@@ -1,11 +1,10 @@
 package randhound_test
 
 import (
-	"log"
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/randhound"
 	"github.com/dedis/cothority/sda"
 )
@@ -23,7 +22,7 @@ func TestRandHound(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(testing.Verbose(), 1)
+	log.TestOutput(testing.Verbose(), 1)
 
 	// Setup and Start RandHound
 	log.Printf("RandHound - starting")

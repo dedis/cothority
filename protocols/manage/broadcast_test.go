@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
@@ -12,8 +12,8 @@ import (
 
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 3)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
@@ -31,7 +31,7 @@ func TestBroadcast(t *testing.T) {
 		timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
 		select {
 		case <-done:
-			dbg.Lvl2("Done with connecting everybody")
+			log.Lvl2("Done with connecting everybody")
 		case <-time.After(timeout):
 			t.Fatal("Didn't finish in time")
 		}

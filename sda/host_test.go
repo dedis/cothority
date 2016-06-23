@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 
@@ -14,7 +14,7 @@ import (
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
@@ -27,7 +27,7 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	time.Sleep(time.Second)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
@@ -44,14 +44,14 @@ func TestHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	dbg.Lvl3("Finished first connection, starting 2nd")
+	log.Lvl3("Finished first connection, starting 2nd")
 	h3 := sda.NewLocalHost(2002)
 	h3.ListenAndBind()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
-	dbg.Lvl3("Closing h3")
+	log.Lvl3("Closing h3")
 	err = h3.Close()
 	if err != nil {
 		// try closing the underlying connection manually and fail
@@ -61,20 +61,20 @@ func TestHostClose(t *testing.T) {
 }
 
 func TestHostClose2(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 
 	_, _, tree := local.GenTree(2, false, true, true)
-	dbg.Lvl3(tree.Dump())
+	log.Lvl3(tree.Dump())
 	time.Sleep(time.Millisecond * 100)
-	dbg.Lvl3("Done")
+	log.Lvl3("Done")
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
@@ -104,7 +104,7 @@ func TestHostMessaging(t *testing.T) {
 
 // Test sending data back and forth using the sendSDAData
 func TestHostSendMsgDuplex(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
@@ -112,14 +112,14 @@ func TestHostSendMsgDuplex(t *testing.T) {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
-	dbg.Lvl2("Received msg h1 -> h2", msg)
+	log.Lvl2("Received msg h1 -> h2", msg)
 
 	err = h2.SendRaw(h1.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
 	msg = h1.Receive()
-	dbg.Lvl2("Received msg h2 -> h1", msg)
+	log.Lvl2("Received msg h2 -> h1", msg)
 
 	h1.Close()
 	h2.Close()
@@ -127,7 +127,7 @@ func TestHostSendMsgDuplex(t *testing.T) {
 
 // Test sending data back and forth using the SendTo
 func TestHostSendDuplex(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1, h2 := SetupTwoHosts(t, false)
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
@@ -135,14 +135,14 @@ func TestHostSendDuplex(t *testing.T) {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := h2.Receive()
-	dbg.Lvl2("Received msg h1 -> h2", msg)
+	log.Lvl2("Received msg h1 -> h2", msg)
 
 	err = h2.SendRaw(h1.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
 	msg = h1.Receive()
-	dbg.Lvl2("Received msg h2 -> h1", msg)
+	log.Lvl2("Received msg h2 -> h1", msg)
 
 	h1.Close()
 	h2.Close()
@@ -151,7 +151,7 @@ func TestHostSendDuplex(t *testing.T) {
 // Test when a peer receives a New Roster, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
@@ -171,7 +171,7 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
@@ -225,7 +225,7 @@ func TestPeerListPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, false, false)
 	defer local.CloseAll()
@@ -286,7 +286,7 @@ func TestTreePropagation(t *testing.T) {
 // h1 ask for the entitylist (because it dont know)
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, true, false)
 	defer local.CloseAll()
@@ -329,7 +329,7 @@ func TestListTreePropagation(t *testing.T) {
 }
 
 func TestTokenId(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	t1 := &sda.Token{
 		RosterID: sda.RosterID(uuid.NewV1()),
 		TreeID:   sda.TreeID(uuid.NewV1()),
@@ -358,7 +358,7 @@ func TestTokenId(t *testing.T) {
 
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	h2.ListenAndBind()
@@ -379,7 +379,7 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	h1 := sda.NewLocalHost(2000)
 	h2 := sda.NewLocalHost(2001)
 	defer h1.Close()
@@ -388,35 +388,35 @@ func TestReconnection(t *testing.T) {
 	h1.ListenAndBind()
 	h2.ListenAndBind()
 
-	dbg.Lvl1("Sending h1->h2")
-	dbg.ErrFatal(sendrcv(h1, h2))
-	dbg.Lvl1("Sending h2->h1")
-	dbg.ErrFatal(sendrcv(h2, h1))
-	dbg.Lvl1("Closing h1")
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv(h2, h1))
+	log.Lvl1("Closing h1")
 	h1.CloseConnections()
 
-	dbg.Lvl1("Listening again on h1")
+	log.Lvl1("Listening again on h1")
 	h1.ListenAndBind()
 
-	dbg.Lvl1("Sending h2->h1")
-	dbg.ErrFatal(sendrcv(h2, h1))
-	dbg.Lvl1("Sending h1->h2")
-	dbg.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv(h2, h1))
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
 
-	dbg.Lvl1("Shutting down listener of h2")
+	log.Lvl1("Shutting down listener of h2")
 
 	// closing h2, but simulate *hard* failure, without sending a FIN packet
 	c2 := h1.Connection(h2.ServerIdentity)
 	// making h2 fails
 	h2.AbortConnections()
-	dbg.Lvl1("asking h2 to listen again")
+	log.Lvl1("asking h2 to listen again")
 	// making h2 backup again
 	h2.ListenAndBind()
 	// and re-registering the connection to h2 from h1
 	h1.RegisterConnection(h2.ServerIdentity, c2)
 
-	dbg.Lvl1("Sending h1->h2")
-	dbg.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
 }
 
 func sendrcv(from, to *sda.Host) error {
@@ -425,9 +425,9 @@ func sendrcv(from, to *sda.Host) error {
 		return errors.New("Couldn't send message: " + err.Error())
 	}
 	// Receive the message
-	dbg.Lvl2("Waiting to receive")
+	log.Lvl2("Waiting to receive")
 	msg := to.Receive()
-	dbg.Lvl2("Received")
+	log.Lvl2("Received")
 	if msg.Msg.(SimpleMessage).I != 12 {
 		return errors.New("Simple message got distorted")
 	}

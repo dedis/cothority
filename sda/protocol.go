@@ -3,7 +3,7 @@ package sda
 import (
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
@@ -61,7 +61,7 @@ func ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
 	}
 	protocolNames[u] = name
 	protocols[u] = protocol
-	dbg.Lvl4("Registered", name, "to", u)
+	log.Lvl4("Registered", name, "to", u)
 	return u
 }
 

@@ -2,7 +2,7 @@ package ntree
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
 )
@@ -47,14 +47,14 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte(e.Message)
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round, "with message", string(msg))
+		log.Lvl1("Starting round", round, "with message", string(msg))
 		round := monitor.NewTimeMeasure("round")
 
 		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "NaiveTree")
 		if err != nil {
-			dbg.Error("Quitting the simulation....", err)
+			log.Error("Quitting the simulation....", err)
 			return err
 		}
 		pi := p.(*Protocol)
@@ -68,7 +68,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		})
 		err = pi.Start()
 		if err != nil {
-			dbg.Error("Quitting the simulation....", err)
+			log.Error("Quitting the simulation....", err)
 			return err
 		}
 		<-done

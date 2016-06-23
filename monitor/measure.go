@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Sink is the server address where all measures are transmitted to for
@@ -69,12 +69,12 @@ func ConnectSink(addr string) error {
 	if encoder != nil {
 		return nil
 	}
-	dbg.Lvl3("Connecting to:", addr)
+	log.Lvl3("Connecting to:", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
 	}
-	dbg.Lvl3("Connected to sink:", addr)
+	log.Lvl3("Connected to sink:", addr)
 	sink = addr
 	connection = conn
 	encoder = json.NewEncoder(conn)
@@ -92,7 +92,7 @@ func NewSingleMeasure(name string, value float64) *SingleMeasure {
 // Record sends the value to the monitor. Reset the value to 0.
 func (sm *SingleMeasure) Record() {
 	if err := send(sm); err != nil {
-		dbg.Error("Error sending SingleMeasure", sm.Name, " to monitor:", err)
+		log.Error("Error sending SingleMeasure", sm.Name, " to monitor:", err)
 	}
 	sm.Value = 0
 }
@@ -204,7 +204,7 @@ func send(v interface{}) error {
 			ok = true
 			break
 		}
-		dbg.Lvl1("Couldn't send to monitor-sink:", err)
+		log.Lvl1("Couldn't send to monitor-sink:", err)
 		time.Sleep(time.Duration(wait) * time.Millisecond)
 		continue
 	}
@@ -217,11 +217,11 @@ func send(v interface{}) error {
 // EndAndCleanup sends a message to end the logging and closes the connection
 func EndAndCleanup() {
 	if err := send(NewSingleMeasure("end", 0)); err != nil {
-		dbg.Error("Error while sending 'end' message:", err)
+		log.Error("Error while sending 'end' message:", err)
 	}
 	if err := connection.Close(); err != nil {
 		// at least tell that we could not close the connection:
-		dbg.Error("Could not close connecttion:", err)
+		log.Error("Could not close connecttion:", err)
 	}
 	encoder = nil
 }
@@ -235,7 +235,7 @@ func iiToF(sec int64, usec int64) float64 {
 func getRTime() (tSys, tUsr float64) {
 	rusage := &syscall.Rusage{}
 	if err := syscall.Getrusage(syscall.RUSAGE_SELF, rusage); err != nil {
-		dbg.Error("Couldn't get rusage time:", err)
+		log.Error("Couldn't get rusage time:", err)
 	}
 	s, u := rusage.Stime, rusage.Utime
 	return iiToF(int64(s.Sec), int64(s.Usec)), iiToF(int64(u.Sec), int64(u.Usec))
@@ -251,9 +251,9 @@ func getDiffRTime(tSys, tUsr float64) (tDiffSys, tDiffUsr float64) {
 // Otherwise all measures won't be sent at all.
 func EnableMeasure(b bool) {
 	if b {
-		dbg.Lvl3("Monitor: Measure enabled")
+		log.Lvl3("Monitor: Measure enabled")
 	} else {
-		dbg.Lvl3("Monitor: Measure disabled")
+		log.Lvl3("Monitor: Measure disabled")
 	}
 	enabled = b
 }

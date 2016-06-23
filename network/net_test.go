@@ -11,7 +11,7 @@ import (
 
 	"os"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -33,12 +33,12 @@ type TestRegisterS struct {
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-	dbg.AfterTest(nil)
+	log.AfterTest(nil)
 	os.Exit(code)
 }
 
 func TestRegister(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
@@ -57,7 +57,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterReflect(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	typ := RegisterMessageType(TestRegisterS{})
 	typReflect := RTypeToMessageTypeID(reflect.TypeOf(TestRegisterS{}))
@@ -68,12 +68,12 @@ func TestRegisterReflect(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
 	fn := func(s Conn) {
-		dbg.Lvl3("Getting connection from", s)
+		log.Lvl3("Getting connection from", s)
 		gotConnect <- true
 	}
 	h1 := NewTCPHost()
@@ -87,7 +87,7 @@ func TestMultiClose(t *testing.T) {
 		done <- true
 	}()
 	time.Sleep(time.Second)
-	dbg.Lvl3("Open connection to h2")
+	log.Lvl3("Open connection to h2")
 	_, err := h2.Open("localhost:2000")
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h1, err)
@@ -131,12 +131,12 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s.ServerIdentity().First())
+		log.Lvl3("Getting connection from", s.ServerIdentity().First())
 		close(receiverStarted)
 	}
 
@@ -172,10 +172,10 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 	<-done
 
-	dbg.Lvl3("Finished first connection, starting 2nd")
+	log.Lvl3("Finished first connection, starting 2nd")
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s.ServerIdentity().First())
+		log.Lvl3("Getting connection from", s.ServerIdentity().First())
 		receiverStarted2 <- true
 	}
 	done2 := make(chan bool)
@@ -201,10 +201,10 @@ func TestSecureMultiClose(t *testing.T) {
 }
 
 func TestTcpCounterIO(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	RegisterMessageType(&TestRegisterS{})
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s Conn) {
 		err := s.Send(context.TODO(), &TestRegisterS{10})
@@ -249,12 +249,12 @@ func TestTcpCounterIO(t *testing.T) {
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
 	fn := func(s SecureConn) {
-		dbg.Lvl3("Getting connection from", s)
+		log.Lvl3("Getting connection from", s)
 		opened <- true
 	}
 
@@ -284,7 +284,7 @@ func TestSecureTcp(t *testing.T) {
 	if !<-opened {
 		t.Fatal("Lazy programmers - no select")
 	}
-	dbg.Lvl4("Closing connections")
+	log.Lvl4("Closing connections")
 	if err := host1.Close(); err != nil {
 		t.Fatal("Couldn't close host", host1)
 	}
@@ -296,7 +296,7 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	// Create one client + one server
 	clientHost := NewTCPHost()
@@ -406,7 +406,7 @@ func (s *SimpleClient) ExchangeWithServer(name string, t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	if err == ErrClosed {
-		dbg.Error("Called Close() on alredy closed connetion.")
+		log.Error("Called Close() on alredy closed connetion.")
 	}
 	s.wg.Done()
 }

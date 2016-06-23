@@ -19,7 +19,7 @@ import (
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 
@@ -241,7 +241,7 @@ func checkList(list *sda.Roster, descs []string) error {
 		name := strings.Split(descs[i], " ")[0]
 		serverStr += fmt.Sprintf("%s_%s ", s.Addresses[0], name)
 	}
-	dbg.Lvl3("Sending message to: " + serverStr)
+	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
 	ui.Info("Checking server(s) ", serverStr, ": ")
 	sig, err := signStatement(strings.NewReader(msg), list)
@@ -269,7 +269,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	pchan := make(chan *s.SignatureResponse)
 	var err error
 	go func() {
-		dbg.Lvl3("Waiting for the response on SignRequest")
+		log.Lvl3("Waiting for the response on SignRequest")
 		response, e := client.SignMsg(el, msg)
 		if e != nil {
 			err = e
@@ -281,7 +281,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 
 	select {
 	case response, ok := <-pchan:
-		dbg.Lvl5("Response:", response)
+		log.Lvl5("Response:", response)
 		if !ok || err != nil {
 			return nil, errors.New("Received an invalid repsonse.")
 		}
@@ -325,7 +325,7 @@ func isPublicIP(ip string) bool {
 		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
 		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip)
 	if err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 	return !public
 }

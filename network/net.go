@@ -24,7 +24,7 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -71,7 +71,7 @@ func (t *TCPHost) Close() error {
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
-		// dbg.Lvl4("Closing peer", c)
+		// log.Lvl4("Closing peer", c)
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}
@@ -137,7 +137,7 @@ func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	for i := 0; i < MaxRetry; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
-			//dbg.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
+			//log.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
 			time.Sleep(WaitRetry)
 		} else {
 			break
@@ -219,16 +219,16 @@ func NewSecureTCPHost(private abstract.Scalar, e *ServerIdentity) *SecureTCPHost
 // Returns an error if it can listen on any address
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		dbg.Lvl3(st.workingAddress, "connected with", c.Remote())
+		log.Lvl3(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
 		}
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeServerIdentity(); err != nil {
-			dbg.Error("Negotiation failed:", err)
+			log.Error("Negotiation failed:", err)
 			if err := stc.Close(); err != nil {
-				dbg.Error("Couldn't close secure connection:",
+				log.Error("Couldn't close secure connection:",
 					err)
 			}
 			return
@@ -243,9 +243,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	if st.entity == nil {
 		return errors.New("Can't listen without ServerIdentity")
 	}
-	dbg.Lvl3("Addresses are", st.entity.Addresses)
+	log.Lvl3("Addresses are", st.entity.Addresses)
 	for _, addr = range st.entity.Addresses {
-		dbg.Lvl3("Starting to listen on", addr)
+		log.Lvl3("Starting to listen on", addr)
 		st.lockAddress.Lock()
 		st.workingAddress = addr
 		st.lockAddress.Unlock()
@@ -271,10 +271,10 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 	// try all names
 	for _, addr := range e.Addresses {
 		// try to connect with this name
-		dbg.Lvl3("Trying address", addr)
+		log.Lvl3("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
-			dbg.Lvl3("Address didn't accept connection:", addr, "=>", err)
+			log.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
@@ -373,10 +373,10 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 		}
 		// put it in the longterm buffer
 		if _, err := buffer.Write(b[:n]); err != nil {
-			dbg.Error("Couldn't write to buffer:", err)
+			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
-		dbg.Lvl5("Read", read, "out of", total, "bytes")
+		log.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
@@ -404,7 +404,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	dbg.Lvlf5("Message SEND => %+v", am)
+	log.Lvlf5("Message SEND => %+v", am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -425,14 +425,14 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		}
 
 		// Sending 'length' bytes
-		dbg.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
+		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
-			dbg.Error("Couldn't write chunk starting at", sent, "size", length, err)
+			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			return handleError(err)
 		}
 		sent += Size(n)
-		dbg.Lvl5("Sent", sent, "out of", packetSize)
+		log.Lvl5("Sent", sent, "out of", packetSize)
 
 		// bytes left to send
 		b = b[n:]
@@ -508,7 +508,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
 	// Send our ServerIdentity to the remote endpoint
-	dbg.Lvl4("Sending our identity", ourEnt.ID, "to",
+	log.Lvl4("Sending our identity", ourEnt.ID, "to",
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
@@ -525,10 +525,10 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 
 	// Set the ServerIdentity for this connection
 	e := nm.Msg.(ServerIdentity)
-	dbg.Lvl4(ourEnt.ID, "Received identity", e.ID)
+	log.Lvl4(ourEnt.ID, "Received identity", e.ID)
 
 	sc.entity = &e
-	dbg.Lvl4("Identity exchange complete")
+	log.Lvl4("Identity exchange complete")
 	return nil
 }
 
@@ -543,9 +543,9 @@ func (sc *SecureTCPConn) negotiateOpen(e *ServerIdentity) error {
 	}
 	// verify the ServerIdentity if its the same we are supposed to connect
 	if sc.ServerIdentity().ID != e.ID {
-		dbg.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.ServerIdentity(), sc.ServerIdentity().ID)
-		dbg.Lvl3(e.Public, sc.ServerIdentity().Public)
-		dbg.Lvl4("IDs not the same", dbg.Stack())
+		log.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.ServerIdentity(), sc.ServerIdentity().ID)
+		log.Lvl3(e.Public, sc.ServerIdentity().Public)
+		log.Lvl4("IDs not the same", log.Stack())
 		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}
 

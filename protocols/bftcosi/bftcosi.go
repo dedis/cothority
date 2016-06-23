@@ -5,7 +5,9 @@ package bftcosi
 import (
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
@@ -190,12 +192,12 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
-			dbg.Lvl2(bft.Name(), "BFTCoSi Dispatches stop.")
+			log.Lvl2(bft.Name(), "BFTCoSi Dispatches stop.")
 
 			return nil
 		}
 		if err != nil {
-			dbg.Error("Error handling messages:", err)
+			log.Error("Error handling messages:", err)
 		}
 	}
 }
@@ -292,6 +294,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 			return nil
 		}
 
+		log.Lvl4(bft.Name(), "BFTCoSi handle Commit COMMIT")
 	}
 	// set same RoundType as for the received commitment:
 	typedCommitment := &Commitment{
@@ -303,14 +306,8 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
-	if t == RoundPrepare {
-		// create challenge from message's hash:
-		// XXX Why ? Since Challenge() already hash the message
-		// and the message is being broadcasted in its original form anyway.
-		// It's way more simpler to treat it as-is for the moment.
-	}
-
 	ch, err := bft.getCosi(t).CreateChallenge(bft.Msg)
+
 	if err != nil {
 		return err
 	}
@@ -386,15 +383,10 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 		return bft.handleResponseCommit(nil)
 	}
 
-	return bft.SendToChildrenInParallel(ch)
-}
-
-// startResponse dispatches the response to the correct round-type
-func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
-	if t == RoundPrepare {
-		return bft.handleResponsePrepare(r)
+	if err := bft.SendToChildrenInParallel(ch); err != nil {
+		log.Error(err)
 	}
-	return bft.handleResponseCommit(r)
+	return nil
 }
 
 // challenge process.
@@ -430,7 +422,6 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if err != nil {
 		return err
 	}
-
 	// replace the old one with the corrected one
 	copy(cosiSig[32:64], correctResponseBuff)
 	bft.prepareSignature = cosiSig
@@ -454,9 +445,17 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	// Start the challenge of the 'commit'-round
 	if err := bft.startChallenge(RoundCommit); err != nil {
 		dbg.Error(err)
+		return err
 	}
-
 	return nil
+}
+
+// startResponse dispatches the response to the correct round-type
+func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
+	if t == RoundPrepare {
+		return bft.handleResponsePrepare(r)
+	}
+	return bft.handleResponseCommit(r)
 }
 
 // handleResponseCommit collects all commits from the children and either
@@ -499,7 +498,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 
 	// notify we have finished to participate in this signature
 	bft.doneSigning <- true
-	dbg.Lvl4(bft.Name(), "BFTCoSi handle Response COMMIT (refusal=", bft.signRefusal, ")")
+	log.Lvl4(bft.Name(), "BFTCoSi handle Response COMMIT (refusal=", bft.signRefusal, ")")
 	// if root we have finished
 	if bft.IsRoot() {
 		sig := bft.Signature()
@@ -554,7 +553,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	dbg.Lvl4(bft.Name(), "nodeDone()")
+	log.Lvl4(bft.Name(), "nodeDone()")
 	bft.doneProcessing <- true
 	if bft.onDoneCallback != nil {
 		// only true for the root

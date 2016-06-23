@@ -1,7 +1,7 @@
 package sda
 
 import (
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
 
@@ -13,7 +13,7 @@ func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
 
 func (h *Host) Receive() network.Packet {
 	data := <-h.networkChan
-	dbg.Lvl5("Got message", data)
+	log.Lvl5("Got message", data)
 	return data
 }
 

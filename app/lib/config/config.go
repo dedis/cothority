@@ -12,7 +12,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -216,7 +216,7 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
-		dbg.Error("Error writing public key")
+		log.Error("Error writing public key")
 		return nil
 	}
 	return &ServerToml{

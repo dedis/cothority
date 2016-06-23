@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
 	"github.com/dedis/protobuf"
@@ -90,7 +90,7 @@ func TypeToMessageTypeID(msg Body) MessageTypeID {
 	}
 	url := NamespaceProtocolMessageType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
-	dbg.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
+	log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return MessageTypeID(u)
 }
 
@@ -103,7 +103,7 @@ func RTypeToMessageTypeID(msg reflect.Type) MessageTypeID {
 // DumpTypes is used for debugging - it prints out all known types
 func DumpTypes() {
 	for t, m := range registry.types {
-		dbg.Print("Type", t, "has message", m)
+		log.Print("Type", t, "has message", m)
 	}
 }
 
@@ -191,9 +191,9 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 	var buf []byte
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
-		dbg.Error("Error for protobuf encoding:", err)
-		if dbg.DebugVisible() >= 3 {
-			dbg.Error(dbg.Stack())
+		log.Error("Error for protobuf encoding:", err)
+		if log.DebugVisible() >= 3 {
+			log.Error(log.Stack())
 		}
 		return nil, err
 	}

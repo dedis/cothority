@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
@@ -141,7 +143,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 func verify(m []byte, d []byte) bool {
 	countMut.Lock()
 	veriCount++
-	dbg.Lvl1("Verification called", veriCount, "times")
+	log.Lvl1("Verification called", veriCount, "times")
 	countMut.Unlock()
 	dbg.Lvl1("Ignoring message:", string(m))
 	if len(d) != 1 {

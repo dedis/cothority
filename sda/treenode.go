@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 )
@@ -174,7 +174,7 @@ func (n *TreeNodeInstance) RegisterChannel(c interface{}) error {
 	n.channels[typ] = c
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type) n.channels[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl4("Registered channel", typ, "with flags", flags)
+	log.Lvl4("Registered channel", typ, "with flags", flags)
 	return nil
 }
 
@@ -213,7 +213,7 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.handlers[typ] = c
 	n.messageTypeFlags[typ] = flags
-	dbg.Lvl3("Registered handler", typ, "with flags", flags)
+	log.Lvl3("Registered handler", typ, "with flags", flags)
 	return nil
 }
 
@@ -245,7 +245,7 @@ func (n *TreeNodeInstance) Shutdown() error {
 
 // Close shuts down the go-routine and calls the protocolInstance-shutdown
 func (n *TreeNodeInstance) Close() error {
-	dbg.Lvl3("Closing node", n.Info())
+	log.Lvl3("Closing node", n.Info())
 	n.msgDispatchQueueMutex.Lock()
 	n.closing = true
 	if len(n.msgDispatchQueueWait) == 0 {
@@ -269,11 +269,11 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
-		dbg.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
+		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
 		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
-			dbg.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
+			log.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
 			m := n.reflectCreate(to, msg)
 			f.Call([]reflect.Value{m})
 		}
@@ -296,13 +296,13 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.channels[mt])
 	if n.HasFlag(mt, AggregateMessages) {
-		dbg.Lvl4("Received aggregated message of type:", mt)
+		log.Lvl4("Received aggregated message of type:", mt)
 		to = to.Elem()
 		out := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
-			dbg.Lvl4("Dispatching aggregated to", to)
+			log.Lvl4("Dispatching aggregated to", to)
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.Lvl4("Adding msg", m, "to", n.ServerIdentity().Addresses)
+			log.Lvl4("Adding msg", m, "to", n.ServerIdentity().Addresses)
 			out.Index(i).Set(m)
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
@@ -310,7 +310,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
 			m := n.reflectCreate(to.Elem(), msg)
-			dbg.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			log.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -320,10 +320,10 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 // ProcessProtocolMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
-	dbg.Lvl4(n.Info(), "Received message")
+	log.Lvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
-	dbg.Lvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	log.Lvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
 	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
 		n.msgDispatchQueueWait <- true
 	}
@@ -334,23 +334,23 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 	for {
 		n.msgDispatchQueueMutex.Lock()
 		if n.closing == true {
-			dbg.Lvl3("Closing reader")
+			log.Lvl3("Closing reader")
 			n.msgDispatchQueueMutex.Unlock()
 			return
 		}
 		if len(n.msgDispatchQueue) > 0 {
-			dbg.Lvl4(n.Info(), "Read message and dispatching it",
+			log.Lvl4(n.Info(), "Read message and dispatching it",
 				len(n.msgDispatchQueue))
 			msg := n.msgDispatchQueue[0]
 			n.msgDispatchQueue = n.msgDispatchQueue[1:]
 			n.msgDispatchQueueMutex.Unlock()
 			err := n.dispatchMsgToProtocol(msg)
 			if err != nil {
-				dbg.Error("Error while dispatching message:", err)
+				log.Error("Error while dispatching message:", err)
 			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()
-			dbg.Lvl4(n.Info(), "Waiting for message")
+			log.Lvl4(n.Info(), "Waiting for message")
 			<-n.msgDispatchQueueWait
 		}
 	}
@@ -365,7 +365,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	var err error
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
-		dbg.Error(n.ServerIdentity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
+		log.Error(n.ServerIdentity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
 	}
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
@@ -376,17 +376,17 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	// if we still need to wait for additional messages, we return
 	msgType, msgs, done := n.aggregate(sdaMsg)
 	if !done {
-		dbg.Lvl3(n.Name(), "Not done aggregating children msgs")
+		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	dbg.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
+	log.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:
-		dbg.Lvl4(n.Info(), "Dispatching to channel")
+		log.Lvl4(n.Info(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		dbg.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
+		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
 		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
@@ -425,7 +425,7 @@ func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.MessageTypeID
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	dbg.Lvl4(n.ServerIdentity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
+	log.Lvl4(n.ServerIdentity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -454,7 +454,7 @@ func (n *TreeNodeInstance) Done() {
 			return
 		}
 	}
-	dbg.Lvl3(n.Info(), "has finished. Deleting its resources")
+	log.Lvl3(n.Info(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
 }
 

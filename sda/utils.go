@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // WriteTomlConfig write  any structure to a toml-file
@@ -17,11 +17,11 @@ import (
 func WriteTomlConfig(conf interface{}, filename string, dirOpt ...string) {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(conf); err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
 	err := ioutil.WriteFile(getFullName(filename, dirOpt...), buf.Bytes(), 0660)
 	if err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
 }
 
@@ -31,13 +31,13 @@ func ReadTomlConfig(conf interface{}, filename string, dirOpt ...string) error {
 	buf, err := ioutil.ReadFile(getFullName(filename, dirOpt...))
 	if err != nil {
 		pwd, _ := os.Getwd()
-		dbg.Lvl1("Didn't find", filename, "in", pwd)
+		log.Lvl1("Didn't find", filename, "in", pwd)
 		return err
 	}
 
 	_, err = toml.Decode(string(buf), conf)
 	if err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
 
 	return nil

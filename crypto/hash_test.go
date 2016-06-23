@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/ed25519"
 )
 
@@ -122,7 +122,7 @@ func TestHashChunk(t *testing.T) {
 	}
 
 	for _, i := range []int{16, 128, 1024} {
-		dbg.Lvl3("Reading", i, "bytes")
+		log.Lvl3("Reading", i, "bytes")
 		hash, err := crypto.HashFileChunk(ed25519.NewAES128SHA256Ed25519(false).Hash(),
 			tmpfile, i)
 		if err != nil {

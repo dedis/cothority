@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"golang.org/x/net/context"
 )
@@ -24,7 +24,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	// How many hosts are run
 	nbrHosts := 10
 	// 16MB of message size
@@ -36,7 +36,7 @@ func TestHugeConnections(t *testing.T) {
 	}
 	bigMessageType := RegisterMessageType(big)
 
-	dbg.TestOutput(testing.Verbose(), 3)
+	log.TestOutput(testing.Verbose(), 3)
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)
 	hosts := make([]SecureHost, nbrHosts)
@@ -50,10 +50,10 @@ func TestHugeConnections(t *testing.T) {
 	for i := 0; i < nbrHosts; i++ {
 		privkeys[i], ids[i] = genServerIdentity("localhost:" + strconv.Itoa(2000+i))
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
-		dbg.Lvl5("Host is", hosts[i], "id is", ids[i])
+		log.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {
-				dbg.Lvl5(2000+h, "got a connection")
+				log.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
 					t.Fatal("Couldn't receive msg:", err)
@@ -69,16 +69,16 @@ func TestHugeConnections(t *testing.T) {
 					t.Fatal("CRC is wrong")
 				}
 				// And send it back
-				dbg.Lvl3(h, "sends it back")
+				log.Lvl3(h, "sends it back")
 
 				go func(h int) {
-					dbg.Lvl3(h, "Sending back")
+					log.Lvl3(h, "Sending back")
 					err := c.Send(context.TODO(), &big)
 					if err != nil {
 						t.Fatal(h, "couldn't send message:", err)
 					}
 				}(h)
-				dbg.Lvl3(h, "done sending messages")
+				log.Lvl3(h, "done sending messages")
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -88,7 +88,7 @@ func TestHugeConnections(t *testing.T) {
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
-			dbg.Lvl5("Connecting", ids[i], "with", ids[j])
+			log.Lvl5("Connecting", ids[i], "with", ids[j])
 			conns[i][j], err = hosts[i].Open(ids[j])
 			if err != nil {
 				t.Fatal("Couldn't open:", err)
@@ -105,7 +105,7 @@ func TestHugeConnections(t *testing.T) {
 			c := conns[i][j]
 			go func(conn SecureConn, i, j int) {
 				defer wg.Done()
-				dbg.Lvl3("Sending from", i, "to", j, ":")
+				log.Lvl3("Sending from", i, "to", j, ":")
 				ctx := context.TODO()
 				if err := conn.Send(ctx, &big); err != nil {
 					t.Fatal(i, j, "Couldn't send:", err)
@@ -121,7 +121,7 @@ func TestHugeConnections(t *testing.T) {
 				if bc.Pcrc != 25 {
 					t.Fatal(i, j, "CRC is wrong")
 				}
-				dbg.Lvl3(i, j, "Done")
+				log.Lvl3(i, j, "Done")
 			}(c, i, j)
 		}
 	}
