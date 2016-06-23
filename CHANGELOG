@@ -1,5 +1,7 @@
 160622 - 0.9.0
-	- Renamed Entity -> ServerIdentity
-	- Renamed EntityList -> Roster
+	- Renamed network.Entity -> network.ServerIdentity
+	- Renamed network.EntityList -> network.Roster
+	- Renamed network.ProtocolMessage -> network.Body
+	- Renamed network.Message -> network.Packet
 	- Moved lib/* to parent-directory
 	- Depend on dedis/cosi for the cosi-library
