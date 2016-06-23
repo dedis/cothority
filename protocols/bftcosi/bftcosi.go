@@ -324,22 +324,22 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 		}
 
 		return bft.handleChallengePrepare(bftChal)
-	} else {
-		ch, err := bft.commit.CreateChallenge(bft.Msg)
-		if err != nil {
-			return err
-		}
-		// send challenge + signature
-		cc := &ChallengeCommit{
-			Challenge: ch,
-			Signature: &BFTSignature{
-				Msg:        bft.Msg,
-				Sig:        bft.prepareSignature,
-				Exceptions: bft.tempExceptions,
-			},
-		}
-		return bft.handleChallengeCommit(cc)
 	}
+	// commit phase
+	ch, err := bft.commit.CreateChallenge(bft.Msg)
+	if err != nil {
+		return err
+	}
+	// send challenge + signature
+	cc := &ChallengeCommit{
+		Challenge: ch,
+		Signature: &BFTSignature{
+			Msg:        bft.Msg,
+			Sig:        bft.prepareSignature,
+			Exceptions: bft.tempExceptions,
+		},
+	}
+	return bft.handleChallengeCommit(cc)
 }
 
 // handleChallengePrepare collects the challenge-messages

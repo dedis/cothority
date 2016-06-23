@@ -29,7 +29,7 @@ type BFTSignature struct {
 	Exceptions []Exception
 }
 
-// Verify returns whether the verification of the signature succeeds or not.
+// VerifyBFTSignature returns whether the verification of the signature succeeds or not.
 // Specifically, it adjusts the signature according to the exception in the
 // signature, so it can be verified by dedis/crypto/cosi.
 // Aggregate is the aggregate public key of all signers, and the msg is the msg
