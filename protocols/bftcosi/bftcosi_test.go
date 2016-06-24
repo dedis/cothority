@@ -143,9 +143,8 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 func verify(m []byte, d []byte) bool {
 	countMut.Lock()
 	veriCount++
-	log.Lvl1("Verification called", veriCount, "times")
+	log.Lvl4("Verification called", veriCount, "times")
 	countMut.Unlock()
-	dbg.Lvl1("Ignoring message:", string(m))
 	if len(d) != 1 {
 		dbg.Error("Didn't receive correct data")
 		return false
