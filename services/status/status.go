@@ -85,11 +85,11 @@ func (st *Stat) Request(e *network.ServerIdentity, req *Request) (network.Body, 
 	sorted := sda.Available()
 	sort.Strings(sorted)
 	return &Response{
-		Serv:      Host(st.Context.(*sda.DefaultContext).Host.Connections),
-		Remote:    Remote(st.Context.(*sda.DefaultContext).Host.Connections),
-		Tot:       len(st.Context.(*sda.DefaultContext).Host.Connections),
-		Received:  Received(st.Context.(*sda.DefaultContext).Host.Connections),
-		Sent:      Sent(st.Context.(*sda.DefaultContext).Host.Connections),
+		Serv:      Host(st.Context.Host.Connections),
+		Remote:    Remote(st.Context.Host.Connections),
+		Tot:       len(st.Context.Host.Connections),
+		Received:  Received(st.Context.Host.Connections),
+		Sent:      Sent(st.Context.Host.Connections),
 		Available: sorted,
 	}, nil
 }
