@@ -9,11 +9,7 @@ import (
 
 /*
 This is the CoSi-protocol for simulation which supports
- verification at different level of the tree to being able
- to test at different levels:
- 0: not at all
- 1: only the root
- 2: every node verifies
+ verification at different level.
 */
 
 // Name can be used to reference the registered protocol.
@@ -27,7 +23,7 @@ func init() {
 // see https://github.com/dedis/cothority/issues/260
 // 0 - no check at all
 // 1 - check only at root
-// 2 - check at each level of the tree
+// 2 - check at each level of the tree, except the leafs
 var VerifyResponse = 1
 
 // CoSimul is a protocol suited for simulation
