@@ -97,7 +97,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 //Available returns the available services in a server
 func Available() []string {
 	var out []string
-	for name, _ := range ServiceFactory.translations {
+	for name := range ServiceFactory.translations {
 		out = append(out, name)
 	}
 	return out
