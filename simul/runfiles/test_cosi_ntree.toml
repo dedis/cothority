@@ -1,9 +1,0 @@
-Simulation = "NaiveTree"
-Servers = 16
-Bf = 4
-Rounds = 10
-
-Depth
-1
-2
-3

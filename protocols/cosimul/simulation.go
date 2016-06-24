@@ -1,4 +1,4 @@
-package cosi_simulation
+package cosimul
 
 import (
 	"github.com/BurntSushi/toml"
@@ -6,12 +6,11 @@ import (
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
 )
 
 func init() {
-	sda.SimulationRegister("CoSi", NewSimulation)
+	sda.SimulationRegister(Name, NewSimulation)
 }
 
 // Simulation implements the sda.Simulation of the CoSi protocol.
@@ -58,34 +57,33 @@ func (cs *Simulation) Node(sc *sda.SimulationConfig) error {
 func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := len(config.Roster.List)
 	msg := []byte("Hello World Cosi Simulation")
-	aggPublic := computeAggregatedPublic(config.Roster)
 	log.Lvl2("Simulation starting with: Size=", size, ", Rounds=", cs.Rounds)
 	for round := 0; round < cs.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateProtocolSDA(config.Tree, "CoSi")
+		node, err := config.Overlay.CreateProtocolSDA(config.Tree, Name)
 		if err != nil {
 			return err
 		}
 		// the protocol itself
-		proto := node.(*ProtocolCosi)
+		proto := node.(*CoSimul)
 		// give the message to sign
 		proto.SigningMessage(msg)
 		// tell us when it is done
 		done := make(chan bool)
-		fn := func(chal, resp abstract.Secret) {
+		fn := func(sig []byte) {
 			roundM.Record()
-			//  No need to verify it twice here. It already happens in
-			//  handleResponse() even for the root.
-			if err := cosi.VerifySignature(network.Suite, msg, aggPublic, chal, resp); err != nil {
+			publics := proto.Publics()
+			if err := cosi.VerifySignature(network.Suite, publics,
+				msg, sig); err != nil {
 				log.Lvl1("Round", round, " => fail verification")
 			} else {
 				log.Lvl2("Round", round, " => success")
 			}
 			done <- true
 		}
-		proto.RegisterDoneCallback(fn)
+		proto.RegisterSignatureHook(fn)
 		if err := proto.Start(); err != nil {
 			log.Error("Couldn't start protocol in round", round)
 		}
@@ -93,13 +91,4 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 	}
 	log.Lvl1("Simulation finished")
 	return nil
-}
-
-func computeAggregatedPublic(el *sda.Roster) abstract.Point {
-	suite := network.Suite
-	agg := suite.Point().Null()
-	for _, e := range el.List {
-		agg = agg.Add(agg, e.Public)
-	}
-	return agg
 }

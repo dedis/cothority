@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 var tSuite = network.Suite
@@ -466,6 +467,26 @@ func TestRoster_Publics(t *testing.T) {
 		el.List[1].Public)
 	if !agg[0].Equal(agg2) {
 		t.Fatal("Aggregate of 2 keys is not correct")
+	}
+}
+
+func TestTreeNode_AggregatePublic(t *testing.T) {
+	tree, el := genLocalTree(7, 2000)
+	agg := el.Aggregate
+	root := tree.Root
+	aggRoot := root.AggregatePublic()
+	assert.True(t, aggRoot.Equal(agg))
+
+	rootPub := tree.Root.ServerIdentity.Public
+	aggChild1 := tree.Root.Children[0].AggregatePublic()
+	aggChild2 := tree.Root.Children[1].AggregatePublic()
+
+	assert.True(t, aggChild1.Add(aggChild1, aggChild2).
+		Add(aggChild1, rootPub).Equal(aggRoot))
+
+	for i := 0; i < 4; i++ {
+		leaf := tree.Root.Children[i%2].Children[i/2]
+		assert.True(t, leaf.AggregatePublic().Equal(leaf.ServerIdentity.Public))
 	}
 }
 
