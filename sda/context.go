@@ -12,8 +12,8 @@ type Context struct {
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
 
-func newContext(h *Host, o *Overlay, servID ServiceID) Context {
-	return Context{
+func newContext(h *Host, o *Overlay, servID ServiceID) *Context {
+	return &Context{
 		Overlay: o,
 		Host:    h,
 		servID:  servID,
