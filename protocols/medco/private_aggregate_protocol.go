@@ -2,10 +2,10 @@ package medco
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 )
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
@@ -80,7 +80,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 		return errors.New("No data reference provided for aggregation.")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Private Aggregate Protocol (", len(*p.GroupedData), " local groups )")
+	log.Lvl1(p.ServerIdentity(), "started a Private Aggregate Protocol (", len(*p.GroupedData), " local groups )")
 
 	p.SendToChildren(&DataReferenceMessage{})
 
@@ -97,7 +97,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 2. Ascending aggregation phase
 	groups, aggregatedData := p.ascendingAggregationPhase()
-	dbg.Lvl1(p.Entity(), "completed aggregation phase (", len(*aggregatedData),"groups )")
+	log.Lvl1(p.ServerIdentity(), "completed aggregation phase (", len(*aggregatedData),"groups )")
 
 	// 3. Result reporting
 	if p.IsRoot() {

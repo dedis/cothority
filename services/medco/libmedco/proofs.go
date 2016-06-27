@@ -1,7 +1,7 @@
-package medco
+package libmedco
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/proof"
 )
@@ -17,10 +17,10 @@ type CompleteProof struct {
 }
 
 //proof creation for scheme switching on a ciphervector
-func VectSwitchSchemeProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rjs []abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
+func VectSwitchSchemeProof(suite abstract.Suite, k abstract.Scalar, s abstract.Scalar, Rjs []abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
 	var result []CompleteProof
 	if len(C1) != len(C2) {
-		dbg.Errorf("two vectors should have same size")
+		log.Errorf("two vectors should have same size")
 		return nil
 	} else {
 		for i, v := range C1 {
@@ -31,15 +31,15 @@ func VectSwitchSchemeProof(suite abstract.Suite, k abstract.Secret, s abstract.S
 }
 
 //proof creation for scheme switching
-func SwitchSchemeProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rj abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
+func SwitchSchemeProof(suite abstract.Suite, k abstract.Scalar, s abstract.Scalar, Rj abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
 	return SwitchKeyProof(suite, k, s, Rj, suite.Point().Base(), C1, C2)
 }
 
 //proof creation for key switching on a ciphervector
-func VectSwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rjs []abstract.Point, B2orU abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
+func VectSwitchKeyProof(suite abstract.Suite, k abstract.Scalar, s abstract.Scalar, Rjs []abstract.Point, B2orU abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
 	var result []CompleteProof
 	if len(C1) != len(C2) {
-		dbg.Errorf("two vectors should have same size")
+		log.Errorf("two vectors should have same size")
 		return nil
 	} else {
 		for i, v := range C1 {
@@ -49,10 +49,10 @@ func VectSwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secr
 	return result
 }
 
-func VectSwitchToProbProof(suite abstract.Suite, s abstract.Secret, rjs []abstract.Secret, newK abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
+func VectSwitchToProbProof(suite abstract.Suite, s abstract.Scalar, rjs []abstract.Scalar, newK abstract.Point, C1 CipherVector, C2 CipherVector) []CompleteProof {
 	var result []CompleteProof
 	if len(C1) != len(C2) {
-		dbg.Errorf("two vectors should have same size")
+		log.Errorf("two vectors should have same size")
 		return nil
 	} else {
 		for i, v := range C1 {
@@ -63,7 +63,7 @@ func VectSwitchToProbProof(suite abstract.Suite, s abstract.Secret, rjs []abstra
 }
 
 //proof creation for key switching
-func SwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, Rj abstract.Point, B2orU abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
+func SwitchKeyProof(suite abstract.Suite, k abstract.Scalar, s abstract.Scalar, Rj abstract.Point, B2orU abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
 	pred := CreatePredicate()
 
 	B1 := suite.Point().Neg(Rj) // B1 = -rjB
@@ -76,7 +76,7 @@ func SwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, 
 
 	C := suite.Point().Sub(C2, C1) // c = Ci - C(i-1)
 
-	sval := map[string]abstract.Secret{"k": k, "s": s}
+	sval := map[string]abstract.Scalar{"k": k, "s": s}
 	pval := map[string]abstract.Point{"B1": B1, "B2": B2, "a": A, "b": B, "c": C}
 	prover := pred.Prover(suite, sval, pval, nil) // computes: commitment, challenge, response
 
@@ -85,7 +85,7 @@ func SwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, 
 	Proof, err := proof.HashProve(suite, "TEST", rand, prover)
 	_ = Proof
 	if err != nil {
-		dbg.Errorf("---------Prover:", err.Error())
+		log.Errorf("---------Prover:", err.Error())
 	} else {
 
 	}
@@ -100,7 +100,7 @@ func SwitchKeyProof(suite abstract.Suite, k abstract.Secret, s abstract.Secret, 
 	return CompleteProof{Proof, B1, B2, A, B, C}
 }
 
-func SwitchToProbProof(suite abstract.Suite, s abstract.Secret, rj abstract.Secret, newK abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
+func SwitchToProbProof(suite abstract.Suite, s abstract.Scalar, rj abstract.Scalar, newK abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
 	return SwitchKeyProof( suite, s, rj, suite.Point().Base(), newK, C1, C2)
 	/*pred := CreatePredicate()
 
@@ -114,7 +114,7 @@ func SwitchToProbProof(suite abstract.Suite, s abstract.Secret, rj abstract.Secr
 
 	C := suite.Point().Sub(C2, C1) // c = Ci - C(i-1)
 
-	sval := map[string]abstract.Secret{"k": k, "s": s}
+	sval := map[string]abstract.Scalar{"k": k, "s": s}
 	pval := map[string]abstract.Point{"B1": B1, "B2": B2, "a": A, "b": B, "c": C}
 	prover := pred.Prover(suite, sval, pval, nil) // computes: commitment, challenge, response
 
@@ -123,7 +123,7 @@ func SwitchToProbProof(suite abstract.Suite, s abstract.Secret, rj abstract.Secr
 	Proof, err := proof.HashProve(suite, "TEST", rand, prover)
 	_ = Proof
 	if err != nil {
-		dbg.Errorf("---------Prover:", err.Error())
+		log.Errorf("---------Prover:", err.Error())
 	} else {
 
 	}
@@ -154,10 +154,10 @@ func SwitchCheckProof(cp CompleteProof) bool {
 	pval := map[string]abstract.Point{"B1": cp.B1, "B2": cp.B2, "a": cp.A, "b": cp.B, "c": cp.C}
 	verifier := pred.Verifier(suite, pval)
 	if err := proof.HashVerify(suite, "TEST", verifier, cp.Proof); err != nil {
-		dbg.Errorf("---------Verifier:", err.Error())
+		log.Errorf("---------Verifier:", err.Error())
 		return false
 	} else {
-		//dbg.LLvl1("Proof verified")
+		//log.LLvl1("Proof verified")
 	}
 
 	return true
@@ -166,7 +166,7 @@ func SwitchCheckProof(cp CompleteProof) bool {
 func SwitchCheckMapProofs(m map[TempID][]CompleteProof) bool {
 	for _,v := range m {
 		if !VectSwitchCheckProof(v) {
-			dbg.Errorf("ATTENTION, false proof detected")
+			log.Errorf("ATTENTION, false proof detected")
 			return false
 		}
 	}

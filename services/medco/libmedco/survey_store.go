@@ -1,4 +1,4 @@
-package medco
+package libmedco
 
 import (
 	"fmt"

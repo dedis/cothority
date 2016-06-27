@@ -1,33 +1,33 @@
 package medco
 
 import (
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/medco"
+	."github.com/dedis/cothority/services/medco/libmedco"
 )
 
 
 type SurveyCreationQuery struct {
-	SurveyID *medco.SurveyID
-	sda.EntityList
-	medco.SurveyDescription
+	SurveyID *SurveyID
+	sda.Roster
+	SurveyDescription
 }
 
 type SurveyResponseQuery struct {
-	SurveyID medco.SurveyID
-	medco.ClientResponse
+	SurveyID SurveyID
+	ClientResponse
 }
 
 type SurveyResultsQuery struct {
-	SurveyID     medco.SurveyID
+	SurveyID     SurveyID
 	ClientPublic abstract.Point
 }
 
 type ServiceResponse struct {
-	SurveyID medco.SurveyID
+	SurveyID SurveyID
 }
 
 
 type SurveyResultResponse struct {
-	Results []medco.SurveyResult
+	Results []SurveyResult
 }

@@ -1,11 +1,11 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"testing"
 	"time"
@@ -38,14 +38,14 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	testCipherVect1 := *EncryptIntVector(aggregateKey, expRes1)
 
 
-	dbg.LLvl1(testCipherVect, suite)
+	log.LLvl1(testCipherVect, suite)
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect
 	mapi[TempID(2)] = testCipherVect1
 
 	// Generate client key
-	clientPrivate := suite.Secret().Pick(random.Stream)
+	clientPrivate := suite.Scalar().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
 	protocol.TargetOfSwitch = &mapi
@@ -61,10 +61,10 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	case encryptedResult := <-feedback:
 		cv1 := encryptedResult[TempID(1)]
 		res := DecryptIntVector(clientPrivate, &cv1)
-		dbg.Lvl1("Recieved results", res)
+		log.Lvl1("Recieved results", res)
 		cv2 := encryptedResult[TempID(2)]
 		res1 := DecryptIntVector(clientPrivate, &cv2)
-		dbg.Lvl1("Recieved results", res1)
+		log.Lvl1("Recieved results", res1)
 		if !reflect.DeepEqual(res, expRes) {
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
 		}

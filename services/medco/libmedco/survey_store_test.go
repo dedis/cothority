@@ -1,22 +1,22 @@
-package medco_test
+package libmedco_test
 
 import (
 	"fmt"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 
 	"github.com/dedis/crypto/random"
 	"testing"
 
-	."github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 )
 
 func TestStoring(t *testing.T) {
-	dbg.Lvl1("Test beginning")
+	log.Lvl1("Test beginning")
 
 	//construc variables
-	secKey := suite.Secret().Pick(random.Stream)
+	secKey := suite.Scalar().Pick(random.Stream)
 	pubKey := suite.Point().Mul(suite.Point().Base(), secKey)
-	nullEnc :=EncryptInt( pubKey, 0) //*CipherText
+	nullEnc := EncryptInt(pubKey, 0) //*CipherText
 	oneEnc := EncryptInt(pubKey, 1)  //*CipherText
 	oneBEnc := EncryptInt(pubKey, 1) //*CipherText
 
@@ -62,7 +62,7 @@ func TestStoring(t *testing.T) {
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect2})
 	//fmt.Println("SECOND AGGREGATION")
 
-	if  _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1)  {
+	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
 		fmt.Println("aggregation error")
 		t.Errorf("aggregation error")
 	} else {
@@ -170,5 +170,5 @@ func TestStoring(t *testing.T) {
 		fmt.Println("PushQuerierKeyEncryptedGroupingAttributes OK")
 	}
 
-	dbg.Lvl1("... Done")
+	log.Lvl1("... Done")
 }

@@ -2,10 +2,10 @@ package medco
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	."github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
+	."github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -41,7 +41,7 @@ type DeterministicSwitchingProtocol struct {
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
 	TargetOfSwitch    *map[TempID]CipherVector
-	SurveyPHKey       *abstract.Secret
+	SurveyPHKey       *abstract.Scalar
 	originalEphemKeys map[TempID][]abstract.Point
 }
 
@@ -77,7 +77,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 		return errors.New("No PH key given.")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
+	log.Lvl1(p.Name(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
 
 
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
@@ -115,10 +115,10 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
-		dbg.Lvl1(p.Entity(), "completed deterministic switching (", len(deterministicSwitchedData),"row )")
+		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData),"row )")
 		p.FeedbackChannel <- deterministicSwitchedData
 	} else {
-		dbg.Lvl1(p.Entity(), "carried on deterministic switching.")
+		log.Lvl1(p.ServerIdentity(), "carried on deterministic switching.")
 		p.sendToNext(&deterministicSwitchingTarget.DeterministicSwitchedMessage)
 	}
 
@@ -130,6 +130,6 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 func (p *DeterministicSwitchingProtocol) sendToNext(msg interface{}) {
 	err := p.SendTo(p.nextNodeInCircuit, msg)
 	if err != nil {
-		dbg.Lvl1("Had an error sending a message: ", err)
+		log.Lvl1("Had an error sending a message: ", err)
 	}
 }

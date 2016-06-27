@@ -2,10 +2,10 @@ package medco
 
 import (
 	"errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -78,7 +78,7 @@ func (p *KeySwitchingProtocol) Start() error {
 		return errors.New("No new public key to be switched on provided.")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Key Switching Protocol")
+	log.Lvl1(p.ServerIdentity(), "started a Key Switching Protocol")
 
 	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
@@ -113,10 +113,10 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 	}
 	
 	if p.IsRoot() {
-		dbg.Lvl1(p.Entity(), "completed key switching.")
+		log.Lvl1(p.ServerIdentity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data
 	} else {
-		dbg.Lvl1(p.Entity(), "carried on key switching.")
+		log.Lvl1(p.ServerIdentity(), "carried on key switching.")
 		p.sendToNext(&keySwitchingTarget.KeySwitchedCipherMessage)
 	}
 
@@ -128,6 +128,6 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 func (p *KeySwitchingProtocol) sendToNext(msg interface{}) {
 	err := p.SendTo(p.nextNodeInCircuit, msg)
 	if err != nil {
-		dbg.Lvl1("Had an error sending a message: ", err)
+		log.Lvl1("Had an error sending a message: ", err)
 	}
 }

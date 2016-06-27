@@ -2,16 +2,16 @@ package medco
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/lib/medco"
-	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/network"
 )
 
 var suite = network.Suite
 var grpattr = DeterministCipherText{suite.Point().Base()}
-var clientPrivate = suite.Secret().One() //one -> to have the same for each node
+var clientPrivate = suite.Scalar().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
 func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector){
@@ -63,14 +63,14 @@ func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 
 func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	sim.CreateEntityList(sc, hosts, 20)
+	sim.CreateRoster(sc, hosts, 20)
 	err := sim.CreateTree(sc)
 
 	if err != nil {
 		return nil, err
 	}
 
-	dbg.Lvl1("Begin simulation")
+	log.Lvl1("Begin simulation")
 
 	return sc, nil
 
@@ -79,7 +79,7 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"PrivateAggregateSimul")
 		if err != nil {
 			return err
@@ -95,9 +95,9 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 		result := <-root.ProtocolInstance().(*PrivateAggregateProtocol).FeedbackChannel
 		round.Record()
 
-		dbg.LLvl1("RESULT SIZE: ", len(result.GroupedData))
+		log.LLvl1("RESULT SIZE: ", len(result.GroupedData))
 		for i,v := range result.GroupedData{
-			dbg.Lvl1(i, " ", DecryptIntVector(clientPrivate, &v))
+			log.Lvl1(i, " ", DecryptIntVector(clientPrivate, &v))
 		}
 	}
 

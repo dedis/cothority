@@ -2,13 +2,13 @@ package medco
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/random"
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 
-	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/network"
 )
 const NUM_ATTR_DET = 3
 const NUM_VECT_DET = 2
@@ -36,14 +36,14 @@ func NewDeterministicSwitchingSimulation(config string) (sda.Simulation, error) 
 
 func (sim *DeterministicSwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	sim.CreateEntityList(sc, hosts, 20)
+	sim.CreateRoster(sc, hosts, 20)
 	err := sim.CreateTree(sc)
 
 	if err != nil {
 		return nil, err
 	}
 
-	dbg.Lvl1("Begin test encrypted data generation")
+	log.Lvl1("Begin test encrypted data generation")
 
 	return sc, nil
 }
@@ -51,7 +51,7 @@ func (sim *DeterministicSwitchingSimulation) Setup(dir string, hosts []string) (
 
 func (sim *DeterministicSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"DeterministicSwitchingSimul")
 		if err != nil {
 			return err
@@ -73,9 +73,9 @@ func (sim *DeterministicSwitchingSimulation) Run(config *sda.SimulationConfig) e
 			}
 		}
 		if output{
-			dbg.LLvl1("Test passed")
+			log.LLvl1("Test passed")
 		}
-		//dbg.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))*/
+		//log.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))*/
 
 	}
 
@@ -87,7 +87,7 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 	pap := protocol.(*DeterministicSwitchingProtocol)
 
 	if (tni.Index() == 0) {
-		aggregateKey := pap.EntityList().Aggregate
+		aggregateKey := pap.Roster().Aggregate
 
 		ciphertexts := make(map[TempID]CipherVector)
 
@@ -106,8 +106,7 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		pap.TargetOfSwitch = &ciphertexts
 	}
-
-	tempKey := network.Suite.Secret().Pick(random.Stream)
+	tempKey := network.Suite.Scalar().Pick(random.Stream)
 	pap.SurveyPHKey = &tempKey
 
 	return pap, err

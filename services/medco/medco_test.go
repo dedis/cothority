@@ -1,18 +1,18 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	"testing"
 	"time"
-	libmedco "github.com/dedis/cothority/lib/medco"
+	."github.com/dedis/cothority/services/medco/libmedco"
 )
 
 func TestServiceMedco(t *testing.T) {
 	//t.Skip()
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 1)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -23,7 +23,7 @@ func TestServiceMedco(t *testing.T) {
 	client := medco.NewMedcoClient(el.List[0])
 
 
-	surveyDesc := libmedco.SurveyDescription{1,10}
+	surveyDesc := SurveyDescription{1,10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
 	if err != nil {
 		t.Fatal("Service did not start.")
@@ -31,7 +31,7 @@ func TestServiceMedco(t *testing.T) {
 
 	<-time.After(0*time.Second)
 
-	dbg.Lvl1("Sending response data... ")
+	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.MedcoAPI, 10)
 	for i := 0; i < 10; i++ {
 		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
@@ -49,8 +49,8 @@ func TestServiceMedco(t *testing.T) {
 		t.Fatal("Service could not output the results.")
 	}
 
-	dbg.Lvl1("Service output:")
+	log.Lvl1("Service output:")
 	for i, _ := range *grp {
-		dbg.Lvl1(i, ")", (*grp)[i], "->", (*aggr)[i])
+		log.Lvl1(i, ")", (*grp)[i], "->", (*aggr)[i])
 	}
 }

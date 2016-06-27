@@ -1,10 +1,10 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"reflect"
 	_ "reflect"
@@ -48,13 +48,13 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 	//mapi[TempID(3)] = testCipherVect1
 
 	// Generate client key
-	clientPrivate := suite.Secret().Pick(random.Stream)
+	clientPrivate := suite.Scalar().Pick(random.Stream)
 	//clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
 	protocol.TargetOfSwitch = &mapi
 	protocol.SurveyPHKey = &clientPrivate
 
-	dbg.LLvl1(protocol.SurveyPHKey)
+	log.LLvl1(protocol.SurveyPHKey)
 	feedback := protocol.FeedbackChannel
 
 	go protocol.StartProtocol()
@@ -64,9 +64,9 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 	select {
 	case encryptedResult := <-feedback:
 		resultDet1 = encryptedResult[TempID(1)]
-		dbg.Lvl1("Recieved results", resultDet1)
+		log.Lvl1("Recieved results", resultDet1)
 		resultDet2 = encryptedResult[TempID(2)]
-		dbg.Lvl1("Recieved results", resultDet2)
+		log.Lvl1("Recieved results", resultDet2)
 		if !reflect.DeepEqual(resultDet1, resultDet2) {
 			t.Fatal("Wrong results, expected", resultDet1, "but got", resultDet2)
 		}
@@ -95,14 +95,14 @@ func TestProbabilisticSwitching5Nodes(t *testing.T) {
 	//mapi[TempID(3)] = testCipherVect1
 
 	// Generate client key
-	clientPrivate := suite.Secret().Pick(random.Stream)
+	clientPrivate := suite.Scalar().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
 	protocol1.TargetOfSwitch = &mapi
 	protocol1.SurveyPHKey = &clientPrivate
 	protocol1.TargetPublicKey = &clientPublic
 
-	dbg.LLvl1(protocol1.SurveyPHKey)
+	log.LLvl1(protocol1.SurveyPHKey)
 	feedback := protocol1.FeedbackChannel
 	
 	go protocol1.StartProtocol()
@@ -113,11 +113,11 @@ func TestProbabilisticSwitching5Nodes(t *testing.T) {
 	case encryptedResult := <-feedback:
 		cv1 := encryptedResult[TempID(1)]
 		res := DecryptIntVector(clientPrivate, &cv1)
-		dbg.Lvl1("Recieved results", res)
+		log.Lvl1("Recieved results", res)
 		cv2 := encryptedResult[TempID(2)]
 		res1 := DecryptIntVector(clientPrivate, &cv2)
-		dbg.Lvl1("Recieved results", res1)
-		dbg.LLvl1("values in the test are not consistent, TODO but works")
+		log.Lvl1("Recieved results", res1)
+		log.LLvl1("values in the test are not consistent, TODO but works")
 		//if reflect.DeepEqual(res, res1) {
 			//t.Fatal("Wrong results, expected", res, "but got", res1)
 		//}

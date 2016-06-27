@@ -1,25 +1,25 @@
-package medco_test
+package libmedco_test
 
 import (
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"reflect"
 	"testing"
-	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
 )
 
 var suite = network.Suite
 
-func genKey() (secKey abstract.Secret, pubKey abstract.Point) {
-	secKey = suite.Secret().Pick(random.Stream)
+func genKey() (secKey abstract.Scalar, pubKey abstract.Point) {
+	secKey = suite.Scalar().Pick(random.Stream)
 	pubKey = suite.Point().Mul(suite.Point().Base(), secKey)
 	return
 }
 
-func genKeys(n int) (abstract.Point, []abstract.Secret, []abstract.Point) {
-	priv := make([]abstract.Secret, n)
+func genKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
+	priv := make([]abstract.Scalar, n)
 	pub := make([]abstract.Point, n)
 	group := suite.Point().Null()
 	for i := 0; i < n; i ++ {
@@ -105,7 +105,7 @@ func TestCryptoDeterministicSwitching(t *testing.T) {
 	dec := suite.Point()
 	for i, v := range dcv {
 		dec.Sub(v.C, phMasterKey)
-		need := suite.Point().Mul(suite.Point().Base(), suite.Secret().SetInt64(target[i]))
+		need := suite.Point().Mul(suite.Point().Base(), suite.Scalar().SetInt64(target[i]))
 		assert.True(t, dec.Equal(need))
 	}
 }
@@ -137,7 +137,7 @@ func TestCryptoKeySwitching(t *testing.T) {
 	}
 
 	res := DecryptIntVector(newPrivate, &kscv)
-	//dbg.Lvl1(res)
+	//log.Lvl1(res)
 	assert.True(t, reflect.DeepEqual(res, target))
 
 }

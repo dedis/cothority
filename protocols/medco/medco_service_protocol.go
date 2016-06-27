@@ -1,11 +1,11 @@
 package medco
 
 import (
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/sda"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/log"
+	."github.com/dedis/cothority/services/medco/libmedco"
 )
 
 const MEDCO_SERVICE_PROTOCOL_NAME = "MedcoServiceProtocol"
@@ -17,13 +17,13 @@ func init() {
 }
 
 type MedcoServiceInterface interface {
-	DeterministicSwitchingPhase(medco.SurveyID) error
-	AggregationPhase(medco.SurveyID) error
-	KeySwitchingPhase(medco.SurveyID) error
+	DeterministicSwitchingPhase(SurveyID) error
+	AggregationPhase(SurveyID) error
+	KeySwitchingPhase(SurveyID) error
 }
 
 type TriggerFlushCollectedDataMessage struct {
-	SurveyID medco.SurveyID
+	SurveyID SurveyID
 }
 type DoneFlushCollectedDataMessage struct {}
 type DoneProcessingMessage struct {}
@@ -47,7 +47,7 @@ type MedcoServiceProtocol struct {
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance MedcoServiceInterface
-	TargetSurvey *medco.Survey
+	TargetSurvey *Survey
 }
 
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -72,7 +72,7 @@ func (p *MedcoServiceProtocol) Start() error {
 		return errors.New("No Target Survey ID pointer provided")
 	}
 
-	dbg.Lvl1(p.Entity(), "started a Medco Service Protocol.")
+	log.Lvl1(p.ServerIdentity(), "started a Medco Service Protocol.")
 	p.Broadcast(&TriggerFlushCollectedDataMessage{p.TargetSurvey.ID})
 
 	return nil

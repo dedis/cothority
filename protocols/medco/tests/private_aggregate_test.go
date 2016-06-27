@@ -1,11 +1,11 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	_ "reflect"
 	"testing"
@@ -16,7 +16,7 @@ import (
 //aggregateKey := entityList.Aggregate
 // Generate client key
 var suite = network.Suite
-var clientPrivate = suite.Secret().Pick(random.Stream)
+var clientPrivate = suite.Scalar().Pick(random.Stream)
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 var grpattr1 = DeterministCipherText{suite.Point().Base()}
 var grpattr2 = DeterministCipherText{suite.Point().Null()}
@@ -92,11 +92,11 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 
 	select {
 	case encryptedResult := <-feedback:
-		dbg.Lvl1("Recieved results:")
+		log.Lvl1("Recieved results:")
 		resultData := make(map[GroupingKey][]int64)
 		for k,v := range encryptedResult.GroupedData {
 			resultData[k] = DecryptIntVector(clientPrivate, &v)
-			dbg.Lvl1(k, resultData[k])
+			log.Lvl1(k, resultData[k])
 		}
 		for k,v1 := range expectedGroups {
 			if v2, ok := encryptedResult.Groups[k]; ok {

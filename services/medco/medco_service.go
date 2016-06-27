@@ -2,11 +2,11 @@ package medco
 
 import (
 	"github.com/btcsuite/goleveldb/leveldb/errors"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 )
@@ -30,7 +30,7 @@ type MedcoService struct {
 	//currentSurveyID SurveyID
 }
 
-func NewMedcoService(c sda.Context, path string) sda.Service {
+func NewMedcoService(c *sda.Context, path string) sda.Service {
 	newMedCoInstance := &MedcoService{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		homePath:         path,
@@ -41,49 +41,48 @@ func NewMedcoService(c sda.Context, path string) sda.Service {
 	return newMedCoInstance
 }
 
-func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.Entity, recq *SurveyCreationQuery) (network.ProtocolMessage, error) {
-
-	dbg.Lvl1(mcs.Entity(), "received a Survey Creation Query")
+func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
+	log.Lvl1(mcs.ServerIdentity(), "received a Survey Creation Query")
 	if recq.SurveyID == nil {
 		newID := SurveyID(uuid.NewV4().String())
 		recq.SurveyID = &newID
 
-		mcs.SendISMOthers(&recq.EntityList, recq)
+		mcs.SendISMOthers(&recq.Roster, recq)
 
-		dbg.Lvl1(mcs.Entity(), "initiated the survey", newID)
+		log.Lvl1(mcs.ServerIdentity(), "initiated the survey", newID)
 	}
 
 	mcs.survey =  Survey{
 		SurveyStore: NewSurveyStore(),
 		ID: *recq.SurveyID,
-		EntityList: recq.EntityList,
-		SurveyPHKey: network.Suite.Secret().Pick(random.Stream),
+		Roster: recq.Roster,
+		SurveyPHKey: network.Suite.Scalar().Pick(random.Stream),
 		ClientPublic: nil,
 		SurveyDescription: recq.SurveyDescription,
 	}
-	dbg.Lvl1(mcs.Entity(), "created the survey", *recq.SurveyID)
+	log.Lvl1(mcs.ServerIdentity(), "created the survey", *recq.SurveyID)
 
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
 
-func (mcs *MedcoService) HandleSurveyResponseData(e *network.Entity, resp *SurveyResponseQuery) (network.ProtocolMessage, error) {
-	dbg.Lvl1(mcs.Entity(), "recieved response data for survey ",resp.SurveyID)
+func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
+	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ",resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {
 		mcs.survey.InsertClientResponse(resp.ClientResponse)
 		return &ServiceResponse{"1"}, nil
 	}
-	dbg.Lvl1(mcs.Entity(),"does not know about this survey!")
+	log.Lvl1(mcs.ServerIdentity(),"does not know about this survey!")
 	return &ServiceResponse{"2"}, nil
 }
 
-func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.Entity, resq *SurveyResultsQuery) (network.ProtocolMessage, error) {
+func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
 
-	dbg.Lvl1(mcs.Entity(), "recieved a survey result query from", e)
+	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
 	mcs.survey.ClientPublic = resq.ClientPublic
 	pi,_ := mcs.startProtocol(medco.MEDCO_SERVICE_PROTOCOL_NAME, resq.SurveyID)
 
 	<- pi.(*medco.MedcoServiceProtocol).FeedbackChannel
-	dbg.Lvl1(mcs.Entity(), "completed the query processing...")
+	log.Lvl1(mcs.ServerIdentity(), "completed the query processing...")
 	return &SurveyResultResponse{mcs.survey.PollDeliverableResults()}, nil
 }
 
@@ -135,7 +134,7 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 
 func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.ProtocolInstance, error) {
 	//dbg.Printf("%#v",survey)
-	tree := mcs.survey.EntityList.GenerateNaryTreeWithRoot(2, mcs.Entity())
+	tree := mcs.survey.Roster.GenerateNaryTreeWithRoot(2, mcs.ServerIdentity())
 	tni := mcs.NewTreeNodeInstance(tree, tree.Root, name)
 	pi , err := mcs.NewProtocol(tni, nil)
 	mcs.RegisterProtocolInstance(pi)

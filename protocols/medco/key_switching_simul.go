@@ -2,11 +2,11 @@ package medco
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/random"
-	. "github.com/dedis/cothority/lib/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 
 	"reflect"
 )
@@ -35,14 +35,14 @@ func NewKeySwitchingSimulation(config string) (sda.Simulation, error) {
 
 func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	sim.CreateEntityList(sc, hosts, 20)
+	sim.CreateRoster(sc, hosts, 20)
 	err := sim.CreateTree(sc)
 
 	if err != nil {
 		return nil, err
 	}    // global variable?
 
-	dbg.Lvl1("Begin test encrypted data generation")
+	log.Lvl1("Begin test encrypted data generation")
 
 	return sc, nil
 }// Run when all node ready , run as a node ?
@@ -50,7 +50,7 @@ func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.Simul
 
 func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"KeySwitching")
 		if err != nil {
 			return err
@@ -58,11 +58,11 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 
 		root := rooti.(*KeySwitchingProtocol)
 		suite := root.Suite()
-		aggregateKey := root.EntityList().Aggregate
+		aggregateKey := root.Roster().Aggregate
 
 		ciphertexts := make(map[TempID]CipherVector)
 
-		//dbg.Lvl1("ciphertexts",ciphertexts)
+		//log.Lvl1("ciphertexts",ciphertexts)
 
 		var tab []int64
 		for i := 0; i < NUM_ATTR; i++{
@@ -79,7 +79,7 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 
 
 
-		clientSecret  := suite.Secret().Pick(random.Stream)
+		clientSecret  := suite.Scalar().Pick(random.Stream)
 		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 
 		root.ProtocolInstance().(*KeySwitchingProtocol).TargetPublicKey = &clientPublic
@@ -94,14 +94,14 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		for _,v := range result {
 			val1 := DecryptIntVector(clientSecret, &v)
 			if !reflect.DeepEqual(val1, tab){
-				dbg.Errorf("Not expected results, got ", val1, " & ", tab)
+				log.Errorf("Not expected results, got ", val1, " & ", tab)
 				output = false
 			}
 		}
 		if output{
-			dbg.LLvl1("Test passed")
+			log.LLvl1("Test passed")
 		}
-		//dbg.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))
+		//log.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))
 
 	}
 

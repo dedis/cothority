@@ -1,9 +1,9 @@
-package medco
+package libmedco
 
 import (
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
@@ -65,7 +65,7 @@ func NewDeterministicCipherVector(length int) *DeterministCipherVector {
 
 func EncryptPoint(pubkey abstract.Point, M abstract.Point) *CipherText {
 	B := suite.Point().Base()
-	k := suite.Secret().Pick(random.Stream) // ephemeral private key
+	k := suite.Scalar().Pick(random.Stream) // ephemeral private key
 	// ElGamal-encrypt the point to produce ciphertext (K,C).
 	K := suite.Point().Mul(B, k)      // ephemeral DH public key
 	S := suite.Point().Mul(pubkey, k) // ephemeral DH shared secret
@@ -89,7 +89,7 @@ func EncryptBytes(pubkey abstract.Point, message []byte) (*CipherText, error) {
 // EncryptInt encodes i as iB, encrypt it into a CipherText and returns a pointer to it
 func EncryptInt(pubkey abstract.Point, integer int64) *CipherText {
 	B := suite.Point().Base()
-	i := suite.Secret().SetInt64(integer)
+	i := suite.Scalar().SetInt64(integer)
 	M := suite.Point().Mul(B, i)
 	return EncryptPoint(pubkey, M)
 }
@@ -111,18 +111,18 @@ func NullCipherVector(length int, pubkey abstract.Point) *CipherVector {
 // Decryption
 //______________________________________________________________________________________________________________________
 
-func DecryptPoint(prikey abstract.Secret, c CipherText) abstract.Point {
+func DecryptPoint(prikey abstract.Scalar, c CipherText) abstract.Point {
 	S := suite.Point().Mul(c.K, prikey) // regenerate shared secret
 	M := suite.Point().Sub(c.C, S)      // use to un-blind the message
 	return M
 }
 
-func DecryptInt(prikey abstract.Secret, cipher CipherText) int64 {
+func DecryptInt(prikey abstract.Scalar, cipher CipherText) int64 {
 	M := DecryptPoint(prikey,cipher)
 	return discreteLog(M)
 }
 
-func DecryptIntVector(prikey abstract.Secret, cipherVector *CipherVector) []int64 {
+func DecryptIntVector(prikey abstract.Scalar, cipherVector *CipherVector) []int64 {
 	result := make([]int64, len(*cipherVector))
 	for i, c := range (*cipherVector) {
 		result[i] = DecryptInt(prikey, c)
@@ -165,13 +165,13 @@ func (c *CipherText) ReplaceContribution(cipher *CipherText, old, new abstract.P
 
 
 // DeterministicSwitching perform one step in the deterministic switching process and store result in reciever
-func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract.Secret, phContrib abstract.Point) *CipherText {
+func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract.Scalar, phContrib abstract.Point) *CipherText {
 	egContrib := suite.Point().Mul(cipher.K, private)
 	c.ReplaceContribution(cipher, egContrib, phContrib)
 	return c
 }
 
-func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abstract.Secret, phContrib abstract.Point) *CipherVector {
+func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abstract.Scalar, phContrib abstract.Point) *CipherVector {
 	for i,c := range *cipher {
 		(*cv)[i].DeterministicSwitching(&c, private, phContrib)
 	}
@@ -179,7 +179,7 @@ func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abs
 }
 
 func (c *CipherText) ProbabilisticSwitching(cipher *CipherText, PHContrib abstract.Point, targetPublic abstract.Point) *CipherText {
-	r := suite.Secret().Pick(random.Stream)
+	r := suite.Scalar().Pick(random.Stream)
 	EGEphemContrib := suite.Point().Mul(suite.Point().Base(), r)
 	EGContrib := suite.Point().Mul(targetPublic, r)
 	c.ReplaceContribution(cipher, PHContrib, EGContrib)
@@ -196,8 +196,8 @@ func (cv *CipherVector) ProbabilisticSwitching(cipher *CipherVector, phContrib, 
 }
 
 
-func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newKey abstract.Point, private abstract.Secret) *CipherText {
-	r := suite.Secret().Pick(random.Stream)
+func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newKey abstract.Point, private abstract.Scalar) *CipherText {
+	r := suite.Scalar().Pick(random.Stream)
 	oldContrib := suite.Point().Mul(originalEphemeralKey, private)
 	newContrib := suite.Point().Mul(newKey, r)
 	ephemContrib := suite.Point().Mul(suite.Point().Base(), r)
@@ -206,7 +206,7 @@ func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newK
 	return c
 }
 
-func (cv *CipherVector) KeySwitching(cipher *CipherVector, originalEphemeralKeys *[]abstract.Point, newKey abstract.Point, private abstract.Secret) *CipherVector {
+func (cv *CipherVector) KeySwitching(cipher *CipherVector, originalEphemeralKeys *[]abstract.Point, newKey abstract.Point, private abstract.Scalar) *CipherVector {
 	for i, c := range *cipher {
 		(*cv)[i].KeySwitching(&c, (*originalEphemeralKeys)[i], newKey, private)
 	}

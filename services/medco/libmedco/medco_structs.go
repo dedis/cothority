@@ -1,9 +1,9 @@
-package medco
+package libmedco
 
 import (
 	"strings"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/sda"
 	//"reflect"
 )
 
@@ -24,8 +24,8 @@ type SurveyID string
 type Survey struct {
 	*SurveyStore
 	ID SurveyID
-	EntityList   sda.EntityList
-	SurveyPHKey  abstract.Secret
+	Roster   sda.Roster
+	SurveyPHKey  abstract.Scalar
 	ClientPublic abstract.Point
 	SurveyDescription SurveyDescription
 }
