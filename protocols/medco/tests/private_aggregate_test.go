@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/random"
 	_ "reflect"
 	"testing"
@@ -15,6 +15,7 @@ import (
 
 //aggregateKey := entityList.Aggregate
 // Generate client key
+var suite = network.Suite
 var clientPrivate = suite.Secret().Pick(random.Stream)
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 var grpattr1 = DeterministCipherText{suite.Point().Base()}

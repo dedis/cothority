@@ -1,4 +1,4 @@
-package medco_service
+package medco
 
 import (
 	"github.com/btcsuite/goleveldb/leveldb/errors"
@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 )

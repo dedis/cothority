@@ -1,17 +1,14 @@
-package medco_structs_test
+package medco_test
 
 import (
 	"fmt"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
 
 	"github.com/dedis/crypto/random"
 	"testing"
 
-	."github.com/dedis/cothority/services/medco/structs"
+	."github.com/dedis/cothority/lib/medco"
 )
-
-var suite = network.Suite
 
 func TestStoring(t *testing.T) {
 	dbg.Lvl1("Test beginning")
@@ -23,8 +20,8 @@ func TestStoring(t *testing.T) {
 	oneEnc := EncryptInt(pubKey, 1)  //*CipherText
 	oneBEnc := EncryptInt(pubKey, 1) //*CipherText
 
-	oneEnc.DeterministicSwitching(*oneEnc, secKey, pubKey)
-	oneBEnc.DeterministicSwitching(*oneBEnc, secKey, pubKey)
+	oneEnc.DeterministicSwitching(oneEnc, secKey, pubKey)
+	oneBEnc.DeterministicSwitching(oneBEnc, secKey, pubKey)
 
 	var dnull DeterministCipherText
 	var done DeterministCipherText

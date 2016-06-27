@@ -1,17 +1,17 @@
-package medco_service
+package medco
 
 import (
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"strconv"
 )
 
-type MedcoClient struct {
+type MedcoAPI struct {
 	*sda.Client
 	entryPoint        *network.Entity
 	localClientNumber int64
@@ -21,9 +21,9 @@ type MedcoClient struct {
 
 var localClientCounter = int64(0)
 
-func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
+func NewMedcoClient(entryPoint *network.Entity) *MedcoAPI {
 	keys := config.NewKeyPair(network.Suite)
-	newClient := &MedcoClient{
+	newClient := &MedcoAPI{
 		Client:            sda.NewClient(MEDCO_SERVICE_NAME),
 		entryPoint:        entryPoint,
 		localClientNumber: localClientCounter,
@@ -35,7 +35,7 @@ func NewMedcoClient(entryPoint *network.Entity) *MedcoClient {
 	return newClient
 }
 
-func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription SurveyDescription) (*SurveyID, error) {
+func (c *MedcoAPI) CreateSurvey(entities *sda.EntityList, surveyDescription SurveyDescription) (*SurveyID, error) {
 	dbg.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
 	if err != nil {
@@ -47,7 +47,7 @@ func (c *MedcoClient) CreateSurvey(entities *sda.EntityList, surveyDescription S
 	return &surveyID,nil
 }
 
-func (c *MedcoClient) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
+func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	dbg.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	encGrouping := EncryptIntVector(groupKey, grouping)
 	encAggregating := EncryptIntVector(groupKey, aggregating)
@@ -59,7 +59,7 @@ func (c *MedcoClient) SendSurveyResultsData(surveyID SurveyID, grouping, aggrega
 	return nil
 }
 
-func (c *MedcoClient) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
+func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
 		dbg.Error("Got error when querying the results: " + err.Error())
@@ -80,6 +80,6 @@ func (c *MedcoClient) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int6
 	}
 }
 
-func (c *MedcoClient) String() string {
+func (c *MedcoAPI) String() string {
 	return "[Client-" + strconv.FormatInt(c.localClientNumber, 10) + "]"
 }

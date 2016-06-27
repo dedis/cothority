@@ -1,13 +1,10 @@
-package medco_structs
+package medco
 
 import (
 	"fmt"
 )
 
-const AGGREGATION_ID int = 0
 const DEFAULT_GROUP = GroupingKey("DefaultGroup")
-
-type Survey_Database []SurveyStore
 
 type SurveyResult struct{
 	GroupingAttributes CipherVector

@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 )
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"

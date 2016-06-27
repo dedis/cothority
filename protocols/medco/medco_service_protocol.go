@@ -5,7 +5,7 @@ import (
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/services/medco/structs"
+	"github.com/dedis/cothority/lib/medco"
 )
 
 const MEDCO_SERVICE_PROTOCOL_NAME = "MedcoServiceProtocol"
@@ -17,13 +17,13 @@ func init() {
 }
 
 type MedcoServiceInterface interface {
-	DeterministicSwitchingPhase(medco_structs.SurveyID) error
-	AggregationPhase(medco_structs.SurveyID) error
-	KeySwitchingPhase(medco_structs.SurveyID) error
+	DeterministicSwitchingPhase(medco.SurveyID) error
+	AggregationPhase(medco.SurveyID) error
+	KeySwitchingPhase(medco.SurveyID) error
 }
 
 type TriggerFlushCollectedDataMessage struct {
-	SurveyID medco_structs.SurveyID
+	SurveyID medco.SurveyID
 }
 type DoneFlushCollectedDataMessage struct {}
 type DoneProcessingMessage struct {}
@@ -47,7 +47,7 @@ type MedcoServiceProtocol struct {
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance MedcoServiceInterface
-	TargetSurvey *medco_structs.Survey
+	TargetSurvey *medco.Survey
 }
 
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {

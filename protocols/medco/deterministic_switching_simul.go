@@ -6,8 +6,9 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/random"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 
+	"github.com/dedis/cothority/lib/network"
 )
 const NUM_ATTR_DET = 3
 const NUM_VECT_DET = 2
@@ -106,7 +107,7 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		pap.TargetOfSwitch = &ciphertexts
 	}
 
-	tempKey := suite.Secret().Pick(random.Stream)
+	tempKey := network.Suite.Secret().Pick(random.Stream)
 	pap.SurveyPHKey = &tempKey
 
 	return pap, err

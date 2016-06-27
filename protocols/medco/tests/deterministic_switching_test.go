@@ -4,14 +4,12 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	//"github.com/dedis/cothority/protocols/medco"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/random"
 	"reflect"
 	_ "reflect"
 	"testing"
 	"time"
-	//"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/protocols/medco"
 )
 

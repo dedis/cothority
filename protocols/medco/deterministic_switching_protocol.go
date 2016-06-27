@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/services/medco/structs"
+	."github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -101,7 +101,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
 
-	phContrib := suite.Point().Mul(suite.Point().Base(), *p.SurveyPHKey)
+	phContrib := p.Suite().Point().Mul(p.Suite().Point().Base(), *p.SurveyPHKey)
 	for k, v := range deterministicSwitchingTarget.Data {
 		v.DeterministicSwitching(&v, p.Private(), phContrib)
 		deterministicSwitchingTarget.Data[k] = v

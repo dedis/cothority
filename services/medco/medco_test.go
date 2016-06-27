@@ -1,12 +1,12 @@
-package medco_service_test
+package medco_test
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/cothority/services/medco"
 	"testing"
-	"github.com/dedis/cothority/services/medco/structs"
 	"time"
+	libmedco "github.com/dedis/cothority/lib/medco"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -20,10 +20,10 @@ func TestServiceMedco(t *testing.T) {
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := medco_service.NewMedcoClient(el.List[0])
+	client := medco.NewMedcoClient(el.List[0])
 
 
-	surveyDesc := medco_structs.SurveyDescription{1,10}
+	surveyDesc := libmedco.SurveyDescription{1,10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
 	if err != nil {
 		t.Fatal("Service did not start.")
@@ -32,9 +32,9 @@ func TestServiceMedco(t *testing.T) {
 	<-time.After(0*time.Second)
 
 	dbg.Lvl1("Sending response data... ")
-	dataHolder := make([]*medco_service.MedcoClient, 10)
+	dataHolder := make([]*medco.MedcoAPI, 10)
 	for i := 0; i < 10; i++ {
-		dataHolder[i] = medco_service.NewMedcoClient(el.List[i%5])
+		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
 		grp := make([]int64, 1)
 		aggr := make([]int64, 10)
 		grp[0] = int64(i%4)

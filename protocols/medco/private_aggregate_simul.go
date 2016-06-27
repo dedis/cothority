@@ -5,10 +5,11 @@ import (
 	"github.com/dedis/cothority/lib/dbg"
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
+	"github.com/dedis/cothority/lib/network"
 )
 
-
+var suite = network.Suite
 var grpattr = DeterministCipherText{suite.Point().Base()}
 var clientPrivate = suite.Secret().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)

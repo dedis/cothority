@@ -1,14 +1,13 @@
 package medco_test
 
 import (
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"reflect"
 	"testing"
 	"github.com/dedis/cothority/lib/network"
 	"github.com/stretchr/testify/assert"
-	"github.com/dedis/cothority/lib/dbg"
 )
 
 var suite = network.Suite
@@ -141,25 +140,6 @@ func TestCryptoKeySwitching(t *testing.T) {
 	//dbg.Lvl1(res)
 	assert.True(t, reflect.DeepEqual(res, target))
 
-}
-
-func TestCesPointsCon(t *testing.T) {
-	B := suite.Point().Base()
-	Bb := suite.Point().Base()
-	N := suite.Point().Null()
-
-	var A abstract.Point
-	A = suite.Point().Base()
-	dbg.Printf("B : %#v Bb: %#v A : %#v", B, Bb, A)
-	ret := suite.Point().Add(A, Bb)
-	dbg.Printf("B : %#v Bb: %#v A : %#v", B, Bb, A)
-	dbg.Printf("r : %#v", ret)
-	ret.Mul(N, suite.Secret().Zero())
-	dbg.Printf("A : %#v", A)
-
-	c := &CipherText{B, Bb}
-
-	dbg.Printf("c : %#v", c)
 }
 
 func TestEqualDeterministCipherText(t *testing.T) {

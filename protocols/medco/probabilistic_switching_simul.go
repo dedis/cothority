@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/cothority/lib/monitor"
 	"github.com/dedis/cothority/lib/sda"
 	"github.com/dedis/crypto/random"
-	. "github.com/dedis/cothority/services/medco/structs"
+	. "github.com/dedis/cothority/lib/medco"
 )
 const NUM_ATTR_PROB = 2
 const NUM_VECT_PROB = 10

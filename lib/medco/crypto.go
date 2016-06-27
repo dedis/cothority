@@ -1,4 +1,4 @@
-package medco_structs
+package medco
 
 import (
 	"errors"

@@ -2,13 +2,9 @@ package medco
 
 import (
 	"github.com/dedis/cothority/lib/dbg"
-	. "github.com/dedis/cothority/services/medco/structs"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/proof"
-	"github.com/dedis/cothority/lib/network"
 )
-
-var suite = network.Suite
 
 type CompleteProof struct {
 	//suite abstract.Suite
