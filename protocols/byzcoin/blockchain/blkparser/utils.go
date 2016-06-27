@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Get the Tx count, decode the variable length integer
@@ -31,12 +31,12 @@ func DecodeVariableLengthInteger(raw []byte) (cnt int, cnt_size int) {
 func GetShaString(data []byte) (res string) {
 	sha := sha256.New()
 	if _, err := sha.Write(data[:]); err != nil {
-		dbg.Error("Failed to hash data", err)
+		log.Error("Failed to hash data", err)
 	}
 	tmp := sha.Sum(nil)
 	sha.Reset()
 	if _, err := sha.Write(tmp); err != nil {
-		dbg.Error("Failed to hash data", err)
+		log.Error("Failed to hash data", err)
 	}
 	hash := sha.Sum(nil)
 	res = HashString(hash)

@@ -101,9 +101,8 @@ func Input(def string, args ...interface{}) string {
 	str = strings.TrimSpace(str)
 	if str == "" {
 		return def
-	} else {
-		return str
 	}
+	return str
 }
 
 // Inputf takes a format and calls Input

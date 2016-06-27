@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Blockchain is a struct representing a block chain
@@ -46,7 +46,7 @@ func (blockchain *Blockchain) NextBlock() (block *Block, err error) {
 		}
 		blockchain.CurrentId++
 		if err := blockchain.CurrentFile.Close(); err != nil {
-			dbg.Error("Couldn't close",
+			log.Error("Couldn't close",
 				blockchain.CurrentFile.Name(),
 				err)
 		}

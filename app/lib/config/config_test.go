@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 func TestMain(m *testing.M) {
-	dbg.MainTest(m)
+	log.MainTest(m)
 }
 
 var serverGroup string = `Description = "Default Dedis Cosi servers"
@@ -25,15 +25,15 @@ Description = "Ismail's server"`
 
 func TestReadGroupDescToml(t *testing.T) {
 	group, err := ReadGroupDescToml(strings.NewReader(serverGroup))
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 
-	if len(group.EntityList.List) != 2 {
-		t.Fatal("Should have 2 Entities")
+	if len(group.Roster.List) != 2 {
+		t.Fatal("Should have 2 ServerIdentities")
 	}
 	if len(group.description) != 2 {
 		t.Fatal("Should have 2 descriptions")
 	}
-	if group.description[group.EntityList.List[1]] != "Ismail's server" {
+	if group.description[group.Roster.List[1]] != "Ismail's server" {
 		t.Fatal("This should be Ismail's server")
 	}
 }
