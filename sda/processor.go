@@ -20,11 +20,11 @@ import (
 // wants to send.
 type ServiceProcessor struct {
 	functions map[network.MessageTypeID]interface{}
-	Context
+	*Context
 }
 
 // NewServiceProcessor initializes your ServiceProcessor.
-func NewServiceProcessor(c Context) *ServiceProcessor {
+func NewServiceProcessor(c *Context) *ServiceProcessor {
 	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
