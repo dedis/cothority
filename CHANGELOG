@@ -1,3 +1,6 @@
+160627 - 0.9.1
+	- Changed sda.Context from interface to structure
+	
 160622 - 0.9.0
 	- Renamed network.Entity -> network.ServerIdentity
 	- Renamed network.EntityList -> network.Roster
