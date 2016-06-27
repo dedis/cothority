@@ -62,8 +62,8 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 }
 
 func TestPrivateAggregate10Nodes(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 1)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
 	_ /*entityList*/, _, tree := local.GenTree(10, false, true, true)
 	sda.ProtocolRegisterName("PrivateAggregateTest", NewPrivateAggregateTest)

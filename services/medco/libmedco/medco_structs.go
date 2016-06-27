@@ -4,7 +4,6 @@ import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"strings"
-	//"reflect"
 )
 
 const MAX_GROUP_ATTR int = 2

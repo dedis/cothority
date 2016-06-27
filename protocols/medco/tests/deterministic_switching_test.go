@@ -17,9 +17,10 @@ var resultDet1 []DeterministCipherText
 var resultDet2 []DeterministCipherText
 
 func TestDeterministicSwitching5Nodes(t *testing.T) {
-	defer dbg.AfterTest(t)
+	t.Skip()
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
-	dbg.TestOutput(testing.Verbose(), 1)
+	log.TestOutput(testing.Verbose(), 1)
 	host, entityList, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
 
@@ -76,9 +77,10 @@ func TestDeterministicSwitching5Nodes(t *testing.T) {
 	}
 }
 func TestProbabilisticSwitching5Nodes(t *testing.T) {
-	defer dbg.AfterTest(t)
+	t.Skip()
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
-	dbg.TestOutput(testing.Verbose(), 1)
+	log.TestOutput(testing.Verbose(), 1)
 	host, _, tree := local.GenTree(5, false, true, true)
 	defer local.CloseAll()
 

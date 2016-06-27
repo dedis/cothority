@@ -13,9 +13,9 @@ import (
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
-	dbg.TestOutput(testing.Verbose(), 1)
+	log.TestOutput(testing.Verbose(), 1)
 	_, entityList, tree := local.GenTree(5, false, true, true)
 
 	defer local.CloseAll()
