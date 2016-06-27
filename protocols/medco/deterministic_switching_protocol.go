@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	."github.com/dedis/cothority/services/medco/libmedco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -79,7 +79,6 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	log.Lvl1(p.Name(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
 
-
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 
 	for k := range *p.TargetOfSwitch {
@@ -100,7 +99,6 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-
 	phContrib := p.Suite().Point().Mul(p.Suite().Point().Base(), *p.SurveyPHKey)
 	for k, v := range deterministicSwitchingTarget.Data {
 		v.DeterministicSwitching(&v, p.Private(), phContrib)
@@ -115,7 +113,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
 			}
 		}
-		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData),"row )")
+		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData), "row )")
 		p.FeedbackChannel <- deterministicSwitchedData
 	} else {
 		log.Lvl1(p.ServerIdentity(), "carried on deterministic switching.")

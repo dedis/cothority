@@ -1,13 +1,13 @@
 package libmedco_test
 
 import (
+	"github.com/dedis/cothority/network"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
-	"github.com/dedis/cothority/network"
-	"github.com/stretchr/testify/assert"
 )
 
 var suite = network.Suite
@@ -22,7 +22,7 @@ func genKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	priv := make([]abstract.Scalar, n)
 	pub := make([]abstract.Point, n)
 	group := suite.Point().Null()
-	for i := 0; i < n; i ++ {
+	for i := 0; i < n; i++ {
 		priv[i], pub[i] = genKey()
 		group.Add(group, pub[i])
 	}
@@ -74,9 +74,9 @@ func TestNullCipherVector(t *testing.T) {
 func TestHomomorphicOpp(t *testing.T) {
 	secKey, pubKey := genKey()
 
-	cv1 := EncryptIntVector(pubKey, []int64{0, 1, 2, 3,100})
+	cv1 := EncryptIntVector(pubKey, []int64{0, 1, 2, 3, 100})
 	cv2 := EncryptIntVector(pubKey, []int64{0, 0, 1, 100, 3})
-	target := []int64{0,1,3,103,103}
+	target := []int64{0, 1, 3, 103, 103}
 
 	cv3 := NewCipherVector(5).Add(*cv1, *cv2)
 
@@ -91,7 +91,7 @@ func TestCryptoDeterministicSwitching(t *testing.T) {
 	groupKey, private, _ := genKeys(N)
 	phMasterKey, _, phPrivate := genKeys(N)
 
-	target := []int64{0,0,2,3,2,5}
+	target := []int64{0, 0, 2, 3, 2, 5}
 	cv := EncryptIntVector(groupKey, target)
 
 	dcv := *cv
@@ -115,7 +115,7 @@ func TestCryptoKeySwitching(t *testing.T) {
 	groupKey, privates, _ := genKeys(N)
 	newPrivate, newPublic := genKey()
 
-	target := []int64{1,2,3,4,5}
+	target := []int64{1, 2, 3, 4, 5}
 	cv := EncryptIntVector(groupKey, target)
 
 	origEphem := make([]abstract.Point, len(*cv))

@@ -44,7 +44,7 @@ func (c *MedcoAPI) CreateSurvey(entities *sda.Roster, surveyDescription SurveyDe
 	}
 	log.Lvl1(c, "successfully created the survey with ID", resp.Msg.(ServiceResponse).SurveyID)
 	surveyID := resp.Msg.(ServiceResponse).SurveyID
-	return &surveyID,nil
+	return &surveyID, nil
 }
 
 func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {

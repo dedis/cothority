@@ -5,9 +5,10 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/crypto/random"
 	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/crypto/random"
 )
+
 const NUM_ATTR_PROB = 2
 const NUM_VECT_PROB = 10
 
@@ -24,10 +25,10 @@ type ProbabilisticSwitchingSimulation struct {
 
 func NewProbabilisticSwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &ProbabilisticSwitchingSimulation{}
-	_,err := toml.Decode(config, sim)
+	_, err := toml.Decode(config, sim)
 
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	return sim, nil
 }
@@ -49,7 +50,7 @@ func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (
 func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"ProbabilisticSwitchingSimul")
+		rooti, err := config.Overlay.CreateProtocolSDA(config.Tree, "ProbabilisticSwitchingSimul")
 		if err != nil {
 			return err
 		}
@@ -58,7 +59,7 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 		root.StartProtocol()
-		/*result*/_= <-root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).FeedbackChannel
+		/*result*/ _ = <-root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).FeedbackChannel
 		round.Record()
 		/*output := true
 		for i,v := range result {
@@ -79,13 +80,12 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 	return nil
 }
 
-
 func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewProbabilisticSwitchingProtocol(tni)
 	pap := protocol.(*ProbabilisticSwitchingProtocol)
 
-	if (tni.Index() == 0){
-		clientSecret  := suite.Scalar().Pick(random.Stream)
+	if tni.Index() == 0 {
+		clientSecret := suite.Scalar().Pick(random.Stream)
 		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 
 		aggregateKey := pap.Roster().Aggregate
@@ -93,18 +93,18 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		ciphertexts := make(map[TempID]DeterministCipherVector)
 
 		var tab []int64
-		for i := 0; i < NUM_ATTR_PROB; i++{
-			if i == 0{
+		for i := 0; i < NUM_ATTR_PROB; i++ {
+			if i == 0 {
 				tab = []int64{1}
 			} else {
 				tab = append(tab, 1)
 			}
 		}
 
-		for i := 0; i < NUM_VECT_PROB; i++{
+		for i := 0; i < NUM_VECT_PROB; i++ {
 			encrypted := *EncryptIntVector(aggregateKey, tab)
-			for ind,v := range encrypted {
-				if ind == 0{
+			for ind, v := range encrypted {
+				if ind == 0 {
 					ciphertexts[TempID(i)] = DeterministCipherVector{DeterministCipherText{v.C}}
 				} else {
 					ciphertexts[TempID(i)] = append(ciphertexts[TempID(i)], DeterministCipherText{v.C})

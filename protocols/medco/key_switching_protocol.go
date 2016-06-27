@@ -82,7 +82,7 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
-	for k,_ := range *p.TargetOfSwitch {
+	for k, _ := range *p.TargetOfSwitch {
 		initialCipherVector := *NewCipherVector(len((*p.TargetOfSwitch)[k]))
 		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
 		for i, c := range (*p.TargetOfSwitch)[k] {
@@ -111,7 +111,7 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 		v.KeySwitching(&v, &origEphemKeys, keySwitchingTarget.NewKey, p.Private())
 		keySwitchingTarget.Data[k] = v
 	}
-	
+
 	if p.IsRoot() {
 		log.Lvl1(p.ServerIdentity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data

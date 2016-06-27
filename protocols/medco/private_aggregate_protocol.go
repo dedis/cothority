@@ -97,7 +97,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 2. Ascending aggregation phase
 	groups, aggregatedData := p.ascendingAggregationPhase()
-	log.Lvl1(p.ServerIdentity(), "completed aggregation phase (", len(*aggregatedData),"groups )")
+	log.Lvl1(p.ServerIdentity(), "completed aggregation phase (", len(*aggregatedData), "groups )")
 
 	// 3. Result reporting
 	if p.IsRoot() {
@@ -124,7 +124,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 
 	if !p.IsLeaf() {
 		for _, childrenContribution := range <-p.ChildDataChannel {
-			for group,aggr := range childrenContribution.ChildData {
+			for group, aggr := range childrenContribution.ChildData {
 				(*p.Groups)[group] = childrenContribution.ChildGroups[group]
 				if localAggr, ok := (*p.GroupedData)[group]; ok {
 					(*p.GroupedData)[group] = *NewCipherVector(len(aggr)).Add(localAggr, aggr)

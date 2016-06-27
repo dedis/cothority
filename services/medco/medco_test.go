@@ -4,9 +4,9 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"testing"
 	"time"
-	."github.com/dedis/cothority/services/medco/libmedco"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -22,14 +22,13 @@ func TestServiceMedco(t *testing.T) {
 	// Send a request to the service
 	client := medco.NewMedcoClient(el.List[0])
 
-
-	surveyDesc := SurveyDescription{1,10}
+	surveyDesc := SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
 	if err != nil {
 		t.Fatal("Service did not start.")
 	}
 
-	<-time.After(0*time.Second)
+	<-time.After(0 * time.Second)
 
 	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.MedcoAPI, 10)
@@ -37,12 +36,12 @@ func TestServiceMedco(t *testing.T) {
 		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
 		grp := make([]int64, 1)
 		aggr := make([]int64, 10)
-		grp[0] = int64(i%4)
+		grp[0] = int64(i % 4)
 		aggr[i] = 3
 		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
 	}
 
-	<-time.After(0*time.Second)
+	<-time.After(0 * time.Second)
 
 	grp, aggr, err := client.GetSurveyResults(*surveyID)
 	if err != nil {

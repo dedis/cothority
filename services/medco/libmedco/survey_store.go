@@ -6,8 +6,8 @@ import (
 
 const DEFAULT_GROUP = GroupingKey("DefaultGroup")
 
-type SurveyResult struct{
-	GroupingAttributes CipherVector
+type SurveyResult struct {
+	GroupingAttributes    CipherVector
 	AggregatingAttributes CipherVector
 }
 
@@ -16,7 +16,7 @@ type SurveyStore struct {
 	DeliverableResults []SurveyResult   //d & 6
 
 	//ProbabilisticGroupingAttributes map[TempID]CipherVector //1
-	AggregatingAttributes           map[TempID]CipherVector //2
+	AggregatingAttributes map[TempID]CipherVector //2
 
 	LocGroupingAggregating map[GroupingKey]CipherVector //b & c
 	AfterAggrProto         map[GroupingKey]CipherVector
@@ -32,7 +32,7 @@ type SurveyStore struct {
 func NewSurveyStore() *SurveyStore {
 	return &SurveyStore{
 		//ProbabilisticGroupingAttributes: make(map[TempID]CipherVector),
-		AggregatingAttributes:           make(map[TempID]CipherVector),
+		AggregatingAttributes: make(map[TempID]CipherVector),
 
 		LocGroupingAggregating: make(map[GroupingKey]CipherVector),
 		LocGroupingGroups:      make(map[GroupingKey]GroupingAttributes),
@@ -121,7 +121,7 @@ func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]Groupin
 func (s *SurveyStore) HasNextAggregatedGroupsId() bool {
 	return (len(s.GroupedDeterministicGroupingAttributes) == 0)
 }
-func (s *SurveyStore) PollCothorityAggregatedGroupsId() map[TempID]GroupingAttributes{
+func (s *SurveyStore) PollCothorityAggregatedGroupsId() map[TempID]GroupingAttributes {
 	if len(s.AfterAggrProto) != 0 {
 		for key, value := range s.AfterAggrProto {
 			newId := s.nextId()
@@ -149,7 +149,7 @@ func (s *SurveyStore) PollCothorityAggregatedGroupsAttr() map[TempID]CipherVecto
 		s.AfterAggrProto = make(map[GroupingKey]CipherVector)
 		s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
 	}
-	groupAttrs:= s.GroupedAggregatingAttributes
+	groupAttrs := s.GroupedAggregatingAttributes
 	s.GroupedAggregatingAttributes = make(map[TempID]CipherVector)
 	return groupAttrs
 }
@@ -168,7 +168,6 @@ func (s *SurveyStore) PollDeliverableResults() []SurveyResult {
 	s.DeliverableResults = s.DeliverableResults[:0]
 	return results
 }
-
 
 func (s *SurveyStore) DisplayResults() {
 	for _, v := range s.DeliverableResults {

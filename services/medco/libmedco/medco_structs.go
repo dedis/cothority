@@ -1,9 +1,9 @@
 package libmedco
 
 import (
-	"strings"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/abstract"
+	"strings"
 	//"reflect"
 )
 
@@ -23,15 +23,15 @@ type SurveyID string
 
 type Survey struct {
 	*SurveyStore
-	ID SurveyID
-	Roster   sda.Roster
-	SurveyPHKey  abstract.Scalar
-	ClientPublic abstract.Point
+	ID                SurveyID
+	Roster            sda.Roster
+	SurveyPHKey       abstract.Scalar
+	ClientPublic      abstract.Point
 	SurveyDescription SurveyDescription
 }
 
 type SurveyDescription struct {
-	GroupingAttributesCount int32
+	GroupingAttributesCount    int32
 	AggregatingAttributesCount uint32
 }
 
@@ -40,14 +40,14 @@ func (ga *GroupingAttributes) Key() GroupingKey {
 	for _, a := range DeterministCipherVector(*ga) {
 		key = append(key, a.String())
 	}
-	return GroupingKey(strings.Join(key,""))
+	return GroupingKey(strings.Join(key, ""))
 }
 
-func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool{
+func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool {
 	if ga == nil || ga2 == nil {
 		return ga == ga2
 	}
-	for i,v := range DeterministCipherVector(*ga) {
+	for i, v := range DeterministCipherVector(*ga) {
 		temp := (*ga2)[i]
 		if !v.Equal(&temp) {
 			return false

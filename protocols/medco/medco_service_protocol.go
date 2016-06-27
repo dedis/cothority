@@ -1,11 +1,11 @@
 package medco
 
 import (
-	"github.com/dedis/cothority/sda"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
-	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/log"
-	."github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 )
 
 const MEDCO_SERVICE_PROTOCOL_NAME = "MedcoServiceProtocol"
@@ -25,8 +25,8 @@ type MedcoServiceInterface interface {
 type TriggerFlushCollectedDataMessage struct {
 	SurveyID SurveyID
 }
-type DoneFlushCollectedDataMessage struct {}
-type DoneProcessingMessage struct {}
+type DoneFlushCollectedDataMessage struct{}
+type DoneProcessingMessage struct{}
 
 type FlushCollectedDataStruct struct {
 	*sda.TreeNode
@@ -42,12 +42,12 @@ type MedcoServiceProtocol struct {
 	*sda.TreeNodeInstance
 
 	TriggerFlushCollectedData chan FlushCollectedDataStruct
-	DoneFlushCollectedData chan []DoneFlushCollectedDataStruct
+	DoneFlushCollectedData    chan []DoneFlushCollectedDataStruct
 
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance MedcoServiceInterface
-	TargetSurvey *Survey
+	TargetSurvey         *Survey
 }
 
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -55,7 +55,7 @@ func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 		FeedbackChannel: make(chan DoneProcessingMessage)}
 
 	chans := []interface{}{&protocol.TriggerFlushCollectedData, &protocol.DoneFlushCollectedData}
-	for _,c := range chans {
+	for _, c := range chans {
 		if err := protocol.RegisterChannel(c); err != nil {
 			return nil, errors.New("couldn't register data reference channel: " + err.Error())
 		}
@@ -80,7 +80,6 @@ func (p *MedcoServiceProtocol) Start() error {
 
 func (p *MedcoServiceProtocol) Dispatch() error {
 
-
 	// 1st phase (optional) : Grouping
 	if p.TargetSurvey.SurveyDescription.GroupingAttributesCount > 0 {
 		if p.IsRoot() {
@@ -94,12 +93,12 @@ func (p *MedcoServiceProtocol) Dispatch() error {
 	}
 
 	// 2nd phase: Aggregating
-	if (p.IsRoot()) {
+	if p.IsRoot() {
 		p.MedcoServiceInstance.AggregationPhase(p.TargetSurvey.ID)
 	}
 
 	// 4rd phase: Key Switching
-	if (p.IsRoot()) {
+	if p.IsRoot() {
 		p.MedcoServiceInstance.KeySwitchingPhase(p.TargetSurvey.ID)
 		p.FeedbackChannel <- DoneProcessingMessage{}
 	}

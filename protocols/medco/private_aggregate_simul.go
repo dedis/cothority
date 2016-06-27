@@ -4,9 +4,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
-	"github.com/dedis/cothority/network"
 )
 
 var suite = network.Suite
@@ -14,21 +14,20 @@ var grpattr = DeterministCipherText{suite.Point().Base()}
 var clientPrivate = suite.Scalar().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
-func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector){
+func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
 	testGAMap := make(map[GroupingKey]GroupingAttributes)
 	testCVMap := make(map[GroupingKey]CipherVector)
 
 	for i := 0; i < numberGroups; i++ {
 		newGrpattr := grpattr
-		(DeterministCipherText(newGrpattr).Point).Add(DeterministCipherText(newGrpattr).Point,DeterministCipherText(newGrpattr).Point)
+		(DeterministCipherText(newGrpattr).Point).Add(DeterministCipherText(newGrpattr).Point, DeterministCipherText(newGrpattr).Point)
 		groupAttributes := GroupingAttributes{grpattr, newGrpattr}
 
 		grpattr = newGrpattr
 
-
 		var tab []int64
-		for i := 0; i < numberAttributes; i++{
-			if i == 0{
+		for i := 0; i < numberAttributes; i++ {
+			if i == 0 {
 				tab = []int64{1}
 			} else {
 				tab = append(tab, 1)
@@ -53,13 +52,12 @@ type PrivateAggregateSimulation struct {
 
 func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 	sim := &PrivateAggregateSimulation{}
-	_,err := toml.Decode(config, sim)
+	_, err := toml.Decode(config, sim)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	return sim, nil
 }
-
 
 func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
@@ -76,15 +74,13 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 
 }
 
-
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA( config.Tree,"PrivateAggregateSimul")
+		rooti, err := config.Overlay.CreateProtocolSDA(config.Tree, "PrivateAggregateSimul")
 		if err != nil {
 			return err
 		}
-
 
 		root := rooti.(*PrivateAggregateProtocol)
 
@@ -96,15 +92,13 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 		round.Record()
 
 		log.LLvl1("RESULT SIZE: ", len(result.GroupedData))
-		for i,v := range result.GroupedData{
+		for i, v := range result.GroupedData {
 			log.Lvl1(i, " ", DecryptIntVector(clientPrivate, &v))
 		}
 	}
 
 	return nil
 }
-
-
 
 func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewPrivateAggregate(tni)
@@ -135,11 +129,10 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 		testGAMap[groupingAttrC.Key()] = groupingAttrC
 		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 1, 0, 1, 0})*/
 	default:
-		groupMap, attribMap = CreateDataSet(10,100)
+		groupMap, attribMap = CreateDataSet(10, 100)
 	}
 	pap.Groups = &groupMap
 	pap.GroupedData = &attribMap
 
 	return protocol, err
 }
-

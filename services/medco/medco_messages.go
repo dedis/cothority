@@ -2,10 +2,9 @@ package medco
 
 import (
 	"github.com/dedis/cothority/sda"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
-	."github.com/dedis/cothority/services/medco/libmedco"
 )
-
 
 type SurveyCreationQuery struct {
 	SurveyID *SurveyID
@@ -26,7 +25,6 @@ type SurveyResultsQuery struct {
 type ServiceResponse struct {
 	SurveyID SurveyID
 }
-
 
 type SurveyResultResponse struct {
 	Results []SurveyResult

@@ -3,14 +3,14 @@ package medco_test
 import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/medco"
+	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
+	"github.com/stretchr/testify/assert"
 	_ "reflect"
 	"testing"
 	"time"
-	"github.com/stretchr/testify/assert"
 )
 
 //aggregateKey := entityList.Aggregate
@@ -23,7 +23,6 @@ var grpattr2 = DeterministCipherText{suite.Point().Null()}
 var groupingAttrA = GroupingAttributes{grpattr1, grpattr1}
 var groupingAttrB = GroupingAttributes{grpattr2, grpattr2}
 var groupingAttrC = GroupingAttributes{grpattr1, grpattr2}
-
 
 func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
@@ -59,7 +58,6 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	protocol.Groups = &testGAMap
 	protocol.GroupedData = &testCVMap
 
-
 	return protocol, err
 }
 
@@ -78,8 +76,8 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 	protocol := p.(*medco.PrivateAggregateProtocol)
 
 	expectedGroups := map[GroupingKey]GroupingAttributes{groupingAttrA.Key(): groupingAttrA,
-								groupingAttrB.Key(): groupingAttrB,
-								groupingAttrC.Key(): groupingAttrC}
+		groupingAttrB.Key(): groupingAttrB,
+		groupingAttrC.Key(): groupingAttrC}
 
 	expectedResults := map[GroupingKey][]int64{groupingAttrA.Key(): {3, 5, 7, 9, 11},
 		groupingAttrB.Key(): {1, 2, 3, 4, 5},
@@ -94,11 +92,11 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 	case encryptedResult := <-feedback:
 		log.Lvl1("Recieved results:")
 		resultData := make(map[GroupingKey][]int64)
-		for k,v := range encryptedResult.GroupedData {
+		for k, v := range encryptedResult.GroupedData {
 			resultData[k] = DecryptIntVector(clientPrivate, &v)
 			log.Lvl1(k, resultData[k])
 		}
-		for k,v1 := range expectedGroups {
+		for k, v1 := range expectedGroups {
 			if v2, ok := encryptedResult.Groups[k]; ok {
 				assert.True(t, ok)
 				assert.True(t, v1.Equal(&v2))

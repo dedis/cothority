@@ -101,7 +101,7 @@ func SwitchKeyProof(suite abstract.Suite, k abstract.Scalar, s abstract.Scalar, 
 }
 
 func SwitchToProbProof(suite abstract.Suite, s abstract.Scalar, rj abstract.Scalar, newK abstract.Point, C1 abstract.Point, C2 abstract.Point) CompleteProof {
-	return SwitchKeyProof( suite, s, rj, suite.Point().Base(), newK, C1, C2)
+	return SwitchKeyProof(suite, s, rj, suite.Point().Base(), newK, C1, C2)
 	/*pred := CreatePredicate()
 
 	B1 := suite.Point().Neg(suite.Point().Base()) // B1 = -rjB
@@ -164,7 +164,7 @@ func SwitchCheckProof(cp CompleteProof) bool {
 }
 
 func SwitchCheckMapProofs(m map[TempID][]CompleteProof) bool {
-	for _,v := range m {
+	for _, v := range m {
 		if !VectSwitchCheckProof(v) {
 			log.Errorf("ATTENTION, false proof detected")
 			return false

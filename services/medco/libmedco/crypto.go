@@ -17,8 +17,7 @@ var currentGreatestInt int64 = 0
 var suite abstract.Suite = network.Suite
 
 type CipherText struct {
-	K, C  abstract.Point
-
+	K, C abstract.Point
 }
 
 type CipherVector []CipherText
@@ -27,9 +26,7 @@ type DeterministCipherText struct {
 	Point abstract.Point
 }
 
-
 type DeterministCipherVector []DeterministCipherText
-
 
 // Constructors
 //______________________________________________________________________________________________________________________
@@ -53,12 +50,11 @@ func NewDeterministicCipherText() *DeterministCipherText {
 
 func NewDeterministicCipherVector(length int) *DeterministCipherVector {
 	dcv := make(DeterministCipherVector, length)
-	for i:=0; i < length; i++ {
+	for i := 0; i < length; i++ {
 		dcv[i] = DeterministCipherText{suite.Point().Null()}
 	}
 	return &dcv
 }
-
 
 // Encryption
 //______________________________________________________________________________________________________________________
@@ -80,7 +76,7 @@ func EncryptBytes(pubkey abstract.Point, message []byte) (*CipherText, error) {
 
 	if len(remainder) > 0 {
 		return &CipherText{nil, nil},
-		errors.New(fmt.Sprintf("Message too long: %s (%d bytes too long).", string(message), len(remainder)))
+			errors.New(fmt.Sprintf("Message too long: %s (%d bytes too long).", string(message), len(remainder)))
 	}
 
 	return EncryptPoint(pubkey, M), nil
@@ -118,13 +114,13 @@ func DecryptPoint(prikey abstract.Scalar, c CipherText) abstract.Point {
 }
 
 func DecryptInt(prikey abstract.Scalar, cipher CipherText) int64 {
-	M := DecryptPoint(prikey,cipher)
+	M := DecryptPoint(prikey, cipher)
 	return discreteLog(M)
 }
 
 func DecryptIntVector(prikey abstract.Scalar, cipherVector *CipherVector) []int64 {
 	result := make([]int64, len(*cipherVector))
-	for i, c := range (*cipherVector) {
+	for i, c := range *cipherVector {
 		result[i] = DecryptInt(prikey, c)
 	}
 	return result
@@ -163,7 +159,6 @@ func (c *CipherText) ReplaceContribution(cipher *CipherText, old, new abstract.P
 	return c
 }
 
-
 // DeterministicSwitching perform one step in the deterministic switching process and store result in reciever
 func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract.Scalar, phContrib abstract.Point) *CipherText {
 	egContrib := suite.Point().Mul(cipher.K, private)
@@ -172,7 +167,7 @@ func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract
 }
 
 func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abstract.Scalar, phContrib abstract.Point) *CipherVector {
-	for i,c := range *cipher {
+	for i, c := range *cipher {
 		(*cv)[i].DeterministicSwitching(&c, private, phContrib)
 	}
 	return cv
@@ -187,14 +182,12 @@ func (c *CipherText) ProbabilisticSwitching(cipher *CipherText, PHContrib abstra
 	return c
 }
 
-
 func (cv *CipherVector) ProbabilisticSwitching(cipher *CipherVector, phContrib, targetPublic abstract.Point) *CipherVector {
-	for i,c := range *cipher {
+	for i, c := range *cipher {
 		(*cv)[i].ProbabilisticSwitching(&c, phContrib, targetPublic)
 	}
 	return cv
 }
-
 
 func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newKey abstract.Point, private abstract.Scalar) *CipherText {
 	r := suite.Scalar().Pick(random.Stream)
@@ -229,7 +222,6 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
 	return cv
 }
 
-
 func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
 	c.C.Sub(c1.C, c2.C)
 	c.K.Sub(c1.K, c2.K)
@@ -242,7 +234,6 @@ func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
 	}
 	return cv
 }
-
 
 // Representation
 //______________________________________________________________________________________________________________________
@@ -282,6 +273,3 @@ func (c CipherText) String() string {
 	}
 	return fmt.Sprintf("CipherText{%s,%s}", kstr, cstr)
 }
-
-
-

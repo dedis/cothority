@@ -3,13 +3,13 @@ package medco_test
 import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/protocols/medco"
+	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
+	"reflect"
 	"testing"
 	"time"
-	"reflect"
 )
 
 func TestKeySwitching5Nodes(t *testing.T) {
@@ -33,10 +33,8 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	expRes := []int64{1, 2, 3, 6}
 	testCipherVect := *EncryptIntVector(aggregateKey, expRes)
 
-
 	expRes1 := []int64{7, 8, 9, 7}
 	testCipherVect1 := *EncryptIntVector(aggregateKey, expRes1)
-
 
 	log.LLvl1(testCipherVect, suite)
 	var mapi map[TempID]CipherVector
