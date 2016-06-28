@@ -16,7 +16,6 @@ type KeySwitchedCipherMessage struct {
 	Data                  map[TempID]CipherVector
 	NewKey                abstract.Point
 	OriginalEphemeralKeys map[TempID][]abstract.Point
-	Proof                 map[TempID][]CompleteProof
 }
 
 //KeySwitchedCipherStruct node doing protocol and switching message
@@ -71,7 +70,6 @@ func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, err
 	return keySwitchingProtocol, nil
 }
 
-// Starts the protocol
 func (p *KeySwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
@@ -101,13 +99,11 @@ func (p *KeySwitchingProtocol) Start() error {
 	p.sendToNext(&KeySwitchedCipherMessage{
 		initialMap,
 		*p.TargetPublicKey,
-		p.originalEphemKeys,
-		map[TempID][]CompleteProof{}})
+		p.originalEphemKeys})
 
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
 func (p *KeySwitchingProtocol) Dispatch() error {
 
 	keySwitchingTarget := <-p.PreviousNodeInPathChannel

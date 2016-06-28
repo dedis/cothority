@@ -21,7 +21,7 @@ type ClientResponse struct {
 
 type SurveyID string
 
-//Survey represents a survey with the corresponding params. Each node should have one PH contribution per survey.
+//Survey represents a survey with the corresponding params. PH key is different for each server
 type Survey struct {
 	*SurveyStore
 	ID                SurveyID
@@ -31,14 +31,14 @@ type Survey struct {
 	SurveyDescription SurveyDescription
 }
 
-//SurveyDescription permits to define a survey by describing a client response format
+//SurveyDescription is currently only used to define a client response format
 type SurveyDescription struct {
 	GroupingAttributesCount    int32
 	AggregatingAttributesCount uint32
 }
 
 
-//Key permits to derive a key from grouping attributes (encrypted deterministically)
+//Key a map-friendly representation of grouping attributes to be used as keys
 func (ga *GroupingAttributes) Key() GroupingKey {
 	var key []string
 	for _, a := range DeterministCipherVector(*ga) {
@@ -47,7 +47,7 @@ func (ga *GroupingAttributes) Key() GroupingKey {
 	return GroupingKey(strings.Join(key, ""))
 }
 
-//Equal verifies equality between deterministic grouping attributes
+//Equal checks deterministic grouping attributes for equality
 func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool {
 	if ga == nil || ga2 == nil {
 		return ga == ga2
@@ -61,7 +61,7 @@ func (ga *GroupingAttributes) Equal(ga2 *GroupingAttributes) bool {
 	return true
 }
 
-//GroupingAttributesToDeterministicCipherVector converses grouping attributes to a deterministic vector object
+//GroupingAttributesToDeterministicCipherVector converts grouping attributes to a deterministic vector object
 func GroupingAttributesToDeterministicCipherVector(ga *map[TempID]GroupingAttributes) *map[TempID]DeterministCipherVector {
 	deterministicCipherVector := make(map[TempID]DeterministCipherVector, len(*ga))
 	for k := range *ga {
@@ -70,7 +70,7 @@ func GroupingAttributesToDeterministicCipherVector(ga *map[TempID]GroupingAttrib
 	return &deterministicCipherVector
 }
 
-//DeterministicCipherVectorToGroupingAttributes converses deterministic ciphervector to grouping attributes
+//DeterministicCipherVectorToGroupingAttributes converts deterministic ciphervector to grouping attributes
 func DeterministicCipherVectorToGroupingAttributes(dcv *map[TempID]DeterministCipherVector) *map[TempID]GroupingAttributes {
 	deterministicGroupAttributes := make(map[TempID]GroupingAttributes, len(*dcv))
 	for k := range *dcv {

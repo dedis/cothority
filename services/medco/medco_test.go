@@ -1,12 +1,11 @@
 package medco_test
 
 import (
+	"testing"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
-	"testing"
-	"time"
 )
 
 func TestServiceMedco(t *testing.T) {
@@ -28,8 +27,6 @@ func TestServiceMedco(t *testing.T) {
 		t.Fatal("Service did not start.")
 	}
 
-	<-time.After(0 * time.Second)
-
 	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.MedcoAPI, 10)
 	for i := 0; i < 10; i++ {
@@ -40,8 +37,6 @@ func TestServiceMedco(t *testing.T) {
 		aggr[i] = 3
 		dataHolder[i].SendSurveyResultsData(*surveyID, grp, aggr, el.Aggregate)
 	}
-
-	<-time.After(0 * time.Second)
 
 	grp, aggr, err := client.GetSurveyResults(*surveyID)
 	if err != nil {

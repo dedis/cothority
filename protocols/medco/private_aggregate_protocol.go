@@ -79,7 +79,6 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 	return privateAggregateProtocol, nil
 }
 
-// Starts the protocol
 func (p *PrivateAggregateProtocol) Start() error {
 	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
@@ -92,7 +91,6 @@ func (p *PrivateAggregateProtocol) Start() error {
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
 func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 1. Aggregation announcement phase

@@ -20,7 +20,6 @@ func init() {
 type ProbabilisticSwitchedMessage struct {
 	Data            map[TempID]CipherVector
 	TargetPublicKey abstract.Point
-	Proof           map[TempID][]CompleteProof
 }
 
 //ProbabilisticSwitchedStruct node and message
@@ -95,8 +94,7 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 			targetOfSwitch[k][i] = pc
 		}
 	}
-	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey,
-		map[TempID][]CompleteProof{}})
+	p.sendToNext(&ProbabilisticSwitchedMessage{targetOfSwitch, *p.TargetPublicKey})
 
 	return nil
 }

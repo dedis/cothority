@@ -18,12 +18,11 @@ func init() {
 	sda.ProtocolRegisterName(DETERMINISTIC_SWITCHING_PROTOCOL_NAME, NewDeterministSwitchingProtocol)
 }
 
-//DeterministicSwitchedMessage represents a deterministic switching message containing the processed ciphervector,
-//and corresponding data.
+//DeterministicSwitchedMessage represents a deterministic switching message containing the processed ciphervectors,
+//their original ephemeral keys
 type DeterministicSwitchedMessage struct {
 	Data                  map[TempID]CipherVector
 	OriginalEphemeralKeys map[TempID][]abstract.Point
-	Proof                 map[TempID][]CompleteProof
 }
 
 //DeterministicSwitchedStruct contains a sda treenode and a deterministic switching message
@@ -74,7 +73,6 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 	return deterministicSwitchingProtocol, nil
 }
 
-// Starts the protocol
 func (p *DeterministicSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
@@ -95,13 +93,11 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 	}
 	//forward message to next node
 	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch,
-		p.originalEphemKeys,
-		map[TempID][]CompleteProof{}})
+		p.originalEphemKeys})
 
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
 func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel

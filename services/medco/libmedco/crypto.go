@@ -69,7 +69,7 @@ func NewDeterministicCipherVector(length int) *DeterministCipherVector {
 // Encryption
 //______________________________________________________________________________________________________________________
 
-//EncryptPoint create an elliptic curve point from an integer
+//EncryptPoint creates an elliptic curve point from an integer and encrypt it using El-Gamal encryption
 func EncryptPoint(pubkey abstract.Point, M abstract.Point) *CipherText {
 	B := suite.Point().Base()
 	k := suite.Scalar().Pick(random.Stream) // ephemeral private key
@@ -80,7 +80,7 @@ func EncryptPoint(pubkey abstract.Point, M abstract.Point) *CipherText {
 	return &CipherText{K, C}
 }
 
-// EncryptBytes embeds the message into a curve point.
+// EncryptBytes embeds the message into a curve point with deterministic padding and encypts it using El-Gamal encryption
 func EncryptBytes(pubkey abstract.Point, message []byte) (*CipherText, error) {
 	// As we want to compare the encrypted points, we take a non-random stream
 	M, remainder := suite.Point().Pick(message, suite.Cipher([]byte(BYTES_TO_POINT_ENCODING_SEED)))
@@ -118,14 +118,14 @@ func NullCipherVector(length int, pubkey abstract.Point) *CipherVector {
 // Decryption
 //______________________________________________________________________________________________________________________
 
-//DecryptPoint derives an elliptic point for a ciphertext
+//DecryptPoint decrypts an elliptic point from an El-Gamal cipher text
 func DecryptPoint(prikey abstract.Scalar, c CipherText) abstract.Point {
 	S := suite.Point().Mul(c.K, prikey) // regenerate shared secret
 	M := suite.Point().Sub(c.C, S)      // use to un-blind the message
 	return M
 }
 
-//DecryptInt derives an integer for an elliptic curve point
+//DecryptInt decrypts an integer from an El-Gamal cipher text where integer are encoded in the exponent
 func DecryptInt(prikey abstract.Scalar, cipher CipherText) int64 {
 	M := DecryptPoint(prikey, cipher)
 	return discreteLog(M)
@@ -140,6 +140,7 @@ func DecryptIntVector(prikey abstract.Scalar, cipherVector *CipherVector) []int6
 	return result
 }
 
+// Brute-Forces the discrete log for integer decoding
 func discreteLog(P abstract.Point) int64 {
 	B := suite.Point().Base()
 	var Bi abstract.Point
@@ -228,14 +229,14 @@ func (cv *CipherVector) KeySwitching(cipher *CipherVector, originalEphemeralKeys
 // Homomorphic operations
 //______________________________________________________________________________________________________________________
 
-//Add two ciphertexts
+//Add two ciphertexts and stores result in reciever
 func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 	c.C.Add(c1.C, c2.C)
 	c.K.Add(c1.K, c2.K)
 	return c
 }
 
-//Add two ciphervectors
+//Add two ciphervectors and stores result in reciever
 func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
 	for i, _ := range cv1 {
 		(*cv)[i].Add(cv1[i], cv2[i])
@@ -243,14 +244,14 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
 	return cv
 }
 
-//Sub two ciphertexts
+//Sub two ciphertexts and stores result in reciever
 func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
 	c.C.Sub(c1.C, c2.C)
 	c.K.Sub(c1.K, c2.K)
 	return c
 }
 
-//Sub two cipherVectors
+//Sub two cipherVectors and stores result in reciever
 func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
 	for i, _ := range cv1 {
 		(*cv)[i].Sub(cv1[i], cv2[i])
@@ -261,12 +262,12 @@ func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
 // Representation
 //______________________________________________________________________________________________________________________
 
-//Equal verifies euqality between deterministic ciphertexts
+//Equal checks equality between deterministic ciphertexts
 func (dc *DeterministCipherText) Equal(dc2 *DeterministCipherText) bool {
 	return dc2.Point.Equal(dc.Point)
 }
 
-//Equal verifies euqality between deterministic ciphervector
+//Equal checks equality between deterministic ciphervector
 func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
 	if dcv == nil || dcv2 == nil {
 		return dcv == dcv2
@@ -279,7 +280,7 @@ func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
 	return true
 }
 
-//String defines string representation of deterministic ciphertext
+//String representation of deterministic ciphertext
 func (dc DeterministCipherText) String() string {
 	cstr := "<nil>"
 	if dc.Point != nil {
@@ -288,7 +289,7 @@ func (dc DeterministCipherText) String() string {
 	return fmt.Sprintf("DetCipherText{%s}", cstr)
 }
 
-//String defines string representation of ciphertext
+//String representation of ciphertext
 func (c CipherText) String() string {
 	cstr := "nil"
 	kstr := cstr

@@ -63,7 +63,7 @@ func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregatin
 	return nil
 }
 
-//Method GetSurveyResults to get the result from associated server. THen this response is decrypted
+//Method GetSurveyResults to get the result from associated server. Then this response is decrypted
 func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {

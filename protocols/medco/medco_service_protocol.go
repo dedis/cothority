@@ -16,7 +16,8 @@ func init() {
 	network.RegisterMessageType(DoneFlushCollectedDataMessage{})
 }
 
-//MedcoServiceInterface contains the 3 possible phases of a medco protocol
+//MedcoServiceInterface contains the 3 possible phases of a medco protocol. The service implements this interface so
+// the protocol can trigger these phases.
 type MedcoServiceInterface interface {
 	DeterministicSwitchingPhase(SurveyID) error
 	AggregationPhase(SurveyID) error
@@ -71,7 +72,6 @@ func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	return protocol, nil
 }
 
-//Start a medco protocol
 func (p *MedcoServiceProtocol) Start() error {
 
 	if p.MedcoServiceInstance == nil {
@@ -87,7 +87,6 @@ func (p *MedcoServiceProtocol) Start() error {
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
 func (p *MedcoServiceProtocol) Dispatch() error {
 
 	// 1st phase (optional) : Grouping

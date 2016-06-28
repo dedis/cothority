@@ -9,6 +9,7 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
+	"github.com/dedis/crypto/abstract"
 )
 
 const MEDCO_SERVICE_NAME = "MedCo"
@@ -22,13 +23,40 @@ func init() {
 	network.RegisterMessageType(&ServiceResponse{})
 }
 
+// Client Queries
+
+type SurveyCreationQuery struct {
+	SurveyID *SurveyID
+	sda.Roster
+	SurveyDescription
+}
+
+type SurveyResponseQuery struct {
+	SurveyID SurveyID
+	ClientResponse
+}
+
+type SurveyResultsQuery struct {
+	SurveyID     SurveyID
+	ClientPublic abstract.Point
+}
+
+// Service responses
+
+type ServiceResponse struct {
+	SurveyID SurveyID
+}
+
+type SurveyResultResponse struct {
+	Results []SurveyResult
+}
+
 //MedcoService defines a service in medco case with a survey
 type MedcoService struct {
 	*sda.ServiceProcessor
 	homePath string
 
-	survey Survey
-	//currentSurveyID SurveyID
+	survey Survey // For now, server only handles one survey
 }
 
 //NewMedcoService constructor which registers the needed messages
@@ -42,6 +70,9 @@ func NewMedcoService(c *sda.Context, path string) sda.Service {
 	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyCreationQuery)
 	return newMedCoInstance
 }
+
+// Queries Handlers definitions
+//=============================
 
 //HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating a corresponding survey
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
@@ -68,7 +99,8 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, re
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
 
-//HandleSurveyResponseData
+
+// HandleSurveyResponseData handles a survey answers submission by a subject
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ", resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {
@@ -76,9 +108,10 @@ func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, res
 		return &ServiceResponse{"1"}, nil
 	}
 	log.Lvl1(mcs.ServerIdentity(), "does not know about this survey!")
-	return &ServiceResponse{"2"}, nil
+	return &ServiceResponse{resp.SurveyID}, nil
 }
 
+// HandleSurveyResultsQuery handles the survey result query by the surveyor
 func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
 
 	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
@@ -137,7 +170,6 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 }
 
 func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.ProtocolInstance, error) {
-	//dbg.Printf("%#v",survey)
 	tree := mcs.survey.Roster.GenerateNaryTreeWithRoot(2, mcs.ServerIdentity())
 	tni := mcs.NewTreeNodeInstance(tree, tree.Root, name)
 	pi, err := mcs.NewProtocol(tni, nil)
