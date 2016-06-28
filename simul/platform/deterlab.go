@@ -321,7 +321,7 @@ func (d *Deterlab) Start(args ...string) error {
 func (d *Deterlab) Wait() error {
 	wait := d.CloseWait
 	if wait == 0 {
-		wait = 60000
+		wait = 600
 	}
 	if d.started {
 		log.Lvl3("Simulation is started")
