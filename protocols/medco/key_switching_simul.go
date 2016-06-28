@@ -7,23 +7,24 @@ import (
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
-
-	"reflect"
 )
 
-const NUM_ATTR = 100000
-const NUM_VECT = 1
+//number of ciphertexts in each vector to be switched
+const NUM_ATTR = 100
+//number of vectors to be switched
+const NUM_VECT = 10
 
-// we have 5 clients
 func init() {
 	sda.SimulationRegister("KeySwitching", NewKeySwitchingSimulation)
 
 }
 
+//KeySwitchingSimulation contains a simulation tree
 type KeySwitchingSimulation struct {
 	sda.SimulationBFTree
 }
 
+//NewKeySwitchingSimulation constructs a key switching simulation
 func NewKeySwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &KeySwitchingSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -32,8 +33,9 @@ func NewKeySwitchingSimulation(config string) (sda.Simulation, error) {
 		return nil, err
 	}
 	return sim, nil
-} // Send a file to all nodes ? Dir lisible dans Run et Protocol
+}
 
+//Setup creates a servers tree for the simulation
 func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -41,13 +43,14 @@ func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.Simul
 
 	if err != nil {
 		return nil, err
-	} // global variable?
+	}
 
-	log.Lvl1("Begin test encrypted data generation")
+	log.Lvl1("Setup done")
 
 	return sc, nil
-} // Run when all node ready , run as a node ?
+}
 
+//Run starts the simulation
 func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -60,9 +63,8 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		suite := root.Suite()
 		aggregateKey := root.Roster().Aggregate
 
+		//create dummy data
 		ciphertexts := make(map[TempID]CipherVector)
-
-		//log.Lvl1("ciphertexts",ciphertexts)
 
 		var tab []int64
 		for i := 0; i < NUM_ATTR; i++ {
@@ -82,24 +84,12 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 
 		root.ProtocolInstance().(*KeySwitchingProtocol).TargetPublicKey = &clientPublic
 		root.ProtocolInstance().(*KeySwitchingProtocol).TargetOfSwitch = &ciphertexts
-		//root.ProtocolInstance().(*KeySwitchingProtocol).originalEphemKeys =
 
+		//measure protocol runtime
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
-		root.StartProtocol() // problem is here!
-		result := <-root.ProtocolInstance().(*KeySwitchingProtocol).FeedbackChannel
+		root.StartProtocol()
+		<-root.ProtocolInstance().(*KeySwitchingProtocol).FeedbackChannel
 		round.Record()
-		output := true
-		for _, v := range result {
-			val1 := DecryptIntVector(clientSecret, &v)
-			if !reflect.DeepEqual(val1, tab) {
-				log.Errorf("Not expected results, got ", val1, " & ", tab)
-				output = false
-			}
-		}
-		if output {
-			log.LLvl1("Test passed")
-		}
-		//log.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))
 
 	}
 

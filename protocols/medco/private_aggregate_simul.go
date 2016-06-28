@@ -14,7 +14,7 @@ var grpattr = DeterministCipherText{suite.Point().Base()}
 var clientPrivate = suite.Scalar().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
-func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
+func createDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
 	testGAMap := make(map[GroupingKey]GroupingAttributes)
 	testCVMap := make(map[GroupingKey]CipherVector)
 
@@ -33,7 +33,9 @@ func CreateDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]Grou
 				tab = append(tab, 1)
 			}
 		}
+		//round := monitor.NewTimeMeasure("MEDCO_ENCRYPTION")
 		cipherVect := *EncryptIntVector(clientPublic, tab)
+		//round.Record()
 
 		testGAMap[groupAttributes.Key()] = groupAttributes
 		testCVMap[groupAttributes.Key()] = cipherVect
@@ -46,10 +48,12 @@ func init() {
 	sda.ProtocolRegisterName("PrivateAggregateSimul", NewAggregationProtocolSimul)
 }
 
+//PrivateAggregateSimulation contains simulation tree
 type PrivateAggregateSimulation struct {
 	sda.SimulationBFTree
 }
 
+//NewPrivateAggregateSimulation simultaion constructor
 func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 	sim := &PrivateAggregateSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -59,6 +63,7 @@ func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 	return sim, nil
 }
 
+//Setup initializes the servers tree
 func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -68,12 +73,13 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 		return nil, err
 	}
 
-	log.Lvl1("Begin simulation")
+	log.Lvl1("Setup done")
 
 	return sc, nil
 
 }
 
+//Run starts the simulation of the protocol and measures its runtime
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -84,22 +90,19 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 
 		root := rooti.(*PrivateAggregateProtocol)
 
+		//time measurement
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 
 		root.StartProtocol()
 
-		result := <-root.ProtocolInstance().(*PrivateAggregateProtocol).FeedbackChannel
+		<-root.ProtocolInstance().(*PrivateAggregateProtocol).FeedbackChannel
 		round.Record()
-
-		log.LLvl1("RESULT SIZE: ", len(result.GroupedData))
-		for i, v := range result.GroupedData {
-			log.Lvl1(i, " ", DecryptIntVector(clientPrivate, &v))
-		}
 	}
 
 	return nil
 }
 
+//NewAggregationProtocolSimul default constructor used by all nodes to init their parameters
 func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewPrivateAggregate(tni)
 	pap := protocol.(*PrivateAggregateProtocol)
@@ -108,6 +111,7 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 	attribMap := make(map[GroupingKey]CipherVector)
 
 	switch tni.Index() {
+	//if want to study special cases********************************************************************************
 	/*case 0:
 		// Generate test data
 		testGAMap[groupingAttrA.Key()] = groupingAttrA
@@ -128,8 +132,9 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 	case 4:
 		testGAMap[groupingAttrC.Key()] = groupingAttrC
 		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 1, 0, 1, 0})*/
+	//**************************************************************************************************************
 	default:
-		groupMap, attribMap = CreateDataSet(10, 100)
+		groupMap, attribMap = createDataSet(10, 100)
 	}
 	pap.Groups = &groupMap
 	pap.GroupedData = &attribMap

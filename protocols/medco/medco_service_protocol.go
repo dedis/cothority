@@ -16,17 +16,23 @@ func init() {
 	network.RegisterMessageType(DoneFlushCollectedDataMessage{})
 }
 
+//MedcoServiceInterface contains the 3 possible phases of a medco protocol
 type MedcoServiceInterface interface {
 	DeterministicSwitchingPhase(SurveyID) error
 	AggregationPhase(SurveyID) error
 	KeySwitchingPhase(SurveyID) error
 }
 
+//TriggerFlushCollectedDataMessage contains ID of subject survey
 type TriggerFlushCollectedDataMessage struct {
 	SurveyID SurveyID
 }
+
+//DoneFlushCollectedDataMessage empty structure which indicates that the flush is done
 type DoneFlushCollectedDataMessage struct{}
+//DoneProcessingMessage empty structure which indicates that the processing is done
 type DoneProcessingMessage struct{}
+
 
 type FlushCollectedDataStruct struct {
 	*sda.TreeNode
@@ -38,6 +44,7 @@ type DoneFlushCollectedDataStruct struct {
 	DoneFlushCollectedDataMessage
 }
 
+//MedcoServiceProtocol contains elements of a service protocol
 type MedcoServiceProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -50,6 +57,7 @@ type MedcoServiceProtocol struct {
 	TargetSurvey         *Survey
 }
 
+//NewMedcoServiceProcotol constructor of a medco service protocol
 func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol := &MedcoServiceProtocol{TreeNodeInstance: tni,
 		FeedbackChannel: make(chan DoneProcessingMessage)}
@@ -63,6 +71,7 @@ func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	return protocol, nil
 }
 
+//Start a medco protocol
 func (p *MedcoServiceProtocol) Start() error {
 
 	if p.MedcoServiceInstance == nil {
@@ -78,6 +87,7 @@ func (p *MedcoServiceProtocol) Start() error {
 	return nil
 }
 
+// Dispatch is an infinite loop to handle messages from channels
 func (p *MedcoServiceProtocol) Dispatch() error {
 
 	// 1st phase (optional) : Grouping

@@ -11,6 +11,7 @@ import (
 
 const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
 
+//KeySwitchedCipherMessage contains cipherVector under switching and attached data used in protocol
 type KeySwitchedCipherMessage struct {
 	Data                  map[TempID]CipherVector
 	NewKey                abstract.Point
@@ -18,6 +19,7 @@ type KeySwitchedCipherMessage struct {
 	Proof                 map[TempID][]CompleteProof
 }
 
+//KeySwitchedCipherStruct node doing protocol and switching message
 type KeySwitchedCipherStruct struct {
 	*sda.TreeNode
 	KeySwitchedCipherMessage
@@ -28,6 +30,7 @@ func init() {
 	sda.ProtocolRegisterName(KEY_SWITCHING_PROTOCOL_NAME, NewKeySwitchingProtocol)
 }
 
+//KeySwitchingProtocol contains all elements used in protocol
 type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -44,6 +47,7 @@ type KeySwitchingProtocol struct {
 	originalEphemKeys map[TempID][]abstract.Point
 }
 
+//NewKeySwitchingProtocol constructor fo Key Switching protocol
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
@@ -80,6 +84,7 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	log.Lvl1(p.ServerIdentity(), "started a Key Switching Protocol")
 
+	//create data from object that has to be switched
 	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
 	for k, _ := range *p.TargetOfSwitch {
@@ -92,6 +97,7 @@ func (p *KeySwitchingProtocol) Start() error {
 		initialMap[k] = initialCipherVector
 	}
 
+	//forward message
 	p.sendToNext(&KeySwitchedCipherMessage{
 		initialMap,
 		*p.TargetPublicKey,
@@ -112,6 +118,7 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 		keySwitchingTarget.Data[k] = v
 	}
 
+	//if root then protocol is reaching the end
 	if p.IsRoot() {
 		log.Lvl1(p.ServerIdentity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data

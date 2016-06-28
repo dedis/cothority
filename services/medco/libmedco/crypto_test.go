@@ -1,13 +1,13 @@
 package libmedco_test
 
 import (
+	"reflect"
+	"testing"
 	"github.com/dedis/cothority/network"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 var suite = network.Suite
@@ -30,6 +30,7 @@ func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	return group, priv, pub
 }
 
+//TestNullCipherText verifies encryption, decryption and behavior of null ciphertexts
 func TestNullCipherText(t *testing.T) {
 
 	secKey, pubKey := GenKey()
@@ -51,6 +52,7 @@ func TestNullCipherText(t *testing.T) {
 
 }
 
+//TestNullCipherText verifies encryption, decryption and behavior of null cipherVectors
 func TestNullCipherVector(t *testing.T) {
 	secKey, pubKey := GenKey()
 
@@ -72,6 +74,7 @@ func TestNullCipherVector(t *testing.T) {
 	}
 }
 
+//TestHomomorphicOpp tests homomorphic addition
 func TestHomomorphicOpp(t *testing.T) {
 	secKey, pubKey := GenKey()
 
@@ -86,6 +89,7 @@ func TestHomomorphicOpp(t *testing.T) {
 	assert.Equal(t, target, p)
 }
 
+//TestCryptoDeterministicSwitching tests deterministic switch
 func TestCryptoDeterministicSwitching(t *testing.T) {
 	const N = 5
 
@@ -111,6 +115,7 @@ func TestCryptoDeterministicSwitching(t *testing.T) {
 	}
 }
 
+//TestCryptoKeySwitching tests key switching
 func TestCryptoKeySwitching(t *testing.T) {
 	const N = 5
 	groupKey, privates, _ := GenKeys(N)
@@ -138,11 +143,11 @@ func TestCryptoKeySwitching(t *testing.T) {
 	}
 
 	res := DecryptIntVector(newPrivate, &kscv)
-	//log.Lvl1(res)
 	assert.True(t, reflect.DeepEqual(res, target))
 
 }
 
+//TestEqualDeterministCipherText tests equality between deterministic ciphertexts
 func TestEqualDeterministCipherText(t *testing.T) {
 	dcv1 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}
 	dcv2 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}

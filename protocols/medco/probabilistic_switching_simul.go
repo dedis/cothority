@@ -9,20 +9,23 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
+//number of attributes to be switched in each vector
 const NUM_ATTR_PROB = 2
+//number of vectors to be switched
 const NUM_VECT_PROB = 10
 
-// we have 5 clients
 func init() {
 	sda.SimulationRegister("ProbabilisticSwitching", NewProbabilisticSwitchingSimulation)
 	sda.ProtocolRegisterName("ProbabilisticSwitchingSimul", NewProbabilisticSwitchingSimul)
 
 }
 
+//ProbabilisticSwitchingSimulation contains simulation tree
 type ProbabilisticSwitchingSimulation struct {
 	sda.SimulationBFTree
 }
 
+//NewProbabilisticSwitchingSimulation simulation constructor
 func NewProbabilisticSwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &ProbabilisticSwitchingSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -33,6 +36,7 @@ func NewProbabilisticSwitchingSimulation(config string) (sda.Simulation, error) 
 	return sim, nil
 }
 
+//Setup initializes servers tree to do the simulation
 func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -42,11 +46,12 @@ func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (
 		return nil, err
 	}
 
-	log.Lvl1("Begin test encrypted data generation")
+	log.Lvl1("Setup done")
 
 	return sc, nil
 }
 
+//Run starts the protocol simulation
 func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -57,34 +62,22 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 
 		root := rooti.(*ProbabilisticSwitchingProtocol)
 
+		//runtime measurement
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 		root.StartProtocol()
-		/*result*/ _ = <-root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).FeedbackChannel
+		<-root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).FeedbackChannel
 		round.Record()
-		/*output := true
-		for i,v := range result {
-			if int(i) < (len(result)-1) {
-				if !reflect.DeepEqual(v, result[i+1]) { //both are equals but deepEqual says not ?
-					dbg.Errorf("Not expected results, got ", v, " & ", result[i+1])
-					output = false
-				}
-			}
-		}
-		if output{
-			log.LLvl1("Test passed")
-		}
-		//log.Lvl1("Got result", DecryptIntVector(suite, clientSecret, result[TempID(0)]))*/
-
 	}
 
 	return nil
 }
 
+//NewProbabilisticSwitchingSimul default constructor used by each node to init its parameters
 func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewProbabilisticSwitchingProtocol(tni)
 	pap := protocol.(*ProbabilisticSwitchingProtocol)
 
-	if tni.Index() == 0 {
+	if tni.Index() == 0 { //root
 		clientSecret := suite.Scalar().Pick(random.Stream)
 		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 
@@ -92,6 +85,7 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		ciphertexts := make(map[TempID]DeterministCipherVector)
 
+		//create dummy data
 		var tab []int64
 		for i := 0; i < NUM_ATTR_PROB; i++ {
 			if i == 0 {

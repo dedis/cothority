@@ -18,18 +18,23 @@ func init() {
 	sda.ProtocolRegisterName(DETERMINISTIC_SWITCHING_PROTOCOL_NAME, NewDeterministSwitchingProtocol)
 }
 
+//DeterministicSwitchedMessage represents a deterministic switching message containing the processed ciphervector,
+//and corresponding data.
 type DeterministicSwitchedMessage struct {
 	Data                  map[TempID]CipherVector
 	OriginalEphemeralKeys map[TempID][]abstract.Point
 	Proof                 map[TempID][]CompleteProof
 }
 
+//DeterministicSwitchedStruct contains a sda treenode and a deterministic switching message
 type DeterministicSwitchedStruct struct {
 	*sda.TreeNode
 	DeterministicSwitchedMessage
 }
 
+//DeterministicSwitchingProtocol defines the elements of deterministicSwitching protocol
 type DeterministicSwitchingProtocol struct {
+	//node doing the protocol
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
@@ -45,6 +50,7 @@ type DeterministicSwitchingProtocol struct {
 	originalEphemKeys map[TempID][]abstract.Point
 }
 
+//NewDeterministSwitchingProtocol constructor for DeterministicSwitchingProtocol
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
@@ -87,6 +93,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 			p.originalEphemKeys[k][i] = c.K
 		}
 	}
+	//forward message to next node
 	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch,
 		p.originalEphemKeys,
 		map[TempID][]CompleteProof{}})
@@ -99,12 +106,14 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
+	//each node should use one different PH contribution per survey
 	phContrib := p.Suite().Point().Mul(p.Suite().Point().Base(), *p.SurveyPHKey)
 	for k, v := range deterministicSwitchingTarget.Data {
 		v.DeterministicSwitching(&v, p.Private(), phContrib)
 		deterministicSwitchingTarget.Data[k] = v
 	}
 
+	//if root, then protocol reached the end
 	if p.IsRoot() {
 		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
 		for k, v := range deterministicSwitchingTarget.Data {
@@ -115,7 +124,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 		}
 		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData), "row )")
 		p.FeedbackChannel <- deterministicSwitchedData
-	} else {
+	} else { //forward switched message
 		log.Lvl1(p.ServerIdentity(), "carried on deterministic switching.")
 		p.sendToNext(&deterministicSwitchingTarget.DeterministicSwitchedMessage)
 	}

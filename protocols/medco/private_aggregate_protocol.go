@@ -10,24 +10,29 @@ import (
 
 const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
 
+//DataReferenceMessage empty message sent to trigger protocol in nodes
 type DataReferenceMessage struct {
 }
 
+//DataReferenceStruct node and message
 type DataReferenceStruct struct {
 	*sda.TreeNode
 	DataReferenceMessage
 }
 
+//ChildAggregatedDataMessage containes aggregated data
 type ChildAggregatedDataMessage struct {
 	ChildData   map[GroupingKey]CipherVector
 	ChildGroups map[GroupingKey]GroupingAttributes
 }
 
+//ChildAggregatedDataStruct node and aggregated data message
 type ChildAggregatedDataStruct struct {
 	*sda.TreeNode
 	ChildAggregatedDataMessage
 }
 
+//CothorityAggregatedData result of collectiove aggregation
 type CothorityAggregatedData struct {
 	Groups      map[GroupingKey]GroupingAttributes
 	GroupedData map[GroupingKey]CipherVector
@@ -106,6 +111,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	return nil
 }
 
+//message forward down the tree
 func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	dataReferenceMessage := <-p.DataReferenceChannel
 	if !p.IsLeaf() {
@@ -113,6 +119,7 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
+//message forward up the tree containing aggregation results
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
 	if p.GroupedData == nil {
