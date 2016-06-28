@@ -12,18 +12,19 @@ import (
 
 var suite = network.Suite
 
-func genKey() (secKey abstract.Scalar, pubKey abstract.Point) {
+func GenKey() (secKey abstract.Scalar, pubKey abstract.Point) {
 	secKey = suite.Scalar().Pick(random.Stream)
 	pubKey = suite.Point().Mul(suite.Point().Base(), secKey)
 	return
 }
 
-func genKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
+
+func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	priv := make([]abstract.Scalar, n)
 	pub := make([]abstract.Point, n)
 	group := suite.Point().Null()
 	for i := 0; i < n; i++ {
-		priv[i], pub[i] = genKey()
+		priv[i], pub[i] = GenKey()
 		group.Add(group, pub[i])
 	}
 	return group, priv, pub
@@ -31,7 +32,7 @@ func genKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 
 func TestNullCipherText(t *testing.T) {
 
-	secKey, pubKey := genKey()
+	secKey, pubKey := GenKey()
 
 	nullEnc := EncryptInt(pubKey, 0)
 	nullDec := DecryptInt(secKey, *nullEnc)
@@ -51,7 +52,7 @@ func TestNullCipherText(t *testing.T) {
 }
 
 func TestNullCipherVector(t *testing.T) {
-	secKey, pubKey := genKey()
+	secKey, pubKey := GenKey()
 
 	nullVectEnc := *NullCipherVector(10, pubKey)
 
@@ -72,7 +73,7 @@ func TestNullCipherVector(t *testing.T) {
 }
 
 func TestHomomorphicOpp(t *testing.T) {
-	secKey, pubKey := genKey()
+	secKey, pubKey := GenKey()
 
 	cv1 := EncryptIntVector(pubKey, []int64{0, 1, 2, 3, 100})
 	cv2 := EncryptIntVector(pubKey, []int64{0, 0, 1, 100, 3})
@@ -88,8 +89,8 @@ func TestHomomorphicOpp(t *testing.T) {
 func TestCryptoDeterministicSwitching(t *testing.T) {
 	const N = 5
 
-	groupKey, private, _ := genKeys(N)
-	phMasterKey, _, phPrivate := genKeys(N)
+	groupKey, private, _ := GenKeys(N)
+	phMasterKey, _, phPrivate := GenKeys(N)
 
 	target := []int64{0, 0, 2, 3, 2, 5}
 	cv := EncryptIntVector(groupKey, target)
@@ -112,8 +113,8 @@ func TestCryptoDeterministicSwitching(t *testing.T) {
 
 func TestCryptoKeySwitching(t *testing.T) {
 	const N = 5
-	groupKey, privates, _ := genKeys(N)
-	newPrivate, newPublic := genKey()
+	groupKey, privates, _ := GenKeys(N)
+	newPrivate, newPublic := GenKey()
 
 	target := []int64{1, 2, 3, 4, 5}
 	cv := EncryptIntVector(groupKey, target)
