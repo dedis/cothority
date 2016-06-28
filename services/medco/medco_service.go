@@ -186,7 +186,6 @@ func (mcs *MedcoService) DeterministicSwitchingPhase(targetSurvey SurveyID) erro
 
 	pi, err := mcs.startProtocol(medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME, targetSurvey)
 	if err != nil {
-		log.LLvl1("ALERT***********************************************************************")
 		return err
 	}
 	deterministicSwitchedResult := <-pi.(*medco.DeterministicSwitchingProtocol).FeedbackChannel
