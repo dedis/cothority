@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"sort"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -62,28 +64,31 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	serviceStore *serviceStore
+	serviceStore         *serviceStore
+	statusReporterStruct *statusReporterStruct
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
-		ServerIdentity:      e,
-		workingAddress:      e.First(),
-		Connections:         make(map[network.ServerIdentityID]network.SecureConn),
-		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
-		pendingSDAs:         make([]*ProtocolMsg, 0),
-		host:                network.NewSecureTCPHost(pkey, e),
-		private:             pkey,
-		suite:               network.Suite,
-		networkChan:         make(chan network.Packet, 1),
-		isClosing:           false,
-		ProcessMessagesQuit: make(chan bool),
+		ServerIdentity:       e,
+		workingAddress:       e.First(),
+		Connections:          make(map[network.ServerIdentityID]network.SecureConn),
+		pendingTreeMarshal:   make(map[RosterID][]*TreeMarshal),
+		pendingSDAs:          make([]*ProtocolMsg, 0),
+		host:                 network.NewSecureTCPHost(pkey, e),
+		private:              pkey,
+		suite:                network.Suite,
+		networkChan:          make(chan network.Packet, 1),
+		isClosing:            false,
+		ProcessMessagesQuit:  make(chan bool),
+		statusReporterStruct: newStatusReporterStruct(),
 	}
 
 	h.overlay = NewOverlay(h)
 	h.serviceStore = newServiceStore(h, h.overlay)
+	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
 }
 
@@ -611,4 +616,64 @@ func (h *Host) Rx() uint64 {
 // Address is the address where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
+}
+
+//Received gives packets received
+func Received(n map[network.ServerIdentityID]network.SecureConn) uint64 {
+	var a uint64
+	for _, value := range n {
+		a = value.Rx()
+	}
+	return a
+}
+
+//Sent gives packets sent
+func Sent(n map[network.ServerIdentityID]network.SecureConn) uint64 {
+	var a uint64
+	for _, value := range n {
+		a = value.Tx()
+	}
+	return a
+
+}
+
+//Host is the host
+func id(n map[network.ServerIdentityID]network.SecureConn) string {
+	var a string
+	for _, value := range n {
+		a = value.Local()
+	}
+	return a
+
+}
+
+//Remote is who the host is connected to
+func Remote(n map[network.ServerIdentityID]network.SecureConn) string {
+	var a string
+	for _, value := range n {
+		a = a + value.Remote() + "\n"
+	}
+	return a
+}
+
+//GetStatus is a function
+func (h *Host) GetStatus() Status {
+	m := make(map[string]string)
+	m["Host"] = id(h.Connections)
+	m["Connections"] = Remote(h.Connections)
+	s := fmt.Sprintf("%d", len(h.Connections))
+	m["Total"] = s
+	t := fmt.Sprintf("%d", Received(h.Connections))
+	m["Packets Received"] = t
+	x := fmt.Sprintf("%d ", Sent(h.Connections))
+	m["Packets Sent"] = x
+	a := Available()
+	sort.Strings(a)
+	var r string
+	for _, value := range a {
+		r = r + value
+	}
+	m["Available Services"] = r
+
+	return m
 }

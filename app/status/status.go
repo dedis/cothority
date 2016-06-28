@@ -100,12 +100,8 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 }
 
 func printConn(e *status.Response) {
-	log.Print("Host: ", e.Serv)
-	for i := 0; i < len(e.Received); i++ {
-		log.Print("\nConnection: ", e.Remote[i])
-		log.Print("Total Packets Recieved: ", e.Received[i])
-		log.Print("Total Packets Sent: ", e.Sent[i])
-		log.Print("Services Available: ", e.Available)
+	for key, value := range e.Msg["Status"] {
+		fmt.Print(key + ": " + value + "\n")
 	}
 	fmt.Print("\n")
 }

@@ -51,7 +51,7 @@ var NilServiceID = ServiceID(uuid.Nil)
 // A service is initialized with a Host (to send messages to someone), the
 // overlay (to register a Tree + Roster + start new node), and a path where
 // it can finds / write everything it needs
-type NewServiceFunc func(c Context, path string) Service
+type NewServiceFunc func(c *Context, path string) Service
 
 // GenericConfig is a config that can withhold any type of specific configs for
 // protocols. It is passed down to the service NewProtocol function.
@@ -146,7 +146,7 @@ func (s *serviceFactory) Name(id ServiceID) string {
 }
 
 // start launches a new service
-func (s *serviceFactory) start(name string, c Context, path string) (Service, error) {
+func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {

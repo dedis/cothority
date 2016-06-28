@@ -25,7 +25,7 @@ func TestServiceStatus(t *testing.T) {
 	log.Lvl1(el.List[0])
 	log.ErrFatal(err)
 	log.Lvl1(stat)
-	assert.Equal(t, 2, stat.Tot)
+	assert.Equal(t, "2", stat.Msg["Status"]["Total"])
 	pi, err := local.CreateProtocol(tr, "ExampleChannels")
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
@@ -35,5 +35,5 @@ func TestServiceStatus(t *testing.T) {
 	stat, err = client.GetStatus(el.List[0])
 	log.ErrFatal(err)
 	log.Lvl1(stat)
-	assert.Equal(t, 4, stat.Tot)
+	assert.Equal(t, "4", stat.Msg["Status"]["Total"])
 }
