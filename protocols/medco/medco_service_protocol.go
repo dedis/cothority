@@ -97,7 +97,10 @@ func (p *MedcoServiceProtocol) Dispatch() error {
 		} else {
 			msg := <-p.TriggerFlushCollectedData
 			p.MedcoServiceInstance.DeterministicSwitchingPhase(msg.SurveyID)
-			p.SendTo(p.Root(), &DoneFlushCollectedDataMessage{})
+			if !p.IsLeaf() {
+				<-p.DoneFlushCollectedData
+			}
+			p.SendToParent(&DoneFlushCollectedDataMessage{})
 		}
 	}
 
