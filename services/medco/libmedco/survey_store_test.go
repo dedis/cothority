@@ -1,24 +1,25 @@
 package libmedco_test
 
 import (
-	"fmt"
-	"github.com/dedis/cothority/log"
-
-	"github.com/dedis/crypto/random"
+	"reflect"
 	"testing"
-
+	"github.com/dedis/cothority/log"
 	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/crypto/random"
 )
 
+//TestStoring tests survey store and its methods
 func TestStoring(t *testing.T) {
 	log.Lvl1("Test beginning")
 
 	//construc variables
-	secKey := suite.Scalar().Pick(random.Stream)
-	pubKey := suite.Point().Mul(suite.Point().Base(), secKey)
+	secKey := network.Suite.Scalar().Pick(random.Stream)
+	pubKey := network.Suite.Point().Mul(network.Suite.Point().Base(), secKey)
 	nullEnc := EncryptInt(pubKey, 0) //*CipherText
 	oneEnc := EncryptInt(pubKey, 1)  //*CipherText
 	oneBEnc := EncryptInt(pubKey, 1) //*CipherText
+
 
 	oneEnc.DeterministicSwitching(oneEnc, secKey, pubKey)
 	oneBEnc.DeterministicSwitching(oneBEnc, secKey, pubKey)
@@ -47,127 +48,99 @@ func TestStoring(t *testing.T) {
 	_ = storage
 
 	//AddAggregate & GetAggregateLoc Test
-	//fmt.Println("FIRST AGGREGATION")
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
 
+	//veifies that one element has been stored
 	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
-		fmt.Println("aggregation error")
 		t.Errorf("aggregation error")
 	} else {
-		fmt.Println("aggregation OK")
 		t.Logf("aggregation OK")
 	}
 
-	//storage.DisplayResults()
+	//add a second element with same group ID -> should be aggregated with first one
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect2})
-	//fmt.Println("SECOND AGGREGATION")
+	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
 
 	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
-		fmt.Println("aggregation error")
 		t.Errorf("aggregation error")
 	} else {
+		added := *testCipherVect1.Add(testCipherVect1, testCipherVect2)
+		for i,v := range added{
+			if !reflect.DeepEqual(v,aggr[GroupingKey(DEFAULT_GROUP)][i]){
+				t.Errorf("aggregation error")
+			}
+		}
 		t.Logf("second aggregation OK")
-		fmt.Println("aggregation OK")
 	}
 
-	//storage.DisplayResults()
 
 	//GROUPING
 	storage = NewSurveyStore()
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect1, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect1})
-	//storage.InsertClientResponse(ClientResponse{testCipherVect2,testCipherVect1})
 
 	if !(len(storage.ClientResponses) == 3) {
-		fmt.Println("insertion error")
 		t.Errorf("insertion error")
 	} else {
 		t.Logf("insertion OK")
-		fmt.Println("insertion OK")
 	}
 
 	probaGroups := storage.PollProbabilisticGroupingAttributes()
-	//verif two maps creation -> OK
+	//get the indices to use same unique ids for next test steps
 	var indexes []TempID
 	for i, v := range probaGroups {
 		_ = v
-		//fmt.Println(i, " : ", v)
 		indexes = append(indexes, i)
 	}
 
-	//for i,v := range storage.AggregatingAttributes{
-	//	fmt.Println(i, " : ", v)
-	//}
 	groupedAttr := make(map[TempID]GroupingAttributes)
 	groupedAttr[indexes[0]] = []DeterministCipherText{dnull, done}
 	groupedAttr[indexes[1]] = []DeterministCipherText{dnull, dnull}
-	groupedAttr[indexes[2]] = []DeterministCipherText{dnull, doneB}
-	//groupedAttr[indexes[3]] = [MAX_GROUP_ATTR]DeterministCipherText{dnull, doneB}
+	groupedAttr[indexes[2]] = []DeterministCipherText{dnull, doneB} //doneB and done are equal
 
 	storage.PushDeterministicGroupingAttributes(groupedAttr)
-	//for i,v := range *locRes{
-	//	fmt.Println(i, " : ", v)
-	//}
 
+	//right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
-		fmt.Println("PushDeterministicGroupingAttributes error")
 		t.Errorf("PushDeterministicGroupingAttributes error")
 	} else {
 		t.Logf("PushDeterministicGroupingAttributestion OK")
-		fmt.Println("PushDeterministicGroupingAttributes OK")
 	}
 
 	storage.PushCothorityAggregatedGroups(storage.LocGroupingGroups, storage.LocGroupingAggregating)
 
+	//right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
-		fmt.Println("PushCothorityAggregatedGroups error")
 		t.Errorf("PushCothorityAggregatedGroups error")
 	} else {
 		t.Logf("PushCothorityAggregatedGroups OK")
-		fmt.Println("PushCothorityAggregatedGroups OK")
 	}
 
 	groupedDetAttr := storage.PollCothorityAggregatedGroupsId()
 	aggrAttr := storage.PollCothorityAggregatedGroupsAttr()
 	if !(len(groupedDetAttr) == 2) {
-		fmt.Println("PollDeterministicGroupingAttributes error")
 		t.Errorf("PollDeterministicGroupingAttributes error")
 	} else {
 		t.Logf("PollDeterministicGroupingAttributes OK")
-		fmt.Println("PollDeterministicGroupingAttributes OK")
 	}
 
 	var indexes1 []TempID
 	for i, v := range groupedDetAttr {
 		_ = v
-		//fmt.Println(i, " : ", v)
 		indexes1 = append(indexes1, i)
 	}
-
-	//for i,v := range *groupedDetAttr{
-	//	fmt.Println(i, " : ", v)
-	//}
-
-	//for i,v := range storage.GroupedAggregatingAttributes{
-	//	fmt.Println(i, " : ", v)
-	//}
 
 	reencrGroupAttr := make(map[TempID]CipherVector)
 	reencrGroupAttr[indexes1[0]] = testCipherVect2
 	reencrGroupAttr[indexes1[1]] = testCipherVect1
-	//reencrGroupAttr[indexes[2]] = [100]medco.DeterministCipherText{dnull, done}
 
 	storage.PushQuerierKeyEncryptedData(reencrGroupAttr, aggrAttr)
 
-	//storage.DisplayResults()
-
 	if !(len(storage.PollDeliverableResults()) == 2) {
-		fmt.Println("PushQuerierKeyEncryptedGroupingAttributes error")
 		t.Errorf("PushQuerierKeyEncryptedGroupingAttributes error")
 	} else {
 		t.Logf("PushQuerierKeyEncryptedGroupingAttributes OK")
-		fmt.Println("PushQuerierKeyEncryptedGroupingAttributes OK")
 	}
 
 	log.Lvl1("... Done")

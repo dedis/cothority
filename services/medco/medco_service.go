@@ -22,6 +22,7 @@ func init() {
 	network.RegisterMessageType(&ServiceResponse{})
 }
 
+//MedcoService defines a service in medco case with a survey
 type MedcoService struct {
 	*sda.ServiceProcessor
 	homePath string
@@ -30,6 +31,7 @@ type MedcoService struct {
 	//currentSurveyID SurveyID
 }
 
+//NewMedcoService constructor which registers the needed messages
 func NewMedcoService(c *sda.Context, path string) sda.Service {
 	newMedCoInstance := &MedcoService{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -41,6 +43,7 @@ func NewMedcoService(c *sda.Context, path string) sda.Service {
 	return newMedCoInstance
 }
 
+//HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating a corresponding survey
 func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "received a Survey Creation Query")
 	if recq.SurveyID == nil {
@@ -65,6 +68,7 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, re
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
 
+//HandleSurveyResponseData
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ", resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {

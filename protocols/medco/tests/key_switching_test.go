@@ -1,18 +1,19 @@
 package medco_test
 
 import (
+	"reflect"
+	"testing"
+	"time"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
-	"reflect"
-	"testing"
-	"time"
 )
 
-func TestKeySwitching5Nodes(t *testing.T) {
+//TestKeySwitching tests key switching protocol
+func TestKeySwitching(t *testing.T) {
 	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	log.TestOutput(testing.Verbose(), 1)
@@ -29,14 +30,13 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	suite := network.Suite
 	aggregateKey := entityList.Aggregate
 
-	// Encrypt test data with group key
+	// create dummy data
 	expRes := []int64{1, 2, 3, 6}
 	testCipherVect := *EncryptIntVector(aggregateKey, expRes)
 
 	expRes1 := []int64{7, 8, 9, 7}
 	testCipherVect1 := *EncryptIntVector(aggregateKey, expRes1)
 
-	log.LLvl1(testCipherVect, suite)
 	var mapi map[TempID]CipherVector
 	mapi = make(map[TempID]CipherVector)
 	mapi[TempID(1)] = testCipherVect
@@ -51,10 +51,12 @@ func TestKeySwitching5Nodes(t *testing.T) {
 	protocol.TargetPublicKey = &clientPublic
 	feedback := protocol.FeedbackChannel
 
+	//run protocol
 	go protocol.StartProtocol()
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
+	//verify results
 	select {
 	case encryptedResult := <-feedback:
 		cv1 := encryptedResult[TempID(1)]
@@ -65,6 +67,8 @@ func TestKeySwitching5Nodes(t *testing.T) {
 		log.Lvl1("Recieved results", res1)
 		if !reflect.DeepEqual(res, expRes) {
 			t.Fatal("Wrong results, expected", expRes, "but got", res)
+		} else {
+			t.Log("Good results")
 		}
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")

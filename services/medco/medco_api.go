@@ -1,6 +1,7 @@
 package medco
 
 import (
+	"strconv"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -8,9 +9,9 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"strconv"
 )
 
+//MedcoAPI represents a client with its associated server and public/private key par
 type MedcoAPI struct {
 	*sda.Client
 	entryPoint        *network.ServerIdentity
@@ -21,6 +22,7 @@ type MedcoAPI struct {
 
 var localClientCounter = int64(0)
 
+//NewMedcoClient constructor of a client
 func NewMedcoClient(entryPoint *network.ServerIdentity) *MedcoAPI {
 	keys := config.NewKeyPair(network.Suite)
 	newClient := &MedcoAPI{
@@ -35,6 +37,7 @@ func NewMedcoClient(entryPoint *network.ServerIdentity) *MedcoAPI {
 	return newClient
 }
 
+//CreateSurvey creates a survey based on a set of entities (servers) and a survey description.
 func (c *MedcoAPI) CreateSurvey(entities *sda.Roster, surveyDescription SurveyDescription) (*SurveyID, error) {
 	log.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
@@ -47,6 +50,7 @@ func (c *MedcoAPI) CreateSurvey(entities *sda.Roster, surveyDescription SurveyDe
 	return &surveyID, nil
 }
 
+//Method SendSurveyResultsData creates and sends a client response encrypted with the collective key
 func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	log.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	encGrouping := EncryptIntVector(groupKey, grouping)
@@ -59,6 +63,7 @@ func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregatin
 	return nil
 }
 
+//Method GetSurveyResults to get the result from associated server. THen this response is decrypted
 func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
@@ -79,6 +84,7 @@ func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, 
 		return nil, nil, errors.New("Bad response type from service")
 	}
 }
+
 
 func (c *MedcoAPI) String() string {
 	return "[Client-" + strconv.FormatInt(c.localClientNumber, 10) + "]"

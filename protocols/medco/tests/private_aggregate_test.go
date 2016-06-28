@@ -1,6 +1,8 @@
 package medco_test
 
 import (
+	"testing"
+	"time"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
@@ -8,13 +10,9 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
-	_ "reflect"
-	"testing"
-	"time"
 )
 
-//aggregateKey := entityList.Aggregate
-// Generate client key
+
 var suite = network.Suite
 var clientPrivate = suite.Scalar().Pick(random.Stream)
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
@@ -24,6 +22,7 @@ var groupingAttrA = GroupingAttributes{grpattr1, grpattr1}
 var groupingAttrB = GroupingAttributes{grpattr2, grpattr2}
 var groupingAttrC = GroupingAttributes{grpattr1, grpattr2}
 
+//NewPrivateAggregateTest default constructor used by all nodes to create their dummy data
 func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	pi, err := medco.NewPrivateAggregate(tni)
@@ -34,7 +33,7 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 
 	switch tni.Index() {
 	case 0:
-		// Generate test data
+
 		testGAMap[groupingAttrA.Key()] = groupingAttrA
 		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
 		testGAMap[groupingAttrB.Key()] = groupingAttrB
@@ -61,7 +60,8 @@ func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	return protocol, err
 }
 
-func TestPrivateAggregate10Nodes(t *testing.T) {
+//TestPrivateAggregate tests private aggregate protocol
+func TestPrivateAggregate(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
@@ -75,6 +75,14 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 	}
 	protocol := p.(*medco.PrivateAggregateProtocol)
 
+
+	//run protocol
+	go protocol.StartProtocol()
+	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
+
+	feedback := protocol.FeedbackChannel
+
+	//verify results
 	expectedGroups := map[GroupingKey]GroupingAttributes{groupingAttrA.Key(): groupingAttrA,
 		groupingAttrB.Key(): groupingAttrB,
 		groupingAttrC.Key(): groupingAttrC}
@@ -83,29 +91,24 @@ func TestPrivateAggregate10Nodes(t *testing.T) {
 		groupingAttrB.Key(): {1, 2, 3, 4, 5},
 		groupingAttrC.Key(): {1, 1, 1, 1, 1}}
 
-	go protocol.StartProtocol()
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
-
-	feedback := protocol.FeedbackChannel
-
 	select {
-	case encryptedResult := <-feedback:
-		log.Lvl1("Recieved results:")
-		resultData := make(map[GroupingKey][]int64)
-		for k, v := range encryptedResult.GroupedData {
-			resultData[k] = DecryptIntVector(clientPrivate, &v)
-			log.Lvl1(k, resultData[k])
-		}
-		for k, v1 := range expectedGroups {
-			if v2, ok := encryptedResult.Groups[k]; ok {
-				assert.True(t, ok)
-				assert.True(t, v1.Equal(&v2))
-				delete(encryptedResult.Groups, k)
+		case encryptedResult := <-feedback:
+			log.Lvl1("Recieved results:")
+			resultData := make(map[GroupingKey][]int64)
+			for k, v := range encryptedResult.GroupedData {
+				resultData[k] = DecryptIntVector(clientPrivate, &v)
+				log.Lvl1(k, resultData[k])
 			}
-		}
-		assert.Empty(t, encryptedResult.Groups)
-		assert.Equal(t, expectedResults, resultData)
-	case <-time.After(timeout):
-		t.Fatal("Didn't finish in time")
+			for k, v1 := range expectedGroups {
+				if v2, ok := encryptedResult.Groups[k]; ok {
+					assert.True(t, ok)
+					assert.True(t, v1.Equal(&v2))
+					delete(encryptedResult.Groups, k)
+				}
+			}
+			assert.Empty(t, encryptedResult.Groups)
+			assert.Equal(t, expectedResults, resultData)
+		case <-time.After(timeout):
+			t.Fatal("Didn't finish in time")
 	}
 }

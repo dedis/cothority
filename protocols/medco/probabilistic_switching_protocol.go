@@ -16,17 +16,20 @@ func init() {
 	sda.ProtocolRegisterName(PROBABILISTIC_SWITCHING_PROTOCOL_NAME, NewProbabilisticSwitchingProtocol)
 }
 
+//ProbabilisticSwitchedMessage contains swiched vector and data used in protocol
 type ProbabilisticSwitchedMessage struct {
 	Data            map[TempID]CipherVector
 	TargetPublicKey abstract.Point
 	Proof           map[TempID][]CompleteProof
 }
 
+//ProbabilisticSwitchedStruct node and message
 type ProbabilisticSwitchedStruct struct {
 	*sda.TreeNode
 	ProbabilisticSwitchedMessage
 }
 
+//ProbabilisticSwitchingProtocol contains all protocol parameters and dat
 type ProbabilisticSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -43,6 +46,7 @@ type ProbabilisticSwitchingProtocol struct {
 	TargetPublicKey   *abstract.Point
 }
 
+//NewProbabilisticSwitchingProtocol constructor
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	probabilisticSwitchingProtocol := &ProbabilisticSwitchingProtocol{
 		TreeNodeInstance: n,
@@ -103,6 +107,7 @@ func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
 	phContrib := suite.Point().Mul(suite.Point().Base(), *p.SurveyPHKey)
+	//switching
 	for k, v := range probabilisticSwitchingTarget.Data {
 		v.ProbabilisticSwitching(&v, phContrib, probabilisticSwitchingTarget.TargetPublicKey)
 		probabilisticSwitchingTarget.Data[k] = v

@@ -8,7 +8,9 @@ import (
 	"github.com/dedis/crypto/random"
 )
 
+//upper bound for integers used in messages, a failed decryption will return this value
 const MAX_HOMOMORPHIC_INT int64 = 300
+//default seed used in bytes encoding
 const BYTES_TO_POINT_ENCODING_SEED string = "seed"
 
 var PointToInt map[string]int64 = make(map[string]int64, MAX_HOMOMORPHIC_INT)
@@ -16,25 +18,31 @@ var currentGreatestM abstract.Point
 var currentGreatestInt int64 = 0
 var suite abstract.Suite = network.Suite
 
+//CipherText is an ElGamal encrypted point
 type CipherText struct {
 	K, C abstract.Point
 }
 
+//CipherVector is a slice of ElGamal encrypted points
 type CipherVector []CipherText
 
+//DeterministCipherText deterministic encryption of a point
 type DeterministCipherText struct {
 	Point abstract.Point
 }
 
+//DeterministCipherVector slice of deterministic encrypted points
 type DeterministCipherVector []DeterministCipherText
 
 // Constructors
 //______________________________________________________________________________________________________________________
 
+//NewCipherText creates a ciphertext of null elements
 func NewCipherText() *CipherText {
 	return &CipherText{K: suite.Point().Null(), C: suite.Point().Null()}
 }
 
+//NewCipherVector creates a ciphervector of null elements
 func NewCipherVector(length int) *CipherVector {
 	cv := make(CipherVector, length)
 	for i := 0; i < length; i++ {
@@ -43,11 +51,13 @@ func NewCipherVector(length int) *CipherVector {
 	return &cv
 }
 
+//NewDeterministicCipherText create determinist cipher text of null element
 func NewDeterministicCipherText() *DeterministCipherText {
 	dc := DeterministCipherText{suite.Point().Null()}
 	return &dc
 }
 
+//NewDeterministicCipherVector creates a vector of determinist ciphertext of null elements
 func NewDeterministicCipherVector(length int) *DeterministCipherVector {
 	dcv := make(DeterministCipherVector, length)
 	for i := 0; i < length; i++ {
@@ -59,6 +69,7 @@ func NewDeterministicCipherVector(length int) *DeterministCipherVector {
 // Encryption
 //______________________________________________________________________________________________________________________
 
+//EncryptPoint create an elliptic curve point from an integer
 func EncryptPoint(pubkey abstract.Point, M abstract.Point) *CipherText {
 	B := suite.Point().Base()
 	k := suite.Scalar().Pick(random.Stream) // ephemeral private key
@@ -107,17 +118,20 @@ func NullCipherVector(length int, pubkey abstract.Point) *CipherVector {
 // Decryption
 //______________________________________________________________________________________________________________________
 
+//DecryptPoint derives an elliptic point for a ciphertext
 func DecryptPoint(prikey abstract.Scalar, c CipherText) abstract.Point {
 	S := suite.Point().Mul(c.K, prikey) // regenerate shared secret
 	M := suite.Point().Sub(c.C, S)      // use to un-blind the message
 	return M
 }
 
+//DecryptInt derives an integer for an elliptic curve point
 func DecryptInt(prikey abstract.Scalar, cipher CipherText) int64 {
 	M := DecryptPoint(prikey, cipher)
 	return discreteLog(M)
 }
 
+//DecryptIntVector decrypts a cipherVector
 func DecryptIntVector(prikey abstract.Scalar, cipherVector *CipherVector) []int64 {
 	result := make([]int64, len(*cipherVector))
 	for i, c := range *cipherVector {
@@ -149,7 +163,7 @@ func discreteLog(P abstract.Point) int64 {
 	return m
 }
 
-// Key Switching
+// Switching
 //______________________________________________________________________________________________________________________
 
 // ReplaceContribution computes the new CipherText with the old mask contribution replaced by new and save in receiver
@@ -159,13 +173,14 @@ func (c *CipherText) ReplaceContribution(cipher *CipherText, old, new abstract.P
 	return c
 }
 
-// DeterministicSwitching perform one step in the deterministic switching process and store result in reciever
+// DeterministicSwitching performs one step in the deterministic switching process and store result in reciever
 func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract.Scalar, phContrib abstract.Point) *CipherText {
 	egContrib := suite.Point().Mul(cipher.K, private)
 	c.ReplaceContribution(cipher, egContrib, phContrib)
 	return c
 }
 
+// DeterministicSwitching perform one step in the deterministic switching process on a vector and stores the result in reciever
 func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abstract.Scalar, phContrib abstract.Point) *CipherVector {
 	for i, c := range *cipher {
 		(*cv)[i].DeterministicSwitching(&c, private, phContrib)
@@ -173,6 +188,7 @@ func (cv *CipherVector) DeterministicSwitching(cipher *CipherVector, private abs
 	return cv
 }
 
+// ProbabilisticSwitching performs one step in the Probabilistic switching process and stores result in reciever
 func (c *CipherText) ProbabilisticSwitching(cipher *CipherText, PHContrib abstract.Point, targetPublic abstract.Point) *CipherText {
 	r := suite.Scalar().Pick(random.Stream)
 	EGEphemContrib := suite.Point().Mul(suite.Point().Base(), r)
@@ -182,6 +198,7 @@ func (c *CipherText) ProbabilisticSwitching(cipher *CipherText, PHContrib abstra
 	return c
 }
 
+// ProbabilisticSwitching performs one step in the Probabilistic switching process on a vector and stores result in reciever
 func (cv *CipherVector) ProbabilisticSwitching(cipher *CipherVector, phContrib, targetPublic abstract.Point) *CipherVector {
 	for i, c := range *cipher {
 		(*cv)[i].ProbabilisticSwitching(&c, phContrib, targetPublic)
@@ -189,6 +206,7 @@ func (cv *CipherVector) ProbabilisticSwitching(cipher *CipherVector, phContrib, 
 	return cv
 }
 
+// KeySwitching performs one step in the Key switching process and stores result in reciever
 func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newKey abstract.Point, private abstract.Scalar) *CipherText {
 	r := suite.Scalar().Pick(random.Stream)
 	oldContrib := suite.Point().Mul(originalEphemeralKey, private)
@@ -199,6 +217,7 @@ func (c *CipherText) KeySwitching(cipher *CipherText, originalEphemeralKey, newK
 	return c
 }
 
+// KeySwitching performs one step in the Key switching process on a vector and stores result in reciever
 func (cv *CipherVector) KeySwitching(cipher *CipherVector, originalEphemeralKeys *[]abstract.Point, newKey abstract.Point, private abstract.Scalar) *CipherVector {
 	for i, c := range *cipher {
 		(*cv)[i].KeySwitching(&c, (*originalEphemeralKeys)[i], newKey, private)
@@ -209,12 +228,14 @@ func (cv *CipherVector) KeySwitching(cipher *CipherVector, originalEphemeralKeys
 // Homomorphic operations
 //______________________________________________________________________________________________________________________
 
+//Add two ciphertexts
 func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 	c.C.Add(c1.C, c2.C)
 	c.K.Add(c1.K, c2.K)
 	return c
 }
 
+//Add two ciphervectors
 func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
 	for i, _ := range cv1 {
 		(*cv)[i].Add(cv1[i], cv2[i])
@@ -222,12 +243,14 @@ func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
 	return cv
 }
 
+//Sub two ciphertexts
 func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
 	c.C.Sub(c1.C, c2.C)
 	c.K.Sub(c1.K, c2.K)
 	return c
 }
 
+//Sub two cipherVectors
 func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
 	for i, _ := range cv1 {
 		(*cv)[i].Sub(cv1[i], cv2[i])
@@ -238,10 +261,12 @@ func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
 // Representation
 //______________________________________________________________________________________________________________________
 
+//Equal verifies euqality between deterministic ciphertexts
 func (dc *DeterministCipherText) Equal(dc2 *DeterministCipherText) bool {
 	return dc2.Point.Equal(dc.Point)
 }
 
+//Equal verifies euqality between deterministic ciphervector
 func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
 	if dcv == nil || dcv2 == nil {
 		return dcv == dcv2
@@ -254,6 +279,7 @@ func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
 	return true
 }
 
+//String defines string representation of deterministic ciphertext
 func (dc DeterministCipherText) String() string {
 	cstr := "<nil>"
 	if dc.Point != nil {
@@ -262,6 +288,7 @@ func (dc DeterministCipherText) String() string {
 	return fmt.Sprintf("DetCipherText{%s}", cstr)
 }
 
+//String defines string representation of ciphertext
 func (c CipherText) String() string {
 	cstr := "nil"
 	kstr := cstr
