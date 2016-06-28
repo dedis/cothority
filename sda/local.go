@@ -282,7 +282,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 			for !connected {
 				time.Sleep(time.Millisecond * 10)
 				root.networkLock.Lock()
-				for id := range root.connections {
+				for id := range root.Connections {
 					if id.Equal(host.ServerIdentity.ID) {
 						connected = true
 						break

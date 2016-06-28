@@ -87,7 +87,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	ts := s[testServiceID]
 	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
 	ts.ProcessClientRequest(h.ServerIdentity, cr)
-	msg := ts.(*testService).Context.(*testContext).Msg
+	msg := ts.(*testService).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
 	}
@@ -144,16 +144,12 @@ func procMsgWrong6(e *network.ServerIdentity, msg *int) (network.Body, error) {
 
 type testService struct {
 	*ServiceProcessor
-}
-
-type testContext struct {
-	Context
 	Msg interface{}
 }
 
-func newTestService(c Context, path string) Service {
+func newTestService(c *Context, path string) Service {
 	ts := &testService{
-		ServiceProcessor: NewServiceProcessor(&testContext{Context: c}),
+		ServiceProcessor: NewServiceProcessor(c),
 	}
 	ts.RegisterMessage(ts.ProcessMsg)
 	return ts
@@ -164,12 +160,8 @@ func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (P
 }
 
 func (ts *testService) ProcessMsg(e *network.ServerIdentity, msg *testMsg) (network.Body, error) {
-	return msg, nil
-}
-
-func (ts *testContext) SendRaw(to *network.ServerIdentity, msg interface{}) error {
 	ts.Msg = msg
-	return nil
+	return msg, nil
 }
 
 func returnMsg(e *network.ServerIdentity, msg network.Body) (network.Body, error) {

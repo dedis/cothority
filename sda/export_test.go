@@ -61,12 +61,12 @@ func (h *Host) CloseConnections() error {
 func (h *Host) RegisterConnection(e *network.ServerIdentity, c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	h.connections[e.ID] = c
+	h.Connections[e.ID] = c
 }
 
 func (h *Host) Connection(e *network.ServerIdentity) network.SecureConn {
 	h.networkLock.RLock()
 	defer h.networkLock.RUnlock()
-	c, _ := h.connections[e.ID]
+	c, _ := h.Connections[e.ID]
 	return c
 }
