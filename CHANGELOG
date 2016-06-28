@@ -1,0 +1,10 @@
+160627 - 0.9.1
+	- Changed sda.Context from interface to structure
+	
+160622 - 0.9.0
+	- Renamed network.Entity -> network.ServerIdentity
+	- Renamed network.EntityList -> network.Roster
+	- Renamed network.ProtocolMessage -> network.Body
+	- Renamed network.Message -> network.Packet
+	- Moved lib/* to parent-directory
+	- Depend on dedis/cosi for the cosi-library
