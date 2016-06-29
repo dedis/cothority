@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 )
+
 //Service constant identifier
 const ServiceName = "MedCo"
 
