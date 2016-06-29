@@ -630,10 +630,9 @@ func (h *Host) GetStatus() Status {
 	iter := 0
 	var rx uint64
 	var tx uint64
-	var local string
+	local := h.ServerIdentity.Addresses[0]
 	for _, c := range h.connections {
 		remote[iter] = c.Remote()
-		local = c.Local()
 		rx += c.Rx()
 		tx += c.Tx()
 		iter = iter + 1
