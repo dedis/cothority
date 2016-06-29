@@ -18,18 +18,6 @@ import (
 	"gopkg.in/codegangsta/cli.v1"
 )
 
-// RequestTimeOut defines when the client stops waiting for the CoSi group to
-// reply
-const RequestTimeOut = time.Second * 10
-
-const optionGroup = "group"
-const optionGroupShort = "g"
-
-func init() {
-	log.SetDebugVisible(1)
-	log.SetUseColors(false)
-}
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "Status"
@@ -48,11 +36,11 @@ func main() {
 			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
 	}
-	app.Before = func(c *cli.Context) error {
+	app.Action = func(c *cli.Context) error {
+		log.SetUseColors(false)
 		log.SetDebugVisible(c.GlobalInt("debug"))
-		return nil
+		return network(c)
 	}
-	app.Action = cli.ActionFunc(network)
 	app.Run(os.Args)
 }
 
