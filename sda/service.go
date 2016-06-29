@@ -94,15 +94,6 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	s.inverseTr[id] = name
 }
 
-//Available returns the available services in a server
-func Available() []string {
-	var out []string
-	for name := range ServiceFactory.translations {
-		out = append(out, name)
-	}
-	return out
-}
-
 // RegisterNewService is a wrapper around service factory
 func RegisterNewService(name string, fn NewServiceFunc) {
 	ServiceFactory.Register(name, fn)

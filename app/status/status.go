@@ -12,8 +12,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 
-	"fmt"
-
 	"github.com/dedis/cothority/services/status"
 	"gopkg.in/codegangsta/cli.v1"
 )
@@ -59,12 +57,12 @@ func main() {
 		log.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
-	app.Action = network
+	app.Action = cli.ActionFunc(network)
 	app.Run(os.Args)
 }
 
-// signFile will search for the file and sign it
-// it always returns nil as an error
+// network will contact all cothorities in the group-file and print
+// the status-report of each one.
 func network(c *cli.Context) error {
 	groupToml := c.GlobalString(optionGroup)
 	el, err := readGroup(groupToml)
@@ -80,7 +78,7 @@ func network(c *cli.Context) error {
 	return nil
 }
 
-// sign takes a stream and a toml file defining the servers
+// readGroup takes a toml file name and reads the file, returning the entities within
 func readGroup(tomlFileName string) (*sda.Roster, error) {
 	log.Print("Reading From File")
 	f, err := os.Open(tomlFileName)
@@ -101,7 +99,7 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 
 func printConn(e *status.Response) {
 	for key, value := range e.Msg["Status"] {
-		fmt.Print(key + ": " + value + "\n")
+		log.Print(key + ": " + value)
 	}
-	fmt.Print("\n")
+	log.Print("\n")
 }

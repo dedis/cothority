@@ -8,12 +8,12 @@ type StatusReporter interface {
 	GetStatus() Status
 }
 
-//statusReporter struct is a struct
+// statusReporter holds a map of all StatusReporters
 type statusReporterStruct struct {
 	statusReporters map[string]StatusReporter
 }
 
-//newStatusReporterStruct creats the struct
+//newStatusReporterStruct creates the struct
 func newStatusReporterStruct() *statusReporterStruct {
 	return &statusReporterStruct{
 		statusReporters: make(map[string]StatusReporter),

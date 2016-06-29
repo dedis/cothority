@@ -7,7 +7,11 @@ import (
 	"sync"
 	"time"
 
+	"strings"
+
 	"sort"
+
+	"strconv"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -30,7 +34,7 @@ type Host struct {
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
 	// The open connections
-	Connections map[network.ServerIdentityID]network.SecureConn
+	connections map[network.ServerIdentityID]network.SecureConn
 	// chan of received messages - testmode
 	networkChan chan network.Packet
 	// treeMarshal that needs to be converted to Tree but host does not have the
@@ -74,7 +78,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
 		workingAddress:       e.First(),
-		Connections:          make(map[network.ServerIdentityID]network.SecureConn),
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		pendingTreeMarshal:   make(map[RosterID][]*TreeMarshal),
 		pendingSDAs:          make([]*ProtocolMsg, 0),
 		host:                 network.NewSecureTCPHost(pkey, e),
@@ -178,7 +182,7 @@ func (h *Host) Close() error {
 func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	for _, c := range h.Connections {
+	for _, c := range h.connections {
 		log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
@@ -187,7 +191,7 @@ func (h *Host) closeConnections() error {
 		}
 	}
 	log.Lvl4(h.ServerIdentity.First(), "Closing tcpHost")
-	h.Connections = make(map[network.ServerIdentityID]network.SecureConn)
+	h.connections = make(map[network.ServerIdentityID]network.SecureConn)
 	return h.host.Close()
 }
 
@@ -201,7 +205,7 @@ func (h *Host) closeConnection(c network.SecureConn) error {
 	if err != nil {
 		return err
 	}
-	delete(h.Connections, c.ServerIdentity().ID)
+	delete(h.connections, c.ServerIdentity().ID)
 	return nil
 }
 
@@ -211,7 +215,7 @@ func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 		return errors.New("Can't send nil-packet")
 	}
 	h.networkLock.RLock()
-	c, ok := h.Connections[e.ID]
+	c, ok := h.connections[e.ID]
 	h.networkLock.RUnlock()
 	if !ok {
 		var err error
@@ -425,7 +429,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		// This is for testing purposes only: if the connection is missing
 		// in the map, we just return silently
 		h.networkLock.Lock()
-		_, cont := h.Connections[c.ServerIdentity().ID]
+		_, cont := h.connections[c.ServerIdentity().ID]
 		h.networkLock.Unlock()
 		if !cont {
 			log.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
@@ -509,12 +513,12 @@ func (h *Host) registerConnection(c network.SecureConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.ServerIdentity()
-	_, okc := h.Connections[id.ID]
+	_, okc := h.connections[id.ID]
 	if okc {
 		// TODO - we should catch this in some way
 		log.Lvl3("Connection already registered", okc)
 	}
-	h.Connections[id.ID] = c
+	h.connections[id.ID] = c
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -618,7 +622,7 @@ func (h *Host) Address() string {
 	return h.workingAddress
 }
 
-//Received gives packets received
+//Received gives the total number of packets received by a host
 func Received(n map[network.ServerIdentityID]network.SecureConn) uint64 {
 	var a uint64
 	for _, value := range n {
@@ -627,7 +631,7 @@ func Received(n map[network.ServerIdentityID]network.SecureConn) uint64 {
 	return a
 }
 
-//Sent gives packets sent
+//Sent gives the total number of packets sent by the host
 func Sent(n map[network.ServerIdentityID]network.SecureConn) uint64 {
 	var a uint64
 	for _, value := range n {
@@ -637,8 +641,8 @@ func Sent(n map[network.ServerIdentityID]network.SecureConn) uint64 {
 
 }
 
-//Host is the host
-func id(n map[network.ServerIdentityID]network.SecureConn) string {
+//ID is the host that you are asking for stats from
+func ID(n map[network.ServerIdentityID]network.SecureConn) string {
 	var a string
 	for _, value := range n {
 		a = value.Local()
@@ -659,15 +663,26 @@ func Remote(n map[network.ServerIdentityID]network.SecureConn) string {
 //GetStatus is a function
 func (h *Host) GetStatus() Status {
 	m := make(map[string]string)
-	m["Host"] = id(h.Connections)
-	m["Connections"] = Remote(h.Connections)
-	s := fmt.Sprintf("%d", len(h.Connections))
-	m["Total"] = s
-	t := fmt.Sprintf("%d", Received(h.Connections))
-	m["Packets Received"] = t
-	x := fmt.Sprintf("%d ", Sent(h.Connections))
-	m["Packets Sent"] = x
-	a := Available()
+	nbr := len(h.connections)
+	remote := make([]string, nbr)
+	iter := 0
+	var rx uint64
+	var tx uint64
+	var local string
+	for _, c := range h.connections {
+		remote[iter] = c.Remote()
+		local = c.Local()
+		rx += c.Rx()
+		tx += c.Tx()
+		iter = iter + 1
+
+	}
+	m["Connections"] = strings.Join(remote, "\n")
+	m["Host"] = local
+	m["Total"] = strconv.Itoa(nbr)
+	m["Packets Received"] = fmt.Sprintf("%d", rx)
+	m["Packets Sent"] = fmt.Sprintf("%d", tx)
+	a := ServiceFactory.RegisteredServicesName()
 	sort.Strings(a)
 	var r string
 	for _, value := range a {
