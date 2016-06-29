@@ -12,12 +12,14 @@ import (
 
 var suite = network.Suite
 
+// GenKeys permits to generate a public/private key pairs.
 func GenKey() (secKey abstract.Scalar, pubKey abstract.Point) {
 	secKey = suite.Scalar().Pick(random.Stream)
 	pubKey = suite.Point().Mul(suite.Point().Base(), secKey)
 	return
 }
 
+//GenKeys permits to generate ElGamal public/private key pairs.
 func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	priv := make([]abstract.Scalar, n)
 	pub := make([]abstract.Point, n)
@@ -29,7 +31,7 @@ func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	return group, priv, pub
 }
 
-//TestNullCipherText verifies encryption, decryption and behavior of null ciphertexts
+// TestNullCipherText verifies encryption, decryption and behavior of null ciphertexts.
 func TestNullCipherText(t *testing.T) {
 
 	secKey, pubKey := GenKey()
@@ -51,7 +53,7 @@ func TestNullCipherText(t *testing.T) {
 
 }
 
-//TestNullCipherText verifies encryption, decryption and behavior of null cipherVectors
+// TestNullCipherText verifies encryption, decryption and behavior of null cipherVectors.
 func TestNullCipherVector(t *testing.T) {
 	secKey, pubKey := GenKey()
 
@@ -73,7 +75,7 @@ func TestNullCipherVector(t *testing.T) {
 	}
 }
 
-//TestHomomorphicOpp tests homomorphic addition
+// TestHomomorphicOpp tests homomorphic addition.
 func TestHomomorphicOpp(t *testing.T) {
 	secKey, pubKey := GenKey()
 
@@ -88,7 +90,7 @@ func TestHomomorphicOpp(t *testing.T) {
 	assert.Equal(t, target, p)
 }
 
-//TestCryptoDeterministicSwitching tests deterministic switch
+// TestCryptoDeterministicSwitching tests deterministic switch.
 func TestCryptoDeterministicSwitching(t *testing.T) {
 	const N = 5
 
@@ -114,7 +116,7 @@ func TestCryptoDeterministicSwitching(t *testing.T) {
 	}
 }
 
-//TestCryptoKeySwitching tests key switching
+// TestCryptoKeySwitching tests key switching.
 func TestCryptoKeySwitching(t *testing.T) {
 	const N = 5
 	groupKey, privates, _ := GenKeys(N)
@@ -132,13 +134,7 @@ func TestCryptoKeySwitching(t *testing.T) {
 	}
 
 	for n := 0; n < N; n++ {
-		//res := *NewCipherVector(len(kscv))
-		//dbg.Printf("%#v",res)
-		//res.KeySwitching(&kscv, &origEphem, newPublic, privates[n])
-		//dbg.Printf("%#v", res)
-		//kscv = res
 		kscv.KeySwitching(&kscv, &origEphem, newPublic, privates[n])
-		//dbg.Printf("%#v", kscv)
 	}
 
 	res := DecryptIntVector(newPrivate, &kscv)
@@ -146,7 +142,7 @@ func TestCryptoKeySwitching(t *testing.T) {
 
 }
 
-//TestEqualDeterministCipherText tests equality between deterministic ciphertexts
+// TestEqualDeterministCipherText tests equality between deterministic ciphertexts.
 func TestEqualDeterministCipherText(t *testing.T) {
 	dcv1 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}
 	dcv2 := DeterministCipherVector{DeterministCipherText{suite.Point().Base()}, DeterministCipherText{suite.Point().Null()}}
