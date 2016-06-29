@@ -99,6 +99,6 @@ func printConn(e *status.Response) {
 		a = append(a, (key + ": " + value + "\n"))
 	}
 	sort.Strings(a)
-	strings.Join(a, "\n\n")
+	strings.Join(a, "\n")
 	log.Print(a)
 }

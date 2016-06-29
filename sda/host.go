@@ -622,7 +622,7 @@ func (h *Host) Address() string {
 	return h.workingAddress
 }
 
-//GetStatus is a function
+// GetStatus is a function that returns the status report of the server.
 func (h *Host) GetStatus() Status {
 	m := make(map[string]string)
 	nbr := len(h.connections)

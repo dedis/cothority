@@ -6,12 +6,11 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
-// This file contains all the code to run a Stat service. It is used to reply to
-// client request for status.
-// It would be very easy to write an
-// updated version that provides additional data
+// This file contains all the code to run a Stat service. The Stat receives takes a
+// request for the Status reports of the server, and sends back the status reports for each service
+// in the server.
 
-// ServiceName is the name to refer to the Status service
+// ServiceName is the name to refer to the Status service.
 const ServiceName = "Status"
 
 func init() {
@@ -27,10 +26,10 @@ type Stat struct {
 	path string
 }
 
-// Request is what the Cosi service is expected to receive from clients.
+// Request is what the Status service is expected to receive from clients.
 type Request struct{}
 
-// Response is what the Cosi service will reply to clients.
+// Response is what the Status service will reply to clients.
 type Response struct {
 	Msg map[string]sda.Status
 }
@@ -40,6 +39,7 @@ func (st *Stat) Request(e *network.ServerIdentity, req *Request) (network.Body, 
 	return &Response{st.Context.ReportStatus()}, nil
 }
 
+// newStatService creates a new service that is built for Status
 func newStatService(c *sda.Context, path string) sda.Service {
 	s := &Stat{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -53,7 +53,7 @@ func newStatService(c *sda.Context, path string) sda.Service {
 	return s
 }
 
-//NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary
+// NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary.
 func (st *Stat) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	return nil, nil
 }

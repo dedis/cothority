@@ -20,22 +20,22 @@ func newContext(h *Host, o *Overlay, servID ServiceID) *Context {
 	}
 }
 
-// NewTreeNodeInstance is a Context method
+// NewTreeNodeInstance is a Context method.
 func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
 	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID)
 }
 
-// SendRaw sends a message to the entity
+// SendRaw sends a message to the entity.
 func (c *Context) SendRaw(e *network.ServerIdentity, msg interface{}) error {
 	return c.host.SendRaw(e, msg)
 }
 
-// ServerIdentity returns the entity the service uses
+// ServerIdentity returns the entity the service uses.
 func (c *Context) ServerIdentity() *network.ServerIdentity {
 	return c.host.ServerIdentity
 }
 
-// ServiceID returns the service-id
+// ServiceID returns the service-id.
 func (c *Context) ServiceID() ServiceID {
 	return c.servID
 }
@@ -54,17 +54,17 @@ func (c *Context) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, err
 	return pi, err
 }
 
-// RegisterProtocolInstance registers a new instance of a protocol using overlay
+// RegisterProtocolInstance registers a new instance of a protocol using overlay.
 func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
 	return c.overlay.RegisterProtocolInstance(pi)
 }
 
-//ReportStatus is the status reporter but it works with context
+// ReportStatus is the status reporter but it works with context.
 func (c *Context) ReportStatus() map[string]Status {
 	return c.host.statusReporterStruct.ReportStatus()
 }
 
-//RegisterStatusReporter registers the Status Reporter
+// RegisterStatusReporter registers the Status Reporter.
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
 }

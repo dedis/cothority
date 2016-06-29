@@ -8,7 +8,7 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
-//Client is a structure to communicate with status service
+// Client is a structure to communicate with status service
 type Client struct {
 	*sda.Client
 }
