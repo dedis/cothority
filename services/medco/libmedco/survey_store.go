@@ -15,7 +15,6 @@ type SurveyResult struct {
 
 // SurveyStore contains all the elements of a survey, it consists of the data structure that each cothority has to
 // maintain locally to perform a collective survey.
-
 type SurveyStore struct {
 	ClientResponses    []ClientResponse
 	DeliverableResults []SurveyResult
