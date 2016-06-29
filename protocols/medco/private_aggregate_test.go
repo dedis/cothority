@@ -1,8 +1,6 @@
 package medco_test
 
 import (
-	"testing"
-	"time"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
@@ -10,8 +8,9 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
-
 
 var suite = network.Suite
 var clientPrivate = suite.Scalar().Pick(random.Stream)
@@ -75,7 +74,6 @@ func TestPrivateAggregate(t *testing.T) {
 	}
 	protocol := p.(*medco.PrivateAggregateProtocol)
 
-
 	//run protocol
 	go protocol.StartProtocol()
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
@@ -92,23 +90,23 @@ func TestPrivateAggregate(t *testing.T) {
 		groupingAttrC.Key(): {1, 1, 1, 1, 1}}
 
 	select {
-		case encryptedResult := <-feedback:
-			log.Lvl1("Recieved results:")
-			resultData := make(map[GroupingKey][]int64)
-			for k, v := range encryptedResult.GroupedData {
-				resultData[k] = DecryptIntVector(clientPrivate, &v)
-				log.Lvl1(k, resultData[k])
+	case encryptedResult := <-feedback:
+		log.Lvl1("Recieved results:")
+		resultData := make(map[GroupingKey][]int64)
+		for k, v := range encryptedResult.GroupedData {
+			resultData[k] = DecryptIntVector(clientPrivate, &v)
+			log.Lvl1(k, resultData[k])
+		}
+		for k, v1 := range expectedGroups {
+			if v2, ok := encryptedResult.Groups[k]; ok {
+				assert.True(t, ok)
+				assert.True(t, v1.Equal(&v2))
+				delete(encryptedResult.Groups, k)
 			}
-			for k, v1 := range expectedGroups {
-				if v2, ok := encryptedResult.Groups[k]; ok {
-					assert.True(t, ok)
-					assert.True(t, v1.Equal(&v2))
-					delete(encryptedResult.Groups, k)
-				}
-			}
-			assert.Empty(t, encryptedResult.Groups)
-			assert.Equal(t, expectedResults, resultData)
-		case <-time.After(timeout):
-			t.Fatal("Didn't finish in time")
+		}
+		assert.Empty(t, encryptedResult.Groups)
+		assert.Equal(t, expectedResults, resultData)
+	case <-time.After(timeout):
+		t.Fatal("Didn't finish in time")
 	}
 }

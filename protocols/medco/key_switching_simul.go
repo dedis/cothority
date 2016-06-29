@@ -11,6 +11,7 @@ import (
 
 //number of ciphertexts in each vector to be switched
 const NUM_ATTR = 100
+
 //number of vectors to be switched
 const NUM_VECT = 10
 

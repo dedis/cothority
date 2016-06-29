@@ -28,8 +28,8 @@ type SurveyStore struct {
 
 	//AfterAggrProto & LocGroupingGroups are the results of the split of LocGroupingAggregating, first one contains
 	//aggregating attributes and the secondm the grouping attributes
-	AfterAggrProto         map[GroupingKey]CipherVector
-	LocGroupingGroups      map[GroupingKey]GroupingAttributes
+	AfterAggrProto    map[GroupingKey]CipherVector
+	LocGroupingGroups map[GroupingKey]GroupingAttributes
 
 	//GroupedDeterministicGroupingAttributes & GroupedAggregatingAttributes contain results of the grouping
 	//before they are key switched and combined in the last step (key switching)

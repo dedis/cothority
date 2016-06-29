@@ -1,7 +1,6 @@
 package medco
 
 import (
-	"strconv"
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -9,6 +8,7 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"strconv"
 )
 
 //MedcoAPI represents a client with its associated server and public/private key par
@@ -84,7 +84,6 @@ func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, 
 		return nil, nil, errors.New("Bad response type from service")
 	}
 }
-
 
 func (c *MedcoAPI) String() string {
 	return "[Client-" + strconv.FormatInt(c.localClientNumber, 10) + "]"

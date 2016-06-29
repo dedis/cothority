@@ -1,12 +1,12 @@
 package libmedco_test
 
 import (
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/crypto/random"
 	"reflect"
 	"testing"
-	"github.com/dedis/cothority/log"
-	. "github.com/dedis/cothority/services/medco/libmedco"
-	"github.com/dedis/cothority/network"
-	"github.com/dedis/crypto/random"
 )
 
 //TestStoring tests survey store and its methods
@@ -19,7 +19,6 @@ func TestStoring(t *testing.T) {
 	nullEnc := EncryptInt(pubKey, 0) //*CipherText
 	oneEnc := EncryptInt(pubKey, 1)  //*CipherText
 	oneBEnc := EncryptInt(pubKey, 1) //*CipherText
-
 
 	oneEnc.DeterministicSwitching(oneEnc, secKey, pubKey)
 	oneBEnc.DeterministicSwitching(oneBEnc, secKey, pubKey)
@@ -65,14 +64,13 @@ func TestStoring(t *testing.T) {
 		t.Errorf("aggregation error")
 	} else {
 		added := *testCipherVect1.Add(testCipherVect1, testCipherVect2)
-		for i,v := range added{
-			if !reflect.DeepEqual(v,aggr[GroupingKey(DEFAULT_GROUP)][i]){
+		for i, v := range added {
+			if !reflect.DeepEqual(v, aggr[GroupingKey(DEFAULT_GROUP)][i]) {
 				t.Errorf("aggregation error")
 			}
 		}
 		t.Logf("second aggregation OK")
 	}
-
 
 	//GROUPING
 	storage = NewSurveyStore()

@@ -1,14 +1,14 @@
 package medco_test
 
 import (
-	"testing"
-	"time"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
-	"github.com/dedis/crypto/random"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/crypto/random"
+	"testing"
+	"time"
 )
 
 //NewDeterministicSwitchingTest default constructor such that each node use it and generates a SurveyPHKey needed
@@ -90,4 +90,3 @@ func TestDeterministicSwitching(t *testing.T) {
 		t.Fatal("Didn't finish in time")
 	}
 }
-

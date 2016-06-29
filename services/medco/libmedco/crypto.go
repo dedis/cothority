@@ -10,6 +10,7 @@ import (
 
 //upper bound for integers used in messages, a failed decryption will return this value
 const MAX_HOMOMORPHIC_INT int64 = 300
+
 //default seed used in bytes encoding
 const BYTES_TO_POINT_ENCODING_SEED string = "seed"
 

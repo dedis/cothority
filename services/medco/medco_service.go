@@ -7,9 +7,9 @@ import (
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
-	"github.com/dedis/crypto/abstract"
 )
 
 const MEDCO_SERVICE_NAME = "MedCo"
@@ -98,7 +98,6 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, re
 
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
-
 
 // HandleSurveyResponseData handles a survey answers submission by a subject
 func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {

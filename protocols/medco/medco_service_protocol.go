@@ -31,9 +31,9 @@ type TriggerFlushCollectedDataMessage struct {
 
 //DoneFlushCollectedDataMessage empty structure which indicates that the flush is done
 type DoneFlushCollectedDataMessage struct{}
+
 //DoneProcessingMessage empty structure which indicates that the processing is done
 type DoneProcessingMessage struct{}
-
 
 type FlushCollectedDataStruct struct {
 	*sda.TreeNode

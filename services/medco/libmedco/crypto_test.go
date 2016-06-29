@@ -1,13 +1,13 @@
 package libmedco_test
 
 import (
-	"reflect"
-	"testing"
 	"github.com/dedis/cothority/network"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
+	"reflect"
+	"testing"
 )
 
 var suite = network.Suite
@@ -17,7 +17,6 @@ func GenKey() (secKey abstract.Scalar, pubKey abstract.Point) {
 	pubKey = suite.Point().Mul(suite.Point().Base(), secKey)
 	return
 }
-
 
 func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	priv := make([]abstract.Scalar, n)

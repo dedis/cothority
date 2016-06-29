@@ -11,6 +11,7 @@ import (
 
 //number of attributes to be switched in each vector
 const NUM_ATTR_PROB = 2
+
 //number of vectors to be switched
 const NUM_VECT_PROB = 10
 

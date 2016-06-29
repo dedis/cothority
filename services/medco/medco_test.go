@@ -1,18 +1,20 @@
 package medco_test
 
 import (
-	"reflect"
-	"testing"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
+	"reflect"
+	"testing"
 )
 
 //number of group attributes
 const numberGrpAttr = 1
+
 //number of attributes
 const numberAttr = 10
+
 func TestServiceMedco(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 1)
@@ -43,8 +45,8 @@ func TestServiceMedco(t *testing.T) {
 		aggr[i] = 3
 
 		//convert tab in slice (was a tab only for the test)
-		sliceGrp := make([]int64,numberGrpAttr)
-		for i,v := range grp {
+		sliceGrp := make([]int64, numberGrpAttr)
+		for i, v := range grp {
 			if i == 0 {
 				sliceGrp = []int64{v}
 			} else {
@@ -55,9 +57,9 @@ func TestServiceMedco(t *testing.T) {
 		dataHolder[i].SendSurveyResultsData(*surveyID, sliceGrp, aggr, el.Aggregate)
 
 		//compute expected results
-		_,ok := expectedResults[grp]
+		_, ok := expectedResults[grp]
 		if ok {
-			for ind,v := range expectedResults[grp]{
+			for ind, v := range expectedResults[grp] {
 				expectedResults[grp][ind] = v + aggr[ind]
 			}
 		} else {
@@ -72,15 +74,15 @@ func TestServiceMedco(t *testing.T) {
 	}
 
 	log.Lvl1("Service output:")
-	for i,_ := range *grp {
+	for i, _ := range *grp {
 		log.Lvl1(i, ")", (*grp)[i], "->", (*aggr)[i])
 		//convert from slice to tab in order to test the values
 		grpTab := [numberGrpAttr]int64{}
-		for ind,v := range (*grp)[i]{
+		for ind, v := range (*grp)[i] {
 			grpTab[ind] = v
 		}
 		data, ok := expectedResults[grpTab]
-		if !ok || !reflect.DeepEqual(data,(*aggr)[i]){
+		if !ok || !reflect.DeepEqual(data, (*aggr)[i]) {
 			t.Error("Not expected results, got ", (*aggr)[i], " when expected ", data)
 		}
 	}

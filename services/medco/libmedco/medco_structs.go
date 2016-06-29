@@ -1,11 +1,10 @@
 package libmedco
 
 import (
-	"strings"
-	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/abstract"
+	"strings"
 )
-
 
 //PROOF is true if we use protocols with proofs (ZKPs)
 const PROOF = false
@@ -36,7 +35,6 @@ type SurveyDescription struct {
 	GroupingAttributesCount    int32
 	AggregatingAttributesCount uint32
 }
-
 
 //Key a map-friendly representation of grouping attributes to be used as keys
 func (ga *GroupingAttributes) Key() GroupingKey {

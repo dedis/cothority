@@ -1,17 +1,16 @@
 package medco_test
 
 import (
-	"reflect"
-	"testing"
-	"time"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
+	"reflect"
+	"testing"
+	"time"
 )
-
 
 //NewProbabilisticSwitchingTest default constructor such that each node use it and generates a SurveyPHKey needed
 func NewProbabilisticSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -43,7 +42,7 @@ func TestProbabilisticSwitching(t *testing.T) {
 	//create dummy data
 	aggregateKey := entityList.Aggregate
 
-	expRes := []int64{1,1}
+	expRes := []int64{1, 1}
 	point := network.Suite.Scalar().SetInt64(1)
 	multPoint := network.Suite.Point().Mul(network.Suite.Point().Base(), point)
 	multPoint.Add(multPoint, aggregateKey)
@@ -65,19 +64,19 @@ func TestProbabilisticSwitching(t *testing.T) {
 
 	//verify results
 	select {
-		case encryptedResult := <-feedback:
-			val1 := encryptedResult[TempID(1)]
-			cv1 := DecryptIntVector(clientPrivate, &val1)
-			val2 := encryptedResult[TempID(1)]
-			cv2 := DecryptIntVector(clientPrivate, &val2)
-			if !reflect.DeepEqual(cv1, expRes) {
-				t.Fatal("Wrong results, expected ", expRes, " and got ", cv1)
-			}
-			if !reflect.DeepEqual(cv2, expRes) {
-				t.Fatal("Wrong results, expected ", expRes, " and got ", cv2)
-			}
+	case encryptedResult := <-feedback:
+		val1 := encryptedResult[TempID(1)]
+		cv1 := DecryptIntVector(clientPrivate, &val1)
+		val2 := encryptedResult[TempID(1)]
+		cv2 := DecryptIntVector(clientPrivate, &val2)
+		if !reflect.DeepEqual(cv1, expRes) {
+			t.Fatal("Wrong results, expected ", expRes, " and got ", cv1)
+		}
+		if !reflect.DeepEqual(cv2, expRes) {
+			t.Fatal("Wrong results, expected ", expRes, " and got ", cv2)
+		}
 
 	case <-time.After(timeout):
-			t.Fatal("Didn't finish in time")
+		t.Fatal("Didn't finish in time")
 	}
 }

@@ -12,9 +12,9 @@ import (
 
 //number of attributes per client response that should be switched to deterministic
 const NUM_ATTR_DET = 3
+
 //number of client responses (of vector to be switched)
 const NUM_VECT_DET = 2
-
 
 func init() {
 	sda.SimulationRegister("DeterministicSwitching", NewDeterministicSwitchingSimulation)
