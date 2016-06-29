@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-//DEFAULT_GROUP defines the default grouping key. Used when a survey consists of an aggregation only (no grouping)
+//DefaultGroup defines the default grouping key. Used when a survey consists of an aggregation only (no grouping)
 const DefaultGroup = GroupingKey("DefaultGroup")
 
 //SurveyResult represents a result from a survey which is made of two ciphervector encrypted for the querier
@@ -112,7 +112,7 @@ func (s *SurveyStore) PollLocallyAggregatedResponses() (map[GroupingKey]Grouping
 }
 
 func (s *SurveyStore) nextID() TempID {
-	s.lastID += 1
+	s.lastID++
 	return TempID(s.lastID)
 }
 
@@ -134,12 +134,12 @@ func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]Groupin
 	}
 }
 
-//HasNextAggregatedGroupsId verifies that the server has local grouping results (group attributes)
+//HasNextAggregatedGroupsID verifies that the server has local grouping results (group attributes)
 func (s *SurveyStore) HasNextAggregatedGroupsID() bool {
 	return (len(s.GroupedDeterministicGroupingAttributes) == 0)
 }
 
-//PollCothorityAggregatedGroupsId returns the local results of the grouping (group attributes)
+//PollCothorityAggregatedGroupsID returns the local results of the grouping (group attributes)
 func (s *SurveyStore) PollCothorityAggregatedGroupsID() map[TempID]GroupingAttributes {
 	if len(s.AfterAggrProto) != 0 {
 		for key, value := range s.AfterAggrProto {
