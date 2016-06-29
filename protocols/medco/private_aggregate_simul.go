@@ -10,7 +10,7 @@ import (
 )
 
 var suite = network.Suite
-var grpattr = libmedco.DeterministCipherText{suite.Point().Base()}
+var grpattr = libmedco.DeterministCipherText{Point: suite.Point().Base()}
 var clientPrivate = suite.Scalar().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 

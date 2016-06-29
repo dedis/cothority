@@ -98,9 +98,11 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 			encrypted := *libmedco.EncryptIntVector(aggregateKey, tab)
 			for ind, v := range encrypted {
 				if ind == 0 {
-					ciphertexts[libmedco.TempID(i)] = libmedco.DeterministCipherVector{libmedco.DeterministCipherText{v.C}}
+					ciphertexts[libmedco.TempID(i)] = libmedco.DeterministCipherVector{
+						libmedco.DeterministCipherText{Point: v.C}}
 				} else {
-					ciphertexts[libmedco.TempID(i)] = append(ciphertexts[libmedco.TempID(i)], libmedco.DeterministCipherText{v.C})
+					ciphertexts[libmedco.TempID(i)] = append(ciphertexts[libmedco.TempID(i)],
+						libmedco.DeterministCipherText{Point: v.C})
 				}
 			}
 		}

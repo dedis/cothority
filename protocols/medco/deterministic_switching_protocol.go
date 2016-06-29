@@ -118,7 +118,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 		for k, v := range deterministicSwitchingTarget.Data {
 			deterministicSwitchedData[k] = make(libmedco.DeterministCipherVector, len(v))
 			for i, c := range v {
-				deterministicSwitchedData[k][i] = libmedco.DeterministCipherText{c.C}
+				deterministicSwitchedData[k][i] = libmedco.DeterministCipherText{Point: c.C}
 			}
 		}
 		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData), "row )")
