@@ -9,13 +9,14 @@ import (
 	"testing"
 )
 
-//number of group attributes
+// numberGrpAttr is the number of group attributes.
 const numberGrpAttr = 1
 
-//number of attributes
+// numberAttr is the number of attributes.
 const numberAttr = 10
 
-func TestServiceMedco(t *testing.T) {
+// TestService tests medco complete service execution.
+func TestService(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
@@ -74,7 +75,7 @@ func TestServiceMedco(t *testing.T) {
 	}
 
 	log.Lvl1("Service output:")
-	for i, _ := range *grp {
+	for i := range *grp {
 		log.Lvl1(i, ")", (*grp)[i], "->", (*aggr)[i])
 		//convert from slice to tab in order to test the values
 		grpTab := [numberGrpAttr]int64{}

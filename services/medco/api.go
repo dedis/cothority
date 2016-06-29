@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-//API represents a client with its associated server and public/private key par
+// API represents a client with the server to which he is connected and its public/private key pair.
 type API struct {
 	*sda.Client
 	entryPoint        *network.ServerIdentity
@@ -22,7 +22,7 @@ type API struct {
 
 var localClientCounter = int64(0)
 
-//NewMedcoClient constructor of a client
+// NewMedcoClient constructor of a client.
 func NewMedcoClient(entryPoint *network.ServerIdentity) *API {
 	keys := config.NewKeyPair(network.Suite)
 	newClient := &API{
@@ -37,7 +37,7 @@ func NewMedcoClient(entryPoint *network.ServerIdentity) *API {
 	return newClient
 }
 
-//CreateSurvey creates a survey based on a set of entities (servers) and a survey description.
+// CreateSurvey creates a survey based on a set of entities (servers) and a survey description.
 func (c *API) CreateSurvey(entities *sda.Roster, surveyDescription libmedco.SurveyDescription) (*libmedco.SurveyID, error) {
 	log.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
@@ -50,7 +50,7 @@ func (c *API) CreateSurvey(entities *sda.Roster, surveyDescription libmedco.Surv
 	return &surveyID, nil
 }
 
-//SendSurveyResultsData creates and sends a client response encrypted with the collective key
+// SendSurveyResultsData creates and sends a client response encrypted with the cothority collective key.
 func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	log.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	encGrouping := libmedco.EncryptIntVector(groupKey, grouping)
@@ -66,7 +66,7 @@ func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggreg
 	return nil
 }
 
-//GetSurveyResults to get the result from associated server. Then this response is decrypted
+// GetSurveyResults to get the result from associated server and decrypt the response using its private key.
 func (c *API) GetSurveyResults(surveyID libmedco.SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
@@ -89,6 +89,7 @@ func (c *API) GetSurveyResults(surveyID libmedco.SurveyID) (*[][]int64, *[][]int
 
 }
 
+// String permits to have the string representation of a client.
 func (c *API) String() string {
 	return "[Client-" + strconv.FormatInt(c.localClientNumber, 10) + "]"
 }

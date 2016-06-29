@@ -12,7 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-//ServiceName constant identifier
+// ServiceName is the registered name for the medco service.
 const ServiceName = "MedCo"
 
 func init() {
@@ -24,44 +24,44 @@ func init() {
 	network.RegisterMessageType(&ServiceResponse{})
 }
 
-//SurveyCreationQuery is used to trigger the creation of a survey
+// SurveyCreationQuery is used to trigger the creation of a survey.
 type SurveyCreationQuery struct {
 	SurveyID *libmedco.SurveyID
 	sda.Roster
 	libmedco.SurveyDescription
 }
 
-//SurveyResponseQuery sis used to ask a client for its response
+// SurveyResponseQuery is used to ask a client for its response to a survey.
 type SurveyResponseQuery struct {
 	SurveyID libmedco.SurveyID
 	libmedco.ClientResponse
 }
 
-//SurveyResultsQuery is used by querier to ask for the response
+// SurveyResultsQuery is used by querier to ask for the response of the survey.
 type SurveyResultsQuery struct {
 	SurveyID     libmedco.SurveyID
 	ClientPublic abstract.Point
 }
 
-//ServiceResponse represents service "state"
+// ServiceResponse represents the service "state".
 type ServiceResponse struct {
 	SurveyID libmedco.SurveyID
 }
 
-//SurveyResultResponse will contain final results of a survey and be sent to querier
+// SurveyResultResponse will contain final results of a survey and be sent to querier.
 type SurveyResultResponse struct {
 	Results []libmedco.SurveyResult
 }
 
-//Service defines a service in medco case with a survey
+// Service defines a service in medco case with a survey.
 type Service struct {
 	*sda.ServiceProcessor
 	homePath string
 
-	survey libmedco.Survey // For now, server only handles one survey
+	survey libmedco.Survey // For now, server only handles one survey.
 }
 
-//NewService constructor which registers the needed messages
+// NewService constructor which registers the needed messages.
 func NewService(c *sda.Context, path string) sda.Service {
 	newMedCoInstance := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -74,9 +74,8 @@ func NewService(c *sda.Context, path string) sda.Service {
 }
 
 // Queries Handlers definitions
-//=============================
 
-//HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating a corresponding survey
+// HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating the corresponding survey.
 func (mcs *Service) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "received a Survey Creation Query")
 	if recq.SurveyID == nil {
@@ -101,7 +100,7 @@ func (mcs *Service) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *S
 	return &ServiceResponse{*recq.SurveyID}, nil
 }
 
-// HandleSurveyResponseData handles a survey answers submission by a subject
+// HandleSurveyResponseData handles a survey answers submission by a subject.
 func (mcs *Service) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ", resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {
@@ -112,7 +111,7 @@ func (mcs *Service) HandleSurveyResponseData(e *network.ServerIdentity, resp *Su
 	return &ServiceResponse{resp.SurveyID}, nil
 }
 
-// HandleSurveyResultsQuery handles the survey result query by the surveyor
+// HandleSurveyResultsQuery handles the survey result query by the surveyor.
 func (mcs *Service) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
 
 	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
@@ -124,7 +123,7 @@ func (mcs *Service) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *Su
 	return &SurveyResultResponse{mcs.survey.PollDeliverableResults()}, nil
 }
 
-//NewProtocol handles the creation of the right protocols
+// NewProtocol handles the creation of the right protocol parameters.
 func (mcs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 
 	var pi sda.ProtocolInstance
@@ -183,7 +182,7 @@ func (mcs *Service) startProtocol(name string, targetSurvey libmedco.SurveyID) (
 
 // Pipeline steps forward operations
 
-// DeterministicSwitchingPhase performs the private grouping on the currently collected data
+// DeterministicSwitchingPhase performs the private grouping on the currently collected data.
 func (mcs *Service) DeterministicSwitchingPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.DeterministicSwitchingProtocolName, targetSurvey)
@@ -195,7 +194,7 @@ func (mcs *Service) DeterministicSwitchingPhase(targetSurvey libmedco.SurveyID) 
 	return err
 }
 
-// AggregationPhase performs the per-group aggregation on the currently grouped data
+// AggregationPhase performs the per-group aggregation on the currently grouped data.
 func (mcs *Service) AggregationPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.PrivateAggregateProtocolName, targetSurvey)
@@ -209,7 +208,7 @@ func (mcs *Service) AggregationPhase(targetSurvey libmedco.SurveyID) error {
 	return err
 }
 
-// KeySwitchingPhase performs the switch to data querier key on the currently aggregated data
+// KeySwitchingPhase performs the switch to data querier key on the currently aggregated data.
 func (mcs *Service) KeySwitchingPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.KeySwitchingProtocolName, targetSurvey)

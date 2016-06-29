@@ -9,11 +9,11 @@ import (
 	"testing"
 )
 
-//TestStoring tests survey store and its methods
+// TestStoring tests survey store and its methods.
 func TestStoring(t *testing.T) {
 	log.Lvl1("Test beginning")
 
-	//construc variables
+	// construction of variables
 	secKey := network.Suite.Scalar().Pick(random.Stream)
 	pubKey := network.Suite.Point().Mul(network.Suite.Point().Base(), secKey)
 	nullEnc := EncryptInt(pubKey, 0) //*CipherText
@@ -27,7 +27,7 @@ func TestStoring(t *testing.T) {
 	var done DeterministCipherText
 	var doneB DeterministCipherText
 	dnull.Point = nullEnc.C
-	done.Point = oneEnc.C //deterministic ciphertext
+	done.Point = oneEnc.C // deterministic ciphertext
 	doneB.Point = oneBEnc.C
 
 	nullVectEnc := NullCipherVector(4, pubKey) //CipherVector
@@ -42,21 +42,21 @@ func TestStoring(t *testing.T) {
 		testCipherVect2[i] = *EncryptInt(pubKey, p)
 	}
 
-	//constructor test
+	// constructor test
 	storage := NewSurveyStore()
 	_ = storage
 
-	//AddAggregate & GetAggregateLoc Test
+	// AddAggregate & GetAggregateLoc Test
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
 
-	//veifies that one element has been stored
+	// verifies that one element has been stored
 	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
 		t.Errorf("aggregation error")
 	} else {
 		t.Logf("aggregation OK")
 	}
 
-	//add a second element with same group ID -> should be aggregated with first one
+	// add a second element with same group ID -> should be aggregated with first one
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
 
@@ -72,7 +72,7 @@ func TestStoring(t *testing.T) {
 		t.Logf("second aggregation OK")
 	}
 
-	//GROUPING
+	// GROUPING
 	storage = NewSurveyStore()
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{testCipherVect1, testCipherVect2})
@@ -85,7 +85,7 @@ func TestStoring(t *testing.T) {
 	}
 
 	probaGroups := storage.PollProbabilisticGroupingAttributes()
-	//get the indices to use same unique ids for next test steps
+	// get the indices to use same unique ids for next test steps
 	var indexes []TempID
 	for i, v := range probaGroups {
 		_ = v
@@ -99,7 +99,7 @@ func TestStoring(t *testing.T) {
 
 	storage.PushDeterministicGroupingAttributes(groupedAttr)
 
-	//right size would mean right operations since aggregation has already been verified
+	// right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
 		t.Errorf("PushDeterministicGroupingAttributes error")
 	} else {
@@ -108,7 +108,7 @@ func TestStoring(t *testing.T) {
 
 	storage.PushCothorityAggregatedGroups(storage.LocGroupingGroups, storage.LocGroupingAggregating)
 
-	//right size would mean right operations since aggregation has already been verified
+	// right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
 		t.Errorf("PushCothorityAggregatedGroups error")
 	} else {
