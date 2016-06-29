@@ -16,11 +16,7 @@ func init() {
 // Simulation implements the sda.Simulation of the CoSi protocol.
 type Simulation struct {
 	sda.SimulationBFTree
-
-	// 0 - don't check any signatures
-	// 1 - only the root-node checks the aggregate signature
-	// 2 - every node checks the aggregate signature
-	Checking int
+	Checking VRType
 }
 
 // NewSimulation returns an sda.Simulation or an error if sth. is wrong.

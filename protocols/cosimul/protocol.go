@@ -19,12 +19,20 @@ func init() {
 	sda.ProtocolRegisterName(Name, NewCoSimul)
 }
 
+type VRType int
+
+const (
+	NoCheck   = VRType(0)
+	RootCheck = VRType(1)
+	AllCheck  = VRType(2)
+)
+
 // VerifyResponse sets how the checks are done,
 // see https://github.com/dedis/cothority/issues/260
 // 0 - no check at all
 // 1 - check only at root
 // 2 - check at each level of the tree, except the leafs
-var VerifyResponse = 1
+var VerifyResponse = RootCheck
 
 // CoSimul is a protocol suited for simulation
 type CoSimul struct {
@@ -62,9 +70,11 @@ func (c *CoSimul) getResponse(in []abstract.Scalar) {
 
 	verify := false
 	switch VerifyResponse {
-	case 1:
+	case NoCheck:
+		dbg.Lvl3("Not checking at all")
+	case RootCheck:
 		verify = c.IsRoot()
-	case 2:
+	case AllCheck:
 		verify = !c.IsLeaf()
 	}
 
