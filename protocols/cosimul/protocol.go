@@ -19,19 +19,20 @@ func init() {
 	sda.ProtocolRegisterName(Name, NewCoSimul)
 }
 
+// VRType defines what verifications are done
+// see https://github.com/dedis/cothority/issues/260
 type VRType int
 
 const (
-	NoCheck   = VRType(0)
+	// NoCheck will do no check at all
+	NoCheck = VRType(0)
+	// RootCheck will check only at root
 	RootCheck = VRType(1)
-	AllCheck  = VRType(2)
+	// AllCheck check at each level of the tree, except the leafs
+	AllCheck = VRType(2)
 )
 
 // VerifyResponse sets how the checks are done,
-// see https://github.com/dedis/cothority/issues/260
-// 0 - no check at all
-// 1 - check only at root
-// 2 - check at each level of the tree, except the leafs
 var VerifyResponse = RootCheck
 
 // CoSimul is a protocol suited for simulation
