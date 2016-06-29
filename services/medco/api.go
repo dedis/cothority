@@ -55,7 +55,10 @@ func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggreg
 	log.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
 	encGrouping := libmedco.EncryptIntVector(groupKey, grouping)
 	encAggregating := libmedco.EncryptIntVector(groupKey, aggregating)
-	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID, libmedco.ClientResponse{*encGrouping, *encAggregating}})
+	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID,
+		libmedco.ClientResponse{
+			ProbabilisticGroupingAttributes: *encGrouping,
+			AggregatingAttributes:           *encAggregating}})
 	if err != nil {
 		log.Error("Got error when sending a message: " + err.Error())
 		return err

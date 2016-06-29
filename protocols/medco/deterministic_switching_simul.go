@@ -6,15 +6,13 @@ import (
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 )
 
-//number of attributes per client response that should be switched to deterministic
-const NUM_ATTR_DET = 3
+const deterministicSwitchedAttributesCount = 3
 
-//number of client responses (of vector to be switched)
-const NUM_VECT_DET = 2
+const deterministicSwitchedVectorCount = 2
 
 func init() {
 	sda.SimulationRegister("DeterministicSwitching", NewDeterministicSwitchingSimulation)
@@ -82,9 +80,9 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		aggregateKey := pap.Roster().Aggregate
 
 		//create dummy data
-		ciphertexts := make(map[TempID]CipherVector)
+		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
 		var tab []int64
-		for i := 0; i < NUM_ATTR_DET; i++ {
+		for i := 0; i < deterministicSwitchedAttributesCount; i++ {
 			if i == 0 {
 				tab = []int64{1}
 			} else {
@@ -92,8 +90,8 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 			}
 		}
 
-		for i := 0; i < NUM_VECT_DET; i++ {
-			ciphertexts[TempID(i)] = *EncryptIntVector(aggregateKey, tab)
+		for i := 0; i < deterministicSwitchedVectorCount; i++ {
+			ciphertexts[libmedco.TempID(i)] = *libmedco.EncryptIntVector(aggregateKey, tab)
 		}
 
 		pap.TargetOfSwitch = &ciphertexts

@@ -5,24 +5,25 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
 
-const DETERMINISTIC_SWITCHING_PROTOCOL_NAME = "DeterministicSwitching"
+// DeterministicSwitchingProtocolName is the registered name for the deterministic switching protocol
+const DeterministicSwitchingProtocolName = "DeterministicSwitching"
 
 func init() {
 	network.RegisterMessageType(DeterministicSwitchedMessage{})
-	network.RegisterMessageType(CipherText{})
-	network.RegisterMessageType(CipherVector{})
-	sda.ProtocolRegisterName(DETERMINISTIC_SWITCHING_PROTOCOL_NAME, NewDeterministSwitchingProtocol)
+	network.RegisterMessageType(libmedco.CipherText{})
+	network.RegisterMessageType(libmedco.CipherVector{})
+	sda.ProtocolRegisterName(DeterministicSwitchingProtocolName, NewDeterministSwitchingProtocol)
 }
 
 //DeterministicSwitchedMessage represents a deterministic switching message containing the processed ciphervectors,
 //their original ephemeral keys
 type DeterministicSwitchedMessage struct {
-	Data                  map[TempID]CipherVector
-	OriginalEphemeralKeys map[TempID][]abstract.Point
+	Data                  map[libmedco.TempID]libmedco.CipherVector
+	OriginalEphemeralKeys map[libmedco.TempID][]abstract.Point
 }
 
 //DeterministicSwitchedStruct contains a sda treenode and a deterministic switching message
@@ -37,23 +38,23 @@ type DeterministicSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel chan map[TempID]DeterministCipherVector
+	FeedbackChannel chan map[libmedco.TempID]libmedco.DeterministCipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan DeterministicSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
-	TargetOfSwitch    *map[TempID]CipherVector
+	TargetOfSwitch    *map[libmedco.TempID]libmedco.CipherVector
 	SurveyPHKey       *abstract.Scalar
-	originalEphemKeys map[TempID][]abstract.Point
+	originalEphemKeys map[libmedco.TempID][]abstract.Point
 }
 
 //NewDeterministSwitchingProtocol constructor for DeterministicSwitchingProtocol
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel:  make(chan map[TempID]DeterministCipherVector),
+		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.DeterministCipherVector),
 	}
 
 	if err := deterministicSwitchingProtocol.RegisterChannel(&deterministicSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -73,6 +74,7 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 	return deterministicSwitchingProtocol, nil
 }
 
+// Start is called at the root node and starts the execution of the protocol
 func (p *DeterministicSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
@@ -83,7 +85,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 
 	log.Lvl1(p.Name(), "started a Deterministic Switching Protocol (", len(*p.TargetOfSwitch), "rows )")
 
-	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
+	p.originalEphemKeys = make(map[libmedco.TempID][]abstract.Point, len(*p.TargetOfSwitch))
 
 	for k := range *p.TargetOfSwitch {
 		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
@@ -98,6 +100,7 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 	return nil
 }
 
+// Dispatch is called on each node. It waits for incoming messages and handle them.
 func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
@@ -111,11 +114,11 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	//if root, then protocol reached the end
 	if p.IsRoot() {
-		deterministicSwitchedData := make(map[TempID]DeterministCipherVector, len(deterministicSwitchingTarget.Data))
+		deterministicSwitchedData := make(map[libmedco.TempID]libmedco.DeterministCipherVector, len(deterministicSwitchingTarget.Data))
 		for k, v := range deterministicSwitchingTarget.Data {
-			deterministicSwitchedData[k] = make(DeterministCipherVector, len(v))
+			deterministicSwitchedData[k] = make(libmedco.DeterministCipherVector, len(v))
 			for i, c := range v {
-				deterministicSwitchedData[k][i] = DeterministCipherText{c.C}
+				deterministicSwitchedData[k][i] = libmedco.DeterministCipherText{Point: c.C}
 			}
 		}
 		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData), "row )")

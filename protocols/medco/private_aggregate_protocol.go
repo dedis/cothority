@@ -5,48 +5,45 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
-const PRIVATE_AGGREGATE_PROTOCOL_NAME = "PrivateAggregate"
+//PrivateAggregateProtocolName is the registered name for the private aggregate protocol
+const PrivateAggregateProtocolName = "PrivateAggregate"
 
-//DataReferenceMessage empty message sent to trigger protocol in nodes
+//DataReferenceMessage message sent to trigger an aggregation protocol
 type DataReferenceMessage struct {
 }
 
-//DataReferenceStruct node and message
-type DataReferenceStruct struct {
+//ChildAggregatedDataMessage contains one node's aggregated data
+type ChildAggregatedDataMessage struct {
+	ChildData   map[libmedco.GroupingKey]libmedco.CipherVector
+	ChildGroups map[libmedco.GroupingKey]libmedco.GroupingAttributes
+}
+
+type dataReferenceStruct struct {
 	*sda.TreeNode
 	DataReferenceMessage
 }
 
-//ChildAggregatedDataMessage containes aggregated data
-type ChildAggregatedDataMessage struct {
-	ChildData   map[GroupingKey]CipherVector
-	ChildGroups map[GroupingKey]GroupingAttributes
-}
-
-//ChildAggregatedDataStruct node and aggregated data message
-type ChildAggregatedDataStruct struct {
+type childAggregatedDataStruct struct {
 	*sda.TreeNode
 	ChildAggregatedDataMessage
 }
 
-//CothorityAggregatedData result of collectiove aggregation
+//CothorityAggregatedData is the collective aggregation result
 type CothorityAggregatedData struct {
-	Groups      map[GroupingKey]GroupingAttributes
-	GroupedData map[GroupingKey]CipherVector
+	Groups      map[libmedco.GroupingKey]libmedco.GroupingAttributes
+	GroupedData map[libmedco.GroupingKey]libmedco.CipherVector
 }
 
 func init() {
 	network.RegisterMessageType(DataReferenceMessage{})
 	network.RegisterMessageType(ChildAggregatedDataMessage{})
-	sda.ProtocolRegisterName(PRIVATE_AGGREGATE_PROTOCOL_NAME, NewPrivateAggregate)
+	sda.ProtocolRegisterName(PrivateAggregateProtocolName, NewPrivateAggregate)
 }
 
-// ProtocolExampleChannels just holds a message that is passed to all children.
-// It also defines a channel that will receive the number of children. Only the
-// root-node will write to the channel.
+//PrivateAggregateProtocol performs an aggregation of the data held by every node in the cothority.
 type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -54,15 +51,15 @@ type PrivateAggregateProtocol struct {
 	FeedbackChannel chan CothorityAggregatedData
 
 	// Protocol communication channels
-	DataReferenceChannel chan DataReferenceStruct
-	ChildDataChannel     chan []ChildAggregatedDataStruct
+	DataReferenceChannel chan dataReferenceStruct
+	ChildDataChannel     chan []childAggregatedDataStruct
 
 	// Protocol state data
-	GroupedData *map[GroupingKey]CipherVector
-	Groups      *map[GroupingKey]GroupingAttributes
+	GroupedData *map[libmedco.GroupingKey]libmedco.CipherVector
+	Groups      *map[libmedco.GroupingKey]libmedco.GroupingAttributes
 }
 
-// NewExampleChannels initialises the structure for use in one round
+//NewPrivateAggregate initialises the protocol instance
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
 		TreeNodeInstance: n,
@@ -79,6 +76,7 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 	return privateAggregateProtocol, nil
 }
 
+//Start is called at the root to begin the execution of the protocol
 func (p *PrivateAggregateProtocol) Start() error {
 	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
@@ -91,6 +89,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 	return nil
 }
 
+//Dispatch is called at each node and handle incoming messages
 func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 1. Aggregation announcement phase
@@ -119,10 +118,10 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 
 //message forward up the tree containing aggregation results
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
-	*map[GroupingKey]GroupingAttributes, *map[GroupingKey]CipherVector) {
+	*map[libmedco.GroupingKey]libmedco.GroupingAttributes, *map[libmedco.GroupingKey]libmedco.CipherVector) {
 	if p.GroupedData == nil {
-		emptyMap := make(map[GroupingKey]CipherVector, 0)
-		emptyGroupMap := make(map[GroupingKey]GroupingAttributes, 0)
+		emptyMap := make(map[libmedco.GroupingKey]libmedco.CipherVector, 0)
+		emptyGroupMap := make(map[libmedco.GroupingKey]libmedco.GroupingAttributes, 0)
 		p.GroupedData = &emptyMap
 		p.Groups = &emptyGroupMap
 	}
@@ -132,7 +131,7 @@ func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 			for group, aggr := range childrenContribution.ChildData {
 				(*p.Groups)[group] = childrenContribution.ChildGroups[group]
 				if localAggr, ok := (*p.GroupedData)[group]; ok {
-					(*p.GroupedData)[group] = *NewCipherVector(len(aggr)).Add(localAggr, aggr)
+					(*p.GroupedData)[group] = *libmedco.NewCipherVector(len(aggr)).Add(localAggr, aggr)
 				} else {
 					(*p.GroupedData)[group] = aggr
 				}
