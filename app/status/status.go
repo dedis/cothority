@@ -1,5 +1,4 @@
-// Cosi takes a file or a message and signs it collectively.
-// For usage, see README.md
+// Status takes in a file containing a list of servers and returns the status reports of all of the servers
 package main
 
 import (
