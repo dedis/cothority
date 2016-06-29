@@ -150,7 +150,7 @@ func TestServiceChannels(t *testing.T) {
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
-	sda.RegisterNewService("ChannelsService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("ChannelsService", func(c *sda.Context, path string) sda.Service {
 		var sc *ServiceChannels
 		if count == 0 {
 			sc = sc1
@@ -356,7 +356,7 @@ func (p *ProtocolChannels) Release() {
 }
 
 type ServiceChannels struct {
-	ctx  sda.Context
+	ctx  *sda.Context
 	path string
 	tree sda.Tree
 }
