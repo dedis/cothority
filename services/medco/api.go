@@ -5,14 +5,14 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"strconv"
 )
 
-//MedcoAPI represents a client with its associated server and public/private key par
-type MedcoAPI struct {
+//API represents a client with its associated server and public/private key par
+type API struct {
 	*sda.Client
 	entryPoint        *network.ServerIdentity
 	localClientNumber int64
@@ -23,22 +23,22 @@ type MedcoAPI struct {
 var localClientCounter = int64(0)
 
 //NewMedcoClient constructor of a client
-func NewMedcoClient(entryPoint *network.ServerIdentity) *MedcoAPI {
+func NewMedcoClient(entryPoint *network.ServerIdentity) *API {
 	keys := config.NewKeyPair(network.Suite)
-	newClient := &MedcoAPI{
-		Client:            sda.NewClient(MEDCO_SERVICE_NAME),
+	newClient := &API{
+		Client:            sda.NewClient(ServiceName),
 		entryPoint:        entryPoint,
 		localClientNumber: localClientCounter,
 		public:            keys.Public,
 		private:           keys.Secret,
 	}
 
-	localClientCounter += 1
+	localClientCounter++
 	return newClient
 }
 
 //CreateSurvey creates a survey based on a set of entities (servers) and a survey description.
-func (c *MedcoAPI) CreateSurvey(entities *sda.Roster, surveyDescription SurveyDescription) (*SurveyID, error) {
+func (c *API) CreateSurvey(entities *sda.Roster, surveyDescription libmedco.SurveyDescription) (*libmedco.SurveyID, error) {
 	log.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
 	if err != nil {
@@ -50,12 +50,12 @@ func (c *MedcoAPI) CreateSurvey(entities *sda.Roster, surveyDescription SurveyDe
 	return &surveyID, nil
 }
 
-//Method SendSurveyResultsData creates and sends a client response encrypted with the collective key
-func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
+//SendSurveyResultsData creates and sends a client response encrypted with the collective key
+func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggregating []int64, groupKey abstract.Point) error {
 	log.Lvl1(c, "responds {", grouping, ",", aggregating, "}")
-	encGrouping := EncryptIntVector(groupKey, grouping)
-	encAggregating := EncryptIntVector(groupKey, aggregating)
-	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID, ClientResponse{*encGrouping, *encAggregating}})
+	encGrouping := libmedco.EncryptIntVector(groupKey, grouping)
+	encAggregating := libmedco.EncryptIntVector(groupKey, aggregating)
+	_, err := c.Send(c.entryPoint, &SurveyResponseQuery{surveyID, libmedco.ClientResponse{*encGrouping, *encAggregating}})
 	if err != nil {
 		log.Error("Got error when sending a message: " + err.Error())
 		return err
@@ -63,8 +63,8 @@ func (c *MedcoAPI) SendSurveyResultsData(surveyID SurveyID, grouping, aggregatin
 	return nil
 }
 
-//Method GetSurveyResults to get the result from associated server. Then this response is decrypted
-func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, error) {
+//GetSurveyResults to get the result from associated server. Then this response is decrypted
+func (c *API) GetSurveyResults(surveyID libmedco.SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
 		log.Error("Got error when querying the results: " + err.Error())
@@ -75,16 +75,17 @@ func (c *MedcoAPI) GetSurveyResults(surveyID SurveyID) (*[][]int64, *[][]int64, 
 		grp := make([][]int64, len(encResults.Results))
 		aggr := make([][]int64, len(encResults.Results))
 		for i, res := range encResults.Results {
-			grp[i] = DecryptIntVector(c.private, &res.GroupingAttributes)
-			aggr[i] = DecryptIntVector(c.private, &res.AggregatingAttributes)
+			grp[i] = libmedco.DecryptIntVector(c.private, &res.GroupingAttributes)
+			aggr[i] = libmedco.DecryptIntVector(c.private, &res.AggregatingAttributes)
 		}
 		return &grp, &aggr, nil
-	} else {
-		log.Error("Bad response type from service.")
-		return nil, nil, errors.New("Bad response type from service")
 	}
+
+	log.Error("Bad response type from service.")
+	return nil, nil, errors.New("Bad response type from service")
+
 }
 
-func (c *MedcoAPI) String() string {
+func (c *API) String() string {
 	return "[Client-" + strconv.FormatInt(c.localClientNumber, 10) + "]"
 }

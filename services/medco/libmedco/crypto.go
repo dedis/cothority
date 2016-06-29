@@ -1,23 +1,23 @@
 package libmedco
 
 import (
-	"errors"
 	"fmt"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
 
-//upper bound for integers used in messages, a failed decryption will return this value
-const MAX_HOMOMORPHIC_INT int64 = 300
+//MaxHomomorphicInt upper bound for integers used in messages, a failed decryption will return this value
+const MaxHomomorphicInt int64 = 300
 
-//default seed used in bytes encoding
-const BYTES_TO_POINT_ENCODING_SEED string = "seed"
+//BytesToPointEncodingSeed default seed used in bytes encoding
+const BytesToPointEncodingSeed string = "seed"
 
-var PointToInt map[string]int64 = make(map[string]int64, MAX_HOMOMORPHIC_INT)
+//PointToInt creates a map between EC points and integers
+var PointToInt = make(map[string]int64, MaxHomomorphicInt)
 var currentGreatestM abstract.Point
-var currentGreatestInt int64 = 0
-var suite abstract.Suite = network.Suite
+var currentGreatestInt int64
+var suite = network.Suite
 
 //CipherText is an ElGamal encrypted point
 type CipherText struct {
@@ -84,11 +84,11 @@ func EncryptPoint(pubkey abstract.Point, M abstract.Point) *CipherText {
 // EncryptBytes embeds the message into a curve point with deterministic padding and encypts it using El-Gamal encryption
 func EncryptBytes(pubkey abstract.Point, message []byte) (*CipherText, error) {
 	// As we want to compare the encrypted points, we take a non-random stream
-	M, remainder := suite.Point().Pick(message, suite.Cipher([]byte(BYTES_TO_POINT_ENCODING_SEED)))
+	M, remainder := suite.Point().Pick(message, suite.Cipher([]byte(BytesToPointEncodingSeed)))
 
 	if len(remainder) > 0 {
 		return &CipherText{nil, nil},
-			errors.New(fmt.Sprintf("Message too long: %s (%d bytes too long).", string(message), len(remainder)))
+			fmt.Errorf("Message too long: %s (%d bytes too long).", string(message), len(remainder))
 	}
 
 	return EncryptPoint(pubkey, M), nil
@@ -156,7 +156,7 @@ func discreteLog(P abstract.Point) int64 {
 		currentGreatestM = suite.Point().Null()
 	}
 
-	for Bi, m = currentGreatestM, currentGreatestInt; !Bi.Equal(P) && m < MAX_HOMOMORPHIC_INT; Bi, m = Bi.Add(Bi, B), m+1 {
+	for Bi, m = currentGreatestM, currentGreatestInt; !Bi.Equal(P) && m < MaxHomomorphicInt; Bi, m = Bi.Add(Bi, B), m+1 {
 		PointToInt[Bi.String()] = m
 	}
 	currentGreatestM = Bi
@@ -239,7 +239,7 @@ func (c *CipherText) Add(c1, c2 CipherText) *CipherText {
 
 //Add two ciphervectors and stores result in reciever
 func (cv *CipherVector) Add(cv1, cv2 CipherVector) *CipherVector {
-	for i, _ := range cv1 {
+	for i := range cv1 {
 		(*cv)[i].Add(cv1[i], cv2[i])
 	}
 	return cv
@@ -254,7 +254,7 @@ func (c *CipherText) Sub(c1, c2 CipherText) *CipherText {
 
 //Sub two cipherVectors and stores result in reciever
 func (cv *CipherVector) Sub(cv1, cv2 CipherVector) *CipherVector {
-	for i, _ := range cv1 {
+	for i := range cv1 {
 		(*cv)[i].Sub(cv1[i], cv2[i])
 	}
 	return cv
@@ -273,7 +273,7 @@ func (dcv *DeterministCipherVector) Equal(dcv2 *DeterministCipherVector) bool {
 	if dcv == nil || dcv2 == nil {
 		return dcv == dcv2
 	}
-	for i, _ := range *dcv2 {
+	for i := range *dcv2 {
 		if !(*dcv)[i].Equal(&(*dcv2)[i]) {
 			return false
 		}

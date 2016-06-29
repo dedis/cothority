@@ -9,15 +9,21 @@ import (
 //PROOF is true if we use protocols with proofs (ZKPs)
 const PROOF = false
 
+//GroupingAttributes are attributes involved in grouping
 type GroupingAttributes DeterministCipherVector
+//GroupingKey is an ID corresponding to grouping attributes
 type GroupingKey string
+
+//TempID unique ID used in related maps
 type TempID uint64
 
+//ClientResponse represents a client response made of group attributes and aggr attributes
 type ClientResponse struct {
 	ProbabilisticGroupingAttributes CipherVector
 	AggregatingAttributes           CipherVector
 }
 
+//SurveyID each survey has a unique ID
 type SurveyID string
 
 //Survey represents a survey with the corresponding params. PH key is different for each server
