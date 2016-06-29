@@ -36,7 +36,6 @@ type DoneFlushCollectedDataMessage struct{}
 //doneProcessingMessage is a message indicating that pipeline execution complete
 type DoneProcessingMessage struct{}
 
-
 type flushCollectedDataStruct struct {
 	*sda.TreeNode
 	TriggerFlushCollectedDataMessage
@@ -54,10 +53,10 @@ type PipelineProtocol struct {
 	TriggerFlushCollectedData chan flushCollectedDataStruct
 	DoneFlushCollectedData    chan []doneFlushCollectedDataStruct
 
-	FeedbackChannel           chan DoneProcessingMessage
+	FeedbackChannel chan DoneProcessingMessage
 
-	MedcoServiceInstance      ServiceInterface
-	TargetSurvey              *Survey
+	MedcoServiceInstance ServiceInterface
+	TargetSurvey         *Survey
 }
 
 //NewPipelineProcotol constructor of a pipeline protocol

@@ -22,7 +22,7 @@ func createDataSet(numberGroups int, numberAttributes int) (
 	for i := 0; i < numberGroups; i++ {
 		newGrpattr := grpattr
 		(libmedco.DeterministCipherText(newGrpattr).Point).Add(libmedco.DeterministCipherText(newGrpattr).Point,
-									libmedco.DeterministCipherText(newGrpattr).Point)
+			libmedco.DeterministCipherText(newGrpattr).Point)
 		groupAttributes := libmedco.GroupingAttributes{grpattr, newGrpattr}
 
 		grpattr = newGrpattr

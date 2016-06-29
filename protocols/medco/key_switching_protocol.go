@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
+
 //KeySwitchingProtocolName is the registered name for the key switching protocol
 const KeySwitchingProtocolName = "KeySwitching"
 

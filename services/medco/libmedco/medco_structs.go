@@ -11,6 +11,7 @@ const PROOF = false
 
 //GroupingAttributes are attributes involved in grouping
 type GroupingAttributes DeterministCipherVector
+
 //GroupingKey is an ID corresponding to grouping attributes
 type GroupingKey string
 
