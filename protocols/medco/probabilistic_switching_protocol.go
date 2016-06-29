@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -19,7 +19,7 @@ func init() {
 
 //ProbabilisticSwitchedMessage contains swiched vector and data used in protocol
 type ProbabilisticSwitchedMessage struct {
-	Data            map[TempID]CipherVector
+	Data            map[libmedco.TempID]libmedco.CipherVector
 	TargetPublicKey abstract.Point
 }
 
@@ -34,14 +34,14 @@ type ProbabilisticSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel chan map[TempID]CipherVector
+	FeedbackChannel chan map[libmedco.TempID]libmedco.CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan ProbabilisticSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
-	TargetOfSwitch    *map[TempID]DeterministCipherVector
+	TargetOfSwitch    *map[libmedco.TempID]libmedco.DeterministCipherVector
 	SurveyPHKey       *abstract.Scalar
 	TargetPublicKey   *abstract.Point
 }
@@ -50,7 +50,7 @@ type ProbabilisticSwitchingProtocol struct {
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	probabilisticSwitchingProtocol := &ProbabilisticSwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel:  make(chan map[TempID]CipherVector),
+		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.CipherVector),
 	}
 
 	if err := probabilisticSwitchingProtocol.RegisterChannel(&probabilisticSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -85,11 +85,11 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 
 	log.Lvl1(p.ServerIdentity(), "started a Probabilistic Switching Protocol")
 
-	targetOfSwitch := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
+	targetOfSwitch := make(map[libmedco.TempID]libmedco.CipherVector, len(*p.TargetOfSwitch))
 	for k := range *p.TargetOfSwitch {
-		targetOfSwitch[k] = make(CipherVector, len((*p.TargetOfSwitch)[k]))
+		targetOfSwitch[k] = make(libmedco.CipherVector, len((*p.TargetOfSwitch)[k]))
 		for i, dc := range (*p.TargetOfSwitch)[k] {
-			var pc CipherText
+			var pc libmedco.CipherText
 			pc.K = network.Suite.Point().Null()
 			pc.C = dc.Point
 			targetOfSwitch[k][i] = pc
