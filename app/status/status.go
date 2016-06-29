@@ -1,11 +1,11 @@
-// Status takes in a file containing a list of servers and returns the status reports of all of the servers
+// Status takes in a file containing a list of servers and returns the status reports of all of the servers.
+// A status is a list of connections and packets sent and received for each server in the file.
 package main
 
 import (
 	"os"
 
 	"errors"
-	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
@@ -21,8 +21,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "Status"
-	app.Usage = "Get and print status of all servers in a file."
-	//a status is a list of connections and packets sent and received for each server in the file
+	app.Usage = "Get and print status of all servers of a file."
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
@@ -47,7 +46,7 @@ func main() {
 // network will contact all cothorities in the group-file and print
 // the status-report of each one.
 func network(c *cli.Context) error {
-	groupToml := c.GlobalString(optionGroup)
+	groupToml := c.GlobalString("g")
 	el, err := readGroup(groupToml)
 	log.ErrFatal(err, "Couldn't Read File")
 	log.Lvl3(el)
