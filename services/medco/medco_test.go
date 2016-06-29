@@ -36,7 +36,7 @@ func TestServiceMedco(t *testing.T) {
 	//save values in a map to verify them at the end
 	expectedResults := make(map[[numberGrpAttr]int64][]int64)
 	log.Lvl1("Sending response data... ")
-	dataHolder := make([]*medco.MedcoAPI, 10)
+	dataHolder := make([]*medco.API, 10)
 	for i := 0; i < numberAttr; i++ {
 		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
 		grp := [numberGrpAttr]int64{}

@@ -6,62 +6,63 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"github.com/satori/go.uuid"
 )
 
-const MEDCO_SERVICE_NAME = "MedCo"
+const ServiceName = "MedCo"
 
 func init() {
-	sda.RegisterNewService(MEDCO_SERVICE_NAME, NewMedcoService)
-	network.RegisterMessageType(&ClientResponse{})
+	sda.RegisterNewService(ServiceName, NewService)
+	network.RegisterMessageType(&libmedco.ClientResponse{})
 	network.RegisterMessageType(&SurveyResultsQuery{})
 	network.RegisterMessageType(&SurveyCreationQuery{})
 	network.RegisterMessageType(&SurveyResultResponse{})
 	network.RegisterMessageType(&ServiceResponse{})
 }
 
-// Client Queries
-
+//SurveyCreationQuery is used to trigger the creation of a survey
 type SurveyCreationQuery struct {
-	SurveyID *SurveyID
+	SurveyID *libmedco.SurveyID
 	sda.Roster
-	SurveyDescription
+	libmedco.SurveyDescription
 }
 
+//SurveyResponseQuery sis used to ask a client for its response
 type SurveyResponseQuery struct {
-	SurveyID SurveyID
-	ClientResponse
+	SurveyID libmedco.SurveyID
+	libmedco.ClientResponse
 }
 
+//SurveyResultsQuery is used by querier to ask for the response
 type SurveyResultsQuery struct {
-	SurveyID     SurveyID
+	SurveyID     libmedco.SurveyID
 	ClientPublic abstract.Point
 }
 
-// Service responses
-
+//ServiceResponse represents service "state"
 type ServiceResponse struct {
-	SurveyID SurveyID
+	SurveyID libmedco.SurveyID
 }
 
+//SurveyResultResponse will contain final results of a survey and be sent to querier
 type SurveyResultResponse struct {
-	Results []SurveyResult
+	Results []libmedco.SurveyResult
 }
 
-//MedcoService defines a service in medco case with a survey
-type MedcoService struct {
+//Service defines a service in medco case with a survey
+type Service struct {
 	*sda.ServiceProcessor
 	homePath string
 
-	survey Survey // For now, server only handles one survey
+	survey libmedco.Survey // For now, server only handles one survey
 }
 
-//NewMedcoService constructor which registers the needed messages
-func NewMedcoService(c *sda.Context, path string) sda.Service {
-	newMedCoInstance := &MedcoService{
+//NewService constructor which registers the needed messages
+func NewService(c *sda.Context, path string) sda.Service {
+	newMedCoInstance := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		homePath:         path,
 	}
@@ -75,10 +76,10 @@ func NewMedcoService(c *sda.Context, path string) sda.Service {
 //=============================
 
 //HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating a corresponding survey
-func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "received a Survey Creation Query")
 	if recq.SurveyID == nil {
-		newID := SurveyID(uuid.NewV4().String())
+		newID := libmedco.SurveyID(uuid.NewV4().String())
 		recq.SurveyID = &newID
 
 		mcs.SendISMOthers(&recq.Roster, recq)
@@ -86,8 +87,8 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, re
 		log.Lvl1(mcs.ServerIdentity(), "initiated the survey", newID)
 	}
 
-	mcs.survey = Survey{
-		SurveyStore:       NewSurveyStore(),
+	mcs.survey = libmedco.Survey{
+		SurveyStore:       libmedco.NewSurveyStore(),
 		ID:                *recq.SurveyID,
 		Roster:            recq.Roster,
 		SurveyPHKey:       network.Suite.Scalar().Pick(random.Stream),
@@ -100,7 +101,7 @@ func (mcs *MedcoService) HandleSurveyCreationQuery(e *network.ServerIdentity, re
 }
 
 // HandleSurveyResponseData handles a survey answers submission by a subject
-func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ", resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {
 		mcs.survey.InsertClientResponse(resp.ClientResponse)
@@ -111,7 +112,7 @@ func (mcs *MedcoService) HandleSurveyResponseData(e *network.ServerIdentity, res
 }
 
 // HandleSurveyResultsQuery handles the survey result query by the surveyor
-func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
 
 	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
 	mcs.survey.ClientPublic = resq.ClientPublic
@@ -122,7 +123,8 @@ func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.ServerIdentity, res
 	return &SurveyResultResponse{mcs.survey.PollDeliverableResults()}, nil
 }
 
-func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+//NewProtocol handles the creation of the right protocols
+func (mcs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 
 	var pi sda.ProtocolInstance
 	var err error
@@ -150,8 +152,8 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 		probSwitch := pi.(*medco.ProbabilisticSwitchingProtocol)
 		probSwitch.SurveyPHKey = &mcs.survey.SurveyPHKey
 		if tn.IsRoot() {
-			groups := mcs.survey.PollCothorityAggregatedGroupsId()
-			probSwitch.TargetOfSwitch = GroupingAttributesToDeterministicCipherVector(&groups)
+			groups := mcs.survey.PollCothorityAggregatedGroupsID()
+			probSwitch.TargetOfSwitch = libmedco.GroupingAttributesToDeterministicCipherVector(&groups)
 			probSwitch.TargetPublicKey = &mcs.survey.ClientPublic
 		}
 	case medco.KEY_SWITCHING_PROTOCOL_NAME:
@@ -168,7 +170,7 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	return pi, err
 }
 
-func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.ProtocolInstance, error) {
+func (mcs *Service) startProtocol(name string, targetSurvey libmedco.SurveyID) (sda.ProtocolInstance, error) {
 	tree := mcs.survey.Roster.GenerateNaryTreeWithRoot(2, mcs.ServerIdentity())
 	tni := mcs.NewTreeNodeInstance(tree, tree.Root, name)
 	pi, err := mcs.NewProtocol(tni, nil)
@@ -180,20 +182,20 @@ func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.
 
 // Pipeline steps forward operations
 
-// Performs the private grouping on the currently collected data
-func (mcs *MedcoService) DeterministicSwitchingPhase(targetSurvey SurveyID) error {
+// DeterministicSwitchingPhase performs the private grouping on the currently collected data
+func (mcs *Service) DeterministicSwitchingPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME, targetSurvey)
 	if err != nil {
 		return err
 	}
 	deterministicSwitchedResult := <-pi.(*medco.DeterministicSwitchingProtocol).FeedbackChannel
-	mcs.survey.PushDeterministicGroupingAttributes(*DeterministicCipherVectorToGroupingAttributes(&deterministicSwitchedResult))
+	mcs.survey.PushDeterministicGroupingAttributes(*libmedco.DeterministicCipherVectorToGroupingAttributes(&deterministicSwitchedResult))
 	return err
 }
 
-// Performs the per-group aggregation on the currently grouped data
-func (mcs *MedcoService) AggregationPhase(targetSurvey SurveyID) error {
+// AggregationPhase performs the per-group aggregation on the currently grouped data
+func (mcs *Service) AggregationPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.PRIVATE_AGGREGATE_PROTOCOL_NAME, targetSurvey)
 	if err != nil {
@@ -206,8 +208,8 @@ func (mcs *MedcoService) AggregationPhase(targetSurvey SurveyID) error {
 	return err
 }
 
-// Perform the switch to data querier key on the currently aggregated data
-func (mcs *MedcoService) KeySwitchingPhase(targetSurvey SurveyID) error {
+// KeySwitchingPhase performs the switch to data querier key on the currently aggregated data
+func (mcs *Service) KeySwitchingPhase(targetSurvey libmedco.SurveyID) error {
 
 	pi, err := mcs.startProtocol(medco.KEY_SWITCHING_PROTOCOL_NAME, targetSurvey)
 	if err != nil {
@@ -216,7 +218,7 @@ func (mcs *MedcoService) KeySwitchingPhase(targetSurvey SurveyID) error {
 	keySwitchedAggregatedAttributes := <-pi.(*medco.KeySwitchingProtocol).FeedbackChannel
 
 	//TODO: extract this subphase because it is optional
-	keySwitchedAggregatedGroups := make(map[TempID]CipherVector)
+	keySwitchedAggregatedGroups := make(map[libmedco.TempID]libmedco.CipherVector)
 	if mcs.survey.SurveyDescription.GroupingAttributesCount > 0 {
 		pi, err = mcs.startProtocol(medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME, targetSurvey)
 		if err != nil {

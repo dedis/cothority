@@ -65,7 +65,7 @@ func TestStoring(t *testing.T) {
 	} else {
 		added := *testCipherVect1.Add(testCipherVect1, testCipherVect2)
 		for i, v := range added {
-			if !reflect.DeepEqual(v, aggr[GroupingKey(DEFAULT_GROUP)][i]) {
+			if !reflect.DeepEqual(v, aggr[GroupingKey(DefaultGroup)][i]) {
 				t.Errorf("aggregation error")
 			}
 		}
@@ -115,7 +115,7 @@ func TestStoring(t *testing.T) {
 		t.Logf("PushCothorityAggregatedGroups OK")
 	}
 
-	groupedDetAttr := storage.PollCothorityAggregatedGroupsId()
+	groupedDetAttr := storage.PollCothorityAggregatedGroupsID()
 	aggrAttr := storage.PollCothorityAggregatedGroupsAttr()
 	if !(len(groupedDetAttr) == 2) {
 		t.Errorf("PollDeterministicGroupingAttributes error")

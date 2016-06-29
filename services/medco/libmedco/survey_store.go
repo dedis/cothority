@@ -5,7 +5,7 @@ import (
 )
 
 //DEFAULT_GROUP defines the default grouping key. Used when a survey consists of an aggregation only (no grouping)
-const DEFAULT_GROUP = GroupingKey("DefaultGroup")
+const DefaultGroup = GroupingKey("DefaultGroup")
 
 //SurveyResult represents a result from a survey which is made of two ciphervector encrypted for the querier
 type SurveyResult struct {
@@ -36,7 +36,7 @@ type SurveyStore struct {
 	GroupedDeterministicGroupingAttributes map[TempID]GroupingAttributes
 	GroupedAggregatingAttributes           map[TempID]CipherVector
 
-	lastId uint64
+	lastID uint64
 }
 
 //NewSurveyStore constructor
@@ -56,13 +56,13 @@ func NewSurveyStore() *SurveyStore {
 //InsertClientResponse handles the local storage of a new client response
 func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
 	if len(cr.ProbabilisticGroupingAttributes) == 0 { //only aggregation, no grouping
-		mapValue, ok := s.LocGroupingAggregating[DEFAULT_GROUP]
+		mapValue, ok := s.LocGroupingAggregating[DefaultGroup]
 		if !ok {
 			mapValue = cr.AggregatingAttributes
 		} else {
 			mapValue = *NewCipherVector(len(mapValue)).Add(mapValue, cr.AggregatingAttributes)
 		}
-		s.LocGroupingAggregating[DEFAULT_GROUP] = mapValue
+		s.LocGroupingAggregating[DefaultGroup] = mapValue
 	} else { //grouping
 		s.ClientResponses = append(s.ClientResponses, cr)
 	}
@@ -78,9 +78,9 @@ func (s *SurveyStore) HasNextClientResponses() bool {
 func (s *SurveyStore) PollProbabilisticGroupingAttributes() map[TempID]CipherVector {
 	polledProbGroupAttr := make(map[TempID]CipherVector)
 	for _, v := range s.ClientResponses {
-		newId := s.nextId()
-		s.AggregatingAttributes[newId] = v.AggregatingAttributes
-		polledProbGroupAttr[newId] = v.ProbabilisticGroupingAttributes
+		newID := s.nextID()
+		s.AggregatingAttributes[newID] = v.AggregatingAttributes
+		polledProbGroupAttr[newID] = v.ProbabilisticGroupingAttributes
 	}
 	s.ClientResponses = s.ClientResponses[:0] //clear table
 
@@ -111,9 +111,9 @@ func (s *SurveyStore) PollLocallyAggregatedResponses() (map[GroupingKey]Grouping
 
 }
 
-func (s *SurveyStore) nextId() TempID {
-	s.lastId += 1
-	return TempID(s.lastId)
+func (s *SurveyStore) nextID() TempID {
+	s.lastID += 1
+	return TempID(s.lastID)
 }
 
 func addInMapping(s map[GroupingKey]CipherVector, key GroupingKey, added CipherVector) {
@@ -135,24 +135,24 @@ func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]Groupin
 }
 
 //HasNextAggregatedGroupsId verifies that the server has local grouping results (group attributes)
-func (s *SurveyStore) HasNextAggregatedGroupsId() bool {
+func (s *SurveyStore) HasNextAggregatedGroupsID() bool {
 	return (len(s.GroupedDeterministicGroupingAttributes) == 0)
 }
 
 //PollCothorityAggregatedGroupsId returns the local results of the grouping (group attributes)
-func (s *SurveyStore) PollCothorityAggregatedGroupsId() map[TempID]GroupingAttributes {
+func (s *SurveyStore) PollCothorityAggregatedGroupsID() map[TempID]GroupingAttributes {
 	if len(s.AfterAggrProto) != 0 {
 		for key, value := range s.AfterAggrProto {
-			newId := s.nextId()
-			s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
-			s.GroupedAggregatingAttributes[newId] = value
+			newID := s.nextID()
+			s.GroupedDeterministicGroupingAttributes[newID] = s.LocGroupingGroups[key]
+			s.GroupedAggregatingAttributes[newID] = value
 		}
 		s.AfterAggrProto = make(map[GroupingKey]CipherVector)
 		s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
 	}
-	groupIds := s.GroupedDeterministicGroupingAttributes
+	groupIDs := s.GroupedDeterministicGroupingAttributes
 	s.GroupedDeterministicGroupingAttributes = make(map[TempID]GroupingAttributes)
-	return groupIds
+	return groupIDs
 }
 
 //HasNextAggregatedGroupsAttr verifies that the server has local grouping results (aggregating attributes)
@@ -164,9 +164,9 @@ func (s *SurveyStore) HasNextAggregatedGroupsAttr() bool {
 func (s *SurveyStore) PollCothorityAggregatedGroupsAttr() map[TempID]CipherVector {
 	if len(s.AfterAggrProto) != 0 {
 		for key, value := range s.AfterAggrProto {
-			newId := s.nextId()
-			s.GroupedDeterministicGroupingAttributes[newId] = s.LocGroupingGroups[key]
-			s.GroupedAggregatingAttributes[newId] = value
+			newID := s.nextID()
+			s.GroupedDeterministicGroupingAttributes[newID] = s.LocGroupingGroups[key]
+			s.GroupedAggregatingAttributes[newID] = value
 		}
 		s.AfterAggrProto = make(map[GroupingKey]CipherVector)
 		s.LocGroupingGroups = make(map[GroupingKey]GroupingAttributes)
