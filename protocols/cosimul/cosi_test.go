@@ -9,7 +9,7 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
-func TestCosi(t *testing.T) {
+func TestCoSimul(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 4)
 
