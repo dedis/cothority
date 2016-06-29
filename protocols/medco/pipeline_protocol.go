@@ -8,7 +8,7 @@ import (
 	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
-// MedcoServiceProtocolName is the registered name for the medco service protocol
+// MedcoServiceProtocolName is the registered name for the medco service protocol.
 const MedcoServiceProtocolName = "MedcoServiceProtocol"
 
 func init() {
@@ -17,23 +17,23 @@ func init() {
 	network.RegisterMessageType(DoneFlushCollectedDataMessage{})
 }
 
-//ServiceInterface defines the 3 phases of a medco protocol. The service implements this interface so
-// the protocol can trigger them.
+// ServiceInterface defines the 3 phases of a medco pipeline. The service implements this interface so the
+// protocol can trigger them.
 type ServiceInterface interface {
 	DeterministicSwitchingPhase(libmedco.SurveyID) error
 	AggregationPhase(libmedco.SurveyID) error
 	KeySwitchingPhase(libmedco.SurveyID) error
 }
 
-//TriggerFlushCollectedDataMessage is a message trigger the Map phase at all node
+// TriggerFlushCollectedDataMessage is a message trigger the Map phase at all node.
 type TriggerFlushCollectedDataMessage struct {
 	SurveyID libmedco.SurveyID // Currently unused
 }
 
-//DoneFlushCollectedDataMessage is a message reporting the Map phase completion
+// DoneFlushCollectedDataMessage is a message reporting the Map phase completion.
 type DoneFlushCollectedDataMessage struct{}
 
-//DoneProcessingMessage is a message indicating that pipeline execution complete
+// DoneProcessingMessage is a message indicating that pipeline execution complete.
 type DoneProcessingMessage struct{}
 
 type flushCollectedDataStruct struct {
@@ -46,7 +46,7 @@ type doneFlushCollectedDataStruct struct {
 	DoneFlushCollectedDataMessage
 }
 
-//PipelineProtocol contains elements of a service protocol
+// PipelineProtocol is a struct holding the protocol instance state
 type PipelineProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -59,7 +59,7 @@ type PipelineProtocol struct {
 	TargetSurvey         *libmedco.Survey
 }
 
-//NewPipelineProcotol constructor of a pipeline protocol
+// NewPipelineProcotol constructor of a pipeline protocol.
 func NewPipelineProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol := &PipelineProtocol{TreeNodeInstance: tni,
 		FeedbackChannel: make(chan DoneProcessingMessage)}
@@ -73,7 +73,7 @@ func NewPipelineProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error
 	return protocol, nil
 }
 
-// Start is called at the root the start the execution of the protocol
+// Start is called at the root. It starts the execution of the protocol.
 func (p *PipelineProtocol) Start() error {
 
 	if p.MedcoServiceInstance == nil {
@@ -89,7 +89,7 @@ func (p *PipelineProtocol) Start() error {
 	return nil
 }
 
-// Dispatch is called at all node and handle the incoming messages
+// Dispatch is called at all node and handle the incoming messages.
 func (p *PipelineProtocol) Dispatch() error {
 
 	// 1st phase (optional) : Grouping

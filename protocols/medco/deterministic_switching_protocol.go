@@ -9,7 +9,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// DeterministicSwitchingProtocolName is the registered name for the deterministic switching protocol
+// DeterministicSwitchingProtocolName is the registered name for the deterministic switching protocol.
 const DeterministicSwitchingProtocolName = "DeterministicSwitching"
 
 func init() {
@@ -19,29 +19,27 @@ func init() {
 	sda.ProtocolRegisterName(DeterministicSwitchingProtocolName, NewDeterministSwitchingProtocol)
 }
 
-//DeterministicSwitchedMessage represents a deterministic switching message containing the processed ciphervectors,
-//their original ephemeral keys
+// DeterministicSwitchedMessage represents a deterministic switching message containing the processed cipher vectors,
+// their original ephemeral keys.
 type DeterministicSwitchedMessage struct {
 	Data                  map[libmedco.TempID]libmedco.CipherVector
 	OriginalEphemeralKeys map[libmedco.TempID][]abstract.Point
 }
 
-//DeterministicSwitchedStruct contains a sda treenode and a deterministic switching message
-type DeterministicSwitchedStruct struct {
+type deterministicSwitchedStruct struct {
 	*sda.TreeNode
 	DeterministicSwitchedMessage
 }
 
-//DeterministicSwitchingProtocol defines the elements of deterministicSwitching protocol
+// DeterministicSwitchingProtocol hold the state of a deterministic switching protocol instance.
 type DeterministicSwitchingProtocol struct {
-	//node doing the protocol
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
 	FeedbackChannel chan map[libmedco.TempID]libmedco.DeterministCipherVector
 
 	// Protocol communication channels
-	PreviousNodeInPathChannel chan DeterministicSwitchedStruct
+	PreviousNodeInPathChannel chan deterministicSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
@@ -50,7 +48,7 @@ type DeterministicSwitchingProtocol struct {
 	originalEphemKeys map[libmedco.TempID][]abstract.Point
 }
 
-//NewDeterministSwitchingProtocol constructor for DeterministicSwitchingProtocol
+//NewDeterministSwitchingProtocol constructs deterministic switching protocol instances.
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
@@ -74,7 +72,7 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 	return deterministicSwitchingProtocol, nil
 }
 
-// Start is called at the root node and starts the execution of the protocol
+// Start is called at the root node and starts the execution of the protocol.
 func (p *DeterministicSwitchingProtocol) Start() error {
 	if p.TargetOfSwitch == nil {
 		return errors.New("No map given as deterministic switching target.")
@@ -93,26 +91,26 @@ func (p *DeterministicSwitchingProtocol) Start() error {
 			p.originalEphemKeys[k][i] = c.K
 		}
 	}
-	//forward message to next node
+
 	p.sendToNext(&DeterministicSwitchedMessage{*p.TargetOfSwitch,
 		p.originalEphemKeys})
 
 	return nil
 }
 
-// Dispatch is called on each node. It waits for incoming messages and handle them.
+// Dispatch is called on each tree node. It waits for incoming messages and handle them.
 func (p *DeterministicSwitchingProtocol) Dispatch() error {
 
 	deterministicSwitchingTarget := <-p.PreviousNodeInPathChannel
 
-	//each node should use one different PH contribution per survey
+	// Each node should use one different PH contribution per survey.
 	phContrib := p.Suite().Point().Mul(p.Suite().Point().Base(), *p.SurveyPHKey)
 	for k, v := range deterministicSwitchingTarget.Data {
 		v.DeterministicSwitching(&v, p.Private(), phContrib)
 		deterministicSwitchingTarget.Data[k] = v
 	}
 
-	//if root, then protocol reached the end
+	// If this tree node is the root, then protocol reached the end.
 	if p.IsRoot() {
 		deterministicSwitchedData := make(map[libmedco.TempID]libmedco.DeterministCipherVector, len(deterministicSwitchingTarget.Data))
 		for k, v := range deterministicSwitchingTarget.Data {
@@ -123,7 +121,7 @@ func (p *DeterministicSwitchingProtocol) Dispatch() error {
 		}
 		log.Lvl1(p.ServerIdentity(), "completed deterministic switching (", len(deterministicSwitchedData), "row )")
 		p.FeedbackChannel <- deterministicSwitchedData
-	} else { //forward switched message
+	} else { // Forward switched message.
 		log.Lvl1(p.ServerIdentity(), "carried on deterministic switching.")
 		p.sendToNext(&deterministicSwitchingTarget.DeterministicSwitchedMessage)
 	}

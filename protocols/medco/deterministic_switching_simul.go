@@ -20,12 +20,12 @@ func init() {
 
 }
 
-//DeterministicSwitchingSimulation contains a simulation tree
+// DeterministicSwitchingSimulation is the structure holding the state of the simulation.
 type DeterministicSwitchingSimulation struct {
 	sda.SimulationBFTree
 }
 
-//NewDeterministicSwitchingSimulation constructor for the simulation
+// NewDeterministicSwitchingSimulation is a constructor for the simulation.
 func NewDeterministicSwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &DeterministicSwitchingSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -36,7 +36,7 @@ func NewDeterministicSwitchingSimulation(config string) (sda.Simulation, error) 
 	return sim, nil
 }
 
-//Setup initializes a simulation by creating the servers tree
+// Setup initializes a simulation.
 func (sim *DeterministicSwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -50,7 +50,7 @@ func (sim *DeterministicSwitchingSimulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-//Run starts the simulation
+// Run starts the simulation.
 func (sim *DeterministicSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -71,15 +71,15 @@ func (sim *DeterministicSwitchingSimulation) Run(config *sda.SimulationConfig) e
 	return nil
 }
 
-//NewDeterministicSwitchingSimul default simulation constructor used by all nodes to init their params
+// NewDeterministicSwitchingSimul is a custom protocol constructor specific for simulation purposes.
 func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewDeterministSwitchingProtocol(tni)
 	pap := protocol.(*DeterministicSwitchingProtocol)
 
-	if tni.Index() == 0 { //root
+	if tni.IsRoot() {
 		aggregateKey := pap.Roster().Aggregate
 
-		//create dummy data
+		// Creates dummy data...
 		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
 		var tab []int64
 		for i := 0; i < deterministicSwitchedAttributesCount; i++ {
@@ -93,20 +93,7 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 		for i := 0; i < deterministicSwitchedVectorCount; i++ {
 			ciphertexts[libmedco.TempID(i)] = *libmedco.EncryptIntVector(aggregateKey, tab)
 		}
-
 		pap.TargetOfSwitch = &ciphertexts
-
-		//TODO: put it in its own simulation
-		//local aggregation time measurement, quick way to measure aggregation time**
-		//ciphertext := *EncryptIntArray(suite, aggregateKey, tab)
-		//ciphertexts[0] = ciphertext
-		//dbg.LLvl1("local aggr")
-		//round := monitor.NewTimeMeasure("MEDCO_LOCAGGR")
-		//for i := 0; i < NUM_VECT_DET; i++ {
-		//	ciphertext.AddNoReplace(ciphertext,ciphertext)
-		//}
-		//round.Record()
-		//**************************************************************************
 	}
 	tempKey := network.Suite.Scalar().Pick(random.Stream)
 	pap.SurveyPHKey = &tempKey

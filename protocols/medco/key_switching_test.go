@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-//TestKeySwitching tests key switching protocol
 func TestKeySwitching(t *testing.T) {
 	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
@@ -30,7 +29,6 @@ func TestKeySwitching(t *testing.T) {
 	suite := network.Suite
 	aggregateKey := entityList.Aggregate
 
-	// create dummy data
 	expRes := []int64{1, 2, 3, 6}
 	testCipherVect := *EncryptIntVector(aggregateKey, expRes)
 
@@ -42,7 +40,6 @@ func TestKeySwitching(t *testing.T) {
 	mapi[TempID(1)] = testCipherVect
 	mapi[TempID(2)] = testCipherVect1
 
-	// Generate client key
 	clientPrivate := suite.Scalar().Pick(random.Stream)
 	clientPublic := suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
@@ -51,12 +48,10 @@ func TestKeySwitching(t *testing.T) {
 	protocol.TargetPublicKey = &clientPublic
 	feedback := protocol.FeedbackChannel
 
-	//run protocol
 	go protocol.StartProtocol()
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
-	//verify results
 	select {
 	case encryptedResult := <-feedback:
 		cv1 := encryptedResult[TempID(1)]

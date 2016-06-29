@@ -12,17 +12,6 @@ import (
 	"time"
 )
 
-//NewProbabilisticSwitchingTest default constructor such that each node use it and generates a SurveyPHKey needed
-func NewProbabilisticSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-
-	pi, err := medco.NewProbabilisticSwitchingProtocol(tni)
-	protocol := pi.(*medco.ProbabilisticSwitchingProtocol)
-	priv := protocol.Private()
-	protocol.SurveyPHKey = &priv
-
-	return protocol, err
-}
-
 //TestProbabilisticSwitching tests probabilistic switching protocol
 func TestProbabilisticSwitching(t *testing.T) {
 	defer log.AfterTest(t)
@@ -39,7 +28,6 @@ func TestProbabilisticSwitching(t *testing.T) {
 	rootInstance, _ := local.CreateProtocol(tree, "ProbabilisticSwitchingTest")
 	protocol := rootInstance.(*medco.ProbabilisticSwitchingProtocol)
 
-	//create dummy data
 	aggregateKey := entityList.Aggregate
 
 	expRes := []int64{1, 1}
@@ -55,14 +43,12 @@ func TestProbabilisticSwitching(t *testing.T) {
 	protocol.TargetOfSwitch = &mapi
 	protocol.TargetPublicKey = &clientPublic
 
-	//run protocol
 	feedback := protocol.FeedbackChannel
 
 	go protocol.StartProtocol()
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
-	//verify results
 	select {
 	case encryptedResult := <-feedback:
 		val1 := encryptedResult[TempID(1)]
@@ -79,4 +65,15 @@ func TestProbabilisticSwitching(t *testing.T) {
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
+}
+
+// NewProbabilisticSwitchingTest is a test specific constructor that injects data in the protocol instance.
+func NewProbabilisticSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+
+	pi, err := medco.NewProbabilisticSwitchingProtocol(tni)
+	protocol := pi.(*medco.ProbabilisticSwitchingProtocol)
+	priv := protocol.Private()
+	protocol.SurveyPHKey = &priv
+
+	return protocol, err
 }

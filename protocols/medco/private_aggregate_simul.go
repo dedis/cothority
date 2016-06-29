@@ -35,9 +35,7 @@ func createDataSet(numberGroups int, numberAttributes int) (
 				tab = append(tab, 1)
 			}
 		}
-		//round := monitor.NewTimeMeasure("MEDCO_ENCRYPTION")
 		cipherVect := *libmedco.EncryptIntVector(clientPublic, tab)
-		//round.Record()
 
 		testGAMap[groupAttributes.Key()] = groupAttributes
 		testCVMap[groupAttributes.Key()] = cipherVect
@@ -50,12 +48,12 @@ func init() {
 	sda.ProtocolRegisterName("PrivateAggregateSimul", NewAggregationProtocolSimul)
 }
 
-//PrivateAggregateSimulation contains simulation tree
+// PrivateAggregateSimulation holds the state of a simulation.
 type PrivateAggregateSimulation struct {
 	sda.SimulationBFTree
 }
 
-//NewPrivateAggregateSimulation simultaion constructor
+// NewPrivateAggregateSimulation is the simulation instance constructor.
 func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 	sim := &PrivateAggregateSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -65,7 +63,7 @@ func NewPrivateAggregateSimulation(config string) (sda.Simulation, error) {
 	return sim, nil
 }
 
-//Setup initializes the servers tree
+// Setup initializes the simulation.
 func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -81,7 +79,7 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 
 }
 
-//Run starts the simulation of the protocol and measures its runtime
+// Run starts the simulation of the protocol and measures its runtime.
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -104,7 +102,7 @@ func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	return nil
 }
 
-//NewAggregationProtocolSimul default constructor used by all nodes to init their parameters
+// NewAggregationProtocolSimul is a simulation specific protocol instance constructor that injects test data.
 func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewPrivateAggregate(tni)
 	pap := protocol.(*PrivateAggregateProtocol)
@@ -113,28 +111,7 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 	attribMap := make(map[libmedco.GroupingKey]libmedco.CipherVector)
 
 	switch tni.Index() {
-	//if want to study special cases********************************************************************************
-	/*case 0:
-		// Generate test data
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
-		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 0, 0, 0, 0})
-	case 1:
-		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
-	case 2:
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 1, 1, 1, 1})
-	case 3:
-		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 0, 1, 0, 1})
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntArray(suite, clientPublic, []int64{1, 2, 3, 4, 5})
-	case 4:
-		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntArray(suite, clientPublic, []int64{0, 1, 0, 1, 0})*/
-	//**************************************************************************************************************
+	// Put special cases you want to simulate here...
 	default:
 		groupMap, attribMap = createDataSet(10, 100)
 	}

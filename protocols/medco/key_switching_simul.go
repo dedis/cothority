@@ -18,12 +18,12 @@ func init() {
 
 }
 
-//KeySwitchingSimulation contains a simulation tree
+// KeySwitchingSimulation holds the state of a simulation.
 type KeySwitchingSimulation struct {
 	sda.SimulationBFTree
 }
 
-//NewKeySwitchingSimulation constructs a key switching simulation
+// NewKeySwitchingSimulation constructs a key switching simulation.
 func NewKeySwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &KeySwitchingSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -34,7 +34,7 @@ func NewKeySwitchingSimulation(config string) (sda.Simulation, error) {
 	return sim, nil
 }
 
-//Setup creates a servers tree for the simulation
+// Setup initializes the simulation.
 func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -49,7 +49,7 @@ func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.Simul
 	return sc, nil
 }
 
-//Run starts the simulation
+// Run starts the simulation.
 func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -62,7 +62,6 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		suite := root.Suite()
 		aggregateKey := root.Roster().Aggregate
 
-		//create dummy data
 		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
 
 		var tab []int64
@@ -84,7 +83,6 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		root.ProtocolInstance().(*KeySwitchingProtocol).TargetPublicKey = &clientPublic
 		root.ProtocolInstance().(*KeySwitchingProtocol).TargetOfSwitch = &ciphertexts
 
-		//measure protocol runtime
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 		root.StartProtocol()
 		<-root.ProtocolInstance().(*KeySwitchingProtocol).FeedbackChannel

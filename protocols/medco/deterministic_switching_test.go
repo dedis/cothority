@@ -11,19 +11,6 @@ import (
 	"time"
 )
 
-//NewDeterministicSwitchingTest default constructor such that each node use it and generates a SurveyPHKey needed
-func NewDeterministicSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-
-	pi, err := medco.NewDeterministSwitchingProtocol(tni)
-	protocol := pi.(*medco.DeterministicSwitchingProtocol)
-
-	clientPrivate := network.Suite.Scalar().Pick(random.Stream)
-	protocol.SurveyPHKey = &clientPrivate
-
-	return protocol, err
-}
-
-//TestDeterministicSwitching tests the deterministic switching protocol done from the root
 func TestDeterministicSwitching(t *testing.T) {
 	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
@@ -37,7 +24,6 @@ func TestDeterministicSwitching(t *testing.T) {
 
 	aggregateKey := entityList.Aggregate
 
-	//creates dummy data in order to test the protocol
 	testCipherVect := make(CipherVector, 4)
 	expRes := []int64{1, 2, 3, 6}
 	for i, p := range expRes {
@@ -64,14 +50,11 @@ func TestDeterministicSwitching(t *testing.T) {
 
 	protocol.TargetOfSwitch = &mapi
 
-	//run protocol
 	feedback := protocol.FeedbackChannel
-
 	go protocol.StartProtocol()
 
 	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
 
-	//verify the results
 	select {
 	case encryptedResult := <-feedback:
 		resultDet1 := encryptedResult[TempID(1)]
@@ -89,4 +72,16 @@ func TestDeterministicSwitching(t *testing.T) {
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
+}
+
+// NewDeterministicSwitchingTest is a special purpose protocol constructor specific to tests.
+func NewDeterministicSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+
+	pi, err := medco.NewDeterministSwitchingProtocol(tni)
+	protocol := pi.(*medco.DeterministicSwitchingProtocol)
+
+	clientPrivate := network.Suite.Scalar().Pick(random.Stream)
+	protocol.SurveyPHKey = &clientPrivate
+
+	return protocol, err
 }

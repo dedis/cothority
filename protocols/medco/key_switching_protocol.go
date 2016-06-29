@@ -9,18 +9,17 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-//KeySwitchingProtocolName is the registered name for the key switching protocol
+// KeySwitchingProtocolName is the registered name for the key switching protocol.
 const KeySwitchingProtocolName = "KeySwitching"
 
-//KeySwitchedCipherMessage contains cipherVector under switching and attached data used in protocol
+// KeySwitchedCipherMessage contains cipherVector under switching.
 type KeySwitchedCipherMessage struct {
 	Data                  map[libmedco.TempID]libmedco.CipherVector
 	NewKey                abstract.Point
 	OriginalEphemeralKeys map[libmedco.TempID][]abstract.Point
 }
 
-//KeySwitchedCipherStruct node doing protocol and switching message
-type KeySwitchedCipherStruct struct {
+type keySwitchedCipherStruct struct {
 	*sda.TreeNode
 	KeySwitchedCipherMessage
 }
@@ -30,7 +29,7 @@ func init() {
 	sda.ProtocolRegisterName(KeySwitchingProtocolName, NewKeySwitchingProtocol)
 }
 
-//KeySwitchingProtocol contains all elements used in protocol
+// KeySwitchingProtocol is a struct holding the state of a protocol instance.
 type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -38,7 +37,7 @@ type KeySwitchingProtocol struct {
 	FeedbackChannel chan map[libmedco.TempID]libmedco.CipherVector
 
 	// Protocol communication channels
-	PreviousNodeInPathChannel chan KeySwitchedCipherStruct
+	PreviousNodeInPathChannel chan keySwitchedCipherStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
@@ -47,7 +46,7 @@ type KeySwitchingProtocol struct {
 	originalEphemKeys map[libmedco.TempID][]abstract.Point
 }
 
-//NewKeySwitchingProtocol constructor fo Key Switching protocol
+// NewKeySwitchingProtocol is constructor of Key Switching protocol instances.
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
@@ -71,7 +70,7 @@ func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, err
 	return keySwitchingProtocol, nil
 }
 
-// Start is called at the root to start the execution of the key switching
+// Start is called at the root to start the execution of the key switching.
 func (p *KeySwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
@@ -84,7 +83,7 @@ func (p *KeySwitchingProtocol) Start() error {
 
 	log.Lvl1(p.ServerIdentity(), "started a Key Switching Protocol")
 
-	//create data from object that has to be switched
+	// Creates initialize the target cipher text and extract the original ephemeral keys.
 	initialMap := make(map[libmedco.TempID]libmedco.CipherVector, len(*p.TargetOfSwitch))
 	p.originalEphemKeys = make(map[libmedco.TempID][]abstract.Point, len(*p.TargetOfSwitch))
 	for k := range *p.TargetOfSwitch {
@@ -97,7 +96,6 @@ func (p *KeySwitchingProtocol) Start() error {
 		initialMap[k] = initialCipherVector
 	}
 
-	//forward message
 	p.sendToNext(&KeySwitchedCipherMessage{
 		initialMap,
 		*p.TargetPublicKey,
@@ -117,7 +115,7 @@ func (p *KeySwitchingProtocol) Dispatch() error {
 		keySwitchingTarget.Data[k] = v
 	}
 
-	//if root then protocol is reaching the end
+	// If the tree node is the root then protocol returns.
 	if p.IsRoot() {
 		log.Lvl1(p.ServerIdentity(), "completed key switching.")
 		p.FeedbackChannel <- keySwitchingTarget.Data

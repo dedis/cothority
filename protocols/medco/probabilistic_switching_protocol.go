@@ -9,7 +9,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-//ProbabilisticSwitchingProtocolName is the registered name for the probabilistic switching protocol
+// ProbabilisticSwitchingProtocolName is the registered name for the probabilistic switching protocol.
 const ProbabilisticSwitchingProtocolName = "ProbabilisticSwitching"
 
 func init() {
@@ -17,19 +17,18 @@ func init() {
 	sda.ProtocolRegisterName(ProbabilisticSwitchingProtocolName, NewProbabilisticSwitchingProtocol)
 }
 
-//ProbabilisticSwitchedMessage contains swiched vector and data used in protocol
+// ProbabilisticSwitchedMessage contains switched vector and data used in protocol.
 type ProbabilisticSwitchedMessage struct {
 	Data            map[libmedco.TempID]libmedco.CipherVector
 	TargetPublicKey abstract.Point
 }
 
-//ProbabilisticSwitchedStruct node and message
-type ProbabilisticSwitchedStruct struct {
+type probabilisticSwitchedStruct struct {
 	*sda.TreeNode
 	ProbabilisticSwitchedMessage
 }
 
-//ProbabilisticSwitchingProtocol contains all protocol parameters and dat
+// ProbabilisticSwitchingProtocol is a struct holding the state of a protocol instance.
 type ProbabilisticSwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -37,7 +36,7 @@ type ProbabilisticSwitchingProtocol struct {
 	FeedbackChannel chan map[libmedco.TempID]libmedco.CipherVector
 
 	// Protocol communication channels
-	PreviousNodeInPathChannel chan ProbabilisticSwitchedStruct
+	PreviousNodeInPathChannel chan probabilisticSwitchedStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
@@ -46,7 +45,7 @@ type ProbabilisticSwitchingProtocol struct {
 	TargetPublicKey   *abstract.Point
 }
 
-//NewProbabilisticSwitchingProtocol constructor
+// NewProbabilisticSwitchingProtocol is the protocol instance constructor.
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	probabilisticSwitchingProtocol := &ProbabilisticSwitchingProtocol{
 		TreeNodeInstance: n,
@@ -70,7 +69,7 @@ func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolIns
 	return probabilisticSwitchingProtocol, nil
 }
 
-// Start is called at the root to start the execution of the protocol
+// Start is called at the root to start the execution of the protocol.
 func (p *ProbabilisticSwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
@@ -100,13 +99,12 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	return nil
 }
 
-// Dispatch handles messages from channels
+// Dispatch handles messages from channels.
 func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel
 
 	phContrib := suite.Point().Mul(suite.Point().Base(), *p.SurveyPHKey)
-	//switching
 	for k, v := range probabilisticSwitchingTarget.Data {
 		v.ProbabilisticSwitching(&v, phContrib, probabilisticSwitchingTarget.TargetPublicKey)
 		probabilisticSwitchingTarget.Data[k] = v

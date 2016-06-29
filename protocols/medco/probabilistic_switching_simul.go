@@ -19,12 +19,12 @@ func init() {
 
 }
 
-//ProbabilisticSwitchingSimulation contains simulation tree
+// ProbabilisticSwitchingSimulation holds the state of a simulation instance.
 type ProbabilisticSwitchingSimulation struct {
 	sda.SimulationBFTree
 }
 
-//NewProbabilisticSwitchingSimulation simulation constructor
+// NewProbabilisticSwitchingSimulation is the simulation instance constructor.
 func NewProbabilisticSwitchingSimulation(config string) (sda.Simulation, error) {
 	sim := &ProbabilisticSwitchingSimulation{}
 	_, err := toml.Decode(config, sim)
@@ -35,7 +35,7 @@ func NewProbabilisticSwitchingSimulation(config string) (sda.Simulation, error) 
 	return sim, nil
 }
 
-//Setup initializes servers tree to do the simulation
+// Setup initializes servers tree to do the simulation.
 func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	sim.CreateRoster(sc, hosts, 20)
@@ -50,7 +50,7 @@ func (sim *ProbabilisticSwitchingSimulation) Setup(dir string, hosts []string) (
 	return sc, nil
 }
 
-//Run starts the protocol simulation
+// Run starts the protocol simulation.
 func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -61,7 +61,6 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 
 		root := rooti.(*ProbabilisticSwitchingProtocol)
 
-		//runtime measurement
 		round := monitor.NewTimeMeasure("MEDCO_PROTOCOL")
 		root.StartProtocol()
 		<-root.ProtocolInstance().(*ProbabilisticSwitchingProtocol).FeedbackChannel
@@ -71,12 +70,13 @@ func (sim *ProbabilisticSwitchingSimulation) Run(config *sda.SimulationConfig) e
 	return nil
 }
 
-//NewProbabilisticSwitchingSimul default constructor used by each node to init its parameters
+// NewProbabilisticSwitchingSimul is a simulation specific protocol instance constructor. It injects data at
+// each tree node.
 func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	protocol, err := NewProbabilisticSwitchingProtocol(tni)
 	pap := protocol.(*ProbabilisticSwitchingProtocol)
 
-	if tni.Index() == 0 { //root
+	if tni.IsRoot() {
 		clientSecret := suite.Scalar().Pick(random.Stream)
 		clientPublic := suite.Point().Mul(suite.Point().Base(), clientSecret)
 
@@ -84,7 +84,6 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		ciphertexts := make(map[libmedco.TempID]libmedco.DeterministCipherVector)
 
-		//create dummy data
 		var tab []int64
 		for i := 0; i < probabilisticSwitchedAttributeCount; i++ {
 			if i == 0 {

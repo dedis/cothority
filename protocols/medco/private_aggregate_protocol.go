@@ -8,14 +8,14 @@ import (
 	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
-//PrivateAggregateProtocolName is the registered name for the private aggregate protocol
+// PrivateAggregateProtocolName is the registered name for the private aggregate protocol.
 const PrivateAggregateProtocolName = "PrivateAggregate"
 
-//DataReferenceMessage message sent to trigger an aggregation protocol
+// DataReferenceMessage message sent to trigger an aggregation protocol.
 type DataReferenceMessage struct {
 }
 
-//ChildAggregatedDataMessage contains one node's aggregated data
+// ChildAggregatedDataMessage contains one node's aggregated data.
 type ChildAggregatedDataMessage struct {
 	ChildData   map[libmedco.GroupingKey]libmedco.CipherVector
 	ChildGroups map[libmedco.GroupingKey]libmedco.GroupingAttributes
@@ -31,7 +31,7 @@ type childAggregatedDataStruct struct {
 	ChildAggregatedDataMessage
 }
 
-//CothorityAggregatedData is the collective aggregation result
+// CothorityAggregatedData is the collective aggregation result.
 type CothorityAggregatedData struct {
 	Groups      map[libmedco.GroupingKey]libmedco.GroupingAttributes
 	GroupedData map[libmedco.GroupingKey]libmedco.CipherVector
@@ -43,7 +43,7 @@ func init() {
 	sda.ProtocolRegisterName(PrivateAggregateProtocolName, NewPrivateAggregate)
 }
 
-//PrivateAggregateProtocol performs an aggregation of the data held by every node in the cothority.
+// PrivateAggregateProtocol performs an aggregation of the data held by every node in the cothority.
 type PrivateAggregateProtocol struct {
 	*sda.TreeNodeInstance
 
@@ -59,7 +59,7 @@ type PrivateAggregateProtocol struct {
 	Groups      *map[libmedco.GroupingKey]libmedco.GroupingAttributes
 }
 
-//NewPrivateAggregate initialises the protocol instance
+// NewPrivateAggregate initializes the protocol instance.
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	privateAggregateProtocol := &PrivateAggregateProtocol{
 		TreeNodeInstance: n,
@@ -76,7 +76,7 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 	return privateAggregateProtocol, nil
 }
 
-//Start is called at the root to begin the execution of the protocol
+// Start is called at the root to begin the execution of the protocol.
 func (p *PrivateAggregateProtocol) Start() error {
 	if p.GroupedData == nil {
 		return errors.New("No data reference provided for aggregation.")
@@ -89,7 +89,7 @@ func (p *PrivateAggregateProtocol) Start() error {
 	return nil
 }
 
-//Dispatch is called at each node and handle incoming messages
+// Dispatch is called at each node and handle incoming messages.
 func (p *PrivateAggregateProtocol) Dispatch() error {
 
 	// 1. Aggregation announcement phase
@@ -108,7 +108,7 @@ func (p *PrivateAggregateProtocol) Dispatch() error {
 	return nil
 }
 
-//message forward down the tree
+// Announce forwarding down the tree.
 func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	dataReferenceMessage := <-p.DataReferenceChannel
 	if !p.IsLeaf() {
@@ -116,7 +116,7 @@ func (p *PrivateAggregateProtocol) aggregationAnnouncementPhase() {
 	}
 }
 
-//message forward up the tree containing aggregation results
+// Results pushing up the tree containing aggregation results.
 func (p *PrivateAggregateProtocol) ascendingAggregationPhase() (
 	*map[libmedco.GroupingKey]libmedco.GroupingAttributes, *map[libmedco.GroupingKey]libmedco.CipherVector) {
 	if p.GroupedData == nil {

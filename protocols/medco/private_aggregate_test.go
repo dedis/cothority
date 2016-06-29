@@ -21,44 +21,6 @@ var groupingAttrA = GroupingAttributes{grpattr1, grpattr1}
 var groupingAttrB = GroupingAttributes{grpattr2, grpattr2}
 var groupingAttrC = GroupingAttributes{grpattr1, grpattr2}
 
-//NewPrivateAggregateTest default constructor used by all nodes to create their dummy data
-func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-
-	pi, err := medco.NewPrivateAggregate(tni)
-	protocol := pi.(*medco.PrivateAggregateProtocol)
-
-	testGAMap := make(map[GroupingKey]GroupingAttributes)
-	testCVMap := make(map[GroupingKey]CipherVector)
-
-	switch tni.Index() {
-	case 0:
-
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
-		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{0, 0, 0, 0, 0})
-	case 1:
-		testGAMap[groupingAttrB.Key()] = groupingAttrB
-		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
-	case 2:
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 1, 1, 1, 1})
-	case 9:
-		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{1, 0, 1, 0, 1})
-		testGAMap[groupingAttrA.Key()] = groupingAttrA
-		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
-	case 5:
-		testGAMap[groupingAttrC.Key()] = groupingAttrC
-		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{0, 1, 0, 1, 0})
-	default:
-	}
-	protocol.Groups = &testGAMap
-	protocol.GroupedData = &testCVMap
-
-	return protocol, err
-}
-
 //TestPrivateAggregate tests private aggregate protocol
 func TestPrivateAggregate(t *testing.T) {
 	defer log.AfterTest(t)
@@ -109,4 +71,42 @@ func TestPrivateAggregate(t *testing.T) {
 	case <-time.After(timeout):
 		t.Fatal("Didn't finish in time")
 	}
+}
+
+// NewPrivateAggregateTest is a test specific protocol instance constructor that injects test data.
+func NewPrivateAggregateTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+
+	pi, err := medco.NewPrivateAggregate(tni)
+	protocol := pi.(*medco.PrivateAggregateProtocol)
+
+	testGAMap := make(map[GroupingKey]GroupingAttributes)
+	testCVMap := make(map[GroupingKey]CipherVector)
+
+	switch tni.Index() {
+	case 0:
+
+		testGAMap[groupingAttrA.Key()] = groupingAttrA
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
+		testGAMap[groupingAttrB.Key()] = groupingAttrB
+		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{0, 0, 0, 0, 0})
+	case 1:
+		testGAMap[groupingAttrB.Key()] = groupingAttrB
+		testCVMap[groupingAttrB.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
+	case 2:
+		testGAMap[groupingAttrA.Key()] = groupingAttrA
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 1, 1, 1, 1})
+	case 9:
+		testGAMap[groupingAttrC.Key()] = groupingAttrC
+		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{1, 0, 1, 0, 1})
+		testGAMap[groupingAttrA.Key()] = groupingAttrA
+		testCVMap[groupingAttrA.Key()] = *EncryptIntVector(clientPublic, []int64{1, 2, 3, 4, 5})
+	case 5:
+		testGAMap[groupingAttrC.Key()] = groupingAttrC
+		testCVMap[groupingAttrC.Key()] = *EncryptIntVector(clientPublic, []int64{0, 1, 0, 1, 0})
+	default:
+	}
+	protocol.Groups = &testGAMap
+	protocol.GroupedData = &testCVMap
+
+	return protocol, err
 }
