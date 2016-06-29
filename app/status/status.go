@@ -23,12 +23,8 @@ import (
 const RequestTimeOut = time.Second * 10
 
 const optionGroup = "group"
-const optionGroupShort = "g"
 
-func init() {
-	log.SetDebugVisible(1)
-	log.SetUseColors(false)
-}
+func init() {}
 
 func main() {
 	app := cli.NewApp()
@@ -38,7 +34,7 @@ func main() {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  optionGroup + " ," + optionGroupShort,
+			Name:  optionGroup + " ," + "g",
 			Value: "group.toml",
 			Usage: "Cothority group definition in `FILE.toml`",
 		},
@@ -50,6 +46,7 @@ func main() {
 	}
 	app.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.GlobalInt("debug"))
+		log.SetUseColors(false)
 		return nil
 	}
 	app.Action = cli.ActionFunc(network)
