@@ -1,6 +1,7 @@
-package medco
+package medco_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 	"github.com/dedis/cothority/log"
@@ -9,11 +10,8 @@ import (
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
-	"reflect"
 )
 
-var clientPrivate = network.Suite.Scalar().Pick(random.Stream)
-var clientPublic = network.Suite.Point().Mul(network.Suite.Point().Base(), clientPrivate)
 
 //NewProbabilisticSwitchingTest default constructor such that each node use it and generates a SurveyPHKey needed
 func NewProbabilisticSwitchingTest(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -35,6 +33,9 @@ func TestProbabilisticSwitching(t *testing.T) {
 	sda.ProtocolRegisterName("ProbabilisticSwitchingTest", NewProbabilisticSwitchingTest)
 
 	defer local.CloseAll()
+
+	var clientPrivate = network.Suite.Scalar().Pick(random.Stream)
+	var clientPublic = network.Suite.Point().Mul(network.Suite.Point().Base(), clientPrivate)
 
 	rootInstance, _ := local.CreateProtocol(tree, "ProbabilisticSwitchingTest")
 	protocol := rootInstance.(*medco.ProbabilisticSwitchingProtocol)
