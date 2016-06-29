@@ -26,7 +26,7 @@ func main() {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  optionGroup + " ," + optionGroupShort,
+			Name:  "group, g",
 			Value: "group.toml",
 			Usage: "Cothority group definition in `FILE.toml`",
 		},
