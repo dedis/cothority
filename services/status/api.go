@@ -29,7 +29,7 @@ func (c *Client) GetStatus(dst *network.ServerIdentity) (*Response, error) {
 	}
 	sr, ok := reply.Msg.(Response)
 	if !ok {
-		return nil, errors.New("Wrong return type:")
+		return nil, errors.New("Wrong return type")
 	}
 	return &sr, nil
 

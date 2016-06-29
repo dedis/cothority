@@ -11,6 +11,9 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 
+	"sort"
+	"strings"
+
 	"github.com/dedis/cothority/services/status"
 	"gopkg.in/codegangsta/cli.v1"
 )
@@ -32,14 +35,7 @@ func main() {
 	app.Name = "Status"
 	app.Usage = "Get and print status of all servers in a file."
 	//a status is a list of connections and packets sent and received for each server in the file
-	app.Commands = []cli.Command{
-		{
-			Name:    "network",
-			Aliases: []string{"g"},
-			Usage:   "Gets status from all entities in group file.",
-			Action:  network,
-		},
-	}
+
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  optionGroup + " ," + optionGroupShort,
@@ -96,9 +92,13 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 	return el, err
 }
 
+// printConn prints the status response that is returned from the server
 func printConn(e *status.Response) {
+	var a []string
 	for key, value := range e.Msg["Status"] {
-		log.Print(key + ": " + value)
+		a = append(a, (key + ": " + value + "\n"))
 	}
-	log.Print("\n")
+	sort.Strings(a)
+	strings.Join(a, "\n\n")
+	log.Print(a)
 }

@@ -21,7 +21,7 @@ func init() {
 
 }
 
-// Stat is the service that handles collective signing operations
+// Stat is the service that returns the status reports of all services running on a server.
 type Stat struct {
 	*sda.ServiceProcessor
 	path string

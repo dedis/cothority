@@ -18,7 +18,7 @@ testNetwork(){
     cp group.toml cl1
     testOut "Running network"
     testGrep "Connections:" runCl 1
-    testGrep "Packets Sent:" runCl 1
+    testGrep "Packets_Sent:" runCl 1
 }
 
 testBuild(){

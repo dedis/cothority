@@ -622,44 +622,6 @@ func (h *Host) Address() string {
 	return h.workingAddress
 }
 
-//Received gives the total number of packets received by a host
-func Received(n map[network.ServerIdentityID]network.SecureConn) uint64 {
-	var a uint64
-	for _, value := range n {
-		a = value.Rx()
-	}
-	return a
-}
-
-//Sent gives the total number of packets sent by the host
-func Sent(n map[network.ServerIdentityID]network.SecureConn) uint64 {
-	var a uint64
-	for _, value := range n {
-		a = value.Tx()
-	}
-	return a
-
-}
-
-//ID is the host that you are asking for stats from
-func ID(n map[network.ServerIdentityID]network.SecureConn) string {
-	var a string
-	for _, value := range n {
-		a = value.Local()
-	}
-	return a
-
-}
-
-//Remote is who the host is connected to
-func Remote(n map[network.ServerIdentityID]network.SecureConn) string {
-	var a string
-	for _, value := range n {
-		a = a + value.Remote() + "\n"
-	}
-	return a
-}
-
 //GetStatus is a function
 func (h *Host) GetStatus() Status {
 	m := make(map[string]string)
@@ -675,20 +637,15 @@ func (h *Host) GetStatus() Status {
 		rx += c.Rx()
 		tx += c.Tx()
 		iter = iter + 1
-
 	}
 	m["Connections"] = strings.Join(remote, "\n")
 	m["Host"] = local
 	m["Total"] = strconv.Itoa(nbr)
-	m["Packets Received"] = fmt.Sprintf("%d", rx)
-	m["Packets Sent"] = fmt.Sprintf("%d", tx)
+	m["Packets_Received"] = strconv.FormatUint(rx, 10)
+	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
 	a := ServiceFactory.RegisteredServicesName()
 	sort.Strings(a)
-	var r string
-	for _, value := range a {
-		r = r + value
-	}
-	m["Available Services"] = r
+	m["Available_Services"] = strings.Join(a, ",")
 
 	return m
 }
