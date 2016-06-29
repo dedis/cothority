@@ -5,15 +5,13 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 )
 
-//number of attributes to be switched in each vector
-const NUM_ATTR_PROB = 2
+const probabilisticSwitchedAttributeCount = 2
 
-//number of vectors to be switched
-const NUM_VECT_PROB = 10
+const probabilisticSwitchedVectorCount = 10
 
 func init() {
 	sda.SimulationRegister("ProbabilisticSwitching", NewProbabilisticSwitchingSimulation)
@@ -84,11 +82,11 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		aggregateKey := pap.Roster().Aggregate
 
-		ciphertexts := make(map[TempID]DeterministCipherVector)
+		ciphertexts := make(map[libmedco.TempID]libmedco.DeterministCipherVector)
 
 		//create dummy data
 		var tab []int64
-		for i := 0; i < NUM_ATTR_PROB; i++ {
+		for i := 0; i < probabilisticSwitchedAttributeCount; i++ {
 			if i == 0 {
 				tab = []int64{1}
 			} else {
@@ -96,13 +94,13 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 			}
 		}
 
-		for i := 0; i < NUM_VECT_PROB; i++ {
-			encrypted := *EncryptIntVector(aggregateKey, tab)
+		for i := 0; i < probabilisticSwitchedVectorCount; i++ {
+			encrypted := *libmedco.EncryptIntVector(aggregateKey, tab)
 			for ind, v := range encrypted {
 				if ind == 0 {
-					ciphertexts[TempID(i)] = DeterministCipherVector{DeterministCipherText{v.C}}
+					ciphertexts[libmedco.TempID(i)] = libmedco.DeterministCipherVector{libmedco.DeterministCipherText{v.C}}
 				} else {
-					ciphertexts[TempID(i)] = append(ciphertexts[TempID(i)], DeterministCipherText{v.C})
+					ciphertexts[libmedco.TempID(i)] = append(ciphertexts[libmedco.TempID(i)], libmedco.DeterministCipherText{v.C})
 				}
 			}
 		}

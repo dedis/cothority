@@ -6,22 +6,24 @@ import (
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
 var suite = network.Suite
-var grpattr = DeterministCipherText{suite.Point().Base()}
+var grpattr = libmedco.DeterministCipherText{suite.Point().Base()}
 var clientPrivate = suite.Scalar().One() //one -> to have the same for each node
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
 
-func createDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]GroupingAttributes, map[GroupingKey]CipherVector) {
-	testGAMap := make(map[GroupingKey]GroupingAttributes)
-	testCVMap := make(map[GroupingKey]CipherVector)
+func createDataSet(numberGroups int, numberAttributes int) (
+	map[libmedco.GroupingKey]libmedco.GroupingAttributes, map[libmedco.GroupingKey]libmedco.CipherVector) {
+	testGAMap := make(map[libmedco.GroupingKey]libmedco.GroupingAttributes)
+	testCVMap := make(map[libmedco.GroupingKey]libmedco.CipherVector)
 
 	for i := 0; i < numberGroups; i++ {
 		newGrpattr := grpattr
-		(DeterministCipherText(newGrpattr).Point).Add(DeterministCipherText(newGrpattr).Point, DeterministCipherText(newGrpattr).Point)
-		groupAttributes := GroupingAttributes{grpattr, newGrpattr}
+		(libmedco.DeterministCipherText(newGrpattr).Point).Add(libmedco.DeterministCipherText(newGrpattr).Point,
+									libmedco.DeterministCipherText(newGrpattr).Point)
+		groupAttributes := libmedco.GroupingAttributes{grpattr, newGrpattr}
 
 		grpattr = newGrpattr
 
@@ -34,7 +36,7 @@ func createDataSet(numberGroups int, numberAttributes int) (map[GroupingKey]Grou
 			}
 		}
 		//round := monitor.NewTimeMeasure("MEDCO_ENCRYPTION")
-		cipherVect := *EncryptIntVector(clientPublic, tab)
+		cipherVect := *libmedco.EncryptIntVector(clientPublic, tab)
 		//round.Record()
 
 		testGAMap[groupAttributes.Key()] = groupAttributes
@@ -107,8 +109,8 @@ func NewAggregationProtocolSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInstanc
 	protocol, err := NewPrivateAggregate(tni)
 	pap := protocol.(*PrivateAggregateProtocol)
 
-	groupMap := make(map[GroupingKey]GroupingAttributes)
-	attribMap := make(map[GroupingKey]CipherVector)
+	groupMap := make(map[libmedco.GroupingKey]libmedco.GroupingAttributes)
+	attribMap := make(map[libmedco.GroupingKey]libmedco.CipherVector)
 
 	switch tni.Index() {
 	//if want to study special cases********************************************************************************

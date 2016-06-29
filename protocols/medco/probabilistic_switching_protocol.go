@@ -9,11 +9,12 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-const PROBABILISTIC_SWITCHING_PROTOCOL_NAME = "ProbabilisticSwitching"
+//ProbabilisticSwitchingProtocolName is the registered name for the probabilistic switching protocol
+const ProbabilisticSwitchingProtocolName = "ProbabilisticSwitching"
 
 func init() {
 	network.RegisterMessageType(ProbabilisticSwitchedMessage{})
-	sda.ProtocolRegisterName(PROBABILISTIC_SWITCHING_PROTOCOL_NAME, NewProbabilisticSwitchingProtocol)
+	sda.ProtocolRegisterName(ProbabilisticSwitchingProtocolName, NewProbabilisticSwitchingProtocol)
 }
 
 //ProbabilisticSwitchedMessage contains swiched vector and data used in protocol
@@ -69,7 +70,7 @@ func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolIns
 	return probabilisticSwitchingProtocol, nil
 }
 
-// Starts the protocol
+// Start is called at the root to start the execution of the protocol
 func (p *ProbabilisticSwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
@@ -99,7 +100,7 @@ func (p *ProbabilisticSwitchingProtocol) Start() error {
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
+// Dispatch handles messages from channels
 func (p *ProbabilisticSwitchingProtocol) Dispatch() error {
 
 	probabilisticSwitchingTarget := <-p.PreviousNodeInPathChannel

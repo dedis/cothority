@@ -5,15 +5,13 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 )
 
-//number of ciphertexts in each vector to be switched
-const NUM_ATTR = 100
+const switchedAttributesCount = 100
 
-//number of vectors to be switched
-const NUM_VECT = 10
+const switchedVectorCount = 10
 
 func init() {
 	sda.SimulationRegister("KeySwitching", NewKeySwitchingSimulation)
@@ -65,10 +63,10 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 		aggregateKey := root.Roster().Aggregate
 
 		//create dummy data
-		ciphertexts := make(map[TempID]CipherVector)
+		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
 
 		var tab []int64
-		for i := 0; i < NUM_ATTR; i++ {
+		for i := 0; i < switchedAttributesCount; i++ {
 			if i == 0 {
 				tab = []int64{1}
 			} else {
@@ -76,8 +74,8 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 			}
 		}
 
-		for i := 0; i < NUM_VECT; i++ {
-			ciphertexts[TempID(i)] = *EncryptIntVector(aggregateKey, tab)
+		for i := 0; i < switchedVectorCount; i++ {
+			ciphertexts[libmedco.TempID(i)] = *libmedco.EncryptIntVector(aggregateKey, tab)
 		}
 
 		clientSecret := suite.Scalar().Pick(random.Stream)

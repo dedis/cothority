@@ -5,17 +5,17 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 )
-
-const KEY_SWITCHING_PROTOCOL_NAME = "KeySwitching"
+//KeySwitchingProtocolName is the registered name for the key switching protocol
+const KeySwitchingProtocolName = "KeySwitching"
 
 //KeySwitchedCipherMessage contains cipherVector under switching and attached data used in protocol
 type KeySwitchedCipherMessage struct {
-	Data                  map[TempID]CipherVector
+	Data                  map[libmedco.TempID]libmedco.CipherVector
 	NewKey                abstract.Point
-	OriginalEphemeralKeys map[TempID][]abstract.Point
+	OriginalEphemeralKeys map[libmedco.TempID][]abstract.Point
 }
 
 //KeySwitchedCipherStruct node doing protocol and switching message
@@ -26,7 +26,7 @@ type KeySwitchedCipherStruct struct {
 
 func init() {
 	network.RegisterMessageType(KeySwitchedCipherMessage{})
-	sda.ProtocolRegisterName(KEY_SWITCHING_PROTOCOL_NAME, NewKeySwitchingProtocol)
+	sda.ProtocolRegisterName(KeySwitchingProtocolName, NewKeySwitchingProtocol)
 }
 
 //KeySwitchingProtocol contains all elements used in protocol
@@ -34,23 +34,23 @@ type KeySwitchingProtocol struct {
 	*sda.TreeNodeInstance
 
 	// Protocol feedback channel
-	FeedbackChannel chan map[TempID]CipherVector
+	FeedbackChannel chan map[libmedco.TempID]libmedco.CipherVector
 
 	// Protocol communication channels
 	PreviousNodeInPathChannel chan KeySwitchedCipherStruct
 
 	// Protocol state data
 	nextNodeInCircuit *sda.TreeNode
-	TargetOfSwitch    *map[TempID]CipherVector
+	TargetOfSwitch    *map[libmedco.TempID]libmedco.CipherVector
 	TargetPublicKey   *abstract.Point
-	originalEphemKeys map[TempID][]abstract.Point
+	originalEphemKeys map[libmedco.TempID][]abstract.Point
 }
 
 //NewKeySwitchingProtocol constructor fo Key Switching protocol
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	keySwitchingProtocol := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
-		FeedbackChannel:  make(chan map[TempID]CipherVector),
+		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.CipherVector),
 	}
 
 	if err := keySwitchingProtocol.RegisterChannel(&keySwitchingProtocol.PreviousNodeInPathChannel); err != nil {
@@ -70,6 +70,7 @@ func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, err
 	return keySwitchingProtocol, nil
 }
 
+// Start is called at the root to start the execution of the key switching
 func (p *KeySwitchingProtocol) Start() error {
 
 	if p.TargetOfSwitch == nil {
@@ -83,10 +84,10 @@ func (p *KeySwitchingProtocol) Start() error {
 	log.Lvl1(p.ServerIdentity(), "started a Key Switching Protocol")
 
 	//create data from object that has to be switched
-	initialMap := make(map[TempID]CipherVector, len(*p.TargetOfSwitch))
-	p.originalEphemKeys = make(map[TempID][]abstract.Point, len(*p.TargetOfSwitch))
-	for k, _ := range *p.TargetOfSwitch {
-		initialCipherVector := *NewCipherVector(len((*p.TargetOfSwitch)[k]))
+	initialMap := make(map[libmedco.TempID]libmedco.CipherVector, len(*p.TargetOfSwitch))
+	p.originalEphemKeys = make(map[libmedco.TempID][]abstract.Point, len(*p.TargetOfSwitch))
+	for k := range *p.TargetOfSwitch {
+		initialCipherVector := *libmedco.NewCipherVector(len((*p.TargetOfSwitch)[k]))
 		p.originalEphemKeys[k] = make([]abstract.Point, len((*p.TargetOfSwitch)[k]))
 		for i, c := range (*p.TargetOfSwitch)[k] {
 			initialCipherVector[i].C = c.C
@@ -104,6 +105,7 @@ func (p *KeySwitchingProtocol) Start() error {
 	return nil
 }
 
+// Dispatch is called on each node. It waits for incoming messages and handle them.
 func (p *KeySwitchingProtocol) Dispatch() error {
 
 	keySwitchingTarget := <-p.PreviousNodeInPathChannel

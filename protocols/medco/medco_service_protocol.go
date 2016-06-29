@@ -8,59 +8,61 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 )
 
-const MEDCO_SERVICE_PROTOCOL_NAME = "MedcoServiceProtocol"
+// MedcoServiceProtocolName is the registered name for the medco service protocol
+const MedcoServiceProtocolName = "MedcoServiceProtocol"
 
 func init() {
-	sda.ProtocolRegisterName(MEDCO_SERVICE_PROTOCOL_NAME, NewMedcoServiceProcotol)
+	sda.ProtocolRegisterName(MedcoServiceProtocolName, NewPipelineProcotol)
 	network.RegisterMessageType(TriggerFlushCollectedDataMessage{})
 	network.RegisterMessageType(DoneFlushCollectedDataMessage{})
 }
 
-//MedcoServiceInterface contains the 3 possible phases of a medco protocol. The service implements this interface so
-// the protocol can trigger these phases.
-type MedcoServiceInterface interface {
+//ServiceInterface defines the 3 phases of a medco protocol. The service implements this interface so
+// the protocol can trigger them.
+type ServiceInterface interface {
 	DeterministicSwitchingPhase(SurveyID) error
 	AggregationPhase(SurveyID) error
 	KeySwitchingPhase(SurveyID) error
 }
 
-//TriggerFlushCollectedDataMessage contains ID of subject survey
+//triggerFlushCollectedDataMessage is a message trigger the Map phase at all node
 type TriggerFlushCollectedDataMessage struct {
-	SurveyID SurveyID
+	SurveyID SurveyID // Currently unused
 }
 
-//DoneFlushCollectedDataMessage empty structure which indicates that the flush is done
+//doneFlushCollectedDataMessage is a message reporting the Map phase completion
 type DoneFlushCollectedDataMessage struct{}
 
-//DoneProcessingMessage empty structure which indicates that the processing is done
+//doneProcessingMessage is a message indicating that pipeline execution complete
 type DoneProcessingMessage struct{}
 
-type FlushCollectedDataStruct struct {
+
+type flushCollectedDataStruct struct {
 	*sda.TreeNode
 	TriggerFlushCollectedDataMessage
 }
 
-type DoneFlushCollectedDataStruct struct {
+type doneFlushCollectedDataStruct struct {
 	*sda.TreeNode
 	DoneFlushCollectedDataMessage
 }
 
-//MedcoServiceProtocol contains elements of a service protocol
-type MedcoServiceProtocol struct {
+//PipelineProtocol contains elements of a service protocol
+type PipelineProtocol struct {
 	*sda.TreeNodeInstance
 
-	TriggerFlushCollectedData chan FlushCollectedDataStruct
-	DoneFlushCollectedData    chan []DoneFlushCollectedDataStruct
+	TriggerFlushCollectedData chan flushCollectedDataStruct
+	DoneFlushCollectedData    chan []doneFlushCollectedDataStruct
 
-	FeedbackChannel chan DoneProcessingMessage
+	FeedbackChannel           chan DoneProcessingMessage
 
-	MedcoServiceInstance MedcoServiceInterface
-	TargetSurvey         *Survey
+	MedcoServiceInstance      ServiceInterface
+	TargetSurvey              *Survey
 }
 
-//NewMedcoServiceProcotol constructor of a medco service protocol
-func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	protocol := &MedcoServiceProtocol{TreeNodeInstance: tni,
+//NewPipelineProcotol constructor of a pipeline protocol
+func NewPipelineProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	protocol := &PipelineProtocol{TreeNodeInstance: tni,
 		FeedbackChannel: make(chan DoneProcessingMessage)}
 
 	chans := []interface{}{&protocol.TriggerFlushCollectedData, &protocol.DoneFlushCollectedData}
@@ -72,7 +74,8 @@ func NewMedcoServiceProcotol(tni *sda.TreeNodeInstance) (sda.ProtocolInstance, e
 	return protocol, nil
 }
 
-func (p *MedcoServiceProtocol) Start() error {
+// Start is called at the root the start the execution of the protocol
+func (p *PipelineProtocol) Start() error {
 
 	if p.MedcoServiceInstance == nil {
 		return errors.New("No Medco Service pointer provided.")
@@ -87,7 +90,8 @@ func (p *MedcoServiceProtocol) Start() error {
 	return nil
 }
 
-func (p *MedcoServiceProtocol) Dispatch() error {
+// Dispatch is called at all node and handle the incoming messages
+func (p *PipelineProtocol) Dispatch() error {
 
 	// 1st phase (optional) : Grouping
 	if p.TargetSurvey.SurveyDescription.GroupingAttributesCount > 0 {

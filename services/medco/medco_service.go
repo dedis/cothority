@@ -115,9 +115,9 @@ func (mcs *MedcoService) HandleSurveyResultsQuery(e *network.ServerIdentity, res
 
 	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
 	mcs.survey.ClientPublic = resq.ClientPublic
-	pi, _ := mcs.startProtocol(medco.MEDCO_SERVICE_PROTOCOL_NAME, resq.SurveyID)
+	pi, _ := mcs.startProtocol(medco.MedcoServiceProtocolName, resq.SurveyID)
 
-	<-pi.(*medco.MedcoServiceProtocol).FeedbackChannel
+	<-pi.(*medco.PipelineProtocol).FeedbackChannel
 	log.Lvl1(mcs.ServerIdentity(), "completed the query processing...")
 	return &SurveyResultResponse{mcs.survey.PollDeliverableResults()}, nil
 }
@@ -127,12 +127,12 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 	var pi sda.ProtocolInstance
 	var err error
 	switch tn.ProtocolName() {
-	case medco.MEDCO_SERVICE_PROTOCOL_NAME:
-		pi, err = medco.NewMedcoServiceProcotol(tn)
-		medcoServ := pi.(*medco.MedcoServiceProtocol)
+	case medco.MedcoServiceProtocolName:
+		pi, err = medco.NewPipelineProcotol(tn)
+		medcoServ := pi.(*medco.PipelineProtocol)
 		medcoServ.MedcoServiceInstance = mcs
 		medcoServ.TargetSurvey = &mcs.survey
-	case medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME:
+	case medco.DeterministicSwitchingProtocolName:
 		pi, err = medco.NewDeterministSwitchingProtocol(tn)
 		detSwitch := pi.(*medco.DeterministicSwitchingProtocol)
 		detSwitch.SurveyPHKey = &mcs.survey.SurveyPHKey
@@ -140,12 +140,12 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 			groupingAttr := mcs.survey.PollProbabilisticGroupingAttributes()
 			detSwitch.TargetOfSwitch = &groupingAttr
 		}
-	case medco.PRIVATE_AGGREGATE_PROTOCOL_NAME:
+	case medco.PrivateAggregateProtocolName:
 		pi, err = medco.NewPrivateAggregate(tn)
 		groups, groupedData := mcs.survey.PollLocallyAggregatedResponses()
 		pi.(*medco.PrivateAggregateProtocol).GroupedData = &groupedData
 		pi.(*medco.PrivateAggregateProtocol).Groups = &groups
-	case medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME:
+	case medco.ProbabilisticSwitchingProtocolName:
 		pi, err = medco.NewProbabilisticSwitchingProtocol(tn)
 		probSwitch := pi.(*medco.ProbabilisticSwitchingProtocol)
 		probSwitch.SurveyPHKey = &mcs.survey.SurveyPHKey
@@ -154,7 +154,7 @@ func (mcs *MedcoService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generic
 			probSwitch.TargetOfSwitch = GroupingAttributesToDeterministicCipherVector(&groups)
 			probSwitch.TargetPublicKey = &mcs.survey.ClientPublic
 		}
-	case medco.KEY_SWITCHING_PROTOCOL_NAME:
+	case medco.KeySwitchingProtocolName:
 		pi, err = medco.NewKeySwitchingProtocol(tn)
 		keySwitch := pi.(*medco.KeySwitchingProtocol)
 		if tn.IsRoot() {
@@ -183,7 +183,7 @@ func (mcs *MedcoService) startProtocol(name string, targetSurvey SurveyID) (sda.
 // Performs the private grouping on the currently collected data
 func (mcs *MedcoService) DeterministicSwitchingPhase(targetSurvey SurveyID) error {
 
-	pi, err := mcs.startProtocol(medco.DETERMINISTIC_SWITCHING_PROTOCOL_NAME, targetSurvey)
+	pi, err := mcs.startProtocol(medco.DeterministicSwitchingProtocolName, targetSurvey)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (mcs *MedcoService) DeterministicSwitchingPhase(targetSurvey SurveyID) erro
 // Performs the per-group aggregation on the currently grouped data
 func (mcs *MedcoService) AggregationPhase(targetSurvey SurveyID) error {
 
-	pi, err := mcs.startProtocol(medco.PRIVATE_AGGREGATE_PROTOCOL_NAME, targetSurvey)
+	pi, err := mcs.startProtocol(medco.PrivateAggregateProtocolName, targetSurvey)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (mcs *MedcoService) AggregationPhase(targetSurvey SurveyID) error {
 // Perform the switch to data querier key on the currently aggregated data
 func (mcs *MedcoService) KeySwitchingPhase(targetSurvey SurveyID) error {
 
-	pi, err := mcs.startProtocol(medco.KEY_SWITCHING_PROTOCOL_NAME, targetSurvey)
+	pi, err := mcs.startProtocol(medco.KeySwitchingProtocolName, targetSurvey)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (mcs *MedcoService) KeySwitchingPhase(targetSurvey SurveyID) error {
 	//TODO: extract this subphase because it is optional
 	keySwitchedAggregatedGroups := make(map[TempID]CipherVector)
 	if mcs.survey.SurveyDescription.GroupingAttributesCount > 0 {
-		pi, err = mcs.startProtocol(medco.PROBABILISTIC_SWITCHING_PROTOCOL_NAME, targetSurvey)
+		pi, err = mcs.startProtocol(medco.ProbabilisticSwitchingProtocolName, targetSurvey)
 		if err != nil {
 			return err
 		}
