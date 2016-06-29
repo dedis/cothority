@@ -5,7 +5,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
 // MedcoServiceProtocolName is the registered name for the medco service protocol
@@ -20,20 +20,20 @@ func init() {
 //ServiceInterface defines the 3 phases of a medco protocol. The service implements this interface so
 // the protocol can trigger them.
 type ServiceInterface interface {
-	DeterministicSwitchingPhase(SurveyID) error
-	AggregationPhase(SurveyID) error
-	KeySwitchingPhase(SurveyID) error
+	DeterministicSwitchingPhase(libmedco.SurveyID) error
+	AggregationPhase(libmedco.SurveyID) error
+	KeySwitchingPhase(libmedco.SurveyID) error
 }
 
-//triggerFlushCollectedDataMessage is a message trigger the Map phase at all node
+//TriggerFlushCollectedDataMessage is a message trigger the Map phase at all node
 type TriggerFlushCollectedDataMessage struct {
-	SurveyID SurveyID // Currently unused
+	SurveyID libmedco.SurveyID // Currently unused
 }
 
-//doneFlushCollectedDataMessage is a message reporting the Map phase completion
+//DoneFlushCollectedDataMessage is a message reporting the Map phase completion
 type DoneFlushCollectedDataMessage struct{}
 
-//doneProcessingMessage is a message indicating that pipeline execution complete
+//DoneProcessingMessage is a message indicating that pipeline execution complete
 type DoneProcessingMessage struct{}
 
 type flushCollectedDataStruct struct {
@@ -56,7 +56,7 @@ type PipelineProtocol struct {
 	FeedbackChannel chan DoneProcessingMessage
 
 	MedcoServiceInstance ServiceInterface
-	TargetSurvey         *Survey
+	TargetSurvey         *libmedco.Survey
 }
 
 //NewPipelineProcotol constructor of a pipeline protocol
