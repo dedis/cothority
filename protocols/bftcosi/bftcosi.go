@@ -134,7 +134,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		doneSigning:          make(chan bool, 1),
 		VerificationFunction: verify,
 		AggregatedPublic:     n.Roster().Aggregate,
-		threshold:            len(n.Tree().List()) * 2 / 3,
+		threshold:            (len(n.Tree().List()) + 1) * 2 / 3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 		commitCommitDone:     make(chan bool, 1),
@@ -178,6 +178,7 @@ func (bft *ProtocolBFTCoSi) Start() error {
 // Dispatch listens on all channels and implements the sda.ProtocolInstance
 // interface.
 func (bft *ProtocolBFTCoSi) Dispatch() error {
+	log.Lvl2(bft.Name(), "Starts")
 	for {
 		var err error
 		select {
@@ -242,6 +243,12 @@ func (bft *ProtocolBFTCoSi) RegisterOnDone(fn func()) {
 // protocol reached a signature on the block
 func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
+}
+
+func (bft *ProtocolBFTCoSi) Shutdown() error {
+	dbg.Lvl3(bft.Name(), "is shutting down")
+	bft.nodeDone()
+	return nil
 }
 
 // startAnnouncementPrepare create its announcement for the prepare round and
@@ -579,7 +586,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	log.Lvl4(bft.Name(), "nodeDone()")
+	log.Lvl4(bft.Name(), "closing")
 	bft.doneProcessing <- true
 	if bft.onDoneCallback != nil {
 		// only true for the root

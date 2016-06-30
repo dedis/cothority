@@ -21,6 +21,39 @@ func TestMain(m *testing.M) {
 	dbg.MainTest(m)
 }
 
+func TestThreshold(t *testing.T) {
+	const TestProtocolName = "DummyBFTCoSiThr"
+
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verify)
+	})
+
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	tests := []struct{ h, t int }{
+		{1, 1},
+		{2, 2},
+		{3, 2},
+		{4, 3},
+		{5, 4},
+		{6, 4},
+	}
+	for _, s := range tests {
+		hosts, thr := s.h, s.t
+		dbg.Lvl3("Hosts is", hosts)
+		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
+		dbg.Lvl3("Tree is:", tree.Dump())
+
+		// Start the protocol
+		node, err := local.CreateProtocol(tree, TestProtocolName)
+		dbg.ErrFatal(err)
+		bc := node.(*ProtocolBFTCoSi)
+		assert.Equal(t, thr, bc.threshold, "hosts was %d", hosts)
+		local.CloseAll()
+	}
+}
+
 func TestBftCoSi(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSi"
 
@@ -61,7 +94,7 @@ func TestCheckFailMore(t *testing.T) {
 		for failCount = 1; failCount <= 3; failCount++ {
 			dbg.Lvl1("FailMore at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				failCount < n*2/3)
+				failCount < (n+1)*2/3)
 		}
 	}
 }
@@ -78,7 +111,8 @@ func TestCheckFailBit(t *testing.T) {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
 			dbg.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				bitCount(failCount) < n*2/3)
+				bitCount(failCount) < (n+1)*2/3)
+
 		}
 	}
 }
