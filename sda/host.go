@@ -630,7 +630,6 @@ func (h *Host) GetStatus() Status {
 	iter := 0
 	var rx uint64
 	var tx uint64
-	local := h.ServerIdentity.Addresses[0]
 	for _, c := range h.connections {
 		remote[iter] = c.Remote()
 		rx += c.Rx()
@@ -638,7 +637,7 @@ func (h *Host) GetStatus() Status {
 		iter = iter + 1
 	}
 	m["Connections"] = strings.Join(remote, "\n")
-	m["Host"] = local
+	m["Host"] = h.Address()
 	m["Total"] = strconv.Itoa(nbr)
 	m["Packets_Received"] = strconv.FormatUint(rx, 10)
 	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
