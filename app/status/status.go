@@ -1,11 +1,11 @@
-// Status takes in a file containing a list of servers and returns the status reports of all of the servers
+// Status takes in a file containing a list of servers and returns the status reports of all of the servers.
+// A status is a list of connections and packets sent and received for each server in the file.
 package main
 
 import (
 	"os"
 
 	"errors"
-	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
@@ -18,23 +18,14 @@ import (
 	"gopkg.in/codegangsta/cli.v1"
 )
 
-// RequestTimeOut defines when the client stops waiting for the CoSi group to
-// reply
-const RequestTimeOut = time.Second * 10
-
-const optionGroup = "group"
-
-func init() {}
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "Status"
-	app.Usage = "Get and print status of all servers in a file."
-	//a status is a list of connections and packets sent and received for each server in the file
+	app.Usage = "Get and print status of all servers of a file."
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  optionGroup + " ," + "g",
+			Name:  "group, g",
 			Value: "group.toml",
 			Usage: "Cothority group definition in `FILE.toml`",
 		},
@@ -44,19 +35,18 @@ func main() {
 			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
 	}
-	app.Before = func(c *cli.Context) error {
-		log.SetDebugVisible(c.GlobalInt("debug"))
+	app.Action = func(c *cli.Context) error {
 		log.SetUseColors(false)
-		return nil
+		log.SetDebugVisible(c.GlobalInt("debug"))
+		return network(c)
 	}
-	app.Action = cli.ActionFunc(network)
 	app.Run(os.Args)
 }
 
 // network will contact all cothorities in the group-file and print
 // the status-report of each one.
 func network(c *cli.Context) error {
-	groupToml := c.GlobalString(optionGroup)
+	groupToml := c.GlobalString("g")
 	el, err := readGroup(groupToml)
 	log.ErrFatal(err, "Couldn't Read File")
 	log.Lvl3(el)
