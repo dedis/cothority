@@ -7,6 +7,12 @@ import (
 	"sync"
 	"time"
 
+	"strings"
+
+	"sort"
+
+	"strconv"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -62,28 +68,31 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	serviceStore *serviceStore
+	serviceStore         *serviceStore
+	statusReporterStruct *statusReporterStruct
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
-		ServerIdentity:      e,
-		workingAddress:      e.First(),
-		connections:         make(map[network.ServerIdentityID]network.SecureConn),
-		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
-		pendingSDAs:         make([]*ProtocolMsg, 0),
-		host:                network.NewSecureTCPHost(pkey, e),
-		private:             pkey,
-		suite:               network.Suite,
-		networkChan:         make(chan network.Packet, 1),
-		isClosing:           false,
-		ProcessMessagesQuit: make(chan bool),
+		ServerIdentity:       e,
+		workingAddress:       e.First(),
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
+		pendingTreeMarshal:   make(map[RosterID][]*TreeMarshal),
+		pendingSDAs:          make([]*ProtocolMsg, 0),
+		host:                 network.NewSecureTCPHost(pkey, e),
+		private:              pkey,
+		suite:                network.Suite,
+		networkChan:          make(chan network.Packet, 1),
+		isClosing:            false,
+		ProcessMessagesQuit:  make(chan bool),
+		statusReporterStruct: newStatusReporterStruct(),
 	}
 
 	h.overlay = NewOverlay(h)
 	h.serviceStore = newServiceStore(h, h.overlay)
+	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
 }
 
@@ -611,4 +620,30 @@ func (h *Host) Rx() uint64 {
 // Address is the address where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
+}
+
+// GetStatus is a function that returns the status report of the server.
+func (h *Host) GetStatus() Status {
+	m := make(map[string]string)
+	nbr := len(h.connections)
+	remote := make([]string, nbr)
+	iter := 0
+	var rx uint64
+	var tx uint64
+	for _, c := range h.connections {
+		remote[iter] = c.Remote()
+		rx += c.Rx()
+		tx += c.Tx()
+		iter = iter + 1
+	}
+	m["Connections"] = strings.Join(remote, "\n")
+	m["Host"] = h.Address()
+	m["Total"] = strconv.Itoa(nbr)
+	m["Packets_Received"] = strconv.FormatUint(rx, 10)
+	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
+	a := ServiceFactory.RegisteredServicesName()
+	sort.Strings(a)
+	m["Available_Services"] = strings.Join(a, ",")
+
+	return m
 }
