@@ -245,6 +245,8 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
 }
 
+// Shutdown will close the dispatch-method if the protocol is stopped
+// before the normal termination.
 func (bft *ProtocolBFTCoSi) Shutdown() error {
 	bft.doneProcessing <- true
 	return nil
