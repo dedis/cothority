@@ -1,5 +1,5 @@
 Servers = 8
-Simulation = "CoSi"
+Simulation = "CoSimul"
 Rounds = 5
 Depth = 3
 BF = 4
