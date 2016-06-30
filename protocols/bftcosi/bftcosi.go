@@ -78,10 +78,10 @@ type ProtocolBFTCoSi struct {
 	// commit phase to put an exception or to sign.
 	signRefusal bool
 
-	// onDoneCallback is the callback that will be called at the end of the
+	// onDone is the callback that will be called at the end of the
 	// protocol when all nodes have finished. Either at the end of the response
 	// phase of the commit round or at the end of a view change.
-	onDoneCallback func()
+	onDone func()
 
 	// onSignatureDone is the callback that will be called when a signature has
 	// been generated ( at the end of the response phase of the commit round)
@@ -236,7 +236,7 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 // RegisterOnDone registers a callback to call when the bftcosi protocols has
 // really finished
 func (bft *ProtocolBFTCoSi) RegisterOnDone(fn func()) {
-	bft.onDoneCallback = fn
+	bft.onDone = fn
 }
 
 // RegisterOnSignatureDone register a callback to call when the bftcosi
@@ -246,8 +246,7 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 }
 
 func (bft *ProtocolBFTCoSi) Shutdown() error {
-	dbg.Lvl3(bft.Name(), "is shutting down")
-	bft.nodeDone()
+	bft.doneProcessing <- true
 	return nil
 }
 
@@ -588,9 +587,9 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	log.Lvl4(bft.Name(), "closing")
 	bft.doneProcessing <- true
-	if bft.onDoneCallback != nil {
+	if bft.onDone != nil {
 		// only true for the root
-		bft.onDoneCallback()
+		bft.onDone()
 	}
 	return true
 }
