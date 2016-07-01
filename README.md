@@ -56,6 +56,12 @@ This is a stable version that depends on the v0-versions of the other dedis-pack
 
 https://github.com/dedis/cothority/tree/v0
 
+If you write code that uses our library in the v0-version, be sure to reference it as
+
+```
+import "gopkg.in/dedis/cothority.v0
+```
+
 ### Master
 
 The master-branch is used for day-to-day development and will break your code about once a week. If you are using this branch, be sure to do
