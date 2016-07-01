@@ -422,7 +422,6 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 	return nil
 }
 
-// challenge process.
 // If 'r' is nil, it will starts the response process.
 func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if r != nil {
@@ -447,8 +446,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if !bft.IsRoot() {
 		return bft.SendTo(bft.Parent(), bzrReturn)
 	}
-	// let's modify the cosi signature so it don't account the exception
-	// response. Since cosi does not support exceptions yet, we have to remove
+	// Since cosi does not support exceptions yet, we have to remove
 	// the responses that are not supposed to be there,i.e. exceptions.
 	cosiSig := bft.prepare.Signature()
 	correctResponseBuff, err := bzrReturn.Response.MarshalBinary()
