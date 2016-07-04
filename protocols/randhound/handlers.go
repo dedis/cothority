@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -82,7 +82,7 @@ type R4 struct {
 type R4Share struct {
 	DealerIdx uint32          // Dealer's index in the peer list
 	ShareIdx  uint32          // Share's index in dealer's deal
-	Share     abstract.Secret // Decrypted share dealt to this server
+	Share     abstract.Scalar // Decrypted share dealt to this server
 }
 
 // WI1 is a SDA-wrapper around I1

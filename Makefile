@@ -1,14 +1,3 @@
-install_dev:
-	@echo Installing development-branch of crypto and cosi
-	@for r in crypto cosi; do \
-		repo=github.com/dedis/$$r; \
-		go get $$repo; \
-		cd $$GOPATH/src/$$repo; \
-		git checkout development; \
-	done
-	@cd $$GOPATH/src/github.com/dedis/cothority
-	go get -t ./...
-
 install:
 	go get -t ./...
 
@@ -38,7 +27,9 @@ test_lint:
 	fi \
 	}
 
-test: test_fmt test_lint
+test_go:
 	go test -race -p=1 ./...
+
+test: test_fmt test_lint test_go
 
 all: install test
