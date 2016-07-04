@@ -145,6 +145,8 @@ func (l *LocalTest) CloseAll() {
 		node.Close()
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
+	// Give the nodes some time to correctly close down
+	time.Sleep(time.Millisecond * 500)
 }
 
 // GetTree returns the tree of the given TreeNode
