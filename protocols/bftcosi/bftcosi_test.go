@@ -162,7 +162,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 		// if assert fails we don't care for unlocking (t.Fail)
 		countMut.Unlock()
 		sig := root.Signature()
-		err := VerifyBFTSignature(root.Suite(), sig, root.Roster().Publics())
+		err := sig.Verify(root.Suite(), root.Roster().Publics())
 		if succeed && err != nil {
 			t.Fatalf("%s Verification of the signature failed: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
