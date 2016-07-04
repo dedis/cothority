@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-func lvlUI(lvl int, args ...interface{}) {
+func lvlUI(l int, args ...interface{}) {
 	if debugVisible > 0 {
-		lvld(lvl, args...)
+		lvl(l, 3, args...)
 	} else {
-		print(lvl, args...)
+		print(l, args...)
 	}
 }
 
