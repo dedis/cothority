@@ -64,7 +64,7 @@ func (dm *DummyProtocol) Dispatch() error {
 }
 
 type DummyService struct {
-	c        sda.Context
+	c        *sda.Context
 	path     string
 	link     chan bool
 	fakeTree *sda.Tree
@@ -118,7 +118,7 @@ func TestServiceNew(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
 		ds.link <- true
@@ -136,7 +136,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
 		return ds
@@ -178,7 +178,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		ds.c = c
 		ds.path = path
 		return ds
@@ -230,7 +230,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		link: make(chan bool),
 	}
 	var count int
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		if count == 0 {
 			count++
 			// the client does not need a Service
@@ -293,7 +293,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		link: make(chan bool),
 	}
 	var count int
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		var localDs *DummyService
 		switch count {
 		case 2:
@@ -362,7 +362,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		link: make(chan bool),
 	}
 	var count int
-	sda.RegisterNewService("DummyService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("DummyService", func(c *sda.Context, path string) sda.Service {
 		var s *DummyService
 		if count == 0 {
 			s = ds1
@@ -403,7 +403,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	defer local.CloseAll()
 
 	// register service
-	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("BackForth", func(c *sda.Context, path string) sda.Service {
 		return &simpleService{
 			ctx: c,
 		}
@@ -443,7 +443,7 @@ func TestClient_Send(t *testing.T) {
 	defer local.CloseAll()
 
 	// register service
-	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("BackForth", func(c *sda.Context, path string) sda.Service {
 		return &simpleService{
 			ctx: c,
 		}
@@ -471,7 +471,7 @@ func TestClient_Parallel(t *testing.T) {
 	defer local.CloseAll()
 
 	// register service
-	sda.RegisterNewService("BackForth", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("BackForth", func(c *sda.Context, path string) sda.Service {
 		return &simpleService{
 			ctx: c,
 		}
@@ -610,7 +610,7 @@ var simpleRequestType = network.RegisterMessageType(simpleRequest{})
 var simpleResponseType = network.RegisterMessageType(simpleResponse{})
 
 type simpleService struct {
-	ctx sda.Context
+	ctx *sda.Context
 }
 
 func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *sda.ClientRequest) {

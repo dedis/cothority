@@ -656,6 +656,16 @@ func (t *TreeNode) SubtreeCount() int {
 	return ret
 }
 
+// AggregatePublic will return the aggregate public key of the TreeNode
+// and all it's children
+func (t *TreeNode) AggregatePublic() abstract.Point {
+	agg := network.Suite.Point().Null()
+	t.Visit(0, func(i int, tn *TreeNode) {
+		agg.Add(agg, tn.ServerIdentity.Public)
+	})
+	return agg
+}
+
 // RosterToml is the struct can can embedded ServerIdentityToml to be written in a
 // toml file
 type RosterToml struct {
