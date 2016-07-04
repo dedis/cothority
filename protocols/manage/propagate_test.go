@@ -7,9 +7,9 @@ import (
 
 	"reflect"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 type PropagateMsg struct {
@@ -30,19 +30,19 @@ func TestPropagate(t *testing.T) {
 		i := 0
 		msg := &PropagateMsg{[]byte("propagate")}
 
-		tree := el.GenerateNaryTreeWithRoot(8, o.Entity())
-		dbg.Lvl2("Starting to propagate", reflect.TypeOf(msg))
+		tree := el.GenerateNaryTreeWithRoot(8, o.ServerIdentity())
+		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 		pi, err := o.CreateProtocolSDA(tree, "Propagate")
-		dbg.ErrFatal(err)
+		log.ErrFatal(err)
 		nodes, err := propagateStartAndWait(pi, msg, 1000,
-			func(m network.ProtocolMessage) {
+			func(m network.Body) {
 				if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 					i++
 				} else {
 					t.Error("Didn't receive correct data")
 				}
 			})
-		dbg.ErrFatal(err)
+		log.ErrFatal(err)
 		if i != 1 {
 			t.Fatal("Didn't get data-request")
 		}

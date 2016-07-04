@@ -5,9 +5,9 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -29,7 +29,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 	c := NewClient()
 	root, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
@@ -54,10 +54,10 @@ func TestClient_CreateData(t *testing.T) {
 
 	c := NewClient()
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	td := &testData{1, "data-sc"}
 	inter, data, err := c.CreateData(inter, 1, 1, VerifyNone, td)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	if err = data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
@@ -68,7 +68,7 @@ func TestClient_CreateData(t *testing.T) {
 		t.Fatal("Intermediate chain doesn't point to data-chain")
 	}
 	_, td1, err := network.UnmarshalRegisteredType(data.Data, network.DefaultConstructors(network.Suite))
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	if *td != td1.(testData) {
 		t.Fatal("Stored data is not the same as initial data")
 	}
@@ -80,16 +80,19 @@ func TestClient_ProposeData(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
+	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	td := &testData{1, "data-sc"}
+	log.Lvl1("Creating data chain")
 	inter, data1, err := c.CreateData(inter, 1, 1, VerifyNone, td)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	td.A++
+	log.Lvl1("Proposing data on intermediate chain")
 	data2, err := c.ProposeData(inter, data1, td)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	dataLast, err := c.GetUpdateChain(inter, data1.Hash)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	if len(dataLast.Update) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain", len(dataLast.Update))
 	}
@@ -105,17 +108,21 @@ func TestClient_ProposeRoster(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewClient()
+	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	dbg.ErrFatal(err)
-	el2 := sda.NewEntityList(el.List[:nbrHosts-1])
+	log.ErrFatal(err)
+	el2 := sda.NewRoster(el.List[:nbrHosts-1])
+	log.Lvl1("Proposing roster")
 	sb1, err := c.ProposeRoster(inter, el2)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
+	log.Lvl1("Proposing same roster again")
 	_, err = c.ProposeRoster(inter, el2)
 	if err == nil {
 		t.Fatal("Appending two Blocks to the same last block should fail")
 	}
+	log.Lvl1("Proposing following roster")
 	sb2, err := c.ProposeRoster(sb1.Latest, el2)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	if !sb2.Previous.Equal(sb1.Latest) {
 		t.Fatal("New previous should be previous latest")
 	}

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
@@ -82,7 +82,7 @@ type R4 struct {
 type R4Share struct {
 	DealerIdx uint32          // Dealer's index in the peer list
 	ShareIdx  uint32          // Share's index in dealer's deal
-	Share     abstract.Secret // Decrypted share dealt to this server
+	Share     abstract.Scalar // Decrypted share dealt to this server
 }
 
 // WI1 is a SDA-wrapper around I1
@@ -219,9 +219,9 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Construct deal
 	longPair := &config.KeyPair{
-		rh.Suite(),
-		rh.Public(),
-		rh.Private(),
+		Suite:  rh.Suite(),
+		Public: rh.Public(),
+		Secret: rh.Private(),
 	}
 	secretPair := config.NewKeyPair(rh.Suite())
 	_, trustees := rh.chooseTrustees(rh.Peer.i2.Rc, rh.Peer.rs)
@@ -302,9 +302,9 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.Peer.i3 = &i3.I3
 
 	longPair := &config.KeyPair{
-		rh.Suite(),
-		rh.Public(),
-		rh.Private(),
+		Suite:  rh.Suite(),
+		Public: rh.Public(),
+		Secret: rh.Private(),
 	}
 
 	responses := []R3Resp{}

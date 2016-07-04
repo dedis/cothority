@@ -8,7 +8,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // Scp copies the given files to the remote host
@@ -32,7 +32,7 @@ func Rsync(username, host, file, dest string) error {
 	}
 	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
 	cmd.Stderr = os.Stderr
-	if dbg.DebugVisible() > 1 {
+	if log.DebugVisible() > 1 {
 		cmd.Stdout = os.Stdout
 	}
 	return cmd.Run()
@@ -58,7 +58,7 @@ func SSHRunStdout(username, host, command string) error {
 		addr = username + "@" + addr
 	}
 
-	dbg.Lvl4("Going to ssh to", addr, command)
+	log.Lvl4("Going to ssh to", addr, command)
 	cmd := exec.Command("ssh", "-o", "StrictHostKeyChecking=no", addr,
 		"eval '"+command+"'")
 	cmd.Stderr = os.Stderr
@@ -76,21 +76,21 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 	buildBuffer := bufio.NewWriter(&b)
 
 	wd, _ := os.Getwd()
-	dbg.Lvl4("In directory", wd)
+	log.Lvl4("In directory", wd)
 	var args []string
 	args = append(args, "build", "-v")
 	args = append(args, buildArgs...)
 	args = append(args, "-o", out, path)
 	cmd = exec.Command("go", args...)
-	dbg.Lvl4("Building", cmd.Args, "in", path)
+	log.Lvl4("Building", cmd.Args, "in", path)
 	cmd.Stdout = buildBuffer
 	cmd.Stderr = buildBuffer
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
 	wd, err := os.Getwd()
-	dbg.Lvl4(wd)
-	dbg.Lvl4("Command:", cmd.Args)
+	log.Lvl4(wd)
+	log.Lvl4("Command:", cmd.Args)
 	err = cmd.Run()
-	dbg.Lvl4(b.String())
+	log.Lvl4(b.String())
 	return b.String(), err
 }
 
@@ -98,6 +98,6 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 func KillGo() {
 	cmd := exec.Command("killall", "go")
 	if err := cmd.Run(); err != nil {
-		dbg.Lvl3("Couldn't kill all go instances:", err)
+		log.Lvl3("Couldn't kill all go instances:", err)
 	}
 }

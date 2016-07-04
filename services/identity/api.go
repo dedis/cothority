@@ -6,10 +6,10 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -37,17 +37,17 @@ func init() {
 	}
 }
 
-// Identity can both follow and update an IdentityList
+// Identity can both follow and update an IdRoster
 type Identity struct {
 	*sda.Client
-	Private    abstract.Secret
+	Private    abstract.Scalar
 	Public     abstract.Point
 	ID         ID
 	Config     *AccountList
 	Proposed   *AccountList
 	ManagerStr string
 	SSHPub     string
-	Cothority  *sda.EntityList
+	Cothority  *sda.Roster
 	skipchain  *skipchain.Client
 	root       *skipchain.SkipBlock
 	data       *skipchain.SkipBlock
@@ -55,7 +55,7 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) *Identity {
+func NewIdentity(cothority *sda.Roster, majority int, owner, sshPub string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
@@ -71,7 +71,7 @@ func NewIdentity(cothority *sda.EntityList, majority int, owner, sshPub string) 
 }
 
 // NewIdentityFromCothority searches for a given cothority
-func NewIdentityFromCothority(el *sda.EntityList, id ID) (*Identity, error) {
+func NewIdentityFromCothority(el *sda.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
 		Client:    sda.NewClient(ServiceName),
 		Cothority: el,
@@ -142,7 +142,7 @@ func (i *Identity) CreateIdentity() error {
 	return nil
 }
 
-// ConfigNewPropose collects new IdentityLists and waits for confirmation with
+// ConfigNewPropose collects new IdRosters and waits for confirmation with
 // ConfigNewVote
 func (i *Identity) ConfigNewPropose(il *AccountList) error {
 	_, err := i.Send(i.Cothority.GetRandom(), &PropagateProposition{i.ID, il})
@@ -179,7 +179,7 @@ func (i *Identity) VoteProposed(accept bool) error {
 
 // ConfigNewVote sends a vote (accept or reject) with regard to a new configuration
 func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
-	dbg.Lvl3("Voting on", i.Proposed.Owners)
+	log.Lvl3("Voting on", i.Proposed.Owners)
 	hash, err := i.Proposed.Hash()
 	if err != nil {
 		return err
@@ -197,11 +197,11 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 		return err
 	}
 	if msg == nil {
-		dbg.Lvl3("Threshold not reached")
+		log.Lvl3("Threshold not reached")
 	} else {
 		sb, ok := msg.Msg.(skipchain.SkipBlock)
 		if ok {
-			dbg.Lvl3("Threshold reached and signed")
+			log.Lvl3("Threshold reached and signed")
 			i.data = &sb
 			i.Config = i.Proposed
 		} else {

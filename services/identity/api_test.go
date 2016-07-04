@@ -7,15 +7,15 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	dbg.MainTest(m)
+	log.MainTest(m)
 }
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
@@ -26,15 +26,15 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one", "public1")
-	dbg.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Owners["two"] = &Owner{kp2.Public}
 	conf2.Data["two"] = "public2"
-	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
+	log.ErrFatal(c1.ConfigNewPropose(conf2))
 
-	dbg.ErrFatal(c1.ConfigNewCheck())
+	log.ErrFatal(c1.ConfigNewCheck())
 	al := c1.Proposed
 	assert.NotNil(t, al)
 
@@ -53,10 +53,10 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one", "public1")
-	dbg.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c1.CreateIdentity())
 
 	c2 := NewIdentity(el, 50, "two", "public2")
-	dbg.ErrFatal(c2.AttachToIdentity(c1.ID))
+	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	for _, s := range services {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
@@ -75,11 +75,11 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one", "public1")
-	dbg.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c1.CreateIdentity())
 
 	c2 := NewIdentity(el, 50, "two", "public2")
 	c2.ID = c1.ID
-	dbg.ErrFatal(c2.ConfigUpdate())
+	log.ErrFatal(c2.ConfigUpdate())
 
 	assert.NotNil(t, c2.Config)
 	o1 := c2.Config.Owners[c1.ManagerStr]
@@ -95,13 +95,13 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewIdentity(el, 50, "one", "public1")
-	dbg.ErrFatal(c.CreateIdentity())
+	log.ErrFatal(c.CreateIdentity())
 
 	// Check we're in the configuration
 	assert.NotNil(t, c.Config)
 	assert.NotNil(t, c.data)
 	assert.NotNil(t, c.root)
-	dbg.ErrFatal(c.data.VerifySignatures())
+	log.ErrFatal(c.data.VerifySignatures())
 }
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
@@ -111,12 +111,12 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one", "public1")
-	dbg.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Owners["two"] = &Owner{kp2.Public}
-	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
+	log.ErrFatal(c1.ConfigNewPropose(conf2))
 	time.Sleep(time.Second)
 
 	for _, s := range services {
@@ -140,21 +140,21 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
-		dbg.Lvl3(s.(*Service).identities)
+		log.Lvl3(s.(*Service).identities)
 	}
 
 	c1 := NewIdentity(el, 50, "one1", "public1")
-	dbg.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Owners["two2"] = &Owner{kp2.Public}
 	conf2.Data["two2"] = "public2"
-	dbg.ErrFatal(c1.ConfigNewPropose(conf2))
-	dbg.ErrFatal(c1.ConfigNewCheck())
+	log.ErrFatal(c1.ConfigNewPropose(conf2))
+	log.ErrFatal(c1.ConfigNewCheck())
 	hash, err := conf2.Hash()
-	dbg.ErrFatal(err)
-	dbg.ErrFatal(c1.ConfigNewVote(hash, true))
+	log.ErrFatal(err)
+	log.ErrFatal(c1.ConfigNewVote(hash, true))
 
 	if len(c1.Config.Owners) != 2 {
 		t.Fatal("Should have two owners now")
@@ -163,7 +163,7 @@ func TestIdentity_ConfigNewVote(t *testing.T) {
 		t.Fatal("Should have two data-entries now")
 	}
 
-	dbg.ErrFatal(c1.ConfigUpdate())
+	log.ErrFatal(c1.ConfigUpdate())
 	if len(c1.Config.Owners) != 2 {
 		t.Fatal("Update should have two owners now")
 	}
@@ -175,15 +175,15 @@ func TestIdentity_SaveToStream(t *testing.T) {
 	defer l.CloseAll()
 	id := NewIdentity(el, 50, "one1", "public1")
 	tmpfile, err := ioutil.TempFile("", "example")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	defer os.Remove(tmpfile.Name())
-	dbg.ErrFatal(id.SaveToStream(tmpfile))
+	log.ErrFatal(id.SaveToStream(tmpfile))
 	tmpfile.Close()
 	tmpfile, err = os.Open(tmpfile.Name())
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	id2, err := NewIdentityFromStream(tmpfile)
 	assert.NotNil(t, id2)
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	tmpfile.Close()
 
 	if id.Config.Threshold != id2.Config.Threshold {

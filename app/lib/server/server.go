@@ -18,20 +18,20 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 
 	"regexp"
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	"github.com/dedis/cothority/app/lib/ui"
-	"github.com/dedis/cothority/lib/cosi"
-	_ "github.com/dedis/cothority/protocols/cosi"
-	_ "github.com/dedis/cothority/services/cosi"
-	s "github.com/dedis/cothority/services/cosi"
+	"github.com/dedis/crypto/cosi"
+	// For the moment, the server only serves CoSi requests
+	_ "github.com/dedis/cosi/protocol"
+	s "github.com/dedis/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )
@@ -54,10 +54,10 @@ const DefaultAddress = "127.0.0.1"
 // Service used to get the port connection service
 const whatsMyIP = "http://www.whatsmyip.org/"
 
-// How long we're willing to wait for a signature
+// RequestTimeOut is how long we're willing to wait for a signature
 var RequestTimeOut = time.Second * 1
 
-// interactiveConfig will ask through the command line to create a Private / Public
+// InteractiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
 func InteractiveConfig(binaryName string) {
 	ui.Info("Setting up a cothority-server.")
@@ -190,11 +190,11 @@ func CheckConfig(tomlFileName string) error {
 	ui.ErrFatal(err, "Couldn't open group definition file")
 	group, err := config.ReadGroupDescToml(f)
 	ui.ErrFatal(err, "Error while reading group definition file", err)
-	if len(group.EntityList.List) == 0 {
+	if len(group.Roster.List) == 0 {
 		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	fmt.Println("[+] Checking the availability and responsiveness of the servers in the group...")
+	ui.Info("Checking the availability and responsiveness of the servers in the group...")
 	return CheckServers(group)
 }
 
@@ -203,27 +203,27 @@ func CheckConfig(tomlFileName string) error {
 func CheckServers(g *config.Group) error {
 	success := true
 	// First check all servers individually
-	for _, e := range g.EntityList.List {
+	for _, e := range g.Roster.List {
 		desc := []string{"none", "none"}
 		if d := g.GetDescription(e); d != "" {
 			desc = []string{d, d}
 		}
-		el := sda.NewEntityList([]*network.Entity{e})
+		el := sda.NewRoster([]*network.ServerIdentity{e})
 		success = success && checkList(el, desc) == nil
 	}
-	if len(g.EntityList.List) > 1 {
+	if len(g.Roster.List) > 1 {
 		// Then check pairs of servers
-		for i, first := range g.EntityList.List {
-			for _, second := range g.EntityList.List[i+1:] {
+		for i, first := range g.Roster.List {
+			for _, second := range g.Roster.List[i+1:] {
 				desc := []string{"none", "none"}
 				if d1 := g.GetDescription(first); d1 != "" {
 					desc = []string{d1, g.GetDescription(second)}
 				}
-				es := []*network.Entity{first, second}
-				success = success && checkList(sda.NewEntityList(es), desc) == nil
+				es := []*network.ServerIdentity{first, second}
+				success = success && checkList(sda.NewRoster(es), desc) == nil
 				es[0], es[1] = es[1], es[0]
 				desc[0], desc[1] = desc[1], desc[0]
-				success = success && checkList(sda.NewEntityList(es), desc) == nil
+				success = success && checkList(sda.NewRoster(es), desc) == nil
 			}
 		}
 	}
@@ -235,36 +235,32 @@ func CheckServers(g *config.Group) error {
 }
 
 // checkList sends a message to the list and waits for the reply
-func checkList(list *sda.EntityList, descs []string) error {
+func checkList(list *sda.Roster, descs []string) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
 		serverStr += fmt.Sprintf("%s_%s ", s.Addresses[0], name)
 	}
-	dbg.Lvl3("Sending message to: " + serverStr)
+	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	fmt.Print("[+] Checking server(s) ", serverStr, ": ")
+	ui.Info("Checking server(s) ", serverStr, ": ")
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Fprintln(os.Stderr,
-			fmt.Sprintf("Error '%v'", err))
+		ui.Error(err)
 		return err
-	} else {
-		err := verifySignatureHash([]byte(msg), sig, list)
-		if err != nil {
-			fmt.Println(os.Stderr,
-				fmt.Sprintf("Invalid signature: %v", err))
-			return err
-		} else {
-			fmt.Println("Success")
-		}
 	}
+	err = verifySignatureHash([]byte(msg), sig, list)
+	if err != nil {
+		ui.Errorf("Invalid signature: %v", err)
+		return err
+	}
+	ui.Info("Success")
 	return nil
 }
 
 // signStatement can be used to sign the contents passed in the io.Reader
 // (pass an io.File or use an strings.NewReader for strings)
-func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
+func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	error) {
 	//publics := entityListToPublics(el)
 	client := s.NewClient()
@@ -273,7 +269,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 	pchan := make(chan *s.SignatureResponse)
 	var err error
 	go func() {
-		dbg.Lvl3("Waiting for the response on SignRequest")
+		log.Lvl3("Waiting for the response on SignRequest")
 		response, e := client.SignMsg(el, msg)
 		if e != nil {
 			err = e
@@ -285,13 +281,11 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 
 	select {
 	case response, ok := <-pchan:
-		dbg.Lvl5("Response:", response)
+		log.Lvl5("Response:", response)
 		if !ok || err != nil {
 			return nil, errors.New("Received an invalid repsonse.")
 		}
-
-		err = cosi.VerifySignature(network.Suite, msg, el.Aggregate,
-			response.Challenge, response.Response)
+		err = cosi.VerifySignature(network.Suite, el.Publics(), msg, response.Signature)
 		if err != nil {
 			return nil, err
 		}
@@ -301,7 +295,7 @@ func signStatement(read io.Reader, el *sda.EntityList) (*s.SignatureResponse,
 	}
 }
 
-func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList) error {
+func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	//publics := entityListToPublics(el)
@@ -312,14 +306,13 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.EntityList)
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	err := cosi.VerifySignature(network.Suite, fHash, el.Aggregate,
-		sig.Challenge, sig.Response)
+	err := cosi.VerifySignature(network.Suite, el.Publics(), fHash, sig.Signature)
 	if err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
 }
-func entityListToPublics(el *sda.EntityList) []abstract.Point {
+func entityListToPublics(el *sda.Roster) []abstract.Point {
 	publics := make([]abstract.Point, len(el.List))
 	for i, e := range el.List {
 		publics[i] = e.Public
@@ -332,7 +325,7 @@ func isPublicIP(ip string) bool {
 		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
 		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip)
 	if err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 	return !public
 }
@@ -351,7 +344,7 @@ func checkOverwrite(file string) bool {
 func createKeyPair() (string, string) {
 	ui.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
-	privStr, err := crypto.SecretHex(network.Suite, kp.Secret)
+	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
 	if err != nil {
 		ui.Fatal("Error formating private key to hexadecimal. Abort.")
 	}

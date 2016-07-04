@@ -5,9 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,6 +19,39 @@ var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
 	dbg.MainTest(m)
+}
+
+func TestThreshold(t *testing.T) {
+	const TestProtocolName = "DummyBFTCoSiThr"
+
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verify)
+	})
+
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	tests := []struct{ h, t int }{
+		{1, 1},
+		{2, 2},
+		{3, 2},
+		{4, 3},
+		{5, 4},
+		{6, 4},
+	}
+	for _, s := range tests {
+		hosts, thr := s.h, s.t
+		dbg.Lvl3("Hosts is", hosts)
+		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
+		dbg.Lvl3("Tree is:", tree.Dump())
+
+		// Start the protocol
+		node, err := local.CreateProtocol(tree, TestProtocolName)
+		dbg.ErrFatal(err)
+		bc := node.(*ProtocolBFTCoSi)
+		assert.Equal(t, thr, bc.threshold, "hosts was %d", hosts)
+		local.CloseAll()
+	}
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -60,7 +94,7 @@ func TestCheckFailMore(t *testing.T) {
 		for failCount = 1; failCount <= 3; failCount++ {
 			dbg.Lvl1("FailMore at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				failCount < n*2/3)
+				failCount < (n+1)*2/3)
 		}
 	}
 }
@@ -77,7 +111,8 @@ func TestCheckFailBit(t *testing.T) {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
 			dbg.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				bitCount(failCount) < n*2/3)
+				bitCount(failCount) < (n+1)*2/3)
+
 		}
 	}
 }
@@ -127,8 +162,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 		// if assert fails we don't care for unlocking (t.Fail)
 		countMut.Unlock()
 		sig := root.Signature()
-		err := cosi.VerifyCosiSignatureWithException(root.Suite(),
-			root.AggregatedPublic, msg, sig.Sig, nil)
+		err := sig.Verify(root.Suite(), root.Roster().Publics())
 		if succeed && err != nil {
 			t.Fatalf("%s Verification of the signature failed: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
@@ -143,9 +177,8 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 func verify(m []byte, d []byte) bool {
 	countMut.Lock()
 	veriCount++
-	dbg.Lvl1("Verification called", veriCount, "times")
+	log.Lvl4("Verification called", veriCount, "times")
 	countMut.Unlock()
-	dbg.Lvl1("Ignoring message:", string(m))
 	if len(d) != 1 {
 		dbg.Error("Didn't receive correct data")
 		return false

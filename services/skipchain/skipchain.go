@@ -12,11 +12,11 @@ import (
 
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/manage"
+	"github.com/dedis/cothority/sda"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -45,7 +45,7 @@ type Service struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (network.ProtocolMessage, error) {
+func (s *Service) ProposeSkipBlock(e *network.ServerIdentity, psbd *ProposeSkipBlock) (network.Body, error) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -68,7 +68,7 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 				break
 			}
 		}
-		dbg.Lvl4("Found height", prop.Height, "for index", prop.Index,
+		log.Lvl4("Found height", prop.Height, "for index", prop.Index,
 			"and maxHeight", prop.MaximumHeight, "and base", prop.BaseHeight)
 		prop.BackLinkIds = make([]SkipBlockID, prop.Height)
 		pointer := prev
@@ -100,8 +100,8 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 		rand.Read(bl)
 		prop.BackLinkIds = []SkipBlockID{SkipBlockID(bl)}
 	}
-	if prop.EntityList != nil {
-		prop.Aggregate = prop.EntityList.Aggregate
+	if prop.Roster != nil {
+		prop.Aggregate = prop.Roster.Aggregate
 	}
 	el, err := prop.GetResponsible(s)
 	if err != nil {
@@ -127,14 +127,14 @@ func (s *Service) ProposeSkipBlock(e *network.Entity, psbd *ProposeSkipBlock) (n
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain) (network.ProtocolMessage, error) {
+func (s *Service) GetUpdateChain(e *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
-	dbg.Lvl3("Starting to search chain")
+	log.Lvl3("Starting to search chain")
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[len(block.ForwardLink)-1]
 		block, ok = s.getSkipBlockByID(link.Hash)
@@ -143,7 +143,7 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 		}
 		blocks = append(blocks, block)
 	}
-	dbg.Lvl3("Found", len(blocks), "blocks")
+	log.Lvl3("Found", len(blocks), "blocks")
 	reply := &GetUpdateChainReply{blocks}
 
 	return reply, nil
@@ -151,7 +151,7 @@ func (s *Service) GetUpdateChain(e *network.Entity, latestKnown *GetUpdateChain)
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipBlock) (network.ProtocolMessage, error) {
+func (s *Service) SetChildrenSkipBlock(e *network.ServerIdentity, scsb *SetChildrenSkipBlock) (network.Body, error) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
@@ -181,7 +181,6 @@ func (s *Service) SetChildrenSkipBlock(e *network.Entity, scsb *SetChildrenSkipB
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl3(s.Entity(), "SkipChain received New Protocol event", tn.ProtocolName(), tn, conf)
 	var pi sda.ProtocolInstance
 	var err error
 	switch tn.ProtocolName() {
@@ -198,18 +197,18 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 }
 
 // PropagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(msg network.ProtocolMessage) {
+func (s *Service) PropagateSkipBlock(msg network.Body) {
 	sb, ok := msg.(*SkipBlock)
 	if !ok {
-		dbg.Error("Couldn't convert to SkipBlock")
+		log.Error("Couldn't convert to SkipBlock")
 		return
 	}
 	if err := sb.VerifySignatures(); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 		return
 	}
 	s.storeSkipBlock(sb)
-	dbg.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.Entity().ID[0:8])
+	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
 }
 
 // signNewSkipBlock should start a BFT-signature on the newest block
@@ -217,7 +216,18 @@ func (s *Service) PropagateSkipBlock(msg network.ProtocolMessage) {
 // As a simple solution it verifies the validity of the block,
 // simulates a signature and propagates the latest and newest block.
 func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *SkipBlock, error) {
-	dbg.Lvl4("Signing new block", newest, "on block", latest)
+	log.Lvl4("Signing new block", newest, "on block", latest)
+	if newest != nil && newest.Roster == nil {
+		log.Lvl3("Got a data-block")
+		if newest.ParentBlockID.IsNull() {
+			return nil, nil, errors.New("Data skipblock without parent")
+		}
+		parent, ok := s.getSkipBlockByID(newest.ParentBlockID)
+		if !ok {
+			return nil, nil, errors.New("Didn't find parent block")
+		}
+		newest.Roster = parent.Roster
+	}
 	// Now verify if it's a valid block
 	if err := s.verifyNewSkipBlock(latest, newest); err != nil {
 		return nil, nil, errors.New("Verification of newest SkipBlock failed: " + err.Error())
@@ -229,7 +239,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 		return nil, nil, err
 	}
 	if err := newest.VerifySignatures(); err != nil {
-		dbg.Error("Couldn't verify signature: " + err.Error())
+		log.Error("Couldn't verify signature: " + err.Error())
 		return nil, nil, err
 	}
 
@@ -248,7 +258,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	}
 
 	// Store and propagate the new SkipBlocks
-	dbg.Lvl4("Finished signing new block", newest)
+	log.Lvl4("Finished signing new block", newest)
 	if err = s.startPropagation(newblocks); err != nil {
 		return nil, nil, err
 	}
@@ -265,13 +275,13 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	}
 	switch len(el.List) {
 	case 0:
-		return errors.New("Found empty EntityList")
+		return errors.New("Found empty Roster")
 	case 1:
-		return errors.New("Need more than 1 entry for EntityList")
+		return errors.New("Need more than 1 entry for Roster")
 	}
 
 	// Start the protocol
-	tree := el.GenerateNaryTreeWithRoot(2, s.Entity())
+	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
@@ -297,7 +307,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		if len(block.BlockSig.Exceptions) != 0 {
 			return errors.New("Not everybody signed off the new block")
 		}
-		if err := block.BlockSig.Verify(network.Suite, el.Aggregate, msg); err != nil {
+		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
 		return nil
@@ -329,13 +339,13 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 	blocks := make([]*SkipBlock, height+1)
 	blocks[0] = newest
 	for h := range newest.BackLinkIds {
-		dbg.Lvl4("Searching forward-link for", h)
+		log.Lvl4("Searching forward-link for", h)
 		b, ok := s.getSkipBlockByID(newest.BackLinkIds[h])
 		if !ok {
 			return nil, errors.New("Found unknwon backlink in block")
 		}
 		bc := b.Copy()
-		dbg.Lvl4("Checking", b.Index, b, len(bc.ForwardLink))
+		log.Lvl4("Checking", b.Index, b, len(bc.ForwardLink))
 		if len(bc.ForwardLink) >= h+1 {
 			return nil, errors.New("Backlinking to a block which has a forwardlink")
 		}
@@ -344,7 +354,7 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 			fl.Hash = newest.Hash
 			bc.ForwardLink = append(bc.ForwardLink, fl)
 		}
-		dbg.Lvl4("Block has now height of", len(bc.ForwardLink))
+		log.Lvl4("Block has now height of", len(bc.ForwardLink))
 		blocks[h+1] = bc
 	}
 	return blocks, nil
@@ -352,24 +362,24 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	dbg.Lvlf3("Starting to propagate for service %x", s.Context.Entity().ID[0:8])
+	log.Lvlf3("Starting to propagate for service %x", s.Context.ServerIdentity().ID[0:8])
 	for _, block := range blocks {
-		roster := block.EntityList
+		roster := block.Roster
 		if roster == nil {
 			// Suppose it's a dataSkipBlock
 			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
 			if !ok {
-				return errors.New("Didn't find EntityList nor parent")
+				return errors.New("Didn't find Roster nor parent")
 			}
-			roster = sb.EntityList
+			roster = sb.Roster
 		}
-		replies, err := manage.PropagateStartAndWait(s, roster,
+		replies, err := manage.PropagateStartAndWait(s.Context, roster,
 			block, 1000, s.PropagateSkipBlock)
 		if err != nil {
 			return err
 		}
 		if replies != len(roster.List) {
-			dbg.Warn("Did only get", replies, "out of", len(roster.List))
+			log.Warn("Did only get", replies, "out of", len(roster.List))
 		}
 	}
 	return nil
@@ -377,32 +387,32 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
-	dbg.Lvlf4("%s verifying block %x", s.Entity(), msg)
+	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
-		dbg.Error("Couldn't unmarshal SkipBlock", data)
+		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
 	}
 	sb := sbN.(*SkipBlock)
 	if !sb.Hash.Equal(SkipBlockID(msg)) {
-		dbg.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
+		log.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
 		return false
 	}
 	switch sb.VerifierID {
 	case VerifyNone:
-		dbg.Lvl4("No verification - accepted")
+		log.Lvl4("No verification - accepted")
 		return true
 	case VerifyShard:
 		if sb.ParentBlockID.IsNull() {
-			dbg.Lvl3("No parent skipblock to verify against")
+			log.Lvl3("No parent skipblock to verify against")
 		} else {
 			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
 			if !exists {
-				dbg.Lvl3("Parent skipblock doesn't exist")
+				log.Lvl3("Parent skipblock doesn't exist")
 			} else {
-				for _, e := range sb.EntityList.List {
-					if i, _ := sbParent.EntityList.Search(e.ID); i < 0 {
-						dbg.Lvl3("Entity in child doesn't exist in parent")
+				for _, e := range sb.Roster.List {
+					if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
+						log.Lvl3("ServerIdentity in child doesn't exist in parent")
 						return false
 					}
 				}
@@ -438,7 +448,7 @@ func (s *Service) lenSkipBlocks() int {
 
 const skipchainBFT = "SkipchainBFT"
 
-func newSkipchainService(c sda.Context, path string) sda.Service {
+func newSkipchainService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
@@ -447,14 +457,11 @@ func newSkipchainService(c sda.Context, path string) sda.Service {
 	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
 	})
-	if err := s.RegisterMessage(s.ProposeSkipBlock); err != nil {
-		dbg.Fatal("Registration error:", err)
-	}
-	if err := s.RegisterMessage(s.SetChildrenSkipBlock); err != nil {
-		dbg.Fatal("Registration error:", err)
-	}
-	if err := s.RegisterMessage(s.GetUpdateChain); err != nil {
-		dbg.Fatal("Registration error:", err)
+	for _, msg := range []interface{}{s.ProposeSkipBlock, s.SetChildrenSkipBlock,
+		s.GetUpdateChain} {
+		if err := s.RegisterMessage(msg); err != nil {
+			log.Fatal("Registration error for msg", msg, err)
+		}
 	}
 	return s
 }

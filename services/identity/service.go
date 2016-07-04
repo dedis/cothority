@@ -14,11 +14,11 @@ import (
 
 	"reflect"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 )
 
@@ -53,33 +53,33 @@ type Storage struct {
 
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
-func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.ProtocolMessage, error) {
-	dbg.Lvlf2("Adding identity %+v", *ai)
+func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
+	log.Lvlf2("Adding identity %+v", *ai)
 	ids := &Storage{
 		Latest: ai.AccountList,
 	}
-	dbg.Lvl3("Creating Root-skipchain")
+	log.Lvl3("Creating Root-skipchain")
 	var err error
-	ids.Root, err = s.skipchain.CreateRoster(ai.EntityList, 2, 10,
+	ids.Root, err = s.skipchain.CreateRoster(ai.Roster, 2, 10,
 		skipchain.VerifyNone, nil)
 	if err != nil {
 		return nil, err
 	}
-	dbg.Lvl3("Creating Data-skipchain")
+	log.Lvl3("Creating Data-skipchain")
 	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
 		skipchain.VerifyNone, ai.AccountList)
 	if err != nil {
 		return nil, err
 	}
 
-	roster := ids.Root.EntityList
-	replies, err := manage.PropagateStartAndWait(s, roster,
+	roster := ids.Root.Roster
+	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		&PropagateIdentity{ids}, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
 	if replies != len(roster.List) {
-		dbg.Warn("Did only get", replies, "out of", len(roster.List))
+		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 
 	return &AddIdentityReply{
@@ -90,25 +90,25 @@ func (s *Service) AddIdentity(e *network.Entity, ai *AddIdentity) (network.Proto
 
 // ProposeConfig only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeConfig(e *network.Entity, p *PropagateProposition) (network.ProtocolMessage, error) {
+func (s *Service) ProposeConfig(e *network.ServerIdentity, p *PropagateProposition) (network.Body, error) {
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
-	roster := sid.Root.EntityList
-	replies, err := manage.PropagateStartAndWait(s, roster,
+	roster := sid.Root.Roster
+	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		p, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
 	if replies != len(roster.List) {
-		dbg.Warn("Did only get", replies, "out of", len(roster.List))
+		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil, nil
 }
 
 // ConfigNewCheck returns an eventual config-proposition
-func (s *Service) ConfigNewCheck(e *network.Entity, cnc *ConfigNewCheck) (network.ProtocolMessage, error) {
+func (s *Service) ConfigNewCheck(e *network.ServerIdentity, cnc *ConfigNewCheck) (network.Body, error) {
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -122,7 +122,7 @@ func (s *Service) ConfigNewCheck(e *network.Entity, cnc *ConfigNewCheck) (networ
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(e *network.Entity, cu *ConfigUpdate) (network.ProtocolMessage, error) {
+func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -138,14 +138,14 @@ func (s *Service) ConfigUpdate(e *network.Entity, cu *ConfigUpdate) (network.Pro
 // VoteConfig takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessage, error) {
+func (s *Service) VoteConfig(e *network.ServerIdentity, v *Vote) (network.Body, error) {
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
 	sid.Lock()
-	dbg.Lvl3("Voting on", sid.Proposed.Owners)
+	log.Lvl3("Voting on", sid.Proposed.Owners)
 	owner, ok := sid.Latest.Owners[v.Signer]
 	if !ok {
 		return nil, errors.New("Didn't find signer")
@@ -160,7 +160,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 	if _, exists := sid.Votes[v.Signer]; exists {
 		return nil, errors.New("Already voted for that block")
 	}
-	dbg.Lvl3(v.Signer, "voted", v.Signature)
+	log.Lvl3(v.Signer, "voted", v.Signature)
 	if v.Signature != nil {
 		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
 		if err != nil {
@@ -170,7 +170,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 	sid.Unlock()
 
 	// Propagate the vote
-	_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, v, 1000, s.Propagate)
+	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, 1000, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
@@ -178,21 +178,22 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 		len(sid.Votes) == len(sid.Latest.Owners) {
 		// If we have enough signatures, make a new data-skipblock and
 		// propagate it
-		dbg.Lvl3("Having majority or all votes")
+		log.Lvl3("Having majority or all votes")
 
 		// Making a new data-skipblock
-		dbg.Lvl3("Sending data-block with", sid.Proposed.Owners)
+		log.Lvl3("Sending data-block with", sid.Proposed.Owners)
 		reply, err := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
 		if err != nil {
 			return nil, err
 		}
 		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
-		dbg.Lvl3("SB signed is", msg.(*AccountList).Owners)
+		log.Lvl3("SB signed is", msg.(*AccountList).Owners)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = manage.PropagateStartAndWait(s, sid.Root.EntityList, usb, 1000, s.Propagate)
+		_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster,
+			usb, 1000, s.Propagate)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +204,7 @@ func (s *Service) VoteConfig(e *network.Entity, v *Vote) (network.ProtocolMessag
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl3(s.Entity(), "Identity received New Protocol event", tn.ProtocolName(), tn, conf)
+	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", tn.ProtocolName(), tn, conf)
 	switch tn.ProtocolName() {
 	case "Propagate":
 		pi, err := manage.NewPropagateProtocol(tn)
@@ -217,8 +218,8 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 }
 
 // Propagate handles propagation of all data in the identity-service
-func (s *Service) Propagate(msg network.ProtocolMessage) {
-	dbg.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+func (s *Service) Propagate(msg network.Body) {
+	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := ID(nil)
 	switch msg.(type) {
 	case *PropagateProposition:
@@ -231,10 +232,10 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 		pi := msg.(*PropagateIdentity)
 		id = ID(pi.Data.Hash)
 		if s.getIdentityStorage(id) != nil {
-			dbg.Error("Couldn't store new identity")
+			log.Error("Couldn't store new identity")
 			return
 		}
-		dbg.Lvl3("Storing identity in", s)
+		log.Lvl3("Storing identity in", s)
 		s.setIdentityStorage(id, pi.Storage)
 		return
 	}
@@ -242,7 +243,7 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 	if id != nil {
 		sid := s.getIdentityStorage(id)
 		if sid == nil {
-			dbg.Error("Didn't find entity in", s)
+			log.Error("Didn't find entity in", s)
 			return
 		}
 		sid.Lock()
@@ -259,12 +260,12 @@ func (s *Service) Propagate(msg network.ProtocolMessage) {
 			skipblock := msg.(*UpdateSkipBlock).Latest
 			_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
 			if err != nil {
-				dbg.Error(err)
+				log.Error(err)
 				return
 			}
 			al, ok := msgLatest.(*AccountList)
 			if !ok {
-				dbg.Error(err)
+				log.Error(err)
 				return
 			}
 			sid.Data = skipblock
@@ -290,11 +291,11 @@ func (s *Service) getIdentityStorage(id ID) *Storage {
 func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
-	dbg.Lvlf3("%s %x %v", s.Context.Entity(), id[0:8], is.Latest.Owners)
+	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Owners)
 	s.identities[string(id)] = is
 }
 
-func newIdentityService(c sda.Context, path string) sda.Service {
+func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		identities:       make(map[string]*Storage),
@@ -304,7 +305,7 @@ func newIdentityService(c sda.Context, path string) sda.Service {
 	for _, f := range []interface{}{s.ProposeConfig, s.VoteConfig,
 		s.AddIdentity, s.ConfigNewCheck, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
-			dbg.Fatal("Registration error:", err)
+			log.Fatal("Registration error:", err)
 		}
 	}
 	return s

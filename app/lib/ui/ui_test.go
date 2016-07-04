@@ -6,7 +6,7 @@ import (
 
 	"bufio"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ var o *bufio.Writer
 func TestMain(m *testing.M) {
 	o = bufio.NewWriter(&b)
 	out = o
-	dbg.MainTest(m)
+	log.MainTest(m)
 }
 
 func TestInput(t *testing.T) {

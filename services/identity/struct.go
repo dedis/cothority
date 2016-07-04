@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 )
@@ -22,7 +22,7 @@ type ID skipchain.SkipBlockID
 // identity
 type AccountList struct {
 	Threshold int
-	Listeners []*network.Entity
+	Listeners []*network.ServerIdentity
 	Owners    map[string]*Owner
 	Data      map[string]string
 }
@@ -32,7 +32,7 @@ func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub stri
 	return &AccountList{
 		Threshold: threshold,
 		Owners:    map[string]*Owner{owner: &Owner{pub}},
-		Listeners: []*network.Entity{},
+		Listeners: []*network.ServerIdentity{},
 		Data:      map[string]string{owner: sshPub},
 	}
 }
@@ -41,12 +41,12 @@ func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub stri
 func (al *AccountList) Copy() *AccountList {
 	b, err := network.MarshalRegisteredType(al)
 	if err != nil {
-		dbg.Error("Couldn't marshal AccountList:", err)
+		log.Error("Couldn't marshal AccountList:", err)
 		return nil
 	}
 	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
 	if err != nil {
-		dbg.Error("Couldn't unmarshal AccountList:", err)
+		log.Error("Couldn't unmarshal AccountList:", err)
 	}
 	ilNew := msg.(AccountList)
 	return &ilNew
@@ -117,7 +117,7 @@ type Owner struct {
 // AddIdentity starts a new identity-skipchain
 type AddIdentity struct {
 	*AccountList
-	*sda.EntityList
+	*sda.Roster
 }
 
 // AddIdentityReply is the reply when a new Identity has been added
