@@ -73,12 +73,12 @@ func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) 
 	}
 
 	err := pap.RegisterChannel(&pap.DataReferenceChannel)
-	if  err != nil {
+	if err != nil {
 		return nil, errors.New("couldn't register data reference channel: " + err.Error())
 	}
 
 	err = pap.RegisterChannel(&pap.ChildDataChannel)
-	if  err != nil {
+	if err != nil {
 		return nil, errors.New("couldn't register child-data channel: " + err.Error())
 	}
 
