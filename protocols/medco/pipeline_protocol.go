@@ -1,4 +1,4 @@
-// This protocols handles the pipeline which means the flow of executions of
+// Package medco contains the pipeline protocol which handles the pipeline meaning the flow of executions of
 // specific protocols.
 // The complete execution is separated into three phases and this protocol handles
 // the "synchronization" of the protocols. At first, it triggers all the nodes to

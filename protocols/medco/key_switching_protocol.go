@@ -1,5 +1,6 @@
-// The key switching protocol permits to switch a ciphertext encrypted under a specific key by using
-// an El-Gamal encryption (probabilistic) to a ciphertext encrypted under another key.
+// Package medco contains the key switching protocol which permits to switch a ciphertext
+// encrypted under a specific key by using an El-Gamal encryption (probabilistic) to a ciphertext encrypted
+// under another key.
 // The El-Gamal ciphertext should be encrypted by the collective public key of the cothority. In that case,
 // each cothority server (node) can remove his El-Gamal secret contribution and add a new
 // secret contribution containing the new key. By doing that the ciphertext is never decrypted.

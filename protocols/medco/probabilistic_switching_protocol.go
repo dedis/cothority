@@ -1,5 +1,5 @@
-// The probabilistic switching protocol permits to switch a ciphertext encrypted under a deterministic
-// Pohlig-Hellman encryption to a probabilistic El-Gamal encryption.
+// Package medco contains the probabilistic switching protocol which permits to switch a ciphertext encrypted
+// under a deterministic Pohlig-Hellman encryption to a probabilistic El-Gamal encryption.
 // Each cothority server (node) removes his Pohlig-Hellman secret contribution and adds a new
 // El-Gamal secret contribution. By doing that the ciphertext is never decrypted.
 // This is done by creating a circuit between the servers. The ciphertext is sent through this circuit and
