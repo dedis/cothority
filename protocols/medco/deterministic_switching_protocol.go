@@ -1,4 +1,4 @@
-// The deterministic switching protocol permits to switch a ciphertext encrypted by using
+// Package medco contains the deterministic switching protocol permits to switch a ciphertext encrypted by using
 // an El-Gamal encryption (probabilistic) to a Pohlig-Hellman deterministic encrypted ciphertext.
 // The El-Gamal ciphertext should be encrypted by the collective public key of the cothority. In that case,
 // each cothority server (node) can remove his El-Gamal secret contribution and add a new Pohlig-Hellman
