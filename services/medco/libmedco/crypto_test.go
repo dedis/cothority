@@ -19,7 +19,7 @@ func GenKey() (secKey abstract.Scalar, pubKey abstract.Point) {
 	return
 }
 
-//GenKeys permits to generate ElGamal public/private key pairs.
+// GenKeys permits to generate ElGamal public/private key pairs.
 func GenKeys(n int) (abstract.Point, []abstract.Scalar, []abstract.Point) {
 	priv := make([]abstract.Scalar, n)
 	pub := make([]abstract.Point, n)

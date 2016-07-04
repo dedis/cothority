@@ -1,4 +1,4 @@
-Simulation = "PrivateAggregate"
+Simulation = "KeySwitching"
 Servers = 3
 Bf = 2
 Rounds = 1

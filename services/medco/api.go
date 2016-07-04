@@ -42,7 +42,6 @@ func (c *API) CreateSurvey(entities *sda.Roster, surveyDescription libmedco.Surv
 	log.Lvl1(c, "is creating a survey.")
 	resp, err := c.Send(c.entryPoint, &SurveyCreationQuery{nil, *entities, surveyDescription})
 	if err != nil {
-		log.Error("Got error when creating survey: " + err.Error())
 		return nil, err
 	}
 	log.Lvl1(c, "successfully created the survey with ID", resp.Msg.(ServiceResponse).SurveyID)
@@ -60,7 +59,6 @@ func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggreg
 			ProbabilisticGroupingAttributes: *encGrouping,
 			AggregatingAttributes:           *encAggregating}})
 	if err != nil {
-		log.Error("Got error when sending a message: " + err.Error())
 		return err
 	}
 	return nil
@@ -70,7 +68,6 @@ func (c *API) SendSurveyResultsData(surveyID libmedco.SurveyID, grouping, aggreg
 func (c *API) GetSurveyResults(surveyID libmedco.SurveyID) (*[][]int64, *[][]int64, error) {
 	resp, err := c.Send(c.entryPoint, &SurveyResultsQuery{surveyID, c.public})
 	if err != nil {
-		log.Error("Got error when querying the results: " + err.Error())
 		return nil, nil, err
 	}
 	if encResults, ok := resp.Msg.(SurveyResultResponse); ok == true {

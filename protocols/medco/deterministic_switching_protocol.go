@@ -1,3 +1,11 @@
+// The deterministic switching protocol permits to switch a ciphertext encrypted by using
+// an El-Gamal encryption (probabilistic) to a Pohlig-Hellman deterministic encrypted ciphertext.
+// The El-Gamal ciphertext should be encrypted by the collective public key of the cothority. In that case,
+// each cothority server (node) can remove his El-Gamal secret contribution and add a new Pohlig-Hellman
+// secret contribution. By doing that the ciphertext is never decrypted.
+// This is done by creating a circuit between the servers. The ciphertext is sent through this circuit and
+// each server applies its transformation on the ciphertext and forwards it to the next node in the circuit
+// until it comes back to the server who started the protocol.
 package medco
 
 import (
@@ -48,14 +56,14 @@ type DeterministicSwitchingProtocol struct {
 	originalEphemKeys map[libmedco.TempID][]abstract.Point
 }
 
-//NewDeterministSwitchingProtocol constructs deterministic switching protocol instances.
+// NewDeterministSwitchingProtocol constructs deterministic switching protocol instances.
 func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	deterministicSwitchingProtocol := &DeterministicSwitchingProtocol{
+	dsp := &DeterministicSwitchingProtocol{
 		TreeNodeInstance: n,
 		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.DeterministCipherVector),
 	}
 
-	if err := deterministicSwitchingProtocol.RegisterChannel(&deterministicSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
+	if err := dsp.RegisterChannel(&dsp.PreviousNodeInPathChannel); err != nil {
 		return nil, errors.New("couldn't register data reference channel: " + err.Error())
 	}
 
@@ -64,12 +72,12 @@ func NewDeterministSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInsta
 	var nodeList = n.Tree().List()
 	for i, node = range nodeList {
 		if n.TreeNode().Equal(node) {
-			deterministicSwitchingProtocol.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
+			dsp.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
 			break
 		}
 	}
 
-	return deterministicSwitchingProtocol, nil
+	return dsp, nil
 }
 
 // Start is called at the root node and starts the execution of the protocol.

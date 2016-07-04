@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-//TestProbabilisticSwitching tests probabilistic switching protocol
+// TestProbabilisticSwitching tests probabilistic switching protocol
 func TestProbabilisticSwitching(t *testing.T) {
 	defer log.AfterTest(t)
 	local := sda.NewLocalTest()

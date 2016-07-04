@@ -1,3 +1,10 @@
+// The probabilistic switching protocol permits to switch a ciphertext encrypted under a deterministic
+// Pohlig-Hellman encryption to a probabilistic El-Gamal encryption.
+// Each cothority server (node) removes his Pohlig-Hellman secret contribution and adds a new
+// El-Gamal secret contribution. By doing that the ciphertext is never decrypted.
+// This is done by creating a circuit between the servers. The ciphertext is sent through this circuit and
+// each server applies its transformation on the ciphertext and forwards it to the next node in the circuit
+// until it comes back to the server who started the protocol.
 package medco
 
 import (
@@ -47,12 +54,12 @@ type ProbabilisticSwitchingProtocol struct {
 
 // NewProbabilisticSwitchingProtocol is the protocol instance constructor.
 func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	probabilisticSwitchingProtocol := &ProbabilisticSwitchingProtocol{
+	psp := &ProbabilisticSwitchingProtocol{
 		TreeNodeInstance: n,
 		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.CipherVector),
 	}
 
-	if err := probabilisticSwitchingProtocol.RegisterChannel(&probabilisticSwitchingProtocol.PreviousNodeInPathChannel); err != nil {
+	if err := psp.RegisterChannel(&psp.PreviousNodeInPathChannel); err != nil {
 		return nil, errors.New("couldn't register data reference channel: " + err.Error())
 	}
 
@@ -61,12 +68,12 @@ func NewProbabilisticSwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolIns
 	var nodeList = n.Tree().List()
 	for i, node = range nodeList {
 		if n.TreeNode().Equal(node) {
-			probabilisticSwitchingProtocol.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
+			psp.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
 			break
 		}
 	}
 
-	return probabilisticSwitchingProtocol, nil
+	return psp, nil
 }
 
 // Start is called at the root to start the execution of the protocol.

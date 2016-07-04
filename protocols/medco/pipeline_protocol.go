@@ -1,3 +1,9 @@
+// This protocols handles the pipeline which means the flow of executions of
+// specific protocols.
+// The complete execution is separated into three phases and this protocol handles
+// the "synchronization" of the protocols. At first, it triggers all the nodes to
+// run a deterministic switching (1st phase). Then it waits until all responses are received by
+// the root and triggers the next phase and same after that.
 package medco
 
 import (
@@ -89,7 +95,7 @@ func (p *PipelineProtocol) Start() error {
 	return nil
 }
 
-// Dispatch is called at all node and handle the incoming messages.
+// Dispatch is called at all node and handles the incoming messages.
 func (p *PipelineProtocol) Dispatch() error {
 
 	// 1st phase (optional) : Grouping
@@ -112,7 +118,7 @@ func (p *PipelineProtocol) Dispatch() error {
 		p.MedcoServiceInstance.AggregationPhase(p.TargetSurvey.ID)
 	}
 
-	// 4rd phase: Key Switching
+	// 3rd phase: Key Switching
 	if p.IsRoot() {
 		p.MedcoServiceInstance.KeySwitchingPhase(p.TargetSurvey.ID)
 		p.FeedbackChannel <- DoneProcessingMessage{}

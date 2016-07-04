@@ -64,13 +64,9 @@ func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 
 		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
 
-		var tab []int64
+		tab := make([]int64, switchedAttributesCount)
 		for i := 0; i < switchedAttributesCount; i++ {
-			if i == 0 {
-				tab = []int64{1}
-			} else {
-				tab = append(tab, 1)
-			}
+			tab[i] = int64(1)
 		}
 
 		for i := 0; i < switchedVectorCount; i++ {

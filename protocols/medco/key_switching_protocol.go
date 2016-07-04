@@ -1,3 +1,11 @@
+// The key switching protocol permits to switch a ciphertext encrypted under a specific key by using
+// an El-Gamal encryption (probabilistic) to a ciphertext encrypted under another key.
+// The El-Gamal ciphertext should be encrypted by the collective public key of the cothority. In that case,
+// each cothority server (node) can remove his El-Gamal secret contribution and add a new
+// secret contribution containing the new key. By doing that the ciphertext is never decrypted.
+// This is done by creating a circuit between the servers. The ciphertext is sent through this circuit and
+// each server applies its transformation on the ciphertext and forwards it to the next node in the circuit
+// until it comes back to the server who started the protocol.
 package medco
 
 import (
@@ -48,12 +56,12 @@ type KeySwitchingProtocol struct {
 
 // NewKeySwitchingProtocol is constructor of Key Switching protocol instances.
 func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	keySwitchingProtocol := &KeySwitchingProtocol{
+	ksp := &KeySwitchingProtocol{
 		TreeNodeInstance: n,
 		FeedbackChannel:  make(chan map[libmedco.TempID]libmedco.CipherVector),
 	}
 
-	if err := keySwitchingProtocol.RegisterChannel(&keySwitchingProtocol.PreviousNodeInPathChannel); err != nil {
+	if err := ksp.RegisterChannel(&ksp.PreviousNodeInPathChannel); err != nil {
 		return nil, errors.New("couldn't register data reference channel: " + err.Error())
 	}
 
@@ -62,12 +70,12 @@ func NewKeySwitchingProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, err
 	var nodeList = n.Tree().List()
 	for i, node = range nodeList {
 		if n.TreeNode().Equal(node) {
-			keySwitchingProtocol.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
+			ksp.nextNodeInCircuit = nodeList[(i+1)%len(nodeList)]
 			break
 		}
 	}
 
-	return keySwitchingProtocol, nil
+	return ksp, nil
 }
 
 // Start is called at the root to start the execution of the key switching.

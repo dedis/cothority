@@ -84,13 +84,9 @@ func NewProbabilisticSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		ciphertexts := make(map[libmedco.TempID]libmedco.DeterministCipherVector)
 
-		var tab []int64
+		tab := make([]int64, probabilisticSwitchedAttributeCount)
 		for i := 0; i < probabilisticSwitchedAttributeCount; i++ {
-			if i == 0 {
-				tab = []int64{1}
-			} else {
-				tab = append(tab, 1)
-			}
+			tab[i] = int64(1)
 		}
 
 		for i := 0; i < probabilisticSwitchedVectorCount; i++ {

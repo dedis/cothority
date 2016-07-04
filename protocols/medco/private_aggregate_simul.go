@@ -27,13 +27,9 @@ func createDataSet(numberGroups int, numberAttributes int) (
 
 		grpattr = newGrpattr
 
-		var tab []int64
+		tab := make([]int64, numberAttributes)
 		for i := 0; i < numberAttributes; i++ {
-			if i == 0 {
-				tab = []int64{1}
-			} else {
-				tab = append(tab, 1)
-			}
+			tab[i] = int64(1)
 		}
 		cipherVect := *libmedco.EncryptIntVector(clientPublic, tab)
 

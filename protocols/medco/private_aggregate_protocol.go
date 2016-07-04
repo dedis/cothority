@@ -1,3 +1,9 @@
+// The private aggregate protocol permits the cothority to collectively aggregate the local
+// results of all the servers.
+// It uses the tree structure of the cothority. The root sends down an aggregation trigger message. The leafs
+// respond with their local result and other nodes aggregate what they receive before forwarding the
+// aggregation result up the tree until the root can produce the final result.
+
 package medco
 
 import (
@@ -61,19 +67,22 @@ type PrivateAggregateProtocol struct {
 
 // NewPrivateAggregate initializes the protocol instance.
 func NewPrivateAggregate(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	privateAggregateProtocol := &PrivateAggregateProtocol{
+	pap := &PrivateAggregateProtocol{
 		TreeNodeInstance: n,
 		FeedbackChannel:  make(chan CothorityAggregatedData),
 	}
 
-	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.DataReferenceChannel); err != nil {
+	err := pap.RegisterChannel(&pap.DataReferenceChannel)
+	if  err != nil {
 		return nil, errors.New("couldn't register data reference channel: " + err.Error())
 	}
-	if err := privateAggregateProtocol.RegisterChannel(&privateAggregateProtocol.ChildDataChannel); err != nil {
+
+	err = pap.RegisterChannel(&pap.ChildDataChannel)
+	if  err != nil {
 		return nil, errors.New("couldn't register child-data channel: " + err.Error())
 	}
 
-	return privateAggregateProtocol, nil
+	return pap, nil
 }
 
 // Start is called at the root to begin the execution of the protocol.

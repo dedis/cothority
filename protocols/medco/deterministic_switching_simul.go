@@ -81,13 +81,9 @@ func NewDeterministicSwitchingSimul(tni *sda.TreeNodeInstance) (sda.ProtocolInst
 
 		// Creates dummy data...
 		ciphertexts := make(map[libmedco.TempID]libmedco.CipherVector)
-		var tab []int64
+		tab := make([]int64, deterministicSwitchedAttributesCount)
 		for i := 0; i < deterministicSwitchedAttributesCount; i++ {
-			if i == 0 {
-				tab = []int64{1}
-			} else {
-				tab = append(tab, 1)
-			}
+			tab[i] = int64(1)
 		}
 
 		for i := 0; i < deterministicSwitchedVectorCount; i++ {

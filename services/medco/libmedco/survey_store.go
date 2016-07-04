@@ -55,7 +55,8 @@ func NewSurveyStore() *SurveyStore {
 
 // InsertClientResponse handles the local storage of a new client response in aggregation or grouping cases.
 func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
-	if len(cr.ProbabilisticGroupingAttributes) == 0 { //only aggregation, no grouping
+	if len(cr.ProbabilisticGroupingAttributes) == 0 {
+		//only aggregation, no grouping
 		mapValue, ok := s.LocGroupingAggregating[DefaultGroup]
 		if !ok {
 			mapValue = cr.AggregatingAttributes
@@ -63,14 +64,15 @@ func (s *SurveyStore) InsertClientResponse(cr ClientResponse) {
 			mapValue = *NewCipherVector(len(mapValue)).Add(mapValue, cr.AggregatingAttributes)
 		}
 		s.LocGroupingAggregating[DefaultGroup] = mapValue
-	} else { //grouping
+	} else {
+		//grouping
 		s.ClientResponses = append(s.ClientResponses, cr)
 	}
 }
 
 // HasNextClientResponses permits to verify if there are new client responses to be processed.
 func (s *SurveyStore) HasNextClientResponses() bool {
-	return (len(s.ClientResponses) == 0)
+	return len(s.ClientResponses) > 0
 }
 
 // PollProbabilisticGroupingAttributes processes the client responses to construct Id -> aggr. attributes and Id -> gr.
@@ -100,7 +102,7 @@ func (s *SurveyStore) PushDeterministicGroupingAttributes(detGroupAttr map[TempI
 
 // HasNextAggregatedResponses verifies the presence of locally aggregated results.
 func (s *SurveyStore) HasNextAggregatedResponses() bool {
-	return (len(s.LocGroupingAggregating) == 0)
+	return len(s.LocGroupingAggregating) > 0
 }
 
 // PollLocallyAggregatedResponses returns splitted (by group and aggr attributes) of local aggregated results.
@@ -136,7 +138,7 @@ func (s *SurveyStore) PushCothorityAggregatedGroups(gNew map[GroupingKey]Groupin
 
 // HasNextAggregatedGroupsID verifies that the server has local grouping results (group attributes).
 func (s *SurveyStore) HasNextAggregatedGroupsID() bool {
-	return (len(s.GroupedDeterministicGroupingAttributes) == 0)
+	return len(s.GroupedDeterministicGroupingAttributes) > 0
 }
 
 // PollCothorityAggregatedGroupsID returns the local results of the grouping (group attributes).
@@ -157,7 +159,7 @@ func (s *SurveyStore) PollCothorityAggregatedGroupsID() map[TempID]GroupingAttri
 
 // HasNextAggregatedGroupsAttr verifies that the server has local grouping results (aggregating attributes).
 func (s *SurveyStore) HasNextAggregatedGroupsAttr() bool {
-	return (len(s.GroupedAggregatingAttributes) == 0)
+	return len(s.GroupedAggregatingAttributes) > 0
 }
 
 // PollCothorityAggregatedGroupsAttr returns the local results of the grouping (aggregating attributes).
