@@ -7,13 +7,13 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/cosi"
 )
 
 // AppSkipBlock is the interface needed to add a new SkipBlockType with
@@ -70,8 +70,8 @@ type SkipBlockFix struct {
 	AggregateResp abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
-	// EntityList holds the roster-definition of that SkipBlock
-	EntityList *sda.EntityList
+	// Roster holds the roster-definition of that SkipBlock
+	Roster *sda.Roster
 }
 
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
@@ -79,11 +79,11 @@ type SkipBlockFix struct {
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
 	b, err := network.MarshalRegisteredType(sbf)
 	if err != nil {
-		dbg.Panic("Couldn't marshal SkipBlockFix:", err)
+		log.Panic("Couldn't marshal SkipBlockFix:", err)
 	}
 	h, err := crypto.HashBytes(network.Suite.Hash(), b)
 	if err != nil {
-		dbg.Panic("Couldn't hash SkipBlockFix:", err)
+		log.Panic("Couldn't hash SkipBlockFix:", err)
 	}
 	return h
 }
@@ -105,14 +105,6 @@ type SkipBlock struct {
 	ChildSL *BlockLink
 }
 
-// NewSignature returns a pre-initialized signature with Secret.One
-func newSignature(s abstract.Suite) *cosi.Signature {
-	return &cosi.Signature{
-		s.Secret().One(),
-		s.Secret().One(),
-	}
-}
-
 // NewSkipBlock pre-initialises the block so it can be sent over
 // the network
 func NewSkipBlock() *SkipBlock {
@@ -121,7 +113,7 @@ func NewSkipBlock() *SkipBlock {
 			Data: make([]byte, 0),
 		},
 		BlockSig: &bftcosi.BFTSignature{
-			Sig: newSignature(network.Suite),
+			Sig: make([]byte, 0),
 			Msg: make([]byte, 0),
 		},
 	}
@@ -130,8 +122,8 @@ func NewSkipBlock() *SkipBlock {
 // VerifySignatures returns whether all signatures are correctly signed
 // by the aggregate public key of the roster. It needs the aggregate key.
 func (sb *SkipBlock) VerifySignatures() error {
-	if err := sb.BlockSig.Verify(network.Suite, sb.AggregateResp, sb.Hash); err != nil {
-		dbg.Error(err.Error() + dbg.Stack())
+	if err := sb.BlockSig.Verify(network.Suite, sb.Roster.Publics()); err != nil {
+		log.Error(err.Error() + log.Stack())
 		return err
 	}
 	//for _, fl := range sb.ForwardLink {
@@ -155,8 +147,10 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := *sb
 	sbf := *b.SkipBlockFix
 	b.SkipBlockFix = &sbf
+	sigCopy := make([]byte, len(b.BlockSig.Sig))
+	copy(sigCopy, b.BlockSig.Sig)
 	b.BlockSig = &bftcosi.BFTSignature{
-		Sig:        &cosi.Signature{b.BlockSig.Sig.Challenge, b.BlockSig.Sig.Response},
+		Sig:        sigCopy,
 		Msg:        b.BlockSig.Msg,
 		Exceptions: b.BlockSig.Exceptions,
 	}
@@ -175,32 +169,23 @@ func (sb *SkipBlock) String() string {
 }
 
 // GetResponsible searches for the block that is responsible for us - for
-// - Genesis-block - it's himself
-// - Follower - it's the previous block
 // - Data - it's his parent
-func (sb *SkipBlock) GetResponsible(s *Service) (*sda.EntityList, error) {
-	el := sb.EntityList
+// - else - it's himself
+func (sb *SkipBlock) GetResponsible(s *Service) (*sda.Roster, error) {
+	el := sb.Roster
 	if el == nil {
-		// We're a data-block, so use the parent's EntityList
+		// We're a data-block, so use the parent's Roster
 		if sb.ParentBlockID.IsNull() {
-			return nil, errors.New("Didn't find an EntityList")
+			return nil, errors.New("Didn't find an Roster")
 		}
 		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
 		if !ok {
-			return nil, errors.New("No EntityList and no parent")
+			return nil, errors.New("No Roster and no parent")
 		}
-		if parent.EntityList == nil {
-			return nil, errors.New("Parent doesn't have EntityList")
+		if parent.Roster == nil {
+			return nil, errors.New("Parent doesn't have Roster")
 		}
-		el = parent.EntityList
-	} else {
-		if sb.Index > 0 {
-			latest, ok := s.getSkipBlockByID(sb.BackLinkIds[0])
-			if !ok {
-				return nil, errors.New("Non-genesis block and no previous block available")
-			}
-			el = latest.EntityList
-		}
+		el = parent.Roster
 	}
 	return el, nil
 }
@@ -212,35 +197,32 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 
 // BlockLink has the hash and a signature of a block
 type BlockLink struct {
-	Hash SkipBlockID
-	*cosi.Signature
+	Hash      SkipBlockID
+	Signature []byte
 }
 
 // NewBlockLink pre-initialises the signature so it can be sent
 // over the network.
 func NewBlockLink() *BlockLink {
 	return &BlockLink{
-		Signature: newSignature(network.Suite),
+		Signature: make([]byte, 0),
 	}
 }
 
 // Copy makes a deep copy of a blocklink
 func (bl *BlockLink) Copy() *BlockLink {
-	sig := &cosi.Signature{
-		Challenge: network.Suite.Secret().Set(bl.Challenge),
-		Response:  network.Suite.Secret().Set(bl.Response),
-	}
+	sigCopy := make([]byte, len(bl.Signature))
+	copy(sigCopy, bl.Signature)
 	return &BlockLink{
 		Hash:      bl.Hash,
-		Signature: sig,
+		Signature: sigCopy,
 	}
 }
 
 // VerifySignature returns whether the BlockLink has been signed
 // correctly using the aggregate key given.
-func (bl *BlockLink) VerifySignature(aggregate abstract.Point) error {
+func (bl *BlockLink) VerifySignature(publics []abstract.Point) error {
 	// TODO: enable real verification once we have signatures
 	//return nil
-	return cosi.VerifySignature(network.Suite, bl.Hash, aggregate,
-		bl.Challenge, bl.Response)
+	return cosi.VerifySignature(network.Suite, publics, bl.Hash, bl.Signature)
 }

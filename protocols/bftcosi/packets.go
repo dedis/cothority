@@ -34,7 +34,7 @@ type BFTSignature struct {
 // signature, so it can be verified by dedis/crypto/cosi.
 // Aggregate is the aggregate public key of all signers, and the msg is the msg
 // being signed.
-func VerifyBFTSignature(s abstract.Suite, bs *BFTSignature, publics []abstract.Point) error {
+func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
 	if bs == nil || bs.Sig == nil || bs.Msg == nil {
 		return errors.New("Invalid signature")
 	}

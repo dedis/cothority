@@ -396,7 +396,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 		Msg:        data[:],
 		Exceptions: ch.Signature.Exceptions,
 	}
-	if err := VerifyBFTSignature(bft.suite, bftPrepareSig, bft.Roster().Publics()); err != nil {
+	if err := bftPrepareSig.Verify(bft.suite, bft.Roster().Publics()); err != nil {
 		dbg.Lvl2(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
@@ -469,7 +469,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	for _, c := range bft.tempPrepareCommit {
 		aggCommit.Add(aggCommit, c)
 	}
-	if err := VerifyBFTSignature(bft.suite, sig, bft.Roster().Publics()); err != nil {
+	if err := sig.Verify(bft.suite, bft.Roster().Publics()); err != nil {
 		dbg.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}

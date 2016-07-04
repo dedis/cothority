@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
@@ -27,13 +27,13 @@ func NewClient() *Client {
 // maximumHeight of maxHRoot and an control SkipChain with
 // maximumHeight of maxHControl. It connects both chains for later
 // reference.
-func (c *Client) CreateRootControl(elRoot, elControl *sda.EntityList, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, err error) {
-	dbg.Lvl2("Creating root roster")
+func (c *Client) CreateRootControl(elRoot, elControl *sda.Roster, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, err error) {
+	log.Lvl2("Creating root roster")
 	root, err = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if err != nil {
 		return
 	}
-	dbg.Lvl2("Creating control roster")
+	log.Lvl2("Creating control roster")
 	control, err = c.CreateRoster(elControl, baseHeight, maxHControl, ver, root.Hash)
 	if err != nil {
 		return
@@ -44,14 +44,14 @@ func (c *Client) CreateRootControl(elRoot, elControl *sda.EntityList, baseHeight
 // ProposeRoster will propose to add a new SkipBlock containing the 'roster' to
 // an existing SkipChain. If it succeeds, it will return the old and the new
 // SkipBlock.
-func (c *Client) ProposeRoster(latest *SkipBlock, el *sda.EntityList) (reply *ProposedSkipBlockReply, err error) {
+func (c *Client) ProposeRoster(latest *SkipBlock, el *sda.Roster) (reply *ProposedSkipBlockReply, err error) {
 	return c.proposeSkipBlock(latest, el, nil)
 }
 
 // CreateRoster will create a new SkipChainRoster with the parameters given
-func (c *Client) CreateRoster(el *sda.EntityList, baseH, maxH int, ver VerifierID, parent SkipBlockID) (*SkipBlock, error) {
+func (c *Client) CreateRoster(el *sda.Roster, baseH, maxH int, ver VerifierID, parent SkipBlockID) (*SkipBlock, error) {
 	genesis := NewSkipBlock()
-	genesis.EntityList = el
+	genesis.Roster = el
 	genesis.VerifierID = ver
 	genesis.MaximumHeight = maxH
 	genesis.BaseHeight = baseH
@@ -65,19 +65,19 @@ func (c *Client) CreateRoster(el *sda.EntityList, baseH, maxH int, ver VerifierI
 
 // ProposeData will propose to add a new SkipBlock containing 'data' to an existing
 // SkipChain. If it succeeds, it will return the old and the new SkipBlock.
-func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.ProtocolMessage) (reply *ProposedSkipBlockReply, err error) {
-	return c.proposeSkipBlock(latest, parent.EntityList, d)
+func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Body) (reply *ProposedSkipBlockReply, err error) {
+	return c.proposeSkipBlock(latest, parent.Roster, d)
 }
 
 // CreateData will create a new SkipChainData with the parameters given
-func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.ProtocolMessage) (
+func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.Body) (
 	*SkipBlock, *SkipBlock, error) {
 	data := NewSkipBlock()
 	data.MaximumHeight = maxH
 	data.BaseHeight = baseH
 	data.VerifierID = ver
 	data.ParentBlockID = parent.Hash
-	data.EntityList = parent.EntityList
+	data.Roster = parent.Roster
 	dataMsg, err := c.proposeSkipBlock(data, nil, d)
 	if err != nil {
 		return nil, nil, err
@@ -97,7 +97,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
 		return nil, nil, errors.New("Child doesn't point to that parent")
 	}
-	host := parent.EntityList.GetRandom()
+	host := parent.Roster.GetRandom()
 	replyMsg, err := c.Send(host, &SetChildrenSkipBlock{parent.Hash, child.Hash})
 	if err != nil {
 		return nil, nil, err
@@ -109,7 +109,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
-	h := parent.EntityList.GetRandom()
+	h := parent.Roster.GetRandom()
 	r, err := c.Send(h, &GetUpdateChain{latest})
 	if err != nil {
 		return
@@ -121,11 +121,11 @@ func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *G
 
 // proposeSkipBlock sends a proposeSkipBlock to the service. If latest has
 // a Nil-Hash, it will be used as a
-// - rosterSkipBlock if data is nil, the EntityList will be taken from 'el'
+// - rosterSkipBlock if data is nil, the Roster will be taken from 'el'
 // - dataSkipBlock if data is non-nil. Furthermore 'el' will hold the activeRoster
 // to send the request to.
-func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.EntityList, d network.ProtocolMessage) (reply *ProposedSkipBlockReply, err error) {
-	activeRoster := latest.EntityList
+func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.Roster, d network.Body) (reply *ProposedSkipBlockReply, err error) {
+	activeRoster := latest.Roster
 	hash := latest.Hash
 	propose := latest
 	if !hash.IsNull() {
@@ -134,7 +134,7 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.EntityList, d netwo
 		propose = NewSkipBlock()
 		if d == nil {
 			// This is a RosterSkipBlock
-			propose.EntityList = el
+			propose.Roster = el
 		} else {
 			// DataSkipBlock will be set later, just make sure that
 			// there will be a receiver

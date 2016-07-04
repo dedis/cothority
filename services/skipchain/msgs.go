@@ -1,7 +1,7 @@
 package skipchain
 
 import (
-	"github.com/dedis/cothority/lib/network"
+	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
 
