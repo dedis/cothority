@@ -139,10 +139,12 @@ func (l *LocalTest) CloseAll() {
 			log.Error("Closing host", host.ServerIdentity.First(),
 				"gives error", err)
 		}
+		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
 		node.Close()
 	}
+	l.Nodes = make([]*TreeNodeInstance, 0)
 }
 
 // GetTree returns the tree of the given TreeNode
