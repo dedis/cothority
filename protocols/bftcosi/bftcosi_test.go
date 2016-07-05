@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +15,7 @@ var failCount int
 var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
-	dbg.MainTest(m)
+	log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -28,7 +26,7 @@ func TestBftCoSi(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	dbg.Lvl1("Standard at", failCount)
+	log.Lvl1("Standard at", failCount)
 	runProtocol(t, TestProtocolName)
 }
 
@@ -55,13 +53,13 @@ func TestThreshold(t *testing.T) {
 	}
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
-		dbg.Lvl3("Hosts is", hosts)
+		log.Lvl3("Hosts is", hosts)
 		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
-		dbg.Lvl3("Tree is:", tree.Dump())
+		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
 		node, err := local.CreateProtocol(tree, TestProtocolName)
-		dbg.ErrFatal(err)
+		log.ErrFatal(err)
 		bc := node.(*ProtocolBFTCoSi)
 		assert.Equal(t, thr, bc.threshold, "hosts was %d", hosts)
 		local.CloseAll()
@@ -80,7 +78,7 @@ func TestCheckFail(t *testing.T) {
 	})
 
 	for failCount = 1; failCount <= 3; failCount++ {
-		dbg.Lvl1("Fail at", failCount)
+		log.Lvl1("Fail at", failCount)
 		runProtocol(t, TestProtocolName)
 	}
 }
@@ -98,7 +96,7 @@ func TestCheckFailMore(t *testing.T) {
 
 	for _, n := range []int{3, 4, 13} {
 		for failCount = 1; failCount <= 3; failCount++ {
-			dbg.Lvl1("FailMore at", failCount)
+			log.Lvl1("FailMore at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
 				failCount < (n+1)*2/3)
 		}
@@ -118,7 +116,7 @@ func TestCheckFailBit(t *testing.T) {
 
 	for _, n := range []int{2, 3, 4} {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
-			dbg.Lvl1("FailBit at", failCount)
+			log.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
 				bitCount(failCount) < (n+1)*2/3)
 
@@ -135,11 +133,11 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	countMut.Lock()
 	veriCount = 0
 	countMut.Unlock()
-	dbg.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
+	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
-	dbg.Lvl3("Tree is:", tree.Dump())
+	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
 	// create the message we want to sign for this round
@@ -190,7 +188,7 @@ func verify(m []byte, d []byte) bool {
 	log.Lvl4("Verification called", veriCount, "times")
 	countMut.Unlock()
 	if len(d) != 1 {
-		dbg.Error("Didn't receive correct data")
+		log.Error("Didn't receive correct data")
 		return false
 	}
 	return true
@@ -202,13 +200,13 @@ func verifyFail(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount == failCount {
-		dbg.Lvl1("Failing for count==", failCount)
+		log.Lvl1("Failing for count==", failCount)
 		return false
 	}
-	dbg.Lvl1("Verification called", veriCount, "times")
-	dbg.Lvl1("Ignoring message:", string(m))
+	log.Lvl1("Verification called", veriCount, "times")
+	log.Lvl1("Ignoring message:", string(m))
 	if len(d) != 1 {
-		dbg.Error("Didn't receive correct data")
+		log.Error("Didn't receive correct data")
 		return false
 	}
 	return true
@@ -220,13 +218,13 @@ func verifyFailMore(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount <= failCount {
-		dbg.Lvlf1("Failing for %d<=%d", veriCount, failCount)
+		log.Lvlf1("Failing for %d<=%d", veriCount, failCount)
 		return false
 	}
-	dbg.Lvl1("Verification called", veriCount, "times")
-	dbg.Lvl1("Ignoring message:", string(m))
+	log.Lvl1("Verification called", veriCount, "times")
+	log.Lvl1("Ignoring message:", string(m))
 	if len(d) != 1 {
-		dbg.Error("Didn't receive correct data")
+		log.Error("Didn't receive correct data")
 		return false
 	}
 	return true
@@ -248,9 +246,9 @@ func verifyFailBit(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if failCount&(1<<myBit) != 0 {
-		dbg.Lvl1("Failing for myBit==", myBit)
+		log.Lvl1("Failing for myBit==", myBit)
 		return false
 	}
-	dbg.Lvl1("Verification called", veriCount, "times")
+	log.Lvl1("Verification called", veriCount, "times")
 	return true
 }
