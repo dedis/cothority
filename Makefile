@@ -29,7 +29,7 @@ test_lint:
 
 test_go:
 	for s in $$(seq 10); do \
-		go test -race -p=1; \
+		go test -race -p=1 -short; \
 	done
 
 test: test_fmt test_lint test_go
