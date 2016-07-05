@@ -28,9 +28,8 @@ test_lint:
 	}
 
 test_go:
-	cd protocols/bftcosi; \
 	for s in $$(seq 10); do \
-		go test -race -p=1 -v; \
+		go test -race -p=1; \
 	done
 
 test: test_fmt test_lint test_go
