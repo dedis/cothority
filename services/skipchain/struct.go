@@ -41,6 +41,7 @@ func (sbid SkipBlockID) String() string {
 	return fmt.Sprintf("%x", []byte(sbid[0:8]))
 }
 
+// Equal compares the hash of the two skipblocks
 func (sbid SkipBlockID) Equal(sb SkipBlockID) bool {
 	return bytes.Equal([]byte(sbid), []byte(sb))
 }
