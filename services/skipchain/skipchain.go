@@ -310,11 +310,10 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
-		return nil
 	case <-time.After(time.Second * 3):
 		return errors.New("Timed out while waiting for signature")
 	}
-	return errors.New("Nothing happened...")
+	return nil
 }
 
 func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) error {

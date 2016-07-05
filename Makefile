@@ -28,7 +28,9 @@ test_lint:
 	}
 
 test_go:
-	go test -race -p=1 ./...
+	for s in $$( seq 10 ); do \
+	go test -race -p=1 -short ./...; \
+	done
 
 test: test_fmt test_lint test_go
 

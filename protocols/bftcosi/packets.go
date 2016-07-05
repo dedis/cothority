@@ -29,10 +29,10 @@ type BFTSignature struct {
 	Exceptions []Exception
 }
 
-// VerifyBFTSignature returns whether the verification of the signature succeeds or not.
+// Verify returns whether the verification of the signature succeeds or not.
 // Specifically, it adjusts the signature according to the exception in the
 // signature, so it can be verified by dedis/crypto/cosi.
-// Aggregate is the aggregate public key of all signers, and the msg is the msg
+// publics is a slice of all public signatures, and the msg is the msg
 // being signed.
 func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
 	if bs == nil || bs.Sig == nil || bs.Msg == nil {
