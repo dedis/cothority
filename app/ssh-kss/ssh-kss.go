@@ -4,7 +4,8 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/services/identity"
 
 	"os"
@@ -20,7 +21,6 @@ import (
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/ui"
-	"github.com/dedis/cothority/lib/network"
 )
 
 type servers struct {
@@ -42,14 +42,14 @@ func main() {
 			Name:      "addId",
 			Aliases:   []string{"a"},
 			Usage:     "adding a new identity",
-			Action:    addId,
+			Action:    addID,
 			ArgsUsage: "group-file identity-hash",
 		},
 		{
 			Name:      "delId",
 			Aliases:   []string{"d"},
 			Usage:     "delete an identity",
-			Action:    delId,
+			Action:    delID,
 			ArgsUsage: "identity-hash",
 		},
 		{
@@ -80,7 +80,7 @@ func main() {
 	app.Before = func(c *cli.Context) error {
 		configDir := tildeToHome(c.String("config"))
 		os.Mkdir(configDir, 0660)
-		dbg.SetDebugVisible(c.Int("debug"))
+		log.SetDebugVisible(c.Int("debug"))
 		configFile = configDir + "/config.bin"
 		if err := loadConfig(); err != nil {
 			ui.Error("Problems reading config-file. Most probably you\n",
@@ -121,7 +121,7 @@ func saveConfig() {
 	return
 }
 
-func delId(c *cli.Context) {
+func delID(c *cli.Context) {
 	idHex, err := hex.DecodeString(c.Args().First())
 	ui.ErrFatal(err)
 	idFound := -1
@@ -142,7 +142,7 @@ func delId(c *cli.Context) {
 	list(c)
 }
 
-func addId(c *cli.Context) {
+func addID(c *cli.Context) {
 	groupFile := tildeToHome(c.Args().Get(0))
 	idStr := c.Args().Get(1)
 	if groupFile == "" {

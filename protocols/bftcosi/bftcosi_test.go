@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Dummy verification function: always returns OK/true/no-error on data
 var veriCount int
 var failCount int
 var countMut sync.Mutex
@@ -184,6 +183,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	}
 }
 
+// Verify function that returns true if the length of the data is 1.
 func verify(m []byte, d []byte) bool {
 	countMut.Lock()
 	veriCount++
@@ -193,10 +193,10 @@ func verify(m []byte, d []byte) bool {
 		dbg.Error("Didn't receive correct data")
 		return false
 	}
-	// everything is OK, always:
 	return true
 }
 
+// Verify-function that will fail if we're the `failCount`ed call.
 func verifyFail(m []byte, d []byte) bool {
 	countMut.Lock()
 	defer countMut.Unlock()
@@ -211,10 +211,10 @@ func verifyFail(m []byte, d []byte) bool {
 		dbg.Error("Didn't receive correct data")
 		return false
 	}
-	// everything is OK, always:
 	return true
 }
 
+// Verify-function that will fail for all calls >= `failCount`.
 func verifyFailMore(m []byte, d []byte) bool {
 	countMut.Lock()
 	defer countMut.Unlock()
@@ -229,7 +229,6 @@ func verifyFailMore(m []byte, d []byte) bool {
 		dbg.Error("Didn't receive correct data")
 		return false
 	}
-	// everything is OK, always:
 	return true
 }
 
@@ -242,6 +241,7 @@ func bitCount(x int) int {
 	return count
 }
 
+// Verify-function that will fail if the `called` bit is 0.
 func verifyFailBit(m []byte, d []byte) bool {
 	countMut.Lock()
 	myBit := uint(veriCount)
@@ -252,6 +252,5 @@ func verifyFailBit(m []byte, d []byte) bool {
 		return false
 	}
 	dbg.Lvl1("Verification called", veriCount, "times")
-	// everything is OK, always:
 	return true
 }

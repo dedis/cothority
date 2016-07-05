@@ -7,22 +7,22 @@ import (
 	"os"
 
 	"github.com/dedis/cothority/app/lib/config"
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/identity"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	dbg.MainTest(m)
+	log.MainTest(m)
 	tmpCleanup()
 }
 
 func TestLoadConfig(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "config.bin")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	tmpfile.Close()
 	configFile = tmpfile.Name()
 	os.Remove(configFile)
@@ -35,11 +35,11 @@ func TestLoadConfig(t *testing.T) {
 	clientApp = identity.NewIdentity(el, 50, "one1", "sshpub1")
 
 	err = saveConfig()
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 
 	clientApp = nil
 	err = loadConfig()
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 
 	if clientApp.Config.Threshold != 50 {
 		t.Fatal("Threshold not correctly loaded")
@@ -70,14 +70,14 @@ func saveGroupToml(n int, file string) (*config.GroupToml, *sda.LocalTest) {
 	servers := make([]*config.ServerToml, n)
 	for i, h := range hosts {
 		pub, err := crypto.Pub64(network.Suite, h.Entity.Public)
-		dbg.ErrFatal(err)
+		log.ErrFatal(err)
 		servers[i] = &config.ServerToml{
 			Addresses: h.Entity.Addresses,
 			Public:    pub,
 		}
 	}
 	gt := config.NewGroupToml(servers...)
-	dbg.ErrFatal(gt.Save(file))
+	log.ErrFatal(gt.Save(file))
 	return gt, local
 }
 
@@ -85,7 +85,7 @@ var tmpfiles []string
 
 func tmpName() string {
 	file, err := ioutil.TempFile("", "tmpfile")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	file.Close()
 	tmpfiles = append(tmpfiles, file.Name())
 	return file.Name()

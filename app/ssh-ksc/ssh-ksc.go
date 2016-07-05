@@ -16,7 +16,7 @@ import (
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/app/lib/ui"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	_ "github.com/dedis/cothority/services"
 	"github.com/dedis/cothority/services/identity"
 )
@@ -106,7 +106,7 @@ func main() {
 	app.Before = func(c *cli.Context) error {
 		configDir := tildeToHome(c.String("config"))
 		os.Mkdir(configDir, 0660)
-		dbg.SetDebugVisible(c.Int("debug"))
+		log.SetDebugVisible(c.Int("debug"))
 		configFile = configDir + "/config.bin"
 		if err := loadConfig(); err != nil {
 			ui.Error("Problems reading config-file. Most probably you\n",

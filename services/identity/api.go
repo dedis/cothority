@@ -84,7 +84,7 @@ func NewIdentityFromCothority(el *sda.Roster, id ID) (*Identity, error) {
 	return iden, nil
 }
 
-// NewClientFromStream reads the configuration of that client from
+// NewIdentityFromStream reads the configuration of that client from
 // any stream
 func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	data, err := ioutil.ReadAll(in)
