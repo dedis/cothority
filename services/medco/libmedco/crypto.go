@@ -171,7 +171,7 @@ func discreteLog(P abstract.Point) int64 {
 // ReplaceContribution computes the new CipherText with the old mask contribution replaced by new and save in receiver.
 func (c *CipherText) ReplaceContribution(cipher *CipherText, old, new abstract.Point) *CipherText {
 	c.C.Sub(cipher.C, old)
-	c.C.Add(cipher.C, new)
+	c.C.Add(c.C, new)
 	return c
 }
 
@@ -179,6 +179,7 @@ func (c *CipherText) ReplaceContribution(cipher *CipherText, old, new abstract.P
 func (c *CipherText) DeterministicSwitching(cipher *CipherText, private abstract.Scalar, phContrib abstract.Point) *CipherText {
 	egContrib := suite.Point().Mul(cipher.K, private)
 	c.ReplaceContribution(cipher, egContrib, phContrib)
+	c.K = cipher.K
 	return c
 }
 
