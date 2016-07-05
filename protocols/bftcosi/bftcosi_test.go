@@ -21,9 +21,24 @@ func TestMain(m *testing.M) {
 	dbg.MainTest(m)
 }
 
-func TestThreshold(t *testing.T) {
-	const TestProtocolName = "DummyBFTCoSiThr"
+func TestBftCoSi(t *testing.T) {
+	const TestProtocolName = "DummyBFTCoSi"
 
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verify)
+	})
+
+	dbg.Lvl1("Standard at", failCount)
+	runProtocol(t, TestProtocolName)
+}
+
+func TestThreshold(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	const TestProtocolName = "DummyBFTCoSiThr"
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
@@ -54,21 +69,10 @@ func TestThreshold(t *testing.T) {
 	}
 }
 
-func TestBftCoSi(t *testing.T) {
-	const TestProtocolName = "DummyBFTCoSi"
-
-	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
-	})
-
-	for i := 1; i <= 3; i++ {
-		dbg.Lvl1("Standard at", failCount)
-		runProtocol(t, TestProtocolName)
-	}
-}
-
 func TestCheckFail(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	const TestProtocolName = "DummyBFTCoSiFail"
 
 	// Register test protocol using BFTCoSi
@@ -83,6 +87,9 @@ func TestCheckFail(t *testing.T) {
 }
 
 func TestCheckFailMore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	const TestProtocolName = "DummyBFTCoSiFailMore"
 
 	// Register test protocol using BFTCoSi
@@ -100,6 +107,9 @@ func TestCheckFailMore(t *testing.T) {
 }
 
 func TestCheckFailBit(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	const TestProtocolName = "DummyBFTCoSiFailBit"
 
 	// Register test protocol using BFTCoSi
@@ -118,7 +128,7 @@ func TestCheckFailBit(t *testing.T) {
 }
 
 func runProtocol(t *testing.T, name string) {
-	for _, nbrHosts := range []int{3, 13} {
+	for _, nbrHosts := range []int{3, 4, 13} {
 		runProtocolOnce(t, nbrHosts, name, true)
 	}
 }
