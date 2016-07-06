@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"flag"
+	"os"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +18,12 @@ var failCount int
 var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	//log.MainTest(m)
+	flag.Parse()
+	log.SetDebugVisible(3)
+	code := m.Run()
+	log.AfterTest(nil)
+	os.Exit(code)
 }
 
 func TestBftCoSi(t *testing.T) {

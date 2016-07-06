@@ -364,6 +364,38 @@ func TestService_SignBlock(t *testing.T) {
 	log.ErrFatal(sbSecond.VerifySignatures())
 }
 
+func TestService_ProtocolVerification(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	hosts, el, s1 := makeHELS(local, 3)
+	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
+	s3 := local.Services[hosts[2].ServerIdentity.ID][skipchainSID].(*Service)
+	services := []*Service{s1, s2, s3}
+
+	sb := makeGenesisRosterArgs(s1, el, nil, VerifyNone, 1, 1)
+	for i := 0; i < 3; i++ {
+		sb = launchVerification(t, services, i, sb)
+	}
+}
+
+func launchVerification(t *testing.T, services []*Service, n int, prev *SkipBlock) *SkipBlock {
+	next := NewSkipBlock()
+	next.Roster = prev.Roster
+	for _, s := range services {
+		s.testVerify = false
+	}
+	sb, err := services[n].ProposeSkipBlock(nil,
+		&ProposeSkipBlock{prev.Hash, next})
+	log.ErrFatal(err)
+	for _, s := range services {
+		if !s.testVerify {
+			t.Fatal("Service", n, "didn't verify")
+		}
+	}
+	return sb.(*ProposedSkipBlockReply).Latest
+}
+
 func TestService_ForwardSignature(t *testing.T) {
 }
 
