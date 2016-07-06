@@ -79,9 +79,9 @@ type ProtocolBFTCoSi struct {
 	// onSignatureDone is the callback that will be called when a signature has
 	// been generated ( at the end of the response phase of the commit round)
 	onSignatureDone func(*BFTSignature)
-	// verificationFunction will be called
+	// VerificationFunction will be called
 	// during the (start/handle) challenge prepare phase of the protocol
-	verificationFunction VerificationFunction
+	VerificationFunction VerificationFunction
 }
 
 // collectStructs holds the variables that are used during the protocol to hold
@@ -122,7 +122,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 		},
 		verifyChan:           make(chan bool),
 		doneProcessing:       make(chan bool, 2),
-		verificationFunction: verify,
+		VerificationFunction: verify,
 		threshold:            (len(n.Tree().List()) + 1) * 2 / 3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
@@ -352,7 +352,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(ch *ChallengePrepare) error {
 		bft.prepare.Challenge(ch.Challenge)
 	}
 	go func() {
-		bft.verifyChan <- bft.verificationFunction(bft.Msg, bft.Data)
+		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
 	}()
 	log.Lvl4(bft.Name(), "BFTCoSi handle Challenge PREPARE")
 	// go to response if leaf
