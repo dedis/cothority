@@ -46,6 +46,32 @@ including setting the GOPATH environment variable.
 You can run CoSi either as a standalone application or in testbed simulations,
 as described below. 
 
+## Versions
+
+For the moment we have two version: _v0_ and _master_.
+
+### V0
+
+This is a stable version that depends on the v0-versions of the other dedis-packages. It will only receive bugfixes, but no changes that will make the code incompatible. You can find this version at:
+
+https://github.com/dedis/cothority/tree/v0
+
+If you write code that uses our library in the v0-version, be sure to reference it as
+
+```
+import "gopkg.in/dedis/cothority.v0
+```
+
+### Master
+
+The master-branch is used for day-to-day development and will break your code about once a week. If you are using this branch, be sure to do
+
+```
+go get -u ./...
+```
+
+from time to time, as all dedis-dependencies change quite often.
+
 
 # Command-line Interface
 
