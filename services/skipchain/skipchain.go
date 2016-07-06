@@ -25,6 +25,9 @@ const ServiceName = "Skipchain"
 func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
+	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, nil)
+	})
 }
 
 var skipchainSID sda.ServiceID
@@ -37,6 +40,8 @@ type Service struct {
 	SkipBlocks map[string]*SkipBlock
 	sbMutex    sync.Mutex
 	path       string
+	// testVerify is set to true if a verification happened - only for testing
+	testVerify bool
 }
 
 // ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
@@ -266,6 +271,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 }
 
 func (s *Service) startBFTSignature(block *SkipBlock) error {
+	log.Lvl3("Starting bftsignature with root-node=", s.ServerIdentity())
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte(block.Hash)
@@ -282,6 +288,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+
 	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
@@ -295,6 +302,9 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		return errors.New("Couldn't marshal block: " + err.Error())
 	}
 	root.Data = data
+
+	// in testing-mode with more than one host and service per cothority-instance
+	// we might have the wrong verification-function, so set it again here.
 	root.VerificationFunction = s.bftVerify
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
@@ -387,6 +397,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
+	s.testVerify = true
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
@@ -453,9 +464,6 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]*SkipBlock),
 	}
-	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
-	})
 	for _, msg := range []interface{}{s.ProposeSkipBlock, s.SetChildrenSkipBlock,
 		s.GetUpdateChain} {
 		if err := s.RegisterMessage(msg); err != nil {
