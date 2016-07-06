@@ -32,7 +32,7 @@ func TestBftCoSi(t *testing.T) {
 
 func TestThreshold(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
 	}
 
 	const TestProtocolName = "DummyBFTCoSiThr"
@@ -68,7 +68,7 @@ func TestThreshold(t *testing.T) {
 
 func TestCheckFail(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
 	}
 	const TestProtocolName = "DummyBFTCoSiFail"
 
@@ -85,7 +85,7 @@ func TestCheckFail(t *testing.T) {
 
 func TestCheckFailMore(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
 	}
 	const TestProtocolName = "DummyBFTCoSiFailMore"
 
@@ -105,7 +105,7 @@ func TestCheckFailMore(t *testing.T) {
 
 func TestCheckFailBit(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
 	}
 	const TestProtocolName = "DummyBFTCoSiFailBit"
 
