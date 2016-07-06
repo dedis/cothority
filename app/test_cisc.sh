@@ -21,8 +21,12 @@ main(){
 
 testClientSetup(){
     cothoritySetup
-    testOK runCl 1 setup group.toml
-    testFile cl1/config.bin
+    testFail runCl 1 cr
+    echo test > test.toml
+    testFail runCl 1 cr test.toml
+    testOK runCl 1 cr group.toml
+    testOK runCl 1 cr group.toml client1
+	testFile cl1/config.bin
 }
 
 testBuild(){

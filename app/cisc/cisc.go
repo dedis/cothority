@@ -36,10 +36,11 @@ func main() {
 			Usage: "working on the identity",
 			Subcommands: []cli.Command{
 				{
-					Name:    "create",
-					Aliases: []string{"cr"},
-					Usage:   "start a new identity",
-					Action:  idCreate,
+					Name:      "create",
+					Aliases:   []string{"cr"},
+					Usage:     "start a new identity",
+					ArgsUsage: "group-definition [id-name]",
+					Action:    idCreate,
 				},
 				{
 					Name:    "connect",
@@ -58,6 +59,12 @@ func main() {
 					Aliases: []string{"f"},
 					Usage:   "follow an existing identity",
 					Action:  idFollow,
+				},
+				{
+					Name:    "check",
+					Aliases: []string{"ch"},
+					Usage:   "check the health of the cothority",
+					Action:  idCheck,
 				},
 			},
 		},
@@ -157,6 +164,23 @@ func saveConfig() error {
 }
 
 func idCreate(c *cli.Context) error {
+	if c.NArg() == 0 {
+		log.Fatal("Please give at least a group-definition")
+	}
+	gfile := c.Args().Get(0)
+	gr, err := os.Open(gfile)
+	log.ErrFatal(err)
+	groups, err := config.ReadGroupDescToml(gr)
+	gr.Close()
+	if len(groups.Roster.List) == 0 {
+		log.Fatal("No servers found in roster from", gfile)
+	}
+	name, err := os.Hostname()
+	log.ErrFatal(err)
+	if c.NArg() > 1 {
+		name = c.Args().Get(1)
+	}
+	log.Info("Creating new blockchain-identity for", name)
 	return nil
 }
 func idConnect(c *cli.Context) error {
@@ -166,6 +190,9 @@ func idRemove(c *cli.Context) error {
 	return nil
 }
 func idFollow(c *cli.Context) error {
+	return nil
+}
+func idCheck(c *cli.Context) error {
 	return nil
 }
 

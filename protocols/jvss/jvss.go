@@ -46,6 +46,7 @@ type JVSS struct {
 	ltssInit              bool                  // Indicator whether shared secret has been already initialised or not
 	secretsDone           chan bool             // Channel to indicate when shared secrets of all peers are ready
 	sigChan               chan *poly.SchnorrSig // Channel for JVSS signature
+	mutex                 sync.Mutex            // Protects the structure
 }
 
 // Secret contains all information for long- and short-term shared secrets.
@@ -159,7 +160,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 }
 
 func (jv *JVSS) initSecret(sid SID) error {
-
+	jv.mutex.Lock()
+	defer jv.mutex.Unlock()
 	// Initialise shared secret of given type if necessary
 	if _, ok := jv.secrets[sid]; !ok {
 		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
