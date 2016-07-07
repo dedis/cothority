@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
-# Debug-level for server
-DBG_SRV=1
-# Debug-level for client
-DBG_CLIENT=1
+DBG_SHOW=2
+# Debug-level for app
+DBG_APP=3
 # Uncomment to build in local dir
 STATICDIR=test
 
@@ -14,19 +12,53 @@ STATICDIR=test
 main(){
     startTest
     build
-    test Build
-    #test ClientSetup
+#    test Build
+#    test IdCreate
+#	test DataList
+	test IdConnect
     stopTest
 }
 
-testClientSetup(){
+testIdConnect(){
+	clientSetup
+	dbgOut "ID of client 1 is $ID"
+	testFail runCl 2 id co
+	echo test > test.toml
+	testFail runCl 2 id co test.toml
+	testFail runCl 2 id co group.toml
+	testOK runCl 2 id co group.toml $ID client2
+	own2="Owner: client2"
+	testNGrep "$own2" runCl 2 data ls
+	testGrep "$own2" runCl 2 data lsp
+	testNGrep "$own2" runCl 1 data ls
+	testGrep "$own2" runCl 1 data lsp
+}
+
+testDataList(){
+	clientSetup
+	testGrep "name: client1" runCl 1 data ls
+	testReGrep "ID: [0-9a-f]"
+}
+
+clientSetup(){
+	cothoritySetup
+	DBG_OLD=$DBG_SHOW
+    DBG_SHOW=2
+    testOK runCl 1 id cr group.toml client1
+    runGrepSed ID "s/.* //" runCl 1 data ls
+    ID=$SED
+    DBG_SHOW=$DBG_OLD
+}
+
+testIdCreate(){
     cothoritySetup
-    testFail runCl 1 cr
+    testFail runCl 1 id cr
     echo test > test.toml
-    testFail runCl 1 cr test.toml
-    testOK runCl 1 cr group.toml
-    testOK runCl 1 cr group.toml client1
+    testFail runCl 1 id cr test.toml
+    testOK runCl 1 id cr group.toml
 	testFile cl1/config.bin
+    testGrep $(hostname) runCl 1 id cr group.toml
+    testGrep client1 runCl 1 id cr group.toml client1
 }
 
 testBuild(){
@@ -37,7 +69,7 @@ testBuild(){
 runCl(){
     D=cl$1
     shift
-    dbgRun ./cisc -d $DBG_CLIENT -c $D --cs $D $@
+    dbgRun ./cisc -d $DBG_APP -c $D --cs $D $@
 }
 
 build(){
@@ -59,20 +91,16 @@ build(){
     done
     echo "Creating keys"
     for n in $(seq $NBR); do
-        srv=srv$n
-        if [ -d $srv ]; then
-            rm -f $srv/*bin
-        else
-            mkdir $srv
-            ssh-keygen -t rsa -b 4096 -N "" -f $srv/ssh_host_rsa_key > /dev/null
-        fi
+        co=co$n
+        rm -f $co/*bin
+        mkdir -p $co
 
         cl=cl$n
-        if [ -d $cl ]; then
-            rm -f $cl/*bin
-        else
-            mkdir $cl
-            ssh-keygen -t rsa -b 4096 -N "" -f $cl/id_rsa > /dev/null
+        rm -f $cl/*bin
+        mkdir -p $cl
+        key=$cl/id_rsa
+        if [ ! -f $key ]; then
+        	ssh-keygen -t rsa -b 4096 -N "" -f $key > /dev/null
         fi
 
         co=co$n

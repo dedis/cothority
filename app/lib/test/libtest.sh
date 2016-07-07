@@ -9,6 +9,8 @@ BUILD=${BUILD:-}
 # Show the output of the commands
 DBG_SHOW=${DBG_SHOW:-0}
 
+RUNOUT=/tmp/run.out
+
 startTest(){
     set +m
 }
@@ -44,30 +46,47 @@ testGrep(){
     S="$1"
     shift
     testOut "Assert grepping '$S' in '$@'"
-    runGrep "$S" "$@"
-    if [ ! "$GRP" ]; then
+    runOutFile "$@"
+    doGrep "$S"
+    if [ ! "$EGREP" ]; then
         fail "Didn't find '$S' in output of '$@': $GRP"
     fi
 }
 
+testReGrep(){
+	G="$1"
+    testOut "Assert grepping again '$G' in same output as before"
+    doGrep "$G"
+    if [ ! "$EGREP" ]; then
+        fail "Didn't find '$G' in last output: $(cat $GREPFILE)"
+    fi
+}
+
+doGrep(){
+    WC=$( cat $RUNOUT | egrep "$1" | wc -l )
+    EGREP=$( cat $RUNOUT | egrep "$1" )
+}
+
 testCount(){
     C="$1"
-    S="$2"
+    G="$2"
     shift 2
-    testOut "Assert counting '$C' of '$S' in '$@'"
-    runGrep "$S" "$@"
+    testOut "Assert counting '$C' of '$G' in '$@'"
+    runOutFile "$@"
+    doGrep "$G"
     if [ $WC -ne $C ]; then
-        fail "Didn't find '$C' (but '$WC') of '$S' in output of '$@': $GRP"
+        fail "Didn't find '$C' (but '$WC') of '$G' in output of '$@': $(cat $GREPFILE)"
     fi
 }
 
 testNGrep(){
-    S="$1"
+    G="$1"
     shift
-    testOut "Assert NOT grepping '$S' in '$@'"
-    runGrep "$S" "$@"
-    if [ "$GRP" ]; then
-        fail "Did find '$S' in output of '$@': $GRP"
+    testOut "Assert NOT grepping '$G' in '$@'"
+    runOutFile "$@"
+    doGrep "$G"
+    if [ "$EGREP" ]; then
+        fail "Did find '$G' in output of '$@': $(cat $GREPFILE)"
     fi
 }
 
@@ -89,32 +108,27 @@ dbgRun(){
     else
         OUT=/dev/null
     fi
-    if [ "$GREP" ]; then
-        $@ 2>&1 | tee $GREP > $OUT
+    if [ "$OUTFILE" ]; then
+        $@ 2>&1 | tee $OUTFILE > $OUT
     else
         $@ 2>&1 > $OUT
     fi
 }
 
-runSed(){
-    SED="$1"
-    shift
-    OLDGREP=$GREP
-    GREP=$( mktemp )
-    dbgRun "$@"
-    SED=$( cat $GREP | sed -e "$SED" )
-    GREP=$OLDGREP
+runGrepSed(){
+	GREP="$1"
+    SED="$2"
+    shift 2
+    runOutFile "$@"
+    doGrep "$GREP"
+    SED=$( echo $EGREP | sed -e "$SED" )
 }
 
-runGrep(){
-    GRP="$1"
-    shift
-    OLDGREP=$GREP
-    GREP=$( mktemp )
+runOutFile(){
+    OLDOUTFILE=$OUTFILE
+    OUTFILE=$RUNOUT
     dbgRun "$@"
-    WC=$( cat $GREP | egrep "$GRP" | wc -l )
-    GRP=$( cat $GREP | egrep "$GRP" )
-    GREP=$OLDGREP
+    OUTFILE=$OLDOUTFILE
 }
 
 fail(){
