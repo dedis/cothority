@@ -116,14 +116,14 @@ var outputLines = true
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
-func lvl(lvl int, args ...interface{}) {
+func lvl(lvl, skip int, args ...interface{}) {
 	debugMut.Lock()
 	defer debugMut.Unlock()
 
 	if lvl > debugVisible {
 		return
 	}
-	pc, _, line, _ := runtime.Caller(3)
+	pc, _, line, _ := runtime.Caller(skip)
 	name := regexpPaths.ReplaceAllString(runtime.FuncForPC(pc).Name(), "")
 	lineStr := fmt.Sprintf("%d", line)
 
@@ -159,6 +159,9 @@ func lvl(lvl int, args ...interface{}) {
 	case lvlPrint:
 		fg(ct.White, true)
 		lvlStr = "I"
+	case lvlInfo:
+		fg(ct.White, true)
+		lvlStr = "I"
 	case lvlWarning:
 		fg(ct.Green, true)
 		lvlStr = "W"
@@ -185,7 +188,7 @@ func lvl(lvl int, args ...interface{}) {
 		str = fmt.Sprintf("%s.%09d%s", ti.Format("06/02/01 15:04:05"), ti.Nanosecond(), str)
 	}
 	str = fmt.Sprintf("%-2s%s", lvlStr, str)
-	if lvl < lvlPrint {
+	if lvl < lvlInfo {
 		fmt.Fprint(stdErr, str)
 	} else {
 		fmt.Fprint(stdOut, str)
@@ -206,10 +209,10 @@ func fg(c ct.Color, bright bool) {
 // or
 // Lvl1 -> lvld -> lvl
 func lvlf(l int, f string, args ...interface{}) {
-	lvl(l, fmt.Sprintf(f, args...))
+	lvl(l, 3, fmt.Sprintf(f, args...))
 }
 func lvld(l int, args ...interface{}) {
-	lvl(l, args...)
+	lvl(l, 3, args...)
 }
 
 // Lvl1 debug output is informational and always displayed
