@@ -21,6 +21,9 @@ import (
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
 // protocol. The passed message is the same as sent in the challenge phase.
+// The `Data`-part is only to help the VerificationFunction do it's job. In
+// the case of the services, this part should be replaced by the correct
+// passing of the service-configuration-data, which is not done yet.
 type VerificationFunction func(Msg []byte, Data []byte) bool
 
 // ProtocolBFTCoSi is the main struct for running the protocol
