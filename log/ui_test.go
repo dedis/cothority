@@ -57,3 +57,16 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, "None Python\n", getStdOut())
 	SetDebugVisible(1)
 }
+
+func TestLvl(t *testing.T) {
+	SetDebugVisible(1)
+	Info("TestLvl")
+	assert.Equal(t, "I : (                             log.TestLvl:   0) - TestLvl\n",
+		getStdOut())
+	Print("TestLvl")
+	assert.Equal(t, "I : (                             log.TestLvl:   0) - TestLvl\n",
+		getStdOut())
+	Warn("TestLvl")
+	assert.Equal(t, "W : (                             log.TestLvl:   0) - TestLvl\n",
+		getStdErr())
+}

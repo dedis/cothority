@@ -159,6 +159,9 @@ func lvl(lvl, skip int, args ...interface{}) {
 	case lvlPrint:
 		fg(ct.White, true)
 		lvlStr = "I"
+	case lvlInfo:
+		fg(ct.White, true)
+		lvlStr = "I"
 	case lvlWarning:
 		fg(ct.Green, true)
 		lvlStr = "W"
@@ -185,7 +188,7 @@ func lvl(lvl, skip int, args ...interface{}) {
 		str = fmt.Sprintf("%s.%09d%s", ti.Format("06/02/01 15:04:05"), ti.Nanosecond(), str)
 	}
 	str = fmt.Sprintf("%-2s%s", lvlStr, str)
-	if lvl < lvlPrint {
+	if lvl < lvlInfo {
 		fmt.Fprint(stdErr, str)
 	} else {
 		fmt.Fprint(stdOut, str)
