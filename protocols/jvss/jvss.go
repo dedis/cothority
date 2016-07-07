@@ -140,7 +140,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// ... and buffer it
+	jv.mutex.Lock()
 	secret := jv.secrets[sid]
+	jv.mutex.Unlock()
 	secret.sigs[jv.Index()] = ps
 
 	// Broadcast signing request
@@ -196,6 +198,8 @@ func (jv *JVSS) initSecret(sid SID) error {
 }
 
 func (jv *JVSS) finaliseSecret(sid SID) error {
+	jv.mutex.Lock()
+	defer jv.mutex.Unlock()
 	secret, ok := jv.secrets[sid]
 	if !ok {
 		return fmt.Errorf("Error, shared secret does not exist")
@@ -241,6 +245,8 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 }
 
 func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error) {
+	jv.mutex.Lock()
+	defer jv.mutex.Unlock()
 	secret, ok := jv.secrets[sid]
 	if !ok {
 		return nil, fmt.Errorf("Error, shared secret does not exist")

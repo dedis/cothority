@@ -1,0 +1,8 @@
+Simulation = "KeySwitching"
+Servers = 3
+Bf = 2
+Rounds = 1
+RunWait = 600000
+
+Hosts
+3
