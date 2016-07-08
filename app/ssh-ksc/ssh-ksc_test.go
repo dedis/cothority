@@ -44,7 +44,7 @@ func TestLoadConfig(t *testing.T) {
 	if clientApp.Config.Threshold != 50 {
 		t.Fatal("Threshold not correctly loaded")
 	}
-	if len(clientApp.Config.Owners) != 1 {
+	if len(clientApp.Config.Device) != 1 {
 		t.Fatal("Owners not correctly loaded")
 	}
 }

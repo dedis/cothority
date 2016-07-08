@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=2
+DBG_SHOW=0
 # Debug-level for app
-DBG_APP=3
+DBG_APP=2
 # Uncomment to build in local dir
 STATICDIR=test
 
@@ -12,16 +12,77 @@ STATICDIR=test
 main(){
     startTest
     build
-#    test Build
-#    test IdCreate
-#	test DataList
+	test Build
+	test ClientSetup
+	test IdCreate
+	test DataList
 	test IdConnect
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
     stopTest
+}
+
+testKeyDel(){
+	clientSetup 2
+	testOK runCl 1 kv add key1 value1
+	testOK runCl 1 kv add key2 value2
+	testOK runCl 1 data vote
+	testOK runCl 2 data update
+	testOK runCl 2 data vote
+	testOK runCl 1 data update
+	testGrep key1 runCl 1 kv ls
+	testGrep key2 runCl 1 kv ls
+	testFail runCl 1 kv rm key3
+	testOK runCl 1 kv rm key2
+	testOK runCl 1 data vote
+	testOK runCl 2 data update
+	testOK runCl 2 data vote
+	testNGrep key2 runCl 2 kv ls
+	testOK runCl 1 data update
+	testNGrep key2 runCl 2 kv ls
+}
+
+testKeyAdd2(){
+	MAXCLIENTS=3
+	for C in $( seq $MAXCLIENTS ); do
+		testOut "Running with $C devices"
+		clientSetup $C
+		testOK runCl 1 kv add key1 value1
+		testOK runCl 1 kv add key2 value2
+		testOK runCl 1 data vote
+		if [ $C -gt 1 ]; then
+			testNGrep key1 runCl 2 kv ls
+			testOK runCl 2 data update
+			testOK runCl 2 data vote
+			testGrep key1 runCl 2 kv ls
+		fi
+		testOK runCl 1 data update
+		testGrep key1 runCl 1 kv ls
+		testReGrep key2 runCl 1 kv ls
+		cleanup
+	done
+}
+
+testKeyAdd(){
+	clientSetup 2
+	testNGrep key1 runCl 1 kv ls
+	testOK runCl 1 kv add key1 value1
+	testOK runCl 1 data vote
+	testGrep key1 runCl 1 data ls -p
+	testOK runCl 2 data update
+	testNGrep key1 runCl 2 kv ls
+	testGrep key1 runCl 2 data ls -p
+	testOK runCl 2 data update
+	testOK runCl 2 data vote
+	testGrep key1 runCl 2 kv ls
+	testOK runCl 1 data update
+	testGrep key1 runCl 1 kv ls
 }
 
 testIdConnect(){
 	clientSetup
-	dbgOut "ID of client 1 is $ID"
+	dbgOut "Connecting client_2 to ID of client_1: $ID"
 	testFail runCl 2 id co
 	echo test > test.toml
 	testFail runCl 2 id co test.toml
@@ -29,25 +90,32 @@ testIdConnect(){
 	testOK runCl 2 id co group.toml $ID client2
 	own2="Owner: client2"
 	testNGrep "$own2" runCl 2 data ls
-	testGrep "$own2" runCl 2 data lsp
+	testOK runCl 2 data update
+	testGrep "$own2" runCl 2 data ls -p
+
+	dbgOut "Verifying client_1 is not auto-updated"
 	testNGrep "$own2" runCl 1 data ls
-	testGrep "$own2" runCl 1 data lsp
+	testNGrep "$own2" runCl 1 data ls -p
+	testOK runCl 1 data update
+	testGrep "$own2" runCl 1 data ls -p
+
+	dbgOut "Voting with client_1 - first reject then accept"
+	testOK runCl 1 data vote -r
+	testNGrep "$own2" runCl 1 data ls
+	testOK runCl 2 data update
+	testNGrep "$own2" runCl 2 data ls
+
+	testOK runCl 1 data vote
+	testGrep "$own2" runCl 1 data ls
+	testNGrep "$own2" runCl 2 data ls
+	testOK runCl 2 data update
+	testGrep "$own2" runCl 2 data ls
 }
 
 testDataList(){
 	clientSetup
 	testGrep "name: client1" runCl 1 data ls
 	testReGrep "ID: [0-9a-f]"
-}
-
-clientSetup(){
-	cothoritySetup
-	DBG_OLD=$DBG_SHOW
-    DBG_SHOW=2
-    testOK runCl 1 id cr group.toml client1
-    runGrepSed ID "s/.* //" runCl 1 data ls
-    ID=$SED
-    DBG_SHOW=$DBG_OLD
 }
 
 testIdCreate(){
@@ -61,15 +129,56 @@ testIdCreate(){
     testGrep client1 runCl 1 id cr group.toml client1
 }
 
+testClientSetup(){
+	MAXCLIENTS=3
+	for t in $( seq $MAXCLIENTS ); do
+		testOut "Starting $t clients"
+		clientSetup $t
+		for u in $( seq $MAXCLIENTS ); do
+			if [ $u -le $t ]; then
+				testGrep client1 runCl $u data ls
+			else
+				testFail runCl $u data ls
+			fi
+		done
+		cleanup
+	done
+}
+
 testBuild(){
     testOK dbgRun ./cothorityd --help
     testOK dbgRun ./cisc -c cl1 -cs cl1 --help
 }
 
 runCl(){
-    D=cl$1
+    local D=cl$1
     shift
     dbgRun ./cisc -d $DBG_APP -c $D --cs $D $@
+}
+
+clientSetup(){
+    local CLIENTS=${1:-0} c b
+	cothoritySetup
+	local DBG_OLD=$DBG_SHOW
+    DBG_SHOW=0
+    testOK runCl 1 id cr group.toml client1
+    runGrepSed ID "s/.* //" runCl 1 data ls
+    ID=$SED
+    if [ "$CLIENTS" -gt 1 ]; then
+    	for c in $( seq 2 $CLIENTS ); do
+    		testOK runCl $c id co group.toml $ID client$c
+    		for b in 1 2; do
+    			if [ $b -lt $c ]; then
+					testOK runCl $b data update
+					testOK runCl $b data vote
+				fi
+			done
+		done
+		for c in $( seq $CLIENTS ); do
+			testOK runCl $c data update
+		done
+	fi
+    DBG_SHOW=$DBG_OLD
 }
 
 build(){

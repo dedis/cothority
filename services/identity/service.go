@@ -44,8 +44,8 @@ type Service struct {
 // Storage stores one identity together with the skipblocks
 type Storage struct {
 	sync.Mutex
-	Latest   *AccountList
-	Proposed *AccountList
+	Latest   *Config
+	Proposed *Config
 	Votes    map[string]*crypto.SchnorrSig
 	Root     *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
@@ -56,7 +56,7 @@ type Storage struct {
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf2("Adding identity %+v", *ai)
 	ids := &Storage{
-		Latest: ai.AccountList,
+		Latest: ai.Config,
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var err error
@@ -67,7 +67,7 @@ func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (netwo
 	}
 	log.Lvl3("Creating Data-skipchain")
 	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.AccountList)
+		skipchain.VerifyNone, ai.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +88,23 @@ func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (netwo
 	}, nil
 }
 
-// ProposeConfig only stores the proposed configuration internally. Signatures
+// ConfigUpdate returns a new configuration update
+func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
+	sid := s.getIdentityStorage(cu.ID)
+	if sid == nil {
+		return nil, errors.New("Didn't find Identity")
+	}
+	sid.Lock()
+	defer sid.Unlock()
+	return &ConfigUpdate{
+		ID:          cu.ID,
+		AccountList: sid.Latest,
+	}, nil
+}
+
+// ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeConfig(e *network.ServerIdentity, p *PropagateProposition) (network.Body, error) {
+func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -107,46 +121,32 @@ func (s *Service) ProposeConfig(e *network.ServerIdentity, p *PropagatePropositi
 	return nil, nil
 }
 
-// ConfigNewCheck returns an eventual config-proposition
-func (s *Service) ConfigNewCheck(e *network.ServerIdentity, cnc *ConfigNewCheck) (network.Body, error) {
+// ProposeFetch returns an eventual config-proposition
+func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ConfigNewCheck{
+	return &ProposeFetch{
 		ID:          cnc.ID,
 		AccountList: sid.Proposed,
 	}, nil
 }
 
-// ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
-	sid := s.getIdentityStorage(cu.ID)
-	if sid == nil {
-		return nil, errors.New("Didn't find Identity")
-	}
-	sid.Lock()
-	defer sid.Unlock()
-	return &ConfigUpdate{
-		ID:          cu.ID,
-		AccountList: sid.Latest,
-	}, nil
-}
-
-// VoteConfig takes int account a vote for the proposed config. It also verifies
+// ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) VoteConfig(e *network.ServerIdentity, v *Vote) (network.Body, error) {
+func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
 	sid.Lock()
-	log.Lvl3("Voting on", sid.Proposed.Owners)
-	owner, ok := sid.Latest.Owners[v.Signer]
+	log.Lvl3("Voting on", sid.Proposed.Device)
+	owner, ok := sid.Latest.Device[v.Signer]
 	if !ok {
 		return nil, errors.New("Didn't find signer")
 	}
@@ -175,19 +175,19 @@ func (s *Service) VoteConfig(e *network.ServerIdentity, v *Vote) (network.Body, 
 		return nil, err
 	}
 	if len(sid.Votes) >= sid.Latest.Threshold ||
-		len(sid.Votes) == len(sid.Latest.Owners) {
+		len(sid.Votes) == len(sid.Latest.Device) {
 		// If we have enough signatures, make a new data-skipblock and
 		// propagate it
 		log.Lvl3("Having majority or all votes")
 
 		// Making a new data-skipblock
-		log.Lvl3("Sending data-block with", sid.Proposed.Owners)
+		log.Lvl3("Sending data-block with", sid.Proposed.Device)
 		reply, err := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
 		if err != nil {
 			return nil, err
 		}
 		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
-		log.Lvl3("SB signed is", msg.(*AccountList).Owners)
+		log.Lvl3("SB signed is", msg.(*Config).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
 			Latest: reply.Latest,
@@ -222,10 +222,10 @@ func (s *Service) Propagate(msg network.Body) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := ID(nil)
 	switch msg.(type) {
-	case *PropagateProposition:
-		id = msg.(*PropagateProposition).ID
-	case *Vote:
-		id = msg.(*Vote).ID
+	case *ProposeSend:
+		id = msg.(*ProposeSend).ID
+	case *ProposeVote:
+		id = msg.(*ProposeVote).ID
 	case *UpdateSkipBlock:
 		id = msg.(*UpdateSkipBlock).ID
 	case *PropagateIdentity:
@@ -249,12 +249,12 @@ func (s *Service) Propagate(msg network.Body) {
 		sid.Lock()
 		defer sid.Unlock()
 		switch msg.(type) {
-		case *PropagateProposition:
-			p := msg.(*PropagateProposition)
-			sid.Proposed = p.AccountList
+		case *ProposeSend:
+			p := msg.(*ProposeSend)
+			sid.Proposed = p.Config
 			sid.Votes = make(map[string]*crypto.SchnorrSig)
-		case *Vote:
-			v := msg.(*Vote)
+		case *ProposeVote:
+			v := msg.(*ProposeVote)
 			sid.Votes[v.Signer] = v.Signature
 		case *UpdateSkipBlock:
 			skipblock := msg.(*UpdateSkipBlock).Latest
@@ -263,7 +263,7 @@ func (s *Service) Propagate(msg network.Body) {
 				log.Error(err)
 				return
 			}
-			al, ok := msgLatest.(*AccountList)
+			al, ok := msgLatest.(*Config)
 			if !ok {
 				log.Error(err)
 				return
@@ -291,7 +291,7 @@ func (s *Service) getIdentityStorage(id ID) *Storage {
 func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
-	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Owners)
+	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.identities[string(id)] = is
 }
 
@@ -302,8 +302,8 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}
-	for _, f := range []interface{}{s.ProposeConfig, s.VoteConfig,
-		s.AddIdentity, s.ConfigNewCheck, s.ConfigUpdate} {
+	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
+		s.AddIdentity, s.ProposeFetch, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}

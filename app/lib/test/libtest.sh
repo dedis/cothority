@@ -58,7 +58,7 @@ testReGrep(){
     testOut "Assert grepping again '$G' in same output as before"
     doGrep "$G"
     if [ ! "$EGREP" ]; then
-        fail "Didn't find '$G' in last output: $(cat $GREPFILE)"
+        fail "Didn't find '$G' in last output: $(cat $RUNOUT)"
     fi
 }
 
@@ -75,7 +75,7 @@ testCount(){
     runOutFile "$@"
     doGrep "$G"
     if [ $WC -ne $C ]; then
-        fail "Didn't find '$C' (but '$WC') of '$G' in output of '$@': $(cat $GREPFILE)"
+        fail "Didn't find '$C' (but '$WC') of '$G' in output of '$@': $(cat $RUNOUT)"
     fi
 }
 
@@ -86,7 +86,7 @@ testNGrep(){
     runOutFile "$@"
     doGrep "$G"
     if [ "$EGREP" ]; then
-        fail "Did find '$G' in output of '$@': $(cat $GREPFILE)"
+        fail "Did find '$G' in output of '$@': $(cat $RUNOUT)"
     fi
 }
 

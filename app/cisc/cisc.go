@@ -75,6 +75,12 @@ func main() {
 			Usage: "updating and voting on data",
 			Subcommands: []cli.Command{
 				{
+					Name:    "propose",
+					Aliases: []string{"l"},
+					Usage:   "propose the new data",
+					Action:  dataPropose,
+				},
+				{
 					Name:    "update",
 					Aliases: []string{"u"},
 					Usage:   "fetch the latest data",
@@ -85,18 +91,58 @@ func main() {
 					Aliases: []string{"ls"},
 					Usage:   "list existing data and proposed",
 					Action:  dataList,
-				},
-				{
-					Name:    "proposed",
-					Aliases: []string{"lsp"},
-					Usage:   "update config and list proposed",
-					Action:  dataProposed,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "p,propose",
+							Usage: "will also show proposed config",
+						},
+					},
 				},
 				{
 					Name:    "vote",
 					Aliases: []string{"v"},
 					Usage:   "vote on existing data",
-					Action:  dataVote,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "r,reject",
+							Usage: "reject the proposition",
+						},
+					},
+					Action: dataVote,
+				},
+			},
+		},
+		{
+			Name:    "keyvalue",
+			Aliases: []string{"kv"},
+			Usage:   "storing and retrieving key/value pairs",
+			Subcommands: []cli.Command{
+				{
+					Name:    "list",
+					Aliases: []string{"ls"},
+					Usage:   "list all values",
+					Action:  kvList,
+				},
+				{
+					Name:      "value",
+					Aliases:   []string{"v"},
+					Usage:     "return the value of a key",
+					ArgsUsage: "key",
+					Action:    kvValue,
+				},
+				{
+					Name:      "add",
+					Aliases:   []string{"a"},
+					Usage:     "add a new key/value pair",
+					ArgsUsage: "key value",
+					Action:    kvAdd,
+				},
+				{
+					Name:      "rm",
+					Aliases:   []string{"ls"},
+					Usage:     "list all values",
+					ArgsUsage: "key",
+					Action:    kvRm,
 				},
 			},
 		},
@@ -187,7 +233,7 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	clientApp = identity.NewIdentity(group.Roster, 2, name, "")
+	clientApp = identity.NewIdentity(group.Roster, 2, name)
 	log.ErrFatal(clientApp.CreateIdentity())
 	err = saveConfig()
 	log.ErrFatal(err)
@@ -210,40 +256,92 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	clientApp = identity.NewIdentity(group.Roster, 2, name, "")
+	clientApp = identity.NewIdentity(group.Roster, 2, name)
 	clientApp.AttachToIdentity(id)
 	log.ErrFatal(saveConfig())
 	return nil
 }
 func idRemove(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
 func idFollow(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
 func idCheck(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
 
 func dataUpdate(c *cli.Context) error {
-	return nil
+	assertCA()
+	log.ErrFatal(clientApp.ConfigUpdate())
+	log.ErrFatal(clientApp.ProposeFetch())
+	log.Info("Successfully updated")
+	return dataList(c)
 }
 func dataList(c *cli.Context) error {
 	assertCA()
 	log.Info("Account name:", clientApp.ManagerStr)
 	log.Infof("Identity-ID: %x", clientApp.ID)
 	log.Infof("Current config: %s", clientApp.Config)
-	return nil
-}
-func dataProposed(c *cli.Context) error {
-	log.ErrFatal(clientApp.ConfigNewCheck(), "Couldn't update the config")
-	dataList(c)
-	if clientApp.Proposed != nil {
-		log.Infof("Proposed config: %s", clientApp.Proposed)
+	if c.Bool("p") {
+		if clientApp.Proposed != nil {
+			log.Infof("Proposed config: %s", clientApp.Proposed)
+		} else {
+			log.Info("No proposed data")
+		}
 	}
 	return nil
 }
+func dataPropose(c *cli.Context) error {
+	assertCA()
+	log.Fatal("Not yet implemented")
+	return nil
+}
 func dataVote(c *cli.Context) error {
+	assertCA()
+	log.ErrFatal(clientApp.ProposeVote(!c.Bool("r")))
+	return nil
+}
+
+func kvList(c *cli.Context) error {
+	assertCA()
+	log.Infof("Data for id %x", clientApp.ID)
+	for k, v := range clientApp.Config.Data {
+		log.Infof("%s: %s", k, v)
+	}
+	return nil
+}
+func kvValue(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
+	return nil
+}
+func kvAdd(c *cli.Context) error {
+	assertCA()
+	if c.NArg() < 2 {
+		log.Fatal("Please give a key value pair")
+	}
+	key := c.Args().Get(0)
+	value := c.Args().Get(1)
+	prop := clientApp.GetProposed()
+	prop.Data[key] = value
+	log.ErrFatal(clientApp.ProposeSend(prop))
+	return nil
+}
+func kvRm(c *cli.Context) error {
+	assertCA()
+	if c.NArg() != 1 {
+		log.Fatal("Please give a key to delete")
+	}
+	key := c.Args().First()
+	prop := clientApp.GetProposed()
+	if _, ok := prop.Data[key]; !ok {
+		log.Fatal("Didn't find key", key, "in the data")
+	}
+	delete(prop.Data, key)
+	log.ErrFatal(clientApp.ProposeSend(prop))
 	return nil
 }
 

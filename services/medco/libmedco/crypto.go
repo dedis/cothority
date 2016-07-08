@@ -2,6 +2,7 @@ package libmedco
 
 import (
 	"fmt"
+
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"

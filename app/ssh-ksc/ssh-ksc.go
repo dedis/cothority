@@ -197,24 +197,24 @@ func setup(groupFile, hostname, pubFileName, add string) {
 
 func ownerDel(c *cli.Context) {
 	owner := c.Args().First()
-	if _, exists := clientApp.Config.Owners[owner]; !exists {
+	if _, exists := clientApp.Config.Device[owner]; !exists {
 		ui.Info("Owners available:")
-		for o := range clientApp.Config.Owners {
+		for o := range clientApp.Config.Device {
 			ui.Info(o)
 		}
 		return
 	}
 	prop := clientApp.Config.Copy()
-	delete(prop.Owners, owner)
-	ui.ErrFatal(clientApp.ConfigNewPropose(prop))
-	ui.ErrFatal(clientApp.VoteProposed(true))
+	delete(prop.Device, owner)
+	ui.ErrFatal(clientApp.ProposeSend(prop))
+	ui.ErrFatal(clientApp.ProposeVote(true))
 	update(c)
 }
 
 func update(c *cli.Context) {
 	checkClientApp()
 	ui.ErrFatal(clientApp.ConfigUpdate(), "Couldn't update the config")
-	ui.ErrFatal(clientApp.ConfigNewCheck(), "Didn't get newest proposals")
+	ui.ErrFatal(clientApp.ProposeFetch(), "Didn't get newest proposals")
 	list(c)
 }
 
@@ -233,10 +233,10 @@ func confirm(c *cli.Context) {
 	if clientApp.Proposed == nil {
 		ui.Fatal("Didn't find a proposed config - check if one exists with 'listNew'.")
 	}
-	ui.ErrFatal(clientApp.VoteProposed(true))
+	ui.ErrFatal(clientApp.ProposeVote(true))
 	ui.Info("Confirmed new config")
 	ui.ErrFatal(clientApp.ConfigUpdate())
-	ui.ErrFatal(clientApp.ConfigNewCheck())
+	ui.ErrFatal(clientApp.ProposeFetch())
 	list(c)
 }
 
@@ -250,7 +250,7 @@ func listNew(c *cli.Context) {
 	if clientApp == nil {
 		ui.Fatal("No configuration available. Please 'setup' first.")
 	}
-	ui.ErrFatal(clientApp.ConfigNewCheck(), "Couldn't update the config")
+	ui.ErrFatal(clientApp.ProposeFetch(), "Couldn't update the config")
 	list(c)
 	if clientApp.Proposed != nil {
 		ui.Infof("Proposed config: %s", clientApp.Proposed)

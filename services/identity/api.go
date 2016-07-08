@@ -20,18 +20,18 @@ import (
 
 func init() {
 	for _, s := range []interface{}{
-		&Owner{},
+		&Device{},
 		&Identity{},
-		&AccountList{},
+		&Config{},
 		&AddIdentity{},
 		&AddIdentityReply{},
 		&PropagateIdentity{},
-		&PropagateProposition{},
+		&ProposeSend{},
 		&AttachToIdentity{},
-		&ConfigNewCheck{},
+		&ProposeFetch{},
 		&ConfigUpdate{},
 		&UpdateSkipBlock{},
-		&Vote{},
+		&ProposeVote{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -43,10 +43,9 @@ type Identity struct {
 	Private    abstract.Scalar
 	Public     abstract.Point
 	ID         ID
-	Config     *AccountList
-	Proposed   *AccountList
+	Config     *Config
+	Proposed   *Config
 	ManagerStr string
-	SSHPub     string
 	Cothority  *sda.Roster
 	skipchain  *skipchain.Client
 	root       *skipchain.SkipBlock
@@ -55,16 +54,15 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.Roster, majority int, owner, sshPub string) *Identity {
+func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
 		Client:     client,
 		Private:    kp.Secret,
 		Public:     kp.Public,
-		Config:     NewAccountList(majority, kp.Public, owner, sshPub),
+		Config:     NewConfig(majority, kp.Public, owner),
 		ManagerStr: owner,
-		SSHPub:     sshPub,
 		Cothority:  cothority,
 		skipchain:  skipchain.NewClient(),
 	}
@@ -108,6 +106,15 @@ func (i *Identity) SaveToStream(out io.Writer) error {
 	return err
 }
 
+// GetProposed returns the Propose-field or a copy of the config if
+// the Propose-field is nil
+func (i *Identity) GetProposed() *Config {
+	if i.Proposed != nil {
+		return i.Proposed
+	}
+	return i.Config.Copy()
+}
+
 // AttachToIdentity proposes to attach it to an existing Identity
 func (i *Identity) AttachToIdentity(ID ID) error {
 	i.ID = ID
@@ -115,13 +122,12 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	if err != nil {
 		return err
 	}
-	if _, exists := i.Config.Owners[i.ManagerStr]; exists {
+	if _, exists := i.Config.Device[i.ManagerStr]; exists {
 		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Owners[i.ManagerStr] = &Owner{i.Public}
-	confPropose.Data[i.ManagerStr] = i.SSHPub
-	err = i.ConfigNewPropose(confPropose)
+	confPropose.Device[i.ManagerStr] = &Device{i.Public}
+	err = i.ProposeSend(confPropose)
 	if err != nil {
 		return err
 	}
@@ -142,44 +148,38 @@ func (i *Identity) CreateIdentity() error {
 	return nil
 }
 
-// ConfigNewPropose collects new IdRosters and waits for confirmation with
-// ConfigNewVote
-func (i *Identity) ConfigNewPropose(il *AccountList) error {
-	_, err := i.Send(i.Cothority.GetRandom(), &PropagateProposition{i.ID, il})
+// ProposeSend sends the new proposition of this identity
+// ProposeVote
+func (i *Identity) ProposeSend(il *Config) error {
+	_, err := i.Send(i.Cothority.GetRandom(), &ProposeSend{i.ID, il})
 	i.Proposed = il
 	return err
 }
 
-// ConfigNewCheck verifies if there is a new configuration awaiting that
+// ProposeFetch verifies if there is a new configuration awaiting that
 // needs approval from clients
-func (i *Identity) ConfigNewCheck() error {
-	msg, err := i.Send(i.Cothority.GetRandom(), &ConfigNewCheck{
+func (i *Identity) ProposeFetch() error {
+	msg, err := i.Send(i.Cothority.GetRandom(), &ProposeFetch{
 		ID:          i.ID,
 		AccountList: nil,
 	})
 	if err != nil {
 		return err
 	}
-	cnc := msg.Msg.(ConfigNewCheck)
+	cnc := msg.Msg.(ProposeFetch)
 	i.Proposed = cnc.AccountList
 	return nil
 }
 
-// VoteProposed calls the 'accept'-vote on the current propose-configuration
-func (i *Identity) VoteProposed(accept bool) error {
+// ProposeVote calls the 'accept'-vote on the current propose-configuration
+func (i *Identity) ProposeVote(accept bool) error {
 	if i.Proposed == nil {
 		return errors.New("No proposed config")
 	}
-	h, err := i.Proposed.Hash()
-	if err != nil {
-		return err
+	log.Lvlf3("Voting %t on %s", accept, i.Proposed.Device)
+	if !accept {
+		return nil
 	}
-	return i.ConfigNewVote(h, accept)
-}
-
-// ConfigNewVote sends a vote (accept or reject) with regard to a new configuration
-func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
-	log.Lvl3("Voting on", i.Proposed.Owners)
 	hash, err := i.Proposed.Hash()
 	if err != nil {
 		return err
@@ -188,25 +188,23 @@ func (i *Identity) ConfigNewVote(configID crypto.HashID, accept bool) error {
 	if err != nil {
 		return err
 	}
-	msg, err := i.Send(i.Cothority.GetRandom(), &Vote{
+	msg, err := i.Send(i.Cothority.GetRandom(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.ManagerStr,
 		Signature: &sig,
 	})
+	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
 	}
-	if msg == nil {
-		log.Lvl3("Threshold not reached")
+	sb, ok := msg.Msg.(skipchain.SkipBlock)
+	if ok {
+		log.Lvl2("Threshold reached and signed")
+		i.data = &sb
+		i.Config = i.Proposed
+		i.Proposed = nil
 	} else {
-		sb, ok := msg.Msg.(skipchain.SkipBlock)
-		if ok {
-			log.Lvl3("Threshold reached and signed")
-			i.data = &sb
-			i.Config = i.Proposed
-		} else {
-			return errors.New(msg.Msg.(sda.StatusRet).Status)
-		}
+		log.Lvl2("Threshold not reached")
 	}
 	return nil
 }

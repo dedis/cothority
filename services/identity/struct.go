@@ -18,28 +18,31 @@ import (
 // ID represents one skipblock and corresponds to its Hash
 type ID skipchain.SkipBlockID
 
-// AccountList holds the information about all accounts belonging to an
-// identity
-type AccountList struct {
+// Config holds the information about all devices and the data stored in this
+// identity-blockchain
+type Config struct {
 	Threshold int
-	Listeners []*network.ServerIdentity
-	Owners    map[string]*Owner
+	Device    map[string]*Device
 	Data      map[string]string
 }
 
-// NewAccountList returns a new List with the first owner initialised
-func NewAccountList(threshold int, pub abstract.Point, owner string, sshPub string) *AccountList {
-	return &AccountList{
+// Device has write-access to the IdentityList if the threshold is given
+type Device struct {
+	Point abstract.Point
+}
+
+// NewConfig returns a new List with the first owner initialised
+func NewConfig(threshold int, pub abstract.Point, owner string) *Config {
+	return &Config{
 		Threshold: threshold,
-		Owners:    map[string]*Owner{owner: &Owner{pub}},
-		Listeners: []*network.ServerIdentity{},
-		Data:      map[string]string{owner: sshPub},
+		Device:    map[string]*Device{owner: {pub}},
+		Data:      make(map[string]string),
 	}
 }
 
 // Copy makes a deep copy of the AccountList
-func (al *AccountList) Copy() *AccountList {
-	b, err := network.MarshalRegisteredType(al)
+func (c *Config) Copy() *Config {
+	b, err := network.MarshalRegisteredType(c)
 	if err != nil {
 		log.Error("Couldn't marshal AccountList:", err)
 		return nil
@@ -48,30 +51,23 @@ func (al *AccountList) Copy() *AccountList {
 	if err != nil {
 		log.Error("Couldn't unmarshal AccountList:", err)
 	}
-	ilNew := msg.(AccountList)
+	ilNew := msg.(Config)
+	if len(ilNew.Data) == 0 {
+		ilNew.Data = make(map[string]string)
+	}
 	return &ilNew
 }
 
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID
-func (al *AccountList) Hash() (crypto.HashID, error) {
+func (c *Config) Hash() (crypto.HashID, error) {
 	hash := network.Suite.Hash()
-	err := binary.Write(hash, binary.LittleEndian, int32(al.Threshold))
+	err := binary.Write(hash, binary.LittleEndian, int32(c.Threshold))
 	if err != nil {
 		return nil, err
 	}
-	for _, e := range al.Listeners {
-		b, err := network.MarshalRegisteredType(e)
-		if err != nil {
-			return nil, err
-		}
-		_, err = hash.Write(b)
-		if err != nil {
-			return nil, err
-		}
-	}
 	var owners []string
-	for s := range al.Owners {
+	for s := range c.Device {
 		owners = append(owners, s)
 	}
 	sort.Strings(owners)
@@ -80,11 +76,11 @@ func (al *AccountList) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(al.Data[s]))
+		_, err = hash.Write([]byte(c.Data[s]))
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(al.Owners[s])
+		b, err := network.MarshalRegisteredType(c.Device[s])
 		if err != nil {
 			return nil, err
 		}
@@ -97,26 +93,24 @@ func (al *AccountList) Hash() (crypto.HashID, error) {
 }
 
 // String returns a nicely formatted output of the AccountList
-func (al *AccountList) String() string {
+func (c *Config) String() string {
 	var owners []string
-	for n := range al.Owners {
-		owners = append(owners, fmt.Sprintf("Owner: %s\nData: %s",
-			n, al.Data[n]))
+	for n := range c.Device {
+		owners = append(owners, fmt.Sprintf("Owner: %s", n))
 	}
-	return fmt.Sprintf("Threshold: %d\n%s", al.Threshold,
-		strings.Join(owners, "\n"))
-}
-
-// Owner has write-access to the IdentityList if the threshold is given
-type Owner struct {
-	Point abstract.Point
+	var data []string
+	for k, v := range c.Data {
+		data = append(data, fmt.Sprintf("Data: %s/%s", k, v))
+	}
+	return fmt.Sprintf("Threshold: %d\n%s\n%s", c.Threshold,
+		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
 // Messages between the Client-API and the Service
 
 // AddIdentity starts a new identity-skipchain
 type AddIdentity struct {
-	*AccountList
+	*Config
 	*sda.Roster
 }
 
@@ -129,28 +123,27 @@ type AddIdentityReply struct {
 // AttachToIdentity requests to attach the manager-device to an
 // existing identity
 type AttachToIdentity struct {
-	ID        ID
-	Public    abstract.Point
-	PublicSSH string
+	ID     ID
+	Public abstract.Point
 }
 
-// ConfigNewCheck verifies if a new config is available. On sending,
+// ProposeFetch verifies if a new config is available. On sending,
 // the ID is given, on receiving, the AccountList is given.
-type ConfigNewCheck struct {
+type ProposeFetch struct {
 	ID          ID
-	AccountList *AccountList
+	AccountList *Config
 }
 
 // ConfigUpdate verifies if a new update is available. On sending,
 // the ID is given, on receiving, the AccountList is given.
 type ConfigUpdate struct {
 	ID          ID
-	AccountList *AccountList
+	AccountList *Config
 }
 
-// Vote sends the signature for a specific IdentityList. It replies nil
+// ProposeVote sends the signature for a specific IdentityList. It replies nil
 // if the threshold hasn't been reached, or the new SkipBlock
-type Vote struct {
+type ProposeVote struct {
 	ID        ID
 	Signer    string
 	Signature *crypto.SchnorrSig
@@ -163,10 +156,10 @@ type PropagateIdentity struct {
 	*Storage
 }
 
-// PropagateProposition sends a new proposition to be stored in all identities
-type PropagateProposition struct {
+// ProposeSend sends a new proposition to be stored in all identities
+type ProposeSend struct {
 	ID ID
-	*AccountList
+	*Config
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock

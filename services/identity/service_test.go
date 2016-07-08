@@ -17,7 +17,7 @@ func TestService_AddIdentity(t *testing.T) {
 	service := s.(*Service)
 
 	keypair := config.NewKeyPair(network.Suite)
-	il := NewAccountList(50, keypair.Public, "one", "public1")
+	il := NewConfig(50, keypair.Public, "one")
 	msg, err := service.AddIdentity(nil, &AddIdentity{il, el})
 	log.ErrFatal(err)
 	air := msg.(*AddIdentityReply)
