@@ -9,7 +9,7 @@ runCoCfg(){
 runCoBG(){
     nb=$1
     shift
-    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ 2>&1 > /dev/null & )
+    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ & )
 }
 
 runCo(){
