@@ -12,15 +12,20 @@ STATICDIR=test
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test DataList
-	test IdConnect
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test DataList
+#	test IdConnect
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+	test SSHAdd
     stopTest
+}
+
+testSSHAdd(){
+	clientSetup 2
 }
 
 testKeyDel(){

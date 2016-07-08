@@ -146,6 +146,37 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:  "ssh",
+			Usage: "handling your ssh-keys",
+			Subcommands: []cli.Command{
+				{
+					Name:    "add",
+					Aliases: []string{"a"},
+					Action:  sshAdd,
+				},
+				{
+					Name:    "del",
+					Aliases: []string{"rm"},
+					Action:  sshDel,
+				},
+				{
+					Name:    "rotate",
+					Aliases: []string{"r"},
+					Action:  sshRotate,
+				},
+				{
+					Name:    "toconfig",
+					Aliases: []string{"tc"},
+					Action:  sshToConfig,
+				},
+				{
+					Name:    "fromconfig",
+					Aliases: []string{"fc"},
+					Action:  sshFromConfig,
+				},
+			},
+		},
 	}
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -344,7 +375,21 @@ func kvRm(c *cli.Context) error {
 	log.ErrFatal(clientApp.ProposeSend(prop))
 	return nil
 }
-
+func sshAdd(c *cli.Context) error {
+	return nil
+}
+func sshDel(c *cli.Context) error {
+	return nil
+}
+func sshRotate(c *cli.Context) error {
+	return nil
+}
+func sshFromConfig(c *cli.Context) error {
+	return nil
+}
+func sshToConfig(c *cli.Context) error {
+	return nil
+}
 func assertCA() {
 	if clientApp == nil {
 		log.Fatal("Couldn't load config-file", configFile, "or it was empty.")
