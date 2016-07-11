@@ -49,22 +49,24 @@ func TestBlockingDispatcher(t *testing.T) {
 	}
 }
 
-func TestBasicProcessor(t *testing.T) {
-	/*defer log.AfterTest(t)*/
-	//h1 := newHostMock(network.Suite, "127.0.0.1:2000")
+func TestHostProcessor(t *testing.T) {
+	defer log.AfterTest(t)
+	h1 := newHostMock(network.Suite, "127.0.0.1:2000")
 
-	//proc := basicProcessor{make(chan network.Packet, 1)}
-	//h1.RegisterProcessor(proc)
-	//assert.Nil(t, h1.Dispatch(&basicMessage{10}))
+	proc := &basicProcessor{make(chan network.Packet, 1)}
+	h1.RegisterProcessor(proc, basicMessageType)
+	h1.Dispatch(h1.ServerIdentity, &network.Packet{
+		Msg:     basicMessage{10},
+		MsgType: basicMessageType})
 
-	//select {
-	//case m := <-proc.msgChan:
-	//basic, ok := m.Msg.(basicMessage)
-	//assert.True(t, ok)
-	//assert.Equal(t, basic.Value, 10)
-	//default:
-	//t.Error("No message received on channel")
-	/*}*/
+	select {
+	case m := <-proc.msgChan:
+		basic, ok := m.Msg.(basicMessage)
+		assert.True(t, ok)
+		assert.Equal(t, basic.Value, 10)
+	default:
+		t.Error("No message received on channel")
+	}
 }
 
 var testServiceID ServiceID
