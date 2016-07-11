@@ -141,6 +141,8 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	return nil
 }
 
+// Process implements the Processor interface and dispatch ClientRequest message
+// and InterServiceMessage
 func (p *ServiceProcessor) Process(id *network.ServerIdentity, packet *network.Packet) {
 	// check client type
 	switch packet.MsgType {
