@@ -42,6 +42,14 @@ testFile(){
     fi
 }
 
+testFileGrep(){
+	local G="$1" F="$2"
+	testFile "$F"
+	if ! pcregrep -M -q "$G" $F; then
+		fail "Didn't find '$G' in file '$F': $(cat $F)"
+	fi
+}
+
 testGrep(){
     S="$1"
     shift
@@ -159,3 +167,12 @@ stopTest(){
     fi
     echo "Success"
 }
+
+if ! which pcregrep > /dev/null; then
+	echo "*** WARNING ***"
+	echo "Most probably you're missing pcregrep which might be used here..."
+	echo "On mac you can install it with"
+	echo "brew install pcre"
+	echo "Not aborting because it might work anyway."
+	echo
+fi

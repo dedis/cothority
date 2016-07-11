@@ -3,11 +3,26 @@ package main
 import (
 	"os"
 
+	"golang.org/x/crypto/ssh"
+
 	"io/ioutil"
 
 	"errors"
 
 	"encoding/hex"
+
+	"fmt"
+
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+
+	"path"
+
+	"strings"
+
+	"sort"
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
@@ -25,6 +40,8 @@ holds the skipchain and answers to requests from the cisc-binary.
 */
 
 var configFile string
+var sshDir string
+var sshConfig string
 var clientApp *identity.Identity
 
 func main() {
@@ -153,28 +170,63 @@ func main() {
 				{
 					Name:    "add",
 					Aliases: []string{"a"},
+					Usage:   "adds a new entry to the config",
 					Action:  sshAdd,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "a,alias",
+							Usage: "alias to use for that entry",
+						},
+						cli.StringFlag{
+							Name:  "u,user",
+							Usage: "user for that connection",
+						},
+						cli.StringFlag{
+							Name:  "p,port",
+							Usage: "port for the connection",
+						},
+					},
 				},
 				{
 					Name:    "del",
 					Aliases: []string{"rm"},
+					Usage:   "deletes an entry from the config",
 					Action:  sshDel,
 				},
 				{
-					Name:    "rotate",
-					Aliases: []string{"r"},
-					Action:  sshRotate,
+					Name:    "list",
+					Aliases: []string{"ls"},
+					Usage:   "shows all entries for this device",
+					Action:  sshLs,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "a,all",
+							Usage: "show entries for all devices",
+						},
+					},
 				},
-				{
-					Name:    "toconfig",
-					Aliases: []string{"tc"},
-					Action:  sshToConfig,
-				},
-				{
-					Name:    "fromconfig",
-					Aliases: []string{"fc"},
-					Action:  sshFromConfig,
-				},
+				//{
+				//	Name:    "rotate",
+				//	Aliases: []string{"r"},
+				//	Usage:   "renews all keys - only active once the vote passed",
+				//	Action:  sshRotate,
+				//},
+				//{
+				//	Name:    "sync",
+				//	Aliases: []string{"tc"},
+				//	Usage:   "sync config and blockchain - interactive",
+				//	Flags: []cli.Flag{
+				//		cli.StringFlag{
+				//			Name:  "tob,toblockchain",
+				//			Usage: "force copy of config-file to blockchain",
+				//		},
+				//		cli.StringFlag{
+				//			Name:  "toc,toconfig",
+				//			Usage: "force copy of blockchain to config-file",
+				//		},
+				//	},
+				//	Action: sshSync,
+				//},
 			},
 		},
 	}
@@ -205,6 +257,8 @@ func main() {
 				"should start a new one by running with the 'setup'\n",
 				"argument.")
 		}
+		sshDir = config.TildeToHome(c.String("cs"))
+		sshConfig = sshDir + "/config"
 		return nil
 	}
 	app.After = func(c *cli.Context) error {
@@ -221,7 +275,7 @@ func main() {
 // loadConfig will return nil if the config-file doesn't exist. It tries to
 // load the file given in configFile.
 func loadConfig() error {
-	log.Info("Searching config-file at", configFile)
+	log.Lvl2("Loading from", configFile)
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -376,18 +430,60 @@ func kvRm(c *cli.Context) error {
 	return nil
 }
 func sshAdd(c *cli.Context) error {
+	assertCA()
+	if c.NArg() != 1 {
+		log.Fatal("Please give the hostname as argument")
+	}
+	f, err := os.OpenFile(sshConfig, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	hostname := c.Args().First()
+	alias := c.String("a")
+	if alias == "" {
+		alias = hostname
+	}
+	filePub := path.Join(sshDir, "key_"+alias+".pub")
+	idPriv := "key_" + alias
+	filePriv := path.Join(sshDir, idPriv)
+	log.ErrFatal(makeSSHKeyPair(filePub, filePriv))
+	text := fmt.Sprintf("Host %s\n\tHostName %s\n\tIdentityFile %s\n",
+		alias, hostname, idPriv)
+	if port := c.String("p"); port != "" {
+		text += fmt.Sprintf("\tPort %s\n", port)
+	}
+	if user := c.String("u"); user != "" {
+		text += fmt.Sprintf("\tUser %s\n", user)
+	}
+	if _, err = f.WriteString(text); err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }
+func sshLs(c *cli.Context) error {
+	assertCA()
+	all := c.Bool("a")
+	if all {
+
+	}
+	log.Print("")
+	return nil
+}
+func printSSH(dev string) {
+
+}
 func sshDel(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
 func sshRotate(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
-func sshFromConfig(c *cli.Context) error {
-	return nil
-}
-func sshToConfig(c *cli.Context) error {
+func sshSync(c *cli.Context) error {
+	log.Fatal("Not yet implemented")
 	return nil
 }
 func assertCA() {
@@ -416,4 +512,62 @@ func getGroup(c *cli.Context) *config.Group {
 		log.Fatal("No servers found in roster from", gfile)
 	}
 	return groups
+}
+
+// getKeys returns the keys up to the next ":". If given a slice of keys, it
+// will return sub-keys.
+func getKeys(data map[string]string, keys ...string) []string {
+	var ret []string
+	start := strings.Join(keys, ":")
+	if len(start) > 0 {
+		start += ":"
+	}
+	for k, _ := range data {
+		if strings.HasPrefix(k, start) {
+			// Create subkey
+			subkey := strings.TrimPrefix(k, start)
+			subkey = strings.SplitN(subkey, ":", 2)[0]
+			// Check if it's already in there
+			isNew := true
+			for _, s := range ret {
+				isNew = isNew && (s != subkey)
+			}
+			if isNew {
+				ret = append(ret, subkey)
+			}
+		}
+	}
+	sort.Strings(ret)
+	return ret
+}
+
+// MakeSSHKeyPair make a pair of public and private keys for SSH access.
+// Public key is encoded in the format for inclusion in an OpenSSH authorized_keys file.
+// Private Key generated is PEM encoded
+// StackOverflow: Greg http://stackoverflow.com/users/328645/greg in
+// http://stackoverflow.com/questions/21151714/go-generate-an-ssh-public-key
+// No licence added
+func makeSSHKeyPair(pubKeyPath, privateKeyPath string) error {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		return err
+	}
+
+	// generate and write private key as PEM
+	privateKeyFile, err := os.OpenFile(privateKeyPath, os.O_WRONLY|os.O_CREATE, 0600)
+	defer privateKeyFile.Close()
+	if err != nil {
+		return err
+	}
+	privateKeyPEM := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
+	if err := pem.Encode(privateKeyFile, privateKeyPEM); err != nil {
+		return err
+	}
+
+	// generate and write public key
+	pub, err := ssh.NewPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(pubKeyPath, ssh.MarshalAuthorizedKey(pub), 0600)
 }

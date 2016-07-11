@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=0
+DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
 # Uncomment to build in local dir
@@ -21,11 +21,32 @@ main(){
 #	test KeyAdd2
 #	test KeyDel
 	test SSHAdd
+#	test SSHDel
     stopTest
 }
 
+testSSHDel(){
+	clientSetup 1
+	testOK runCl 1 ssh add service1
+	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
+	testFile cl1/key_service1.pub
+	testFile cl1/key_service1
+	testOK runCl 1 ssh add service2
+	testOK runCl 1 ssh add -a s3 service3
+	testOK runCl 1 ssh rm service1
+}
+
 testSSHAdd(){
-	clientSetup 2
+	clientSetup 1
+	testOK runCl 1 ssh add service1
+	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
+	testFile cl1/key_service1.pub
+	testFile cl1/key_service1
+	testOK runCl 1 ssh add -a s2 service2
+	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile key_s2" cl1/config
+	testFile cl1/key_s2.pub
+	testFile cl1/key_s2
+	testOK runCl 1 data ls
 }
 
 testKeyDel(){
@@ -210,7 +231,7 @@ build(){
         mkdir -p $co
 
         cl=cl$n
-        rm -f $cl/*bin
+        rm -f $cl/*bin $cl/config $cl/*.{pub,key}
         mkdir -p $cl
         key=$cl/id_rsa
         if [ ! -f $key ]; then
