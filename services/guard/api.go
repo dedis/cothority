@@ -18,30 +18,9 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// GetGuard Sends requests to all other members of network and creates client
-//func (c *Client) GetGuard(dst *sda.Roster, UID []byte, epoch []byte, t []byte) ([]*Response, error) {
-//	srs := make([]*Response, len(dst.List))
-//	secrets := s.Create(1, len(dst.List), string(t))
-//	//send request to all entities in the network
-//	for i := 0; i < len(dst.List); i++ {
-//		log.Lvl4("Sending Request to ", dst.List[i])
-//		ServiceReq := &Request{UID, epoch, []byte(secrets[i])}
-//		reply, err := c.Send(dst.List[i], ServiceReq)
-//		if e := sda.ErrMsg(reply, err); e != nil {
-//			return nil, e
-//		}
-//		sr, ok := reply.Msg.(Response)
-//		if !ok {
-//			return nil, errors.New("Wrong return type")
-//		}
-//		srs[i] = &sr
-//	}
-//	return srs, nil
-//
-//}
-
+// GetGuard is the function that sends a request to the guard server and creates a client to receive the responses
 func (c *Client) GetGuard(dst *network.ServerIdentity, UID []byte, epoch []byte, t []byte) (*Response, error) {
-	//send request to all entities in the network
+	//send request an entity in the network
 	log.Lvl4("Sending Request to ", dst)
 	ServiceReq := &Request{UID, epoch, []byte(t)}
 	reply, err := c.Send(dst, ServiceReq)

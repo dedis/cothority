@@ -1,6 +1,8 @@
 package guard
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 
 	"github.com/dedis/cothority/log"
@@ -10,32 +12,25 @@ import (
 )
 
 // This file contains all the code to run a Guard service. The Guard receives takes a
-// request for the Guard reports of the server, and sends back the message recieved encrypted with the key for each service
+// request for the Guard password protection service and sends back the message received encrypted with the key for each service
 // in the server.
 
 // ServiceName is the name to refer to the Guard service.
 const ServiceName = "Guard"
 
-var z []byte
-
 func init() {
 	sda.RegisterNewService(ServiceName, newGuardService)
 	network.RegisterMessageType(&Request{})
 	network.RegisterMessageType(&Response{})
-	//This is the area where Z is generated for a server
-	const n = 5
-	lel := make([]byte, n)
-	rand.Read(lel)
-	z = []byte{1, 2, 3, 4, 5}
-
 }
 
 //This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
 
-// Stat is the service that returns the Guard reports of all services running on a server.
+// Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests
 type Guard struct {
 	*sda.ServiceProcessor
 	path string
+	z    []byte
 }
 
 // Request is what the Guard service is expected to receive from clients.
@@ -50,13 +45,29 @@ type Response struct {
 	Msg []byte
 }
 
+//[]byte("gmPTvzEuu88GAL_67UJFFZXzaAhWn_N3ZonPU-D272Y=SuNSfNfzkP3CSSNIR3uuERNxDWzN7MwebioZGkZBwdc=")
+
 // Request treats external request to this service.
 func (st *Guard) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
-	la, _ := e.Public.Data()
-	return &Response{abstract.Sum(network.Suite, req.Msg, z, la, req.UID, req.Epoch)}, nil
+	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
+	hashy := abstract.Sum(network.Suite, req.Msg, st.z, req.UID, req.Epoch)
+	key := []byte("example key 1234")
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err)
+	}
+	// This part is necessary because you need a key to convert the Hash to a stream. The key is not even important because
+	//all that is required is that the request gives the same output for the same input
+	stream := cipher.NewCTR(block, []byte("example key 1234"))
+	msg := make([]byte, 88)
+	//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
+	//password setting and authentication services
+	stream.XORKeyStream(msg, hashy)
+
+	return &Response{msg}, nil
 }
 
-// newStatService creates a new service that is built for Guard
+// newGuardService creates a new service that is built for Guard
 func newGuardService(c *sda.Context, path string) sda.Service {
 	s := &Guard{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -66,6 +77,12 @@ func newGuardService(c *sda.Context, path string) sda.Service {
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}
+
+	//This is the area where Z is generated for a server
+	const n = 88
+	lel := make([]byte, n)
+	rand.Read(lel)
+	s.z = lel
 
 	return s
 }
