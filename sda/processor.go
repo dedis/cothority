@@ -4,11 +4,76 @@ import (
 	"errors"
 	"reflect"
 
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
+
 	"strings"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
+
+// Dispatcher is a struct that will dispatch message coming from the network to
+// Processors. Each Processor that want to receive all messages of a specific
+// type must register them self to the dispatcher using `RegisterProcessor()`.
+// The network layer must call `Dispatch()` each time it received a message, so
+// the dispatcher is able to dispatch correctly to the right Processor for
+// further analysis.
+// For the moment, only blockingDispatcher is implemented but later, one can
+// easily imagine to have a dispatcher having producer/consumers in go routine
+// so the call is not blocking.
+type Dispatcher interface {
+	// RegisterProcessor is called by a Processor so it can receive any packet
+	// of type msgType.
+	// **NOTE** In the current version, if a subequent call RegisterProcessor
+	// happens, for the same msgType, the latest Processor will be used; there
+	// is no *copy* or *duplication* of messages.
+	RegisterProcessor(p Processor, msgType network.MessageTypeID)
+	// Dispatch will find the right processor to dispatch the packet to. The id
+	// is the identity of the author / sender of the packet.
+	// It can be called for example by the network layer.
+	// If no processor is found for this message type, then the message is
+	// dropped.
+	Dispatch(id *network.ServerIdentity, packet *network.Packet)
+}
+
+// blockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
+// processor p each time it receives a message with `Dispatch`. It does *not*
+// launch a go routine, or put the message in a queue, etc.
+// It can be re-used for more complex dispatcher.
+type blockingDispatcher struct {
+	procs map[network.MessageTypeID]Processor
+}
+
+// NewBlockingDispatcher will return a freshly initialized blockingDispatcher
+func NewBlockingDispatcher() *blockingDispatcher {
+	return &blockingDispatcher{
+		procs: make(map[network.MessageTypeID]Processor),
+	}
+}
+
+// RegisterProcessor save the given processor in the dispatcher.
+func (d *blockingDispatcher) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+	d.procs[msgType] = p
+}
+
+// Dispatch will directly call the right processor's method Process. It's a
+// blocking call if the Processor is blocking !
+func (d *blockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) {
+	var p Processor
+	if p = d.procs[packet.MsgType]; p == nil {
+		dbg.Lvl2("Dispatcher received packet with no processor associated")
+		return
+	}
+	p.Process(id, packet)
+}
+
+// Processor is an abstraction to represent any object that want to process
+// packets. It is used in conjunction with Dispatcher.
+type Processor interface {
+	// Process takes a ServerIdentity as the sender identity and the message
+	// sent.
+	Process(id *network.ServerIdentity, packet *network.Packet)
+}
 
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,

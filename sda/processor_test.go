@@ -10,11 +10,67 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
+	"github.com/stretchr/testify/assert"
 )
+
+type basicProcessor struct {
+	msgChan chan network.Packet
+}
+
+func (bp *basicProcessor) Process(e *network.ServerIdentity, msg *network.Packet) {
+	bp.msgChan <- *msg
+}
+
+type basicMessage struct {
+	Value int
+}
+
+var basicMessageType network.MessageTypeID
+
+func TestBlockingDispatcher(t *testing.T) {
+	defer log.AfterTest(t)
+
+	dispatcher := NewBlockingDispatcher()
+	processor := &basicProcessor{make(chan network.Packet, 1)}
+	identity := network.NewServerIdentity(network.Suite.Point(), "127.0.0.1:2000")
+
+	dispatcher.RegisterProcessor(processor, basicMessageType)
+	dispatcher.Dispatch(identity, &network.Packet{
+		Msg:     basicMessage{10},
+		MsgType: basicMessageType})
+
+	select {
+	case m := <-processor.msgChan:
+		msg, ok := m.Msg.(basicMessage)
+		assert.True(t, ok)
+		assert.Equal(t, msg.Value, 10)
+	default:
+		t.Error("No message received")
+	}
+}
+
+func TestBasicProcessor(t *testing.T) {
+	/*defer log.AfterTest(t)*/
+	//h1 := newHostMock(network.Suite, "127.0.0.1:2000")
+
+	//proc := basicProcessor{make(chan network.Packet, 1)}
+	//h1.RegisterProcessor(proc)
+	//assert.Nil(t, h1.Dispatch(&basicMessage{10}))
+
+	//select {
+	//case m := <-proc.msgChan:
+	//basic, ok := m.Msg.(basicMessage)
+	//assert.True(t, ok)
+	//assert.Equal(t, basic.Value, 10)
+	//default:
+	//t.Error("No message received on channel")
+	/*}*/
+}
 
 var testServiceID ServiceID
 
 func init() {
+	basicMessageType = network.RegisterMessageType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
 }
