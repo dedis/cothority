@@ -241,6 +241,7 @@ type ClientRequest struct {
 }
 
 // RequestID is the type that registered by the network library
+// TODO rename that ClientRequestID
 var RequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is

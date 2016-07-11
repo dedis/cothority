@@ -18,7 +18,7 @@ import (
 // The network layer must call `Dispatch()` each time it received a message, so
 // the dispatcher is able to dispatch correctly to the right Processor for
 // further analysis.
-// For the moment, only blockingDispatcher is implemented but later, one can
+// For the moment, only BlockingDispatcher is implemented but later, one can
 // easily imagine to have a dispatcher having producer/consumers in go routine
 // so the call is not blocking.
 type Dispatcher interface {
@@ -36,29 +36,29 @@ type Dispatcher interface {
 	Dispatch(id *network.ServerIdentity, packet *network.Packet)
 }
 
-// blockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
+// BlockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
 // processor p each time it receives a message with `Dispatch`. It does *not*
 // launch a go routine, or put the message in a queue, etc.
 // It can be re-used for more complex dispatcher.
-type blockingDispatcher struct {
+type BlockingDispatcher struct {
 	procs map[network.MessageTypeID]Processor
 }
 
-// NewBlockingDispatcher will return a freshly initialized blockingDispatcher
-func NewBlockingDispatcher() *blockingDispatcher {
-	return &blockingDispatcher{
+// NewBlockingDispatcher will return a freshly initialized BlockingDispatcher
+func NewBlockingDispatcher() *BlockingDispatcher {
+	return &BlockingDispatcher{
 		procs: make(map[network.MessageTypeID]Processor),
 	}
 }
 
 // RegisterProcessor save the given processor in the dispatcher.
-func (d *blockingDispatcher) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
 	d.procs[msgType] = p
 }
 
 // Dispatch will directly call the right processor's method Process. It's a
 // blocking call if the Processor is blocking !
-func (d *blockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) {
+func (d *BlockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) {
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
 		dbg.Lvl2("Dispatcher received packet with no processor associated")
@@ -90,13 +90,20 @@ type ServiceProcessor struct {
 
 // NewServiceProcessor initializes your ServiceProcessor.
 func NewServiceProcessor(c *Context) *ServiceProcessor {
-	return &ServiceProcessor{
+	s := &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
 	}
+	// register the client messages
+	c.host.RegisterProcessor(s, RequestID)
+	// register the service messages
+	c.host.RegisterProcessor(s, ServiceMessageID)
+	return s
 }
 
 // RegisterMessage puts a new message in the message-handler
+// XXX More comments are needed as it's not clear whether RegisterMessage waits
+// for message for/from Clients or for/from Services.
 func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
@@ -132,6 +139,18 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		cr1.Elem())
 	p.functions[typ] = f
 	return nil
+}
+
+func (p *ServiceProcessor) Process(id *network.ServerIdentity, packet *network.Packet) {
+	// check client type
+	switch packet.MsgType {
+	case RequestID:
+		cr := packet.Msg.(ClientRequest)
+		p.ProcessClientRequest(id, &cr)
+	case ServiceMessageID:
+		sm := packet.Msg.(InterServiceMessage)
+		p.ProcessServiceMessage(id, &sm)
+	}
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply
