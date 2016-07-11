@@ -8,3 +8,7 @@
 	- Renamed network.Message -> network.Packet
 	- Moved lib/* to parent-directory
 	- Depend on dedis/cosi for the cosi-library
+
+Refactoring version (XXX Set to right number):
+    - unify Processor interface 
+    - ...
