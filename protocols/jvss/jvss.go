@@ -47,7 +47,6 @@ type JVSS struct {
 	ltssInit              bool                  // Indicator whether shared secret has been already initialised or not
 	secretsDone           chan bool             // Channel to indicate when shared secrets of all peers are ready
 	sigChan               chan *poly.SchnorrSig // Channel for JVSS signature
-	mutex                 sync.Mutex            // Protects the structure
 }
 
 // Secret contains all information for long- and short-term shared secrets.
