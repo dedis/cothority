@@ -106,7 +106,9 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	// Check if we have enough confirmations to proceed
 	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
+		log.Print("Write to channel secretsDone")
 		jv.secretsDone <- true
+		log.Print("Wrote to channel secretsDone")
 	}
 
 	return nil
