@@ -15,14 +15,20 @@ main(){
 #	test Build
 #	test ClientSetup
 #	test IdCreate
-#	test DataList
+#	test ConfigList
 #	test IdConnect
 #	test KeyAdd
 #	test KeyAdd2
 #	test KeyDel
 #	test SSHAdd
-	test SSHDel
+#	test SSHDel
+	test Follow
     stopTest
+}
+
+testFollow(){
+	clientSetup 2
+
 }
 
 testSSHDel(){
@@ -63,19 +69,19 @@ testKeyDel(){
 	clientSetup 2
 	testOK runCl 1 kv add key1 value1
 	testOK runCl 1 kv add key2 value2
-	testOK runCl 1 data vote
-	testOK runCl 2 data update
-	testOK runCl 2 data vote
-	testOK runCl 1 data update
+	testOK runCl 1 config vote
+	testOK runCl 2 config update
+	testOK runCl 2 config vote
+	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
 	testGrep key2 runCl 1 kv ls
 	testFail runCl 1 kv rm key3
 	testOK runCl 1 kv rm key2
-	testOK runCl 1 data vote
-	testOK runCl 2 data update
-	testOK runCl 2 data vote
+	testOK runCl 1 config vote
+	testOK runCl 2 config update
+	testOK runCl 2 config vote
 	testNGrep key2 runCl 2 kv ls
-	testOK runCl 1 data update
+	testOK runCl 1 config update
 	testNGrep key2 runCl 2 kv ls
 }
 
@@ -86,14 +92,14 @@ testKeyAdd2(){
 		clientSetup $C
 		testOK runCl 1 kv add key1 value1
 		testOK runCl 1 kv add key2 value2
-		testOK runCl 1 data vote
+		testOK runCl 1 config vote
 		if [ $C -gt 1 ]; then
 			testNGrep key1 runCl 2 kv ls
-			testOK runCl 2 data update
-			testOK runCl 2 data vote
+			testOK runCl 2 config update
+			testOK runCl 2 config vote
 			testGrep key1 runCl 2 kv ls
 		fi
-		testOK runCl 1 data update
+		testOK runCl 1 config update
 		testGrep key1 runCl 1 kv ls
 		testReGrep key2 runCl 1 kv ls
 		cleanup
@@ -104,15 +110,15 @@ testKeyAdd(){
 	clientSetup 2
 	testNGrep key1 runCl 1 kv ls
 	testOK runCl 1 kv add key1 value1
-	testOK runCl 1 data vote
-	testGrep key1 runCl 1 data ls -p
-	testOK runCl 2 data update
+	testOK runCl 1 config vote
+	testGrep key1 runCl 1 config ls -p
+	testOK runCl 2 config update
 	testNGrep key1 runCl 2 kv ls
-	testGrep key1 runCl 2 data ls -p
-	testOK runCl 2 data update
-	testOK runCl 2 data vote
+	testGrep key1 runCl 2 config ls -p
+	testOK runCl 2 config update
+	testOK runCl 2 config vote
 	testGrep key1 runCl 2 kv ls
-	testOK runCl 1 data update
+	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
 }
 
@@ -125,32 +131,32 @@ testIdConnect(){
 	testFail runCl 2 id co group.toml
 	testOK runCl 2 id co group.toml $ID client2
 	own2="Owner: client2"
-	testNGrep "$own2" runCl 2 data ls
-	testOK runCl 2 data update
-	testGrep "$own2" runCl 2 data ls -p
+	testNGrep "$own2" runCl 2 config ls
+	testOK runCl 2 config update
+	testGrep "$own2" runCl 2 config ls -p
 
 	dbgOut "Verifying client_1 is not auto-updated"
-	testNGrep "$own2" runCl 1 data ls
-	testNGrep "$own2" runCl 1 data ls -p
-	testOK runCl 1 data update
-	testGrep "$own2" runCl 1 data ls -p
+	testNGrep "$own2" runCl 1 config ls
+	testNGrep "$own2" runCl 1 config ls -p
+	testOK runCl 1 config update
+	testGrep "$own2" runCl 1 config ls -p
 
 	dbgOut "Voting with client_1 - first reject then accept"
-	testOK runCl 1 data vote -r
-	testNGrep "$own2" runCl 1 data ls
-	testOK runCl 2 data update
-	testNGrep "$own2" runCl 2 data ls
+	testOK runCl 1 config vote -r
+	testNGrep "$own2" runCl 1 config ls
+	testOK runCl 2 config update
+	testNGrep "$own2" runCl 2 config ls
 
-	testOK runCl 1 data vote
-	testGrep "$own2" runCl 1 data ls
-	testNGrep "$own2" runCl 2 data ls
-	testOK runCl 2 data update
-	testGrep "$own2" runCl 2 data ls
+	testOK runCl 1 config vote
+	testGrep "$own2" runCl 1 config ls
+	testNGrep "$own2" runCl 2 config ls
+	testOK runCl 2 config update
+	testGrep "$own2" runCl 2 config ls
 }
 
-testDataList(){
+testConfigList(){
 	clientSetup
-	testGrep "name: client1" runCl 1 data ls
+	testGrep "name: client1" runCl 1 config ls
 	testReGrep "ID: [0-9a-f]"
 }
 
@@ -172,9 +178,9 @@ testClientSetup(){
 		clientSetup $t
 		for u in $( seq $MAXCLIENTS ); do
 			if [ $u -le $t ]; then
-				testGrep client1 runCl $u data ls
+				testGrep client1 runCl $u config ls
 			else
-				testFail runCl $u data ls
+				testFail runCl $u config ls
 			fi
 		done
 		cleanup
@@ -198,20 +204,20 @@ clientSetup(){
 	local DBG_OLD=$DBG_SHOW
     DBG_SHOW=0
     testOK runCl 1 id cr group.toml client1
-    runGrepSed ID "s/.* //" runCl 1 data ls
+    runGrepSed ID "s/.* //" runCl 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
     		testOK runCl $c id co group.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
-					testOK runCl $b data update
-					testOK runCl $b data vote
+					testOK runCl $b config update
+					testOK runCl $b config vote
 				fi
 			done
 		done
 		for c in $( seq $CLIENTS ); do
-			testOK runCl $c data update
+			testOK runCl $c config update
 		done
 	fi
     DBG_SHOW=$DBG_OLD

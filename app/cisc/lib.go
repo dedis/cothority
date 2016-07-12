@@ -83,7 +83,7 @@ func kvGetKeys(keys ...string) []string {
 	if len(start) > 0 {
 		start += ":"
 	}
-	for k, _ := range clientApp.Config.Data {
+	for k := range clientApp.Config.Data {
 		if strings.HasPrefix(k, start) {
 			// Create subkey
 			subkey := strings.TrimPrefix(k, start)
@@ -114,7 +114,7 @@ func kvGetIntKeys(prefix, suffix string) []string {
 	if len(suffix) > 0 {
 		suffix = ":" + suffix
 	}
-	for k, _ := range clientApp.Config.Data {
+	for k := range clientApp.Config.Data {
 		if strings.HasPrefix(k, prefix) && strings.HasSuffix(k, suffix) {
 			interm := strings.TrimPrefix(k, prefix)
 			interm = strings.TrimSuffix(interm, suffix)

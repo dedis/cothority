@@ -87,7 +87,7 @@ func (s *SSHConfig) String() string {
 	return strings.Join(str, "\n")
 }
 
-// NewHost adds a host
+// AddHost adds a host
 func (s *SSHConfig) AddHost(h *SSHHost) {
 	s.Host = append(s.Host, h)
 }
@@ -103,7 +103,7 @@ func (s *SSHConfig) DelHost(name string) {
 	s.Host = hosts
 }
 
-// SSSHost is one part of the config-file. It starts with an eventual comment
+// SSHHost is one part of the config-file. It starts with an eventual comment
 // followed by the name and the configuration.
 type SSHHost struct {
 	Comment []string
