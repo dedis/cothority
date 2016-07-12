@@ -34,38 +34,6 @@ const (
 	STSS SID = "STSS"
 )
 
-type sharedSecrets struct {
-	sync.RWMutex
-	secrets map[SID]*Secret
-}
-
-func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
-	s.RLock()
-	defer s.RUnlock()
-
-	sec, ok := s.secrets[sid]
-	if !ok {
-		return nil, fmt.Errorf("Error, shared secret does not exist")
-	}
-	return sec, nil
-}
-
-func (s *sharedSecrets) addSecret(sid SID, sec *Secret) {
-	s.Lock()
-	defer s.Unlock()
-	s.secrets[sid] = sec
-}
-
-func (s *sharedSecrets) remove(sid SID) {
-	s.Lock()
-	defer s.Unlock()
-	delete(s.secrets, sid)
-}
-
-func newSecrets() *sharedSecrets {
-	return &sharedSecrets{secrets: make(map[SID]*Secret)}
-}
-
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
@@ -296,4 +264,37 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 		return nil, fmt.Errorf("Error, node %d could not create partial signature", jv.Index())
 	}
 	return ps, nil
+}
+
+// thread safe helpers for accessing shared (long and short-term) secrets:
+type sharedSecrets struct {
+	sync.RWMutex
+	secrets map[SID]*Secret
+}
+
+func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	sec, ok := s.secrets[sid]
+	if !ok {
+		return nil, fmt.Errorf("Error, shared secret does not exist")
+	}
+	return sec, nil
+}
+
+func (s *sharedSecrets) addSecret(sid SID, sec *Secret) {
+	s.Lock()
+	defer s.Unlock()
+	s.secrets[sid] = sec
+}
+
+func (s *sharedSecrets) remove(sid SID) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.secrets, sid)
+}
+
+func newSecrets() *sharedSecrets {
+	return &sharedSecrets{secrets: make(map[SID]*Secret)}
 }
