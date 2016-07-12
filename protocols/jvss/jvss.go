@@ -267,13 +267,13 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 
 // thread safe helpers for accessing shared (long and short-term) secrets:
 type sharedSecrets struct {
-	sync.RWMutex
+	sync.Mutex
 	secrets map[SID]*Secret
 }
 
 func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
-	s.RLock()
-	defer s.RUnlock()
+	s.Lock()
+	defer s.Unlock()
 
 	sec, ok := s.secrets[sid]
 	if !ok {
