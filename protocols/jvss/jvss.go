@@ -18,7 +18,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 func init() {
@@ -99,7 +98,9 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
 	err := jv.initSecret(LTSS)
+	log.Print("Start(): Waiting on secretsDone")
 	<-jv.secretsDone
+	log.Print("Start(): Done waiting on secretsDone")
 	return err
 }
 
@@ -131,8 +132,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// Wait for setup of shared secrets to finish
+	log.Print("Sign(): Waiting on secretsDone")
 	<-jv.secretsDone
-
+	log.Print("Sign(): Done - Waiting on secretsDone")
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
 	if err != nil {
@@ -142,7 +144,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	// ... and buffer it
 	secret, err := jv.secrets.secret(sid)
 	if err != nil {
-		dbg.Error("Didn't find secret. Still continuing:", err)
+		log.Error("Didn't find secret. Still continuing:", err)
 	}
 
 	secret.sigs[jv.Index()] = ps
