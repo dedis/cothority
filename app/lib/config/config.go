@@ -242,12 +242,9 @@ func (s *ServerToml) String() string {
 
 // TildeToHome takes a path and replaces an eventual "~" with the home-directory
 func TildeToHome(path string) string {
-	if strings.HasPrefix(path, "~") {
+	if strings.HasPrefix(path, "~/") {
 		usr, err := user.Current()
-		if err != nil {
-			log.Error("Could't get home-directory")
-			return path
-		}
+		log.ErrFatal(err, "Got error while fetching home-directory")
 		return usr.HomeDir + path[1:]
 	}
 	return path
