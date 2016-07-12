@@ -1,3 +1,8 @@
+// Guard is a service that provides additional password protection by creating a series of guard servers that allow a
+// Client to further secure their passwords from direct database compromises. The service is hash based and the passwords
+// never leave the main database, making the guard servers very lightweight. The guard server's are used in both setting and
+// authenticating passwords.
+
 package main
 
 import (
