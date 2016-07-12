@@ -50,13 +50,9 @@ type Database struct {
 
 var db *Database
 
-var mastersalt []byte
-
 func main() {
 	network.RegisterMessageType(&Database{})
-	salty := make([]byte, 12)
-	rand.Read(salty)
-	mastersalt = salty
+
 	app := cli.NewApp()
 	app.Name = "Guard"
 	app.Usage = "Get and print status of all servers of a file."
@@ -141,26 +137,30 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 }
 
 func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []byte) {
+	var mastersalt []byte
+	salty := make([]byte, 12)
+	rand.Read(salty)
+	mastersalt = salty
 	k := make([]byte, 32)
 	rand.Read(k)
-	//pwhash is the password hash that will be sent to the guard servers
+	// pwhash is the password hash that will be sent to the guard servers
 	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
-	//secretkeys is the Shamir Secret share of the keys
+	// secretkeys is the Shamir Secret share of the keys
 	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
-	//salty is a list of salts that will be used to encrypt the pwhash before sending it to the guard, derived from a single
-	//master salt
+	// salty is a list of salts that will be used to encrypt the pwhash before sending it to the guard, derived from a single
+	// master salt
 	salty := saltgen(mastersalt, len(db.Cothority.List))
 	responses := make([][]byte, len(db.Cothority.List))
 	keys := make([][]byte, len(db.Cothority.List))
-	for i := 0; i < len(db.Cothority.List); i++ {
+	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
 		sendy := abstract.Sum(network.Suite, pwhash, salty[i])
-		rep, err := cl.GetGuard(db.Cothority.List[i], UID, epoch, sendy)
+		rep, err := cl.GetGuard(si, UID, epoch, sendy)
 		log.ErrFatal(err)
 		responses[i] = rep.Msg
 		keys[i] = xor([]byte(secretkeys[i]), responses[i])
 	}
-	//This is the code that seals the user data using the master key and saves it to the db
+	// This is the code that seals the user data using the master key and saves it to the db
 	block, _ := aes.NewCipher(k)
 	aesgcm, _ := cipher.NewGCM(block)
 	ciphertext := aesgcm.Seal(nil, mastersalt, userdata, nil)
@@ -170,22 +170,23 @@ func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []b
 // saltgen is a function that generates all the keys and salts given a length and an initial salt
 func saltgen(salt []byte, count int) [][]byte {
 	salts := make([][]byte, count)
-	tlas := salt
 	for i := 0; i < count; i++ {
-		salts[i] = tlas
-		tlas = abstract.Sum(network.Suite, tlas)
+		salts[i] = salt
+		salt = abstract.Sum(network.Suite, salt)
 	}
 	return salts
 }
 
 // setup when you setup the password
 func setup(c *cli.Context) error {
-	db = &Database{}
+
 	groupToml := c.Args().First()
 	log.Print("Setup is working")
 	var err error
 	t, err := readGroup(groupToml)
-	db.Cothority = t
+	db = &Database{
+		Cothority: t,
+	}
 	log.ErrFatal(err)
 	b, err := network.MarshalRegisteredType(db)
 	log.ErrFatal(err)
@@ -197,35 +198,34 @@ func setup(c *cli.Context) error {
 
 // getuser returns the user that the UID matches
 func getuser(UID []byte) *User {
-
-	for i := 0; i < len(db.Users); i++ {
-		if bytes.Equal((db.Users[i]).Name, UID) {
-			return &db.Users[i]
+	for _, u := range db.Users {
+		if bytes.Equal(u.Name, UID) {
+			return &u
 		}
 	}
-	//this is necessary because there needs to be a return at the end but
+	// this is necessary because there needs to be a return at the end but
 	return nil
 }
 
 // getpass contacts the guard servers, then gets the passwords and reconstructs the secret keys
 func getpass(c *cli.Context, UID []byte, epoch []byte, pass string) {
 	if getuser(UID) == nil {
-		log.ErrFatal(nil, "Wrong Username")
+		log.Fatal("Wrong username")
 	}
 	pwhash := abstract.Sum(network.Suite, []byte(pass), getuser(UID).Salt)
 	salty := saltgen(getuser(UID).Salt, len(db.Cothority.List))
 	responses := make([]string, len(db.Cothority.List))
 	keys := make([]string, len(db.Cothority.List))
-	for i := 0; i < len(db.Cothority.List); i++ {
+	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
 		sendy := abstract.Sum(network.Suite, pwhash, salty[i])
-		rep, err := cl.GetGuard(db.Cothority.List[i], UID, epoch, sendy)
+		rep, err := cl.GetGuard(si, UID, epoch, sendy)
 		log.ErrFatal(err)
 		responses[i] = string(rep.Msg)
 		keys[i] = string(xor(getuser(UID).Keys[i], rep.Msg))
 	}
 	k := s.Combine(keys)
-	if len([]byte(k)) == 0 {
+	if len(k) == 0 {
 		log.Fatal("You entered the wrong password")
 	}
 	block, err := aes.NewCipher([]byte(k))

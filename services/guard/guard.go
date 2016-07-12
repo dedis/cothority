@@ -45,8 +45,6 @@ type Response struct {
 	Msg []byte
 }
 
-//[]byte("gmPTvzEuu88GAL_67UJFFZXzaAhWn_N3ZonPU-D272Y=SuNSfNfzkP3CSSNIR3uuERNxDWzN7MwebioZGkZBwdc=")
-
 // Request treats external request to this service.
 func (st *Guard) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
