@@ -1,8 +1,6 @@
 package guard
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
 
 	"github.com/dedis/cothority/log"
@@ -49,20 +47,7 @@ type Response struct {
 func (st *Guard) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
 	hashy := abstract.Sum(network.Suite, req.Msg, st.z, req.UID, req.Epoch)
-	key := []byte("example key 1234")
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
-	// This part is necessary because you need a key to convert the Hash to a stream. The key is not even important because
-	//all that is required is that the request gives the same output for the same input
-	stream := cipher.NewCTR(block, []byte("example key 1234"))
-	msg := make([]byte, 88)
-	//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
-	//password setting and authentication services
-	stream.XORKeyStream(msg, hashy)
-
-	return &Response{msg}, nil
+	return &Response{hashy}, nil
 }
 
 // newGuardService creates a new service that is built for Guard

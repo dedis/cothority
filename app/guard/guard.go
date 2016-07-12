@@ -40,6 +40,7 @@ type User struct {
 	Keys [][]byte
 	// Data AEAD-encrypted with key
 	Data []byte
+	Iv   []byte
 }
 
 // Database is a structure that stores Cothority(the list of guard servers), and a list of all users within the database
@@ -108,15 +109,6 @@ func main() {
 	app.Run(os.Args)
 }
 
-func xor(x []byte, y []byte) []byte {
-	z := make([]byte, len(x))
-
-	for i := 0; i < len(x); i++ {
-		z[i] = x[i] ^ y[i]
-	}
-	return z
-}
-
 // readGroup takes a toml file name and reads the file, returning the entities within
 func readGroup(tomlFileName string) (*sda.Roster, error) {
 	log.Print("Reading From File")
@@ -149,6 +141,8 @@ func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []b
 	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
 	// salty is a list of salts that will be used to encrypt the pwhash before sending it to the guard, derived from a single
 	// master salt
+	iv := make([]byte, 16)
+	rand.Read(iv)
 	salty := saltgen(mastersalt, len(db.Cothority.List))
 	responses := make([][]byte, len(db.Cothority.List))
 	keys := make([][]byte, len(db.Cothority.List))
@@ -158,13 +152,29 @@ func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []b
 		rep, err := cl.GetGuard(si, UID, epoch, sendy)
 		log.ErrFatal(err)
 		responses[i] = rep.Msg
-		keys[i] = xor([]byte(secretkeys[i]), responses[i])
+		block, err := aes.NewCipher(responses[i])
+		if err != nil {
+			panic(err)
+		}
+		log.Print("Block Size: ", block.BlockSize())
+		// This part is necessary because you need a key to convert the Hash to a stream. The key is not even important because
+		//all that is required is that the request gives the same output for the same input
+		stream := cipher.NewCTR(block, iv)
+		msg := make([]byte, 88)
+		//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
+		//password setting and authentication services
+		log.Print("SecretKey: ", []byte(secretkeys[i]))
+		log.Print("set xorkey before: ", msg)
+		stream.XORKeyStream(msg, []byte(secretkeys[i]))
+		log.Print("set xorkey after: ", msg)
+		keys[i] = msg
+
 	}
 	// This is the code that seals the user data using the master key and saves it to the db
 	block, _ := aes.NewCipher(k)
 	aesgcm, _ := cipher.NewGCM(block)
 	ciphertext := aesgcm.Seal(nil, mastersalt, userdata, nil)
-	db.Users = append(db.Users, User{UID, mastersalt, keys, ciphertext})
+	db.Users = append(db.Users, User{UID, mastersalt, keys, ciphertext, iv})
 }
 
 // saltgen is a function that generates all the keys and salts given a length and an initial salt
@@ -214,15 +224,21 @@ func getpass(c *cli.Context, UID []byte, epoch []byte, pass string) {
 	}
 	pwhash := abstract.Sum(network.Suite, []byte(pass), getuser(UID).Salt)
 	salty := saltgen(getuser(UID).Salt, len(db.Cothority.List))
-	responses := make([]string, len(db.Cothority.List))
 	keys := make([]string, len(db.Cothority.List))
 	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
 		sendy := abstract.Sum(network.Suite, pwhash, salty[i])
 		rep, err := cl.GetGuard(si, UID, epoch, sendy)
 		log.ErrFatal(err)
-		responses[i] = string(rep.Msg)
-		keys[i] = string(xor(getuser(UID).Keys[i], rep.Msg))
+		block, err := aes.NewCipher(rep.Msg)
+		stream := cipher.NewCTR(block, getuser(UID).Iv)
+		msg := make([]byte, 88)
+		//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
+		//password setting and authentication services
+		log.Print("set xorkey before: ", msg)
+		stream.XORKeyStream(msg, []byte(getuser(UID).Keys[i]))
+		log.Print("set xorkey after: ", msg)
+		keys[i] = string(msg)
 	}
 	k := s.Combine(keys)
 	if len(k) == 0 {
