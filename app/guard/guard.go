@@ -138,9 +138,9 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 
 func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []byte) {
 	var mastersalt []byte
-	salty := make([]byte, 12)
-	rand.Read(salty)
-	mastersalt = salty
+	saltsy := make([]byte, 12)
+	rand.Read(saltsy)
+	mastersalt = saltsy
 	k := make([]byte, 32)
 	rand.Read(k)
 	// pwhash is the password hash that will be sent to the guard servers

@@ -22,9 +22,9 @@ func TestServiceGuard(t *testing.T) {
 	// Send a request to the service
 	client := NewClient()
 	log.Lvl1("Sending request to service...")
-	UID := []byte{"USER"}
-	Epoch := []byte{"EPOCH"}
-	msg := []byte{"Hello"}
+	UID := []byte("USER")
+	Epoch := []byte("EPOCH")
+	msg := []byte("Hello")
 	Hzi, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
 
 	Hz2, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
