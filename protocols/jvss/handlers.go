@@ -76,9 +76,9 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	}
 
 	// Buffer received deal for later
-	secret, ok := jv.secrets[msg.SID]
-	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+	secret, err := jv.secrets.secret(msg.SID)
+	if err != nil {
+		return err
 	}
 	secret.deals[msg.Src] = deal
 
@@ -93,9 +93,9 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	msg := m.SecConfMsg
 
-	secret, ok := jv.secrets[msg.SID]
-	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+	secret, err := jv.secrets.secret(msg.SID)
+	if err != nil {
+		return err
 	}
 
 	secret.mtx.Lock()
@@ -133,7 +133,7 @@ func (jv *JVSS) handleSigReq(m WSigReqMsg) error {
 	}
 
 	// Cleanup short-term shared secret
-	delete(jv.secrets, msg.SID)
+	jv.secrets.remove(msg.SID)
 
 	return nil
 }
@@ -142,10 +142,11 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 	msg := m.SigRespMsg
 
 	// Collect partial signatures
-	secret, ok := jv.secrets[msg.SID]
-	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+	secret, err := jv.secrets.secret(msg.SID)
+	if err != nil {
+		return err
 	}
+
 	secret.sigs[msg.Src] = msg.Sig
 
 	log.Lvl2(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Index(), msg.SID, len(secret.sigs), len(jv.List())))
@@ -166,7 +167,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 		jv.sigChan <- sig
 
 		// Cleanup short-term shared secret
-		delete(jv.secrets, msg.SID)
+		jv.secrets.remove(msg.SID)
 	}
 
 	return nil

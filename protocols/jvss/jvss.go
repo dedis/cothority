@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 func init() {
@@ -33,6 +34,38 @@ const (
 	STSS SID = "STSS"
 )
 
+type sharedSecrets struct {
+	sync.RWMutex
+	secrets map[SID]*Secret
+}
+
+func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
+	s.RLock()
+	defer s.RUnlock()
+
+	sec, ok := s.secrets[sid]
+	if !ok {
+		return nil, fmt.Errorf("Error, shared secret does not exist")
+	}
+	return sec, nil
+}
+
+func (s *sharedSecrets) addSecret(sid SID, sec *Secret) {
+	s.Lock()
+	defer s.Unlock()
+	s.secrets[sid] = sec
+}
+
+func (s *sharedSecrets) remove(sid SID) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.secrets, sid)
+}
+
+func newSecrets() *sharedSecrets {
+	return &sharedSecrets{secrets: make(map[SID]*Secret)}
+}
+
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
@@ -42,7 +75,7 @@ type JVSS struct {
 	pubKeys               []abstract.Point      // List of public keys of the above TreeNodes
 	info                  poly.Threshold        // JVSS thresholds
 	schnorr               *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
-	secrets               map[SID]*Secret       // Shared secrets (long- and short-term ones)
+	secrets               *sharedSecrets        // Shared secrets (long- and short-term ones)
 	ltssInit              bool                  // Indicator whether shared secret has been already initialised or not
 	secretsDone           chan bool             // Channel to indicate when shared secrets of all peers are ready
 	sigChan               chan *poly.SchnorrSig // Channel for JVSS signature
@@ -77,7 +110,7 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		pubKeys:          pk,
 		info:             info,
 		schnorr:          new(poly.Schnorr),
-		secrets:          make(map[SID]*Secret),
+		secrets:          newSecrets(),
 		ltssInit:         false,
 		secretsDone:      make(chan bool, 1),
 		sigChan:          make(chan *poly.SchnorrSig),
@@ -140,9 +173,11 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// ... and buffer it
-	jv.mutex.Lock()
-	secret := jv.secrets[sid]
-	jv.mutex.Unlock()
+	secret, err := jv.secrets.secret(sid)
+	if err != nil {
+		dbg.Error("Didn't find secret. Still continuing:", err)
+	}
+
 	secret.sigs[jv.Index()] = ps
 
 	// Broadcast signing request
@@ -162,10 +197,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 }
 
 func (jv *JVSS) initSecret(sid SID) error {
-	jv.mutex.Lock()
-	defer jv.mutex.Unlock()
 	// Initialise shared secret of given type if necessary
-	if _, ok := jv.secrets[sid]; !ok {
+	if sec, err := jv.secrets.secret(sid); sec == nil && err != nil {
 		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &Secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
@@ -173,10 +206,13 @@ func (jv *JVSS) initSecret(sid SID) error {
 			sigs:     make(map[int]*poly.SchnorrPartialSig),
 			numConfs: 0,
 		}
-		jv.secrets[sid] = sec
+		jv.secrets.addSecret(sid, sec)
 	}
 
-	secret := jv.secrets[sid]
+	secret, err := jv.secrets.secret(sid)
+	if err != nil { // this should never happen here
+		return err
+	}
 
 	// Initialise and broadcast our deal if necessary
 	if len(secret.deals) == 0 {
@@ -198,11 +234,9 @@ func (jv *JVSS) initSecret(sid SID) error {
 }
 
 func (jv *JVSS) finaliseSecret(sid SID) error {
-	jv.mutex.Lock()
-	defer jv.mutex.Unlock()
-	secret, ok := jv.secrets[sid]
-	if !ok {
-		return fmt.Errorf("Error, shared secret does not exist")
+	secret, err := jv.secrets.secret(sid)
+	if err != nil {
+		return err
 	}
 
 	log.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
@@ -245,11 +279,9 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 }
 
 func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error) {
-	jv.mutex.Lock()
-	defer jv.mutex.Unlock()
-	secret, ok := jv.secrets[sid]
-	if !ok {
-		return nil, fmt.Errorf("Error, shared secret does not exist")
+	secret, err := jv.secrets.secret(sid)
+	if err != nil {
+		return nil, err
 	}
 
 	hash := jv.keyPair.Suite.Hash()
