@@ -20,20 +20,27 @@ main(){
 #	test KeyAdd
 #	test KeyAdd2
 #	test KeyDel
-	test SSHAdd
-#	test SSHDel
+#	test SSHAdd
+	test SSHDel
     stopTest
 }
 
 testSSHDel(){
 	clientSetup 1
 	testOK runCl 1 ssh add service1
-	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
-	testFile cl1/key_service1.pub
-	testFile cl1/key_service1
-	testOK runCl 1 ssh add service2
+	testOK runCl 1 ssh add -a s2 service2
 	testOK runCl 1 ssh add -a s3 service3
+	testGrep service1 runCl 1 ssh ls
+	testReGrep s2
+	testReGrep s3
 	testOK runCl 1 ssh rm service1
+	testNGrep service1 runCl 1 ssh ls
+	testReGrep s2
+	testReGrep s3
+	testOK runCl 1 ssh rm s2
+	testNGrep s2 runCl 1 ssh ls
+	testFail runCl 1 ssh rm service3
+	testGrep s3 runCl 1 ssh ls
 }
 
 testSSHAdd(){
@@ -42,11 +49,14 @@ testSSHAdd(){
 	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
 	testFile cl1/key_service1.pub
 	testFile cl1/key_service1
+	testGrep service1 runCl 1 ssh ls
+	testReGrep client1
 	testOK runCl 1 ssh add -a s2 service2
 	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile key_s2" cl1/config
 	testFile cl1/key_s2.pub
 	testFile cl1/key_s2
-	testOK runCl 1 data ls
+	testGrep s2 runCl 1 ssh ls
+	testReGrep client1
 }
 
 testKeyDel(){

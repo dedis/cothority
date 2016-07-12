@@ -3,30 +3,15 @@ package main
 import (
 	"os"
 
-	"golang.org/x/crypto/ssh"
-
-	"io/ioutil"
-
-	"errors"
-
 	"encoding/hex"
-
-	"fmt"
-
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 
 	"path"
 
+	"io/ioutil"
 	"strings"
-
-	"sort"
 
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/services/identity"
 	"gopkg.in/codegangsta/cli.v1"
 )
@@ -88,26 +73,26 @@ func main() {
 			},
 		},
 		{
-			Name:  "data",
-			Usage: "updating and voting on data",
+			Name:  "config",
+			Usage: "updating and voting on config",
 			Subcommands: []cli.Command{
 				{
 					Name:    "propose",
 					Aliases: []string{"l"},
-					Usage:   "propose the new data",
-					Action:  dataPropose,
+					Usage:   "propose the new config",
+					Action:  configPropose,
 				},
 				{
 					Name:    "update",
 					Aliases: []string{"u"},
-					Usage:   "fetch the latest data",
-					Action:  dataUpdate,
+					Usage:   "fetch the latest config",
+					Action:  configUpdate,
 				},
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage:   "list existing data and proposed",
-					Action:  dataList,
+					Usage:   "list existing config and proposed",
+					Action:  configList,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "p,propose",
@@ -118,14 +103,14 @@ func main() {
 				{
 					Name:    "vote",
 					Aliases: []string{"v"},
-					Usage:   "vote on existing data",
+					Usage:   "vote on existing config",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "r,reject",
 							Usage: "reject the proposition",
 						},
 					},
-					Action: dataVote,
+					Action: configVote,
 				},
 			},
 		},
@@ -188,10 +173,11 @@ func main() {
 					},
 				},
 				{
-					Name:    "del",
-					Aliases: []string{"rm"},
-					Usage:   "deletes an entry from the config",
-					Action:  sshDel,
+					Name:      "del",
+					Aliases:   []string{"rm"},
+					Usage:     "deletes an entry from the config",
+					ArgsUsage: "alias_or_host",
+					Action:    sshDel,
 				},
 				{
 					Name:    "list",
@@ -272,37 +258,9 @@ func main() {
 
 }
 
-// loadConfig will return nil if the config-file doesn't exist. It tries to
-// load the file given in configFile.
-func loadConfig() error {
-	log.Lvl2("Loading from", configFile)
-	buf, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
-		}
-		return err
-	}
-	_, msg, err := network.UnmarshalRegistered(buf)
-	if err != nil {
-		return err
-	}
-	var ok bool
-	clientApp, ok = msg.(*identity.Identity)
-	if !ok {
-		return errors.New("Wrong message-type in config-file")
-	}
-	return nil
-}
-
-func saveConfig() error {
-	buf, err := network.MarshalRegisteredType(clientApp)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(configFile, buf, 0660)
-}
-
+/*
+ * Identity-related commands
+ */
 func idCreate(c *cli.Context) error {
 	log.Info("Creating id")
 	if c.NArg() == 0 {
@@ -359,14 +317,17 @@ func idCheck(c *cli.Context) error {
 	return nil
 }
 
-func dataUpdate(c *cli.Context) error {
+/*
+ * Commands related to the config in general
+ */
+func configUpdate(c *cli.Context) error {
 	assertCA()
 	log.ErrFatal(clientApp.ConfigUpdate())
 	log.ErrFatal(clientApp.ProposeFetch())
 	log.Info("Successfully updated")
-	return dataList(c)
+	return configList(c)
 }
-func dataList(c *cli.Context) error {
+func configList(c *cli.Context) error {
 	assertCA()
 	log.Info("Account name:", clientApp.ManagerStr)
 	log.Infof("Identity-ID: %x", clientApp.ID)
@@ -375,25 +336,28 @@ func dataList(c *cli.Context) error {
 		if clientApp.Proposed != nil {
 			log.Infof("Proposed config: %s", clientApp.Proposed)
 		} else {
-			log.Info("No proposed data")
+			log.Info("No proposed config")
 		}
 	}
 	return nil
 }
-func dataPropose(c *cli.Context) error {
+func configPropose(c *cli.Context) error {
 	assertCA()
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func dataVote(c *cli.Context) error {
+func configVote(c *cli.Context) error {
 	assertCA()
 	log.ErrFatal(clientApp.ProposeVote(!c.Bool("r")))
 	return nil
 }
 
+/*
+ * Commands related to the key/value storage and retrieval
+ */
 func kvList(c *cli.Context) error {
 	assertCA()
-	log.Infof("Data for id %x", clientApp.ID)
+	log.Infof("config for id %x", clientApp.ID)
 	for k, v := range clientApp.Config.Data {
 		log.Infof("%s: %s", k, v)
 	}
@@ -423,23 +387,27 @@ func kvRm(c *cli.Context) error {
 	key := c.Args().First()
 	prop := clientApp.GetProposed()
 	if _, ok := prop.Data[key]; !ok {
-		log.Fatal("Didn't find key", key, "in the data")
+		log.Fatal("Didn't find key", key, "in the config")
 	}
 	delete(prop.Data, key)
 	log.ErrFatal(clientApp.ProposeSend(prop))
 	return nil
 }
+
+/*
+ * Commands related to the ssh-handling
+ */
 func sshAdd(c *cli.Context) error {
 	assertCA()
 	if c.NArg() != 1 {
 		log.Fatal("Please give the hostname as argument")
 	}
-	f, err := os.OpenFile(sshConfig, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
 
+	// Get the current configuration
+	sc, err := NewSSHConfigFromFile(sshConfig)
+	log.ErrFatal(err)
+
+	// Add a new host-entry
 	hostname := c.Args().First()
 	alias := c.String("a")
 	if alias == "" {
@@ -449,33 +417,61 @@ func sshAdd(c *cli.Context) error {
 	idPriv := "key_" + alias
 	filePriv := path.Join(sshDir, idPriv)
 	log.ErrFatal(makeSSHKeyPair(filePub, filePriv))
-	text := fmt.Sprintf("Host %s\n\tHostName %s\n\tIdentityFile %s\n",
-		alias, hostname, idPriv)
+	host := NewSSHHost(alias, "HostName"+hostname,
+		"IdentityFile "+idPriv)
 	if port := c.String("p"); port != "" {
-		text += fmt.Sprintf("\tPort %s\n", port)
+		host.AddConfig("Port " + port)
 	}
 	if user := c.String("u"); user != "" {
-		text += fmt.Sprintf("\tUser %s\n", user)
+		host.AddConfig("User " + user)
 	}
-	if _, err = f.WriteString(text); err != nil {
-		log.Fatal(err)
-	}
+	sc.AddHost(host)
+	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
+	log.ErrFatal(err)
+
+	// Propose the new configuration
+	prop := clientApp.GetProposed()
+	key := strings.Join([]string{"ssh", clientApp.ManagerStr, alias}, ":")
+	pub, err := ioutil.ReadFile(filePub)
+	log.ErrFatal(err)
+	prop.Data[key] = string(pub)
+	proposeSendVoteUpdate(prop)
 	return nil
 }
 func sshLs(c *cli.Context) error {
 	assertCA()
-	all := c.Bool("a")
-	if all {
-
+	var devs []string
+	if c.Bool("a") {
+		devs = kvGetKeys("ssh")
+	} else {
+		devs = []string{clientApp.ManagerStr}
 	}
-	log.Print("")
+	for _, dev := range devs {
+		for _, pub := range kvGetKeys("ssh", dev) {
+			log.Printf("SSH-key for device %s: %s", dev, pub)
+		}
+	}
 	return nil
 }
-func printSSH(dev string) {
-
-}
 func sshDel(c *cli.Context) error {
-	log.Fatal("Not yet implemented")
+	assertCA()
+	if c.NArg() == 0 {
+		log.Fatal("Please give alias or host to delete from ssh")
+	}
+	ah := c.Args().First()
+	if len(kvGetValue("ssh", clientApp.ManagerStr, ah)) == 0 {
+		log.Print("Didn't find alias or host", ah)
+		sshLs(c)
+		log.Fatal("Aboring")
+	}
+	sc, err := NewSSHConfigFromFile(sshConfig)
+	log.ErrFatal(err)
+	sc.DelHost(ah)
+	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
+	log.ErrFatal(err)
+	prop := clientApp.GetProposed()
+	delete(prop.Data, "ssh:"+clientApp.ManagerStr+":"+ah)
+	proposeSendVoteUpdate(prop)
 	return nil
 }
 func sshRotate(c *cli.Context) error {
@@ -486,88 +482,8 @@ func sshSync(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func assertCA() {
-	if clientApp == nil {
-		log.Fatal("Couldn't load config-file", configFile, "or it was empty.")
-	}
-}
-
-func addSSH(c *cli.Context) {
-	pubFileName := config.TildeToHome(c.GlobalString("config-ssh") + "/id_rsa.pub")
-	pubFile, err := os.Open(pubFileName)
-	log.ErrFatal(err, "Couldn't open public-ssh: ", pubFileName)
-	pub, err := ioutil.ReadAll(pubFile)
-	pubFile.Close()
-	log.ErrFatal(err, "Couldn't read public-ssh: ", pubFileName)
-	log.Print(pub)
-}
-
-func getGroup(c *cli.Context) *config.Group {
-	gfile := c.Args().Get(0)
-	gr, err := os.Open(gfile)
-	log.ErrFatal(err)
-	groups, err := config.ReadGroupDescToml(gr)
-	gr.Close()
-	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
-		log.Fatal("No servers found in roster from", gfile)
-	}
-	return groups
-}
-
-// getKeys returns the keys up to the next ":". If given a slice of keys, it
-// will return sub-keys.
-func getKeys(data map[string]string, keys ...string) []string {
-	var ret []string
-	start := strings.Join(keys, ":")
-	if len(start) > 0 {
-		start += ":"
-	}
-	for k, _ := range data {
-		if strings.HasPrefix(k, start) {
-			// Create subkey
-			subkey := strings.TrimPrefix(k, start)
-			subkey = strings.SplitN(subkey, ":", 2)[0]
-			// Check if it's already in there
-			isNew := true
-			for _, s := range ret {
-				isNew = isNew && (s != subkey)
-			}
-			if isNew {
-				ret = append(ret, subkey)
-			}
-		}
-	}
-	sort.Strings(ret)
-	return ret
-}
-
-// MakeSSHKeyPair make a pair of public and private keys for SSH access.
-// Public key is encoded in the format for inclusion in an OpenSSH authorized_keys file.
-// Private Key generated is PEM encoded
-// StackOverflow: Greg http://stackoverflow.com/users/328645/greg in
-// http://stackoverflow.com/questions/21151714/go-generate-an-ssh-public-key
-// No licence added
-func makeSSHKeyPair(pubKeyPath, privateKeyPath string) error {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
-	if err != nil {
-		return err
-	}
-
-	// generate and write private key as PEM
-	privateKeyFile, err := os.OpenFile(privateKeyPath, os.O_WRONLY|os.O_CREATE, 0600)
-	defer privateKeyFile.Close()
-	if err != nil {
-		return err
-	}
-	privateKeyPEM := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
-	if err := pem.Encode(privateKeyFile, privateKeyPEM); err != nil {
-		return err
-	}
-
-	// generate and write public key
-	pub, err := ssh.NewPublicKey(&privateKey.PublicKey)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(pubKeyPath, ssh.MarshalAuthorizedKey(pub), 0600)
+func proposeSendVoteUpdate(p *identity.Config) {
+	log.ErrFatal(clientApp.ProposeSend(p))
+	log.ErrFatal(clientApp.ProposeVote(true))
+	log.ErrFatal(clientApp.ConfigUpdate())
 }
