@@ -1,12 +1,13 @@
 package libmedco_test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
-	"reflect"
-	"testing"
 )
 
 // TestStoring tests survey store and its methods.
