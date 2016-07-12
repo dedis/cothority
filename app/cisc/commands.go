@@ -33,18 +33,18 @@ func init() {
 				Usage:   "follow an existing identity",
 				Action:  idFollow,
 			},
-			//{
-			//	Name:    "remove",
-			//	Aliases: []string{"rm"},
-			//	Usage:   "remove an identity",
-			//	Action:  idRemove,
-			//},
-			//{
-			//	Name:    "check",
-			//	Aliases: []string{"ch"},
-			//	Usage:   "check the health of the cothority",
-			//	Action:  idCheck,
-			//},
+			{
+				Name:    "remove",
+				Aliases: []string{"rm"},
+				Usage:   "remove an identity",
+				Action:  idRemove,
+			},
+			{
+				Name:    "check",
+				Aliases: []string{"ch"},
+				Usage:   "check the health of the cothority",
+				Action:  idCheck,
+			},
 		},
 	}
 	commandConfig = cli.Command{
@@ -166,28 +166,28 @@ func init() {
 					},
 				},
 			},
-			//{
-			//	Name:    "rotate",
-			//	Aliases: []string{"r"},
-			//	Usage:   "renews all keys - only active once the vote passed",
-			//	Action:  sshRotate,
-			//},
-			//{
-			//	Name:    "sync",
-			//	Aliases: []string{"tc"},
-			//	Usage:   "sync config and blockchain - interactive",
-			//	Flags: []cli.Flag{
-			//		cli.StringFlag{
-			//			Name:  "tob,toblockchain",
-			//			Usage: "force copy of config-file to blockchain",
-			//		},
-			//		cli.StringFlag{
-			//			Name:  "toc,toconfig",
-			//			Usage: "force copy of blockchain to config-file",
-			//		},
-			//	},
-			//	Action: sshSync,
-			//},
+			{
+				Name:    "rotate",
+				Aliases: []string{"r"},
+				Usage:   "renews all keys - only active once the vote passed",
+				Action:  sshRotate,
+			},
+			{
+				Name:    "sync",
+				Aliases: []string{"tc"},
+				Usage:   "sync config and blockchain - interactive",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:  "tob,toblockchain",
+						Usage: "force copy of config-file to blockchain",
+					},
+					cli.StringFlag{
+						Name:  "toc,toconfig",
+						Usage: "force copy of blockchain to config-file",
+					},
+				},
+				Action: sshSync,
+			},
 		},
 	}
 }
