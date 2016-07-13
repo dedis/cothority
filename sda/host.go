@@ -261,6 +261,8 @@ func (h *Host) processMessages() {
 		case network.ErrorType:
 			log.Lvl3("Error from the network")
 		default:
+			// The dispatcher will call the appropriate processors for the
+			// message
 			if err := h.Dispatch(data.ServerIdentity, &data); err != nil {
 				log.Lvl3("Unknown message received:", data)
 			}
