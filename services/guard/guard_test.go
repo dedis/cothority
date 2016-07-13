@@ -3,9 +3,8 @@ package guard
 import (
 	"testing"
 
-	"fmt"
-
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,13 +23,11 @@ func TestServiceGuard(t *testing.T) {
 	log.Lvl1("Sending request to service...")
 	UID := []byte("USER")
 	Epoch := []byte("EPOCH")
-	msg := []byte("Hello")
+	msg := network.Suite.Point()
+
 	Hzi, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
 
 	Hz2, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
-	fmt.Println(Hzi)
-	fmt.Println(Hz2)
-
 	assert.Equal(t, Hzi, Hz2)
 
 }

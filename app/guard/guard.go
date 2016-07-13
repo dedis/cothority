@@ -30,7 +30,7 @@ import (
 	"github.com/dedis/cothority/network"
 )
 
-// User is a representation of the Users data in the code, and is used to store all relevant information
+// User is a representation of the Users data in the code, and is used to store all relevant information.
 type User struct {
 	// Name or UserID
 	Name []byte
@@ -43,7 +43,7 @@ type User struct {
 	Iv   []byte
 }
 
-// Database is a structure that stores Cothority(the list of guard servers), and a list of all users within the database
+// Database is a structure that stores Cothority(the list of guard servers), and a list of all users within the database.
 type Database struct {
 	Cothority *sda.Roster
 	Users     []User
@@ -109,9 +109,9 @@ func main() {
 	app.Run(os.Args)
 }
 
-// readGroup takes a toml file name and reads the file, returning the entities within
+// readGroup takes a toml file name and reads the file, returning the entities within.
 func readGroup(tomlFileName string) (*sda.Roster, error) {
-	log.Print("Reading From File")
+	log.Lvl2("Reading From File")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
@@ -128,56 +128,85 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 	return el, err
 }
 
-func set(c *cli.Context, UID []byte, epoch []byte, password string, userdata []byte) {
-	var mastersalt []byte
-	saltsy := make([]byte, 12)
-	rand.Read(saltsy)
-	mastersalt = saltsy
+func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []byte) {
+	mastersalt := make([]byte, 12)
+	rand.Read(mastersalt)
 	k := make([]byte, 32)
 	rand.Read(k)
-	// pwhash is the password hash that will be sent to the guard servers
-	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
-	// secretkeys is the Shamir Secret share of the keys
+	// secretkeys is the Shamir Secret share of the keys.
 	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
-	// salty is a list of salts that will be used to encrypt the pwhash before sending it to the guard, derived from a single
-	// master salt
+	blind := make([]byte, 12)
+	rand.Read(blind)
+	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := make([]byte, 16)
 	rand.Read(iv)
-	salty := saltgen(mastersalt, len(db.Cothority.List))
+	// pwhash is the password hash that will be sent to the guard servers with Gu and bi.
+	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
+	GuHash := abstract.Sum(network.Suite, uid, epoch)
+	// creating stream for Scalar.Pick from the hash.
+	blocky, err := aes.NewCipher(iv)
+	log.ErrFatal(err)
+	log.Lvl2("Blocky: ", blocky)
+	log.Lvl2("Iv: ", iv)
+	log.Lvl2("SetHash: ", pwhash)
+	GuStream := cipher.NewCTR(blocky, iv)
+	gupoint := network.Suite.Point()
+	Gu, _ := gupoint.Pick(GuHash, GuStream)
+	// This is a test to see whether Gu is working
+	gudat, _ := Gu.MarshalBinary()
+	log.Lvl2("SetGu: ", gudat)
+
 	responses := make([][]byte, len(db.Cothority.List))
 	keys := make([][]byte, len(db.Cothority.List))
 	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
-		sendy := abstract.Sum(network.Suite, pwhash, salty[i])
-		rep, err := cl.GetGuard(si, UID, epoch, sendy)
+		// blankpoints needed to call the functions
+		blankpoint := network.Suite.Point()
+		blankscalar := network.Suite.Scalar()
+		// Initializing the variables pwbytes and blindbytes, which are scalars with the values of pwhash and blinds[i].
+		pwbytes := network.Suite.Scalar()
+		pwbytes.SetBytes(pwhash)
+		a, _ := blankscalar.MarshalBinary()
+		log.Lvl2("BlankScalar: ", a)
+		blindbytes := network.Suite.Scalar()
+		blindbytes.SetBytes(blinds[i])
+		b, _ := blankscalar.MarshalBinary()
+		log.Lvl2("BlankScalar: ", b)
+		log.Lvl2("pwbytes: ", pwbytes)
+		log.Lvl2("blindbytes: ", blindbytes)
+		log.Lvl2("Pwhash: ", pwhash)
+		log.Lvl2("blinds: ", blinds[i])
+		// this next part performs all necessary computations to create Xi, here called sendy.
+		ad := blankscalar.Add(pwbytes, blindbytes).Bytes()
+		log.Lvl2("Addition: ", ad)
+		log.Lvl2("BlankScalar: ", blankscalar.Bytes())
+		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
+		rep, err := cl.GetGuard(si, uid, epoch, sendy)
 		log.ErrFatal(err)
-		responses[i] = rep.Msg
+		log.Lvl2("SetRep: ", rep.Msg)
+		reply := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes))
+		responses[i], err = reply.MarshalBinary()
+		log.ErrFatal(err)
+
 		block, err := aes.NewCipher(responses[i])
 		if err != nil {
 			panic(err)
 		}
-		log.Print("Block Size: ", block.BlockSize())
-		// This part is necessary because you need a key to convert the Hash to a stream. The key is not even important because
-		//all that is required is that the request gives the same output for the same input
 		stream := cipher.NewCTR(block, iv)
 		msg := make([]byte, 88)
-		//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
-		//password setting and authentication services
-		log.Print("SecretKey: ", []byte(secretkeys[i]))
-		log.Print("set xorkey before: ", msg)
 		stream.XORKeyStream(msg, []byte(secretkeys[i]))
-		log.Print("set xorkey after: ", msg)
 		keys[i] = msg
 
 	}
-	// This is the code that seals the user data using the master key and saves it to the db
+	log.Lvl2("key: ", k)
+	// This is the code that seals the user data using the master key and saves it to the db.
 	block, _ := aes.NewCipher(k)
 	aesgcm, _ := cipher.NewGCM(block)
 	ciphertext := aesgcm.Seal(nil, mastersalt, userdata, nil)
-	db.Users = append(db.Users, User{UID, mastersalt, keys, ciphertext, iv})
+	db.Users = append(db.Users, User{uid, mastersalt, keys, ciphertext, iv})
 }
 
-// saltgen is a function that generates all the keys and salts given a length and an initial salt
+// saltgen is a function that generates all the keys and salts given a length and an initial salt.
 func saltgen(salt []byte, count int) [][]byte {
 	salts := make([][]byte, count)
 	for i := 0; i < count; i++ {
@@ -187,11 +216,11 @@ func saltgen(salt []byte, count int) [][]byte {
 	return salts
 }
 
-// setup when you setup the password
+// setup is called when you setup the password database.
 func setup(c *cli.Context) error {
 
 	groupToml := c.Args().First()
-	log.Print("Setup is working")
+	log.Lvl2("Setup is working")
 	var err error
 	t, err := readGroup(groupToml)
 	db = &Database{
@@ -200,7 +229,7 @@ func setup(c *cli.Context) error {
 	log.ErrFatal(err)
 	b, err := network.MarshalRegisteredType(db)
 	log.ErrFatal(err)
-	log.Print("Setup is working")
+	log.Lvl2("Setup is working")
 	err = ioutil.WriteFile("config.bin", b, 0660)
 	log.ErrFatal(err)
 	return nil
@@ -213,42 +242,84 @@ func getuser(UID []byte) *User {
 			return &u
 		}
 	}
-	// this is necessary because there needs to be a return at the end but
 	return nil
 }
 
 // getpass contacts the guard servers, then gets the passwords and reconstructs the secret keys
-func getpass(c *cli.Context, UID []byte, epoch []byte, pass string) {
-	if getuser(UID) == nil {
+func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
+	if getuser(uid) == nil {
 		log.Fatal("Wrong username")
 	}
-	pwhash := abstract.Sum(network.Suite, []byte(pass), getuser(UID).Salt)
-	salty := saltgen(getuser(UID).Salt, len(db.Cothority.List))
+
 	keys := make([]string, len(db.Cothority.List))
+
+	blind := make([]byte, 12)
+	rand.Read(blind)
+	blinds := saltgen(blind, len(db.Cothority.List))
+	iv := getuser(uid).Iv
+	// pwhash is the password hash that will be sent to the guard servers with Gu and bi
+	pwhash := abstract.Sum(network.Suite, []byte(pass), getuser(uid).Salt)
+	GuHash := abstract.Sum(network.Suite, uid, epoch)
+	// creating stream for Scalar.Pick from the hash
+	// creating stream for Scalar.Pick from the hash
+	blocky, err := aes.NewCipher(iv)
+	log.ErrFatal(err)
+	log.Lvl2("Blocky: ", blocky)
+	log.Lvl2("Iv: ", iv)
+	log.Lvl2("GetHash: ", pwhash)
+	GuStream := cipher.NewCTR(blocky, iv)
+	gupoint := network.Suite.Point()
+	Gu, _ := gupoint.Pick(GuHash, GuStream)
+	// printing gudat is just a test
+	Gudat, _ := Gu.MarshalBinary()
+	log.Lvl2("GetGu: ", Gudat)
+
 	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
-		sendy := abstract.Sum(network.Suite, pwhash, salty[i])
-		rep, err := cl.GetGuard(si, UID, epoch, sendy)
+		// blankpoints needed for computations
+		blankpoint := network.Suite.Point()
+		blankscalar := network.Suite.Scalar()
+		// pwbytes and blindbytes are actually scalars that are initialized to the values of the bytes
+		pwbytes := network.Suite.Scalar()
+		pwbytes.SetBytes(pwhash)
+		a, _ := blankscalar.MarshalBinary()
+		log.Lvl2("BlankScalar: ", a)
+		blindbytes := network.Suite.Scalar()
+		blindbytes.SetBytes(blinds[i])
+		b, _ := blankscalar.MarshalBinary()
+		// The following sections of the code perform the computations to Create Xi, here called sendy.
+		log.Lvl2("BlankScalar: ", b)
+		log.Lvl2("getpwhash: ", pwhash)
+		log.Lvl2("getblind: ", blinds[i])
+		ad, _ := blankscalar.Add(pwbytes, blindbytes).MarshalBinary()
+		log.Lvl2("GetAddition: ", ad)
+		mul, err := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes)).MarshalBinary()
+		log.Lvl2("GetMul: ", mul)
+		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
+		rep, err := cl.GetGuard(si, uid, epoch, sendy)
+		log.Lvl2("GetRep: ", rep.Msg)
 		log.ErrFatal(err)
-		block, err := aes.NewCipher(rep.Msg)
-		stream := cipher.NewCTR(block, getuser(UID).Iv)
-		msg := make([]byte, 88)
-		//this does not work, as it merely appends zeros at the end, this is still necessary to do an xor during the clients
-		//password setting and authentication services
-		log.Print("set xorkey before: ", msg)
-		stream.XORKeyStream(msg, []byte(getuser(UID).Keys[i]))
-		log.Print("set xorkey after: ", msg)
+		// This section of the program removes the blinding factor from the Zi for storage
+		reply, err := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes)).MarshalBinary()
+		log.ErrFatal(err)
+		log.Lvl2("Reply: ", reply)
+		// This section Xors the data with the response
+		block, err := aes.NewCipher(reply)
+		stream := cipher.NewCTR(block, getuser(uid).Iv)
+		msg := make([]byte, len([]byte(getuser(uid).Keys[i])))
+		stream.XORKeyStream(msg, []byte(getuser(uid).Keys[i]))
 		keys[i] = string(msg)
 	}
 	k := s.Combine(keys)
 	if len(k) == 0 {
 		log.Fatal("You entered the wrong password")
 	}
+	log.Lvl2("key: ", []byte(k))
 	block, err := aes.NewCipher([]byte(k))
 	log.ErrFatal(err)
 	aesgcm, err := cipher.NewGCM(block)
 	log.ErrFatal(err)
-	plaintext, err := aesgcm.Open(nil, getuser(UID).Salt, getuser(UID).Data, nil)
+	plaintext, err := aesgcm.Open(nil, getuser(uid).Salt, getuser(uid).Data, nil)
 	log.ErrFatal(err)
 	log.Print(string(plaintext))
 }
@@ -264,9 +335,9 @@ func setpass(c *cli.Context) error {
 	return nil
 }
 func get(c *cli.Context) error {
-	UID := []byte(c.Args().Get(0))
-	Epoch := []byte{'E', 'P', 'O', 'C', 'H'}
-	Pass := c.Args().Get(1)
-	getpass(c, UID, Epoch, string(Pass))
+	uid := []byte(c.Args().Get(0))
+	epoch := []byte{'E', 'P', 'O', 'C', 'H'}
+	pass := c.Args().Get(1)
+	getpass(c, uid, epoch, string(pass))
 	return nil
 }

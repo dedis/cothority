@@ -24,33 +24,38 @@ func init() {
 
 //This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
 
-// Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests
+// Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests.
 type Guard struct {
 	*sda.ServiceProcessor
 	path string
-	z    []byte
+	Z    []byte
 }
 
 // Request is what the Guard service is expected to receive from clients.
 type Request struct {
 	UID   []byte
 	Epoch []byte
-	Msg   []byte
+	Msg   abstract.Point
 }
 
 // Response is what the Guard service will reply to clients.
 type Response struct {
-	Msg []byte
+	Msg abstract.Point
 }
 
 // Request treats external request to this service.
 func (st *Guard) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
-	hashy := abstract.Sum(network.Suite, req.Msg, st.z, req.UID, req.Epoch)
-	return &Response{hashy}, nil
+	blankpoint := network.Suite.Point()
+	zbytes := network.Suite.Scalar()
+	zbytes.SetBytes(st.Z)
+	//need to change this impementation, the setbytes will not work
+
+	sendy := blankpoint.Mul(req.Msg, zbytes)
+	return &Response{sendy}, nil
 }
 
-// newGuardService creates a new service that is built for Guard
+// newGuardService creates a new service that is built for Guard.
 func newGuardService(c *sda.Context, path string) sda.Service {
 	s := &Guard{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -65,7 +70,7 @@ func newGuardService(c *sda.Context, path string) sda.Service {
 	const n = 88
 	lel := make([]byte, n)
 	rand.Read(lel)
-	s.z = lel
+	s.Z = lel
 
 	return s
 }

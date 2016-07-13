@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 // Client is a structure to communicate with Guard service
@@ -19,11 +20,11 @@ func NewClient() *Client {
 }
 
 // GetGuard is the function that sends a request to the guard server and creates a client to receive the responses
-func (c *Client) GetGuard(dst *network.ServerIdentity, UID []byte, epoch []byte, t []byte) (*Response, error) {
+func (c *Client) GetGuard(dst *network.ServerIdentity, UID []byte, epoch []byte, t abstract.Point) (*Response, error) {
 	//send request an entity in the network
 	log.Lvl4("Sending Request to ", dst)
-	ServiceReq := &Request{UID, epoch, []byte(t)}
-	reply, err := c.Send(dst, ServiceReq)
+	serviceReq := &Request{UID, epoch, t}
+	reply, err := c.Send(dst, serviceReq)
 	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
