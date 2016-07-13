@@ -4,8 +4,6 @@ import (
 	"errors"
 	"reflect"
 
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
-
 	"strings"
 
 	"github.com/dedis/cothority/log"
@@ -33,9 +31,8 @@ type Dispatcher interface {
 	// Dispatch will find the right processor to dispatch the packet to. The id
 	// is the identity of the author / sender of the packet.
 	// It can be called for example by the network layer.
-	// If no processor is found for this message type, then the message is
-	// dropped.
-	Dispatch(id *network.ServerIdentity, packet *network.Packet)
+	// If no processor is found for this message type, then an error is returned
+	Dispatch(id *network.ServerIdentity, packet *network.Packet) error
 }
 
 // BlockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
@@ -60,13 +57,13 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType network.Mess
 
 // Dispatch will directly call the right processor's method Process. It's a
 // blocking call if the Processor is blocking !
-func (d *BlockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) {
+func (d *BlockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) error {
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
-		dbg.Lvl2("Dispatcher received packet with no processor associated")
-		return
+		return errors.New("No Processor attached to this message type.")
 	}
 	p.Process(id, packet)
+	return nil
 }
 
 // Processor is an abstraction to represent any object that want to process
@@ -79,16 +76,41 @@ type Processor interface {
 	Process(id *network.ServerIdentity, packet *network.Packet)
 }
 
-// ChannelProcessor is a Processor implementation which looks up the type of the
-// message and then sends it along a registered specific channel.
-// A user of this struct must register channels using `RegisterChannel`
-// and then can listen on the channel to get all messages of this type.
-type ChannelProcessor struct {
-	// channels holds all channels available for the different message-types
-	channels map[network.MessageTypeID]interface{}
-}
+/*// ChannelProcessor is a Processor implementation which looks up the type of the*/
+//// message and then sends it along a registered specific channel.
+//// A user of this struct must register channels using `RegisterChannel`
+//// and then can listen on the channel to get all messages of this type.
+//type ChannelProcessor struct {
+//// channels holds all channels available for the different message-types
+//channels map[network.MessageTypeID]interface{}
+//}
 
-/*// RegisterChannel takes a channel with a struct that contains two*/
+//var ErrSliceAggregation = errors.New("RegisterChannel takes a struct, call RegisterChannelAggregation to register a channel of slice")
+
+//func (c *ChannelProcessor) RegisterChannel(channel interface{}) error {
+//cr := reflect.TypeOf(c)
+//// instantiate the channel if not done
+//if cr.Kind() == reflect.Ptr {
+//val := reflect.ValueOf(c).Elem()
+//val.Set(reflect.MakeChan(val.Type(), 100))
+//return c.RegisterChannel(reflect.Indirect(val).Interface())
+//} else if reflect.ValueOf(c).IsNil() {
+//return errors.New("Can not Register a (value) channel not initialized")
+//} else if cr.Kind() != reflect.Chan {
+//// Check we have the correct channel-type
+//return errors.New("Input is not channel")
+//} else if cr.Elem().Kind() != reflect.Struct {
+//return errors.New("Input is not channel of structure")
+//} else if cr.Elem().Kind() == reflect.Slice {
+//return ErrSliceAggregation
+//}
+//// Automatic registration of the message to the network library.
+//typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+//cr.Elem().Type), cr.Elem().Type)
+
+//}
+
+//// RegisterChannel takes a channel with a struct that contains two
 //// elements: a TreeNode and a message. It will send every message that are the
 //// same type to this channel.
 //// This function handles also
@@ -132,93 +154,93 @@ type ChannelProcessor struct {
 //n.messageTypeFlags[typ] = flags
 //log.Lvl4("Registered channel", typ, "with flags", flags)
 //return nil
-/*}*/
+//}
 
-// HanlderProcessor is a Processor implementation which looks up the type of the
-// message and then sends it to a specific registered handler function. An user
-// of HandlerProcessor must register handlers using `RegisterHandler`
-type HandlerProcessor struct {
-}
+//// HanlderProcessor is a Processor implementation which looks up the type of the
+//// message and then sends it to a specific registered handler function. An user
+//// of HandlerProcessor must register handlers using `RegisterHandler`
+//type HandlerProcessor struct {
+//}
 
-// aggregator is a utility to store and retrieve messages. You can retrieve
-// messages in batch of specific size or individually for each message type,
-// whether you call `aggregateType()`. Call `release` to get the aggregated
-// messages.
-type aggregator struct {
-	// aggregateSize contains the size of batches when messages are bein
-	// gaggregated. 0,1 or empty entry for individual retrieval.
-	aggregateSize map[network.MessageTypeID]int
-	msgQueue      map[network.MessageTypeID][]interface{}
-}
+//// aggregator is a utility to store and retrieve messages. You can retrieve
+//// messages in batch of specific size or individually for each message type,
+//// whether you call `aggregateType()`. Call `release` to get the aggregated
+//// messages.
+//type aggregator struct {
+//// aggregateSize contains the size of batches when messages are bein
+//// gaggregated. 0,1 or empty entry for individual retrieval.
+//aggregateSize map[network.MessageTypeID]int
+//msgQueue      map[network.MessageTypeID][]interface{}
+//}
 
-func newAggregator() *aggregator {
-	return &aggregator{
-		aggregateSize: make(map[network.MessageTypeID]int),
-		msgQueue:      make(map[network.MessageTypeID][]interface{}),
-	}
-}
+//func newAggregator() *aggregator {
+//return &aggregator{
+//aggregateSize: make(map[network.MessageTypeID]int),
+//msgQueue:      make(map[network.MessageTypeID][]interface{}),
+//}
+//}
 
-// aggregateType takes a message type and an int to specify how many messages of
-// this type it must aggregate before releasing them.
-func (a *aggregator) aggregateType(msg network.MessageTypeID, agg int) {
-	if agg < 1 {
-		panic("Can't aggregate nothing...")
-	}
-	a.aggregateSize[msg] = agg
-}
+//// aggregateType takes a message type and an int to specify how many messages of
+//// this type it must aggregate before releasing them.
+//func (a *aggregator) aggregateType(msg network.MessageTypeID, agg int) {
+//if agg < 1 {
+//panic("Can't aggregate nothing...")
+//}
+//a.aggregateSize[msg] = agg
+//}
 
-// disableAggregateType will remove the aggregation flag for this specific type
-func (a *aggregator) disableAggregateType(msg network.MessageTypeID) {
-	delete(a.aggregateSize, msg)
-}
+//// disableAggregateType will remove the aggregation flag for this specific type
+//func (a *aggregator) disableAggregateType(msg network.MessageTypeID) {
+//delete(a.aggregateSize, msg)
+//}
 
-// aggregate takes a message type and a message and stores the message
-// internally. Any next call to `Release(msgType)` will contain this message.
-func (a *aggregator) aggregate(msgType network.MessageTypeID, msg interface{}) {
-	a.msgQueue[msgType] = append(a.msgQueue[msgType], msg)
-}
+//// aggregate takes a message type and a message and stores the message
+//// internally. Any next call to `Release(msgType)` will contain this message.
+//func (a *aggregator) aggregate(msgType network.MessageTypeID, msg interface{}) {
+//a.msgQueue[msgType] = append(a.msgQueue[msgType], msg)
+//}
 
-// release will release all messages aggregating of this type.
-// If there are more messages than the batch size, it will delete *batch_size*
-// messages and keep the rest for future release.
-// The slice returned can be of length one if the flag has not been set.
-// The slice returned can be of length 0 if no messages of this type have been
-// stored.
-// The slice returned can be nil if there is not enough messages yet aggregated,
-// i.e. the number of message of this type is less than the batch size.
-func (a *aggregator) release(msgType network.MessageTypeID) []interface{} {
-	nb, ok := a.aggregateSize[msgType]
-	msgs, okM := a.msgQueue[msgType]
-	// no messages of this type
-	if !okM || len(msgs) == 0 {
-		return []interface{}{}
-	}
+//// release will release all messages aggregating of this type.
+//// If there are more messages than the batch size, it will delete *batch_size*
+//// messages and keep the rest for future release.
+//// The slice returned can be of length one if the flag has not been set.
+//// The slice returned can be of length 0 if no messages of this type have been
+//// stored.
+//// The slice returned can be nil if there is not enough messages yet aggregated,
+//// i.e. the number of message of this type is less than the batch size.
+//func (a *aggregator) release(msgType network.MessageTypeID) []interface{} {
+//nb, ok := a.aggregateSize[msgType]
+//msgs, okM := a.msgQueue[msgType]
+//// no messages of this type
+//if !okM || len(msgs) == 0 {
+//return []interface{}{}
+//}
 
-	// individual retrieval
-	if !ok || nb == 0 || nb == 1 {
-		ret := msgs[:1]
-		a.msgQueue[msgType] = msgs[1:]
-		return ret
-	}
+//// individual retrieval
+//if !ok || nb == 0 || nb == 1 {
+//ret := msgs[:1]
+//a.msgQueue[msgType] = msgs[1:]
+//return ret
+//}
 
-	// not enough messages yet
-	if len(msgs) < nb {
-		return nil
-	}
+//// not enough messages yet
+//if len(msgs) < nb {
+//return nil
+//}
 
-	// take a batch
-	var ret = make([]interface{}, nb)
-	// copy needed in order for the GC to work - referenced array in the slice
-	// will always be kept if we just call `ret = msgs[:nb]`
-	copy(ret, msgs[:nb])
-	if len(msgs) > nb {
-		keep := make([]interface{}, len(msgs)-nb)
-		copy(keep, msgs[nb:])
-		// it seems OK to just replace the slice
-		a.msgQueue[msgType] = keep
-	}
-	return ret
-}
+//// take a batch
+//var ret = make([]interface{}, nb)
+//// copy needed in order for the GC to work - referenced array in the slice
+//// will always be kept if we just call `ret = msgs[:nb]`
+//copy(ret, msgs[:nb])
+//if len(msgs) > nb {
+//keep := make([]interface{}, len(msgs)-nb)
+//copy(keep, msgs[nb:])
+//// it seems OK to just replace the slice
+//a.msgQueue[msgType] = keep
+//}
+//return ret
+//}
 
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,

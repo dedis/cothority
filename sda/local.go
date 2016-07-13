@@ -219,13 +219,13 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 // known trees, also triggering dispatching of SDA-messages waiting for that
 // tree
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
-	h.addPendingTreeMarshal(tm)
+	h.overlay.addPendingTreeMarshal(tm)
 }
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *Roster) {
-	h.checkPendingTreeMarshal(el)
+	h.overlay.checkPendingTreeMarshal(el)
 }
 
 // GetPrivate returns the private key of a host
