@@ -106,8 +106,8 @@ func (c *Config) String() string {
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
-// GetKeys returns the keys up to the next ":". If given a slice of keys, it
-// will return sub-keys.
+// GetKeys returns the unique keys up to the next ":". If given a slice of keys, it
+// will join them using ":" and return the unique keys with that prefix.
 func (c *Config) GetKeys(keys ...string) []string {
 	var ret []string
 	start := strings.Join(keys, ":")
@@ -125,7 +125,9 @@ func (c *Config) GetKeys(keys ...string) []string {
 	return sortUniq(ret)
 }
 
-// GetValue returns the value of the key
+// GetValue returns the value of the key. If more than one key is given,
+// the slice is joined using ":" and the value is returned. If the key
+// is not found, an empty string is returned.
 func (c *Config) GetValue(keys ...string) string {
 	key := strings.Join(keys, ":")
 	for k, v := range c.Data {
@@ -136,7 +138,8 @@ func (c *Config) GetValue(keys ...string) string {
 	return ""
 }
 
-// GetIntKeys returns the keys in the middle of prefix and suffix
+// GetIntKeys returns the keys in the middle of prefix and suffix. Searching
+// for the keys, the method will add ":" after the prefix and before the suffix.
 func (c *Config) GetIntKeys(prefix, suffix string) []string {
 	var ret []string
 	if len(prefix) > 0 {
