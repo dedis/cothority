@@ -320,7 +320,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
-	case <-time.After(time.Second * 3):
+	case <-time.After(time.Second * 60):
 		return errors.New("Timed out while waiting for signature")
 	}
 	return nil
