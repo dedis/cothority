@@ -71,8 +71,8 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		schnorr:          new(poly.Schnorr),
 		secrets:          newSecrets(),
 		ltssInit:         false,
-		longTermSecDone:  make(chan bool, 1),
-		shortTermSecDone: make(chan bool, 1),
+		longTermSecDone:  make(chan bool, n),
+		shortTermSecDone: make(chan bool, n),
 		sigChan:          make(chan *poly.SchnorrSig),
 	}
 
