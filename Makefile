@@ -28,7 +28,7 @@ test_lint:
 	}
 
 test_go:
-	go test -race -p=1 -short ./...
+	cd services/skipchain; go test -race -p=1 -short -v ./...
 
 test: test_fmt test_lint test_go
 
