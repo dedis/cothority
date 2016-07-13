@@ -21,7 +21,15 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-// CothoritydConfig is the Cothority daemon config
+var in *bufio.Reader
+var out io.Writer
+
+func init() {
+	in = bufio.NewReader(os.Stdin)
+	out = os.Stdout
+}
+
+// CothoritydConfig is the cothority daemon config
 type CothoritydConfig struct {
 	Public    string
 	Private   string
@@ -242,13 +250,41 @@ func (s *ServerToml) String() string {
 
 // TildeToHome takes a path and replaces an eventual "~" with the home-directory
 func TildeToHome(path string) string {
-	if strings.HasPrefix(path, "~") {
+	if strings.HasPrefix(path, "~/") {
 		usr, err := user.Current()
-		if err != nil {
-			log.Error("Could't get home-directory")
-			return path
-		}
+		log.ErrFatal(err, "Got error while fetching home-directory")
 		return usr.HomeDir + path[1:]
 	}
 	return path
+}
+
+// Input prints the arguments given with a 'input'-format and
+// proposes the 'def' string as default. If the user presses
+// 'enter', the 'dev' will be returned.
+func Input(def string, args ...interface{}) string {
+	fmt.Fprint(out, args...)
+	fmt.Fprintf(out, " [%s]: ", def)
+	str, err := in.ReadString('\n')
+	if err != nil {
+		log.Fatal("Could not read input.")
+	}
+	str = strings.TrimSpace(str)
+	if str == "" {
+		return def
+	}
+	return str
+}
+
+// Inputf takes a format and calls Input
+func Inputf(def string, f string, args ...interface{}) string {
+	return Input(def, fmt.Sprintf(f, args...))
+}
+
+// InputYN asks a Yes/No question
+func InputYN(def bool, args ...interface{}) bool {
+	defStr := "Yn"
+	if !def {
+		defStr = "Ny"
+	}
+	return strings.ToLower(string(Input(defStr, args...)[0])) == "y"
 }
