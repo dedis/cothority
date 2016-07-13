@@ -1,3 +1,10 @@
+/*
+Cisc is the Cisc Identity SkipChain to store information in a skipchain and
+being able to retrieve it.
+
+This is only one part of the system - the other part being the cothority that
+holds the skipchain and answers to requests from the cisc-binary.
+*/
 package main
 
 import (
@@ -10,24 +17,10 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/services/identity"
 	"gopkg.in/codegangsta/cli.v1"
 )
-
-/*
-Cisc is the Cisc Identity SkipChain to store information in a skipchain and
-being able to retrieve it.
-
-This is only one part of the system - the other part being the cothority that
-holds the skipchain and answers to requests from the cisc-binary.
-*/
-
-var configFile string
-var sshDir string
-var sshConfig string
-var clientApp *identity.Identity
 
 func main() {
 	app := cli.NewApp()
@@ -57,24 +50,7 @@ func main() {
 		},
 	}
 	app.Before = func(c *cli.Context) error {
-		configDir := config.TildeToHome(c.String("config"))
-		os.Mkdir(configDir, 0660)
 		log.SetDebugVisible(c.Int("debug"))
-		configFile = configDir + "/config.bin"
-		if err := loadConfig(); err != nil {
-			log.Error("Problems reading config-file. Most probably you\n",
-				"should start a new one by running with the 'setup'\n",
-				"argument.")
-		}
-		sshDir = config.TildeToHome(c.String("cs"))
-		sshConfig = sshDir + "/config"
-		return nil
-	}
-	app.After = func(c *cli.Context) error {
-		if clientApp != nil {
-			err := saveConfig()
-			log.ErrFatal(err, "Error while creating config-file", configFile)
-		}
 		return nil
 	}
 	app.Run(os.Args)
@@ -99,11 +75,9 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	clientApp = identity.NewIdentity(group.Roster, 2, name)
+	clientApp := identity.NewIdentity(group.Roster, 2, name)
 	log.ErrFatal(clientApp.CreateIdentity())
-	err = saveConfig()
-	log.ErrFatal(err)
-	return nil
+	return saveConfig(c, clientApp)
 }
 
 func idConnect(c *cli.Context) error {
@@ -122,10 +96,9 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	clientApp = identity.NewIdentity(group.Roster, 2, name)
+	clientApp := identity.NewIdentity(group.Roster, 2, name)
 	clientApp.AttachToIdentity(id)
-	log.ErrFatal(saveConfig())
-	return nil
+	return saveConfig(c, clientApp)
 }
 func idFollow(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -144,14 +117,15 @@ func idCheck(c *cli.Context) error {
  * Commands related to the config in general
  */
 func configUpdate(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	log.ErrFatal(clientApp.ConfigUpdate())
 	log.ErrFatal(clientApp.ProposeFetch())
 	log.Info("Successfully updated")
+	log.ErrFatal(saveConfig(c, clientApp))
 	return configList(c)
 }
 func configList(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	log.Info("Account name:", clientApp.ManagerStr)
 	log.Infof("Identity-ID: %x", clientApp.ID)
 	log.Infof("Current config: %s", clientApp.Config)
@@ -165,21 +139,20 @@ func configList(c *cli.Context) error {
 	return nil
 }
 func configPropose(c *cli.Context) error {
-	assertCA()
 	log.Fatal("Not yet implemented")
 	return nil
 }
 func configVote(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	log.ErrFatal(clientApp.ProposeVote(!c.Bool("r")))
-	return nil
+	return saveConfig(c, clientApp)
 }
 
 /*
  * Commands related to the key/value storage and retrieval
  */
 func kvList(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	log.Infof("config for id %x", clientApp.ID)
 	for k, v := range clientApp.Config.Data {
 		log.Infof("%s: %s", k, v)
@@ -191,7 +164,7 @@ func kvValue(c *cli.Context) error {
 	return nil
 }
 func kvAdd(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	if c.NArg() < 2 {
 		log.Fatal("Please give a key value pair")
 	}
@@ -200,10 +173,10 @@ func kvAdd(c *cli.Context) error {
 	prop := clientApp.GetProposed()
 	prop.Data[key] = value
 	log.ErrFatal(clientApp.ProposeSend(prop))
-	return nil
+	return saveConfig(c, clientApp)
 }
-func kvRm(c *cli.Context) error {
-	assertCA()
+func kvDel(c *cli.Context) error {
+	clientApp := assertCA(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give a key to delete")
 	}
@@ -214,14 +187,15 @@ func kvRm(c *cli.Context) error {
 	}
 	delete(prop.Data, key)
 	log.ErrFatal(clientApp.ProposeSend(prop))
-	return nil
+	return saveConfig(c, clientApp)
 }
 
 /*
  * Commands related to the ssh-handling
  */
 func sshAdd(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
+	sshDir, sshConfig := sshDirConfig(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give the hostname as argument")
 	}
@@ -258,11 +232,11 @@ func sshAdd(c *cli.Context) error {
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
 	prop.Data[key] = string(pub)
-	proposeSendVoteUpdate(prop)
-	return nil
+	proposeSendVoteUpdate(clientApp, prop)
+	return saveConfig(c, clientApp)
 }
 func sshLs(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
 	var devs []string
 	if c.Bool("a") {
 		devs = kvGetKeys("ssh")
@@ -277,7 +251,8 @@ func sshLs(c *cli.Context) error {
 	return nil
 }
 func sshDel(c *cli.Context) error {
-	assertCA()
+	clientApp := assertCA(c)
+	_, sshConfig := sshDirConfig(c)
 	if c.NArg() == 0 {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
@@ -285,7 +260,7 @@ func sshDel(c *cli.Context) error {
 	if len(kvGetValue("ssh", clientApp.ManagerStr, ah)) == 0 {
 		log.Print("Didn't find alias or host", ah)
 		sshLs(c)
-		log.Fatal("Aboring")
+		log.Fatal("Aborting")
 	}
 	sc, err := NewSSHConfigFromFile(sshConfig)
 	log.ErrFatal(err)
@@ -294,8 +269,8 @@ func sshDel(c *cli.Context) error {
 	log.ErrFatal(err)
 	prop := clientApp.GetProposed()
 	delete(prop.Data, "ssh:"+clientApp.ManagerStr+":"+ah)
-	proposeSendVoteUpdate(prop)
-	return nil
+	proposeSendVoteUpdate(clientApp, prop)
+	return saveConfig(c, clientApp)
 }
 func sshRotate(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -305,7 +280,7 @@ func sshSync(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func proposeSendVoteUpdate(p *identity.Config) {
+func proposeSendVoteUpdate(clientApp *identity.Identity, p *identity.Config) {
 	log.ErrFatal(clientApp.ProposeSend(p))
 	log.ErrFatal(clientApp.ProposeVote(true))
 	log.ErrFatal(clientApp.ConfigUpdate())

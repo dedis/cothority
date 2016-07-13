@@ -115,11 +115,11 @@ func init() {
 				Action:    kvAdd,
 			},
 			{
-				Name:      "rm",
-				Aliases:   []string{"ls"},
+				Name:      "del",
+				Aliases:   []string{"rm"},
 				Usage:     "list all values",
 				ArgsUsage: "key",
-				Action:    kvRm,
+				Action:    kvDel,
 			},
 		},
 	}

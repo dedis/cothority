@@ -22,44 +22,57 @@ import (
 
 // loadConfig will return nil if the config-file doesn't exist. It tries to
 // load the file given in configFile.
-func loadConfig() error {
+func loadConfig(c *cli.Context) (*identity.Identity, error) {
+	configFile := getConfig(c)
 	log.Lvl2("Loading from", configFile)
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil
+			return &identity.Identity{}, nil
 		}
-		return err
+		return nil, err
 	}
 	_, msg, err := network.UnmarshalRegistered(buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	var ok bool
-	clientApp, ok = msg.(*identity.Identity)
+	ca, ok := msg.(*identity.Identity)
 	if !ok {
 		return errors.New("Wrong message-type in config-file")
 	}
-	return nil
+	return ca, nil
 }
 
 // Saves the clientApp in the configfile - refuses to save an empty file.
-func saveConfig() error {
-	if clientApp == nil {
+func saveConfig(c *cli.Context, ca *identity.Identity) error {
+	configFile := getConfig(c)
+	if ca == nil {
 		return errors.New("Cannot save empty clientApp")
 	}
-	buf, err := network.MarshalRegisteredType(clientApp)
+	buf, err := network.MarshalRegisteredType(ca)
 	if err != nil {
 		return err
 	}
 	return ioutil.WriteFile(configFile, buf, 0660)
 }
 
+// Returns the config-file from the configuration
+func getConfig(c *cli.Context) string {
+	configDir := config.TildeToHome(c.GlobalString("config"))
+	os.Mkdir(configDir, 0660)
+	return configDir + "/config.bin"
+}
+
 // Asserts that the clientApp exists, else fatals
-func assertCA() {
-	if clientApp == nil {
-		log.Fatal("Couldn't load config-file", configFile, "or it was empty.")
+func assertCA(c *cli.Context) *identity.Identity {
+	ca, err := loadConfig(c)
+	log.ErrFatal(err, "Problems reading config-file. Most probably you\n",
+		"should start a new one by running with the 'setup'\n",
+		"argument.")
+	if ca == nil {
+		log.Fatal("Couldn't load config-file or it was empty.")
 	}
+	return ca
 }
 
 // Reads the group-file and returns it
@@ -67,8 +80,9 @@ func getGroup(c *cli.Context) *config.Group {
 	gfile := c.Args().Get(0)
 	gr, err := os.Open(gfile)
 	log.ErrFatal(err)
+	defer gr.Close()
 	groups, err := config.ReadGroupDescToml(gr)
-	gr.Close()
+	log.ErrFatal(err)
 	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
 		log.Fatal("No servers found in roster from", gfile)
 	}
@@ -138,6 +152,12 @@ func sortUniq(slice []string) []string {
 		}
 	}
 	return ret
+}
+
+// retrieves ssh-config-name and ssh-directory
+func sshDirConfig(c *cli.Context) (string, string) {
+	sshDir = config.TildeToHome(c.String("cs"))
+	return sshDir, sshDir + "/config"
 }
 
 // MakeSSHKeyPair make a pair of public and private keys for SSH access.
