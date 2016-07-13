@@ -200,7 +200,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 		}
 		tni := o.newTreeNodeInstanceFromToken(tn, sdaMsg.To)
 		// see if we know the Service Recipient
-		s, ok := o.host.serviceStore.serviceByID(sdaMsg.To.ServiceID)
+		s, ok := o.host.serviceManager.serviceByID(sdaMsg.To.ServiceID)
 
 		// no servies defined => check if there is a protocol that can be
 		// created

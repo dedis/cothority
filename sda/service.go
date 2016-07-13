@@ -155,7 +155,7 @@ func (s *serviceFactory) start(name string, c *Context, path string) (Service, e
 // serviceStore is the place where all instantiated services are stored
 // It gives access to :  all the currently running services and is handling the
 // configuration path for them
-type serviceStore struct {
+type serviceManager struct {
 	// the actual services
 	services map[ServiceID]Service
 	// the config paths
@@ -167,7 +167,7 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceStore(h *Host, o *Overlay) *serviceStore {
+func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	// check if we have a config folder
 	if err := os.MkdirAll(configFolder, 0777); err != nil {
 		_, ok := err.(*os.PathError)
@@ -197,29 +197,61 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		log.Lvl2("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
-		// !! register to the ProtocolFactory !!
-		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
 	log.Lvl3(h.workingAddress, "instantiated all services")
-	return &serviceStore{services, configs}
+	s := &serviceManager{services, configs}
+
+	// registering messages that services are expecting
+	h.RegisterProcessor(s, RequestID)
+	h.RegisterProcessor(s, ServiceMessageID)
+	return s
+}
+
+// Process implements the Processor interface: service manager will relay
+// messages to the right Service.
+func (s *serviceManager) Process(id *network.ServerIdentity, data *network.Packet) {
+	switch data.MsgType {
+	case RequestID:
+		r := data.Msg.(ClientRequest)
+		// check if the target service is indeed existing
+		s, ok := s.serviceByID(r.Service)
+		if !ok {
+			log.Error("Received a request for an unknown service", r.Service)
+			// XXX TODO should reply with some generic response =>
+			// 404 Service Unknown
+			return
+		}
+		go s.ProcessClientRequest(id, &r)
+	case ServiceMessageID:
+		m := data.Msg.(InterServiceMessage)
+		// check if the target service is indeed existing
+		s, ok := s.serviceByID(m.Service)
+		if !ok {
+			log.Error("Received a message for an unknown service", m.Service)
+			// XXX TODO should reply with some generic response =>
+			// 404 Service Unknown
+			return
+		}
+		go s.ProcessServiceMessage(id, &m)
+	}
 }
 
 // TODO
-func (s *serviceStore) AvailableServices() []string {
+func (s *serviceManager) AvailableServices() []string {
 	panic("not implemented")
 }
 
 // TODO
-func (s *serviceStore) Service(name string) Service {
+func (s *serviceManager) Service(name string) Service {
 	return s.serviceByString(name)
 }
 
 // TODO
-func (s *serviceStore) serviceByString(name string) Service {
+func (s *serviceManager) serviceByString(name string) Service {
 	panic("Not implemented")
 }
 
-func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
+func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
 	var serv Service
 	var ok bool
 	if serv, ok = s.services[id]; !ok {

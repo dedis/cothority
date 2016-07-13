@@ -78,7 +78,7 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
-		l.Services[host.ServerIdentity.ID] = host.serviceStore.services
+		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
 	}
 	return hosts
 }

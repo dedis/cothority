@@ -54,7 +54,7 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	serviceStore         *serviceStore
+	serviceManager       *serviceManager
 	statusReporterStruct *statusReporterStruct
 }
 
@@ -76,7 +76,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	}
 
 	h.overlay = NewOverlay(h)
-	h.serviceStore = newServiceStore(h, h.overlay)
+	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
 }
@@ -258,13 +258,6 @@ func (h *Host) processMessages() {
 		}
 		log.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
-		case RequestID:
-			r := data.Msg.(ClientRequest)
-			h.processRequest(data.ServerIdentity, &r)
-		case ServiceMessageID:
-			log.Lvl4("Got ServiceMessageID")
-			m := data.Msg.(InterServiceMessage)
-			h.processServiceMessage(data.ServerIdentity, &m)
 		case network.ErrorType:
 			log.Lvl3("Error from the network")
 		default:
@@ -273,33 +266,6 @@ func (h *Host) processMessages() {
 			}
 		}
 	}
-}
-
-func (h *Host) processServiceMessage(e *network.ServerIdentity, m *InterServiceMessage) {
-	// check if the target service is indeed existing
-	s, ok := h.serviceStore.serviceByID(m.Service)
-	if !ok {
-		log.Error("Received a message for an unknown service", m.Service)
-		// XXX TODO should reply with some generic response =>
-		// 404 Service Unknown
-		return
-	}
-	log.Lvl5("host", h.Address(), m)
-	go s.ProcessServiceMessage(e, m)
-
-}
-
-func (h *Host) processRequest(e *network.ServerIdentity, r *ClientRequest) {
-	// check if the target service is indeed existing
-	s, ok := h.serviceStore.serviceByID(r.Service)
-	if !ok {
-		log.Error("Received a request for an unknown service", r.Service)
-		// XXX TODO should reply with some generic response =>
-		// 404 Service Unknown
-		return
-	}
-	log.Lvl5("host", h.Address(), " => Dispatch request to Request")
-	go s.ProcessClientRequest(e, r)
 }
 
 // Handle a connection => giving messages to the MsgChans
