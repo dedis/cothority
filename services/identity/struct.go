@@ -15,23 +15,23 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// ID represents one skipblock and corresponds to its Hash
+// ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
 // Config holds the information about all devices and the data stored in this
-// identity-blockchain
+// identity-blockchain. All Devices have voting-rights to the Config-structure.
 type Config struct {
 	Threshold int
 	Device    map[string]*Device
 	Data      map[string]string
 }
 
-// Device has write-access to the IdentityList if the threshold is given
+// Device is represented by a public key.
 type Device struct {
 	Point abstract.Point
 }
 
-// NewConfig returns a new List with the first owner initialised
+// NewConfig returns a new List with the first owner initialised.
 func NewConfig(threshold int, pub abstract.Point, owner string) *Config {
 	return &Config{
 		Threshold: threshold,
@@ -40,7 +40,7 @@ func NewConfig(threshold int, pub abstract.Point, owner string) *Config {
 	}
 }
 
-// Copy makes a deep copy of the AccountList
+// Copy returns a deep copy of the AccountList.
 func (c *Config) Copy() *Config {
 	b, err := network.MarshalRegisteredType(c)
 	if err != nil {
@@ -59,7 +59,7 @@ func (c *Config) Copy() *Config {
 }
 
 // Hash makes a cryptographic hash of the configuration-file - this
-// can be used as an ID
+// can be used as an ID.
 func (c *Config) Hash() (crypto.HashID, error) {
 	hash := network.Suite.Hash()
 	err := binary.Write(hash, binary.LittleEndian, int32(c.Threshold))
