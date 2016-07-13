@@ -16,13 +16,14 @@ main(){
 #	test ClientSetup
 #	test IdCreate
 #	test ConfigList
+	test ConfigVote
 #	test IdConnect
 #	test KeyAdd
 #	test KeyAdd2
 #	test KeyDel
 #	test SSHAdd
 #	test SSHDel
-	test Follow
+#	test Follow
     stopTest
 }
 
@@ -142,16 +143,34 @@ testIdConnect(){
 	testGrep "$own2" runCl 1 config ls -p
 
 	dbgOut "Voting with client_1 - first reject then accept"
-	testOK runCl 1 config vote -r
+	testOK runCl 1 config vote n
 	testNGrep "$own2" runCl 1 config ls
 	testOK runCl 2 config update
 	testNGrep "$own2" runCl 2 config ls
 
-	testOK runCl 1 config vote
+	testOK runCl 1 config vote y
 	testGrep "$own2" runCl 1 config ls
 	testNGrep "$own2" runCl 2 config ls
 	testOK runCl 2 config update
 	testGrep "$own2" runCl 2 config ls
+}
+
+testConfigVote(){
+	clientSetup
+	testOK runCl 1 kv add one two
+	testNGrep one runCl 1 kv ls
+	testOK runCl 1 config vote n
+	testNGrep one runCl 1 kv ls
+
+	testOK runCl 1 config vote y
+	testGrep one runCl 1 kv ls
+
+	testOK runCl 1 kv add three four
+	testNGrep three runCl 1 kv ls
+	echo "n" | testOK runCl 1 config vote
+	testNGrep three runCl 1 kv ls
+	echo "y" | testOK runCl 1 config vote
+	testGrep three runCl 1 kv ls
 }
 
 testConfigList(){
@@ -212,7 +231,7 @@ clientSetup(){
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
 					testOK runCl $b config update
-					testOK runCl $b config vote
+					testOK runCl $b config vote y
 				fi
 			done
 		done

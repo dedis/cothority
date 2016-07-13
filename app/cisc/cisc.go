@@ -144,6 +144,9 @@ func configPropose(c *cli.Context) error {
 }
 func configVote(c *cli.Context) error {
 	clientApp := assertCA(c)
+	if c.NArg() == 0 {
+
+	}
 	log.ErrFatal(clientApp.ProposeVote(!c.Bool("r")))
 	return saveConfig(c, clientApp)
 }
@@ -239,12 +242,12 @@ func sshLs(c *cli.Context) error {
 	clientApp := assertCA(c)
 	var devs []string
 	if c.Bool("a") {
-		devs = kvGetKeys("ssh")
+		devs = kvGetKeys(clientApp, "ssh")
 	} else {
 		devs = []string{clientApp.ManagerStr}
 	}
 	for _, dev := range devs {
-		for _, pub := range kvGetKeys("ssh", dev) {
+		for _, pub := range kvGetKeys(clientApp, "ssh", dev) {
 			log.Printf("SSH-key for device %s: %s", dev, pub)
 		}
 	}
@@ -257,7 +260,7 @@ func sshDel(c *cli.Context) error {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
 	ah := c.Args().First()
-	if len(kvGetValue("ssh", clientApp.ManagerStr, ah)) == 0 {
+	if len(kvGetValue(clientApp, "ssh", clientApp.ManagerStr, ah)) == 0 {
 		log.Print("Didn't find alias or host", ah)
 		sshLs(c)
 		log.Fatal("Aborting")

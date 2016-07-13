@@ -38,7 +38,7 @@ func loadConfig(c *cli.Context) (*identity.Identity, error) {
 	}
 	ca, ok := msg.(*identity.Identity)
 	if !ok {
-		return errors.New("Wrong message-type in config-file")
+		return nil, errors.New("Wrong message-type in config-file")
 	}
 	return ca, nil
 }
@@ -69,7 +69,7 @@ func assertCA(c *cli.Context) *identity.Identity {
 	log.ErrFatal(err, "Problems reading config-file. Most probably you\n",
 		"should start a new one by running with the 'setup'\n",
 		"argument.")
-	if ca == nil {
+	if ca == nil || ca.ManagerStr == "" {
 		log.Fatal("Couldn't load config-file or it was empty.")
 	}
 	return ca
@@ -91,7 +91,7 @@ func getGroup(c *cli.Context) *config.Group {
 
 // kvGetKeys returns the keys up to the next ":". If given a slice of keys, it
 // will return sub-keys.
-func kvGetKeys(keys ...string) []string {
+func kvGetKeys(clientApp *identity.Identity, keys ...string) []string {
 	var ret []string
 	start := strings.Join(keys, ":")
 	if len(start) > 0 {
@@ -109,7 +109,7 @@ func kvGetKeys(keys ...string) []string {
 }
 
 // kvGetValue returns the value of the key
-func kvGetValue(keys ...string) string {
+func kvGetValue(clientApp *identity.Identity, keys ...string) string {
 	key := strings.Join(keys, ":")
 	for k, v := range clientApp.Config.Data {
 		if k == key {
@@ -120,7 +120,7 @@ func kvGetValue(keys ...string) string {
 }
 
 // kvGetIntKeys returns the keys in the middle of prefix and suffix
-func kvGetIntKeys(prefix, suffix string) []string {
+func kvGetIntKeys(clientApp *identity.Identity, prefix, suffix string) []string {
 	var ret []string
 	if len(prefix) > 0 {
 		prefix += ":"
@@ -156,7 +156,7 @@ func sortUniq(slice []string) []string {
 
 // retrieves ssh-config-name and ssh-directory
 func sshDirConfig(c *cli.Context) (string, string) {
-	sshDir = config.TildeToHome(c.String("cs"))
+	sshDir := config.TildeToHome(c.GlobalString("cs"))
 	return sshDir, sshDir + "/config"
 }
 

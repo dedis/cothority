@@ -13,7 +13,6 @@ import (
 	"os/user"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -245,8 +244,11 @@ func (s *ServerToml) String() string {
 func TildeToHome(path string) string {
 	if strings.HasPrefix(path, "~") {
 		usr, err := user.Current()
-		ui.ErrFatal(err)
-		return usr.HomeDir + path[1:len(path)]
+		if err != nil {
+			log.Error("Could't get home-directory")
+			return path
+		}
+		return usr.HomeDir + path[1:]
 	}
 	return path
 }

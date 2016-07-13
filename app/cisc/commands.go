@@ -76,16 +76,11 @@ func init() {
 				},
 			},
 			{
-				Name:    "vote",
-				Aliases: []string{"v"},
-				Usage:   "vote on existing config",
-				Flags: []cli.Flag{
-					cli.BoolFlag{
-						Name:  "r,reject",
-						Usage: "reject the proposition",
-					},
-				},
-				Action: configVote,
+				Name:      "vote",
+				Aliases:   []string{"v"},
+				Usage:     "vote on existing config",
+				ArgsUsage: "[yn]",
+				Action:    configVote,
 			},
 		},
 	}
