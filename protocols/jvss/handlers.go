@@ -99,14 +99,14 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	secret.incrementConfirms()
 
-	log.LLvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfirms(), len(jv.List())))
+	log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfirms(), len(jv.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfirms() == len(jv.List())) && (msg.SID == LTSS) {
+	if (secret.numConfirms() == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
 		jv.longTermSecDone <- true
 		secret.resetConfirms()
 	}
-	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
+	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
 		jv.shortTermSecDone <- true
 		secret.resetConfirms()
 	}
