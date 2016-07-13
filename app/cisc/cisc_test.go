@@ -13,12 +13,12 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetKeys(t *testing.T) {
-	setupCA()
-	res := kvGetKeys()
+	clientApp := setupCA()
+	res := clientApp.kvGetKeys()
 	assert.Equal(t, []string{"ssh", "web"}, res)
-	res = kvGetKeys("web")
+	res = clientApp.kvGetKeys("web")
 	assert.Equal(t, []string{"one", "two"}, res)
-	res = kvGetKeys("ssh", "mbp")
+	res = clientApp.kvGetKeys("ssh", "mbp")
 	assert.Equal(t, []string{"dl", "gh"}, res)
 }
 
@@ -28,15 +28,15 @@ func TestSortUniq(t *testing.T) {
 }
 
 func TestKvGetIntKeys(t *testing.T) {
-	setupCA()
+	clientApp := setupCA()
 	s1, s2 := "ssh", "gh"
-	assert.Equal(t, []string{"mba", "mbp"}, kvGetIntKeys(s1, s2))
+	assert.Equal(t, []string{"mba", "mbp"}, clientApp.kvGetIntKeys(s1, s2))
 	assert.Equal(t, "ssh", s1)
 	assert.Equal(t, "gh", s2)
 }
 
-func setupCA() {
-	clientApp = &identity.Identity{
+func setupCA() *CA {
+	return &CA{&identity.Identity{
 		Config: &identity.Config{
 			Data: map[string]string{
 				"web:one":     "1",
@@ -47,5 +47,5 @@ func setupCA() {
 				"ssh:mba:gh":  "6",
 			},
 		},
-	}
+	}}
 }

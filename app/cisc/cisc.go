@@ -76,9 +76,9 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	clientApp := identity.NewIdentity(group.Roster, 2, name)
+	clientApp := &CA{identity.NewIdentity(group.Roster, 2, name)}
 	log.ErrFatal(clientApp.CreateIdentity())
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 
 func idConnect(c *cli.Context) error {
@@ -97,9 +97,9 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	clientApp := identity.NewIdentity(group.Roster, 2, name)
+	clientApp := &CA{identity.NewIdentity(group.Roster, 2, name)}
 	clientApp.AttachToIdentity(id)
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 func idFollow(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -122,7 +122,7 @@ func configUpdate(c *cli.Context) error {
 	log.ErrFatal(clientApp.ConfigUpdate())
 	log.ErrFatal(clientApp.ProposeFetch())
 	log.Info("Successfully updated")
-	log.ErrFatal(saveConfig(c, clientApp))
+	log.ErrFatal(clientApp.saveConfig(c))
 	return configList(c)
 }
 func configList(c *cli.Context) error {
@@ -155,7 +155,7 @@ func configVote(c *cli.Context) error {
 		return nil
 	}
 	log.ErrFatal(clientApp.ProposeVote(true))
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 
 /*
@@ -183,7 +183,7 @@ func kvAdd(c *cli.Context) error {
 	prop := clientApp.GetProposed()
 	prop.Data[key] = value
 	log.ErrFatal(clientApp.ProposeSend(prop))
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 func kvDel(c *cli.Context) error {
 	clientApp := assertCA(c)
@@ -197,7 +197,7 @@ func kvDel(c *cli.Context) error {
 	}
 	delete(prop.Data, key)
 	log.ErrFatal(clientApp.ProposeSend(prop))
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 
 /*
@@ -243,18 +243,18 @@ func sshAdd(c *cli.Context) error {
 	log.ErrFatal(err)
 	prop.Data[key] = string(pub)
 	proposeSendVoteUpdate(clientApp, prop)
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 func sshLs(c *cli.Context) error {
 	clientApp := assertCA(c)
 	var devs []string
 	if c.Bool("a") {
-		devs = kvGetKeys(clientApp, "ssh")
+		devs = clientApp.kvGetKeys("ssh")
 	} else {
 		devs = []string{clientApp.ManagerStr}
 	}
 	for _, dev := range devs {
-		for _, pub := range kvGetKeys(clientApp, "ssh", dev) {
+		for _, pub := range clientApp.kvGetKeys("ssh", dev) {
 			log.Printf("SSH-key for device %s: %s", dev, pub)
 		}
 	}
@@ -267,7 +267,7 @@ func sshDel(c *cli.Context) error {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
 	ah := c.Args().First()
-	if len(kvGetValue(clientApp, "ssh", clientApp.ManagerStr, ah)) == 0 {
+	if len(clientApp.kvGetValue("ssh", clientApp.ManagerStr, ah)) == 0 {
 		log.Print("Didn't find alias or host", ah)
 		sshLs(c)
 		log.Fatal("Aborting")
@@ -280,7 +280,7 @@ func sshDel(c *cli.Context) error {
 	prop := clientApp.GetProposed()
 	delete(prop.Data, "ssh:"+clientApp.ManagerStr+":"+ah)
 	proposeSendVoteUpdate(clientApp, prop)
-	return saveConfig(c, clientApp)
+	return clientApp.saveConfig(c)
 }
 func sshRotate(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -290,7 +290,7 @@ func sshSync(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func proposeSendVoteUpdate(clientApp *identity.Identity, p *identity.Config) {
+func proposeSendVoteUpdate(clientApp *CA, p *identity.Config) {
 	log.ErrFatal(clientApp.ProposeSend(p))
 	log.ErrFatal(clientApp.ProposeVote(true))
 	log.ErrFatal(clientApp.ConfigUpdate())
