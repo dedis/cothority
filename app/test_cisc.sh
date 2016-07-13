@@ -12,19 +12,19 @@ STATICDIR=test
 main(){
     startTest
     build
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
-#	test ConfigVote
-#	test IdConnect
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
+	test ConfigVote
+	test IdConnect
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
 	test SSHAdd
-#	test SSHDel
-#	test Follow
-#    stopTest
+	test SSHDel
+	test Follow
+    stopTest
 }
 
 testFollow(){

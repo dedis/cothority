@@ -8,8 +8,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"sort"
-	"strings"
 
 	"golang.org/x/crypto/ssh"
 
@@ -20,91 +18,33 @@ import (
 	"gopkg.in/codegangsta/cli.v1"
 )
 
-type CA struct {
-	*identity.Identity
-}
-
-// loadCA will return nil if the config-file doesn't exist. It tries to
-// load the file given in configFile.
-func loadCA(c *cli.Context) (*CA, error) {
+// loadConfig will try to load the configuration and fail if it can't load it.
+func loadConfig(c *cli.Context) *identity.Identity {
 	configFile := getConfig(c)
 	log.Lvl2("Loading from", configFile)
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &CA{&identity.Identity{}}, nil
+			return &identity.Identity{}
 		}
-		return nil, err
+		log.Fatal(err)
 	}
 	_, msg, err := network.UnmarshalRegistered(buf)
-	if err != nil {
-		return nil, err
-	}
-	ca, ok := msg.(*CA)
+	log.ErrFatal(err)
+	cfg, ok := msg.(*identity.Identity)
 	if !ok {
-		return nil, errors.New("Wrong message-type in config-file")
+		log.Fatal("Wrong message-type in config-file")
 	}
-	return ca, nil
-}
-
-// kvGetKeys returns the keys up to the next ":". If given a slice of keys, it
-// will return sub-keys.
-func (ca *CA) kvGetKeys(keys ...string) []string {
-	var ret []string
-	start := strings.Join(keys, ":")
-	if len(start) > 0 {
-		start += ":"
-	}
-	for k := range ca.Config.Data {
-		if strings.HasPrefix(k, start) {
-			// Create subkey
-			subkey := strings.TrimPrefix(k, start)
-			subkey = strings.SplitN(subkey, ":", 2)[0]
-			ret = append(ret, subkey)
-		}
-	}
-	return sortUniq(ret)
-}
-
-// kvGetValue returns the value of the key
-func (ca *CA) kvGetValue(keys ...string) string {
-	key := strings.Join(keys, ":")
-	for k, v := range ca.Config.Data {
-		if k == key {
-			return v
-		}
-	}
-	return ""
-}
-
-// kvGetIntKeys returns the keys in the middle of prefix and suffix
-func (ca *CA) kvGetIntKeys(prefix, suffix string) []string {
-	var ret []string
-	if len(prefix) > 0 {
-		prefix += ":"
-	}
-	if len(suffix) > 0 {
-		suffix = ":" + suffix
-	}
-	for k := range ca.Config.Data {
-		if strings.HasPrefix(k, prefix) && strings.HasSuffix(k, suffix) {
-			interm := strings.TrimPrefix(k, prefix)
-			interm = strings.TrimSuffix(interm, suffix)
-			if !strings.Contains(interm, ":") {
-				ret = append(ret, interm)
-			}
-		}
-	}
-	return sortUniq(ret)
+	return cfg
 }
 
 // Saves the clientApp in the configfile - refuses to save an empty file.
-func (ca *CA) saveConfig(c *cli.Context) error {
+func saveConfig(c *cli.Context, cfg *identity.Identity) error {
 	configFile := getConfig(c)
-	if ca == nil {
+	if cfg == nil {
 		return errors.New("Cannot save empty clientApp")
 	}
-	buf, err := network.MarshalRegisteredType(ca)
+	buf, err := network.MarshalRegisteredType(cfg)
 	if err != nil {
 		return err
 	}
@@ -116,18 +56,6 @@ func getConfig(c *cli.Context) string {
 	configDir := config.TildeToHome(c.GlobalString("config"))
 	os.Mkdir(configDir, 0660)
 	return configDir + "/config.bin"
-}
-
-// Asserts that the clientApp exists, else fatals
-func assertCA(c *cli.Context) *CA {
-	ca, err := loadCA(c)
-	log.ErrFatal(err, "Problems reading config-file. Most probably you\n",
-		"should start a new one by running with the 'setup'\n",
-		"argument.")
-	if ca == nil || ca.ManagerStr == "" {
-		log.Fatal("Couldn't load config-file or it was empty.")
-	}
-	return ca
 }
 
 // Reads the group-file and returns it
@@ -142,20 +70,6 @@ func getGroup(c *cli.Context) *config.Group {
 		log.Fatal("No servers found in roster from", gfile)
 	}
 	return groups
-}
-
-// sortUniq sorts the slice of strings and deletes duplicates
-func sortUniq(slice []string) []string {
-	sorted := make([]string, len(slice))
-	copy(sorted, slice)
-	sort.Strings(sorted)
-	var ret []string
-	for i, s := range sorted {
-		if i == 0 || s != sorted[i-1] {
-			ret = append(ret, s)
-		}
-	}
-	return ret
 }
 
 // retrieves ssh-config-name and ssh-directory

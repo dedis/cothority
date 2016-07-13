@@ -106,6 +106,71 @@ func (c *Config) String() string {
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
+// GetKeys returns the keys up to the next ":". If given a slice of keys, it
+// will return sub-keys.
+func (c *Config) GetKeys(keys ...string) []string {
+	var ret []string
+	start := strings.Join(keys, ":")
+	if len(start) > 0 {
+		start += ":"
+	}
+	for k := range c.Data {
+		if strings.HasPrefix(k, start) {
+			// Create subkey
+			subkey := strings.TrimPrefix(k, start)
+			subkey = strings.SplitN(subkey, ":", 2)[0]
+			ret = append(ret, subkey)
+		}
+	}
+	return sortUniq(ret)
+}
+
+// GetValue returns the value of the key
+func (c *Config) GetValue(keys ...string) string {
+	key := strings.Join(keys, ":")
+	for k, v := range c.Data {
+		if k == key {
+			return v
+		}
+	}
+	return ""
+}
+
+// GetIntKeys returns the keys in the middle of prefix and suffix
+func (c *Config) GetIntKeys(prefix, suffix string) []string {
+	var ret []string
+	if len(prefix) > 0 {
+		prefix += ":"
+	}
+	if len(suffix) > 0 {
+		suffix = ":" + suffix
+	}
+	for k := range c.Data {
+		if strings.HasPrefix(k, prefix) && strings.HasSuffix(k, suffix) {
+			interm := strings.TrimPrefix(k, prefix)
+			interm = strings.TrimSuffix(interm, suffix)
+			if !strings.Contains(interm, ":") {
+				ret = append(ret, interm)
+			}
+		}
+	}
+	return sortUniq(ret)
+}
+
+// sortUniq sorts the slice of strings and deletes duplicates
+func sortUniq(slice []string) []string {
+	sorted := make([]string, len(slice))
+	copy(sorted, slice)
+	sort.Strings(sorted)
+	var ret []string
+	for i, s := range sorted {
+		if i == 0 || s != sorted[i-1] {
+			ret = append(ret, s)
+		}
+	}
+	return ret
+}
+
 // Messages between the Client-API and the Service
 
 // AddIdentity starts a new identity-skipchain

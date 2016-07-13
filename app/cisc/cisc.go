@@ -76,9 +76,9 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	clientApp := &CA{identity.NewIdentity(group.Roster, 2, name)}
-	log.ErrFatal(clientApp.CreateIdentity())
-	return clientApp.saveConfig(c)
+	cfg := identity.NewIdentity(group.Roster, 2, name)
+	log.ErrFatal(cfg.CreateIdentity())
+	return saveConfig(c, cfg)
 }
 
 func idConnect(c *cli.Context) error {
@@ -97,9 +97,9 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	clientApp := &CA{identity.NewIdentity(group.Roster, 2, name)}
-	clientApp.AttachToIdentity(id)
-	return clientApp.saveConfig(c)
+	cfg := identity.NewIdentity(group.Roster, 2, name)
+	cfg.AttachToIdentity(id)
+	return saveConfig(c, cfg)
 }
 func idFollow(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -118,21 +118,21 @@ func idCheck(c *cli.Context) error {
  * Commands related to the config in general
  */
 func configUpdate(c *cli.Context) error {
-	clientApp := assertCA(c)
-	log.ErrFatal(clientApp.ConfigUpdate())
-	log.ErrFatal(clientApp.ProposeFetch())
+	cfg := loadConfig(c)
+	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.ProposeFetch())
 	log.Info("Successfully updated")
-	log.ErrFatal(clientApp.saveConfig(c))
+	log.ErrFatal(saveConfig(c, cfg))
 	return configList(c)
 }
 func configList(c *cli.Context) error {
-	clientApp := assertCA(c)
-	log.Info("Account name:", clientApp.ManagerStr)
-	log.Infof("Identity-ID: %x", clientApp.ID)
-	log.Infof("Current config: %s", clientApp.Config)
+	cfg := loadConfig(c)
+	log.Info("Account name:", cfg.ManagerStr)
+	log.Infof("Identity-ID: %x", cfg.ID)
+	log.Infof("Current config: %s", cfg.Config)
 	if c.Bool("p") {
-		if clientApp.Proposed != nil {
-			log.Infof("Proposed config: %s", clientApp.Proposed)
+		if cfg.Proposed != nil {
+			log.Infof("Proposed config: %s", cfg.Proposed)
 		} else {
 			log.Info("No proposed config")
 		}
@@ -144,7 +144,7 @@ func configPropose(c *cli.Context) error {
 	return nil
 }
 func configVote(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	if c.NArg() == 0 {
 		configList(c)
 		if !config.InputYN(true, "Do you want to accept the changes") {
@@ -154,17 +154,17 @@ func configVote(c *cli.Context) error {
 	if strings.ToLower(c.Args().First()) == "n" {
 		return nil
 	}
-	log.ErrFatal(clientApp.ProposeVote(true))
-	return clientApp.saveConfig(c)
+	log.ErrFatal(cfg.ProposeVote(true))
+	return saveConfig(c, cfg)
 }
 
 /*
  * Commands related to the key/value storage and retrieval
  */
 func kvList(c *cli.Context) error {
-	clientApp := assertCA(c)
-	log.Infof("config for id %x", clientApp.ID)
-	for k, v := range clientApp.Config.Data {
+	cfg := loadConfig(c)
+	log.Infof("config for id %x", cfg.ID)
+	for k, v := range cfg.Config.Data {
 		log.Infof("%s: %s", k, v)
 	}
 	return nil
@@ -174,37 +174,37 @@ func kvValue(c *cli.Context) error {
 	return nil
 }
 func kvAdd(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	if c.NArg() < 2 {
 		log.Fatal("Please give a key value pair")
 	}
 	key := c.Args().Get(0)
 	value := c.Args().Get(1)
-	prop := clientApp.GetProposed()
+	prop := cfg.GetProposed()
 	prop.Data[key] = value
-	log.ErrFatal(clientApp.ProposeSend(prop))
-	return clientApp.saveConfig(c)
+	log.ErrFatal(cfg.ProposeSend(prop))
+	return saveConfig(c, cfg)
 }
 func kvDel(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give a key to delete")
 	}
 	key := c.Args().First()
-	prop := clientApp.GetProposed()
+	prop := cfg.GetProposed()
 	if _, ok := prop.Data[key]; !ok {
 		log.Fatal("Didn't find key", key, "in the config")
 	}
 	delete(prop.Data, key)
-	log.ErrFatal(clientApp.ProposeSend(prop))
-	return clientApp.saveConfig(c)
+	log.ErrFatal(cfg.ProposeSend(prop))
+	return saveConfig(c, cfg)
 }
 
 /*
  * Commands related to the ssh-handling
  */
 func sshAdd(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	sshDir, sshConfig := sshDirConfig(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give the hostname as argument")
@@ -237,37 +237,37 @@ func sshAdd(c *cli.Context) error {
 	log.ErrFatal(err)
 
 	// Propose the new configuration
-	prop := clientApp.GetProposed()
-	key := strings.Join([]string{"ssh", clientApp.ManagerStr, alias}, ":")
+	prop := cfg.GetProposed()
+	key := strings.Join([]string{"ssh", cfg.ManagerStr, alias}, ":")
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
 	prop.Data[key] = string(pub)
-	proposeSendVoteUpdate(clientApp, prop)
-	return clientApp.saveConfig(c)
+	proposeSendVoteUpdate(cfg, prop)
+	return saveConfig(c, cfg)
 }
 func sshLs(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	var devs []string
 	if c.Bool("a") {
-		devs = clientApp.kvGetKeys("ssh")
+		devs = cfg.Config.GetKeys("ssh")
 	} else {
-		devs = []string{clientApp.ManagerStr}
+		devs = []string{cfg.ManagerStr}
 	}
 	for _, dev := range devs {
-		for _, pub := range clientApp.kvGetKeys("ssh", dev) {
+		for _, pub := range cfg.Config.GetKeys("ssh", dev) {
 			log.Printf("SSH-key for device %s: %s", dev, pub)
 		}
 	}
 	return nil
 }
 func sshDel(c *cli.Context) error {
-	clientApp := assertCA(c)
+	cfg := loadConfig(c)
 	_, sshConfig := sshDirConfig(c)
 	if c.NArg() == 0 {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
 	ah := c.Args().First()
-	if len(clientApp.kvGetValue("ssh", clientApp.ManagerStr, ah)) == 0 {
+	if len(cfg.Config.GetValue("ssh", cfg.ManagerStr, ah)) == 0 {
 		log.Print("Didn't find alias or host", ah)
 		sshLs(c)
 		log.Fatal("Aborting")
@@ -277,10 +277,10 @@ func sshDel(c *cli.Context) error {
 	sc.DelHost(ah)
 	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
 	log.ErrFatal(err)
-	prop := clientApp.GetProposed()
-	delete(prop.Data, "ssh:"+clientApp.ManagerStr+":"+ah)
-	proposeSendVoteUpdate(clientApp, prop)
-	return clientApp.saveConfig(c)
+	prop := cfg.GetProposed()
+	delete(prop.Data, "ssh:"+cfg.ManagerStr+":"+ah)
+	proposeSendVoteUpdate(cfg, prop)
+	return saveConfig(c, cfg)
 }
 func sshRotate(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -290,8 +290,8 @@ func sshSync(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func proposeSendVoteUpdate(clientApp *CA, p *identity.Config) {
-	log.ErrFatal(clientApp.ProposeSend(p))
-	log.ErrFatal(clientApp.ProposeVote(true))
-	log.ErrFatal(clientApp.ConfigUpdate())
+func proposeSendVoteUpdate(cfg *identity.Identity, p *identity.Config) {
+	log.ErrFatal(cfg.ProposeSend(p))
+	log.ErrFatal(cfg.ProposeVote(true))
+	log.ErrFatal(cfg.ConfigUpdate())
 }
