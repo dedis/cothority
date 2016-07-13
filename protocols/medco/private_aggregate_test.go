@@ -1,6 +1,9 @@
 package medco_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
@@ -8,8 +11,6 @@ import (
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 var suite = network.Suite
