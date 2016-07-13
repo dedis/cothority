@@ -86,29 +86,29 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	if err := jv.finaliseSecret(msg.SID); err != nil {
 		return err
 	}
-
+	log.Lvl4("Finalised secret", jv.Name(), msg.SID)
 	return nil
 }
 
 func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	msg := m.SecConfMsg
-
 	secret, err := jv.secrets.secret(msg.SID)
 	if err != nil {
 		return err
 	}
 
-	secret.mtx.Lock()
-	secret.numConfs++
-	secret.mtx.Unlock()
+	secret.incrementConfirms()
 
-	log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
+	log.LLvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfirms(), len(jv.List())))
 
 	// Check if we have enough confirmations to proceed
-	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS || msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
-		log.Print("Write to channel secretsDone")
-		jv.secretsDone <- true
-		log.Print("Wrote to channel secretsDone")
+	if (secret.numConfirms() == len(jv.List())) && (msg.SID == LTSS) {
+		jv.longTermSecDone <- true
+		secret.resetConfirms()
+	}
+	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) {
+		jv.shortTermSecDone <- true
+		secret.resetConfirms()
 	}
 
 	return nil

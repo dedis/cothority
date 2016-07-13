@@ -36,26 +36,19 @@ const (
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
-	*sda.TreeNodeInstance                       // The SDA TreeNode
-	keyPair               *config.KeyPair       // KeyPair of the host
-	nodeList              []*sda.TreeNode       // List of TreeNodes in the JVSS group
-	pubKeys               []abstract.Point      // List of public keys of the above TreeNodes
-	info                  poly.Threshold        // JVSS thresholds
-	schnorr               *poly.Schnorr         // Long-term Schnorr struct to compute distributed signatures
-	secrets               *sharedSecrets        // Shared secrets (long- and short-term ones)
-	ltssInit              bool                  // Indicator whether shared secret has been already initialised or not
-	secretsDone           chan bool             // Channel to indicate when shared secrets of all peers are ready
-	sigChan               chan *poly.SchnorrSig // Channel for JVSS signature
-}
+	*sda.TreeNodeInstance                  // The SDA TreeNode
+	keyPair               *config.KeyPair  // KeyPair of the host
+	nodeList              []*sda.TreeNode  // List of TreeNodes in the JVSS group
+	pubKeys               []abstract.Point // List of public keys of the above TreeNodes
+	info                  poly.Threshold   // JVSS thresholds
+	schnorr               *poly.Schnorr    // Long-term Schnorr struct to compute distributed signatures
+	secrets               *sharedSecrets   // Shared secrets (long- and short-term ones)
+	ltssInit              bool             // Indicator whether shared secret has been already initialised or not
 
-// Secret contains all information for long- and short-term shared secrets.
-type Secret struct {
-	secret   *poly.SharedSecret              // Shared secret
-	receiver *poly.Receiver                  // Receiver to aggregate deals
-	deals    map[int]*poly.Deal              // Buffer for deals
-	sigs     map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
-	numConfs int                             // Number of collected confirmations that shared secrets are ready
-	mtx      sync.Mutex                      // Mutex to sync access to numConfs
+	longTermSecDone  chan bool // Channel to indicate when long-term shared secrets of all peers are ready
+	shortTermSecDone chan bool // Channel to indicate when short-term shared secrets of all peers are ready
+
+	sigChan chan *poly.SchnorrSig // Channel for JVSS signature
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -78,7 +71,8 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		schnorr:          new(poly.Schnorr),
 		secrets:          newSecrets(),
 		ltssInit:         false,
-		secretsDone:      make(chan bool, 1),
+		longTermSecDone:  make(chan bool, 1),
+		shortTermSecDone: make(chan bool, 1),
 		sigChan:          make(chan *poly.SchnorrSig),
 	}
 
@@ -90,7 +84,9 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		jv.handleSigResp,
 	}
 	err := jv.RegisterHandlers(h...)
-
+	if err != nil {
+		log.Error(err)
+	}
 	return jv, err
 }
 
@@ -98,9 +94,9 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
 	err := jv.initSecret(LTSS)
-	log.Print("Start(): Waiting on secretsDone")
-	<-jv.secretsDone
-	log.Print("Start(): Done waiting on secretsDone")
+	log.Lvl2("Waiting on long-term secrets:", jv.Name())
+	<-jv.longTermSecDone
+	log.Lvl2("Done waiting on long-term secrets:", jv.Name())
 	return err
 }
 
@@ -132,9 +128,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	}
 
 	// Wait for setup of shared secrets to finish
-	log.Print("Sign(): Waiting on secretsDone")
-	<-jv.secretsDone
-	log.Print("Sign(): Done - Waiting on secretsDone")
+	log.Lvl2("Waiting on short-term secrets:", jv.Name())
+	<-jv.shortTermSecDone
+	log.Lvl2("Done waiting on short-term secrets", jv.Name())
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
 	if err != nil {
@@ -169,7 +165,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 	// Initialise shared secret of given type if necessary
 	if sec, err := jv.secrets.secret(sid); sec == nil && err != nil {
 		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
-		sec := &Secret{
+		sec := &secret{
 			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:    make(map[int]*poly.Deal),
 			sigs:     make(map[int]*poly.SchnorrPartialSig),
@@ -223,9 +219,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 			return err
 		}
 		secret.secret = sec
-		secret.mtx.Lock()
-		secret.numConfs++
-		secret.mtx.Unlock()
+		secret.incrementConfirms()
 		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
@@ -270,10 +264,10 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 // thread safe helpers for accessing shared (long and short-term) secrets:
 type sharedSecrets struct {
 	sync.Mutex
-	secrets map[SID]*Secret
+	secrets map[SID]*secret
 }
 
-func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
+func (s *sharedSecrets) secret(sid SID) (*secret, error) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -284,7 +278,7 @@ func (s *sharedSecrets) secret(sid SID) (*Secret, error) {
 	return sec, nil
 }
 
-func (s *sharedSecrets) addSecret(sid SID, sec *Secret) {
+func (s *sharedSecrets) addSecret(sid SID, sec *secret) {
 	s.Lock()
 	defer s.Unlock()
 	s.secrets[sid] = sec
@@ -297,5 +291,35 @@ func (s *sharedSecrets) remove(sid SID) {
 }
 
 func newSecrets() *sharedSecrets {
-	return &sharedSecrets{secrets: make(map[SID]*Secret)}
+	return &sharedSecrets{secrets: make(map[SID]*secret)}
+}
+
+// secret contains all information for long- and short-term shared secrets.
+type secret struct {
+	secret   *poly.SharedSecret // Shared secret
+	receiver *poly.Receiver     // Receiver to aggregate deals
+	// XXX potentially get rid of deals buffer later:
+	deals map[int]*poly.Deal // Buffer for deals
+	// XXX potentially get rid of sig buffer later:
+	sigs         map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+	nConfirmsMtx sync.Mutex                      // Mutex to sync access to numConfs
+	numConfs     int                             // Number of collected confirmations that shared secrets are ready
+}
+
+func (s *secret) incrementConfirms() {
+	s.nConfirmsMtx.Lock()
+	defer s.nConfirmsMtx.Unlock()
+	s.numConfs++
+}
+
+func (s *secret) numConfirms() int {
+	s.nConfirmsMtx.Lock()
+	defer s.nConfirmsMtx.Unlock()
+	return s.numConfs
+}
+
+func (s *secret) resetConfirms() {
+	s.nConfirmsMtx.Lock()
+	defer s.nConfirmsMtx.Unlock()
+	s.numConfs = 0
 }

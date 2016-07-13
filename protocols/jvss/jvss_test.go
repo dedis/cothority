@@ -33,7 +33,10 @@ func TestJVSS(t *testing.T) {
 	for i := 0; i < rounds; i++ {
 		log.Lvl1("JVSS - starting round", i)
 		log.Lvl1("JVSS - requesting signature")
-		sig, _ := jv.Sign(msg)
+		sig, err := jv.Sign(msg)
+		if err != nil {
+			t.Fatal("Error signature failed", err)
+		}
 		log.Lvl1("JVSS - signature received")
 		err = jv.Verify(msg, sig)
 		if err != nil {
