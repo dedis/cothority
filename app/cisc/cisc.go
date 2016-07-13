@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/services/identity"
 	"gopkg.in/codegangsta/cli.v1"
@@ -145,9 +146,15 @@ func configPropose(c *cli.Context) error {
 func configVote(c *cli.Context) error {
 	clientApp := assertCA(c)
 	if c.NArg() == 0 {
-
+		configList(c)
+		if !config.InputYN(true, "Do you want to accept the changes") {
+			return nil
+		}
 	}
-	log.ErrFatal(clientApp.ProposeVote(!c.Bool("r")))
+	if strings.ToLower(c.Args().First()) == "n" {
+		return nil
+	}
+	log.ErrFatal(clientApp.ProposeVote(true))
 	return saveConfig(c, clientApp)
 }
 

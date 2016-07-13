@@ -12,18 +12,18 @@ STATICDIR=test
 main(){
     startTest
     build
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
 	test ConfigVote
-#	test IdConnect
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
-#	test SSHAdd
-#	test SSHDel
-#	test Follow
+	test IdConnect
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
+	test SSHAdd
+	test SSHDel
+	test Follow
     stopTest
 }
 
@@ -70,17 +70,17 @@ testKeyDel(){
 	clientSetup 2
 	testOK runCl 1 kv add key1 value1
 	testOK runCl 1 kv add key2 value2
-	testOK runCl 1 config vote
+	testOK runCl 1 config vote y
 	testOK runCl 2 config update
-	testOK runCl 2 config vote
+	testOK runCl 2 config vote y
 	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
 	testGrep key2 runCl 1 kv ls
 	testFail runCl 1 kv rm key3
 	testOK runCl 1 kv rm key2
-	testOK runCl 1 config vote
+	testOK runCl 1 config vote y
 	testOK runCl 2 config update
-	testOK runCl 2 config vote
+	testOK runCl 2 config vote y
 	testNGrep key2 runCl 2 kv ls
 	testOK runCl 1 config update
 	testNGrep key2 runCl 2 kv ls
@@ -93,11 +93,11 @@ testKeyAdd2(){
 		clientSetup $C
 		testOK runCl 1 kv add key1 value1
 		testOK runCl 1 kv add key2 value2
-		testOK runCl 1 config vote
+		testOK runCl 1 config vote y
 		if [ $C -gt 1 ]; then
 			testNGrep key1 runCl 2 kv ls
 			testOK runCl 2 config update
-			testOK runCl 2 config vote
+			testOK runCl 2 config vote y
 			testGrep key1 runCl 2 kv ls
 		fi
 		testOK runCl 1 config update
@@ -111,13 +111,13 @@ testKeyAdd(){
 	clientSetup 2
 	testNGrep key1 runCl 1 kv ls
 	testOK runCl 1 kv add key1 value1
-	testOK runCl 1 config vote
+	testOK runCl 1 config vote y
 	testGrep key1 runCl 1 config ls -p
 	testOK runCl 2 config update
 	testNGrep key1 runCl 2 kv ls
 	testGrep key1 runCl 2 config ls -p
 	testOK runCl 2 config update
-	testOK runCl 2 config vote
+	testOK runCl 2 config vote y
 	testGrep key1 runCl 2 kv ls
 	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
