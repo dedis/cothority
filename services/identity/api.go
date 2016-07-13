@@ -16,7 +16,10 @@ import (
 )
 
 /*
- */
+This is the external API to access the identity-service. It shows the methods
+used to create a new identity-skipchain, propose new configurations and how
+to vote on these configurations.
+*/
 
 func init() {
 	for _, s := range []interface{}{
@@ -37,19 +40,28 @@ func init() {
 	}
 }
 
-// Identity can both follow and update an IdRoster
+// Identity structure holds the data necessary for a client/device to use the
+// identity-service. Each identity-skipchain is tied to a roster that is defined
+// in 'Cothority'.
 type Identity struct {
+	// Client is included for easy `Send`-methods.
 	*sda.Client
-	Private    abstract.Scalar
-	Public     abstract.Point
-	ID         ID
-	Config     *Config
-	Proposed   *Config
-	ManagerStr string
-	Cothority  *sda.Roster
-	skipchain  *skipchain.Client
-	root       *skipchain.SkipBlock
-	data       *skipchain.SkipBlock
+	// Private key for that device.
+	Private abstract.Scalar
+	// Public key for that device - will be stored in the identity-skipchain.
+	Public abstract.Point
+	// ID of the skipchain this device is tied to.
+	ID ID
+	// Config is the actual, valid configuration of the identity-skipchain.
+	Config *Config
+	// Proposed is the new configuration that has not been validated by a
+	// threshold of devices.
+	Proposed *Config
+	// DeviceName must be unique in the identity-skipchain.
+	DeviceName string
+	// Cothority is the roster responsible for the identity-skipchain. It
+	// might change in the case of a roster-update.
+	Cothority *sda.Roster
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
@@ -62,9 +74,8 @@ func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 		Private:    kp.Secret,
 		Public:     kp.Public,
 		Config:     NewConfig(majority, kp.Public, owner),
-		ManagerStr: owner,
+		DeviceName: owner,
 		Cothority:  cothority,
-		skipchain:  skipchain.NewClient(),
 	}
 }
 
@@ -122,11 +133,11 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	if err != nil {
 		return err
 	}
-	if _, exists := i.Config.Device[i.ManagerStr]; exists {
+	if _, exists := i.Config.Device[i.DeviceName]; exists {
 		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Device[i.ManagerStr] = &Device{i.Public}
+	confPropose.Device[i.DeviceName] = &Device{i.Public}
 	err = i.ProposeSend(confPropose)
 	if err != nil {
 		return err
@@ -141,9 +152,7 @@ func (i *Identity) CreateIdentity() error {
 		return err
 	}
 	air := msg.Msg.(AddIdentityReply)
-	i.root = air.Root
-	i.data = air.Data
-	i.ID = ID(i.data.Hash)
+	i.ID = ID(air.Data.Hash)
 
 	return nil
 }
@@ -190,17 +199,16 @@ func (i *Identity) ProposeVote(accept bool) error {
 	}
 	msg, err := i.Send(i.Cothority.GetRandom(), &ProposeVote{
 		ID:        i.ID,
-		Signer:    i.ManagerStr,
+		Signer:    i.DeviceName,
 		Signature: &sig,
 	})
 	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
 	}
-	sb, ok := msg.Msg.(skipchain.SkipBlock)
+	_, ok := msg.Msg.(skipchain.SkipBlock)
 	if ok {
 		log.Lvl2("Threshold reached and signed")
-		i.data = &sb
 		i.Config = i.Proposed
 		i.Proposed = nil
 	} else {

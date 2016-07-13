@@ -1,11 +1,15 @@
-package identity
-
 /*
-SSH-ks is a keystorage service for SSH keys. You can have a set of clients
-that communicate with a cothority to keep the list of public keys updated.
-A number of servers track all changes and update their .authorized_hosts
-accordingly.
+Identity is a service that allows storing of key/value pairs that belong to
+a given identity that is shared between multiple devices. In order to
+add/remove devices or add/remove key/value-pairs, a 'threshold' of devices
+need to vote on those changes.
+
+The key/value-pairs are stored in a personal blockchain and signed by the
+cothority using forward-links, so that an external observer can check the
+collective signatures and be assured that the blockchain is valid.
 */
+
+package identity
 
 import (
 	"errors"

@@ -82,7 +82,7 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 	log.ErrFatal(c2.ConfigUpdate())
 
 	assert.NotNil(t, c2.Config)
-	o1 := c2.Config.Device[c1.ManagerStr]
+	o1 := c2.Config.Device[c1.DeviceName]
 	if !o1.Point.Equal(c1.Public) {
 		t.Fatal("Owner is not c1")
 	}
@@ -99,9 +99,6 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 
 	// Check we're in the configuration
 	assert.NotNil(t, c.Config)
-	assert.NotNil(t, c.data)
-	assert.NotNil(t, c.root)
-	log.ErrFatal(c.data.VerifySignatures())
 }
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {

@@ -127,7 +127,7 @@ func configUpdate(c *cli.Context) error {
 }
 func configList(c *cli.Context) error {
 	cfg := loadConfig(c)
-	log.Info("Account name:", cfg.ManagerStr)
+	log.Info("Account name:", cfg.DeviceName)
 	log.Infof("Identity-ID: %x", cfg.ID)
 	log.Infof("Current config: %s", cfg.Config)
 	if c.Bool("p") {
@@ -238,7 +238,7 @@ func sshAdd(c *cli.Context) error {
 
 	// Propose the new configuration
 	prop := cfg.GetProposed()
-	key := strings.Join([]string{"ssh", cfg.ManagerStr, alias}, ":")
+	key := strings.Join([]string{"ssh", cfg.DeviceName, alias}, ":")
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
 	prop.Data[key] = string(pub)
@@ -251,7 +251,7 @@ func sshLs(c *cli.Context) error {
 	if c.Bool("a") {
 		devs = cfg.Config.GetKeys("ssh")
 	} else {
-		devs = []string{cfg.ManagerStr}
+		devs = []string{cfg.DeviceName}
 	}
 	for _, dev := range devs {
 		for _, pub := range cfg.Config.GetKeys("ssh", dev) {
@@ -267,7 +267,7 @@ func sshDel(c *cli.Context) error {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
 	ah := c.Args().First()
-	if len(cfg.Config.GetValue("ssh", cfg.ManagerStr, ah)) == 0 {
+	if len(cfg.Config.GetValue("ssh", cfg.DeviceName, ah)) == 0 {
 		log.Print("Didn't find alias or host", ah)
 		sshLs(c)
 		log.Fatal("Aborting")
@@ -278,7 +278,7 @@ func sshDel(c *cli.Context) error {
 	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
 	log.ErrFatal(err)
 	prop := cfg.GetProposed()
-	delete(prop.Data, "ssh:"+cfg.ManagerStr+":"+ah)
+	delete(prop.Data, "ssh:"+cfg.DeviceName+":"+ah)
 	proposeSendVoteUpdate(cfg, prop)
 	return saveConfig(c, cfg)
 }
