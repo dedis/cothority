@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -238,6 +239,31 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	return nil
 }
 
+// sendSDAData marshals the inner msg and then sends a Data msg
+// to the appropriate entity
+func (o *Overlay) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
+	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
+	if err != nil {
+		typ := network.TypeFromData(sdaMsg.Msg)
+		rtype := reflect.TypeOf(sdaMsg.Msg)
+		var str string
+		if typ == network.ErrorType {
+			str = " Non registered Type !"
+		} else {
+			str = typ.String()
+		}
+		str += " (reflect= " + rtype.String()
+		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
+	}
+	sdaMsg.MsgSlice = b
+	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
+	// put to nil so protobuf won't encode it and there won't be any error on the
+	// other side (because it doesn't know how to decode it)
+	sdaMsg.Msg = nil
+	log.Lvl4("Sending to", e.Addresses)
+	return o.host.SendRaw(e, sdaMsg)
+}
+
 // addPendingTreeMarshal adds a treeMarshal to the list.
 // This list is checked each time we receive a new Roster
 // so trees using this Roster can be constructed.
@@ -388,7 +414,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) er
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
 	log.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
-	return o.host.sendSDAData(to.ServerIdentity, sda)
+	return o.sendSDAData(to.ServerIdentity, sda)
 }
 
 // nodeDone is called by node to signify that its work is finished and its
