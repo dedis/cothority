@@ -361,6 +361,9 @@ func (h *Host) processMessages() {
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.ServerIdentity, &r)
 		case ServiceMessageID:
+			// XXX just noticed that we take the identity out of the message and
+			// not from the network endpoint, which could be problematic in case
+			// of routing.
 			log.Lvl4("Got ServiceMessageID")
 			m := data.Msg.(InterServiceMessage)
 			h.processServiceMessage(data.ServerIdentity, &m)

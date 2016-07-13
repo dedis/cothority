@@ -69,6 +69,30 @@ func TestProcessorHost(t *testing.T) {
 	}
 }
 
+func TestAggregator(t *testing.T) {
+	agg := newAggregator()
+	// just aggregate individually
+	agg.aggregate(basicMessageType, &basicMessage{10})
+	agg.aggregate(basicMessageType, &basicMessage{11})
+
+	bm1 := agg.release(basicMessageType)
+	assert.Len(t, bm1, 1)
+	bm2 := agg.release(basicMessageType)
+	assert.Len(t, bm2, 1)
+	assert.Len(t, agg.release(basicMessageType), 0)
+
+	// with aggregation
+	agg.aggregate(basicMessageType, &basicMessage{12})
+	agg.aggregate(basicMessageType, &basicMessage{13})
+	agg.aggregate(basicMessageType, &basicMessage{14})
+	agg.aggregate(basicMessageType, &basicMessage{15})
+
+	agg.aggregateType(basicMessageType, 3)
+	assert.Len(t, agg.release(basicMessageType), 3)
+	assert.Nil(t, agg.release(basicMessageType), nil)
+
+}
+
 var testServiceID ServiceID
 
 func init() {
@@ -79,7 +103,8 @@ func init() {
 
 func TestProcessor_AddMessage(t *testing.T) {
 	defer log.AfterTest(t)
-	p := NewServiceProcessor(nil)
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
@@ -107,7 +132,8 @@ func TestProcessor_AddMessage(t *testing.T) {
 
 func TestProcessor_GetReply(t *testing.T) {
 	defer log.AfterTest(t)
-	p := NewServiceProcessor(nil)
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
