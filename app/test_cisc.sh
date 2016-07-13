@@ -12,19 +12,19 @@ STATICDIR=test
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
-	test ConfigVote
-	test IdConnect
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
+#	test ConfigVote
+#	test IdConnect
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
 	test SSHAdd
-	test SSHDel
-	test Follow
-    stopTest
+#	test SSHDel
+#	test Follow
+#    stopTest
 }
 
 testFollow(){
@@ -64,6 +64,14 @@ testSSHAdd(){
 	testFile cl1/key_s2
 	testGrep s2 runCl 1 ssh ls
 	testReGrep client1
+
+	testOK runCl 1 ssh add -sec 4096 service3
+	if [ $( wc -c < "cl1/key_service1.pub" ) -ne 381 ]; then
+		fail "Public-key of standard (2048) bit key should be of length 381"
+	fi
+	if [ $( wc -c < "cl1/key_service3.pub" ) -ne 725 ]; then
+		fail "Public-key of standard (4096) bit key should be of length 725"
+	fi
 }
 
 testKeyDel(){

@@ -140,6 +140,11 @@ func init() {
 						Name:  "p,port",
 						Usage: "port for the connection",
 					},
+					cli.IntFlag{
+						Name:  "sec,security",
+						Usage: "how many bits for the key-creation",
+						Value: 2048,
+					},
 				},
 			},
 			{

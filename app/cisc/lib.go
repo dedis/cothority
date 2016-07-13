@@ -166,8 +166,11 @@ func sshDirConfig(c *cli.Context) (string, string) {
 // StackOverflow: Greg http://stackoverflow.com/users/328645/greg in
 // http://stackoverflow.com/questions/21151714/go-generate-an-ssh-public-key
 // No licence added
-func makeSSHKeyPair(pubKeyPath, privateKeyPath string) error {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+func makeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
+	if bits < 1024 {
+		return errors.New("Reject using too few bits for key")
+	}
+	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
 	if err != nil {
 		return err
 	}
