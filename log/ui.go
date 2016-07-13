@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func lvlUI(l int, args ...interface{}) {
@@ -80,15 +79,19 @@ func Fatalf(f string, args ...interface{}) {
 }
 
 // ErrFatal calls log.Fatal in the case err != nil
-func ErrFatal(err error, msg ...string) {
+func ErrFatal(err error, args ...interface{}) {
 	if err != nil {
-		Fatal(strings.Join(msg, " "), err)
+		lvlUI(lvlFatal, err.Error()+" "+fmt.Sprint(args...))
+		os.Exit(1)
 	}
 }
 
 // ErrFatalf will call Fatalf when the error is non-nil
 func ErrFatalf(err error, f string, args ...interface{}) {
-	ErrFatal(err, fmt.Sprintf(f, args...))
+	if err != nil {
+		lvlUI(lvlFatal, err.Error()+fmt.Sprintf(" "+f, args...))
+		os.Exit(1)
+	}
 }
 
 func print(lvl int, args ...interface{}) {
