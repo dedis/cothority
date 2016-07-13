@@ -148,13 +148,13 @@ type aggregator struct {
 	// aggregateSize contains the size of batches when messages are bein
 	// gaggregated. 0,1 or empty entry for individual retrieval.
 	aggregateSize map[network.MessageTypeID]int
-	msgQueue      map[network.MessageTypeID][]network.Body
+	msgQueue      map[network.MessageTypeID][]interface{}
 }
 
 func newAggregator() *aggregator {
 	return &aggregator{
 		aggregateSize: make(map[network.MessageTypeID]int),
-		msgQueue:      make(map[network.MessageTypeID][]network.Body),
+		msgQueue:      make(map[network.MessageTypeID][]interface{}),
 	}
 }
 
@@ -174,7 +174,7 @@ func (a *aggregator) disableAggregateType(msg network.MessageTypeID) {
 
 // aggregate takes a message type and a message and stores the message
 // internally. Any next call to `Release(msgType)` will contain this message.
-func (a *aggregator) aggregate(msgType network.MessageTypeID, msg network.Body) {
+func (a *aggregator) aggregate(msgType network.MessageTypeID, msg interface{}) {
 	a.msgQueue[msgType] = append(a.msgQueue[msgType], msg)
 }
 
@@ -186,12 +186,12 @@ func (a *aggregator) aggregate(msgType network.MessageTypeID, msg network.Body) 
 // stored.
 // The slice returned can be nil if there is not enough messages yet aggregated,
 // i.e. the number of message of this type is less than the batch size.
-func (a *aggregator) release(msgType network.MessageTypeID) []network.Body {
+func (a *aggregator) release(msgType network.MessageTypeID) []interface{} {
 	nb, ok := a.aggregateSize[msgType]
 	msgs, okM := a.msgQueue[msgType]
 	// no messages of this type
 	if !okM || len(msgs) == 0 {
-		return []network.Body{}
+		return []interface{}{}
 	}
 
 	// individual retrieval
@@ -207,12 +207,12 @@ func (a *aggregator) release(msgType network.MessageTypeID) []network.Body {
 	}
 
 	// take a batch
-	var ret = make([]network.Body, nb)
+	var ret = make([]interface{}, nb)
 	// copy needed in order for the GC to work - referenced array in the slice
 	// will always be kept if we just call `ret = msgs[:nb]`
 	copy(ret, msgs[:nb])
 	if len(msgs) > nb {
-		keep := make([]network.Body, len(msgs)-nb)
+		keep := make([]interface{}, len(msgs)-nb)
 		copy(keep, msgs[nb:])
 		// it seems OK to just replace the slice
 		a.msgQueue[msgType] = keep
