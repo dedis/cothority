@@ -10,7 +10,11 @@
 package jvss
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -36,6 +40,10 @@ const (
 	STSS SID = "STSS"
 )
 
+// randomLength is the length of random bytes that will be appended to SID to
+// make them unique per signing requests
+const randomLength = 32
+
 // JVSS is the main protocol struct and implements the sda.ProtocolInstance
 // interface.
 type JVSS struct {
@@ -52,6 +60,9 @@ type JVSS struct {
 	shortTermSecDone chan bool // Channel to indicate when short-term shared secrets of all peers are ready
 
 	sigChan chan *poly.SchnorrSig // Channel for JVSS signature
+
+	// keeps the set of SID this node has started/initiated
+	sidStore *sidStore
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -77,6 +88,7 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		longTermSecDone:  make(chan bool, n),
 		shortTermSecDone: make(chan bool, n),
 		sigChan:          make(chan *poly.SchnorrSig),
+		sidStore:         newSidStore(),
 	}
 
 	// Setup message handlers
@@ -96,7 +108,14 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // Start initiates the JVSS protocol by setting up a long-term shared secret
 // which can be used later on by the JVSS group to sign and verify messages.
 func (jv *JVSS) Start() error {
-	err := jv.initSecret(LTSS)
+	log.Lvl2(jv.Name(), "index", jv.Index(), " Starts()")
+	sid := newSID(LTSS)
+	jv.sidStore.insert(sid)
+	err := jv.initSecret(sid)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 	log.Lvl2("Waiting on long-term secrets:", jv.Name())
 	<-jv.longTermSecDone
 	log.Lvl2("Done waiting on long-term secrets:", jv.Name())
@@ -124,8 +143,11 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 		return nil, fmt.Errorf("Error, long-term shared secret has not been initialised")
 	}
 
+	log.Lvl3(jv.Name(), "index", jv.Index(), " => Sign starting")
+
 	// Initialise short-term shared secret only used for this signing request
-	sid := SID(fmt.Sprintf("%s%d", STSS, jv.Index()))
+	sid := newSID(STSS)
+	jv.sidStore.insert(sid)
 	log.LLvl4("before initSecret: len(jv.secrets.secrets)=", len(jv.secrets.secrets))
 	if err := jv.initSecret(sid); err != nil {
 		return nil, err
@@ -167,6 +189,10 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 }
 
 func (jv *JVSS) initSecret(sid SID) error {
+	if sid.IsLTSS() && jv.ltssInit {
+		return errors.New("Only one longterm secret allowed per JVSS instance")
+	}
+
 	// Initialise shared secret of given type if necessary
 	if sec, err := jv.secrets.secret(sid); sec == nil && err != nil {
 		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
@@ -231,7 +257,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
-		if sid == LTSS && !jv.ltssInit {
+		if sid.IsLTSS() && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
 			log.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
@@ -313,4 +339,71 @@ type secret struct {
 	numConfs int
 	// Mutex to sync access to numConfs
 	nConfirmsMtx sync.Mutex
+}
+
+// newSID takes a TYPE of Secret,i.e. STSS or LTSS and append some random bytes
+// to it
+func newSID(t SID) SID {
+	random := randomString(randomLength)
+	return SID(string(t) + " - " + random)
+}
+
+func (s SID) IsLTSS() bool {
+	return strings.HasPrefix(string(s), string(LTSS))
+}
+
+func (s SID) IsSTSS() bool {
+	return strings.HasPrefix(string(s), string(STSS))
+}
+
+// randomString will read n bytes from crypto/rand, will encode these bytes in
+// base64 and returns the resulting string
+func randomString(n int) string {
+	var buff = make([]byte, n)
+	_, err := rand.Read(buff)
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString([]byte(buff))
+}
+
+// sidStore stores all sid in a thred safe manner
+type sidStore struct {
+	mutex sync.Mutex
+	store map[SID]bool
+}
+
+func newSidStore() *sidStore {
+	return &sidStore{
+		store: make(map[SID]bool),
+	}
+}
+
+// exists return true if the given sid is stored
+// false otherwise.
+func (s *sidStore) exists(sid SID) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	_, exists := s.store[sid]
+	return exists
+}
+
+// insert will store the sid and returns true if it already existed before or
+// false if the sid is a new entry.
+func (s *sidStore) insert(sid SID) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	_, exists := s.store[sid]
+	s.store[sid] = true
+	return exists
+}
+
+// remove will delete the sid from the store and returns true if it was present
+// or false otherwise
+func (s *sidStore) remove(sid SID) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	_, exists := s.store[sid]
+	delete(s.store, sid)
+	return exists
 }

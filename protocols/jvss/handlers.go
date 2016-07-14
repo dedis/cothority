@@ -64,6 +64,8 @@ type WSigRespMsg struct {
 func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	msg := m.SecInitMsg
 
+	log.Lvl2(jv.Name(), jv.Index(), "Received SecInit from", m.TreeNode.Name())
+
 	// Initialise shared secret
 	if err := jv.initSecret(msg.SID); err != nil {
 		return err
@@ -86,7 +88,7 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	if err := jv.finaliseSecret(msg.SID); err != nil {
 		return err
 	}
-	log.Lvl4("Finalised secret", jv.Name(), msg.SID)
+	log.Lvl2("Finalised secret", jv.Name(), msg.SID)
 	return nil
 }
 
@@ -101,12 +103,12 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	defer secret.nConfirmsMtx.Unlock()
 	secret.numConfs++
 
-	// Check if we are root node and have enough confirmations to proceed
-	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
+	// Check if we are the initiator node and have enough confirmations to proceed
+	if (secret.numConfs == len(jv.List())) && msg.SID.IsLTSS() && jv.sidStore.exists(msg.SID) {
 		log.Lvl4("Writing to longTermSecDone")
 		jv.longTermSecDone <- true
 		secret.numConfs = 0
-	} else if (secret.numConfs == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
+	} else if (secret.numConfs == len(jv.List())) && msg.SID.IsSTSS() && jv.sidStore.exists(msg.SID) {
 		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
 		secret.numConfs = 0
