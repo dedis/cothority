@@ -1,32 +1,44 @@
-package jvss_test
+package jvss
 
 import (
 	"testing"
 
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/protocols/jvss"
 	"github.com/dedis/cothority/sda"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestSID(t *testing.T) {
+	sl := newSID(LTSS)
+	ss := newSID(STSS)
+
+	assert.True(t, sl.IsLTSS())
+	assert.False(t, sl.IsSTSS())
+	assert.NotEqual(t, sl, ss)
+
+	assert.True(t, ss.IsSTSS())
+	assert.False(t, ss.IsLTSS())
+}
 
 func TestJVSS(t *testing.T) {
 	// Setup parameters
 	var name string = "JVSS"      // Protocol name
 	var nodes uint32 = 17         // Number of nodes
-	var rounds int = 16           // Number of rounds
+	var rounds int = 15           // Number of rounds
 	msg := []byte("Hello World!") // Message to-be-signed
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	log.TestOutput(testing.Verbose(), 2)
+	log.TestOutput(testing.Verbose(), 3)
 
 	log.Lvl1("JVSS - starting")
 	leader, err := local.CreateProtocol(tree, name)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}
-	jv := leader.(*jvss.JVSS)
+	jv := leader.(*JVSS)
 	leader.Start()
 	log.Lvl1("JVSS - setup done")
 
