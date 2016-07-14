@@ -278,7 +278,6 @@ type sharedSecrets struct {
 func (s *sharedSecrets) secret(sid SID) (*secret, error) {
 	s.Lock()
 	defer s.Unlock()
-
 	sec, ok := s.secrets[sid]
 	if !ok {
 		return nil, fmt.Errorf("Error, shared secret does not exist")
