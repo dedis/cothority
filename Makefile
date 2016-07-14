@@ -28,7 +28,7 @@ test_lint:
 	}
 
 test_go:
-	cd protocols/jvss/; for a in $$( seq 100 ); do go test -race -v -p=1 -run TestJVSS; done
+	go test -race -p=1 -short ./...
 
 test: test_fmt test_lint test_go
 
