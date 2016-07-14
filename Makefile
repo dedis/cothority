@@ -28,7 +28,7 @@ test_lint:
 	}
 
 test_go:
-	go test -race -p=1 -short -v ./...
+	go test -race -p=1 -short ./...
 
 test: test_fmt test_lint test_go
 
