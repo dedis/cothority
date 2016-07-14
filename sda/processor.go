@@ -32,13 +32,23 @@ type Dispatcher interface {
 	// is the identity of the author / sender of the packet.
 	// It can be called for example by the network layer.
 	// If no processor is found for this message type, then an error is returned
-	Dispatch(id *network.ServerIdentity, packet *network.Packet) error
+	Dispatch(packet *network.Packet) error
+}
+
+// Processor is an abstraction to represent any object that want to process
+// packets. It is used in conjunction with Dispatcher:
+// A processor must register itself to a Dispatcher so the Dispatcher will
+// dispatch every messages to the Processor asked for.
+type Processor interface {
+	// Process takes a ServerIdentity as the sender identity and the message
+	// sent.
+	Process(packet *network.Packet)
 }
 
 // BlockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
 // processor p each time it receives a message with `Dispatch`. It does *not*
 // launch a go routine, or put the message in a queue, etc.
-// It can be re-used for more complex dispatcher.
+// It can be re-uswored for more complex dispatcher.
 type BlockingDispatcher struct {
 	procs map[network.MessageTypeID]Processor
 }
@@ -57,23 +67,35 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType network.Mess
 
 // Dispatch will directly call the right processor's method Process. It's a
 // blocking call if the Processor is blocking !
-func (d *BlockingDispatcher) Dispatch(id *network.ServerIdentity, packet *network.Packet) error {
+func (d *BlockingDispatcher) Dispatch(packet *network.Packet) error {
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
 		return errors.New("No Processor attached to this message type.")
 	}
-	p.Process(id, packet)
+	p.Process(packet)
 	return nil
 }
 
-// Processor is an abstraction to represent any object that want to process
-// packets. It is used in conjunction with Dispatcher:
-// A processor must register itself to a Dispatcher so the Dispatcher will
-// dispatch every messages to the Processor asked for.
-type Processor interface {
-	// Process takes a ServerIdentity as the sender identity and the message
-	// sent.
-	Process(id *network.ServerIdentity, packet *network.Packet)
+// RoutineDispatcher is a Dispatcher that will dispatch messages to Processor
+// in a go routine. RoutineDispatcher creates one go routine per messages it
+// receives.
+type RoutineDispatcher struct {
+	*BlockingDispatcher
+}
+
+func NewRoutineDispatcher() *RoutineDispatcher {
+	return &RoutineDispatcher{
+		BlockingDispatcher: NewBlockingDispatcher(),
+	}
+}
+
+func (d *RoutineDispatcher) Dispatch(packet *network.Packet) error {
+	var p Processor
+	if p = d.procs[packet.MsgType]; p == nil {
+		return errors.New("No Processor attached to this message type.")
+	}
+	go p.Process(packet)
+	return nil
 }
 
 // ServiceProcessor allows for an easy integration of external messages
@@ -95,10 +117,6 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
 	}
-	// register the client messages
-	c.host.RegisterProcessor(s, RequestID)
-	// register the service messages
-	c.host.RegisterProcessor(s, ServiceMessageID)
 	return s
 }
 
@@ -144,32 +162,25 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 
 // Process implements the Processor interface and dispatch ClientRequest message
 // and InterServiceMessage
-func (p *ServiceProcessor) Process(id *network.ServerIdentity, packet *network.Packet) {
-	// check client type
-	switch packet.MsgType {
-	case RequestID:
-		cr := packet.Msg.(ClientRequest)
-		p.ProcessClientRequest(id, &cr)
-	case ServiceMessageID:
-		sm := packet.Msg.(InterServiceMessage)
-		p.ProcessServiceMessage(id, &sm)
-	}
+func (p *ServiceProcessor) Process(packet *network.Packet) {
+	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
 func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 	cr *ClientRequest) {
-	reply := p.GetReply(e, cr.Data)
+	// unmarshal the inner message
+	mt, m, err := network.UnmarshalRegisteredType(cr.Data,
+		network.DefaultConstructors(network.Suite))
+	if err != nil {
+		log.Error("Err unmarshal client request:" + err.Error())
+		return
+	}
+	reply := p.GetReply(e, mt, m)
 	if err := p.SendRaw(e, reply); err != nil {
 		log.Error(err)
 	}
-}
-
-// ProcessServiceMessage is to implement the Service interface.
-func (p *ServiceProcessor) ProcessServiceMessage(e *network.ServerIdentity,
-	s *InterServiceMessage) {
-	p.GetReply(e, s.Data)
 }
 
 // SendISM takes the message and sends it to the corresponding service
@@ -202,18 +213,12 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 	return err
 }
 
-// GetReply takes a clientRequest and passes it to the corresponding
-// handler-function.
-func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, d []byte) network.Body {
-	mt, m, err := network.UnmarshalRegisteredType(d,
-		network.DefaultConstructors(network.Suite))
+// GetReply takes msgType and a message. It dispatches the msg to the right
+// function registered, then sends the responses to the sender.
+func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.MessageTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &StatusRet{"Didn't register message-handler: " + mt.String()}
-	}
-
-	if err != nil {
-		return &StatusRet{err.Error()}
 	}
 
 	//to0 := reflect.TypeOf(fu).In(0)

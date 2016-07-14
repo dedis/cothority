@@ -32,8 +32,13 @@ type Service interface {
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
-	// ProcessServiceRequest takes a message from another Service
-	ProcessServiceMessage(*network.ServerIdentity, *InterServiceMessage)
+	// Processor makes a Service being able to handle any kind of packets
+	// directly from the network. It is used for inter service communications,
+	// which are mostly single packets with no or little interactions needed. If
+	// a complex logic is used for these messages, it's best to put that logic
+	// into a ProtocolInstance that the Service will launch, since there's nicer
+	// utilities for ProtocolInstance.
+	Processor
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -160,6 +165,10 @@ type serviceManager struct {
 	services map[ServiceID]Service
 	// the config paths
 	paths map[ServiceID]string
+	// the main sda host
+	host *Host
+	// serviceManager can take registration of Processors
+	Dispatcher
 }
 
 const configFolder = "config"
@@ -178,6 +187,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
+	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -189,7 +199,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		if err := os.MkdirAll(configName, 0666); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(h, o, id)
+		c := newContext(h, o, id, s)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
@@ -199,17 +209,16 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		configs[id] = configName
 	}
 	log.Lvl3(h.workingAddress, "instantiated all services")
-	s := &serviceManager{services, configs}
 
 	// registering messages that services are expecting
 	h.RegisterProcessor(s, RequestID)
-	h.RegisterProcessor(s, ServiceMessageID)
 	return s
 }
 
 // Process implements the Processor interface: service manager will relay
 // messages to the right Service.
-func (s *serviceManager) Process(id *network.ServerIdentity, data *network.Packet) {
+func (s *serviceManager) Process(data *network.Packet) {
+	id := data.ServerIdentity
 	switch data.MsgType {
 	case RequestID:
 		r := data.Msg.(ClientRequest)
@@ -222,18 +231,24 @@ func (s *serviceManager) Process(id *network.ServerIdentity, data *network.Packe
 			return
 		}
 		go s.ProcessClientRequest(id, &r)
-	case ServiceMessageID:
-		m := data.Msg.(InterServiceMessage)
-		// check if the target service is indeed existing
-		s, ok := s.serviceByID(m.Service)
-		if !ok {
-			log.Error("Received a message for an unknown service", m.Service)
-			// XXX TODO should reply with some generic response =>
-			// 404 Service Unknown
-			return
-		}
-		go s.ProcessServiceMessage(id, &m)
+	default:
+		// will launch a go routine for that message
+		s.Dispatch(data) //s.ProcessServiceMessage(id, &m)
 	}
+}
+
+// Register the processor to the service manager and tells the host to dispatch
+// this message to the service manager. The service manager will then dispatch
+// the message in a go routine. XXX This is needed because we need to have
+// messages for service dispatched in asyncrhonously regarding the protocols.
+// This behavior with go routine is fine for the moment but for better
+// performance / memory / resilience, it may be changed to a real queuing
+// system later.
+func (s *serviceManager) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+	// delegate message to host so the host will pass the message to ourself
+	s.host.RegisterProcessor(s, msgType)
+	// handle the message ourself (will be launched in a go routine)
+	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
 // TODO

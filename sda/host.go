@@ -263,7 +263,7 @@ func (h *Host) processMessages() {
 		default:
 			// The dispatcher will call the appropriate processors for the
 			// message
-			if err := h.Dispatch(data.ServerIdentity, &data); err != nil {
+			if err := h.Dispatch(&data); err != nil {
 				log.Lvl3("Unknown message received:", data)
 			}
 		}

@@ -17,7 +17,7 @@ type basicProcessor struct {
 	msgChan chan network.Packet
 }
 
-func (bp *basicProcessor) Process(e *network.ServerIdentity, msg *network.Packet) {
+func (bp *basicProcessor) Process(msg *network.Packet) {
 	bp.msgChan <- *msg
 }
 
@@ -32,10 +32,9 @@ func TestBlockingDispatcher(t *testing.T) {
 
 	dispatcher := NewBlockingDispatcher()
 	processor := &basicProcessor{make(chan network.Packet, 1)}
-	identity := network.NewServerIdentity(network.Suite.Point(), "127.0.0.1:2000")
 
 	dispatcher.RegisterProcessor(processor, basicMessageType)
-	dispatcher.Dispatch(identity, &network.Packet{
+	dispatcher.Dispatch(&network.Packet{
 		Msg:     basicMessage{10},
 		MsgType: basicMessageType})
 
@@ -55,7 +54,7 @@ func TestProcessorHost(t *testing.T) {
 
 	proc := &basicProcessor{make(chan network.Packet, 1)}
 	h1.RegisterProcessor(proc, basicMessageType)
-	h1.Dispatch(h1.ServerIdentity, &network.Packet{
+	h1.Dispatch(&network.Packet{
 		Msg:     basicMessage{10},
 		MsgType: basicMessageType})
 
@@ -94,11 +93,13 @@ func TestProcessorHost(t *testing.T) {
 //}
 
 var testServiceID ServiceID
+var testMsgID network.MessageTypeID
 
 func init() {
 	basicMessageType = network.RegisterMessageType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
+	testMsgID = network.RegisterMessageType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
@@ -139,7 +140,7 @@ func TestProcessor_GetReply(t *testing.T) {
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewServerIdentity(pair.Public, "")
 
-	rep := p.GetReply(e, mkClientRequest(&testMsg{11}))
+	rep := p.GetReply(e, testMsgID, testMsg{11})
 	val, ok := rep.(*testMsg)
 	if !ok {
 		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
@@ -148,7 +149,7 @@ func TestProcessor_GetReply(t *testing.T) {
 		t.Fatal("Value got lost - should be 11")
 	}
 
-	rep = p.GetReply(e, mkClientRequest(&testMsg{42}))
+	rep = p.GetReply(e, testMsgID, testMsg{42})
 	errMsg, ok := rep.(*StatusRet)
 	if !ok {
 		t.Fatal("42 should return an error")

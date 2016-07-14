@@ -77,7 +77,7 @@ func NewOverlay(h *Host) *Overlay {
 
 // Process implements the Processor interface so it process the messages that it
 // wants.
-func (o *Overlay) Process(id *network.ServerIdentity, data *network.Packet) {
+func (o *Overlay) Process(data *network.Packet) {
 	switch data.MsgType {
 	case SDADataMessageID:
 		sdaMsg := data.Msg.(ProtocolMsg)
