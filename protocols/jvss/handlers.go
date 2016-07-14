@@ -108,9 +108,8 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		secret.resetConfirms()
 	}
 	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
-		log.LLvl4("Wrinting to shortTermSecDone")
+		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		log.LLvl4("len(jv.shortTermSecDone), cap(jv.shortTermSecDone)", len(jv.shortTermSecDone), cap(jv.shortTermSecDone))
 		secret.resetConfirms()
 	}
 

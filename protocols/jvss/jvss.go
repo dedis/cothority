@@ -162,7 +162,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	sig := <-jv.sigChan
 	// XXX wait a long time for all messages to propagate (to see if this
 	// influences the deadlock)
-	time.Sleep(25 * time.Second)
+	time.Sleep(3 * time.Minute)
 	return sig, nil
 }
 
