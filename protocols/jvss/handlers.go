@@ -120,7 +120,11 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		jv.shortTermSecDone <- true
 		secret.numShortConfs = 0
 	} else {
-		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numLongtermConfs, len(jv.List())))
+		n := secret.numLongtermConfs
+		if isShortTermSecret {
+			n = secret.numShortConfs
+		}
+		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, n, len(jv.List())))
 	}
 
 	return nil

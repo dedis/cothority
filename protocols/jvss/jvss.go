@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
+	"strings"
 )
 
 func init() {
@@ -222,9 +223,16 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 			return err
 		}
 		secret.secret = sec
-		secret.nLongConfirmsMtx.Lock()
-		defer secret.nLongConfirmsMtx.Unlock()
-		secret.numLongtermConfs++
+		isShortTermSecret := strings.HasPrefix(string(sid), string(STSS))
+		if isShortTermSecret {
+			secret.nShortConfirmsMtx.Lock()
+			defer secret.nShortConfirmsMtx.Unlock()
+			secret.numShortConfs++
+		} else {
+			secret.nLongConfirmsMtx.Lock()
+			defer secret.nLongConfirmsMtx.Unlock()
+			secret.numLongtermConfs++
+		}
 
 		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
