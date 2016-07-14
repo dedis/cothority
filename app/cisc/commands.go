@@ -6,7 +6,7 @@ import "gopkg.in/codegangsta/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandID, commandConfig, commandKeyvalue, commandSSH cli.Command
+var commandID, commandConfig, commandKeyvalue, commandSSH, commandFollow cli.Command
 
 func init() {
 	commandID = cli.Command{
@@ -26,12 +26,6 @@ func init() {
 				Usage:     "connect to an existing identity",
 				ArgsUsage: "group id [id-name]",
 				Action:    idConnect,
-			},
-			{
-				Name:    "follow",
-				Aliases: []string{"f"},
-				Usage:   "follow an existing identity",
-				Action:  idFollow,
 			},
 			{
 				Name:    "remove",
@@ -112,7 +106,7 @@ func init() {
 			{
 				Name:      "del",
 				Aliases:   []string{"rm"},
-				Usage:     "list all values",
+				Usage:     "delete a value",
 				ArgsUsage: "key",
 				Action:    kvDel,
 			},
@@ -187,6 +181,46 @@ func init() {
 					},
 				},
 				Action: sshSync,
+			},
+		},
+	}
+	commandFollow = cli.Command{
+		Name:    "follow",
+		Aliases: []string{"f"},
+		Usage:   "follow skipchains",
+		Subcommands: []cli.Command{
+			{
+				Name:      "add",
+				Aliases:   []string{"a"},
+				Usage:     "add a new skipchain",
+				ArgsUsage: "group ID service-name",
+				Action:    followAdd,
+			},
+			{
+				Name:      "del",
+				Aliases:   []string{"rm"},
+				Usage:     "delete a skipchain",
+				ArgsUsage: "ID",
+				Action:    followDel,
+			},
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "list all skipchains and keys",
+				Action:  followList,
+			},
+			{
+				Name:    "update",
+				Aliases: []string{"u"},
+				Usage:   "update all skipchains",
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "p,poll",
+						Value: 0,
+						Usage: "poll every n seconds",
+					},
+				},
+				Action: followUpdate,
 			},
 		},
 	}

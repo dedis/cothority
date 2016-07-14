@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=2
+DBG_SHOW=1
 # Debug-level for app
 DBG_APP=2
 # Uncomment to build in local dir
 STATICDIR=test
+# Needs 4 clients
+NBR=4
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -28,8 +30,23 @@ main(){
 }
 
 testFollow(){
-	clientSetup 2
-
+	clientSetup 1
+	echo ID is $ID
+	testNFile cl3/authorized_keys
+	testFail runCl 3 follow add group.toml 1234 service1
+	testOK runCl 3 follow add group.toml $ID service1
+	testFail grep -q service1 cl3/authorized_keys
+	testNGrep client1 runCl 3 follow list
+	testGrep $ID runCl 3 follow list
+	testOK runCl 1 ssh add service1
+	testOK runCl 3 follow update
+	testOK grep -q service1 cl3/authorized_keys
+	testGrep service1 runCl 3 follow list
+	testReGrep client1
+	testOK runCl 3 follow rm $ID
+	testNGrep client1 runCl 3 follow list
+	testReNGrep service1
+	testFail grep -q service1 cl3/authorized_keys
 }
 
 testSSHDel(){
@@ -274,7 +291,7 @@ build(){
         mkdir -p $co
 
         cl=cl$n
-        rm -f $cl/*bin $cl/config $cl/*.{pub,key}
+        rm -f $cl/*bin $cl/config $cl/*.{pub,key} $cl/auth*
         mkdir -p $cl
         key=$cl/id_rsa
         if [ ! -f $key ]; then
