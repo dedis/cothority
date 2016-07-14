@@ -29,9 +29,6 @@ func init() {
 }
 
 // SID is the type of shared secret identifiers
-// TODO make this a uuid or at least something more unique and depending on the
-// message (at least for the short-term secrets) currently each sid for short-term
-// secrets is always "STSS0" (if the root starts the signing process)
 type SID string
 
 // Identifiers for long- and short-term shared secrets.
