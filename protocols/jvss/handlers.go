@@ -66,7 +66,7 @@ type WSigRespMsg struct {
 func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	msg := m.SecInitMsg
 
-	log.Lvl2(jv.Name(), jv.Index(), "Received SecInit from", m.TreeNode.Name())
+	log.Lvl4(jv.Name(), jv.Index(), "Received SecInit from", m.TreeNode.Name())
 
 	// Initialise shared secret
 	if err := jv.initSecret(msg.SID); err != nil {
@@ -90,7 +90,7 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	if err := jv.finaliseSecret(msg.SID); err != nil {
 		return err
 	}
-	log.Lvl2("Finalised secret", jv.Name(), msg.SID)
+	log.Lvl4("Finalised secret", jv.Name(), msg.SID)
 	return nil
 }
 
@@ -119,16 +119,16 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		jv.longTermSecDone <- true
 		secret.numLongtermConfs = 0
 	} else if msg.SID.IsSTSS() && secret.numShortConfs == len(jv.List()) && jv.sidStore.exists(msg.SID) {
-		log.LLvl4("Writing to shortTermSecDone")
+		log.Lvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		log.LLvl4("Wrote to shortTermSecDone")
+		log.Lvl4("Wrote to shortTermSecDone")
 		secret.numShortConfs = 0
 	} else {
 		n := secret.numLongtermConfs
 		if isShortTermSecret {
 			n = secret.numShortConfs
 		}
-		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, n, len(jv.List())))
+		log.Lvl4(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, n, len(jv.List())))
 	}
 
 	return nil
@@ -171,7 +171,7 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 
 	secret.sigs[msg.Src] = msg.Sig
 
-	log.Lvl2(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Index(), msg.SID, len(secret.sigs), len(jv.List())))
+	log.Lvl4(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Index(), msg.SID, len(secret.sigs), len(jv.List())))
 
 	// Create Schnorr signature once we received enough partial signatures
 	if jv.info.T == len(secret.sigs) {

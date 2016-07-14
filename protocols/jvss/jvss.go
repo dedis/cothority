@@ -148,7 +148,6 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	// Initialise short-term shared secret only used for this signing request
 	sid := newSID(STSS)
 	jv.sidStore.insert(sid)
-	log.LLvl4("before initSecret: len(jv.secrets.secrets)=", len(jv.secrets.secrets))
 	if err := jv.initSecret(sid); err != nil {
 		return nil, err
 	}
@@ -156,7 +155,6 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	// Wait for setup of shared secrets to finish
 	log.Lvl2("Waiting on short-term secrets:", jv.Name())
 	<-jv.shortTermSecDone
-	log.Lvl2("Done waiting on short-term secrets", jv.Name())
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
 	if err != nil {
@@ -194,7 +192,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 
 	// Initialise shared secret of given type if necessary
 	if sec, err := jv.secrets.secret(sid); sec == nil && err != nil {
-		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
+		log.Lvl4(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &secret{
 			receiver:         poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
 			deals:            make(map[int]*poly.Deal),
@@ -213,7 +211,7 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
-		log.Lvl2(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
+		log.Lvl4(fmt.Sprintf("Node %d: Initialising %v deal", jv.Index(), sid))
 		secret.deals[jv.Index()] = deal
 		db, _ := deal.MarshalBinary()
 		msg := &SecInitMsg{
@@ -234,7 +232,7 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		return err
 	}
 
-	log.Lvl2(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
+	log.Lvl4(fmt.Sprintf("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals), len(jv.List())))
 
 	if len(secret.deals) == jv.info.T {
 
@@ -260,13 +258,13 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 			secret.numLongtermConfs++
 		}
 
-		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
+		log.Lvl4(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
 		if sid.IsLTSS() && !jv.ltssInit {
 			jv.ltssInit = true
 			jv.schnorr.Init(jv.keyPair.Suite, jv.info, secret.secret)
-			log.Lvl2(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
+			log.Lvl4(fmt.Sprintf("Node %d: %v Schnorr struct initialised", jv.Index(), sid))
 		}
 
 		// Broadcast that we have finished setting up our shared secret
