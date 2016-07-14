@@ -98,7 +98,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		return err
 	}
 
-	isShortTermSecret := strings.HasPrefix(string(msg.SID), STSS)
+	isShortTermSecret := strings.HasPrefix(string(msg.SID), string(STSS))
 	if isShortTermSecret {
 		secret.nShortConfirmsMtx.Lock()
 		defer secret.nShortConfirmsMtx.Unlock()
