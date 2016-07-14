@@ -358,10 +358,12 @@ func newSID(t SID) SID {
 	return SID(string(t) + " - " + random)
 }
 
+// IsLTSS returns true if this SID is of type LTSS - longterm secret
 func (s SID) IsLTSS() bool {
 	return strings.HasPrefix(string(s), string(LTSS))
 }
 
+// IsSTSS returns true if this SID is of type STSS - shorterm secret
 func (s SID) IsSTSS() bool {
 	return strings.HasPrefix(string(s), string(STSS))
 }
