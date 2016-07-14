@@ -39,14 +39,14 @@ func init() {
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	identities      map[string]*Storage
+	identities      map[string]*storage
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
 	path            string
 }
 
 // Storage stores one identity together with the skipblocks
-type Storage struct {
+type storage struct {
 	sync.Mutex
 	Latest   *Config
 	Proposed *Config
@@ -59,7 +59,7 @@ type Storage struct {
 // managed identities
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf2("Adding identity %+v", *ai)
-	ids := &Storage{
+	ids := &storage{
 		Latest: ai.Config,
 	}
 	log.Lvl3("Creating Root-skipchain")
@@ -240,7 +240,7 @@ func (s *Service) Propagate(msg network.Body) {
 			return
 		}
 		log.Lvl3("Storing identity in", s)
-		s.setIdentityStorage(id, pi.Storage)
+		s.setIdentityStorage(id, pi.storage)
 		return
 	}
 
@@ -281,7 +281,7 @@ func (s *Service) Propagate(msg network.Body) {
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id ID) *Storage {
+func (s *Service) getIdentityStorage(id ID) *storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	is, ok := s.identities[string(id)]
@@ -292,7 +292,7 @@ func (s *Service) getIdentityStorage(id ID) *Storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id ID, is *Storage) {
+func (s *Service) setIdentityStorage(id ID, is *storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
@@ -302,7 +302,7 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		identities:       make(map[string]*Storage),
+		identities:       make(map[string]*storage),
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}

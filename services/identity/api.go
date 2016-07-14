@@ -147,7 +147,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-	msg, err := i.Send(i.Cothority.GetRandom(), &AddIdentity{i.Config, i.Cothority})
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &AddIdentity{i.Config, i.Cothority})
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (i *Identity) CreateIdentity() error {
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
 func (i *Identity) ProposeSend(il *Config) error {
-	_, err := i.Send(i.Cothority.GetRandom(), &ProposeSend{i.ID, il})
+	_, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
 	i.Proposed = il
 	return err
 }
@@ -168,7 +168,7 @@ func (i *Identity) ProposeSend(il *Config) error {
 // ProposeFetch verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ProposeFetch() error {
-	msg, err := i.Send(i.Cothority.GetRandom(), &ProposeFetch{
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeFetch{
 		ID:          i.ID,
 		AccountList: nil,
 	})
@@ -197,7 +197,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	msg, err := i.Send(i.Cothority.GetRandom(), &ProposeVote{
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: &sig,
@@ -223,7 +223,7 @@ func (i *Identity) ConfigUpdate() error {
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
-	msg, err := i.Send(i.Cothority.GetRandom(), &ConfigUpdate{ID: i.ID})
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
 	if err != nil {
 		return err
 	}

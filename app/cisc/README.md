@@ -1,11 +1,11 @@
 # CISC - Cisc Identity SkipChain
 
 ## Description
-Cisc is based on a personal blockchain handled by the cothority. It
+Cisc is uses a personal blockchain handled by the cothority. It
  can store any key/value pairs, and has a special module for managing
  ssh-public-keys.
 
-Based upon the well-known skipchains, cisc serves a data-block with different entries that can be handled by a number of devices who propose changes and cryptographically vote to approve or deny those changes. Different data-types exist that will interpret the data-block and offer a service.
+Based upon skipchains, cisc serves a data-block with different entries that can be handled by a number of devices who propose changes and cryptographically vote to approve or deny those changes. Different data-types exist that will interpret the data-block and offer a service.
 
 Besides having devices that can vote on changes, simple followers can download the data-block and get cryptographically signed updates to that data-block to be sure of the authenticity of the new data-block.
 

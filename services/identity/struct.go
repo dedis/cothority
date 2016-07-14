@@ -221,7 +221,7 @@ type ProposeVote struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*Storage
+	*storage
 }
 
 // ProposeSend sends a new proposition to be stored in all identities
