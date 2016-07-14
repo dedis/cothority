@@ -18,7 +18,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
-	"time"
 )
 
 func init() {
@@ -26,6 +25,9 @@ func init() {
 }
 
 // SID is the type of shared secret identifiers
+// TODO make this a uuid or at least something more unique and depending on the
+// message (at least for the short-term secrets) currently each sid for short-term
+// secrets is always "STSS0" (if the root starts the signing process)
 type SID string
 
 // Identifiers for long- and short-term shared secrets.
@@ -160,9 +162,7 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// Wait for complete signature
 	sig := <-jv.sigChan
-	// XXX wait a long time for all messages to propagate (to see if this
-	// influences the deadlock)
-	time.Sleep(3 * time.Minute)
+
 	return sig, nil
 }
 
@@ -224,7 +224,10 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 			return err
 		}
 		secret.secret = sec
-		secret.incrementConfirms()
+		secret.nConfirmsMtx.Lock()
+		defer secret.nConfirmsMtx.Unlock()
+		secret.numConfs++
+
 		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
 		// Initialise Schnorr struct for long-term shared secret if not done so before
@@ -306,25 +309,9 @@ type secret struct {
 	// XXX potentially get rid of deals buffer later:
 	deals map[int]*poly.Deal // Buffer for deals
 	// XXX potentially get rid of sig buffer later:
-	sigs         map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
-	nConfirmsMtx sync.Mutex                      // Mutex to sync access to numConfs
-	numConfs     int                             // Number of collected confirmations that shared secrets are ready
-}
-
-func (s *secret) incrementConfirms() {
-	s.nConfirmsMtx.Lock()
-	defer s.nConfirmsMtx.Unlock()
-	s.numConfs++
-}
-
-func (s *secret) numConfirms() int {
-	s.nConfirmsMtx.Lock()
-	defer s.nConfirmsMtx.Unlock()
-	return s.numConfs
-}
-
-func (s *secret) resetConfirms() {
-	s.nConfirmsMtx.Lock()
-	defer s.nConfirmsMtx.Unlock()
-	s.numConfs = 0
+	sigs map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+	// Number of collected confirmations that shared secrets are ready
+	numConfs int
+	// Mutex to sync access to numConfs
+	nConfirmsMtx sync.Mutex
 }

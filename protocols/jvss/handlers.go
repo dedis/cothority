@@ -97,20 +97,21 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		return err
 	}
 
-	secret.incrementConfirms()
-
-	log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfirms(), len(jv.List())))
+	secret.nConfirmsMtx.Lock()
+	defer secret.nConfirmsMtx.Unlock()
+	secret.numConfs++
 
 	// Check if we are root node and have enough confirmations to proceed
-	if (secret.numConfirms() == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
+	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
 		log.Lvl4("Writing to longTermSecDone")
 		jv.longTermSecDone <- true
-		secret.resetConfirms()
-	}
-	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
+		secret.numConfs = 0
+	} else if (secret.numConfs == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
 		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		secret.resetConfirms()
+		secret.numConfs = 0
+	} else {
+		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
 	}
 
 	return nil
