@@ -83,12 +83,15 @@ type RoutineDispatcher struct {
 	*BlockingDispatcher
 }
 
+// NewRoutineDispatcher returns a fresh RoutineDispatcher
 func NewRoutineDispatcher() *RoutineDispatcher {
 	return &RoutineDispatcher{
 		BlockingDispatcher: NewBlockingDispatcher(),
 	}
 }
 
+// Dispatch implements the Dispatcher interface. It will give the packet to the
+// right Processor in a go routine.
 func (d *RoutineDispatcher) Dispatch(packet *network.Packet) error {
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {

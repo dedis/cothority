@@ -73,7 +73,8 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
 }
 
-// delegate the dispatching to servicemanager
+// RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
+// It delegates the dispatching to the serviceManager.
 func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
