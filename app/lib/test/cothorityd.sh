@@ -9,12 +9,15 @@ runCoCfg(){
 runCoBG(){
     nb=$1
     shift
-    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ 2>&1 > /dev/null & )
+    testOut "starting cothority-server #$nb"
+#    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ 2>&1 > /dev/null & )
+    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ & )
 }
 
 runCo(){
     nb=$1
     shift
+    testOut "starting cothority-server #$nb"
     dbgRun ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@
 }
 

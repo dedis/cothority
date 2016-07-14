@@ -271,7 +271,7 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 	// try all names
 	for _, addr := range e.Addresses {
 		// try to connect with this name
-		log.Lvl3("Trying address", addr)
+		log.Lvl4("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
 			log.Lvl3("Address didn't accept connection:", addr, "=>", err)
@@ -287,7 +287,7 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 		break
 	}
 	if !success {
-		return nil, fmt.Errorf("Could not connect to any address tied to this ServerIdentity")
+		return nil, errors.New("Could not connect to any address tied to this ServerIdentity")
 	}
 	// Exchange and verify entities
 	err := secure.negotiateOpen(e)
@@ -296,6 +296,8 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 		st.conns = append(st.conns, &secure)
 		st.connMutex.Unlock()
 	}
+	log.Lvl3(secure.TCPConn.Local(), ": successfully connected and identified",
+		secure.TCPConn.Remote())
 	return &secure, err
 }
 
