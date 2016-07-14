@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/poly"
+	"time"
 )
 
 func init() {
@@ -123,9 +124,11 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// Initialise short-term shared secret only used for this signing request
 	sid := SID(fmt.Sprintf("%s%d", STSS, jv.Index()))
+	log.LLvl4("before initSecret: len(jv.secrets.secrets)=", len(jv.secrets.secrets))
 	if err := jv.initSecret(sid); err != nil {
 		return nil, err
 	}
+	log.LLvl4("after initSecret: len(jv.secrets.secrets)=", len(jv.secrets.secrets))
 
 	// Wait for setup of shared secrets to finish
 	log.Lvl2("Waiting on short-term secrets:", jv.Name())
@@ -157,7 +160,9 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// Wait for complete signature
 	sig := <-jv.sigChan
-
+	// XXX wait a long time for all messages to propagate (to see if this
+	// influences the deadlock)
+	time.Sleep(25 * time.Second)
 	return sig, nil
 }
 

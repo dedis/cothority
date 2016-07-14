@@ -103,9 +103,8 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 
 	// Check if we are root node and have enough confirmations to proceed
 	if (secret.numConfirms() == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
-		log.LLvl4("Wrinting to longTermSecDone")
+		log.Lvl4("Writing to longTermSecDone")
 		jv.longTermSecDone <- true
-		log.LLvl4("len(jv.longTermSecDone), cap(jv.longTermSecDone)", len(jv.longTermSecDone), cap(jv.longTermSecDone))
 		secret.resetConfirms()
 	}
 	if (secret.numConfirms() == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
