@@ -1,12 +1,13 @@
 package medco_test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
-	"reflect"
-	"testing"
 )
 
 // numberGrpAttr is the number of group attributes.
@@ -17,6 +18,8 @@ const numberAttr = 10
 
 // TestService tests medco complete service execution.
 func TestService(t *testing.T) {
+	// See https://github.com/dedis/cothority/issues/479
+	t.Skip()
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
