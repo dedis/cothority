@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/poly"
+	"strings"
 )
 
 // SecInitMsg are used to initialise new shared secrets both long- and
@@ -97,21 +98,29 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		return err
 	}
 
-	secret.nConfirmsMtx.Lock()
-	defer secret.nConfirmsMtx.Unlock()
-	secret.numConfs++
+	isShortTermSecret := strings.HasPrefix(string(msg.SID), STSS)
+	if isShortTermSecret {
+		secret.nShortConfirmsMtx.Lock()
+		defer secret.nShortConfirmsMtx.Unlock()
+		secret.numShortConfs++
+	} else {
+		secret.nLongConfirmsMtx.Lock()
+		defer secret.nLongConfirmsMtx.Unlock()
+		secret.numLongtermConfs++
+
+	}
 
 	// Check if we are root node and have enough confirmations to proceed
-	if (secret.numConfs == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
+	if (secret.numLongtermConfs == len(jv.List())) && (msg.SID == LTSS) && jv.IsRoot() {
 		log.Lvl4("Writing to longTermSecDone")
 		jv.longTermSecDone <- true
-		secret.numConfs = 0
-	} else if (secret.numConfs == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
+		secret.numLongtermConfs = 0
+	} else if (secret.numShortConfs == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
 		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		secret.numConfs = 0
+		secret.numShortConfs = 0
 	} else {
-		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
+		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numLongtermConfs, len(jv.List())))
 	}
 
 	return nil
