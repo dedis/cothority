@@ -118,6 +118,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	} else if (secret.numShortConfs == len(jv.List())) && (msg.SID == SID(fmt.Sprintf("%s%d", STSS, jv.Index()))) && jv.IsRoot() {
 		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
+		log.LLvl4("Wrote to shortTermSecDone")
 		secret.numShortConfs = 0
 	} else {
 		n := secret.numLongtermConfs
