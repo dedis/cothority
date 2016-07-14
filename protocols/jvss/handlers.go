@@ -3,6 +3,8 @@ package jvss
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/poly"
@@ -99,21 +101,34 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		return err
 	}
 
-	secret.nConfirmsMtx.Lock()
-	defer secret.nConfirmsMtx.Unlock()
-	secret.numConfs++
+	isShortTermSecret := strings.HasPrefix(string(msg.SID), string(STSS))
+	if isShortTermSecret {
+		secret.nShortConfirmsMtx.Lock()
+		defer secret.nShortConfirmsMtx.Unlock()
+		secret.numShortConfs++
+	} else {
+		secret.nLongConfirmsMtx.Lock()
+		defer secret.nLongConfirmsMtx.Unlock()
+		secret.numLongtermConfs++
+
+	}
 
 	// Check if we are the initiator node and have enough confirmations to proceed
-	if (secret.numConfs == len(jv.List())) && msg.SID.IsLTSS() && jv.sidStore.exists(msg.SID) {
+	if msg.SID.IsLTSS() && secret.numLongtermConfs == len(jv.List()) && jv.sidStore.exists(msg.SID) {
 		log.Lvl4("Writing to longTermSecDone")
 		jv.longTermSecDone <- true
-		secret.numConfs = 0
-	} else if (secret.numConfs == len(jv.List())) && msg.SID.IsSTSS() && jv.sidStore.exists(msg.SID) {
+		secret.numLongtermConfs = 0
+	} else if msg.SID.IsSTSS() && secret.numShortConfs == len(jv.List()) && jv.sidStore.exists(msg.SID) {
 		log.LLvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		secret.numConfs = 0
+		log.LLvl4("Wrote to shortTermSecDone")
+		secret.numShortConfs = 0
 	} else {
-		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, secret.numConfs, len(jv.List())))
+		n := secret.numLongtermConfs
+		if isShortTermSecret {
+			n = secret.numShortConfs
+		}
+		log.Lvl2(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, n, len(jv.List())))
 	}
 
 	return nil

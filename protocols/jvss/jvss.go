@@ -85,8 +85,8 @@ func NewJVSS(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		schnorr:          new(poly.Schnorr),
 		secrets:          newSecrets(),
 		ltssInit:         false,
-		longTermSecDone:  make(chan bool, n),
-		shortTermSecDone: make(chan bool, n),
+		longTermSecDone:  make(chan bool, 1),
+		shortTermSecDone: make(chan bool, 1),
 		sigChan:          make(chan *poly.SchnorrSig),
 		sidStore:         newSidStore(),
 	}
@@ -152,7 +152,6 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	if err := jv.initSecret(sid); err != nil {
 		return nil, err
 	}
-	log.LLvl4("after initSecret: len(jv.secrets.secrets)=", len(jv.secrets.secrets))
 
 	// Wait for setup of shared secrets to finish
 	log.Lvl2("Waiting on short-term secrets:", jv.Name())
@@ -197,10 +196,10 @@ func (jv *JVSS) initSecret(sid SID) error {
 	if sec, err := jv.secrets.secret(sid); sec == nil && err != nil {
 		log.Lvl2(fmt.Sprintf("Node %d: Initialising %s shared secret", jv.Index(), sid))
 		sec := &secret{
-			receiver: poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
-			deals:    make(map[int]*poly.Deal),
-			sigs:     make(map[int]*poly.SchnorrPartialSig),
-			numConfs: 0,
+			receiver:         poly.NewReceiver(jv.keyPair.Suite, jv.info, jv.keyPair),
+			deals:            make(map[int]*poly.Deal),
+			sigs:             make(map[int]*poly.SchnorrPartialSig),
+			numLongtermConfs: 0,
 		}
 		jv.secrets.addSecret(sid, sec)
 	}
@@ -250,9 +249,16 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 			return err
 		}
 		secret.secret = sec
-		secret.nConfirmsMtx.Lock()
-		defer secret.nConfirmsMtx.Unlock()
-		secret.numConfs++
+		isShortTermSecret := strings.HasPrefix(string(sid), string(STSS))
+		if isShortTermSecret {
+			secret.nShortConfirmsMtx.Lock()
+			defer secret.nShortConfirmsMtx.Unlock()
+			secret.numShortConfs++
+		} else {
+			secret.nLongConfirmsMtx.Lock()
+			defer secret.nLongConfirmsMtx.Unlock()
+			secret.numLongtermConfs++
+		}
 
 		log.Lvl2(fmt.Sprintf("Node %d: %v created", jv.Index(), sid))
 
@@ -335,10 +341,14 @@ type secret struct {
 	deals map[int]*poly.Deal // Buffer for deals
 	// XXX potentially get rid of sig buffer later:
 	sigs map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
+
 	// Number of collected confirmations that shared secrets are ready
-	numConfs int
-	// Mutex to sync access to numConfs
-	nConfirmsMtx sync.Mutex
+	numLongtermConfs int
+	nLongConfirmsMtx sync.Mutex
+
+	// Number of collected (short-term) confirmations that shared secrets are ready
+	numShortConfs     int
+	nShortConfirmsMtx sync.Mutex
 }
 
 // newSID takes a TYPE of Secret,i.e. STSS or LTSS and append some random bytes
