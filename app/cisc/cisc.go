@@ -224,7 +224,7 @@ func sshAdd(c *cli.Context) error {
 	filePriv := path.Join(sshDir, idPriv)
 	log.ErrFatal(makeSSHKeyPair(c.Int("sec"), filePub, filePriv))
 	host := NewSSHHost(alias, "HostName "+hostname,
-		"IdentityFile "+idPriv)
+		"IdentityFile "+filePriv)
 	if port := c.String("p"); port != "" {
 		host.AddConfig("Port " + port)
 	}
