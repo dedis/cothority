@@ -101,7 +101,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 // Returns the config-file from the configuration
 func getConfig(c *cli.Context) string {
 	configDir := config.TildeToHome(c.GlobalString("config"))
-	os.Mkdir(configDir, 0660)
+	os.Mkdir(configDir, 0770)
 	return configDir + "/config.bin"
 }
 
@@ -122,6 +122,7 @@ func getGroup(c *cli.Context) *config.Group {
 // retrieves ssh-config-name and ssh-directory
 func sshDirConfig(c *cli.Context) (string, string) {
 	sshDir := config.TildeToHome(c.GlobalString("cs"))
+	os.Mkdir(sshDir, 0700)
 	return sshDir, sshDir + "/config"
 }
 
