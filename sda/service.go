@@ -169,7 +169,7 @@ const configFolder = "config"
 // ```configFolder / *nameOfService*```
 func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	// check if we have a config folder
-	if err := os.MkdirAll(configFolder, 0777); err != nil {
+	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -186,7 +186,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
-		if err := os.MkdirAll(configName, 0666); err != nil {
+		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		c := newContext(h, o, id)

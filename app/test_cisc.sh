@@ -151,12 +151,16 @@ testKeyAdd(){
 
 testIdDel(){
 	clientSetup 3
+	testOK runCl 2 ssh add server2
+	testOK runCl 1 config vote y
 	testGrep client2 runCl 1 config ls
+	testGrep server2 runCl 1 config ls
 	testOK runCl 1 id del client2
 	testOK runCl 3 config vote y
 	testNGrep client2 runCl 3 config ls
 	testOK runCl 1 config update
 	testNGrep client2 runCl 1 config ls
+	testReNGrep server2
 	testFail runCl 2 ssh add server
 	testFail runCl 2 config update
 }

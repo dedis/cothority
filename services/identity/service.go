@@ -18,6 +18,10 @@ import (
 
 	"reflect"
 
+	"io/ioutil"
+
+	"os"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -39,14 +43,14 @@ func init() {
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	identities      map[string]*storage
+	Identities      map[string]*Storage
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
 	path            string
 }
 
 // Storage stores one identity together with the skipblocks
-type storage struct {
+type Storage struct {
 	sync.Mutex
 	Latest   *Config
 	Proposed *Config
@@ -59,7 +63,7 @@ type storage struct {
 // managed identities
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf3("%s Adding identity %x", s, ai.ID)
-	ids := &storage{
+	ids := &Storage{
 		Latest: ai.Config,
 	}
 	log.Lvl3("Creating Root-skipchain")
@@ -86,6 +90,7 @@ func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (netwo
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
+	s.save()
 
 	return &AddIdentityReply{
 		Root: ids.Root,
@@ -128,16 +133,16 @@ func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (networ
 	return nil, nil
 }
 
-// ProposeFetch returns an eventual config-proposition
-func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
-	log.Lvl2(s, "Sending proposal to client")
+// ProposeUpdate returns an eventual config-proposition
+func (s *Service) ProposeUpdate(e *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
+	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ProposeFetch{
+	return &ProposeUpdate{
 		ID:          cnc.ID,
 		AccountList: sid.Proposed,
 	}, nil
@@ -206,6 +211,7 @@ func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (networ
 		if err != nil {
 			return nil, err
 		}
+		s.save()
 		return sid.Data, nil
 	}
 	return nil, nil
@@ -245,7 +251,7 @@ func (s *Service) Propagate(msg network.Body) {
 			return
 		}
 		log.Lvl3("Storing identity in", s)
-		s.setIdentityStorage(id, pi.storage)
+		s.setIdentityStorage(id, pi.Storage)
 		return
 	}
 
@@ -286,10 +292,10 @@ func (s *Service) Propagate(msg network.Body) {
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id ID) *storage {
+func (s *Service) getIdentityStorage(id ID) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
-	is, ok := s.identities[string(id)]
+	is, ok := s.Identities[string(id)]
 	if !ok {
 		return nil
 	}
@@ -297,22 +303,50 @@ func (s *Service) getIdentityStorage(id ID) *storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id ID, is *storage) {
+func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
-	s.identities[string(id)] = is
+	s.Identities[string(id)] = is
+}
+
+// saves the actual identity
+func (s *Service) save() {
+	log.Lvl3("Saving service")
+	b, err := network.MarshalRegisteredType(s)
+	if err != nil {
+		log.Error("Couldn't marshal service:", err)
+	} else {
+		err = ioutil.WriteFile(s.path+"/identity.bin", b, 0660)
+		if err != nil {
+			log.Error("Couldn't save file:", err)
+		}
+	}
 }
 
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		identities:       make(map[string]*storage),
+		Identities:       make(map[string]*Storage),
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}
+	b, err := ioutil.ReadFile(path + "/identity.bin")
+	if err != nil && !os.IsNotExist(err) {
+		log.Error("Error while reading", path+"/identity.bin:", err)
+	} else {
+		if len(b) > 0 {
+			_, msg, err := network.UnmarshalRegistered(b)
+			if err != nil {
+				log.Error("Couldn't unmarshal:", err)
+			} else {
+				log.Lvl3("Successfully loaded")
+				s.Identities = msg.(*Service).Identities
+			}
+		}
+	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.AddIdentity, s.ProposeFetch, s.ConfigUpdate} {
+		s.AddIdentity, s.ProposeUpdate, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}

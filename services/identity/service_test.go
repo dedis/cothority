@@ -23,7 +23,7 @@ func TestService_AddIdentity(t *testing.T) {
 	air := msg.(*AddIdentityReply)
 
 	data := air.Data
-	id, ok := service.identities[string(data.Hash)]
+	id, ok := service.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }

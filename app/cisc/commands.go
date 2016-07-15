@@ -67,6 +67,10 @@ func init() {
 						Name:  "p,propose",
 						Usage: "will also show proposed config",
 					},
+					cli.BoolFlag{
+						Name:  "d,details",
+						Usage: "also show the values of the keys",
+					},
 				},
 			},
 			{

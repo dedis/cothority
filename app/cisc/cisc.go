@@ -118,6 +118,9 @@ func idDel(c *cli.Context) error {
 	}
 	prop := cfg.GetProposed()
 	delete(prop.Device, dev)
+	for _, s := range cfg.Config.GetKeys("ssh", dev) {
+		delete(prop.Data, "ssh:"+dev+":"+s)
+	}
 	cfg.proposeSendVoteUpdate(prop)
 	return nil
 }
@@ -132,15 +135,13 @@ func idCheck(c *cli.Context) error {
 func configUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	log.ErrFatal(cfg.ConfigUpdate())
-	log.ErrFatal(cfg.ProposeFetch())
+	log.ErrFatal(cfg.ProposeUpdate())
 	log.Info("Successfully updated")
 	log.ErrFatal(cfg.saveConfig(c))
 	if cfg.Proposed != nil {
 		cfg.showDifference()
 	} else {
-		for k := range cfg.Config.Data {
-			log.Info("Key set", k)
-		}
+		cfg.showKeys()
 	}
 	return nil
 }
@@ -148,7 +149,11 @@ func configList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	log.Info("Account name:", cfg.DeviceName)
 	log.Infof("Identity-ID: %x", cfg.ID)
-	log.Infof("Current config: %s", cfg.Config)
+	if c.Bool("d") {
+		log.Info(cfg.Config.Data)
+	} else {
+		cfg.showKeys()
+	}
 	if c.Bool("p") {
 		if cfg.Proposed != nil {
 			log.Infof("Proposed config: %s", cfg.Proposed)
@@ -165,7 +170,7 @@ func configPropose(c *cli.Context) error {
 func configVote(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	log.ErrFatal(cfg.ConfigUpdate())
-	log.ErrFatal(cfg.ProposeFetch())
+	log.ErrFatal(cfg.ProposeUpdate())
 	if cfg.Proposed == nil {
 		log.Info("No proposed config")
 		return nil

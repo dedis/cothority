@@ -56,6 +56,8 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	if cfg == nil || empty {
 		log.Fatal("Couldn't load configuration-file")
 	}
+	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.ProposeUpdate())
 	return cfg
 }
 
@@ -89,7 +91,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 		for _, s := range f.Config.GetIntKeys("ssh", f.DeviceName) {
 			pub := f.Config.GetValue("ssh", s, f.DeviceName)
 			log.Lvlf2("Value of %s is %s", s, pub)
-			log.Info("Adding key for", s)
+			log.Info("Writing key for", s, "to authorized_keys")
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
 		}
 	}
@@ -111,10 +113,31 @@ func (cfg *ciscConfig) showDifference() {
 			log.Info("New or changed key:", k)
 		}
 	}
+	for k := range cfg.Config.Data {
+		_, ok := cfg.Proposed.Data[k]
+		if !ok {
+			log.Info("Deleted key:", k)
+		}
+	}
 	for dev := range cfg.Proposed.Device {
 		if _, exists := cfg.Config.Device[dev]; !exists {
 			log.Info("New device:", dev)
 		}
+	}
+	for dev := range cfg.Config.Device {
+		if _, exists := cfg.Proposed.Device[dev]; !exists {
+			log.Info("Deleted device:", dev)
+		}
+	}
+}
+
+// shows only the keys, but not the data
+func (cfg *ciscConfig) showKeys() {
+	for d := range cfg.Config.Device {
+		log.Info("Connected device", d)
+	}
+	for k := range cfg.Config.Data {
+		log.Info("Key set", k)
 	}
 }
 
