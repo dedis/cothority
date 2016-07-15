@@ -1,12 +1,13 @@
 package medco_test
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
-	"reflect"
-	"testing"
 )
 
 // numberGrpAttr is the number of group attributes.
