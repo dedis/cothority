@@ -28,11 +28,11 @@ type Dispatcher interface {
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
 	RegisterProcessor(p Processor, msgType network.MessageTypeID)
-	// Dispatch will find the right processor to dispatch the packet to. The id
-	// is the identity of the author / sender of the packet.
-	// It can be called for example by the network layer.
-	// If no processor is found for this message type, then an error is returned
-	Dispatch(packet *network.Packet) error
+	/* // Dispatch will find the right processor to dispatch the packet to. The id*/
+	//// is the identity of the author / sender of the packet.
+	//// It can be called for example by the network layer.
+	//// If no processor is found for this message type, then an error is returned
+	/*Dispatch(packet *network.Packet) error*/
 }
 
 // Processor is an abstraction to represent any object that want to process
