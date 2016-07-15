@@ -23,7 +23,7 @@ test_fmt:
 		if ! go vet ./...; then \
 		exit 1; \
 		fi \
-		}
+	}
 
 test_lint:
 	@echo Checking linting of files
@@ -36,7 +36,7 @@ test_lint:
 		echo "$$lintfiles"; \
 		exit 1; \
 		fi \
-		}
+	}
 
 test_go:
 	go test -race -p=1 -short ./...

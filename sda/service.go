@@ -165,7 +165,7 @@ type serviceManager struct {
 	services map[ServiceID]Service
 	// the config paths
 	paths map[ServiceID]string
-	// the main sda host
+	// the sda host
 	host *Host
 	// serviceManager can take registration of Processors
 	Dispatcher
@@ -233,7 +233,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 		go s.ProcessClientRequest(id, &r)
 	default:
 		// will launch a go routine for that message
-		s.Dispatch(data) //s.ProcessServiceMessage(id, &m)
+		s.Dispatch(data)
 	}
 }
 

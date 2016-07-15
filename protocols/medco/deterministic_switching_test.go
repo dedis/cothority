@@ -13,6 +13,7 @@ import (
 )
 
 func TestDeterministicSwitching(t *testing.T) {
+	// Issue with deadlock occurences in the medco protocol
 	// see https://github.com/dedis/cothority/issues/479
 	t.Skip()
 	defer log.AfterTest(t)
