@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
 # Uncomment to build in local dir
@@ -14,18 +14,19 @@ NBR=4
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
-	test ConfigVote
-	test IdConnect
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
-	test SSHAdd
-	test SSHDel
-	test Follow
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
+#	test ConfigVote
+#	test IdConnect
+	test IdDel
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+#	test SSHAdd
+#	test SSHDel
+#	test Follow
     stopTest
 }
 
@@ -146,6 +147,18 @@ testKeyAdd(){
 	testGrep key1 runCl 2 kv ls
 	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
+}
+
+testIdDel(){
+	clientSetup 3
+	testGrep client2 runCl 1 config ls
+	testOK runCl 1 id del client2
+	testOK runCl 3 config vote y
+	testNGrep client2 runCl 3 config ls
+	testOK runCl 1 config update
+	testNGrep client2 runCl 1 config ls
+	testFail runCl 2 ssh add server
+	testFail runCl 2 config update
 }
 
 testIdConnect(){

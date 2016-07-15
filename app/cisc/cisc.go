@@ -105,8 +105,20 @@ func idConnect(c *cli.Context) error {
 	cfg.AttachToIdentity(id)
 	return cfg.saveConfig(c)
 }
-func idRemove(c *cli.Context) error {
-	log.Fatal("Not yet implemented")
+func idDel(c *cli.Context) error {
+	if c.NArg() == 0 {
+		log.Fatal("Please give device to delete")
+	}
+	cfg := loadConfigOrFail(c)
+	dev := c.Args().First()
+	if _, ok := cfg.Config.Device[dev]; !ok {
+		log.Info("Didn't find", dev, "in config")
+		configList(c)
+		log.Fatal("Try with one of those")
+	}
+	prop := cfg.GetProposed()
+	delete(prop.Device, dev)
+	cfg.proposeSendVoteUpdate(prop)
 	return nil
 }
 func idCheck(c *cli.Context) error {
@@ -123,7 +135,14 @@ func configUpdate(c *cli.Context) error {
 	log.ErrFatal(cfg.ProposeFetch())
 	log.Info("Successfully updated")
 	log.ErrFatal(cfg.saveConfig(c))
-	return configList(c)
+	if cfg.Proposed != nil {
+		cfg.showDifference()
+	} else {
+		for k := range cfg.Config.Data {
+			log.Info("Key set", k)
+		}
+	}
+	return nil
 }
 func configList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
@@ -145,8 +164,14 @@ func configPropose(c *cli.Context) error {
 }
 func configVote(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
+	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.ProposeFetch())
+	if cfg.Proposed == nil {
+		log.Info("No proposed config")
+		return nil
+	}
 	if c.NArg() == 0 {
-		configList(c)
+		cfg.showDifference()
 		if !config.InputYN(true, "Do you want to accept the changes") {
 			return nil
 		}
@@ -292,8 +317,8 @@ func sshSync(c *cli.Context) error {
 }
 
 func followAdd(c *cli.Context) error {
-	if c.NArg() != 3 {
-		log.Fatal("Please give a group-definition, an ID, and a service-name of the skipchain to follow")
+	if c.NArg() < 2 {
+		log.Fatal("Please give a group-definition, an ID, and optionally a service-name of the skipchain to follow")
 	}
 	cfg, _ := loadConfig(c)
 	group := getGroup(c)
@@ -302,7 +327,13 @@ func followAdd(c *cli.Context) error {
 	id := identity.ID(idBytes)
 	newID, err := identity.NewIdentityFromCothority(group.Roster, id)
 	log.ErrFatal(err)
-	newID.DeviceName = c.Args().Get(2)
+	if c.NArg() == 3 {
+		newID.DeviceName = c.Args().Get(2)
+	} else {
+		var err error
+		newID.DeviceName, err = os.Hostname()
+		log.ErrFatal(err)
+	}
 	cfg.Follow = append(cfg.Follow, newID)
 	cfg.writeAuthorizedKeys(c)
 	// Identity needs to exist, else saving/loading will fail. For
@@ -343,7 +374,6 @@ func followUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, f := range cfg.Follow {
 		log.ErrFatal(f.ConfigUpdate())
-		log.Print(f.Config.Data)
 	}
 	cfg.writeAuthorizedKeys(c)
 	return cfg.saveConfig(c)

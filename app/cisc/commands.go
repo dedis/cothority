@@ -28,10 +28,10 @@ func init() {
 				Action:    idConnect,
 			},
 			{
-				Name:    "remove",
+				Name:    "del",
 				Aliases: []string{"rm"},
-				Usage:   "remove an identity",
-				Action:  idRemove,
+				Usage:   "delete an identity",
+				Action:  idDel,
 			},
 			{
 				Name:    "check",

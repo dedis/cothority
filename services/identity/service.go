@@ -58,7 +58,7 @@ type storage struct {
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
-	log.Lvlf2("%s Adding identity %+v", s, *ai)
+	log.Lvlf3("%s Adding identity %x", s, ai.ID)
 	ids := &storage{
 		Latest: ai.Config,
 	}
@@ -85,6 +85,7 @@ func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (netwo
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
+	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
 
 	return &AddIdentityReply{
 		Root: ids.Root,
@@ -100,7 +101,7 @@ func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (net
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	log.Lvl2(s, "Sending config-update")
+	log.Lvl3(s, "Sending config-update")
 	return &ConfigUpdate{
 		ID:          cu.ID,
 		AccountList: sid.Latest,

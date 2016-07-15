@@ -85,10 +85,11 @@ func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Config) {
 func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	var keys []string
 	for _, f := range cfg.Follow {
-		log.LLvlf2("Parsing IC %x", f.ID)
+		log.Lvlf2("Parsing IC %x", f.ID)
 		for _, s := range f.Config.GetIntKeys("ssh", f.DeviceName) {
 			pub := f.Config.GetValue("ssh", s, f.DeviceName)
-			log.LLvlf2("Value of %s is %s", s, pub)
+			log.Lvlf2("Value of %s is %s", s, pub)
+			log.Info("Adding key for", s)
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
 		}
 	}
@@ -96,6 +97,25 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	err := ioutil.WriteFile(dir+"/authorized_keys",
 		[]byte(strings.Join(keys, "\n")), 0600)
 	log.ErrFatal(err)
+}
+
+// showDifference compares the propose and the config-part
+func (cfg *ciscConfig) showDifference() {
+	if cfg.Proposed == nil {
+		log.Info("No proposed config found")
+		return
+	}
+	for k, v := range cfg.Proposed.Data {
+		orig, ok := cfg.Config.Data[k]
+		if !ok || v != orig {
+			log.Info("New or changed key:", k)
+		}
+	}
+	for dev := range cfg.Proposed.Device {
+		if _, exists := cfg.Config.Device[dev]; !exists {
+			log.Info("New device:", dev)
+		}
+	}
 }
 
 // Returns the config-file from the configuration
