@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/network"
+	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
