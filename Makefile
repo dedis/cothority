@@ -43,6 +43,6 @@ test_go:
 
 #test: test_fmt test_lint test_go
 test:
-	cd services/skipchain; for i in $$( seq 100 ); do go test -race -p=1 -short; done
+	cd services/skipchain; for i in $$( seq 100 ); do go test -race -p=1 -short -t; done
 
 all: install test
