@@ -58,7 +58,7 @@ type storage struct {
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
-	log.Lvlf2("Adding identity %+v", *ai)
+	log.Lvlf2("%s Adding identity %+v", s, *ai)
 	ids := &storage{
 		Latest: ai.Config,
 	}
@@ -100,6 +100,7 @@ func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (net
 	}
 	sid.Lock()
 	defer sid.Unlock()
+	log.Lvl2(s, "Sending config-update")
 	return &ConfigUpdate{
 		ID:          cu.ID,
 		AccountList: sid.Latest,
@@ -109,6 +110,7 @@ func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (net
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -127,6 +129,7 @@ func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (networ
 
 // ProposeFetch returns an eventual config-proposition
 func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
+	log.Lvl2(s, "Sending proposal to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -143,6 +146,7 @@ func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (ne
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
 func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {

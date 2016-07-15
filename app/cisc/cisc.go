@@ -39,7 +39,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
-			Value: 1,
+			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
@@ -81,6 +81,7 @@ func idCreate(c *cli.Context) error {
 
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 2, name)}
 	log.ErrFatal(cfg.CreateIdentity())
+	log.Infof("IC is %x", cfg.ID)
 	return cfg.saveConfig(c)
 }
 
