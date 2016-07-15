@@ -10,7 +10,7 @@ import (
 	"net"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -107,14 +107,14 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		}
 		for _, e := range sc.Roster.List {
 			for _, a := range e.Addresses {
-				dbg.Lvl4("Searching for", ha, "in", a)
+				log.Lvl4("Searching for", ha, "in", a)
 				// If we are started in Deterlab- or other
 				// big-server-needs-multiple-hosts, we might
 				// want to initialise all hosts in one instance
 				// of 'cothority' so as to minimize memory
 				// footprint
 				if strings.Contains(a, ha) {
-					dbg.Lvl3("Found host", a, "to match", ha)
+					log.Lvl3("Found host", a, "to match", ha)
 					host := NewHost(e, scf.PrivateKeys[a])
 					scNew := *sc
 					scNew.Host = host
@@ -152,11 +152,11 @@ func (sc *SimulationConfig) Save(dir string) error {
 	}
 	buf, err := network.MarshalRegisteredType(scf)
 	if err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
 	err = ioutil.WriteFile(dir+"/"+SimulationFileName, buf, 0660)
 	if err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
 
 	return nil
@@ -213,7 +213,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	if s.SingleHost {
 		// If we want to work with a single host, we only make one
 		// host per server
-		dbg.Fatal("Not supported yet")
+		log.Fatal("Not supported yet")
 		hosts = nbrAddr
 		if hosts > s.Hosts {
 			hosts = s.Hosts
@@ -225,7 +225,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		localhosts = true
 	}
 	entities := make([]*network.ServerIdentity, hosts)
-	dbg.Lvl3("Doing", hosts, "hosts")
+	log.Lvl3("Doing", hosts, "hosts")
 	key := config.NewKeyPair(network.Suite)
 	for c := 0; c < hosts; c++ {
 		key.Secret.Add(key.Secret,
@@ -238,11 +238,11 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 			var err error
 			listeners[c], err = net.Listen("tcp", ":0")
 			if err != nil {
-				dbg.Fatal("Couldn't search for empty port:", err)
+				log.Fatal("Couldn't search for empty port:", err)
 			}
 			_, p, _ := net.SplitHostPort(listeners[c].Addr().String())
 			address += p
-			dbg.Lvl4("Found free port", address)
+			log.Lvl4("Found free port", address)
 		} else {
 			address += strconv.Itoa(port + c/nbrAddr)
 		}
@@ -254,25 +254,25 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		for _, l := range listeners {
 			err := l.Close()
 			if err != nil {
-				dbg.Fatal("Couldn't close port:", l, err)
+				log.Fatal("Couldn't close port:", l, err)
 			}
 		}
 	}
 
 	sc.Roster = NewRoster(entities)
-	dbg.Lvl3("Creating entity List took: " + time.Now().Sub(start).String())
+	log.Lvl3("Creating entity List took: " + time.Now().Sub(start).String())
 }
 
 // CreateTree the tree as defined in SimulationBFTree and stores the result
 // in 'sc'
 func (s *SimulationBFTree) CreateTree(sc *SimulationConfig) error {
-	dbg.Lvl3("CreateTree strarted")
+	log.Lvl3("CreateTree strarted")
 	start := time.Now()
 	if sc.Roster == nil {
 		return errors.New("Empty Roster")
 	}
 	sc.Tree = sc.Roster.GenerateBigNaryTree(s.BF, s.Hosts)
-	dbg.Lvl3("Creating tree took: " + time.Now().Sub(start).String())
+	log.Lvl3("Creating tree took: " + time.Now().Sub(start).String())
 	return nil
 }
 
@@ -289,7 +289,7 @@ func (sc SimulationConfig) GetSingleHost() bool {
 	var sh struct{ SingleHost bool }
 	_, err := toml.Decode(sc.Config, &sh)
 	if err != nil {
-		dbg.Error("Couldn't decode string", sc.Config, "into toml.")
+		log.Error("Couldn't decode string", sc.Config, "into toml.")
 		return false
 	}
 	return sh.SingleHost

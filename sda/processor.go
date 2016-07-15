@@ -6,7 +6,7 @@ import (
 
 	"strings"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
 
@@ -20,11 +20,11 @@ import (
 // wants to send.
 type ServiceProcessor struct {
 	functions map[network.MessageTypeID]interface{}
-	Context
+	*Context
 }
 
 // NewServiceProcessor initializes your ServiceProcessor.
-func NewServiceProcessor(c Context) *ServiceProcessor {
+func NewServiceProcessor(c *Context) *ServiceProcessor {
 	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
@@ -61,7 +61,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
 	}
 	// Automatic registration of the message to the network library.
-	dbg.Lvl4("Registering handler", cr1.String())
+	log.Lvl4("Registering handler", cr1.String())
 	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
 		cr1.Elem()),
 		cr1.Elem())
@@ -75,7 +75,7 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 	cr *ClientRequest) {
 	reply := p.GetReply(e, cr.Data)
 	if err := p.SendRaw(e, reply); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 }
 
@@ -92,7 +92,7 @@ func (p *ServiceProcessor) SendISM(e *network.ServerIdentity, msg network.Body) 
 	if err != nil {
 		return err
 	}
-	dbg.Lvl4("Raw-sending to", e)
+	log.Lvl4("Raw-sending to", e)
 	return p.SendRaw(e, sm)
 }
 
@@ -101,7 +101,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 	var errStrs []string
 	for _, e := range el.List {
 		if !e.ID.Equal(p.Context.ServerIdentity().ID) {
-			dbg.Lvl3("Sending to", e)
+			log.Lvl3("Sending to", e)
 			err := p.SendISM(e, msg)
 			if err != nil {
 				errStrs = append(errStrs, err.Error())
@@ -133,7 +133,7 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, d []byte) network
 	to1 := reflect.TypeOf(fu).In(1)
 	f := reflect.ValueOf(fu)
 
-	dbg.Lvl4("Dispatching to", e.Addresses)
+	log.Lvl4("Dispatching to", e.Addresses)
 	arg0 := reflect.New(reflect.TypeOf(network.ServerIdentity{}))
 	arg0.Elem().Set(reflect.ValueOf(e).Elem())
 	arg1 := reflect.New(to1.Elem())

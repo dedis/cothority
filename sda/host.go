@@ -7,7 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"strings"
+
+	"sort"
+
+	"strconv"
+
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -62,28 +68,31 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	serviceStore *serviceStore
+	serviceStore         *serviceStore
+	statusReporterStruct *statusReporterStruct
 }
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
-		ServerIdentity:      e,
-		workingAddress:      e.First(),
-		connections:         make(map[network.ServerIdentityID]network.SecureConn),
-		pendingTreeMarshal:  make(map[RosterID][]*TreeMarshal),
-		pendingSDAs:         make([]*ProtocolMsg, 0),
-		host:                network.NewSecureTCPHost(pkey, e),
-		private:             pkey,
-		suite:               network.Suite,
-		networkChan:         make(chan network.Packet, 1),
-		isClosing:           false,
-		ProcessMessagesQuit: make(chan bool),
+		ServerIdentity:       e,
+		workingAddress:       e.First(),
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
+		pendingTreeMarshal:   make(map[RosterID][]*TreeMarshal),
+		pendingSDAs:          make([]*ProtocolMsg, 0),
+		host:                 network.NewSecureTCPHost(pkey, e),
+		private:              pkey,
+		suite:                network.Suite,
+		networkChan:          make(chan network.Packet, 1),
+		isClosing:            false,
+		ProcessMessagesQuit:  make(chan bool),
+		statusReporterStruct: newStatusReporterStruct(),
 	}
 
 	h.overlay = NewOverlay(h)
 	h.serviceStore = newServiceStore(h, h.overlay)
+	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
 }
 
@@ -91,26 +100,26 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 // contact this host. If 'wait' is true, it will try to connect to itself before
 // returning.
 func (h *Host) listen(wait bool) {
-	dbg.Lvl3(h.ServerIdentity.First(), "starts to listen")
+	log.Lvl3(h.ServerIdentity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
-		dbg.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
+		log.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
 		h.registerConnection(c)
 		h.handleConn(c)
 	}
 	go func() {
-		dbg.Lvl4("Host listens on:", h.workingAddress)
+		log.Lvl4("Host listens on:", h.workingAddress)
 		err := h.host.Listen(fn)
 		if err != nil {
-			dbg.Fatal("Couldn't listen on", h.workingAddress, ":", err)
+			log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
 		}
 	}()
 	if wait {
 		for {
-			dbg.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
+			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
 			_, err := h.Connect(h.ServerIdentity)
 			if err == nil {
-				dbg.Lvl4(h.ServerIdentity.First(), "managed to connect to itself")
+				log.Lvl4(h.ServerIdentity.First(), "managed to connect to itself")
 				break
 			}
 			time.Sleep(network.WaitRetry)
@@ -140,7 +149,7 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	dbg.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
+	log.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
 	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
@@ -154,7 +163,7 @@ func (h *Host) Close() error {
 	if h.isClosing {
 		return errors.New("Already closing")
 	}
-	dbg.Lvl4(h.ServerIdentity.First(), "Starts closing")
+	log.Lvl4(h.ServerIdentity.First(), "Starts closing")
 	h.isClosing = true
 	if h.processMessagesStarted {
 		// Tell ProcessMessages to quit
@@ -174,14 +183,14 @@ func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	for _, c := range h.connections {
-		dbg.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
+		log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
-			dbg.Error(h.ServerIdentity.First(), "Couldn't close connection", c)
+			log.Error(h.ServerIdentity.First(), "Couldn't close connection", c)
 			return err
 		}
 	}
-	dbg.Lvl4(h.ServerIdentity.First(), "Closing tcpHost")
+	log.Lvl4(h.ServerIdentity.First(), "Closing tcpHost")
 	h.connections = make(map[network.ServerIdentityID]network.SecureConn)
 	return h.host.Close()
 }
@@ -191,7 +200,7 @@ func (h *Host) closeConnections() error {
 func (h *Host) closeConnection(c network.SecureConn) error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	dbg.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
+	log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 	err := c.Close()
 	if err != nil {
 		return err
@@ -216,11 +225,11 @@ func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 		}
 	}
 
-	dbg.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
-		dbg.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
+		log.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
 		c, err = h.Connect(e)
 		if err != nil {
 			return err
@@ -230,7 +239,7 @@ func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 			return err
 		}
 	}
-	dbg.Lvl5("Message sent")
+	log.Lvl5("Message sent")
 	return nil
 }
 
@@ -262,14 +271,14 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		dbg.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
+		log.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case SDADataMessageID:
 			sdaMsg := data.Msg.(ProtocolMsg)
 			sdaMsg.ServerIdentity = data.ServerIdentity
 			err := h.overlay.TransmitMsg(&sdaMsg)
 			if err != nil {
-				dbg.Error("ProcessSDAMessage returned:", err)
+				log.Error("ProcessSDAMessage returned:", err)
 			}
 			// A host has sent us a request to get a tree definition
 		case RequestTreeMessageID:
@@ -285,13 +294,13 @@ func (h *Host) processMessages() {
 				err = h.SendRaw(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
 			}
 			if err != nil {
-				dbg.Error("Couldn't send tree:", err)
+				log.Error("Couldn't send tree:", err)
 			}
 			// A Host has replied to our request of a tree
 		case SendTreeMessageID:
 			tm := data.Msg.(TreeMarshal)
 			if tm.TreeID == TreeID(uuid.Nil) {
-				dbg.Error("Received an empty Tree")
+				log.Error("Received an empty Tree")
 				continue
 			}
 			il := h.overlay.Roster(tm.RosterID)
@@ -299,7 +308,7 @@ func (h *Host) processMessages() {
 			if il == nil {
 				msg := &RequestRoster{tm.RosterID}
 				if err := h.SendRaw(data.ServerIdentity, msg); err != nil {
-					dbg.Error("Requesting Roster in SendTree failed", err)
+					log.Error("Requesting Roster in SendTree failed", err)
 				}
 
 				// put the tree marshal into pending queue so when we receive the
@@ -310,10 +319,10 @@ func (h *Host) processMessages() {
 
 			tree, err := tm.MakeTree(il)
 			if err != nil {
-				dbg.Error("Couldn't create tree:", err)
+				log.Error("Couldn't create tree:", err)
 				continue
 			}
-			dbg.Lvl4("Received new tree")
+			log.Lvl4("Received new tree")
 			h.overlay.RegisterTree(tree)
 			h.checkPendingSDA(tree)
 			// Some host requested an Roster
@@ -324,11 +333,11 @@ func (h *Host) processMessages() {
 			if el != nil {
 				err = h.SendRaw(data.ServerIdentity, el)
 			} else {
-				dbg.Lvl2("Requested entityList that we don't have")
+				log.Lvl2("Requested entityList that we don't have")
 				err = h.SendRaw(data.ServerIdentity, &Roster{})
 			}
 			if err != nil {
-				dbg.Error("Couldn't send empty entity list from host:",
+				log.Error("Couldn't send empty entity list from host:",
 					h.ServerIdentity.String(),
 					err)
 				continue
@@ -337,23 +346,23 @@ func (h *Host) processMessages() {
 		case SendRosterMessageID:
 			il := data.Msg.(Roster)
 			if il.ID == RosterID(uuid.Nil) {
-				dbg.Lvl2("Received an empty Roster")
+				log.Lvl2("Received an empty Roster")
 			} else {
 				h.overlay.RegisterRoster(&il)
 				// Check if some trees can be constructed from this entitylist
 				h.checkPendingTreeMarshal(&il)
 			}
-			dbg.Lvl4("Received new entityList")
+			log.Lvl4("Received new entityList")
 		case RequestID:
 			r := data.Msg.(ClientRequest)
 			h.processRequest(data.ServerIdentity, &r)
 		case ServiceMessageID:
-			dbg.Lvl4("Got ServiceMessageID")
+			log.Lvl4("Got ServiceMessageID")
 			m := data.Msg.(InterServiceMessage)
 			h.processServiceMessage(data.ServerIdentity, &m)
 		default:
 			if data.MsgType != network.ErrorType {
-				dbg.Lvl3("Unknown message received:", data)
+				log.Lvl3("Unknown message received:", data)
 			}
 		}
 	}
@@ -363,12 +372,12 @@ func (h *Host) processServiceMessage(e *network.ServerIdentity, m *InterServiceM
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(m.Service)
 	if !ok {
-		dbg.Error("Received a message for an unknown service", m.Service)
+		log.Error("Received a message for an unknown service", m.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl5("host", h.Address(), m)
+	log.Lvl5("host", h.Address(), m)
 	go s.ProcessServiceMessage(e, m)
 
 }
@@ -377,12 +386,12 @@ func (h *Host) processRequest(e *network.ServerIdentity, r *ClientRequest) {
 	// check if the target service is indeed existing
 	s, ok := h.serviceStore.serviceByID(r.Service)
 	if !ok {
-		dbg.Error("Received a request for an unknown service", r.Service)
+		log.Error("Received a request for an unknown service", r.Service)
 		// XXX TODO should reply with some generic response =>
 		// 404 Service Unknown
 		return
 	}
-	dbg.Lvl5("host", h.Address(), " => Dispatch request to Request")
+	log.Lvl5("host", h.Address(), " => Dispatch request to Request")
 	go s.ProcessClientRequest(e, r)
 }
 
@@ -407,7 +416,7 @@ func (h *Host) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
-	dbg.Lvl4("Sending to", e.Addresses)
+	log.Lvl4("Sending to", e.Addresses)
 	return h.SendRaw(e, sdaMsg)
 }
 
@@ -423,24 +432,24 @@ func (h *Host) handleConn(c network.SecureConn) {
 		_, cont := h.connections[c.ServerIdentity().ID]
 		h.networkLock.Unlock()
 		if !cont {
-			dbg.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
+			log.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
 			return
 		}
 		// So the receiver can know about the error
 		am.SetError(err)
 		am.From = address
-		dbg.Lvl5("Got message", am)
+		log.Lvl5("Got message", am)
 		if err != nil {
 			h.closingMut.Lock()
-			dbg.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
+			log.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
 				h.ServerIdentity.First(), err, h.isClosing)
 			h.closingMut.Unlock()
 			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				dbg.Lvl4(h.ServerIdentity.First(), c.Remote(), "quitting handleConn for-loop", err)
+				log.Lvl4(h.ServerIdentity.First(), c.Remote(), "quitting handleConn for-loop", err)
 				h.closeConnection(c)
 				return
 			}
-			dbg.Error(h.ServerIdentity.Addresses, "Error with connection", address, "=>", err)
+			log.Error(h.ServerIdentity.Addresses, "Error with connection", address, "=>", err)
 		} else {
 			h.closingMut.Lock()
 			if !h.isClosing {
@@ -484,7 +493,7 @@ func (h *Host) checkPendingSDA(t *Tree) {
 				// instantiate it and go
 				err := h.overlay.TransmitMsg(msg)
 				if err != nil {
-					dbg.Error("TransmitMsg failed:", err)
+					log.Error("TransmitMsg failed:", err)
 					continue
 				}
 			} else {
@@ -500,14 +509,14 @@ func (h *Host) checkPendingSDA(t *Tree) {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
 func (h *Host) registerConnection(c network.SecureConn) {
-	dbg.Lvl4(h.ServerIdentity.First(), "registers", c.ServerIdentity().First())
+	log.Lvl4(h.ServerIdentity.First(), "registers", c.ServerIdentity().First())
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	id := c.ServerIdentity()
 	_, okc := h.connections[id.ID]
 	if okc {
 		// TODO - we should catch this in some way
-		dbg.Lvl3("Connection already registered", okc)
+		log.Lvl3("Connection already registered", okc)
 	}
 	h.connections[id.ID] = c
 }
@@ -541,7 +550,7 @@ func (h *Host) checkPendingTreeMarshal(el *Roster) {
 	for _, tm := range sl {
 		tree, err := tm.MakeTree(el)
 		if err != nil {
-			dbg.Error("Tree from Roster failed")
+			log.Error("Tree from Roster failed")
 			continue
 		}
 		// add the tree into our "database"
@@ -611,4 +620,30 @@ func (h *Host) Rx() uint64 {
 // Address is the address where this host is listening
 func (h *Host) Address() string {
 	return h.workingAddress
+}
+
+// GetStatus is a function that returns the status report of the server.
+func (h *Host) GetStatus() Status {
+	m := make(map[string]string)
+	nbr := len(h.connections)
+	remote := make([]string, nbr)
+	iter := 0
+	var rx uint64
+	var tx uint64
+	for _, c := range h.connections {
+		remote[iter] = c.Remote()
+		rx += c.Rx()
+		tx += c.Tx()
+		iter = iter + 1
+	}
+	m["Connections"] = strings.Join(remote, "\n")
+	m["Host"] = h.Address()
+	m["Total"] = strconv.Itoa(nbr)
+	m["Packets_Received"] = strconv.FormatUint(rx, 10)
+	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
+	a := ServiceFactory.RegisteredServicesName()
+	sort.Strings(a)
+	m["Available_Services"] = strings.Join(a, ",")
+
+	return m
 }

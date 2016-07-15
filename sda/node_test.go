@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
@@ -23,7 +23,7 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -45,7 +45,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -81,7 +81,7 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -118,7 +118,7 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
@@ -146,11 +146,11 @@ func TestNewNode(t *testing.T) {
 }
 
 func TestServiceChannels(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
-	sda.RegisterNewService("ChannelsService", func(c sda.Context, path string) sda.Service {
+	sda.RegisterNewService("ChannelsService", func(c *sda.Context, path string) sda.Service {
 		var sc *ServiceChannels
 		if count == 0 {
 			sc = sc1
@@ -185,19 +185,19 @@ func TestServiceChannels(t *testing.T) {
 }
 
 func TestProtocolHandlers(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
-	dbg.Lvl2("Sending to children")
+	log.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *sda.TreeNodeInstance, 2)
 	p, err := local.CreateProtocol(tree, "ProtocolHandlers")
 	if err != nil {
 		t.Fatal(err)
 	}
 	go p.Start()
-	dbg.Lvl2("Waiting for responses")
+	log.Lvl2("Waiting for responses")
 	child1 := <-IncomingHandlers
 	child2 := <-IncomingHandlers
 
@@ -205,7 +205,7 @@ func TestProtocolHandlers(t *testing.T) {
 		t.Fatal("Both entities should be different")
 	}
 
-	dbg.Lvl2("Sending to parent")
+	log.Lvl2("Sending to parent")
 
 	tni := p.(*ProtocolHandlers).TreeNodeInstance
 	child1.SendTo(tni.TreeNode(), &NodeTestAggMsg{})
@@ -220,7 +220,7 @@ func TestProtocolHandlers(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
@@ -233,7 +233,7 @@ func TestMsgAggregation(t *testing.T) {
 	// Wait for both children to be up
 	<-Incoming
 	<-Incoming
-	dbg.Lvl3("Both children are up")
+	log.Lvl3("Both children are up")
 	child1 := local.GetNodes(tree.Root.Children[0])[0]
 	child2 := local.GetNodes(tree.Root.Children[1])[0]
 
@@ -262,7 +262,7 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	testType := network.MessageTypeID(uuid.Nil)
 	local := sda.NewLocalTest()
@@ -287,13 +287,13 @@ func TestFlags(t *testing.T) {
 }
 
 func TestSendLimitedTree(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenBigTree(7, 1, 2, true, true)
 	defer local.CloseAll()
 
-	dbg.Lvl3(tree.Dump())
+	log.Lvl3(tree.Dump())
 
 	root, err := local.StartProtocol("Count", tree)
 	if err != nil {
@@ -356,7 +356,7 @@ func (p *ProtocolChannels) Release() {
 }
 
 type ServiceChannels struct {
-	ctx  sda.Context
+	ctx  *sda.Context
 	path string
 	tree sda.Tree
 }
@@ -377,7 +377,7 @@ func (c *ServiceChannels) ProcessClientRequest(e *network.ServerIdentity, r *sda
 }
 
 func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	dbg.Lvl1("Cosi Service received New Protocol event")
+	log.Lvl1("Cosi Service received New Protocol event")
 	return NewProtocolChannels(tn)
 }
 
@@ -423,7 +423,7 @@ func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
 	*sda.TreeNode
 	NodeTestAggMsg
 }) {
-	dbg.Lvl3("Received message")
+	log.Lvl3("Received message")
 	IncomingHandlers <- p.TreeNodeInstance
 }
 
@@ -437,7 +437,7 @@ func (p *ProtocolHandlers) Release() {
 }
 
 func TestBlocking(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	l := sda.NewLocalTest()
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
@@ -476,7 +476,7 @@ func TestBlocking(t *testing.T) {
 	p2.stopBlockChan <- true
 	select {
 	case <-p2.doneChan:
-		dbg.Lvl2("Node 2 done")
+		log.Lvl2("Node 2 done")
 		p1.stopBlockChan <- true
 		<-p1.doneChan
 	case <-time.After(time.Second):
@@ -518,10 +518,10 @@ func (bp *BlockingProtocol) Start() error {
 func (bp *BlockingProtocol) Dispatch() error {
 	// first wait on stopBlockChan
 	<-bp.stopBlockChan
-	dbg.Lvl2("BlockingProtocol: will continue")
+	log.Lvl2("BlockingProtocol: will continue")
 	// Then wait on the actual message
 	<-bp.Incoming
-	dbg.Lvl2("BlockingProtocol: received message => signal Done")
+	log.Lvl2("BlockingProtocol: received message => signal Done")
 	// then signal that you are done
 	bp.doneChan <- true
 	return nil

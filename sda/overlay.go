@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -57,12 +57,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
 	if o.Roster(sdaMsg.To.RosterID) == nil {
-		dbg.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
+		log.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
 		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl4("Will ask for tree from token")
+		log.Lvl4("Will ask for tree from token")
 		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	// TreeNodeInstance
@@ -72,12 +72,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
-		dbg.Lvl4("Message for TreeNodeInstance that is already finished")
+		log.Lvl4("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
-		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.ServerIdentity, sdaMsg.To.ID())
+		log.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.ServerIdentity, sdaMsg.To.ID())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
@@ -111,12 +111,12 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		dbg.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+		log.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
 
-	dbg.Lvl4("Dispatching message", o.host.ServerIdentity)
+	log.Lvl4("Dispatching message", o.host.ServerIdentity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.ProcessProtocolMsg(sdaMsg)
 
@@ -194,7 +194,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) er
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
-	dbg.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
+	log.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
 	return o.host.sendSDAData(to.ServerIdentity, sda)
 }
 
@@ -211,13 +211,13 @@ func (o *Overlay) nodeDone(tok *Token) {
 func (o *Overlay) nodeDelete(tok *Token) {
 	tni, ok := o.instances[tok.ID()]
 	if !ok {
-		dbg.Lvl2("Node", tok.ID(), "already gone")
+		log.Lvl2("Node", tok.ID(), "already gone")
 		return
 	}
-	dbg.Lvl4("Closing node", tok.ID())
+	log.Lvl4("Closing node", tok.ID())
 	err := tni.Close()
 	if err != nil {
-		dbg.Error("Error while closing node:", err)
+		log.Error("Error while closing node:", err)
 	}
 	delete(o.instances, tok.ID())
 	// mark it done !
@@ -233,7 +233,7 @@ func (o *Overlay) Close() {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
 	for _, tni := range o.instances {
-		dbg.Lvl4(o.host.workingAddress, "Closing TNI", tni.TokenID())
+		log.Lvl4(o.host.workingAddress, "Closing TNI", tni.TokenID())
 		o.nodeDelete(tni.Token())
 	}
 }
@@ -269,7 +269,7 @@ func (o *Overlay) StartProtocol(t *Tree, name string) (ProtocolInstance, error) 
 	go func() {
 		err := pi.Start()
 		if err != nil {
-			dbg.Error("Error while starting:", err)
+			log.Error("Error while starting:", err)
 		}
 	}()
 	return pi, err
@@ -356,7 +356,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.ID()] = pi
-	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.ID())
+	log.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.ID())
 	return nil
 }
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
@@ -35,13 +35,13 @@ func NewProtocolTest(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // Dispatch is used to send the messages further - here everything is
 // copied to /dev/null
 func (p *ProtocolTest) Dispatch() error {
-	dbg.Lvl2("ProtocolTest.Dispatch()")
+	log.Lvl2("ProtocolTest.Dispatch()")
 	p.DispMsg <- "Dispatch"
 	return nil
 }
 
 func (p *ProtocolTest) Start() error {
-	dbg.Lvl2("ProtocolTest.Start()")
+	log.Lvl2("ProtocolTest.Start()")
 	p.StartMsg <- "Start"
 	return nil
 }
@@ -93,9 +93,9 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)

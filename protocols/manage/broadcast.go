@@ -3,7 +3,7 @@ package manage
 import (
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
 
@@ -50,7 +50,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
-	dbg.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
+	log.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
 	b.SendTo(b.Root(), &ContactNodes{})
 	return nil
 }
@@ -61,19 +61,19 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	*sda.TreeNode
 	ContactNodes
 }) {
-	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
+	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
 	if msg.TreeNode.ID == b.Root().ID {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
-			dbg.Lvl3("Won't contact anybody - finishing")
+			log.Lvl3("Won't contact anybody - finishing")
 			b.SendTo(b.Root(), &Done{})
 			return
 		}
-		dbg.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
+		log.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
 		// Connect to all nodes that are later in the TreeNodeList, but only if
 		// the message comes from root
 		for _, tn := range b.Tree().List()[b.tnIndex+1:] {
-			dbg.Lvl3("Connecting to", tn.String())
+			log.Lvl3("Connecting to", tn.String())
 			err := b.SendTo(tn, &ContactNodes{})
 			if err != nil {
 				return
@@ -81,7 +81,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 		}
 	} else {
 		// Tell the caller we're done
-		dbg.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
+		log.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
 		b.SendTo(msg.TreeNode, &Done{})
 	}
 }
@@ -93,15 +93,15 @@ func (b *Broadcast) handleDone(msg struct {
 	Done
 }) {
 	b.repliesLeft--
-	dbg.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
+	log.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
 	if b.repliesLeft == 0 {
 		if b.onDoneCb != nil {
-			dbg.Lvl3("Done with broadcasting to everybody")
+			log.Lvl3("Done with broadcasting to everybody")
 			b.onDoneCb()
 		}
 		if !b.IsRoot() {
 			// Tell root we're done
-			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
+			log.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
 			b.SendTo(b.Root(), &Done{})
 		}
 

@@ -8,12 +8,13 @@ import (
 
 	"strings"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
 )
 
 var tSuite = network.Suite
@@ -21,7 +22,7 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
@@ -46,7 +47,7 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
@@ -63,7 +64,7 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestRosterNew(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genRoster(tSuite, adresses)
@@ -80,7 +81,7 @@ func TestRosterNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
@@ -116,7 +117,7 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -129,7 +130,7 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genRoster(tSuite, names)
@@ -143,9 +144,9 @@ func TestTreeChildren(t *testing.T) {
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -164,13 +165,13 @@ func TestUnMarshalTree(t *testing.T) {
 		t.Fatal("Error while unmarshaling:", err)
 	}
 	if !tree.Equal(tree2) {
-		dbg.Lvl3(tree, "\n", tree2)
+		log.Lvl3(tree, "\n", tree2)
 		t.Fatal("Tree and Tree2 are not identical")
 	}
 }
 
 func TestGetNode(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.List() {
@@ -182,7 +183,7 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
@@ -201,8 +202,8 @@ func TestBinaryTree(t *testing.T) {
 }
 
 func TestTreeNodeServerIdentityIndex(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+	defer log.AfterTest(t)
+	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -228,9 +229,9 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 }
 
 func TestNaryTree(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -251,7 +252,7 @@ func TestNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	names = genLocalhostPeerNames(14, 2000)
 	peerList = genRoster(tSuite, names)
 	tree = peerList.GenerateNaryTree(3)
@@ -271,14 +272,14 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
 	root := tree.Root
-	dbg.Lvl2(tree.Dump())
+	log.Lvl2(tree.Dump())
 	if !tree.IsNary(root, 3) {
 		t.Fatal("Tree should be 3-ary")
 	}
@@ -295,9 +296,9 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
@@ -312,7 +313,7 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
@@ -333,11 +334,11 @@ func TestBinaryTrees(t *testing.T) {
 }
 
 func TestRosterIsUsed(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
+	log.TestOutput(testing.Verbose(), 4)
 	port := 2000
 	for hostExp := uint(2); hostExp < 8; hostExp++ {
 		hosts := (1 << hostExp) - 1
-		dbg.Lvl2("Trying tree with", hosts, "hosts")
+		log.Lvl2("Trying tree with", hosts, "hosts")
 		names := make([]string, hosts)
 		for i := 0; i < hosts; i++ {
 			names[i] = "localhost" + strconv.Itoa(i/2) + ":" +
@@ -390,17 +391,17 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 func TestTree_BinaryMarshaler(t *testing.T) {
 	tree, _ := genLocalTree(5, 2000)
 	b, err := tree.BinaryMarshaler()
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	tree2 := &sda.Tree{}
-	dbg.ErrFatal(tree2.BinaryUnmarshaler(b))
+	log.ErrFatal(tree2.BinaryUnmarshaler(b))
 	if !tree.Equal(tree2) {
 		t.Fatal("Unmarshalled tree is not equal")
 	}
 	if tree.Root == tree2.Root {
 		t.Fatal("Addresses should not be equal")
 	}
-	dbg.Lvl1(tree.Dump())
-	dbg.Lvl1(tree2.Dump())
+	log.Lvl1(tree.Dump())
+	log.Lvl1(tree2.Dump())
 }
 
 func TestTreeNode_SubtreeCount(t *testing.T) {
@@ -466,6 +467,26 @@ func TestRoster_Publics(t *testing.T) {
 		el.List[1].Public)
 	if !agg[0].Equal(agg2) {
 		t.Fatal("Aggregate of 2 keys is not correct")
+	}
+}
+
+func TestTreeNode_AggregatePublic(t *testing.T) {
+	tree, el := genLocalTree(7, 2000)
+	agg := el.Aggregate
+	root := tree.Root
+	aggRoot := root.AggregatePublic()
+	assert.True(t, aggRoot.Equal(agg))
+
+	rootPub := tree.Root.ServerIdentity.Public
+	aggChild1 := tree.Root.Children[0].AggregatePublic()
+	aggChild2 := tree.Root.Children[1].AggregatePublic()
+
+	assert.True(t, aggChild1.Add(aggChild1, aggChild2).
+		Add(aggChild1, rootPub).Equal(aggRoot))
+
+	for i := 0; i < 4; i++ {
+		leaf := tree.Root.Children[i%2].Children[i/2]
+		assert.True(t, leaf.AggregatePublic().Equal(leaf.ServerIdentity.Public))
 	}
 }
 

@@ -3,7 +3,7 @@ package sda
 import (
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
@@ -52,16 +52,24 @@ func ProtocolIDToName(id ProtocolID) string {
 }
 
 // ProtocolRegisterName is a convenience function to automatically generate
-// a UUID out of the name.
+// a UUID out of the name. If the protocol is alreday registere, it will
+// output an error.
+// Take care if you want to register the same protocol-name for different
+// service-instantiations, as you might run into problems when doing
+// tests and/or simulations.
 func ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
 	u := ProtocolNameToID(name)
 	if protocols == nil {
 		protocols = make(map[ProtocolID]NewProtocol)
 		protocolNames = make(map[ProtocolID]string)
 	}
+	if _, exists := protocolNames[u]; exists {
+		log.Warn("Protocol", u, "already exists - not overwriting")
+		return u
+	}
 	protocolNames[u] = name
 	protocols[u] = protocol
-	dbg.Lvl4("Registered", name, "to", u)
+	log.Lvl4("Registered", name, "to", u)
 	return u
 }
 

@@ -3,7 +3,7 @@
 package monitor
 
 import (
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"syscall"
 )
 
@@ -16,7 +16,7 @@ func iiToF(sec int64, usec int64) float64 {
 func getRTime() (tSys, tUsr float64) {
 	rusage := &syscall.Rusage{}
 	if err := syscall.Getrusage(syscall.RUSAGE_SELF, rusage); err != nil {
-		dbg.Error("Couldn't get rusage time:", err)
+		log.Error("Couldn't get rusage time:", err)
 		return -1, -1
 	}
 	s, u := rusage.Stime, rusage.Utime

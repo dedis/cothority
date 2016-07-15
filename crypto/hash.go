@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -26,7 +26,7 @@ func hashStream(hash h.Hash, stream io.Reader, size int) ([]byte, error) {
 	b := make([]byte, size)
 	for {
 		n, errRead := stream.Read(b)
-		dbg.Lvl4("Read", n, "bytes of", size)
+		log.Lvl4("Read", n, "bytes of", size)
 		_, err := hash.Write(b[:n])
 		if err != nil {
 			return nil, err

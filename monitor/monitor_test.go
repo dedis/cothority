@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // setupMonitor launches a basic monitor with a created Stats object
 // When finished with the monitor, just call `End()`
 func setupMonitor(t *testing.T) (*Monitor, *Stats) {
-	dbg.TestOutput(testing.Verbose(), 2)
+	log.TestOutput(testing.Verbose(), 2)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	stat := NewStats(m)
@@ -32,9 +32,9 @@ func setupMonitor(t *testing.T) (*Monitor, *Stats) {
 }
 
 func TestReadyNormal(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 3)
+	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	stat := NewStats(m)
@@ -65,9 +65,9 @@ func TestReadyNormal(t *testing.T) {
 }
 
 func TestKeyOrder(t *testing.T) {
-	defer dbg.AfterTest(t)
+	defer log.AfterTest(t)
 
-	dbg.TestOutput(testing.Verbose(), 3)
+	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"
