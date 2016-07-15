@@ -497,15 +497,15 @@ func (el *Roster) GenerateBinaryTree() *Tree {
 	return el.GenerateNaryTree(2)
 }
 
-// GetRandom returns a random element of the Roster
-func (el *Roster) GetRandom() *network.ServerIdentity {
+// RandomServerIdentity returns a random element of the Roster.
+func (el *Roster) RandomServerIdentity() *network.ServerIdentity {
 	if el.List == nil || len(el.List) == 0 {
 		return nil
 	}
 	return el.List[rand.Int()%len(el.List)]
 }
 
-// addNary is a recursive function to create the binary tree
+// addNary is a recursive function to create the binary tree.
 func (el *Roster) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if !(start <= end && end < len(el.List)) {
 		return nil

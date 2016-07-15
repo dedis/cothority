@@ -168,7 +168,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	})
 	go node.Start()
 	// are we done yet?
-	wait := time.Second * 3
+	wait := time.Second * 60
 	select {
 	case <-done:
 		countMut.Lock()
@@ -185,7 +185,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 			t.Fatal(root.Name(), "Shouldn't have succeeded for", nbrHosts, "hosts, but signed for count:", failCount)
 		}
 	case <-time.After(wait):
-		t.Fatal("Waited", wait, "sec for BFTCoSi to finish ...")
+		t.Fatal("Waited", wait, "for BFTCoSi to finish ...")
 	}
 }
 
