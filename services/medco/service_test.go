@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
-	. "github.com/dedis/cothority/services/medco/libmedco"
 )
 
 // numberGrpAttr is the number of group attributes.
