@@ -1,20 +1,11 @@
 package sda
 
-import (
-	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/network"
-)
+import "github.com/dedis/cothority/network"
 
 // Export some private functions of Host for testing
 
 func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
 	return h.overlay.sendSDAData(id, msg)
-}
-
-func (h *Host) Receive() network.Packet {
-	data := <-h.networkChan
-	log.Lvl5("Got message", data)
-	return data
 }
 
 func (h *Host) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {

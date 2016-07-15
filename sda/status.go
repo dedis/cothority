@@ -34,3 +34,11 @@ func (s *statusReporterStruct) ReportStatus() map[string]Status {
 	}
 	return m
 }
+
+// Merge will return a new status containing entries of s and s2
+func (s Status) Merge(s2 Status) Status {
+	for k, v := range s2 {
+		s[k] = v
+	}
+	return s
+}
