@@ -1,9 +1,10 @@
 package libmedco
 
 import (
+	"strings"
+
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"strings"
 )
 
 // PROOF is true if we use protocols with proofs (ZKPs).

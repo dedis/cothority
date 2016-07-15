@@ -1,6 +1,8 @@
 package medco
 
 import (
+	"strconv"
+
 	"github.com/btcsuite/goleveldb/leveldb/errors"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -8,7 +10,6 @@ import (
 	"github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"strconv"
 )
 
 // API represents a client with the server to which he is connected and its public/private key pair.
