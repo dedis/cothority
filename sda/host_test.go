@@ -1,4 +1,4 @@
-package sda_test
+package sda
 
 import (
 	"errors"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 
 	"github.com/satori/go.uuid"
 )
@@ -15,7 +14,7 @@ import (
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
 	defer log.AfterTest(t)
-	h1 := sda.NewLocalHost(2000)
+	h1 := NewLocalHost(2000)
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
 	}
@@ -29,8 +28,8 @@ func TestHostNew(t *testing.T) {
 func TestHostClose(t *testing.T) {
 	defer log.AfterTest(t)
 	time.Sleep(time.Second)
-	h1 := sda.NewLocalHost(2000)
-	h2 := sda.NewLocalHost(2001)
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
 	h1.ListenAndBind()
 	_, err := h2.Connect(h1.ServerIdentity)
 	if err != nil {
@@ -45,7 +44,7 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
-	h3 := sda.NewLocalHost(2002)
+	h3 := NewLocalHost(2002)
 	h3.ListenAndBind()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
@@ -62,7 +61,7 @@ func TestHostClose(t *testing.T) {
 
 func TestHostClose2(t *testing.T) {
 	defer log.AfterTest(t)
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 	defer local.CloseAll()
 
 	_, _, tree := local.GenTree(2, false, true, true)
@@ -152,7 +151,7 @@ func TestHostSendDuplex(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestPeerPendingTreeMarshal(t *testing.T) {
 	defer log.AfterTest(t)
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -172,7 +171,7 @@ func TestPeerPendingTreeMarshal(t *testing.T) {
 // Test propagation of peer-lists - both known and unknown
 func TestPeerListPropagation(t *testing.T) {
 	defer log.AfterTest(t)
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -180,36 +179,36 @@ func TestPeerListPropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendRaw(h2.ServerIdentity, &sda.RequestRoster{
+	err := h1.SendRaw(h2.ServerIdentity, &RequestRoster{
 		RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendRosterMessageID {
+	if msg.MsgType != SendRosterMessageID {
 		t.Fatal("h1 didn't receive Roster type, but", msg.MsgType)
 	}
-	if msg.Msg.(sda.Roster).ID != sda.RosterID(uuid.Nil) {
+	if msg.Msg.(Roster).ID != RosterID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
 	h2.AddRoster(el)
-	err = h1.SendRaw(h2.ServerIdentity, &sda.RequestRoster{RosterID: el.ID})
+	err = h1.SendRaw(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendRosterMessageID {
+	if msg.MsgType != SendRosterMessageID {
 		t.Fatal("h1 didn't receive Roster type")
 	}
-	if msg.Msg.(sda.Roster).ID != el.ID {
+	if msg.Msg.(Roster).ID != el.ID {
 		t.Fatal("List should be equal to original list")
 	}
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.ServerIdentity, &sda.RequestRoster{RosterID: el.ID})
+	err = h1.SendRaw(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -226,7 +225,7 @@ func TestPeerListPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestTreePropagation(t *testing.T) {
 	defer log.AfterTest(t)
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -237,36 +236,36 @@ func TestTreePropagation(t *testing.T) {
 	h2.StartProcessMessages()
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendRaw(h2.ServerIdentity, &sda.RequestTree{TreeID: tree.ID})
+	err := h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg := h1.Receive()
-	if msg.MsgType != sda.SendTreeMessageID {
+	if msg.MsgType != SendTreeMessageID {
 		network.DumpTypes()
 		t.Fatal("h1 didn't receive SendTree type:", msg.MsgType)
 	}
-	if msg.Msg.(sda.TreeMarshal).RosterID != sda.RosterID(uuid.Nil) {
+	if msg.Msg.(TreeMarshal).RosterID != RosterID(uuid.Nil) {
 		t.Fatal("List should be empty")
 	}
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendRaw(h2.ServerIdentity, &sda.RequestTree{TreeID: tree.ID})
+	err = h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	msg = h1.Receive()
-	if msg.MsgType != sda.SendTreeMessageID {
+	if msg.MsgType != SendTreeMessageID {
 		t.Fatal("h1 didn't receive Tree-type")
 	}
-	if msg.Msg.(sda.TreeMarshal).TreeID != tree.ID {
+	if msg.Msg.(TreeMarshal).TreeID != tree.ID {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
 	// And test whether it gets stored correctly
 	h1.StartProcessMessages()
-	err = h1.SendRaw(h2.ServerIdentity, &sda.RequestTree{TreeID: tree.ID})
+	err = h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -287,7 +286,7 @@ func TestTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestListTreePropagation(t *testing.T) {
 	defer log.AfterTest(t)
-	local := sda.NewLocalTest()
+	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, true, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
@@ -298,7 +297,7 @@ func TestListTreePropagation(t *testing.T) {
 	// and the tree
 	h2.AddTree(tree)
 	// make the communcation happen
-	if err := h1.SendRaw(h2.ServerIdentity, &sda.RequestTree{TreeID: tree.ID}); err != nil {
+	if err := h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 
@@ -330,18 +329,18 @@ func TestListTreePropagation(t *testing.T) {
 
 func TestTokenId(t *testing.T) {
 	defer log.AfterTest(t)
-	t1 := &sda.Token{
-		RosterID: sda.RosterID(uuid.NewV1()),
-		TreeID:   sda.TreeID(uuid.NewV1()),
-		ProtoID:  sda.ProtocolID(uuid.NewV1()),
-		RoundID:  sda.RoundID(uuid.NewV1()),
+	t1 := &Token{
+		RosterID: RosterID(uuid.NewV1()),
+		TreeID:   TreeID(uuid.NewV1()),
+		ProtoID:  ProtocolID(uuid.NewV1()),
+		RoundID:  RoundID(uuid.NewV1()),
 	}
 	id1 := t1.ID()
-	t2 := &sda.Token{
-		RosterID: sda.RosterID(uuid.NewV1()),
-		TreeID:   sda.TreeID(uuid.NewV1()),
-		ProtoID:  sda.ProtocolID(uuid.NewV1()),
-		RoundID:  sda.RoundID(uuid.NewV1()),
+	t2 := &Token{
+		RosterID: RosterID(uuid.NewV1()),
+		TreeID:   TreeID(uuid.NewV1()),
+		ProtoID:  ProtocolID(uuid.NewV1()),
+		RoundID:  RoundID(uuid.NewV1()),
 	}
 	id2 := t2.ID()
 	if uuid.Equal(uuid.UUID(id1), uuid.UUID(id2)) {
@@ -350,7 +349,7 @@ func TestTokenId(t *testing.T) {
 	if !uuid.Equal(uuid.UUID(id1), uuid.UUID(t1.ID())) {
 		t.Fatal("Twice the Id of the same token should be equal")
 	}
-	t3 := t1.ChangeTreeNodeID(sda.TreeNodeID(uuid.NewV1()))
+	t3 := t1.ChangeTreeNodeID(TreeNodeID(uuid.NewV1()))
 	if t1.TreeNodeID.Equal(t3.TreeNodeID) {
 		t.Fatal("OtherToken should modify copy")
 	}
@@ -359,8 +358,8 @@ func TestTokenId(t *testing.T) {
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
 	defer log.AfterTest(t)
-	h1 := sda.NewLocalHost(2000)
-	h2 := sda.NewLocalHost(2001)
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
 	h2.ListenAndBind()
 
 	defer h1.Close()
@@ -380,8 +379,8 @@ func TestAutoConnection(t *testing.T) {
 
 func TestReconnection(t *testing.T) {
 	defer log.AfterTest(t)
-	h1 := sda.NewLocalHost(2000)
-	h2 := sda.NewLocalHost(2001)
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
 	defer h1.Close()
 	defer h2.Close()
 
@@ -419,7 +418,7 @@ func TestReconnection(t *testing.T) {
 	log.ErrFatal(sendrcv(h1, h2))
 }
 
-func sendrcv(from, to *sda.Host) error {
+func sendrcv(from, to *Host) error {
 	err := from.SendRaw(to.ServerIdentity, &SimpleMessage{12})
 	if err != nil {
 		return errors.New("Couldn't send message: " + err.Error())
@@ -434,20 +433,13 @@ func sendrcv(from, to *sda.Host) error {
 	return nil
 }
 
-func SetupTwoHosts(t *testing.T, h2process bool) (*sda.Host, *sda.Host) {
-	hosts := sda.GenLocalHosts(2, true, false)
+func SetupTwoHosts(t *testing.T, h2process bool) (*Host, *Host) {
+	hosts := GenLocalHosts(2, true, false)
 	if h2process {
 		hosts[1].StartProcessMessages()
 	}
 	return hosts[0], hosts[1]
 }
-
-// Test instantiation of ProtocolInstances
-
-// Test access of actual peer that received the message
-// - corner-case: accessing parent/children with multiple instances of the same peer
-// in the graph - ProtocolID + GraphID + InstanceID is not enough
-// XXX ???
 
 // Test complete parsing of new incoming packet
 // - Test if it is SDAMessage

@@ -1,4 +1,4 @@
-package sda_test
+package sda
 
 import (
 	"errors"
@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/sda"
 )
 
 func TestSimulationBF(t *testing.T) {
@@ -68,7 +67,7 @@ func TestLoadSave(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := sda.LoadSimulationConfig(dir, "local1:2000")
+	sc2, err := LoadSimulationConfig(dir, "local1:2000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +88,7 @@ func TestMultipleInstances(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := sda.LoadSimulationConfig(dir, "local1")
+	sc2, err := LoadSimulationConfig(dir, "local1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,9 +100,9 @@ func TestMultipleInstances(t *testing.T) {
 	}
 }
 
-func createBFTree(hosts, bf int) (*sda.SimulationConfig, *sda.SimulationBFTree, error) {
-	sc := &sda.SimulationConfig{}
-	sb := &sda.SimulationBFTree{
+func createBFTree(hosts, bf int) (*SimulationConfig, *SimulationBFTree, error) {
+	sc := &SimulationConfig{}
+	sb := &SimulationBFTree{
 		Hosts: hosts,
 		BF:    bf,
 	}
