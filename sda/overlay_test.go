@@ -3,6 +3,8 @@ package sda_test
 import (
 	"testing"
 
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -67,5 +69,50 @@ func TestOverlayDone(t *testing.T) {
 	po.Release()
 	if _, ok := overlay.TokenToNode(po.Token()); ok {
 		t.Fatal("Node should NOT exists after call Done()")
+	}
+}
+
+type ProtocolSetup struct {
+	*sda.TreeNodeInstance
+}
+
+type ProtocolSetupMsg struct {
+}
+type ProtocolSetupMsgStruct struct {
+	*sda.TreeNode
+	Msg ProtocolSetupMsg
+}
+
+func NewProtocolSetup(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	ps := ProtocolSetup{
+		TreeNodeInstance: n,
+	}
+	ps.RegisterHandler(ps.handleMsg)
+	return &ps, nil
+}
+
+func (ps *ProtocolSetup) Start() error {
+	ps.handleMsg(ProtocolSetupMsgStruct{})
+	return nil
+}
+
+func (ps *ProtocolSetup) handleMsg(msg ProtocolSetupMsgStruct) {
+	log.LLvl3("Passing message")
+	ps.SendToChildren(&msg.Msg)
+}
+
+func TestOverlayTransmitTree(t *testing.T) {
+	defer log.AfterTest(t)
+	sda.ProtocolRegisterName("ProtocolSetup", NewProtocolSetup)
+
+	log.TestOutput(testing.Verbose(), 3)
+	local := sda.NewLocalTest()
+	for _, size := range []int{15, 31} {
+		log.LLvl1("Going with tree of size", size)
+		_, _, tree := local.GenBigTree(size, size, 2, false, false)
+		_, err := local.StartProtocol("ProtocolSetup", tree)
+		log.ErrFatal(err)
+		time.Sleep(time.Duration(200*size) * time.Millisecond)
+		local.CloseAll()
 	}
 }

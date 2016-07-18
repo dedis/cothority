@@ -307,7 +307,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 
-	log.LLvl4(bft.Name(), "RoundType:", t)
+	//log.LLvl4(bft.Name(), "RoundType:", t)
 	if t == RoundPrepare {
 		// need to hash the message before so challenge in both phases are not
 		// the same
@@ -326,9 +326,9 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	}
 
 	// make sure the Announce->Commit has been done for the commit phase
-	log.Print(bft.Name())
+	//log.Print(bft.Name())
 	<-bft.commitCommitDone
-	log.Print(bft.Name())
+	//log.Print(bft.Name())
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
