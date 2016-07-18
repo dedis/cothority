@@ -27,8 +27,7 @@ type Host struct {
 	private abstract.Scalar
 	// The TCPHost
 	host network.SecureHost
-	// the dispatcher of messages coming from network
-	*BlockingDispatcher
+	Dispatcher
 	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
@@ -64,7 +63,7 @@ type Host struct {
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
-		BlockingDispatcher:   NewBlockingDispatcher(),
+		Dispatcher:           NewBlockingDispatcher(),
 		workingAddress:       e.First(),
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		host:                 network.NewSecureTCPHost(pkey, e),
