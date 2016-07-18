@@ -312,5 +312,8 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 			log.Fatal("Registration error:", err)
 		}
 	}
+	// Calls the initialisation-function of the external
+	// requests.
+	s.initExternal()
 	return s
 }
