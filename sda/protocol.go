@@ -63,8 +63,8 @@ func ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
 		protocols = make(map[ProtocolID]NewProtocol)
 		protocolNames = make(map[ProtocolID]string)
 	}
-	if _, exists := protocolNames[u]; exists {
-		log.Warn("Protocol", u, "already exists - not overwriting")
+	if n, exists := protocolNames[u]; exists {
+		log.Warn("Protocol", n, "already exists - not overwriting")
 		return u
 	}
 	protocolNames[u] = name

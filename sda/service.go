@@ -168,7 +168,7 @@ type serviceManager struct {
 	// the sda host
 	host *Host
 	// serviceManager can take registration of Processors
-	*RoutineDispatcher
+	Dispatcher
 }
 
 const configFolder = "config"
@@ -248,7 +248,7 @@ func (s *serviceManager) RegisterProcessor(p Processor, msgType network.MessageT
 	// delegate message to host so the host will pass the message to ourself
 	s.host.RegisterProcessor(s, msgType)
 	// handle the message ourself (will be launched in a go routine)
-	s.RoutineDispatcher.RegisterProcessor(p, msgType)
+	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
 // TODO
