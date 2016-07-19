@@ -8,7 +8,6 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 )
 
 var testProto = "test"
@@ -77,14 +76,15 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	testProtoID := sda.ProtocolRegisterName(testProtoName, NewProtocolTest)
-	if !sda.ProtocolExists(testProtoID) {
+	testProtoName := "testProto"
+	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
+	if !ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
-	if sda.ProtocolNameToID(testProtoName) != testProtoID {
+	if ProtocolNameToID(testProtoName) != testProtoID {
 		t.Fatal("Not correct translation from string to ID")
 	}
-	if sda.ProtocolIDToName(testProtoID) != testProtoName {
+	if ProtocolIDToName(testProtoID) != testProtoName {
 		t.Fatal("Not correct translation from ID to String")
 	}
 }
