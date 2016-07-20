@@ -1,12 +1,24 @@
-package jvss_test
+package jvss
 
 import (
 	"testing"
 
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/protocols/jvss"
 	"github.com/dedis/cothority/sda"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestSID(t *testing.T) {
+	sl := newSID(LTSS)
+	ss := newSID(STSS)
+
+	assert.True(t, sl.IsLTSS())
+	assert.False(t, sl.IsSTSS())
+	assert.NotEqual(t, sl, ss)
+
+	assert.True(t, ss.IsSTSS())
+	assert.False(t, ss.IsLTSS())
+}
 
 func TestJVSS(t *testing.T) {
 	t.Skip("Does not work for the moment.")
@@ -27,14 +39,17 @@ func TestJVSS(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}
-	jv := leader.(*jvss.JVSS)
+	jv := leader.(*JVSS)
 	leader.Start()
 	log.Lvl1("JVSS - setup done")
 
 	for i := 0; i < rounds; i++ {
 		log.Lvl1("JVSS - starting round", i)
 		log.Lvl1("JVSS - requesting signature")
-		sig, _ := jv.Sign(msg)
+		sig, err := jv.Sign(msg)
+		if err != nil {
+			t.Fatal("Error signature failed", err)
+		}
 		log.Lvl1("JVSS - signature received")
 		err = jv.Verify(msg, sig)
 		if err != nil {
