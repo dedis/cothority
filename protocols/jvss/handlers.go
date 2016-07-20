@@ -1,8 +1,6 @@
 package jvss
 
 import (
-	"fmt"
-
 	"strings"
 
 	"github.com/dedis/cothority/log"
@@ -128,7 +126,8 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		if isShortTermSecret {
 			n = secret.numShortConfs
 		}
-		log.Lvl4(fmt.Sprintf("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID, n, len(jv.List())))
+		log.Lvl4("Node %d: %s confirmations %d/%d", jv.Index(), msg.SID,
+			n, len(jv.List()))
 	}
 
 	return nil
@@ -171,7 +170,8 @@ func (jv *JVSS) handleSigResp(m WSigRespMsg) error {
 
 	secret.sigs[msg.Src] = msg.Sig
 
-	log.Lvl4(fmt.Sprintf("Node %d: %s signatures %d/%d", jv.Index(), msg.SID, len(secret.sigs), len(jv.List())))
+	log.Lvlf4("Node %d: %s signatures %d/%d", jv.Index(), msg.SID,
+		len(secret.sigs), len(jv.List()))
 
 	// Create Schnorr signature once we received enough partial signatures
 	if jv.info.T == len(secret.sigs) {
