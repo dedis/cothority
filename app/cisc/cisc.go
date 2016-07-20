@@ -29,6 +29,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "SSH keystore client"
 	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
+	app.Version = "0.3"
 	app.Commands = []cli.Command{
 		commandID,
 		commandConfig,
