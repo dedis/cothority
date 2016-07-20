@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
 	git \
 	vim \
 	sudo
-RUN adduser --gecos "" --disabled-password dedis
+RUN adduser --gecos "" --ingroup sudo --disabled-password dedis; \
+	perl -pi -e "s/%sudo.*/%sudo ALL=NOPASSWD: ALL/" /etc/sudoers
 USER dedis
 WORKDIR /home/dedis
 RUN echo 'export GOPATH=/home/dedis/go' >> ~/.profile; \
