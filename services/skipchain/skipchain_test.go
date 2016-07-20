@@ -55,6 +55,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, service := makeHELS(local, 5)
+	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot := makeGenesisRoster(service, el)
