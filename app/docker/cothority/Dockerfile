@@ -27,5 +27,5 @@ RUN echo 'export GOPATH=/home/dedis/go' >> ~/.profile; \
 	go get -v github.com/dedis/cosi; \
 	go get -v github.com/dedis/cothority
 
-EXPOSE 2000-2010
+EXPOSE 2000
 
