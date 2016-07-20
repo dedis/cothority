@@ -148,7 +148,7 @@ func (s *serviceFactory) start(name string, c *Context, path string) (Service, e
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
 	serv := fn(c, path)
-	log.Lvl2("Instantiated service", name)
+	log.Lvl3("Instantiated service", name)
 	return serv, nil
 }
 
@@ -169,7 +169,7 @@ const configFolder = "config"
 // ```configFolder / *nameOfService*```
 func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	// check if we have a config folder
-	if err := os.MkdirAll(configFolder, 0777); err != nil {
+	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -186,7 +186,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
-		if err := os.MkdirAll(configName, 0666); err != nil {
+		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		c := newContext(h, o, id)
@@ -194,7 +194,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
-		log.Lvl2("Started Service", name, " (config in", configName, ")")
+		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
 		// !! register to the ProtocolFactory !!

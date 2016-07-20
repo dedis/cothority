@@ -2,9 +2,9 @@ package cosimul
 
 import (
 	"github.com/dedis/cosi/protocol"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 /*
@@ -72,7 +72,7 @@ func (c *CoSimul) getResponse(in []abstract.Scalar) {
 	verify := false
 	switch VerifyResponse {
 	case NoCheck:
-		dbg.Lvl3("Not checking at all")
+		log.Lvl3("Not checking at all")
 	case RootCheck:
 		verify = c.IsRoot()
 	case AllCheck:
@@ -82,9 +82,9 @@ func (c *CoSimul) getResponse(in []abstract.Scalar) {
 	if verify {
 		err := c.VerifyResponses(c.TreeNode().AggregatePublic())
 		if err != nil {
-			dbg.Error("Couldn't verify responses at our level", c.Name(), err.Error())
+			log.Error("Couldn't verify responses at our level", c.Name(), err.Error())
 		} else {
-			dbg.Lvl2("Successfully verified responses at", c.Name())
+			log.Lvl2("Successfully verified responses at", c.Name())
 		}
 	}
 }

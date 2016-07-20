@@ -5,6 +5,8 @@ DBG_SHOW=2
 DBG_APP=2
 # Uncomment to build in local dir
 STATICDIR=test
+# Needs 4 clients
+NBR=4
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -12,24 +14,40 @@ STATICDIR=test
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
-	test ConfigVote
-	test IdConnect
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
-	test SSHAdd
-	test SSHDel
-	test Follow
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
+#	test ConfigVote
+#	test IdConnect
+	test IdDel
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+#	test SSHAdd
+#	test SSHDel
+#	test Follow
     stopTest
 }
 
 testFollow(){
-	clientSetup 2
-
+	clientSetup 1
+	echo ID is $ID
+	testNFile cl3/authorized_keys
+	testFail runCl 3 follow add group.toml 1234 service1
+	testOK runCl 3 follow add group.toml $ID service1
+	testFail grep -q service1 cl3/authorized_keys
+	testNGrep client1 runCl 3 follow list
+	testGrep $ID runCl 3 follow list
+	testOK runCl 1 ssh add service1
+	testOK runCl 3 follow update
+	testOK grep -q service1 cl3/authorized_keys
+	testGrep service1 runCl 3 follow list
+	testReGrep client1
+	testOK runCl 3 follow rm $ID
+	testNGrep client1 runCl 3 follow list
+	testReNGrep service1
+	testFail grep -q service1 cl3/authorized_keys
 }
 
 testSSHDel(){
@@ -129,6 +147,22 @@ testKeyAdd(){
 	testGrep key1 runCl 2 kv ls
 	testOK runCl 1 config update
 	testGrep key1 runCl 1 kv ls
+}
+
+testIdDel(){
+	clientSetup 3
+	testOK runCl 2 ssh add server2
+	testOK runCl 1 config vote y
+	testGrep client2 runCl 1 config ls
+	testGrep server2 runCl 1 config ls
+	testOK runCl 1 id del client2
+	testOK runCl 3 config vote y
+	testNGrep client2 runCl 3 config ls
+	testOK runCl 1 config update
+	testNGrep client2 runCl 1 config ls
+	testReNGrep server2
+	testFail runCl 2 ssh add server
+	testFail runCl 2 config update
 }
 
 testIdConnect(){
@@ -274,7 +308,7 @@ build(){
         mkdir -p $co
 
         cl=cl$n
-        rm -f $cl/*bin $cl/config $cl/*.{pub,key}
+        rm -f $cl/*bin $cl/config $cl/*.{pub,key} $cl/auth*
         mkdir -p $cl
         key=$cl/id_rsa
         if [ ! -f $key ]; then
