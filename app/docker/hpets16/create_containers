@@ -51,7 +51,7 @@ bindLocalGo(){
 }
 
 setupDocker(){
-  if ! docker images | grep -q cothority; then
+  if ! docker images | grep -q cothority$; then
     echo "Building docker-image for cothority"
     docker build -t $BASE ../cothority
   fi
