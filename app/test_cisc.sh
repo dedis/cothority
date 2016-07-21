@@ -3,6 +3,7 @@
 DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
+DBG_SRV=3
 # Uncomment to build in local dir
 STATICDIR=test
 # Needs 4 clients
@@ -14,20 +15,34 @@ NBR=4
 main(){
     startTest
     build
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
-#	test ConfigVote
-#	test IdConnect
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
+	test ConfigVote
+	test IdConnect
 	test IdDel
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
-#	test SSHAdd
-#	test SSHDel
-#	test Follow
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
+	test SSHAdd
+	test SSHDel
+	test Follow
+#	test Revoke
     stopTest
+}
+
+testRevoke(){
+	clientSetup 3
+	testOK runCl 3 ssh add service1
+	testOK runCl 1 config vote y
+	testOK runCl 2 config vote y
+
+	testOK runCl 1 id rm client3
+	testOK runCl 2 config vote y
+
+	testFail runCl 3 ssh add service1
+	testOK runCl 1 config update
 }
 
 testFollow(){
@@ -71,13 +86,13 @@ testSSHDel(){
 testSSHAdd(){
 	clientSetup 1
 	testOK runCl 1 ssh add service1
-	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
+	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile cl1/key_service1" cl1/config
 	testFile cl1/key_service1.pub
 	testFile cl1/key_service1
 	testGrep service1 runCl 1 ssh ls
 	testReGrep client1
 	testOK runCl 1 ssh add -a s2 service2
-	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile key_s2" cl1/config
+	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile cl1/key_s2" cl1/config
 	testFile cl1/key_s2.pub
 	testFile cl1/key_s2
 	testGrep s2 runCl 1 ssh ls
@@ -173,16 +188,10 @@ testIdConnect(){
 	testFail runCl 2 id co test.toml
 	testFail runCl 2 id co group.toml
 	testOK runCl 2 id co group.toml $ID client2
-	own2="Owner: client2"
+	own2="Connected device client2"
 	testNGrep "$own2" runCl 2 config ls
 	testOK runCl 2 config update
-	testGrep "$own2" runCl 2 config ls -p
-
-	dbgOut "Verifying client_1 is not auto-updated"
-	testNGrep "$own2" runCl 1 config ls
-	testNGrep "$own2" runCl 1 config ls -p
-	testOK runCl 1 config update
-	testGrep "$own2" runCl 1 config ls -p
+	testGrep "Owner: client2" runCl 2 config ls -p
 
 	dbgOut "Voting with client_1 - first reject then accept"
 	testOK runCl 1 config vote n
@@ -192,8 +201,6 @@ testIdConnect(){
 
 	testOK runCl 1 config vote y
 	testGrep "$own2" runCl 1 config ls
-	testNGrep "$own2" runCl 2 config ls
-	testOK runCl 2 config update
 	testGrep "$own2" runCl 2 config ls
 }
 

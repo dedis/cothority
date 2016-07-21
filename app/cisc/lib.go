@@ -144,7 +144,7 @@ func (cfg *ciscConfig) showKeys() {
 // Returns the config-file from the configuration
 func getConfig(c *cli.Context) string {
 	configDir := config.TildeToHome(c.GlobalString("config"))
-	log.ErrFatal(os.Mkdir(configDir, 0770))
+	log.ErrFatal(mkdir(configDir, 0770))
 	return configDir + "/config.bin"
 }
 
@@ -165,7 +165,7 @@ func getGroup(c *cli.Context) *config.Group {
 // retrieves ssh-config-name and ssh-directory
 func sshDirConfig(c *cli.Context) (string, string) {
 	sshDir := config.TildeToHome(c.GlobalString("cs"))
-	log.ErrFatal(os.Mkdir(sshDir, 0700))
+	log.ErrFatal(mkdir(sshDir, 0700))
 	return sshDir, sshDir + "/config"
 }
 
@@ -201,4 +201,13 @@ func makeSSHKeyPair(bits int, pubKeyPath, privateKeyPath string) error {
 		return err
 	}
 	return ioutil.WriteFile(pubKeyPath, ssh.MarshalAuthorizedKey(pub), 0600)
+}
+
+// mkDir fails only if it is another error than an existing directory
+func mkdir(n string, p os.FileMode) error {
+	err := os.Mkdir(n, p)
+	if !os.IsExist(err) {
+		return err
+	}
+	return nil
 }

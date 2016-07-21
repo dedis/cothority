@@ -18,7 +18,14 @@ func init() {
 				Aliases:   []string{"cr"},
 				Usage:     "start a new identity",
 				ArgsUsage: "group [id-name]",
-				Action:    idCreate,
+				Flags: []cli.Flag{
+					cli.IntFlag{
+						Name:  "thr,threshold",
+						Usage: "the threshold necessary to add a block",
+						Value: 2,
+					},
+				},
+				Action: idCreate,
 			},
 			{
 				Name:      "connect",
