@@ -184,3 +184,48 @@ func TestIdentity_SaveToStream(t *testing.T) {
 		t.Fatal("Owners are not the same", id.Config.Data, id2.Config.Data)
 	}
 }
+
+func TestCrashAfterRevocation(t *testing.T) {
+	log.SetDebugVisible(2)
+	l := sda.NewLocalTest()
+	hosts, el, _ := l.GenTree(5, true, true, true)
+	services := l.GetServices(hosts, identityService)
+	defer l.CloseAll()
+	for _, s := range services {
+		log.Lvl3(s.(*Service).Identities)
+	}
+
+	c1 := NewIdentity(el, 2, "one")
+	c2 := NewIdentity(el, 2, "two")
+	c3 := NewIdentity(el, 2, "three")
+	log.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c2.AttachToIdentity(c1.ID))
+	proposeUpVote(c1)
+	log.ErrFatal(c3.AttachToIdentity(c1.ID))
+	proposeUpVote(c1)
+	proposeUpVote(c2)
+	log.ErrFatal(c1.ConfigUpdate())
+	log.Print(c1.Config)
+
+	conf := c1.GetProposed()
+	delete(conf.Device, "three")
+	log.Print(conf)
+	log.ErrFatal(c1.ProposeSend(conf))
+	proposeUpVote(c1)
+	proposeUpVote(c2)
+	log.ErrFatal(c1.ConfigUpdate())
+	log.Print(c1.Config)
+
+	log.Lvl1("C3 trying to send anyway")
+	conf = c3.GetProposed()
+	c3.ProposeSend(conf)
+	if c3.ProposeVote(true) == nil {
+		t.Fatal("Should not be able to vote")
+	}
+	log.ErrFatal(c1.ProposeUpdate())
+}
+
+func proposeUpVote(i *Identity) {
+	log.ErrFatal(i.ProposeUpdate())
+	log.ErrFatal(i.ProposeVote(true))
+}

@@ -41,7 +41,7 @@ bindLocalGo(){
 
   echo "Updating go-binaries"
   docker start hpets > /dev/null
-  CMD=". .profile; update; ln -s bin/group.toml .; \
+  CMD=". .profile; update_dedis.sh; ln -s bin/group.toml .; \
   echo sudo /etc/init.d/ssh start >> .bashrc"
   docker exec hpets /bin/bash -c "$CMD" > /dev/null
   docker kill hpets > /dev/null
@@ -51,7 +51,7 @@ bindLocalGo(){
 }
 
 setupDocker(){
-  if ! docker images | grep -q cothority$; then
+  if ! docker images | grep -q ^cothority; then
     echo "Building docker-image for cothority"
     docker build -t $BASE ../cothority
   fi
