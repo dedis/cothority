@@ -22,6 +22,8 @@ import (
 
 	"os"
 
+	"fmt"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -328,6 +330,27 @@ func (s *Service) clearIdentities() {
 	s.Identities = make(map[string]*Storage)
 }
 
+// Tries to load the configuration and updates if a configuration
+// is found, else it returns an error.
+func (s *Service) tryLoad() error {
+	configFile := s.path + "/identity.bin"
+	b, err := ioutil.ReadFile(configFile)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	} else {
+		if len(b) > 0 {
+			_, msg, err := network.UnmarshalRegistered(b)
+			if err != nil {
+				return fmt.Errorf("Couldn't unmarshal: %s", err)
+			} else {
+				log.Lvl3("Successfully loaded")
+				s.Identities = msg.(*Service).Identities
+			}
+		}
+	}
+	return nil
+}
+
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -335,19 +358,8 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}
-	b, err := ioutil.ReadFile(path + "/identity.bin")
-	if err != nil && !os.IsNotExist(err) {
-		log.Error("Error while reading", path+"/identity.bin:", err)
-	} else {
-		if len(b) > 0 {
-			_, msg, err := network.UnmarshalRegistered(b)
-			if err != nil {
-				log.Error("Couldn't unmarshal:", err)
-			} else {
-				log.Lvl3("Successfully loaded")
-				s.Identities = msg.(*Service).Identities
-			}
-		}
+	if err := s.tryLoad(); err != nil {
+		log.Error(err)
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.AddIdentity, s.ProposeUpdate, s.ConfigUpdate} {

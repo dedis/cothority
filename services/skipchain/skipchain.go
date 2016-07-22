@@ -15,6 +15,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"fmt"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
@@ -24,6 +26,7 @@ import (
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "Skipchain"
+const skipchainBFT = "SkipchainBFT"
 
 func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
@@ -475,7 +478,26 @@ func (s *Service) save() {
 	}
 }
 
-const skipchainBFT = "SkipchainBFT"
+// Tries to load the configuration and updates the data in the service
+// if it finds a valid config-file.
+func (s *Service) tryLoad() error {
+	configFile := s.path + "/skipchain.bin"
+	b, err := ioutil.ReadFile(configFile)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	} else {
+		if len(b) > 0 {
+			_, msg, err := network.UnmarshalRegistered(b)
+			if err != nil {
+				return fmt.Errorf("Couldn't unmarshal: %s", err)
+			} else {
+				log.Lvl3("Successfully loaded")
+				s.SkipBlocks = msg.(*Service).SkipBlocks
+			}
+		}
+	}
+	return nil
+}
 
 func newSkipchainService(c *sda.Context, path string) sda.Service {
 	s := &Service{
@@ -483,19 +505,8 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		path:             path,
 		SkipBlocks:       make(map[string]*SkipBlock),
 	}
-	b, err := ioutil.ReadFile(path + "/skipchain.bin")
-	if err != nil && !os.IsNotExist(err) {
-		log.Error("Error while reading", path+"/skipchain.bin:", err)
-	} else {
-		if len(b) > 0 {
-			_, msg, err := network.UnmarshalRegistered(b)
-			if err != nil {
-				log.Error("Couldn't unmarshal:", err)
-			} else {
-				log.Lvl3("Successfully loaded")
-				s.SkipBlocks = msg.(*Service).SkipBlocks
-			}
-		}
+	if err := s.tryLoad(); err != nil {
+		log.Error(err)
 	}
 	for _, msg := range []interface{}{s.ProposeSkipBlock, s.SetChildrenSkipBlock,
 		s.GetUpdateChain} {
