@@ -20,7 +20,7 @@ var countMut sync.Mutex
 func TestMain(m *testing.M) {
 	//log.MainTest(m)
 	flag.Parse()
-	log.SetDebugVisible(2)
+	log.SetDebugVisible(1)
 	code := m.Run()
 	log.AfterTest(nil)
 	os.Exit(code)
