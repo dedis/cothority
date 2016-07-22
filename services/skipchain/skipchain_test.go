@@ -10,9 +10,6 @@ import (
 	"errors"
 	"fmt"
 
-	"flag"
-	"os"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
@@ -20,12 +17,7 @@ import (
 
 func TestMain(m *testing.M) {
 	//log.Info("Skipping all skipchain tests for now as it randomly fails on master. @ineiti is investigating.")
-	flag.Parse()
-	log.SetDebugVisible(1)
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
-	//log.MainTest(m)
+	log.MainTest(m, 1)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {

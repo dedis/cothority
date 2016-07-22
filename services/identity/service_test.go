@@ -3,9 +3,6 @@ package identity
 import (
 	"testing"
 
-	"flag"
-	"os"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -14,12 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	//log.MainTest(m)
-	flag.Parse()
-	log.SetDebugVisible(1)
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
+	log.MainTest(m, 1)
 }
 
 func TestService_AddIdentity(t *testing.T) {

@@ -5,9 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"flag"
-	"os"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
@@ -19,12 +16,7 @@ var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
 	//log.Info("skipping test because of https://github.com/dedis/cothority/issues/467")
-	//log.MainTest(m)
-	flag.Parse()
-	log.SetDebugVisible(1)
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
+	log.MainTest(m, 1)
 }
 
 func TestBftCoSi(t *testing.T) {
