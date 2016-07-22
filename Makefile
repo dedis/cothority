@@ -28,7 +28,7 @@ test_lint:
 	}
 
 test_multi:
-	for a in $( seq 10 ); do \
+	for a in $$( seq 10 ); do \
 	  cd services/identity; \
 	  go test -v -race -p=1 -short ./...; \
 	done
