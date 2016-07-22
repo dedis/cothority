@@ -152,7 +152,7 @@ messages are passed between the hosts.
   
 ## Directory-structure
 
-* [`sda/`](sda/): basic definition of our framework
+* [`sda/`](sda/): the framework which is used to handle the messages, the overlay tree layer, the protocols and the services
 * `crypto/`, `log/`, `monitor/`, `network/`: additional libraries for the framework
 * [`simul/`](simul/): simulation-related code
 * [`app/`](app/): all apps in user-space
