@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"flag"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -15,14 +17,17 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	//log.MainTest(m)
+	flag.Parse()
+	log.SetDebugVisible(1)
+	code := m.Run()
+	log.AfterTest(nil)
+	os.Exit(code)
 }
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
-	t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
-	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -71,7 +76,6 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 }
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
-	t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
@@ -91,7 +95,6 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 }
 
 func TestIdentity_CreateIdentity(t *testing.T) {
-	//t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(3, true, true, true)
 	defer l.CloseAll()
