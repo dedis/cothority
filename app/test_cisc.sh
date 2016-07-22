@@ -3,7 +3,7 @@
 DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
-DBG_SRV=3
+DBG_SRV=0
 # Uncomment to build in local dir
 STATICDIR=test
 # Needs 4 clients
@@ -15,20 +15,20 @@ NBR=4
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
-	test ConfigVote
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
+#	test ConfigVote
 	test IdConnect
-	test IdDel
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
-	test SSHAdd
-	test SSHDel
-	test Follow
-	test Revoke
+#	test IdDel
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+#	test SSHAdd
+#	test SSHDel
+#	test Follow
+#	test Revoke
     stopTest
 }
 
@@ -188,12 +188,21 @@ testIdConnect(){
 	testFail runCl 2 id co test.toml
 	testFail runCl 2 id co group.toml
 	testOK runCl 2 id co group.toml $ID client2
+	runGrepSed "Public key" "s/.* //" runCl 2 id co group.toml $ID client2
+    PUBLIC=$SED
+    if [ -z "$PUBLIC" ]; then
+    	fail "no public keys received"
+    fi
 	own2="Connected device client2"
 	testNGrep "$own2" runCl 2 config ls
 	testOK runCl 2 config update
 	testGrep "Owner: client2" runCl 2 config ls -p
 
 	dbgOut "Voting with client_1 - first reject then accept"
+	echo "n" | testGrep $PUBLIC runCl 1 config vote
+	dbgOut
+	echo "n" | testNGrep a$PUBLIC runCl 1 config vote
+	dbgOut
 	testOK runCl 1 config vote n
 	testNGrep "$own2" runCl 1 config ls
 	testOK runCl 2 config update
