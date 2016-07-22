@@ -35,7 +35,7 @@ func TestBftCoSi(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	log.Lvl1("Standard at", failCount)
+	log.Lvl2("Standard at", failCount)
 	runProtocol(t, TestProtocolName)
 }
 
