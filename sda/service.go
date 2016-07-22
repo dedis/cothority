@@ -150,16 +150,18 @@ func (s *serviceFactory) Name(id ServiceID) string {
 // start launches a new service
 func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
 	s.mutex.Lock()
-	defer s.mutex.Unlock()
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {
+		s.mutex.Unlock()
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
 	if fn, ok = s.constructors[id]; !ok {
+		s.mutex.Unlock()
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
+	s.mutex.Unlock()
 	serv := fn(c, path)
 	log.Lvl3("Instantiated service", name)
 	return serv, nil
