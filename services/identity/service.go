@@ -337,16 +337,14 @@ func (s *Service) tryLoad() error {
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
-	} else {
-		if len(b) > 0 {
-			_, msg, err := network.UnmarshalRegistered(b)
-			if err != nil {
-				return fmt.Errorf("Couldn't unmarshal: %s", err)
-			} else {
-				log.Lvl3("Successfully loaded")
-				s.Identities = msg.(*Service).Identities
-			}
+	}
+	if len(b) > 0 {
+		_, msg, err := network.UnmarshalRegistered(b)
+		if err != nil {
+			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
+		log.Lvl3("Successfully loaded")
+		s.Identities = msg.(*Service).Identities
 	}
 	return nil
 }
