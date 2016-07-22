@@ -214,7 +214,7 @@ func verifyFailMore(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount <= failCount {
-		log.Lvlf1("Failing for %d<=%d", veriCount, failCount)
+		log.Lvlf2("Failing for %d<=%d", veriCount, failCount)
 		return false
 	}
 	log.Lvl3("Verification called", veriCount, "times")
