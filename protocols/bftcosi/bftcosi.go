@@ -326,7 +326,9 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	}
 
 	// make sure the Announce->Commit has been done for the commit phase
+	log.Print(bft.Name(), "Waiting")
 	<-bft.commitCommitDone
+	log.Print(bft.Name(), "Continuing")
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
