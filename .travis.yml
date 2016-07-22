@@ -7,7 +7,7 @@ install:
   - make install
 
 script:
-  - make test_go
+  - make test_verbose
 
 notifications:
   email: false

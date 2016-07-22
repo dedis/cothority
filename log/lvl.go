@@ -361,7 +361,7 @@ func UseColors() bool {
 // remaining go-routines.
 func MainTest(m *testing.M) {
 	flag.Parse()
-	TestOutput(testing.Verbose(), 3)
+	TestOutput(testing.Verbose(), 0)
 	code := m.Run()
 	AfterTest(nil)
 	os.Exit(code)
