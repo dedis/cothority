@@ -69,7 +69,7 @@ and protocols
 * [cosi](https://github.com/dedis/cosi) - collective signatures
 * [status](app/status) - returns the status of the given group
 * [cisc](app/cisc) - handle your ssh-keys on a blockchain
-* [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/docker) - 
+* [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/docker/hpets16) - 
 hotpets16-branch containing Dockerfile.
 
 # Protocols
