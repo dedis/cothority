@@ -324,6 +324,10 @@ func (s *Service) save() {
 	}
 }
 
+func (s *Service) clearIdentities() {
+	s.Identities = make(map[string]*Storage)
+}
+
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),

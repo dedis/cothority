@@ -50,6 +50,9 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
 	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
+	for _, s := range services {
+		s.(*Service).clearIdentities()
+	}
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -71,7 +74,6 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 	t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
-	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
