@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 var veriCount int
@@ -81,7 +80,7 @@ func TestCheckFail(t *testing.T) {
 	})
 
 	for failCount = 1; failCount <= 3; failCount++ {
-		log.Lvl1("Fail at", failCount)
+		log.Lvl2("Fail at", failCount)
 		runProtocol(t, TestProtocolName)
 	}
 }
@@ -96,7 +95,7 @@ func TestCheckFailMore(t *testing.T) {
 
 	for _, n := range []int{3, 4, 13} {
 		for failCount = 1; failCount <= 3; failCount++ {
-			log.Lvl1("FailMore at", failCount)
+			log.Lvl2("FailMore at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
 				failCount < (n+1)*2/3)
 		}
@@ -113,7 +112,7 @@ func TestCheckFailBit(t *testing.T) {
 
 	for _, n := range []int{2, 3, 4} {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
-			log.Lvl1("FailBit at", failCount)
+			log.Lvl2("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
 				bitCount(failCount) < (n+1)*2/3)
 
@@ -197,11 +196,11 @@ func verifyFail(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount == failCount {
-		log.Lvl1("Failing for count==", failCount)
+		log.Lvl2("Failing for count==", failCount)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
-	log.Lvl1("Ignoring message:", string(m))
+	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Ignoring message:", string(m))
 	if len(d) != 1 {
 		log.Error("Didn't receive correct data")
 		return false
@@ -218,8 +217,8 @@ func verifyFailMore(m []byte, d []byte) bool {
 		log.Lvlf1("Failing for %d<=%d", veriCount, failCount)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
-	log.Lvl1("Ignoring message:", string(m))
+	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Ignoring message:", string(m))
 	if len(d) != 1 {
 		log.Error("Didn't receive correct data")
 		return false
@@ -243,9 +242,9 @@ func verifyFailBit(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if failCount&(1<<myBit) != 0 {
-		log.Lvl1("Failing for myBit==", myBit)
+		log.Lvl2("Failing for myBit==", myBit)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
+	log.Lvl3("Verification called", veriCount, "times")
 	return true
 }
