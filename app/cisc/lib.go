@@ -119,9 +119,10 @@ func (cfg *ciscConfig) showDifference() {
 			log.Info("Deleted key:", k)
 		}
 	}
-	for dev := range cfg.Proposed.Device {
+	for dev, pub := range cfg.Proposed.Device {
 		if _, exists := cfg.Config.Device[dev]; !exists {
-			log.Info("New device:", dev)
+			log.Infof("New device: %s / %s", dev,
+				pub.Point.String())
 		}
 	}
 	for dev := range cfg.Config.Device {

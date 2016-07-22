@@ -105,6 +105,8 @@ func idConnect(c *cli.Context) error {
 	id := identity.ID(idBytes)
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
 	cfg.AttachToIdentity(id)
+	log.Infof("Public key: %s",
+		cfg.Proposed.Device[cfg.DeviceName].Point.String())
 	return cfg.saveConfig(c)
 }
 func idDel(c *cli.Context) error {
