@@ -27,6 +27,9 @@ test_lint:
 	fi \
 	}
 
+test_multi:
+	cd services/identity; go test -v -race -p=1 -short ./...
+
 test_go:
 	go test -race -p=1 -short ./...
 
