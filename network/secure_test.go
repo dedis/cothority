@@ -16,9 +16,6 @@ import (
 // Now you connect to someone else using ServerIdentity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	priv1, id1 := genServerIdentity("localhost:2000")
 	priv2, id2 := genServerIdentity("localhost:2001")
 	sHost1 := NewSecureTCPHost(priv1, id1)

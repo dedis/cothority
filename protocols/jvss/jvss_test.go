@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 func TestSID(t *testing.T) {
 	sl := newSID(LTSS)
 	ss := newSID(STSS)
@@ -31,8 +35,6 @@ func TestJVSS(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
-
-	log.TestOutput(testing.Verbose(), 1)
 
 	log.Lvl1("JVSS - starting")
 	leader, err := local.CreateProtocol(tree, name)

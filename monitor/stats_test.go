@@ -58,7 +58,6 @@ func TestStatsUpdate(t *testing.T) {
 	}
 }
 func TestStatsOrder(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"
@@ -98,7 +97,6 @@ func TestValues(t *testing.T) {
 }
 
 func TestStatsAverage(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"
@@ -132,7 +130,6 @@ func TestStatsAverage(t *testing.T) {
 }
 
 func TestStatsAverageFiltered(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"

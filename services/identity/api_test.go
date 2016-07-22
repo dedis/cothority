@@ -7,23 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"flag"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestMain(m *testing.M) {
-	//log.MainTest(m)
-	flag.Parse()
-	log.SetDebugVisible(1)
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
-}
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
 	l := sda.NewLocalTest()

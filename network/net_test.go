@@ -9,8 +9,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	"os"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -32,13 +30,10 @@ type TestRegisterS struct {
 }
 
 func TestMain(m *testing.M) {
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
+	log.MainTest(m)
 }
 
 func TestRegister(t *testing.T) {
-	defer log.AfterTest(t)
 	if TypeFromData(&TestRegisterS{}) != ErrorType {
 		t.Fatal("TestRegister should not yet be there")
 	}
@@ -57,8 +52,6 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterReflect(t *testing.T) {
-	defer log.AfterTest(t)
-
 	typ := RegisterMessageType(TestRegisterS{})
 	typReflect := RTypeToMessageTypeID(reflect.TypeOf(TestRegisterS{}))
 	if typ != typReflect {
@@ -68,9 +61,6 @@ func TestRegisterReflect(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	gotConnect := make(chan bool)
 	fn := func(s Conn) {
 		log.Lvl3("Getting connection from", s)
@@ -131,9 +121,6 @@ func TestMultiClose(t *testing.T) {
 
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s.ServerIdentity().First())
@@ -201,10 +188,7 @@ func TestSecureMultiClose(t *testing.T) {
 }
 
 func TestTcpCounterIO(t *testing.T) {
-	defer log.AfterTest(t)
-
 	RegisterMessageType(&TestRegisterS{})
-	log.TestOutput(testing.Verbose(), 4)
 	receiverStarted := make(chan bool)
 	fn := func(s Conn) {
 		err := s.Send(context.TODO(), &TestRegisterS{10})
@@ -249,9 +233,6 @@ func TestTcpCounterIO(t *testing.T) {
 
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	opened := make(chan bool)
 	fn := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s)
@@ -296,8 +277,6 @@ func TestSecureTcp(t *testing.T) {
 
 // Testing a full-blown server/client
 func TestTcpNetwork(t *testing.T) {
-	defer log.AfterTest(t)
-
 	// Create one client + one server
 	clientHost := NewTCPHost()
 	serverHost := NewTCPHost()

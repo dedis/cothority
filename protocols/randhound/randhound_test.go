@@ -9,6 +9,10 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 func TestRandHound(t *testing.T) {
 
 	// Setup parameters
@@ -21,8 +25,6 @@ func TestRandHound(t *testing.T) {
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
-
-	log.TestOutput(testing.Verbose(), 1)
 
 	// Setup and Start RandHound
 	log.Printf("RandHound - starting")

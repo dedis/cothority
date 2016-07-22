@@ -8,6 +8,10 @@ import (
 	"github.com/dedis/cothority/simul/platform"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 var testfile = `Machines = 8
 App = "sign"
 
@@ -16,7 +20,6 @@ Ppm, Rounds
 4, 30`
 
 func TestReadRunfile(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 2)
 	tplat := &TPlat{}
 
 	tmpfile := "/tmp/testrun.toml"
