@@ -80,7 +80,8 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 2, name)}
+	thr := c.Int("thr")
+	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
 	log.Infof("IC is %x", cfg.ID)
 	return cfg.saveConfig(c)
@@ -102,7 +103,7 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 2, name)}
+	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
 	cfg.AttachToIdentity(id)
 	return cfg.saveConfig(c)
 }

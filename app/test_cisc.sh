@@ -15,19 +15,19 @@ NBR=4
 main(){
     startTest
     build
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
-#	test ConfigVote
-#	test IdConnect
-#	test IdDel
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
-#	test SSHAdd
-#	test SSHDel
-#	test Follow
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
+	test ConfigVote
+	test IdConnect
+	test IdDel
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
+	test SSHAdd
+	test SSHDel
+	test Follow
 	test Revoke
     stopTest
 }
