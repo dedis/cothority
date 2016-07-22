@@ -200,5 +200,5 @@ func TestStatsString(t *testing.T) {
 	if !strings.Contains(rs.String(), "0.1") {
 		t.Fatal("The measurement should contain 0.1:", rs.String())
 	}
-	m.Stop()
+	EndAndCleanup()
 }
