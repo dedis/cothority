@@ -85,7 +85,7 @@ const (
 
 // defaultMainTest indicates what debug-level should be used when `go test -v`
 // is called.
-const defaultMainTest = 0
+const defaultMainTest = 2
 
 // NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
 // whenever there are longer functions and kept at that new maximum. If you prefer

@@ -17,6 +17,7 @@ import (
 func TestIdentity_ConfigNewCheck(t *testing.T) {
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
+	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -28,7 +29,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	conf2.Data["two"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
 
-	log.ErrFatal(c1.ProposeUpdate())
+	log.ErrFatal(c1.ProposeFetch())
 	al := c1.Proposed
 	assert.NotNil(t, al)
 
@@ -44,9 +45,6 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
 	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
-	for _, s := range services {
-		s.(*Service).clearIdentities()
-	}
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -57,7 +55,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	for _, s := range services {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
-		if len(is.Identities) != 1 {
+		if len(is.identities) != 1 {
 			t.Fatal("The configuration hasn't been proposed in all services")
 		}
 		is.identitiesMutex.Unlock()
@@ -67,6 +65,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 func TestIdentity_ConfigUpdate(t *testing.T) {
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
+	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -131,7 +130,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
-		log.Lvl3(s.(*Service).Identities)
+		log.Lvl3(s.(*Service).identities)
 	}
 
 	c1 := NewIdentity(el, 50, "one1")
@@ -142,7 +141,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	conf2.Device["two2"] = &Device{kp2.Public}
 	conf2.Data["two2"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
-	log.ErrFatal(c1.ProposeUpdate())
+	log.ErrFatal(c1.ProposeFetch())
 	log.ErrFatal(c1.ProposeVote(true))
 
 	if len(c1.Config.Device) != 2 {
