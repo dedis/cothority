@@ -150,7 +150,7 @@ type SecureConn interface {
 type SecureTCPHost struct {
 	*TCPHost
 	// ServerIdentity of this host
-	entity *ServerIdentity
+	serverIdentity *ServerIdentity
 	// Private key tied to this entity
 	private abstract.Scalar
 	// workingaddress is a private field used mostly for testing

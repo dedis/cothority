@@ -173,7 +173,7 @@ func TestSecureMultiClose(t *testing.T) {
 		}
 		done2 <- true
 	}()
-	_, err = h2.Open(h1.entity)
+	_, err = h2.Open(h1.serverIdentity)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,6 +305,58 @@ func TestTcpNetwork(t *testing.T) {
 		t.Fatal("could not close server", err)
 	}
 	<-done
+}
+
+// Opens up a lot of connections
+func TestStress(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		log.Print("Going for round:", i)
+		stressTest(t)
+	}
+}
+func stressTest(t *testing.T) {
+	// nbrHosts
+	// 17 - survives 23-58 rounds
+	// 20 - survives 19, 19, 29
+	// 30 - survives 6, 6, 6
+	nbrHosts := 30
+	wg := sync.WaitGroup{}
+	closeIt := func(s SecureConn) {
+		log.Lvl2("Waiting to close connection", s)
+		//time.Sleep(time.Second)
+		log.Lvl2("Closing connection", s)
+		s.Close()
+		wg.Done()
+	}
+	hosts := make([]*SecureTCPHost, nbrHosts)
+	for i := range hosts {
+		log.Lvl2("Starting connection", i)
+		wg.Add(1)
+		go func(nbr int) {
+			kp := config.NewKeyPair(Suite)
+			si := NewServerIdentity(kp.Public, "localhost:0")
+			h := NewSecureTCPHost(kp.Secret, si)
+			hosts[nbr] = h
+			log.ErrFatal(h.Listen(closeIt))
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	for i := range hosts {
+		wg.Add(1)
+		go func(nbr int) {
+			log.Lvl2("Opening", nbr, hosts[nbr])
+			_, err := hosts[nbr].Open(hosts[(nbr+1)%nbrHosts].serverIdentity)
+			log.ErrFatal(err)
+		}(i)
+	}
+	wg.Wait()
+	//time.Sleep(time.Second)
+	log.Lvl2("Closing hosts")
+	for _, h := range hosts {
+		log.ErrFatal(h.Close())
+		log.Print(h)
+	}
 }
 
 type SimpleClient struct {
