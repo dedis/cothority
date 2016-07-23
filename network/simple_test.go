@@ -5,7 +5,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dedis/cothority/log"
 	"golang.org/x/net/context"
 )
 
@@ -20,9 +19,6 @@ type SimplePacket struct {
 }
 
 func TestSimple(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	client := NewTCPHost()
 	clientName := "client"
 	server := NewTCPHost()

@@ -24,7 +24,6 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
-	defer log.AfterTest(t)
 	// How many hosts are run
 	nbrHosts := 10
 	// 16MB of message size
@@ -36,7 +35,6 @@ func TestHugeConnections(t *testing.T) {
 	}
 	bigMessageType := RegisterMessageType(big)
 
-	log.TestOutput(testing.Verbose(), 3)
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)
 	hosts := make([]SecureHost, nbrHosts)

@@ -5,25 +5,25 @@ import (
 	"testing"
 	"time"
 
-	"flag"
-	"os"
+	"strconv"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
-var veriCount int
-var failCount int
-var countMut sync.Mutex
+type Counter struct {
+	veriCount int
+	failCount int
+	sync.Mutex
+}
+
+var counters []*Counter
+var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
-	//log.MainTest(m)
-	flag.Parse()
-	log.SetDebugVisible(3)
-	code := m.Run()
-	log.AfterTest(nil)
-	os.Exit(code)
+	//log.Info("skipping test because of https://github.com/dedis/cothority/issues/467")
+	log.MainTest(m, 2)
 }
 
 func TestBftCoSi(t *testing.T) {
