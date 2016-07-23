@@ -6,6 +6,8 @@ import (
 
 	"time"
 
+	"sync"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -255,17 +257,25 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 func NewLocalHost(port int) *Host {
 	address := "localhost:" + strconv.Itoa(port)
 	priv, pub := PrivPub()
+	log.LLvl4("Creating localhost", address)
 	id := network.NewServerIdentity(pub, address)
 	return NewHost(id, priv)
 }
 
+var LocalHostPort = 2000
+var lhpMutex sync.Mutex
+
 // GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true.
+// the other nodes if connect is true. It will take the port-number from
+// the global variable LocalHostPort.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
+		lhpMutex.Lock()
+		host := NewLocalHost(LocalHostPort)
+		LocalHostPort += 1
+		lhpMutex.Unlock()
 		hosts[i] = host
 	}
 	root := hosts[0]

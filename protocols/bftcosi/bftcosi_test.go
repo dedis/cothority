@@ -5,18 +5,25 @@ import (
 	"testing"
 	"time"
 
+	"strconv"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 )
 
-var veriCount int
-var failCount int
-var countMut sync.Mutex
+type Counter struct {
+	veriCount int
+	failCount int
+	sync.Mutex
+}
+
+var counters []*Counter
+var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
 	//log.Info("skipping test because of https://github.com/dedis/cothority/issues/467")
-	log.MainTest(m, 1)
+	log.MainTest(m, 2)
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -27,8 +34,8 @@ func TestBftCoSi(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	log.Lvl2("Standard at", failCount)
-	runProtocol(t, TestProtocolName)
+	log.Lvl2("Simple count")
+	runProtocol(t, TestProtocolName, 0)
 }
 
 func TestThreshold(t *testing.T) {
@@ -71,9 +78,9 @@ func TestCheckFail(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verifyFail)
 	})
 
-	for failCount = 1; failCount <= 3; failCount++ {
+	for failCount := 1; failCount <= 3; failCount++ {
 		log.Lvl2("Fail at", failCount)
-		runProtocol(t, TestProtocolName)
+		runProtocol(t, TestProtocolName, failCount)
 	}
 }
 
@@ -86,16 +93,16 @@ func TestCheckFailMore(t *testing.T) {
 	})
 
 	for _, n := range []int{3, 4, 13} {
-		for failCount = 1; failCount <= 3; failCount++ {
+		for failCount := 1; failCount <= 3; failCount++ {
 			log.Lvl2("FailMore at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				failCount < (n+1)*2/3)
+				failCount, failCount < (n+1)*2/3)
 		}
 	}
 }
 
 func TestCheckFailBit(t *testing.T) {
-	t.Skip("Skipping and hoping it will be resolved with #467")
+	//t.Skip("Skipping and hoping it will be resolved with #467")
 	const TestProtocolName = "DummyBFTCoSiFailBit"
 
 	// Register test protocol using BFTCoSi
@@ -103,25 +110,53 @@ func TestCheckFailBit(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verifyFailBit)
 	})
 
-	for _, n := range []int{2, 3, 4} {
-		for failCount = 0; failCount < 1<<uint(n); failCount++ {
-			log.Lvl2("FailBit at", failCount)
-			runProtocolOnce(t, n, TestProtocolName,
-				bitCount(failCount) < (n+1)*2/3)
-
+	wg := sync.WaitGroup{}
+	for _, n := range []int{3} {
+		for failCount := 0; failCount < 1<<uint(n); failCount++ {
+			wg.Add(1)
+			go func(n, fc int) {
+				log.Lvl1("FailBit at", n, fc)
+				runProtocolOnce(t, n, TestProtocolName,
+					fc, bitCount(fc) < (n+1)*2/3)
+				log.LLvl3("Done with", n, fc)
+				wg.Done()
+			}(n, failCount)
 		}
 	}
+	wg.Wait()
 }
 
-func runProtocol(t *testing.T, name string) {
+func TestCheckFailParallel(t *testing.T) {
+	//t.Skip("Skipping and hoping it will be resolved with #467")
+	const TestProtocolName = "DummyBFTCoSiFailParallel"
+
+	// Register test protocol using BFTCoSi
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verifyFailBit)
+	})
+
+	wg := sync.WaitGroup{}
+	n := 3
+	for fc := 0; fc < 8; fc++ {
+		wg.Add(1)
+		go func(fc int) {
+			runProtocolOnce(t, n, TestProtocolName,
+				8, bitCount(fc) < (n+1)*2/3)
+			log.LLvl3("Done with", n, fc)
+			wg.Done()
+		}(fc)
+		//wg.Wait()
+	}
+	wg.Wait()
+}
+
+func runProtocol(t *testing.T, name string, failCount int) {
 	for _, nbrHosts := range []int{3, 4, 13} {
-		runProtocolOnce(t, nbrHosts, name, true)
+		runProtocolOnce(t, nbrHosts, name, failCount, true)
 	}
 }
-func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
-	countMut.Lock()
-	veriCount = 0
-	countMut.Unlock()
+func runProtocolOnce(t *testing.T, nbrHosts int, name string, failCount int,
+	succeed bool) {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
@@ -142,7 +177,13 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	var root *ProtocolBFTCoSi
 	root = node.(*ProtocolBFTCoSi)
 	root.Msg = msg
-	root.Data = []byte("1")
+	cMux.Lock()
+	counter := &Counter{failCount: failCount}
+	counters = append(counters, counter)
+	root.Data = []byte(strconv.Itoa(len(counters) - 1))
+	log.LLvl3("Added counter", len(counters)-1, failCount)
+	cMux.Unlock()
+	log.ErrFatal(err)
 	// function that will be called when protocol is finished by the root
 	root.RegisterOnDone(func() {
 		done <- true
@@ -152,11 +193,11 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	wait := time.Second * 60
 	select {
 	case <-done:
-		countMut.Lock()
-		assert.Equal(t, veriCount, nbrHosts,
+		counter.Lock()
+		assert.Equal(t, counter.veriCount, nbrHosts,
 			"Each host should have called verification.")
 		// if assert fails we don't care for unlocking (t.Fail)
-		countMut.Unlock()
+		counter.Unlock()
 		sig := root.Signature()
 		err := sig.Verify(root.Suite(), root.Roster().Publics())
 		if succeed && err != nil {
@@ -172,11 +213,15 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 
 // Verify function that returns true if the length of the data is 1.
 func verify(m []byte, d []byte) bool {
-	countMut.Lock()
-	veriCount++
-	log.Lvl4("Verification called", veriCount, "times")
-	countMut.Unlock()
-	if len(d) != 1 {
+	c, err := strconv.Atoi(string(d))
+	log.ErrFatal(err)
+	counter := counters[c]
+	counter.Lock()
+	defer counter.Unlock()
+	counter.veriCount++
+	log.Lvl4("Verification called", counter.veriCount, "times")
+	counter.Unlock()
+	if len(d) == 0 {
 		log.Error("Didn't receive correct data")
 		return false
 	}
@@ -185,16 +230,19 @@ func verify(m []byte, d []byte) bool {
 
 // Verify-function that will fail if we're the `failCount`ed call.
 func verifyFail(m []byte, d []byte) bool {
-	countMut.Lock()
-	defer countMut.Unlock()
-	veriCount++
-	if veriCount == failCount {
-		log.Lvl2("Failing for count==", failCount)
+	c, err := strconv.Atoi(string(d))
+	log.ErrFatal(err)
+	counter := counters[c]
+	counter.Lock()
+	defer counter.Unlock()
+	counter.veriCount++
+	if counter.veriCount == counter.failCount {
+		log.Lvl2("Failing for count==", counter.failCount)
 		return false
 	}
-	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Verification called", counter.veriCount, "times")
 	log.Lvl3("Ignoring message:", string(m))
-	if len(d) != 1 {
+	if len(d) == 0 {
 		log.Error("Didn't receive correct data")
 		return false
 	}
@@ -203,16 +251,20 @@ func verifyFail(m []byte, d []byte) bool {
 
 // Verify-function that will fail for all calls >= `failCount`.
 func verifyFailMore(m []byte, d []byte) bool {
-	countMut.Lock()
-	defer countMut.Unlock()
-	veriCount++
-	if veriCount <= failCount {
-		log.Lvlf2("Failing for %d<=%d", veriCount, failCount)
+	c, err := strconv.Atoi(string(d))
+	log.ErrFatal(err)
+	counter := counters[c]
+	counter.Lock()
+	defer counter.Unlock()
+	counter.veriCount++
+	if counter.veriCount <= counter.failCount {
+		log.Lvlf2("Failing for %d<=%d", counter.veriCount,
+			counter.failCount)
 		return false
 	}
-	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Verification called", counter.veriCount, "times")
 	log.Lvl3("Ignoring message:", string(m))
-	if len(d) != 1 {
+	if len(d) == 0 {
 		log.Error("Didn't receive correct data")
 		return false
 	}
@@ -230,14 +282,18 @@ func bitCount(x int) int {
 
 // Verify-function that will fail if the `called` bit is 0.
 func verifyFailBit(m []byte, d []byte) bool {
-	countMut.Lock()
-	myBit := uint(veriCount)
-	defer countMut.Unlock()
-	veriCount++
-	if failCount&(1<<myBit) != 0 {
+	c, err := strconv.Atoi(string(d))
+	log.ErrFatal(err)
+	counter := counters[c]
+	counter.Lock()
+	defer counter.Unlock()
+	log.LLvl4("Counter", c, counter)
+	myBit := uint(counter.veriCount)
+	counter.veriCount++
+	if counter.failCount&(1<<myBit) != 0 {
 		log.Lvl2("Failing for myBit==", myBit)
 		return false
 	}
-	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Verification called", counter.veriCount, "times")
 	return true
 }
