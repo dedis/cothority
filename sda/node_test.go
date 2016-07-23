@@ -15,7 +15,6 @@ func init() {
 	sda.ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
 	sda.ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
 	sda.ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
-	sda.ProtocolRegisterName(testProto, NewProtocolTest)
 	Incoming = make(chan struct {
 		*sda.TreeNode
 		NodeTestMsg

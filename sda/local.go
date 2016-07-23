@@ -262,10 +262,9 @@ func NewLocalHost(port int) *Host {
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
+		host := NewLocalHost(0)
 		hosts[i] = host
 	}
 	root := hosts[0]

@@ -159,7 +159,7 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 	<-done
 
-	log.Lvl3("Finished first connection, starting 2nd")
+	log.Lvl1("Finished first connection, starting 2nd")
 	receiverStarted2 := make(chan bool)
 	fn2 := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s.ServerIdentity().First())

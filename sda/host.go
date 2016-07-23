@@ -13,6 +13,8 @@ import (
 
 	"strconv"
 
+	"net"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -75,6 +77,7 @@ type Host struct {
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
+	log.Lvl4("Creating host at", e.Addresses)
 	h := &Host{
 		ServerIdentity:       e,
 		workingAddress:       e.First(),
@@ -115,6 +118,19 @@ func (h *Host) listen(wait bool) {
 		}
 	}()
 	if wait {
+		port := <-h.host.(*network.SecureTCPHost).TCPHost.ListeningPort
+		for i, addr := range h.ServerIdentity.Addresses {
+			if strings.HasSuffix(addr, ":0") {
+				host, _, err := net.SplitHostPort(addr)
+				if err != nil {
+					log.Error("Couldn't parse network address", addr)
+				} else {
+					h.ServerIdentity.Addresses[i] = host +
+						":" + strconv.Itoa(port)
+				}
+				log.Lvl4("Replaced port to", port)
+			}
+		}
 		for {
 			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
 			_, err := h.Connect(h.ServerIdentity)

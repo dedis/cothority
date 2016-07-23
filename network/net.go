@@ -24,6 +24,8 @@ import (
 
 	"errors"
 
+	"strconv"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -35,10 +37,11 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTCPHost() *TCPHost {
 	return &TCPHost{
-		peers:        make(map[string]Conn),
-		quit:         make(chan bool),
-		constructors: DefaultConstructors(Suite),
-		quitListener: make(chan bool),
+		ListeningPort: make(chan int, 1),
+		peers:         make(map[string]Conn),
+		quit:          make(chan bool),
+		constructors:  DefaultConstructors(Suite),
+		quitListener:  make(chan bool),
 	}
 }
 
@@ -163,8 +166,10 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := GlobalBind(addr)
+	var ln net.Listener
 	for i := 0; i < MaxRetry; i++ {
-		ln, err := net.Listen("tcp", global)
+		var err error
+		ln, err = net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
@@ -173,6 +178,19 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 			return errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(WaitRetry)
+	}
+
+	// Send the actual listening port through the channel, in case
+	// it was a ":0"-address where the system choses its own
+	// port.
+	_, p, _ := net.SplitHostPort(ln.Addr().String())
+	port, err := strconv.Atoi(p)
+	if err != nil {
+		return errors.New("Couldn't find port: " + err.Error())
+	}
+	if len(t.ListeningPort) == 0 {
+		// If the channel is empty, else we'd block.
+		t.ListeningPort <- port
 	}
 
 	t.listeningLock.Unlock()
@@ -216,7 +234,7 @@ func NewSecureTCPHost(private abstract.Scalar, e *ServerIdentity) *SecureTCPHost
 }
 
 // Listen will try each addresses it the host ServerIdentity.
-// Returns an error if it can listen on any address
+// Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
 		log.Lvl3(st.workingAddress, "connected with", c.Remote())
@@ -510,24 +528,24 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
 	// Send our ServerIdentity to the remote endpoint
-	log.Lvl4("Sending our identity", ourEnt.ID, "to",
+	log.Lvlf4("Sending our identity %x to %s", ourEnt.ID,
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
-		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
+		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
 	// Receive the other ServerIdentity
 	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
-		return fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
+		return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
 	}
 	// Check if it is correct
 	if nm.MsgType != ServerIdentityType {
-		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
+		return fmt.Errorf("Received wrong type during negotiation: %s", nm.MsgType.String())
 	}
 
 	// Set the ServerIdentity for this connection
 	e := nm.Msg.(ServerIdentity)
-	log.Lvl4(ourEnt.ID, "Received identity", e.ID)
+	log.Lvlf4("%x: Received identity %x", ourEnt.ID, e.ID)
 
 	sc.entity = &e
 	log.Lvl4("Identity exchange complete")

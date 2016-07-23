@@ -15,6 +15,8 @@ var testProto = "test"
 
 var simpleProto = "simple"
 
+var protocolTestID = sda.ProtocolRegisterName(testProto, NewProtocolTest)
+
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
@@ -77,14 +79,13 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	testProtoID := sda.ProtocolRegisterName(testProto, NewProtocolTest)
-	if !sda.ProtocolExists(testProtoID) {
+	if !sda.ProtocolExists(protocolTestID) {
 		t.Fatal("Test should exist now")
 	}
-	if sda.ProtocolNameToID(testProto) != testProtoID {
+	if sda.ProtocolNameToID(testProto) != protocolTestID {
 		t.Fatal("Not correct translation from string to ID")
 	}
-	if sda.ProtocolIDToName(testProtoID) != testProto {
+	if sda.ProtocolIDToName(protocolTestID) != testProto {
 		t.Fatal("Not correct translation from ID to String")
 	}
 }
