@@ -42,6 +42,12 @@ testFile(){
     fi
 }
 
+testNFile(){
+    if [ -f $1 ]; then
+        fail "file $1 IS here"
+    fi
+}
+
 testFileGrep(){
 	local G="$1" F="$2"
 	testFile "$F"
@@ -61,12 +67,32 @@ testGrep(){
     fi
 }
 
+testNGrep(){
+    G="$1"
+    shift
+    testOut "Assert NOT grepping '$G' in '$@'"
+    runOutFile "$@"
+    doGrep "$G"
+    if [ "$EGREP" ]; then
+        fail "DID find '$G' in output of '$@': $(cat $RUNOUT)"
+    fi
+}
+
 testReGrep(){
 	G="$1"
     testOut "Assert grepping again '$G' in same output as before"
     doGrep "$G"
     if [ ! "$EGREP" ]; then
         fail "Didn't find '$G' in last output: $(cat $RUNOUT)"
+    fi
+}
+
+testReNGrep(){
+	G="$1"
+    testOut "Assert grepping again NOT '$G' in same output as before"
+    doGrep "$G"
+    if [ "$EGREP" ]; then
+        fail "DID find '$G' in last output: $(cat $RUNOUT)"
     fi
 }
 
@@ -84,17 +110,6 @@ testCount(){
     doGrep "$G"
     if [ $WC -ne $C ]; then
         fail "Didn't find '$C' (but '$WC') of '$G' in output of '$@': $(cat $RUNOUT)"
-    fi
-}
-
-testNGrep(){
-    G="$1"
-    shift
-    testOut "Assert NOT grepping '$G' in '$@'"
-    runOutFile "$@"
-    doGrep "$G"
-    if [ "$EGREP" ]; then
-        fail "Did find '$G' in output of '$@': $(cat $RUNOUT)"
     fi
 }
 

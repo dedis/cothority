@@ -10,9 +10,12 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 // Tests a 2-node system
 func TestNode(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)

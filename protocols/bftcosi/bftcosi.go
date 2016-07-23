@@ -161,7 +161,7 @@ func (bft *ProtocolBFTCoSi) Start() error {
 // Dispatch listens on all channels and implements the sda.ProtocolInstance
 // interface.
 func (bft *ProtocolBFTCoSi) Dispatch() error {
-	log.Lvl2(bft.Name(), "Starts")
+	log.Lvl3(bft.Name(), "Starts")
 	for {
 		var err error
 		select {
@@ -184,7 +184,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
-			log.Lvl2(bft.Name(), "BFTCoSi Dispatches stop.")
+			log.Lvl3(bft.Name(), "BFTCoSi Dispatches stop.")
 
 			return nil
 		}
@@ -326,7 +326,9 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	}
 
 	// make sure the Announce->Commit has been done for the commit phase
+	log.Print(bft.Name(), "Waiting")
 	<-bft.commitCommitDone
+	log.Print(bft.Name(), "Continuing")
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
@@ -380,13 +382,13 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(ch *ChallengeCommit) error {
 		Exceptions: ch.Signature.Exceptions,
 	}
 	if err := bftPrepareSig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Lvl2(bft.Name(), "Verification of the signature failed:", err)
+		log.Lvl3(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
 
 	// Check if we have no more than threshold failed nodes
 	if len(ch.Signature.Exceptions) >= int(bft.threshold) {
-		log.Lvlf2("%s: More than threshold (%d/%d) refused to sign - aborting.",
+		log.Lvlf3("%s: More than threshold (%d/%d) refused to sign - aborting.",
 			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
 		bft.signRefusal = true
 	}

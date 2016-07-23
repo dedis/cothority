@@ -72,6 +72,7 @@ type serviceFactory struct {
 	translations map[string]ServiceID
 	// Inverse mapping of ServiceId => string
 	inverseTr map[ServiceID]string
+	mutex     sync.Mutex
 }
 
 // ServiceFactory is the global service factory to instantiate Services
@@ -85,6 +86,7 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
+	s.mutex.Lock()
 	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
 		log.Lvl1("RegisterService():", name)
@@ -92,6 +94,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	s.constructors[id] = fn
 	s.translations[name] = id
 	s.inverseTr[id] = name
+	s.mutex.Unlock()
 }
 
 // RegisterNewService is a wrapper around service factory
@@ -101,6 +104,8 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
 	for id := range s.constructors {
 		ids = append(ids, id)
@@ -110,6 +115,8 @@ func (s *serviceFactory) registeredServicesID() []ServiceID {
 
 // RegisteredServicesByName returns all the names of the services registered
 func (s *serviceFactory) RegisteredServicesName() []string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var names = make([]string, 0, len(s.translations))
 	for n := range s.translations {
 		names = append(names, n)
@@ -119,6 +126,8 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	id, ok := s.translations[name]
 	if !ok {
 		return NilServiceID
@@ -128,6 +137,8 @@ func (s *serviceFactory) ServiceID(name string) ServiceID {
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var name string
 	var ok bool
 	if name, ok = s.inverseTr[id]; !ok {
@@ -138,17 +149,21 @@ func (s *serviceFactory) Name(id ServiceID) string {
 
 // start launches a new service
 func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
+	s.mutex.Lock()
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {
+		s.mutex.Unlock()
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
 	if fn, ok = s.constructors[id]; !ok {
+		s.mutex.Unlock()
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
+	s.mutex.Unlock()
 	serv := fn(c, path)
-	log.Lvl2("Instantiated service", name)
+	log.Lvl3("Instantiated service", name)
 	return serv, nil
 }
 
@@ -169,7 +184,7 @@ const configFolder = "config"
 // ```configFolder / *nameOfService*```
 func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	// check if we have a config folder
-	if err := os.MkdirAll(configFolder, 0777); err != nil {
+	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -186,7 +201,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
-		if err := os.MkdirAll(configName, 0666); err != nil {
+		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		c := newContext(h, o, id)
@@ -194,7 +209,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
-		log.Lvl2("Started Service", name, " (config in", configName, ")")
+		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
 		// !! register to the ProtocolFactory !!

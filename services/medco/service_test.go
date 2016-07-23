@@ -16,11 +16,13 @@ const numberGrpAttr = 1
 // numberAttr is the number of attributes.
 const numberAttr = 10
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 // TestService tests medco complete service execution.
 func TestService(t *testing.T) {
-	t.Skip("Still needs to be debugged.")
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 1)
+	//t.Skip("Still needs to be debugged -> #479")
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist

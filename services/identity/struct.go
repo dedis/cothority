@@ -195,9 +195,9 @@ type AttachToIdentity struct {
 	Public abstract.Point
 }
 
-// ProposeFetch verifies if a new config is available. On sending,
+// ProposeUpdate verifies if a new config is available. On sending,
 // the ID is given, on receiving, the AccountList is given.
-type ProposeFetch struct {
+type ProposeUpdate struct {
 	ID          ID
 	AccountList *Config
 }
@@ -221,7 +221,7 @@ type ProposeVote struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*storage
+	*Storage
 }
 
 // ProposeSend sends a new proposition to be stored in all identities
