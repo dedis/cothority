@@ -9,10 +9,11 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
-func TestCoSimul(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
+func TestCoSimul(t *testing.T) {
 	for VerifyResponse = 0; VerifyResponse < 3; VerifyResponse++ {
 		for _, nbrHosts := range []int{1, 3, 13} {
 			log.Lvl2("Running cosi with", nbrHosts, "hosts")

@@ -1,22 +1,20 @@
 package medco_test
 
 import (
-	"github.com/dedis/cothority/log"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
 	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
-	"reflect"
-	"testing"
-	"time"
 )
 
 // TestProbabilisticSwitching tests probabilistic switching protocol
 func TestProbabilisticSwitching(t *testing.T) {
-	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
-	log.TestOutput(testing.Verbose(), 1)
 	_, entityList, tree := local.GenTree(5, false, true, true)
 	sda.ProtocolRegisterName("ProbabilisticSwitchingTest", NewProbabilisticSwitchingTest)
 

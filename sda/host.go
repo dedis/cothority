@@ -1,6 +1,8 @@
 package sda
 
 import (
+	"sync"
+
 	"strings"
 
 	"sort"
@@ -17,14 +19,15 @@ type Host struct {
 	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
+	suite   abstract.Suite
+	Router
 	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
-	// The suite used for this Host
-	suite abstract.Suite
-
-	Router
-
+	// The open connections
+	connections map[network.ServerIdentityID]network.SecureConn
+	// lock associated to access trees
+	treesLock            sync.Mutex
 	serviceManager       *serviceManager
 	statusReporterStruct *statusReporterStruct
 }
@@ -34,22 +37,16 @@ type Host struct {
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
-		private:              pkey,
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
-		Router:               NewNetworkRouter(pkey, e),
+		Router:               NewTcpRouter(e, pkey),
 	}
 
 	h.overlay = NewOverlay(h)
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
-}
-
-func (h *Host) Close() error {
-	h.Router.Close()
-	h.overlay.Close()
-	return nil
 }
 
 // AddTree registers the given Tree struct in the underlying overlay.
@@ -97,6 +94,13 @@ func (h *Host) GetStatus() Status {
 	a := ServiceFactory.RegisteredServicesName()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
-	routerStatus := h.Router.GetStatus()
-	return routerStatus.Merge(m)
+	router := h.Router.GetStatus()
+	return router.Merge(m)
+
+}
+
+func (h *Host) Close() error {
+	h.Router.Close()
+	h.overlay.Close()
+	return nil
 }

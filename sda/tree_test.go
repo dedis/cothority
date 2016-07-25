@@ -1,4 +1,4 @@
-package sda_test
+package sda
 
 import (
 	"math/rand"
@@ -10,7 +10,6 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
@@ -22,8 +21,6 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -31,7 +28,7 @@ func TestTreeId(t *testing.T) {
 	/*
 			TODO: re-calculate the uuid
 		root, _ := ExampleGenerateTreeFromRoster(idsList)
-		tree := sda.Tree{IdList: idsList, Root: root}
+		tree := Tree{IdList: idsList, Root: root}
 		var h bytes.Buffer
 		h.Write(idsList.Id().Bytes())
 		h.Write(root.Id().Bytes())
@@ -47,8 +44,6 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -64,14 +59,12 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestRosterNew(t *testing.T) {
-	defer log.AfterTest(t)
-
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genRoster(tSuite, adresses)
 	if len(pl.List) != 2 {
 		t.Fatalf("Expected two peers in PeerList. Instead got %d", len(pl.List))
 	}
-	if pl.ID == sda.RosterID(uuid.Nil) {
+	if pl.ID == RosterID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(pl.ID.String()) != 36 {
@@ -81,22 +74,20 @@ func TestRosterNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
 	// write it
-	sda.WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
+	WriteTomlConfig(idsList.Toml(tSuite), "identities.toml", "testdata")
 	// decode it
-	var decoded sda.RosterToml
-	if err := sda.ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
+	var decoded RosterToml
+	if err := ReadTomlConfig(&decoded, "identities.toml", "testdata"); err != nil {
 		t.Fatal("COuld not read from file the entityList")
 	}
 	decodedList := decoded.Roster(tSuite)
 	if len(decodedList.List) != 3 {
 		t.Fatalf("Expected two identities in Roster. Instead got %d", len(decodedList.List))
 	}
-	if decodedList.ID == sda.RosterID(uuid.Nil) {
+	if decodedList.ID == RosterID(uuid.Nil) {
 		t.Fatal("PeerList without ID is not allowed")
 	}
 	if len(decodedList.ID.String()) != 36 {
@@ -117,7 +108,6 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
-	defer log.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -130,8 +120,6 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -144,9 +132,6 @@ func TestTreeChildren(t *testing.T) {
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -160,7 +145,7 @@ func TestUnMarshalTree(t *testing.T) {
 		t.Fatal("Marshaled tree is empty")
 	}
 
-	tree2, err := sda.NewTreeFromMarshal(tree_binary, peerList)
+	tree2, err := NewTreeFromMarshal(tree_binary, peerList)
 	if err != nil {
 		t.Fatal("Error while unmarshaling:", err)
 	}
@@ -171,8 +156,6 @@ func TestUnMarshalTree(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.List() {
 		node := tree.Search(tn.ID)
@@ -183,8 +166,6 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
 	if len(root.Children) != 2 {
@@ -202,8 +183,6 @@ func TestBinaryTree(t *testing.T) {
 }
 
 func TestTreeNodeServerIdentityIndex(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -229,9 +208,6 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 }
 
 func TestNaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -252,7 +228,6 @@ func TestNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 
-	log.TestOutput(testing.Verbose(), 4)
 	names = genLocalhostPeerNames(14, 2000)
 	peerList = genRoster(tSuite, names)
 	tree = peerList.GenerateNaryTree(3)
@@ -272,9 +247,6 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
@@ -296,9 +268,6 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
@@ -313,8 +282,6 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
 		t.Fatal("Tree with 1 node should be binary")
@@ -334,7 +301,6 @@ func TestBinaryTrees(t *testing.T) {
 }
 
 func TestRosterIsUsed(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	port := 2000
 	for hostExp := uint(2); hostExp < 8; hostExp++ {
 		hosts := (1 << hostExp) - 1
@@ -392,7 +358,7 @@ func TestTree_BinaryMarshaler(t *testing.T) {
 	tree, _ := genLocalTree(5, 2000)
 	b, err := tree.BinaryMarshaler()
 	log.ErrFatal(err)
-	tree2 := &sda.Tree{}
+	tree2 := &Tree{}
 	log.ErrFatal(tree2.BinaryUnmarshaler(b))
 	if !tree.Equal(tree2) {
 		t.Fatal("Unmarshalled tree is not equal")
@@ -549,16 +515,16 @@ func genLocalDiffPeerNames(n, p int) []string {
 }
 
 // genRoster generates a Roster out of names
-func genRoster(suite abstract.Suite, names []string) *sda.Roster {
+func genRoster(suite abstract.Suite, names []string) *Roster {
 	var ids []*network.ServerIdentity
 	for _, n := range names {
 		kp := config.NewKeyPair(suite)
 		ids = append(ids, network.NewServerIdentity(kp.Public, n))
 	}
-	return sda.NewRoster(ids)
+	return NewRoster(ids)
 }
 
-func genLocalTree(count, port int) (*sda.Tree, *sda.Roster) {
+func genLocalTree(count, port int) (*Tree, *Roster) {
 	names := genLocalhostPeerNames(count, port)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBinaryTree()

@@ -568,6 +568,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	log.Lvl4(bft.Name(), "closing")
+	close(bft.commitCommitDone)
 	bft.doneProcessing <- true
 	if bft.onDone != nil {
 		// only true for the root

@@ -63,15 +63,12 @@ func NewOverlay(h *Host) *Overlay {
 		pendingSDAs:        make([]*ProtocolMsg, 0),
 	}
 	// messages going to protocol instances
-	h.RegisterProcessor(o, SDADataMessageID)
-	// requesting a tree
-	h.RegisterProcessor(o, RequestTreeMessageID)
-	// sending back a tree
-	h.RegisterProcessor(o, SendTreeMessageID)
-	// requesting a roster
-	h.RegisterProcessor(o, RequestRosterMessageID)
-	// sending back a roster
-	h.RegisterProcessor(o, SendRosterMessageID)
+	h.RegisterProcessor(o,
+		SDADataMessageID,       // protocol instance's messages
+		RequestTreeMessageID,   // request a tree
+		SendTreeMessageID,      // send a tree back to a request
+		RequestRosterMessageID, // request a roster
+		SendRosterMessageID)    // send a roster back to request
 	return o
 }
 
@@ -87,8 +84,8 @@ func (o *Overlay) Process(data *network.Packet) {
 			log.Error("ProcessSDAMessage returned:", err)
 		}
 
-	// A host has sent us a request to get a tree definition
 	case RequestTreeMessageID:
+		// A host has sent us a request to get a tree definition
 		tid := data.Msg.(RequestTree).TreeID
 		tree := o.Tree(tid)
 		var err error
@@ -103,8 +100,8 @@ func (o *Overlay) Process(data *network.Packet) {
 		if err != nil {
 			log.Error("Couldn't send tree:", err)
 		}
-		// A Host has replied to our request of a tree
 	case SendTreeMessageID:
+		// A Host has replied to our request of a tree
 		tm := data.Msg.(TreeMarshal)
 		if tm.TreeID == TreeID(uuid.Nil) {
 			log.Error("Received an empty Tree")
@@ -132,8 +129,8 @@ func (o *Overlay) Process(data *network.Packet) {
 		log.Lvl4("Received new tree")
 		o.RegisterTree(tree)
 		o.checkPendingSDA(tree)
-		// Some host requested an Roster
 	case RequestRosterMessageID:
+		// Some host requested an Roster
 		id := data.Msg.(RequestRoster).RosterID
 		el := o.Roster(id)
 		var err error
@@ -149,8 +146,8 @@ func (o *Overlay) Process(data *network.Packet) {
 				err)
 			return
 		}
-		// Host replied to our request of entitylist
 	case SendRosterMessageID:
+		// Host replied to our request of entitylist
 		il := data.Msg.(Roster)
 		if il.ID == RosterID(uuid.Nil) {
 			log.Lvl2("Received an empty Roster")
@@ -173,7 +170,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
 	if o.Roster(sdaMsg.To.RosterID) == nil {
-		log.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.Address)
+		log.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.Address())
 		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
@@ -227,7 +224,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		log.Lvl4(o.host.Address, "Overlay created new ProtocolInstace msg => ",
+		log.Lvl4(o.host.Address(), "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
@@ -291,9 +288,8 @@ func (o *Overlay) checkPendingSDA(t *Tree) {
 		o.pendingSDAsLock.Lock()
 		var newPending []*ProtocolMsg
 		for _, msg := range o.pendingSDAs {
-			// if this message references t
 			if t.ID.Equals(msg.To.TreeID) {
-				// instantiate it and go
+				// if this message references t, instantiate it and go
 				err := o.TransmitMsg(msg)
 				if err != nil {
 					log.Error("TransmitMsg failed:", err)
@@ -452,7 +448,7 @@ func (o *Overlay) Close() {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
 	for _, tni := range o.instances {
-		log.Lvl4(o.host.Address, "Closing TNI", tni.TokenID())
+		log.Lvl4(o.host.Address(), "Closing TNI", tni.TokenID())
 		o.nodeDelete(tni.Token())
 	}
 }
@@ -575,7 +571,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.ID()] = pi
-	log.Lvlf4("%s registered ProtocolInstance %x", o.host.Address, tok.ID())
+	log.Lvlf4("%s registered ProtocolInstance %x", o.host.Address(), tok.ID())
 	return nil
 }
 

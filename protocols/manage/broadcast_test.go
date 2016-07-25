@@ -12,8 +12,6 @@ import (
 
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
