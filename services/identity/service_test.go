@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	log.Info("Skipping because of bftcosi and skipchain - #482")
+	log.MainTest(m)
+}
+
 func TestService_AddIdentity(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()

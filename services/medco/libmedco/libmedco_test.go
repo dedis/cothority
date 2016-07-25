@@ -1,4 +1,4 @@
-package crypto_test
+package libmedco_test
 
 import (
 	"testing"

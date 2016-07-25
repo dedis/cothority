@@ -38,6 +38,15 @@ test_lint:
 		fi \
 	}
 
+test_multi:
+	for a in $$( seq 10 ); do \
+	  cd services/identity; \
+	  go test -v -race -p=1 -short ./...; \
+	done
+
+test_verbose:
+	go test -v -race -p=1 -short ./...
+
 test_go:
 	go test -race -p=1 -short ./...
 
