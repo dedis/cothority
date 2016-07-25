@@ -23,11 +23,12 @@ import (
 // further analysis.
 type Dispatcher interface {
 	// RegisterProcessor is called by a Processor so it can receive any packet
-	// of type msgType.
+	// of type msgType. If given multiple msgType, the same processor will be
+	// called for each of all the msgType given.
 	// **NOTE** In the current version, if a subequent call RegisterProcessor
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
-	RegisterProcessor(p Processor, msgType network.MessageTypeID)
+	RegisterProcessor(p Processor, msgType ...network.MessageTypeID)
 	// Dispatch will find the right processor to dispatch the packet to. The id
 	// is the identity of the author / sender of the packet.
 	// It can be called for example by the network layer.
@@ -61,8 +62,10 @@ func NewBlockingDispatcher() *BlockingDispatcher {
 }
 
 // RegisterProcessor save the given processor in the dispatcher.
-func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
-	d.procs[msgType] = p
+func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.MessageTypeID) {
+	for _, t := range msgType {
+		d.procs[t] = p
+	}
 }
 
 // Dispatch will directly call the right processor's method Process. It's a

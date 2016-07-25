@@ -63,15 +63,12 @@ func NewOverlay(h *Host) *Overlay {
 		pendingSDAs:        make([]*ProtocolMsg, 0),
 	}
 	// messages going to protocol instances
-	h.RegisterProcessor(o, SDADataMessageID)
-	// requesting a tree
-	h.RegisterProcessor(o, RequestTreeMessageID)
-	// sending back a tree
-	h.RegisterProcessor(o, SendTreeMessageID)
-	// requesting a roster
-	h.RegisterProcessor(o, RequestRosterMessageID)
-	// sending back a roster
-	h.RegisterProcessor(o, SendRosterMessageID)
+	h.RegisterProcessor(o,
+		SDADataMessageID,       // protocol instance's messages
+		RequestTreeMessageID,   // request a tree
+		SendTreeMessageID,      // send a tree back to a request
+		RequestRosterMessageID, // request a roster
+		SendRosterMessageID)    // send a roster back to request
 	return o
 }
 
