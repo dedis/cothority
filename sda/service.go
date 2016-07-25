@@ -32,8 +32,13 @@ type Service interface {
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
-	// ProcessServiceRequest takes a message from another Service
-	ProcessServiceMessage(*network.ServerIdentity, *InterServiceMessage)
+	// Processor makes a Service being able to handle any kind of packets
+	// directly from the network. It is used for inter service communications,
+	// which are mostly single packets with no or little interactions needed. If
+	// a complex logic is used for these messages, it's best to put that logic
+	// into a ProtocolInstance that the Service will launch, since there's nicer
+	// utilities for ProtocolInstance.
+	Processor
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -155,11 +160,15 @@ func (s *serviceFactory) start(name string, c *Context, path string) (Service, e
 // serviceStore is the place where all instantiated services are stored
 // It gives access to :  all the currently running services and is handling the
 // configuration path for them
-type serviceStore struct {
+type serviceManager struct {
 	// the actual services
 	services map[ServiceID]Service
 	// the config paths
 	paths map[ServiceID]string
+	// the sda host
+	host *Host
+	// serviceManager can take registration of Processors
+	*RoutineDispatcher
 }
 
 const configFolder = "config"
@@ -167,7 +176,7 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceStore(h *Host, o *Overlay) *serviceStore {
+func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	// check if we have a config folder
 	if err := os.MkdirAll(configFolder, 0777); err != nil {
 		_, ok := err.(*os.PathError)
@@ -178,6 +187,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
+	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -189,7 +199,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		if err := os.MkdirAll(configName, 0666); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(h, o, id)
+		c := newContext(h, o, id, s)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
@@ -197,29 +207,66 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 		log.Lvl2("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
-		// !! register to the ProtocolFactory !!
-		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
 	log.Lvl3(h.workingAddress, "instantiated all services")
-	return &serviceStore{services, configs}
+
+	// registering messages that services are expecting
+	h.RegisterProcessor(s, RequestID)
+	return s
+}
+
+// Process implements the Processor interface: service manager will relay
+// messages to the right Service.
+func (s *serviceManager) Process(data *network.Packet) {
+	id := data.ServerIdentity
+	switch data.MsgType {
+	case RequestID:
+		r := data.Msg.(ClientRequest)
+		// check if the target service is indeed existing
+		s, ok := s.serviceByID(r.Service)
+		if !ok {
+			log.Error("Received a request for an unknown service", r.Service)
+			// XXX TODO should reply with some generic response =>
+			// 404 Service Unknown
+			return
+		}
+		go s.ProcessClientRequest(id, &r)
+	default:
+		// will launch a go routine for that message
+		s.Dispatch(data)
+	}
+}
+
+// Register the processor to the service manager and tells the host to dispatch
+// this message to the service manager. The service manager will then dispatch
+// the message in a go routine. XXX This is needed because we need to have
+// messages for service dispatched in asyncrhonously regarding the protocols.
+// This behavior with go routine is fine for the moment but for better
+// performance / memory / resilience, it may be changed to a real queuing
+// system later.
+func (s *serviceManager) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+	// delegate message to host so the host will pass the message to ourself
+	s.host.RegisterProcessor(s, msgType)
+	// handle the message ourself (will be launched in a go routine)
+	s.RoutineDispatcher.RegisterProcessor(p, msgType)
 }
 
 // TODO
-func (s *serviceStore) AvailableServices() []string {
+func (s *serviceManager) AvailableServices() []string {
 	panic("not implemented")
 }
 
 // TODO
-func (s *serviceStore) Service(name string) Service {
+func (s *serviceManager) Service(name string) Service {
 	return s.serviceByString(name)
 }
 
 // TODO
-func (s *serviceStore) serviceByString(name string) Service {
+func (s *serviceManager) serviceByString(name string) Service {
 	panic("Not implemented")
 }
 
-func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
+func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
 	var serv Service
 	var ok bool
 	if serv, ok = s.services[id]; !ok {
@@ -241,6 +288,7 @@ type ClientRequest struct {
 }
 
 // RequestID is the type that registered by the network library
+// TODO rename that ClientRequestID
 var RequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is

@@ -96,17 +96,12 @@ func (ds *DummyService) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericC
 	return dp, nil
 }
 
-func (ds *DummyService) ProcessServiceMessage(e *network.ServerIdentity, s *sda.InterServiceMessage) {
-	id, m, err := network.UnmarshalRegisteredType(s.Data, network.DefaultConstructors(network.Suite))
-	if err != nil {
+func (ds *DummyService) Process(packet *network.Packet) {
+	if packet.MsgType != dummyMsgType {
 		ds.link <- false
 		return
 	}
-	if id != dummyMsgType {
-		ds.link <- false
-		return
-	}
-	dms := m.(DummyMsg)
+	dms := packet.Msg.(DummyMsg)
 	if dms.A != 10 {
 		ds.link <- false
 		return
@@ -371,6 +366,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		}
 		s.c = c
 		s.path = path
+		c.RegisterProcessor(s, dummyMsgType)
 		return s
 	})
 	// create two hosts
@@ -389,10 +385,8 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	}
 
 	// create request
-	m, err := sda.CreateServiceMessage("DummyService", &DummyMsg{10})
-	assert.Nil(t, err)
 	log.Lvl1("Sending request to service...")
-	assert.Nil(t, h2.SendRaw(h1.ServerIdentity, m))
+	assert.Nil(t, h2.SendRaw(h1.ServerIdentity, &DummyMsg{10}))
 
 	// wait for the link from the Service on host 1
 	waitOrFatalValue(ds1.link, true, t)
@@ -644,7 +638,7 @@ func (s *simpleService) NewProtocol(tni *sda.TreeNodeInstance, conf *sda.Generic
 	return pi, err
 }
 
-func (s *simpleService) ProcessServiceMessage(e *network.ServerIdentity, r *sda.InterServiceMessage) {
+func (s *simpleService) Process(packet *network.Packet) {
 	return
 }
 

@@ -8,7 +8,7 @@ import (
 // Export some private functions of Host for testing
 
 func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
-	return h.sendSDAData(id, msg)
+	return h.overlay.sendSDAData(id, msg)
 }
 
 func (h *Host) Receive() network.Packet {

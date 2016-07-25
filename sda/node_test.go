@@ -381,7 +381,7 @@ func (c *ServiceChannels) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.Generi
 	return NewProtocolChannels(tn)
 }
 
-func (c *ServiceChannels) ProcessServiceMessage(e *network.ServerIdentity, s *sda.InterServiceMessage) {
+func (c *ServiceChannels) Process(packet *network.Packet) {
 	return
 }
 

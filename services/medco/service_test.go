@@ -18,7 +18,9 @@ const numberAttr = 10
 
 // TestService tests medco complete service execution.
 func TestService(t *testing.T) {
-	t.Skip("Still needs to be debugged.")
+	// Issue with deadlock occuring in the medco protocol
+	// See https://github.com/dedis/cothority/issues/479
+	t.Skip()
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 1)
 	local := sda.NewLocalTest()
