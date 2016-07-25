@@ -18,6 +18,7 @@ import (
 func TestMain(m *testing.M) {
 	// Issue with skipchain service blocking. currently actively being resolved.
 	// see https://github.com/dedis/cothority/pull/483
+	log.Info("Skipping all skipchain tests for now as it randomly fails on master. @ineiti is investigating.")
 	//log.MainTest(m)
 }
 
