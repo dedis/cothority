@@ -22,8 +22,6 @@ var prefix = "localhost:"
 
 // test the ID generation
 func TestTreeId(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -47,8 +45,6 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -64,8 +60,6 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestRosterNew(t *testing.T) {
-	defer log.AfterTest(t)
-
 	adresses := []string{"localhost:1010", "localhost:1012"}
 	pl := genRoster(tSuite, adresses)
 	if len(pl.List) != 2 {
@@ -81,8 +75,6 @@ func TestRosterNew(t *testing.T) {
 
 // Test initialisation of new peer-list from config-file
 func TestInitPeerListFromConfigFile(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(3, 2000)
 	idsList := genRoster(tSuite, names)
 	// write it
@@ -117,7 +109,6 @@ func TestInitPeerListFromConfigFile(t *testing.T) {
 // Test access to tree:
 // - parent
 func TestTreeParent(t *testing.T) {
-	defer log.AfterTest(t)
 	names := genLocalhostPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -130,8 +121,6 @@ func TestTreeParent(t *testing.T) {
 
 // - children
 func TestTreeChildren(t *testing.T) {
-	defer log.AfterTest(t)
-
 	names := genLocalhostPeerNames(2, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -144,9 +133,6 @@ func TestTreeChildren(t *testing.T) {
 
 // Test marshal/unmarshaling of trees
 func TestUnMarshalTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(10, 2000)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
@@ -171,8 +157,6 @@ func TestUnMarshalTree(t *testing.T) {
 }
 
 func TestGetNode(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(10, 2000)
 	for _, tn := range tree.List() {
 		node := tree.Search(tn.ID)
@@ -183,8 +167,6 @@ func TestGetNode(t *testing.T) {
 }
 
 func TestBinaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(7, 2000)
 	root := tree.Root
 	if len(root.Children) != 2 {
@@ -202,8 +184,6 @@ func TestBinaryTree(t *testing.T) {
 }
 
 func TestTreeNodeServerIdentityIndex(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -229,9 +209,6 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 }
 
 func TestNaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalhostPeerNames(13, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateNaryTree(3)
@@ -252,7 +229,6 @@ func TestNaryTree(t *testing.T) {
 		t.Fatal("Tree should be 3-ary")
 	}
 
-	log.TestOutput(testing.Verbose(), 4)
 	names = genLocalhostPeerNames(14, 2000)
 	peerList = genRoster(tSuite, names)
 	tree = peerList.GenerateNaryTree(3)
@@ -272,9 +248,6 @@ func TestNaryTree(t *testing.T) {
 }
 
 func TestBigNaryTree(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := genLocalDiffPeerNames(3, 2000)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
@@ -296,9 +269,6 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	names := []string{"local1:1000", "local1:1001", "local2:1000", "local2:1001"}
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)
@@ -313,8 +283,6 @@ func TestTreeIsColored(t *testing.T) {
 }
 
 func TestBinaryTrees(t *testing.T) {
-	defer log.AfterTest(t)
-
 	tree, _ := genLocalTree(1, 2000)
 	if !tree.IsBinary(tree.Root) {
 		t.Fatal("Tree with 1 node should be binary")
@@ -334,7 +302,6 @@ func TestBinaryTrees(t *testing.T) {
 }
 
 func TestRosterIsUsed(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	port := 2000
 	for hostExp := uint(2); hostExp < 8; hostExp++ {
 		hosts := (1 << hostExp) - 1

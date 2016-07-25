@@ -23,7 +23,6 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
-	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -45,7 +44,6 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
-	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -81,7 +79,6 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
-	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
@@ -118,8 +115,6 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNewNode(t *testing.T) {
-	defer log.AfterTest(t)
-
 	h1, h2 := SetupTwoHosts(t, false)
 	// Add tree + entitylist
 	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
@@ -146,7 +141,6 @@ func TestNewNode(t *testing.T) {
 }
 
 func TestServiceChannels(t *testing.T) {
-	defer log.AfterTest(t)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
@@ -185,8 +179,6 @@ func TestServiceChannels(t *testing.T) {
 }
 
 func TestProtocolHandlers(t *testing.T) {
-	defer log.AfterTest(t)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
@@ -220,8 +212,6 @@ func TestProtocolHandlers(t *testing.T) {
 }
 
 func TestMsgAggregation(t *testing.T) {
-	defer log.AfterTest(t)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
@@ -262,8 +252,6 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	defer log.AfterTest(t)
-
 	testType := network.MessageTypeID(uuid.Nil)
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
@@ -287,8 +275,6 @@ func TestFlags(t *testing.T) {
 }
 
 func TestSendLimitedTree(t *testing.T) {
-	defer log.AfterTest(t)
-
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenBigTree(7, 1, 2, true, true)
 	defer local.CloseAll()
@@ -437,7 +423,6 @@ func (p *ProtocolHandlers) Release() {
 }
 
 func TestBlocking(t *testing.T) {
-	defer log.AfterTest(t)
 	l := sda.NewLocalTest()
 	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()

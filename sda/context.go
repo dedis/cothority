@@ -68,3 +68,8 @@ func (c *Context) ReportStatus() map[string]Status {
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
 }
+
+// String returns the host it's running on
+func (c *Context) String() string {
+	return c.host.ServerIdentity.String()
+}

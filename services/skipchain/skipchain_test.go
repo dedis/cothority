@@ -16,7 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Skipping all skipchain tests for now as it randomly fails on master. @ineiti is investigating.")
+	log.Info("Not working - #482")
 	//log.MainTest(m)
 }
 
@@ -56,6 +56,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, service := makeHELS(local, 5)
+	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot := makeGenesisRoster(service, el)

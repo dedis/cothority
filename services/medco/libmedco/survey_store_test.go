@@ -52,26 +52,24 @@ func TestStoring(t *testing.T) {
 
 	// verifies that one element has been stored
 	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
-		t.Errorf("aggregation error")
-	} else {
-		t.Logf("aggregation OK")
+		log.Fatal("aggregation error")
 	}
+	log.Lvl1("aggregation OK")
 
 	// add a second element with same group ID -> should be aggregated with first one
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect2})
 	storage.InsertClientResponse(ClientResponse{CipherVector{}, testCipherVect1})
-
-	if _, aggr := storage.PollLocallyAggregatedResponses(); !(len(aggr) == 1) {
-		t.Errorf("aggregation error")
-	} else {
-		added := *testCipherVect1.Add(testCipherVect1, testCipherVect2)
-		for i, v := range added {
-			if !reflect.DeepEqual(v, aggr[GroupingKey(DefaultGroup)][i]) {
-				t.Errorf("aggregation error")
-			}
-		}
-		t.Logf("second aggregation OK")
+	_, aggr := storage.PollLocallyAggregatedResponses()
+	if !(len(aggr) == 1) {
+		log.Fatal("aggregation error")
 	}
+	added := *testCipherVect1.Add(testCipherVect1, testCipherVect2)
+	for i, v := range added {
+		if !reflect.DeepEqual(v, aggr[GroupingKey(DefaultGroup)][i]) {
+			log.Fatal("aggregation error")
+		}
+	}
+	log.Lvl1("second aggregation OK")
 
 	// GROUPING
 	storage = NewSurveyStore()
@@ -80,10 +78,9 @@ func TestStoring(t *testing.T) {
 	storage.InsertClientResponse(ClientResponse{testCipherVect2, testCipherVect1})
 
 	if !(len(storage.ClientResponses) == 3) {
-		t.Errorf("insertion error")
-	} else {
-		t.Logf("insertion OK")
+		log.Fatal("insertion error")
 	}
+	log.Lvl1("insertion OK")
 
 	probaGroups := storage.PollProbabilisticGroupingAttributes()
 	// get the indices to use same unique ids for next test steps
@@ -102,27 +99,24 @@ func TestStoring(t *testing.T) {
 
 	// right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
-		t.Errorf("PushDeterministicGroupingAttributes error")
-	} else {
-		t.Logf("PushDeterministicGroupingAttributestion OK")
+		log.Fatal("PushDeterministicGroupingAttributes error")
 	}
+	log.Lvl1("PushDeterministicGroupingAttributestion OK")
 
 	storage.PushCothorityAggregatedGroups(storage.LocGroupingGroups, storage.LocGroupingAggregating)
 
 	// right size would mean right operations since aggregation has already been verified
 	if !(len(storage.LocGroupingAggregating) == 2) {
-		t.Errorf("PushCothorityAggregatedGroups error")
-	} else {
-		t.Logf("PushCothorityAggregatedGroups OK")
+		log.Fatal("PushCothorityAggregatedGroups error")
 	}
+	log.Lvl1("PushCothorityAggregatedGroups OK")
 
 	groupedDetAttr := storage.PollCothorityAggregatedGroupsID()
 	aggrAttr := storage.PollCothorityAggregatedGroupsAttr()
 	if !(len(groupedDetAttr) == 2) {
-		t.Errorf("PollDeterministicGroupingAttributes error")
-	} else {
-		t.Logf("PollDeterministicGroupingAttributes OK")
+		log.Fatal("PollDeterministicGroupingAttributes error")
 	}
+	log.Lvl1("PollDeterministicGroupingAttributes OK")
 
 	var indexes1 []TempID
 	for i, v := range groupedDetAttr {
@@ -137,10 +131,9 @@ func TestStoring(t *testing.T) {
 	storage.PushQuerierKeyEncryptedData(reencrGroupAttr, aggrAttr)
 
 	if !(len(storage.PollDeliverableResults()) == 2) {
-		t.Errorf("PushQuerierKeyEncryptedGroupingAttributes error")
-	} else {
-		t.Logf("PushQuerierKeyEncryptedGroupingAttributes OK")
+		log.Fatal("PushQuerierKeyEncryptedGroupingAttributes error")
 	}
+	log.Lvl1("PushQuerierKeyEncryptedGroupingAttributes OK")
 
 	log.Lvl1("... Done")
 }
