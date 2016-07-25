@@ -33,6 +33,12 @@ type Router interface {
 	ListenAndBind()
 	StartProcessMessages()
 	Connections() map[network.ServerIdentityID]network.SecureConn
+	AbortConnections() error
+	CloseConnections() error
+	RegisterConnection(e *network.ServerIdentity, c network.SecureConn)
+	Connection(e *network.ServerIdentity) network.SecureConn
+	Receive() network.Packet
+	Listen()
 }
 
 type TcpRouter struct {
@@ -65,12 +71,14 @@ type TcpRouter struct {
 
 func NewTcpRouter(e *network.ServerIdentity, pkey abstract.Scalar) *TcpRouter {
 	return &TcpRouter{
-		Dispatcher:     NewBlockingDispatcher(),
-		workingAddress: e.First(),
-		connections:    make(map[network.ServerIdentityID]network.SecureConn),
-		host:           network.NewSecureTCPHost(pkey, e),
-		suite:          network.Suite,
-		serverIdentity: e,
+		Dispatcher:          NewBlockingDispatcher(),
+		workingAddress:      e.First(),
+		connections:         make(map[network.ServerIdentityID]network.SecureConn),
+		host:                network.NewSecureTCPHost(pkey, e),
+		suite:               network.Suite,
+		serverIdentity:      e,
+		ProcessMessagesQuit: make(chan bool),
+		networkChan:         make(chan network.Packet, 1),
 	}
 }
 
@@ -367,4 +375,33 @@ func (t *TcpRouter) GetStatus() Status {
 	m["Packets_Received"] = strconv.FormatUint(rx, 10)
 	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
 	return m
+}
+
+// XXX TODO EXPORTED FUNCTION TO BE REMOVED !
+func (t *TcpRouter) AbortConnections() error {
+	t.closeConnections()
+	close(t.ProcessMessagesQuit)
+	return t.host.Close()
+}
+
+func (t *TcpRouter) CloseConnections() error {
+	return t.closeConnections()
+}
+func (t *TcpRouter) RegisterConnection(e *network.ServerIdentity, c network.SecureConn) {
+	t.networkLock.Lock()
+	defer t.networkLock.Unlock()
+	t.connections[e.ID] = c
+}
+
+func (t *TcpRouter) Connection(e *network.ServerIdentity) network.SecureConn {
+	t.networkLock.RLock()
+	defer t.networkLock.RUnlock()
+	c, _ := t.connections[e.ID]
+	return c
+}
+
+func (t *TcpRouter) Receive() network.Packet {
+	data := <-t.networkChan
+	log.Lvl5("Got message", data)
+	return data
 }

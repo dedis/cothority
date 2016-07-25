@@ -38,26 +38,3 @@ func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
 	tni, ok := o.instances[tok.ID()]
 	return tni, ok
 }
-
-func (h *Host) AbortConnections() error {
-	h.closeConnections()
-	close(h.ProcessMessagesQuit)
-	return h.host.Close()
-}
-
-func (h *Host) CloseConnections() error {
-	return h.closeConnections()
-}
-
-func (h *Host) RegisterConnection(e *network.ServerIdentity, c network.SecureConn) {
-	h.networkLock.Lock()
-	defer h.networkLock.Unlock()
-	h.connections[e.ID] = c
-}
-
-func (h *Host) Connection(e *network.ServerIdentity) network.SecureConn {
-	h.networkLock.RLock()
-	defer h.networkLock.RUnlock()
-	c, _ := h.connections[e.ID]
-	return c
-}
