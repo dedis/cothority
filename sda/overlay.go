@@ -84,8 +84,8 @@ func (o *Overlay) Process(data *network.Packet) {
 			log.Error("ProcessSDAMessage returned:", err)
 		}
 
-	// A host has sent us a request to get a tree definition
 	case RequestTreeMessageID:
+		// A host has sent us a request to get a tree definition
 		tid := data.Msg.(RequestTree).TreeID
 		tree := o.Tree(tid)
 		var err error
@@ -100,8 +100,8 @@ func (o *Overlay) Process(data *network.Packet) {
 		if err != nil {
 			log.Error("Couldn't send tree:", err)
 		}
-		// A Host has replied to our request of a tree
 	case SendTreeMessageID:
+		// A Host has replied to our request of a tree
 		tm := data.Msg.(TreeMarshal)
 		if tm.TreeID == TreeID(uuid.Nil) {
 			log.Error("Received an empty Tree")
@@ -129,8 +129,8 @@ func (o *Overlay) Process(data *network.Packet) {
 		log.Lvl4("Received new tree")
 		o.RegisterTree(tree)
 		o.checkPendingSDA(tree)
-		// Some host requested an Roster
 	case RequestRosterMessageID:
+		// Some host requested an Roster
 		id := data.Msg.(RequestRoster).RosterID
 		el := o.Roster(id)
 		var err error
@@ -146,8 +146,8 @@ func (o *Overlay) Process(data *network.Packet) {
 				err)
 			return
 		}
-		// Host replied to our request of entitylist
 	case SendRosterMessageID:
+		// Host replied to our request of entitylist
 		il := data.Msg.(Roster)
 		if il.ID == RosterID(uuid.Nil) {
 			log.Lvl2("Received an empty Roster")
@@ -288,9 +288,8 @@ func (o *Overlay) checkPendingSDA(t *Tree) {
 		o.pendingSDAsLock.Lock()
 		var newPending []*ProtocolMsg
 		for _, msg := range o.pendingSDAs {
-			// if this message references t
 			if t.ID.Equals(msg.To.TreeID) {
-				// instantiate it and go
+				// if this message references t, instantiate it and go
 				err := o.TransmitMsg(msg)
 				if err != nil {
 					log.Error("TransmitMsg failed:", err)

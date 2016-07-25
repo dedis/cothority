@@ -16,16 +16,16 @@ import (
 // BlockingDispatcher is implemented, which is a blocking dispatcher.
 // Later, one can easily imagine to have a dispatcher with one worker in a
 // goroutine or a fully fledged producer/consumers pattern in go routines.
-// Each Processor that want to receive all messages of a specific
-// type must register them self to the dispatcher using `RegisterProcessor()`.
-// The network layer must call `Dispatch()` each time it received a message, so
+// Each Processor that wants to receive all messages of a specific
+// type must register itself to the dispatcher using `RegisterProcessor()`.
+// The network layer must call `Dispatch()` each time it receives a message, so
 // the dispatcher is able to dispatch correctly to the right Processor for
 // further analysis.
 type Dispatcher interface {
-	// RegisterProcessor is called by a Processor so it can receive any packet
+	// RegisterProcessor is called by a Processor so it can receive all packets
 	// of type msgType. If given multiple msgType, the same processor will be
 	// called for each of all the msgType given.
-	// **NOTE** In the current version, if a subequent call RegisterProcessor
+	// **NOTE** In the current version, if a subequent call to RegisterProcessor
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
 	RegisterProcessor(p Processor, msgType ...network.MessageTypeID)
@@ -41,27 +41,26 @@ type Dispatcher interface {
 // A processor must register itself to a Dispatcher so the Dispatcher will
 // dispatch every messages to the Processor asked for.
 type Processor interface {
-	// Process takes a ServerIdentity as the sender identity and the message
-	// sent.
+	// Process takes a received network.Packet.
 	Process(packet *network.Packet)
 }
 
 // BlockingDispatcher is a Dispatcher that simply calls `p.Process()` on a
 // processor p each time it receives a message with `Dispatch`. It does *not*
 // launch a go routine, or put the message in a queue, etc.
-// It can be re-uswored for more complex dispatcher.
+// It can be re-used for more complex dispatcher.
 type BlockingDispatcher struct {
 	procs map[network.MessageTypeID]Processor
 }
 
-// NewBlockingDispatcher will return a freshly initialized BlockingDispatcher
+// NewBlockingDispatcher will return a freshly initialized BlockingDispatcher.
 func NewBlockingDispatcher() *BlockingDispatcher {
 	return &BlockingDispatcher{
 		procs: make(map[network.MessageTypeID]Processor),
 	}
 }
 
-// RegisterProcessor save the given processor in the dispatcher.
+// RegisterProcessor saves the given processor in the dispatcher.
 func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.MessageTypeID) {
 	for _, t := range msgType {
 		d.procs[t] = p
@@ -96,8 +95,8 @@ func NewRoutineDispatcher() *RoutineDispatcher {
 // Dispatch implements the Dispatcher interface. It will give the packet to the
 // right Processor in a go routine.
 func (d *RoutineDispatcher) Dispatch(packet *network.Packet) error {
-	var p Processor
-	if p = d.procs[packet.MsgType]; p == nil {
+	var p = d.procs[packet.MsgType]
+	if p == nil {
 		return errors.New("No Processor attached to this message type.")
 	}
 	go p.Process(packet)
@@ -119,11 +118,10 @@ type ServiceProcessor struct {
 
 // NewServiceProcessor initializes your ServiceProcessor.
 func NewServiceProcessor(c *Context) *ServiceProcessor {
-	s := &ServiceProcessor{
+	return &ServiceProcessor{
 		functions: make(map[network.MessageTypeID]interface{}),
 		Context:   c,
 	}
-	return s
 }
 
 // RegisterMessage puts a new message in the message-handler
@@ -166,7 +164,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	return nil
 }
 
-// Process implements the Processor interface and dispatch ClientRequest message
+// Process implements the Processor interface and dispatches ClientRequest message
 // and InterServiceMessage
 func (p *ServiceProcessor) Process(packet *network.Packet) {
 	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)

@@ -24,6 +24,12 @@ func init() {
 }
 
 // Service is a generic interface to define any type of services.
+// A Service has multiple roles:
+// * Processing sda-external client requests with ProcessClientRequests
+// * Handling sda-external information to ProtocolInstances created with
+//  	NewProtocol
+// * Handling any kind of messages between Services between different hosts with
+//   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
 	// ProcessRequest is the function that will be called when a external client
@@ -167,7 +173,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	host *Host
-	// serviceManager can take registration of Processors
+	// the dispather can take registration of Processors
 	Dispatcher
 }
 
@@ -211,7 +217,8 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	log.Lvl3(h.workingAddress, "instantiated all services")
 
 	// registering messages that services are expecting
-	h.RegisterProcessor(s, RequestID)
+	// TODO
+	h.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
@@ -220,7 +227,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 func (s *serviceManager) Process(data *network.Packet) {
 	id := data.ServerIdentity
 	switch data.MsgType {
-	case RequestID:
+	case ClientRequestID:
 		r := data.Msg.(ClientRequest)
 		// check if the target service is indeed existing
 		s, ok := s.serviceByID(r.Service)
@@ -237,7 +244,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 	}
 }
 
-// Register the processor to the service manager and tells the host to dispatch
+// RegisterProcessor the processor to the service manager and tells the host to dispatch
 // this message to the service manager. The service manager will then dispatch
 // the message in a go routine. XXX This is needed because we need to have
 // messages for service dispatched in asyncrhonously regarding the protocols.
@@ -256,7 +263,8 @@ func (s *serviceManager) AvailableServices() []string {
 	panic("not implemented")
 }
 
-// TODO
+// Service returns the Service implementation being registered to this name
+// TODO use serviceByString not implemented
 func (s *serviceManager) Service(name string) Service {
 	return s.serviceByString(name)
 }
@@ -287,9 +295,8 @@ type ClientRequest struct {
 	Data []byte
 }
 
-// RequestID is the type that registered by the network library
-// TODO rename that ClientRequestID
-var RequestID = network.RegisterMessageType(ClientRequest{})
+// ClientRequestID is the type that registered by the network library
+var ClientRequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
@@ -336,16 +343,12 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
-/*
-A simple client structure to be used when wanting to connect to services. It
-holds the private and public key and allows to connect to a service through
-the network.
-The error-handling is done using the ErrorRet structure which can be returned
-in place of the standard reply. The Client.Send method will catch that and return
- the appropriate error.
-*/
-
-// Client for a service
+// Client is a simple client structure to be used when wanting to connect to services. It
+// holds the private and public key and allows to connect to a service through
+// the network.
+// The error-handling is done using the ErrorRet structure which can be returned
+// in place of the standard reply. The Client.Send method will catch that and return
+// the appropriate error.
 type Client struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID
