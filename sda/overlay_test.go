@@ -3,7 +3,6 @@ package sda
 import (
 	"testing"
 
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
 
@@ -27,9 +26,6 @@ func (po *ProtocolOverlay) Release() {
 }
 
 func TestOverlayDone(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	// setup
 	h1 := NewLocalHost(2000)
 	defer h1.Close()

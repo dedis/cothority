@@ -3,7 +3,7 @@ install:
 	export BRANCH=$$(if [ "$$TRAVIS_PULL_REQUEST" == "false" ]; then echo $$TRAVIS_BRANCH; else echo `curl -s $$PR | jq -r .head.ref`; fi); \
 	echo "TRAVIS_BRANCH=$$TRAVIS_BRANCH, PR=$$PR, BRANCH=$$BRANCH"; \
 	pattern="refactor_"; \
-	if [[ $$BRANCH =~ $$pattern ]]; then \
+	if [[ "$$BRANCH" =~ "$$pattern" ]]; then \
 		repo=github.com/dedis/cosi; \
 		go get $$repo; \
 		cd $$GOPATH/src/$$repo; \
@@ -14,7 +14,7 @@ install:
 
 test_fmt:
 	@echo Checking correct formatting of files
-	@{ \
+	{ \
 		files=$$( go fmt ./... ); \
 		if [ -n "$$files" ]; then \
 		echo "Files not properly formatted: $$files"; \
@@ -27,7 +27,7 @@ test_fmt:
 
 test_lint:
 	@echo Checking linting of files
-	@{ \
+	{ \
 		go get github.com/golang/lint/golint; \
 		exclude="protocols/byzcoin|_test.go"; \
 		lintfiles=$$( golint ./... | egrep -v "($$exclude)" ); \
@@ -37,6 +37,15 @@ test_lint:
 		exit 1; \
 		fi \
 	}
+
+test_multi:
+	for a in $$( seq 10 ); do \
+	  cd services/identity; \
+	  go test -v -race -p=1 -short ./...; \
+	done
+
+test_verbose:
+	go test -v -race -p=1 -short ./...
 
 test_go:
 	go test -race -p=1 -short ./...

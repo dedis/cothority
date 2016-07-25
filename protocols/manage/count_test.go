@@ -12,8 +12,6 @@ import (
 
 // Tests a 2-node system
 func TestClose(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)

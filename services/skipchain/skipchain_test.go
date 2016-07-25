@@ -16,10 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// Issue with skipchain service not passing travis
-	// actively being resolved
-	// see https://github.com/dedis/cothority/pull/483
-	// log.MainTest(m)
+	log.Info("Skipping all skipchain tests for now as it randomly fails on master. https://github.com/dedis/cothority/pull/483")
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -58,6 +55,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, service := makeHELS(local, 5)
+	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot := makeGenesisRoster(service, el)

@@ -14,12 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
-
 func TestIdentity_ConfigNewCheck(t *testing.T) {
-	t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
@@ -68,7 +63,6 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 }
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
-	t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
@@ -89,7 +83,6 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 }
 
 func TestIdentity_CreateIdentity(t *testing.T) {
-	//t.Skip()
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(3, true, true, true)
 	defer l.CloseAll()

@@ -24,6 +24,12 @@ func init() {
 }
 
 // Service is a generic interface to define any type of services.
+// A Service has multiple roles:
+// * Processing sda-external client requests with ProcessClientRequests
+// * Handling sda-external information to ProtocolInstances created with
+//  	NewProtocol
+// * Handling any kind of messages between Services between different hosts with
+//   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
 	// ProcessRequest is the function that will be called when a external client
@@ -77,6 +83,7 @@ type serviceFactory struct {
 	translations map[string]ServiceID
 	// Inverse mapping of ServiceId => string
 	inverseTr map[ServiceID]string
+	mutex     sync.Mutex
 }
 
 // ServiceFactory is the global service factory to instantiate Services
@@ -90,6 +97,7 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
+	s.mutex.Lock()
 	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
 		log.Lvl1("RegisterService():", name)
@@ -97,6 +105,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	s.constructors[id] = fn
 	s.translations[name] = id
 	s.inverseTr[id] = name
+	s.mutex.Unlock()
 }
 
 // RegisterNewService is a wrapper around service factory
@@ -106,6 +115,8 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
 	for id := range s.constructors {
 		ids = append(ids, id)
@@ -115,6 +126,8 @@ func (s *serviceFactory) registeredServicesID() []ServiceID {
 
 // RegisteredServicesByName returns all the names of the services registered
 func (s *serviceFactory) RegisteredServicesName() []string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var names = make([]string, 0, len(s.translations))
 	for n := range s.translations {
 		names = append(names, n)
@@ -124,6 +137,8 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	id, ok := s.translations[name]
 	if !ok {
 		return NilServiceID
@@ -133,6 +148,8 @@ func (s *serviceFactory) ServiceID(name string) ServiceID {
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var name string
 	var ok bool
 	if name, ok = s.inverseTr[id]; !ok {
@@ -143,17 +160,21 @@ func (s *serviceFactory) Name(id ServiceID) string {
 
 // start launches a new service
 func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
+	s.mutex.Lock()
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {
+		s.mutex.Unlock()
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
 	if fn, ok = s.constructors[id]; !ok {
+		s.mutex.Unlock()
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
+	s.mutex.Unlock()
 	serv := fn(c, path)
-	log.Lvl2("Instantiated service", name)
+	log.Lvl3("Instantiated service", name)
 	return serv, nil
 }
 
@@ -167,7 +188,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	host *Host
-	// serviceManager can take registration of Processors
+	// the dispather can take registration of Processors
 	Dispatcher
 }
 
@@ -178,7 +199,7 @@ const configFolder = "config"
 // ```configFolder / *nameOfService*```
 func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	// check if we have a config folder
-	if err := os.MkdirAll(configFolder, 0777); err != nil {
+	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -196,7 +217,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
-		if err := os.MkdirAll(configName, 0666); err != nil {
+		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
 		c := newContext(h, o, id, s)
@@ -204,14 +225,15 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
-		log.Lvl2("Started Service", name, " (config in", configName, ")")
+		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
 	}
 	log.Lvl3(h.workingAddress, "instantiated all services")
 
 	// registering messages that services are expecting
-	h.RegisterProcessor(s, RequestID)
+	// TODO
+	h.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
@@ -220,7 +242,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 func (s *serviceManager) Process(data *network.Packet) {
 	id := data.ServerIdentity
 	switch data.MsgType {
-	case RequestID:
+	case ClientRequestID:
 		r := data.Msg.(ClientRequest)
 		// check if the target service is indeed existing
 		s, ok := s.serviceByID(r.Service)
@@ -237,7 +259,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 	}
 }
 
-// Register the processor to the service manager and tells the host to dispatch
+// RegisterProcessor the processor to the service manager and tells the host to dispatch
 // this message to the service manager. The service manager will then dispatch
 // the message in a go routine. XXX This is needed because we need to have
 // messages for service dispatched in asyncrhonously regarding the protocols.
@@ -256,7 +278,8 @@ func (s *serviceManager) AvailableServices() []string {
 	panic("not implemented")
 }
 
-// TODO
+// Service returns the Service implementation being registered to this name
+// TODO use serviceByString not implemented
 func (s *serviceManager) Service(name string) Service {
 	return s.serviceByString(name)
 }
@@ -287,9 +310,8 @@ type ClientRequest struct {
 	Data []byte
 }
 
-// RequestID is the type that registered by the network library
-// TODO rename that ClientRequestID
-var RequestID = network.RegisterMessageType(ClientRequest{})
+// ClientRequestID is the type that registered by the network library
+var ClientRequestID = network.RegisterMessageType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
@@ -336,16 +358,12 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
-/*
-A simple client structure to be used when wanting to connect to services. It
-holds the private and public key and allows to connect to a service through
-the network.
-The error-handling is done using the ErrorRet structure which can be returned
-in place of the standard reply. The Client.Send method will catch that and return
- the appropriate error.
-*/
-
-// Client for a service
+// Client is a simple client structure to be used when wanting to connect to services. It
+// holds the private and public key and allows to connect to a service through
+// the network.
+// The error-handling is done using the ErrorRet structure which can be returned
+// in place of the standard reply. The Client.Send method will catch that and return
+// the appropriate error.
 type Client struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID

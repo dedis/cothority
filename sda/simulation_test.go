@@ -12,8 +12,6 @@ import (
 )
 
 func TestSimulationBF(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -46,8 +44,6 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestBigTree(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	for i := uint(12); i < 15; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
 		if err != nil {
@@ -57,8 +53,6 @@ func TestBigTree(t *testing.T) {
 }
 
 func TestLoadSave(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -77,9 +71,6 @@ func TestLoadSave(t *testing.T) {
 }
 
 func TestMultipleInstances(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)

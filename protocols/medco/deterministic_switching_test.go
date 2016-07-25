@@ -13,12 +13,10 @@ import (
 )
 
 func TestDeterministicSwitching(t *testing.T) {
-	// Issue with deadlock occurences in the medco protocol
-	// see https://github.com/dedis/cothority/issues/479
-	t.Skip()
+	t.Skip("Skipping due to error in medco: https://github.com/dedis/cothority/issues/479")
+
 	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
-	log.TestOutput(testing.Verbose(), 1)
 	_, entityList, tree := local.GenTree(5, false, true, true)
 	sda.ProtocolRegisterName("DeterministicSwitchingTest", NewDeterministicSwitchingTest)
 	defer local.CloseAll()

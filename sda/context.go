@@ -78,3 +78,8 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
+
+// String returns the host it's running on
+func (c *Context) String() string {
+	return c.host.ServerIdentity.String()
+}

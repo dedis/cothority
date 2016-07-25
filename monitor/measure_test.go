@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/log"
 )
 
 type DummyCounterIO struct {
@@ -24,7 +22,6 @@ func (dm *DummyCounterIO) Tx() uint64 {
 }
 
 func TestCounterIOMeasureRecord(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	mon, _ := setupMonitor(t)
 	dm := &DummyCounterIO{0, 0}
 	// create the counter measure
