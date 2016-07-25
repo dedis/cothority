@@ -552,10 +552,10 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		nm, err = sc.TCPConn.Receive(context.TODO())
 		switch {
 		case err == nil:
-			log.LLvl4("Going on")
+			log.LLvl4(sc, "Going on")
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.LLvl4("EOF while receiving identity: ", i*100)
+			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(100 * time.Millisecond)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
