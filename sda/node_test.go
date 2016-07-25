@@ -272,33 +272,6 @@ func TestFlags(t *testing.T) {
 	}
 }
 
-// Test commented out because of cycle import. if we really
-// neet/want this test,i.e. it actually test something different
-// than all of the other tests, then we need to code a quick local
-// count protocol.
-/*func TestSendLimitedTree(t *testing.T) {*/
-//defer log.AfterTest(t)
-
-//local := NewLocalTest()
-//_, _, tree := local.GenBigTree(7, 1, 2, true, true)
-//defer local.CloseAll()
-
-//log.Lvl3(tree.Dump())
-
-//root, err := local.StartProtocol("Count", tree)
-//if err != nil {
-//t.Fatal("Couldn't create new node:", err)
-//}
-//// XXX using manage here ... maybe theses are the kind of protocol /
-//// services we want to embed directly into SDA instead of exporting them and
-//// then importing them again in sda_test. If we really need them ...
-//protoCount := root.(*manage.ProtocolCount)
-//count := <-protoCount.Count
-//if count != 7 {
-//t.Fatal("Didn't get a count of 7:", count)
-//}
-/*}*/
-
 // Protocol/service Channels test code:
 type NodeTestMsg struct {
 	I int
