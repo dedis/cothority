@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strconv"
 	"sync"
@@ -67,7 +68,7 @@ type Localhost struct {
 // Configure various internal variables
 func (d *Localhost) Configure(pc *Config) {
 	pwd, _ := os.Getwd()
-	d.runDir = pwd + "/platform/localhost"
+	d.runDir = path.Join(pwd, "platform/localhost")
 	d.localDir = pwd
 	d.debug = pc.Debug
 	d.running = false
@@ -83,7 +84,10 @@ func (d *Localhost) Configure(pc *Config) {
 // Build makes sure that the binary is available for our local platform
 func (d *Localhost) Build(build string, arg ...string) error {
 	src := "./cothority"
-	dst := d.runDir + "/" + d.Simulation
+	dst := path.Join(d.runDir, d.Simulation)
+	if runtime.GOOS == "windows" {
+		dst += ".exe"
+	}
 	start := time.Now()
 	// build for the local machine
 	res, err := Build(src, dst,
@@ -101,7 +105,7 @@ func (d *Localhost) Build(build string, arg ...string) error {
 // Cleanup kills all running cothority-binaryes
 func (d *Localhost) Cleanup() error {
 	log.Lvl3("Cleaning up")
-	ex := d.runDir + "/" + d.Simulation
+	ex := path.Join(d.runDir, d.Simulation)
 	err := exec.Command("pkill", "-f", ex).Run()
 	if err != nil {
 		log.Lvl3("Error stopping localhost", err)
@@ -165,7 +169,8 @@ func (d *Localhost) Start(args ...string) error {
 		return err
 	}
 	log.Lvl4("Localhost: chdir into", d.runDir)
-	ex := d.runDir + "/" + d.Simulation
+	ex := path.Join(d.runDir, d.Simulation)
+
 	d.running = true
 	log.Lvl1("Starting", d.servers, "applications of", ex)
 	for index := 0; index < d.servers; index++ {

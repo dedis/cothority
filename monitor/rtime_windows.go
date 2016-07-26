@@ -3,7 +3,7 @@
 package monitor
 
 import (
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"syscall"
 )
 
@@ -12,7 +12,7 @@ func getRTime() (tSys, tUsr float64) {
 	var creationTime, exitTime, kernelTime, userTime syscall.Filetime
 	hProcess, _ := syscall.GetCurrentProcess()
 	if err := syscall.GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime); err != nil {
-		dbg.Error("Couldn't get rusage time:", err)
+		log.Error("Couldn't get rusage time:", err)
 		return -1, -1
 	}
 
