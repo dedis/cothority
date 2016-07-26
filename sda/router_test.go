@@ -238,12 +238,10 @@ func sendrcv_proc(from, to *TcpRouter) error {
 		err = nil
 	case <-time.After(1 * time.Second):
 		err = errors.New("timeout")
-
 	}
 	// delete the processing
 	to.RegisterProcessor(nil, statusMsgID)
 	return err
-
 }
 
 type statusMessage struct {
