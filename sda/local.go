@@ -259,6 +259,24 @@ func NewLocalHost(port int) *Host {
 	return NewHost(id, priv)
 }
 
+// NewTestHost returns a new host using a LocalRouter (channels) to communicate.
+// It does not open any ports nor connect to anything on the network.
+func NewTestHost(port int) *Host {
+	h := NewLocalHost(port)
+	localRouter := NewLocalRouter(h.ServerIdentity)
+	h.Router = localRouter
+	return h
+}
+
+func GenTestHost(n int) []*Host {
+	hosts := make([]*Host, n)
+	for i := 0; i < n; i++ {
+		host := NewTestHost(2000 + i*10)
+		hosts[i] = host
+	}
+	return hosts
+}
+
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
@@ -278,14 +296,14 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 		if connect && root != host {
 			log.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
 				root.ServerIdentity.First(), root.ServerIdentity.ID)
-			if _, err := host.Connect(root.ServerIdentity); err != nil {
+			if _, err := host.Router.(*TcpRouter).Connect(root.ServerIdentity); err != nil {
 				log.Fatal(host.ServerIdentity.Addresses, "Could not connect hosts", root.ServerIdentity.Addresses, err)
 			}
 			// Wait for connection accepted in root
 			connected := false
 			for !connected {
 				time.Sleep(time.Millisecond * 10)
-				for id := range root.Connections() {
+				for id := range root.Router.(*TcpRouter).Connections() {
 					if id.Equal(host.ServerIdentity.ID) {
 						connected = true
 						break

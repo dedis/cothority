@@ -148,10 +148,6 @@ func TestServiceProcessRequest(t *testing.T) {
 	// fake a client
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
-	log.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.ServerIdentity); err != nil {
-		t.Fatal(err)
-	}
 	log.Lvl1("Sending request to service...")
 	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
@@ -198,10 +194,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// fake a client
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
-	log.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.ServerIdentity); err != nil {
-		t.Fatal(err)
-	}
 	log.Lvl1("Sending request to service...")
 	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
@@ -258,10 +250,6 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	re := &ClientRequest{
 		Service: ServiceFactory.ServiceID("DummyService"),
 		Data:    b,
-	}
-	log.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(host.ServerIdentity); err != nil {
-		t.Fatal(err)
 	}
 	log.Lvl1("Sending request to service...")
 	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
@@ -330,10 +318,6 @@ func TestServiceNewProtocol(t *testing.T) {
 	// fake a client
 	client := NewLocalHost(2010)
 	defer client.Close()
-	log.Lvl1("Client connecting to host")
-	if _, err := client.Connect(host.ServerIdentity); err != nil {
-		t.Fatal(err)
-	}
 	log.Lvl1("Sending request to service...")
 	if err := client.SendRaw(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
@@ -376,13 +360,6 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	h1.StartProcessMessages()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
-
-	// connect themselves
-	log.Lvl1("Client connecting to host")
-	if _, err := h2.Connect(h1.ServerIdentity); err != nil {
-		t.Fatal(err)
-	}
-
 	// create request
 	log.Lvl1("Sending request to service...")
 	assert.Nil(t, h2.SendRaw(h1.ServerIdentity, &DummyMsg{10}))

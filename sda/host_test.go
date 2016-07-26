@@ -26,10 +26,10 @@ func TestHostNew(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
 	time.Sleep(time.Second)
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewMockTcpRouter(2000)
+	h2 := NewMockTcpRouter(2001)
 	h1.ListenAndBind()
-	_, err := h2.Connect(h1.ServerIdentity)
+	_, err := h2.Connect(h1.serverIdentity)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
 	}
@@ -70,16 +70,19 @@ func TestHostClose2(t *testing.T) {
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
 func TestHostMessaging(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
+	h1, h2 := TwoTcpHosts()
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
+	proc := &simpleMessageProc{t, make(chan SimpleMessage)}
+	h1.RegisterProcessor(proc, SimpleMessageType)
+	h2.RegisterProcessor(proc, SimpleMessageType)
+
 	msgSimple := &SimpleMessage{3}
 	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
-	msg := h2.Receive()
-	decoded := testMessageSimple(t, msg)
+	decoded := <-proc.relay
 	if decoded.I != 3 {
 		t.Fatal("Received message from h2 -> h1 is wrong")
 	}
@@ -99,42 +102,24 @@ func TestHostMessaging(t *testing.T) {
 
 // Test sending data back and forth using the sendSDAData
 func TestHostSendMsgDuplex(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
+	h1, h2 := TwoTcpHosts()
+	proc := &simpleMessageProc{t, make(chan SimpleMessage)}
+	h1.RegisterProcessor(proc, SimpleMessageType)
+	h2.RegisterProcessor(proc, SimpleMessageType)
+
 	msgSimple := &SimpleMessage{5}
 	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
-	msg := h2.Receive()
+	msg := <-proc.relay
 	log.Lvl2("Received msg h1 -> h2", msg)
 
 	err = h2.SendRaw(h1.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
-	msg = h1.Receive()
-	log.Lvl2("Received msg h2 -> h1", msg)
-
-	h1.Close()
-	h2.Close()
-}
-
-// Test sending data back and forth using the SendTo
-func TestHostSendDuplex(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
-	msgSimple := &SimpleMessage{5}
-	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
-	if err != nil {
-		t.Fatal("Couldn't send message from h1 to h2", err)
-	}
-	msg := h2.Receive()
-	log.Lvl2("Received msg h1 -> h2", msg)
-
-	err = h2.SendRaw(h1.ServerIdentity, msgSimple)
-	if err != nil {
-		t.Fatal("Couldn't send message from h2 to h1", err)
-	}
-	msg = h1.Receive()
+	msg = <-proc.relay
 	log.Lvl2("Received msg h2 -> h1", msg)
 
 	h1.Close()
@@ -388,6 +373,17 @@ func SetupTwoHosts(t *testing.T, h2process bool) (*Host, *Host) {
 	return hosts[0], hosts[1]
 }
 
+func TwoTcpHosts() (*Host, *Host) {
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
+	h1.ListenAndBind()
+	h2.ListenAndBind()
+	h1.StartProcessMessages()
+	h2.StartProcessMessages()
+
+	return h1, h2
+}
+
 // Test complete parsing of new incoming packet
 // - Test if it is SDAMessage
 // - reject if unknown ProtocolID
@@ -401,9 +397,15 @@ type SimpleMessage struct {
 
 var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
 
-func testMessageSimple(t *testing.T, msg network.Packet) SimpleMessage {
-	if msg.MsgType != SimpleMessageType {
-		t.Fatal("Received non SimpleMessage type")
+type simpleMessageProc struct {
+	t     *testing.T
+	relay chan SimpleMessage
+}
+
+func (smp *simpleMessageProc) Process(p *network.Packet) {
+	if p.MsgType != SimpleMessageType {
+		smp.t.Fatal("Wrong message")
 	}
-	return msg.Msg.(SimpleMessage)
+	sm := p.Msg.(SimpleMessage)
+	smp.relay <- sm
 }
