@@ -34,7 +34,6 @@ type Router interface {
 	Connect(e *network.ServerIdentity) (network.SecureConn, error)
 	Connections() map[network.ServerIdentityID]network.SecureConn
 	Connection(e *network.ServerIdentity) network.SecureConn
-	AbortConnections() error
 	CloseConnections() error
 	RegisterConnection(e *network.ServerIdentity, c network.SecureConn)
 	Receive() network.Packet
@@ -193,7 +192,6 @@ func (t *TcpRouter) Close() error {
 	if t.processMessagesStarted {
 		// Tell ProcessMessages to quit
 		close(t.ProcessMessagesQuit)
-		close(t.networkChan)
 	}
 	if err := t.closeConnections(); err != nil {
 		return err
@@ -239,8 +237,11 @@ func (t *TcpRouter) closeConnection(c network.SecureConn) error {
 func (t *TcpRouter) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
+	log.Lvl5(t.workingAddress, "Before StartProcessMessages.Lock()")
 	t.networkLock.Lock()
+	log.Lvl5(t.workingAddress, "After StartProcessMessages.Lock()")
 	t.processMessagesStarted = true
+	t.ProcessMessagesQuit = make(chan bool)
 	go t.processMessages()
 }
 
@@ -254,11 +255,13 @@ func (t *TcpRouter) StartProcessMessages() {
 // * SendPeerListID - send the tree to the child
 func (t *TcpRouter) processMessages() {
 	t.networkLock.Unlock()
+	log.Lvl5(t.workingAddress, "Starting ProcessMessages")
 	for {
 		var data network.Packet
 		select {
 		case data = <-t.networkChan:
 		case <-t.ProcessMessagesQuit:
+			log.Lvl5(t.workingAddress, "Quitting ProcessMessages")
 			return
 		}
 		log.Lvl4(t.workingAddress, "Message Received from", data.From, data.MsgType)
@@ -269,7 +272,7 @@ func (t *TcpRouter) processMessages() {
 			// The dispatcher will call the appropriate processors for the
 			// message
 			if err := t.Dispatch(&data); err != nil {
-				log.Lvl3("Unknown message received:", data)
+				log.Lvl3("Unknown message received:", data, err)
 			}
 		}
 	}
@@ -293,7 +296,7 @@ func (t *TcpRouter) handleConn(c network.SecureConn) {
 		// So the receiver can know about the error
 		am.SetError(err)
 		am.From = address
-		log.Lvl5("Got message", am)
+		log.Lvl5(t.workingAddress, "Got message", am)
 		if err != nil {
 			t.closingMut.Lock()
 			log.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
@@ -308,6 +311,7 @@ func (t *TcpRouter) handleConn(c network.SecureConn) {
 		} else {
 			t.closingMut.Lock()
 			if !t.isClosing {
+				log.Lvl5(t.workingAddress, "Send message to networkChan", len(t.networkChan))
 				t.networkChan <- am
 			}
 			t.closingMut.Unlock()
@@ -334,9 +338,7 @@ func (t *TcpRouter) registerConnection(c network.SecureConn) {
 // WaitForClose returns only once all connections have been closed
 func (t *TcpRouter) WaitForClose() {
 	if t.processMessagesStarted {
-		select {
-		case <-t.ProcessMessagesQuit:
-		}
+		<-t.ProcessMessagesQuit
 	}
 }
 
