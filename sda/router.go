@@ -16,7 +16,6 @@ import (
 type Router interface {
 	Dispatcher
 
-	Connect(e *network.ServerIdentity) (network.SecureConn, error)
 	// XXX TODO replace this by Route
 	SendRaw(e *network.ServerIdentity, msg network.Body) error
 	//	Route(id *network.ServerIdentity, msg network.Packet)
@@ -32,11 +31,12 @@ type Router interface {
 	// TO REMOVE IDEALLY
 	ListenAndBind()
 	StartProcessMessages()
+	Connect(e *network.ServerIdentity) (network.SecureConn, error)
 	Connections() map[network.ServerIdentityID]network.SecureConn
+	Connection(e *network.ServerIdentity) network.SecureConn
 	AbortConnections() error
 	CloseConnections() error
 	RegisterConnection(e *network.ServerIdentity, c network.SecureConn)
-	Connection(e *network.ServerIdentity) network.SecureConn
 	Receive() network.Packet
 	Listen()
 }
