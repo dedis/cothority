@@ -29,8 +29,8 @@ type Dispatcher interface {
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
 	RegisterProcessor(p Processor, msgType ...network.MessageTypeID)
-	// Dispatch will find the right processor to dispatch the packet to. The id
-	// is the identity of the author / sender of the packet.
+	// Dispatch will find the right processor to dispatch the packet to.
+	// The id identifies the sender of the packet.
 	// It can be called for example by the network layer.
 	// If no processor is found for this message type, then an error is returned
 	Dispatch(packet *network.Packet) error
@@ -79,7 +79,7 @@ func (d *BlockingDispatcher) Dispatch(packet *network.Packet) error {
 }
 
 // RoutineDispatcher is a Dispatcher that will dispatch messages to Processor
-// in a go routine. RoutineDispatcher creates one go routine per messages it
+// in a go routine. RoutineDispatcher creates one go routine per message it
 // receives.
 type RoutineDispatcher struct {
 	*BlockingDispatcher
@@ -124,10 +124,17 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 	}
 }
 
-// RegisterMessage puts a new message in the message-handler
-// XXX More comments are needed as it's not clear whether RegisterMessage waits
-// for message for/from Clients or for/from Services.
-func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
+// RegisterHandler will store the given handler that will be used by the service.
+// f must be a function that takes two input:
+//  * network.ServerIdentity: from whom the message is coming from
+//  * Pointer to a struct: message that the service is ready to handle.
+// f must have two return values:
+//  * Pointer to a struct: message that the service has generated as a reply and
+//  that will be sent to the requester (the sender).
+//  * Error in any case there is an error.
+// f can be used to treat internal service messages as well as external requests
+// from clients.
+func (p *ServiceProcessor) RegisterHandler(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
 	if ft.Kind() != reflect.Func {

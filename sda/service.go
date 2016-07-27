@@ -232,7 +232,6 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	log.Lvl3(h.workingAddress, "instantiated all services")
 
 	// registering messages that services are expecting
-	// TODO
 	h.RegisterProcessor(s, ClientRequestID)
 	return s
 }
