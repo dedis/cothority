@@ -119,7 +119,7 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	go func() {
-		h := NewLocalHost(2000)
+		h := NewTestHost(2000)
 		h.Close()
 	}()
 
@@ -172,7 +172,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewTestHost(2000)
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -183,7 +183,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		Data:    []byte("a"),
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewTestHost(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
 	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
@@ -210,7 +210,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewTestHost(2000)
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -229,7 +229,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewTestHost(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
 	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
@@ -267,10 +267,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		return ds
 	})
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewTestHost(2010)
 	defer h2.Close()
 
-	host := NewLocalHost(2000)
+	host := NewTestHost(2000)
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -329,15 +329,13 @@ func TestServiceNewProtocol(t *testing.T) {
 		count++
 		return localDs
 	})
-	host := NewLocalHost(2000)
+	host := NewTestHost(2000)
 	host.ListenAndBind()
-	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
-	host2 := NewLocalHost(2002)
+	host2 := NewTestHost(2002)
 	host2.ListenAndBind()
-	host2.StartProcessMessages()
 	defer host2.Close()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
@@ -353,7 +351,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	client := NewLocalHost(2010)
+	client := NewTestHost(2010)
 	defer client.Close()
 	log.Lvl1("Sending request to service...")
 	if err := client.SendRaw(host.ServerIdentity, re); err != nil {
@@ -390,11 +388,10 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		return s
 	})
 	// create two hosts
-	h2 := NewLocalHost(2010)
+	h2 := NewTestHost(2010)
 	defer h2.Close()
-	h1 := NewLocalHost(2000)
+	h1 := NewTestHost(2000)
 	h1.ListenAndBind()
-	h1.StartProcessMessages()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request
