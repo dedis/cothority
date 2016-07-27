@@ -235,9 +235,7 @@ func (t *TcpRouter) closeConnection(c network.SecureConn) error {
 func (t *TcpRouter) StartProcessMessages() {
 	// The networkLock.Unlock is in the processMessages-method to make
 	// sure the goroutine started
-	log.Lvl5(t.workingAddress, "Before StartProcessMessages.Lock()")
 	t.networkLock.Lock()
-	log.Lvl5(t.workingAddress, "After StartProcessMessages.Lock()")
 	t.processMessagesStarted = true
 	t.ProcessMessagesQuit = make(chan bool)
 	go t.processMessages()
@@ -253,7 +251,6 @@ func (t *TcpRouter) StartProcessMessages() {
 // * SendPeerListID - send the tree to the child
 func (t *TcpRouter) processMessages() {
 	t.networkLock.Unlock()
-	log.Lvl5(t.workingAddress, "Starting ProcessMessages")
 	for {
 		var data network.Packet
 		select {
@@ -391,6 +388,8 @@ func (t *TcpRouter) connection(e *network.ServerIdentity) network.SecureConn {
 	return c
 }
 
+// XXX To be removed (it causes more problem than we think, during the tests
+// notably)
 func (t *TcpRouter) Receive() network.Packet {
 	data := <-t.networkChan
 	log.Lvl5("Got message", data)
@@ -475,6 +474,7 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 		ServerIdentity: m.identity,
 	}
 	r.msgChan <- &nm
+	log.Lvl5(m.identity.First(), "Send msg", t.String(), "to", e.First())
 	return nil
 }
 
@@ -483,8 +483,14 @@ func (m *localRouter) Listen() {
 	go func() {
 		ready <- true
 		for msg := range m.msgChan {
+			log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
 			// XXX Do we need a go routine here ?
-			m.Dispatch(msg)
+			if err := m.Dispatch(msg); err != nil {
+				log.Lvl4(m.Address(), "Error dispatching:", err)
+				for k := range m.Dispatcher.(*BlockingDispatcher).procs {
+					log.Print(m.Address(), "Dispatcher for", k)
+				}
+			}
 		}
 	}()
 	<-ready

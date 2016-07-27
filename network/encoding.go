@@ -36,7 +36,11 @@ var ErrorType = MessageTypeID(uuid.Nil)
 
 // String returns the canonical string representation of the MessageTypeID
 func (mId MessageTypeID) String() string {
-	return uuid.UUID(mId).String()
+	t, ok := registry.get(mId)
+	if !ok {
+		return uuid.UUID(mId).String()
+	}
+	return t.String()
 }
 
 // NamespaceURL is the basic namespace used for uuid

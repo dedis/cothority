@@ -70,6 +70,18 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
+// GenTestHosts => LocalRouter
+func (l *LocalTest) GenTestHosts(n int, connect, processMsg bool) []*Host {
+	hosts := GenTestHosts(n)
+	for _, host := range hosts {
+		l.Hosts[host.ServerIdentity.ID] = host
+		l.Overlays[host.ServerIdentity.ID] = host.overlay
+		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
+	}
+	return hosts
+
+}
+
 // GenLocalHosts returns a slice of 'n' Hosts. If 'connect' is true, the
 // hosts will be connected between each other. If 'processMsg' is true,
 // the ProcessMsg-method will be called.
@@ -81,6 +93,21 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
 	}
 	return hosts
+}
+
+// GenTestTree => LocalRouter
+func (l *LocalTest) GenTestTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenTestHosts(n, connect, processMsg)
+
+	list := l.GenRosterFromHost(hosts...)
+	tree := list.GenerateBinaryTree()
+	l.Trees[tree.ID] = tree
+	if register {
+		hosts[0].overlay.RegisterRoster(list)
+		hosts[0].overlay.RegisterTree(tree)
+	}
+	return hosts, list, tree
+
 }
 
 // GenTree will create a tree of n hosts. If connect is true, they will
@@ -251,24 +278,29 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
-// NewLocalHost creates a new host with the given address and registers it.
-func NewLocalHost(port int) *Host {
+func NewPrivIdentiy(port int) (abstract.Scalar, *network.ServerIdentity) {
 	address := "localhost:" + strconv.Itoa(port)
 	priv, pub := PrivPub()
 	id := network.NewServerIdentity(pub, address)
+	return priv, id
+}
+
+// NewLocalHost creates a new host with the given address and registers it.
+func NewLocalHost(port int) *Host {
+	priv, id := NewPrivIdentiy(port)
 	return NewHost(id, priv)
 }
 
 // NewTestHost returns a new host using a LocalRouter (channels) to communicate.
 // It does not open any ports nor connect to anything on the network.
 func NewTestHost(port int) *Host {
-	h := NewLocalHost(port)
-	localRouter := NewLocalRouter(h.ServerIdentity)
-	h.Router = localRouter
-	return h
+	priv, id := NewPrivIdentiy(port)
+	localRouter := NewLocalRouter(id)
+	localRouter.Listen()
+	return NewHostWithRouter(id, priv, localRouter)
 }
 
-func GenTestHost(n int) []*Host {
+func GenTestHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		host := NewTestHost(2000 + i*10)

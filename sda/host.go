@@ -49,6 +49,21 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	return h
 }
 
+func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router) *Host {
+	h := &Host{
+		ServerIdentity:       e,
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
+		suite:                network.Suite,
+		statusReporterStruct: newStatusReporterStruct(),
+		Router:               r,
+	}
+
+	h.overlay = NewOverlay(h)
+	h.serviceManager = newServiceManager(h, h.overlay)
+	h.statusReporterStruct.RegisterStatusReporter("Status", h)
+	return h
+}
+
 // AddTree registers the given Tree struct in the underlying overlay.
 // Useful for unit-testing only.
 // XXX probably move into the tests.

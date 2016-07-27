@@ -72,7 +72,7 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.M
 func (d *BlockingDispatcher) Dispatch(packet *network.Packet) error {
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
-		return errors.New("No Processor attached to this message type.")
+		return errors.New("No Processor attached to this message type " + packet.MsgType.String())
 	}
 	p.Process(packet)
 	return nil
