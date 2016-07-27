@@ -8,3 +8,7 @@
 	- Renamed network.Message -> network.Packet
 	- Moved lib/* to parent-directory
 	- Depend on dedis/cosi for the cosi-library
+
+160725 - 
+    - Added Processor and Dispatcher interface 
+    - Dynamic registration of message handler in host.go

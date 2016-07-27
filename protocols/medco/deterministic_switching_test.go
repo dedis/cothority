@@ -13,6 +13,9 @@ import (
 )
 
 func TestDeterministicSwitching(t *testing.T) {
+	t.Skip("Skipping due to error in medco: https://github.com/dedis/cothority/issues/479")
+
+	defer log.AfterTest(t)
 	local := sda.NewLocalTest()
 	_, entityList, tree := local.GenTree(5, false, true, true)
 	sda.ProtocolRegisterName("DeterministicSwitchingTest", NewDeterministicSwitchingTest)
