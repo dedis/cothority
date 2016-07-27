@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
@@ -171,7 +170,6 @@ func TestOverlayRosterPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestOverlayTreePropagation(t *testing.T) {
-	log.TestOutput(true, 5)
 	local := NewLocalTest()
 	hosts, el, tree := local.GenTestTree(2, true, false, false)
 	defer local.CloseAll()

@@ -487,9 +487,6 @@ func (m *localRouter) Listen() {
 			// XXX Do we need a go routine here ?
 			if err := m.Dispatch(msg); err != nil {
 				log.Lvl4(m.Address(), "Error dispatching:", err)
-				for k := range m.Dispatcher.(*BlockingDispatcher).procs {
-					log.Print(m.Address(), "Dispatcher for", k)
-				}
 			}
 		}
 	}()

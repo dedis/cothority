@@ -113,6 +113,13 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 	ServiceFactory.Register(name, fn)
 }
 
+// DeleteNewService will remove the NewServiceFunc from the global store of
+// NewServiceFunc so it can't be initialized again. If the service needs to be
+// initialized again, a new call to RegisterNewService must be made.
+func DeleteNewService(name string) {
+	ServiceFactory.DeleteNewService(name)
+}
+
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
 	s.mutex.Lock()
@@ -133,6 +140,22 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 		names = append(names, n)
 	}
 	return names
+}
+
+// DeleteNewService will remove the NewServiceFunc from the global store of
+// NewServiceFunc so it can't be initialized again. If the service needs to be
+// initialized again, a new call to RegisterNewService must be made.
+func (s *serviceFactory) DeleteNewService(name string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	sid, ok := s.translations[name]
+	if !ok {
+		// we don't have any service registered to this name
+		return
+	}
+	delete(s.translations, name)
+	delete(s.constructors, sid)
+	delete(s.inverseTr, sid)
 }
 
 // ServiceID returns the ServiceID out of the name of the service

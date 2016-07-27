@@ -12,6 +12,31 @@ import (
 	"golang.org/x/net/context"
 )
 
+func TestServiceRegistration(t *testing.T) {
+	var name = "dummy"
+	RegisterNewService(name, func(c *Context, path string) Service {
+		return &DummyService{}
+	})
+
+	names := ServiceFactory.RegisteredServicesName()
+	var found bool
+	for _, n := range names {
+		if n == name {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("Name not found !?")
+	}
+	DeleteNewService(name)
+	names = ServiceFactory.RegisteredServicesName()
+	for _, n := range names {
+		if n == name {
+			t.Fatal("Dummy should not be found!")
+		}
+	}
+}
+
 type DummyProtocol struct {
 	*TreeNodeInstance
 	link   chan bool
@@ -130,6 +155,9 @@ func TestServiceChannels(t *testing.T) {
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
+	// Needed because of TestServiceNew which listens on a channel. Strange that
+	// it worked before.
+	DeleteNewService("DummyService")
 	RegisterNewService("ChannelsService", func(c *Context, path string) Service {
 		var sc *ServiceChannels
 		if count == 0 {
@@ -151,7 +179,6 @@ func TestServiceChannels(t *testing.T) {
 	sc1.tree = *tree
 	h1.AddRoster(el)
 	h1.AddTree(tree)
-
 	sc1.ProcessClientRequest(nil, nil)
 	select {
 	case msg := <-Incoming:

@@ -72,7 +72,6 @@ func TestTcpRouterNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestTcpRouterClose(t *testing.T) {
-	time.Sleep(time.Second)
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)
 	h1.ListenAndBind()
@@ -187,6 +186,9 @@ func TestTcpRouterAutoConnection(t *testing.T) {
 // also tests for the counterIO interface that it works well
 func TestTcpRouterMessaging(t *testing.T) {
 	h1, h2 := TwoTcpHosts()
+	defer h1.Close()
+	defer h2.Close()
+
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
 	proc := &simpleMessageProc{t, make(chan SimpleMessage)}
@@ -212,8 +214,6 @@ func TestTcpRouterMessaging(t *testing.T) {
 		t.Fatal("Something is wrong with Host.CounterIO")
 	}
 
-	h1.Close()
-	h2.Close()
 }
 
 // Test sending data back and forth using the sendSDAData

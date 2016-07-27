@@ -57,7 +57,6 @@ func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 	}
-
 	h.overlay = NewOverlay(h)
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
