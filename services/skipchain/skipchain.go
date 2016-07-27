@@ -466,7 +466,7 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 	}
 	for _, msg := range []interface{}{s.ProposeSkipBlock, s.SetChildrenSkipBlock,
 		s.GetUpdateChain} {
-		if err := s.RegisterHandler(msg); err != nil {
+		if err := s.RegisterMessage(msg); err != nil {
 			log.Fatal("Registration error for msg", msg, err)
 		}
 	}

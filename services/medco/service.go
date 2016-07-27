@@ -67,9 +67,9 @@ func NewService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		homePath:         path,
 	}
-	newMedCoInstance.RegisterHandler(newMedCoInstance.HandleSurveyResponseData)
-	newMedCoInstance.RegisterHandler(newMedCoInstance.HandleSurveyResultsQuery)
-	newMedCoInstance.RegisterHandler(newMedCoInstance.HandleSurveyCreationQuery)
+	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResponseData)
+	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyResultsQuery)
+	newMedCoInstance.RegisterMessage(newMedCoInstance.HandleSurveyCreationQuery)
 	return newMedCoInstance
 }
 

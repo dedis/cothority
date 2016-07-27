@@ -45,7 +45,7 @@ func newStatService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-	err := s.RegisterHandler(s.Request)
+	err := s.RegisterMessage(s.Request)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}

@@ -81,7 +81,7 @@ func init() {
 func TestProcessor_AddMessage(t *testing.T) {
 	h1 := newHostMock(network.Suite, "127.0.0.1")
 	p := NewServiceProcessor(&Context{host: h1})
-	log.ErrFatal(p.RegisterHandler(procMsg))
+	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
 	}
@@ -99,7 +99,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 	}
 	for _, f := range wrongFunctions {
 		log.Lvl2("Checking function", reflect.TypeOf(f).String())
-		err := p.RegisterHandler(f)
+		err := p.RegisterMessage(f)
 		if err == nil {
 			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
 		}
@@ -109,7 +109,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 func TestProcessor_GetReply(t *testing.T) {
 	h1 := newHostMock(network.Suite, "127.0.0.1")
 	p := NewServiceProcessor(&Context{host: h1})
-	log.ErrFatal(p.RegisterHandler(procMsg))
+	log.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewServerIdentity(pair.Public, "")
@@ -209,7 +209,7 @@ func newTestService(c *Context, path string) Service {
 	ts := &testService{
 		ServiceProcessor: NewServiceProcessor(c),
 	}
-	ts.RegisterHandler(ts.ProcessMsg)
+	ts.RegisterMessage(ts.ProcessMsg)
 	return ts
 }
 

@@ -124,7 +124,7 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 	}
 }
 
-// RegisterHandler will store the given handler that will be used by the service.
+// RegisterMessage will store the given handler that will be used by the service.
 // f must be a function that takes two input:
 //  * network.ServerIdentity: from whom the message is coming from
 //  * Pointer to a struct: message that the service is ready to handle.
@@ -134,7 +134,8 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 //  * Error in any case there is an error.
 // f can be used to treat internal service messages as well as external requests
 // from clients.
-func (p *ServiceProcessor) RegisterHandler(f interface{}) error {
+// XXX Name should be changed but need to change also in dedis/cosi
+func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
 	if ft.Kind() != reflect.Func {
