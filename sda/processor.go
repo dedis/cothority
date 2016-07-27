@@ -125,8 +125,12 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 }
 
 // RegisterMessage will store the given handler that will be used by the service.
-// f must be a function that takes two input:
-//  * network.ServerIdentity: from whom the message is coming from
+// f must be a function of the following form:
+// func(sId *network.ServerIdentity, structPtr *MyMessageStruct)(network.Body, error)
+//
+// In other words:
+// f must be a function that takes two arguments:
+//  * network.ServerIdentity: from whom the message is coming from.
 //  * Pointer to a struct: message that the service is ready to handle.
 // f must have two return values:
 //  * Pointer to a struct: message that the service has generated as a reply and
