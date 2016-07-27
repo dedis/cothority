@@ -72,7 +72,7 @@ func TestOverlayDone(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestOverlayPendingTreeMarshal(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTree(2, false, false, false)
+	hosts, el, tree := local.GenTestTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 
@@ -231,7 +231,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestOverlayRosterTreePropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTree(2, true, true, false)
+	hosts, el, tree := local.GenTestTree(2, true, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
