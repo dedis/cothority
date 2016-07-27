@@ -253,6 +253,14 @@ func TwoTcpHosts() (*Host, *Host) {
 	return h1, h2
 }
 
+func TwoTestHosts() (*Host, *Host) {
+	h1 := NewTestHost(2000)
+	h2 := NewTestHost(2001)
+	h1.Listen()
+	h2.Listen()
+	return h1, h2
+}
+
 func sendrcv_proc(from, to *TcpRouter) error {
 	sp := newSimpleProcessor()
 	// new processing

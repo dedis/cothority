@@ -126,6 +126,43 @@ func TestServiceNew(t *testing.T) {
 	waitOrFatal(ds.link, t)
 }
 
+func TestServiceChannels(t *testing.T) {
+	sc1 := &ServiceChannels{}
+	sc2 := &ServiceChannels{}
+	var count int
+	RegisterNewService("ChannelsService", func(c *Context, path string) Service {
+		var sc *ServiceChannels
+		if count == 0 {
+			sc = sc1
+		} else {
+			sc = sc2
+		}
+		count++
+		sc.ctx = c
+		sc.path = path
+		return sc
+	})
+	h1, h2 := TwoTestHosts()
+	defer h1.Close()
+	defer h2.Close()
+	// Add tree + entitylist
+	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
+	tree := el.GenerateBinaryTree()
+	sc1.tree = *tree
+	h1.AddRoster(el)
+	h1.AddTree(tree)
+
+	sc1.ProcessClientRequest(nil, nil)
+	select {
+	case msg := <-Incoming:
+		if msg.I != 12 {
+			t.Fatal("Child should receive 12")
+		}
+	case <-time.After(time.Millisecond * 100):
+		t.Fatal("Timeout")
+	}
+}
+
 func TestServiceProcessRequest(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
