@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
 )
 
 // Host is the structure responsible for holding information about the current
@@ -82,24 +81,6 @@ func (h *Host) AddRoster(el *Roster) {
 // Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
 	return h.suite
-}
-
-// SetupHostsMock can be used to create a Host mock for testing.
-func SetupHostsMock(s abstract.Suite, addresses ...string) []*Host {
-	var hosts []*Host
-	for _, add := range addresses {
-		h := newHostMock(s, add)
-		h.ListenAndBind()
-		h.StartProcessMessages()
-		hosts = append(hosts, h)
-	}
-	return hosts
-}
-
-func newHostMock(s abstract.Suite, address string) *Host {
-	kp := config.NewKeyPair(s)
-	en := network.NewServerIdentity(kp.Public, address)
-	return NewHost(en, kp.Secret)
 }
 
 // GetStatus is a function that returns the status report of the server.

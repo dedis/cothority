@@ -6,14 +6,6 @@ import (
 	"github.com/dedis/cothority/network"
 )
 
-func SetupTwoHosts(t *testing.T, h2process bool) (*Host, *Host) {
-	hosts := GenLocalHosts(2, true, false)
-	if h2process {
-		hosts[1].StartProcessMessages()
-	}
-	return hosts[0], hosts[1]
-}
-
 // Test complete parsing of new incoming packet
 // - Test if it is SDAMessage
 // - reject if unknown ProtocolID

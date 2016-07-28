@@ -66,7 +66,6 @@ func main() {
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		log.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Addresses)
 		host.Listen()
-		host.StartProcessMessages()
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
 			log.Fatal(err)

@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 func TestServiceRegistration(t *testing.T) {
@@ -200,8 +199,6 @@ func TestServiceProcessRequest(t *testing.T) {
 		return ds
 	})
 	host := NewTestHost(2000)
-	host.Listen()
-	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// Send a request to the service
@@ -239,7 +236,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	})
 	host := NewTestHost(2000)
 	host.Listen()
-	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
@@ -298,8 +294,6 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	defer h2.Close()
 
 	host := NewTestHost(2000)
-	host.ListenAndBind()
-	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
@@ -429,6 +423,24 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	waitOrFatalValue(ds1.link, true, t)
 }
 
+type clientProc struct {
+	t     *testing.T
+	relay chan simpleResponse
+}
+
+func newClientProc(t *testing.T) *clientProc {
+	return &clientProc{
+		relay: make(chan simpleResponse),
+	}
+}
+
+func (c *clientProc) Process(p *network.Packet) {
+	if p.MsgType != simpleResponseType {
+		c.t.Fatal("Message type not simpleResponseType")
+	}
+	c.relay <- p.Msg.(simpleResponse)
+}
+
 func TestServiceBackForthProtocol(t *testing.T) {
 	local := NewLocalTest()
 	defer local.CloseAll()
@@ -440,13 +452,14 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(4, true, true, false)
+	hosts, el, _ := local.GenTestTree(4, true, true, false)
 
 	// create client
-	priv, pub := PrivPub()
-	client := network.NewSecureTCPHost(priv, network.NewServerIdentity(pub, ""))
-	c, err := client.Open(hosts[0].ServerIdentity)
-	assert.Nil(t, err)
+	client := NewTestHost(5000)
+	defer client.Close()
+	proc := newClientProc(t)
+	client.RegisterProcessor(proc, simpleResponseType)
+
 	// create request
 	r := &simpleRequest{
 		ServerIdentities: el,
@@ -459,14 +472,13 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		Service: ServiceFactory.ServiceID("BackForth"),
 		Data:    buff,
 	}
-	assert.Nil(t, c.Send(context.TODO(), req))
-
-	nm, err := c.Receive(context.TODO())
-	assert.Nil(t, err)
-
-	assert.Equal(t, nm.MsgType, simpleResponseType)
-	resp := nm.Msg.(simpleResponse)
-	assert.Equal(t, resp.Val, 10)
+	assert.Nil(t, client.SendRaw(hosts[0].ServerIdentity, req))
+	select {
+	case msg := <-proc.relay:
+		assert.Equal(t, msg.Val, 10)
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("Not received any response from host")
+	}
 }
 
 func TestClient_Send(t *testing.T) {

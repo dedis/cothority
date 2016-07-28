@@ -2,6 +2,7 @@ package sda
 
 import (
 	"testing"
+	"time"
 
 	"reflect"
 
@@ -53,7 +54,7 @@ func TestProcessorHost(t *testing.T) {
 	h1 := NewTestHost(2000)
 	defer h1.Close()
 
-	proc := &basicProcessor{make(chan network.Packet, 1)}
+	proc := &basicProcessor{make(chan network.Packet)}
 	h1.RegisterProcessor(proc, basicMessageType)
 	h1.Dispatch(&network.Packet{
 		Msg:     basicMessage{10},
@@ -64,7 +65,7 @@ func TestProcessorHost(t *testing.T) {
 		basic, ok := m.Msg.(basicMessage)
 		assert.True(t, ok)
 		assert.Equal(t, basic.Value, 10)
-	default:
+	case <-time.After(100 * time.Millisecond):
 		t.Error("No message received on channel")
 	}
 }

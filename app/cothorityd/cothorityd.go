@@ -111,7 +111,6 @@ func runServer(ctx *cli.Context) {
 		log.Fatal("Couldn't parse config:", err)
 	}
 	host.ListenAndBind()
-	host.StartProcessMessages()
 	host.WaitForClose()
 
 }

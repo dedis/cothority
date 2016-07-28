@@ -122,9 +122,7 @@ func TestTcpRouterReconnection(t *testing.T) {
 	defer h2.Close()
 
 	h1.ListenAndBind()
-	h1.StartProcessMessages()
 	h2.ListenAndBind()
-	h2.StartProcessMessages()
 
 	log.Lvl1("Sending h1->h2")
 	log.ErrFatal(sendrcv_proc(h1, h2))
@@ -150,7 +148,6 @@ func TestTcpRouterReconnection(t *testing.T) {
 	log.Lvl1("asking h2 to listen again")
 	// making h2 backup again
 	h2.ListenAndBind()
-	h2.StartProcessMessages()
 	// and re-registering the connection to h2 from h1
 	h1.registerConnection(c2)
 
@@ -163,7 +160,6 @@ func TestTcpRouterAutoConnection(t *testing.T) {
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)
 	h2.ListenAndBind()
-	h2.StartProcessMessages()
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
@@ -247,8 +243,6 @@ func TwoTcpHosts() (*Host, *Host) {
 	h2 := NewLocalHost(2001)
 	h1.ListenAndBind()
 	h2.ListenAndBind()
-	h1.StartProcessMessages()
-	h2.StartProcessMessages()
 
 	return h1, h2
 }

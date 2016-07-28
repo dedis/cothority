@@ -30,11 +30,6 @@ type Router interface {
 
 	// TO REMOVE IDEALLY
 	ListenAndBind()
-	StartProcessMessages()
-	// Real usage in sda.GenLocalHosts
-	//	Connect(e *network.ServerIdentity) (network.SecureConn, error)
-	// Real usage in sda.GenLocalHosts
-	//	Connections() map[network.ServerIdentityID]network.SecureConn
 	Listen()
 }
 
@@ -154,12 +149,14 @@ func (t *TcpRouter) listen(wait bool) {
 // using port-forwarding to an internal IP.
 func (r *TcpRouter) ListenAndBind() {
 	r.listen(true)
+	r.StartProcessMessages()
 }
 
 // Listen only starts listening and returns without waiting for the
 // listening to be active.
 func (r *TcpRouter) Listen() {
 	r.listen(false)
+	r.StartProcessMessages()
 }
 
 // Connect takes an entity where to connect to
@@ -438,12 +435,14 @@ func (lrs *localRouterStore) Len() int {
 type localRouter struct {
 	Dispatcher
 	identity *network.ServerIdentity
-	msgChan  chan *network.Packet
+	// msgQueue is the channel where other localRouter communicate messages to
+	// this localRouter.
+	msgChan chan *network.Packet
 }
 
 func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
 	r := &localRouter{
-		Dispatcher: NewBlockingDispatcher(),
+		Dispatcher: NewRoutineDispatcher(), //NewBlockingDispatcher(),
 		identity:   identity,
 		msgChan:    make(chan *network.Packet),
 	}
@@ -520,9 +519,5 @@ func (l *localRouter) Address() string {
 }
 
 func (l *localRouter) ListenAndBind() {
-	l.Listen()
-}
-
-func (l *localRouter) StartProcessMessages() {
 	l.Listen()
 }

@@ -126,6 +126,19 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 	return hosts, list, tree
 }
 
+func (l *LocalTest) GenTestBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenTestHosts(nbrHosts, connect, true)
+
+	list := l.GenRosterFromHost(hosts...)
+	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
+	l.Trees[tree.ID] = tree
+	if register {
+		hosts[0].overlay.RegisterRoster(list)
+		hosts[0].overlay.RegisterTree(tree)
+	}
+	return hosts, list, tree
+}
+
 // GenBigTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the Roster and Tree
 // will be registered with the overlay.
@@ -322,9 +335,6 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	for _, host := range hosts {
 		host.ListenAndBind()
 		log.Lvlf3("Listening on %s %x", host.ServerIdentity.First(), host.ServerIdentity.ID)
-		if processMessages {
-			host.StartProcessMessages()
-		}
 		if connect && root != host {
 			log.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
 				root.ServerIdentity.First(), root.ServerIdentity.ID)

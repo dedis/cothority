@@ -111,10 +111,9 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 	network.RegisterMessageType(SimpleMessage{})
 	ProtocolRegisterName(simpleProto, fn)
-	h1, h2 := SetupTwoHosts(t, true)
+	h1, h2 := TwoTestHosts()
 	defer h1.Close()
 	defer h2.Close()
-	h1.StartProcessMessages()
 	// create small Tree
 	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 	h1.AddRoster(el)
