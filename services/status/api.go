@@ -10,7 +10,7 @@ import (
 
 // Client is a structure to communicate with status service
 type Client struct {
-	*sda.Client
+	sda.Client
 }
 
 // NewClient makes a new Client
