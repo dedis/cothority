@@ -534,7 +534,6 @@ func TestClient_LocalSend(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	nbrNodes := 2
 	nbrParallel := 2
 	local := NewLocalTest()
 	defer local.CloseAll()
@@ -546,7 +545,14 @@ func TestClient_Parallel(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(nbrNodes, true, true, false)
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
+	defer h1.Close()
+	defer h2.Close()
+	h1.ListenAndBind()
+	h2.ListenAndBind()
+
+	roster := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 
 	wg := sync.WaitGroup{}
 	wg.Add(nbrParallel)
@@ -554,11 +560,11 @@ func TestClient_Parallel(t *testing.T) {
 		go func(i int) {
 			log.Lvl1("Starting message", i)
 			r := &simpleRequest{
-				ServerIdentities: el,
+				ServerIdentities: roster,
 				Val:              10 * i,
 			}
 			client := NewClient("BackForth")
-			nm, err := client.Send(hosts[0].ServerIdentity, r)
+			nm, err := client.Send(h1.ServerIdentity, r)
 			log.ErrFatal(err)
 
 			assert.Equal(t, nm.MsgType, simpleResponseType)

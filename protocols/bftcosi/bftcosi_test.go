@@ -55,7 +55,7 @@ func TestThreshold(t *testing.T) {
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
-		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
+		_, _, tree := local.GenTestBigTree(hosts, hosts, 2, true, true)
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol

@@ -103,16 +103,6 @@ func TestTcpRouterClose(t *testing.T) {
 	}
 }
 
-func TestTcpRouterClose2(t *testing.T) {
-	local := NewLocalTest()
-	defer local.CloseAll()
-
-	_, _, tree := local.GenTree(2, false, true, true)
-	log.Lvl3(tree.Dump())
-	time.Sleep(time.Millisecond * 100)
-	log.Lvl3("Done")
-}
-
 func TestTcpRouterReconnection(t *testing.T) {
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)

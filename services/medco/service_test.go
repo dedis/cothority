@@ -34,11 +34,11 @@ func TestService(t *testing.T) {
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, el, _ := local.GenTree(5, true, true, true)
+	_, el, _ := local.GenTestTree(5, true, true, true)
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := medco.NewMedcoClient(el.List[0])
+	client := medco.NewTestMedcoClient(el.List[0])
 
 	surveyDesc := SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
@@ -51,7 +51,7 @@ func TestService(t *testing.T) {
 	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.API, 10)
 	for i := 0; i < numberAttr; i++ {
-		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
+		dataHolder[i] = medco.NewTestMedcoClient(el.List[i%5])
 		grp := [numberGrpAttr]int64{}
 		aggr := make([]int64, 10)
 		grp[0] = int64(i % 4)

@@ -82,20 +82,10 @@ func (l *LocalTest) GenTestHosts(n int, connect, processMsg bool) []*Host {
 
 }
 
-// GenLocalHosts returns a slice of 'n' Hosts. If 'connect' is true, the
-// hosts will be connected between each other. If 'processMsg' is true,
-// the ProcessMsg-method will be called.
-func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
-	hosts := GenLocalHosts(n, connect, processMsg)
-	for _, host := range hosts {
-		l.Hosts[host.ServerIdentity.ID] = host
-		l.Overlays[host.ServerIdentity.ID] = host.overlay
-		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
-	}
-	return hosts
-}
-
 // GenTestTree => LocalRouter
+// GenTree will create a tree of n hosts. If connect is true, they will
+// be connected to the root host. If register is true, the Roster and Tree
+// will be registered with the overlay.
 func (l *LocalTest) GenTestTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
 	hosts := l.GenTestHosts(n, connect, processMsg)
 
@@ -110,35 +100,6 @@ func (l *LocalTest) GenTestTree(n int, connect, processMsg, register bool) ([]*H
 
 }
 
-// GenTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the Roster and Tree
-// will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenLocalHosts(n, connect, processMsg)
-
-	list := l.GenRosterFromHost(hosts...)
-	tree := list.GenerateBinaryTree()
-	l.Trees[tree.ID] = tree
-	if register {
-		hosts[0].overlay.RegisterRoster(list)
-		hosts[0].overlay.RegisterTree(tree)
-	}
-	return hosts, list, tree
-}
-
-func (l *LocalTest) GenTestBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenTestHosts(nbrHosts, connect, true)
-
-	list := l.GenRosterFromHost(hosts...)
-	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
-	l.Trees[tree.ID] = tree
-	if register {
-		hosts[0].overlay.RegisterRoster(list)
-		hosts[0].overlay.RegisterTree(tree)
-	}
-	return hosts, list, tree
-}
-
 // GenBigTree will create a tree of n hosts. If connect is true, they will
 // be connected to the root host. If register is true, the Roster and Tree
 // will be registered with the overlay.
@@ -146,8 +107,8 @@ func (l *LocalTest) GenTestBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool,
 // 'nbrTreeNodes' is how many TreeNodes are created
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
-func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenLocalHosts(nbrHosts, connect, true)
+func (l *LocalTest) GenTestBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenTestHosts(nbrHosts, connect, true)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
@@ -316,42 +277,6 @@ func GenTestHosts(n int) []*Host {
 	for i := 0; i < n; i++ {
 		host := NewTestHost(2000 + i*10)
 		hosts[i] = host
-	}
-	return hosts
-}
-
-// GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true.
-func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-
-	hosts := make([]*Host, n)
-	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
-		hosts[i] = host
-	}
-	root := hosts[0]
-	for _, host := range hosts {
-		host.ListenAndBind()
-		log.Lvlf3("Listening on %s %x", host.ServerIdentity.First(), host.ServerIdentity.ID)
-		if connect && root != host {
-			log.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
-				root.ServerIdentity.First(), root.ServerIdentity.ID)
-			if _, err := host.Router.(*TcpRouter).Connect(root.ServerIdentity); err != nil {
-				log.Fatal(host.ServerIdentity.Addresses, "Could not connect hosts", root.ServerIdentity.Addresses, err)
-			}
-			// Wait for connection accepted in root
-			connected := false
-			for !connected {
-				time.Sleep(time.Millisecond * 10)
-				for id := range root.Router.(*TcpRouter).Connections() {
-					if id.Equal(host.ServerIdentity.ID) {
-						connected = true
-						break
-					}
-				}
-			}
-			log.Lvl4(host.ServerIdentity.First(), "is connected to root")
-		}
 	}
 	return hosts
 }
