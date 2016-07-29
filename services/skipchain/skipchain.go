@@ -30,6 +30,8 @@ func init() {
 	})
 }
 
+// XXX Why skipchainSID is private ? Should we not be able to access it from
+// outside ?
 var skipchainSID sda.ServiceID
 
 // Service handles adding new SkipBlocks

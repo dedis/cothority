@@ -15,7 +15,7 @@ import (
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
-	*sda.Client
+	sda.Client
 }
 
 // NewClient instantiates a new client with name 'n'
