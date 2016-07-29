@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"encoding"
 	"errors"
 	"fmt"
 	"os"
@@ -21,6 +22,7 @@ import (
 
 func init() {
 	network.RegisterMessageType(&StatusRet{})
+	network.RegisterMessageType(&TcpClient{})
 }
 
 // Service is a generic interface to define any type of services.
@@ -384,6 +386,10 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 type Client interface {
 	Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error)
 	SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error)
+	// Hack needed becase a Client is being encoded/decoded by protobuf in
+	// identity service
+	encoding.BinaryMarshaler
+	encoding.BinaryUnmarshaler
 }
 
 // TcpClient is a simple client structure to be used when wanting to connect to services. It
@@ -489,14 +495,12 @@ func (c *TcpClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet,
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
-func (c *TcpClient) BinaryMarshaler() ([]byte, error) {
-	log.Fatal("Not yet implemented")
-	return nil, nil
+func (c *TcpClient) MarshalBinary() ([]byte, error) {
+	return []byte{}, nil
 }
 
 // BinaryUnmarshaler sets the different values from a byte-slice
-func (c *TcpClient) BinaryUnmarshaler(b []byte) error {
-	log.Fatal("Not yet implemented")
+func (c *TcpClient) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
@@ -603,4 +607,11 @@ func (c *localClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packe
 
 func (c *localClient) serverIdentity() *network.ServerIdentity {
 	return c.identity
+}
+
+func (c *localClient) MarshalBinary() ([]byte, error) {
+	return []byte{}, nil
+}
+func (c *localClient) UnmarshalBinary(buf []byte) error {
+	return nil
 }

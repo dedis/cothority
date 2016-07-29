@@ -2,7 +2,6 @@ package identity
 
 import (
 	"testing"
-	"time"
 
 	"io/ioutil"
 	"os"
@@ -50,14 +49,14 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(5, true, true, true)
+	hosts, el, _ := l.GenTestTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewIdentity(el, 50, "two")
+	c2 := NewTestIdentity(el, 50, "two")
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	for _, s := range services {
 		is := s.(*Service)
@@ -71,14 +70,14 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTestTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewIdentity(el, 50, "two")
+	c2 := NewTestIdentity(el, 50, "two")
 	c2.ID = c1.ID
 	log.ErrFatal(c2.ConfigUpdate())
 
@@ -91,10 +90,10 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 
 func TestIdentity_CreateIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(3, true, true, true)
+	_, el, _ := l.GenTestTree(3, true, true, true)
 	defer l.CloseAll()
 
-	c := NewIdentity(el, 50, "one")
+	c := NewTestIdentity(el, 50, "one")
 	log.ErrFatal(c.CreateIdentity())
 
 	// Check we're in the configuration
@@ -103,18 +102,17 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(3, true, true, true)
+	hosts, el, _ := l.GenTestTree(3, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
 	log.ErrFatal(c1.ProposeSend(conf2))
-	time.Sleep(time.Second)
 
 	for _, s := range services {
 		is := s.(*Service)
@@ -133,14 +131,14 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 
 func TestIdentity_ProposeVote(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(5, true, true, true)
+	hosts, el, _ := l.GenTestTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
 		log.Lvl3(s.(*Service).identities)
 	}
 
-	c1 := NewIdentity(el, 50, "one1")
+	c1 := NewTestIdentity(el, 50, "one1")
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
