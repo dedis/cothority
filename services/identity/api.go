@@ -3,7 +3,6 @@ package identity
 import (
 	"errors"
 	"io"
-	"reflect"
 
 	"io/ioutil"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/protobuf"
 )
 
 /*
@@ -37,6 +35,7 @@ func init() {
 		&ConfigUpdate{},
 		&UpdateSkipBlock{},
 		&ProposeVote{},
+		&IdentityData{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -47,7 +46,13 @@ func init() {
 // in 'Cothority'
 type Identity struct {
 	// Client is included for easy `Send`-methods.
-	Client sda.Client
+	sda.Client
+	// IdentityData holds all the data related to this identity
+	// It will be stored and load from a config file or else.
+	IdentityData
+}
+
+type IdentityData struct {
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
@@ -72,21 +77,25 @@ func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
-		Client:     client,
-		Private:    kp.Secret,
-		Public:     kp.Public,
-		Config:     NewConfig(majority, kp.Public, owner),
-		DeviceName: owner,
-		Cothority:  cothority,
+		Client: client,
+		IdentityData: IdentityData{
+			Private:    kp.Secret,
+			Public:     kp.Public,
+			Config:     NewConfig(majority, kp.Public, owner),
+			DeviceName: owner,
+			Cothority:  cothority,
+		},
 	}
 }
 
 // NewIdentityFromCothority searches for a given cothority
 func NewIdentityFromCothority(el *sda.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
-		Client:    sda.NewClient(ServiceName),
-		Cothority: el,
-		ID:        id,
+		Client: sda.NewClient(ServiceName),
+		IdentityData: IdentityData{
+			Cothority: el,
+			ID:        id,
+		},
 	}
 	err := iden.ConfigUpdate()
 	if err != nil {
@@ -102,17 +111,21 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, id, err := network.UnmarshalRegisteredType(data, clientConstructors())
+	_, i, err := network.UnmarshalRegistered(data)
 	if err != nil {
 		return nil, err
 	}
-	it := id.(Identity)
-	return &it, nil
+	id := i.(*IdentityData)
+	identity := &Identity{
+		Client:       sda.NewClient(ServiceName),
+		IdentityData: *id,
+	}
+	return identity, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.MarshalRegisteredType(i)
+	data, err := network.MarshalRegisteredType(&i.IdentityData)
 	if err != nil {
 		return err
 	}
@@ -234,11 +247,4 @@ func (i *Identity) ConfigUpdate() error {
 	// TODO - verify new config
 	i.Config = cu.AccountList
 	return nil
-}
-
-func clientConstructors() protobuf.Constructors {
-	cons := network.DefaultConstructors(network.Suite)
-	var cl sda.Client
-	cons[reflect.TypeOf(&cl).Elem()] = func() interface{} { return sda.NewClient(ServiceName) }
-	return cons
 }
