@@ -458,10 +458,9 @@ type localRouter struct {
 
 func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
 	r := &localRouter{
-
 		Dispatcher: NewBlockingDispatcher(),
 		identity:   identity,
-		msgChan:    make(chan *network.Packet),
+		msgChan:    make(chan *network.Packet, 100),
 		conns:      make(map[string]bool),
 	}
 	localRelays.Put(r)
@@ -499,7 +498,6 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 		To:             e,
 	}
 	r.receive(&nm)
-	log.Lvl5(m.identity.First(), "Send msg", typ.String(), "to", e.First())
 	return nil
 }
 
@@ -518,7 +516,6 @@ func (m *localRouter) Listen() {
 			if err := m.Dispatch(msg); err != nil {
 				log.Lvl4(m.Address(), "Error dispatching:", err)
 			}
-			log.Print(m.Address(), "Dispatched message", msg.MsgType, "from", msg.ServerIdentity.First())
 		}
 	}()
 	<-ready

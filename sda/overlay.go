@@ -335,7 +335,9 @@ func (o *Overlay) requestTree(e *network.ServerIdentity, sdaMsg *ProtocolMsg) er
 	o.pendingSDAsLock.Unlock()
 
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
-	return o.host.SendRaw(e, treeRequest)
+
+	var err = o.host.SendRaw(e, treeRequest)
+	return err
 }
 
 // RegisterTree takes a tree and puts it in the map
@@ -356,8 +358,9 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 // Tree returns the tree given by treeId or nil if not found
 func (o *Overlay) Tree(tid TreeID) *Tree {
 	o.treesMut.Lock()
-	defer o.treesMut.Unlock()
-	return o.trees[tid]
+	t := o.trees[tid]
+	o.treesMut.Unlock()
+	return t
 }
 
 // RegisterRoster puts an entityList in the map
