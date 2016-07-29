@@ -15,7 +15,7 @@ import (
 
 func TestKeySwitching(t *testing.T) {
 	local := sda.NewLocalTest()
-	_, entityList, tree := local.GenTree(5, false, true, true)
+	_, entityList, tree := local.GenTestTree(5, false, true, true)
 
 	defer local.CloseAll()
 

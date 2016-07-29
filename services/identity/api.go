@@ -42,10 +42,10 @@ func init() {
 
 // Identity structure holds the data necessary for a client/device to use the
 // identity-service. Each identity-skipchain is tied to a roster that is defined
-// in 'Cothority'.
+// in 'Cothority'
 type Identity struct {
 	// Client is included for easy `Send`-methods.
-	*sda.Client
+	sda.Client
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.

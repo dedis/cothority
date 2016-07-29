@@ -25,7 +25,7 @@ var groupingAttrC = GroupingAttributes{grpattr1, grpattr2}
 //TestPrivateAggregate tests private aggregate protocol
 func TestPrivateAggregate(t *testing.T) {
 	local := sda.NewLocalTest()
-	_ /*entityList*/, _, tree := local.GenTree(10, false, true, true)
+	_ /*entityList*/, _, tree := local.GenTestTree(10, false, true, true)
 	sda.ProtocolRegisterName("PrivateAggregateTest", NewPrivateAggregateTest)
 	defer local.CloseAll()
 

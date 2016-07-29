@@ -23,7 +23,7 @@ func TestRandHound(t *testing.T) {
 	var shards uint32 = 2                     // Number of shards created from the randomness
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(int(nodes), false, true, true)
+	_, _, tree := local.GenTestTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
 	// Setup and Start RandHound

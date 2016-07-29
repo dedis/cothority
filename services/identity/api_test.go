@@ -14,13 +14,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func NewTestIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
+	id := NewIdentity(cothority, majority, owner)
+	id.Client = sda.NewLocalClient(ServiceName)
+	return id
+}
+
 func TestIdentity_ConfigNewCheck(t *testing.T) {
+	log.TestOutput(true, 5)
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTestTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()

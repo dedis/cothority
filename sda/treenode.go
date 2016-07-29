@@ -320,10 +320,10 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 // ProcessProtocolMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
-	log.Lvl4(n.Info(), "Received message")
+	log.LLvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
-	log.Lvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
+	log.LLvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
 	if len(n.msgDispatchQueue) == 1 && len(n.msgDispatchQueueWait) == 0 {
 		n.msgDispatchQueueWait <- true
 	}
@@ -379,7 +379,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	log.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
+	log.Lvlf5(n.Name(), "TNI dispatching -Message is: %+v", sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:

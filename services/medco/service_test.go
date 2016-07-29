@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
@@ -18,6 +19,12 @@ const numberAttr = 10
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
+}
+
+func NewTestMedcoClient(entryPoint *network.ServerIdentity) *medco.API {
+	a := medco.NewMedcoClient(entryPoint)
+	a.Client = sda.NewLocalClient(medco.ServiceName)
+	return a
 }
 
 // TestService tests medco complete service execution.

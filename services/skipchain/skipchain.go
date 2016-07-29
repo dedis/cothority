@@ -273,7 +273,6 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 }
 
 func (s *Service) startBFTSignature(block *SkipBlock) error {
-	log.Lvl3("Starting bftsignature with root-node=", s.ServerIdentity())
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte(block.Hash)
@@ -290,7 +289,8 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
-
+	log.Lvl3("Starting bftsignature with root-node=", s.ServerIdentity(), "over", len(el.List))
+	log.Print("tree.Dump()", tree.Dump())
 	node, err := s.CreateProtocolService(tree, skipchainBFT)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())

@@ -6,16 +6,23 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Skipping because of bftcosi and skipchain - #482")
+	//log.Info("Skipping because of bftcosi and skipchain - #482")
+	sda.RegisterNewService(ServiceName, func(c *sda.Context, path string) sda.Service {
+		s := newIdentityService(c, path).(*Service)
+		s.skipchain = skipchain.NewTestClient()
+		return s
+	})
 	log.MainTest(m)
 }
 
 func TestService_AddIdentity(t *testing.T) {
+	log.TestOutput(true, 3)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(5, identityService)

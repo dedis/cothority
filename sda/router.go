@@ -451,14 +451,18 @@ type localRouter struct {
 	// msgQueue is the channel where other localRouter communicate messages to
 	// this localRouter.
 	msgChan chan *network.Packet
+	// conns keep tracks of to whom this local router sent something so it can
+	// have a reasonable loooking report status in GetStatus
+	conns map[string]bool
 }
 
 func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
 	r := &localRouter{
-		//Dispatcher: NewRoutineDispatcher(), //NewBlockingDispatcher(),
+
 		Dispatcher: NewBlockingDispatcher(),
 		identity:   identity,
 		msgChan:    make(chan *network.Packet),
+		conns:      make(map[string]bool),
 	}
 	localRelays.Put(r)
 	return r
@@ -477,6 +481,8 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 	if r == nil {
 		return errors.New("No mock routers at this entity")
 	}
+
+	m.conns[e.String()] = true
 
 	var body network.Body
 	var val = reflect.ValueOf(msg)
@@ -505,6 +511,7 @@ func (m *localRouter) Listen() {
 	go func() {
 		ready <- true
 		for msg := range m.msgChan {
+			m.conns[msg.ServerIdentity.String()] = true
 			log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
 			// XXX Do we need a go routine here ?
 			if err := m.Dispatch(msg); err != nil {
@@ -533,7 +540,16 @@ func (l *localRouter) Rx() uint64 {
 
 func (l *localRouter) GetStatus() Status {
 	m := make(map[string]string)
-	m["localRouters"] = strconv.Itoa(localRelays.Len())
+	nbr := len(l.conns)
+	var conns []string
+	for k := range l.conns {
+		conns = append(conns, k)
+	}
+	m["Connections"] = strings.Join(conns, "\n")
+	m["Host"] = l.Address()
+	m["Total"] = strconv.Itoa(nbr)
+	m["Packets_Received"] = strconv.FormatUint(0, 10)
+	m["Packets_Sent"] = strconv.FormatUint(0, 10)
 	return m
 }
 

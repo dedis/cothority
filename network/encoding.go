@@ -94,7 +94,7 @@ func TypeToMessageTypeID(msg Body) MessageTypeID {
 	}
 	url := NamespaceProtocolMessageType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
-	log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
+	//log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return MessageTypeID(u)
 }
 

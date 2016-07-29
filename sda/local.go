@@ -291,6 +291,12 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
+func (l *LocalTest) MakeTestHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
+	hosts := l.GenTestHosts(nbr, false, true)
+	el := l.GenRosterFromHost(hosts...)
+	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
+}
+
 func NewPrivIdentiy(port int) (abstract.Scalar, *network.ServerIdentity) {
 	address := "localhost:" + strconv.Itoa(port)
 	priv, pub := PrivPub()

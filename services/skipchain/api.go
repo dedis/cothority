@@ -23,6 +23,12 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
+// NewLocalClient instantiates a new local client for *testing*. It sends
+// messages to LocalHosts using go routines / channels.
+func NewTestClient() *Client {
+	return &Client{Client: sda.NewLocalClient("Skipchain")}
+}
+
 // CreateRootControl creates two Skipchains: a root SkipChain with
 // maximumHeight of maxHRoot and an control SkipChain with
 // maximumHeight of maxHControl. It connects both chains for later

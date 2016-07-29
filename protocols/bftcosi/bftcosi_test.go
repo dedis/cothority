@@ -137,7 +137,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
+	_, _, tree := local.GenTestBigTree(nbrHosts, nbrHosts, 2, true, true)
 	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
