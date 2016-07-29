@@ -156,7 +156,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 
 func TestIdentity_SaveToStream(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTestTree(5, true, true, true)
 	defer l.CloseAll()
 	id := NewIdentity(el, 50, "one1")
 	tmpfile, err := ioutil.TempFile("", "example")
