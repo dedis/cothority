@@ -492,8 +492,8 @@ func TestClient_Send(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(4, true, true, false)
-	client := NewClient("BackForth")
+	hosts, el, _ := local.GenTestTree(4, true, true, false)
+	client := NewLocalClient("BackForth")
 
 	r := &simpleRequest{
 		ServerIdentities: el,

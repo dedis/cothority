@@ -283,14 +283,6 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-// MakeHELS is an abbreviation to make a Host, an Roster, and a service.
-// It returns the service of the first host in the slice.
-func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
-	hosts := l.GenLocalHosts(nbr, false, true)
-	el := l.GenRosterFromHost(hosts...)
-	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
-}
-
 func (l *LocalTest) MakeTestHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
 	hosts := l.GenTestHosts(nbr, false, true)
 	el := l.GenRosterFromHost(hosts...)
