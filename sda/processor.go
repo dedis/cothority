@@ -75,7 +75,9 @@ func (d *BlockingDispatcher) Dispatch(packet *network.Packet) error {
 	if p = d.procs[packet.MsgType]; p == nil {
 		return errors.New("No Processor attached to this message type " + packet.MsgType.String())
 	}
+	log.Print(packet.To.String(), "Dispatches packet", packet.MsgType.String(), "from", packet.ServerIdentity.String(), "to", reflect.TypeOf(p))
 	p.Process(packet)
+	log.Print(packet.To.String(), "AFTER Dispatches packet", packet.MsgType.String(), "from", packet.ServerIdentity.String(), "to", reflect.TypeOf(p))
 	return nil
 }
 

@@ -185,6 +185,8 @@ type Packet struct {
 	Constructors protobuf.Constructors
 	// possible error during unmarshalling so that upper layer can know it
 	err error
+	// XXX REMOVE
+	To *ServerIdentity
 }
 
 // ServerIdentity is used to represent a Conode in the whole internet.

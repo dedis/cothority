@@ -496,6 +496,7 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 		MsgType:        typ,
 		Msg:            body,
 		ServerIdentity: m.identity,
+		To:             e,
 	}
 	r.receive(&nm)
 	log.Lvl5(m.identity.First(), "Send msg", typ.String(), "to", e.First())
@@ -517,6 +518,7 @@ func (m *localRouter) Listen() {
 			if err := m.Dispatch(msg); err != nil {
 				log.Lvl4(m.Address(), "Error dispatching:", err)
 			}
+			log.Print(m.Address(), "Dispatched message", msg.MsgType, "from", msg.ServerIdentity.First())
 		}
 	}()
 	<-ready
