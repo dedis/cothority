@@ -36,6 +36,7 @@ type Host struct {
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
+		private:              pkey,
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
@@ -51,6 +52,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router) *Host {
 	h := &Host{
 		ServerIdentity:       e,
+		private:              pkey,
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
@@ -95,7 +97,6 @@ func (h *Host) GetStatus() Status {
 }
 
 func (h *Host) Close() error {
-	h.Router.Close()
 	h.overlay.Close()
-	return nil
+	return h.Router.Close()
 }

@@ -54,11 +54,11 @@ func TestProcessorHost(t *testing.T) {
 	h1 := NewTestHost(2000)
 	defer h1.Close()
 
-	proc := &basicProcessor{make(chan network.Packet)}
+	proc := &basicProcessor{make(chan network.Packet, 1)}
 	h1.RegisterProcessor(proc, basicMessageType)
-	h1.Dispatch(&network.Packet{
+	assert.Nil(t, h1.Dispatch(&network.Packet{
 		Msg:     basicMessage{10},
-		MsgType: basicMessageType})
+		MsgType: basicMessageType}))
 
 	select {
 	case m := <-proc.msgChan:

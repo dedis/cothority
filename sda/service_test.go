@@ -507,6 +507,32 @@ func TestClient_Send(t *testing.T) {
 	assert.Equal(t, resp.Val, 10)
 }
 
+func TestClient_LocalSend(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+
+	// register service
+	RegisterNewService("BackForth", func(c *Context, path string) Service {
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	// create hosts
+	hosts, el, _ := local.GenTestTree(4, true, true, false)
+	client := NewLocalClient("BackForth")
+
+	r := &simpleRequest{
+		ServerIdentities: el,
+		Val:              10,
+	}
+	nm, err := client.Send(hosts[0].ServerIdentity, r)
+	log.ErrFatal(err)
+
+	assert.Equal(t, nm.MsgType, simpleResponseType)
+	resp := nm.Msg.(simpleResponse)
+	assert.Equal(t, resp.Val, 10)
+}
+
 func TestClient_Parallel(t *testing.T) {
 	nbrNodes := 2
 	nbrParallel := 2

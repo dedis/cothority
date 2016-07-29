@@ -26,8 +26,8 @@ func TestLocalRouter(t *testing.T) {
 	m2 := NewLocalRouter(NewServerIdentity("127.0.0.1:4000"))
 	m2.Listen()
 	defer m2.Close()
-	assert.NotNil(t, localRouters.Get(m1.ServerIdentity()))
-	assert.NotNil(t, localRouters.Get(m2.ServerIdentity()))
+	assert.NotNil(t, localRelays.Get(m1.ServerIdentity()))
+	assert.NotNil(t, localRelays.Get(m2.ServerIdentity()))
 
 	p := newSimpleProcessor()
 	m2.RegisterProcessor(p, statusMsgID)

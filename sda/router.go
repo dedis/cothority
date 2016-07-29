@@ -2,6 +2,7 @@ package sda
 
 import (
 	"errors"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +29,9 @@ type Router interface {
 	StatusReporter
 	Address() string
 
+	// Run will start the Router. It is a blocking call which will return until
+	// Close() is called.
+	//Run()
 	// TO REMOVE IDEALLY
 	ListenAndBind()
 	Listen()
@@ -176,7 +180,6 @@ func (t *TcpRouter) Connect(id *network.ServerIdentity) (network.SecureConn, err
 
 // Close shuts down all network connections and closes the listener.
 func (t *TcpRouter) Close() error {
-
 	t.closingMut.Lock()
 	defer t.closingMut.Unlock()
 	if t.isClosing {
@@ -188,9 +191,10 @@ func (t *TcpRouter) Close() error {
 		// Tell ProcessMessages to quit
 		close(t.ProcessMessagesQuit)
 	}
-	if err := t.closeConnections(); err != nil {
-		return err
-	}
+	return t.host.Close()
+	/* if err := t.closeConnections(); err != nil {*/
+	//return err
+	/*}*/
 	return nil
 }
 
@@ -394,41 +398,50 @@ func (t *TcpRouter) Receive() network.Packet {
 }
 
 // MOCKING NETWORK ROUTER
+// localRelay defines the basic functionalities such as sending and
+// receiving a message, locally. It is implemented by localRouter and
+// localClient so both a Router and a Client can be emulated locally without
+// opening any real connections.
+type localRelay interface {
+	send(e *network.ServerIdentity, msg network.Body) error
+	receive(msg *network.Packet)
+	serverIdentity() *network.ServerIdentity
+}
 
 // localRouterStore keeps tracks of all the mock routers
-type localRouterStore struct {
-	localRouters map[network.ServerIdentityID]*localRouter
-	mut          sync.Mutex
+type localRelayStore struct {
+	localRelays map[network.ServerIdentityID]localRelay
+	mut         sync.Mutex
 }
 
 // localRouters is the store that keeps tracks of all opened local routers in a
 // thread safe manner
-var localRouters = localRouterStore{
-	localRouters: make(map[network.ServerIdentityID]*localRouter),
+var localRelays = localRelayStore{
+	localRelays: make(map[network.ServerIdentityID]localRelay),
 }
 
-func (lrs *localRouterStore) Put(r *localRouter) {
+func (lrs *localRelayStore) Put(r localRelay) {
 	lrs.mut.Lock()
 	defer lrs.mut.Unlock()
-	lrs.localRouters[r.identity.ID] = r
+	lrs.localRelays[r.serverIdentity().ID] = r
 }
 
 // Get returns the router associated with this ServerIdentity. It returns nil if
 // there is no localRouter associated with this ServerIdentity
-func (lrs *localRouterStore) Get(id *network.ServerIdentity) *localRouter {
+func (lrs *localRelayStore) Get(id *network.ServerIdentity) localRelay {
 	lrs.mut.Lock()
 	defer lrs.mut.Unlock()
-	r, ok := lrs.localRouters[id.ID]
+	r, ok := lrs.localRelays[id.ID]
 	if !ok {
 		return nil
 	}
 	return r
 }
 
-func (lrs *localRouterStore) Len() int {
+func (lrs *localRelayStore) Len() int {
 	lrs.mut.Lock()
 	defer lrs.mut.Unlock()
-	return len(lrs.localRouters)
+	return len(lrs.localRelays)
 }
 
 // localRouter is a struct that implements the Router interface locally
@@ -442,39 +455,49 @@ type localRouter struct {
 
 func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
 	r := &localRouter{
-		Dispatcher: NewRoutineDispatcher(), //NewBlockingDispatcher(),
+		//Dispatcher: NewRoutineDispatcher(), //NewBlockingDispatcher(),
+		Dispatcher: NewBlockingDispatcher(),
 		identity:   identity,
 		msgChan:    make(chan *network.Packet),
 	}
-	localRouters.Put(r)
-	// XXX Will be replaced by Start or Listen from the Router interface
-	// go r.dispatch()
+	localRelays.Put(r)
 	return r
 }
 
+func (m *localRouter) serverIdentity() *network.ServerIdentity {
+	return m.identity
+}
+
+func (m *localRouter) send(e *network.ServerIdentity, msg network.Body) error {
+	return m.SendRaw(e, msg)
+}
+
 func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error {
-	r := localRouters.Get(e)
+	r := localRelays.Get(e)
 	if r == nil {
 		return errors.New("No mock routers at this entity")
 	}
-	// simulate network marshaling / unmarshaling
-	b, err := network.MarshalRegisteredType(msg)
-	if err != nil {
-		return err
-	}
 
-	t, unmarshalled, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
-	if err != nil {
-		return err
+	var body network.Body
+	var val = reflect.ValueOf(msg)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
 	}
+	body = val.Interface()
+
+	var typ = network.TypeFromData(body)
 	nm := network.Packet{
-		Msg:            unmarshalled,
-		MsgType:        t,
+		MsgType:        typ,
+		Msg:            body,
 		ServerIdentity: m.identity,
 	}
-	r.msgChan <- &nm
-	log.Lvl5(m.identity.First(), "Send msg", t.String(), "to", e.First())
+	r.receive(&nm)
+	log.Lvl5(m.identity.First(), "Send msg", typ.String(), "to", e.First())
 	return nil
+}
+
+func (m *localRouter) receive(msg *network.Packet) {
+	m.msgChan <- msg
 }
 
 func (m *localRouter) Listen() {
@@ -510,7 +533,7 @@ func (l *localRouter) Rx() uint64 {
 
 func (l *localRouter) GetStatus() Status {
 	m := make(map[string]string)
-	m["localRouters"] = strconv.Itoa(localRouters.Len())
+	m["localRouters"] = strconv.Itoa(localRelays.Len())
 	return m
 }
 
