@@ -577,6 +577,10 @@ func (c *localClient) receive(msg *network.Packet) {
 func (c *localClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.send(dst, msg)
 	reply := <-c.msgChan
+	err := ErrMsg(reply, nil)
+	if err != nil {
+		return nil, err
+	}
 	return reply, nil
 }
 

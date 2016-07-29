@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"strings"
@@ -223,7 +222,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.MessageTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
-		fmt.Print("Error ServiceProcessor(1) Didn't register message", mt.String())
+		log.Error("Error ServiceProcessor(1) Didn't register message", mt.String())
 		return &StatusRet{"Didn't register message-handler: " + mt.String()}
 	}
 
@@ -242,6 +241,7 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.Messag
 	errI := ret[1].Interface()
 
 	if errI != nil {
+		log.Error("StatusRet:", errI.(error).Error())
 		return &StatusRet{errI.(error).Error()}
 	}
 

@@ -451,9 +451,7 @@ type localRouter struct {
 	// msgQueue is the channel where other localRouter communicate messages to
 	// this localRouter.
 	msgChan chan *network.Packet
-	// conns keep tracks of to whom this local router sent something so it can
-	// have a reasonable loooking report status in GetStatus
-	conns map[string]bool
+	conns   *connsStore
 }
 
 func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
@@ -461,7 +459,7 @@ func NewLocalRouter(identity *network.ServerIdentity) *localRouter {
 		Dispatcher: NewBlockingDispatcher(),
 		identity:   identity,
 		msgChan:    make(chan *network.Packet, 100),
-		conns:      make(map[string]bool),
+		conns:      newConnsStore(),
 	}
 	localRelays.Put(r)
 	return r
@@ -481,7 +479,7 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 		return errors.New("No mock routers at this entity")
 	}
 
-	m.conns[e.String()] = true
+	m.conns.Put(e.String())
 
 	var body network.Body
 	var val = reflect.ValueOf(msg)
@@ -510,7 +508,7 @@ func (m *localRouter) Listen() {
 	go func() {
 		ready <- true
 		for msg := range m.msgChan {
-			m.conns[msg.ServerIdentity.String()] = true
+			m.conns.Put(msg.ServerIdentity.String())
 			log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
 			// XXX Do we need a go routine here ?
 			if err := m.Dispatch(msg); err != nil {
@@ -539,14 +537,9 @@ func (l *localRouter) Rx() uint64 {
 
 func (l *localRouter) GetStatus() Status {
 	m := make(map[string]string)
-	nbr := len(l.conns)
-	var conns []string
-	for k := range l.conns {
-		conns = append(conns, k)
-	}
-	m["Connections"] = strings.Join(conns, "\n")
+	m["Connections"] = strings.Join(l.conns.Get(), "\n")
 	m["Host"] = l.Address()
-	m["Total"] = strconv.Itoa(nbr)
+	m["Total"] = strconv.Itoa(l.conns.Len())
 	m["Packets_Received"] = strconv.FormatUint(0, 10)
 	m["Packets_Sent"] = strconv.FormatUint(0, 10)
 	return m
@@ -558,4 +551,37 @@ func (l *localRouter) Address() string {
 
 func (l *localRouter) ListenAndBind() {
 	l.Listen()
+}
+
+type connsStore struct {
+	// conns keep tracks of to whom this local router sent something so it can
+	// have a reasonable loooking report status in GetStatus
+	conns map[string]bool
+	sync.Mutex
+}
+
+func (cs *connsStore) Put(name string) {
+	cs.Lock()
+	defer cs.Unlock()
+	cs.conns[name] = true
+}
+func (cs *connsStore) Get() []string {
+	cs.Lock()
+	defer cs.Unlock()
+	var names []string
+	for k := range cs.conns {
+		names = append(names, k)
+	}
+	return names
+}
+func (cs *connsStore) Len() int {
+	cs.Lock()
+	defer cs.Unlock()
+	return len(cs.conns)
+}
+
+func newConnsStore() *connsStore {
+	return &connsStore{
+		conns: make(map[string]bool),
+	}
 }
