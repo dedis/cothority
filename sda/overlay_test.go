@@ -158,16 +158,11 @@ func TestOverlayRosterPropagation(t *testing.T) {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
 	// check if we receive the Roster then
-	var roster Roster
-	select {
-	case roster = <-proc.sendRoster:
-		break
-	case <-time.After(50 * time.Millisecond):
-		t.Fatal("Timeout for receiving roster")
-	}
-	packet = network.Packet{
+	var ros Roster
+	ros = <-proc.sendRoster
+	packet := network.Packet{
 		ServerIdentity: h2.ServerIdentity,
-		Msg:            roster,
+		Msg:            ros,
 		MsgType:        SendRosterMessageID,
 	}
 	h1.overlay.Process(&packet)
