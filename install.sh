@@ -10,8 +10,9 @@ echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
 
 pattern="refactor_*"; \
 if [[ "$BRANCH" =~ "$pattern" ]]; then \
+    echo "[+] Using a refactor_ branch"
     repo=github.com/dedis/cosi; \
-    go get $$repo; \
+    go get $repo; \
     cd $GOPATH/src/$repo; \
     git checkout -f $BRANCH; \
 fi;\
