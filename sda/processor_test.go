@@ -175,7 +175,7 @@ type testMsg struct {
 func procMsg(e *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
-		return nil, errors.New("6 * 9 != 42")
+		return nil, errors.New("ServiceProcessor received unwanted value (42)")
 	}
 	return msg, nil
 }

@@ -21,10 +21,10 @@ func NewServerIdentity(address string) *network.ServerIdentity {
 
 func TestLocalRouter(t *testing.T) {
 	m1 := NewLocalRouter(NewServerIdentity("127.0.0.1:2000"))
-	m1.Listen()
+	go m1.Run()
 	defer m1.Close()
 	m2 := NewLocalRouter(NewServerIdentity("127.0.0.1:4000"))
-	m2.Listen()
+	go m2.Run()
 	defer m2.Close()
 	assert.NotNil(t, localRelays.Get(m1.ServerIdentity()))
 	assert.NotNil(t, localRelays.Get(m2.ServerIdentity()))
@@ -74,7 +74,7 @@ func TestTcpRouterNew(t *testing.T) {
 func TestTcpRouterClose(t *testing.T) {
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)
-	h1.ListenAndBind()
+	go h1.Run()
 	_, err := h2.Connect(h1.serverIdentity)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
@@ -89,7 +89,7 @@ func TestTcpRouterClose(t *testing.T) {
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
 	h3 := NewLocalHost(2002)
-	h3.ListenAndBind()
+	go h3.Run()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
@@ -111,8 +111,8 @@ func TestTcpRouterReconnection(t *testing.T) {
 	defer h1.Close()
 	defer h2.Close()
 
-	h1.ListenAndBind()
-	h2.ListenAndBind()
+	go h1.Run()
+	go h2.Run()
 
 	log.Lvl1("Sending h1->h2")
 	log.ErrFatal(sendrcv_proc(h1, h2))
@@ -122,7 +122,7 @@ func TestTcpRouterReconnection(t *testing.T) {
 	h1.closeConnections()
 
 	log.Lvl1("Listening again on h1")
-	h1.ListenAndBind()
+	go h1.Run()
 
 	log.Lvl1("Sending h2->h1")
 	log.ErrFatal(sendrcv_proc(h2, h1))
@@ -137,7 +137,7 @@ func TestTcpRouterReconnection(t *testing.T) {
 	h2.AbortConnections()
 	log.Lvl1("asking h2 to listen again")
 	// making h2 backup again
-	h2.ListenAndBind()
+	go h2.Run()
 	// and re-registering the connection to h2 from h1
 	h1.registerConnection(c2)
 
@@ -149,7 +149,7 @@ func TestTcpRouterReconnection(t *testing.T) {
 func TestTcpRouterAutoConnection(t *testing.T) {
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)
-	h2.ListenAndBind()
+	go h2.Run()
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
@@ -231,8 +231,8 @@ func TestTcpRouterSendMsgDuplex(t *testing.T) {
 func TwoTcpHosts() (*Host, *Host) {
 	h1 := NewLocalHost(2000)
 	h2 := NewLocalHost(2001)
-	h1.ListenAndBind()
-	h2.ListenAndBind()
+	go h1.Run()
+	go h2.Run()
 
 	return h1, h2
 }
@@ -240,8 +240,8 @@ func TwoTcpHosts() (*Host, *Host) {
 func TwoTestHosts() (*Host, *Host) {
 	h1 := NewTestHost(2000)
 	h2 := NewTestHost(2001)
-	h1.Listen()
-	h2.Listen()
+	go h1.Run()
+	go h2.Run()
 	return h1, h2
 }
 

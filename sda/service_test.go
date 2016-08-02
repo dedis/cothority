@@ -235,7 +235,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		return ds
 	})
 	host := NewTestHost(2000)
-	host.Listen()
+	go host.Run()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
@@ -351,12 +351,12 @@ func TestServiceNewProtocol(t *testing.T) {
 		return localDs
 	})
 	host := NewTestHost(2000)
-	host.ListenAndBind()
+	go host.Run()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
 	host2 := NewTestHost(2002)
-	host2.ListenAndBind()
+	go host2.Run()
 	defer host2.Close()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
@@ -412,7 +412,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	h2 := NewTestHost(2010)
 	defer h2.Close()
 	h1 := NewTestHost(2000)
-	h1.ListenAndBind()
+	go h1.Run()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request
@@ -549,8 +549,8 @@ func TestClient_Parallel(t *testing.T) {
 	h2 := NewLocalHost(2001)
 	defer h1.Close()
 	defer h2.Close()
-	h1.ListenAndBind()
-	h2.ListenAndBind()
+	go h1.Run()
+	go h2.Run()
 
 	roster := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 

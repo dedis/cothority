@@ -241,7 +241,6 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.Messag
 	errI := ret[1].Interface()
 
 	if errI != nil {
-		log.Error("StatusRet:", errI.(error).Error())
 		return &StatusRet{errI.(error).Error()}
 	}
 

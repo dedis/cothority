@@ -268,7 +268,7 @@ func NewLocalHost(port int) *Host {
 func NewTestHost(port int) *Host {
 	priv, id := NewPrivIdentiy(port)
 	localRouter := NewLocalRouter(id)
-	localRouter.Listen()
+	go localRouter.Run()
 	return NewHostWithRouter(id, priv, localRouter)
 }
 

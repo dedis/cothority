@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -29,12 +28,11 @@ type Router interface {
 	StatusReporter
 	Address() string
 
-	// Run will start the Router. It is a blocking call which will return until
-	// Close() is called.
-	//Run()
-	// TO REMOVE IDEALLY
-	ListenAndBind()
-	Listen()
+	// Run will start the Router:
+	//  * Accepting new connections
+	//  * Dispatching  incoming messages
+	// It is a blocking call which will return until Close() is called.
+	Run()
 }
 
 type TcpRouter struct {
@@ -117,10 +115,13 @@ func (t *TcpRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 	return nil
 }
 
-// listen starts listening for messages coming from any host that tries to
-// contact this host. If 'wait' is true, it will try to connect to itself before
-// returning.
-func (t *TcpRouter) listen(wait bool) {
+// Run will start opening a tcp port and accepting connections. It is a blocking
+// call. This function returns when an error occurs on the open port or when
+// t.Stop() is called.
+func (t *TcpRouter) Run() {
+	// start processing messages
+	t.StartProcessMessages()
+	// open port
 	log.Lvl3(t.serverIdentity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
 		log.Lvl3(t.workingAddress, "Accepted Connection from", c.Remote())
@@ -128,39 +129,10 @@ func (t *TcpRouter) listen(wait bool) {
 		t.registerConnection(c)
 		t.handleConn(c)
 	}
-	go func() {
-		log.Lvl4("Host listens on:", t.workingAddress)
-		err := t.host.Listen(fn)
-		if err != nil {
-			log.Fatal("Couldn't listen on", t.workingAddress, ":", err)
-		}
-	}()
-	if wait {
-		for {
-			log.Lvl4(t.serverIdentity.First(), "checking if listener is up")
-			_, err := t.Connect(t.serverIdentity)
-			if err == nil {
-				log.Lvl4(t.serverIdentity.First(), "managed to connect to itself")
-				break
-			}
-			time.Sleep(network.WaitRetry)
-		}
+	err := t.host.Listen(fn)
+	if err != nil {
+		log.Fatal("Error listening on", t.workingAddress, ":", err)
 	}
-}
-
-// ListenAndBind starts listening and returns once it could connect to itself.
-// This can fail in the case of running inside a container or virtual machine
-// using port-forwarding to an internal IP.
-func (r *TcpRouter) ListenAndBind() {
-	r.listen(true)
-	r.StartProcessMessages()
-}
-
-// Listen only starts listening and returns without waiting for the
-// listening to be active.
-func (r *TcpRouter) Listen() {
-	r.listen(false)
-	r.StartProcessMessages()
 }
 
 // Connect takes an entity where to connect to
@@ -503,20 +475,31 @@ func (m *localRouter) receive(msg *network.Packet) {
 	m.msgChan <- msg
 }
 
-func (m *localRouter) Listen() {
-	ready := make(chan bool)
-	go func() {
-		ready <- true
-		for msg := range m.msgChan {
-			m.conns.Put(msg.ServerIdentity.String())
-			log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
-			// XXX Do we need a go routine here ?
-			if err := m.Dispatch(msg); err != nil {
-				log.Lvl4(m.Address(), "Error dispatching:", err)
-			}
+/*func (m *localRouter) Listen() {*/
+//ready := make(chan bool)
+//go func() {
+//ready <- true
+//for msg := range m.msgChan {
+//m.conns.Put(msg.ServerIdentity.String())
+//log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
+//// XXX Do we need a go routine here ?
+//if err := m.Dispatch(msg); err != nil {
+//log.Lvl4(m.Address(), "Error dispatching:", err)
+//}
+//}
+//}()
+//<-ready
+/*}*/
+
+func (m *localRouter) Run() {
+	for msg := range m.msgChan {
+		m.conns.Put(msg.ServerIdentity.String())
+		log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
+		// XXX Do we need a go routine here ?
+		if err := m.Dispatch(msg); err != nil {
+			log.Lvl4(m.Address(), "Error dispatching:", err)
 		}
-	}()
-	<-ready
+	}
 }
 
 func (m *localRouter) ServerIdentity() *network.ServerIdentity {
@@ -547,10 +530,6 @@ func (l *localRouter) GetStatus() Status {
 
 func (l *localRouter) Address() string {
 	return l.identity.First()
-}
-
-func (l *localRouter) ListenAndBind() {
-	l.Listen()
 }
 
 type connsStore struct {
