@@ -173,10 +173,6 @@ func (t *TcpRouter) Close() error {
 		close(t.ProcessMessagesQuit)
 	}
 	return t.host.Close()
-	/* if err := t.closeConnections(); err != nil {*/
-	//return err
-	/*}*/
-	return nil
 }
 
 // CloseConnections only shuts down the network connections - used mainly
