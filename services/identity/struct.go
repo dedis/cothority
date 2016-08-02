@@ -178,8 +178,8 @@ func sortUniq(slice []string) []string {
 
 // AddIdentity starts a new identity-skipchain
 type AddIdentity struct {
-	*Config
-	*sda.Roster
+	Config *Config
+	Roster *sda.Roster
 }
 
 // AddIdentityReply is the reply when a new Identity has been added
