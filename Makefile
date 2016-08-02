@@ -1,15 +1,5 @@
 install:
-	@export PR=https://api.github.com/repos/$$TRAVIS_REPO_SLUG/pulls/$$TRAVIS_PULL_REQUEST; \
-	pattern="refactor_*"; \
-	if [ $$BRANCH =~ $$pattern ]; then \
-		repo=github.com/dedis/cosi; \
-		go get $$repo; \
-		cd $$GOPATH/src/$$repo; \
-		git checkout -f $BRANCH; \
-	fi;\
-	cd $$GOPATH/src/github.com/dedis/cothority; \
-	go get -t ./...
-
+	./install.sh
 test_fmt:
 	@echo Checking correct formatting of files
 	{ \
