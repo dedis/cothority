@@ -38,7 +38,7 @@ func TestService(t *testing.T) {
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := medco.NewTestMedcoClient(el.List[0])
+	client := NewTestMedcoClient(el.List[0])
 
 	surveyDesc := SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
@@ -51,7 +51,7 @@ func TestService(t *testing.T) {
 	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.API, 10)
 	for i := 0; i < numberAttr; i++ {
-		dataHolder[i] = medco.NewTestMedcoClient(el.List[i%5])
+		dataHolder[i] = NewTestMedcoClient(el.List[i%5])
 		grp := [numberGrpAttr]int64{}
 		aggr := make([]int64, 10)
 		grp[0] = int64(i % 4)
