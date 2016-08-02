@@ -2,7 +2,6 @@ package sda
 
 import (
 	"testing"
-	"time"
 
 	"reflect"
 
@@ -60,14 +59,10 @@ func TestProcessorHost(t *testing.T) {
 		Msg:     basicMessage{10},
 		MsgType: basicMessageType}))
 
-	select {
-	case m := <-proc.msgChan:
-		basic, ok := m.Msg.(basicMessage)
-		assert.True(t, ok)
-		assert.Equal(t, basic.Value, 10)
-	case <-time.After(100 * time.Millisecond):
-		t.Error("No message received on channel")
-	}
+	m := <-proc.msgChan
+	basic, ok := m.Msg.(basicMessage)
+	assert.True(t, ok)
+	assert.Equal(t, basic.Value, 10)
 }
 
 var testServiceID ServiceID
