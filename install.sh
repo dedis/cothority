@@ -5,7 +5,7 @@
 ## `refactor_`, it will try to checkout the same branch name 
 ## in dedis/cosi.
 export PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`; fi)
+export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
 
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
 
