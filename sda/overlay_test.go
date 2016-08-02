@@ -151,8 +151,6 @@ func TestOverlayRosterPropagation(t *testing.T) {
 		t.Fatal("List should be equal to original list")
 	}
 
-	// put back the overlay into place
-	h1.RegisterProcessor(h1.overlay, SendRosterMessageID)
 	err = h1.SendRaw(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
@@ -212,14 +210,20 @@ func TestOverlayTreePropagation(t *testing.T) {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
-	// put back the overlay in charge
-	h1.RegisterProcessor(h1.overlay, SendTreeMessageID)
 	err = h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	// XXX Should be able to remove this as in TestOverlayRosterTreePropagation
-	time.Sleep(50 * time.Millisecond)
+	// check if we receive the tree then
+	var tm TreeMarshal
+	tm = <-proc.treeMarshal
+	packet := network.Packet{
+		ServerIdentity: h2.ServerIdentity,
+		Msg:            tm,
+		MsgType:        SendTreeMessageID,
+	}
+	h1.overlay.Process(&packet)
+
 	tree2, ok := h1.GetTree(tree.ID)
 	if !ok {
 		t.Fatal("List-id not found")
