@@ -17,7 +17,7 @@ if [[ $BRANCH =~ $pattern ]]; then
     cd $GOPATH/src/$repo; 
     git checkout -f $BRANCH; 
     git pull;
-    echo "Checked out!";
+    echo $(git rev-parse --abbrev-ref HEAD);
 fi;
 cd $GOPATH/src/github.com/dedis/cothority; 
 go get -t ./...
