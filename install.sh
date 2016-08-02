@@ -13,7 +13,7 @@ pattern="refactor_*";
 if [[ $BRANCH =~ $pattern ]]; then 
     echo "Using refactor branch ..."
     repo=github.com/dedis/cosi; 
-    go get $repo; 
+    go get -d $repo; 
     cd $GOPATH/src/$repo; 
     git checkout -f $BRANCH; 
     git pull;
