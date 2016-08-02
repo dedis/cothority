@@ -110,9 +110,7 @@ func runServer(ctx *cli.Context) {
 	if err != nil {
 		log.Fatal("Couldn't parse config:", err)
 	}
-	host.ListenAndBind()
-	host.WaitForClose()
-
+	host.Run()
 }
 
 func getDefaultConfigFile() string {

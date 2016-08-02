@@ -6,6 +6,7 @@ package main
 
 import (
 	"flag"
+	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
@@ -60,12 +61,28 @@ func main() {
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
 	var rootSim sda.Simulation
+	// having a waitgroup so the binary stops when all hosts are closed
+	var wg sync.WaitGroup
+	var ready = make(chan bool)
 	for i, sc := range scs {
 		// Starting all hosts for that server
 		host := sc.Host
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		log.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Addresses)
-		host.Listen()
+		// Launch a host and notifies when it's done
+
+		wg.Add(1)
+		go func(h *sda.Host, m monitor.Measure) {
+			ready <- true
+			defer wg.Done()
+			h.Run()
+			// record bandwidth
+			m.Record()
+			log.Lvl3(hostAddress, "Simulation closed host", h.ServerIdentity.First())
+		}(host, measures[i])
+		// wait to be sure the goroutine started
+		<-ready
+
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
 			log.Fatal(err)
@@ -145,19 +162,8 @@ func main() {
 		}
 	}
 
-	// Wait for all hosts to be closed
-	allClosed := make(chan bool)
-	go func() {
-		for i, sc := range scs {
-			sc.Host.WaitForClose()
-			// record the bandwidth
-			measures[i].Record()
-			log.Lvl3(hostAddress, "Simulation closed host", sc.Host.ServerIdentity.Addresses, "closed")
-		}
-		allClosed <- true
-	}()
 	log.Lvl3(hostAddress, scs[0].Host.ServerIdentity.First(), "is waiting for all hosts to close")
-	<-allClosed
+	wg.Wait()
 	log.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()
 }

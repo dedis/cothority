@@ -157,8 +157,20 @@ func TestOverlayRosterPropagation(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
-	// XXX We should be able to remove this arbitrary sleeping
-	time.Sleep(50 * time.Millisecond)
+	// check if we receive the Roster then
+	var roster Roster
+	select {
+	case roster = <-proc.sendRoster:
+		break
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("Timeout for receiving roster")
+	}
+	packet = network.Packet{
+		ServerIdentity: h2.ServerIdentity,
+		Msg:            roster,
+		MsgType:        SendRosterMessageID,
+	}
+	h1.overlay.Process(&packet)
 	list, ok := h1.Roster(el.ID)
 	if !ok {
 		t.Fatal("List-id not found")

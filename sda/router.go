@@ -13,6 +13,15 @@ import (
 	"golang.org/x/net/context"
 )
 
+// Router is an abstraction to represent the bridge between the communication
+// layer (network, channels etc) and the logical/processing layer (overlay &
+// protocols, services etc). It is a duplex communication link (send/receive)
+// from/to other router of the same type.
+// Typically, for deployement you would use a tcpRouter so it opens tcp ports
+// and communicate through tcp connections. For testing, there is a localRouter
+// which pass all messages through channels going to other localRouter.
+// For the Router to dispatch messages to your struct, you need to register a
+// `Processor` (see the `Dispatcher` interface in processor.go).
 type Router interface {
 	Dispatcher
 
@@ -474,22 +483,6 @@ func (m *localRouter) SendRaw(e *network.ServerIdentity, msg network.Body) error
 func (m *localRouter) receive(msg *network.Packet) {
 	m.msgChan <- msg
 }
-
-/*func (m *localRouter) Listen() {*/
-//ready := make(chan bool)
-//go func() {
-//ready <- true
-//for msg := range m.msgChan {
-//m.conns.Put(msg.ServerIdentity.String())
-//log.Lvl5(m.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
-//// XXX Do we need a go routine here ?
-//if err := m.Dispatch(msg); err != nil {
-//log.Lvl4(m.Address(), "Error dispatching:", err)
-//}
-//}
-//}()
-//<-ready
-/*}*/
 
 func (m *localRouter) Run() {
 	for msg := range m.msgChan {
