@@ -14,6 +14,7 @@ cd $GOPATH/src/github.com/dedis/cothority;
 git fetch --tags
 git fetch --unshallow
 BRANCH=`git rev-parse --abbrev-ref HEAD`
+echo "Branch is $BRANCH"
 
 pattern="refactor_*"; 
 if [[ $BRANCH =~ $pattern ]]; then 
