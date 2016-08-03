@@ -26,14 +26,14 @@ func TestLocalRouter(t *testing.T) {
 	m2 := NewLocalRouter(NewServerIdentity("127.0.0.1:4000"))
 	go m2.Run()
 	defer m2.Close()
-	assert.NotNil(t, localRelays.Get(m1.ServerIdentity()))
-	assert.NotNil(t, localRelays.Get(m2.ServerIdentity()))
+	assert.NotNil(t, localRelays.Get(m1.identity))
+	assert.NotNil(t, localRelays.Get(m2.identity))
 
 	p := newSimpleProcessor()
 	m2.RegisterProcessor(p, statusMsgID)
 
 	status := &statusMessage{true, 10}
-	assert.Nil(t, m1.SendRaw(m2.ServerIdentity(), status))
+	assert.Nil(t, m1.Send(m2.identity, status))
 
 	select {
 	case m := <-p.relay:
@@ -45,14 +45,14 @@ func TestLocalRouter(t *testing.T) {
 	}
 }
 
-func NewMockTcpRouter(port int) *TcpRouter {
+func NewMockTcpRouter(port int) *TCPRouter {
 	addr := "localhost:" + strconv.Itoa(port)
 	kp := config.NewKeyPair(network.Suite)
 	id := network.NewServerIdentity(kp.Public, addr)
-	return NewTcpRouter(id, kp.Secret)
+	return NewTCPRouter(id, kp.Secret)
 }
 
-func (t *TcpRouter) abortConnections() error {
+func (t *TCPRouter) abortConnections() error {
 	t.closeConnections()
 	close(t.ProcessMessagesQuit)
 	return t.host.Close()
@@ -88,7 +88,7 @@ func TestTcpRouterClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewLocalHost(2002)
+	h3 := NewTCPHost(2002)
 	go h3.Run()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
@@ -100,6 +100,26 @@ func TestTcpRouterClose(t *testing.T) {
 		// try closing the underlying connection manually and fail
 		c.Close()
 		t.Fatal("Couldn't Close()", h3)
+	}
+}
+
+// Test if TCPRouter fits the interface such as calling Run(), then Close(),
+// should return
+func TestTcpRouterRunClose(t *testing.T) {
+	h := NewMockTcpRouter(2000)
+	var stop = make(chan bool)
+	go func() {
+		stop <- true
+		h.Run()
+		stop <- true
+	}()
+	<-stop
+	h.Close()
+	select {
+	case <-stop:
+		return
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("TcpHost should have returned from Run() by now")
 	}
 }
 
@@ -156,7 +176,7 @@ func TestTcpRouterAutoConnection(t *testing.T) {
 	defer h1.Close()
 	defer h2.Close()
 
-	err := h1.SendRaw(h2.serverIdentity, &SimpleMessage{12})
+	err := h1.Send(h2.serverIdentity, &SimpleMessage{12})
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
@@ -182,7 +202,7 @@ func TestTcpRouterMessaging(t *testing.T) {
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
 	msgSimple := &SimpleMessage{3}
-	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
+	err := h1.Send(h2.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
@@ -210,14 +230,14 @@ func TestTcpRouterSendMsgDuplex(t *testing.T) {
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
 	msgSimple := &SimpleMessage{5}
-	err := h1.SendRaw(h2.ServerIdentity, msgSimple)
+	err := h1.Send(h2.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := <-proc.relay
 	log.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.SendRaw(h1.ServerIdentity, msgSimple)
+	err = h2.Send(h1.ServerIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
@@ -229,8 +249,8 @@ func TestTcpRouterSendMsgDuplex(t *testing.T) {
 }
 
 func TwoTcpHosts() (*Host, *Host) {
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewTCPHost(2000)
+	h2 := NewTCPHost(2001)
 	go h1.Run()
 	go h2.Run()
 
@@ -238,18 +258,18 @@ func TwoTcpHosts() (*Host, *Host) {
 }
 
 func TwoTestHosts() (*Host, *Host) {
-	h1 := NewTestHost(2000)
-	h2 := NewTestHost(2001)
+	h1 := NewLocalHost(2000)
+	h2 := NewLocalHost(2001)
 	go h1.Run()
 	go h2.Run()
 	return h1, h2
 }
 
-func sendrcv_proc(from, to *TcpRouter) error {
+func sendrcv_proc(from, to *TCPRouter) error {
 	sp := newSimpleProcessor()
 	// new processing
 	to.RegisterProcessor(sp, statusMsgID)
-	if err := from.SendRaw(to.serverIdentity, &statusMessage{true, 10}); err != nil {
+	if err := from.Send(to.serverIdentity, &statusMessage{true, 10}); err != nil {
 		return err
 	}
 	var err error

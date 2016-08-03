@@ -32,7 +32,7 @@ func TestJVSS(t *testing.T) {
 	msg := []byte("Hello World!") // Message to-be-signed
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTestTree(int(nodes), false, true, true)
+	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
 	log.Lvl1("JVSS - starting")

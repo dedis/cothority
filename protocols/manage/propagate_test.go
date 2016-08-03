@@ -24,7 +24,7 @@ func init() {
 func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
-		_, el, _ := local.GenTestTree(nbrNodes, false, true, true)
+		_, el, _ := local.GenTree(nbrNodes, false, true, true)
 		o := local.Overlays[el.List[0].ID]
 
 		i := 0

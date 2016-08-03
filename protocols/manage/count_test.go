@@ -14,7 +14,7 @@ import (
 func TestClose(t *testing.T) {
 	local := sda.NewLocalTest()
 	nbrNodes := 2
-	_, _, tree := local.GenTestTree(nbrNodes, false, true, true)
+	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 	defer local.CloseAll()
 
 	pi, err := local.CreateProtocol(tree, "ExampleChannels")

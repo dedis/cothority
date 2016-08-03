@@ -31,8 +31,8 @@ type Host struct {
 	statusReporterStruct *statusReporterStruct
 }
 
-// NewHost starts a new Host that will listen on the network for incoming
-// messages. It will store the private-key.
+// NewHost returns a new Host that out of a private-key and its relating public
+// key with a default TcpRouter as Router.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
@@ -40,7 +40,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
-		Router:               NewTcpRouter(e, pkey),
+		Router:               NewTCPRouter(e, pkey),
 	}
 
 	h.overlay = NewOverlay(h)
@@ -49,12 +49,12 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	return h
 }
 
+// NewHostWithRouter returns a fresh Host with a given Router.
 func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router) *Host {
 	h := &Host{
-		ServerIdentity:       e,
-		private:              pkey,
-		connections:          make(map[network.ServerIdentityID]network.SecureConn),
-		suite:                network.Suite,
+		ServerIdentity: e,
+		private:        pkey,
+		connections:    make(map[network.ServerIdentityID]network.SecureConn), suite: network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 	}
@@ -62,20 +62,6 @@ func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
-}
-
-// AddTree registers the given Tree struct in the underlying overlay.
-// Useful for unit-testing only.
-// XXX probably move into the tests.
-func (h *Host) AddTree(t *Tree) {
-	h.overlay.RegisterTree(t)
-}
-
-// AddRoster registers the given Roster in the underlying overlay.
-// Useful for unit-testing only.
-// XXX probably move into the tests.
-func (h *Host) AddRoster(el *Roster) {
-	h.overlay.RegisterRoster(el)
 }
 
 // Suite can (and should) be used to get the underlying abstract.Suite.
@@ -96,6 +82,7 @@ func (h *Host) GetStatus() Status {
 
 }
 
+// Close closes the overlay and the Router
 func (h *Host) Close() error {
 	h.overlay.Close()
 	return h.Router.Close()

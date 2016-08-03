@@ -143,7 +143,7 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	go func() {
-		h := NewTestHost(2000)
+		h := NewLocalHost(2000)
 		h.Close()
 	}()
 
@@ -198,7 +198,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewTestHost(2000)
+	host := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// Send a request to the service
@@ -207,10 +207,10 @@ func TestServiceProcessRequest(t *testing.T) {
 		Data:    []byte("a"),
 	}
 	// fake a client
-	h2 := NewTestHost(2010)
+	h2 := NewLocalHost(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link
@@ -234,7 +234,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewTestHost(2000)
+	host := NewLocalHost(2000)
 	go host.Run()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
@@ -252,10 +252,10 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	h2 := NewTestHost(2010)
+	h2 := NewLocalHost(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the
@@ -263,7 +263,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 	// Now RESEND the value so we instantiate using the SAME TREENODE
 	log.Lvl1("Sending request AGAIN to service...")
-	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the
@@ -290,10 +290,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		return ds
 	})
 	// fake a client
-	h2 := NewTestHost(2010)
+	h2 := NewLocalHost(2010)
 	defer h2.Close()
 
-	host := NewTestHost(2000)
+	host := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// create the entityList and tree
@@ -310,7 +310,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		Data:    b,
 	}
 	log.Lvl1("Sending request to service...")
-	if err := h2.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol
@@ -350,12 +350,12 @@ func TestServiceNewProtocol(t *testing.T) {
 		count++
 		return localDs
 	})
-	host := NewTestHost(2000)
+	host := NewLocalHost(2000)
 	go host.Run()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
-	host2 := NewTestHost(2002)
+	host2 := NewLocalHost(2002)
 	go host2.Run()
 	defer host2.Close()
 	// create the entityList and tree
@@ -372,10 +372,10 @@ func TestServiceNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	client := NewTestHost(2010)
+	client := NewLocalHost(2010)
 	defer client.Close()
 	log.Lvl1("Sending request to service...")
-	if err := client.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := client.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol that Starts
@@ -409,15 +409,15 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		return s
 	})
 	// create two hosts
-	h2 := NewTestHost(2010)
+	h2 := NewLocalHost(2010)
 	defer h2.Close()
-	h1 := NewTestHost(2000)
+	h1 := NewLocalHost(2000)
 	go h1.Run()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request
 	log.Lvl1("Sending request to service...")
-	assert.Nil(t, h2.SendRaw(h1.ServerIdentity, &DummyMsg{10}))
+	assert.Nil(t, h2.Send(h1.ServerIdentity, &DummyMsg{10}))
 
 	// wait for the link from the Service on host 1
 	waitOrFatalValue(ds1.link, true, t)
@@ -452,10 +452,10 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTestTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, true, true, false)
 
 	// create client
-	client := NewTestHost(5000)
+	client := NewLocalHost(5000)
 	defer client.Close()
 	proc := newClientProc(t)
 	client.RegisterProcessor(proc, simpleResponseType)
@@ -472,7 +472,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		Service: ServiceFactory.ServiceID("BackForth"),
 		Data:    buff,
 	}
-	assert.Nil(t, client.SendRaw(hosts[0].ServerIdentity, req))
+	assert.Nil(t, client.Send(hosts[0].ServerIdentity, req))
 	select {
 	case msg := <-proc.relay:
 		assert.Equal(t, msg.Val, 10)
@@ -492,7 +492,7 @@ func TestClient_Send(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTestTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, true, true, false)
 	client := NewLocalClient("BackForth")
 
 	r := &simpleRequest{
@@ -518,7 +518,7 @@ func TestClient_LocalSend(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTestTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, true, true, false)
 	client := NewLocalClient("BackForth")
 
 	r := &simpleRequest{
@@ -545,8 +545,8 @@ func TestClient_Parallel(t *testing.T) {
 		}
 	})
 	// create hosts
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewTCPHost(2000)
+	h2 := NewTCPHost(2001)
 	defer h1.Close()
 	defer h2.Close()
 	go h1.Run()

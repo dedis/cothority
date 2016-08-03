@@ -31,7 +31,7 @@ func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *
 
 // SendRaw sends a message to the entity.
 func (c *Context) SendRaw(e *network.ServerIdentity, msg interface{}) error {
-	return c.host.SendRaw(e, msg)
+	return c.host.Send(e, msg)
 }
 
 // ServerIdentity returns the entity the service uses.

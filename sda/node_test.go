@@ -22,7 +22,7 @@ func init() {
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol(tree, "ProtocolChannels")
@@ -43,7 +43,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 
 func TestNodeChannelCreate(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol(tree, "ProtocolChannels")
@@ -78,7 +78,7 @@ func TestNodeChannelCreate(t *testing.T) {
 
 func TestNodeChannel(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, false, true, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol(tree, "ProtocolChannels")
@@ -140,7 +140,7 @@ func TestNewNode(t *testing.T) {
 
 func TestProtocolHandlers(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(3, false, true, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	log.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *TreeNodeInstance, 2)
@@ -173,7 +173,7 @@ func TestProtocolHandlers(t *testing.T) {
 
 func TestTreeNodeMsgAggregation(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(3, false, true, true)
+	_, _, tree := local.GenTree(3, false, true, true)
 	defer local.CloseAll()
 	root, err := local.StartProtocol("ProtocolChannels", tree)
 	if err != nil {
@@ -214,7 +214,7 @@ func TestTreeNodeMsgAggregation(t *testing.T) {
 func TestTreeNodeFlags(t *testing.T) {
 	testType := network.MessageTypeID(uuid.Nil)
 	local := NewLocalTest()
-	_, _, tree := local.GenTestTree(3, false, false, true)
+	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()
 	p, err := local.CreateProtocol(tree, "ProtocolChannels")
 	if err != nil {
@@ -363,7 +363,7 @@ func (p *ProtocolHandlers) Release() {
 
 func TestBlocking(t *testing.T) {
 	l := NewLocalTest()
-	_, _, tree := l.GenTestTree(2, true, true, true)
+	_, _, tree := l.GenTree(2, true, true, true)
 	defer l.CloseAll()
 
 	n1, err := l.StartProtocol("ProtocolBlocking", tree)

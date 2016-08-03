@@ -382,17 +382,20 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
+// Client is a simple interface to be used when wanting to connect to services.
+// Two implementations are done: TcpClient to use for applications and
+// deployement,and localClient to use for local testing alongside with
+// LocalRouter.
 type Client interface {
+	// Send will send the message to the destination service and return the
+	// reply.
+	// The error-handling is done using the ErrorRet structure which can be returned
+	// in place of the standard reply. This method will catch that and return
+	// the appropriate error as a network.Packet.
 	Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error)
 	SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error)
 }
 
-// TcpClient is a simple client structure to be used when wanting to connect to services. It
-// holds the private and public key and allows to connect to a service through
-// the network.
-// The error-handling is done using the ErrorRet structure which can be returned
-// in place of the standard reply. The TcpClient.Send method will catch that and return
-// the appropriate error.
 type TcpClient struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID

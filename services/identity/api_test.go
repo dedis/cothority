@@ -22,7 +22,7 @@ func NewTestIdentity(cothority *sda.Roster, majority int, owner string) *Identit
 func TestIdentity_ConfigNewCheck(t *testing.T) {
 	log.TestOutput(true, 5)
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTestTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
@@ -49,7 +49,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTestTree(5, true, true, true)
+	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
@@ -70,7 +70,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTestTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
@@ -90,7 +90,7 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 
 func TestIdentity_CreateIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTestTree(3, true, true, true)
+	_, el, _ := l.GenTree(3, true, true, true)
 	defer l.CloseAll()
 
 	c := NewTestIdentity(el, 50, "one")
@@ -102,7 +102,7 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTestTree(3, true, true, true)
+	hosts, el, _ := l.GenTree(3, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
@@ -131,7 +131,7 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 
 func TestIdentity_ProposeVote(t *testing.T) {
 	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTestTree(5, true, true, true)
+	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
@@ -156,7 +156,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 
 func TestIdentity_SaveToStream(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTestTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
 	id := NewIdentity(el, 50, "one1")
 	tmpfile, err := ioutil.TempFile("", "example")

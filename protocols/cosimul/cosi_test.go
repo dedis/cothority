@@ -19,7 +19,7 @@ func TestCoSimul(t *testing.T) {
 			log.Lvl2("Running cosi with", nbrHosts, "hosts")
 			local := sda.NewLocalTest()
 
-			hosts, _, tree := local.GenTestBigTree(nbrHosts, nbrHosts, 3, true, true)
+			hosts, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
 			log.Lvl2(tree.Dump())
 
 			done := make(chan bool)

@@ -90,12 +90,12 @@ func (o *Overlay) Process(data *network.Packet) {
 		tree := o.Tree(tid)
 		var err error
 		if tree != nil {
-			err = o.host.SendRaw(data.ServerIdentity, tree.MakeTreeMarshal())
+			err = o.host.Send(data.ServerIdentity, tree.MakeTreeMarshal())
 		} else {
 			// XXX Take care here for we must verify at the other side that
 			// the tree is Nil. Should we think of a way of sending back an
 			// "error" ?
-			err = o.host.SendRaw(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
+			err = o.host.Send(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
 		}
 		if err != nil {
 			log.Error("Couldn't send tree:", err)
@@ -111,7 +111,7 @@ func (o *Overlay) Process(data *network.Packet) {
 		// The entity list does not exists, we should request that, too
 		if il == nil {
 			msg := &RequestRoster{tm.RosterID}
-			if err := o.host.SendRaw(data.ServerIdentity, msg); err != nil {
+			if err := o.host.Send(data.ServerIdentity, msg); err != nil {
 				log.Error("Requesting Roster in SendTree failed", err)
 			}
 
@@ -135,10 +135,10 @@ func (o *Overlay) Process(data *network.Packet) {
 		el := o.Roster(id)
 		var err error
 		if el != nil {
-			err = o.host.SendRaw(data.ServerIdentity, el)
+			err = o.host.Send(data.ServerIdentity, el)
 		} else {
 			log.Lvl2("Requested entityList that we don't have")
-			err = o.host.SendRaw(data.ServerIdentity, &Roster{})
+			err = o.host.Send(data.ServerIdentity, &Roster{})
 		}
 		if err != nil {
 			log.Error("Couldn't send empty entity list from host:",
@@ -258,7 +258,7 @@ func (o *Overlay) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) er
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
 	log.Lvl4(o.host.Address(), "Sending to", e.Addresses)
-	return o.host.SendRaw(e, sdaMsg)
+	return o.host.Send(e, sdaMsg)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -336,7 +336,7 @@ func (o *Overlay) requestTree(e *network.ServerIdentity, sdaMsg *ProtocolMsg) er
 
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
 
-	var err = o.host.SendRaw(e, treeRequest)
+	var err = o.host.Send(e, treeRequest)
 	return err
 }
 

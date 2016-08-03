@@ -29,7 +29,7 @@ func (po *ProtocolOverlay) Release() {
 
 func TestOverlayDone(t *testing.T) {
 	// setup
-	h1 := NewTestHost(2000)
+	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := ProtocolOverlay{
@@ -71,7 +71,7 @@ func TestOverlayDone(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestOverlayPendingTreeMarshal(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTestTree(2, false, false, false)
+	hosts, el, tree := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 
@@ -122,7 +122,7 @@ func (op *overlayProc) Types() []network.MessageTypeID {
 // Test propagation of roster - both known and unknown
 func TestOverlayRosterPropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, _ := local.GenTestTree(2, false, false, false)
+	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -130,7 +130,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 	h1.RegisterProcessor(proc, proc.Types()...)
 
 	// Check that h2 sends back an empty list if it is unknown
-	err := h1.SendRaw(h2.ServerIdentity, &RequestRoster{
+	err := h1.Send(h2.ServerIdentity, &RequestRoster{
 		RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
@@ -142,7 +142,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddRoster(el)
-	err = h1.SendRaw(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
+	err = h1.Send(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -151,7 +151,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 		t.Fatal("List should be equal to original list")
 	}
 
-	err = h1.SendRaw(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
+	err = h1.Send(h2.ServerIdentity, &RequestRoster{RosterID: el.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -176,7 +176,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestOverlayTreePropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTestTree(2, true, false, false)
+	hosts, el, tree := local.GenTree(2, true, false, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -189,7 +189,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 	//h2.RegisterProcessor(proc, proc.Types()...)
 
 	// Check that h2 sends back an empty tree if it is unknown
-	err := h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
+	err := h1.Send(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -200,7 +200,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
-	err = h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
+	err = h1.Send(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -210,7 +210,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 		t.Fatal("Tree should be equal to original tree")
 	}
 
-	err = h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
+	err = h1.Send(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
 	if err != nil {
 		t.Fatal("Couldn't send message to h2:", err)
 	}
@@ -240,7 +240,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestOverlayRosterTreePropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTestTree(2, true, true, false)
+	hosts, el, tree := local.GenTree(2, true, true, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -250,7 +250,7 @@ func TestOverlayRosterTreePropagation(t *testing.T) {
 	// and the tree
 	h2.AddTree(tree)
 	// make the communcation happen
-	if err := h1.SendRaw(h2.ServerIdentity, &RequestTree{TreeID: tree.ID}); err != nil {
+	if err := h1.Send(h2.ServerIdentity, &RequestTree{TreeID: tree.ID}); err != nil {
 		t.Fatal("Could not send tree request to host2", err)
 	}
 

@@ -15,7 +15,7 @@ import (
 // TestProbabilisticSwitching tests probabilistic switching protocol
 func TestProbabilisticSwitching(t *testing.T) {
 	local := sda.NewLocalTest()
-	_, entityList, tree := local.GenTestTree(5, false, true, true)
+	_, entityList, tree := local.GenTree(5, false, true, true)
 	sda.ProtocolRegisterName("ProbabilisticSwitchingTest", NewProbabilisticSwitchingTest)
 
 	defer local.CloseAll()

@@ -25,7 +25,7 @@ func TestService_AddIdentity(t *testing.T) {
 	log.TestOutput(true, 3)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, s := local.MakeTestHELS(5, identityService)
+	_, el, s := local.MakeHELS(5, identityService)
 	service := s.(*Service)
 
 	keypair := config.NewKeyPair(network.Suite)

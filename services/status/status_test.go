@@ -22,7 +22,7 @@ func TestServiceStatus(t *testing.T) {
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist.
 	// Branching factor of 2 by default
-	_, el, tr := local.GenTestTree(5, false, true, false)
+	_, el, tr := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
 
 	// Send a request to the service

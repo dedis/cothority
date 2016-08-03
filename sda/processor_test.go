@@ -50,7 +50,7 @@ func TestBlockingDispatcher(t *testing.T) {
 
 func TestProcessorHost(t *testing.T) {
 	defer log.AfterTest(t)
-	h1 := NewTestHost(2000)
+	h1 := NewLocalHost(2000)
 	defer h1.Close()
 
 	proc := &basicProcessor{make(chan network.Packet, 1)}
@@ -76,7 +76,7 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	h1 := NewTestHost(2000)
+	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
@@ -105,7 +105,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	h1 := NewTestHost(2000)
+	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
@@ -137,7 +137,7 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	h := local.GenTestHosts(1, false, false)[0]
+	h := local.GenHosts(1, false, false)[0]
 	defer local.CloseAll()
 
 	s := local.Services[h.ServerIdentity.ID]

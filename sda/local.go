@@ -70,9 +70,9 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-// GenTestHosts => LocalRouter
-func (l *LocalTest) GenTestHosts(n int, connect, processMsg bool) []*Host {
-	hosts := GenTestHosts(n)
+// GenHosts returns n Hosts with a localRouter
+func (l *LocalTest) GenHosts(n int, connect, processMsg bool) []*Host {
+	hosts := GenLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
@@ -82,12 +82,10 @@ func (l *LocalTest) GenTestHosts(n int, connect, processMsg bool) []*Host {
 
 }
 
-// GenTestTree => LocalRouter
-// GenTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the Roster and Tree
-// will be registered with the overlay.
-func (l *LocalTest) GenTestTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenTestHosts(n, connect, processMsg)
+// GenTree will create a tree of n hosts with a localRouter, and returns the
+// list of hosts and the associated roster / tree.
+func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(n, connect, processMsg)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
@@ -107,8 +105,8 @@ func (l *LocalTest) GenTestTree(n int, connect, processMsg, register bool) ([]*H
 // 'nbrTreeNodes' is how many TreeNodes are created
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
-func (l *LocalTest) GenTestBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenTestHosts(nbrHosts, connect, true)
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(nbrHosts, connect, true)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
@@ -244,38 +242,46 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-func (l *LocalTest) MakeTestHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
-	hosts := l.GenTestHosts(nbr, false, true)
+// MakeHELS creates nbr hosts, and will return the associated roster. It also
+// returns the Service object of the first hosts in the list having sid as a
+// ServiceID.
+func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
+	hosts := l.GenHosts(nbr, false, true)
 	el := l.GenRosterFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
-func NewPrivIdentiy(port int) (abstract.Scalar, *network.ServerIdentity) {
+// NewPrivIdentity returns a secret + ServerIdentity. The SI will have
+// "localhost:+port as first address.
+func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 	address := "localhost:" + strconv.Itoa(port)
 	priv, pub := PrivPub()
 	id := network.NewServerIdentity(pub, address)
 	return priv, id
 }
 
-// NewLocalHost creates a new host with the given address and registers it.
-func NewLocalHost(port int) *Host {
-	priv, id := NewPrivIdentiy(port)
+// NewTCPHost creates a new host with a tcpRouter with "localhost:"+port as an
+// address.
+func NewTCPHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
 	return NewHost(id, priv)
 }
 
-// NewTestHost returns a new host using a LocalRouter (channels) to communicate.
-// It does not open any ports nor connect to anything on the network.
-func NewTestHost(port int) *Host {
-	priv, id := NewPrivIdentiy(port)
+// NewLocalHost returns a new host using a LocalRouter (channels) to communicate.
+// At the return of this function, the router is already Run()ing in a go
+// routine.
+func NewLocalHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
 	localRouter := NewLocalRouter(id)
 	go localRouter.Run()
 	return NewHostWithRouter(id, priv, localRouter)
 }
 
-func GenTestHosts(n int) []*Host {
+// GenLocalHosts returns n hosts created with a localRouter
+func GenLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewTestHost(2000 + i*10)
+		host := NewLocalHost(2000 + i*10)
 		hosts[i] = host
 	}
 	return hosts
