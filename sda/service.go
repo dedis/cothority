@@ -21,7 +21,7 @@ import (
 
 func init() {
 	network.RegisterMessageType(&StatusRet{})
-	network.RegisterMessageType(&TcpClient{})
+	network.RegisterMessageType(&TCPClient{})
 }
 
 // Service is a generic interface to define any type of services.
@@ -396,22 +396,24 @@ type Client interface {
 	SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error)
 }
 
-type TcpClient struct {
+// TCPClient is a client that will connect to a Host using a Tcp connection.
+type TCPClient struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID
 	sync.Mutex
 }
 
-// NewClient returns a random client using the service s
+// NewClient returns a random client using the service s. It's a TCPClient by
+// default.
 func NewClient(s string) Client {
-	return &TcpClient{
+	return &TCPClient{
 		ServiceID: ServiceFactory.ServiceID(s),
 	}
 }
 
 // Send opens the connection to 'dst' and sends the message 'req'. The
 // reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *TcpClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
+func (c *TCPClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.Lock()
 	defer c.Unlock()
 	if c.host == nil {
@@ -475,7 +477,7 @@ func (c *TcpClient) Send(dst *network.ServerIdentity, msg network.Body) (*networ
 
 // SendToAll sends a message to all ServerIdentities of the Roster and returns
 // all errors encountered concatenated together as a string.
-func (c *TcpClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
+func (c *TCPClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
 	msgs := make([]*network.Packet, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {
@@ -517,17 +519,19 @@ func ErrMsg(em *network.Packet, err error) error {
 	return nil
 }
 
-// localClient is an implementation of the Client interface using local go
+// LocalClient is an implementation of the Client interface using local go
 // routines and channels to communicate with localRouters
-type localClient struct {
+type LocalClient struct {
 	msgChan   chan *network.Packet
 	identity  *network.ServerIdentity
 	serviceID ServiceID
 }
 
-func NewLocalClient(s string) *localClient {
+// NewLocalClient returns a LocalClient that is communicating to the hosts
+// through channels and go routine as in LocalRouter
+func NewLocalClient(s string) *LocalClient {
 	kp := config.NewKeyPair(network.Suite)
-	lc := &localClient{
+	lc := &LocalClient{
 		msgChan:   make(chan *network.Packet),
 		identity:  network.NewServerIdentity(kp.Public, ""),
 		serviceID: ServiceFactory.ServiceID(s),
@@ -536,7 +540,7 @@ func NewLocalClient(s string) *localClient {
 	return lc
 }
 
-func (c *localClient) send(dest *network.ServerIdentity, msg network.Body) error {
+func (c *LocalClient) send(dest *network.ServerIdentity, msg network.Body) error {
 	r := localRelays.Get(dest)
 	if r == nil {
 		return errors.New("No mock routers at this entity")
@@ -562,11 +566,12 @@ func (c *localClient) send(dest *network.ServerIdentity, msg network.Body) error
 	return nil
 }
 
-func (c *localClient) receive(msg *network.Packet) {
+func (c *LocalClient) receive(msg *network.Packet) {
 	c.msgChan <- msg
 }
 
-func (c *localClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
+// Send implements the Client interface
+func (c *LocalClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.send(dst, msg)
 	reply := <-c.msgChan
 	err := ErrMsg(reply, nil)
@@ -576,7 +581,8 @@ func (c *localClient) Send(dst *network.ServerIdentity, msg network.Body) (*netw
 	return reply, nil
 }
 
-func (c *localClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
+// SendToAll implements the Client interface
+func (c *LocalClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
 	msgs := make([]*network.Packet, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {
@@ -593,6 +599,6 @@ func (c *localClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packe
 	return msgs, err
 }
 
-func (c *localClient) serverIdentity() *network.ServerIdentity {
+func (c *LocalClient) serverIdentity() *network.ServerIdentity {
 	return c.identity
 }

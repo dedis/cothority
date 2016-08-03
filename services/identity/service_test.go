@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 	//log.Info("Skipping because of bftcosi and skipchain - #482")
 	sda.RegisterNewService(ServiceName, func(c *sda.Context, path string) sda.Service {
 		s := newIdentityService(c, path).(*Service)
-		s.skipchain = skipchain.NewTestClient()
+		s.skipchain = skipchain.NewLocalClient()
 		return s
 	})
 	log.MainTest(m)

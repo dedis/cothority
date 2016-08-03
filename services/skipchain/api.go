@@ -25,7 +25,7 @@ func NewClient() *Client {
 
 // NewLocalClient instantiates a new local client for *testing*. It sends
 // messages to LocalHosts using go routines / channels.
-func NewTestClient() *Client {
+func NewLocalClient() *Client {
 	return &Client{Client: sda.NewLocalClient("Skipchain")}
 }
 

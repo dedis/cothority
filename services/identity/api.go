@@ -35,7 +35,7 @@ func init() {
 		&ConfigUpdate{},
 		&UpdateSkipBlock{},
 		&ProposeVote{},
-		&IdentityData{},
+		&Data{},
 	} {
 		network.RegisterMessageType(s)
 	}
@@ -49,10 +49,12 @@ type Identity struct {
 	sda.Client
 	// IdentityData holds all the data related to this identity
 	// It will be stored and load from a config file or else.
-	IdentityData
+	Data
 }
 
-type IdentityData struct {
+// Data contains the data that will be stored / loaded from / to a file
+// that enables a client to use the Identity service.
+type Data struct {
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
@@ -78,7 +80,7 @@ func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
 		Client: client,
-		IdentityData: IdentityData{
+		Data: Data{
 			Private:    kp.Secret,
 			Public:     kp.Public,
 			Config:     NewConfig(majority, kp.Public, owner),
@@ -92,7 +94,7 @@ func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 func NewIdentityFromCothority(el *sda.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
 		Client: sda.NewClient(ServiceName),
-		IdentityData: IdentityData{
+		Data: Data{
 			Cothority: el,
 			ID:        id,
 		},
@@ -115,17 +117,17 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := i.(*IdentityData)
+	id := i.(*Data)
 	identity := &Identity{
-		Client:       sda.NewClient(ServiceName),
-		IdentityData: *id,
+		Client: sda.NewClient(ServiceName),
+		Data:   *id,
 	}
 	return identity, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.MarshalRegisteredType(&i.IdentityData)
+	data, err := network.MarshalRegisteredType(&i.Data)
 	if err != nil {
 		return err
 	}
