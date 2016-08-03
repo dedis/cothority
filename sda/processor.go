@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"reflect"
+	"sync"
 
 	"strings"
 
@@ -50,6 +51,7 @@ type Processor interface {
 // launch a go routine, or put the message in a queue, etc.
 // It can be re-used for more complex dispatcher.
 type BlockingDispatcher struct {
+	sync.Mutex
 	procs map[network.MessageTypeID]Processor
 }
 
@@ -62,6 +64,8 @@ func NewBlockingDispatcher() *BlockingDispatcher {
 
 // RegisterProcessor saves the given processor in the dispatcher.
 func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.MessageTypeID) {
+	d.Lock()
+	defer d.Unlock()
 	for _, t := range msgType {
 		d.procs[t] = p
 	}
@@ -70,10 +74,13 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.M
 // Dispatch will directly call the right processor's method Process. It's a
 // blocking call if the Processor is blocking !
 func (d *BlockingDispatcher) Dispatch(packet *network.Packet) error {
+	d.Lock()
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
+		d.Unlock()
 		return errors.New("No Processor attached to this message type " + packet.MsgType.String())
 	}
+	d.Unlock()
 	p.Process(packet)
 	return nil
 }
