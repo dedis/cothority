@@ -26,8 +26,8 @@ GITHUB_PR_BODY=$(curl -s $GITHUB_PR_URL 2>/dev/null)
 
 if [[ $GITHUB_PR_BODY =~ \"ref\":\ *\"([a-zA-Z0-9_-]*)\" ]]; then
       export TRAVIS_BRANCH=${BASH_REMATCH[1]}
-  fi
-}
+fi;
+
 BRANCH=$TRAVIS_BRANCH
 echo "Branch is $BRANCH"
 
