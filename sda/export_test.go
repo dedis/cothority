@@ -56,7 +56,7 @@ func (h *Host) AddRoster(el *Roster) {
 
 func (t *TCPRouter) AbortConnections() error {
 	t.closeConnections()
-	close(t.ProcessMessagesQuit)
+	close(t.quitProcessMsg)
 	return t.host.Close()
 }
 

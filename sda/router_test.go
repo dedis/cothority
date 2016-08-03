@@ -54,7 +54,7 @@ func NewMockTcpRouter(port int) *TCPRouter {
 
 func (t *TCPRouter) abortConnections() error {
 	t.closeConnections()
-	close(t.ProcessMessagesQuit)
+	close(t.quitProcessMsg)
 	return t.host.Close()
 }
 
@@ -114,11 +114,14 @@ func TestTcpRouterRunClose(t *testing.T) {
 		stop <- true
 	}()
 	<-stop
+	// Time needed so the listener is up. Equivalent to "connecting ourself" as
+	// we had before.
+	time.Sleep(500 * time.Millisecond)
 	h.Close()
 	select {
 	case <-stop:
 		return
-	case <-time.After(200 * time.Millisecond):
+	case <-time.After(500 * time.Millisecond):
 		t.Fatal("TcpHost should have returned from Run() by now")
 	}
 }

@@ -76,21 +76,25 @@ type TCPRouter struct {
 	// whether processMessages has started
 	processMessagesStarted bool
 	// tell processMessages to quit
-	ProcessMessagesQuit chan bool
+	quitProcessMsg chan bool
+	// tell Run() to stop
+	closing chan bool
 }
 
 // NewTCPRouter returns a fresh Router which uses TCP connections to
 // communicate.
 func NewTCPRouter(e *network.ServerIdentity, pkey abstract.Scalar) *TCPRouter {
 	return &TCPRouter{
-		Dispatcher:          NewBlockingDispatcher(),
-		workingAddress:      e.First(),
-		connections:         make(map[network.ServerIdentityID]network.SecureConn),
-		host:                network.NewSecureTCPHost(pkey, e),
-		suite:               network.Suite,
-		serverIdentity:      e,
-		ProcessMessagesQuit: make(chan bool, 1),
-		networkChan:         make(chan network.Packet, 1),
+		Dispatcher:     NewBlockingDispatcher(),
+		workingAddress: e.First(),
+		connections:    make(map[network.ServerIdentityID]network.SecureConn),
+		host:           network.NewSecureTCPHost(pkey, e),
+		suite:          network.Suite,
+		serverIdentity: e,
+		quitProcessMsg: make(chan bool),
+		closing:        make(chan bool, 1), // buffered channel of 1 so Close() without
+		// Run() before does not fail
+		networkChan: make(chan network.Packet, 1),
 	}
 }
 
@@ -132,8 +136,13 @@ func (t *TCPRouter) Send(e *network.ServerIdentity, msg network.Body) error {
 // call. This function returns when an error occurs on the open port or when
 // t.Stop() is called.
 func (t *TCPRouter) Run() {
+	// channel used to signal the end of the routines
+	var stoping = make(chan bool)
 	// start processing messages
-	t.startProcessMessages()
+	go func() {
+		t.processMessages()
+		stoping <- true
+	}()
 	// open port
 	log.Lvl3(t.serverIdentity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
@@ -142,9 +151,50 @@ func (t *TCPRouter) Run() {
 		t.registerConnection(c)
 		t.handleConn(c)
 	}
-	err := t.host.Listen(fn)
-	if err != nil {
-		log.Fatal("Error listening on", t.workingAddress, ":", err)
+	// listen
+	go func() {
+		err := t.host.Listen(fn)
+		if err != nil {
+			log.Fatal("Error listening on", t.workingAddress, ":", err)
+		}
+		stoping <- true
+	}()
+	<-t.closing
+	<-stoping
+	<-stoping
+}
+
+// processMessages checks if it is one of the messages for us or dispatch it
+// to the corresponding instance.
+// Our messages are:
+// * SDAMessage - used to communicate between the Hosts
+// * RequestTreeID - ask the parent for a given tree
+// * SendTree - send the tree to the child
+// * RequestPeerListID - ask the parent for a given peerList
+// * SendPeerListID - send the tree to the child
+func (t *TCPRouter) processMessages() {
+	t.networkLock.Lock()
+	t.processMessagesStarted = true
+	t.networkLock.Unlock()
+	for {
+		var data network.Packet
+		select {
+		case data = <-t.networkChan:
+		case <-t.quitProcessMsg:
+			log.Lvl5(t.workingAddress, "Quitting ProcessMessages")
+			return
+		}
+		log.Lvl4(t.workingAddress, "Message Received from", data.From, data.MsgType)
+		switch data.MsgType {
+		case network.ErrorType:
+			log.Lvl3("Error from the network")
+		default:
+			// The dispatcher will call the appropriate processors for the
+			// message
+			if err := t.Dispatch(&data); err != nil {
+				log.Lvl3("Unknown message received:", data, err)
+			}
+		}
 	}
 }
 
@@ -172,11 +222,18 @@ func (t *TCPRouter) Close() error {
 	}
 	log.Lvl4(t.serverIdentity.First(), "Starts closing")
 	t.isClosing = true
+	// stop the Run
+	t.closing <- true
+	t.networkLock.Lock()
 	if t.processMessagesStarted {
 		// Tell ProcessMessages to quit
-		close(t.ProcessMessagesQuit)
+		close(t.quitProcessMsg)
 	}
-	return t.host.Close()
+	t.networkLock.Unlock()
+	if err := t.host.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // closeConnection closes a connection and removes it from the connections-map
@@ -191,50 +248,6 @@ func (t *TCPRouter) closeConnection(c network.SecureConn) error {
 	}
 	delete(t.connections, c.ServerIdentity().ID)
 	return nil
-}
-
-// StartProcessMessages start the processing of incoming messages.
-// Mostly it used internally (by the cothority's simulation for instance).
-// Protocol/simulation developers usually won't need it.
-func (t *TCPRouter) startProcessMessages() {
-	// The networkLock.Unlock is in the processMessages-method to make
-	// sure the goroutine started
-	t.networkLock.Lock()
-	t.processMessagesStarted = true
-	t.ProcessMessagesQuit = make(chan bool)
-	go t.processMessages()
-}
-
-// ProcessMessages checks if it is one of the messages for us or dispatch it
-// to the corresponding instance.
-// Our messages are:
-// * SDAMessage - used to communicate between the Hosts
-// * RequestTreeID - ask the parent for a given tree
-// * SendTree - send the tree to the child
-// * RequestPeerListID - ask the parent for a given peerList
-// * SendPeerListID - send the tree to the child
-func (t *TCPRouter) processMessages() {
-	t.networkLock.Unlock()
-	for {
-		var data network.Packet
-		select {
-		case data = <-t.networkChan:
-		case <-t.ProcessMessagesQuit:
-			log.Lvl5(t.workingAddress, "Quitting ProcessMessages")
-			return
-		}
-		log.Lvl4(t.workingAddress, "Message Received from", data.From, data.MsgType)
-		switch data.MsgType {
-		case network.ErrorType:
-			log.Lvl3("Error from the network")
-		default:
-			// The dispatcher will call the appropriate processors for the
-			// message
-			if err := t.Dispatch(&data); err != nil {
-				log.Lvl3("Unknown message received:", data, err)
-			}
-		}
-	}
 }
 
 // Handle a connection => giving messages to the MsgChans
