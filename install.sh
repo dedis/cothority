@@ -28,7 +28,7 @@ echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
 #      export TRAVIS_BRANCH=${BASH_REMATCH[1]}
 #fi;
 
-BRANCH=$TRAVIS_BRANCH
+#BRANCH=$TRAVIS_BRANCH
 echo "Branch is $BRANCH"
 
 pattern="refactor_*"; 
