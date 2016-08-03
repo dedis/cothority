@@ -136,13 +136,30 @@ func (t *TCPRouter) Send(e *network.ServerIdentity, msg network.Body) error {
 // call. This function returns when an error occurs on the open port or when
 // t.Stop() is called.
 func (t *TCPRouter) Run() {
-	// channel used to signal the end of the routines
-	var stoping = make(chan bool)
 	// start processing messages
 	go func() {
+		t.networkLock.Lock()
+		t.quitProcessMsg = make(chan bool)
+		if t.processMessagesStarted {
+			// we are already listening
+			t.networkLock.Unlock()
+			return
+		}
+		t.networkLock.Unlock()
+
 		t.processMessages()
-		stoping <- true
 	}()
+	// listen
+	go func() {
+		err := t.listen()
+		if err != nil {
+			log.Fatal("Error listening on", t.workingAddress, ":", err)
+		}
+	}()
+	<-t.closing
+}
+
+func (t *TCPRouter) listen() error {
 	// open port
 	log.Lvl3(t.serverIdentity.First(), "starts to listen")
 	fn := func(c network.SecureConn) {
@@ -151,17 +168,12 @@ func (t *TCPRouter) Run() {
 		t.registerConnection(c)
 		t.handleConn(c)
 	}
-	// listen
-	go func() {
-		err := t.host.Listen(fn)
-		if err != nil {
-			log.Fatal("Error listening on", t.workingAddress, ":", err)
-		}
-		stoping <- true
-	}()
-	<-t.closing
-	<-stoping
-	<-stoping
+	err := t.host.Listen(fn)
+	if err != nil {
+		log.Fatal("Error listening on", t.workingAddress, ":", err)
+		return err
+	}
+	return nil
 }
 
 // processMessages checks if it is one of the messages for us or dispatch it
@@ -175,14 +187,18 @@ func (t *TCPRouter) Run() {
 func (t *TCPRouter) processMessages() {
 	t.networkLock.Lock()
 	t.processMessagesStarted = true
+	log.Lvl5(t.workingAddress, "Starting Process Messages")
 	t.networkLock.Unlock()
 	for {
 		var data network.Packet
 		select {
-		case data = <-t.networkChan:
 		case <-t.quitProcessMsg:
 			log.Lvl5(t.workingAddress, "Quitting ProcessMessages")
+			t.networkLock.Lock()
+			t.processMessagesStarted = false
+			t.networkLock.Unlock()
 			return
+		case data = <-t.networkChan:
 		}
 		log.Lvl4(t.workingAddress, "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
@@ -230,6 +246,7 @@ func (t *TCPRouter) Close() error {
 		close(t.quitProcessMsg)
 	}
 	t.networkLock.Unlock()
+	// The tcp host is supposed to take care of the connection for us
 	if err := t.host.Close(); err != nil {
 		return err
 	}
@@ -256,15 +273,6 @@ func (t *TCPRouter) handleConn(c network.SecureConn) {
 	for {
 		ctx := context.TODO()
 		am, err := c.Receive(ctx)
-		// This is for testing purposes only: if the connection is missing
-		// in the map, we just return silently
-		t.networkLock.Lock()
-		_, cont := t.connections[c.ServerIdentity().ID]
-		t.networkLock.Unlock()
-		if !cont {
-			log.Lvl3(t.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
-			return
-		}
 		// So the receiver can know about the error
 		am.SetError(err)
 		am.From = address
