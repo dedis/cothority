@@ -10,7 +10,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Lvl("Skipping test because of data race: see #503")
+	log.Lvl1("Skipping test because of data race: see #503")
 	//log.MainTest(m)
 }
 
