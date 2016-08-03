@@ -10,8 +10,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Lvl1("Skipping test because of data race: see #503")
-	//log.MainTest(m)
+	log.MainTest(m)
 }
 
 func TestRandHound(t *testing.T) {
