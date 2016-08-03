@@ -11,7 +11,6 @@ export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
 
 # method 2 from https://github.com/travis-ci/travis-ci/issues/1633
-#cd $GOPATH/src/github.com/dedis/cothority; 
 #git fetch --tags
 #git fetch --unshallow
 #BRANCH=`git rev-parse --abbrev-ref HEAD`
@@ -41,5 +40,15 @@ if [[ $BRANCH =~ $pattern ]]; then
     git pull;
     echo $(git rev-parse --abbrev-ref HEAD);
 fi;
+
+echo "Using refactor branch ..."
+repo=github.com/dedis/cosi; 
+go get -d $repo; 
+cd $GOPATH/src/$repo; 
+git checkout -f refactor_mocking;
+git pull;
+echo $(git rev-parse --abbrev-ref HEAD);
+
+cd $GOPATH/src/github.com/dedis/cothority; 
 go get -t ./...
 
