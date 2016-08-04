@@ -72,8 +72,8 @@ func TestTcpRouterNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestTcpRouterClose(t *testing.T) {
-	h1 := NewMockTcpRouter(2000)
-	h2 := NewMockTcpRouter(2001)
+	h1 := NewMockTcpRouter(2001)
+	h2 := NewMockTcpRouter(2002)
 	go h1.Run()
 	_, err := h2.Connect(h1.serverIdentity)
 	if err != nil {
@@ -88,7 +88,7 @@ func TestTcpRouterClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewTCPHost(2002)
+	h3 := NewTCPHost(2003)
 	go h3.Run()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
@@ -106,7 +106,7 @@ func TestTcpRouterClose(t *testing.T) {
 // Test if TCPRouter fits the interface such as calling Run(), then Close(),
 // should return
 func TestTcpRouterRunClose(t *testing.T) {
-	h := NewMockTcpRouter(2000)
+	h := NewMockTcpRouter(2004)
 	var stop = make(chan bool)
 	go func() {
 		stop <- true
@@ -127,8 +127,8 @@ func TestTcpRouterRunClose(t *testing.T) {
 }
 
 func TestTcpRouterReconnection(t *testing.T) {
-	h1 := NewMockTcpRouter(2000)
-	h2 := NewMockTcpRouter(2001)
+	h1 := NewMockTcpRouter(2005)
+	h2 := NewMockTcpRouter(2006)
 	defer h1.Close()
 	defer h2.Close()
 
@@ -179,9 +179,10 @@ func TestTcpRouterReconnection(t *testing.T) {
 
 // Test the automatic connection upon request
 func TestTcpRouterAutoConnection(t *testing.T) {
-	h1 := NewMockTcpRouter(2000)
-	h2 := NewMockTcpRouter(2001)
+	h1 := NewMockTcpRouter(2007)
+	h2 := NewMockTcpRouter(2008)
 	go h2.Run()
+
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
@@ -203,7 +204,11 @@ func TestTcpRouterAutoConnection(t *testing.T) {
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
 func TestTcpRouterMessaging(t *testing.T) {
-	h1, h2 := TwoTcpHosts()
+	h1 := NewMockTcpRouter(2009)
+	h2 := NewMockTcpRouter(2010)
+	go h1.Run()
+	go h2.Run()
+
 	defer h1.Close()
 	defer h2.Close()
 
@@ -214,7 +219,7 @@ func TestTcpRouterMessaging(t *testing.T) {
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
 	msgSimple := &SimpleMessage{3}
-	err := h1.Send(h2.ServerIdentity, msgSimple)
+	err := h1.Send(h2.serverIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send from h2 -> h1:", err)
 	}
@@ -236,20 +241,24 @@ func TestTcpRouterMessaging(t *testing.T) {
 
 // Test sending data back and forth using the sendSDAData
 func TestTcpRouterSendMsgDuplex(t *testing.T) {
-	h1, h2 := TwoTcpHosts()
+	h1 := NewMockTcpRouter(2011)
+	h2 := NewMockTcpRouter(2012)
+	go h1.Run()
+	go h2.Run()
+
 	proc := &simpleMessageProc{t, make(chan SimpleMessage)}
 	h1.RegisterProcessor(proc, SimpleMessageType)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
 	msgSimple := &SimpleMessage{5}
-	err := h1.Send(h2.ServerIdentity, msgSimple)
+	err := h1.Send(h2.serverIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h1 to h2", err)
 	}
 	msg := <-proc.relay
 	log.Lvl2("Received msg h1 -> h2", msg)
 
-	err = h2.Send(h1.ServerIdentity, msgSimple)
+	err = h2.Send(h1.serverIdentity, msgSimple)
 	if err != nil {
 		t.Fatal("Couldn't send message from h2 to h1", err)
 	}
