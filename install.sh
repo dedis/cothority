@@ -13,6 +13,7 @@ export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
 
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
 
+cd $GOPATH/src/github.com/dedis/cothority; 
 export BRANCH=$(`git status | grep "On branch" | cut -d" " -f3`)
 echo "Git status: $BRANCH"
 
