@@ -40,7 +40,7 @@ func TestLocalRouter(t *testing.T) {
 		if !m.Ok || m.Val != 10 {
 			t.Fatal("Wrong value")
 		}
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(250 * time.Millisecond):
 		t.Fatal("waited too long")
 	}
 }

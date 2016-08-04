@@ -2,7 +2,6 @@ package sda
 
 import (
 	"testing"
-	"time"
 
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
@@ -259,13 +258,8 @@ func TestOverlayRosterTreePropagation(t *testing.T) {
 	h1.RegisterProcessor(proc, SendTreeMessageID)
 
 	// check if we have the tree
-	var treeM TreeMarshal
-	select {
-	case treeM = <-proc.treeMarshal:
-		break
-	case <-time.After(250 * time.Millisecond):
-		t.Fatal("Timeout for receiving tree")
-	}
+	treeM := <-proc.treeMarshal
+
 	packet := network.Packet{
 		ServerIdentity: h2.ServerIdentity,
 		Msg:            treeM,
@@ -279,13 +273,8 @@ func TestOverlayRosterTreePropagation(t *testing.T) {
 		t.Fatal("Tree should Not be there")
 	}
 	// check if we receive the Roster then
-	var roster Roster
-	select {
-	case roster = <-proc.sendRoster:
-		break
-	case <-time.After(50 * time.Millisecond):
-		t.Fatal("Timeout for receiving roster")
-	}
+	roster := <-proc.sendRoster
+
 	packet = network.Packet{
 		ServerIdentity: h2.ServerIdentity,
 		Msg:            roster,

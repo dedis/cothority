@@ -180,14 +180,12 @@ func TestServiceChannels(t *testing.T) {
 	h1.AddRoster(el)
 	h1.AddTree(tree)
 	sc1.ProcessClientRequest(nil, nil)
-	select {
-	case msg := <-Incoming:
-		if msg.I != 12 {
-			t.Fatal("Child should receive 12")
-		}
-	case <-time.After(time.Millisecond * 100):
-		t.Fatal("Timeout")
+
+	msg := <-Incoming
+	if msg.I != 12 {
+		t.Fatal("Child should receive 12")
 	}
+
 }
 
 func TestServiceProcessRequest(t *testing.T) {
@@ -217,13 +215,9 @@ func TestServiceProcessRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	// wait for the link
-	select {
-	case v := <-ds.link:
-		if v {
-			t.Fatal("was expecting false !")
-		}
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("Too late")
+	v := <-ds.link
+	if v {
+		t.Fatal("was expecting false !")
 	}
 }
 
@@ -484,12 +478,9 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		Data:    buff,
 	}
 	assert.Nil(t, client.Send(hosts[0].ServerIdentity, req))
-	select {
-	case msg := <-proc.relay:
-		assert.Equal(t, msg.Val, 10)
-	case <-time.After(50 * time.Millisecond):
-		t.Fatal("Not received any response from host")
-	}
+
+	msg := <-proc.relay
+	assert.Equal(t, msg.Val, 10)
 }
 
 func TestClient_Send(t *testing.T) {
@@ -745,6 +736,7 @@ func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
 	}
 
 }
+
 func waitOrFatal(ch chan bool, t *testing.T) {
 	select {
 	case _ = <-ch:
