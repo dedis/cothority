@@ -1,12 +1,10 @@
 package sda
 
 import (
-	"testing"
-	"time"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
+	"testing"
 )
 
 func init() {
@@ -198,17 +196,15 @@ func TestTreeNodeMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	select {
-	case msgs := <-proto.IncomingAgg:
-		if msgs[0].I != 3 {
-			t.Fatal("First message should be 3")
-		}
-		if msgs[1].I != 4 {
-			t.Fatal("Second message should be 4")
-		}
-	case <-time.After(time.Second):
-		t.Fatal("Messages should BE there")
+
+	msgs := <-proto.IncomingAgg
+	if msgs[0].I != 3 {
+		t.Fatal("First message should be 3")
 	}
+	if msgs[1].I != 4 {
+		t.Fatal("Second message should be 4")
+	}
+
 }
 
 func TestTreeNodeFlags(t *testing.T) {
@@ -398,14 +394,11 @@ func TestBlocking(t *testing.T) {
 	}()
 	// Release p2
 	p2.stopBlockChan <- true
-	select {
-	case <-p2.doneChan:
-		log.Lvl2("Node 2 done")
-		p1.stopBlockChan <- true
-		<-p1.doneChan
-	case <-time.After(time.Second):
-		t.Fatal("Node 2 didn't receive")
-	}
+	<-p2.doneChan
+	log.Lvl2("Node 2 done")
+	p1.stopBlockChan <- true
+	<-p1.doneChan
+
 }
 
 // BlockingProtocol is a protocol that will block until it receives a "continue"

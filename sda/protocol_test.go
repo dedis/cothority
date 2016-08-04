@@ -3,11 +3,9 @@ package sda
 import (
 	"errors"
 	"fmt"
-	"testing"
-	"time"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"testing"
 )
 
 var testProto = "test"
@@ -128,18 +126,9 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}()
 
 	// we are supposed to receive something from host1 from Start()
-	select {
-	case _ = <-chanH1:
-		break
-	case <-time.After(200 * time.Millisecond):
-		t.Fatal("Could not receive from channel of host 1")
-	}
+	_ = <-chanH1
+
 	// Then we are supposed to receive from h2 after he got the tree and the
 	// entity list from h1
-	select {
-	case _ = <-chanH2:
-		break
-	case <-time.After(2 * time.Second):
-		t.Fatal("Could not receive from channel of host 1")
-	}
+	<-chanH2
 }
