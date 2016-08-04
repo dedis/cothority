@@ -404,7 +404,7 @@ type TCPClient struct {
 	sync.Mutex
 }
 
-// NewClient returns a random client using the service s. It's a TCPClient by
+// NewClient returns a client using the service s. It's a TCPClient by
 // default.
 func NewClient(s string) Client {
 	return &TCPClient{
