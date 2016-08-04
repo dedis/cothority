@@ -32,7 +32,7 @@ type Host struct {
 }
 
 // NewHost returns a new Host that out of a private-key and its relating public
-// key with a default TcpRouter as Router.
+// key within the ServerIdentity. The host will create a default TcpRouter as Router.
 func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
