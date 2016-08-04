@@ -129,8 +129,6 @@ func TestTcpRouterRunClose(t *testing.T) {
 func TestTcpRouterReconnection(t *testing.T) {
 	h1 := NewMockTcpRouter(2000)
 	h2 := NewMockTcpRouter(2001)
-	/* h1 := NewLocalHost(2000)*/
-	/*h2 := NewLocalHost(2001)*/
 	defer h1.Close()
 	defer h2.Close()
 

@@ -114,9 +114,10 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 	ServiceFactory.Register(name, fn)
 }
 
-// DeleteNewService will remove the NewServiceFunc from the global store of
-// NewServiceFunc so it can't be initialized again. If the service needs to be
-// initialized again, a new call to RegisterNewService must be made.
+// DeleteNewService will remove the NewServiceFunc associated with *name*
+// from the global store of NewServiceFunc so it can't be initialized again.
+// If the service needs to be initialized again, a new call to
+// RegisterNewService must be made.
 func DeleteNewService(name string) {
 	ServiceFactory.DeleteNewService(name)
 }
