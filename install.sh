@@ -9,6 +9,8 @@
 export PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
 
 i=0
+echo "Branch before $BRANCH"
+unset BRANCH
 while [ -z $BRANCH ] && [ "$BRANCH" = "null" ]
 do
     a=`expr $a + 1`
