@@ -263,7 +263,7 @@ func TestOverlayRosterTreePropagation(t *testing.T) {
 	select {
 	case treeM = <-proc.treeMarshal:
 		break
-	case <-time.After(50 * time.Millisecond):
+	case <-time.After(250 * time.Millisecond):
 		t.Fatal("Timeout for receiving tree")
 	}
 	packet := network.Packet{
