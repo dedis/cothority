@@ -8,17 +8,13 @@
 # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
 export PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
 
-i=0
-echo "Branch before $BRANCH"
 unset BRANCH
-while [ -z $BRANCH ] || [ "$BRANCH" = "null" ]
-do
-    a=`expr $a + 1`
-    export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
-    echo "Got BRANCH=$BRANCH (round $a)"
-done
+export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
 
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+
+export BRANCH=$(`git status | grep "On branch" | cut -d" " -f3`)
+echo "Git status: $BRANCH"
 
 # method 2 from https://github.com/travis-ci/travis-ci/issues/1633
 #git fetch --tags
