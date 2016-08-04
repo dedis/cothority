@@ -176,7 +176,7 @@ func (t *TCPRouter) listen() error {
 }
 
 // processMessages is receiving all the messages coming from the network and
-// dispatch it to the Dispatcher.
+// dispatches them to the Dispatcher.
 func (t *TCPRouter) processMessages() {
 	t.networkLock.Lock()
 	t.processMessagesStarted = true
