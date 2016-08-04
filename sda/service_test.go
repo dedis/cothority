@@ -142,21 +142,20 @@ func TestServiceNew(t *testing.T) {
 		ds.link <- true
 		return ds
 	})
+	defer DeleteNewService("DummyService")
 	go func() {
 		h := NewLocalHost(2000)
 		h.Close()
 	}()
 
 	waitOrFatal(ds.link, t)
+
 }
 
 func TestServiceChannels(t *testing.T) {
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
-	// Needed because of TestServiceNew which listens on a channel. Strange that
-	// it worked before.
-	DeleteNewService("DummyService")
 	RegisterNewService("ChannelsService", func(c *Context, path string) Service {
 		var sc *ServiceChannels
 		if count == 0 {
@@ -169,6 +168,8 @@ func TestServiceChannels(t *testing.T) {
 		sc.path = path
 		return sc
 	})
+
+	defer DeleteNewService("ChannelsService")
 	h1, h2 := TwoTestHosts()
 	defer h1.Close()
 	defer h2.Close()
@@ -198,6 +199,8 @@ func TestServiceProcessRequest(t *testing.T) {
 		ds.path = path
 		return ds
 	})
+
+	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
 	defer host.Close()
@@ -234,6 +237,8 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		ds.path = path
 		return ds
 	})
+
+	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
 	go host.Run()
 	log.Lvl1("Host created and listening")
@@ -289,6 +294,8 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		}
 		return ds
 	})
+
+	defer DeleteNewService("DummyService")
 	// fake a client
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
@@ -350,6 +357,8 @@ func TestServiceNewProtocol(t *testing.T) {
 		count++
 		return localDs
 	})
+
+	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
 	go host.Run()
 	log.Lvl1("Host created and listening")
@@ -408,6 +417,8 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		c.RegisterProcessor(s, dummyMsgType)
 		return s
 	})
+
+	defer DeleteNewService("DummyService")
 	// create two hosts
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
