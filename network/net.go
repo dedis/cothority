@@ -27,6 +27,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"runtime/debug"
 )
 
 // Network part //
@@ -227,6 +228,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeServerIdentity(); err != nil {
 			log.Error("Negotiation failed:", err)
+			debug.PrintStack()
 			if err := stc.Close(); err != nil {
 				log.Error("Couldn't close secure connection:",
 					err)
