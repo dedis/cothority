@@ -11,7 +11,7 @@ export PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQU
 i=0
 echo "Branch before $BRANCH"
 unset BRANCH
-while [ -z $BRANCH ] && [ "$BRANCH" = "null" ]
+while [ -z $BRANCH ] || [ "$BRANCH" = "null" ]
 do
     a=`expr $a + 1`
     export BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
