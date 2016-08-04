@@ -129,8 +129,12 @@ func TestTcpRouterRunClose(t *testing.T) {
 func TestTcpRouterReconnection(t *testing.T) {
 	h1 := NewMockTcpRouter(2005)
 	h2 := NewMockTcpRouter(2006)
-	defer h1.Close()
-	defer h2.Close()
+	defer func() {
+		h1.Close()
+		h2.Close()
+		// Let some time to tcp
+		time.Sleep(250 * time.Millisecond)
+	}()
 
 	go h1.Run()
 	go h2.Run()
@@ -186,8 +190,11 @@ func TestTcpRouterAutoConnection(t *testing.T) {
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 
-	defer h1.Close()
-	defer h2.Close()
+	defer func() {
+		h1.Close()
+		h2.Close()
+		time.Sleep(250 * time.Millisecond)
+	}()
 
 	err := h1.Send(h2.serverIdentity, &SimpleMessage{12})
 	if err != nil {
@@ -209,8 +216,11 @@ func TestTcpRouterMessaging(t *testing.T) {
 	go h1.Run()
 	go h2.Run()
 
-	defer h1.Close()
-	defer h2.Close()
+	defer func() {
+		h1.Close()
+		h2.Close()
+		time.Sleep(250 * time.Millisecond)
+	}()
 
 	bw1 := h1.Tx()
 	br2 := h2.Rx()
@@ -246,6 +256,12 @@ func TestTcpRouterSendMsgDuplex(t *testing.T) {
 	go h1.Run()
 	go h2.Run()
 
+	defer func() {
+		h1.Close()
+		h2.Close()
+		time.Sleep(250 * time.Millisecond)
+	}()
+
 	proc := &simpleMessageProc{t, make(chan SimpleMessage)}
 	h1.RegisterProcessor(proc, SimpleMessageType)
 	h2.RegisterProcessor(proc, SimpleMessageType)
@@ -264,9 +280,6 @@ func TestTcpRouterSendMsgDuplex(t *testing.T) {
 	}
 	msg = <-proc.relay
 	log.Lvl2("Received msg h2 -> h1", msg)
-
-	h1.Close()
-	h2.Close()
 }
 
 func TwoTcpHosts() (*Host, *Host) {
