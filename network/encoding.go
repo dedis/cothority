@@ -94,7 +94,6 @@ func TypeToMessageTypeID(msg Body) MessageTypeID {
 	}
 	url := NamespaceProtocolMessageType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
-	//log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return MessageTypeID(u)
 }
 
@@ -121,7 +120,7 @@ func DefaultConstructors(suite abstract.Suite) protobuf.Constructors {
 	return constructors
 }
 
-// Error returns the eror that has been encountered during the unmarshaling of
+// Error returns the error that has been encountered during the unmarshaling of
 // this message.
 func (am *Packet) Error() error {
 	return am.err

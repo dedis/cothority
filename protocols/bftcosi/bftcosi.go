@@ -161,7 +161,7 @@ func (bft *ProtocolBFTCoSi) Start() error {
 // Dispatch listens on all channels and implements the sda.ProtocolInstance
 // interface.
 func (bft *ProtocolBFTCoSi) Dispatch() error {
-	log.LLvl2(bft.Name(), "Starts")
+	log.Lvl2(bft.Name(), "Starts")
 	for {
 		var err error
 		select {

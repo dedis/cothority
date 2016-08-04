@@ -560,7 +560,6 @@ func (c *LocalClient) send(dest *network.ServerIdentity, msg network.Body) error
 		MsgType:        ClientRequestID,
 		Msg:            serviceReq,
 		ServerIdentity: c.identity,
-		To:             dest,
 	}
 	r.receive(&nm)
 	return nil

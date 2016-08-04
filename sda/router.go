@@ -460,7 +460,6 @@ func (l *LocalRouter) Send(e *network.ServerIdentity, msg network.Body) error {
 		MsgType:        typ,
 		Msg:            body,
 		ServerIdentity: l.identity,
-		To:             e,
 	}
 	r.receive(&nm)
 	return nil
