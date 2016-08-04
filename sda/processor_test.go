@@ -1,11 +1,10 @@
 package sda
 
 import (
+	"fmt"
 	"testing"
 
 	"reflect"
-
-	"errors"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -169,7 +168,7 @@ type testMsg struct {
 func procMsg(e *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
-		return nil, errors.New("ServiceProcessor received unwanted value (42)")
+		return nil, fmt.Errorf("ServiceProcessor received %d (actual) vs 42 (expected)", msg.I)
 	}
 	return msg, nil
 }

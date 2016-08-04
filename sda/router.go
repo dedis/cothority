@@ -16,32 +16,30 @@ import (
 // Router is an abstraction to represent the bridge between the communication
 // layer (network, channels etc) and the logical/processing layer (overlay &
 // protocols, services etc). It is a duplex communication link (send/receive)
-// from/to other router of the same type.
-// Typically, for deployement you would use a tcpRouter so it opens tcp ports
-// and communicate through tcp connections. For testing, there is a localRouter
-// which pass all messages through channels going to other localRouter.
+// from/to other routers of the same type.
+// Typically, for deployment you would use a tcpRouter so it opens tcp ports
+// and communicate through tcp connections. For testing, there is a LocalRouter
+// which passes all messages through channels going to another LocalRouter.
 // For the Router to dispatch messages to your struct, you need to register a
 // `Processor` (see the `Dispatcher` interface in processor.go).
 type Router interface {
 	// Run will start the Router:
 	//  * Accepting new connections
 	//  * Dispatching  incoming messages
-	// It is a blocking call which will return until Close() is called.
+	// It is a blocking call which won't return until Close() is called
 	Run()
 	// Close will stop the Router from running and will close all connections.
-	// It makes the Run() returns.
+	// It makes the Run() method returns.
 	Close() error
 
 	// Router is a Dispatcher so you can register any Processor to it. Every
-	// messages coming to this Router will be dispatched accordingly to its
+	// messages coming to this Router will be dispatched according to its
 	// registered Processors.
 	Dispatcher
 
 	// Send will send the message msg to e.
 	Send(e *network.ServerIdentity, msg network.Body) error
 
-	// XXX Feels like there's a lot of common goal for the next methods
-	// that could maybe be factored together into something simpler...
 	Tx() uint64
 	Rx() uint64
 	StatusReporter
@@ -50,7 +48,7 @@ type Router interface {
 
 // TCPRouter is a Router implementation that uses TCP connections to communicate
 // to different hosts. It manages automatically the connection to hosts, the
-// maintenance of the connections etc. It is believed to be thread-safe.
+// maintenance of the connections etc. It is supposed to be thread-safe.
 type TCPRouter struct {
 	// The TCPHost
 	host           network.SecureHost
@@ -92,8 +90,9 @@ func NewTCPRouter(e *network.ServerIdentity, pkey abstract.Scalar) *TCPRouter {
 		suite:          network.Suite,
 		serverIdentity: e,
 		quitProcessMsg: make(chan bool),
-		closing:        make(chan bool, 1), // buffered channel of 1 so Close() without
+		// buffered channel of 1 so Close() without
 		// Run() before does not fail
+		closing:     make(chan bool, 1),
 		networkChan: make(chan network.Packet, 1),
 	}
 }
@@ -361,7 +360,7 @@ func (t *TCPRouter) connection(e *network.ServerIdentity) network.SecureConn {
 
 // MOCKING NETWORK ROUTER
 // localRelay defines the basic functionalities such as sending and
-// receiving a message, locally. It is implemented by localRouter and
+// receiving a message, locally. It is implemented by LocalRouter and
 // localClient so both a Router and a Client can be emulated locally without
 // opening any real connections.
 type localRelay interface {
@@ -370,13 +369,13 @@ type localRelay interface {
 	serverIdentity() *network.ServerIdentity
 }
 
-// localRouterStore keeps tracks of all the mock routers
+// localRelayStore keeps tracks of all the mock routers
 type localRelayStore struct {
 	localRelays map[network.ServerIdentityID]localRelay
 	mut         sync.Mutex
 }
 
-// localRouters is the store that keeps tracks of all opened local routers in a
+// localRelays is the store that keeps tracks of all opened local routers in a
 // thread safe manner
 var localRelays = localRelayStore{
 	localRelays: make(map[network.ServerIdentityID]localRelay),
@@ -389,7 +388,7 @@ func (lrs *localRelayStore) Put(r localRelay) {
 }
 
 // Get returns the router associated with this ServerIdentity. It returns nil if
-// there is no localRouter associated with this ServerIdentity
+// there is no LocalRouter associated with this ServerIdentity
 func (lrs *localRelayStore) Get(id *network.ServerIdentity) localRelay {
 	lrs.mut.Lock()
 	defer lrs.mut.Unlock()
@@ -411,14 +410,14 @@ func (lrs *localRelayStore) Len() int {
 type LocalRouter struct {
 	Dispatcher
 	identity *network.ServerIdentity
-	// msgQueue is the channel where other localRouter communicate messages to
-	// this localRouter.
+	// msgQueue is the channel where other LocalRouter communicate messages to
+	// this LocalRouter.
 	msgChan chan *network.Packet
 	conns   *connsStore
 }
 
 // NewLocalRouter will return a fresh router using native go channels to communicate
-// to others localRouter. Its purpose is mainly for easy testing without any
+// to others LocalRouter. Its purpose is mainly for easy testing without any
 // trouble of opening / closing / waiting for the network socket ...
 func NewLocalRouter(identity *network.ServerIdentity) *LocalRouter {
 	r := &LocalRouter{
