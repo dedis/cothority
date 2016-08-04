@@ -116,7 +116,7 @@ func (t *TCPRouter) Send(e *network.ServerIdentity, msg network.Body) error {
 	log.Lvlf4("%s sends to %s msg: %+v", t.serverIdentity.Addresses, e, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
-	if err != nil /*&& err != network.ErrClosed*/ {
+	if err != nil {
 		log.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
 		c, err = t.Connect(e)
 		if err != nil {
