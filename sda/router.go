@@ -75,6 +75,7 @@ type TCPRouter struct {
 	processMessagesStarted bool
 	// tell processMessages to quit
 	quitProcessMsg chan bool
+	quitProcessMut sync.Mutex
 	// tell Run() to stop
 	closing chan bool
 }
@@ -137,14 +138,14 @@ func (t *TCPRouter) Send(e *network.ServerIdentity, msg network.Body) error {
 func (t *TCPRouter) Run() {
 	// start processing messages
 	go func() {
-		t.networkLock.Lock()
+		t.quitProcessMut.Lock()
 		t.quitProcessMsg = make(chan bool)
 		if t.processMessagesStarted {
 			// we are already listening
-			t.networkLock.Unlock()
+			t.quitProcessMut.Unlock()
 			return
 		}
-		t.networkLock.Unlock()
+		t.quitProcessMut.Unlock()
 
 		t.processMessages()
 	}()
@@ -178,18 +179,18 @@ func (t *TCPRouter) listen() error {
 // processMessages is receiving all the messages coming from the network and
 // dispatches them to the Dispatcher.
 func (t *TCPRouter) processMessages() {
-	t.networkLock.Lock()
+	t.quitProcessMut.Lock()
 	t.processMessagesStarted = true
 	log.Lvl5(t.workingAddress, "Starting Process Messages")
-	t.networkLock.Unlock()
+	t.quitProcessMut.Unlock()
 	for {
 		var data network.Packet
 		select {
 		case <-t.quitProcessMsg:
 			log.Lvl5(t.workingAddress, "Quitting ProcessMessages")
-			t.networkLock.Lock()
+			t.quitProcessMut.Lock()
 			t.processMessagesStarted = false
-			t.networkLock.Unlock()
+			t.quitProcessMut.Unlock()
 			return
 		case data = <-t.networkChan:
 		}
@@ -247,7 +248,7 @@ func (t *TCPRouter) Close() error {
 }
 
 // closeConnection closes a connection and removes it from the connections-map
-// The t.networkLock must be taken.
+// Calling this method will borrow the networkLock.
 func (t *TCPRouter) closeConnection(c network.SecureConn) error {
 	t.networkLock.Lock()
 	defer t.networkLock.Unlock()
@@ -302,7 +303,6 @@ func (t *TCPRouter) registerConnection(c network.SecureConn) {
 	id := c.ServerIdentity()
 	_, okc := t.connections[id.ID]
 	if okc {
-		// TODO - we should catch this in some way
 		log.Lvl3("Connection already registered", okc)
 	}
 	t.connections[id.ID] = c
