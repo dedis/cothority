@@ -48,7 +48,7 @@ type Identity struct {
 	// Client is included for easy `Send`-methods.
 	sda.Client
 	// IdentityData holds all the data related to this identity
-	// It will be stored and load from a config file or else.
+	// It can be stored and loaded from a config file.
 	Data
 }
 
