@@ -265,11 +265,11 @@ func (t *TCPRouter) handleConn(c network.SecureConn) {
 	address := c.Remote()
 	for {
 		ctx := context.TODO()
-		am, err := c.Receive(ctx)
+		packet, err := c.Receive(ctx)
 		// So the receiver can know about the error
-		am.SetError(err)
-		am.From = address
-		log.Lvl5(t.workingAddress, "Got message", am)
+		packet.SetError(err)
+		packet.From = address
+		log.Lvl5(t.workingAddress, "Got message", packet)
 		if err != nil {
 			t.closingMut.Lock()
 			log.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
@@ -285,7 +285,7 @@ func (t *TCPRouter) handleConn(c network.SecureConn) {
 			t.closingMut.Lock()
 			if !t.isClosing {
 				log.Lvl5(t.workingAddress, "Send message to networkChan", len(t.networkChan))
-				t.networkChan <- am
+				t.networkChan <- packet
 			}
 			t.closingMut.Unlock()
 		}
