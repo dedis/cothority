@@ -25,7 +25,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 func TestClient_CreateRootInter(t *testing.T) {
 	log.TestOutput(true, 5)
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
 	c := NewLocalClient()
@@ -50,7 +50,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 func TestClient_CreateData(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(2, true, true, true)
+	_, el, _ := l.GenTree(2, true)
 	defer l.CloseAll()
 
 	c := NewLocalClient()
@@ -77,7 +77,7 @@ func TestClient_CreateData(t *testing.T) {
 
 func TestClient_ProposeData(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
 	c := NewLocalClient()
@@ -105,7 +105,7 @@ func TestClient_ProposeData(t *testing.T) {
 func TestClient_ProposeRoster(t *testing.T) {
 	nbrHosts := 5
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(nbrHosts, true, true, true)
+	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
 	c := NewLocalClient()

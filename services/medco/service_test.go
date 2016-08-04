@@ -34,7 +34,7 @@ func TestService(t *testing.T) {
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, el, _ := local.GenTree(5, true, true, true)
+	_, el, _ := local.GenTree(5, true)
 	defer local.CloseAll()
 
 	// Send a request to the service

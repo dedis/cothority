@@ -36,7 +36,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 
 func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, false, true, false)
+	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
 	sbd1.Roster = el

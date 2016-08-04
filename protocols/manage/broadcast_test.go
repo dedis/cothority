@@ -14,7 +14,7 @@ import (
 func TestBroadcast(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
-		_, _, tree := local.GenTree(nbrNodes, false, true, true)
+		_, _, tree := local.GenTree(nbrNodes, true)
 
 		pi, err := local.CreateProtocol(tree, "Broadcast")
 		if err != nil {

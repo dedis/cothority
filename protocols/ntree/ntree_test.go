@@ -18,7 +18,7 @@ func TestNtree(t *testing.T) {
 		log.Lvl2("Running ntree with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 
-		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
+		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
 
 		done := make(chan bool)
 		// create the message we want to sign for this round

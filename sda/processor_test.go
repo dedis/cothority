@@ -135,9 +135,8 @@ func TestProcessor_GetReply(t *testing.T) {
 func TestProcessor_ProcessClientRequest(t *testing.T) {
 	local := NewLocalTest()
 
-	// generate 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
-	h := local.GenHosts(1, false, false)[0]
+	// generate 5 hosts,
+	h := local.GenHosts(1)[0]
 	defer local.CloseAll()
 
 	s := local.Services[h.ServerIdentity.ID]

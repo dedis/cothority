@@ -71,7 +71,7 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 }
 
 // GenHosts returns n Hosts with a localRouter
-func (l *LocalTest) GenHosts(n int, connect, processMsg bool) []*Host {
+func (l *LocalTest) GenHosts(n int) []*Host {
 	hosts := GenLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
@@ -84,8 +84,8 @@ func (l *LocalTest) GenHosts(n int, connect, processMsg bool) []*Host {
 
 // GenTree will create a tree of n hosts with a localRouter, and returns the
 // list of hosts and the associated roster / tree.
-func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenHosts(n, connect, processMsg)
+func (l *LocalTest) GenTree(n int, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(n)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
@@ -98,15 +98,14 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 
 }
 
-// GenBigTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the Roster and Tree
-// will be registered with the overlay.
+// GenBigTree will create a tree of n hosts.
+// If register is true, the Roster and Tree will be registered with the overlay.
 // 'nbrHosts' is how many hosts are created
 // 'nbrTreeNodes' is how many TreeNodes are created
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
-func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenHosts(nbrHosts, connect, true)
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(nbrHosts)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
@@ -246,7 +245,7 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 // returns the Service object of the first hosts in the list having sid as a
 // ServiceID.
 func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
-	hosts := l.GenHosts(nbr, false, true)
+	hosts := l.GenHosts(nbr)
 	el := l.GenRosterFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }

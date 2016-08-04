@@ -71,7 +71,7 @@ func TestOverlayDone(t *testing.T) {
 // waiting on this specific entitiy list, to be constructed.
 func TestOverlayPendingTreeMarshal(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTree(2, false, false, false)
+	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 
@@ -122,7 +122,7 @@ func (op *overlayProc) Types() []network.MessageTypeID {
 // Test propagation of roster - both known and unknown
 func TestOverlayRosterPropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, _ := local.GenTree(2, false, false, false)
+	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -176,7 +176,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 // Test propagation of tree - both known and unknown
 func TestOverlayTreePropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTree(2, true, false, false)
+	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]
@@ -240,7 +240,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 // h2 respond with the entitylist
 func TestOverlayRosterTreePropagation(t *testing.T) {
 	local := NewLocalTest()
-	hosts, el, tree := local.GenTree(2, true, true, false)
+	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
 	h1 := hosts[0]
 	h2 := hosts[1]

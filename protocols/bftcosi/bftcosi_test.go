@@ -54,7 +54,7 @@ func TestThreshold(t *testing.T) {
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
-		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
+		_, _, tree := local.GenBigTree(hosts, hosts, 2, true)
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
@@ -136,7 +136,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
+	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true)
 	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)

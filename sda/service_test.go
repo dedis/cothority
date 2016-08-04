@@ -452,7 +452,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, false)
 
 	// create client
 	client := NewLocalHost(5000)
@@ -492,7 +492,7 @@ func TestClient_Send(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, false)
 	client := NewLocalClient("BackForth")
 
 	r := &simpleRequest{
@@ -518,7 +518,7 @@ func TestClient_LocalSend(t *testing.T) {
 		}
 	})
 	// create hosts
-	hosts, el, _ := local.GenTree(4, true, true, false)
+	hosts, el, _ := local.GenTree(4, false)
 	client := NewLocalClient("BackForth")
 
 	r := &simpleRequest{
