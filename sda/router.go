@@ -175,14 +175,8 @@ func (t *TCPRouter) listen() error {
 	return nil
 }
 
-// processMessages checks if it is one of the messages for us or dispatch it
-// to the corresponding instance.
-// Our messages are:
-// * SDAMessage - used to communicate between the Hosts
-// * RequestTreeID - ask the parent for a given tree
-// * SendTree - send the tree to the child
-// * RequestPeerListID - ask the parent for a given peerList
-// * SendPeerListID - send the tree to the child
+// processMessages is receiving all the messages coming from the network and
+// dispatch it to the Dispatcher.
 func (t *TCPRouter) processMessages() {
 	t.networkLock.Lock()
 	t.processMessagesStarted = true
