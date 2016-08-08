@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_SRV=0
+DBG_SRV=${DBG_SRV:-0}
 
 runCoCfg(){
     echo -e "127.0.0.1:200$1\nco$1\n\n" | dbgRun runCo $1 setup
@@ -9,12 +9,15 @@ runCoCfg(){
 runCoBG(){
     nb=$1
     shift
+    testOut "starting cothority-server #$nb"
+#    ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ 2>&1 > /dev/null & )
     ( ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@ & )
 }
 
 runCo(){
     nb=$1
     shift
+    testOut "starting cothority-server #$nb"
     dbgRun ./cothorityd -d $DBG_SRV -c co$nb/config.toml $@
 }
 

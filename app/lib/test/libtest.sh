@@ -9,6 +9,8 @@ BUILD=${BUILD:-}
 # Show the output of the commands
 DBG_SHOW=${DBG_SHOW:-0}
 
+RUNOUT=/tmp/run.out
+
 startTest(){
     set +m
 }
@@ -40,34 +42,74 @@ testFile(){
     fi
 }
 
+testNFile(){
+    if [ -f $1 ]; then
+        fail "file $1 IS here"
+    fi
+}
+
+testFileGrep(){
+	local G="$1" F="$2"
+	testFile "$F"
+	if ! pcregrep -M -q "$G" $F; then
+		fail "Didn't find '$G' in file '$F': $(cat $F)"
+	fi
+}
+
 testGrep(){
     S="$1"
     shift
     testOut "Assert grepping '$S' in '$@'"
-    runGrep "$S" "$@"
-    if [ ! "$GRP" ]; then
+    runOutFile "$@"
+    doGrep "$S"
+    if [ ! "$EGREP" ]; then
         fail "Didn't find '$S' in output of '$@': $GRP"
     fi
 }
 
-testCount(){
-    C="$1"
-    S="$2"
-    shift 2
-    testOut "Assert counting '$C' of '$S' in '$@'"
-    runGrep "$S" "$@"
-    if [ $WC -ne $C ]; then
-        fail "Didn't find '$C' (but '$WC') of '$S' in output of '$@': $GRP"
+testNGrep(){
+    G="$1"
+    shift
+    testOut "Assert NOT grepping '$G' in '$@'"
+    runOutFile "$@"
+    doGrep "$G"
+    if [ "$EGREP" ]; then
+        fail "DID find '$G' in output of '$@': $(cat $RUNOUT)"
     fi
 }
 
-testNGrep(){
-    S="$1"
-    shift
-    testOut "Assert NOT grepping '$S' in '$@'"
-    runGrep "$S" "$@"
-    if [ "$GRP" ]; then
-        fail "Did find '$S' in output of '$@': $GRP"
+testReGrep(){
+	G="$1"
+    testOut "Assert grepping again '$G' in same output as before"
+    doGrep "$G"
+    if [ ! "$EGREP" ]; then
+        fail "Didn't find '$G' in last output: $(cat $RUNOUT)"
+    fi
+}
+
+testReNGrep(){
+	G="$1"
+    testOut "Assert grepping again NOT '$G' in same output as before"
+    doGrep "$G"
+    if [ "$EGREP" ]; then
+        fail "DID find '$G' in last output: $(cat $RUNOUT)"
+    fi
+}
+
+doGrep(){
+    WC=$( cat $RUNOUT | egrep "$1" | wc -l )
+    EGREP=$( cat $RUNOUT | egrep "$1" )
+}
+
+testCount(){
+    C="$1"
+    G="$2"
+    shift 2
+    testOut "Assert counting '$C' of '$G' in '$@'"
+    runOutFile "$@"
+    doGrep "$G"
+    if [ $WC -ne $C ]; then
+        fail "Didn't find '$C' (but '$WC') of '$G' in output of '$@': $(cat $RUNOUT)"
     fi
 }
 
@@ -89,32 +131,27 @@ dbgRun(){
     else
         OUT=/dev/null
     fi
-    if [ "$GREP" ]; then
-        $@ 2>&1 | tee $GREP > $OUT
+    if [ "$OUTFILE" ]; then
+        $@ 2>&1 | tee $OUTFILE > $OUT
     else
         $@ 2>&1 > $OUT
     fi
 }
 
-runSed(){
-    SED="$1"
-    shift
-    OLDGREP=$GREP
-    GREP=$( mktemp )
-    dbgRun "$@"
-    SED=$( cat $GREP | sed -e "$SED" )
-    GREP=$OLDGREP
+runGrepSed(){
+	GREP="$1"
+    SED="$2"
+    shift 2
+    runOutFile "$@"
+    doGrep "$GREP"
+    SED=$( echo $EGREP | sed -e "$SED" )
 }
 
-runGrep(){
-    GRP="$1"
-    shift
-    OLDGREP=$GREP
-    GREP=$( mktemp )
+runOutFile(){
+    OLDOUTFILE=$OUTFILE
+    OUTFILE=$RUNOUT
     dbgRun "$@"
-    WC=$( cat $GREP | egrep "$GRP" | wc -l )
-    GRP=$( cat $GREP | egrep "$GRP" )
-    GREP=$OLDGREP
+    OUTFILE=$OLDOUTFILE
 }
 
 fail(){
@@ -145,3 +182,12 @@ stopTest(){
     fi
     echo "Success"
 }
+
+if ! which pcregrep > /dev/null; then
+	echo "*** WARNING ***"
+	echo "Most probably you're missing pcregrep which might be used here..."
+	echo "On mac you can install it with"
+	echo "brew install pcre"
+	echo "Not aborting because it might work anyway."
+	echo
+fi

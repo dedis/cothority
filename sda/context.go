@@ -7,16 +7,20 @@ type Context struct {
 	overlay *Overlay
 	host    *Host
 	servID  ServiceID
+	manager *serviceManager
+	Dispatcher
 }
 
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
 
-func newContext(h *Host, o *Overlay, servID ServiceID) *Context {
+func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
-		overlay: o,
-		host:    h,
-		servID:  servID,
+		overlay:    o,
+		host:       h,
+		servID:     servID,
+		manager:    manager,
+		Dispatcher: NewBlockingDispatcher(),
 	}
 }
 
@@ -67,4 +71,15 @@ func (c *Context) ReportStatus() map[string]Status {
 // RegisterStatusReporter registers the Status Reporter.
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
+}
+
+// RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
+// It delegates the dispatching to the serviceManager.
+func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+	c.manager.RegisterProcessor(p, msgType)
+}
+
+// String returns the host it's running on
+func (c *Context) String() string {
+	return c.host.ServerIdentity.String()
 }

@@ -78,7 +78,7 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
-		l.Services[host.ServerIdentity.ID] = host.serviceStore.services
+		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
 	}
 	return hosts
 }
@@ -139,10 +139,14 @@ func (l *LocalTest) CloseAll() {
 			log.Error("Closing host", host.ServerIdentity.First(),
 				"gives error", err)
 		}
+		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
 		node.Close()
 	}
+	l.Nodes = make([]*TreeNodeInstance, 0)
+	// Give the nodes some time to correctly close down
+	time.Sleep(time.Millisecond * 500)
 }
 
 // GetTree returns the tree of the given TreeNode
@@ -215,13 +219,13 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 // known trees, also triggering dispatching of SDA-messages waiting for that
 // tree
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
-	h.addPendingTreeMarshal(tm)
+	h.overlay.addPendingTreeMarshal(tm)
 }
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *Roster) {
-	h.checkPendingTreeMarshal(el)
+	h.overlay.checkPendingTreeMarshal(el)
 }
 
 // GetPrivate returns the private key of a host
