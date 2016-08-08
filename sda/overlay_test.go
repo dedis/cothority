@@ -1,14 +1,13 @@
-package sda_test
+package sda
 
 import (
 	"testing"
 
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 )
 
 type ProtocolOverlay struct {
-	*sda.TreeNodeInstance
+	*TreeNodeInstance
 	done bool
 }
 
@@ -28,19 +27,19 @@ func (po *ProtocolOverlay) Release() {
 
 func TestOverlayDone(t *testing.T) {
 	// setup
-	h1 := sda.NewLocalHost(2000)
+	h1 := NewLocalHost(2000)
 	defer h1.Close()
-	fn := func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := ProtocolOverlay{
 			TreeNodeInstance: n,
 		}
 		return &ps, nil
 	}
-	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity})
+	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity})
 	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
-	sda.ProtocolRegisterName("ProtocolOverlay", fn)
+	ProtocolRegisterName("ProtocolOverlay", fn)
 	p, err := h1.CreateProtocol("ProtocolOverlay", tree)
 	if err != nil {
 		t.Fatal("error starting new node", err)

@@ -10,17 +10,77 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
+	"github.com/stretchr/testify/assert"
 )
 
+type basicProcessor struct {
+	msgChan chan network.Packet
+}
+
+func (bp *basicProcessor) Process(msg *network.Packet) {
+	bp.msgChan <- *msg
+}
+
+type basicMessage struct {
+	Value int
+}
+
+var basicMessageType network.MessageTypeID
+
+func TestBlockingDispatcher(t *testing.T) {
+	defer log.AfterTest(t)
+
+	dispatcher := NewBlockingDispatcher()
+	processor := &basicProcessor{make(chan network.Packet, 1)}
+
+	dispatcher.RegisterProcessor(processor, basicMessageType)
+	dispatcher.Dispatch(&network.Packet{
+		Msg:     basicMessage{10},
+		MsgType: basicMessageType})
+
+	select {
+	case m := <-processor.msgChan:
+		msg, ok := m.Msg.(basicMessage)
+		assert.True(t, ok)
+		assert.Equal(t, msg.Value, 10)
+	default:
+		t.Error("No message received")
+	}
+}
+
+func TestProcessorHost(t *testing.T) {
+	defer log.AfterTest(t)
+	h1 := newHostMock(network.Suite, "127.0.0.1:2000")
+
+	proc := &basicProcessor{make(chan network.Packet, 1)}
+	h1.RegisterProcessor(proc, basicMessageType)
+	h1.Dispatch(&network.Packet{
+		Msg:     basicMessage{10},
+		MsgType: basicMessageType})
+
+	select {
+	case m := <-proc.msgChan:
+		basic, ok := m.Msg.(basicMessage)
+		assert.True(t, ok)
+		assert.Equal(t, basic.Value, 10)
+	default:
+		t.Error("No message received on channel")
+	}
+}
+
 var testServiceID ServiceID
+var testMsgID network.MessageTypeID
 
 func init() {
+	basicMessageType = network.RegisterMessageType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
+	testMsgID = network.RegisterMessageType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	p := NewServiceProcessor(nil)
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
@@ -47,13 +107,14 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	p := NewServiceProcessor(nil)
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)
 	e := network.NewServerIdentity(pair.Public, "")
 
-	rep := p.GetReply(e, mkClientRequest(&testMsg{11}))
+	rep := p.GetReply(e, testMsgID, testMsg{11})
 	val, ok := rep.(*testMsg)
 	if !ok {
 		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
@@ -62,7 +123,7 @@ func TestProcessor_GetReply(t *testing.T) {
 		t.Fatal("Value got lost - should be 11")
 	}
 
-	rep = p.GetReply(e, mkClientRequest(&testMsg{42}))
+	rep = p.GetReply(e, testMsgID, testMsg{42})
 	errMsg, ok := rep.(*StatusRet)
 	if !ok {
 		t.Fatal("42 should return an error")

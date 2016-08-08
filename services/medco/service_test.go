@@ -22,7 +22,8 @@ func TestMain(m *testing.M) {
 
 // TestService tests medco complete service execution.
 func TestService(t *testing.T) {
-	//t.Skip("Still needs to be debugged -> #479")
+	t.Skip("Issue with deadlock occuring in the medco protocol: https://github.com/dedis/cothority/issues/479")
+
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist

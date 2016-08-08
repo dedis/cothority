@@ -1,4 +1,4 @@
-package sda_test
+package sda
 
 import (
 	"errors"
@@ -20,13 +20,13 @@ var protocolTestID = sda.ProtocolRegisterName(testProto, NewProtocolTest)
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {
-	*sda.TreeNodeInstance
+	*TreeNodeInstance
 	StartMsg chan string
 	DispMsg  chan string
 }
 
 // NewProtocolTest is used to create a new protocolTest-instance
-func NewProtocolTest(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+func NewProtocolTest(n *TreeNodeInstance) (ProtocolInstance, error) {
 	return &ProtocolTest{
 		TreeNodeInstance: n,
 		StartMsg:         make(chan string, 1),
@@ -51,7 +51,7 @@ func (p *ProtocolTest) Start() error {
 type SimpleProtocol struct {
 	// chan to get back to testing
 	Chan chan bool
-	*sda.TreeNodeInstance
+	*TreeNodeInstance
 }
 
 // Sends a simple message to its first children
@@ -66,7 +66,7 @@ func (p *SimpleProtocol) Start() error {
 
 // Dispatch analyses the message and does nothing else
 func (p *SimpleProtocol) ReceiveMessage(msg struct {
-	*sda.TreeNode
+	*TreeNode
 	SimpleMessage
 }) error {
 	if msg.I != 10 {
@@ -79,13 +79,15 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	if !sda.ProtocolExists(protocolTestID) {
+	testProtoName := "testProto"
+	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
+	if !ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
-	if sda.ProtocolNameToID(testProto) != protocolTestID {
+	if ProtocolNameToID(testProtoName) != testProtoID {
 		t.Fatal("Not correct translation from string to ID")
 	}
-	if sda.ProtocolIDToName(protocolTestID) != testProto {
+	if ProtocolIDToName(testProtoID) != testProtoName {
 		t.Fatal("Not correct translation from ID to String")
 	}
 }
@@ -100,7 +102,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	chans := []chan bool{chanH1, chanH2}
 	id := 0
 	// custom creation function so we know the step due to the channels
-	fn := func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := SimpleProtocol{
 			TreeNodeInstance: n,
 			Chan:             chans[id],
@@ -111,13 +113,13 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterMessageType(SimpleMessage{})
-	sda.ProtocolRegisterName(simpleProto, fn)
+	ProtocolRegisterName(simpleProto, fn)
 	h1, h2 := SetupTwoHosts(t, true)
 	defer h1.Close()
 	defer h2.Close()
 	h1.StartProcessMessages()
 	// create small Tree
-	el := sda.NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
+	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 	h1.AddRoster(el)
 	tree := el.GenerateBinaryTree()
 	h1.AddTree(tree)
