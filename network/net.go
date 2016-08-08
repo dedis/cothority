@@ -190,8 +190,10 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	if err != nil {
 		return errors.New("Couldn't find port: " + err.Error())
 	}
+	log.LLvl3("Found port", port, len(t.ListeningPort), t.ListeningPort)
 	if len(t.ListeningPort) == 0 {
 		// If the channel is empty, else we'd block.
+		log.LLvl3("Sending port", port, "over", t.ListeningPort)
 		t.ListeningPort <- port
 	}
 
@@ -239,7 +241,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.workingAddress, "connected with", c.Remote())
+		log.Lvl3(st.WorkingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -264,7 +266,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	}
 	log.Lvl3("Addresses are", st.serverIdentity.Addresses)
 	for i, addr := range st.serverIdentity.Addresses {
-		log.Lvl3("Starting to listen on", addr)
+		log.LLvl3("Starting to listen on", addr)
 		go func() {
 			err = st.TCPHost.listen(addr, receiver)
 			// The listening is over
@@ -273,14 +275,20 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			}
 			st.TCPHost.ListeningPort <- -1
 		}()
+		log.LLvl3("Waiting for port on", st.TCPHost.ListeningPort)
 		port := <-st.TCPHost.ListeningPort
-		if port > 0 && strings.HasSuffix(addr, ":0") {
-			addr = strings.TrimRight(addr, "0") +
-				strconv.Itoa(port)
-			st.serverIdentity.Addresses[i] = addr
-			st.lockAddress.Lock()
-			st.workingAddress = addr
-			st.lockAddress.Unlock()
+		log.LLvl3("Got port", port)
+		if port > 0 {
+			// If the port we asked for is '0', we need to
+			// update the address.
+			if strings.HasSuffix(addr, ":0") {
+				addr = strings.TrimRight(addr, "0") +
+					strconv.Itoa(port)
+				st.serverIdentity.Addresses[i] = addr
+				st.lockAddress.Lock()
+				st.workingAddress = addr
+				st.lockAddress.Unlock()
+			}
 			return nil
 		}
 		err = fmt.Errorf("Couldn't open address %s", addr)
@@ -355,6 +363,11 @@ func (st *SecureTCPHost) Rx() uint64 {
 		b += c.Rx()
 	}
 	return b
+}
+
+// WorkingAddress returns the working address
+func (st *SecureTCPHost) WorkingAddress() string {
+	return st.workingAddress
 }
 
 // Remote returns the name of the peer at the end point of
@@ -552,10 +565,10 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		nm, err = sc.TCPConn.Receive(context.TODO())
 		switch {
 		case err == nil:
-			log.LLvl4(sc, "Going on")
+			log.Lvl4(sc, "Got a packet")
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
+			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(100 * time.Millisecond)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)

@@ -8,14 +8,13 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/cothority/sda"
 )
 
 var testProto = "test"
 
 var simpleProto = "simple"
 
-var protocolTestID = sda.ProtocolRegisterName(testProto, NewProtocolTest)
+var protocolTestID = ProtocolRegisterName(testProto, NewProtocolTest)
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.

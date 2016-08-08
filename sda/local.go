@@ -134,6 +134,7 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
+		log.LLvl3("Closing host", host.ServerIdentity)
 		err := host.Close()
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.First(),
@@ -142,6 +143,7 @@ func (l *LocalTest) CloseAll() {
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
+		log.LLvl3("Closing node", node)
 		node.Close()
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)

@@ -26,7 +26,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 func TestHugeConnections(t *testing.T) {
 	// How many hosts are run
 	nbrHosts := 10
-	// 16MB of message size
+	// 1MB of message size
 	msgSize := 1024 * 1024 * 1
 	big := bigMessage{
 		Msize: msgSize,
@@ -48,10 +48,10 @@ func TestHugeConnections(t *testing.T) {
 	for i := 0; i < nbrHosts; i++ {
 		privkeys[i], ids[i] = genServerIdentity("localhost:" + strconv.Itoa(2000+i))
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
-		log.Lvl5("Host is", hosts[i], "id is", ids[i])
+		log.Lvl3("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
 			err := hosts[h].Listen(func(c SecureConn) {
-				log.Lvl5(2000+h, "got a connection")
+				log.Lvl3("Host", h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
 					t.Fatal("Couldn't receive msg:", err)
@@ -86,7 +86,7 @@ func TestHugeConnections(t *testing.T) {
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
-			log.Lvl5("Connecting", ids[i], "with", ids[j])
+			log.Lvl3("Connecting", ids[i], "with", ids[j])
 			conns[i][j], err = hosts[i].Open(ids[j])
 			if err != nil {
 				t.Fatal("Couldn't open:", err)

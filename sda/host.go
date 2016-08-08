@@ -11,8 +11,6 @@ import (
 
 	"strconv"
 
-	"net"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -95,25 +93,16 @@ func (h *Host) listen(wait bool) {
 		h.registerConnection(c)
 		h.handleConn(c)
 	}
-	go func() {
-		log.Lvl4("Host listens on:", h.workingAddress)
-		err := h.host.Listen(fn)
-		if err != nil {
-			log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
-		}
-	}()
+	log.Lvl4("Host listens on:", h.workingAddress)
+	err := h.host.Listen(fn)
+	if err != nil {
+		log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
+	}
 	if wait {
-		port := <-h.host.(*network.SecureTCPHost).TCPHost.ListeningPort
 		for i, addr := range h.ServerIdentity.Addresses {
 			if strings.HasSuffix(addr, ":0") {
-				host, _, err := net.SplitHostPort(addr)
-				if err != nil {
-					log.Error("Couldn't parse network address", addr)
-				} else {
-					h.ServerIdentity.Addresses[i] = host +
-						":" + strconv.Itoa(port)
-				}
-				log.Lvl4("Replaced port to", port)
+				h.ServerIdentity.Addresses[i] = h.host.WorkingAddress()
+				log.LLvl4("Replaced port to", h.ServerIdentity.Addresses[i])
 			}
 		}
 		for {
@@ -184,7 +173,7 @@ func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	for _, c := range h.connections {
-		log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
+		log.LLvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
 			log.Error(h.ServerIdentity.First(), "Couldn't close connection", c)
