@@ -309,7 +309,9 @@ func TestTcpNetwork(t *testing.T) {
 
 // Opens up a lot of connections
 func TestStress(t *testing.T) {
-	//t.Skip("Are the other tests running?")
+	if testing.Short() {
+		t.Skip("Skipping long test.")
+	}
 	for i := 0; i < 100; i++ {
 		log.Print("Going for round:", i)
 		stressTest(t)
@@ -352,7 +354,7 @@ func stressTest(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 	log.Lvl2("Closing hosts")
 	for _, h := range hosts {
 		log.ErrFatal(h.Close())

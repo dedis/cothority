@@ -240,7 +240,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.LLvl3(st.WorkingAddress, "connected with", c.Remote())
+		log.Lvl3(st.WorkingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -265,7 +265,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	}
 	log.Lvl3("Addresses are", st.serverIdentity.Addresses)
 	for i, addr := range st.serverIdentity.Addresses {
-		log.LLvl3("Starting to listen on", addr)
+		log.Lvl3("Starting to listen on", addr)
 		go func() {
 			err = st.TCPHost.listen(addr, receiver)
 			// The listening is over
@@ -279,7 +279,7 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			// If the port we asked for is '0', we need to
 			// update the address.
 			if strings.HasSuffix(addr, ":0") {
-				log.LLvl3("Got port", port)
+				log.Lvl3("Got port", port)
 				addr = strings.TrimRight(addr, "0") +
 					strconv.Itoa(port)
 				st.serverIdentity.Addresses[i] = addr
@@ -304,7 +304,7 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 	// try all names
 	for _, addr := range si.Addresses {
 		// try to connect with this name
-		log.LLvl4("Trying address", addr)
+		log.Lvl4("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
 			log.Lvl3("Address didn't accept connection:", addr, "=>", err)
@@ -329,7 +329,7 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 		st.conns = append(st.conns, &secure)
 		st.connMutex.Unlock()
 	}
-	log.LLvl3(secure.TCPConn.Local(), ": successfully connected and identified",
+	log.Lvl3(secure.TCPConn.Local(), ": successfully connected and identified",
 		secure.TCPConn.Remote())
 	return &secure, err
 }
@@ -566,7 +566,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 			log.Lvl4(sc, "Got a packet")
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
+			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(100 * time.Millisecond)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
