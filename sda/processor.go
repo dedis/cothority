@@ -28,7 +28,7 @@ type Dispatcher interface {
 	// **NOTE** In the current version, if a subequent call to RegisterProcessor
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
-	RegisterProcessor(p Processor, msgType ...network.MessageTypeID)
+	RegisterProcessor(p Processor, msgType ...network.PacketTypeID)
 	// Dispatch will find the right processor to dispatch the packet to.
 	// The id identifies the sender of the packet.
 	// It can be called for example by the network layer.
@@ -50,18 +50,18 @@ type Processor interface {
 // launch a go routine, or put the message in a queue, etc.
 // It can be re-used for more complex dispatcher.
 type BlockingDispatcher struct {
-	procs map[network.MessageTypeID]Processor
+	procs map[network.PacketTypeID]Processor
 }
 
 // NewBlockingDispatcher will return a freshly initialized BlockingDispatcher.
 func NewBlockingDispatcher() *BlockingDispatcher {
 	return &BlockingDispatcher{
-		procs: make(map[network.MessageTypeID]Processor),
+		procs: make(map[network.PacketTypeID]Processor),
 	}
 }
 
 // RegisterProcessor saves the given processor in the dispatcher.
-func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.MessageTypeID) {
+func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...network.PacketTypeID) {
 	for _, t := range msgType {
 		d.procs[t] = p
 	}
@@ -112,14 +112,14 @@ func (d *RoutineDispatcher) Dispatch(packet *network.Packet) error {
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
 // wants to send.
 type ServiceProcessor struct {
-	functions map[network.MessageTypeID]interface{}
+	functions map[network.PacketTypeID]interface{}
 	*Context
 }
 
 // NewServiceProcessor initializes your ServiceProcessor.
 func NewServiceProcessor(c *Context) *ServiceProcessor {
 	return &ServiceProcessor{
-		functions: make(map[network.MessageTypeID]interface{}),
+		functions: make(map[network.PacketTypeID]interface{}),
 		Context:   c,
 	}
 }
@@ -169,7 +169,7 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	}
 	// Automatic registration of the message to the network library.
 	log.Lvl4("Registering handler", cr1.String())
-	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
 		cr1.Elem()),
 		cr1.Elem())
 	p.functions[typ] = f
@@ -231,7 +231,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 
 // GetReply takes msgType and a message. It dispatches the msg to the right
 // function registered, then sends the responses to the sender.
-func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.MessageTypeID, m network.Body) network.Body {
+func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.PacketTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &StatusRet{"Didn't register message-handler: " + mt.String()}

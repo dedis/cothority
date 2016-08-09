@@ -61,7 +61,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	}
 	err = tni.DispatchChannel([]*ProtocolMsg{&ProtocolMsg{
 		Msg:     NodeTestMsg{3},
-		MsgType: network.RegisterMessageType(NodeTestMsg{}),
+		MsgType: network.RegisterPacketType(NodeTestMsg{}),
 		From: &Token{
 			TreeID:     tree.ID,
 			TreeNodeID: tree.Root.ID,
@@ -96,7 +96,7 @@ func TestNodeChannel(t *testing.T) {
 	}
 	err = tni.DispatchChannel([]*ProtocolMsg{&ProtocolMsg{
 		Msg:     NodeTestMsg{3},
-		MsgType: network.RegisterMessageType(NodeTestMsg{}),
+		MsgType: network.RegisterPacketType(NodeTestMsg{}),
 		From: &Token{
 			TreeID:     tree.ID,
 			TreeNodeID: tree.Root.ID,
@@ -250,7 +250,7 @@ func TestMsgAggregation(t *testing.T) {
 }
 
 func TestFlags(t *testing.T) {
-	testType := network.MessageTypeID(uuid.Nil)
+	testType := network.PacketTypeID(uuid.Nil)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, false, false, true)
 	defer local.CloseAll()

@@ -36,7 +36,7 @@ func init() {
 		&UpdateSkipBlock{},
 		&ProposeVote{},
 	} {
-		network.RegisterMessageType(s)
+		network.RegisterPacketType(s)
 	}
 }
 

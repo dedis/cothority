@@ -75,7 +75,7 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 
 // RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
 // It delegates the dispatching to the serviceManager.
-func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (c *Context) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
 

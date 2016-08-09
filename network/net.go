@@ -355,12 +355,12 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	var total Size
 	defer func() {
 		if err := recover(); err != nil {
-			nm = EmptyApplicationMessage
+			nm = EmptyApplicationPacket
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
-		return EmptyApplicationMessage, handleError(err)
+		return EmptyApplicationPacket, handleError(err)
 	}
 	b := make([]byte, total)
 	var read Size
@@ -371,7 +371,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
-			return EmptyApplicationMessage, e
+			return EmptyApplicationPacket, e
 		}
 		// put it in the longterm buffer
 		if _, err := buffer.Write(b[:n]); err != nil {
@@ -383,7 +383,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
 	// set the size read
@@ -402,7 +402,7 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := NewNetworkMessage(obj)
+	am, err := NewNetworkPacket(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}

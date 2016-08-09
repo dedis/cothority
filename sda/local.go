@@ -208,7 +208,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	}
 	sdaMsg := &ProtocolMsg{
 		MsgSlice: b,
-		MsgType:  network.TypeToMessageTypeID(msg),
+		MsgType:  network.TypeToPacketTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}

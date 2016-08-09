@@ -8,10 +8,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-var SimplePacketType MessageTypeID
+var SimplePacketType PacketTypeID
 
 func init() {
-	SimplePacketType = RegisterMessageType(SimplePacket{})
+	SimplePacketType = RegisterPacketType(SimplePacket{})
 }
 
 type SimplePacket struct {

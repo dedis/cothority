@@ -23,7 +23,7 @@ type PublicPacket struct {
 // to the right type and then we can do event-driven stuff such as receiving
 // new messages without knowing the type and then check on the MsgType field
 // to cast to the right packet type (See below)
-var PublicType = RegisterMessageType(PublicPacket{})
+var PublicType = RegisterPacketType(PublicPacket{})
 
 type TestRegisterS struct {
 	I int
@@ -38,7 +38,7 @@ func TestRegister(t *testing.T) {
 		t.Fatal("TestRegister should not yet be there")
 	}
 
-	trType := RegisterMessageType(&TestRegisterS{})
+	trType := RegisterPacketType(&TestRegisterS{})
 	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
 		t.Fatal("Couldn't register TestRegister-struct")
 	}
@@ -52,8 +52,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterReflect(t *testing.T) {
-	typ := RegisterMessageType(TestRegisterS{})
-	typReflect := RTypeToMessageTypeID(reflect.TypeOf(TestRegisterS{}))
+	typ := RegisterPacketType(TestRegisterS{})
+	typReflect := RTypeToPacketTypeID(reflect.TypeOf(TestRegisterS{}))
 	if typ != typReflect {
 		t.Fatal("Register does not work")
 	}
@@ -188,7 +188,7 @@ func TestSecureMultiClose(t *testing.T) {
 }
 
 func TestTcpCounterIO(t *testing.T) {
-	RegisterMessageType(&TestRegisterS{})
+	RegisterPacketType(&TestRegisterS{})
 	receiverStarted := make(chan bool)
 	fn := func(s *TCPConn) {
 		err := s.Send(context.TODO(), &TestRegisterS{10})

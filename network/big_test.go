@@ -33,7 +33,7 @@ func TestHugeConnections(t *testing.T) {
 		Msg:   make([]byte, msgSize),
 		Pcrc:  25,
 	}
-	bigMessageType := RegisterMessageType(big)
+	bigMessageType := RegisterPacketType(big)
 
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)

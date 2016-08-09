@@ -24,16 +24,16 @@ type TreeNodeInstance struct {
 	mtx sync.Mutex
 
 	// channels holds all channels available for the different message-types
-	channels map[network.MessageTypeID]interface{}
+	channels map[network.PacketTypeID]interface{}
 	// registered handler-functions for that protocol
-	handlers map[network.MessageTypeID]interface{}
+	handlers map[network.PacketTypeID]interface{}
 	// flags for messages - only one channel/handler possible
-	messageTypeFlags map[network.MessageTypeID]uint32
+	messageTypeFlags map[network.PacketTypeID]uint32
 	// The protocolInstance belonging to that node
 	instance ProtocolInstance
 	// aggregate messages in order to dispatch them at once in the protocol
 	// instance
-	msgQueue map[network.MessageTypeID][]*ProtocolMsg
+	msgQueue map[network.PacketTypeID][]*ProtocolMsg
 	// done callback
 	onDoneCallback func() bool
 	// queue holding msgs
@@ -60,10 +60,10 @@ type MsgHandler func([]*interface{})
 func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance {
 	n := &TreeNodeInstance{overlay: o,
 		token:                tok,
-		channels:             make(map[network.MessageTypeID]interface{}),
-		handlers:             make(map[network.MessageTypeID]interface{}),
-		messageTypeFlags:     make(map[network.MessageTypeID]uint32),
-		msgQueue:             make(map[network.MessageTypeID][]*ProtocolMsg),
+		channels:             make(map[network.PacketTypeID]interface{}),
+		handlers:             make(map[network.PacketTypeID]interface{}),
+		messageTypeFlags:     make(map[network.PacketTypeID]uint32),
+		msgQueue:             make(map[network.PacketTypeID][]*ProtocolMsg),
 		treeNode:             tn,
 		msgDispatchQueue:     make([]*ProtocolMsg, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
@@ -168,7 +168,7 @@ func (n *TreeNodeInstance) RegisterChannel(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
 		cr.Elem().Field(1).Type),
 		cr.Elem().Field(1).Type)
 	n.channels[typ] = c
@@ -207,7 +207,7 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 		return errors.New("Input-channel doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
-	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
 		cr.Field(1).Type),
 		cr.Field(1).Type)
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
@@ -395,17 +395,17 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 }
 
 // SetFlag makes sure a given flag is set
-func (n *TreeNodeInstance) SetFlag(mt network.MessageTypeID, f uint32) {
+func (n *TreeNodeInstance) SetFlag(mt network.PacketTypeID, f uint32) {
 	n.messageTypeFlags[mt] |= f
 }
 
 // ClearFlag makes sure a given flag is removed
-func (n *TreeNodeInstance) ClearFlag(mt network.MessageTypeID, f uint32) {
+func (n *TreeNodeInstance) ClearFlag(mt network.PacketTypeID, f uint32) {
 	n.messageTypeFlags[mt] &^= f
 }
 
 // HasFlag returns true if the given flag is set
-func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
+func (n *TreeNodeInstance) HasFlag(mt network.PacketTypeID, f uint32) bool {
 	return n.messageTypeFlags[mt]&f != 0
 }
 
@@ -413,7 +413,7 @@ func (n *TreeNodeInstance) HasFlag(mt network.MessageTypeID, f uint32) bool {
 // instances will get all its children messages at once.
 // node is the node the host is representing in this Tree, and sda is the
 // message being analyzed.
-func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.MessageTypeID, []*ProtocolMsg, bool) {
+func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.PacketTypeID, []*ProtocolMsg, bool) {
 	mt := sdaMsg.MsgType
 	fromParent := !n.IsRoot() && sdaMsg.From.TreeNodeID.Equal(n.Parent().ID)
 	if fromParent || !n.HasFlag(mt, AggregateMessages) {

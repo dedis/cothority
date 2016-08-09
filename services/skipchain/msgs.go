@@ -23,7 +23,7 @@ func init() {
 		&SkipBlock{},
 	}
 	for _, m := range msgs {
-		network.RegisterMessageType(m)
+		network.RegisterPacketType(m)
 	}
 }
 

@@ -135,7 +135,7 @@ type Packet struct {
 	// the origin of the message
 	From string
 	// What kind of msg do we have
-	MsgType MessageTypeID
+	MsgType PacketTypeID
 	// The underlying message
 	Msg Body
 	// which constructors are used
@@ -168,7 +168,7 @@ func (e *ServerIdentity) String() string {
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
-var ServerIdentityType = RegisterMessageType(ServerIdentity{})
+var ServerIdentityType = RegisterPacketType(ServerIdentity{})
 
 // ServerIdentityToml is the struct that can be marshalled into a toml file
 type ServerIdentityToml struct {

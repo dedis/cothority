@@ -17,7 +17,7 @@ type PropagateMsg struct {
 }
 
 func init() {
-	network.RegisterMessageType(PropagateMsg{})
+	network.RegisterPacketType(PropagateMsg{})
 }
 
 // Tests an n-node system
