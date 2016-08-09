@@ -58,13 +58,13 @@ func (h *Host) CloseConnections() error {
 	return h.closeConnections()
 }
 
-func (h *Host) RegisterConnection(e *network.ServerIdentity, c network.SecureConn) {
+func (h *Host) RegisterConnection(e *network.ServerIdentity, c *network.SecureTCPConn) {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	h.connections[e.ID] = c
 }
 
-func (h *Host) Connection(e *network.ServerIdentity) network.SecureConn {
+func (h *Host) Connection(e *network.ServerIdentity) *network.SecureTCPConn {
 	h.networkLock.RLock()
 	defer h.networkLock.RUnlock()
 	c, _ := h.connections[e.ID]

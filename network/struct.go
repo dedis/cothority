@@ -12,11 +12,9 @@ import (
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
 
 // MaxRetry defines how many times should we try to connect
@@ -52,36 +50,11 @@ var ErrUnknown = errors.New("Unknown Error")
 // correctly decode it.
 type Size uint32
 
-// Host is the basic interface to represent a Host of any kind
-// Host can open new Conn(ections) and Listen for any incoming Conn(...)
-type Host interface {
-	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) error // the srv processing function
-	Close() error
-	monitor.CounterIO
-}
-
-// Conn is the basic interface to represent any communication mean
-// between two host. It is closely related to the underlying type of Host
-// since a TcpHost will generate only TcpConn
-type Conn interface {
-	// Gives the address of the remote endpoint
-	Remote() string
-	// Returns the local address and port
-	Local() string
-	// Send a message through the connection. Always pass a pointer !
-	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
-	Receive(ctx context.Context) (Packet, error)
-	Close() error
-	monitor.CounterIO
-}
-
 // TCPHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TCPHost struct {
 	// A list of connection maintained by this host
-	peers    map[string]Conn
+	peers    map[string]*TCPConn
 	peersMut sync.Mutex
 	// its listeners
 	listener net.Listener
@@ -123,23 +96,6 @@ type TCPConn struct {
 	// bTx in the number of bytes sent on this connection
 	bTx     uint64
 	bTxLock sync.Mutex
-}
-
-// SecureHost is the analog of Host but with secure communication
-// It is tied to an entity can only open connection with entities
-type SecureHost interface {
-	// Close terminates the `Listen()` function and closes all connections.
-	Close() error
-	Listen(func(SecureConn)) error
-	Open(*ServerIdentity) (SecureConn, error)
-	String() string
-	monitor.CounterIO
-}
-
-// SecureConn is the analog of Conn but for secure communication
-type SecureConn interface {
-	Conn
-	ServerIdentity() *ServerIdentity
 }
 
 // SecureTCPHost is a TcpHost but with the additional property that it handles
