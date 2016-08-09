@@ -52,7 +52,7 @@ type Database struct {
 	Users     []User
 }
 
-const EPOCH = []byte("EPOCH")
+const EPOCH = "EPOCH"
 
 var db *Database
 
@@ -303,7 +303,7 @@ func setpass(c *cli.Context) error {
 	uid := []byte(c.Args().Get(0))
 	Pass := c.Args().Get(1)
 	usrdata := []byte(c.Args().Get(2))
-	set(c, uid, EPOCH, string(Pass), usrdata)
+	set(c, uid, []byte(EPOCH), string(Pass), usrdata)
 	b, err := network.MarshalRegisteredType(db)
 	log.ErrFatal(err)
 	err = ioutil.WriteFile("config.bin", b, 0660)
@@ -312,6 +312,6 @@ func setpass(c *cli.Context) error {
 func get(c *cli.Context) error {
 	uid := []byte(c.Args().Get(0))
 	pass := c.Args().Get(1)
-	getpass(c, uid, EPOCH, string(pass))
+	getpass(c, uid, []byte(EPOCH), string(pass))
 	return nil
 }
