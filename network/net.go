@@ -31,6 +31,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Network part //
@@ -73,6 +74,7 @@ func (t *TCPHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TCPHost) Close() error {
+	dbg.Print(t.ListeningPort)
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
@@ -240,7 +242,12 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.WorkingAddress(), "connected with", c.Remote())
+		log.LLvl3(st.WorkingAddress(), "connected with", c.Remote())
+		c.conn.(*net.TCPConn).SetKeepAlive(false)
+		c.conn.(*net.TCPConn).SetLinger(0)
+		c.conn.(*net.TCPConn).SetNoDelay(false)
+		c.conn.(*net.TCPConn).SetReadBuffer(128)
+		c.conn.(*net.TCPConn).SetWriteBuffer(128)
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -399,6 +406,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
+	dbg.LLvl5("Starting to receive on", c.Endpoint)
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
@@ -440,6 +448,7 @@ const maxChunkSize Size = 1400
 // and send it with the size through the network.
 // Returns an error if anything was wrong
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
+	time.Sleep(time.Millisecond * 100)
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkMessage(obj)
@@ -470,8 +479,9 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
-			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
+			log.Error("Couldn't write chunk starting at", sent, n, "size", length, err)
 			log.Error(log.Stack())
+			//time.Sleep(time.Millisecond * 100)
 			return handleError(err)
 		}
 		sent += Size(n)
@@ -480,6 +490,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		// bytes left to send
 		b = b[n:]
 	}
+	log.LLvl5(c.Endpoint, "Sent a total of", sent, "bytes")
 	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
@@ -487,6 +498,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
+	dbg.Print(c.Endpoint)
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
 	if c.closed == true {
