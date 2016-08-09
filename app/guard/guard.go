@@ -52,6 +52,8 @@ type Database struct {
 	Users     []User
 }
 
+const EPOCH = []byte("EPOCH")
+
 var db *Database
 
 func main() {
@@ -179,11 +181,8 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 		reply := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes))
 		responses[i], err = reply.MarshalBinary()
 		log.ErrFatal(err)
-
 		block, err := aes.NewCipher(responses[i])
-		if err != nil {
-			log.ErrFatal(err)
-		}
+		log.ErrFatal(err)
 		stream := cipher.NewCTR(block, iv)
 		msg := make([]byte, 88)
 		stream.XORKeyStream(msg, []byte(secretkeys[i]))
@@ -302,10 +301,9 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 }
 func setpass(c *cli.Context) error {
 	uid := []byte(c.Args().Get(0))
-	epoch := []byte{'E', 'P', 'O', 'C', 'H'}
 	Pass := c.Args().Get(1)
 	usrdata := []byte(c.Args().Get(2))
-	set(c, uid, epoch, string(Pass), usrdata)
+	set(c, uid, EPOCH, string(Pass), usrdata)
 	b, err := network.MarshalRegisteredType(db)
 	log.ErrFatal(err)
 	err = ioutil.WriteFile("config.bin", b, 0660)
@@ -313,8 +311,7 @@ func setpass(c *cli.Context) error {
 }
 func get(c *cli.Context) error {
 	uid := []byte(c.Args().Get(0))
-	epoch := []byte{'E', 'P', 'O', 'C', 'H'}
 	pass := c.Args().Get(1)
-	getpass(c, uid, epoch, string(pass))
+	getpass(c, uid, EPOCH, string(pass))
 	return nil
 }
