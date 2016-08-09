@@ -26,13 +26,13 @@ type Host struct {
 	// Our private-key
 	private abstract.Scalar
 	// The TCPHost
-	host *network.SecureTCPHost
+	host network.SecureHost
 	Dispatcher
 	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
 	// The open connections
-	connections map[network.ServerIdentityID]*network.SecureTCPConn
+	connections map[network.ServerIdentityID]network.SecureConn
 	// chan of received messages - testmode
 	networkChan chan network.Packet
 	// The suite used for this Host
@@ -65,7 +65,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 		ServerIdentity:       e,
 		Dispatcher:           NewBlockingDispatcher(),
 		workingAddress:       e.First(),
-		connections:          make(map[network.ServerIdentityID]*network.SecureTCPConn),
+		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		host:                 network.NewSecureTCPHost(pkey, e),
 		private:              pkey,
 		suite:                network.Suite,
@@ -86,7 +86,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 // returning.
 func (h *Host) listen(wait bool) {
 	log.Lvl3(h.ServerIdentity.First(), "starts to listen")
-	fn := func(c *network.SecureTCPConn) {
+	fn := func(c network.SecureConn) {
 		log.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
 		h.registerConnection(c)
@@ -126,9 +126,9 @@ func (h *Host) Listen() {
 }
 
 // Connect takes an entity where to connect to
-func (h *Host) Connect(id *network.ServerIdentity) (*network.SecureTCPConn, error) {
+func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	var err error
-	var c *network.SecureTCPConn
+	var c network.SecureConn
 	// try to open connection
 	c, err = h.host.Open(id)
 	if err != nil {
@@ -176,13 +176,13 @@ func (h *Host) closeConnections() error {
 		}
 	}
 	log.Lvl4(h.ServerIdentity.First(), "Closing tcpHost")
-	h.connections = make(map[network.ServerIdentityID]*network.SecureTCPConn)
+	h.connections = make(map[network.ServerIdentityID]network.SecureConn)
 	return h.host.Close()
 }
 
 // closeConnection closes a connection and removes it from the connections-map
 // The h.networkLock must be taken.
-func (h *Host) closeConnection(c *network.SecureTCPConn) error {
+func (h *Host) closeConnection(c network.SecureConn) error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
@@ -271,7 +271,7 @@ func (h *Host) processMessages() {
 }
 
 // Handle a connection => giving messages to the MsgChans
-func (h *Host) handleConn(c *network.SecureTCPConn) {
+func (h *Host) handleConn(c network.SecureConn) {
 	address := c.Remote()
 	for {
 		ctx := context.TODO()
@@ -313,7 +313,7 @@ func (h *Host) handleConn(c *network.SecureTCPConn) {
 // registerConnection registers an ServerIdentity for a new connection, mapped with the
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done): entityListsLock and networkLock
-func (h *Host) registerConnection(c *network.SecureTCPConn) {
+func (h *Host) registerConnection(c network.SecureConn) {
 	log.Lvl4(h.ServerIdentity.First(), "registers", c.ServerIdentity().First())
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()

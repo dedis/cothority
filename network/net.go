@@ -35,7 +35,7 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTCPHost() *TCPHost {
 	return &TCPHost{
-		peers:        make(map[string]*TCPConn),
+		peers:        make(map[string]Conn),
 		quit:         make(chan bool),
 		constructors: DefaultConstructors(Suite),
 		quitListener: make(chan bool),
@@ -45,7 +45,7 @@ func NewTCPHost() *TCPHost {
 // Open will create a new connection between this host
 // and the remote host named "name". This is a TCPConn.
 // If anything went wrong, Conn will be nil.
-func (t *TCPHost) Open(name string) (*TCPConn, error) {
+func (t *TCPHost) Open(name string) (Conn, error) {
 	c, err := t.openTCPConn(name)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (t *TCPHost) Open(name string) (*TCPConn, error) {
 
 // Listen for any host trying to contact him.
 // Will launch in a goroutine the srv function once a connection is established
-func (t *TCPHost) Listen(addr string, fn func(*TCPConn)) error {
+func (t *TCPHost) Listen(addr string, fn func(Conn)) error {
 	receiver := func(tc *TCPConn) {
 		go fn(tc)
 	}
@@ -147,13 +147,13 @@ func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("Could not connect to %s: %s", name, err)
 	}
-	c := &TCPConn{
+	c := TCPConn{
 		Endpoint: name,
 		conn:     conn,
 		host:     t,
 	}
 
-	return c, err
+	return &c, err
 }
 
 // listen is the private function that takes a function that takes a TCPConn.
@@ -187,15 +187,15 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 			}
 			continue
 		}
-		c := &TCPConn{
+		c := TCPConn{
 			Endpoint: conn.RemoteAddr().String(),
 			conn:     conn,
 			host:     t,
 		}
 		t.peersMut.Lock()
-		t.peers[conn.RemoteAddr().String()] = c
+		t.peers[conn.RemoteAddr().String()] = &c
 		t.peersMut.Unlock()
-		fn(c)
+		fn(&c)
 	}
 }
 
@@ -217,7 +217,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 
 // Listen will try each addresses it the host ServerIdentity.
 // Returns an error if it can't listen on any of the addresses.
-func (st *SecureTCPHost) Listen(fn func(*SecureTCPConn)) error {
+func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
 		log.Lvl3(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
@@ -265,8 +265,8 @@ func (st *SecureTCPHost) Listen(fn func(*SecureTCPConn)) error {
 // Open will try any address that is in the ServerIdentity and connect to the first
 // one that works. Then it exchanges the ServerIdentity to verify it is talking with the
 // right host.
-func (st *SecureTCPHost) Open(si *ServerIdentity) (*SecureTCPConn, error) {
-	var secure *SecureTCPConn
+func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
+	var secure SecureTCPConn
 	var success bool
 	// try all names
 	for _, addr := range si.Addresses {
@@ -278,7 +278,7 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (*SecureTCPConn, error) {
 			continue
 		}
 		// create the secure connection
-		secure = &SecureTCPConn{
+		secure = SecureTCPConn{
 			TCPConn:        c,
 			SecureTCPHost:  st,
 			serverIdentity: si,
@@ -293,12 +293,12 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (*SecureTCPConn, error) {
 	err := secure.negotiateOpen(si)
 	if err == nil {
 		st.connMutex.Lock()
-		st.conns = append(st.conns, secure)
+		st.conns = append(st.conns, &secure)
 		st.connMutex.Unlock()
 	}
 	log.Lvl3(secure.TCPConn.Local(), ": successfully connected and identified",
 		secure.TCPConn.Remote())
-	return secure, err
+	return &secure, err
 }
 
 // String returns a string identifying that host
