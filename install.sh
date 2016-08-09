@@ -25,9 +25,7 @@ BRANCH2=`git rev-parse --abbrev-ref HEAD`
 # method 3 from
 # https://gist.github.com/derekstavis/0526ac13cfecb5d6ffe5#file-travis-github-pull-request-integration-sh
 GITHUB_PR_URL=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-echo PR_URL: $GITHUB_PR_URL
 GITHUB_PR_BODY=$(curl -s $GITHUB_PR_URL 2>/dev/null)
-echo PR_BODY: $GITHUB_PR_BODY
 if [[ $GITHUB_PR_BODY =~ \"ref\":\ *\"([a-zA-Z0-9_-]*)\" ]]; then
   BRANCH3=${BASH_REMATCH[1]}
 fi
