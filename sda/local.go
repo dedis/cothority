@@ -64,7 +64,7 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(t, name)
+			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")

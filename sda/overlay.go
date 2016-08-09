@@ -456,7 +456,7 @@ func (o *Overlay) Close() {
 // CreateProtocolSDA returns a fresh Protocol Instance with an attached
 // TreeNodeInstance. This protocol won't be handled by the service, but
 // only by the SDA.
-func (o *Overlay) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
+func (o *Overlay) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
 	return o.CreateProtocolService(ServiceID(uuid.Nil), t, name)
 }
 
@@ -477,7 +477,7 @@ func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (Pr
 
 // StartProtocol will create and start a P.I.
 func (o *Overlay) StartProtocol(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := o.CreateProtocolSDA(t, name)
+	pi, err := o.CreateProtocolSDA(name, t)
 	if err != nil {
 		return nil, err
 	}

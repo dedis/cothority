@@ -53,7 +53,7 @@ func (sim *KeySwitchingSimulation) Setup(dir string, hosts []string) (*sda.Simul
 func (sim *KeySwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA(config.Tree, "KeySwitching")
+		rooti, err := config.Overlay.CreateProtocolSDA("KeySwitching", config.Tree)
 		if err != nil {
 			return err
 		}

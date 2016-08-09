@@ -54,7 +54,7 @@ func (c *Context) CreateProtocolService(t *Tree, name string) (ProtocolInstance,
 // CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
 func (c *Context) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolSDA(t, name)
+	pi, err := c.overlay.CreateProtocolSDA(name, t)
 	return pi, err
 }
 
