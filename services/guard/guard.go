@@ -70,7 +70,7 @@ func newGuardService(c *sda.Context, path string) sda.Service {
 	const n = 88
 	lel := make([]byte, n)
 	_, err = rand.Read(lel)
-	panic(err)
+	log.ErrFatal(err)
 	s.Z = lel
 
 	return s
