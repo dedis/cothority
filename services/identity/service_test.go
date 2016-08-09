@@ -12,7 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	log.Info("Skipping because of bftcosi and skipchain - #482")
-	log.MainTest(m)
+	//log.MainTest(m)
 }
 
 func TestService_AddIdentity(t *testing.T) {
