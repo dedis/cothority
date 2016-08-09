@@ -62,7 +62,7 @@ func TestRegisterReflect(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestMultiClose(t *testing.T) {
 	gotConnect := make(chan bool)
-	fn := func(s *TCPConn) {
+	fn := func(s Conn) {
 		log.Lvl3("Getting connection from", s)
 		gotConnect <- true
 	}
@@ -122,7 +122,7 @@ func TestMultiClose(t *testing.T) {
 // Test closing and opening of SecureHost on same address
 func TestSecureMultiClose(t *testing.T) {
 	receiverStarted := make(chan bool)
-	fn := func(s *SecureTCPConn) {
+	fn := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s.ServerIdentity().First())
 		close(receiverStarted)
 	}
@@ -161,7 +161,7 @@ func TestSecureMultiClose(t *testing.T) {
 
 	log.Lvl1("Finished first connection, starting 2nd")
 	receiverStarted2 := make(chan bool)
-	fn2 := func(s *SecureTCPConn) {
+	fn2 := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s.ServerIdentity().First())
 		receiverStarted2 <- true
 	}
@@ -190,7 +190,7 @@ func TestSecureMultiClose(t *testing.T) {
 func TestTcpCounterIO(t *testing.T) {
 	RegisterPacketType(&TestRegisterS{})
 	receiverStarted := make(chan bool)
-	fn := func(s *TCPConn) {
+	fn := func(s Conn) {
 		err := s.Send(context.TODO(), &TestRegisterS{10})
 		if err != nil {
 			t.Fatal("Error while sending message:", err)
@@ -226,7 +226,7 @@ func TestTcpCounterIO(t *testing.T) {
 	<-done
 	// verify the amount of bytes read / written
 	if h1.Tx() == 0 || h1.Tx() != h2.Rx() || h2.Rx() == 0 || h2.Rx() != c2.Rx() {
-		t.Fatal("stg is wrong with CounterIO implementation of TcpTCPConn / TcpHost")
+		t.Fatal("stg is wrong with CounterIO implementation of TcpConn / TcpHost")
 	}
 
 }
@@ -234,7 +234,7 @@ func TestTcpCounterIO(t *testing.T) {
 // Testing exchange of entity
 func TestSecureTcp(t *testing.T) {
 	opened := make(chan bool)
-	fn := func(s *SecureTCPConn) {
+	fn := func(s SecureConn) {
 		log.Lvl3("Getting connection from", s)
 		opened <- true
 	}
@@ -308,7 +308,7 @@ func TestTcpNetwork(t *testing.T) {
 }
 
 type SimpleClient struct {
-	*TCPHost
+	Host
 	Pub   abstract.Point
 	Peers []abstract.Point
 	wg    *sync.WaitGroup
@@ -316,16 +316,16 @@ type SimpleClient struct {
 
 // The server
 type SimpleServer struct {
-	*TCPHost
+	Host
 	Pub abstract.Point
 	t   *testing.T
 	wg  *sync.WaitGroup
 }
 
 // Create a new simple server
-func NewSimpleServer(host *TCPHost, pub abstract.Point, t *testing.T, wg *sync.WaitGroup) *SimpleServer {
+func NewSimpleServer(host Host, pub abstract.Point, t *testing.T, wg *sync.WaitGroup) *SimpleServer {
 	s := &SimpleServer{}
-	s.TCPHost = host
+	s.Host = host
 	s.Pub = pub
 	s.t = t
 	s.wg = wg
@@ -333,12 +333,12 @@ func NewSimpleServer(host *TCPHost, pub abstract.Point, t *testing.T, wg *sync.W
 }
 
 // Createa a new simple client
-func NewSimpleClient(host *TCPHost, pub abstract.Point, wg *sync.WaitGroup) *SimpleClient {
+func NewSimpleClient(host Host, pub abstract.Point, wg *sync.WaitGroup) *SimpleClient {
 	return &SimpleClient{
-		TCPHost: host,
-		Pub:     pub,
-		Peers:   make([]abstract.Point, 0),
-		wg:      wg,
+		Host:  host,
+		Pub:   pub,
+		Peers: make([]abstract.Point, 0),
+		wg:    wg,
 	}
 }
 
@@ -394,7 +394,7 @@ func (s *SimpleServer) Name() string {
 	return "Server "
 }
 
-func (s *SimpleServer) ProxySend(c *TCPConn, msg Body) {
+func (s *SimpleServer) ProxySend(c Conn, msg Body) {
 	ctx := context.TODO()
 	if err := c.Send(ctx, msg); err != nil {
 		s.t.Fatal(err)
@@ -402,7 +402,7 @@ func (s *SimpleServer) ProxySend(c *TCPConn, msg Body) {
 }
 
 // this is the callback when a new connection is don
-func (s *SimpleServer) ExchangeWithClient(c *TCPConn) {
+func (s *SimpleServer) ExchangeWithClient(c Conn) {
 	s.wg.Add(1)
 	p := PublicPacket{
 		Point: s.Pub,

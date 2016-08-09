@@ -25,7 +25,7 @@ func TestSecureSimple(t *testing.T) {
 	done := make(chan error)
 	doneListen := make(chan bool)
 	go func() {
-		err := sHost1.Listen(func(c *SecureTCPConn) {
+		err := sHost1.Listen(func(c SecureConn) {
 			nm, err := c.Receive(context.TODO())
 			if err != nil {
 				c.Close()

@@ -37,12 +37,12 @@ func TestHugeConnections(t *testing.T) {
 
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)
-	hosts := make([]*SecureTCPHost, nbrHosts)
+	hosts := make([]SecureHost, nbrHosts)
 	// 2-dimensional array of connections between all hosts, where only
 	// the upper-right half is populated. The lower-left half is the
 	// mirror of the upper-right half, and the diagonal is empty, as there
 	// are no connections from one host to itself.
-	conns := make([][]*SecureTCPConn, nbrHosts)
+	conns := make([][]SecureConn, nbrHosts)
 	wg := sync.WaitGroup{}
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
@@ -50,7 +50,7 @@ func TestHugeConnections(t *testing.T) {
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
 		log.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
-			err := hosts[h].Listen(func(c *SecureTCPConn) {
+			err := hosts[h].Listen(func(c SecureConn) {
 				log.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
@@ -82,7 +82,7 @@ func TestHugeConnections(t *testing.T) {
 				t.Fatal(err)
 			}
 		}(i)
-		conns[i] = make([]*SecureTCPConn, nbrHosts)
+		conns[i] = make([]SecureConn, nbrHosts)
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
@@ -101,7 +101,7 @@ func TestHugeConnections(t *testing.T) {
 	for i := 0; i < nbrHosts; i++ {
 		for j := 0; j < i; j++ {
 			c := conns[i][j]
-			go func(conn *SecureTCPConn, i, j int) {
+			go func(conn SecureConn, i, j int) {
 				defer wg.Done()
 				log.Lvl3("Sending from", i, "to", j, ":")
 				ctx := context.TODO()

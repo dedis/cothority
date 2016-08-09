@@ -31,7 +31,7 @@ func TestSimple(t *testing.T) {
 	cConMu := sync.Mutex{}
 
 	go func() {
-		err := server.Listen("localhost:2000", func(c *TCPConn) {
+		err := server.Listen("localhost:2000", func(c Conn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()
