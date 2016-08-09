@@ -69,7 +69,8 @@ func newGuardService(c *sda.Context, path string) sda.Service {
 	//This is the area where Z is generated for a server
 	const n = 88
 	lel := make([]byte, n)
-	rand.Read(lel)
+	_, err = rand.Read(lel)
+	panic(err)
 	s.Z = lel
 
 	return s

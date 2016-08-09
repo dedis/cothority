@@ -105,7 +105,7 @@ func main() {
 		var ok bool
 		db, ok = msg.(*Database)
 		if !ok {
-			log.Fatal("We are not OK")
+			log.Fatal("The message was improperly converted")
 		}
 		return nil
 	}
@@ -133,16 +133,20 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 
 func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []byte) {
 	mastersalt := make([]byte, 12)
-	rand.Read(mastersalt)
+	_, err := rand.Read(mastersalt)
+	panic(err)
 	k := make([]byte, 32)
-	rand.Read(k)
+	_, err = rand.Read(k)
+	panic(err)
 	// secretkeys is the Shamir Secret share of the keys.
 	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
 	blind := make([]byte, 12)
-	rand.Read(blind)
+	_, err = rand.Read(blind)
+	panic(err)
 	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := make([]byte, 16)
-	rand.Read(iv)
+	_, err = rand.Read(iv)
+	panic(err)
 	// pwhash is the password hash that will be sent to the guard servers
 	// with Gu and bi.
 	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
@@ -168,7 +172,7 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 		blindbytes.SetBytes(blinds[i])
 		// this next part performs all necessary computations to create
 		// Xi, here called sendy.
-		ad := blankscalar.Add(pwbytes, blindbytes).Bytes()
+		blankscalar.Add(pwbytes, blindbytes).Bytes()
 		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
 		rep, err := cl.GetGuard(si, uid, epoch, sendy)
 		log.ErrFatal(err)
@@ -240,7 +244,8 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 
 	keys := make([]string, len(db.Cothority.List))
 	blind := make([]byte, 12)
-	rand.Read(blind)
+	_, err := rand.Read(blind)
+	panic(err)
 	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := getuser(uid).Iv
 	// pwhash is the password hash that will be sent to the guard servers
@@ -267,8 +272,8 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 		blindbytes.SetBytes(blinds[i])
 		// The following sections of the code perform the computations
 		// to Create Xi, here called sendy.
-		ad, _ := blankscalar.Add(pwbytes, blindbytes).MarshalBinary()
-		mul, err := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes)).MarshalBinary()
+		blankscalar.Add(pwbytes, blindbytes).MarshalBinary()
+		_, err := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes)).MarshalBinary()
 		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
 		rep, err := cl.GetGuard(si, uid, epoch, sendy)
 		log.ErrFatal(err)
