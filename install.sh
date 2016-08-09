@@ -28,6 +28,7 @@ fi
 
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, BRANCHES=$BRANCH1--$BRANCH2--$BRANCH3"
 export BRANCH=$BRANCH1
+export BRANCH=refactor_cothority_506
 
 cd $GOPATH/src/github.com/dedis/cothority
 
