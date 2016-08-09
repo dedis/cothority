@@ -41,7 +41,7 @@ func TestCoSimul(t *testing.T) {
 			}
 
 			// Start the protocol
-			p, err := local.CreateProtocol(tree, Name)
+			p, err := local.CreateProtocol(Name, tree)
 			if err != nil {
 				t.Fatal("Couldn't create new node:", err)
 			}

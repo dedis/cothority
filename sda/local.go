@@ -58,7 +58,7 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 
 // CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
 	for _, h := range l.Hosts {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
