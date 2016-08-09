@@ -289,7 +289,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 
-	node, err := s.CreateProtocolService(tree, skipchainBFT)
+	node, err := s.CreateProtocolService(skipchainBFT, tree)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
 	}

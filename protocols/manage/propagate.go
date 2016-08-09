@@ -58,7 +58,7 @@ type PropagateReply struct {
 func PropagateStartAndWait(c *sda.Context, el *sda.Roster, msg network.Body, msec int, f func(network.Body)) (int, error) {
 	tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
 	log.Lvl3("Starting to propagate", reflect.TypeOf(msg))
-	pi, err := c.CreateProtocolService(tree, "Propagate")
+	pi, err := c.CreateProtocolService("Propagate", tree)
 	if err != nil {
 		return -1, err
 	}
