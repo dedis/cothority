@@ -43,18 +43,8 @@ if [[ $BRANCH =~ $pattern ]]; then
     go get -d $repo; 
     cd $GOPATH/src/$repo; 
     git checkout -f $BRANCH; 
-    git pull;
     echo $(git rev-parse --abbrev-ref HEAD);
 fi;
 
-echo "Using refactor branch ..."
-repo=github.com/dedis/cosi; 
-go get -d $repo; 
-cd $GOPATH/src/$repo; 
-git checkout -f refactor_mocking;
-git pull;
-echo $(git rev-parse --abbrev-ref HEAD);
-
 cd $GOPATH/src/github.com/dedis/cothority; 
 go get -t ./...
-
