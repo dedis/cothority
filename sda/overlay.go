@@ -128,7 +128,7 @@ func (o *Overlay) Process(data *network.Packet) {
 		}
 		log.Lvl4("Received new tree")
 		o.RegisterTree(tree)
-		o.checkPendingProtocolMessages(tree)
+		o.checkPendingMessages(tree)
 	case RequestRosterMessageID:
 		// Some host requested an Roster
 		id := data.Msg.(RequestRoster).RosterID
@@ -277,13 +277,13 @@ func (o *Overlay) addPendingTreeMarshal(tm *TreeMarshal) {
 	o.pendingTreeLock.Unlock()
 }
 
-// checkPendingProtocolMessages is called each time we receive a new tree if there are some SDA
+// checkPendingMessages is called each time we receive a new tree if there are some SDA
 // messages using this tree. If there are, we can make an instance of a protocolinstance
 // and give it the message!.
 // NOTE: put that as a go routine so the rest of the processing messages are not
 // slowed down, if there are many pending sda message at once (i.e. start many new
 // protocols at same time)
-func (o *Overlay) checkPendingProtocolMessages(t *Tree) {
+func (o *Overlay) checkPendingMessages(t *Tree) {
 	go func() {
 		o.pendingSDAsLock.Lock()
 		var newPending []*ProtocolMsg
@@ -343,7 +343,7 @@ func (o *Overlay) RegisterTree(t *Tree) {
 	o.treesMut.Lock()
 	o.trees[t.ID] = t
 	o.treesMut.Unlock()
-	o.checkPendingProtocolMessages(t)
+	o.checkPendingMessages(t)
 }
 
 // TreeFromToken searches for the tree corresponding to a token.

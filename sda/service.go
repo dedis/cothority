@@ -68,7 +68,6 @@ type NewServiceFunc func(c *Context, path string) Service
 // protocols. It is passed down to the service NewProtocol function.
 type GenericConfig struct {
 	Type uuid.UUID
-	//Data network.ProtocolMessage
 }
 
 // GenericConfigID is the ID used by the network library for sending / receiving

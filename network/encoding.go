@@ -44,8 +44,8 @@ func (mId MessageTypeID) String() string {
 // cothority/packages should be expected to use that.
 const NamespaceURL = "https://dedis.epfl.ch/"
 
-// NamespaceProtocolMessageType is the namespace used for MessageTypeID
-const NamespaceProtocolMessageType = NamespaceURL + "/protocolType/"
+// NamespaceBodyType is the namespace used for MessageTypeID
+const NamespaceBodyType = NamespaceURL + "/protocolType/"
 
 // RegisterMessageType registers a custom "struct" / "packet" and returns the
 // corresponding MessageTypeID.
@@ -82,13 +82,13 @@ func TypeFromData(msg Body) MessageTypeID {
 	return msgType
 }
 
-// TypeToMessageTypeID converts a ProtocolMessage to a MessageTypeID
+// TypeToMessageTypeID converts a Body to a MessageTypeID
 func TypeToMessageTypeID(msg Body) MessageTypeID {
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	url := NamespaceProtocolMessageType + val.Type().String()
+	url := NamespaceBodyType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
 	log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
 	return MessageTypeID(u)
@@ -96,7 +96,7 @@ func TypeToMessageTypeID(msg Body) MessageTypeID {
 
 // RTypeToMessageTypeID converts a reflect.Type to a MessageTypeID
 func RTypeToMessageTypeID(msg reflect.Type) MessageTypeID {
-	url := NamespaceProtocolMessageType + msg.String()
+	url := NamespaceBodyType + msg.String()
 	return MessageTypeID(uuid.NewV5(uuid.NamespaceURL, url))
 }
 
@@ -260,7 +260,7 @@ func (am *Packet) UnmarshalBinary(buf []byte) error {
 	return err
 }
 
-// NewNetworkMessage takes a ProtocolMessage and then constructs a
+// NewNetworkMessage takes a Body and then constructs a
 // Message from it. Error if the type is unknown
 func NewNetworkMessage(obj Body) (*Packet, error) {
 	val := reflect.ValueOf(obj)

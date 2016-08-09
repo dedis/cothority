@@ -159,13 +159,13 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Second argument must be a pointer to *struct*")
 	}
 	if ft.NumOut() != 2 {
-		return errors.New("Need 2 return values: network.ProtocolMessage and error")
+		return errors.New("Need 2 return values: network.Body and error")
 	}
 	if ft.Out(0) != reflect.TypeOf((*network.Body)(nil)).Elem() {
-		return errors.New("Need 2 return values: *network.ProtocolMessage* and error")
+		return errors.New("Need 2 return values: *network.Body* and error")
 	}
 	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
-		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
+		return errors.New("Need 2 return values: network.Body and *error*")
 	}
 	// Automatic registration of the message to the network library.
 	log.Lvl4("Registering handler", cr1.String())
