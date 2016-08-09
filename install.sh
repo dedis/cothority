@@ -5,6 +5,10 @@
 ## `refactor_`, it will try to checkout the same branch name 
 ## in dedis/cosi.
 
+pwd
+cd $TRAVIS_BUILD_DIR
+pwd
+
 # Return if we are not in a Pull Request
 [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && go get -t ./... && return
 
@@ -29,8 +33,6 @@ fi
 echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, BRANCHES=$BRANCH1--$BRANCH2--$BRANCH3"
 export BRANCH=$BRANCH1
 export BRANCH=refactor_cothority_506
-
-cd $GOPATH/src/github.com/dedis/cothority
 
 pattern="refactor_*";
 if [[ $BRANCH =~ $pattern ]]; then 
