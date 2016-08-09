@@ -3,8 +3,9 @@
 package monitor
 
 import (
-	"github.com/dedis/cothority/dbg"
 	"syscall"
+
+	"github.com/dedis/cothority/dbg"
 )
 
 // Returns the system and the user CPU time used by the current process so far.
