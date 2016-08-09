@@ -7,11 +7,13 @@
 
 # Method from
 # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
-PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
+#PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
+#BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
 
 # If you don't believe in travis-magic:
 #BRANCH=refactor_cothority_506
+BRANCH=$TRAVIS_BRANCH
+echo "Thinking we're on branch $BRANCH"
 
 pattern="refactor_*";
 if [[ $BRANCH =~ $pattern ]]; then 
