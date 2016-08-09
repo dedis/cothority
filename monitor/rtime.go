@@ -3,8 +3,9 @@
 package monitor
 
 import (
-	"github.com/dedis/cothority/log"
 	"syscall"
+
+	"github.com/dedis/cothority/log"
 )
 
 // Converts microseconds to seconds.
