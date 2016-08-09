@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"strconv"
+
 	"golang.org/x/net/context"
 )
 
@@ -31,7 +33,7 @@ func TestSimple(t *testing.T) {
 	cConMu := sync.Mutex{}
 
 	go func() {
-		err := server.Listen("localhost:2000", func(c Conn) {
+		err := server.Listen("localhost:0", func(c Conn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()
@@ -50,10 +52,10 @@ func TestSimple(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	cConMu.Lock()
-	conn, err := client.Open("localhost:2000")
+	conn, err := client.Open("localhost:" + strconv.Itoa(<-server.ListeningPort))
 	if err != nil {
 		t.Fatal(err)
 	}

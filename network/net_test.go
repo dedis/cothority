@@ -9,6 +9,8 @@ import (
 
 	"golang.org/x/net/context"
 
+	"strconv"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -70,15 +72,16 @@ func TestMultiClose(t *testing.T) {
 	h2 := NewTCPHost()
 	done := make(chan bool)
 	go func() {
-		err := h1.Listen("localhost:2000", fn)
+		err := h1.Listen("localhost:0", fn)
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
 		done <- true
 	}()
 	time.Sleep(time.Second)
-	log.Lvl3("Open connection to h2")
-	_, err := h2.Open("localhost:2000")
+	log.Lvl3("Opening connection to h1")
+	h1Port := <-h1.ListeningPort
+	_, err := h2.Open("localhost:" + strconv.Itoa(h1Port))
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h1, err)
 	}
@@ -96,13 +99,14 @@ func TestMultiClose(t *testing.T) {
 
 	h3 := NewTCPHost()
 	go func() {
-		err := h3.Listen("localhost:2000", fn)
+		err := h3.Listen("localhost:0", fn)
 		if err != nil {
 			t.Fatal("Couldn't re-open listener:", err)
 		}
 		done <- true
 	}()
-	_, err = h2.Open("localhost:2000")
+	h3Port := <-h3.ListeningPort
+	_, err = h2.Open("localhost:" + strconv.Itoa(h3Port))
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h3, err)
 	}
@@ -128,13 +132,12 @@ func TestSecureMultiClose(t *testing.T) {
 	}
 
 	kp1 := config.NewKeyPair(Suite)
-	entity1 := NewServerIdentity(kp1.Public, "localhost:2000")
-	//entity3 := NewServerIdentity(kp1.Public, "localhost:2000")
+	si1 := NewServerIdentity(kp1.Public, "localhost:0")
 	kp2 := config.NewKeyPair(Suite)
-	entity2 := NewServerIdentity(kp2.Public, "localhost:2001")
+	si2 := NewServerIdentity(kp2.Public, "localhost:0")
 
-	h1 := NewSecureTCPHost(kp1.Secret, entity1)
-	h2 := NewSecureTCPHost(kp2.Secret, entity2)
+	h1 := NewSecureTCPHost(kp1.Secret, si1)
+	h2 := NewSecureTCPHost(kp2.Secret, si2)
 	done := make(chan bool)
 	go func() {
 		err := h1.Listen(fn)
@@ -144,7 +147,8 @@ func TestSecureMultiClose(t *testing.T) {
 		done <- true
 	}()
 
-	_, err := h2.Open(entity1)
+	<-done
+	_, err := h2.Open(h1.serverIdentity)
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
@@ -157,7 +161,6 @@ func TestSecureMultiClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
 	}
-	<-done
 
 	log.Lvl1("Finished first connection, starting 2nd")
 	receiverStarted2 := make(chan bool)
@@ -202,14 +205,14 @@ func TestTcpCounterIO(t *testing.T) {
 	h2 := NewTCPHost()
 	done := make(chan bool)
 	go func() {
-		err := h1.Listen("localhost:3000", fn)
+		err := h1.Listen("localhost:0", fn)
 		if err != nil {
 			t.Fatal("Listening failed for h1:", err)
 		}
 		done <- true
 	}()
 
-	c2, err := h2.Open("localhost:3000")
+	c2, err := h2.Open("localhost:" + strconv.Itoa(<-h1.ListeningPort))
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
@@ -240,12 +243,12 @@ func TestSecureTcp(t *testing.T) {
 	}
 
 	kp1 := config.NewKeyPair(Suite)
-	entity1 := NewServerIdentity(kp1.Public, "localhost:2000")
+	si1 := NewServerIdentity(kp1.Public, "localhost:0")
 	kp2 := config.NewKeyPair(Suite)
-	entity2 := NewServerIdentity(kp2.Public, "localhost:2001")
+	si2 := NewServerIdentity(kp2.Public, "localhost:0")
 
-	host1 := NewSecureTCPHost(kp1.Secret, entity1)
-	host2 := NewSecureTCPHost(kp1.Secret, entity2)
+	host1 := NewSecureTCPHost(kp1.Secret, si1)
+	host2 := NewSecureTCPHost(kp1.Secret, si2)
 
 	done := make(chan bool)
 	go func() {
@@ -255,7 +258,8 @@ func TestSecureTcp(t *testing.T) {
 		}
 		done <- true
 	}()
-	conn, err := host2.Open(entity1)
+	<-done
+	conn, err := host2.Open(host1.serverIdentity)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
@@ -272,7 +276,6 @@ func TestSecureTcp(t *testing.T) {
 	if err := host2.Close(); err != nil {
 		t.Fatal("Couldn't close host", host2)
 	}
-	<-done
 }
 
 // Testing a full-blown server/client

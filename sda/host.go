@@ -102,7 +102,7 @@ func (h *Host) listen(wait bool) {
 		for i, addr := range h.ServerIdentity.Addresses {
 			if strings.HasSuffix(addr, ":0") {
 				h.ServerIdentity.Addresses[i] = h.host.WorkingAddress()
-				log.LLvl4("Replaced port to", h.ServerIdentity.Addresses[i])
+				log.Lvl4("Replaced port to", h.ServerIdentity.Addresses[i])
 			}
 		}
 		for {
@@ -173,7 +173,7 @@ func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
 	for _, c := range h.connections {
-		log.LLvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
+		log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
 		err := c.Close()
 		if err != nil {
 			log.Error(h.ServerIdentity.First(), "Couldn't close connection", c)

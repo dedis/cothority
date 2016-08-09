@@ -13,7 +13,7 @@ import (
 
 // Test setting up of Host
 func TestHostNew(t *testing.T) {
-	h1 := NewLocalHost(2000)
+	h1 := NewLocalHost()
 	if h1 == nil {
 		t.Fatal("Couldn't setup a Host")
 	}
@@ -26,8 +26,8 @@ func TestHostNew(t *testing.T) {
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
 	time.Sleep(time.Second)
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewLocalHost()
+	h2 := NewLocalHost()
 	h1.ListenAndBind()
 	_, err := h2.Connect(h1.ServerIdentity)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewLocalHost(2002)
+	h3 := NewLocalHost()
 	h3.ListenAndBind()
 	c, err := h2.Connect(h3.ServerIdentity)
 	if err != nil {
@@ -346,8 +346,8 @@ func TestTokenId(t *testing.T) {
 
 // Test the automatic connection upon request
 func TestAutoConnection(t *testing.T) {
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewLocalHost()
+	h2 := NewLocalHost()
 	h2.ListenAndBind()
 
 	defer h1.Close()
@@ -366,8 +366,8 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
-	h1 := NewLocalHost(2000)
-	h2 := NewLocalHost(2001)
+	h1 := NewLocalHost()
+	h2 := NewLocalHost()
 	defer h1.Close()
 	defer h2.Close()
 

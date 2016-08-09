@@ -16,41 +16,37 @@ import (
 // Now you connect to someone else using ServerIdentity instead of directly addresses
 
 func TestSecureSimple(t *testing.T) {
-	priv1, id1 := genServerIdentity("localhost:2000")
-	priv2, id2 := genServerIdentity("localhost:2001")
+	priv1, id1 := genServerIdentity("localhost:0")
+	priv2, id2 := genServerIdentity("localhost:0")
 	sHost1 := NewSecureTCPHost(priv1, id1)
 	sHost2 := NewSecureTCPHost(priv2, id2)
 
 	packetToSend := SimplePacket{"HelloWorld"}
 	done := make(chan error)
-	doneListen := make(chan bool)
-	go func() {
-		err := sHost1.Listen(func(c SecureConn) {
-			nm, err := c.Receive(context.TODO())
-			if err != nil {
-				c.Close()
-				done <- fmt.Errorf("Error receiving:")
-			}
-			if nm.MsgType != SimplePacketType {
-				done <- fmt.Errorf("Wrong type received")
-			}
-			sp := nm.Msg.(SimplePacket)
-			if sp.Name != packetToSend.Name {
-				c.Close()
-				done <- fmt.Errorf("Not same packet received!")
-			}
-			if !nm.ServerIdentity.Equal(id2) {
-				c.Close()
-				done <- fmt.Errorf("Not same entity")
-			}
-			log.Lvl3("Connection accepted")
-			close(done)
-		})
+	err := sHost1.Listen(func(c SecureConn) {
+		nm, err := c.Receive(context.TODO())
 		if err != nil {
-			t.Fatal("Listening-error:", err)
+			c.Close()
+			done <- fmt.Errorf("Error receiving:")
 		}
-		doneListen <- true
-	}()
+		if nm.MsgType != SimplePacketType {
+			done <- fmt.Errorf("Wrong type received")
+		}
+		sp := nm.Msg.(SimplePacket)
+		if sp.Name != packetToSend.Name {
+			c.Close()
+			done <- fmt.Errorf("Not same packet received!")
+		}
+		if !nm.ServerIdentity.Equal(id2) {
+			c.Close()
+			done <- fmt.Errorf("Not same entity")
+		}
+		log.Lvl3("Connection accepted")
+		close(done)
+	})
+	if err != nil {
+		t.Fatal("Listening-error:", err)
+	}
 	//time.Sleep(1 * time.Second)
 	// Open connection to entity
 	c, err := sHost2.Open(id1)
@@ -74,9 +70,6 @@ func TestSecureSimple(t *testing.T) {
 	err = sHost2.Close()
 	if err != nil {
 		t.Fatal("Closing sHost2:", err)
-	}
-	if !<-doneListen {
-		t.Fatal("Couldn't close")
 	}
 }
 

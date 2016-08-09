@@ -119,7 +119,7 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	go func() {
-		h := NewLocalHost(2000)
+		h := NewLocalHost()
 		h.Close()
 	}()
 
@@ -135,7 +135,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -146,7 +146,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		Data:    []byte("a"),
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 	log.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.ServerIdentity); err != nil {
@@ -177,7 +177,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -196,7 +196,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 	log.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.ServerIdentity); err != nil {
@@ -238,10 +238,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		return ds
 	})
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -304,13 +304,13 @@ func TestServiceNewProtocol(t *testing.T) {
 		count++
 		return localDs
 	})
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
-	host2 := NewLocalHost(2002)
+	host2 := NewLocalHost()
 	host2.ListenAndBind()
 	host2.StartProcessMessages()
 	defer host2.Close()
@@ -328,7 +328,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	client := NewLocalHost(2010)
+	client := NewLocalHost()
 	defer client.Close()
 	log.Lvl1("Client connecting to host")
 	if _, err := client.Connect(host.ServerIdentity); err != nil {
@@ -369,9 +369,9 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		return s
 	})
 	// create two hosts
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
-	h1 := NewLocalHost(2000)
+	h1 := NewLocalHost()
 	h1.ListenAndBind()
 	h1.StartProcessMessages()
 	defer h1.Close()
