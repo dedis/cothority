@@ -47,7 +47,7 @@ func (c *Context) ServiceID() ServiceID {
 // CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
 func (c *Context) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolService(c.servID, t, name)
+	pi, err := c.overlay.CreateProtocolService(name, t, c.servID)
 	return pi, err
 }
 

@@ -457,12 +457,12 @@ func (o *Overlay) Close() {
 // TreeNodeInstance. This protocol won't be handled by the service, but
 // only by the SDA.
 func (o *Overlay) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
-	return o.CreateProtocolService(ServiceID(uuid.Nil), t, name)
+	return o.CreateProtocolService(name, t, ServiceID(uuid.Nil))
 }
 
 // CreateProtocolService adds the service-id to the token so the protocol will
 // be picked up by the correct service and handled by its NewProtocol method.
-func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (ProtocolInstance, error) {
+func (o *Overlay) CreateProtocolService(name string, t *Tree, sid ServiceID) (ProtocolInstance, error) {
 	tni := o.NewTreeNodeInstanceFromService(t, t.Root, ProtocolNameToID(name), sid)
 	pi, err := ProtocolInstantiate(tni.token.ProtoID, tni)
 	if err != nil {
