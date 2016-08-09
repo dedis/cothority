@@ -9,22 +9,10 @@
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
 else
-  # source: https://gist.github.com/derekstavis/0526ac13cfecb5d6ffe5#file-travis-github-pull-request-integration-sh
-  GITHUB_PR_URL=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-  GITHUB_PR_BODY=$(curl -s $GITHUB_PR_URL 2>/dev/null)
-
-  if [[ $GITHUB_PR_BODY =~ \"ref\":\ *\"([a-zA-Z0-9_-]*)\" ]]; then
-    export TRAVIS_BRANCH=${BASH_REMATCH[1]}
-  fi
-
-  if [[ $GITHUB_PR_BODY =~ \"repo\":.*\"clone_url\":\ *\"https://github\.com/([a-zA-Z0-9_-]*/[a-zA-Z0-9_-]*)\.git.*\"base\" ]]; then
-    export TRAVIS_REPO_SLUG=${BASH_REMATCH[1]}
-  fi
+  BRANCH=refactor_cothority_506
 fi
 
 # If you don't believe in travis-magic:
-#BRANCH=refactor_cothority_506
-#BRANCH=$TRAVIS_BRANCH
 echo "Thinking we're on branch $BRANCH"
 
 pattern="refactor_*";
