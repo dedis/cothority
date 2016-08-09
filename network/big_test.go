@@ -11,7 +11,7 @@ import (
 )
 
 /*
-On MacOSX, for maximum number of hosts, use
+On MacOSX, for maximum number of connections, use
 http://b.oldhu.com/2012/07/19/increase-tcp-max-connections-on-mac-os-x/
 sudo sysctl -w kern.maxfiles=12288
 sudo sysctl -w kern.maxfilesperproc=10240
@@ -24,10 +24,14 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
-	// How many hosts are run
-	nbrHosts := 10
+	if testing.Short() {
+		t.Skip("Long test - skipping in short mode")
+	}
+	// How many hosts are run - if you try with nbrHosts >= 15, increase
+	// the maximum number of connections using the above snippet.
+	nbrHosts := 14
 	// 1MB of message size
-	msgSize := 1024 * 1024 * 1
+	msgSize := 1024 * 1024 * 16
 	big := bigMessage{
 		Msize: msgSize,
 		Msg:   make([]byte, msgSize),

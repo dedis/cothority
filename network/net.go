@@ -190,10 +190,9 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	if err != nil {
 		return errors.New("Couldn't find port: " + err.Error())
 	}
-	log.LLvl3("Found port", port, len(t.ListeningPort), t.ListeningPort)
 	if len(t.ListeningPort) == 0 {
 		// If the channel is empty, else we'd block.
-		log.LLvl3("Sending port", port, "over", t.ListeningPort)
+		log.Lvl3("Sending port", port, "over", t.ListeningPort)
 		t.ListeningPort <- port
 	}
 
@@ -241,7 +240,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.WorkingAddress, "connected with", c.Remote())
+		log.LLvl3(st.WorkingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -275,13 +274,12 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			}
 			st.TCPHost.ListeningPort <- -1
 		}()
-		log.LLvl3("Waiting for port on", st.TCPHost.ListeningPort)
 		port := <-st.TCPHost.ListeningPort
-		log.LLvl3("Got port", port)
 		if port > 0 {
 			// If the port we asked for is '0', we need to
 			// update the address.
 			if strings.HasSuffix(addr, ":0") {
+				log.LLvl3("Got port", port)
 				addr = strings.TrimRight(addr, "0") +
 					strconv.Itoa(port)
 				st.serverIdentity.Addresses[i] = addr
@@ -306,7 +304,7 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 	// try all names
 	for _, addr := range si.Addresses {
 		// try to connect with this name
-		log.Lvl4("Trying address", addr)
+		log.LLvl4("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
 		if err != nil {
 			log.Lvl3("Address didn't accept connection:", addr, "=>", err)
@@ -331,7 +329,7 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 		st.conns = append(st.conns, &secure)
 		st.connMutex.Unlock()
 	}
-	log.Lvl3(secure.TCPConn.Local(), ": successfully connected and identified",
+	log.LLvl3(secure.TCPConn.Local(), ": successfully connected and identified",
 		secure.TCPConn.Remote())
 	return &secure, err
 }
@@ -568,14 +566,14 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 			log.Lvl4(sc, "Got a packet")
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
+			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(100 * time.Millisecond)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
 		}
 	}
 	if err != nil {
-		return errors.New("Didn't receive identity in 1 sec - aborting")
+		return errors.New(sc.Endpoint + ": Didn't receive identity in 1 sec - aborting")
 	}
 	// Check if it is correct
 	if nm.MsgType != ServerIdentityType {

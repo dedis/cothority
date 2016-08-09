@@ -320,7 +320,7 @@ func stressTest(t *testing.T) {
 	// 17 - survives 23-58 rounds
 	// 20 - survives 19, 19, 29
 	// 30 - survives 6, 6, 6
-	nbrHosts := 10
+	nbrHosts := 30
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
 		log.Lvl2("Waiting to close connection", s)
@@ -356,8 +356,9 @@ func stressTest(t *testing.T) {
 	log.Lvl2("Closing hosts")
 	for _, h := range hosts {
 		log.ErrFatal(h.Close())
-		log.Print(h)
+		log.Lvl2("Closing", h)
 	}
+	//time.Sleep(time.Second)
 }
 
 type SimpleClient struct {
