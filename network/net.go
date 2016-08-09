@@ -240,7 +240,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.workingAddress, "connected with", c.Remote())
+		log.Lvl3(st.WorkingAddress(), "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -365,6 +365,8 @@ func (st *SecureTCPHost) Rx() uint64 {
 
 // WorkingAddress returns the working address
 func (st *SecureTCPHost) WorkingAddress() string {
+	st.lockAddress.Lock()
+	defer st.lockAddress.Unlock()
 	return st.workingAddress
 }
 
