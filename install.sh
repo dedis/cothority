@@ -5,10 +5,15 @@
 ## `refactor_`, it will checkout the same branch name
 ## in dedis/cosi.
 
-# Method from
-# http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
-PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
+
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+  BRANCH=$TRAVIS_BRANCH
+else
+  # Method from
+  # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
+  PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
+  BRANCH=$(echo `curl -s $PR | jq -r .head.ref`)
+fi
 
 # If you don't believe in travis-magic:
 #BRANCH=refactor_cothority_506
