@@ -134,19 +134,19 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []byte) {
 	mastersalt := make([]byte, 12)
 	_, err := rand.Read(mastersalt)
-	panic(err)
+	log.ErrFatal(err)
 	k := make([]byte, 32)
 	_, err = rand.Read(k)
-	panic(err)
+	log.ErrFatal(err)
 	// secretkeys is the Shamir Secret share of the keys.
 	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
 	blind := make([]byte, 12)
 	_, err = rand.Read(blind)
-	panic(err)
+	log.ErrFatal(err)
 	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := make([]byte, 16)
 	_, err = rand.Read(iv)
-	panic(err)
+	log.ErrFatal(err)
 	// pwhash is the password hash that will be sent to the guard servers
 	// with Gu and bi.
 	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
@@ -182,7 +182,7 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 
 		block, err := aes.NewCipher(responses[i])
 		if err != nil {
-			panic(err)
+			log.ErrFatal(err)
 		}
 		stream := cipher.NewCTR(block, iv)
 		msg := make([]byte, 88)
@@ -245,7 +245,7 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 	keys := make([]string, len(db.Cothority.List))
 	blind := make([]byte, 12)
 	_, err := rand.Read(blind)
-	panic(err)
+	log.ErrFatal(err)
 	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := getuser(uid).Iv
 	// pwhash is the password hash that will be sent to the guard servers
