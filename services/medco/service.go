@@ -17,11 +17,11 @@ const ServiceName = "MedCo"
 
 func init() {
 	sda.RegisterNewService(ServiceName, NewService)
-	network.RegisterMessageType(&libmedco.ClientResponse{})
-	network.RegisterMessageType(&SurveyResultsQuery{})
-	network.RegisterMessageType(&SurveyCreationQuery{})
-	network.RegisterMessageType(&SurveyResultResponse{})
-	network.RegisterMessageType(&ServiceResponse{})
+	network.RegisterPacketType(&libmedco.ClientResponse{})
+	network.RegisterPacketType(&SurveyResultsQuery{})
+	network.RegisterPacketType(&SurveyCreationQuery{})
+	network.RegisterPacketType(&SurveyResultResponse{})
+	network.RegisterPacketType(&ServiceResponse{})
 }
 
 // SurveyCreationQuery is used to trigger the creation of a survey.

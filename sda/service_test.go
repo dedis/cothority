@@ -27,10 +27,10 @@ type DummyMsg struct {
 	A int
 }
 
-var dummyMsgType network.MessageTypeID
+var dummyMsgType network.PacketTypeID
 
 func init() {
-	dummyMsgType = network.RegisterMessageType(DummyMsg{})
+	dummyMsgType = network.RegisterPacketType(DummyMsg{})
 }
 
 func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
@@ -505,8 +505,8 @@ type SimpleMessageBack struct {
 	Val int
 }
 
-var simpleMessageForthType = network.RegisterMessageType(SimpleMessageForth{})
-var simpleMessageBackType = network.RegisterMessageType(SimpleMessageBack{})
+var simpleMessageForthType = network.RegisterPacketType(SimpleMessageForth{})
+var simpleMessageBackType = network.RegisterPacketType(SimpleMessageBack{})
 
 type BackForthProtocol struct {
 	*TreeNodeInstance
@@ -599,8 +599,8 @@ type simpleResponse struct {
 	Val int
 }
 
-var simpleRequestType = network.RegisterMessageType(simpleRequest{})
-var simpleResponseType = network.RegisterMessageType(simpleResponse{})
+var simpleRequestType = network.RegisterPacketType(simpleRequest{})
+var simpleResponseType = network.RegisterPacketType(simpleResponse{})
 
 type simpleService struct {
 	ctx *Context

@@ -8,10 +8,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-var SimplePacketType MessageTypeID
+var SimplePacketType PacketTypeID
 
 func init() {
-	SimplePacketType = RegisterMessageType(SimplePacket{})
+	SimplePacketType = RegisterPacketType(SimplePacket{})
 }
 
 type SimplePacket struct {
@@ -31,7 +31,7 @@ func TestSimple(t *testing.T) {
 	cConMu := sync.Mutex{}
 
 	go func() {
-		err := server.Listen("localhost:2000", func(c Conn) {
+		err := server.Listen("localhost:2000", func(c *TCPConn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()

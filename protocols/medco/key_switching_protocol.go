@@ -35,7 +35,7 @@ type keySwitchedCipherStruct struct {
 }
 
 func init() {
-	network.RegisterMessageType(KeySwitchedCipherMessage{})
+	network.RegisterPacketType(KeySwitchedCipherMessage{})
 	sda.ProtocolRegisterName(KeySwitchingProtocolName, NewKeySwitchingProtocol)
 }
 

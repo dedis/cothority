@@ -19,9 +19,9 @@ still goes on.
 */
 
 func init() {
-	network.RegisterMessageType(PrepareCount{})
-	network.RegisterMessageType(Count{})
-	network.RegisterMessageType(NodeIsUp{})
+	network.RegisterPacketType(PrepareCount{})
+	network.RegisterPacketType(Count{})
+	network.RegisterPacketType(NodeIsUp{})
 	sda.ProtocolRegisterName("Count", NewCount)
 }
 

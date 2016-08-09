@@ -23,7 +23,7 @@ func TestProbabilisticSwitching(t *testing.T) {
 	var clientPrivate = network.Suite.Scalar().Pick(random.Stream)
 	var clientPublic = network.Suite.Point().Mul(network.Suite.Point().Base(), clientPrivate)
 
-	rootInstance, _ := local.CreateProtocol(tree, "ProbabilisticSwitchingTest")
+	rootInstance, _ := local.CreateProtocol("ProbabilisticSwitchingTest", tree)
 	protocol := rootInstance.(*medco.ProbabilisticSwitchingProtocol)
 
 	aggregateKey := entityList.Aggregate

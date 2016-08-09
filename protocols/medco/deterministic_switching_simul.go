@@ -54,7 +54,7 @@ func (sim *DeterministicSwitchingSimulation) Setup(dir string, hosts []string) (
 func (sim *DeterministicSwitchingSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA(config.Tree, "DeterministicSwitchingSimul")
+		rooti, err := config.Overlay.CreateProtocolSDA("DeterministicSwitchingSimul", config.Tree)
 		if err != nil {
 			return err
 		}

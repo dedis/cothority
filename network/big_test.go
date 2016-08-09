@@ -11,7 +11,7 @@ import (
 )
 
 /*
-On MacOSX, for maximum number of hosts, use
+On MacOSX, for maximum number of connections, use
 http://b.oldhu.com/2012/07/19/increase-tcp-max-connections-on-mac-os-x/
 sudo sysctl -w kern.maxfiles=12288
 sudo sysctl -w kern.maxfilesperproc=10240
@@ -33,16 +33,16 @@ func TestHugeConnections(t *testing.T) {
 		Msg:   make([]byte, msgSize),
 		Pcrc:  25,
 	}
-	bigMessageType := RegisterMessageType(big)
+	bigMessageType := RegisterPacketType(big)
 
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)
-	hosts := make([]SecureHost, nbrHosts)
+	hosts := make([]*SecureTCPHost, nbrHosts)
 	// 2-dimensional array of connections between all hosts, where only
 	// the upper-right half is populated. The lower-left half is the
 	// mirror of the upper-right half, and the diagonal is empty, as there
 	// are no connections from one host to itself.
-	conns := make([][]SecureConn, nbrHosts)
+	conns := make([][]*SecureTCPConn, nbrHosts)
 	wg := sync.WaitGroup{}
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
@@ -50,7 +50,7 @@ func TestHugeConnections(t *testing.T) {
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
 		log.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
-			err := hosts[h].Listen(func(c SecureConn) {
+			err := hosts[h].Listen(func(c *SecureTCPConn) {
 				log.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
@@ -82,7 +82,7 @@ func TestHugeConnections(t *testing.T) {
 				t.Fatal(err)
 			}
 		}(i)
-		conns[i] = make([]SecureConn, nbrHosts)
+		conns[i] = make([]*SecureTCPConn, nbrHosts)
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
@@ -101,7 +101,7 @@ func TestHugeConnections(t *testing.T) {
 	for i := 0; i < nbrHosts; i++ {
 		for j := 0; j < i; j++ {
 			c := conns[i][j]
-			go func(conn SecureConn, i, j int) {
+			go func(conn *SecureTCPConn, i, j int) {
 				defer wg.Done()
 				log.Lvl3("Sending from", i, "to", j, ":")
 				ctx := context.TODO()

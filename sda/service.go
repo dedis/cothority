@@ -20,7 +20,7 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(&StatusRet{})
+	network.RegisterPacketType(&StatusRet{})
 }
 
 // Service is a generic interface to define any type of services.
@@ -68,12 +68,11 @@ type NewServiceFunc func(c *Context, path string) Service
 // protocols. It is passed down to the service NewProtocol function.
 type GenericConfig struct {
 	Type uuid.UUID
-	//Data network.ProtocolMessage
 }
 
 // GenericConfigID is the ID used by the network library for sending / receiving
 // GenericCOnfig
-var GenericConfigID = network.RegisterMessageType(GenericConfig{})
+var GenericConfigID = network.RegisterPacketType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
@@ -265,7 +264,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 // This behavior with go routine is fine for the moment but for better
 // performance / memory / resilience, it may be changed to a real queuing
 // system later.
-func (s *serviceManager) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (s *serviceManager) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
 	// delegate message to host so the host will pass the message to ourself
 	s.host.RegisterProcessor(s, msgType)
 	// handle the message ourself (will be launched in a go routine)
@@ -310,7 +309,7 @@ type ClientRequest struct {
 }
 
 // ClientRequestID is the type that registered by the network library
-var ClientRequestID = network.RegisterMessageType(ClientRequest{})
+var ClientRequestID = network.RegisterPacketType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
@@ -340,7 +339,7 @@ type InterServiceMessage struct {
 }
 
 // ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterMessageType(InterServiceMessage{})
+var ServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
 
 // CreateServiceMessage takes a service name and some data and encodes the whole
 // as a ServiceMessage.
@@ -395,7 +394,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		return nil, err
 	}
 
-	m, err := network.NewNetworkMessage(msg)
+	m, err := network.NewNetworkPacket(msg)
 	if err != nil {
 		return nil, err
 	}
