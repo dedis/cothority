@@ -52,6 +52,7 @@ type Database struct {
 	Users     []User
 }
 
+// EPOCH is a constantg
 const EPOCH = "EPOCH"
 
 var db *Database
