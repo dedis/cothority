@@ -9,19 +9,33 @@
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
 else
-  # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
-  PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-  BRANCH1=$(curl -s $PR | jq -r .head.ref )
+  COUNTER=1
+  while [ $COUNTER -ge 1 ]; do
+    # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
+    PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
+    BRANCH1=$(curl -s $PR | jq -r .head.ref )
 
-  # source: https://gist.github.com/derekstavis/0526ac13cfecb5d6ffe5#file-travis-github-pull-request-integration-sh
-  GITHUB_PR_URL=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-  GITHUB_PR_BODY=$(curl -s $GITHUB_PR_URL 2>/dev/null)
+    # source: https://gist.github.com/derekstavis/0526ac13cfecb5d6ffe5#file-travis-github-pull-request-integration-sh
+    GITHUB_PR_URL=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
+    GITHUB_PR_BODY=$(curl -s $GITHUB_PR_URL 2>/dev/null)
 
-  if [[ $GITHUB_PR_BODY =~ \"ref\":\ *\"([a-zA-Z0-9_-]*)\" ]]; then
-    BRANCH2=${BASH_REMATCH[1]}
-  fi
+    if [[ $GITHUB_PR_BODY =~ \"ref\":\ *\"([a-zA-Z0-9_-]*)\" ]]; then
+      BRANCH2=${BASH_REMATCH[1]}
+    fi
+    echo "Found branches $BRANCH1 -- $BRANCH2"
+    if [ "$BRANCH1" = "null" ]; then
+      COUNTER=$(( COUNTER + 1 ))
+      sleep 10
+    else
+      COUNTER=$(( 0 - COUNTER ))
+    fi
+  done
 fi
-echo "Found branches $BRANCH1 -- $BRANCH2"
+
+if [ $COUNTER -lt -1 ]; then
+  echo "Did take more than once to find branch"
+  exit 1
+fi
 
 # If you don't believe in travis-magic:
 BRANCH=refactor_cothority_506
