@@ -398,11 +398,11 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
-	log.LLvl5("Starting to receive on", c.Local(), "from", c.Remote())
+	log.Lvl5("Starting to receive on", c.Local(), "from", c.Remote())
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
-	log.LLvl5("Received some bytes", total)
+	log.Lvl5("Received some bytes", total)
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
@@ -419,7 +419,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
-		log.LLvl5("Read", read, "out of", total, "bytes")
+		log.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
@@ -447,7 +447,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	log.LLvlf5("%s->%s: Message SEND => %+v", c.Local(), c.Remote(), am)
+	log.Lvlf5("%s->%s: Message SEND => %+v", c.Local(), c.Remote(), am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -553,35 +553,20 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
 	// Send our ServerIdentity to the remote endpoint
-	log.LLvlf4("Sending our identity %x to %s", ourEnt.ID,
+	log.Lvlf4("Sending our identity %x to %s", ourEnt.ID,
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
+		log.Error(err)
 		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
 
-	log.LLvl4(sc.workingAddress, "waiting for identity")
+	log.Lvl4(sc.workingAddress, "waiting for identity")
 	// Wait for a packet to arrive
-	var nm Packet
-	var err error
-	for i := 0; i < MaxRetryListenIdentity; i++ {
-		// Receive the other ServerIdentity
-		nm, err = sc.TCPConn.Receive(context.TODO())
-		log.Print("Got", nm, err)
-		switch {
-		case err == nil:
-			if i > 0 {
-				log.Warn(sc, "Got a packet after a failure")
-			}
-			i = MaxRetryListenIdentity
-		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
-			time.Sleep(WaitRetry)
-		default:
-			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
-		}
-	}
+	// Receive the other ServerIdentity
+	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
-		return errors.New(sc.Endpoint + ": Didn't receive identity in 1 sec - aborting")
+		return fmt.Errorf("%s: Error while receiving ServerIdentity during negotiation: %s",
+			sc.workingAddress, err)
 	}
 	// Check if it is correct
 	if nm.MsgType != ServerIdentityType {
