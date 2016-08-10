@@ -16,8 +16,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Not working - #482")
-	//log.MainTest(m)
+	//log.Info("Not working - #482")
+	log.MainTest(m)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
