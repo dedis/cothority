@@ -397,7 +397,23 @@ func stressTest(t *testing.T) {
 
 // Test what happens if the serverIdentity is not sent strait away
 func TestExchangeDelayed(t *testing.T) {
+	kp := config.NewKeyPair(Suite)
+	si := NewServerIdentity(kp.Public, "localhost:0")
+	h1 := NewSecureTCPHost(kp.Secret, si)
+	h1.Listen(func(SecureConn) {})
+	log.LLvl4("Address of h1 is", h1.workingAddress)
 
+	h2 := NewTCPHost()
+	c, err := h2.Open(h1.workingAddress)
+	log.ErrFatal(err)
+	time.Sleep(10 * WaitRetry)
+
+	log.Lvl1("Sending serverIdentity", c.Local(), c.Remote())
+	log.ErrFatal(c.Send(context.TODO(), si))
+
+	time.Sleep(time.Second)
+	c.Close()
+	h1.Close()
 }
 
 type stressMsg struct {

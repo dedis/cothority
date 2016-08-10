@@ -31,7 +31,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"gopkg.in/dedis/cothority.v0/lib/dbg"
 )
 
 // Network part //
@@ -399,10 +398,11 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
-	dbg.Lvl5("Starting to receive on", c.Endpoint)
+	log.LLvl5("Starting to receive on", c.Local(), "from", c.Remote())
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
+	log.LLvl5("Received some bytes", total)
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
@@ -419,7 +419,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
-		log.Lvl5("Read", read, "out of", total, "bytes")
+		log.LLvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
@@ -447,7 +447,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	log.Lvlf5("Message SEND => %+v", am)
+	log.LLvlf5("%s->%s: Message SEND => %+v", c.Local(), c.Remote(), am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -553,18 +553,20 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
 	// Send our ServerIdentity to the remote endpoint
-	log.Lvlf4("Sending our identity %x to %s", ourEnt.ID,
+	log.LLvlf4("Sending our identity %x to %s", ourEnt.ID,
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
 		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
 
+	log.LLvl4(sc.workingAddress, "waiting for identity")
 	// Wait for a packet to arrive
 	var nm Packet
 	var err error
 	for i := 0; i < MaxRetryListenIdentity; i++ {
 		// Receive the other ServerIdentity
 		nm, err = sc.TCPConn.Receive(context.TODO())
+		log.Print("Got", nm, err)
 		switch {
 		case err == nil:
 			if i > 0 {
@@ -572,7 +574,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 			}
 			i = MaxRetryListenIdentity
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
+			log.LLvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(WaitRetry)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
