@@ -575,7 +575,9 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		nm, err = sc.TCPConn.Receive(context.TODO())
 		switch {
 		case err == nil:
-			log.Lvl4(sc, "Got a packet")
+			if i > 0 {
+				log.Warn(sc, "Got a packet after a failure")
+			}
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
 			log.Lvl4(sc, "EOF while receiving identity: ", i*100)

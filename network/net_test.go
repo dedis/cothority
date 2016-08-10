@@ -312,24 +312,40 @@ func TestTcpNetwork(t *testing.T) {
 
 // Opens up a lot of connections
 func TestStress(t *testing.T) {
-	//if testing.Short() {
-	//	t.Skip("Skipping long test.")
-	//}
+	if testing.Short() {
+		t.Skip("Skipping long test.")
+	}
 	for i := 0; i < 100; i++ {
-		log.Print("Going for round:", i)
+		log.Lvl1("Going for round:", i)
 		stressTest(t)
 	}
 }
 func stressTest(t *testing.T) {
 	// nbrHosts
-	// 17 - survives 23-58 rounds
-	// 20 - survives 19, 19, 29
-	// 30 - survives 6, 6, 6
 	nbrHosts := 50
+	// If loadLen == 0, no data is sent, and it fails on MacOSX.
+	// On linuxMint 18 and Travis it works with or without data sending.
+	loadLen := 1024 * 16
+	//loadLen := 0
+	enableWaiting := false
+	RegisterMessageType(stressMsg{})
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
-		//log.Lvl2("Waiting to close connection", s)
-		//time.Sleep(time.Second)
+		if enableWaiting {
+			log.Lvl2("Waiting to close connection", s)
+			time.Sleep(time.Second)
+		}
+		if loadLen > 0 {
+			log.Lvl2("Sending something")
+			err := s.Send(context.TODO(), &stressMsg{make([]byte, loadLen)})
+			log.ErrFatal(err)
+			log.Lvl2("Receiving")
+			p, err := s.Receive(context.TODO())
+			log.ErrFatal(err)
+			if len(p.Msg.(stressMsg).Load) != loadLen {
+				t.Fatal("Didn't receive enough bytes")
+			}
+		}
 		log.Lvl2("Closing connection", s)
 		s.Close()
 		wg.Done()
@@ -352,18 +368,35 @@ func stressTest(t *testing.T) {
 		wg.Add(1)
 		go func(nbr int) {
 			log.Lvl2("Opening", nbr, hosts[nbr])
-			_, err := hosts[nbr].Open(hosts[(nbr+1)%nbrHosts].serverIdentity)
+			c, err := hosts[nbr].Open(hosts[(nbr+1)%nbrHosts].serverIdentity)
 			log.ErrFatal(err)
+			if loadLen > 0 {
+				p, err := c.Receive(context.TODO())
+				log.ErrFatal(err)
+				if len(p.Msg.(stressMsg).Load) != loadLen {
+					t.Fatal("Didn't receive", loadLen, "bytes")
+				}
+				err = c.Send(context.TODO(), &stressMsg{make([]byte, loadLen)})
+				log.ErrFatal(err)
+			}
 		}(i)
 	}
 	wg.Wait()
-	//time.Sleep(time.Second)
+	if enableWaiting {
+		time.Sleep(time.Second)
+	}
 	log.Lvl2("Closing hosts")
 	for _, h := range hosts {
 		log.ErrFatal(h.Close())
 		log.Lvl2("Closing", h)
 	}
-	//time.Sleep(time.Second)
+	if enableWaiting {
+		time.Sleep(time.Second)
+	}
+}
+
+type stressMsg struct {
+	Load []byte
 }
 
 type SimpleClient struct {
