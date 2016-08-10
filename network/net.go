@@ -241,12 +241,6 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.WorkingAddress(), "connected with", c.Remote())
-		c.conn.(*net.TCPConn).SetKeepAlive(false)
-		c.conn.(*net.TCPConn).SetLinger(0)
-		c.conn.(*net.TCPConn).SetNoDelay(false)
-		c.conn.(*net.TCPConn).SetReadBuffer(128)
-		c.conn.(*net.TCPConn).SetWriteBuffer(128)
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
@@ -447,7 +441,7 @@ const maxChunkSize Size = 1400
 // and send it with the size through the network.
 // Returns an error if anything was wrong
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
-	time.Sleep(time.Millisecond * 100)
+	//time.Sleep(time.Millisecond * 100)
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkMessage(obj)
@@ -581,7 +575,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 			i = 10
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
 			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(WaitRetry)
 		default:
 			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
 		}

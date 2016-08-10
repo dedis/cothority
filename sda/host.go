@@ -102,14 +102,14 @@ func (h *Host) listen(wait bool) {
 		for i, addr := range h.ServerIdentity.Addresses {
 			if strings.HasSuffix(addr, ":0") {
 				h.ServerIdentity.Addresses[i] = h.host.WorkingAddress()
-				log.LLvl4("Replaced port to", h.ServerIdentity.Addresses[i])
+				log.Lvl4("Replaced port to", h.ServerIdentity.Addresses[i])
 			}
 		}
 		for {
 			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
 			_, err := h.Connect(h.ServerIdentity)
 			if err == nil {
-				log.LLvl4(h.ServerIdentity.First(), "managed to connect to itself")
+				log.Lvl4(h.ServerIdentity.First(), "managed to connect to itself")
 				break
 			}
 			time.Sleep(network.WaitRetry)
@@ -215,7 +215,7 @@ func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
 		}
 	}
 
-	log.LLvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
