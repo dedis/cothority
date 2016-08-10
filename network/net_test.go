@@ -333,7 +333,7 @@ func TestStress(t *testing.T) {
 func stressTest(t *testing.T, waiting time.Duration, nbrHosts, loadSize int) {
 	log.Lvl1("Testing with waiting:", waiting, "hosts:", nbrHosts,
 		"load-size:", loadSize)
-	RegisterMessageType(stressMsg{})
+	RegisterPacketType(stressMsg{})
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
 		if waiting.Seconds() > 0 {

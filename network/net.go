@@ -311,9 +311,9 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 		}
 		// create the secure connection
 		secure = SecureTCPConn{
-			TCPConn:       c,
-			SecureTCPHost: st,
-			entity:        si,
+			TCPConn:        c,
+			SecureTCPHost:  st,
+			serverIdentity: si,
 		}
 		success = true
 		break

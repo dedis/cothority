@@ -14,7 +14,7 @@ func TestCloseAll(t *testing.T) {
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
 
-	pi, err := local.CreateProtocol(tree, "CloseAll")
+	pi, err := local.CreateProtocol("CloseAll", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
