@@ -571,16 +571,20 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 	children := n.Children()
 	errs := make([]collectedErrors, 0, len(children))
 	eMut := sync.Mutex{}
+	wg := sync.WaitGroup{}
 	for _, node := range children {
 		name := node.Name()
+		wg.Add(1)
 		go func(n2 *TreeNode) {
 			if err := n.SendTo(n2, msg); err != nil {
 				eMut.Lock()
 				errs = append(errs, collectedErrors{name, err})
 				eMut.Unlock()
 			}
+			wg.Done()
 		}(node)
 	}
+	wg.Wait()
 	return collectErrors("Error while sending to %s: %s\n", errs)
 }
 

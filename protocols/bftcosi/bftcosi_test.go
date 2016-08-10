@@ -106,7 +106,6 @@ func TestCheckFailBit(t *testing.T) {
 			log.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
 				bitCount(failCount) < (n+1)*2/3)
-
 		}
 	}
 }
