@@ -169,20 +169,25 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		select {
 		case msg := <-bft.announceChan:
 			// Announcement
+			log.LLvl4("announcement")
 			err = bft.handleAnnouncement(msg.Announce)
 		case msg := <-bft.commitChan:
 			// Commitment
+			log.LLvl4("commitment")
 			err = bft.handleCommitment(msg.Commitment)
 
 		case msg := <-bft.challengePrepareChan:
 			// Challenge
+			log.LLvl4("challengePrepare")
 			err = bft.handleChallengePrepare(&msg.ChallengePrepare)
 
 		case msg := <-bft.challengeCommitChan:
+			log.LLvl4("challengeCommit")
 			err = bft.handleChallengeCommit(&msg.ChallengeCommit)
 
 		case msg := <-bft.responseChan:
 			// Response
+			log.LLvl4("response", msg.Response.TYPE)
 			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
@@ -337,6 +342,7 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	case <-bft.doneProcessing:
 		return errors.New("Aborted while waiting for reply")
 	}
+	return errors.New("Aborted while waiting for reply")
 
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
