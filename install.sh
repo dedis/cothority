@@ -6,17 +6,19 @@
 ## in dedis/cosi.
 
 # Temporarily overwrite the branch
-#BRANCH=refactor_cothority_506
+BRANCH=refactor_cothority_506
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
-elif [ -z "$BRANCH" ]; then
+elif [ "$BRANCH" ]; then
+  echo "Manual override of branch to: $BRANCH"
+else
   # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
   PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
   BRANCH=$(curl -s $PR | jq -r .head.ref )
   if [ "$BRANCH" = "null" ]; then
     echo "Couldn't fetch branch - probably too many requests."
-    echo "Please set your own branch in the meantime"
+    echo "Please set your own branch manually in install.sh"
     exit 1
   fi
 fi
