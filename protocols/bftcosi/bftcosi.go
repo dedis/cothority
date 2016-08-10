@@ -171,11 +171,9 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		select {
 		case msg := <-bft.announceChan:
 			// Announcement
-			log.LLvl4(bft.Name(), "announcement")
 			err = bft.handleAnnouncement(msg.Announce)
 		case msg := <-bft.commitChan:
 			// Commitment
-			log.LLvl4(bft.Name(), "commitment")
 			err = bft.handleCommitment(msg.Commitment)
 
 		case msg := <-bft.challengePrepareChan:
@@ -261,7 +259,7 @@ func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
 
 // handleAnnouncement passes the announcement to the right CoSi struct.
 func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
-	log.Lvl4(bft.Name(), "RoundType:", ann.TYPE)
+	log.LLvl4(bft.Name(), "RoundType:", ann.TYPE)
 	if bft.IsLeaf() {
 		return bft.startCommitment(ann.TYPE)
 	}
@@ -278,7 +276,7 @@ func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
 // handleCommitment collects all commitments from children and passes them
 // to the parent or starts the challenge-round if it's the root.
 func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
-	log.Lvl4(bft.Name(), "RoundType:", comm.TYPE)
+	log.LLvl4(bft.Name(), "RoundType:", comm.TYPE)
 
 	var commitment abstract.Point
 	// store it and check if we have enough commitments
