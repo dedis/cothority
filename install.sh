@@ -33,4 +33,5 @@ if [[ $BRANCH =~ $pattern ]]; then
     echo $(git rev-parse --abbrev-ref HEAD)
 fi
 
+cd $TRAVIS_BUILD_DIR
 go get -t ./...
