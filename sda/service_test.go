@@ -290,8 +290,8 @@ func TestServiceNewProtocol(t *testing.T) {
 	countMutex := sync.Mutex{}
 	RegisterNewService("DummyService", func(c *Context, path string) Service {
 		countMutex.Lock()
-		log.Lvl2("Creating service", count)
 		defer countMutex.Unlock()
+		log.Lvl2("Creating service", count)
 		var localDs *DummyService
 		switch count {
 		case 2:
