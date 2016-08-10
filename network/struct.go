@@ -22,10 +22,6 @@ import (
 // MaxRetryConnect defines how many times should we try to connect
 const MaxRetryConnect = 10
 
-// MaxRetryListenIdentity defines how long we wait for the identity:
-// WaitRetry * MaxRetryListenIdentity
-const MaxRetryListenIdentity = 20
-
 // WaitRetry defines how much time should we wait before trying again
 const WaitRetry = 100 * time.Millisecond
 
