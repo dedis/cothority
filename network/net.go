@@ -74,7 +74,6 @@ func (t *TCPHost) Listen(addr string, fn func(Conn)) error {
 
 // Close will close every connection this host has opened
 func (t *TCPHost) Close() error {
-	dbg.Print(t.ListeningPort)
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
@@ -242,7 +241,7 @@ func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHos
 // Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.LLvl3(st.WorkingAddress(), "connected with", c.Remote())
+		log.Lvl3(st.WorkingAddress(), "connected with", c.Remote())
 		c.conn.(*net.TCPConn).SetKeepAlive(false)
 		c.conn.(*net.TCPConn).SetLinger(0)
 		c.conn.(*net.TCPConn).SetNoDelay(false)
@@ -406,7 +405,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
-	dbg.LLvl5("Starting to receive on", c.Endpoint)
+	dbg.Lvl5("Starting to receive on", c.Endpoint)
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationMessage, handleError(err)
 	}
@@ -490,7 +489,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		// bytes left to send
 		b = b[n:]
 	}
-	log.LLvl5(c.Endpoint, "Sent a total of", sent, "bytes")
+	log.Lvl5(c.Endpoint, "Sent a total of", sent, "bytes")
 	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
@@ -498,7 +497,6 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
-	dbg.Print(c.Endpoint)
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
 	if c.closed == true {

@@ -328,7 +328,7 @@ func stressTest(t *testing.T) {
 	nbrHosts := 50
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
-		log.Lvl2("Waiting to close connection", s)
+		//log.Lvl2("Waiting to close connection", s)
 		//time.Sleep(time.Second)
 		log.Lvl2("Closing connection", s)
 		s.Close()
