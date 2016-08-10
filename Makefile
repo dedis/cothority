@@ -39,9 +39,9 @@ test_lint:
 	}
 
 test_multi:
+    cd network; \
 	for a in $$( seq 10 ); do \
-	  cd network; \
-	  go test -v -race Stress; \
+	  go test -v -race -run Stress; \
 	done
 
 test_verbose:
