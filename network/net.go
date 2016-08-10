@@ -419,11 +419,15 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
+		b = b[n:]
 		log.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
+		dbg.Print(read, total)
+		dbg.Printf("%x", buffer.Bytes())
+		DumpTypes()
 		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
