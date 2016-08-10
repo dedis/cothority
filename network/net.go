@@ -40,7 +40,7 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTCPHost() *TCPHost {
 	return &TCPHost{
-		ListeningPort: make(chan int, 1),
+		listeningPort: make(chan int, 1),
 		peers:         make(map[string]Conn),
 		quit:          make(chan bool),
 		constructors:  DefaultConstructors(Suite),
@@ -191,10 +191,10 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	if err != nil {
 		return errors.New("Couldn't find port: " + err.Error())
 	}
-	if len(t.ListeningPort) == 0 {
+	if len(t.listeningPort) == 0 {
 		// If the channel is empty, else we'd block.
-		log.Lvl3("Sending port", port, "over", t.ListeningPort)
-		t.ListeningPort <- port
+		log.Lvl3("Sending port", port, "over", t.listeningPort)
+		t.listeningPort <- port
 	}
 
 	t.listeningLock.Unlock()
@@ -272,9 +272,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			if err == nil || err == ErrClosed || err == ErrEOF {
 				return
 			}
-			st.TCPHost.ListeningPort <- -1
+			st.TCPHost.listeningPort <- -1
 		}()
-		port := <-st.TCPHost.ListeningPort
+		port := <-st.TCPHost.listeningPort
 		if port > 0 {
 			// If the port we asked for is '0', we need to
 			// update the address.

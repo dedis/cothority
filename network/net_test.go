@@ -80,7 +80,7 @@ func TestMultiClose(t *testing.T) {
 	}()
 	time.Sleep(time.Second)
 	log.Lvl3("Opening connection to h1")
-	h1Port := <-h1.ListeningPort
+	h1Port := <-h1.listeningPort
 	_, err := h2.Open("localhost:" + strconv.Itoa(h1Port))
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h1, err)
@@ -105,7 +105,7 @@ func TestMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	h3Port := <-h3.ListeningPort
+	h3Port := <-h3.listeningPort
 	_, err = h2.Open("localhost:" + strconv.Itoa(h3Port))
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h3, err)
@@ -212,7 +212,7 @@ func TestTcpCounterIO(t *testing.T) {
 		done <- true
 	}()
 
-	c2, err := h2.Open("localhost:" + strconv.Itoa(<-h1.ListeningPort))
+	c2, err := h2.Open("localhost:" + strconv.Itoa(<-h1.listeningPort))
 	if err != nil {
 		t.Fatal("Couldn't open h2:", err)
 	}
