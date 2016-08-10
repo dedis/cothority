@@ -233,6 +233,10 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 // Shutdown will close the dispatch-method if the protocol is stopped
 // before the normal termination.
 func (bft *ProtocolBFTCoSi) Shutdown() error {
+	// Recover if the channel has alredy been closed
+	defer func() {
+		recover()
+	}()
 	close(bft.doneProcessing)
 	return nil
 }
@@ -575,8 +579,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	log.Lvl4(bft.Name(), "closing")
-	close(bft.commitCommitDone)
-	close(bft.doneProcessing)
+	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root
 		bft.onDone()
