@@ -27,7 +27,15 @@ test_lint:
 test_multi:
 	cd protocols/bftcosi; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run CheckFailBit; \
+	  go test -v -race; \
+	done; \
+	cd ../../services/skipchain; \
+	for a in $$( seq 10 ); do \
+	  go test -v -race; \
+	done; \
+	cd ../identity; \
+	for a in $$( seq 10 ); do \
+	  go test -v -race; \
 	done
 
 test_verbose:
