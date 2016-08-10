@@ -325,7 +325,7 @@ func stressTest(t *testing.T) {
 	// 17 - survives 23-58 rounds
 	// 20 - survives 19, 19, 29
 	// 30 - survives 6, 6, 6
-	nbrHosts := 30
+	nbrHosts := 50
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
 		log.Lvl2("Waiting to close connection", s)

@@ -39,7 +39,7 @@ test_lint:
 	}
 
 test_multi:
-    cd network; \
+	cd network; \
 	for a in $$( seq 10 ); do \
 	  go test -v -race -run Stress; \
 	done
