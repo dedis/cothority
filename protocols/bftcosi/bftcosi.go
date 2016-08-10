@@ -126,7 +126,7 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 			commit:  cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 		},
 		verifyChan:           make(chan bool),
-		doneProcessing:       make(chan bool, 2),
+		doneProcessing:       make(chan bool),
 		VerificationFunction: verify,
 		threshold:            (len(n.Tree().List()) + 1) * 2 / 3,
 		Msg:                  make([]byte, 0),
@@ -241,6 +241,7 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 // before the normal termination.
 func (bft *ProtocolBFTCoSi) Shutdown() error {
 	// Recover if the channel has alredy been closed
+	log.LLvl4(bft.Name(), "closing", log.Stack())
 	defer func() {
 		recover()
 	}()
@@ -587,7 +588,6 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	log.LLvl4(bft.Name(), "closing", log.Stack())
 	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root
