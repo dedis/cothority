@@ -16,7 +16,7 @@ var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
 	log.Info("Skipping for https://github.com/dedis/cothority/issues/467")
-	log.MainTest(m)
+	//log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
