@@ -154,9 +154,11 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 // "commit" round will wait till the end of the "prepare" round during its
 // challenge phase.
 func (bft *ProtocolBFTCoSi) Start() error {
+	log.LLvl4(bft.Name(), "announcePrepare")
 	if err := bft.startAnnouncement(RoundPrepare); err != nil {
 		return err
 	}
+	log.LLvl4(bft.Name(), "announceCommit")
 	return bft.startAnnouncement(RoundCommit)
 }
 
@@ -169,25 +171,25 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		select {
 		case msg := <-bft.announceChan:
 			// Announcement
-			log.LLvl4("announcement")
+			log.LLvl4(bft.Name(), "announcement")
 			err = bft.handleAnnouncement(msg.Announce)
 		case msg := <-bft.commitChan:
 			// Commitment
-			log.LLvl4("commitment")
+			log.LLvl4(bft.Name(), "commitment")
 			err = bft.handleCommitment(msg.Commitment)
 
 		case msg := <-bft.challengePrepareChan:
 			// Challenge
-			log.LLvl4("challengePrepare")
+			log.LLvl4(bft.Name(), "challengePrepare")
 			err = bft.handleChallengePrepare(&msg.ChallengePrepare)
 
 		case msg := <-bft.challengeCommitChan:
-			log.LLvl4("challengeCommit")
+			log.LLvl4(bft.Name(), "challengeCommit")
 			err = bft.handleChallengeCommit(&msg.ChallengeCommit)
 
 		case msg := <-bft.responseChan:
 			// Response
-			log.LLvl4("response", msg.Response.TYPE)
+			log.LLvl4(bft.Name(), "response", msg.Response.TYPE)
 			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
@@ -342,7 +344,6 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	case <-bft.doneProcessing:
 		return errors.New("Aborted while waiting for reply")
 	}
-	return errors.New("Aborted while waiting for reply")
 
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
@@ -485,8 +486,10 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 // startResponse dispatches the response to the correct round-type
 func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
 	if t == RoundPrepare {
+		log.LLvl4(bft.Name(), "responsePrepare")
 		return bft.handleResponsePrepare(r)
 	}
+	log.LLvl4(bft.Name(), "responseCommit")
 	return bft.handleResponseCommit(r)
 }
 
