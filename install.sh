@@ -35,7 +35,7 @@ else
   done
 fi
 
-if [ $COUNTER -lt -1 ]; then
+if [ "$COUNTER" != "-1" ]; then
   echo "Did take more than once to find branch"
   exit 1
 fi
