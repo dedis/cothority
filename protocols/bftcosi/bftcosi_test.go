@@ -15,6 +15,7 @@ var veriCount int
 var countMut sync.Mutex
 
 func TestMain(m *testing.M) {
+	log.Info("Skipping for https://github.com/dedis/cothority/issues/467")
 	log.MainTest(m)
 }
 
@@ -31,10 +32,6 @@ func TestBftCoSi(t *testing.T) {
 }
 
 func TestThreshold(t *testing.T) {
-	//if testing.Short() {
-	//	t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
-	//}
-
 	const TestProtocolName = "DummyBFTCoSiThr"
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
@@ -67,9 +64,6 @@ func TestThreshold(t *testing.T) {
 }
 
 func TestCheckFail(t *testing.T) {
-	//if testing.Short() {
-	//	t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
-	//}
 	const TestProtocolName = "DummyBFTCoSiFail"
 
 	// Register test protocol using BFTCoSi
@@ -84,9 +78,6 @@ func TestCheckFail(t *testing.T) {
 }
 
 func TestCheckFailMore(t *testing.T) {
-	//if testing.Short() {
-	//	t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
-	//}
 	const TestProtocolName = "DummyBFTCoSiFailMore"
 
 	// Register test protocol using BFTCoSi
@@ -104,9 +95,6 @@ func TestCheckFailMore(t *testing.T) {
 }
 
 func TestCheckFailBit(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping test because of https://github.com/dedis/cothority/issues/467")
-	}
 	const TestProtocolName = "DummyBFTCoSiFailBit"
 
 	// Register test protocol using BFTCoSi
