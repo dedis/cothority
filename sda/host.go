@@ -147,7 +147,6 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 
 // Close shuts down all network connections and closes the listener.
 func (h *Host) Close() error {
-	log.Print(h.host)
 	h.closingMut.Lock()
 	defer h.closingMut.Unlock()
 	if h.isClosing {

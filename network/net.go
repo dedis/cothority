@@ -441,7 +441,6 @@ const maxChunkSize Size = 1400
 // and send it with the size through the network.
 // Returns an error if anything was wrong
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
-	//time.Sleep(time.Millisecond * 100)
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkMessage(obj)
