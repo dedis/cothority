@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -37,7 +36,7 @@ func TestPrivateAggregate(t *testing.T) {
 
 	//run protocol
 	go protocol.StartProtocol()
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*5*2) * time.Millisecond
 
 	feedback := protocol.FeedbackChannel
 

@@ -3,6 +3,8 @@ package manage_test
 import (
 	"testing"
 
+	"time"
+
 	"github.com/dedis/cothority/sda"
 )
 
@@ -16,5 +18,14 @@ func TestCloseAll(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
-	pi.Start()
+	done := make(chan bool)
+	go func() {
+		pi.Start()
+		done <- true
+	}()
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("Didn't finish in 10 seconds")
+	}
 }

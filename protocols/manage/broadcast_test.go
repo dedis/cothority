@@ -26,7 +26,7 @@ func TestBroadcast(t *testing.T) {
 			done <- true
 		})
 		protocol.Start()
-		timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
+		timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 		select {
 		case <-done:
 			log.Lvl2("Done with connecting everybody")

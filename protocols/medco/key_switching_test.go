@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/medco"
 	"github.com/dedis/cothority/sda"
-	. "github.com/dedis/cothority/services/medco/libmedco"
 	"github.com/dedis/crypto/random"
 )
 
@@ -49,7 +48,7 @@ func TestKeySwitching(t *testing.T) {
 
 	go protocol.StartProtocol()
 
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*5*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*5*2) * time.Millisecond
 
 	select {
 	case encryptedResult := <-feedback:

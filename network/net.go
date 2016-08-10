@@ -140,7 +140,7 @@ func (t *TCPHost) Tx() uint64 {
 func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			//log.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
@@ -170,13 +170,13 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listening = true
 	global, _ := GlobalBind(addr)
 	var ln net.Listener
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		var err error
 		ln, err = net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
-		} else if i == MaxRetry-1 {
+		} else if i == MaxRetryConnect-1 {
 			t.listeningLock.Unlock()
 			return errors.New("Error opening listener: " + err.Error())
 		}
@@ -559,10 +559,10 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
 
-	// Try for 1 second to receive the other entity
+	// Wait for a packet to arrive
 	var nm Packet
 	var err error
-	for i := 0; i < 10; i++ {
+	for i := 0; i < MaxRetryListenIdentity; i++ {
 		// Receive the other ServerIdentity
 		nm, err = sc.TCPConn.Receive(context.TODO())
 		switch {
@@ -570,7 +570,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 			if i > 0 {
 				log.Warn(sc, "Got a packet after a failure")
 			}
-			i = 10
+			i = MaxRetryListenIdentity
 		case err.Error() == "EOF" || err.Error() == "Temporary Error":
 			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
 			time.Sleep(WaitRetry)

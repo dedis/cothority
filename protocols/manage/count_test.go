@@ -22,7 +22,7 @@ func TestCount(t *testing.T) {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	protocol := pi.(*manage.ProtocolCount)
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.Count:
 		log.Lvl2("Instance 1 is done")
