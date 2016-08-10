@@ -80,6 +80,9 @@ type Conn interface {
 // TCPHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TCPHost struct {
+	// ListeningPort is a channel where the port found will be
+	// sent through.
+	ListeningPort chan int
 	// A list of connection maintained by this host
 	peers    map[string]Conn
 	peersMut sync.Mutex
@@ -133,6 +136,7 @@ type SecureHost interface {
 	Listen(func(SecureConn)) error
 	Open(*ServerIdentity) (SecureConn, error)
 	String() string
+	WorkingAddress() string
 	monitor.CounterIO
 }
 

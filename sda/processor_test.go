@@ -50,7 +50,7 @@ func TestBlockingDispatcher(t *testing.T) {
 
 func TestProcessorHost(t *testing.T) {
 	defer log.AfterTest(t)
-	h1 := newHostMock(network.Suite, "127.0.0.1:2000")
+	h1 := newHostMock(network.Suite, "127.0.0.1:0")
 
 	proc := &basicProcessor{make(chan network.Packet, 1)}
 	h1.RegisterProcessor(proc, basicMessageType)
@@ -136,7 +136,7 @@ func TestProcessor_GetReply(t *testing.T) {
 func TestProcessor_ProcessClientRequest(t *testing.T) {
 	local := NewLocalTest()
 
-	// generate 5 hosts, they don't connect, they process messages, and they
+	// generate 1 host, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	h := local.GenLocalHosts(1, false, false)[0]
 	defer local.CloseAll()

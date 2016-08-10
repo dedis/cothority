@@ -25,16 +25,16 @@ test_lint:
 	}
 
 test_multi:
-	cd services/identity; \
+	cd network; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -p=1 -short ./...; \
+	  go test -v -race -run Stress; \
 	done
 
 test_verbose:
-	go test -v -race -p=1 -short ./...
+	go test -v -race -short ./...
 
 test_go:
-	go test -race  -p=1 -short ./...
+	go test -race -short ./...
 
 test: test_fmt test_lint test_go
 

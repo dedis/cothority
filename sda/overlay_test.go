@@ -27,7 +27,7 @@ func (po *ProtocolOverlay) Release() {
 
 func TestOverlayDone(t *testing.T) {
 	// setup
-	h1 := NewLocalHost(2000)
+	h1 := NewLocalHost()
 	defer h1.Close()
 	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := ProtocolOverlay{

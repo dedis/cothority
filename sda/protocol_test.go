@@ -14,6 +14,8 @@ var testProto = "test"
 
 var simpleProto = "simple"
 
+var protocolTestID = ProtocolRegisterName(testProto, NewProtocolTest)
+
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
 type ProtocolTest struct {

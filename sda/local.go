@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"strconv"
 
 	"time"
 
@@ -134,6 +133,7 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
+		log.Lvl3("Closing host", host.ServerIdentity)
 		err := host.Close()
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.First(),
@@ -142,6 +142,7 @@ func (l *LocalTest) CloseAll() {
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
+		log.Lvl3("Closing node", node)
 		node.Close()
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
@@ -251,21 +252,19 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
-// NewLocalHost creates a new host with the given address and registers it.
-func NewLocalHost(port int) *Host {
-	address := "localhost:" + strconv.Itoa(port)
+// NewLocalHost creates a new host searching for an open port and registers it.
+func NewLocalHost() *Host {
 	priv, pub := PrivPub()
-	id := network.NewServerIdentity(pub, address)
+	id := network.NewServerIdentity(pub, "localhost:0")
 	return NewHost(id, priv)
 }
 
 // GenLocalHosts will create n hosts with the first one being connected to each of
 // the other nodes if connect is true.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
+		host := NewLocalHost()
 		hosts[i] = host
 	}
 	root := hosts[0]
