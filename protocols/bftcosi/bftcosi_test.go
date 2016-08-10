@@ -165,6 +165,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 			t.Fatal(root.Name(), "Shouldn't have succeeded for", nbrHosts, "hosts, but signed for count:", failCount)
 		}
 	case <-time.After(wait):
+		log.Lvl1("Going to break because of timeout")
 		t.Fatal("Waited", wait, "for BFTCoSi to finish ...")
 	}
 }
