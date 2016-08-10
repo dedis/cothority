@@ -587,7 +587,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	log.Lvl4(bft.Name(), "closing")
+	log.LLvl4(bft.Name(), "closing", log.Stack())
 	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root

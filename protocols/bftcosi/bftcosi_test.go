@@ -101,6 +101,7 @@ func TestCheckFailBit(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verifyFailBit)
 	})
 
+	//for _, n := range []int{30} {
 	for _, n := range []int{2, 3, 4} {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
 			log.Lvl1("FailBit at", failCount)
