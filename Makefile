@@ -27,6 +27,9 @@ test_lint:
 test_multi:
 	cd protocols/bftcosi; \
 	for a in $$( seq 10 ); do \
+	  go test -v -race -run FailBit || exit 1; \
+	done; \
+	for a in $$( seq 10 ); do \
 	  go test -v -race || exit 1; \
 	done; \
 	cd ../../services/skipchain; \

@@ -477,7 +477,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	log.Lvl3(bft.Name(), "Verification of signature successful")
 	// Start the challenge of the 'commit'-round
 	if err := bft.startChallenge(RoundCommit); err != nil {
-		log.Error(err)
+		log.Error(bft.Name(), err)
 		return err
 	}
 	return nil
