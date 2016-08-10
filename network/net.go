@@ -394,13 +394,13 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	var total Size
 	defer func() {
 		if err := recover(); err != nil {
-			nm = EmptyApplicationMessage
+			nm = EmptyApplicationPacket
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
 	log.Lvl5("Starting to receive on", c.Local(), "from", c.Remote())
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
-		return EmptyApplicationMessage, handleError(err)
+		return EmptyApplicationPacket, handleError(err)
 	}
 	log.Lvl5("Received some bytes", total)
 	b := make([]byte, total)
@@ -412,7 +412,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
-			return EmptyApplicationMessage, e
+			return EmptyApplicationPacket, e
 		}
 		// put it in the longterm buffer
 		if _, err := buffer.Write(b[:n]); err != nil {
@@ -424,7 +424,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
 	// set the size read
@@ -443,7 +443,7 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := NewNetworkMessage(obj)
+	am, err := NewNetworkPacket(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
@@ -471,7 +471,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
-			log.Error("Couldn't write chunk starting at", sent, n, "size", length, err)
+			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			log.Error(log.Stack())
 			return handleError(err)
 		}
@@ -536,13 +536,13 @@ func (c *TCPConn) addWrittenBytes(b uint64) {
 // message
 func (sc *SecureTCPConn) Receive(ctx context.Context) (Packet, error) {
 	nm, err := sc.TCPConn.Receive(ctx)
-	nm.ServerIdentity = sc.entity
+	nm.ServerIdentity = sc.serverIdentity
 	return nm, err
 }
 
 // ServerIdentity returns the underlying entity tied to this connection
 func (sc *SecureTCPConn) ServerIdentity() *ServerIdentity {
-	return sc.entity
+	return sc.serverIdentity
 }
 
 // exchangeServerIdentity is made to exchange the ServerIdentity between the two parties.
@@ -577,7 +577,7 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 	e := nm.Msg.(ServerIdentity)
 	log.Lvlf4("%x: Received identity %x", ourEnt.ID, e.ID)
 
-	sc.entity = &e
+	sc.serverIdentity = &e
 	log.Lvl4("Identity exchange complete")
 	return nil
 }

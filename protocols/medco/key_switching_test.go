@@ -19,7 +19,7 @@ func TestKeySwitching(t *testing.T) {
 
 	defer local.CloseAll()
 
-	rootInstance, err := local.CreateProtocol(tree, "KeySwitching")
+	rootInstance, err := local.CreateProtocol("KeySwitching", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}

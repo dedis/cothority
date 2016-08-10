@@ -25,7 +25,7 @@ type basicMessage struct {
 	Value int
 }
 
-var basicMessageType network.MessageTypeID
+var basicMessageType network.PacketTypeID
 
 func TestBlockingDispatcher(t *testing.T) {
 	defer log.AfterTest(t)
@@ -69,13 +69,13 @@ func TestProcessorHost(t *testing.T) {
 }
 
 var testServiceID ServiceID
-var testMsgID network.MessageTypeID
+var testMsgID network.PacketTypeID
 
 func init() {
-	basicMessageType = network.RegisterMessageType(&basicMessage{})
+	basicMessageType = network.RegisterPacketType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
-	testMsgID = network.RegisterMessageType(&testMsg{})
+	testMsgID = network.RegisterPacketType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {

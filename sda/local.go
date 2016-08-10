@@ -57,13 +57,13 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 
 // CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
 	for _, h := range l.Hosts {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(t, name)
+			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -209,7 +209,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	}
 	sdaMsg := &ProtocolMsg{
 		MsgSlice: b,
-		MsgType:  network.TypeToMessageTypeID(msg),
+		MsgType:  network.TypeToPacketTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}

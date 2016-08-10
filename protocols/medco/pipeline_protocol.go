@@ -19,8 +19,8 @@ const MedcoServiceProtocolName = "MedcoServiceProtocol"
 
 func init() {
 	sda.ProtocolRegisterName(MedcoServiceProtocolName, NewPipelineProcotol)
-	network.RegisterMessageType(TriggerFlushCollectedDataMessage{})
-	network.RegisterMessageType(DoneFlushCollectedDataMessage{})
+	network.RegisterPacketType(TriggerFlushCollectedDataMessage{})
+	network.RegisterPacketType(DoneFlushCollectedDataMessage{})
 }
 
 // ServiceInterface defines the 3 phases of a medco pipeline. The service implements this interface so the

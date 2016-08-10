@@ -1,4 +1,4 @@
-// +build linux darwin
+// +build freebsd linux darwin
 
 package monitor
 

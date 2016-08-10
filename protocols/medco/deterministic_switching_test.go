@@ -18,7 +18,7 @@ func TestDeterministicSwitching(t *testing.T) {
 	sda.ProtocolRegisterName("DeterministicSwitchingTest", NewDeterministicSwitchingTest)
 	defer local.CloseAll()
 
-	rootInstance, _ := local.CreateProtocol(tree, "DeterministicSwitchingTest")
+	rootInstance, _ := local.CreateProtocol("DeterministicSwitchingTest", tree)
 	protocol := rootInstance.(*medco.DeterministicSwitchingProtocol)
 
 	aggregateKey := entityList.Aggregate

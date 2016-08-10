@@ -18,7 +18,7 @@ func (h *Host) Receive() network.Packet {
 }
 
 func (h *Host) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
-	return h.overlay.CreateProtocolSDA(t, name)
+	return h.overlay.CreateProtocolSDA(name, t)
 }
 
 func (h *Host) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {

@@ -1,17 +1,3 @@
-install:
-	@export PR=https://api.github.com/repos/$$TRAVIS_REPO_SLUG/pulls/$$TRAVIS_PULL_REQUEST; \
-	export BRANCH=$$(if [ "$$TRAVIS_PULL_REQUEST" == "false" ]; then echo $$TRAVIS_BRANCH; else echo `curl -s $$PR | jq -r .head.ref`; fi); \
-	echo "TRAVIS_BRANCH=$$TRAVIS_BRANCH, PR=$$PR, BRANCH=$$BRANCH"; \
-	pattern="refactor_"; \
-	if [[ "$$BRANCH" =~ "$$pattern" ]]; then \
-		repo=github.com/dedis/cosi; \
-		go get $$repo; \
-		cd $$GOPATH/src/$$repo; \
-		git checkout -f $BRANCH; \
-	fi;\
-	cd $$GOPATH/src/github.com/dedis/cothority; \
-	go get -t ./...
-
 test_fmt:
 	@echo Checking correct formatting of files
 	@{ \
@@ -48,7 +34,7 @@ test_multi:
 	done
 
 test_verbose:
-	go test -v -race -p=1 -short ./...
+	go test -v -race -short ./...
 
 test_go:
 	go test -race -short ./...

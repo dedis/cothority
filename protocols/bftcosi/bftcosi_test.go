@@ -55,7 +55,7 @@ func TestThreshold(t *testing.T) {
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
-		node, err := local.CreateProtocol(tree, TestProtocolName)
+		node, err := local.CreateProtocol(TestProtocolName, tree)
 		log.ErrFatal(err)
 		bc := node.(*ProtocolBFTCoSi)
 		assert.Equal(t, thr, bc.threshold, "hosts was %d", hosts)
@@ -132,7 +132,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	msg := []byte("Hello BFTCoSi")
 
 	// Start the protocol
-	node, err := local.CreateProtocol(tree, name)
+	node, err := local.CreateProtocol(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}

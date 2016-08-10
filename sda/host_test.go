@@ -439,7 +439,7 @@ type SimpleMessage struct {
 	I int
 }
 
-var SimpleMessageType = network.RegisterMessageType(SimpleMessage{})
+var SimpleMessageType = network.RegisterPacketType(SimpleMessage{})
 
 func testMessageSimple(t *testing.T, msg network.Packet) SimpleMessage {
 	if msg.MsgType != SimpleMessageType {

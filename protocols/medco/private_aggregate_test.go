@@ -29,7 +29,7 @@ func TestPrivateAggregate(t *testing.T) {
 	sda.ProtocolRegisterName("PrivateAggregateTest", NewPrivateAggregateTest)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol(tree, "PrivateAggregateTest")
+	p, err := local.CreateProtocol("PrivateAggregateTest", tree)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}
