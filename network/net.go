@@ -473,7 +473,6 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		if err != nil {
 			log.Error("Couldn't write chunk starting at", sent, n, "size", length, err)
 			log.Error(log.Stack())
-			//time.Sleep(time.Millisecond * 100)
 			return handleError(err)
 		}
 		sent += Size(n)
