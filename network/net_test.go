@@ -395,6 +395,11 @@ func stressTest(t *testing.T) {
 	}
 }
 
+// Test what happens if the serverIdentity is not sent strait away
+func TestExchangeDelayed(t *testing.T) {
+
+}
+
 type stressMsg struct {
 	Load []byte
 }
