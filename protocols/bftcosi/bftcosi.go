@@ -172,6 +172,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		case msg := <-bft.announceChan:
 			// Announcement
 			err = bft.handleAnnouncement(msg.Announce)
+
 		case msg := <-bft.commitChan:
 			// Commitment
 			err = bft.handleCommitment(msg.Commitment)
