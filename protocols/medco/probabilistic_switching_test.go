@@ -32,7 +32,7 @@ func TestProbabilisticSwitching(t *testing.T) {
 	point := network.Suite.Scalar().SetInt64(1)
 	multPoint := network.Suite.Point().Mul(network.Suite.Point().Base(), point)
 	multPoint.Add(multPoint, aggregateKey)
-	det := libmedco.DeterministCipherText{multPoint}
+	det := libmedco.DeterministCipherText{Point: multPoint}
 
 	var mapi map[libmedco.TempID]libmedco.DeterministCipherVector
 	mapi = make(map[libmedco.TempID]libmedco.DeterministCipherVector)

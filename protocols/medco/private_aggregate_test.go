@@ -16,8 +16,8 @@ import (
 var suite = network.Suite
 var clientPrivate = suite.Scalar().Pick(random.Stream)
 var clientPublic = suite.Point().Mul(suite.Point().Base(), clientPrivate)
-var grpattr1 = libmedco.DeterministCipherText{suite.Point().Base()}
-var grpattr2 = libmedco.DeterministCipherText{suite.Point().Null()}
+var grpattr1 = libmedco.DeterministCipherText{Point: suite.Point().Base()}
+var grpattr2 = libmedco.DeterministCipherText{Point: suite.Point().Null()}
 var groupingAttrA = libmedco.GroupingAttributes{grpattr1, grpattr1}
 var groupingAttrB = libmedco.GroupingAttributes{grpattr2, grpattr2}
 var groupingAttrC = libmedco.GroupingAttributes{grpattr1, grpattr2}
