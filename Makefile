@@ -40,8 +40,8 @@ test_lint:
 
 test_multi:
 	for a in $$( seq 10 ); do \
-	  cd services/identity; \
-	  go test -v -race -p=1 -short ./...; \
+	  cd network; \
+	  go test -v -race Stress; \
 	done
 
 test_verbose:

@@ -328,10 +328,10 @@ func stressTest(t *testing.T) {
 	nbrHosts := 30
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
-		//log.Lvl2("Waiting to close connection", s)
-		////time.Sleep(time.Second)
-		//log.Lvl2("Closing connection", s)
-		//s.Close()
+		log.Lvl2("Waiting to close connection", s)
+		//time.Sleep(time.Second)
+		log.Lvl2("Closing connection", s)
+		s.Close()
 		wg.Done()
 	}
 	hosts := make([]*SecureTCPHost, nbrHosts)
@@ -357,13 +357,13 @@ func stressTest(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 	log.Lvl2("Closing hosts")
 	for _, h := range hosts {
 		log.ErrFatal(h.Close())
 		log.Lvl2("Closing", h)
 	}
-	time.Sleep(time.Second)
+	//time.Sleep(time.Second)
 }
 
 type SimpleClient struct {

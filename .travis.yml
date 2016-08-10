@@ -7,7 +7,7 @@ install:
   - make install
 
 script:
-  - make test
+  - make test_multi
 
 notifications:
   email: false
