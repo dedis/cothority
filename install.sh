@@ -25,15 +25,6 @@ echo "Found branches $BRANCH1 -- $BRANCH2"
 
 # If you don't believe in travis-magic:
 BRANCH=refactor_cothority_506
-if [[ "$BRANCH1" != "$BRANCH" ]]; then
-  echo "Wrong branch"
-  exit 1
-fi
-if [[ "$BRANCH2" != "$BRANCH" ]]; then
-  echo "Wrong branch"
-  exit 1
-fi
-
 echo "Using branch $BRANCH"
 
 pattern="refactor_*"
