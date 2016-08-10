@@ -46,15 +46,15 @@ func (c *Context) ServiceID() ServiceID {
 
 // CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
-func (c *Context) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolService(c.servID, t, name)
+func (c *Context) CreateProtocolService(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := c.overlay.CreateProtocolService(name, t, c.servID)
 	return pi, err
 }
 
 // CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
-func (c *Context) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolSDA(t, name)
+func (c *Context) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := c.overlay.CreateProtocolSDA(name, t)
 	return pi, err
 }
 
@@ -75,7 +75,7 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 
 // RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
 // It delegates the dispatching to the serviceManager.
-func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (c *Context) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
 

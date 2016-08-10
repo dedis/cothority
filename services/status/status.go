@@ -15,8 +15,8 @@ const ServiceName = "Status"
 
 func init() {
 	sda.RegisterNewService(ServiceName, newStatService)
-	network.RegisterMessageType(&Request{})
-	network.RegisterMessageType(&Response{})
+	network.RegisterPacketType(&Request{})
+	network.RegisterPacketType(&Response{})
 
 }
 

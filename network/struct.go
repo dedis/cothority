@@ -146,13 +146,14 @@ type SecureConn interface {
 // ServerIdentity.
 type SecureTCPHost struct {
 	*TCPHost
+	// workingAddress is the actual address we're listening. This can
+	// be one of the serverIdentity's Addresses or a chosen address if
+	// serverIdentity has ":0"-addresses.
+	workingAddress string
 	// ServerIdentity of this host
-	entity *ServerIdentity
+	serverIdentity *ServerIdentity
 	// Private key tied to this entity
 	private abstract.Scalar
-	// workingaddress is a private field used mostly for testing
-	// so we know which address this host is listening on
-	workingAddress string
 	// Lock for accessing this structure
 	lockAddress sync.Mutex
 	// list of all connections this host has opened
@@ -164,7 +165,7 @@ type SecureTCPHost struct {
 type SecureTCPConn struct {
 	*TCPConn
 	*SecureTCPHost
-	entity *ServerIdentity
+	serverIdentity *ServerIdentity
 }
 
 // Packet is the container for any Msg
@@ -178,7 +179,7 @@ type Packet struct {
 	// the origin of the message
 	From string
 	// What kind of msg do we have
-	MsgType MessageTypeID
+	MsgType PacketTypeID
 	// The underlying message
 	Msg Body
 	// which constructors are used
@@ -211,7 +212,7 @@ func (e *ServerIdentity) String() string {
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
-var ServerIdentityType = RegisterMessageType(ServerIdentity{})
+var ServerIdentityType = RegisterPacketType(ServerIdentity{})
 
 // ServerIdentityToml is the struct that can be marshalled into a toml file
 type ServerIdentityToml struct {

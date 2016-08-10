@@ -11,7 +11,7 @@ import (
 )
 
 /*
-On MacOSX, for maximum number of hosts, use
+On MacOSX, for maximum number of connections, use
 http://b.oldhu.com/2012/07/19/increase-tcp-max-connections-on-mac-os-x/
 sudo sysctl -w kern.maxfiles=12288
 sudo sysctl -w kern.maxfilesperproc=10240
@@ -33,7 +33,7 @@ func TestHugeConnections(t *testing.T) {
 		Msg:   make([]byte, msgSize),
 		Pcrc:  25,
 	}
-	bigMessageType := RegisterMessageType(big)
+	bigMessageType := RegisterPacketType(big)
 
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)

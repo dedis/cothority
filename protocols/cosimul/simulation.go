@@ -58,7 +58,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateProtocolSDA(config.Tree, Name)
+		node, err := config.Overlay.CreateProtocolSDA(Name, config.Tree)
 		if err != nil {
 			return err
 		}
