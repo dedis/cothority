@@ -12,6 +12,8 @@ import (
 	"crypto/sha512"
 	"sync"
 
+	"errors"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -231,7 +233,7 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 // Shutdown will close the dispatch-method if the protocol is stopped
 // before the normal termination.
 func (bft *ProtocolBFTCoSi) Shutdown() error {
-	bft.doneProcessing <- true
+	close(bft.doneProcessing)
 	return nil
 }
 
@@ -326,7 +328,12 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	}
 
 	// make sure the Announce->Commit has been done for the commit phase
-	<-bft.commitCommitDone
+	select {
+	case <-bft.commitCommitDone:
+	case <-bft.doneProcessing:
+		return errors.New("Aborted while waiting for reply")
+	}
+
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
 	if err != nil {
@@ -569,7 +576,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	log.Lvl4(bft.Name(), "closing")
 	close(bft.commitCommitDone)
-	bft.doneProcessing <- true
+	close(bft.doneProcessing)
 	if bft.onDone != nil {
 		// only true for the root
 		bft.onDone()
