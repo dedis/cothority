@@ -254,7 +254,7 @@ func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
 	a := &Announce{
 		TYPE: t,
 	}
-	log.LLvl4("RoundType:", t)
+	log.LLvl4(bft.Name(), "RoundType:", t)
 	return bft.SendToChildrenInParallel(a)
 }
 
