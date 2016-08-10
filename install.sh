@@ -25,6 +25,9 @@ else
     echo "Found branches $BRANCH1 -- $BRANCH2"
     if [ "$BRANCH1" = "null" ]; then
       COUNTER=$(( COUNTER + 1 ))
+      echo $PR
+      echo $GITHUB_PR_BODY
+      echo $GITHUB_PR_URL
       sleep 10
     else
       COUNTER=$(( 0 - COUNTER ))
