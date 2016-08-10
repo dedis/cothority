@@ -240,7 +240,7 @@ func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 // before the normal termination.
 func (bft *ProtocolBFTCoSi) Shutdown() error {
 	// Recover if the channel has alredy been closed
-	log.LLvl4(bft.Name(), "closing", log.Stack())
+	//log.LLvl4(bft.Name(), "closing", log.Stack())
 	defer func() {
 		recover()
 	}()
@@ -254,7 +254,7 @@ func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
 	a := &Announce{
 		TYPE: t,
 	}
-	log.Lvl4("RoundType:", t)
+	log.LLvl4("RoundType:", t)
 	return bft.SendToChildrenInParallel(a)
 }
 
@@ -270,7 +270,7 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(ann Announce) error {
 // startCommitment sends the first commitment to the parent node
 func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
 	cm := bft.getCosi(t).CreateCommitment(nil)
-	log.Lvl4(bft.Name(), "RoundType:", t)
+	log.LLvl4(bft.Name(), "RoundType:", t)
 	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
 }
 
@@ -320,7 +320,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(comm Commitment) error {
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 
-	log.Lvl4(bft.Name(), "RoundType:", t)
+	log.LLvl4(bft.Name(), "RoundType:", t)
 	if t == RoundPrepare {
 		// need to hash the message before so challenge in both phases are not
 		// the same
