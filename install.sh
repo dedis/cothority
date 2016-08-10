@@ -11,7 +11,7 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
 else
   # http://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
   PR=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
-  BRANCH1=$(echo `curl -s $PR | jq -r .head.ref`)
+  BRANCH1=$(curl -s $PR | jq -r .head.ref )
 
   # source: https://gist.github.com/derekstavis/0526ac13cfecb5d6ffe5#file-travis-github-pull-request-integration-sh
   GITHUB_PR_URL=https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST
@@ -24,7 +24,16 @@ fi
 echo "Found branches $BRANCH1 -- $BRANCH2"
 
 # If you don't believe in travis-magic:
-#BRANCH=refactor_cothority_506
+BRANCH=refactor_cothority_506
+if [[ "$BRANCH1" != "$BRANCH" ]]; then
+  echo "Wrong branch"
+  exit 1
+fi
+if [[ "$BRANCH2" != "$BRANCH" ]]; then
+  echo "Wrong branch"
+  exit 1
+fi
+
 echo "Using branch $BRANCH"
 
 pattern="refactor_*"
