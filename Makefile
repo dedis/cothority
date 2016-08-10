@@ -38,6 +38,9 @@ test_lint:
 		fi \
 	}
 
+# You can use `test_multi` to run any test or part of cothority
+# for more than once in Travis. Change `make test` in .travis.yml
+# to `make test_multi`.
 test_multi:
 	cd network; \
 	for a in $$( seq 10 ); do \
