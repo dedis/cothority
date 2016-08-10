@@ -25,9 +25,9 @@ test_lint:
 	}
 
 test_multi:
-	cd network; \
+	cd protocols/bftcosi; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run Stress; \
+	  go test -v -race -run CheckFailBit; \
 	done
 
 test_verbose:

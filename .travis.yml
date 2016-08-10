@@ -7,7 +7,7 @@ install:
   - ./install.sh
 
 script:
-  - make test_fmt
+  - make test_multi
 
 notifications:
   email: false

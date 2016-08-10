@@ -328,7 +328,7 @@ func stressTest(t *testing.T) {
 	loadLen := 1024 * 16
 	//loadLen := 0
 	enableWaiting := false
-	RegisterMessageType(stressMsg{})
+	RegisterPacketType(stressMsg{})
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
 		if enableWaiting {
