@@ -24,6 +24,7 @@ test_lint:
 		fi \
 	}
 
+# If you use test_multi, adjust to your own tests in the desired directories.
 test_multi:
 	cd protocols/bftcosi; \
 	for a in $$( seq 10 ); do \

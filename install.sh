@@ -19,7 +19,7 @@ else
   if [ "$BRANCH" = "null" ]; then
     echo "Couldn't fetch branch - probably too many requests."
     echo "Please set your own branch manually in install.sh"
-#    exit 1
+    exit 1
   fi
 fi
 
