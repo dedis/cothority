@@ -188,7 +188,6 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 		case msg := <-bft.responseChan:
 			// Response
-			log.LLvl4(bft.Name(), "response", msg.Response.TYPE)
 			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
 		case <-bft.doneProcessing:
 			// we are done
@@ -199,6 +198,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		if err != nil {
 			log.Error("Error handling messages:", err)
 		}
+		log.LLvl4(bft.Name(), "done handling message")
 	}
 }
 
@@ -485,11 +485,10 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 
 // startResponse dispatches the response to the correct round-type
 func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
+	log.LLvl4(bft.Name(), "RoundType:", t)
 	if t == RoundPrepare {
-		log.LLvl4(bft.Name(), "responsePrepare")
 		return bft.handleResponsePrepare(r)
 	}
-	log.LLvl4(bft.Name(), "responseCommit")
 	return bft.handleResponseCommit(r)
 }
 
