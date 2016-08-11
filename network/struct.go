@@ -207,8 +207,8 @@ func (eid ServerIdentityID) Equal(other ServerIdentityID) bool {
 	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
-func (e *ServerIdentity) String() string {
-	return fmt.Sprintf("%v", e.Addresses)
+func (si *ServerIdentity) String() string {
+	return fmt.Sprintf("%v", si.Addresses)
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
@@ -233,39 +233,39 @@ func NewServerIdentity(public abstract.Point, addresses ...string) *ServerIdenti
 }
 
 // First returns the first address available
-func (e *ServerIdentity) First() string {
-	if len(e.Addresses) > 0 {
-		return e.Addresses[0]
+func (si *ServerIdentity) First() string {
+	if len(si.Addresses) > 0 {
+		return si.Addresses[0]
 	}
 	return ""
 }
 
 // Equal tests on same public key
-func (e *ServerIdentity) Equal(e2 *ServerIdentity) bool {
-	return e.Public.Equal(e2.Public)
+func (si *ServerIdentity) Equal(e2 *ServerIdentity) bool {
+	return si.Public.Equal(e2.Public)
 }
 
 // Toml converts an ServerIdentity to a Toml-structure
-func (e *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
+func (si *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 	var buf bytes.Buffer
-	if err := crypto.WritePub64(suite, &buf, e.Public); err != nil {
+	if err := crypto.WritePub64(suite, &buf, si.Public); err != nil {
 		log.Error("Error while writing public key:", err)
 	}
 	return &ServerIdentityToml{
-		Addresses: e.Addresses,
+		Addresses: si.Addresses,
 		Public:    buf.String(),
 	}
 }
 
 // ServerIdentity converts an ServerIdentityToml structure back to an ServerIdentity
-func (e *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdentity {
-	pub, err := crypto.ReadPub64(suite, strings.NewReader(e.Public))
+func (si *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdentity {
+	pub, err := crypto.ReadPub64(suite, strings.NewReader(si.Public))
 	if err != nil {
 		log.Error("Error while reading public key:", err)
 	}
 	return &ServerIdentity{
 		Public:    pub,
-		Addresses: e.Addresses,
+		Addresses: si.Addresses,
 	}
 }
 

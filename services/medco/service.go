@@ -76,7 +76,7 @@ func NewService(c *sda.Context, path string) sda.Service {
 // Queries Handlers definitions
 
 // HandleSurveyCreationQuery handles the reception of a survey creation query by instantiating the corresponding survey.
-func (mcs *Service) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyCreationQuery(si *network.ServerIdentity, recq *SurveyCreationQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "received a Survey Creation Query")
 	if recq.SurveyID == nil {
 		newID := libmedco.SurveyID(uuid.NewV4().String())
@@ -101,7 +101,7 @@ func (mcs *Service) HandleSurveyCreationQuery(e *network.ServerIdentity, recq *S
 }
 
 // HandleSurveyResponseData handles a survey answers submission by a subject.
-func (mcs *Service) HandleSurveyResponseData(e *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyResponseData(si *network.ServerIdentity, resp *SurveyResponseQuery) (network.Body, error) {
 	log.Lvl1(mcs.ServerIdentity(), "recieved response data for survey ", resp.SurveyID)
 	if mcs.survey.ID == resp.SurveyID {
 		mcs.survey.InsertClientResponse(resp.ClientResponse)
@@ -112,9 +112,9 @@ func (mcs *Service) HandleSurveyResponseData(e *network.ServerIdentity, resp *Su
 }
 
 // HandleSurveyResultsQuery handles the survey result query by the surveyor.
-func (mcs *Service) HandleSurveyResultsQuery(e *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
+func (mcs *Service) HandleSurveyResultsQuery(si *network.ServerIdentity, resq *SurveyResultsQuery) (network.Body, error) {
 
-	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", e)
+	log.Lvl1(mcs.ServerIdentity(), "recieved a survey result query from", si)
 	mcs.survey.ClientPublic = resq.ClientPublic
 	pi, _ := mcs.startProtocol(medco.MedcoServiceProtocolName, resq.SurveyID)
 
