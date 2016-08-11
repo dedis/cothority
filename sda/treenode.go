@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sync"
 
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -538,6 +540,8 @@ func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	if n.IsRoot() {
 		return nil
 	}
+	log.LLvl4(n.Name(), strings.Split(log.Stack(), "\n")[7], "Sends to",
+		n.Parent().Name())
 	return n.SendTo(n.Parent(), msg)
 }
 
