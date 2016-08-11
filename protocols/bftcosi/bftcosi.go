@@ -241,12 +241,14 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 		// In case the channels were already closed
 		recover()
 	}()
+	bft.tmpMutex.Lock()
 	bft.closing = true
 	close(bft.announceChan)
 	close(bft.commitChan)
 	close(bft.challengePrepareChan)
 	close(bft.challengeCommitChan)
 	close(bft.responseChan)
+	bft.tmpMutex.Unlock()
 	return nil
 }
 
