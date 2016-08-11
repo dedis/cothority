@@ -381,7 +381,8 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	log.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
+	log.LLvlf5("%s->%s: Message is: %+v", sdaMsg.ServerIdentity.First(),
+		n.Name(), sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:

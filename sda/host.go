@@ -60,14 +60,14 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
-	log.Lvl4("Creating host at", e.Addresses)
+func NewHost(si *network.ServerIdentity, pkey abstract.Scalar) *Host {
+	log.Lvl4("Creating host at", si.Addresses)
 	h := &Host{
-		ServerIdentity:       e,
+		ServerIdentity:       si,
 		Dispatcher:           NewBlockingDispatcher(),
-		workingAddress:       e.First(),
+		workingAddress:       si.First(),
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
-		host:                 network.NewSecureTCPHost(pkey, e),
+		host:                 network.NewSecureTCPHost(pkey, si),
 		private:              pkey,
 		suite:                network.Suite,
 		networkChan:          make(chan network.Packet, 1),
@@ -199,27 +199,27 @@ func (h *Host) closeConnection(c network.SecureConn) error {
 }
 
 // SendRaw sends to an ServerIdentity without wrapping the msg into a SDAMessage
-func (h *Host) SendRaw(e *network.ServerIdentity, msg network.Body) error {
+func (h *Host) SendRaw(si *network.ServerIdentity, msg network.Body) error {
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
 	h.networkLock.RLock()
-	c, ok := h.connections[e.ID]
+	c, ok := h.connections[si.ID]
 	h.networkLock.RUnlock()
 	if !ok {
 		var err error
-		c, err = h.Connect(e)
+		c, err = h.Connect(si)
 		if err != nil {
 			return err
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, si, msg)
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
 		log.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
-		c, err = h.Connect(e)
+		c, err = h.Connect(si)
 		if err != nil {
 			return err
 		}
