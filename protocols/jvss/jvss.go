@@ -206,6 +206,8 @@ func (jv *JVSS) initSecret(sid SID) error {
 	}
 
 	// Initialise and broadcast our deal if necessary
+	secret.dealsMutex.Lock()
+	defer secret.dealsMutex.Unlock()
 	if len(secret.deals) == 0 {
 		kp := config.NewKeyPair(jv.keyPair.Suite)
 		deal := new(poly.Deal).ConstructDeal(kp, jv.keyPair, jv.info.T, jv.info.R, jv.pubKeys)
@@ -230,6 +232,8 @@ func (jv *JVSS) finaliseSecret(sid SID) error {
 		return err
 	}
 
+	secret.dealsMutex.Lock()
+	defer secret.dealsMutex.Unlock()
 	log.Lvlf4("Node %d: %s deals %d/%d", jv.Index(), sid, len(secret.deals),
 		len(jv.List()))
 
@@ -336,7 +340,8 @@ type secret struct {
 	secret   *poly.SharedSecret // Shared secret
 	receiver *poly.Receiver     // Receiver to aggregate deals
 	// XXX potentially get rid of deals buffer later:
-	deals map[int]*poly.Deal // Buffer for deals
+	deals      map[int]*poly.Deal // Buffer for deals
+	dealsMutex sync.Mutex
 	// XXX potentially get rid of sig buffer later:
 	sigs map[int]*poly.SchnorrPartialSig // Buffer for partial signatures
 

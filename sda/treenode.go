@@ -281,7 +281,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			f.Call([]reflect.Value{m})
 		}
 	}
-	log.LLvlf4("%s Done with handler for %s", n.Name(), f.Type())
+	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
 	return nil
 }
 
@@ -314,7 +314,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
 			m := n.reflectCreate(to.Elem(), msg)
-			log.LLvl4(n.Name(), "Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			log.Lvl4(n.Name(), "Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -383,12 +383,11 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	log.LLvlf5("%s->%s: Message is: %+v", sdaMsg.ServerIdentity.First(),
-		n.Name(), sdaMsg.Msg)
+	log.Lvlf5("%s->%s: Message is: %+v", n.Name(), sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:
-		log.LLvl4(n.Name(), "Dispatching to channel")
+		log.Lvl4(n.Name(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
@@ -547,7 +546,7 @@ func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	if n.IsRoot() {
 		return nil
 	}
-	log.LLvl4(n.Name(), strings.Split(log.Stack(), "\n")[7], "Sends to",
+	log.Lvl4(n.Name(), strings.Split(log.Stack(), "\n")[7], "Sends to",
 		n.Parent().Name())
 	return n.SendTo(n.Parent(), msg)
 }

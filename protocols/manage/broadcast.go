@@ -3,6 +3,8 @@ package manage
 import (
 	"errors"
 
+	"sync"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
@@ -16,6 +18,7 @@ func init() {
 // using RegisterOnDone()
 type Broadcast struct {
 	*sda.TreeNodeInstance
+	sync.Mutex
 	onDoneCb    func()
 	repliesLeft int
 	tnIndex     int
@@ -49,8 +52,10 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 // Start will contact everyone and make the connections
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
+	b.Lock()
 	b.repliesLeft = n * (n - 1) / 2
 	log.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
+	b.Unlock()
 	b.SendTo(b.Root(), &ContactNodes{})
 	return nil
 }
@@ -63,6 +68,8 @@ func (b *Broadcast) handleContactNodes(msg struct {
 }) {
 	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
 	if msg.TreeNode.ID == b.Root().ID {
+		b.Lock()
+		defer b.Unlock()
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
 			log.Lvl3("Won't contact anybody - finishing")
@@ -92,6 +99,8 @@ func (b *Broadcast) handleDone(msg struct {
 	*sda.TreeNode
 	Done
 }) {
+	b.Lock()
+	defer b.Unlock()
 	b.repliesLeft--
 	log.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
 	if b.repliesLeft == 0 {

@@ -82,7 +82,9 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 	if err != nil {
 		return err
 	}
+	secret.dealsMutex.Lock()
 	secret.deals[msg.Src] = deal
+	secret.dealsMutex.Unlock()
 
 	// Finalise shared secret
 	if err := jv.finaliseSecret(msg.SID); err != nil {

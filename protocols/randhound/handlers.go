@@ -258,6 +258,8 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		}
 
 		// Collect replies of the peers
+		rh.Lock()
+		defer rh.Unlock()
 		rh.Leader.r2[r2.Src] = &r2.R2
 
 		// Initialise deal
@@ -366,6 +368,8 @@ func (rh *RandHound) handleR3(r3 WR3) error {
 		}
 
 		// Collect replies of the peers
+		rh.Lock()
+		defer rh.Unlock()
 		rh.Leader.r3[r3.Src] = &r3.R3
 
 		invalid := []uint32{}

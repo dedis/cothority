@@ -32,6 +32,7 @@ func TestBftCoSi(t *testing.T) {
 
 func TestThreshold(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiThr"
+
 	// Register test protocol using BFTCoSi
 	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
@@ -101,8 +102,7 @@ func TestCheckFailBit(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verifyFailBit)
 	})
 
-	//for _, n := range []int{30} {
-	for _, n := range []int{2, 2, 2, 2, 2, 2, 2, 2, 2} {
+	for _, n := range []int{2, 3, 4} {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
 			log.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
@@ -113,7 +113,6 @@ func TestCheckFailBit(t *testing.T) {
 
 func runProtocol(t *testing.T, name string) {
 	for _, nbrHosts := range []int{3, 4, 13} {
-		//for _, nbrHosts := range []int{30} {
 		runProtocolOnce(t, nbrHosts, name, true)
 	}
 }

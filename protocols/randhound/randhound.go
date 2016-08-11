@@ -10,6 +10,8 @@ import (
 	"encoding/binary"
 	"time"
 
+	"sync"
+
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
@@ -24,6 +26,7 @@ func init() {
 // sda.ProtocolInstance interface.
 type RandHound struct {
 	*sda.TreeNodeInstance
+	sync.Mutex
 	GID     []byte   // Group ID
 	Group   *Group   // Group parameters
 	SID     []byte   // Session ID
