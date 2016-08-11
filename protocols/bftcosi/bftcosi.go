@@ -81,6 +81,8 @@ type ProtocolBFTCoSi struct {
 	VerificationFunction VerificationFunction
 	// closing is true if the node is being shut down
 	closing bool
+	// mutex for closing down properly
+	closingMutex sync.Mutex
 }
 
 // collectStructs holds the variables that are used during the protocol to hold
@@ -241,14 +243,14 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 		// In case the channels were already closed
 		recover()
 	}()
-	bft.tmpMutex.Lock()
+	bft.closingMutex.Lock()
 	bft.closing = true
+	bft.closingMutex.Unlock()
 	close(bft.announceChan)
 	close(bft.commitChan)
 	close(bft.challengePrepareChan)
 	close(bft.challengeCommitChan)
 	close(bft.responseChan)
-	bft.tmpMutex.Unlock()
 	return nil
 }
 
