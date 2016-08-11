@@ -102,7 +102,7 @@ func TestCheckFailBit(t *testing.T) {
 	})
 
 	//for _, n := range []int{30} {
-	for _, n := range []int{2, 3, 4} {
+	for _, n := range []int{2} {
 		for failCount = 0; failCount < 1<<uint(n); failCount++ {
 			log.Lvl1("FailBit at", failCount)
 			runProtocolOnce(t, n, TestProtocolName,
