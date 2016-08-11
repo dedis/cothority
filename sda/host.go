@@ -61,6 +61,7 @@ type Host struct {
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
 func NewHost(si *network.ServerIdentity, pkey abstract.Scalar) *Host {
+	log.Lvl4("Creating host at", si.Addresses)
 	h := &Host{
 		ServerIdentity:       si,
 		Dispatcher:           NewBlockingDispatcher(),
@@ -92,14 +93,18 @@ func (h *Host) listen(wait bool) {
 		h.registerConnection(c)
 		h.handleConn(c)
 	}
-	go func() {
-		log.Lvl4("Host listens on:", h.workingAddress)
-		err := h.host.Listen(fn)
-		if err != nil {
-			log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
-		}
-	}()
+	log.Lvl4("Host listens on:", h.workingAddress)
+	err := h.host.Listen(fn)
+	if err != nil {
+		log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
+	}
 	if wait {
+		for i, addr := range h.ServerIdentity.Addresses {
+			if strings.HasSuffix(addr, ":0") {
+				h.ServerIdentity.Addresses[i] = h.host.WorkingAddress()
+				log.Lvl4("Replaced port to", h.ServerIdentity.Addresses[i])
+			}
+		}
 		for {
 			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
 			_, err := h.Connect(h.ServerIdentity)
@@ -142,7 +147,6 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 
 // Close shuts down all network connections and closes the listener.
 func (h *Host) Close() error {
-
 	h.closingMut.Lock()
 	defer h.closingMut.Unlock()
 	if h.isClosing {

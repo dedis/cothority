@@ -119,7 +119,7 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	go func() {
-		h := NewLocalHost(2000)
+		h := NewLocalHost()
 		h.Close()
 	}()
 
@@ -135,7 +135,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -146,7 +146,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		Data:    []byte("a"),
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 	log.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.ServerIdentity); err != nil {
@@ -177,7 +177,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		ds.path = path
 		return ds
 	})
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.Listen()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -196,7 +196,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 	log.Lvl1("Client connecting to host")
 	if _, err := h2.Connect(host.ServerIdentity); err != nil {
@@ -238,10 +238,10 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		return ds
 	})
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
 
-	host := NewLocalHost(2000)
+	host := NewLocalHost()
 	host.ListenAndBind()
 	host.StartProcessMessages()
 	log.Lvl1("Host created and listening")
@@ -287,7 +287,11 @@ func TestServiceNewProtocol(t *testing.T) {
 		link: make(chan bool),
 	}
 	var count int
+	countMutex := sync.Mutex{}
 	RegisterNewService("DummyService", func(c *Context, path string) Service {
+		countMutex.Lock()
+		defer countMutex.Unlock()
+		log.Lvl2("Creating service", count)
 		var localDs *DummyService
 		switch count {
 		case 2:
@@ -304,18 +308,18 @@ func TestServiceNewProtocol(t *testing.T) {
 		count++
 		return localDs
 	})
-	host := NewLocalHost(2000)
-	host.ListenAndBind()
-	host.StartProcessMessages()
+	host1 := NewLocalHost()
+	host1.ListenAndBind()
+	host1.StartProcessMessages()
 	log.Lvl1("Host created and listening")
-	defer host.Close()
+	defer host1.Close()
 
-	host2 := NewLocalHost(2002)
+	host2 := NewLocalHost()
 	host2.ListenAndBind()
 	host2.StartProcessMessages()
 	defer host2.Close()
 	// create the entityList and tree
-	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
+	el := NewRoster([]*network.ServerIdentity{host1.ServerIdentity, host2.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds1.fakeTree = tree
@@ -328,24 +332,28 @@ func TestServiceNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	client := NewLocalHost(2010)
+	client := NewLocalHost()
 	defer client.Close()
 	log.Lvl1("Client connecting to host")
-	if _, err := client.Connect(host.ServerIdentity); err != nil {
+	if _, err := client.Connect(host1.ServerIdentity); err != nil {
 		t.Fatal(err)
 	}
 	log.Lvl1("Sending request to service...")
-	if err := client.SendRaw(host.ServerIdentity, re); err != nil {
+	if err := client.SendRaw(host1.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
+	log.Lvl1("Waiting for end")
 	// wait for the link from the protocol that Starts
 	waitOrFatalValue(ds1.link, true, t)
 	// now wait for the same link as the protocol should have sent a message to
 	// himself !
+	log.Lvl1("Waiting for end")
 	waitOrFatalValue(ds1.link, true, t)
-	// now wait for the SECOND LINK on the SECOND HOST that the SECOND SERVICE
-	// should have started (ds2) in ProcessRequest
+	// now wait for the second link on the second host that the second service
+	// should have started (ds2) in ProcessRequest.
+	log.Lvl1("Waiting for end")
 	waitOrFatalValue(ds2.link, true, t)
+	log.Lvl1("Done")
 }
 
 func TestServiceProcessServiceMessage(t *testing.T) {
@@ -369,9 +377,9 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 		return s
 	})
 	// create two hosts
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalHost()
 	defer h2.Close()
-	h1 := NewLocalHost(2000)
+	h1 := NewLocalHost()
 	h1.ListenAndBind()
 	h1.StartProcessMessages()
 	defer h1.Close()

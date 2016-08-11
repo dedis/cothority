@@ -19,8 +19,8 @@ import (
 	"golang.org/x/net/context"
 )
 
-// MaxRetry defines how many times should we try to connect
-const MaxRetry = 10
+// MaxRetryConnect defines how many times should we try to connect
+const MaxRetryConnect = 10
 
 // WaitRetry defines how much time should we wait before trying again
 const WaitRetry = 100 * time.Millisecond
@@ -80,6 +80,9 @@ type Conn interface {
 // TCPHost is the underlying implementation of
 // Host using Tcp as a communication channel
 type TCPHost struct {
+	// listeningPort is a channel where the port found will be
+	// sent through.
+	listeningPort chan int
 	// A list of connection maintained by this host
 	peers    map[string]Conn
 	peersMut sync.Mutex
@@ -133,6 +136,7 @@ type SecureHost interface {
 	Listen(func(SecureConn)) error
 	Open(*ServerIdentity) (SecureConn, error)
 	String() string
+	WorkingAddress() string
 	monitor.CounterIO
 }
 

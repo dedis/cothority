@@ -16,7 +16,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Skipping all skipchain tests for now as it randomly fails on master. https://github.com/dedis/cothority/pull/483")
+	log.Info("Not working - #482")
+	//log.MainTest(m)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
