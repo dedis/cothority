@@ -120,7 +120,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, succeed bool) {
 	countMut.Lock()
 	veriCount = 0
 	countMut.Unlock()
-	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
+	log.Lvl1("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
@@ -188,11 +188,11 @@ func verifyFail(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount == failCount {
-		log.Lvl1("Failing for count==", failCount)
+		log.Lvl2("Failing for count==", failCount)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
-	log.Lvl1("Ignoring message:", string(m))
+	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Ignoring message:", string(m))
 	if len(d) != 1 {
 		log.Error("Didn't receive correct data")
 		return false
@@ -206,11 +206,11 @@ func verifyFailMore(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if veriCount <= failCount {
-		log.Lvlf1("Failing for %d<=%d", veriCount, failCount)
+		log.Lvlf2("Failing for %d<=%d", veriCount, failCount)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
-	log.Lvl1("Ignoring message:", string(m))
+	log.Lvl3("Verification called", veriCount, "times")
+	log.Lvl3("Ignoring message:", string(m))
 	if len(d) != 1 {
 		log.Error("Didn't receive correct data")
 		return false
@@ -234,9 +234,9 @@ func verifyFailBit(m []byte, d []byte) bool {
 	defer countMut.Unlock()
 	veriCount++
 	if failCount&(1<<myBit) != 0 {
-		log.Lvl1("Failing for myBit==", myBit)
+		log.Lvl2("Failing for myBit==", myBit)
 		return false
 	}
-	log.Lvl1("Verification called", veriCount, "times")
+	log.Lvl3("Verification called", veriCount, "times")
 	return true
 }
