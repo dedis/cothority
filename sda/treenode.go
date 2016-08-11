@@ -273,15 +273,15 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
 		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
-		go f.Call([]reflect.Value{msgs})
+		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
 			log.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
 			m := n.reflectCreate(to, msg)
-			go f.Call([]reflect.Value{m})
+			f.Call([]reflect.Value{m})
 		}
 	}
-	log.LLvl4(n.Name(), "Done with handler for", msgSlice[0])
+	log.LLvlf4("%s Done with handler for %s", n.Name(), f.Type())
 	return nil
 }
 
@@ -392,7 +392,11 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
-		err = n.dispatchHandler(msgs)
+		go func() {
+			if err := n.dispatchHandler(msgs); err != nil {
+				log.Error(n.Name(), "While dispatching:", err)
+			}
+		}()
 	default:
 		return errors.New("This message-type is not handled by this protocol")
 	}
