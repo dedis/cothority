@@ -375,6 +375,7 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 
 // handleChallengePrepare collects the challenge-messages
 func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) error {
+	log.LLvl4(bft.Name())
 	ch := msg.ChallengePrepare
 	if !bft.IsRoot() {
 		bft.Msg = ch.Msg
@@ -386,7 +387,6 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 	go func() {
 		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
 	}()
-	log.Lvl4(bft.Name(), "BFTCoSi handle Challenge PREPARE")
 	// go to response if leaf
 	if bft.IsLeaf() {
 		return bft.startResponse(RoundPrepare, nil)
@@ -397,6 +397,8 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 // handleChallengeCommit verifies the signature and checks if not more than
 // the threshold of participants refused to sign
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error {
+	log.LLvl4(bft.Name())
+
 	ch := msg.ChallengeCommit
 	if !bft.IsRoot() {
 		bft.commit.Challenge(ch.Challenge)
@@ -423,7 +425,6 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 
 	// store the exceptions for later usage
 	bft.tempExceptions = ch.Signature.Exceptions
-	log.Lvl4("BFTCoSi handle Challenge COMMIT")
 
 	if bft.IsLeaf() {
 		return bft.handleResponseCommit(nil)
