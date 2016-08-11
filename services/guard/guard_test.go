@@ -13,8 +13,8 @@ func TestServiceGuard(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
-	// generate 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
+	// This statement generates 5 hosts, they don't connect, they process messages, and they
+	// don't register the tree or entitylist.
 	_, el, _ := local.GenTree(5, false, true, false)
 	defer local.CloseAll()
 
@@ -25,9 +25,10 @@ func TestServiceGuard(t *testing.T) {
 	Epoch := []byte("EPOCH")
 	msg := network.Suite.Point()
 
-	Hzi, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
-
-	Hz2, _ := client.GetGuard(el.List[0], UID, Epoch, msg)
+	Hzi, _ := client.SendToGuard(el.List[0], UID, Epoch, msg)
+	// We send the message twice to see that the key did not change for the
+	//same epoch.
+	Hz2, _ := client.SendToGuard(el.List[0], UID, Epoch, msg)
 	assert.Equal(t, Hzi, Hz2)
 
 }
