@@ -399,6 +399,10 @@ type stressMsg struct {
 	Load []byte
 }
 
+func TestSecureTCPConn_Receive(t *testing.T) {
+
+}
+
 type SimpleClient struct {
 	Host
 	Pub   abstract.Point
