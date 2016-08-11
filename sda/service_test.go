@@ -71,7 +71,7 @@ type DummyService struct {
 	Config   DummyConfig
 }
 
-func (ds *DummyService) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
+func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
 	msgT, _, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	if err != nil || msgT != dummyMsgType {
 		ds.link <- false
@@ -614,7 +614,7 @@ type simpleService struct {
 	ctx *Context
 }
 
-func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
+func (s *simpleService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
 	msgT, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	log.ErrFatal(err)
 	if msgT != simpleRequestType {
@@ -624,7 +624,7 @@ func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *Clien
 	tree := req.ServerIdentities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root, "BackForth")
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
-		if err := s.ctx.SendRaw(e, &simpleResponse{
+		if err := s.ctx.SendRaw(si, &simpleResponse{
 			Val: n,
 		}); err != nil {
 			log.Error(err)

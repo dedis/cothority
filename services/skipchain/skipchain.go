@@ -50,7 +50,7 @@ type Service struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(e *network.ServerIdentity, psbd *ProposeSkipBlock) (network.Body, error) {
+func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkipBlock) (network.Body, error) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -132,7 +132,7 @@ func (s *Service) ProposeSkipBlock(e *network.ServerIdentity, psbd *ProposeSkipB
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(e *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
+func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
@@ -156,7 +156,7 @@ func (s *Service) GetUpdateChain(e *network.ServerIdentity, latestKnown *GetUpda
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(e *network.ServerIdentity, scsb *SetChildrenSkipBlock) (network.Body, error) {
+func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChildrenSkipBlock) (network.Body, error) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)

@@ -6,7 +6,7 @@
 ## in dedis/cosi.
 
 # Temporarily overwrite the branch
-#BRANCH=refactor_cothority_506
+BRANCH=master
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
