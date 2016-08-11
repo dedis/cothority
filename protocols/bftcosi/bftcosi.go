@@ -138,9 +138,9 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 	bft.index = idx
 
 	// Registering handlers
-	err := n.RegisterHandlers(bft.announcementHandler, bft.commitmentHandler,
-		bft.challengePrepareHandler, bft.challengeCommitHandler,
-		bft.responseHandler)
+	err := n.RegisterHandlers(bft.handleAnnouncement, bft.handleCommitment,
+		bft.handleChallengePrepare, bft.handleChallengeCommit,
+		bft.handleResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -206,8 +206,8 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 	return nil
 }
 
-// announcementHandler passes the announcement to the right CoSi struct.
-func (bft *ProtocolBFTCoSi) announcementHandler(msg announceChan) error {
+// handleAnnouncement passes the announcement to the right CoSi struct.
+func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	ann := msg.Announce
 	log.LLvl4(bft.Name(), "RoundType:", ann.TYPE)
 	if bft.IsLeaf() {
@@ -216,9 +216,9 @@ func (bft *ProtocolBFTCoSi) announcementHandler(msg announceChan) error {
 	return bft.SendToChildrenInParallel(&ann)
 }
 
-// commitmentHandler collects all commitments from children and passes them
+// handleCommitment collects all commitments from children and passes them
 // to the parent or starts the challenge-round if it's the root.
-func (bft *ProtocolBFTCoSi) commitmentHandler(msg commitChan) error {
+func (bft *ProtocolBFTCoSi) handleCommitment(msg commitChan) error {
 	comm := msg.Commitment
 	log.LLvl4(bft.Name(), "RoundType:", comm.TYPE)
 
@@ -260,8 +260,8 @@ func (bft *ProtocolBFTCoSi) commitmentHandler(msg commitChan) error {
 	return bft.SendToParent(typedCommitment)
 }
 
-// challengePrepareHandler collects the challenge-messages
-func (bft *ProtocolBFTCoSi) challengePrepareHandler(msg challengePrepareChan) error {
+// handleChallengePrepare collects the challenge-messages
+func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) error {
 	log.LLvl4(bft.Name(), "RoundType: 0")
 	ch := msg.ChallengePrepare
 	if !bft.IsRoot() {
@@ -283,7 +283,7 @@ func (bft *ProtocolBFTCoSi) challengePrepareHandler(msg challengePrepareChan) er
 
 // handleChallengeCommit verifies the signature and checks if not more than
 // the threshold of participants refused to sign
-func (bft *ProtocolBFTCoSi) challengeCommitHandler(msg challengeCommitChan) error {
+func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error {
 	log.LLvl4(bft.Name(), "RoundType: 1")
 
 	ch := msg.ChallengeCommit
@@ -317,14 +317,11 @@ func (bft *ProtocolBFTCoSi) challengeCommitHandler(msg challengeCommitChan) erro
 		return bft.handleResponseCommit(nil)
 	}
 
-	if err := bft.SendToChildrenInParallel(&ch); err != nil {
-		log.Error(err)
-	}
-	return nil
+	return bft.SendToChildrenInParallel(&ch)
 }
 
-// responseHandler is called when a response message arrives.
-func (bft *ProtocolBFTCoSi) responseHandler(msg responseChan) {
+// handleResponse is called when a response message arrives.
+func (bft *ProtocolBFTCoSi) handleResponse(msg responseChan) {
 	log.LLvl4(bft.Name(), "RoundType:", msg.Response.TYPE)
 	bft.startResponse(msg.Response.TYPE, &msg.Response)
 }
@@ -363,15 +360,17 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 			Data:      bft.Data,
 		}
 
-		return bft.challengePrepareHandler(challengePrepareChan{ChallengePrepare: *bftChal})
+		return bft.handleChallengePrepare(challengePrepareChan{ChallengePrepare: *bftChal})
 	}
 
 	// make sure the Announce->Commit has been done for the commit phase
+	log.LLvl4(bft.Name(), "Waiting on commit^2")
 	select {
 	case <-bft.commitCommitDone:
 	case <-bft.doneProcessing:
 		return errors.New("Aborted while waiting for reply")
 	}
+	log.LLvl4(bft.Name(), "Done waiting on commit^2")
 
 	// commit phase
 	ch, err := bft.commit.CreateChallenge(bft.Msg)
@@ -388,7 +387,7 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 			Exceptions: bft.tempExceptions,
 		},
 	}
-	return bft.challengeCommitHandler(challengeCommitChan{ChallengeCommit: *cc})
+	return bft.handleChallengeCommit(challengeCommitChan{ChallengeCommit: *cc})
 }
 
 // startResponse dispatches the response to the correct round-type

@@ -281,6 +281,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			f.Call([]reflect.Value{m})
 		}
 	}
+	log.LLvl4(n.Name(), "Done with handler for", msgSlice[0])
 	return nil
 }
 
