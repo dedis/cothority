@@ -12,8 +12,6 @@ import (
 	"crypto/sha512"
 	"sync"
 
-	"errors"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -68,8 +66,6 @@ type ProtocolBFTCoSi struct {
 	// Internal communication channels
 	// channel used to wait for the verification of the block
 	verifyChan chan bool
-	// done processing is used to stop the processing of the channels
-	doneProcessing chan bool
 	// commitCommitDone is to ensure the Challenge phase of the Commitment phase
 	// (the second commit) is done, before doing the challenge.
 	// It's needed because both phases are started *almost* simultaneously and
@@ -126,7 +122,6 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 			commit:  cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 		},
 		verifyChan:           make(chan bool),
-		doneProcessing:       make(chan bool),
 		VerificationFunction: verify,
 		threshold:            (len(n.Tree().List()) + 1) * 2 / 3,
 		Msg:                  make([]byte, 0),
@@ -192,18 +187,6 @@ func (bft *ProtocolBFTCoSi) RegisterOnDone(fn func()) {
 // protocol reached a signature on the block
 func (bft *ProtocolBFTCoSi) RegisterOnSignatureDone(fn func(*BFTSignature)) {
 	bft.onSignatureDone = fn
-}
-
-// Shutdown will close the dispatch-method if the protocol is stopped
-// before the normal termination.
-func (bft *ProtocolBFTCoSi) Shutdown() error {
-	// Recover if the channel has alredy been closed
-	//log.Lvl4(bft.Name(), "closing", log.Stack())
-	defer func() {
-		recover()
-	}()
-	close(bft.doneProcessing)
-	return nil
 }
 
 // handleAnnouncement passes the announcement to the right CoSi struct.
@@ -366,31 +349,31 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 		return bft.handleChallengePrepare(challengePrepareChan{ChallengePrepare: *bftChal})
 	}
 
-	// make sure the Announce->Commit has been done for the commit phase
-	log.Lvl4(bft.Name(), "Waiting on commit^2")
-	select {
-	case <-bft.commitCommitDone:
-	case <-bft.doneProcessing:
-		return errors.New("Aborted while waiting for reply")
-	}
-	log.Lvl4(bft.Name(), "Done waiting on commit^2")
+	go func() {
+		// make sure the Announce->Commit has been done for the commit phase
+		<-bft.commitCommitDone
 
-	// commit phase
-	ch, err := bft.commit.CreateChallenge(bft.Msg)
-	if err != nil {
-		return err
-	}
+		// commit phase
+		ch, err := bft.commit.CreateChallenge(bft.Msg)
+		if err != nil {
+			log.Error(err)
+			return
+		}
 
-	// send challenge + signature
-	cc := &ChallengeCommit{
-		Challenge: ch,
-		Signature: &BFTSignature{
-			Msg:        bft.Msg,
-			Sig:        bft.prepareSignature,
-			Exceptions: bft.tempExceptions,
-		},
-	}
-	return bft.handleChallengeCommit(challengeCommitChan{ChallengeCommit: *cc})
+		// send challenge + signature
+		cc := &ChallengeCommit{
+			Challenge: ch,
+			Signature: &BFTSignature{
+				Msg:        bft.Msg,
+				Sig:        bft.prepareSignature,
+				Exceptions: bft.tempExceptions,
+			},
+		}
+		if err := bft.handleChallengeCommit(challengeCommitChan{ChallengeCommit: *cc}); err != nil {
+			log.Error(err)
+		}
+	}()
+	return nil
 }
 
 // startResponse dispatches the response to the correct round-type
@@ -558,7 +541,6 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root
 		bft.onDone()

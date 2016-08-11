@@ -391,11 +391,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
-		go func() {
-			if err := n.dispatchHandler(msgs); err != nil {
-				log.Error(n.Name(), "While dispatching:", err)
-			}
-		}()
+		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
 	}
