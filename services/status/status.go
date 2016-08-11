@@ -35,7 +35,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Stat) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
+func (st *Stat) Request(si *network.ServerIdentity, req *Request) (network.Body, error) {
 	return &Response{st.Context.ReportStatus()}, nil
 }
 

@@ -577,13 +577,13 @@ func NewTreeNode(entityIdx int, ni *network.ServerIdentity) *TreeNode {
 
 // IsConnectedTo checks if the TreeNode can communicate with its parent or
 // children.
-func (t *TreeNode) IsConnectedTo(e *network.ServerIdentity) bool {
-	if t.Parent != nil && t.Parent.ServerIdentity.Equal(e) {
+func (t *TreeNode) IsConnectedTo(si *network.ServerIdentity) bool {
+	if t.Parent != nil && t.Parent.ServerIdentity.Equal(si) {
 		return true
 	}
 
 	for i := range t.Children {
-		if t.Children[i].ServerIdentity.Equal(e) {
+		if t.Children[i].ServerIdentity.Equal(si) {
 			return true
 		}
 	}

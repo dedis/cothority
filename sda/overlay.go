@@ -238,7 +238,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 
 // sendSDAData marshals the inner msg and then sends a Data msg
 // to the appropriate entity
-func (o *Overlay) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
+func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
 		typ := network.TypeFromData(sdaMsg.Msg)
@@ -257,8 +257,8 @@ func (o *Overlay) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) er
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
-	log.Lvl4("Sending to", e.Addresses)
-	return o.host.SendRaw(e, sdaMsg)
+	log.Lvl4("Sending to", si.Addresses)
+	return o.host.SendRaw(si, sdaMsg)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -329,13 +329,13 @@ func (o *Overlay) checkPendingTreeMarshal(el *Roster) {
 // requestTree will ask for the tree the sdadata is related to.
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
-func (o *Overlay) requestTree(e *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
+func (o *Overlay) requestTree(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	o.pendingSDAsLock.Lock()
 	o.pendingSDAs = append(o.pendingSDAs, sdaMsg)
 	o.pendingSDAsLock.Unlock()
 
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
-	return o.host.SendRaw(e, treeRequest)
+	return o.host.SendRaw(si, treeRequest)
 }
 
 // RegisterTree takes a tree and puts it in the map
