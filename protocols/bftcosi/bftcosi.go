@@ -14,6 +14,8 @@ import (
 
 	"errors"
 
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -157,7 +159,14 @@ func (bft *ProtocolBFTCoSi) Start() error {
 	if err := bft.startAnnouncement(RoundPrepare); err != nil {
 		return err
 	}
-	return bft.startAnnouncement(RoundCommit)
+	if true {
+		return bft.startAnnouncement(RoundCommit)
+	}
+	go func() {
+		time.Sleep(time.Second)
+		bft.startAnnouncement(RoundCommit)
+	}()
+	return nil
 }
 
 // Signature will generate the final signature, the output of the BFTCoSi
@@ -225,6 +234,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msg commitChan) error {
 	var commitment abstract.Point
 	// store it and check if we have enough commitments
 	bft.tmpMutex.Lock()
+	log.LLvl4("Got mutex")
 	defer bft.tmpMutex.Unlock()
 	switch comm.TYPE {
 	case RoundPrepare:
@@ -242,7 +252,9 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msg commitChan) error {
 			return nil
 		}
 		commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
+		log.LLvl4(bft.Name(), "Sending true to channel")
 		bft.commitCommitDone <- true
+		log.LLvl4(bft.Name(), "Sent true to channel")
 		if bft.IsRoot() {
 			// do nothing:
 			// stop the processing of the round, wait the end of
@@ -404,12 +416,13 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 	if r != nil {
 		// check if we have enough responses
 		bft.tmpMutex.Lock()
-		defer bft.tmpMutex.Unlock()
 		bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
 		bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
 		if len(bft.tempPrepareResponse) < len(bft.Children()) {
+			bft.tmpMutex.Unlock()
 			return nil
 		}
+		bft.tmpMutex.Unlock()
 	}
 
 	// wait for verification
@@ -465,12 +478,13 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	if r != nil {
 		// check if we have enough
 		bft.tmpMutex.Lock()
-		defer bft.tmpMutex.Unlock()
 		bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
 
 		if len(bft.tempCommitResponse) < len(bft.Children()) {
+			bft.tmpMutex.Unlock()
 			return nil
 		}
+		bft.tmpMutex.Unlock()
 	} else {
 		r = &Response{
 			TYPE:     RoundCommit,
