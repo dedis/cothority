@@ -24,22 +24,13 @@ test_lint:
 		fi \
 	}
 
-# If you use test_multi, adjust to your own tests in the desired directories.
+# You can use `test_multi` to run any test or part of cothority
+# for more than once in Travis. Change `make test` in .travis.yml
+# to `make test_multi`.
 test_multi:
-	cd protocols/bftcosi; \
+	cd network; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run FailBit || exit 1; \
-	done; \
-	for a in $$( seq 10 ); do \
-	  go test -v -race || exit 1; \
-	done; \
-	cd ../../services/skipchain; \
-	for a in $$( seq 10 ); do \
-	  go test -v -race || exit 1; \
-	done; \
-	cd ../identity; \
-	for a in $$( seq 10 ); do \
-	  go test -v -race || exit 1; \
+	  go test -v -race -run Stress; \
 	done
 
 test_verbose:

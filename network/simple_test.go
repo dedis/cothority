@@ -55,7 +55,7 @@ func TestSimple(t *testing.T) {
 		done <- true
 	}()
 	cConMu.Lock()
-	conn, err := client.Open("localhost:" + strconv.Itoa(<-server.ListeningPort))
+	conn, err := client.Open("localhost:" + strconv.Itoa(<-server.listeningPort))
 	if err != nil {
 		t.Fatal(err)
 	}

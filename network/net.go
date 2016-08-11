@@ -40,7 +40,7 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTCPHost() *TCPHost {
 	return &TCPHost{
-		ListeningPort: make(chan int, 1),
+		listeningPort: make(chan int, 1),
 		peers:         make(map[string]Conn),
 		quit:          make(chan bool),
 		constructors:  DefaultConstructors(Suite),
@@ -140,7 +140,7 @@ func (t *TCPHost) Tx() uint64 {
 func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			//log.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
@@ -170,13 +170,13 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listening = true
 	global, _ := GlobalBind(addr)
 	var ln net.Listener
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		var err error
 		ln, err = net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
-		} else if i == MaxRetry-1 {
+		} else if i == MaxRetryConnect-1 {
 			t.listeningLock.Unlock()
 			return errors.New("Error opening listener: " + err.Error())
 		}
@@ -191,10 +191,10 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	if err != nil {
 		return errors.New("Couldn't find port: " + err.Error())
 	}
-	if len(t.ListeningPort) == 0 {
+	if len(t.listeningPort) == 0 {
 		// If the channel is empty, else we'd block.
-		log.Lvl3("Sending port", port, "over", t.ListeningPort)
-		t.ListeningPort <- port
+		log.Lvl3("Sending port", port, "over", t.listeningPort)
+		t.listeningPort <- port
 	}
 
 	t.listeningLock.Unlock()
@@ -272,9 +272,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 			if err == nil || err == ErrClosed || err == ErrEOF {
 				return
 			}
-			st.TCPHost.ListeningPort <- -1
+			st.TCPHost.listeningPort <- -1
 		}()
-		port := <-st.TCPHost.ListeningPort
+		port := <-st.TCPHost.listeningPort
 		if port > 0 {
 			// If the port we asked for is '0', we need to
 			// update the address.
@@ -399,10 +399,11 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
-	dbg.Lvl5("Starting to receive on", c.Endpoint)
+	log.Lvl5("Starting to receive on", c.Local(), "from", c.Remote())
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationPacket, handleError(err)
 	}
+	log.Lvl5("Received some bytes", total)
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
@@ -450,7 +451,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	log.Lvlf5("Message SEND => %+v", am)
+	log.Lvlf5("%s->%s: Message SEND => %+v", c.Local(), c.Remote(), am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -559,30 +560,17 @@ func (sc *SecureTCPConn) exchangeServerIdentity() error {
 	log.Lvlf4("Sending our identity %x to %s", ourEnt.ID,
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
+		log.Error(err)
 		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
 
-	// Try for 1 second to receive the other entity
-	var nm Packet
-	var err error
-	for i := 0; i < 10; i++ {
-		// Receive the other ServerIdentity
-		nm, err = sc.TCPConn.Receive(context.TODO())
-		switch {
-		case err == nil:
-			if i > 0 {
-				log.Warn(sc, "Got a packet after a failure")
-			}
-			i = 10
-		case err.Error() == "EOF" || err.Error() == "Temporary Error":
-			log.Lvl4(sc, "EOF while receiving identity: ", i*100)
-			time.Sleep(WaitRetry)
-		default:
-			return fmt.Errorf("Error while receiving ServerIdentity during negotiation: %s", err)
-		}
-	}
+	log.Lvl4(sc.workingAddress, "waiting for identity")
+	// Wait for a packet to arrive
+	// Receive the other ServerIdentity
+	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
-		return errors.New(sc.Endpoint + ": Didn't receive identity in 1 sec - aborting")
+		return fmt.Errorf("%s: Error while receiving ServerIdentity during negotiation: %s",
+			sc.workingAddress, err)
 	}
 	// Check if it is correct
 	if nm.MsgType != ServerIdentityType {
