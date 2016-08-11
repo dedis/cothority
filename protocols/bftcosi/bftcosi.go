@@ -168,34 +168,34 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	}
 	// Wait for both prepare and commit round
 	for i := 0; i < 2; i++ {
-		log.Lvl2(bft.Name(), "Waiting for announcement")
+		log.Lvl3(bft.Name(), "Waiting for announcement")
 		// Wait for announcement message
 		if err := bft.handleAnnouncement(<-bft.announceChan); err != nil {
 			return err
 		}
 		// Wait for commitment messages of all children
-		log.Lvl2(bft.Name(), "Waiting for commitment")
+		log.Lvl3(bft.Name(), "Waiting for commitment")
 		if err := bft.handleCommitment(<-bft.commitChan); err != nil {
 			return err
 		}
 	}
 
 	// Finish the preparation round
-	log.Lvl2(bft.Name(), "Waiting for challenge 0")
+	log.Lvl3(bft.Name(), "Waiting for challenge 0")
 	if err := bft.handleChallengePrepare(<-bft.challengePrepareChan); err != nil {
 		return err
 	}
-	log.Lvl2(bft.Name(), "Waiting for response 0")
+	log.Lvl3(bft.Name(), "Waiting for response 0")
 	if err := bft.handleResponse(<-bft.responseChan); err != nil {
 		return err
 	}
 
 	// Finish the commit round
-	log.Lvl2(bft.Name(), "Waiting for challenge 1")
+	log.Lvl3(bft.Name(), "Waiting for challenge 1")
 	if err := bft.handleChallengeCommit(<-bft.challengeCommitChan); err != nil {
 		return err
 	}
-	log.Lvl2(bft.Name(), "Waiting for response 1")
+	log.Lvl3(bft.Name(), "Waiting for response 1")
 	if err := bft.handleResponse(<-bft.responseChan); err != nil {
 		return err
 	}
@@ -366,7 +366,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		Exceptions: ch.Signature.Exceptions,
 	}
 	if err := bftPrepareSig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Lvl2(bft.Name(), "Verification of the signature failed:", err)
+		log.Lvl3(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
 	}
 
