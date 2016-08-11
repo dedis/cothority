@@ -105,7 +105,7 @@ func TestMultiClose(t *testing.T) {
 		}
 		done <- true
 	}()
-	h3Port := <-h3.ListeningPort
+	h3Port := <-h3.listeningPort
 	_, err = h2.Open("localhost:" + strconv.Itoa(h3Port))
 	if err != nil {
 		t.Fatal(h2, "couldn't Open() connection to", h3, err)
