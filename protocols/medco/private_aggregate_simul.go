@@ -79,7 +79,7 @@ func (sim *PrivateAggregateSimulation) Setup(dir string, hosts []string) (*sda.S
 func (sim *PrivateAggregateSimulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < sim.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		rooti, err := config.Overlay.CreateProtocolSDA(config.Tree, "PrivateAggregateSimul")
+		rooti, err := config.Overlay.CreateProtocolSDA("PrivateAggregateSimul", config.Tree)
 		if err != nil {
 			return err
 		}

@@ -27,10 +27,10 @@ type DummyMsg struct {
 	A int
 }
 
-var dummyMsgType network.MessageTypeID
+var dummyMsgType network.PacketTypeID
 
 func init() {
-	dummyMsgType = network.RegisterMessageType(DummyMsg{})
+	dummyMsgType = network.RegisterPacketType(DummyMsg{})
 }
 
 func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
@@ -71,7 +71,7 @@ type DummyService struct {
 	Config   DummyConfig
 }
 
-func (ds *DummyService) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
+func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
 	msgT, _, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	if err != nil || msgT != dummyMsgType {
 		ds.link <- false
@@ -505,8 +505,8 @@ type SimpleMessageBack struct {
 	Val int
 }
 
-var simpleMessageForthType = network.RegisterMessageType(SimpleMessageForth{})
-var simpleMessageBackType = network.RegisterMessageType(SimpleMessageBack{})
+var simpleMessageForthType = network.RegisterPacketType(SimpleMessageForth{})
+var simpleMessageBackType = network.RegisterPacketType(SimpleMessageBack{})
 
 type BackForthProtocol struct {
 	*TreeNodeInstance
@@ -599,14 +599,14 @@ type simpleResponse struct {
 	Val int
 }
 
-var simpleRequestType = network.RegisterMessageType(simpleRequest{})
-var simpleResponseType = network.RegisterMessageType(simpleResponse{})
+var simpleRequestType = network.RegisterPacketType(simpleRequest{})
+var simpleResponseType = network.RegisterPacketType(simpleResponse{})
 
 type simpleService struct {
 	ctx *Context
 }
 
-func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
+func (s *simpleService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
 	msgT, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	log.ErrFatal(err)
 	if msgT != simpleRequestType {
@@ -616,7 +616,7 @@ func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *Clien
 	tree := req.ServerIdentities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root, "BackForth")
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
-		if err := s.ctx.SendRaw(e, &simpleResponse{
+		if err := s.ctx.SendRaw(si, &simpleResponse{
 			Val: n,
 		}); err != nil {
 			log.Error(err)

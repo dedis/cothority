@@ -54,7 +54,7 @@ func (e *simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "Count")
+		p, err := config.Overlay.CreateProtocolSDA("Count", config.Tree)
 		if err != nil {
 			return err
 		}

@@ -9,13 +9,13 @@ import (
 
 // SDADataMessageID is to be embedded in every message that is made for a
 // ID of SDAData message as registered in network
-var SDADataMessageID = network.RegisterMessageType(ProtocolMsg{})
+var SDADataMessageID = network.RegisterPacketType(ProtocolMsg{})
 
 // RequestTreeMessageID of RequestTree message as registered in network
-var RequestTreeMessageID = network.RegisterMessageType(RequestTree{})
+var RequestTreeMessageID = network.RegisterPacketType(RequestTree{})
 
 // RequestRosterMessageID of RequestRoster message as registered in network
-var RequestRosterMessageID = network.RegisterMessageType(RequestRoster{})
+var RequestRosterMessageID = network.RegisterPacketType(RequestRoster{})
 
 // SendTreeMessageID of TreeMarshal message as registered in network
 var SendTreeMessageID = TreeMarshalTypeID
@@ -33,7 +33,7 @@ type ProtocolMsg struct {
 	// NOTE: this is taken from network.NetworkMessage
 	ServerIdentity *network.ServerIdentity
 	// MsgType of the underlying data
-	MsgType network.MessageTypeID
+	MsgType network.PacketTypeID
 	// The interface to the actual Data
 	Msg network.Body
 	// The actual data as binary blob

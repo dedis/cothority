@@ -22,9 +22,9 @@ import (
 const DeterministicSwitchingProtocolName = "DeterministicSwitching"
 
 func init() {
-	network.RegisterMessageType(DeterministicSwitchedMessage{})
-	network.RegisterMessageType(libmedco.CipherText{})
-	network.RegisterMessageType(libmedco.CipherVector{})
+	network.RegisterPacketType(DeterministicSwitchedMessage{})
+	network.RegisterPacketType(libmedco.CipherText{})
+	network.RegisterPacketType(libmedco.CipherVector{})
 	sda.ProtocolRegisterName(DeterministicSwitchingProtocolName, NewDeterministSwitchingProtocol)
 }
 
