@@ -106,7 +106,7 @@ func (d *RoutineDispatcher) Dispatch(packet *network.Packet) error {
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,
 // then it will offer an 'RegisterMessage'-method that takes a message of type
-// 	func ReceiveMsg(e *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
+// 	func ReceiveMsg(si *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
@@ -184,7 +184,7 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
+func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 	cr *ClientRequest) {
 	// unmarshal the inner message
 	mt, m, err := network.UnmarshalRegisteredType(cr.Data,
@@ -193,21 +193,21 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 		log.Error("Err unmarshal client request:" + err.Error())
 		return
 	}
-	reply := p.GetReply(e, mt, m)
-	if err := p.SendRaw(e, reply); err != nil {
+	reply := p.GetReply(si, mt, m)
+	if err := p.SendRaw(si, reply); err != nil {
 		log.Error(err)
 	}
 }
 
 // SendISM takes the message and sends it to the corresponding service
-func (p *ServiceProcessor) SendISM(e *network.ServerIdentity, msg network.Body) error {
+func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body) error {
 	sName := ServiceFactory.Name(p.Context.ServiceID())
 	sm, err := CreateServiceMessage(sName, msg)
 	if err != nil {
 		return err
 	}
-	log.Lvl4("Raw-sending to", e)
-	return p.SendRaw(e, sm)
+	log.Lvl4("Raw-sending to", si)
+	return p.SendRaw(si, sm)
 }
 
 // SendISMOthers sends an InterServiceMessage to all other services
@@ -231,7 +231,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 
 // GetReply takes msgType and a message. It dispatches the msg to the right
 // function registered, then sends the responses to the sender.
-func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.PacketTypeID, m network.Body) network.Body {
+func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.PacketTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &StatusRet{"Didn't register message-handler: " + mt.String()}
@@ -241,9 +241,9 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.Packet
 	to1 := reflect.TypeOf(fu).In(1)
 	f := reflect.ValueOf(fu)
 
-	log.Lvl4("Dispatching to", e.Addresses)
+	log.Lvl4("Dispatching to", si.Addresses)
 	arg0 := reflect.New(reflect.TypeOf(network.ServerIdentity{}))
-	arg0.Elem().Set(reflect.ValueOf(e).Elem())
+	arg0.Elem().Set(reflect.ValueOf(si).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))
 

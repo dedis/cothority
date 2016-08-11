@@ -57,7 +57,7 @@ type storage struct {
 
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities
-func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
+func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf2("Adding identity %+v", *ai)
 	ids := &storage{
 		Latest: ai.Config,
@@ -93,7 +93,7 @@ func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (netwo
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
+func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -108,7 +108,7 @@ func (s *Service) ConfigUpdate(e *network.ServerIdentity, cu *ConfigUpdate) (net
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -126,7 +126,7 @@ func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (networ
 }
 
 // ProposeFetch returns an eventual config-proposition
-func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
+func (s *Service) ProposeFetch(si *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -142,7 +142,7 @@ func (s *Service) ProposeFetch(e *network.ServerIdentity, cnc *ProposeFetch) (ne
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {

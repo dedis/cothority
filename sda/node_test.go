@@ -325,7 +325,7 @@ type ServiceChannels struct {
 }
 
 // implement services interface
-func (c *ServiceChannels) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
+func (c *ServiceChannels) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
 
 	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, "ProtocolChannels")
 	pi, err := NewProtocolChannels(tni)
