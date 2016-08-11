@@ -19,7 +19,7 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// GetGuard is the function that sends a request to the guard server from the client and receives the responses
+// SendToGuard is the function that sends a request to the guard server from the client and receives the responses
 func (c *Client) SendToGuard(dst *network.ServerIdentity, UID []byte, epoch []byte, t abstract.Point) (*Response, error) {
 	//send request an entity in the network
 	log.Lvl4("Sending Request to ", dst)
