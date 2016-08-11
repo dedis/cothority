@@ -325,7 +325,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
 			m := n.reflectCreate(to.Elem(), msg)
-			log.LLvl4(n.Name(), "Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			log.Lvl4(n.Name(), "Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
