@@ -223,7 +223,8 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 func (n *TreeNodeInstance) RegisterHandlers(handlers ...interface{}) error {
 	for _, h := range handlers {
 		if err := n.RegisterHandler(h); err != nil {
-			return errors.New("Error, could not register handler: " + err.Error())
+			return fmt.Errorf("Error, could not register handler %T: %s",
+				h, err.Error())
 		}
 	}
 	return nil

@@ -191,7 +191,7 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 	var buf []byte
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
-		log.Error("Error for protobuf encoding:", err)
+		log.Errorf("Error for protobuf encoding: %s %+v", err, data)
 		if log.DebugVisible() >= 3 {
 			log.Error(log.Stack())
 		}
