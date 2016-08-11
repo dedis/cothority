@@ -181,7 +181,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	// Finish the preparation round
 	log.Lvl2(bft.Name(), "Waiting for challenge 0")
 	if err := bft.handleChallengePrepare(<-bft.challengePrepareChan); err != nil {
-		return nil
+		return err
 	}
 	log.Lvl2(bft.Name(), "Waiting for response 0")
 	if err := bft.handleResponse(<-bft.responseChan); err != nil {
