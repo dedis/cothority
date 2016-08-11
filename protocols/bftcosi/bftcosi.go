@@ -167,37 +167,38 @@ func (bft *ProtocolBFTCoSi) Start() error {
 func (bft *ProtocolBFTCoSi) Dispatch() error {
 	log.Lvl2(bft.Name(), "Starts")
 	for {
-		var err error
+		//var err error
 		select {
 		case msg := <-bft.announceChan:
 			// Announcement
-			err = bft.handleAnnouncement(msg.Announce)
+			go bft.handleAnnouncement(msg.Announce)
 
 		case msg := <-bft.commitChan:
 			// Commitment
-			err = bft.handleCommitment(msg.Commitment)
+			go bft.handleCommitment(msg.Commitment)
 
 		case msg := <-bft.challengePrepareChan:
 			// Challenge
 			log.LLvl4(bft.Name(), "challengePrepare")
-			err = bft.handleChallengePrepare(&msg.ChallengePrepare)
+			go bft.handleChallengePrepare(&msg.ChallengePrepare)
 
 		case msg := <-bft.challengeCommitChan:
 			log.LLvl4(bft.Name(), "challengeCommit")
-			err = bft.handleChallengeCommit(&msg.ChallengeCommit)
+			go bft.handleChallengeCommit(&msg.ChallengeCommit)
 
 		case msg := <-bft.responseChan:
 			// Response
-			err = bft.startResponse(msg.Response.TYPE, &msg.Response)
+			go bft.startResponse(msg.Response.TYPE, &msg.Response)
+
 		case <-bft.doneProcessing:
 			// we are done
 			log.Lvl2(bft.Name(), "BFTCoSi Dispatches stop.")
 
 			return nil
 		}
-		if err != nil {
-			log.Error("Error handling messages:", err)
-		}
+		//if err != nil {
+		//	log.Error("Error handling messages:", err)
+		//}
 		log.LLvl4(bft.Name(), "done handling message")
 	}
 }
