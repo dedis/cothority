@@ -10,6 +10,7 @@ the first round.
 
 import (
 	"crypto/sha512"
+	"errors"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -52,7 +53,7 @@ type ProtocolBFTCoSi struct {
 	// channel for announcement
 	announceChan chan announceChan
 	// channel for commitment
-	commitChan chan commitChan
+	commitChan chan []commitChan
 	// Two channels for the challenge through the 2 rounds: difference is that
 	// during the commit round, we need the previous signature of the "prepare"
 	// round.
@@ -61,7 +62,7 @@ type ProtocolBFTCoSi struct {
 	// channel for challenge during the commit phase
 	challengeCommitChan chan challengeCommitChan
 	// channel for response
-	responseChan chan responseChan
+	responseChan chan []responseChan
 
 	// Internal communication channels
 	// channel used to wait for the verification of the block
@@ -128,11 +129,10 @@ func NewBFTCoSiProtocol(n *sda.TreeNodeInstance, verify VerificationFunction) (*
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
 	bft.index = idx
 
-	// Registering channels
-	err := n.RegisterChannels(&bft.announceChan, &bft.commitChan,
+	// Registering channels.
+	err := bft.RegisterChannels(&bft.announceChan,
 		&bft.challengePrepareChan, &bft.challengeCommitChan,
-		&bft.responseChan)
-
+		&bft.commitChan, &bft.responseChan)
 	if err != nil {
 		return nil, err
 	}
@@ -158,45 +158,44 @@ func (bft *ProtocolBFTCoSi) Start() error {
 
 // Dispatch makes sure that the order of the messages is correct
 func (bft *ProtocolBFTCoSi) Dispatch() error {
-	msgs := len(bft.Children())
-	if !bft.IsRoot() {
-		// Wait for both announcement messages
-		log.Lvl3(bft.Name(), "Waiting for announcements")
-		bft.handleAnnouncement(<-bft.announceChan)
-		bft.handleAnnouncement(<-bft.announceChan)
+	// Close unused channels for the leaf nodes. This is not easily
+	// possible for the root-node.
+	if bft.IsLeaf() {
+		close(bft.commitChan)
+		close(bft.responseChan)
 	}
-
-	if !bft.IsLeaf() {
-		// Wait for both commitment messages
-		log.Lvl3(bft.Name(), "Waiting for commitments")
-		for i := 0; i < msgs*2; i++ {
-			log.Lvl3("Waiting", i)
-			bft.handleCommitment(<-bft.commitChan)
+	// Wait for both prepare and commit round
+	for i := 0; i < 2; i++ {
+		log.Lvl2(bft.Name(), "Waiting for announcement")
+		// Wait for announcement message
+		if err := bft.handleAnnouncement(<-bft.announceChan); err != nil {
+			return err
+		}
+		// Wait for commitment messages of all children
+		log.Lvl2(bft.Name(), "Waiting for commitment")
+		if err := bft.handleCommitment(<-bft.commitChan); err != nil {
+			return err
 		}
 	}
 
 	// Finish the preparation round
-	if !bft.IsRoot() {
-		log.Lvl3(bft.Name(), "Waiting for challengeprepare")
-		bft.handleChallengePrepare(<-bft.challengePrepareChan)
+	log.Lvl2(bft.Name(), "Waiting for challenge 0")
+	if err := bft.handleChallengePrepare(<-bft.challengePrepareChan); err != nil {
+		return nil
 	}
-	if !bft.IsLeaf() {
-		log.Lvl3(bft.Name(), "Waiting for responseprepare")
-		for i := 0; i < msgs; i++ {
-			bft.handleResponse(<-bft.responseChan)
-		}
+	log.Lvl2(bft.Name(), "Waiting for response 0")
+	if err := bft.handleResponse(<-bft.responseChan); err != nil {
+		return err
 	}
 
 	// Finish the commit round
-	if !bft.IsRoot() {
-		log.Lvl3(bft.Name(), "Waiting for challengecommit")
-		bft.handleChallengeCommit(<-bft.challengeCommitChan)
+	log.Lvl2(bft.Name(), "Waiting for challenge 1")
+	if err := bft.handleChallengeCommit(<-bft.challengeCommitChan); err != nil {
+		return err
 	}
-	if !bft.IsLeaf() {
-		log.Lvl3(bft.Name(), "Waiting for responsecommit")
-		for i := 0; i < msgs; i++ {
-			bft.handleResponse(<-bft.responseChan)
-		}
+	log.Lvl2(bft.Name(), "Waiting for response 1")
+	if err := bft.handleResponse(<-bft.responseChan); err != nil {
+		return err
 	}
 
 	return nil
@@ -256,7 +255,7 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	ann := msg.Announce
 	log.Lvl3(bft.Name(), "RoundType:", ann.TYPE)
 	if bft.closing {
-		return nil
+		return errors.New("Closing")
 	}
 	if bft.IsLeaf() {
 		return bft.startCommitment(ann.TYPE)
@@ -266,48 +265,56 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 
 // handleCommitment collects all commitments from children and passes them
 // to the parent or starts the challenge-round if it's the root.
-func (bft *ProtocolBFTCoSi) handleCommitment(msg commitChan) error {
-	comm := msg.Commitment
-	log.Lvl3(bft.Name(), "RoundType:", comm.TYPE)
-	if bft.closing {
-		return nil
-	}
-
-	var commitment abstract.Point
-	// store it and check if we have enough commitments
+func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock()
-	switch comm.TYPE {
-	case RoundPrepare:
-		bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
-		if len(bft.tempPrepareCommit) < len(bft.Children()) {
-			return nil
-		}
-		commitment = bft.prepare.Commit(nil, bft.tempPrepareCommit)
-		if bft.IsRoot() {
-			return bft.startChallenge(RoundPrepare)
-		}
-	case RoundCommit:
-		bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-		if len(bft.tempCommitCommit) < len(bft.Children()) {
-			return nil
-		}
-		commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
-		if bft.IsRoot() {
-			// do nothing:
-			// stop the processing of the round, wait the end of
-			// the "prepare" round: calls startChallengeCommit
+	for _, msg := range msgs {
+		comm := msg.Commitment
+		log.Lvl3(bft.Name(), "RoundType:", comm.TYPE)
+		if bft.closing {
 			return nil
 		}
 
-		log.Lvl4(bft.Name(), "BFTCoSi handle Commit COMMIT")
+		var commitment abstract.Point
+		// store it and check if we have enough commitments
+		switch comm.TYPE {
+		case RoundPrepare:
+			bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
+			if len(bft.tempPrepareCommit) < len(bft.Children()) {
+				continue
+			}
+			commitment = bft.prepare.Commit(nil, bft.tempPrepareCommit)
+			if bft.IsRoot() {
+				if err := bft.startChallenge(RoundPrepare); err != nil {
+					return nil
+				}
+				continue
+			}
+		case RoundCommit:
+			bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
+			if len(bft.tempCommitCommit) < len(bft.Children()) {
+				continue
+			}
+			commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
+			if bft.IsRoot() {
+				// do nothing:
+				// stop the processing of the round, wait the end of
+				// the "prepare" round: calls startChallengeCommit
+				continue
+			}
+
+			log.Lvl4(bft.Name(), "BFTCoSi handle Commit COMMIT")
+		}
+		// set same RoundType as for the received commitment:
+		typedCommitment := &Commitment{
+			TYPE:       comm.TYPE,
+			Commitment: commitment,
+		}
+		if err := bft.SendToParent(typedCommitment); err != nil {
+			return err
+		}
 	}
-	// set same RoundType as for the received commitment:
-	typedCommitment := &Commitment{
-		TYPE:       comm.TYPE,
-		Commitment: commitment,
-	}
-	return bft.SendToParent(typedCommitment)
+	return nil
 }
 
 // handleChallengePrepare collects the challenge-messages
@@ -329,7 +336,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 	}()
 	// go to response if leaf
 	if bft.IsLeaf() {
-		return bft.startResponse(RoundPrepare, nil)
+		return bft.startResponse(RoundPrepare)
 	}
 	return bft.SendToChildrenInParallel(&ch)
 }
@@ -377,35 +384,49 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 }
 
 // handleResponse is called when a response message arrives.
-func (bft *ProtocolBFTCoSi) handleResponse(msg responseChan) {
-	log.Lvl3(bft.Name(), "RoundType:", msg.Response.TYPE)
-	if bft.closing {
-		return
+func (bft *ProtocolBFTCoSi) handleResponse(msgs []responseChan) error {
+	for _, msg := range msgs {
+		log.Lvl3(bft.Name(), "RoundType:", msg.Response.TYPE)
+		if bft.closing {
+			return errors.New("Quitting instance")
+		}
+		var resp *Response
+		if !bft.IsLeaf() {
+			resp = &msg.Response
+		}
+		if msg.Response.TYPE == RoundPrepare {
+			if err := bft.handleResponsePrepare(resp); err != nil {
+				return err
+			}
+		} else {
+			if err := bft.handleResponseCommit(resp); err != nil {
+				return err
+			}
+		}
 	}
-	bft.startResponse(msg.Response.TYPE, &msg.Response)
+	return nil
 }
 
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
-	a := &Announce{
-		TYPE: t,
-	}
 	log.Lvl3(bft.Name(), "RoundType:", t)
-	return bft.SendToChildrenInParallel(a)
+	bft.announceChan <- announceChan{Announce: Announce{TYPE: t}}
+	return nil
 }
 
 // startCommitment sends the first commitment to the parent node
 func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
-	cm := bft.getCosi(t).CreateCommitment(nil)
 	log.Lvl3(bft.Name(), "RoundType:", t)
+	cm := bft.getCosi(t).CreateCommitment(nil)
 	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
 }
 
 // startChallenge creates the challenge and sends it to its children
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	log.Lvl3(bft.Name(), "RoundType:", t)
-	if t == RoundPrepare {
+	switch t {
+	case RoundPrepare:
 		// need to hash the message before so challenge in both phases are not
 		// the same
 		data := sha512.Sum512(bft.Msg)
@@ -419,37 +440,33 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 			Data:      bft.Data,
 		}
 
-		return bft.handleChallengePrepare(
-			challengePrepareChan{ChallengePrepare: *bftChal})
-	}
+		bft.challengePrepareChan <- challengePrepareChan{ChallengePrepare: *bftChal}
+	case RoundCommit:
+		// commit phase
+		ch, err := bft.commit.CreateChallenge(bft.Msg)
+		if err != nil {
+			return err
+		}
 
-	// commit phase
-	log.Lvl3(bft.Name(), bft.Msg)
-	ch, err := bft.commit.CreateChallenge(bft.Msg)
-	if err != nil {
-		return err
+		// send challenge + signature
+		cc := &ChallengeCommit{
+			Challenge: ch,
+			Signature: &BFTSignature{
+				Msg:        bft.Msg,
+				Sig:        bft.prepareSignature,
+				Exceptions: bft.tempExceptions,
+			},
+		}
+		bft.challengeCommitChan <- challengeCommitChan{ChallengeCommit: *cc}
 	}
-
-	// send challenge + signature
-	cc := &ChallengeCommit{
-		Challenge: ch,
-		Signature: &BFTSignature{
-			Msg:        bft.Msg,
-			Sig:        bft.prepareSignature,
-			Exceptions: bft.tempExceptions,
-		},
-	}
-	return bft.handleChallengeCommit(
-		challengeCommitChan{ChallengeCommit: *cc})
+	return nil
 }
 
 // startResponse dispatches the response to the correct round-type
-func (bft *ProtocolBFTCoSi) startResponse(t RoundType, r *Response) error {
+func (bft *ProtocolBFTCoSi) startResponse(t RoundType) error {
 	log.Lvl3(bft.Name(), "RoundType:", t)
-	if t == RoundPrepare {
-		return bft.handleResponsePrepare(r)
-	}
-	return bft.handleResponseCommit(r)
+	bft.handleResponse([]responseChan{{Response: Response{TYPE: t}}})
+	return nil
 }
 
 // If 'r' is nil, it will starts the response process.
@@ -475,6 +492,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 
 	// Return if we're not root
 	if !bft.IsRoot() {
+		log.Lvl3(bft.Name(), "Sending to parent")
 		return bft.SendTo(bft.Parent(), bzrReturn)
 	}
 	// Since cosi does not support exceptions yet, we have to remove
@@ -565,6 +583,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(r *Response) error {
 	}
 
 	// otherwise , send the response up
+	log.Lvl3(bft.Name(), "Sending to parent")
 	err = bft.SendTo(bft.Parent(), r)
 	bft.Done()
 	return err

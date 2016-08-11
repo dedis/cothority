@@ -112,7 +112,7 @@ func TestCheckFailBit(t *testing.T) {
 }
 
 func runProtocol(t *testing.T, name string) {
-	for _, nbrHosts := range []int{3, 4, 13} {
+	for _, nbrHosts := range []int{2, 3, 4, 13} {
 		runProtocolOnce(t, nbrHosts, name, true)
 	}
 }
