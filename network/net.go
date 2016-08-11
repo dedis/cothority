@@ -425,8 +425,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		dbg.Print(read, total)
-		dbg.Printf("%x", buffer.Bytes())
+		dbg.Errorf("Read %d out of %d - buffer is %x", read, total, buffer.Bytes())
 		DumpTypes()
 		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
