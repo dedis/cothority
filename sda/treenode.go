@@ -273,12 +273,12 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
 		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
-		f.Call([]reflect.Value{msgs})
+		go f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
 			log.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
 			m := n.reflectCreate(to, msg)
-			f.Call([]reflect.Value{m})
+			go f.Call([]reflect.Value{m})
 		}
 	}
 	log.LLvl4(n.Name(), "Done with handler for", msgSlice[0])
