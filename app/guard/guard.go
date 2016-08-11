@@ -58,7 +58,7 @@ const EPOCH = "EPOCH"
 var db *Database
 
 func main() {
-	network.RegisterMessageType(&Database{})
+	network.RegisterPacketType(&Database{})
 
 	app := cli.NewApp()
 	app.Name = "Guard"

@@ -18,8 +18,8 @@ const ServiceName = "Guard"
 
 func init() {
 	sda.RegisterNewService(ServiceName, newGuardService)
-	network.RegisterMessageType(&Request{})
-	network.RegisterMessageType(&Response{})
+	network.RegisterPacketType(&Request{})
+	network.RegisterPacketType(&Response{})
 }
 
 //This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
