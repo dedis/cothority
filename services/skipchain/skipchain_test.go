@@ -180,7 +180,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
-		log.Lvl2(skipchainSID)
+		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 		m, err := s.GetUpdateChain(h.ServerIdentity, &GetUpdateChain{sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
