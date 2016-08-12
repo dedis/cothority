@@ -147,9 +147,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-	log.Lvl2("Sending")
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &AddIdentity{i.Config, i.Cothority})
-	log.Lvl2("Done")
 	if err != nil {
 		return err
 	}
@@ -162,9 +160,7 @@ func (i *Identity) CreateIdentity() error {
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
 func (i *Identity) ProposeSend(il *Config) error {
-	log.Lvl2("Sending")
 	_, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
-	log.Lvl2("Done")
 	i.Proposed = il
 	return err
 }
@@ -172,12 +168,10 @@ func (i *Identity) ProposeSend(il *Config) error {
 // ProposeFetch verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ProposeFetch() error {
-	log.Lvl2("Sending")
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeFetch{
 		ID:          i.ID,
 		AccountList: nil,
 	})
-	log.Lvl2("Done")
 	if err != nil {
 		return err
 	}
@@ -203,13 +197,11 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl2("Sending")
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	})
-	log.Lvl2("Done")
 	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
@@ -231,9 +223,7 @@ func (i *Identity) ConfigUpdate() error {
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
-	log.Lvl2("Sending")
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
-	log.Lvl2("Done")
 	if err != nil {
 		return err
 	}

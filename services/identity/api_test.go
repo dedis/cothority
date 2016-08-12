@@ -18,7 +18,6 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	_, el, _ := l.GenTree(5, true, true, true)
 	//services := l.GetServices(hosts, identityService)
 
-	log.Lvl2("Creating new identity")
 	c1 := NewIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
@@ -26,15 +25,12 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
 	conf2.Data["two"] = "public2"
-	log.Lvl2("Sending proposition")
 	log.ErrFatal(c1.ProposeSend(conf2))
 
-	log.Lvl2("Fetching new proposition")
 	log.ErrFatal(c1.ProposeFetch())
 	al := c1.Proposed
 	assert.NotNil(t, al)
 
-	log.Lvl2("Comparing propositions")
 	o2, ok := al.Device["two"]
 	assert.True(t, ok)
 	assert.True(t, kp2.Public.Equal(o2.Point))

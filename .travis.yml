@@ -7,7 +7,7 @@ install:
   - ./install.sh
 
 script:
-  - make test_multi
+  - make test
 
 notifications:
   email: false
