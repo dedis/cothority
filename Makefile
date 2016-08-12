@@ -28,9 +28,12 @@ test_lint:
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_multi`.
 test_multi:
-	cd network; \
+	cd protocols/bftcosi; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run Stress; \
+	  go test -v -race -run Threshold; \
+	done
+	for a in $$( seq 10 ); do \
+	  go test -v -race; \
 	done
 
 test_verbose:
