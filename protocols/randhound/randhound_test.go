@@ -14,6 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestRandHound(t *testing.T) {
+
 	// Setup parameters
 	var name string = "RandHound"             // Protocol name
 	var nodes uint32 = 10                     // Number of nodes (peers + leader)
