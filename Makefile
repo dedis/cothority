@@ -28,9 +28,13 @@ test_lint:
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_multi`.
 test_multi:
-	cd services/identity; \
+	cd services/skipchain; \
+	for a in $$( seq 10 ); do \
+	  go test -v -race || exit 1 ; \
+	done; \
+	cd ../identity; \
 	for a in $$( seq 100 ); do \
-	  go test -v -race -run ConfigNewCheck || exit 1 ; \
+	  go test -v -race || exit 1 ; \
 	done; \
 
 test_verbose:
