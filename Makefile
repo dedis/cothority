@@ -28,7 +28,7 @@ test_lint:
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_multi`.
 test_multi:
-	cd ../identity; \
+	cd services/identity; \
 	for a in $$( seq 100 ); do \
 	  go test -v -race -run ConfigNewCheck || exit 1 ; \
 	done; \
