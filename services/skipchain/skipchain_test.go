@@ -175,8 +175,6 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
-	// Wait for block-propagation
-	//time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {

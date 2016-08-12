@@ -2,7 +2,6 @@ package identity
 
 import (
 	"testing"
-	"time"
 
 	"io/ioutil"
 	"os"
@@ -107,7 +106,6 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
 	log.ErrFatal(c1.ProposeSend(conf2))
-	time.Sleep(time.Second)
 
 	for _, s := range services {
 		is := s.(*Service)
