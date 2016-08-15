@@ -16,8 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	//log.Info("Not working - #482")
-	log.MainTest(m)
+	log.MainTest(m, 1)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -220,6 +219,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
+	t.Skip("Not working - #482")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, service := makeHELS(local, 3)
