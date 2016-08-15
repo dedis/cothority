@@ -8,6 +8,8 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 
+	"fmt"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -25,7 +27,6 @@ func TestHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestHostClose(t *testing.T) {
-	time.Sleep(time.Second)
 	h1 := NewLocalHost()
 	h2 := NewLocalHost()
 	h1.ListenAndBind()
@@ -33,6 +34,8 @@ func TestHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
 	}
+	// h1 might still be reading the second part of the identity-exchange
+	log.ErrFatal(waitConnections(h1, 2))
 	err = h1.Close()
 	if err != nil {
 		t.Fatal("Couldn't close:", err)
@@ -48,6 +51,7 @@ func TestHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
+	log.ErrFatal(waitConnections(h3, 2))
 	log.Lvl3("Closing h3")
 	err = h3.Close()
 	if err != nil {
@@ -446,4 +450,18 @@ func testMessageSimple(t *testing.T, msg network.Packet) SimpleMessage {
 		t.Fatal("Received non SimpleMessage type")
 	}
 	return msg.Msg.(SimpleMessage)
+}
+
+func waitConnections(h *Host, n int) error {
+	var l int
+	for i := 0; i < 10; i++ {
+		h.networkLock.Lock()
+		l = len(h.connections)
+		h.networkLock.Unlock()
+		if l == n {
+			return nil
+		}
+		time.Sleep(network.WaitRetry)
+	}
+	return fmt.Errorf("Didn't see %d connections in Host, but %d", n, l)
 }

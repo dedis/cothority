@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"net"
 	"time"
 
@@ -246,9 +247,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		}
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeServerIdentity(); err != nil {
-			log.Error("Negotiation failed:", err)
+			log.Warn("Negotiation failed:", err)
 			if err := stc.Close(); err != nil {
-				log.Error("Couldn't close secure connection:",
+				log.Warn("Couldn't close secure connection:",
 					err)
 			}
 			return
@@ -472,12 +473,17 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 
 		// Sending 'length' bytes
 		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
-		n, err := c.conn.Write(b[:length])
+		l := length
+		if rand.Int()%2 == 1 {
+			l = l/2 + 1
+		}
+		n, err := c.conn.Write(b[:l])
 		if err != nil {
 			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			log.Error(log.Stack())
 			return handleError(err)
 		}
+		time.Sleep(time.Duration(rand.Int()%10) * time.Millisecond)
 		sent += Size(n)
 		log.Lvl5("Sent", sent, "out of", packetSize)
 
