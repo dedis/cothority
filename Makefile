@@ -31,11 +31,7 @@ test_multi:
 	cd services/skipchain; \
 	for a in $$( seq 10 ); do \
 	  go test -v -race || exit 1 ; \
-	done; \
-	cd ../identity; \
-	for a in $$( seq 100 ); do \
-	  go test -v -race || exit 1 ; \
-	done; \
+	done;
 
 test_verbose:
 	go test -v -race -short ./...

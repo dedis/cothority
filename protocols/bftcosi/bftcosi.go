@@ -163,12 +163,18 @@ func (bft *ProtocolBFTCoSi) Start() error {
 // By closing the channels for the leafs we can avoid having
 // `if !bft.IsLeaf` in the code.
 func (bft *ProtocolBFTCoSi) Dispatch() error {
+	bft.closingMutex.Lock()
+	if bft.closing {
+		return nil
+	}
 	// Close unused channels for the leaf nodes. This is not easily
 	// possible for the root-node.
 	if bft.IsLeaf() {
 		close(bft.commitChan)
 		close(bft.responseChan)
 	}
+	bft.closingMutex.Unlock()
+
 	// Wait for both prepare and commit round
 	for i := 0; i < 2; i++ {
 		// Wait for announcement message
@@ -244,9 +250,11 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 	bft.closing = true
 	bft.closingMutex.Unlock()
 	close(bft.announceChan)
-	close(bft.commitChan)
 	close(bft.challengePrepareChan)
 	close(bft.challengeCommitChan)
+	// Close these two channels at the end, because they might have
+	// been closed in `Dispatch`.
+	close(bft.commitChan)
 	close(bft.responseChan)
 	return nil
 }

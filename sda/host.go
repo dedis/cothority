@@ -87,10 +87,14 @@ func NewHost(si *network.ServerIdentity, pkey abstract.Scalar) *Host {
 // returning.
 func (h *Host) listen(wait bool) {
 	log.Lvl3(h.ServerIdentity.First(), "starts to listen")
+	idExchDone := make(chan bool)
 	fn := func(c network.SecureConn) {
 		log.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
 		h.registerConnection(c)
+		if wait && c.ServerIdentity().Equal(h.ServerIdentity) {
+			idExchDone <- true
+		}
 		h.handleConn(c)
 	}
 	log.Lvl4("Host listens on:", h.workingAddress)
@@ -114,6 +118,7 @@ func (h *Host) listen(wait bool) {
 			}
 			time.Sleep(network.WaitRetry)
 		}
+		<-idExchDone
 	}
 }
 
