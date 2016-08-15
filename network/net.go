@@ -477,13 +477,13 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		if rand.Int()%2 == 1 {
 			l = l/2 + 1
 		}
+		time.Sleep(time.Duration(rand.Int()%10) * time.Millisecond)
 		n, err := c.conn.Write(b[:l])
 		if err != nil {
 			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			log.Error(log.Stack())
 			return handleError(err)
 		}
-		time.Sleep(time.Duration(rand.Int()%10) * time.Millisecond)
 		sent += Size(n)
 		log.Lvl5("Sent", sent, "out of", packetSize)
 
