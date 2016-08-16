@@ -18,7 +18,30 @@ type Counter struct {
 	sync.Mutex
 }
 
-var counters []*Counter
+type Counters struct {
+	counters []*Counter
+	sync.Mutex
+}
+
+func (co *Counters) add(c *Counter) {
+	co.Lock()
+	co.counters = append(co.counters, c)
+	co.Unlock()
+}
+
+func (co *Counters) size() int {
+	co.Lock()
+	defer co.Unlock()
+	return len(co.counters)
+}
+
+func (co *Counters) get(i int) *Counter {
+	co.Lock()
+	defer co.Unlock()
+	return co.counters[i]
+}
+
+var counters = &Counters{}
 var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
@@ -178,9 +201,9 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 	root.Msg = msg
 	cMux.Lock()
 	counter := &Counter{refuseCount: refuseCount}
-	counters = append(counters, counter)
-	root.Data = []byte(strconv.Itoa(len(counters) - 1))
-	log.Lvl3("Added counter", len(counters)-1, refuseCount)
+	counters.add(counter)
+	root.Data = []byte(strconv.Itoa(counters.size() - 1))
+	log.Lvl3("Added counter", counters.size()-1, refuseCount)
 	cMux.Unlock()
 	log.ErrFatal(err)
 	// function that will be called when protocol is finished by the root
@@ -215,7 +238,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 func verify(m []byte, d []byte) bool {
 	c, err := strconv.Atoi(string(d))
 	log.ErrFatal(err)
-	counter := counters[c]
+	counter := counters.get(c)
 	counter.Lock()
 	counter.veriCount++
 	log.Lvl4("Verification called", counter.veriCount, "times")
@@ -231,7 +254,7 @@ func verify(m []byte, d []byte) bool {
 func verifyRefuse(m []byte, d []byte) bool {
 	c, err := strconv.Atoi(string(d))
 	log.ErrFatal(err)
-	counter := counters[c]
+	counter := counters.get(c)
 	counter.Lock()
 	defer counter.Unlock()
 	counter.veriCount++
@@ -252,7 +275,7 @@ func verifyRefuse(m []byte, d []byte) bool {
 func verifyRefuseMore(m []byte, d []byte) bool {
 	c, err := strconv.Atoi(string(d))
 	log.ErrFatal(err)
-	counter := counters[c]
+	counter := counters.get(c)
 	counter.Lock()
 	defer counter.Unlock()
 	counter.veriCount++
@@ -283,7 +306,7 @@ func bitCount(x int) int {
 func verifyRefuseBit(m []byte, d []byte) bool {
 	c, err := strconv.Atoi(string(d))
 	log.ErrFatal(err)
-	counter := counters[c]
+	counter := counters.get(c)
 	counter.Lock()
 	defer counter.Unlock()
 	log.Lvl4("Counter", c, counter)
