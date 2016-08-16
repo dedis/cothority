@@ -399,6 +399,7 @@ func TestReconnection(t *testing.T) {
 	c2 := h1.Connection(h2.ServerIdentity)
 	// making h2 fails
 	h2.AbortConnections()
+	c2.Close()
 	log.Lvl1("asking h2 to listen again")
 	// making h2 backup again
 	h2.ListenAndBind()
