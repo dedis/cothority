@@ -93,13 +93,13 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 
 	p.core = make([]ProofCore, len(scalar))
 	v := make([]abstract.Scalar, len(scalar))
-	X := make([]abstract.Point, len(scalar))
-	Y := make([]abstract.Point, len(scalar))
-	V := make([]abstract.Point, 2*len(scalar))
+	xG := make([]abstract.Point, len(scalar))
+	xH := make([]abstract.Point, len(scalar))
+	V := make([]abstract.Point, 2*len(scalar)) // vG vH
 	for i, x := range scalar {
 
-		X[i] = p.suite.Point().Mul(p.base[i].g, x) // xG
-		Y[i] = p.suite.Point().Mul(p.base[i].h, x) // xH
+		xG[i] = p.suite.Point().Mul(p.base[i].g, x)
+		xH[i] = p.suite.Point().Mul(p.base[i].h, x)
 
 		// Commitments
 		v[i] = p.suite.Scalar().Pick(random.Stream)       // v
@@ -108,7 +108,7 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 	}
 
 	// Collective challenge
-	cb, err := crypto.HashArgsSuite(p.suite, X, Y, V)
+	cb, err := crypto.HashArgsSuite(p.suite, xG, xH, V)
 	if err != nil {
 		return err
 	}
