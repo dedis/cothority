@@ -118,7 +118,7 @@ func HashArgsSuite(suite abstract.Suite, args ...interface{}) ([]byte, error) {
 }
 
 // ConvertToBinaryMarshaler takes a slice of interfaces and returns
-// a slice of BinaryMarshalers
+// a slice of BinaryMarshalers.
 func ConvertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, error) {
 	var ret []encoding.BinaryMarshaler
 	for _, a := range args {
