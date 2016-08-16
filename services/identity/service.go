@@ -40,18 +40,24 @@ var identityService sda.ServiceID
 func init() {
 	sda.RegisterNewService(ServiceName, newIdentityService)
 	identityService = sda.ServiceFactory.ServiceID(ServiceName)
+	network.RegisterPacketType(&StorageMap{})
 }
 
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	Identities      map[string]*Storage
+	*StorageMap
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
 	path            string
 }
 
-// Storage stores one identity together with the skipblocks
+// StorageMap holds the map to the storages so it can be marshaled.
+type StorageMap struct {
+	Identities map[string]*Storage
+}
+
+// Storage stores one identity together with the skipblocks.
 type Storage struct {
 	sync.Mutex
 	Latest   *Config
@@ -62,7 +68,7 @@ type Storage struct {
 }
 
 // AddIdentity will register a new SkipChain and add it to our list of
-// managed identities
+// managed identities.
 func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf3("%s Adding identity %x", s, ai.ID)
 	ids := &Storage{
@@ -315,7 +321,7 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s)
+	b, err := network.MarshalRegisteredType(s.StorageMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -344,7 +350,7 @@ func (s *Service) tryLoad() error {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
 		log.Lvl3("Successfully loaded")
-		s.Identities = msg.(*Service).Identities
+		s.StorageMap = msg.(*StorageMap)
 	}
 	return nil
 }
@@ -352,7 +358,7 @@ func (s *Service) tryLoad() error {
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		Identities:       make(map[string]*Storage),
+		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}

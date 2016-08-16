@@ -34,6 +34,7 @@ func init() {
 	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, nil)
 	})
+	network.RegisterPacketType(&SkipBlockMap{})
 }
 
 var skipchainSID sda.ServiceID
@@ -43,11 +44,16 @@ type Service struct {
 	*sda.ServiceProcessor
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
-	SkipBlocks map[string]*SkipBlock
-	sbMutex    sync.Mutex
-	path       string
+	*SkipBlockMap
+	sbMutex sync.Mutex
+	path    string
 	// testVerify is set to true if a verification happened - only for testing
 	testVerify bool
+}
+
+// SkipBlockMap holds the map to the skipblocks so it can be marshaled.
+type SkipBlockMap struct {
+	SkipBlocks map[string]*SkipBlock
 }
 
 // ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
@@ -467,7 +473,7 @@ func (s *Service) lenSkipBlocks() int {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s)
+	b, err := network.MarshalRegisteredType(s.SkipBlockMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -492,7 +498,7 @@ func (s *Service) tryLoad() error {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
 		log.Lvl3("Successfully loaded")
-		s.SkipBlocks = msg.(*Service).SkipBlocks
+		s.SkipBlockMap = msg.(*SkipBlockMap)
 	}
 	return nil
 }
@@ -501,7 +507,7 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
-		SkipBlocks:       make(map[string]*SkipBlock),
+		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

@@ -177,8 +177,8 @@ func (s *serviceFactory) start(name string, c *Context, path string) (Service, e
 	return serv, nil
 }
 
-// serviceStore is the place where all instantiated services are stored
-// It gives access to :  all the currently running services and is handling the
+// serviceManager is the place where all instantiated services are stored
+// It gives access to: all the currently running services and is handling the
 // configuration path for them
 type serviceManager struct {
 	// the actual services
@@ -187,7 +187,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	host *Host
-	// the dispather can take registration of Processors
+	// the dispatcher can take registration of Processors
 	Dispatcher
 }
 
