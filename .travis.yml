@@ -7,7 +7,7 @@ install:
   - ./install.sh
 
 script:
-  - make test_verbose
+  - make test
 
 notifications:
   email: false
