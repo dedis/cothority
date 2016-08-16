@@ -10,7 +10,6 @@ import (
 )
 
 func TestServiceGuard(t *testing.T) {
-	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	// This statement generates 5 hosts, they don't connect, they process messages, and they
