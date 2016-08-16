@@ -28,8 +28,8 @@ type ProofBase struct {
 type ProofCore struct {
 	c  abstract.Scalar // challenge
 	r  abstract.Scalar // response
-	gv abstract.Point  // public commitment with respect to base point g
-	hv abstract.Point  // public commitment with respect to base point h
+	gv abstract.Point  // public commitment with respect to base point G
+	hv abstract.Point  // public commitment with respect to base point H
 }
 
 // NewProof creates a new NIZK dlog-equality proof.
@@ -48,7 +48,7 @@ func NewProof(suite abstract.Suite, point ...abstract.Point) (*Proof, error) {
 }
 
 // Setup initializes the proof by randomly selecting a commitment v and then
-// determining the challenge c = H(G,H,x,v) and the response r = v - cx.
+// determining the challenge c = H(xG,xH,vG,vH) and the response r = v - cx.
 func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 
 	if len(scalar) != len(p.base) {
@@ -98,13 +98,13 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 	V := make([]abstract.Point, 2*len(scalar))
 	for i, x := range scalar {
 
-		X[i] = p.suite.Point().Mul(p.base[i].g, x) // gx
-		Y[i] = p.suite.Point().Mul(p.base[i].h, x) // hx
+		X[i] = p.suite.Point().Mul(p.base[i].g, x) // xG
+		Y[i] = p.suite.Point().Mul(p.base[i].h, x) // xH
 
 		// Commitments
 		v[i] = p.suite.Scalar().Pick(random.Stream)       // v
-		V[2*i] = p.suite.Point().Mul(p.base[i].g, v[i])   // gv
-		V[2*i+1] = p.suite.Point().Mul(p.base[i].h, v[i]) // hv
+		V[2*i] = p.suite.Point().Mul(p.base[i].g, v[i])   // vG
+		V[2*i+1] = p.suite.Point().Mul(p.base[i].h, v[i]) // vH
 	}
 
 	// Collective challenge
@@ -125,14 +125,14 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 }
 
 // Verify validates the proof against the given input by checking that
-// v * G == r * G + c * (x * G) and v * H == r * H + c * (x * H).
+// vG == rG + c(xG) and vH == rH + c(xH).
 func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 
 	if len(point) != 2*len(p.base) {
 		return nil, errors.New("Received unexpected number of points")
 	}
 
-	failed := make([]int, 0)
+	var failed []int
 	for i := 0; i < len(p.base); i++ {
 
 		gr := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
