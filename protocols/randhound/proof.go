@@ -2,7 +2,6 @@ package randhound
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/crypto/abstract"
@@ -12,20 +11,20 @@ import (
 // Package (XXX: name) provides functionality to show equality of discrete
 // logarithms (dlog) through non-interactive zero-knowledge (NIZK) proofs.
 
-// Proof resembles a NIZK dlog-equality proof. Can hold multiple proofs.
+// Proof resembles a NIZK dlog-equality proof. Allows to hold multiple proofs.
 type Proof struct {
 	suite abstract.Suite
 	base  []ProofBase
 	core  []ProofCore
 }
 
-// ProofBase contains the base points for a proof
+// ProofBase contains the base points against which the core proof is created.
 type ProofBase struct {
 	g abstract.Point
 	h abstract.Point
 }
 
-// ProofCore ...
+// ProofCore contains the core elements of the NIZK dlog-equality proof.
 type ProofCore struct {
 	c  abstract.Scalar // challenge
 	r  abstract.Scalar // response
@@ -41,7 +40,6 @@ func NewProof(suite abstract.Suite, point ...abstract.Point) (*Proof, error) {
 	}
 
 	base := make([]ProofBase, len(point)/2)
-
 	for i := 0; i < len(point)/2; i += 1 {
 		base[i] = ProofBase{g: point[2*i], h: point[2*i+1]}
 	}
@@ -69,7 +67,7 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 		hv := p.suite.Point().Mul(p.base[i].h, v)
 
 		// Challenge
-		cb, err := crypto.HashArgsSuite(p.suite, gx, hx, x, v)
+		cb, err := crypto.HashArgsSuite(p.suite, gx, hx, gv, hv)
 		if err != nil {
 			return err
 		}
@@ -85,48 +83,46 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 	return nil
 }
 
-// SetupCollective ...
-//func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
+// SetupCollective is similar to Setup with the difference that the challenge
+// is computed as the hash over all base points and commitments.
+func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 
-//if len(scalar) != len(p.base) {
-//return errors.New("Received number of points does not match number of base points")
-//}
+	if len(scalar) != len(p.base) {
+		return errors.New("Received number of points does not match number of base points")
+	}
 
-//p.core = make([]ProofCore, len(scalar))
-//v := make([]abstract.Scalar, len(scalar))
-//X := make([]abstract.Point, len(scalar))
-//Y := make([]abstract.Point, len(scalar))
-//V := make([]abstract.Point, 2*len(scalar))
-//for i, x := range scalar {
+	p.core = make([]ProofCore, len(scalar))
+	v := make([]abstract.Scalar, len(scalar))
+	X := make([]abstract.Point, len(scalar))
+	Y := make([]abstract.Point, len(scalar))
+	V := make([]abstract.Point, 2*len(scalar))
+	for i, x := range scalar {
 
-//X[i] = p.suite.Point().Mul(p.base[i].g, x) // gx
-//Y[i] = p.suite.Point().Mul(p.base[i].h, x) // hx
+		X[i] = p.suite.Point().Mul(p.base[i].g, x) // gx
+		Y[i] = p.suite.Point().Mul(p.base[i].h, x) // hx
 
-//// Commitments
-//v[i] = p.suite.Scalar().Pick(random.Stream)     // v
-//V[i] = p.suite.Point().Mul(p.base[i].g, v[i])   // gv
-//V[i+1] = p.suite.Point().Mul(p.base[i].h, v[i]) // hv
-//}
+		// Commitments
+		v[i] = p.suite.Scalar().Pick(random.Stream)       // v
+		V[2*i] = p.suite.Point().Mul(p.base[i].g, v[i])   // gv
+		V[2*i+1] = p.suite.Point().Mul(p.base[i].h, v[i]) // hv
+	}
 
-//X = append(X, Y...)
-//X = append(X, V...)
+	// Collective challenge
+	cb, err := crypto.HashArgsSuite(p.suite, X, Y, V)
+	if err != nil {
+		return err
+	}
+	c := p.suite.Scalar().Pick(p.suite.Cipher(cb))
 
-//// Collective challenge
-//cb, err := crypto.HashArgsSuite(p.suite, X...)
-//if err != nil {
-//return err
-//}
-//c := p.suite.Scalar().Pick(p.suite.Cipher(cb))
+	// Responses
+	for i, x := range scalar {
+		r := p.suite.Scalar()
+		r.Mul(x, c).Sub(v[i], r)
+		p.core[i] = ProofCore{c, r, V[2*i], V[2*i+1]}
+	}
 
-//// Responses
-//for i, x := range scalar {
-//r := p.suite.Scalar()
-//r.Mul(x, c).Sub(v[i], r)
-//p.core[i] = ProofCore{c, r, V[i], V[i+1]}
-//}
-
-//return nil
-//}
+	return nil
+}
 
 // Verify validates the proof against the given input by checking that
 // v * G == r * G + c * (x * G) and v * H == r * H + c * (x * H).
@@ -137,18 +133,16 @@ func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 	}
 
 	failed := make([]int, 0)
-	for i := 0; i < len(p.base); i += 2 {
+	for i := 0; i < len(p.base); i += 1 {
 
 		gr := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
 		hr := p.suite.Point().Mul(p.base[i].h, p.core[i].r)
 		gxc := p.suite.Point().Mul(point[2*i], p.core[i].c)
 		hxc := p.suite.Point().Mul(point[2*i+1], p.core[i].c)
-		x := p.suite.Point().Add(gr, gxc)
-		y := p.suite.Point().Add(hr, hxc)
+		a := p.suite.Point().Add(gr, gxc)
+		b := p.suite.Point().Add(hr, hxc)
 
-		fmt.Println(p.core[i].gv.Equal(x), p.core[i].hv.Equal(y))
-
-		if !(p.core[i].gv.Equal(x) && p.core[i].hv.Equal(y)) {
+		if !(p.core[i].gv.Equal(a) && p.core[i].hv.Equal(b)) {
 			failed = append(failed, i)
 		}
 	}
