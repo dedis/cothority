@@ -370,47 +370,44 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
-	log.Lvl1("Hello")
-	for i := 0; i < 1000; i++ {
-		h1 := NewLocalHost()
-		h2 := NewLocalHost()
+	h1 := NewLocalHost()
+	h2 := NewLocalHost()
+	defer h1.Close()
+	defer h2.Close()
 
-		h1.ListenAndBind()
-		h2.ListenAndBind()
+	h1.ListenAndBind()
+	h2.ListenAndBind()
 
-		log.Lvl1("Sending h1->h2")
-		log.ErrFatal(sendrcv(h1, h2))
-		log.Lvl1("Sending h2->h1")
-		log.ErrFatal(sendrcv(h2, h1))
-		log.Lvl1("Closing h1")
-		h1.CloseConnections()
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv(h2, h1))
+	log.Lvl1("Closing h1")
+	h1.CloseConnections()
 
-		log.Lvl1("Listening again on h1")
-		h1.ListenAndBind()
+	log.Lvl1("Listening again on h1")
+	h1.ListenAndBind()
 
-		log.Lvl1("Sending h2->h1")
-		log.ErrFatal(sendrcv(h2, h1))
-		log.Lvl1("Sending h1->h2")
-		log.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv(h2, h1))
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
 
-		log.Lvl1("Shutting down listener of h2")
+	log.Lvl1("Shutting down listener of h2")
 
-		// closing h2, but simulate *hard* failure, without sending a FIN packet
-		c2 := h1.Connection(h2.ServerIdentity)
-		// making h2 fails
-		h2.AbortConnections()
-		log.Lvl1("asking h2 to listen again")
-		// making h2 backup again
-		h2.ListenAndBind()
-		// and re-registering the connection to h2 from h1
-		h1.RegisterConnection(h2.ServerIdentity, c2)
+	// closing h2, but simulate *hard* failure, without sending a FIN packet
+	c2 := h1.Connection(h2.ServerIdentity)
+	// making h2 fails
+	h2.AbortConnections()
+	log.Lvl1("asking h2 to listen again")
+	// making h2 backup again
+	h2.ListenAndBind()
+	// and re-registering the connection to h2 from h1
+	h1.RegisterConnection(h2.ServerIdentity, c2)
 
-		log.Lvl1("Sending h1->h2")
-		log.ErrFatal(sendrcv(h1, h2))
-		log.Lvl1("Closing h1 and h2")
-		h1.Close()
-		h2.Close()
-	}
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Closing h1 and h2")
 }
 
 func sendrcv(from, to *Host) error {

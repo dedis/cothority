@@ -176,8 +176,8 @@ func (h *Host) Close() error {
 func (h *Host) closeConnections() error {
 	h.networkLock.Lock()
 	defer h.networkLock.Unlock()
-	for _, c := range h.connections {
-		log.Lvl4(h.ServerIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
+	for name, c := range h.connections {
+		log.Lvl4(h.ServerIdentity.First(), "Closing connection", name)
 		err := c.Close()
 		if err != nil {
 			log.Error(h.ServerIdentity.First(), "Couldn't close connection", c)
