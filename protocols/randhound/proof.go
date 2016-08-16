@@ -40,7 +40,7 @@ func NewProof(suite abstract.Suite, point ...abstract.Point) (*Proof, error) {
 	}
 
 	base := make([]ProofBase, len(point)/2)
-	for i := 0; i < len(point)/2; i += 1 {
+	for i := 0; i < len(point)/2; i++ {
 		base[i] = ProofBase{g: point[2*i], h: point[2*i+1]}
 	}
 
@@ -133,7 +133,7 @@ func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 	}
 
 	failed := make([]int, 0)
-	for i := 0; i < len(p.base); i += 1 {
+	for i := 0; i < len(p.base); i++ {
 
 		gr := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
 		hr := p.suite.Point().Mul(p.base[i].h, p.core[i].r)
