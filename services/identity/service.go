@@ -41,6 +41,7 @@ func init() {
 	sda.RegisterNewService(ServiceName, newIdentityService)
 	identityService = sda.ServiceFactory.ServiceID(ServiceName)
 	network.RegisterPacketType(&StorageMap{})
+	network.RegisterPacketType(&Storage{})
 }
 
 // Service handles identities

@@ -234,7 +234,7 @@ func UnmarshalRegistered(buf []byte) (PacketTypeID, Body, error) {
 	typ, ok := registry.get(tID)
 	if !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
-			typ.Name())
+			tID)
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
