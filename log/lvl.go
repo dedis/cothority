@@ -54,6 +54,8 @@ import (
 	"testing"
 	"time"
 
+	"runtime/pprof"
+
 	"github.com/daviddengcn/go-colortext"
 )
 
@@ -85,7 +87,11 @@ const (
 
 // defaultMainTest indicates what debug-level should be used when `go test -v`
 // is called.
-const defaultMainTest = 0
+const defaultMainTest = 2
+
+// MainTestWait is the maximum time the MainTest-method waits before aborting
+// and printing a stack-trace of all functions.
+var MainTestWait = 3 * time.Minute
 
 // NamePadding - the padding of functions to make a nice debug-output - this is automatically updated
 // whenever there are longer functions and kept at that new maximum. If you prefer
@@ -374,9 +380,20 @@ func MainTest(m *testing.M, ls ...int) {
 		l = ls[0]
 	}
 	TestOutput(testing.Verbose(), l)
-	code := m.Run()
-	AfterTest(nil)
-	os.Exit(code)
+	done := make(chan int)
+	go func() {
+		code := m.Run()
+		done <- code
+	}()
+	select {
+	case code := <-done:
+		AfterTest(nil)
+		os.Exit(code)
+	case <-time.After(MainTestWait):
+		Error("Didn't finish in time")
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		os.Exit(1)
+	}
 }
 
 // ParseEnv looks at the following environment-variables:

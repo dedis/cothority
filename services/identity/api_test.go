@@ -179,7 +179,6 @@ func TestIdentity_SaveToStream(t *testing.T) {
 }
 
 func TestCrashAfterRevocation(t *testing.T) {
-	log.SetDebugVisible(2)
 	l := sda.NewLocalTest()
 	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
@@ -198,16 +197,16 @@ func TestCrashAfterRevocation(t *testing.T) {
 	proposeUpVote(c1)
 	proposeUpVote(c2)
 	log.ErrFatal(c1.ConfigUpdate())
-	log.Print(c1.Config)
+	log.Lvl2(c1.Config)
 
 	conf := c1.GetProposed()
 	delete(conf.Device, "three")
-	log.Print(conf)
+	log.Lvl2(conf)
 	log.ErrFatal(c1.ProposeSend(conf))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
 	log.ErrFatal(c1.ConfigUpdate())
-	log.Print(c1.Config)
+	log.Lvl2(c1.Config)
 
 	log.Lvl1("C3 trying to send anyway")
 	conf = c3.GetProposed()
