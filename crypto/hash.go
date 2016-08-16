@@ -92,7 +92,7 @@ func HashFileSuite(suite abstract.Suite, file string) ([]byte, error) {
 }
 
 // HashArgs takes all args and returns the hash. Every arg has to implement
-// BinaryMarshaler or will be added using fmt.Sprint
+// BinaryMarshaler.
 func HashArgs(hash h.Hash, args ...interface{}) ([]byte, error) {
 	var res, buf []byte
 	bmArgs, err := ConvertToBinaryMarshaler(args)
