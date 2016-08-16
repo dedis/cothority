@@ -407,6 +407,7 @@ func TestReconnection(t *testing.T) {
 
 	log.Lvl1("Sending h1->h2")
 	log.ErrFatal(sendrcv(h1, h2))
+	log.Lvl1("Closing h1 and h2")
 }
 
 func sendrcv(from, to *Host) error {
