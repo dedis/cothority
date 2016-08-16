@@ -8,8 +8,11 @@ import (
 
 	"os"
 
+	"encoding"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
 )
 
@@ -168,6 +171,45 @@ func TestHashArgs(t *testing.T) {
 	hash2, _ = crypto.HashArgsSuite(hashSuite, str2, str1)
 	if bytes.Compare(hash1, hash2) == 0 {
 		t.Fatal("Making a hash from str1str2 should be different from str2str1")
+	}
+
+	X := make([]abstract.Point, 2)
+	X[0] = hashSuite.Point().Base()
+	X[1] = hashSuite.Point().Null()
+	_, err = crypto.HashArgsSuite(hashSuite, X)
+	log.ErrFatal(err)
+}
+
+func TestConvertToBinaryMarshaler(t *testing.T) {
+	X := make([]abstract.Point, 2)
+	X[0] = hashSuite.Point().Base()
+	X[1] = hashSuite.Point().Null()
+
+	bm, err := crypto.ConvertToBinaryMarshaler(X)
+	log.ErrFatal(err)
+	testEqual(t, bm[0], X[0])
+	testEqual(t, bm[1], X[1])
+
+	bm, err = crypto.ConvertToBinaryMarshaler(X[0], X[1])
+	log.ErrFatal(err)
+	testEqual(t, bm[0], X[0])
+	testEqual(t, bm[1], X[1])
+
+	bm, err = crypto.ConvertToBinaryMarshaler(X, X)
+	log.ErrFatal(err)
+	testEqual(t, bm[0], X[0])
+	testEqual(t, bm[1], X[1])
+	testEqual(t, bm[2], X[0])
+	testEqual(t, bm[3], X[1])
+}
+
+func testEqual(t *testing.T, a, b encoding.BinaryMarshaler) {
+	bina, err := a.MarshalBinary()
+	log.ErrFatal(err)
+	binb, err := b.MarshalBinary()
+	log.ErrFatal(err)
+	if !bytes.Equal(bina, binb) {
+		t.Fatal("Binaries are not the same")
 	}
 }
 
