@@ -28,8 +28,8 @@ type ProofBase struct {
 type ProofCore struct {
 	c  abstract.Scalar // challenge
 	r  abstract.Scalar // response
-	gv abstract.Point  // public commitment with respect to base point G
-	hv abstract.Point  // public commitment with respect to base point H
+	vG abstract.Point  // public commitment with respect to base point G
+	vH abstract.Point  // public commitment with respect to base point H
 }
 
 // NewProof creates a new NIZK dlog-equality proof.
@@ -58,16 +58,16 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 	p.core = make([]ProofCore, len(scalar))
 	for i, x := range scalar {
 
-		gx := p.suite.Point().Mul(p.base[i].g, x)
-		hx := p.suite.Point().Mul(p.base[i].h, x)
+		xG := p.suite.Point().Mul(p.base[i].g, x)
+		xH := p.suite.Point().Mul(p.base[i].h, x)
 
 		// Commitment
 		v := p.suite.Scalar().Pick(random.Stream)
-		gv := p.suite.Point().Mul(p.base[i].g, v)
-		hv := p.suite.Point().Mul(p.base[i].h, v)
+		vG := p.suite.Point().Mul(p.base[i].g, v)
+		vH := p.suite.Point().Mul(p.base[i].h, v)
 
 		// Challenge
-		cb, err := crypto.HashArgsSuite(p.suite, gx, hx, gv, hv)
+		cb, err := crypto.HashArgsSuite(p.suite, xG, xH, vG, vH)
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 		r := p.suite.Scalar()
 		r.Mul(x, c).Sub(v, r)
 
-		p.core[i] = ProofCore{c, r, gv, hv}
+		p.core[i] = ProofCore{c, r, vG, vH}
 	}
 
 	return nil
@@ -135,14 +135,14 @@ func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 	var failed []int
 	for i := 0; i < len(p.base); i++ {
 
-		gr := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
-		hr := p.suite.Point().Mul(p.base[i].h, p.core[i].r)
-		gxc := p.suite.Point().Mul(point[2*i], p.core[i].c)
-		hxc := p.suite.Point().Mul(point[2*i+1], p.core[i].c)
-		a := p.suite.Point().Add(gr, gxc)
-		b := p.suite.Point().Add(hr, hxc)
+		rG := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
+		rH := p.suite.Point().Mul(p.base[i].h, p.core[i].r)
+		cxG := p.suite.Point().Mul(point[2*i], p.core[i].c)
+		cxH := p.suite.Point().Mul(point[2*i+1], p.core[i].c)
+		a := p.suite.Point().Add(rG, cxG)
+		b := p.suite.Point().Add(rH, cxH)
 
-		if !(p.core[i].gv.Equal(a) && p.core[i].hv.Equal(b)) {
+		if !(p.core[i].vG.Equal(a) && p.core[i].vH.Equal(b)) {
 			failed = append(failed, i)
 		}
 	}
