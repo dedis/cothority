@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"net"
 	"time"
 
@@ -473,12 +472,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 
 		// Sending 'length' bytes
 		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
-		l := length
-		if rand.Int()%2 == 1 {
-			l = l/2 + 1
-		}
-		time.Sleep(time.Duration(rand.Int()%10) * time.Millisecond)
-		n, err := c.conn.Write(b[:l])
+		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			log.Error(log.Stack())
