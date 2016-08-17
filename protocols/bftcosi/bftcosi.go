@@ -250,23 +250,21 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 		// In case the channels were already closed
 		recover()
 	}()
-	bft.closingMutex.Lock()
-	bft.closing = true
-	bft.closingMutex.Unlock()
+	bft.setClosing()
 	close(bft.announceChan)
 	close(bft.challengePrepareChan)
 	close(bft.challengeCommitChan)
-	// Close these two channels at the end, because they might have
-	// been closed in `Dispatch`.
-	close(bft.commitChan)
-	close(bft.responseChan)
+	if !bft.IsLeaf() {
+		close(bft.commitChan)
+		close(bft.responseChan)
+	}
 	return nil
 }
 
 // handleAnnouncement passes the announcement to the right CoSi struct.
 func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	ann := msg.Announce
-	if bft.closing {
+	if bft.isClosing() {
 		return errors.New("Closing")
 	}
 	if bft.IsLeaf() {
@@ -282,7 +280,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 	defer bft.tmpMutex.Unlock()
 	for _, msg := range msgs {
 		comm := msg.Commitment
-		if bft.closing {
+		if bft.isClosing() {
 			return nil
 		}
 
@@ -328,7 +326,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 
 // handleChallengePrepare collects the challenge-messages
 func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) error {
-	if bft.closing {
+	if bft.isClosing() {
 		return nil
 	}
 	ch := msg.ChallengePrepare
@@ -352,7 +350,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 // handleChallengeCommit verifies the signature and checks if not more than
 // the threshold of participants refused to sign
 func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error {
-	if bft.closing {
+	if bft.isClosing() {
 		return nil
 	}
 
@@ -393,7 +391,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 // handleResponse is called when a response message arrives.
 func (bft *ProtocolBFTCoSi) handleResponse(msgs []responseChan) error {
 	for _, msg := range msgs {
-		if bft.closing {
+		if bft.isClosing() {
 			return errors.New("Quitting instance")
 		}
 		var resp *Response
@@ -640,4 +638,16 @@ func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
 		return bft.prepare
 	}
 	return bft.commit
+}
+
+func (bft *ProtocolBFTCoSi) isClosing() bool {
+	bft.closingMutex.Lock()
+	defer bft.closingMutex.Unlock()
+	return bft.closing
+}
+
+func (bft *ProtocolBFTCoSi) setClosing() {
+	bft.closingMutex.Lock()
+	bft.closing = true
+	bft.closingMutex.Unlock()
 }
