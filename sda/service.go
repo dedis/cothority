@@ -435,7 +435,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
-		log.LLvl2(log.Stack())
+		log.Lvl2(log.Stack())
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }

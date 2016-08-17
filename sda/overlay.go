@@ -44,8 +44,6 @@ type Overlay struct {
 	pendingSDAs []*ProtocolMsg
 	// lock associated with pending SDAdata
 	pendingSDAsLock sync.Mutex
-
-	transmitMux sync.Mutex
 }
 
 // NewOverlay creates a new overlay-structure
@@ -58,7 +56,6 @@ func NewOverlay(h *Host) *Overlay {
 		instances:          make(map[TokenID]*TreeNodeInstance),
 		instancesInfo:      make(map[TokenID]bool),
 		protocolInstances:  make(map[TokenID]ProtocolInstance),
-		transmitMux:        sync.Mutex{},
 		pendingTreeMarshal: make(map[RosterID][]*TreeMarshal),
 		pendingSDAs:        make([]*ProtocolMsg, 0),
 	}
@@ -128,7 +125,6 @@ func (o *Overlay) Process(data *network.Packet) {
 		}
 		log.Lvl4("Received new tree")
 		o.RegisterTree(tree)
-		o.checkPendingMessages(tree)
 	case RequestRosterMessageID:
 		// Some host requested an Roster
 		id := data.Msg.(RequestRoster).RosterID
@@ -166,17 +162,10 @@ func (o *Overlay) Process(data *network.Packet) {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
-	o.transmitMux.Lock()
-	defer o.transmitMux.Unlock()
-	// do we have the entitylist ? if not, ask for it.
-	if o.Roster(sdaMsg.To.RosterID) == nil {
-		log.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
-		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
-	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		log.Lvl4("Will ask for tree from token")
-		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
+		err := o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
+		return err
 	}
 	// TreeNodeInstance
 	var pi ProtocolInstance
@@ -185,7 +174,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
-		log.Lvl4("Message for TreeNodeInstance that is already finished")
+		log.Error("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it
@@ -229,10 +218,8 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 
 	}
 
-	log.Lvl4("Dispatching message", o.host.ServerIdentity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.ProcessProtocolMsg(sdaMsg)
-
 	return nil
 }
 

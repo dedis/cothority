@@ -36,7 +36,9 @@ var ErrorType = PacketTypeID(uuid.Nil)
 
 // String returns the canonical string representation of the PacketTypeID
 func (mId PacketTypeID) String() string {
-	return uuid.UUID(mId).String()
+	//return uuid.UUID(mId).String()
+	t, _ := registry.get(mId)
+	return t.String()
 }
 
 // NamespaceURL is the basic namespace used for uuid
