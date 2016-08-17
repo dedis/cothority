@@ -22,6 +22,10 @@ import (
 // MaxRetryConnect defines how many times should we try to connect
 const MaxRetryConnect = 10
 
+// MaxIdentityExchange is the maximum time waited for an exchange of
+// the identity to happen.
+const MaxIdentityExchange = 5 * time.Second
+
 // WaitRetry defines how much time should we wait before trying again
 const WaitRetry = 100 * time.Millisecond
 

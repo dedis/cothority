@@ -34,9 +34,14 @@ type PacketTypeID uuid.UUID
 // Error() on it.
 var ErrorType = PacketTypeID(uuid.Nil)
 
-// String returns the canonical string representation of the PacketTypeID
+// String returns the name of the structure if it is known, else it returns
+// the hexadecimal value of the Id.
 func (mId PacketTypeID) String() string {
-	return uuid.UUID(mId).String()
+	t, ok := registry.get(mId)
+	if ok {
+		return t.String()
+	}
+	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
 // NamespaceURL is the basic namespace used for uuid
@@ -191,8 +196,8 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 	var buf []byte
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
-		log.Error("Error for protobuf encoding:", err)
-		if log.DebugVisible() >= 3 {
+		log.Errorf("Error for protobuf encoding: %s %+v", err, data)
+		if log.DebugVisible() > 0 {
 			log.Error(log.Stack())
 		}
 		return nil, err
@@ -234,7 +239,7 @@ func UnmarshalRegistered(buf []byte) (PacketTypeID, Body, error) {
 	typ, ok := registry.get(tID)
 	if !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
-			typ.Name())
+			tID)
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()

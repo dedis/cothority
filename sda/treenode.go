@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sync"
 
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -178,6 +180,17 @@ func (n *TreeNodeInstance) RegisterChannel(c interface{}) error {
 	return nil
 }
 
+// RegisterChannels registers a list of given channels by calling RegisterChannel above
+func (n *TreeNodeInstance) RegisterChannels(channels ...interface{}) error {
+	for _, ch := range channels {
+		if err := n.RegisterChannel(ch); err != nil {
+			return fmt.Errorf("Error, could not register channel %T: %s",
+				ch, err.Error())
+		}
+	}
+	return nil
+}
+
 // RegisterHandler takes a function which takes a struct as argument that contains two
 // elements: a TreeNode and a message. It will send every message that are the
 // same type to this channel.
@@ -221,7 +234,8 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 func (n *TreeNodeInstance) RegisterHandlers(handlers ...interface{}) error {
 	for _, h := range handlers {
 		if err := n.RegisterHandler(h); err != nil {
-			return errors.New("Error, could not register handler: " + err.Error())
+			return fmt.Errorf("Error, could not register handler %T: %s",
+				h, err.Error())
 		}
 	}
 	return nil
@@ -278,6 +292,7 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			f.Call([]reflect.Value{m})
 		}
 	}
+	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
 	return nil
 }
 
@@ -310,7 +325,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 		for _, msg := range msgSlice {
 			out := n.channels[mt]
 			m := n.reflectCreate(to.Elem(), msg)
-			log.Lvl4("Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
+			log.Lvl4(n.Name(), "Dispatching msg type", mt, " to", to, " :", m.Field(1).Interface())
 			reflect.ValueOf(out).Send(m)
 		}
 	}
@@ -379,11 +394,11 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	log.Lvlf5("TNI dispatching -Message is: %+v", sdaMsg.Msg)
+	log.Lvlf5("%s->%s: Message is: %+v", n.Name(), sdaMsg.Msg)
 
 	switch {
 	case n.channels[msgType] != nil:
-		log.Lvl4(n.Info(), "Dispatching to channel")
+		log.Lvl4(n.Name(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
@@ -538,6 +553,8 @@ func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	if n.IsRoot() {
 		return nil
 	}
+	log.Lvl4(n.Name(), strings.Split(log.Stack(), "\n")[7], "Sends to",
+		n.Parent().Name())
 	return n.SendTo(n.Parent(), msg)
 }
 
@@ -571,16 +588,20 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 	children := n.Children()
 	errs := make([]collectedErrors, 0, len(children))
 	eMut := sync.Mutex{}
+	wg := sync.WaitGroup{}
 	for _, node := range children {
 		name := node.Name()
+		wg.Add(1)
 		go func(n2 *TreeNode) {
 			if err := n.SendTo(n2, msg); err != nil {
 				eMut.Lock()
 				errs = append(errs, collectedErrors{name, err})
 				eMut.Unlock()
 			}
+			wg.Done()
 		}(node)
 	}
+	wg.Wait()
 	return collectErrors("Error while sending to %s: %s\n", errs)
 }
 

@@ -260,7 +260,8 @@ func NewLocalHost() *Host {
 }
 
 // GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true.
+// the other nodes if connect is true. It will take the port-number from
+// the global variable LocalHostPort.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {

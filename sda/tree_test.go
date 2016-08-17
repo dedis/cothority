@@ -1,7 +1,6 @@
 package sda
 
 import (
-	"math/rand"
 	"net"
 	"strconv"
 	"testing"
@@ -188,23 +187,23 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 	tree := peerList.GenerateNaryTree(3)
 
 	ln := tree.List()
-	randomNode := ln[rand.Intn(len(ln))]
-	var idx int
-	for i, e := range peerList.List {
-		if e.Equal(randomNode.ServerIdentity) {
-			idx = i
-			break
+	for _, node := range ln {
+		idx := -1
+		for i, e := range peerList.List {
+			if e.Equal(node.ServerIdentity) {
+				idx = i
+				break
+			}
+		}
+
+		if idx == -1 {
+			t.Fatal("Could not find the entity in the node")
+		}
+
+		if node.ServerIdentityIdx != idx {
+			t.Fatal("Index of entity do not correlate")
 		}
 	}
-
-	if idx == 0 {
-		t.Fatal("Could not find the entity in the node")
-	}
-
-	if randomNode.ServerIdentityIdx != idx {
-		t.Fatal("Index of entity do not correlate")
-	}
-
 }
 
 func TestNaryTree(t *testing.T) {

@@ -24,14 +24,14 @@ test_lint:
 		fi \
 	}
 
-# You can use `test_multi` to run any test or part of cothority
+# You can use `test_playground` to run any test or part of cothority
 # for more than once in Travis. Change `make test` in .travis.yml
-# to `make test_multi`.
-test_multi:
-	cd network; \
+# to `make test_playground`.
+test_playground:
+	cd services/skipchain; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run Stress; \
-	done
+	  go test -v -race || exit 1 ; \
+	done;
 
 test_verbose:
 	go test -v -race -short ./...

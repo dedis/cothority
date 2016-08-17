@@ -246,9 +246,9 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		}
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeServerIdentity(); err != nil {
-			log.Error("Negotiation failed:", err)
+			log.Warn("Negotiation failed:", err)
 			if err := stc.Close(); err != nil {
-				log.Error("Couldn't close secure connection:",
+				log.Warn("Couldn't close secure connection:",
 					err)
 			}
 			return
@@ -419,11 +419,14 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
+		b = b[n:]
 		log.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
+		log.Errorf("Read %d out of %d - buffer is %x", read, total, buffer.Bytes())
+		DumpTypes()
 		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
@@ -481,7 +484,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		// bytes left to send
 		b = b[n:]
 	}
-	log.Lvl5(c.Endpoint, "Sent a total of", sent, "bytes")
+	log.Lvl5(c.Local(), c.Remote(), "Sent a total of", sent, "bytes")
 	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
@@ -490,6 +493,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
+	log.Lvl4("Closing connection", c.Local(), c.Remote())
 	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
