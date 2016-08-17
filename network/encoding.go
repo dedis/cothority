@@ -40,9 +40,8 @@ func (mId PacketTypeID) String() string {
 	t, ok := registry.get(mId)
 	if ok {
 		return t.String()
-	} else {
-		return fmt.Sprintf("%x", mId)
 	}
+	return fmt.Sprintf("%x", mId.(uuid.UUID))
 }
 
 // NamespaceURL is the basic namespace used for uuid
