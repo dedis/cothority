@@ -234,12 +234,6 @@ func (h *Host) SendRaw(si *network.ServerIdentity, msg network.Body) error {
 			return err
 		}
 	}
-	m, ok := msg.(*ProtocolMsg)
-	if ok {
-		log.Lvl5(h.ServerIdentity.First(), "sent to", si.First(),
-			c.Local(), c.Remote(),
-			m.MsgType.String())
-	}
 	return nil
 }
 

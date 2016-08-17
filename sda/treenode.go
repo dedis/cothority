@@ -335,7 +335,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 // ProcessProtocolMsg takes a message and puts it into a queue for later processing.
 // This allows a protocol to have a backlog of messages.
 func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
-	log.Lvl4(n.Info(), "aReceived message")
+	log.Lvl4(n.Info(), "Received message")
 	n.msgDispatchQueueMutex.Lock()
 	n.msgDispatchQueue = append(n.msgDispatchQueue, msg)
 	log.Lvl4(n.Info(), "DispatchQueue-length is", len(n.msgDispatchQueue))
@@ -343,7 +343,6 @@ func (n *TreeNodeInstance) ProcessProtocolMsg(msg *ProtocolMsg) {
 		n.msgDispatchQueueWait <- true
 	}
 	n.msgDispatchQueueMutex.Unlock()
-	log.Lvl4(n.Info(), "Finished message")
 }
 
 func (n *TreeNodeInstance) dispatchMsgReader() {
