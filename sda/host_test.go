@@ -370,6 +370,7 @@ func TestAutoConnection(t *testing.T) {
 }
 
 func TestReconnection(t *testing.T) {
+	t.Skip("Will be fixed in https://github.com/dedis/cothority/issues/521")
 	h1 := NewLocalHost()
 	h2 := NewLocalHost()
 	defer h1.Close()
