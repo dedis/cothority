@@ -44,6 +44,8 @@ type Overlay struct {
 	pendingSDAs []*ProtocolMsg
 	// lock associated with pending SDAdata
 	pendingSDAsLock sync.Mutex
+
+	transmitMux sync.Mutex
 }
 
 // NewOverlay creates a new overlay-structure
@@ -164,9 +166,11 @@ func (o *Overlay) Process(data *network.Packet) {
 func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		err := o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
-		return err
+		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
+
+	o.transmitMux.Lock()
+	defer o.transmitMux.Unlock()
 	// TreeNodeInstance
 	var pi ProtocolInstance
 	o.instancesLock.Lock()
