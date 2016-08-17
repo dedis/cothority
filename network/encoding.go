@@ -34,10 +34,14 @@ type PacketTypeID uuid.UUID
 // Error() on it.
 var ErrorType = PacketTypeID(uuid.Nil)
 
-// String returns the canonical string representation of the PacketTypeID
+// String returns the name of the structure if it is known, else it returns
+// the hexadecimal value of the Id.
 func (mId PacketTypeID) String() string {
-	t, _ := registry.get(mId)
-	return t.String()
+	t, ok := registry.get(mId)
+	if ok {
+		return t.String()
+	}
+	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
 // NamespaceURL is the basic namespace used for uuid
