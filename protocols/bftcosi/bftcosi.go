@@ -167,8 +167,12 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	if bft.closing {
 		return nil
 	}
-	// Close unused channels for the leaf nodes. This is not easily
-	// possible for the root-node.
+	// Close unused channels for the leaf nodes, so they won't listen
+	// and block on those messages which they will only send but never
+	// receive.
+	// Unfortunately this is not possible for the announce- and
+	// challenge-channels, so the root-node has to send the message
+	// to the channel instead of using a simple `SendToChildren`.
 	if bft.IsLeaf() {
 		close(bft.commitChan)
 		close(bft.responseChan)
