@@ -41,7 +41,7 @@ func (mId PacketTypeID) String() string {
 	if ok {
 		return t.String()
 	}
-	return fmt.Sprintf("%x", mId.(uuid.UUID))
+	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
 // NamespaceURL is the basic namespace used for uuid
