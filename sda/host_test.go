@@ -400,6 +400,8 @@ func TestReconnection(t *testing.T) {
 	// making h2 fails
 	h2.AbortConnections()
 	log.Lvl1("asking h2 to listen again")
+	// Making sure c2 is not available anymore
+	c2.Close()
 	// making h2 backup again
 	h2.ListenAndBind()
 	// and re-registering the connection to h2 from h1
