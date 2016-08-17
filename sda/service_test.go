@@ -466,8 +466,8 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	nbrNodes := 2
-	nbrParallel := 2
+	nbrNodes := 4
+	nbrParallel := 20
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -579,7 +579,7 @@ func (sp *BackForthProtocol) dispatch() {
 				}
 				return
 			}
-			// pass the message up
+		// pass the message up
 		case m := <-sp.backChan:
 			msg := m.SimpleMessageBack
 			// call the handler  if we are the root

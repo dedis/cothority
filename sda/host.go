@@ -219,7 +219,8 @@ func (h *Host) SendRaw(si *network.ServerIdentity, msg network.Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", h.ServerIdentity.Addresses, si, msg)
+	log.Lvlf4("%s sends to %s over %s", h.ServerIdentity.Addresses,
+		si.Addresses, c.Local())
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil /*&& err != network.ErrClosed*/ {
@@ -233,7 +234,6 @@ func (h *Host) SendRaw(si *network.ServerIdentity, msg network.Body) error {
 			return err
 		}
 	}
-	log.Lvl5("Message sent")
 	return nil
 }
 
