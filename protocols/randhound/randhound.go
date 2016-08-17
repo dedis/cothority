@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
@@ -107,7 +106,7 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 }
 
 // Setup ...
-func (rh *RandHound) Setup(nodes uint32, faulty uint32, trustees uint32, groups uint32, purpose string) error {
+func (rh *RandHound) Setup(nodes uint32, faulty uint32, groups uint32, purpose string) error {
 
 	rh.Transcript = &Transcript{}
 	rh.Transcript.Session = &Session{
@@ -199,7 +198,7 @@ func (rh *RandHound) Start() error {
 	rh.Server = servers
 	rh.Transcript.Session.Key = keys
 
-	// Determine secret sharing thresholds (XXX: currently set to 2/3 of max value)
+	// Determine secret sharing thresholds (XXX: currently defaults to 2/3 of max value)
 	for i := range keys {
 		rh.Transcript.Session.Threshold[i] = uint32(2 * len(keys[i]) / 3)
 	}
@@ -214,19 +213,21 @@ func (rh *RandHound) Start() error {
 	// Send messages to servers
 	for i, group := range servers {
 		i1 := &I1{SID: sid, T: rh.Transcript.Session.Threshold[i], Key: keys[i]}
-		if err := rh.Multicast(group, i1); err != nil {
+		if err := rh.Multicast(i1, group...); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (rh *RandHound) index() uint32 {
-	return uint32(rh.Index())
-}
-
 func (rh *RandHound) handleI1(i1 WI1) error {
-	log.Lvlf1("RandHound - I1: %v %v\n", rh.index(), &i1.I1)
+
+	msg := &i1.I1
+
+	// TODO: For init select random subset of msg.Key of size msg.T
+	pvss := PVSS{}
+	pvss.Setup(rh.Suite(), int(msg.T), msg.SID, msg.Key)
+
 	hi1 := []byte{1}
 	r1 := &R1{HI1: hi1}
 	return rh.SendTo(rh.Root(), r1)
@@ -265,4 +266,8 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		rh.Done <- true
 	}
 	return nil
+}
+
+func (rh *RandHound) index() uint32 {
+	return uint32(rh.Index())
 }

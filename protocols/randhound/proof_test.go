@@ -34,10 +34,10 @@ func TestProof(t *testing.T) {
 	g2y := suite.Point().Mul(g2, y)
 	h2y := suite.Point().Mul(h2, y)
 
-	p, _ := randhound.NewProof(suite, g1, h1, g2, h2)
+	p, _ := randhound.NewProof(suite, g1, g2, h1, h2)
 	p.Setup(x, y)
 
-	failed, err := p.Verify(g1x, h1x, g2y, h2y)
+	failed, err := p.Verify(g1x, g2y, h1x, h2y)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,10 +74,10 @@ func TestProofCollective(t *testing.T) {
 	g2y := suite.Point().Mul(g2, y)
 	h2y := suite.Point().Mul(h2, y)
 
-	p, _ := randhound.NewProof(suite, g1, h1, g2, h2)
+	p, _ := randhound.NewProof(suite, g1, g2, h1, h2)
 	p.SetupCollective(x, y)
 
-	failed, err := p.Verify(g1x, h1x, g2y, h2y)
+	failed, err := p.Verify(g1x, g2y, h1x, h2y)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,14 +12,12 @@ import (
 func TestRandHound(t *testing.T) {
 
 	var name = "RandHound"
-	var nodes uint32 = 6
+	var nodes uint32 = 10
 	var faulty uint32 = 2
-	var trustees uint32 = 3
 	var purpose string = "RandHound test run"
-	var groups uint32 = 2
+	var groups uint32 = 1
 
 	_ = faulty
-	_ = trustees
 	_ = purpose
 
 	local := sda.NewLocalTest()
@@ -34,7 +32,7 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := protocol.(*randhound.RandHound)
-	err = rh.Setup(nodes, faulty, trustees, groups, purpose)
+	err = rh.Setup(nodes, faulty, groups, purpose)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
