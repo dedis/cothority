@@ -70,7 +70,9 @@ func (a Address) Valid() bool {
 		return false
 	}
 
-	if _, _, e := net.SplitHostPort(vals[1] + ":" + vals[2]); e != nil {
+	if ip, _, e := net.SplitHostPort(vals[1] + ":" + vals[2]); e != nil {
+		return false
+	} else if net.ParseIP(ip) == nil {
 		return false
 	}
 	return true
