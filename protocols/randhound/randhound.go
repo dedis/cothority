@@ -1,18 +1,15 @@
-// Package randhound is a client/server protocol that allows a list of nodes to produce
-// a public random string in an unbiasable and verifiable way given that a
-// threshold of nodes is honest. The protocol is driven by a leader (= client)
-// which scavenges the public randomness from its peers (= servers) over the
-// course of four round-trips (= phases).
 package randhound
 
 import (
 	"bytes"
 	"encoding/binary"
+	"sync"
 	"time"
 
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
 )
 
@@ -20,232 +17,252 @@ func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
-// RandHound is the main protocol struct and implements the
-// sda.ProtocolInstance interface.
 type RandHound struct {
 	*sda.TreeNodeInstance
-	GID     []byte   // Group ID
-	Group   *Group   // Group parameters
-	SID     []byte   // Session ID
+	Transcript *Transcript       // Transcript of a protocol run
+	Done       chan bool         // To signal that a protocol run is finished
+	mutex      sync.Mutex        // ...
+	counter    uint32            // XXX: dummy, remove later
+	Server     [][]*sda.TreeNode // Grouped servers (with connection infos)
+}
+
+type Transcript struct {
+	SID     []byte   // Session identifier
 	Session *Session // Session parameters
-	Leader  *Leader  // Protocol leader
-	Peer    *Peer    // Current peer
 }
 
-// Session encapsulates some metadata of a RandHound protocol run.
 type Session struct {
-	Fingerprint []byte    // Fingerprint of a public key (usually of the leader)
-	Purpose     string    // Purpose of randomness
-	Time        time.Time // Scheduled initiation time
+	Nodes     uint32             // Total number of nodes (client + servers)
+	Faulty    uint32             // Maximum number of Byzantine servers
+	Groups    uint32             // Total number of groups
+	Purpose   string             // Purpose of the protocol run
+	Time      time.Time          // Timestamp of initiation
+	Rand      []byte             // Client-chosen randomness
+	Key       [][]abstract.Point // Server key grouping derived from the client-chosen randomness
+	Threshold []uint32           // Secret sharing thresholds of individual server groups
 }
 
-// Group encapsulates all the configuration parameters of a list of RandHound nodes.
-type Group struct {
-	N uint32 // Total number of nodes (peers + leader)
-	F uint32 // Maximum number of Byzantine nodes tolerated (1/3)
-	L uint32 // Minimum number of non-Byzantine nodes required (2/3)
-	K uint32 // Total number of trustees (= shares generated per peer)
-	R uint32 // Minimum number of signatures needed to certify a deal
-	T uint32 // Minimum number of shares needed to reconstruct a secret
+// I1 message
+type I1 struct {
+	SID []byte           // Session identifier
+	T   uint32           // Secret sharing threshold
+	Key []abstract.Point // Public keys of trustees
 }
 
-// Leader (=client) refers to the node which initiates the RandHound protocol,
-// moves it forward, and ultimately outputs the generated public randomness.
-type Leader struct {
-	rc      []byte                 // Leader's trustee-selection random value
-	rs      [][]byte               // Peers' trustee-selection random values
-	i1      *I1                    // I1 message sent to the peers
-	i2      *I2                    // I2 - " -
-	i3      *I3                    // I3 - " -
-	i4      *I4                    // I4 - " -
-	r1      map[uint32]*R1         // R1 messages received from the peers
-	r2      map[uint32]*R2         // R2 - " -
-	r3      map[uint32]*R3         // R3 - " -
-	r4      map[uint32]*R4         // R4 - " -
-	states  map[uint32]*poly.State // States for deals and responses from peers
-	invalid map[uint32]*[]uint32   // Map to mark invalid shares
-	Done    chan bool              // For signaling that a protocol run is finished
+// R1 message
+type R1 struct {
+	HI1 []byte // Hash of I1
 }
 
-// Peer (=server) refers to a node which contributes to the generation of the
-// public randomness.
-type Peer struct {
-	rs     []byte              // A peer's trustee-selection random value
-	shares map[uint32]*R4Share // A peer's shares
-	i1     *I1                 // I1 message we received from the leader
-	i2     *I2                 // I2 - " -
-	i3     *I3                 // I3 - " -
-	i4     *I4                 // I4 - " -
-	r1     *R1                 // R1 message we sent to the leader
-	r2     *R2                 // R2 - " -
-	r3     *R3                 // R3 - " -
-	r4     *R4                 // R4 - " -
+// I2 message
+type I2 struct {
+	SID []byte // Session identifier
 }
 
-// NewRandHound generates a new RandHound instance.
+// R2 message
+type R2 struct {
+	HI2 []byte // Hash of I2
+}
+
+// WI1 is a SDA-wrapper around I1
+type WI1 struct {
+	*sda.TreeNode
+	I1
+}
+
+// WR1 is a SDA-wrapper around R1
+type WR1 struct {
+	*sda.TreeNode
+	R1
+}
+
+// WI2 is a SDA-wrapper around I2
+type WI2 struct {
+	*sda.TreeNode
+	I2
+}
+
+// WR2 is a SDA-wrapper around R2
+type WR2 struct {
+	*sda.TreeNode
+	R2
+}
+
 func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct
 	rh := &RandHound{
 		TreeNodeInstance: node,
-	}
-
-	// Setup leader or peer depending on the node's location in the tree
-	if node.IsRoot() {
-		leader, err := rh.newLeader()
-		if err != nil {
-			return nil, err
-		}
-		rh.Leader = leader
-	} else {
-		peer, err := rh.newPeer()
-		if err != nil {
-			return nil, err
-		}
-		rh.Peer = peer
+		counter:          0,
 	}
 
 	// Setup message handlers
 	h := []interface{}{
-		rh.handleI1, rh.handleR1,
-		rh.handleI2, rh.handleR2,
-		rh.handleI3, rh.handleR3,
-		rh.handleI4, rh.handleR4,
+		rh.handleI1, rh.handleI2,
+		rh.handleR1, rh.handleR2,
 	}
 	err := rh.RegisterHandlers(h...)
 
 	return rh, err
 }
 
-// Setup configures a RandHound instance by creating group and session
-// parameters of the protocol. Needs to be called before Start.
-func (rh *RandHound) Setup(nodes uint32, trustees uint32, purpose string) error {
+// Setup ...
+func (rh *RandHound) Setup(nodes uint32, faulty uint32, trustees uint32, groups uint32, purpose string) error {
 
-	// Setup group
-	group, gid, err := rh.newGroup(nodes, trustees)
-	if err != nil {
-		return err
+	rh.Transcript = &Transcript{}
+	rh.Transcript.Session = &Session{
+		Nodes:     nodes,
+		Faulty:    faulty,
+		Groups:    groups,
+		Purpose:   purpose,
+		Threshold: make([]uint32, groups),
 	}
-	rh.GID = gid
-	rh.Group = group
 
-	// Setup session
-	session, sid, err := rh.newSession(rh.ServerIdentity().Public, purpose, time.Now())
-	if err != nil {
-		return err
-	}
-	rh.SID = sid
-	rh.Session = session
+	rh.Done = make(chan bool, 1)
+	rh.counter = 0
 
 	return nil
 }
 
-// Start initiates the RandHound protocol. The leader chooses its
-// trustee-selection randomness, forms the message I1 and sends it to its
-// children.
+// SID ...
+func (rh *RandHound) SID() ([]byte, error) {
+
+	buf := new(bytes.Buffer)
+
+	if err := binary.Write(buf, binary.LittleEndian, rh.Transcript.Session.Nodes); err != nil {
+		return nil, err
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, rh.Transcript.Session.Faulty); err != nil {
+		return nil, err
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, rh.Transcript.Session.Groups); err != nil {
+		return nil, err
+	}
+
+	if _, err := buf.WriteString(rh.Transcript.Session.Purpose); err != nil {
+		return nil, err
+	}
+
+	t, err := rh.Transcript.Session.Time.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := buf.Write(t); err != nil {
+		return nil, err
+	}
+
+	if _, err := buf.Write(rh.Transcript.Session.Rand); err != nil {
+		return nil, err
+	}
+
+	for _, keys := range rh.Transcript.Session.Key {
+		for _, k := range keys {
+			kb, err := k.MarshalBinary()
+			if err != nil {
+				return nil, err
+			}
+			if _, err := buf.Write(kb); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	for _, t := range rh.Transcript.Session.Threshold {
+		if err := binary.Write(buf, binary.LittleEndian, t); err != nil {
+			return nil, err
+		}
+	}
+
+	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
+}
+
+// Start ...
 func (rh *RandHound) Start() error {
 
+	// Set timestamp
+	rh.Transcript.Session.Time = time.Now()
+
+	// Choose randomness
 	hs := rh.Suite().Hash().Size()
-	rc := make([]byte, hs)
-	random.Stream.XORKeyStream(rc, rc)
-	rh.Leader.rc = rc
+	rand := make([]byte, hs)
+	random.Stream.XORKeyStream(rand, rand)
+	rh.Transcript.Session.Rand = rand
 
-	rh.Leader.i1 = &I1{
-		SID:     rh.SID,
-		Session: rh.Session,
-		GID:     rh.GID,
-		Group:   rh.Group,
-		HRc:     rh.hash(rh.Leader.rc),
-	}
-
-	return rh.SendToChildren(rh.Leader.i1)
-}
-
-func (rh *RandHound) newSession(public abstract.Point, purpose string, time time.Time) (*Session, []byte, error) {
-
-	buf := new(bytes.Buffer)
-
-	pub, err := public.MarshalBinary()
+	// Determine server grouping
+	servers, keys, err := rh.Shard(rand, rh.Transcript.Session.Groups)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	if err = binary.Write(buf, binary.LittleEndian, pub); err != nil {
-		return nil, nil, err
+	rh.Server = servers
+	rh.Transcript.Session.Key = keys
+
+	// Determine secret sharing thresholds (XXX: currently set to 2/3 of max value)
+	for i := range keys {
+		rh.Transcript.Session.Threshold[i] = uint32(2 * len(keys[i]) / 3)
 	}
-	tm, err := time.MarshalBinary()
+
+	// Determine session identifier
+	sid, err := rh.SID()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	if err = binary.Write(buf, binary.LittleEndian, tm); err != nil {
-		return nil, nil, err
-	}
-	if err = binary.Write(buf, binary.LittleEndian, []byte(purpose)); err != nil {
-		return nil, nil, err
-	}
+	rh.Transcript.SID = sid
 
-	return &Session{
-		Fingerprint: pub,
-		Purpose:     purpose,
-		Time:        time}, rh.hash(buf.Bytes()), nil
-}
-
-func (rh *RandHound) newGroup(nodes uint32, trustees uint32) (*Group, []byte, error) {
-
-	buf := new(bytes.Buffer)
-
-	n := nodes    // Number of nodes (peers + leader)
-	k := trustees // Number of trustees (= shares generaetd per peer)
-
-	// Setup group parameters: note that T <= R <= K must hold;
-	// T = R for simplicity, might change later
-	gp := [6]uint32{
-		n,           // N: total number of nodes (peers + leader)
-		n / 3,       // F: maximum number of Byzantine nodes tolerated
-		n - (n / 3), // L: minimum number of non-Byzantine nodes required
-		k,           // K: total number of trustees (= shares generated per peer)
-		(k + 1) / 2, // R: minimum number of signatures needed to certify a deal
-		(k + 1) / 2, // T: minimum number of shares needed to reconstruct a secret
-	}
-
-	// Include public keys of all nodes into group ID
-	for _, x := range rh.List() {
-		pub, err := x.ServerIdentity.Public.MarshalBinary()
-		if err != nil {
-			return nil, nil, err
-		}
-		if err = binary.Write(buf, binary.LittleEndian, pub); err != nil {
-			return nil, nil, err
+	// Send messages to servers
+	for i, group := range servers {
+		i1 := &I1{SID: sid, T: rh.Transcript.Session.Threshold[i], Key: keys[i]}
+		if err := rh.Multicast(group, i1); err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
-	// Include group parameters into group ID
-	for _, g := range gp {
-		if err := binary.Write(buf, binary.LittleEndian, g); err != nil {
-			return nil, nil, err
-		}
+func (rh *RandHound) index() uint32 {
+	return uint32(rh.Index())
+}
+
+func (rh *RandHound) handleI1(i1 WI1) error {
+	log.Lvlf1("RandHound - I1: %v %v\n", rh.index(), &i1.I1)
+	hi1 := []byte{1}
+	r1 := &R1{HI1: hi1}
+	return rh.SendTo(rh.Root(), r1)
+}
+
+func (rh *RandHound) handleR1(r1 WR1) error {
+	//log.Lvlf1("RandHound - R1: %v %v\n", rh.index(), &r1.R1)
+
+	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
+	rh.counter++
+	//log.Lvlf1("RandHound - R1 - Counter: %v %v\n", rh.index(), rh.counter)
+	if rh.counter == 4 {
+		rh.counter = 0
+		sid := []byte{2}
+		i2 := &I2{SID: sid}
+		return rh.Broadcast(i2)
 	}
-
-	return &Group{
-		N: gp[0],
-		F: gp[1],
-		L: gp[2],
-		K: gp[3],
-		R: gp[4],
-		T: gp[5]}, rh.hash(buf.Bytes()), nil
+	return nil
 }
 
-func (rh *RandHound) newLeader() (*Leader, error) {
-	return &Leader{
-		r1:      make(map[uint32]*R1),
-		r2:      make(map[uint32]*R2),
-		r3:      make(map[uint32]*R3),
-		r4:      make(map[uint32]*R4),
-		states:  make(map[uint32]*poly.State),
-		invalid: make(map[uint32]*[]uint32),
-		Done:    make(chan bool, 1),
-	}, nil
+func (rh *RandHound) handleI2(i2 WI2) error {
+	//log.Lvlf1("RandHound - I2: %v %v\n", rh.index(), &i2.I2)
+	hi2 := []byte{3}
+	r2 := &R2{HI2: hi2}
+	return rh.SendTo(rh.Root(), r2)
 }
 
-func (rh *RandHound) newPeer() (*Peer, error) {
-	return &Peer{shares: make(map[uint32]*R4Share)}, nil
+func (rh *RandHound) handleR2(r2 WR2) error {
+	//log.Lvlf1("RandHound - R2: %v %v\n", rh.index(), &r2.R2)
+	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
+	rh.counter++
+	//log.Lvlf1("RandHound - R2 - Counter: %v %v\n", rh.index(), rh.counter)
+	if rh.counter == 4 {
+		rh.Done <- true
+	}
+	return nil
 }

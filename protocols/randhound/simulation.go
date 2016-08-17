@@ -1,4 +1,5 @@
-package randhound
+// +build ignore
+// package randhound
 
 import (
 	"time"

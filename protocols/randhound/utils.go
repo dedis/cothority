@@ -3,96 +3,46 @@ package randhound
 import (
 	"fmt"
 
-	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 )
 
 // Shard produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
-func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*network.ServerIdentity, error) {
+func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*sda.TreeNode, [][]abstract.Point, error) {
 
-	if shards == 0 || rh.Group.N < shards {
-		return nil, fmt.Errorf("Number of requested shards not supported")
+	nodes := rh.Transcript.Session.Nodes
+
+	if shards == 0 || nodes < shards {
+		return nil, nil, fmt.Errorf("Number of requested shards not supported")
 	}
 
-	// Compute a permutation of [0,n-1]
+	// Compute a random permutation of [1,n-1]
 	prng := rh.Suite().Cipher(seed)
-	m := make([]uint32, rh.Group.N)
+	m := make([]uint32, nodes-1)
 	for i := range m {
 		j := int(random.Uint64(prng) % uint64(i+1))
 		m[i] = m[j]
-		m[j] = uint32(i)
+		m[j] = uint32(i) + 1
 	}
 
 	// Create sharding of the current Roster according to the above permutation
-	el := rh.Roster().List
-	n := int(rh.Group.N / shards)
-	sharding := [][]*network.ServerIdentity{}
-	shard := []*network.ServerIdentity{}
+	el := rh.List()
+	n := int(nodes / shards)
+	sharding := [][]*sda.TreeNode{}
+	shard := []*sda.TreeNode{}
+	keys := [][]abstract.Point{}
+	k := []abstract.Point{}
 	for i, j := range m {
 		shard = append(shard, el[j])
+		k = append(k, el[j].ServerIdentity.Public)
 		if (i%n == n-1) || (i == len(m)-1) {
 			sharding = append(sharding, shard)
-			shard = make([]*network.ServerIdentity, 0)
+			shard = make([]*sda.TreeNode, 0)
+			keys = append(keys, k)
+			k = make([]abstract.Point, 0)
 		}
 	}
-	return sharding, nil
+	return sharding, keys, nil
 }
-
-// Random returns the public random string produced by RandHound
-func (rh *RandHound) Random() ([]byte, error) {
-
-	if !rh.IsRoot() {
-		return nil, fmt.Errorf("Random function can only be called from the leader node")
-	}
-
-	output := rh.Suite().Scalar().Zero()
-	for _, state := range rh.Leader.states {
-		output.Add(output, state.PriShares.Secret())
-	}
-
-	rb, err := output.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	return rb, nil
-
-}
-
-func (rh *RandHound) chooseTrustees(Rc, Rs []byte) (map[uint32]uint32, []abstract.Point) {
-
-	// Seed PRNG for selection of trustees
-	var seed []byte
-	seed = append(seed, Rc...)
-	seed = append(seed, Rs...)
-	prng := rh.Suite().Cipher(seed)
-
-	// Choose trustees uniquely
-	shareIdx := make(map[uint32]uint32)
-	trustees := make([]abstract.Point, rh.Group.K)
-	tns := rh.List()
-	j := uint32(0)
-	for uint32(len(shareIdx)) < rh.Group.K {
-		i := uint32(random.Uint64(prng) % uint64(len(tns)))
-		// Add trustee only if not done so before; choosing yourself as an trustee is fine; ignore leader at index 0
-		if _, ok := shareIdx[i]; !ok && !tns[i].IsRoot() {
-			shareIdx[i] = j // j is the share index
-			trustees[j] = tns[i].ServerIdentity.Public
-			j++
-		}
-	}
-	return shareIdx, trustees
-}
-
-func (rh *RandHound) hash(bytes ...[]byte) []byte {
-	return abstract.Sum(rh.Suite(), bytes...)
-}
-
-func (rh *RandHound) index() uint32 {
-	return uint32(rh.Index())
-}
-
-func (rh *RandHound) generateTranscript() {} // TODO
-func (rh *RandHound) verifyTranscript()   {} // TODO
