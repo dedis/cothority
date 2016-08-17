@@ -27,6 +27,10 @@ type PublicPacket struct {
 // to cast to the right packet type (See below)
 var PublicType = RegisterPacketType(PublicPacket{})
 
+func init() {
+	RegisterPacketType(stressMsg{})
+}
+
 type TestRegisterS struct {
 	I int
 }
@@ -333,7 +337,6 @@ func TestStress(t *testing.T) {
 func stressTest(t *testing.T, waiting time.Duration, nbrHosts, loadSize int) {
 	log.Lvl1("Testing with waiting:", waiting, "hosts:", nbrHosts,
 		"load-size:", loadSize)
-	RegisterPacketType(stressMsg{})
 	wg := sync.WaitGroup{}
 	closeIt := func(s SecureConn) {
 		if waiting.Seconds() > 0 {

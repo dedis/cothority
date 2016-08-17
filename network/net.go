@@ -484,7 +484,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		// bytes left to send
 		b = b[n:]
 	}
-	log.Lvl5(c.Endpoint, "Sent a total of", sent, "bytes")
+	log.Lvl5(c.Local(), c.Remote(), "Sent a total of", sent, "bytes")
 	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
