@@ -25,23 +25,27 @@ func TestConnType(t *testing.T) {
 	}
 }
 
-func TestAddressValid(t *testing.T) {
+func TestAddress(t *testing.T) {
 	var tests = []struct {
-		Value    string
-		Expected bool
+		Value   string
+		Valid   bool
+		Type    ConnType
+		Address string
 	}{
-		{"tls:10.0.0.4:2000", true},
-		{"tcp:10.0.0.4:2000", true},
-		{"purb:10.0.0.4:2000", true},
-		{"tls4:10.0.0.4:2000", false},
-		{"tls:1000.0.0.4:2000", false},
-		{"tlsx10.0.0.4:2000", false},
-		{"tls:10.0.0.4x2000", false},
-		{"tlsx10.0.0.4x2000", false},
+		{"tls:10.0.0.4:2000", true, TLS, "10.0.0.4:2000"},
+		{"tcp:10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000"},
+		{"purb:10.0.0.4:2000", true, PURB, "10.0.0.4:2000"},
+		{"tls4:10.0.0.4:2000", false, UnvalidConnType, ""},
+		{"tls:1000.0.0.4:2000", false, UnvalidConnType, ""},
+		{"tlsx10.0.0.4:2000", false, UnvalidConnType, ""},
+		{"tls:10.0.0.4x2000", false, UnvalidConnType, ""},
+		{"tlsx10.0.0.4x2000", false, UnvalidConnType, ""},
 	}
 
 	for i, str := range tests {
 		add := Address(str.Value)
-		assert.Equal(t, str.Expected, add.Valid(), "Address (%d) %s", i, str.Value)
+		assert.Equal(t, str.Valid, add.Valid(), "Address (%d) %s", i, str.Value)
+		assert.Equal(t, str.Type, add.ConnType(), "Address (%d) %s", i, str.Value)
+		assert.Equal(t, str.Address, add.NetworkAddress())
 	}
 }
