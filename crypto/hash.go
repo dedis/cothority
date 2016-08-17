@@ -123,7 +123,8 @@ func ConvertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, 
 	var ret []encoding.BinaryMarshaler
 	for _, a := range args {
 		refl := reflect.ValueOf(a)
-		if refl.Kind() == reflect.Slice {
+		switch refl.Kind() {
+		case reflect.Slice, reflect.Array:
 			for b := 0; b < refl.Len(); b++ {
 				el := refl.Index(b)
 				bms, err := ConvertToBinaryMarshaler(el.Interface())
@@ -132,7 +133,7 @@ func ConvertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, 
 				}
 				ret = append(ret, bms...)
 			}
-		} else {
+		default:
 			bm, ok := a.(encoding.BinaryMarshaler)
 			if !ok {
 				return nil, errors.New("Couldn't convert to BinaryMarshaler")
