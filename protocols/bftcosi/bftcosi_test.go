@@ -7,6 +7,10 @@ import (
 
 	"strconv"
 
+	"errors"
+
+	"fmt"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
@@ -138,8 +142,8 @@ func TestCheckRefuseBit(t *testing.T) {
 			wg.Add(1)
 			go func(n, fc int) {
 				log.Lvl1("RefuseBit at", n, fc)
-				runProtocolOnce(t, n, TestProtocolName,
-					fc, bitCount(fc) < (n+1)*2/3)
+				log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
+					fc, bitCount(fc) < (n+1)*2/3))
 				log.Lvl3("Done with", n, fc)
 				wg.Done()
 			}(n, refuseCount)
@@ -149,7 +153,7 @@ func TestCheckRefuseBit(t *testing.T) {
 }
 
 func TestCheckRefuseParallel(t *testing.T) {
-	t.Skip("Skipping and hoping it will be resolved with #467")
+	//t.Skip("Skipping and hoping it will be resolved with #467")
 	const TestProtocolName = "DummyBFTCoSiRefuseParallel"
 
 	// Register test protocol using BFTCoSi
@@ -162,8 +166,8 @@ func TestCheckRefuseParallel(t *testing.T) {
 	for fc := 0; fc < 8; fc++ {
 		wg.Add(1)
 		go func(fc int) {
-			runProtocolOnce(t, n, TestProtocolName,
-				8, bitCount(fc) < (n+1)*2/3)
+			log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
+				fc, bitCount(fc) < (n+1)*2/3))
 			log.Lvl3("Done with", n, fc)
 			wg.Done()
 		}(fc)
@@ -179,6 +183,12 @@ func runProtocol(t *testing.T, name string, refuseCount int) {
 }
 func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 	succeed bool) {
+	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed); err != nil {
+		t.Fatal(err)
+	}
+}
+func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
+	succeed bool) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
@@ -192,7 +202,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 	// Start the protocol
 	node, err := local.CreateProtocol(name, tree)
 	if err != nil {
-		t.Fatal("Couldn't create new node:", err)
+		return errors.New("Couldn't create new node: " + err.Error())
 	}
 
 	// Register the function generating the protocol instance
@@ -216,22 +226,26 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 	select {
 	case <-done:
 		counter.Lock()
-		assert.Equal(t, counter.veriCount, nbrHosts,
-			"Each host should have called verification.")
+		if counter.veriCount != nbrHosts {
+			return errors.New("Each host should have called verification.")
+		}
 		// if assert refuses we don't care for unlocking (t.Refuse)
 		counter.Unlock()
 		sig := root.Signature()
 		err := sig.Verify(root.Suite(), root.Roster().Publics())
 		if succeed && err != nil {
-			t.Fatalf("%s Verification of the signature refuseed: %s - %+v", root.Name(), err.Error(), sig.Sig)
+			return fmt.Errorf("%s Verification of the signature refused: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
 		if !succeed && err == nil {
-			t.Fatal(root.Name(), "Shouldn't have succeeded for", nbrHosts, "hosts, but signed for count:", refuseCount)
+			log.Print("Fail")
+			return fmt.Errorf("%s: Shouldn't have succeeded for %d hosts, but signed for count: %d",
+				root.Name(), nbrHosts, refuseCount)
 		}
 	case <-time.After(wait):
 		log.Lvl1("Going to break because of timeout")
-		t.Fatal("Waited", wait, "for BFTCoSi to finish ...")
+		return errors.New("Waited " + wait.String() + " for BFTCoSi to finish ...")
 	}
+	return nil
 }
 
 // Verify function that returns true if the length of the data is 1.
@@ -259,7 +273,7 @@ func verifyRefuse(m []byte, d []byte) bool {
 	defer counter.Unlock()
 	counter.veriCount++
 	if counter.veriCount == counter.refuseCount {
-		log.Lvl2("Refuseing for count==", counter.refuseCount)
+		log.Lvl2("Refusing for count==", counter.refuseCount)
 		return false
 	}
 	log.Lvl3("Verification called", counter.veriCount, "times")
@@ -280,7 +294,7 @@ func verifyRefuseMore(m []byte, d []byte) bool {
 	defer counter.Unlock()
 	counter.veriCount++
 	if counter.veriCount <= counter.refuseCount {
-		log.Lvlf2("Refuseing for %d<=%d", counter.veriCount,
+		log.Lvlf2("Refusing for %d<=%d", counter.veriCount,
 			counter.refuseCount)
 		return false
 	}
@@ -309,11 +323,11 @@ func verifyRefuseBit(m []byte, d []byte) bool {
 	counter := counters.get(c)
 	counter.Lock()
 	defer counter.Unlock()
-	log.Lvl4("Counter", c, counter)
+	log.Lvl4("Counter", c, counter.refuseCount, counter.veriCount)
 	myBit := uint(counter.veriCount)
 	counter.veriCount++
 	if counter.refuseCount&(1<<myBit) != 0 {
-		log.Lvl2("Refuseing for myBit==", myBit)
+		log.Lvl2("Refusing for myBit ==", myBit)
 		return false
 	}
 	log.Lvl3("Verification called", counter.veriCount, "times")
