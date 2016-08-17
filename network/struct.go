@@ -16,7 +16,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
 
 // MaxRetry defines how many times should we try to connect
@@ -51,31 +50,6 @@ var ErrUnknown = errors.New("Unknown Error")
 // Size is a type to reprensent the size that is sent before every packet to
 // correctly decode it.
 type Size uint32
-
-// Host is the basic interface to represent a Host of any kind
-// Host can open new Conn(ections) and Listen for any incoming Conn(...)
-type Host interface {
-	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) error // the srv processing function
-	Close() error
-	monitor.CounterIO
-}
-
-// Conn is the basic interface to represent any communication mean
-// between two host. It is closely related to the underlying type of Host
-// since a TcpHost will generate only TcpConn
-type Conn interface {
-	// Gives the address of the remote endpoint
-	Remote() string
-	// Returns the local address and port
-	Local() string
-	// Send a message through the connection. Always pass a pointer !
-	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
-	Receive(ctx context.Context) (Packet, error)
-	Close() error
-	monitor.CounterIO
-}
 
 // TCPHost is the underlying implementation of
 // Host using Tcp as a communication channel
