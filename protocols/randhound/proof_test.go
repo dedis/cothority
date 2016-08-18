@@ -19,10 +19,6 @@ func TestProof(t *testing.T) {
 	// 1st secret value
 	x := suite.Scalar().Pick(random.Stream)
 
-	// 1st set of public values
-	g1x := suite.Point().Mul(g1, x)
-	h1x := suite.Point().Mul(h1, x)
-
 	// 2nd set of base points
 	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
 	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
@@ -30,14 +26,22 @@ func TestProof(t *testing.T) {
 	// 2nd secret value
 	y := suite.Scalar().Pick(random.Stream)
 
-	// 2nd set of public values
-	g2y := suite.Point().Mul(g2, y)
-	h2y := suite.Point().Mul(h2, y)
+	// Create proof
+	p, err := randhound.NewProof(suite, g1, g2, h1, h2)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	p, _ := randhound.NewProof(suite, g1, g2, h1, h2)
-	p.Setup(x, y)
+	xGxH, core, err := p.Setup(x, y)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	failed, err := p.Verify(g1x, g2y, h1x, h2y)
+	// Verify proof
+	q, _ := randhound.NewProof(suite, g1, g2, h1, h2)
+	q.SetCore(core)
+
+	failed, err := q.Verify(xGxH...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,10 +63,6 @@ func TestProofCollective(t *testing.T) {
 	// 1st secret value
 	x := suite.Scalar().Pick(random.Stream)
 
-	// 1st set of public values
-	g1x := suite.Point().Mul(g1, x)
-	h1x := suite.Point().Mul(h1, x)
-
 	// 2nd set of base points
 	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
 	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
@@ -70,14 +70,22 @@ func TestProofCollective(t *testing.T) {
 	// 2nd secret value
 	y := suite.Scalar().Pick(random.Stream)
 
-	// 2nd set of public values
-	g2y := suite.Point().Mul(g2, y)
-	h2y := suite.Point().Mul(h2, y)
+	// Create proof
+	p, err := randhound.NewProof(suite, g1, g2, h1, h2)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	p, _ := randhound.NewProof(suite, g1, g2, h1, h2)
-	p.SetupCollective(x, y)
+	xGxH, core, err := p.SetupCollective(x, y)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	failed, err := p.Verify(g1x, g2y, h1x, h2y)
+	// Verify proof
+	q, _ := randhound.NewProof(suite, g1, g2, h1, h2)
+	q.SetCore(core)
+
+	failed, err := q.Verify(xGxH...)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -52,17 +52,20 @@ func NewProof(suite abstract.Suite, point ...abstract.Point) (*Proof, error) {
 
 // Setup initializes the proof by randomly selecting a commitment v and then
 // determining the challenge c = H(xG,xH,vG,vH) and the response r = v - cx.
-func (p *Proof) Setup(scalar ...abstract.Scalar) error {
+func (p *Proof) Setup(scalar ...abstract.Scalar) ([]abstract.Point, []ProofCore, error) {
 
 	if len(scalar) != len(p.base) {
-		return errors.New("Received unexpected number of scalars")
+		return nil, nil, errors.New("Received unexpected number of scalars")
 	}
 
-	p.core = make([]ProofCore, len(scalar))
+	n := len(scalar)
+	p.core = make([]ProofCore, n)
+	xG := make([]abstract.Point, n)
+	xH := make([]abstract.Point, n)
 	for i, x := range scalar {
 
-		xG := p.suite.Point().Mul(p.base[i].g, x)
-		xH := p.suite.Point().Mul(p.base[i].h, x)
+		xG[i] = p.suite.Point().Mul(p.base[i].g, x)
+		xH[i] = p.suite.Point().Mul(p.base[i].h, x)
 
 		// Commitment
 		v := p.suite.Scalar().Pick(random.Stream)
@@ -70,9 +73,9 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 		vH := p.suite.Point().Mul(p.base[i].h, v)
 
 		// Challenge
-		cb, err := crypto.HashArgsSuite(p.suite, xG, xH, vG, vH)
+		cb, err := crypto.HashArgsSuite(p.suite, xG[i], xH[i], vG, vH)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 		c := p.suite.Scalar().Pick(p.suite.Cipher(cb))
 
@@ -83,15 +86,17 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) error {
 		p.core[i] = ProofCore{c, r, vG, vH}
 	}
 
-	return nil
+	xGxH := append(xG, xH...)
+
+	return xGxH, p.core, nil
 }
 
 // SetupCollective is similar to Setup with the difference that the challenge
 // is computed as the hash over all base points and commitments.
-func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
+func (p *Proof) SetupCollective(scalar ...abstract.Scalar) ([]abstract.Point, []ProofCore, error) {
 
 	if len(scalar) != len(p.base) {
-		return errors.New("Received number of points does not match number of base points")
+		return nil, nil, errors.New("Received unexpected number of scalars")
 	}
 
 	n := len(scalar)
@@ -99,22 +104,23 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 	v := make([]abstract.Scalar, n)
 	xG := make([]abstract.Point, n)
 	xH := make([]abstract.Point, n)
-	V := make([]abstract.Point, 2*n) // vG vH
+	vG := make([]abstract.Point, n)
+	vH := make([]abstract.Point, n)
 	for i, x := range scalar {
 
 		xG[i] = p.suite.Point().Mul(p.base[i].g, x)
 		xH[i] = p.suite.Point().Mul(p.base[i].h, x)
 
 		// Commitments
-		v[i] = p.suite.Scalar().Pick(random.Stream)     // v
-		V[i] = p.suite.Point().Mul(p.base[i].g, v[i])   // vG
-		V[n+i] = p.suite.Point().Mul(p.base[i].h, v[i]) // vH
+		v[i] = p.suite.Scalar().Pick(random.Stream)    // v
+		vG[i] = p.suite.Point().Mul(p.base[i].g, v[i]) // vG
+		vH[i] = p.suite.Point().Mul(p.base[i].h, v[i]) // vH
 	}
 
 	// Collective challenge
-	cb, err := crypto.HashArgsSuite(p.suite, xG, xH, V)
+	cb, err := crypto.HashArgsSuite(p.suite, xG, xH, vG, vH)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	c := p.suite.Scalar().Pick(p.suite.Cipher(cb))
 
@@ -122,10 +128,16 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) error {
 	for i, x := range scalar {
 		r := p.suite.Scalar()
 		r.Mul(x, c).Sub(v[i], r)
-		p.core[i] = ProofCore{c, r, V[i], V[n+i]}
+		p.core[i] = ProofCore{c, r, vG[i], vH[i]}
 	}
 
-	return nil
+	xGxH := append(xG, xH...)
+
+	return xGxH, p.core, nil
+}
+
+func (p *Proof) SetCore(core []ProofCore) {
+	p.core = core
 }
 
 // Verify validates the proof against the given input by checking that
@@ -156,6 +168,7 @@ func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 
 // PVSS implements public verifiable secret sharing
 type PVSS struct {
+	H     abstract.Point
 	p     *poly.PriPoly
 	P     *poly.PubPoly
 	s     *poly.PriShares
@@ -163,7 +176,19 @@ type PVSS struct {
 	proof *Proof
 }
 
-// Init ...
+func NewPVSS(h abstract.Point) *PVSS {
+	return &PVSS{H: h}
+}
+
+func (pv *PVSS) Split() {
+
+}
+
+func (pv *PVSS) Reveal() {
+
+}
+
+// Init ... XXX: rename to 'encryption proof' or so
 func (pv *PVSS) Setup(suite abstract.Suite, threshold int, base []byte, key []abstract.Point) error {
 
 	// Create secret sharing polynomial
@@ -182,32 +207,32 @@ func (pv *PVSS) Setup(suite abstract.Suite, threshold int, base []byte, key []ab
 	pv.S = new(poly.PubShares).Split(pv.P, threshold)
 
 	// Encrypt shares with keys; TODO: ensure that s[0] is not used for encrypting keys; check potential one-off index problem
-	si := make([]abstract.Scalar, len(key))
-	hs := make([]abstract.Point, len(key))
-	for i := range si {
-		si[i] = pv.s.Share(i + 1)
-		hs[i] = h
+	s := make([]abstract.Scalar, len(key))
+	H := make([]abstract.Point, len(key))
+	for i := range s {
+		s[i] = pv.s.Share(i + 1)
+		H[i] = h
 	}
-	hs = append(hs, key...)
+	HK := append(H, key...)
 
-	proof, err := NewProof(suite, hs...)
+	p, err := NewProof(suite, HK...)
 	if err != nil {
 		return err
 	}
-	proof.SetupCollective(si...)
-
-	Si := make([]abstract.Point, len(key))
-	Hi := make([]abstract.Point, len(key))
-	for i := range Si {
-		Si[i] = suite.Point().Mul(key[i], si[i])
-		Hi[i] = suite.Point().Mul(h, si[i])
-	}
-	Hi = append(Hi, Si...)
-
-	failed, err := proof.Verify(Hi...)
-	fmt.Println("failed:", failed)
+	sHsK, core, err := p.SetupCollective(s...)
 	if err != nil {
 		return err
+	}
+
+	q, err := NewProof(suite, HK...)
+	if err != nil {
+		return err
+	}
+	q.SetCore(core)
+
+	failed, err := q.Verify(sHsK...)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Verification of proofs failed: %v\n", failed))
 	}
 
 	return nil
