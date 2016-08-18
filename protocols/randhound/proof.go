@@ -2,7 +2,6 @@ package randhound
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/crypto/abstract"
@@ -168,73 +167,87 @@ func (p *Proof) Verify(point ...abstract.Point) ([]int, error) {
 
 // PVSS implements public verifiable secret sharing
 type PVSS struct {
-	H     abstract.Point
-	p     *poly.PriPoly
-	P     *poly.PubPoly
-	s     *poly.PriShares
-	S     *poly.PubShares
-	proof *Proof
+	suite abstract.Suite // Suite
+	h     abstract.Point // Second base point
+	t     int            // Secret sharing threshold
 }
 
-func NewPVSS(h abstract.Point) *PVSS {
-	return &PVSS{H: h}
+// NewPVSS ...
+func NewPVSS(s abstract.Suite, h abstract.Point, t int) *PVSS {
+	return &PVSS{suite: s, h: h, t: t}
 }
 
-func (pv *PVSS) Split() {
+// Split ...
+func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte, error) {
 
-}
-
-func (pv *PVSS) Reveal() {
-
-}
-
-// Init ... XXX: rename to 'encryption proof' or so
-func (pv *PVSS) Setup(suite abstract.Suite, threshold int, base []byte, key []abstract.Point) error {
+	n := len(X)
 
 	// Create secret sharing polynomial
-	pv.p = new(poly.PriPoly).Pick(suite, threshold, nil, random.Stream)
+	p := new(poly.PriPoly).Pick(pv.suite, pv.t, nil, random.Stream)
 
 	// Create secret set of shares
-	pv.s = new(poly.PriShares).Split(pv.p, len(key)+1)
-
-	// Compute base point H (TODO: use Elligator to compute h?)
-	h, _ := suite.Point().Pick(base, suite.Cipher([]byte("H")))
+	s := new(poly.PriShares).Split(p, n+1)
 
 	// Create public polynomial commitments
-	pv.P = new(poly.PubPoly).Commit(pv.p, h)
+	P := new(poly.PubPoly).Commit(p, pv.h)
 
 	// Create public share commitments
-	pv.S = new(poly.PubShares).Split(pv.P, threshold)
+	//S := new(poly.PubShares).Split(P, n+1)
 
-	// Encrypt shares with keys; TODO: ensure that s[0] is not used for encrypting keys; check potential one-off index problem
-	s := make([]abstract.Scalar, len(key))
-	H := make([]abstract.Point, len(key))
-	for i := range s {
-		s[i] = pv.s.Share(i + 1)
-		H[i] = h
+	// Prepare data for verification proofs
+	share := make([]abstract.Scalar, n)
+	H := make([]abstract.Point, n)
+	for i := 0; i < n; i++ {
+		share[i] = s.Share(i + 1)
+		H[i] = pv.h
 	}
-	HK := append(H, key...)
+	HX := append(H, X...)
 
-	p, err := NewProof(suite, HK...)
+	proof, err := NewProof(pv.suite, HX...)
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
-	sHsK, core, err := p.SetupCollective(s...)
+	sHsX, core, err := proof.SetupCollective(share...)
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 
-	q, err := NewProof(suite, HK...)
+	pb, err := P.MarshalBinary()
 	if err != nil {
-		return err
-	}
-	q.SetCore(core)
-
-	failed, err := q.Verify(sHsK...)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Verification of proofs failed: %v\n", failed))
+		return nil, nil, nil, err
 	}
 
-	return nil
+	return sHsX[n:], core, pb, nil
+}
+
+// Verify ...
+func (pv *PVSS) Verify(X []abstract.Point, sX []abstract.Point, core []ProofCore, pb []byte) ([]int, error) {
+
+	n := len(X)
+	H := make([]abstract.Point, n)
+	sH := make([]abstract.Point, n)
+	P := new(poly.PubPoly)
+	P.Init(pv.suite, pv.t, pv.h)
+	if err := P.UnmarshalBinary(pb); err != nil {
+		return nil, err
+	}
+	for i := 0; i < n; i++ {
+		H[i] = pv.h
+		sH[i] = P.Eval(i + 1)
+	}
+	HX := append(H, X...)
+	sHsX := append(sH, sX...)
+
+	proof, err := NewProof(pv.suite, HX...)
+	if err != nil {
+		return nil, err
+	}
+	proof.SetCore(core)
+
+	return proof.Verify(sHsX...)
+}
+
+// Reveal ...
+func (pv *PVSS) Reveal() {
 
 }

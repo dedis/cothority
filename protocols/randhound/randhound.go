@@ -223,10 +223,11 @@ func (rh *RandHound) Start() error {
 func (rh *RandHound) handleI1(i1 WI1) error {
 
 	msg := &i1.I1
+	_ = msg
 
 	// TODO: For init select random subset of msg.Key of size msg.T
-	pvss := PVSS{}
-	pvss.Setup(rh.Suite(), int(msg.T), msg.SID, msg.Key)
+	//pvss := PVSS{}
+	//pvss.Setup(rh.Suite(), int(msg.T), msg.SID, msg.Key)
 
 	hi1 := []byte{1}
 	r1 := &R1{HI1: hi1}
