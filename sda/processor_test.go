@@ -186,7 +186,7 @@ func procMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 func procMsg2(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I != 42 {
-		return nil, errors.New("6 * 9 != 42")
+		return nil, errors.New("Please give meaning of life.")
 	}
 	return msg, nil
 }
