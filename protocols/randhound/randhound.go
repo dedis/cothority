@@ -16,6 +16,7 @@ func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
+// RandHound ...
 type RandHound struct {
 	*sda.TreeNodeInstance
 	Transcript *Transcript       // Transcript of a protocol run
@@ -25,11 +26,13 @@ type RandHound struct {
 	Server     [][]*sda.TreeNode // Grouped servers (with connection infos)
 }
 
+// Transcript ...
 type Transcript struct {
 	SID     []byte   // Session identifier
 	Session *Session // Session parameters
 }
 
+// Session ...
 type Session struct {
 	Nodes     uint32             // Total number of nodes (client + servers)
 	Faulty    uint32             // Maximum number of Byzantine servers
@@ -87,6 +90,7 @@ type WR2 struct {
 	R2
 }
 
+// NewRandHound
 func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct

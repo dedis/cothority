@@ -199,39 +199,58 @@ func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte
 		return nil, nil, nil, err
 	}
 
-	pb, err := P.MarshalBinary()
+	polyBin, err := P.MarshalBinary()
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	return sX, core, pb, nil
+	return sX, core, polyBin, nil
 }
 
 // Verify ...
-func (pv *PVSS) Verify(X []abstract.Point, sX []abstract.Point, core []ProofCore, pb []byte) ([]int, error) {
+func (pv *PVSS) Verify(X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) ([]int, error) {
 
 	n := len(X)
 	H := make([]abstract.Point, n)
-	sH := make([]abstract.Point, n)
-	P := new(poly.PubPoly)
-	P.Init(pv.suite, pv.t, pv.h)
-	if err := P.UnmarshalBinary(pb); err != nil {
-		return nil, err
-	}
 	for i := 0; i < n; i++ {
 		H[i] = pv.h
-		sH[i] = P.Eval(i + 1)
 	}
-
 	proof, err := NewProof(pv.suite, H, X, core)
 	if err != nil {
 		return nil, err
 	}
-
 	return proof.Verify(sH, sX)
 }
 
+// Reconstruct ...
+func (pv *PVSS) Reconstruct(polyBin [][]byte, index []int) ([]abstract.Point, error) {
+
+	if len(polyBin) != len(index) {
+		return nil, errors.New("Non-matching lengths") // XXX
+	}
+
+	n := len(index)
+	sH := make([]abstract.Point, n)
+	for i := range index {
+		P := new(poly.PubPoly)
+		P.Init(pv.suite, pv.t, pv.h)
+		if err := P.UnmarshalBinary(polyBin[i]); err != nil {
+			return nil, err
+		}
+		sH[i] = P.Eval(index[i])
+	}
+	return sH, nil
+}
+
 // Reveal ...
-func (pv *PVSS) Reveal() {
+func (pv *PVSS) Reveal(ix abstract.Scalar, xS []abstract.Point) {
+
+	// XXX: maybe do verification here
+
+	// Decrypt shares
+	S := make([]abstract.Point, len(xS))
+	for i := range xS {
+		S[i] = pv.suite.Point().Mul(xS[i], ix)
+	}
 
 }

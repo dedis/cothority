@@ -115,11 +115,17 @@ func TestPVSS(t *testing.T) {
 	X := []abstract.Point{X1, X2, X3, X4, X5}
 
 	pvss := randhound.NewPVSS(suite, h, threshold)
-	_ = pvss
 
 	sX, core, pb, _ := pvss.Split(X)
 
-	f, err := pvss.Verify(X, sX, core, pb)
+	index := []int{1, 2, 3, 4, 5}
+	pbx := [][]byte{pb, pb, pb, pb, pb}
+	sH, err := pvss.Reconstruct(pbx, index)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := pvss.Verify(X, sH, sX, core)
 	if err != nil {
 		t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
 	}
