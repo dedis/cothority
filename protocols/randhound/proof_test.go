@@ -28,27 +28,32 @@ func TestProof(t *testing.T) {
 	y := suite.Scalar().Pick(random.Stream)
 
 	// Create proof
-	p, err := randhound.NewProof(suite, g1, g2, h1, h2)
+	g := []abstract.Point{g1, g2}
+	h := []abstract.Point{h1, h2}
+	p, err := randhound.NewProof(suite, g, h, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	xGxH, core, err := p.Setup(x, y)
+	xG, xH, core, err := p.Setup(x, y)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Verify proof
-	q, _ := randhound.NewProof(suite, g1, g2, h1, h2)
-	q.SetCore(core)
+	q, err := randhound.NewProof(suite, g, h, core)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//q.SetCore(core)
 
-	failed, err := q.Verify(xGxH...)
+	f, err := q.Verify(xG, xH)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(failed) != 0 {
-		t.Fatal("Verification of discrete logarithm proof(s) failed:", failed)
+	if len(f) != 0 {
+		t.Fatal("Verification of discrete logarithm proof(s) failed:", f)
 	}
 
 }
@@ -72,21 +77,22 @@ func TestProofCollective(t *testing.T) {
 	y := suite.Scalar().Pick(random.Stream)
 
 	// Create proof
-	p, err := randhound.NewProof(suite, g1, g2, h1, h2)
+	g := []abstract.Point{g1, g2}
+	h := []abstract.Point{h1, h2}
+	p, err := randhound.NewProof(suite, g, h, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	xGxH, core, err := p.SetupCollective(x, y)
+	xG, xH, core, err := p.SetupCollective(x, y)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Verify proof
-	q, _ := randhound.NewProof(suite, g1, g2, h1, h2)
-	q.SetCore(core)
+	q, _ := randhound.NewProof(suite, g, h, core)
 
-	f, err := q.Verify(xGxH...)
+	f, err := q.Verify(xG, xH)
 	if err != nil {
 		t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
 	}
