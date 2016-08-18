@@ -14,6 +14,7 @@ A service interacts with clients and will spawn and wait for the result
 of different protocols.
 An app is an example of a user-space program that can communicate to one or more
 services of a cothority.
+You can find a list of protocols and services supported later.
 
 ## Warning
 **The software provided in this repository is highly experimental and under
@@ -59,18 +60,31 @@ go get -u -t ./...
 
 from time to time, as all dedis-dependencies change quite often.
 
+# Installation
+
+There are three apps available:
+
+* [cothorityd](https://github.com/dedis/cothority/app/cothorityd) - which is the server-part that you can run to add a node
+* [cosi](https://github.com/dedis/cosi) - the cosi-protocol, service, and app,
+in its own repository
+* [status](https://github.com/dedis/cothority/app/status) - reads out the status of a cothority
+
+You will find a README.md in each of its directory. To build the apps, you can
+run the following commands:
+
+```
+go get github.com/dedis/cothority/app/cothorityd
+go get github.com/dedis/cosi
+go get github.com/dedis/cothority/app/status
+```
+
 # Apps
 
-These are the available apps. Each directory holds a README.md file explaining further
-description of each app.
-
-* [cothorityd](app/cothorityd) - the basic cothority-node containing all services
-and protocols
+* [cothorityd](app/cothorityd) - the basic 
 * [cosi](https://github.com/dedis/cosi) - collective signatures
 * [status](app/status) - returns the status of the given group
 * [cisc](app/cisc) - handle your ssh-keys on a blockchain
-* [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/docker/hpets16) - 
-hotpets16-branch containing Dockerfile.
+* [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/cisc) - hotpets16-branch
 
 # Protocols
 
@@ -152,7 +166,7 @@ messages are passed between the hosts.
   
 ## Directory-structure
 
-* [`sda/`](sda/): the framework which is used to handle the messages, the overlay tree layer, the protocols and the services
+* [`sda/`](sda/): basic definition of our framework
 * `crypto/`, `log/`, `monitor/`, `network/`: additional libraries for the framework
 * [`simul/`](simul/): simulation-related code
 * [`app/`](app/): all apps in user-space

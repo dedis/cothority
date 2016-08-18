@@ -145,8 +145,8 @@ type Group struct {
 }
 
 // GetDescription returns the description of an entity
-func (g *Group) GetDescription(si *network.ServerIdentity) string {
-	return g.description[si]
+func (g *Group) GetDescription(e *network.ServerIdentity) string {
+	return g.description[e]
 }
 
 // ReadGroupDescToml reads a group.toml file and returns the list of ServerIdentities

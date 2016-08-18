@@ -17,6 +17,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"bytes"
+
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/services/identity"
@@ -27,16 +29,18 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "SSH keystore client"
 	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
+	app.Version = "0.3"
 	app.Commands = []cli.Command{
 		commandID,
 		commandConfig,
 		commandKeyvalue,
 		commandSSH,
+		commandFollow,
 	}
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
-			Value: 1,
+			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
@@ -76,9 +80,11 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	cfg := identity.NewIdentity(group.Roster, 2, name)
+	thr := c.Int("thr")
+	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
-	return saveConfig(c, cfg)
+	log.Infof("IC is %x", cfg.ID)
+	return cfg.saveConfig(c)
 }
 
 func idConnect(c *cli.Context) error {
@@ -97,16 +103,29 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	cfg := identity.NewIdentity(group.Roster, 2, name)
+	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
 	cfg.AttachToIdentity(id)
-	return saveConfig(c, cfg)
+	log.Infof("Public key: %s",
+		cfg.Proposed.Device[cfg.DeviceName].Point.String())
+	return cfg.saveConfig(c)
 }
-func idFollow(c *cli.Context) error {
-	log.Fatal("Not yet implemented")
-	return nil
-}
-func idRemove(c *cli.Context) error {
-	log.Fatal("Not yet implemented")
+func idDel(c *cli.Context) error {
+	if c.NArg() == 0 {
+		log.Fatal("Please give device to delete")
+	}
+	cfg := loadConfigOrFail(c)
+	dev := c.Args().First()
+	if _, ok := cfg.Config.Device[dev]; !ok {
+		log.Info("Didn't find", dev, "in config")
+		configList(c)
+		log.Fatal("Try with one of those")
+	}
+	prop := cfg.GetProposed()
+	delete(prop.Device, dev)
+	for _, s := range cfg.Config.GetKeys("ssh", dev) {
+		delete(prop.Data, "ssh:"+dev+":"+s)
+	}
+	cfg.proposeSendVoteUpdate(prop)
 	return nil
 }
 func idCheck(c *cli.Context) error {
@@ -118,18 +137,27 @@ func idCheck(c *cli.Context) error {
  * Commands related to the config in general
  */
 func configUpdate(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	log.ErrFatal(cfg.ConfigUpdate())
-	log.ErrFatal(cfg.ProposeFetch())
+	log.ErrFatal(cfg.ProposeUpdate())
 	log.Info("Successfully updated")
-	log.ErrFatal(saveConfig(c, cfg))
-	return configList(c)
+	log.ErrFatal(cfg.saveConfig(c))
+	if cfg.Proposed != nil {
+		cfg.showDifference()
+	} else {
+		cfg.showKeys()
+	}
+	return nil
 }
 func configList(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	log.Info("Account name:", cfg.DeviceName)
 	log.Infof("Identity-ID: %x", cfg.ID)
-	log.Infof("Current config: %s", cfg.Config)
+	if c.Bool("d") {
+		log.Info(cfg.Config.Data)
+	} else {
+		cfg.showKeys()
+	}
 	if c.Bool("p") {
 		if cfg.Proposed != nil {
 			log.Infof("Proposed config: %s", cfg.Proposed)
@@ -144,9 +172,15 @@ func configPropose(c *cli.Context) error {
 	return nil
 }
 func configVote(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
+	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.ProposeUpdate())
+	if cfg.Proposed == nil {
+		log.Info("No proposed config")
+		return nil
+	}
 	if c.NArg() == 0 {
-		configList(c)
+		cfg.showDifference()
 		if !config.InputYN(true, "Do you want to accept the changes") {
 			return nil
 		}
@@ -155,14 +189,14 @@ func configVote(c *cli.Context) error {
 		return nil
 	}
 	log.ErrFatal(cfg.ProposeVote(true))
-	return saveConfig(c, cfg)
+	return cfg.saveConfig(c)
 }
 
 /*
  * Commands related to the key/value storage and retrieval
  */
 func kvList(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	log.Infof("config for id %x", cfg.ID)
 	for k, v := range cfg.Config.Data {
 		log.Infof("%s: %s", k, v)
@@ -174,7 +208,7 @@ func kvValue(c *cli.Context) error {
 	return nil
 }
 func kvAdd(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
 		log.Fatal("Please give a key value pair")
 	}
@@ -183,10 +217,10 @@ func kvAdd(c *cli.Context) error {
 	prop := cfg.GetProposed()
 	prop.Data[key] = value
 	log.ErrFatal(cfg.ProposeSend(prop))
-	return saveConfig(c, cfg)
+	return cfg.saveConfig(c)
 }
 func kvDel(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give a key to delete")
 	}
@@ -197,14 +231,14 @@ func kvDel(c *cli.Context) error {
 	}
 	delete(prop.Data, key)
 	log.ErrFatal(cfg.ProposeSend(prop))
-	return saveConfig(c, cfg)
+	return cfg.saveConfig(c)
 }
 
 /*
  * Commands related to the ssh-handling
  */
 func sshAdd(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	sshDir, sshConfig := sshDirConfig(c)
 	if c.NArg() != 1 {
 		log.Fatal("Please give the hostname as argument")
@@ -225,7 +259,7 @@ func sshAdd(c *cli.Context) error {
 	filePriv := path.Join(sshDir, idPriv)
 	log.ErrFatal(makeSSHKeyPair(c.Int("sec"), filePub, filePriv))
 	host := NewSSHHost(alias, "HostName "+hostname,
-		"IdentityFile "+idPriv)
+		"IdentityFile "+filePriv)
 	if port := c.String("p"); port != "" {
 		host.AddConfig("Port " + port)
 	}
@@ -241,12 +275,12 @@ func sshAdd(c *cli.Context) error {
 	key := strings.Join([]string{"ssh", cfg.DeviceName, alias}, ":")
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
-	prop.Data[key] = string(pub)
-	proposeSendVoteUpdate(cfg, prop)
-	return saveConfig(c, cfg)
+	prop.Data[key] = strings.TrimSpace(string(pub))
+	cfg.proposeSendVoteUpdate(prop)
+	return cfg.saveConfig(c)
 }
 func sshLs(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	var devs []string
 	if c.Bool("a") {
 		devs = cfg.Config.GetKeys("ssh")
@@ -261,7 +295,7 @@ func sshLs(c *cli.Context) error {
 	return nil
 }
 func sshDel(c *cli.Context) error {
-	cfg := loadConfig(c)
+	cfg := loadConfigOrFail(c)
 	_, sshConfig := sshDirConfig(c)
 	if c.NArg() == 0 {
 		log.Fatal("Please give alias or host to delete from ssh")
@@ -279,8 +313,8 @@ func sshDel(c *cli.Context) error {
 	log.ErrFatal(err)
 	prop := cfg.GetProposed()
 	delete(prop.Data, "ssh:"+cfg.DeviceName+":"+ah)
-	proposeSendVoteUpdate(cfg, prop)
-	return saveConfig(c, cfg)
+	cfg.proposeSendVoteUpdate(prop)
+	return cfg.saveConfig(c)
 }
 func sshRotate(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
@@ -290,8 +324,66 @@ func sshSync(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
-func proposeSendVoteUpdate(cfg *identity.Identity, p *identity.Config) {
-	log.ErrFatal(cfg.ProposeSend(p))
-	log.ErrFatal(cfg.ProposeVote(true))
-	log.ErrFatal(cfg.ConfigUpdate())
+
+func followAdd(c *cli.Context) error {
+	if c.NArg() < 2 {
+		log.Fatal("Please give a group-definition, an ID, and optionally a service-name of the skipchain to follow")
+	}
+	cfg, _ := loadConfig(c)
+	group := getGroup(c)
+	idBytes, err := hex.DecodeString(c.Args().Get(1))
+	log.ErrFatal(err)
+	id := identity.ID(idBytes)
+	newID, err := identity.NewIdentityFromCothority(group.Roster, id)
+	log.ErrFatal(err)
+	if c.NArg() == 3 {
+		newID.DeviceName = c.Args().Get(2)
+	} else {
+		var err error
+		newID.DeviceName, err = os.Hostname()
+		log.ErrFatal(err)
+	}
+	cfg.Follow = append(cfg.Follow, newID)
+	cfg.writeAuthorizedKeys(c)
+	// Identity needs to exist, else saving/loading will fail. For
+	// followers it doesn't matter if the identity will be overwritten,
+	// as it is not used.
+	cfg.Identity = newID
+	return cfg.saveConfig(c)
+}
+func followDel(c *cli.Context) error {
+	if c.NArg() != 1 {
+		log.Fatal("Please give id of skipchain to unfollow")
+	}
+	cfg := loadConfigOrFail(c)
+	idBytes, err := hex.DecodeString(c.Args().First())
+	log.ErrFatal(err)
+	idDel := identity.ID(idBytes)
+	var newSlice []*identity.Identity
+	for _, id := range cfg.Follow {
+		if !bytes.Equal(id.ID, idDel) {
+			newSlice = append(newSlice, id)
+		}
+	}
+	cfg.Follow = newSlice
+	cfg.writeAuthorizedKeys(c)
+	return cfg.saveConfig(c)
+}
+func followList(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	for _, id := range cfg.Follow {
+		log.Infof("Following ID: %x", id.ID)
+		log.Infof("As service %s getting ssh-keys from %s:",
+			id.DeviceName,
+			id.Config.GetIntKeys("ssh", id.DeviceName))
+	}
+	return nil
+}
+func followUpdate(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	for _, f := range cfg.Follow {
+		log.ErrFatal(f.ConfigUpdate())
+	}
+	cfg.writeAuthorizedKeys(c)
+	return cfg.saveConfig(c)
 }

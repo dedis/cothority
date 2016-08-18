@@ -2,7 +2,6 @@ package identity
 
 import (
 	"testing"
-	"time"
 
 	"io/ioutil"
 	"os"
@@ -17,7 +16,6 @@ import (
 func TestIdentity_ConfigNewCheck(t *testing.T) {
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
-	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -29,7 +27,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	conf2.Data["two"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
 
-	log.ErrFatal(c1.ProposeFetch())
+	log.ErrFatal(c1.ProposeUpdate())
 	al := c1.Proposed
 	assert.NotNil(t, al)
 
@@ -39,12 +37,16 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	pub2, ok := al.Data["two"]
 	assert.True(t, ok)
 	assert.Equal(t, "public2", pub2)
+	l.CloseAll()
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := sda.NewLocalTest()
 	hosts, el, _ := l.GenTree(5, true, true, true)
 	services := l.GetServices(hosts, identityService)
+	for _, s := range services {
+		s.(*Service).clearIdentities()
+	}
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -55,7 +57,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	for _, s := range services {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
-		if len(is.identities) != 1 {
+		if len(is.Identities) != 1 {
 			t.Fatal("The configuration hasn't been proposed in all services")
 		}
 		is.identitiesMutex.Unlock()
@@ -65,7 +67,6 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 func TestIdentity_ConfigUpdate(t *testing.T) {
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
-	//services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
 	c1 := NewIdentity(el, 50, "one")
@@ -107,7 +108,6 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
 	log.ErrFatal(c1.ProposeSend(conf2))
-	time.Sleep(time.Second)
 
 	for _, s := range services {
 		is := s.(*Service)
@@ -130,7 +130,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
-		log.Lvl3(s.(*Service).identities)
+		log.Lvl3(s.(*Service).Identities)
 	}
 
 	c1 := NewIdentity(el, 50, "one1")
@@ -141,7 +141,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	conf2.Device["two2"] = &Device{kp2.Public}
 	conf2.Data["two2"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
-	log.ErrFatal(c1.ProposeFetch())
+	log.ErrFatal(c1.ProposeUpdate())
 	log.ErrFatal(c1.ProposeVote(true))
 
 	if len(c1.Config.Device) != 2 {
@@ -176,4 +176,48 @@ func TestIdentity_SaveToStream(t *testing.T) {
 	if id.Config.Data["one1"] != id2.Config.Data["one1"] {
 		t.Fatal("Owners are not the same", id.Config.Data, id2.Config.Data)
 	}
+}
+
+func TestCrashAfterRevocation(t *testing.T) {
+	l := sda.NewLocalTest()
+	hosts, el, _ := l.GenTree(5, true, true, true)
+	services := l.GetServices(hosts, identityService)
+	defer l.CloseAll()
+	for _, s := range services {
+		log.Lvl3(s.(*Service).Identities)
+	}
+
+	c1 := NewIdentity(el, 2, "one")
+	c2 := NewIdentity(el, 2, "two")
+	c3 := NewIdentity(el, 2, "three")
+	log.ErrFatal(c1.CreateIdentity())
+	log.ErrFatal(c2.AttachToIdentity(c1.ID))
+	proposeUpVote(c1)
+	log.ErrFatal(c3.AttachToIdentity(c1.ID))
+	proposeUpVote(c1)
+	proposeUpVote(c2)
+	log.ErrFatal(c1.ConfigUpdate())
+	log.Lvl2(c1.Config)
+
+	conf := c1.GetProposed()
+	delete(conf.Device, "three")
+	log.Lvl2(conf)
+	log.ErrFatal(c1.ProposeSend(conf))
+	proposeUpVote(c1)
+	proposeUpVote(c2)
+	log.ErrFatal(c1.ConfigUpdate())
+	log.Lvl2(c1.Config)
+
+	log.Lvl1("C3 trying to send anyway")
+	conf = c3.GetProposed()
+	c3.ProposeSend(conf)
+	if c3.ProposeVote(true) == nil {
+		t.Fatal("Should not be able to vote")
+	}
+	log.ErrFatal(c1.ProposeUpdate())
+}
+
+func proposeUpVote(i *Identity) {
+	log.ErrFatal(i.ProposeUpdate())
+	log.ErrFatal(i.ProposeVote(true))
 }
