@@ -16,8 +16,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Not working - #482")
-	//log.MainTest(m)
+	log.MainTest(m, 1)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -175,12 +174,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
-	// Wait for block-propagation
-	//time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
-		log.Lvl2(skipchainSID)
+		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 		m, err := s.GetUpdateChain(h.ServerIdentity, &GetUpdateChain{sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
