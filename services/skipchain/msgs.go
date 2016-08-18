@@ -21,6 +21,8 @@ func init() {
 		&ForwardSignature{},
 		&SkipBlockFix{},
 		&SkipBlock{},
+		// Own service
+		&Service{},
 	}
 	for _, m := range msgs {
 		network.RegisterPacketType(m)

@@ -11,8 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Skipping because of bftcosi and skipchain - #482")
-	//log.MainTest(m)
+	log.MainTest(m)
 }
 
 func TestService_AddIdentity(t *testing.T) {
@@ -28,7 +27,7 @@ func TestService_AddIdentity(t *testing.T) {
 	air := msg.(*AddIdentityReply)
 
 	data := air.Data
-	id, ok := service.identities[string(data.Hash)]
+	id, ok := service.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }

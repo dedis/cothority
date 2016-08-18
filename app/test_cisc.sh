@@ -3,8 +3,11 @@
 DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
+DBG_SRV=0
 # Uncomment to build in local dir
 STATICDIR=test
+# Needs 4 clients
+NBR=4
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -12,24 +15,54 @@ STATICDIR=test
 main(){
     startTest
     build
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
-	test ConfigVote
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
+#	test ConfigVote
 	test IdConnect
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
-	test SSHAdd
-	test SSHDel
-	test Follow
+#	test IdDel
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+#	test SSHAdd
+#	test SSHDel
+#	test Follow
+#	test Revoke
     stopTest
 }
 
-testFollow(){
-	clientSetup 2
+testRevoke(){
+	clientSetup 3
+	testOK runCl 3 ssh add service1
+	testOK runCl 1 config vote y
+	testOK runCl 2 config vote y
 
+	testOK runCl 1 id rm client3
+	testOK runCl 2 config vote y
+
+	testFail runCl 3 ssh add service1
+	testOK runCl 1 config update
+}
+
+testFollow(){
+	clientSetup 1
+	echo ID is $ID
+	testNFile cl3/authorized_keys
+	testFail runCl 3 follow add group.toml 1234 service1
+	testOK runCl 3 follow add group.toml $ID service1
+	testFail grep -q service1 cl3/authorized_keys
+	testNGrep client1 runCl 3 follow list
+	testGrep $ID runCl 3 follow list
+	testOK runCl 1 ssh add service1
+	testOK runCl 3 follow update
+	testOK grep -q service1 cl3/authorized_keys
+	testGrep service1 runCl 3 follow list
+	testReGrep client1
+	testOK runCl 3 follow rm $ID
+	testNGrep client1 runCl 3 follow list
+	testReNGrep service1
+	testFail grep -q service1 cl3/authorized_keys
 }
 
 testSSHDel(){
@@ -53,13 +86,13 @@ testSSHDel(){
 testSSHAdd(){
 	clientSetup 1
 	testOK runCl 1 ssh add service1
-	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile key_service1" cl1/config
+	testFileGrep "Host service1\n\tHostName service1\n\tIdentityFile cl1/key_service1" cl1/config
 	testFile cl1/key_service1.pub
 	testFile cl1/key_service1
 	testGrep service1 runCl 1 ssh ls
 	testReGrep client1
 	testOK runCl 1 ssh add -a s2 service2
-	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile key_s2" cl1/config
+	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile cl1/key_s2" cl1/config
 	testFile cl1/key_s2.pub
 	testFile cl1/key_s2
 	testGrep s2 runCl 1 ssh ls
@@ -131,6 +164,22 @@ testKeyAdd(){
 	testGrep key1 runCl 1 kv ls
 }
 
+testIdDel(){
+	clientSetup 3
+	testOK runCl 2 ssh add server2
+	testOK runCl 1 config vote y
+	testGrep client2 runCl 1 config ls
+	testGrep server2 runCl 1 config ls
+	testOK runCl 1 id del client2
+	testOK runCl 3 config vote y
+	testNGrep client2 runCl 3 config ls
+	testOK runCl 1 config update
+	testNGrep client2 runCl 1 config ls
+	testReNGrep server2
+	testFail runCl 2 ssh add server
+	testFail runCl 2 config update
+}
+
 testIdConnect(){
 	clientSetup
 	dbgOut "Connecting client_2 to ID of client_1: $ID"
@@ -139,18 +188,21 @@ testIdConnect(){
 	testFail runCl 2 id co test.toml
 	testFail runCl 2 id co group.toml
 	testOK runCl 2 id co group.toml $ID client2
-	own2="Owner: client2"
+	runGrepSed "Public key" "s/.* //" runCl 2 id co group.toml $ID client2
+    PUBLIC=$SED
+    if [ -z "$PUBLIC" ]; then
+    	fail "no public keys received"
+    fi
+	own2="Connected device client2"
 	testNGrep "$own2" runCl 2 config ls
 	testOK runCl 2 config update
-	testGrep "$own2" runCl 2 config ls -p
-
-	dbgOut "Verifying client_1 is not auto-updated"
-	testNGrep "$own2" runCl 1 config ls
-	testNGrep "$own2" runCl 1 config ls -p
-	testOK runCl 1 config update
-	testGrep "$own2" runCl 1 config ls -p
+	testGrep "Owner: client2" runCl 2 config ls -p
 
 	dbgOut "Voting with client_1 - first reject then accept"
+	echo "n" | testGrep $PUBLIC runCl 1 config vote
+	dbgOut
+	echo "n" | testNGrep a$PUBLIC runCl 1 config vote
+	dbgOut
 	testOK runCl 1 config vote n
 	testNGrep "$own2" runCl 1 config ls
 	testOK runCl 2 config update
@@ -158,8 +210,6 @@ testIdConnect(){
 
 	testOK runCl 1 config vote y
 	testGrep "$own2" runCl 1 config ls
-	testNGrep "$own2" runCl 2 config ls
-	testOK runCl 2 config update
 	testGrep "$own2" runCl 2 config ls
 }
 
@@ -274,7 +324,7 @@ build(){
         mkdir -p $co
 
         cl=cl$n
-        rm -f $cl/*bin $cl/config $cl/*.{pub,key}
+        rm -f $cl/*bin $cl/config $cl/*.{pub,key} $cl/auth*
         mkdir -p $cl
         key=$cl/id_rsa
         if [ ! -f $key ]; then

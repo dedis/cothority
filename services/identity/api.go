@@ -26,12 +26,14 @@ func init() {
 		&Device{},
 		&Identity{},
 		&Config{},
+		&Storage{},
+		&Service{},
 		&AddIdentity{},
 		&AddIdentityReply{},
 		&PropagateIdentity{},
 		&ProposeSend{},
 		&AttachToIdentity{},
-		&ProposeFetch{},
+		&ProposeUpdate{},
 		&ConfigUpdate{},
 		&UpdateSkipBlock{},
 		&ProposeVote{},
@@ -165,17 +167,17 @@ func (i *Identity) ProposeSend(il *Config) error {
 	return err
 }
 
-// ProposeFetch verifies if there is a new configuration awaiting that
+// ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
-func (i *Identity) ProposeFetch() error {
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeFetch{
+func (i *Identity) ProposeUpdate() error {
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
 		ID:          i.ID,
 		AccountList: nil,
 	})
 	if err != nil {
 		return err
 	}
-	cnc := msg.Msg.(ProposeFetch)
+	cnc := msg.Msg.(ProposeUpdate)
 	i.Proposed = cnc.AccountList
 	return nil
 }

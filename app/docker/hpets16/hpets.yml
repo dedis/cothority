@@ -1,0 +1,48 @@
+# ~/.tmuxinator/hpets.yml
+
+name: hpets
+root: ~/
+
+# Optional tmux socket
+# socket_name: foo
+
+# Runs before everything. Use it to start daemons etc.
+# pre: sudo /etc/rc.d/mysqld start
+
+# Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
+# pre_window: rbenv shell 2.0.0-p247
+
+# Pass command line options to tmux. Useful for specifying a different tmux.conf.
+# tmux_options: -f ~/.tmux.mac.conf
+
+# Change the command to call tmux.  This can be used by derivatives/wrappers like byobu.
+# tmux_command: byobu
+
+# Specifies (by name or index) which window will be selected on project startup. If not set, the first window is used.
+# startup_window: logs
+
+# Controls whether the tmux session should be attached to automatically. Defaults to true.
+# attach: false
+
+# Runs after everything. Use it to attach to tmux with custom options etc.
+# post: tmux -CC attach -t hpets
+
+windows:
+  - cothority:
+      layout: aab3,181x41,0,0[181x14,0,0{72x14,0,0,0,57x14,73,0,1,50x14,131,0,2},181x12,0,15,3,181x13,0,28{91x13,0,28,4,89x13,92,28,5}]
+      #layout: tiled
+      root: ~/HotPETs16
+      panes:
+        - device1:
+          - docker start -ai device1
+        - device2:
+          - docker start -ai device2
+        - device3:
+          - docker start -ai device3
+        - cothority:
+          - docker start -ai cothority
+        - follower1:
+          - docker start -ai follower1
+        - follower2:
+          - docker start -ai follower2
+
