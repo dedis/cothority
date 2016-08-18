@@ -90,7 +90,7 @@ type WR2 struct {
 	R2
 }
 
-// NewRandHound
+// NewRandHound ...
 func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct

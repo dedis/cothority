@@ -265,7 +265,5 @@ func (pv *PVSS) Reveal(ix abstract.Scalar, X abstract.Point, xS []abstract.Point
 	if err != nil {
 		return nil, nil, err
 	}
-
 	return S, core, nil
-
 }
