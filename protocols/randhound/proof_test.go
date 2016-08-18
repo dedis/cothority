@@ -103,20 +103,26 @@ func TestPVSS(t *testing.T) {
 
 	suite := edwards.NewAES128SHA256Ed25519(false)
 
+	g := suite.Point().Base()
+	_ = g
+
 	base := []byte("This is a PVSS test.")
 	h, _ := suite.Point().Pick(base, suite.Cipher([]byte("H")))
 
 	threshold := 3
-	X1, _ := suite.Point().Pick([]byte("X1"), random.Stream)
-	X2, _ := suite.Point().Pick([]byte("X2"), random.Stream)
-	X3, _ := suite.Point().Pick([]byte("X3"), random.Stream)
-	X4, _ := suite.Point().Pick([]byte("X4"), random.Stream)
-	X5, _ := suite.Point().Pick([]byte("X5"), random.Stream)
-	X := []abstract.Point{X1, X2, X3, X4, X5}
+	n := 5
+	x := make([]abstract.Scalar, n)
+	X := make([]abstract.Point, n)
+	ix := make([]abstract.Scalar, n)
+	for i := 0; i < n; i++ {
+		x[i] = suite.Scalar().Pick(random.Stream)
+		X[i] = suite.Point().Mul(nil, x[i])
+		ix[i] = suite.Scalar().Inv(x[i])
+	}
 
 	pvss := randhound.NewPVSS(suite, h, threshold)
 
-	sX, core, pb, _ := pvss.Split(X)
+	sX, encProof, pb, _ := pvss.Split(X)
 
 	index := []int{1, 2, 3, 4, 5}
 	pbx := [][]byte{pb, pb, pb, pb, pb}
@@ -125,9 +131,22 @@ func TestPVSS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f, err := pvss.Verify(X, sH, sX, core)
+	f, err := pvss.Verify(h, X, sH, sX, encProof)
 	if err != nil {
-		t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
+		t.Fatal("Verification of discrete logarithm encryption proof(s) failed:", err, f)
+	}
+
+	S := make([]abstract.Point, n)
+	decProof := make([]randhound.ProofCore, n)
+	for i := 0; i < n; i++ {
+		s, d, _ := pvss.Reveal(ix[i], X[i], sX[i:i+1])
+		S[i] = s[0]
+		decProof[i] = d[0]
+	}
+
+	e, err := pvss.Verify(g, S, X, sX, decProof)
+	if err != nil {
+		t.Fatal("Verification of discrete logarithm decryption proof(s) failed:", err, e)
 	}
 
 }

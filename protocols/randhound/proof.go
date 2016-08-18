@@ -208,12 +208,12 @@ func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte
 }
 
 // Verify ...
-func (pv *PVSS) Verify(X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) ([]int, error) {
+func (pv *PVSS) Verify(h abstract.Point, X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) ([]int, error) {
 
 	n := len(X)
 	H := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
-		H[i] = pv.h
+		H[i] = h
 	}
 	proof, err := NewProof(pv.suite, H, X, core)
 	if err != nil {
@@ -243,14 +243,29 @@ func (pv *PVSS) Reconstruct(polyBin [][]byte, index []int) ([]abstract.Point, er
 }
 
 // Reveal ...
-func (pv *PVSS) Reveal(ix abstract.Scalar, xS []abstract.Point) {
+func (pv *PVSS) Reveal(ix abstract.Scalar, X abstract.Point, xS []abstract.Point) ([]abstract.Point, []ProofCore, error) {
 
-	// XXX: maybe do verification here
+	// XXX: probably should do verification here
 
 	// Decrypt shares
 	S := make([]abstract.Point, len(xS))
+	G := make([]abstract.Point, len(xS))
+	x := make([]abstract.Scalar, len(xS))
 	for i := range xS {
 		S[i] = pv.suite.Point().Mul(xS[i], ix)
+		G[i] = pv.suite.Point().Base()
+		x[i] = ix
 	}
+
+	proof, err := NewProof(pv.suite, G, S, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, _, core, err := proof.Setup(x...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return S, core, nil
 
 }
