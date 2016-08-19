@@ -1,6 +1,7 @@
 package randhound_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/dedis/cothority/protocols/randhound"
@@ -45,7 +46,6 @@ func TestProof(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//q.SetCore(core)
 
 	f, err := q.Verify(xG, xH)
 	if err != nil {
@@ -103,35 +103,35 @@ func TestPVSS(t *testing.T) {
 
 	suite := edwards.NewAES128SHA256Ed25519(false)
 
-	g := suite.Point().Base()
-	_ = g
+	G := suite.Point().Base()
+	_ = G
 
 	base := []byte("This is a PVSS test.")
-	h, _ := suite.Point().Pick(base, suite.Cipher([]byte("H")))
+	H, _ := suite.Point().Pick(base, suite.Cipher([]byte("H")))
 
 	threshold := 3
 	n := 5
 	x := make([]abstract.Scalar, n)
 	X := make([]abstract.Point, n)
-	ix := make([]abstract.Scalar, n)
 	for i := 0; i < n; i++ {
 		x[i] = suite.Scalar().Pick(random.Stream)
 		X[i] = suite.Point().Mul(nil, x[i])
-		ix[i] = suite.Scalar().Inv(x[i])
 	}
 
-	pvss := randhound.NewPVSS(suite, h, threshold)
+	secret := suite.Scalar().Pick(random.Stream)
 
-	sX, encProof, pb, _ := pvss.Split(X)
+	// (1) Share-Distribution (Dealer)
+	pvss := randhound.NewPVSS(suite, H, threshold)
+	sX, encProof, pb, _ := pvss.Split(X, secret)
 
-	index := []int{1, 2, 3, 4, 5}
+	// (2) Share-Decryption (Trustee)
 	pbx := [][]byte{pb, pb, pb, pb, pb}
-	sH, err := pvss.Reconstruct(pbx, index)
+	sH, err := pvss.Reconstruct(pbx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	f, err := pvss.Verify(h, X, sH, sX, encProof)
+	f, err := pvss.Verify(H, X, sH, sX, encProof)
 	if err != nil {
 		t.Fatal("Verification of discrete logarithm encryption proof(s) failed:", err, f)
 	}
@@ -139,14 +139,23 @@ func TestPVSS(t *testing.T) {
 	S := make([]abstract.Point, n)
 	decProof := make([]randhound.ProofCore, n)
 	for i := 0; i < n; i++ {
-		s, d, _ := pvss.Reveal(ix[i], X[i], sX[i:i+1])
+		s, d, _ := pvss.Reveal(x[i], X[i], sX[i:i+1])
 		S[i] = s[0]
 		decProof[i] = d[0]
 	}
 
-	e, err := pvss.Verify(g, S, X, sX, decProof)
+	e, err := pvss.Verify(G, S, X, sX, decProof)
 	if err != nil {
 		t.Fatal("Verification of discrete logarithm decryption proof(s) failed:", err, e)
 	}
 
+	// (3) Share-Recovery (Dealer)
+	recovered, err := pvss.Recover(S)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
+		t.Fatal(errors.New("Recovered incorrect shared secret"))
+	}
 }

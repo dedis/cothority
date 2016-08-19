@@ -169,24 +169,24 @@ func NewPVSS(s abstract.Suite, h abstract.Point, t int) *PVSS {
 }
 
 // Split ...
-func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte, error) {
+func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Point, []ProofCore, []byte, error) {
 
 	n := len(X)
 
 	// Create secret sharing polynomial
-	p := new(poly.PriPoly).Pick(pv.suite, pv.t, nil, random.Stream)
+	p := new(poly.PriPoly).Pick(pv.suite, pv.t, secret, random.Stream)
 
 	// Create secret set of shares
-	s := new(poly.PriShares).Split(p, n+1)
+	s := new(poly.PriShares).Split(p, n)
 
-	// Create public polynomial commitments
+	// Create public polynomial commitments with respect to basis H
 	P := new(poly.PubPoly).Commit(p, pv.h)
 
 	// Prepare data for verification proofs
 	share := make([]abstract.Scalar, n)
 	H := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
-		share[i] = s.Share(i + 1)
+		share[i] = s.Share(i)
 		H[i] = pv.h
 	}
 
@@ -194,7 +194,7 @@ func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	_, sX, core, err := proof.SetupCollective(share...)
+	_, sX, encProof, err := proof.SetupCollective(share...)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -204,7 +204,7 @@ func (pv *PVSS) Split(X []abstract.Point) ([]abstract.Point, []ProofCore, []byte
 		return nil, nil, nil, err
 	}
 
-	return sX, core, polyBin, nil
+	return sX, encProof, polyBin, nil
 }
 
 // Verify ...
@@ -223,47 +223,59 @@ func (pv *PVSS) Verify(h abstract.Point, X []abstract.Point, sH []abstract.Point
 }
 
 // Reconstruct ...
-func (pv *PVSS) Reconstruct(polyBin [][]byte, index []int) ([]abstract.Point, error) {
+func (pv *PVSS) Reconstruct(polyBin [][]byte) ([]abstract.Point, error) {
 
-	if len(polyBin) != len(index) {
-		return nil, errors.New("Non-matching lengths") // XXX
-	}
-
-	n := len(index)
+	n := len(polyBin)
 	sH := make([]abstract.Point, n)
-	for i := range index {
+	for i := 0; i < n; i++ {
 		P := new(poly.PubPoly)
 		P.Init(pv.suite, pv.t, pv.h)
 		if err := P.UnmarshalBinary(polyBin[i]); err != nil {
 			return nil, err
 		}
-		sH[i] = P.Eval(index[i])
+		sH[i] = P.Eval(i + 1)
 	}
 	return sH, nil
 }
 
 // Reveal ...
-func (pv *PVSS) Reveal(ix abstract.Scalar, X abstract.Point, xS []abstract.Point) ([]abstract.Point, []ProofCore, error) {
-
-	// XXX: probably should do verification here
+func (pv *PVSS) Reveal(x abstract.Scalar, X abstract.Point, xS []abstract.Point) ([]abstract.Point, []ProofCore, error) {
 
 	// Decrypt shares
 	S := make([]abstract.Point, len(xS))
 	G := make([]abstract.Point, len(xS))
-	x := make([]abstract.Scalar, len(xS))
+	y := make([]abstract.Scalar, len(xS))
 	for i := range xS {
-		S[i] = pv.suite.Point().Mul(xS[i], ix)
+		a := pv.suite.Scalar().Inv(x)
+		S[i] = pv.suite.Point().Mul(xS[i], a)
 		G[i] = pv.suite.Point().Base()
-		x[i] = ix
+		y[i] = a
 	}
 
 	proof, err := NewProof(pv.suite, G, S, nil)
 	if err != nil {
 		return nil, nil, err
 	}
-	_, _, core, err := proof.Setup(x...)
+	_, _, core, err := proof.Setup(y...)
 	if err != nil {
 		return nil, nil, err
 	}
 	return S, core, nil
+}
+
+// Recover ...
+func (pv *PVSS) Recover(S []abstract.Point) (abstract.Point, error) {
+
+	if len(S) < pv.t {
+		return nil, errors.New("Not enough shares to recover secret")
+	}
+
+	pp := new(poly.PubPoly).InitNull(pv.suite, pv.t, pv.suite.Point().Base())
+	ps := new(poly.PubShares).Split(pp, len(S)) // XXX: ackward way to init shares, check +1
+
+	for i := 0; i < len(S); i++ {
+		ps.SetShare(i, S[i]) // why is it i and S[i] and not i+1 and S[i] ???
+	}
+
+	return ps.SecretCommit(), nil
 }
