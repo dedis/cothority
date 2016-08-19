@@ -113,9 +113,11 @@ func TestPVSS(t *testing.T) {
 	threshold := 2*n/3 + 1
 	x := make([]abstract.Scalar, n) // trustee private keys
 	X := make([]abstract.Point, n)  // trustee public keys
+	index := make([]int, n)
 	for i := 0; i < n; i++ {
 		x[i] = suite.Scalar().Pick(random.Stream)
 		X[i] = suite.Point().Mul(nil, x[i])
+		index[i] = i
 	}
 
 	// Scalar of shared secret
@@ -133,7 +135,7 @@ func TestPVSS(t *testing.T) {
 	for i := 0; i < n; i++ {
 		pbx[i] = pb // NOTE: polynomials can be  different
 	}
-	sH, err := pvss.Commits(pbx)
+	sH, err := pvss.Commits(pbx, index)
 	if err != nil {
 		t.Fatal(err)
 	}

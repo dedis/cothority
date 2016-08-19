@@ -231,7 +231,11 @@ func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point
 }
 
 // Commits reconstructs a list of commits from the given polynomials and indices.
-func (pv *PVSS) Commits(polyBin [][]byte) ([]abstract.Point, error) {
+func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]abstract.Point, error) {
+
+	if len(polyBin) != len(index) {
+		return nil, errors.New("Inputs have different lengths")
+	}
 
 	n := len(polyBin)
 	sH := make([]abstract.Point, n)
@@ -241,7 +245,7 @@ func (pv *PVSS) Commits(polyBin [][]byte) ([]abstract.Point, error) {
 		if err := P.UnmarshalBinary(polyBin[i]); err != nil {
 			return nil, err
 		}
-		sH[i] = P.Eval(i) // XXX: probably needs an index parameter to better control which commits are reconstructed
+		sH[i] = P.Eval(index[i]) // XXX: probably needs an index parameter to better control which commits are reconstructed
 	}
 	return sH, nil
 }
