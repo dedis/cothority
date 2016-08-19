@@ -1,7 +1,9 @@
 package network
 
-import "net"
-import "strings"
+import (
+	"net"
+	"strings"
+)
 
 // ConnType is a type to represent what is the type of a Conn
 // It can be of different types such as TCP, TLS etc.
@@ -25,6 +27,10 @@ const (
 	UnvalidConnType = "wrong"
 )
 
+// typeAddressSep is the separator between the type of connection and the actual
+// ip address.
+const typeAddressSep = "://"
+
 func connType(t string) ConnType {
 	ct := ConnType(t)
 	if ct == PlainTCP || ct == TLS || ct == PURB {
@@ -40,7 +46,7 @@ func (a Address) ConnType() ConnType {
 	if !a.Valid() {
 		return UnvalidConnType
 	}
-	vals := strings.Split(string(a), ":")
+	vals := strings.Split(string(a), typeAddressSep)
 	if len(vals) == 0 {
 		return UnvalidConnType
 	}
@@ -54,11 +60,11 @@ func (a Address) NetworkAddress() string {
 	if !a.Valid() {
 		return ""
 	}
-	vals := strings.Split(string(a), ":")
-	if len(vals) != 3 {
+	vals := strings.Split(string(a), typeAddressSep)
+	if len(vals) != 2 {
 		return ""
 	}
-	return vals[1] + ":" + vals[2]
+	return vals[1]
 }
 
 // Valid returns true if the address is well formed or false otherwise.
@@ -67,15 +73,15 @@ func (a Address) NetworkAddress() string {
 // NetworkAddress must contain the IP address + Port number.
 // Ex. tls:192.168.1.10:5678
 func (a Address) Valid() bool {
-	vals := strings.Split(string(a), ":")
-	if len(vals) != 3 {
+	vals := strings.Split(string(a), typeAddressSep)
+	if len(vals) != 2 {
 		return false
 	}
 	if connType(vals[0]) == UnvalidConnType {
 		return false
 	}
 
-	if ip, _, e := net.SplitHostPort(vals[1] + ":" + vals[2]); e != nil {
+	if ip, _, e := net.SplitHostPort(vals[1]); e != nil {
 		return false
 	} else if net.ParseIP(ip) == nil {
 		return false

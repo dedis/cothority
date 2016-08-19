@@ -32,11 +32,11 @@ func TestAddress(t *testing.T) {
 		Type    ConnType
 		Address string
 	}{
-		{"tls:10.0.0.4:2000", true, TLS, "10.0.0.4:2000"},
-		{"tcp:10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000"},
-		{"purb:10.0.0.4:2000", true, PURB, "10.0.0.4:2000"},
-		{"tls4:10.0.0.4:2000", false, UnvalidConnType, ""},
-		{"tls:1000.0.0.4:2000", false, UnvalidConnType, ""},
+		{"tls://10.0.0.4:2000", true, TLS, "10.0.0.4:2000"},
+		{"tcp://10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000"},
+		{"purb://10.0.0.4:2000", true, PURB, "10.0.0.4:2000"},
+		{"tls4://10.0.0.4:2000", false, UnvalidConnType, ""},
+		{"tls://1000.0.0.4:2000", false, UnvalidConnType, ""},
 		{"tlsx10.0.0.4:2000", false, UnvalidConnType, ""},
 		{"tls:10.0.0.4x2000", false, UnvalidConnType, ""},
 		{"tlsx10.0.0.4x2000", false, UnvalidConnType, ""},
