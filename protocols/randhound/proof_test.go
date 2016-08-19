@@ -90,7 +90,10 @@ func TestProofCollective(t *testing.T) {
 	}
 
 	// Verify proof
-	q, _ := randhound.NewProof(suite, g, h, core)
+	q, err := randhound.NewProof(suite, g, h, core)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	f, err := q.Verify(xG, xH)
 	if err != nil {
@@ -104,49 +107,59 @@ func TestPVSS(t *testing.T) {
 	suite := edwards.NewAES128SHA256Ed25519(false)
 
 	G := suite.Point().Base()
-	_ = G
+	H, _ := suite.Point().Pick(nil, suite.Cipher([]byte("H")))
 
-	base := []byte("This is a PVSS test.")
-	H, _ := suite.Point().Pick(base, suite.Cipher([]byte("H")))
-
-	threshold := 3
-	n := 5
-	x := make([]abstract.Scalar, n)
-	X := make([]abstract.Point, n)
+	n := 10
+	threshold := 2*n/3 + 1
+	x := make([]abstract.Scalar, n) // trustee private keys
+	X := make([]abstract.Point, n)  // trustee public keys
 	for i := 0; i < n; i++ {
 		x[i] = suite.Scalar().Pick(random.Stream)
 		X[i] = suite.Point().Mul(nil, x[i])
 	}
 
+	// Scalar of shared secret
 	secret := suite.Scalar().Pick(random.Stream)
 
 	// (1) Share-Distribution (Dealer)
 	pvss := randhound.NewPVSS(suite, H, threshold)
-	sX, encProof, pb, _ := pvss.Split(X, secret)
-
-	// (2) Share-Decryption (Trustee)
-	pbx := [][]byte{pb, pb, pb, pb, pb}
-	sH, err := pvss.Reconstruct(pbx)
+	sX, encProof, pb, err := pvss.Split(X, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	f, err := pvss.Verify(H, X, sH, sX, encProof)
+	// (2) Share-Decryption (Trustee)
+	pbx := make([][]byte, n)
+	for i := 0; i < n; i++ {
+		pbx[i] = pb // NOTE: polynomials can be  different
+	}
+	sH, err := pvss.Commits(pbx)
 	if err != nil {
-		t.Fatal("Verification of discrete logarithm encryption proof(s) failed:", err, f)
+		t.Fatal(err)
 	}
 
+	// Check that log_H(sH) == log_X(sX) using encProof
+	f, err := pvss.Verify(H, X, sH, sX, encProof)
+	if err != nil {
+		t.Fatal("encProof:", err, f)
+	}
+
+	// Decrypt shares
 	S := make([]abstract.Point, n)
 	decProof := make([]randhound.ProofCore, n)
 	for i := 0; i < n; i++ {
-		s, d, _ := pvss.Reveal(x[i], X[i], sX[i:i+1])
+		s, d, err := pvss.Reveal(x[i], sX[i:i+1])
+		if err != nil {
+			t.Fatal(err)
+		}
 		S[i] = s[0]
 		decProof[i] = d[0]
 	}
 
+	// Check that log_G(S) == log_X(sX) using decProof
 	e, err := pvss.Verify(G, S, X, sX, decProof)
 	if err != nil {
-		t.Fatal("Verification of discrete logarithm decryption proof(s) failed:", err, e)
+		t.Fatal("decProof:", err, e)
 	}
 
 	// (3) Share-Recovery (Dealer)
@@ -155,6 +168,7 @@ func TestPVSS(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Verify recovered secret
 	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
 		t.Fatal(errors.New("Recovered incorrect shared secret"))
 	}
