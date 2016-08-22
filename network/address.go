@@ -83,6 +83,8 @@ func (a Address) Valid() bool {
 
 	if ip, _, e := net.SplitHostPort(vals[1]); e != nil {
 		return false
+	} else if ip == "localhost" {
+		return true
 	} else if net.ParseIP(ip) == nil {
 		return false
 	}

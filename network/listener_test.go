@@ -40,14 +40,3 @@ func TestTCPListener(t *testing.T) {
 		t.Fatal("Could not stop listener")
 	}
 }
-
-func TestSimple(t *testing.T) {
-	ln := NewTCPListener()
-	go ln.listen("127.0.0.1:2034", nil)
-	time.Sleep(100 * time.Millisecond)
-	err := ln.Stop()
-	if err != nil {
-		t.Error(err)
-
-	}
-}

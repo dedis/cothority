@@ -91,7 +91,6 @@ func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
 			}
 			continue
 		}
-		fmt.Println("Works!", conn)
 		c := TCPConn{
 			endpoint: conn.RemoteAddr().String(),
 			conn:     conn,

@@ -2,15 +2,11 @@ package sda
 
 import (
 	"errors"
-	"reflect"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
-	"golang.org/x/net/context"
 )
 
 // Router is an abstraction to represent the bridge between the communication
@@ -56,8 +52,6 @@ type TCPRouter struct {
 	suite          abstract.Suite
 	connections    map[network.ServerIdentityID]network.SecureConn
 
-	// chan of received messages - testmode
-	networkChan chan network.Packet
 	// We're about to close
 	isClosing  bool
 	closingMut sync.Mutex
@@ -71,11 +65,6 @@ type TCPRouter struct {
 	workingAddress string
 	// listening is a flag to tell whether this host is listening or not
 	listening bool
-	// whether processMessages has started
-	processMessagesStarted bool
-	// tell processMessages to quit
-	quitProcessMsg chan bool
-	quitProcessMut sync.Mutex
 	// tell Run() to stop
 	closing chan bool
 }
@@ -96,40 +85,6 @@ func NewTCPRouter(e *network.ServerIdentity, pkey abstract.Scalar) *TCPRouter {
 		closing:     make(chan bool, 1),
 		networkChan: make(chan network.Packet, 1),
 	}
-}
-
-// Send sends to an ServerIdentity without wrapping the msg into a SDAMessage
-func (t *TCPRouter) Send(e *network.ServerIdentity, msg network.Body) error {
-	if msg == nil {
-		return errors.New("Can't send nil-packet")
-	}
-	t.networkLock.RLock()
-	c, ok := t.connections[e.ID]
-	t.networkLock.RUnlock()
-	if !ok {
-		var err error
-		c, err = t.Connect(e)
-		if err != nil {
-			return err
-		}
-	}
-
-	log.Lvlf4("%s sends to %s msg: %+v", t.serverIdentity.Addresses, e, msg)
-	var err error
-	err = c.Send(context.TODO(), msg)
-	if err != nil {
-		log.Lvl2("Couldn't send to", c.ServerIdentity().First(), ":", err, "trying again")
-		c, err = t.Connect(e)
-		if err != nil {
-			return err
-		}
-		err = c.Send(context.TODO(), msg)
-		if err != nil {
-			return err
-		}
-	}
-	log.Lvl5("Message sent")
-	return nil
 }
 
 // Run will start opening a tcp port and accepting connections. It is a blocking
@@ -157,23 +112,6 @@ func (t *TCPRouter) Run() {
 		}
 	}()
 	<-t.closing
-}
-
-func (t *TCPRouter) listen() error {
-	// open port
-	log.Lvl3(t.serverIdentity.First(), "starts to listen")
-	fn := func(c network.SecureConn) {
-		log.Lvl3(t.workingAddress, "Accepted Connection from", c.Remote())
-		// register the connection once we know it's ok
-		t.registerConnection(c)
-		t.handleConn(c)
-	}
-	err := t.host.Listen(fn)
-	if err != nil {
-		log.Fatal("Error listening on", t.workingAddress, ":", err)
-		return err
-	}
-	return nil
 }
 
 // processMessages is receiving all the messages coming from the network and
@@ -247,297 +185,9 @@ func (t *TCPRouter) Close() error {
 	return nil
 }
 
-// closeConnection closes a connection and removes it from the connections-map
-// Calling this method will borrow the networkLock.
-func (t *TCPRouter) closeConnection(c network.SecureConn) error {
-	t.networkLock.Lock()
-	defer t.networkLock.Unlock()
-	log.Lvl4(t.serverIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
-	err := c.Close()
-	if err != nil {
-		return err
-	}
-	delete(t.connections, c.ServerIdentity().ID)
-	return nil
-}
-
-// Handle a connection => giving messages to the MsgChans
-func (t *TCPRouter) handleConn(c network.SecureConn) {
-	address := c.Remote()
-	for {
-		ctx := context.TODO()
-		packet, err := c.Receive(ctx)
-		// So the receiver can know about the error
-		packet.SetError(err)
-		packet.From = address
-		log.Lvl5(t.workingAddress, "Got message", packet)
-		if err != nil {
-			t.closingMut.Lock()
-			log.Lvlf4("%+v got error (%+s) while receiving message (isClosing=%+v)",
-				t.serverIdentity.First(), err, t.isClosing)
-			t.closingMut.Unlock()
-			if err == network.ErrClosed || err == network.ErrEOF || err == network.ErrTemp {
-				log.Lvl4(t.serverIdentity.First(), c.Remote(), "quitting handleConn for-loop", err)
-				t.closeConnection(c)
-				return
-			}
-			log.Error(t.serverIdentity.Addresses, "Error with connection", address, "=>", err)
-		} else {
-			t.closingMut.Lock()
-			if !t.isClosing {
-				log.Lvl5(t.workingAddress, "Send message to networkChan", len(t.networkChan))
-				t.networkChan <- packet
-			}
-			t.closingMut.Unlock()
-		}
-	}
-}
-
-// registerConnection registers an ServerIdentity for a new connection, mapped with the
-// real physical address of the connection and the connection itself
-// it locks (and unlocks when done):  networkLock
-func (t *TCPRouter) registerConnection(c network.SecureConn) {
-	log.Lvl4(t.serverIdentity.First(), "registers", c.ServerIdentity().First())
-	t.networkLock.Lock()
-	defer t.networkLock.Unlock()
-	id := c.ServerIdentity()
-	_, okc := t.connections[id.ID]
-	if okc {
-		log.Lvl3("Connection already registered", okc)
-	}
-	t.connections[id.ID] = c
-}
-
-// Tx to implement monitor/CounterIO
-func (t *TCPRouter) Tx() uint64 {
-	return t.host.Tx()
-}
-
-// Rx to implement monitor/CounterIO
-func (t *TCPRouter) Rx() uint64 {
-	return t.host.Rx()
-}
-
-// Address is the address where this host is listening
-func (t *TCPRouter) Address() string {
-	return t.workingAddress
-}
-
-// GetStatus is a function that returns the status report of the server.
-func (t *TCPRouter) GetStatus() Status {
-	m := make(map[string]string)
-	nbr := len(t.connections)
-	remote := make([]string, nbr)
-	iter := 0
-	var rx uint64
-	var tx uint64
-	for _, c := range t.connections {
-		remote[iter] = c.Remote()
-		rx += c.Rx()
-		tx += c.Tx()
-		iter = iter + 1
-	}
-	m["Connections"] = strings.Join(remote, "\n")
-	m["Host"] = t.Address()
-	m["Total"] = strconv.Itoa(nbr)
-	m["Packets_Received"] = strconv.FormatUint(rx, 10)
-	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
-	return m
-}
-
 func (t *TCPRouter) connection(e *network.ServerIdentity) network.SecureConn {
 	t.networkLock.RLock()
 	defer t.networkLock.RUnlock()
 	c, _ := t.connections[e.ID]
 	return c
-}
-
-// MOCKING NETWORK ROUTER
-// localRelay defines the basic functionalities such as sending and
-// receiving a message, locally. It is implemented by LocalRouter and
-// localClient so both a Router and a Client can be emulated locally without
-// opening any real connections.
-type localRelay interface {
-	send(e *network.ServerIdentity, msg network.Body) error
-	receive(msg *network.Packet)
-	serverIdentity() *network.ServerIdentity
-}
-
-// localRelayStore keeps tracks of all the mock routers
-type localRelayStore struct {
-	localRelays map[network.ServerIdentityID]localRelay
-	mut         sync.Mutex
-}
-
-// localRelays is the store that keeps tracks of all opened local routers in a
-// thread safe manner
-var localRelays = localRelayStore{
-	localRelays: make(map[network.ServerIdentityID]localRelay),
-}
-
-func (lrs *localRelayStore) Put(r localRelay) {
-	lrs.mut.Lock()
-	defer lrs.mut.Unlock()
-	lrs.localRelays[r.serverIdentity().ID] = r
-}
-
-// Get returns the router associated with this ServerIdentity. It returns nil if
-// there is no LocalRouter associated with this ServerIdentity
-func (lrs *localRelayStore) Get(id *network.ServerIdentity) localRelay {
-	lrs.mut.Lock()
-	defer lrs.mut.Unlock()
-	r, ok := lrs.localRelays[id.ID]
-	if !ok {
-		return nil
-	}
-	return r
-}
-
-func (lrs *localRelayStore) Len() int {
-	lrs.mut.Lock()
-	defer lrs.mut.Unlock()
-	return len(lrs.localRelays)
-}
-
-// LocalRouter is a struct that implements the Router interface locally using
-// channels and go routines.
-type LocalRouter struct {
-	Dispatcher
-	identity *network.ServerIdentity
-	// msgQueue is the channel where other LocalRouter communicate messages to
-	// this LocalRouter.
-	msgChan chan *network.Packet
-	conns   *connsStore
-}
-
-// NewLocalRouter will return a fresh router using native go channels to communicate
-// to others LocalRouter. Its purpose is mainly for easy testing without any
-// trouble of opening / closing / waiting for the network socket ...
-func NewLocalRouter(identity *network.ServerIdentity) *LocalRouter {
-	r := &LocalRouter{
-		Dispatcher: NewBlockingDispatcher(),
-		identity:   identity,
-		msgChan:    make(chan *network.Packet, 100),
-		conns:      newConnsStore(),
-	}
-	localRelays.Put(r)
-	return r
-}
-
-func (l *LocalRouter) serverIdentity() *network.ServerIdentity {
-	return l.identity
-}
-
-func (l *LocalRouter) send(e *network.ServerIdentity, msg network.Body) error {
-	return l.Send(e, msg)
-}
-
-// Send implements the Router interface
-func (l *LocalRouter) Send(e *network.ServerIdentity, msg network.Body) error {
-	r := localRelays.Get(e)
-	if r == nil {
-		return errors.New("No mock routers at this entity")
-	}
-
-	l.conns.Put(e.String())
-
-	var body network.Body
-	var val = reflect.ValueOf(msg)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-	body = val.Interface()
-
-	var typ = network.TypeFromData(body)
-	nm := network.Packet{
-		MsgType:        typ,
-		Msg:            body,
-		ServerIdentity: l.identity,
-	}
-	r.receive(&nm)
-	return nil
-}
-
-func (l *LocalRouter) receive(msg *network.Packet) {
-	l.msgChan <- msg
-}
-
-// Run will make the LocalRouter start listening on its incoming channel. It's a
-// blocking call.
-func (l *LocalRouter) Run() {
-	for msg := range l.msgChan {
-		l.conns.Put(msg.ServerIdentity.String())
-		log.Lvl5(l.Address(), "Received message", msg.MsgType, "from", msg.ServerIdentity.First())
-		if err := l.Dispatch(msg); err != nil {
-			log.Lvl4(l.Address(), "Error dispatching:", err)
-		}
-	}
-}
-
-// Close implements the Router interface. It will stop the dispatching of
-// incoming messages.
-func (l *LocalRouter) Close() error {
-	close(l.msgChan)
-	return nil
-}
-
-// Tx implements the Router interface (mainly for compatibility reason with
-// monitor.CounterIO which is needed for TcpRouter simulations)
-func (l *LocalRouter) Tx() uint64 {
-	return 0
-}
-
-// Rx implements the Router interface (mainly for compatibility reason with
-// monitor.CounterIO which is needed for TcpRouter simulations)
-func (l *LocalRouter) Rx() uint64 {
-	return 0
-}
-
-// GetStatus implements the Router interface
-func (l *LocalRouter) GetStatus() Status {
-	m := make(map[string]string)
-	m["Connections"] = strings.Join(l.conns.Get(), "\n")
-	m["Host"] = l.Address()
-	m["Total"] = strconv.Itoa(l.conns.Len())
-	m["Packets_Received"] = strconv.FormatUint(0, 10)
-	m["Packets_Sent"] = strconv.FormatUint(0, 10)
-	return m
-}
-
-// Address implements the Router interface
-func (l *LocalRouter) Address() string {
-	return l.identity.First()
-}
-
-type connsStore struct {
-	// conns keep tracks of to whom this local router sent something so it can
-	// have a reasonable loooking report status in GetStatus
-	conns map[string]bool
-	sync.Mutex
-}
-
-func (cs *connsStore) Put(name string) {
-	cs.Lock()
-	defer cs.Unlock()
-	cs.conns[name] = true
-}
-func (cs *connsStore) Get() []string {
-	cs.Lock()
-	defer cs.Unlock()
-	var names []string
-	for k := range cs.conns {
-		names = append(names, k)
-	}
-	return names
-}
-func (cs *connsStore) Len() int {
-	cs.Lock()
-	defer cs.Unlock()
-	return len(cs.conns)
-}
-
-func newConnsStore() *connsStore {
-	return &connsStore{
-		conns: make(map[string]bool),
-	}
 }
