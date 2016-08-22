@@ -241,8 +241,7 @@ func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) e
 			str = typ.String()
 		}
 		str += " (reflect= " + rtype.String()
-		log.Error(str)
-		return fmt.Errorf("Error marshaling  message: %s ( msg = %+v)", err.Error(), sdaMsg.Msg)
+		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
