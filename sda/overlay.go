@@ -217,7 +217,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		log.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+		log.Lvl4(o.host.Address(), "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
@@ -241,7 +241,8 @@ func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) e
 			str = typ.String()
 		}
 		str += " (reflect= " + rtype.String()
-		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
+		log.Error(str)
+		return fmt.Errorf("Error marshaling  message: %s ( msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
@@ -439,7 +440,7 @@ func (o *Overlay) Close() {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
 	for _, tni := range o.instances {
-		log.Lvl4(o.host.workingAddress, "Closing TNI", tni.TokenID())
+		log.Lvl4(o.host.Address(), "Closing TNI", tni.TokenID())
 		o.nodeDelete(tni.Token())
 	}
 }
@@ -562,7 +563,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.ID()] = pi
-	log.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.ID())
+	log.Lvlf4("%s registered ProtocolInstance %x", o.host.Address(), tok.ID())
 	return nil
 }
 

@@ -228,7 +228,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		services[id] = s
 		configs[id] = configName
 	}
-	log.Lvl3(h.workingAddress, "instantiated all services")
+	log.Lvl3(h.Address(), "instantiated all services")
 
 	// registering messages that services are expecting
 	h.RegisterProcessor(s, ClientRequestID)

@@ -44,9 +44,6 @@ type Host struct {
 	networkLock sync.RWMutex
 	// lock associated to access trees
 	treesLock sync.Mutex
-	// working address is mostly for debugging purposes so we know what address
-	// is known as right now
-	workingAddress string
 	// listening is a flag to tell whether this host is listening or not
 	listening bool
 	// whether processMessages has started
@@ -65,7 +62,6 @@ func NewHost(si *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       si,
 		Dispatcher:           NewBlockingDispatcher(),
-		workingAddress:       si.First(),
 		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		host:                 network.NewSecureTCPHost(pkey, si),
 		private:              pkey,
@@ -89,7 +85,7 @@ func (h *Host) listen(wait bool) {
 	log.Lvl3(h.ServerIdentity.First(), "starts to listen")
 	idExchDone := make(chan bool)
 	fn := func(c network.SecureConn) {
-		log.Lvl3(h.workingAddress, "Accepted Connection from", c.Remote())
+		log.Lvl3(h.Address(), "Accepted Connection from", c.Remote())
 		// register the connection once we know it's ok
 		h.registerConnection(c)
 		if wait && c.ServerIdentity().Equal(h.ServerIdentity) {
@@ -97,18 +93,12 @@ func (h *Host) listen(wait bool) {
 		}
 		h.handleConn(c)
 	}
-	log.Lvl4("Host listens on:", h.workingAddress)
+	log.Lvl4("Host listens on:", h.Address())
 	err := h.host.Listen(fn)
 	if err != nil {
-		log.Fatal("Couldn't listen on", h.workingAddress, ":", err)
+		log.Fatal("Couldn't listen on", h.Address(), ":", err)
 	}
 	if wait {
-		for i, addr := range h.ServerIdentity.Addresses {
-			if strings.HasSuffix(addr, ":0") {
-				h.ServerIdentity.Addresses[i] = h.host.WorkingAddress()
-				log.Lvl4("Replaced port to", h.ServerIdentity.Addresses[i])
-			}
-		}
 		for {
 			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")
 			_, err := h.Connect(h.ServerIdentity)
@@ -144,7 +134,7 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Lvl3("Host", h.workingAddress, "connected to", c.Remote())
+	log.Lvl3("Host", h.Address(), "connected to", c.Remote())
 	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
@@ -265,7 +255,7 @@ func (h *Host) processMessages() {
 		case <-h.ProcessMessagesQuit:
 			return
 		}
-		log.Lvl4(h.workingAddress, "Message Received from", data.From, data.MsgType)
+		log.Lvl4(h.Address(), "Message Received from", data.From, data.MsgType)
 		switch data.MsgType {
 		case network.ErrorType:
 			log.Lvl3("Error from the network")
@@ -291,7 +281,7 @@ func (h *Host) handleConn(c network.SecureConn) {
 		_, cont := h.connections[c.ServerIdentity().ID]
 		h.networkLock.Unlock()
 		if !cont {
-			log.Lvl3(h.workingAddress, "Quitting handleConn ", c.Remote(), " because entry is not there")
+			log.Lvl3(h.Address(), "Quitting handleConn ", c.Remote(), " because entry is not there")
 			return
 		}
 		// So the receiver can know about the error
@@ -395,7 +385,7 @@ func (h *Host) Rx() uint64 {
 
 // Address is the address where this host is listening
 func (h *Host) Address() string {
-	return h.workingAddress
+	return h.host.WorkingAddress()
 }
 
 // GetStatus is a function that returns the status report of the server.
