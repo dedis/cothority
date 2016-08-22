@@ -27,14 +27,17 @@ type router struct {
 	// boolean flag indicating that the router is already clos{ing,ed}
 	isClosed  bool
 	closedMut sync.Mutex
+
+	handleConnQuit chan bool
 }
 
 func newRouter(own *ServerIdentity, newConn func(sid *ServerIdentity) (Conn, error)) *router {
 	return &router{
-		id:          own,
-		connections: make(map[ServerIdentityID]Conn),
-		newConn:     newConn,
-		Dispatcher:  NewBlockingDispatcher(),
+		id:             own,
+		connections:    make(map[ServerIdentityID]Conn),
+		newConn:        newConn,
+		Dispatcher:     NewBlockingDispatcher(),
+		handleConnQuit: make(chan bool),
 	}
 }
 
@@ -82,6 +85,7 @@ func (r *router) Send(e *ServerIdentity, msg Body) error {
 func (r *router) handleConn(remote *ServerIdentity, c Conn) {
 	r.registerConnection(remote, c)
 	address := c.Remote()
+	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
 		ctx := context.TODO()
 		packet, err := c.Receive(ctx)
@@ -94,13 +98,19 @@ func (r *router) handleConn(remote *ServerIdentity, c Conn) {
 			r.closedMut.Lock()
 			log.Lvlf4("%+v got error (%+s) while receiving message (isClosed=%+v)",
 				r.id.String(), err, r.isClosed)
-			r.closedMut.Unlock()
-			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
+			if r.isClosed {
+				// request to finish handling conn
+				r.handleConnQuit <- true
+			} else if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				log.Lvl4(r.id, c.Remote(), "quitting handleConn for-loop", err)
 				r.closeConnection(remote, c)
-				return
+			} else {
+				r.closedMut.Unlock()
+				log.Error(r.id, "Error with connection", address, "=>", err)
+				continue
 			}
-			log.Error(r.id, "Error with connection", address, "=>", err)
+			r.closedMut.Unlock()
+			return
 		}
 
 		r.closedMut.Lock()
@@ -114,23 +124,13 @@ func (r *router) handleConn(remote *ServerIdentity, c Conn) {
 				log.Print("Error dispatching:", err)
 			}
 		} else {
-			r.closeConnection(remote, c)
+			// signal we are done with this go routine.
+			r.handleConnQuit <- true
 			r.closedMut.Unlock()
 			return
 		}
 		r.closedMut.Unlock()
 	}
-}
-
-// closeConnection closes a connection and removes it from the connections-map
-// Calling this method will borrow the connsMut lock.
-func (r *router) closeConnection(remote *ServerIdentity, c Conn) error {
-	r.connsMut.Lock()
-	defer r.connsMut.Unlock()
-	log.Lvl4("Closing connection", c, c.Remote(), c.Local())
-	err := c.Close()
-	delete(r.connections, remote.ID)
-	return err
 }
 
 // registerConnection registers an ServerIdentity for a new connection, mapped with the
@@ -147,18 +147,52 @@ func (r *router) registerConnection(remote *ServerIdentity, c Conn) {
 	r.connections[remote.ID] = c
 }
 
-// Close shuts down all network connections
+// closeConnection closes a connection and removes it from the connections-map
+// Calling this method will borrow the connsMut lock.
+func (r *router) closeConnection(remote *ServerIdentity, c Conn) error {
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
+	log.Lvl4("Closing connection", c, c.Remote(), c.Local())
+	err := c.Close()
+	delete(r.connections, remote.ID)
+	return err
+}
+
+func (r *router) reset() {
+	r.connsMut.Lock()
+	r.connections = make(map[ServerIdentityID]Conn)
+	r.connsMut.Unlock()
+
+	r.closedMut.Lock()
+	r.isClosed = false
+	r.closedMut.Unlock()
+}
+
+// Close shuts down all network connections and returns once all processing go
+// routines are done.
 func (r *router) close() error {
 	r.closedMut.Lock()
-	defer r.closedMut.Unlock()
 	if r.isClosed {
+		r.closedMut.Unlock()
 		return errors.New("Already closing")
 	}
 	r.isClosed = true
-	for _, c := range r.connections {
+	r.closedMut.Unlock()
+
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
+	lenConn := len(r.connections)
+	for id, c := range r.connections {
+		delete(r.connections, id)
 		if err := c.Close(); err != nil {
 			return err
 		}
+	}
+	// wait for all handleConn to finish
+	var finished int
+	for finished < lenConn {
+		<-r.handleConnQuit
+		finished++
 	}
 	return nil
 }

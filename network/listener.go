@@ -66,6 +66,7 @@ func (t *TCPListener) Listen(addr Address, fn func(Conn)) error {
 func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
+	t.quit = make(chan bool)
 	global, _ := GlobalBind(addr)
 	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)

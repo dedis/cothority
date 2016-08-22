@@ -87,6 +87,7 @@ func (t *TCPHost) Start() {
 func (t *TCPHost) Stop() error {
 	err := t.TCPListener.Stop()
 	err2 := t.router.close()
+	t.router.reset()
 	if err != nil {
 		return err
 	} else if err2 != nil {

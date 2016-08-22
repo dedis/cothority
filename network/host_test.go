@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"strconv"
 	"testing"
 	"time"
@@ -9,49 +10,6 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	SimpleMessageType = RegisterMessageType(SimpleMessage{})
-}
-
-func NewTestTCPHost(port int) *TCPHost {
-	addr := "tcp://localhost:" + strconv.Itoa(port)
-	return NewTCPHost(NewTestServerIdentity(addr))
-}
-
-// Returns a ServerIdentity out of the address
-func NewTestServerIdentity(address string) *ServerIdentity {
-	kp := config.NewKeyPair(Suite)
-	e := NewServerIdentity(kp.Public, Address(address))
-	return e
-}
-
-// SimpleMessage is just used to transfer one integer
-type SimpleMessage struct {
-	I int
-}
-
-var SimpleMessageType MessageTypeID
-
-type simpleMessageProc struct {
-	t     *testing.T
-	relay chan SimpleMessage
-}
-
-func newSimpleMessageProc(t *testing.T) *simpleMessageProc {
-	return &simpleMessageProc{
-		t:     t,
-		relay: make(chan SimpleMessage),
-	}
-}
-
-func (smp *simpleMessageProc) Process(p *Packet) {
-	if p.MsgType != SimpleMessageType {
-		smp.t.Fatal("Wrong message")
-	}
-	sm := p.Msg.(SimpleMessage)
-	smp.relay <- sm
-}
 
 // Test setting up of Host
 func TestTCPHostNew(t *testing.T) {
@@ -221,6 +179,63 @@ func TestTCPHostSendMsgDuplex(t *testing.T) {
 	log.Lvl2("Received msg h2 -> h1", msg)
 }
 
+func TestTCPHostReconnection(t *testing.T) {
+	h1 := NewTestTCPHost(2005)
+	h2 := NewTestTCPHost(2006)
+	defer func() {
+		h1.Stop()
+		h2.Stop()
+		// Let some time to tcp
+		time.Sleep(250 * time.Millisecond)
+	}()
+
+	go h1.Start()
+	go h2.Start()
+
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv_proc(h1, h2))
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv_proc(h2, h1))
+	log.Lvl1("Closing h1")
+	log.ErrFatal(h1.Stop())
+
+	//h1 = NewTestTCPHost(2005)
+
+	log.Lvl1("Listening again on h1")
+	go h1.Start()
+	time.Sleep(200 * time.Millisecond)
+	log.Lvl1("Sending h2->h1")
+	log.ErrFatal(sendrcv_proc(h2, h1))
+	log.Lvl1("Sending h1->h2")
+	log.ErrFatal(sendrcv_proc(h1, h2))
+
+	log.Lvl1("Shutting down listener of h2")
+
+	// closing h2, but simulate *hard* failure, without sending a FIN packet
+	// XXX Actually it DOES send a FIN packet: using tcphost.Close(), it closes
+	// the listener AND all the connections (calling golang tcp connection
+	// Close() which I'm pretty sure will send a FIN packet)
+	// This test is ambiguous as it does not really simulate a network hardware
+	// failure of a node, but merely a host which does weird abort
+	// connections...
+	// One idea if we really want to simulate that is calling tcphost.Close()
+	// and at the same time, at the IP level, blocking all FIN packet.
+	// Then start a new host with the same entity etc..
+	// See also https://github.com/tylertreat/comcast
+
+	/*c2 := h1.connection(h2.serverIdentity)*/
+	//// making h2 fails
+	//h2.AbortConnections()
+	//log.Lvl1("asking h2 to listen again")
+	//// making h2 backup again
+	//go h2.listen()
+	//// and re-registering the connection to h2 from h1
+	//h1.registerConnection(c2)
+
+	//log.Lvl1("Sending h1->h2")
+	/*log.ErrFatal(sendrcv_proc(h1, h2))*/
+}
+
 func TestChanHost(t *testing.T) {
 	m1 := NewLocalHost(NewTestServerIdentity("127.0.0.1:2000"))
 	go m1.Start()
@@ -247,6 +262,49 @@ func TestChanHost(t *testing.T) {
 	}
 }
 
+func init() {
+	SimpleMessageType = RegisterMessageType(SimpleMessage{})
+}
+
+func NewTestTCPHost(port int) *TCPHost {
+	addr := "tcp://localhost:" + strconv.Itoa(port)
+	return NewTCPHost(NewTestServerIdentity(addr))
+}
+
+// Returns a ServerIdentity out of the address
+func NewTestServerIdentity(address string) *ServerIdentity {
+	kp := config.NewKeyPair(Suite)
+	e := NewServerIdentity(kp.Public, Address(address))
+	return e
+}
+
+// SimpleMessage is just used to transfer one integer
+type SimpleMessage struct {
+	I int
+}
+
+var SimpleMessageType MessageTypeID
+
+type simpleMessageProc struct {
+	t     *testing.T
+	relay chan SimpleMessage
+}
+
+func newSimpleMessageProc(t *testing.T) *simpleMessageProc {
+	return &simpleMessageProc{
+		t:     t,
+		relay: make(chan SimpleMessage),
+	}
+}
+
+func (smp *simpleMessageProc) Process(p *Packet) {
+	if p.MsgType != SimpleMessageType {
+		smp.t.Fatal("Wrong message")
+	}
+	sm := p.Msg.(SimpleMessage)
+	smp.relay <- sm
+}
+
 type statusMessage struct {
 	Ok  bool
 	Val int
@@ -271,4 +329,23 @@ func (sp *simpleProcessor) Process(msg *Packet) {
 	sm := msg.Msg.(statusMessage)
 
 	sp.relay <- sm
+}
+
+func sendrcv_proc(from, to *TCPHost) error {
+	sp := newSimpleProcessor()
+	// new processing
+	to.RegisterProcessor(sp, statusMsgID)
+	if err := from.Send(to.id, &statusMessage{true, 10}); err != nil {
+		return err
+	}
+	var err error
+	select {
+	case <-sp.relay:
+		err = nil
+	case <-time.After(1 * time.Second):
+		err = errors.New("timeout")
+	}
+	// delete the processing
+	to.RegisterProcessor(nil, statusMsgID)
+	return err
 }
