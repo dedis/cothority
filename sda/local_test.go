@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/log"
-	"gopkg.in/dedis/cothority.v0/lib/sda"
 )
 
 func TestGenLocalHost(t *testing.T) {
-	l := sda.NewLocalTest()
+	l := NewLocalTest()
 	hosts := l.GenLocalHosts(2, false, false)
 	defer l.CloseAll()
 
