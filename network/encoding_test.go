@@ -1,0 +1,43 @@
+package network
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/dedis/cothority/log"
+	"github.com/satori/go.uuid"
+)
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
+type TestRegisterS struct {
+	I int
+}
+
+func TestRegister(t *testing.T) {
+	if TypeFromData(&TestRegisterS{}) != ErrorType {
+		t.Fatal("TestRegister should not yet be there")
+	}
+
+	trType := RegisterMessageType(&TestRegisterS{})
+	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
+		t.Fatal("Couldn't register TestRegister-struct")
+	}
+
+	if TypeFromData(&TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+	if TypeFromData(TestRegisterS{}) != trType {
+		t.Fatal("TestRegister is different now")
+	}
+}
+
+func TestRegisterReflect(t *testing.T) {
+	typ := RegisterMessageType(TestRegisterS{})
+	typReflect := RTypeToMessageTypeID(reflect.TypeOf(TestRegisterS{}))
+	if typ != typReflect {
+		t.Fatal("Register does not work")
+	}
+}
