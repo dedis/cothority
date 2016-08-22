@@ -547,6 +547,9 @@ func newBackForthProtocol(tn *TreeNodeInstance) (*BackForthProtocol, error) {
 		return nil, err
 	}
 	err = s.RegisterChannel(&s.backChan)
+	if err != nil {
+		return nil, err
+	}
 	go s.dispatch()
 	return s, nil
 }

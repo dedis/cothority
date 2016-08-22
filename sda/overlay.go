@@ -3,7 +3,6 @@ package sda
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -232,16 +231,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
-		typ := network.TypeFromData(sdaMsg.Msg)
-		rtype := reflect.TypeOf(sdaMsg.Msg)
-		var str string
-		if typ == network.ErrorType {
-			str = " Non registered Type !"
-		} else {
-			str = typ.String()
-		}
-		str += " (reflect= " + rtype.String()
-		return fmt.Errorf("Error marshaling  message: %s  ( msg = %+v)", err.Error(), sdaMsg.Msg)
+		return fmt.Errorf("Error marshaling message: %s (msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
 	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
