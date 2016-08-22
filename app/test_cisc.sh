@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=2
+DBG_SHOW=1
 # Debug-level for app
 DBG_APP=2
 DBG_SRV=0
@@ -15,20 +15,20 @@ NBR=4
 main(){
     startTest
     build
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
-#	test ConfigVote
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
+	test ConfigVote
 	test IdConnect
-#	test IdDel
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
-#	test SSHAdd
-#	test SSHDel
-#	test Follow
-#	test Revoke
+	test IdDel
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
+	test SSHAdd
+	test SSHDel
+	test Follow
+	test Revoke
     stopTest
 }
 
@@ -177,7 +177,7 @@ testIdDel(){
 	testNGrep client2 runCl 1 config ls
 	testReNGrep server2
 	testFail runCl 2 ssh add server
-	testFail runCl 2 config update
+	testOK runCl 2 config update
 }
 
 testIdConnect(){
