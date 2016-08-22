@@ -167,30 +167,39 @@ func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (networ
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
-	sid.Lock()
-	log.Lvl3("Voting on", sid.Proposed.Device)
-	owner, ok := sid.Latest.Device[v.Signer]
-	if !ok {
-		return nil, errors.New("Didn't find signer")
-	}
-	if sid.Proposed == nil {
-		return nil, errors.New("No proposed block")
-	}
-	hash, err := sid.Proposed.Hash()
-	if err != nil {
-		return nil, errors.New("Couldn't get hash")
-	}
-	if _, exists := sid.Votes[v.Signer]; exists {
-		return nil, errors.New("Already voted for that block")
-	}
-	log.Lvl3(v.Signer, "voted", v.Signature)
-	if v.Signature != nil {
-		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
-		if err != nil {
-			return nil, errors.New("Wrong signature: " + err.Error())
+
+	// Putting this in a function because of the lock which needs to be held
+	// over all calls that might return an error.
+	err := func() error {
+		sid.Lock()
+		defer sid.Unlock()
+		log.Lvl3("Voting on", sid.Proposed.Device)
+		owner, ok := sid.Latest.Device[v.Signer]
+		if !ok {
+			return errors.New("Didn't find signer")
 		}
+		if sid.Proposed == nil {
+			return errors.New("No proposed block")
+		}
+		hash, err := sid.Proposed.Hash()
+		if err != nil {
+			return errors.New("Couldn't get hash")
+		}
+		if _, exists := sid.Votes[v.Signer]; exists {
+			return errors.New("Already voted for that block")
+		}
+		log.Lvl3(v.Signer, "voted", v.Signature)
+		if v.Signature != nil {
+			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+			if err != nil {
+				return errors.New("Wrong signature: " + err.Error())
+			}
+		}
+		return nil
+	}()
+	if err != nil {
+		return nil, err
 	}
-	sid.Unlock()
 
 	// Propagate the vote
 	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, 1000, s.Propagate)
