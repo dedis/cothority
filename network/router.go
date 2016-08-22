@@ -158,6 +158,12 @@ func (r *router) closeConnection(remote *ServerIdentity, c Conn) error {
 	return err
 }
 
+func (r *router) connection(id *ServerIdentity) Conn {
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
+	return r.connections[id.ID]
+}
+
 func (r *router) reset() {
 	r.connsMut.Lock()
 	r.connections = make(map[ServerIdentityID]Conn)

@@ -1,80 +1,89 @@
 package network
 
-/*var SimplePacketType MessageTypeID*/
+import (
+	"context"
+	"fmt"
+	"sync"
+	"testing"
+)
 
-//func init() {
-//SimplePacketType = RegisterMessageType(SimplePacket{})
-//}
+var SimplePacketType MessageTypeID
 
-//type SimplePacket struct {
-//Name string
-//}
+func init() {
+	SimplePacketType = RegisterMessageType(SimplePacket{})
+}
 
-//func TestSimple(t *testing.T) {
-//client := NewTCPHost()
-//clientName := "client"
-//server := NewTCPHost()
-//serverName := "server"
+type SimplePacket struct {
+	Name string
+}
 
-//done := make(chan bool)
-//listenCB := make(chan bool)
+func TestTCPConnListenerExample(t *testing.T) {
+	server := NewTCPListener()
+	addr := Address("tcp://127.0.0.1:2000")
+	serverName := "server"
+	clientName := "client"
 
-//srvConMu := sync.Mutex{}
-//cConMu := sync.Mutex{}
+	done := make(chan bool)
+	listenCB := make(chan bool)
 
-//go func() {
-//err := server.Listen("localhost:2000", func(c Conn) {
-//listenCB <- true
-//srvConMu.Lock()
-//defer srvConMu.Unlock()
-//nm, _ := c.Receive(context.TODO())
-//if nm.MsgType != SimplePacketType {
-//c.Close()
-//t.Fatal("Packet received not conform")
-//}
-//simplePacket := nm.Msg.(SimplePacket)
-//if simplePacket.Name != clientName {
-//t.Fatal("Not the right name")
-//}
-//c.Send(context.TODO(), &SimplePacket{serverName})
-////c.Close()
-//})
-//if err != nil {
-//t.Fatal("Couldn't listen:", err)
-//}
-//close(done)
-//}()
-//cConMu.Lock()
-//conn, err := client.Open("localhost:2000")
-//if err != nil {
-//t.Fatal(err)
-//}
-//// wait for the listen callback to be called at least once:
-//<-listenCB
+	srvConMu := sync.Mutex{}
+	cConMu := sync.Mutex{}
+	go func() {
+		err := server.Listen(addr, func(c Conn) {
+			listenCB <- true
+			srvConMu.Lock()
+			defer srvConMu.Unlock()
+			nm, _ := c.Receive(context.TODO())
+			if nm.MsgType != SimplePacketType {
+				c.Close()
+				panic("Packet received not conform")
+			}
+			simplePacket := nm.Msg.(SimplePacket)
+			if simplePacket.Name != clientName {
+				panic("Not the right name")
+			}
+			c.Send(context.TODO(), &SimplePacket{serverName})
+			//c.Close()
+		})
+		if err != nil {
+			panic("Couldn't listen:" + err.Error())
+		}
+		close(done)
+	}()
+	cConMu.Lock()
+	conn, err := NewTCPConn(addr.NetworkAddress())
+	if err != nil {
+		panic(err)
+	}
+	// wait for the listen callback to be called at least once:
+	<-listenCB
 
-//conn.Send(context.TODO(), &SimplePacket{clientName})
-//nm, err := conn.Receive(context.TODO())
-//cConMu.Unlock()
-//if err != nil {
-//t.Fatal(err)
-//}
-//if nm.MsgType != SimplePacketType {
-//t.Fatal(fmt.Sprintf("Packet received non conform %+v", nm))
-//}
-//sp := nm.Msg.(SimplePacket)
-//if sp.Name != serverName {
-//t.Fatal("Name no right")
-//}
-//cConMu.Lock()
-//if err := client.Close(); err != nil {
-//t.Fatal("Couldn't close client connection")
-//}
-//cConMu.Unlock()
+	conn.Send(context.TODO(), &SimplePacket{clientName})
+	nm, err := conn.Receive(context.TODO())
+	cConMu.Unlock()
+	if err != nil {
+		panic(err)
+	}
+	if nm.MsgType != SimplePacketType {
+		panic(fmt.Sprintf("Packet received non conform %+v", nm))
+	}
+	sp := nm.Msg.(SimplePacket)
+	if sp.Name != serverName {
+		panic("Name no right")
+	}
+	cConMu.Lock()
+	if err := conn.Close(); err != nil {
+		panic("Couldn't close client connection")
+	}
+	cConMu.Unlock()
 
-//srvConMu.Lock()
-//defer srvConMu.Unlock()
-//if err := server.Close(); err != nil {
-//t.Fatal("Couldn't close server connection")
-//}
-//<-done
-/*}*/
+	srvConMu.Lock()
+	defer srvConMu.Unlock()
+	if err := server.Stop(); err != nil {
+		panic("Couldn't close server connection")
+	}
+	<-done
+	// Output
+	// Client received server
+	// Server received client
+}

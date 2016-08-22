@@ -236,6 +236,50 @@ func TestTCPHostReconnection(t *testing.T) {
 	/*log.ErrFatal(sendrcv_proc(h1, h2))*/
 }
 
+// Testing exchange of entity
+func TestTCPHostExchange(t *testing.T) {
+
+	entity1 := NewTestServerIdentity("tcp://localhost:2000")
+	entity2 := NewTestServerIdentity("tcp://localhost:2001")
+
+	host1 := NewTCPHost(entity1)
+	host2 := NewTCPHost(entity2)
+
+	done := make(chan bool)
+	go func() {
+		done <- true
+		host1.Start()
+		done <- true
+	}()
+	<-done
+	// try correctly
+	c, err := NewTCPConn(entity1.Address.NetworkAddress())
+	if err != nil {
+		t.Fatal("Couldn't connect to host1:", err)
+	}
+	if err := host2.negotiateOpen(c, entity1); err != nil {
+		t.Fatal("Wrong negotiation")
+	}
+
+	// try giving wrong id
+	c, err = NewTCPConn(entity1.Address.NetworkAddress())
+	if err != nil {
+		t.Fatal("Couldn't connect to host1:", err)
+	}
+	if err := host2.negotiateOpen(c, entity2); err == nil {
+		t.Fatal("negotiation should have aborted")
+	}
+
+	log.Lvl4("Closing connections")
+	if err := host1.Stop(); err != nil {
+		t.Fatal("Couldn't close host", host1)
+	}
+	if err := host2.Stop(); err != nil {
+		t.Fatal("Couldn't close host", host2)
+	}
+	<-done
+}
+
 func TestChanHost(t *testing.T) {
 	m1 := NewLocalHost(NewTestServerIdentity("127.0.0.1:2000"))
 	go m1.Start()
