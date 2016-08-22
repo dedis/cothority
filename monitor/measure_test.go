@@ -47,7 +47,9 @@ func TestCounterIOMeasureRecord(t *testing.T) {
 	wr, re := stat.Value("dummy_tx"), stat.Value("dummy_rx")
 	if wr == nil || wr.Avg() != 10 {
 		t.Logf("stats => %v", stat.values)
-		t.Logf("wr.Avg() = %f", wr.Avg())
+		if wr {
+			t.Logf("wr.Avg() = %f", wr.Avg())
+		}
 		t.Fatal("Stats don't have the right value (write)")
 	}
 	if re == nil || re.Avg() != 10 {
