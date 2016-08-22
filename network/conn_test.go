@@ -43,8 +43,7 @@ func TestTCPConnWithListener(t *testing.T) {
 	stop := make(chan bool)
 	connStat := make(chan uint64)
 
-	addr := Address("tcp://127.0.0.1:5678")
-	assert.True(t, addr.Valid())
+	addr := "127.0.0.1:5678"
 	connFn := func(c Conn) {
 		connStat <- c.Rx()
 		c.Receive(context.TODO())
@@ -58,7 +57,7 @@ func TestTCPConnWithListener(t *testing.T) {
 	}()
 
 	<-ready
-	c, err := NewTCPConn(addr.NetworkAddress())
+	c, err := NewTCPConn(addr)
 	assert.Nil(t, err, "Could not open connection")
 	// Test bandwitdth measurements also
 	rx1 := <-connStat

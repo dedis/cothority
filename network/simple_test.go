@@ -19,7 +19,7 @@ type SimplePacket struct {
 
 func TestTCPConnListenerExample(t *testing.T) {
 	server := NewTCPListener()
-	addr := Address("tcp://127.0.0.1:2000")
+	addr := "127.0.0.1:2000"
 	serverName := "server"
 	clientName := "client"
 
@@ -51,7 +51,7 @@ func TestTCPConnListenerExample(t *testing.T) {
 		close(done)
 	}()
 	cConMu.Lock()
-	conn, err := NewTCPConn(addr.NetworkAddress())
+	conn, err := NewTCPConn(addr)
 	if err != nil {
 		panic(err)
 	}

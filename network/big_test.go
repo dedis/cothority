@@ -22,7 +22,7 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // - this function tries to trigger that error so that it can be removed
 // It generates one connection between each host and then starts sending
 // messages all around.
-func TestHugeConnections(t *testing.T) {
+func TestTCPHugeConnections(t *testing.T) {
 	log.TestOutput(true, 3)
 	// How many hosts are run
 	nbrHosts := 10
@@ -49,7 +49,7 @@ func TestHugeConnections(t *testing.T) {
 		hosts[i] = NewTCPListener()
 		log.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
-			err := hosts[h].Listen(ids[h].Address, func(c Conn) {
+			err := hosts[h].Listen(ids[h].Address.NetworkAddress(), func(c Conn) {
 				log.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {

@@ -2,7 +2,6 @@ package network
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -50,14 +49,11 @@ func NewTCPListener() *TCPListener {
 }
 
 // Listen implements the Listener interface
-func (t *TCPListener) Listen(addr Address, fn func(Conn)) error {
-	if addr.ConnType() != t.connType {
-		return fmt.Errorf("Wrong ConnType: %s (actual) vs %s (expected)", addr.ConnType(), t.connType)
-	}
+func (t *TCPListener) Listen(addr string, fn func(Conn)) error {
 	receiver := func(tc *TCPConn) {
 		go fn(tc)
 	}
-	return t.listen(addr.NetworkAddress(), receiver)
+	return t.listen(addr, receiver)
 }
 
 // listen is the private function that takes a function that takes a TCPConn.

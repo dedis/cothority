@@ -69,7 +69,7 @@ func NewTCPHost(own *ServerIdentity) *TCPHost {
 func (t *TCPHost) Start() {
 	// The function given to the listener  does the exchange of ServerIdentity
 	// and pass the connection along to the router.
-	t.TCPListener.Listen(t.id.Address, func(c Conn) {
+	t.TCPListener.Listen(t.id.Address.NetworkAddress(), func(c Conn) {
 		dst, err := t.exchangeServerIdentity(c)
 		if err != nil {
 			log.Error("Negotiation failed:", err)
@@ -78,6 +78,7 @@ func (t *TCPHost) Start() {
 				log.Error("Couldn't close secure connection:",
 					err)
 			}
+			return
 		}
 		// pass it along the router
 		t.router.handleConn(dst, c)
@@ -152,7 +153,7 @@ func (t *TCPHost) negotiateOpen(c Conn, e *ServerIdentity) error {
 	}
 	// verify the ServerIdentity if its the same we are supposed to connect
 	if dst.ID != e.ID {
-		log.Lvl3("Wanted to connect to", e, e.ID, "but got", dst, dst.ID)
+		log.Lvl3(fmt.Sprintf("Wanted to connect to %s (%x) but got %s (%x)", e.Address, e.ID, dst.Address, dst.ID))
 		log.Lvl4("IDs not the same", log.Stack())
 		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}

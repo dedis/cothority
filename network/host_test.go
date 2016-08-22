@@ -56,9 +56,9 @@ func TestTCPHostClose(t *testing.T) {
 	}
 }
 
-// Test if TCPRouter fits the interface such as calling Run(), then Stop(),
+// Test if router fits the interface such as calling Run(), then Stop(),
 // should return
-func TestTcpRouterRunClose(t *testing.T) {
+func TestTCPHost(t *testing.T) {
 	h := NewTestTCPHost(2004)
 	var stop = make(chan bool)
 	go func() {
@@ -239,8 +239,8 @@ func TestTCPHostReconnection(t *testing.T) {
 // Testing exchange of entity
 func TestTCPHostExchange(t *testing.T) {
 
-	entity1 := NewTestServerIdentity("tcp://localhost:2000")
-	entity2 := NewTestServerIdentity("tcp://localhost:2001")
+	entity1 := NewTestServerIdentity("tcp://localhost:7878")
+	entity2 := NewTestServerIdentity("tcp://localhost:8787")
 
 	host1 := NewTCPHost(entity1)
 	host2 := NewTCPHost(entity2)
@@ -260,6 +260,7 @@ func TestTCPHostExchange(t *testing.T) {
 	if err := host2.negotiateOpen(c, entity1); err != nil {
 		t.Fatal("Wrong negotiation")
 	}
+	c.Close()
 
 	// try giving wrong id
 	c, err = NewTCPConn(entity1.Address.NetworkAddress())
@@ -311,7 +312,7 @@ func init() {
 }
 
 func NewTestTCPHost(port int) *TCPHost {
-	addr := "tcp://localhost:" + strconv.Itoa(port)
+	addr := "tcp://127.0.0.1:" + strconv.Itoa(port)
 	return NewTCPHost(NewTestServerIdentity(addr))
 }
 

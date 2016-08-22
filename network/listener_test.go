@@ -15,9 +15,7 @@ func TestTCPListener(t *testing.T) {
 	stop := make(chan bool)
 	connReceived := make(chan bool)
 
-	addr := Address("tcp://127.0.0.1:5678")
-	assert.True(t, addr.Valid())
-	assert.Equal(t, "127.0.0.1:5678", addr.NetworkAddress())
+	addr := "127.0.0.1:5678"
 	connFn := func(c Conn) {
 		connReceived <- true
 		c.Close()
@@ -30,7 +28,7 @@ func TestTCPListener(t *testing.T) {
 	}()
 
 	<-ready
-	_, err := net.Dial("tcp", addr.NetworkAddress())
+	_, err := net.Dial("tcp", addr)
 	assert.Nil(t, err, "Could not open connection")
 	<-connReceived
 	assert.Nil(t, ln.Stop(), "Error stopping listener")
