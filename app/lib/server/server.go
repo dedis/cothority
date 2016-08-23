@@ -228,6 +228,7 @@ func CheckServers(g *config.Group) error {
 	}
 
 	if !success {
+		log.Error("at least one failed")
 		return errors.New("At least one of the tests failed")
 	}
 	return nil
