@@ -23,6 +23,8 @@ const (
 	TLS = "tls"
 	// PURB represents a PURB encryption connection over TCP
 	PURB = "purb"
+	// Chan represents a channel based connection type
+	Chan = "chan"
 	// Unvalid represents a non valid connection type
 	UnvalidConnType = "wrong"
 )

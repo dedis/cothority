@@ -2,7 +2,9 @@ package network
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -11,35 +13,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
-	"golang.org/x/net/context"
 )
-
-// Conn is the basic interface to represent any communication mean
-// between two host.
-type Conn interface {
-	// Send a message through the connection.
-	// obj should be a POINTER to the actual struct to send, or an interface.
-	// It should not be a Golang type.
-	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
-	Receive(ctx context.Context) (Packet, error)
-	// Close will close the connection. Any subsequent call to Send / Receive
-	// have undefined behavior.
-	Close() error
-
-	// Type returns the type of this connection
-	Type() ConnType
-	// Gives the address of the remote endpoint
-	Remote() string
-	// Returns the local address and port
-	Local() string
-	// reconnect is used when sending a message to a Conn, we might want to try
-	// to reconnect directly if an error occured to send the message again.
-	//reconnect() error
-	// XXX Can we remove that ?
-	monitor.CounterIO
-}
 
 // TCPConn is the underlying implementation of
 // Conn using plain Tcp.
@@ -286,4 +260,137 @@ func handleError(err error) error {
 		return ErrTimeout
 	}
 	return ErrUnknown
+}
+
+// TCPListener is the underlying implementation of
+// Host using Tcp as a communication channel
+type TCPListener struct {
+	// the underlying golang/net listener
+	listener net.Listener
+	// the close channel used to indicate to the listener we want to quit
+	quit chan bool
+	// quitListener is a channel to indicate to the closing function that the
+	// listener has actually really quit
+	quitListener  chan bool
+	listeningLock sync.Mutex
+	listening     bool
+
+	connType ConnType
+}
+
+// NewTCPLIstener returns a Listener that listens on a TCP port
+func NewTCPListener() *TCPListener {
+	return &TCPListener{
+		quit:         make(chan bool),
+		quitListener: make(chan bool),
+		connType:     PlainTCP,
+	}
+}
+
+// Listen implements the Listener interface
+func (t *TCPListener) Listen(addr string, fn func(Conn)) error {
+	receiver := func(tc *TCPConn) {
+		go fn(tc)
+	}
+	return t.listen(addr, receiver)
+}
+
+// listen is the private function that takes a function that takes a TCPConn.
+// That way we can control what to do of the TCPConn before returning it to the
+// function given by the user. fn is called in the same routine.
+func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
+	t.listeningLock.Lock()
+	t.listening = true
+	t.quit = make(chan bool)
+	global, _ := GlobalBind(addr)
+	for i := 0; i < MaxRetry; i++ {
+		ln, err := net.Listen("tcp", global)
+		if err == nil {
+			t.listener = ln
+			break
+		} else if i == MaxRetry-1 {
+			t.listeningLock.Unlock()
+			return errors.New("Error opening listener: " + err.Error())
+		}
+		time.Sleep(WaitRetry)
+	}
+
+	t.listeningLock.Unlock()
+	for {
+		conn, err := t.listener.Accept()
+		if err != nil {
+			select {
+			case <-t.quit:
+				t.quitListener <- true
+				return nil
+			default:
+			}
+			continue
+		}
+		c := TCPConn{
+			endpoint: conn.RemoteAddr().String(),
+			conn:     conn,
+		}
+		fn(&c)
+	}
+}
+
+// Stop will stop the listener. It is a blocking call.
+func (t *TCPListener) Stop() error {
+	// lets see if we launched a listening routing
+	var listening bool
+	t.listeningLock.Lock()
+	listening = t.listening
+	defer t.listeningLock.Unlock()
+	// we are NOT listening
+	if !listening {
+		return nil
+	}
+
+	close(t.quit)
+
+	var stop bool
+	for !stop {
+		if t.listener != nil {
+			if err := t.listener.Close(); err != nil {
+				return err
+			}
+		}
+		select {
+		case <-t.quitListener:
+			stop = true
+		case <-time.After(time.Millisecond * 50):
+			continue
+		}
+	}
+	return nil
+}
+
+func (t *TCPListener) IncomingType() ConnType {
+	return t.connType
+}
+
+// TCPHost implements the Host interface
+type TCPHost struct {
+	// Mostly there for logging purposes
+	id *ServerIdentity
+
+	*TCPListener
+}
+
+// NewTCPHost returns a fresh Host using TCP connection based type
+func NewTCPHost(sid *ServerIdentity) *TCPHost {
+	return &TCPHost{
+		id:          sid,
+		TCPListener: NewTCPListener(),
+	}
+}
+
+func (t *TCPHost) Connect(sid *ServerIdentity) (Conn, error) {
+	switch sid.Address.ConnType() {
+	case PlainTCP:
+		c, err := NewTCPConn(sid.Address.NetworkAddress())
+		return c, err
+	}
+	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", t.id, sid.Address.ConnType())
 }
