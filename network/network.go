@@ -50,7 +50,8 @@ type Listener interface {
 }
 
 // Host is an interface that can Listen for a specific type of Conn and can
-// Connect to specific types of Conn. It used by the Router.
+// Connect to specific types of Conn. It used by the Router so the router can
+// manage connections all being oblivious to which type of connections.
 type Host interface {
 	Listener
 

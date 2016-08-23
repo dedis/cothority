@@ -64,7 +64,7 @@ func TestRouterAutoConnection(t *testing.T) {
 
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
-func TestTCPHostMessaging(t *testing.T) {
+func TestRouterMessaging(t *testing.T) {
 	h1 := NewTestRouterTCP(2009)
 	h2 := NewTestRouterTCP(2010)
 	go h1.Start()
@@ -107,7 +107,7 @@ func TestTCPHostMessaging(t *testing.T) {
 }
 
 // Test sending data back and forth using the sendSDAData
-func TestTCPHostSendMsgDuplex(t *testing.T) {
+func TestRouterSendMsgDuplex(t *testing.T) {
 	h1 := NewTestRouterTCP(2011)
 	h2 := NewTestRouterTCP(2012)
 	go h1.Start()

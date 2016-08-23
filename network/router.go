@@ -58,6 +58,7 @@ func (r *Router) Start() {
 	err := r.host.Listen(r.id.Address.NetworkAddress(), func(c Conn) {
 		dst, err := r.exchangeServerIdentity(c)
 		if err != nil {
+			log.Error("ExchangeServerIdentity failed:", err)
 			debug.PrintStack()
 			if err := c.Close(); err != nil {
 				log.Error("Couldn't close secure connection:",
@@ -90,10 +91,13 @@ func (r *Router) Stop() error {
 func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	r.connsMut.Lock()
 	defer r.connsMut.Unlock()
-	// connect function to connect + register + handle
+	// connect function to connect + exchange + register + handle
 	var connect = func() (Conn, error) {
 		c, err := r.host.Connect(e)
 		if err != nil {
+			return nil, err
+		}
+		if err := r.negotiateOpen(c, e); err != nil {
 			return nil, err
 		}
 		r.connections[e.ID] = c
