@@ -103,6 +103,16 @@ func TestProcessor_AddMessage(t *testing.T) {
 	}
 }
 
+func TestProcessor_RegisterMessages(t *testing.T) {
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
+	log.ErrFatal(p.RegisterMessages(procMsg, procMsg2))
+	err := p.RegisterMessages(procMsg, procMsgWrong1)
+	if err == nil {
+		t.Fatal("Registered wrong message and didn't get an error")
+	}
+}
+
 func TestProcessor_GetReply(t *testing.T) {
 	h1 := newHostMock(network.Suite, "127.0.0.1")
 	p := NewServiceProcessor(&Context{host: h1})
@@ -169,6 +179,14 @@ func procMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
 		return nil, errors.New("6 * 9 != 42")
+	}
+	return msg, nil
+}
+
+func procMsg2(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
+	// Return an error for testing
+	if msg.I != 42 {
+		return nil, errors.New("Please give meaning of life.")
 	}
 	return msg, nil
 }
