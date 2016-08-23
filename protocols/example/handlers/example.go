@@ -3,14 +3,14 @@ package handlers
 import (
 	"errors"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
 
 func init() {
-	network.RegisterMessageType(Announce{})
-	network.RegisterMessageType(Reply{})
+	network.RegisterPacketType(Announce{})
+	network.RegisterPacketType(Reply{})
 	sda.ProtocolRegisterName("ExampleHandlers", NewExampleHandlers)
 }
 
@@ -42,7 +42,7 @@ func NewExampleHandlers(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 // Start sends the Announcement-message to all children
 func (p *ProtocolExampleHandlers) Start() error {
-	dbg.Lvl3("Starting ExampleHandlers")
+	log.Lvl3("Starting ExampleHandlers")
 	return p.HandleAnnounce(StructAnnounce{p.TreeNode(),
 		Announce{"cothority rulez!"}})
 }
@@ -73,12 +73,12 @@ func (p *ProtocolExampleHandlers) HandleReply(reply []StructReply) error {
 	for _, c := range reply {
 		children += c.ChildrenCount
 	}
-	dbg.Lvl3(p.ServerIdentity().Addresses, "is done with total of", children)
+	log.Lvl3(p.ServerIdentity().Addresses, "is done with total of", children)
 	if !p.IsRoot() {
-		dbg.Lvl3("Sending to parent")
+		log.Lvl3("Sending to parent")
 		return p.SendTo(p.Parent(), &Reply{children})
 	}
-	dbg.Lvl3("Root-node is done - nbr of children found:", children)
+	log.Lvl3("Root-node is done - nbr of children found:", children)
 	p.ChildCount <- children
 	return nil
 }

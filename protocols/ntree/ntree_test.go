@@ -4,17 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/ntree"
 	"github.com/dedis/cothority/sda"
 )
 
-func TestNtree(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
+func TestNtree(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
-		dbg.Lvl2("Running ntree with", nbrHosts, "hosts")
+		log.Lvl2("Running ntree with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
 
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
@@ -32,7 +33,7 @@ func TestNtree(t *testing.T) {
 		}
 
 		// Start the protocol
-		pi, err := local.CreateProtocol(tree, "NaiveTree")
+		pi, err := local.CreateProtocol("NaiveTree", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

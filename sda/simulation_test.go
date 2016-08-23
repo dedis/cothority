@@ -1,4 +1,4 @@
-package sda_test
+package sda
 
 import (
 	"errors"
@@ -8,13 +8,10 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/dbg"
-	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/log"
 )
 
 func TestSimulationBF(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -47,8 +44,6 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestBigTree(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	for i := uint(12); i < 15; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
 		if err != nil {
@@ -58,17 +53,15 @@ func TestBigTree(t *testing.T) {
 }
 
 func TestLoadSave(t *testing.T) {
-	defer dbg.AfterTest(t)
-	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir, err := ioutil.TempDir("", "example")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := sda.LoadSimulationConfig(dir, "local1:2000")
+	sc2, err := LoadSimulationConfig(dir, "local1:2000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,18 +71,15 @@ func TestLoadSave(t *testing.T) {
 }
 
 func TestMultipleInstances(t *testing.T) {
-	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir, err := ioutil.TempDir("", "example")
-	dbg.ErrFatal(err)
+	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := sda.LoadSimulationConfig(dir, "local1")
+	sc2, err := LoadSimulationConfig(dir, "local1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,9 +91,9 @@ func TestMultipleInstances(t *testing.T) {
 	}
 }
 
-func createBFTree(hosts, bf int) (*sda.SimulationConfig, *sda.SimulationBFTree, error) {
-	sc := &sda.SimulationConfig{}
-	sb := &sda.SimulationBFTree{
+func createBFTree(hosts, bf int) (*SimulationConfig, *SimulationBFTree, error) {
+	sc := &SimulationConfig{}
+	sb := &SimulationBFTree{
 		Hosts: hosts,
 		BF:    bf,
 	}

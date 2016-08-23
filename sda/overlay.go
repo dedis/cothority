@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
@@ -30,20 +30,130 @@ type Overlay struct {
 	instancesLock     sync.Mutex
 	protocolInstances map[TokenID]ProtocolInstance
 
+	// treeMarshal that needs to be converted to Tree but host does not have the
+	// entityList associated yet.
+	// map from Roster.ID => trees that use this entity list
+	pendingTreeMarshal map[RosterID][]*TreeMarshal
+	// lock associated with pending TreeMarshal
+	pendingTreeLock sync.Mutex
+
+	// pendingSDAData are a list of message we received that does not correspond
+	// to any local Tree or/and Roster. We first request theses so we can
+	// instantiate properly protocolInstance that will use these SDAData msg.
+	pendingSDAs []*ProtocolMsg
+	// lock associated with pending SDAdata
+	pendingSDAsLock sync.Mutex
+
 	transmitMux sync.Mutex
 }
 
 // NewOverlay creates a new overlay-structure
 func NewOverlay(h *Host) *Overlay {
-	return &Overlay{
-		host:              h,
-		trees:             make(map[TreeID]*Tree),
-		entityLists:       make(map[RosterID]*Roster),
-		cache:             NewTreeNodeCache(),
-		instances:         make(map[TokenID]*TreeNodeInstance),
-		instancesInfo:     make(map[TokenID]bool),
-		protocolInstances: make(map[TokenID]ProtocolInstance),
-		transmitMux:       sync.Mutex{},
+	o := &Overlay{
+		host:               h,
+		trees:              make(map[TreeID]*Tree),
+		entityLists:        make(map[RosterID]*Roster),
+		cache:              NewTreeNodeCache(),
+		instances:          make(map[TokenID]*TreeNodeInstance),
+		instancesInfo:      make(map[TokenID]bool),
+		protocolInstances:  make(map[TokenID]ProtocolInstance),
+		pendingTreeMarshal: make(map[RosterID][]*TreeMarshal),
+		pendingSDAs:        make([]*ProtocolMsg, 0),
+	}
+	// messages going to protocol instances
+	h.RegisterProcessor(o,
+		SDADataMessageID,       // protocol instance's messages
+		RequestTreeMessageID,   // request a tree
+		SendTreeMessageID,      // send a tree back to a request
+		RequestRosterMessageID, // request a roster
+		SendRosterMessageID)    // send a roster back to request
+	return o
+}
+
+// Process implements the Processor interface so it process the messages that it
+// wants.
+func (o *Overlay) Process(data *network.Packet) {
+	switch data.MsgType {
+	case SDADataMessageID:
+		sdaMsg := data.Msg.(ProtocolMsg)
+		sdaMsg.ServerIdentity = data.ServerIdentity
+		err := o.TransmitMsg(&sdaMsg)
+		if err != nil {
+			log.Error("ProcessSDAMessage returned:", err)
+		}
+
+	case RequestTreeMessageID:
+		// A host has sent us a request to get a tree definition
+		tid := data.Msg.(RequestTree).TreeID
+		tree := o.Tree(tid)
+		var err error
+		if tree != nil {
+			err = o.host.SendRaw(data.ServerIdentity, tree.MakeTreeMarshal())
+		} else {
+			// XXX Take care here for we must verify at the other side that
+			// the tree is Nil. Should we think of a way of sending back an
+			// "error" ?
+			err = o.host.SendRaw(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
+		}
+		if err != nil {
+			log.Error("Couldn't send tree:", err)
+		}
+	case SendTreeMessageID:
+		// A Host has replied to our request of a tree
+		tm := data.Msg.(TreeMarshal)
+		if tm.TreeID == TreeID(uuid.Nil) {
+			log.Error("Received an empty Tree")
+			return
+		}
+		il := o.Roster(tm.RosterID)
+		// The entity list does not exists, we should request that, too
+		if il == nil {
+			msg := &RequestRoster{tm.RosterID}
+			if err := o.host.SendRaw(data.ServerIdentity, msg); err != nil {
+				log.Error("Requesting Roster in SendTree failed", err)
+			}
+
+			// put the tree marshal into pending queue so when we receive the
+			// entitylist we can create the real Tree.
+			o.addPendingTreeMarshal(&tm)
+			return
+		}
+
+		tree, err := tm.MakeTree(il)
+		if err != nil {
+			log.Error("Couldn't create tree:", err)
+			return
+		}
+		log.Lvl4("Received new tree")
+		o.RegisterTree(tree)
+	case RequestRosterMessageID:
+		// Some host requested an Roster
+		id := data.Msg.(RequestRoster).RosterID
+		el := o.Roster(id)
+		var err error
+		if el != nil {
+			err = o.host.SendRaw(data.ServerIdentity, el)
+		} else {
+			log.Lvl2("Requested entityList that we don't have")
+			err = o.host.SendRaw(data.ServerIdentity, &Roster{})
+		}
+		if err != nil {
+			log.Error("Couldn't send empty entity list from host:",
+				o.host.ServerIdentity.String(),
+				err)
+			return
+		}
+	case SendRosterMessageID:
+		// Host replied to our request of entitylist
+		il := data.Msg.(Roster)
+		if il.ID == RosterID(uuid.Nil) {
+			log.Lvl2("Received an empty Roster")
+		} else {
+			o.RegisterRoster(&il)
+			// Check if some trees can be constructed from this entitylist
+			o.checkPendingTreeMarshal(&il)
+		}
+		log.Lvl4("Received new entityList")
 	}
 }
 
@@ -53,18 +163,13 @@ func NewOverlay(h *Host) *Overlay {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
-	o.transmitMux.Lock()
-	defer o.transmitMux.Unlock()
-	// do we have the entitylist ? if not, ask for it.
-	if o.Roster(sdaMsg.To.RosterID) == nil {
-		dbg.Lvl4("Will ask the Roster from token", sdaMsg.To.RosterID, len(o.entityLists), o.host.workingAddress)
-		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
-	}
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
-		dbg.Lvl4("Will ask for tree from token")
-		return o.host.requestTree(sdaMsg.ServerIdentity, sdaMsg)
+		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
+
+	o.transmitMux.Lock()
+	defer o.transmitMux.Unlock()
 	// TreeNodeInstance
 	var pi ProtocolInstance
 	o.instancesLock.Lock()
@@ -72,19 +177,19 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
-		dbg.Lvl4("Message for TreeNodeInstance that is already finished")
+		log.Error("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it
 	if !ok {
-		dbg.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.ServerIdentity, sdaMsg.To.ID())
+		log.Lvlf4("Creating TreeNodeInstance at %s %x", o.host.ServerIdentity, sdaMsg.To.ID())
 		tn, err := o.TreeNodeFromToken(sdaMsg.To)
 		if err != nil {
 			return errors.New("No TreeNode defined in this tree here")
 		}
 		tni := o.newTreeNodeInstanceFromToken(tn, sdaMsg.To)
 		// see if we know the Service Recipient
-		s, ok := o.host.serviceStore.serviceByID(sdaMsg.To.ServiceID)
+		s, ok := o.host.serviceManager.serviceByID(sdaMsg.To.ServiceID)
 
 		// no servies defined => check if there is a protocol that can be
 		// created
@@ -111,16 +216,107 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			return errors.New("Error Binding TreeNodeInstance and ProtocolInstance: " +
 				err.Error())
 		}
-		dbg.Lvl4(o.host.workingAddress, "Overlay created new ProtocolInstace msg => ",
+		log.Lvl4(o.host.Address(), "Overlay created new ProtocolInstace msg => ",
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
 
-	dbg.Lvl4("Dispatching message", o.host.ServerIdentity)
 	// TODO Check if TreeNodeInstance is already Done
 	pi.ProcessProtocolMsg(sdaMsg)
-
 	return nil
+}
+
+// sendSDAData marshals the inner msg and then sends a Data msg
+// to the appropriate entity
+func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
+	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
+	if err != nil {
+		return fmt.Errorf("Error marshaling message: %s (msg = %+v)", err.Error(), sdaMsg.Msg)
+	}
+	sdaMsg.MsgSlice = b
+	sdaMsg.MsgType = network.TypeFromData(sdaMsg.Msg)
+	// put to nil so protobuf won't encode it and there won't be any error on the
+	// other side (because it doesn't know how to decode it)
+	sdaMsg.Msg = nil
+	log.Lvl4("Sending to", si.Addresses)
+	return o.host.SendRaw(si, sdaMsg)
+}
+
+// addPendingTreeMarshal adds a treeMarshal to the list.
+// This list is checked each time we receive a new Roster
+// so trees using this Roster can be constructed.
+func (o *Overlay) addPendingTreeMarshal(tm *TreeMarshal) {
+	o.pendingTreeLock.Lock()
+	var sl []*TreeMarshal
+	var ok bool
+	// initiate the slice before adding
+	if sl, ok = o.pendingTreeMarshal[tm.RosterID]; !ok {
+		sl = make([]*TreeMarshal, 0)
+	}
+	sl = append(sl, tm)
+	o.pendingTreeMarshal[tm.RosterID] = sl
+	o.pendingTreeLock.Unlock()
+}
+
+// checkPendingMessages is called each time we receive a new tree if there are some SDA
+// messages using this tree. If there are, we can make an instance of a protocolinstance
+// and give it the message!.
+// NOTE: put that as a go routine so the rest of the processing messages are not
+// slowed down, if there are many pending sda message at once (i.e. start many new
+// protocols at same time)
+func (o *Overlay) checkPendingMessages(t *Tree) {
+	go func() {
+		o.pendingSDAsLock.Lock()
+		var newPending []*ProtocolMsg
+		for _, msg := range o.pendingSDAs {
+			if t.ID.Equals(msg.To.TreeID) {
+				// if this message references t, instantiate it and go
+				err := o.TransmitMsg(msg)
+				if err != nil {
+					log.Error("TransmitMsg failed:", err)
+					continue
+				}
+			} else {
+				newPending = append(newPending, msg)
+			}
+		}
+		o.pendingSDAs = newPending
+		o.pendingSDAsLock.Unlock()
+	}()
+}
+
+// checkPendingTreeMarshal is called each time we add a new Roster to the
+// system. It checks if some treeMarshal use this entityList so they can be
+// converted to Tree.
+func (o *Overlay) checkPendingTreeMarshal(el *Roster) {
+	o.pendingTreeLock.Lock()
+	sl, ok := o.pendingTreeMarshal[el.ID]
+	if !ok {
+		// no tree for this entitty list
+		return
+	}
+	for _, tm := range sl {
+		tree, err := tm.MakeTree(el)
+		if err != nil {
+			log.Error("Tree from Roster failed")
+			continue
+		}
+		// add the tree into our "database"
+		o.RegisterTree(tree)
+	}
+	o.pendingTreeLock.Unlock()
+}
+
+// requestTree will ask for the tree the sdadata is related to.
+// it will put the message inside the pending list of sda message waiting to
+// have their trees.
+func (o *Overlay) requestTree(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
+	o.pendingSDAsLock.Lock()
+	o.pendingSDAs = append(o.pendingSDAs, sdaMsg)
+	o.pendingSDAsLock.Unlock()
+
+	treeRequest := &RequestTree{sdaMsg.To.TreeID}
+	return o.host.SendRaw(si, treeRequest)
 }
 
 // RegisterTree takes a tree and puts it in the map
@@ -128,7 +324,7 @@ func (o *Overlay) RegisterTree(t *Tree) {
 	o.treesMut.Lock()
 	o.trees[t.ID] = t
 	o.treesMut.Unlock()
-	o.host.checkPendingSDA(t)
+	o.checkPendingMessages(t)
 }
 
 // TreeFromToken searches for the tree corresponding to a token.
@@ -194,8 +390,8 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) er
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
-	dbg.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
-	return o.host.sendSDAData(to.ServerIdentity, sda)
+	log.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
+	return o.sendSDAData(to.ServerIdentity, sda)
 }
 
 // nodeDone is called by node to signify that its work is finished and its
@@ -211,13 +407,13 @@ func (o *Overlay) nodeDone(tok *Token) {
 func (o *Overlay) nodeDelete(tok *Token) {
 	tni, ok := o.instances[tok.ID()]
 	if !ok {
-		dbg.Lvl2("Node", tok.ID(), "already gone")
+		log.Lvlf2("Node %x already gone", tok.ID())
 		return
 	}
-	dbg.Lvl4("Closing node", tok.ID())
+	log.Lvl4("Closing node", tok.ID())
 	err := tni.Close()
 	if err != nil {
-		dbg.Error("Error while closing node:", err)
+		log.Error("Error while closing node:", err)
 	}
 	delete(o.instances, tok.ID())
 	// mark it done !
@@ -233,7 +429,7 @@ func (o *Overlay) Close() {
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
 	for _, tni := range o.instances {
-		dbg.Lvl4(o.host.workingAddress, "Closing TNI", tni.TokenID())
+		log.Lvl4(o.host.Address(), "Closing TNI", tni.TokenID())
 		o.nodeDelete(tni.Token())
 	}
 }
@@ -241,13 +437,13 @@ func (o *Overlay) Close() {
 // CreateProtocolSDA returns a fresh Protocol Instance with an attached
 // TreeNodeInstance. This protocol won't be handled by the service, but
 // only by the SDA.
-func (o *Overlay) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
-	return o.CreateProtocolService(ServiceID(uuid.Nil), t, name)
+func (o *Overlay) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
+	return o.CreateProtocolService(name, t, ServiceID(uuid.Nil))
 }
 
 // CreateProtocolService adds the service-id to the token so the protocol will
 // be picked up by the correct service and handled by its NewProtocol method.
-func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (ProtocolInstance, error) {
+func (o *Overlay) CreateProtocolService(name string, t *Tree, sid ServiceID) (ProtocolInstance, error) {
 	tni := o.NewTreeNodeInstanceFromService(t, t.Root, ProtocolNameToID(name), sid)
 	pi, err := ProtocolInstantiate(tni.token.ProtoID, tni)
 	if err != nil {
@@ -262,14 +458,14 @@ func (o *Overlay) CreateProtocolService(sid ServiceID, t *Tree, name string) (Pr
 
 // StartProtocol will create and start a P.I.
 func (o *Overlay) StartProtocol(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := o.CreateProtocolSDA(t, name)
+	pi, err := o.CreateProtocolSDA(name, t)
 	if err != nil {
 		return nil, err
 	}
 	go func() {
 		err := pi.Start()
 		if err != nil {
-			dbg.Error("Error while starting:", err)
+			log.Error("Error while starting:", err)
 		}
 	}()
 	return pi, err
@@ -356,7 +552,7 @@ func (o *Overlay) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 	tni.bind(pi)
 	o.protocolInstances[tok.ID()] = pi
-	dbg.Lvlf4("%s registered ProtocolInstance %x", o.host.workingAddress, tok.ID())
+	log.Lvlf4("%s registered ProtocolInstance %x", o.host.Address(), tok.ID())
 	return nil
 }
 

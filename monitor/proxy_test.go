@@ -4,14 +4,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/dbg"
 )
 
 func TestProxy(t *testing.T) {
-	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"

@@ -1,14 +1,17 @@
 package randhound_test
 
 import (
-	"log"
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/randhound"
 	"github.com/dedis/cothority/sda"
 )
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
 func TestRandHound(t *testing.T) {
 
@@ -23,11 +26,9 @@ func TestRandHound(t *testing.T) {
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
 	defer local.CloseAll()
 
-	dbg.TestOutput(testing.Verbose(), 1)
-
 	// Setup and Start RandHound
-	log.Printf("RandHound - starting")
-	leader, err := local.CreateProtocol(tree, name)
+	log.Lvlf1("RandHound - starting")
+	leader, err := local.CreateProtocol(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
@@ -36,13 +37,13 @@ func TestRandHound(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
-	log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	log.Printf("RandHound - shards: %d\n", shards)
+	log.Lvlf1("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
+	log.Lvlf1("RandHound - shards: %d\n", shards)
 	leader.Start()
 
 	select {
 	case <-rh.Leader.Done:
-		log.Printf("RandHound - done")
+		log.Lvlf1("RandHound - done")
 		rnd, err := rh.Random()
 		if err != nil {
 			t.Fatal(err)
@@ -51,8 +52,8 @@ func TestRandHound(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		log.Printf("RandHound - random bytes: %v\n", rnd)
-		log.Printf("RandHound - sharding: %v\n", sharding)
+		log.Lvlf1("RandHound - random bytes: %v\n", rnd)
+		log.Lvlf1("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * 60):
 		t.Fatal("RandHound – time out")
 	}

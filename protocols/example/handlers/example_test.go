@@ -4,19 +4,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/example/handlers"
 	"github.com/dedis/cothority/sda"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 // Tests a 2-node system
 func TestNode(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
-	//dbg.Lvl3(tree.Dump())
+	//log.Lvl3(tree.Dump())
 	defer local.CloseAll()
 
 	pi, err := local.StartProtocol("ExampleHandlers", tree)
@@ -24,10 +27,10 @@ func TestNode(t *testing.T) {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	protocol := pi.(*handlers.ProtocolExampleHandlers)
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:
-		dbg.Lvl2("Instance 1 is done")
+		log.Lvl2("Instance 1 is done")
 		if children != nbrNodes {
 			t.Fatal("Didn't get a child-cound of", nbrNodes)
 		}

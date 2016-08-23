@@ -2,7 +2,7 @@ package pbft
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/manage"
@@ -39,7 +39,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
-		dbg.Fatal("Couldn't get block:", err)
+		log.Fatal("Couldn't get block:", err)
 	}
 
 	sc := &sda.SimulationConfig{}
@@ -61,12 +61,12 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	dir := blockchain.GetBlockDir()
 	parser, err := blockchain.NewParser(dir, magicNum)
 	if err != nil {
-		dbg.Error("Error: Couldn't parse blocks in", dir)
+		log.Error("Error: Couldn't parse blocks in", dir)
 		return err
 	}
 	transactions, err := parser.Parse(0, e.Blocksize)
 	if err != nil {
-		dbg.Error("Error while parsing transactions", err)
+		log.Error("Error while parsing transactions", err)
 		return err
 	}
 
@@ -76,9 +76,9 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	pi, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
 	if err != nil {
-		dbg.Error(err)
+		log.Error(err)
 	}
 	proto := pi.(*manage.Broadcast)
 	// channel to notify we are done
@@ -92,10 +92,10 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 
 	// wait
 	<-broadDone
-	dbg.Lvl3("Simulation can start!")
+	log.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
-		p, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "ByzCoinPBFT")
+		log.Lvl1("Starting round", round)
+		p, err := sdaConf.Overlay.CreateProtocolSDA("ByzCoinPBFT", sdaConf.Tree)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		r := monitor.NewTimeMeasure("round_pbft")
 		err = proto.Start()
 		if err != nil {
-			dbg.Error("Couldn't start PrePrepare")
+			log.Error("Couldn't start PrePrepare")
 			return err
 		}
 
@@ -115,7 +115,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		<-doneChan
 		r.Record()
 
-		dbg.Lvl2("Finished round", round)
+		log.Lvl2("Finished round", round)
 	}
 	return nil
 }

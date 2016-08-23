@@ -1,0 +1,36 @@
+Important changes in latest versions
+
+160809 -
+	- Cleanup of singular interfaces in network/
+	- Renaming of RegisterMessageType to RegisterPacketType
+
+160725 -
+    - Added Processor and Dispatcher interface
+    - Dynamic registration of message handler in host.go
+
+160627 - 0.9.1
+	- Changed sda.Context from interface to structure
+	
+160622 - 0.9.0
+	- Renamed network.Entity -> network.ServerIdentity
+	- Renamed network.EntityList -> network.Roster
+	- Renamed network.ProtocolMessage -> network.Body
+	- Renamed network.Message -> network.Packet
+	- Moved lib/* to parent-directory
+	- Depend on dedis/cosi for the cosi-library
+
+protocol/
+
+160202:
+    - Simulation.Dispatch is now called as a go-routine to help handling
+      channels more easily. If you simply include sda.SimulationBFTree in
+      your protocol-struct, a do-nothing Dispatch is defined per default.
+
+simul/
+
+160202:
+    - added a 'SingleHost'-flag for the `runlevel/*toml`-files. When set to
+      true, only one host per server is initialised:
+       + faster running, uses less resources
+       - not real conditions with regard to propagation of new trees.
+       - doesn't run on more than 4095 nodes yet

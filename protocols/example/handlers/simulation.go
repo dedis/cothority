@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
 )
@@ -51,11 +51,11 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 // Run implements sda.Simulation.
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "ExampleHandlers")
+		p, err := config.Overlay.CreateProtocolSDA("ExampleHandlers", config.Tree)
 		if err != nil {
 			return err
 		}

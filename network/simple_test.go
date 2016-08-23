@@ -5,14 +5,15 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"strconv"
+
 	"golang.org/x/net/context"
 )
 
-var SimplePacketType MessageTypeID
+var SimplePacketType PacketTypeID
 
 func init() {
-	SimplePacketType = RegisterMessageType(SimplePacket{})
+	SimplePacketType = RegisterPacketType(SimplePacket{})
 }
 
 type SimplePacket struct {
@@ -20,9 +21,6 @@ type SimplePacket struct {
 }
 
 func TestSimple(t *testing.T) {
-	defer dbg.AfterTest(t)
-
-	dbg.TestOutput(testing.Verbose(), 4)
 	client := NewTCPHost()
 	clientName := "client"
 	server := NewTCPHost()
@@ -35,7 +33,7 @@ func TestSimple(t *testing.T) {
 	cConMu := sync.Mutex{}
 
 	go func() {
-		err := server.Listen("localhost:2000", func(c Conn) {
+		err := server.Listen("localhost:0", func(c Conn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()
@@ -54,10 +52,10 @@ func TestSimple(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't listen:", err)
 		}
-		close(done)
+		done <- true
 	}()
 	cConMu.Lock()
-	conn, err := client.Open("localhost:2000")
+	conn, err := client.Open("localhost:" + strconv.Itoa(<-server.listeningPort))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,17 +1,11 @@
-package crypto_test
+package crypto
 
 import (
-	"flag"
-	"os"
 	"testing"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 func TestMain(m *testing.M) {
-	flag.Parse()
-	dbg.TestOutput(testing.Verbose(), 4)
-	code := m.Run()
-	dbg.AfterTest(nil)
-	os.Exit(code)
+	log.MainTest(m)
 }

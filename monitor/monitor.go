@@ -21,7 +21,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 )
 
 // This file handles the collection of measurements, aggregates them and
@@ -86,7 +86,7 @@ func (m *Monitor) Listen() error {
 	m.listenerLock.Lock()
 	m.listener = ln
 	m.listenerLock.Unlock()
-	dbg.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
+	log.Lvl2("Monitor listening for stats on", Sink, ":", m.SinkPort)
 	finished := false
 	go func() {
 		for {
@@ -100,10 +100,10 @@ func (m *Monitor) Listen() error {
 				if ok && operr.Op == "accept" {
 					break
 				}
-				dbg.Lvl2("Error while monitor accept connection:", operr)
+				log.Lvl2("Error while monitor accept connection:", operr)
 				continue
 			}
-			dbg.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
+			log.Lvl3("Monitor: new connection from", conn.RemoteAddr().String())
 			m.mutexConn.Lock()
 			m.conns[conn.RemoteAddr().String()] = conn
 			go m.handleConnection(conn)
@@ -117,7 +117,7 @@ func (m *Monitor) Listen() error {
 			m.update(measure)
 		// end of a peer conn
 		case peer := <-m.done:
-			dbg.Lvl3("Connections left:", len(m.conns))
+			log.Lvl3("Connections left:", len(m.conns))
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
 			m.mutexConn.Unlock()
@@ -125,7 +125,7 @@ func (m *Monitor) Listen() error {
 			if len(m.conns) == 0 {
 				m.listenerLock.Lock()
 				if err := m.listener.Close(); err != nil {
-					dbg.Error("Couldn't close listener:",
+					log.Error("Couldn't close listener:",
 						err)
 				}
 				m.listener = nil
@@ -135,7 +135,7 @@ func (m *Monitor) Listen() error {
 			}
 		}
 	}
-	dbg.Lvl2("Monitor finished waiting")
+	log.Lvl2("Monitor finished waiting")
 	m.conns = make(map[string]net.Conn)
 	return nil
 }
@@ -143,18 +143,18 @@ func (m *Monitor) Listen() error {
 // Stop will close every connections it has
 // And will stop updating the stats
 func (m *Monitor) Stop() {
-	dbg.Lvl2("Monitor Stop")
+	log.Lvl2("Monitor Stop")
 	m.listenerLock.Lock()
 	if m.listener != nil {
 		if err := m.listener.Close(); err != nil {
-			dbg.Error("Couldn't close listener:", err)
+			log.Error("Couldn't close listener:", err)
 		}
 	}
 	m.listenerLock.Unlock()
 	m.mutexConn.Lock()
 	for _, c := range m.conns {
 		if err := c.Close(); err != nil {
-			dbg.Error("Couldn't close connection:", err)
+			log.Error("Couldn't close connection:", err)
 		}
 	}
 	m.mutexConn.Unlock()
@@ -174,19 +174,19 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 				break
 			}
 			// otherwise log it
-			dbg.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
+			log.Lvl2("Error: monitor decoding from", conn.RemoteAddr().String(), ":", err)
 			nerr++
 			if nerr > 1 {
-				dbg.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
+				log.Lvl2("Monitor: too many errors from", conn.RemoteAddr().String(), ": Abort.")
 				break
 			}
 		}
 
-		dbg.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
+		log.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
 		// Special case where the measurement is indicating a FINISHED step
 		switch strings.ToLower(measure.Name) {
 		case "end":
-			dbg.Lvl3("Finishing monitor")
+			log.Lvl3("Finishing monitor")
 			m.done <- conn.RemoteAddr().String()
 		default:
 			m.measures <- measure
