@@ -72,7 +72,6 @@ func (t *TCPHost) Start() {
 	t.TCPListener.Listen(t.id.Address.NetworkAddress(), func(c Conn) {
 		dst, err := t.exchangeServerIdentity(c)
 		if err != nil {
-			log.Error("Negotiation failed:", err)
 			debug.PrintStack()
 			if err := c.Close(); err != nil {
 				log.Error("Couldn't close secure connection:",
@@ -81,6 +80,7 @@ func (t *TCPHost) Start() {
 			return
 		}
 		// pass it along the router
+		t.router.registerConnection(dst, c)
 		t.router.handleConn(dst, c)
 	})
 }
@@ -120,7 +120,8 @@ func (t *TCPHost) newConn(sid *ServerIdentity) (Conn, error) {
 // the ServerIdentity of the remote party.
 func (t *TCPHost) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
 	// Send our ServerIdentity to the remote endpoint
-	log.Lvl4("Sending our identity", t.id.Address, "to", c.Remote())
+	log.Lvl4(t.id.Address, "Sending our identity to", c.Remote())
+
 	if err := c.Send(context.TODO(), t.id); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}
@@ -136,7 +137,7 @@ func (t *TCPHost) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
 
 	// Set the ServerIdentity for this connection
 	e := nm.Msg.(ServerIdentity)
-	log.Lvl4("Identity exchange complete")
+	log.Lvl4(t.id.Address, "Identity exchange complete with ", e.Address)
 	return &e, nil
 }
 

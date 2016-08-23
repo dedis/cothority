@@ -53,11 +53,10 @@ func (r *router) Send(e *ServerIdentity, msg Body) error {
 	c, ok := r.connections[e.ID]
 	if !ok {
 		var err error
-		c, err = r.newConn(e)
+		c, err = r.connect(e)
 		if err != nil {
 			return err
 		}
-		go r.handleConn(e, c)
 	}
 
 	log.Lvlf4("%s sends to %s msg: %+v", r.id.Address, e, msg)
@@ -66,11 +65,10 @@ func (r *router) Send(e *ServerIdentity, msg Body) error {
 	if err != nil {
 		log.Lvl2("Couldn't send to", e, ":", err, "trying again")
 		delete(r.connections, e.ID)
-		c, err = r.newConn(e)
+		c, err := r.connect(e)
 		if err != nil {
 			return err
 		}
-		go r.handleConn(e, c)
 		err = c.Send(context.TODO(), msg)
 		if err != nil {
 			return err
@@ -80,10 +78,19 @@ func (r *router) Send(e *ServerIdentity, msg Body) error {
 	return nil
 }
 
+func (r *router) connect(sid *ServerIdentity) (Conn, error) {
+	c, err := r.newConn(sid)
+	if err != nil {
+		return nil, err
+	}
+	r.connections[sid.ID] = c
+	go r.handleConn(sid, c)
+	return c, nil
+}
+
 // handleConn is the main routine for a connection to wait for incoming
 // messages.
 func (r *router) handleConn(remote *ServerIdentity, c Conn) {
-	r.registerConnection(remote, c)
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
@@ -102,13 +109,13 @@ func (r *router) handleConn(remote *ServerIdentity, c Conn) {
 				// request to finish handling conn
 				r.handleConnQuit <- true
 			} else if err == ErrClosed || err == ErrEOF || err == ErrTemp {
-				log.Lvl4(r.id, c.Remote(), "quitting handleConn for-loop", err)
 				r.closeConnection(remote, c)
 			} else {
 				r.closedMut.Unlock()
 				log.Error(r.id, "Error with connection", address, "=>", err)
 				continue
 			}
+			log.Lvl3(r.id.Address, "leaving out handleConn for", remote.Address)
 			r.closedMut.Unlock()
 			return
 		}
@@ -121,12 +128,13 @@ func (r *router) handleConn(remote *ServerIdentity, c Conn) {
 			//log.Lvl5(t.workingAddress, "Send message to networkChan", len(t.networkChan))
 			//t.networkChan <- packet
 			if err := r.Dispatch(&packet); err != nil {
-				log.Print("Error dispatching:", err)
+				log.Lvl3("Error dispatching:", err)
 			}
 		} else {
 			// signal we are done with this go routine.
 			r.handleConnQuit <- true
 			r.closedMut.Unlock()
+			log.Lvl3(r.id.Address, "leaving out handleConn for", remote.Address)
 			return
 		}
 		r.closedMut.Unlock()
