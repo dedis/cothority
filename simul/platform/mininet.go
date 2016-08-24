@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
 )
@@ -26,6 +26,8 @@ type MiniNet struct {
 	Login string
 	// The outside host on the platform
 	Host string
+	// Directory we start - supposed to be `cothority/simul`
+	wd string
 	// Directory holding the cothority-go-file
 	cothorityDir string
 	// Directory storing the additional files
@@ -60,12 +62,13 @@ type MiniNet struct {
 func (m *MiniNet) Configure(pc *Config) {
 	// Directory setup - would also be possible in /tmp
 	// Supposes we're in `cothority/simul`
-	pwd, _ := os.Getwd()
-	m.cothorityDir = pwd + "/cothority"
-	m.mininetDir = pwd + "/platform/mininet"
-	m.buildDir = pwd + "/build"
-	m.Login = "mininet"
-	m.Host = "icsil1-conodes.epfl.ch"
+	m.wd, _ = os.Getwd()
+	m.cothorityDir = m.wd + "/cothority"
+	m.mininetDir = m.wd + "/platform/mininet"
+	m.buildDir = m.mininetDir + "/build"
+	m.Login = "root"
+	log.Print(m.wd, m.cothorityDir)
+	m.Host = "iccluster026.iccluster.epfl.ch"
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
@@ -76,7 +79,7 @@ func (m *MiniNet) Configure(pc *Config) {
 	sda.WriteTomlConfig(*m, m.mininetDir+"/mininet.toml", m.mininetDir)
 
 	if m.Simulation == "" {
-		dbg.Fatal("No simulation defined in runconfig")
+		log.Fatal("No simulation defined in runconfig")
 	}
 
 	// Setting up channel
@@ -86,28 +89,21 @@ func (m *MiniNet) Configure(pc *Config) {
 // build is the name of the app to build
 // empty = all otherwise build specific package
 func (m *MiniNet) Build(build string, arg ...string) error {
-	current, _ := os.Getwd()
-	dbg.Lvl3("Current dir is:", current)
-	defer os.Chdir(current)
-	os.Chdir(m.buildDir)
-
-	dbg.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
+	log.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
 
 	// Start with a clean build-directory
-	src_dir := m.buildDir
-	dst := m.buildDir + "/cothority"
 	processor := "amd64"
 	system := "linux"
-	src_rel, _ := filepath.Rel(m.buildDir, src_dir)
-	dbg.Lvl3("Relative-path is", src_rel, " will build into ", dst)
-	out, err := Build("./"+src_rel, dst,
-		processor, system, arg...)
-	if err != nil {
-		dbg.Fatal(out, err)
-	}
+	src_rel, err := filepath.Rel(m.wd, m.cothorityDir)
+	log.ErrFatal(err)
 
-	dbg.Lvl1("Build is finished after", time.Since(start))
+	log.LLvl3("Relative-path is", src_rel, " will build into ", m.buildDir)
+	out, err := Build("./"+src_rel, m.buildDir+"/cothority",
+		processor, system, arg...)
+	log.ErrFatal(err, out)
+
+	log.Lvl1("Build is finished after", time.Since(start))
 	return nil
 }
 
@@ -116,24 +112,22 @@ func (m *MiniNet) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
 	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
 	if err != nil {
-		dbg.Lvl3("Error stopping ssh:", err)
+		log.Lvl3("Error stopping ssh:", err)
 	}
 
 	// SSH to the MiniNet-server and end all running users-processes
-	dbg.Lvl3("Going to stop everything")
-	startcli := "echo -e \"stop\\nquit\\n\" | python cli.py"
-	err = SSHRunStdout(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
-	if err != nil {
-		dbg.Lvl3(err)
-	}
-	dbg.LLvl3("Done with cli.py")
+	log.Lvl3("Going to stop everything")
+	//err = SSHRunStdout(m.Login, m.Host, "ps aux")
+	//if err != nil {
+	//	log.Lvl3(err)
+	//}
 	return nil
 }
 
 // Creates the appropriate configuration-files and copies everything to the
 // MiniNet-installation.
 func (m *MiniNet) Deploy(rc RunConfig) error {
-	dbg.Lvl2("Localhost: Deploying and writing config-files")
+	log.Lvl2("Localhost: Deploying and writing config-files")
 	sim, err := sda.NewSimulation(m.Simulation, string(rc.Toml()))
 	if err != nil {
 		return err
@@ -148,9 +142,9 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	if err != nil {
 		return err
 	}
-	dbg.Lvl3("Creating hosts")
+	log.Lvl3("Creating hosts")
 	mininet.readHosts()
-	dbg.Lvl3("Writing the config file :", mininet)
+	log.Lvl3("Writing the config file :", mininet)
 	sda.WriteTomlConfig(mininet, mininetConfig, m.buildDir)
 
 	simulConfig, err := sim.Setup(m.buildDir, mininet.HostIPs)
@@ -158,16 +152,22 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
-	dbg.Lvl3("Saving configuration")
+	log.Lvl3("Saving configuration")
 	simulConfig.Save(m.buildDir)
 
+	// Copy our script
+	err = Copy(m.buildDir, m.mininetDir+"/start.py")
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 	// Copy everything over to MiniNet
-	dbg.Lvl1("Copying over to", m.Login, "@", m.Host)
+	log.Lvl1("Copying over to", m.Login, "@", m.Host)
 	err = Rsync(m.Login, m.Host, m.buildDir+"/", "mininet_run/")
 	if err != nil {
-		dbg.Fatal(err)
+		log.Fatal(err)
 	}
-	dbg.Lvl2("Done copying")
+	log.Lvl2("Done copying")
 
 	return nil
 }
@@ -187,37 +187,32 @@ func (m *MiniNet) Start(args ...string) error {
 			redirection, login}
 		exCmd = exec.Command("ssh", cmd...)
 		if err := exCmd.Start(); err != nil {
-			dbg.Fatal("Failed to start the ssh port forwarding:", err)
+			log.Fatal("Failed to start the ssh port forwarding:", err)
 		}
 		if err := exCmd.Wait(); err != nil {
-			dbg.Fatal("ssh port forwarding exited in failure:", err)
+			log.Fatal("ssh port forwarding exited in failure:", err)
 		}
-		// And forward that port to the mininet-cluster, which does not have any
-		// access to the outside world
-		exCmd = exec.Command("ssh", "-f", login, "'ssh -nNTf -R :"+redirection+" icsil1-conodes-exp.epfl.ch'")
 	} else {
 		redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
 		login := fmt.Sprintf("%s@%s", m.Login, "icsil1-conodes-exp.epfl.ch")
 		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 			redirection, login}
 		exCmd = exec.Command("ssh", cmd...)
-	}
-	dbg.Print(exCmd)
-	if err := exCmd.Start(); err != nil {
-		dbg.Fatal("Failed to start the 2nd ssh port forwarding:", err)
-	}
-	if err := exCmd.Wait(); err != nil {
-		dbg.Fatal("2nd ssh port forwarding exited in failure:", err)
-	}
-	dbg.Lvl3("Setup remote port forwarding", exCmd)
-	go func() {
-		dbg.LLvl3("Starting simulation over mininet")
-		startcli := "echo -e \"sync\\nstart\\n\\nquit\\n\" | python cli.py"
-		_, err := SSHRun(m.Login, m.Host, "cd mininet/conodes/sites/icsil1; "+startcli)
-		if err != nil {
-			dbg.Lvl3(err)
+		log.Print(exCmd)
+		if err := exCmd.Start(); err != nil {
+			log.Fatal("Failed to start the 2nd ssh port forwarding:", err)
 		}
-		dbg.Print("Finished ssh-command")
+		if err := exCmd.Wait(); err != nil {
+			log.Fatal("2nd ssh port forwarding exited in failure:", err)
+		}
+	}
+	go func() {
+		log.LLvl3("Starting simulation over mininet")
+		_, err := SSHRun(m.Login, m.Host, "cd mininet_run; ./start.py network go")
+		if err != nil {
+			log.Lvl3(err)
+		}
+		log.Print("Finished ssh-command")
 		time.Sleep(time.Second * 100)
 		m.sshMininet <- "finished"
 	}()
@@ -232,17 +227,17 @@ func (m *MiniNet) Wait() error {
 		wait = 600
 	}
 	if m.started {
-		dbg.Lvl3("Simulation is started")
+		log.Lvl3("Simulation is started")
 		select {
 		case msg := <-m.sshMininet:
 			if msg == "finished" {
-				dbg.Lvl3("Received finished-message, not killing users")
+				log.Lvl3("Received finished-message, not killing users")
 				return nil
 			} else {
-				dbg.Lvl1("Received out-of-line message", msg)
+				log.Lvl1("Received out-of-line message", msg)
 			}
 		case <-time.After(time.Second * time.Duration(wait)):
-			dbg.Lvl1("Quitting after ", wait/60,
+			log.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
 			m.started = false
 		}
@@ -254,7 +249,7 @@ func (m *MiniNet) Wait() error {
 /*
 * connect to the MiniNet server and check how many servers we got attributed
  */
-func (m *MiniNet) readHosts() error {
+func (m *MiniNet) readHostsIcsil() error {
 	// Updating the available servers
 	_, err := SSHRun(m.Login, m.Host, "cd mininet; ./icsil1_search_server.py icsil1.servers.json")
 	if err != nil {
@@ -271,6 +266,13 @@ func (m *MiniNet) readHosts() error {
 
 	m.HostIPs = make([]string, num_servers)
 	copy(m.HostIPs, nodes[2:])
-	dbg.Lvl4("Nodes are:", m.HostIPs)
+	log.Lvl4("Nodes are:", m.HostIPs)
+	return nil
+}
+
+// Setting hosts for the iccluster
+func (m *MiniNet) readHosts() error {
+	m.HostIPs = []string{"iccluster026", "iccluster028"}
+	log.LLvl3("Nodes are:", m.HostIPs)
 	return nil
 }
