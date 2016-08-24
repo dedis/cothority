@@ -1,6 +1,7 @@
 test_fmt:
 	@echo Checking correct formatting of files
 	@{ \
+		cd -P .; \
 		files=$$( go fmt ./... ); \
 		if [ -n "$$files" ]; then \
 		echo "Files not properly formatted: $$files"; \
@@ -15,6 +16,7 @@ test_lint:
 	@echo Checking linting of files
 	@{ \
 		go get github.com/golang/lint/golint; \
+		cd -P .; \
 		exclude="protocols/byzcoin|_test.go"; \
 		lintfiles=$$( golint ./... | egrep -v "($$exclude)" ); \
 		if [ -n "$$lintfiles" ]; then \
