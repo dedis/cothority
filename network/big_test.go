@@ -23,7 +23,6 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestTCPHugeConnections(t *testing.T) {
-	log.TestOutput(true, 3)
 	// How many hosts are run
 	nbrHosts := 10
 	// 16MB of message size
