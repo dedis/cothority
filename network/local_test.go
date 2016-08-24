@@ -113,3 +113,8 @@ func waitListeningUp(addr string) bool {
 	}
 	return false
 }
+
+func NewTestLocalHost(port int) *LocalHost {
+	addr := "tcp://127.0.0.1:" + strconv.Itoa(port)
+	return NewLocalHost(NewTestServerIdentity(addr))
+}

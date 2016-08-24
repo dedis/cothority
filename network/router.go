@@ -94,12 +94,14 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	// connect function to connect + exchange + register + handle
 	var connect = func() (Conn, error) {
 		c, err := r.host.Connect(e)
+
 		if err != nil {
 			return nil, err
 		}
 		if err := r.negotiateOpen(c, e); err != nil {
 			return nil, err
 		}
+
 		r.connections[e.ID] = c
 		go r.handleConn(e, c)
 		return c, nil

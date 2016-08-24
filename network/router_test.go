@@ -13,10 +13,24 @@ func NewTestRouterTCP(port int) *Router {
 	return NewRouter(h.id, h)
 }
 
+func NewTestRouterLocal(port int) *Router {
+	h := NewTestLocalHost(port)
+	return NewRouter(h.id, h)
+}
+
+type routerFactory func(port int) *Router
+
 // Test if router fits the interface such as calling Run(), then Stop(),
 // should return
 func TestRouterTCP(t *testing.T) {
-	h := NewTestRouterTCP(2004)
+	testRouter(t, NewTestRouterTCP)
+}
+func TestRouterLocal(t *testing.T) {
+	testRouter(t, NewTestRouterLocal)
+}
+
+func testRouter(t *testing.T, fac routerFactory) {
+	h := fac(2004)
 	var stop = make(chan bool)
 	go func() {
 		stop <- true
@@ -37,9 +51,16 @@ func TestRouterTCP(t *testing.T) {
 }
 
 // Test the automatic connection upon request
-func TestRouterAutoConnection(t *testing.T) {
-	h1 := NewTestRouterTCP(2007)
-	h2 := NewTestRouterTCP(2008)
+func TestRouterAutoConnectionTCP(t *testing.T) {
+	testRouterAutoConnection(t, NewTestRouterTCP)
+}
+func TestRouterAutoConnectionLocal(t *testing.T) {
+	testRouterAutoConnection(t, NewTestRouterLocal)
+}
+
+func testRouterAutoConnection(t *testing.T, fac routerFactory) {
+	h1 := fac(2007)
+	h2 := fac(2008)
 	go h2.Start()
 
 	proc := newSimpleMessageProc(t)
@@ -107,9 +128,16 @@ func TestRouterMessaging(t *testing.T) {
 }
 
 // Test sending data back and forth using the sendSDAData
-func TestRouterSendMsgDuplex(t *testing.T) {
-	h1 := NewTestRouterTCP(2011)
-	h2 := NewTestRouterTCP(2012)
+func TestRouterSendMsgDuplexTCP(t *testing.T) {
+	testRouterSendMsgDuplex(t, NewTestRouterTCP)
+}
+
+func TestRouterSendMsgDuplexLocal(t *testing.T) {
+	testRouterSendMsgDuplex(t, NewTestRouterLocal)
+}
+func testRouterSendMsgDuplex(t *testing.T, fac routerFactory) {
+	h1 := fac(2011)
+	h2 := fac(2012)
 	go h1.Start()
 	go h2.Start()
 

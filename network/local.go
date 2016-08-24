@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+	"time"
 )
 
 // localConnStore_ keeps reference to all opened local connections
@@ -72,6 +73,8 @@ func (ccc *localConnStore_) StopListening(addr string) {
 	delete(ccc.listening, addr)
 }
 
+var errNotListening = errors.New("Remote address is not listening")
+
 // Connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
@@ -81,7 +84,7 @@ func (ccc *localConnStore_) Connect(local, remote string) (*LocalConn, error) {
 
 	fn, ok := ccc.listening[remote]
 	if !ok {
-		return nil, errors.New("Remote address is not listening")
+		return nil, errNotListening
 	}
 
 	outgoing := newLocalConn(local, remote)
@@ -259,6 +262,9 @@ func (cc *LocalConn) Type() ConnType {
 type LocalListener struct {
 	// addr is the addr we're listening to + mut
 	addr string
+	// are we listening or not
+	listening bool
+
 	sync.Mutex
 
 	// quit is used to stop the listening routine
@@ -274,18 +280,21 @@ func NewLocalListener() *LocalListener {
 func (ll *LocalListener) Listen(addr string, fn func(Conn)) error {
 	ll.Lock()
 	ll.addr = addr
-	localConnStore.Listening(addr, fn)
+	ll.listening = true
 	ll.Unlock()
+	localConnStore.Listening(addr, fn)
 	<-ll.quit
 	return nil
 }
 
 func (ll *LocalListener) Stop() error {
-	ll.quit <- true
 	ll.Lock()
+	defer ll.Unlock()
 	addr := ll.addr
-	ll.Unlock()
 	localConnStore.StopListening(addr)
+	if ll.listening {
+		ll.quit <- true
+	}
 	return nil
 }
 
@@ -306,7 +315,15 @@ func NewLocalHost(sid *ServerIdentity) *LocalHost {
 }
 
 func (lh *LocalHost) Connect(sid *ServerIdentity) (Conn, error) {
-	return NewLocalConn(lh.id.Address.NetworkAddress(), sid.Address.NetworkAddress())
+	for i := 0; i < MaxRetry; i++ {
+		c, err := NewLocalConn(lh.id.Address.NetworkAddress(), sid.Address.NetworkAddress())
+		if err == nil {
+			return c, nil
+		}
+		time.Sleep(WaitRetry)
+	}
+	return nil, errors.New("Could not connect...")
+
 }
 
 /*// GetStatus implements the Host interface*/
