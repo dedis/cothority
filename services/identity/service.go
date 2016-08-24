@@ -70,7 +70,7 @@ type Storage struct {
 
 // AddIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) AddIdentity(e *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
+func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
 	log.Lvlf3("%s Adding identity %x", s, ai.ID)
 	ids := &Storage{
 		Latest: ai.Config,
@@ -124,7 +124,7 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
 	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
@@ -143,7 +143,7 @@ func (s *Service) ProposeSend(e *network.ServerIdentity, p *ProposeSend) (networ
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(e *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
+func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
@@ -160,7 +160,7 @@ func (s *Service) ProposeUpdate(e *network.ServerIdentity, cnc *ProposeUpdate) (
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
