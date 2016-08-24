@@ -96,7 +96,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	log.Info("Made a backup of your", authFile, "before creating new one.")
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
-		for _, s := range f.Config.GetIntKeys("ssh", f.DeviceName) {
+		for _, s := range f.Config.GetIntermediateColumn("ssh", f.DeviceName) {
 			pub := f.Config.GetValue("ssh", s, f.DeviceName)
 			log.Lvlf2("Value of %s is %s", s, pub)
 			log.Info("Writing key for", s, "to authorized_keys")

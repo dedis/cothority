@@ -122,7 +122,7 @@ func idDel(c *cli.Context) error {
 	}
 	prop := cfg.GetProposed()
 	delete(prop.Device, dev)
-	for _, s := range cfg.Config.GetKeys("ssh", dev) {
+	for _, s := range cfg.Config.GetSuffixColumn("ssh", dev) {
 		delete(prop.Data, "ssh:"+dev+":"+s)
 	}
 	cfg.proposeSendVoteUpdate(prop)
@@ -240,7 +240,7 @@ func kvDel(c *cli.Context) error {
  * ssh:device:server / ssh_public_key
  * where 'ssh' is a fixed string, 'device' is the device where the private
  * key is stored and 'server' the server that should add the public key to
- * it's authorized_keys.
+ * its authorized_keys.
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
@@ -288,12 +288,12 @@ func sshLs(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	var devs []string
 	if c.Bool("a") {
-		devs = cfg.Config.GetKeys("ssh")
+		devs = cfg.Config.GetSuffixColumn("ssh")
 	} else {
 		devs = []string{cfg.DeviceName}
 	}
 	for _, dev := range devs {
-		for _, pub := range cfg.Config.GetKeys("ssh", dev) {
+		for _, pub := range cfg.Config.GetSuffixColumn("ssh", dev) {
 			log.Printf("SSH-key for device %s: %s", dev, pub)
 		}
 	}
@@ -379,9 +379,10 @@ func followList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, id := range cfg.Follow {
 		log.Infof("SCID: %x", id.ID)
+		server := id.DeviceName
 		log.Infof("Server %s is asked to accept ssh-keys from %s:",
-			id.DeviceName,
-			id.Config.GetIntKeys("ssh", id.DeviceName))
+			server,
+			id.Config.GetIntermediateColumn("ssh", server))
 	}
 	return nil
 }
