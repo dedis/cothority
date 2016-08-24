@@ -16,6 +16,7 @@ An app is an example of a user-space program that can communicate to one or more
 services of a cothority.
 
 ## Warning
+We're testing...
 **The software provided in this repository is highly experimental and under
 heavy development. Do not use it yet for anything security-critical.  or if you
 use it, do so in a way that supplements (rather than replacing) existing, stable
