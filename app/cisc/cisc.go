@@ -235,7 +235,12 @@ func kvDel(c *cli.Context) error {
 }
 
 /*
- * Commands related to the ssh-handling
+ * Commands related to the ssh-handling. All ssh-keys are stored in the
+ * identity-sc as
+ * ssh:device:server / ssh_public_key
+ * where 'ssh' is a fixed string, 'device' is the device where the private
+ * key is stored and 'server' the server that should add the public key to
+ * it's authorized_keys.
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
@@ -272,7 +277,7 @@ func sshAdd(c *cli.Context) error {
 
 	// Propose the new configuration
 	prop := cfg.GetProposed()
-	key := strings.Join([]string{"ssh", cfg.DeviceName, alias}, ":")
+	key := strings.Join([]string{"ssh", cfg.DeviceName, hostname}, ":")
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
 	prop.Data[key] = strings.TrimSpace(string(pub))
@@ -302,9 +307,9 @@ func sshDel(c *cli.Context) error {
 	}
 	ah := c.Args().First()
 	if len(cfg.Config.GetValue("ssh", cfg.DeviceName, ah)) == 0 {
-		log.Print("Didn't find alias or host", ah)
+		log.Error("Didn't find alias or host", ah, "here is what I know:")
 		sshLs(c)
-		log.Fatal("Aborting")
+		log.Fatal("Unknown alias or host.")
 	}
 	sc, err := NewSSHConfigFromFile(sshConfig)
 	log.ErrFatal(err)
@@ -373,8 +378,8 @@ func followDel(c *cli.Context) error {
 func followList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, id := range cfg.Follow {
-		log.Infof("Following ID: %x", id.ID)
-		log.Infof("As follower %s getting ssh-keys from %s:",
+		log.Infof("SCID: %x", id.ID)
+		log.Infof("Server %s is asked to accept ssh-keys from %s:",
 			id.DeviceName,
 			id.Config.GetIntKeys("ssh", id.DeviceName))
 	}
