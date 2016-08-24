@@ -106,9 +106,10 @@ func (c *Config) String() string {
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
-// GetKeys returns the unique keys up to the next ":". If given a slice of keys, it
-// will join them using ":" and return the unique keys with that prefix.
-func (c *Config) GetKeys(keys ...string) []string {
+// GetSuffixColumn returns the unique values up to the next ":" of the keys.
+// If given a slice of keys, it will join them using ":" and return the
+// unique keys with that prefix.
+func (c *Config) GetSuffixColumn(keys ...string) []string {
 	var ret []string
 	start := strings.Join(keys, ":")
 	if len(start) > 0 {
@@ -138,9 +139,10 @@ func (c *Config) GetValue(keys ...string) string {
 	return ""
 }
 
-// GetIntKeys returns the keys in the middle of prefix and suffix. Searching
-// for the keys, the method will add ":" after the prefix and before the suffix.
-func (c *Config) GetIntKeys(prefix, suffix string) []string {
+// GetIntermediateColumn returns the values of the column in the middle of
+// prefix and suffix. Searching for the column-values, the method will add ":"
+// after the prefix and before the suffix.
+func (c *Config) GetIntermediateColumn(prefix, suffix string) []string {
 	var ret []string
 	if len(prefix) > 0 {
 		prefix += ":"

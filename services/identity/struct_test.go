@@ -8,11 +8,11 @@ import (
 
 func TestGetKeys(t *testing.T) {
 	cfg := setupConfig()
-	res := cfg.GetKeys()
+	res := cfg.GetSuffixColumn()
 	assert.Equal(t, []string{"ssh", "web"}, res)
-	res = cfg.GetKeys("web")
+	res = cfg.GetSuffixColumn("web")
 	assert.Equal(t, []string{"one", "two"}, res)
-	res = cfg.GetKeys("ssh", "mbp")
+	res = cfg.GetSuffixColumn("ssh", "mbp")
 	assert.Equal(t, []string{"dl", "gh"}, res)
 }
 
@@ -24,7 +24,7 @@ func TestSortUniq(t *testing.T) {
 func TestKvGetIntKeys(t *testing.T) {
 	cfg := setupConfig()
 	s1, s2 := "ssh", "gh"
-	assert.Equal(t, []string{"mba", "mbp"}, cfg.GetIntKeys(s1, s2))
+	assert.Equal(t, []string{"mba", "mbp"}, cfg.GetIntermediateColumn(s1, s2))
 	assert.Equal(t, "ssh", s1)
 	assert.Equal(t, "gh", s2)
 }
