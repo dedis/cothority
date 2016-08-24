@@ -116,9 +116,9 @@ func idDel(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	dev := c.Args().First()
 	if _, ok := cfg.Config.Device[dev]; !ok {
-		log.Info("Didn't find", dev, "in config")
+		log.Error("Didn't find", dev, "in config. Available devices:")
 		configList(c)
-		log.Fatal("Try with one of those")
+		log.Fatal("Device not found in config.")
 	}
 	prop := cfg.GetProposed()
 	delete(prop.Device, dev)
