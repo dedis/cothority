@@ -68,14 +68,14 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
+func NewIdentity(cothority *sda.Roster, threshold int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
 		Client:     client,
 		Private:    kp.Secret,
 		Public:     kp.Public,
-		Config:     NewConfig(majority, kp.Public, owner),
+		Config:     NewConfig(threshold, kp.Public, owner),
 		DeviceName: owner,
 		Cothority:  cothority,
 	}

@@ -80,7 +80,7 @@ func idCreate(c *cli.Context) error {
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
-	thr := c.Int("thr")
+	thr := c.Int("threshold")
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
 	log.Infof("IC is %x", cfg.ID)
@@ -374,7 +374,7 @@ func followList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, id := range cfg.Follow {
 		log.Infof("Following ID: %x", id.ID)
-		log.Infof("As service %s getting ssh-keys from %s:",
+		log.Infof("As follower %s getting ssh-keys from %s:",
 			id.DeviceName,
 			id.Config.GetIntKeys("ssh", id.DeviceName))
 	}
