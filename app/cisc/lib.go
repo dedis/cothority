@@ -86,6 +86,14 @@ func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Config) {
 // writes the ssh-keys to an 'authorized_keys'-file
 func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	var keys []string
+	dir, _ := sshDirConfig(c)
+	authFile := dir + "/authorized_keys"
+	// Make backup
+	b, err := ioutil.ReadFile(authFile)
+	log.ErrFatal(err)
+	err = ioutil.WriteFile(authFile+".back", b, 0600)
+	log.ErrFatal(err)
+	log.Info("Made a backup of your", authFile, "before creating new one.")
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
 		for _, s := range f.Config.GetIntKeys("ssh", f.DeviceName) {
@@ -95,8 +103,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
 		}
 	}
-	dir, _ := sshDirConfig(c)
-	err := ioutil.WriteFile(dir+"/authorized_keys",
+	err = ioutil.WriteFile(authFile,
 		[]byte(strings.Join(keys, "\n")), 0600)
 	log.ErrFatal(err)
 }

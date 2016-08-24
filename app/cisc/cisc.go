@@ -342,6 +342,7 @@ func followAdd(c *cli.Context) error {
 		var err error
 		newID.DeviceName, err = os.Hostname()
 		log.ErrFatal(err)
+		log.Info("Using", newID.DeviceName, "as the device-name.")
 	}
 	cfg.Follow = append(cfg.Follow, newID)
 	cfg.writeAuthorizedKeys(c)
@@ -359,7 +360,7 @@ func followDel(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().First())
 	log.ErrFatal(err)
 	idDel := identity.ID(idBytes)
-	var newSlice []*identity.Identity
+	newSlice := cfg.Follow[:0]
 	for _, id := range cfg.Follow {
 		if !bytes.Equal(id.ID, idDel) {
 			newSlice = append(newSlice, id)
