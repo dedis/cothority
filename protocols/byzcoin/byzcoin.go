@@ -197,10 +197,11 @@ func NewByzCoinRootProtocol(n *sda.TreeNodeInstance, transactions []blkparser.Tx
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *ByzCoin) Start() error {
-	if err := bz.startAnnouncementPrepare(); err != nil {
+	if err := bz.startAnnouncementCommit(); err != nil {
 		return err
 	}
-	return bz.startAnnouncementCommit()
+	log.Lvl3(bz.Name(), "finished announcment prepare")
+	return bz.startAnnouncementPrepare()
 }
 
 // Dispatch listen on the different channels
@@ -258,7 +259,7 @@ func (bz *ByzCoin) listen() {
 			return
 		}
 		if err != nil {
-			log.Error("Error handling messages:", err)
+			log.Error(bz.Name(), "Error handling messages:", err)
 		}
 	}
 }
@@ -363,6 +364,7 @@ func (bz *ByzCoin) handleCommit(ann Commitment) error {
 	// store it and check if we have enough commitments
 	switch ann.TYPE {
 	case RoundPrepare:
+		log.Lvl3(bz.Name(), "ByzCoin handle Commit PREPARE")
 		bz.tpcMut.Lock()
 		bz.tempPrepareCommit = append(bz.tempPrepareCommit, ann.Commitment)
 		if len(bz.tempPrepareCommit) < len(bz.Children()) {
@@ -378,7 +380,6 @@ func (bz *ByzCoin) handleCommit(ann Commitment) error {
 			TYPE:       RoundPrepare,
 			Commitment: commit,
 		}
-		log.Lvl3(bz.Name(), "ByzCoin handle Commit PREPARE")
 	case RoundCommit:
 		bz.tccMut.Lock()
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
@@ -506,7 +507,7 @@ func (bz *ByzCoin) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// store the exceptions for later usage
 	bz.tempExceptions = ch.Exceptions
-	log.Lvl3("ByzCoin handle Challenge COMMIT")
+	log.Lvl3(bz.Name(), "ByzCoin handle Challenge COMMIT")
 	if bz.IsLeaf() {
 		return bz.startResponseCommit()
 	}
@@ -529,6 +530,7 @@ func (bz *ByzCoin) startResponsePrepare() error {
 	// wait the verification
 	bzr, ok := bz.waitResponseVerification()
 	if ok {
+		log.Lvl3(bz.Name(), "ok")
 		// apend response only if OK
 		bzr.Response = resp
 	}
@@ -638,7 +640,7 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 		bz.tprMut.Unlock()
 	}
 
-	log.Lvl3("ByzCoin Handle Response PREPARE")
+	log.Lvl3(bz.Name(), "ByzCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
 		// notify listeners (simulation) we finished
