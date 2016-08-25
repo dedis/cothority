@@ -5,11 +5,11 @@ DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | 
 
 # Run test coverage on each subdirectories and merge the coverage profile.
 
-echo "mode: count" > profile.cov
+echo "mode: atomic" > profile.cov
 
 for dir in ${DIR_SOURCE};
 do
-    go test -short -race -covermode=count -coverprofile=$dir/profile.tmp $dir
+    go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
     if [ -f $dir/profile.tmp ]
     then
         cat $dir/profile.tmp | tail -n +2 >> profile.cov
