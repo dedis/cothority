@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+func NewLocalRouter(sid *ServerIdentity) *Router {
+	return NewRouter(sid, NewLocalHost(sid))
+}
+
 // localConnStore_ keeps reference to all opened local connections
 // It also keeps tracks of who is "listening", so it's possible to mimics
 // Conn & Listener.
@@ -324,6 +328,13 @@ func (lh *LocalHost) Connect(sid *ServerIdentity) (Conn, error) {
 	}
 	return nil, errors.New("Could not connect...")
 
+}
+
+func NewLocalClient() *Client {
+	fn := func(own, remote *ServerIdentity) (Conn, error) {
+		return NewLocalConn(own.Address.NetworkAddress(), remote.Address.NetworkAddress())
+	}
+	return newClient(fn)
 }
 
 /*// GetStatus implements the Host interface*/

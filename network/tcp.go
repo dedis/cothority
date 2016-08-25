@@ -15,6 +15,10 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
+func NewTCPRouter(sid *ServerIdentity) *Router {
+	return NewRouter(sid, NewTCPHost(sid))
+}
+
 // TCPConn is the underlying implementation of
 // Conn using plain Tcp.
 type TCPConn struct {
@@ -393,4 +397,11 @@ func (t *TCPHost) Connect(sid *ServerIdentity) (Conn, error) {
 		return c, err
 	}
 	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", t.id, sid.Address.ConnType())
+}
+
+func NewTCPClient() *Client {
+	fn := func(own, remote *ServerIdentity) (Conn, error) {
+		return NewTCPConn(remote.Address.NetworkAddress())
+	}
+	return newClient(fn)
 }

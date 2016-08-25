@@ -98,7 +98,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		if err != nil {
 			return nil, err
 		}
-		if err := r.negotiateOpen(c, e); err != nil {
+		if err := r.negotiateOpen(e, c); err != nil {
 			return nil, err
 		}
 
@@ -150,6 +150,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		// So the receiver can know about the error
 		packet.SetError(err)
 		packet.From = address
+		packet.ServerIdentity = remote
 		log.Lvl5(r.id.Address, "Got message", packet)
 		if err != nil {
 			// something went wrong on this connection
@@ -290,10 +291,23 @@ func (r *Router) Rx() uint64 {
 // proceed to the exchanges of the server identities of both parties. It returns
 // the ServerIdentity of the remote party.
 func (h *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
-	// Send our ServerIdentity to the remote endpoint
-	log.Lvl4(h.id.Address, "Sending our identity to", c.Remote())
+	return exchangeServerIdentity(h.id, c)
+}
 
-	if err := c.Send(context.TODO(), h.id); err != nil {
+// negotiateOpen takes a fresh issued new Conn and the supposed destination's
+// ServerIdentity. It proceeds to the exchange of identity and verifies that
+// we are correctly dealing with the right remote party.
+// NOTE: This version is non secure at all, it's just a simple verification.
+// Later will come the signing part,etc.
+func (h *Router) negotiateOpen(e *ServerIdentity, c Conn) error {
+	return negotiateOpen(h.id, e, c)
+}
+
+func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
+	// Send our ServerIdentity to the remote endpoint
+	log.Lvl4(own.Address, "Sending our identity to", c.Remote())
+
+	if err := c.Send(context.TODO(), own); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}
 	// Receive the other ServerIdentity
@@ -308,24 +322,20 @@ func (h *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
 
 	// Set the ServerIdentity for this connection
 	e := nm.Msg.(ServerIdentity)
-	log.Lvl4(h.id.Address, "Identity exchange complete with ", e.Address)
+	log.Lvl4(own.Address, "Identity exchange complete with ", e.Address)
 	return &e, nil
+
 }
 
-// negotiateOpen takes a fresh issued new Conn and the supposed destination's
-// ServerIdentity. It proceeds to the exchange of identity and verifies that
-// we are correctly dealing with the right remote party.
-// NOTE: This version is non secure at all, it's just a simple verification.
-// Later will come the signing part,etc.
-func (h *Router) negotiateOpen(c Conn, e *ServerIdentity) error {
+func negotiateOpen(own, remote *ServerIdentity, c Conn) error {
 	var err error
 	var dst *ServerIdentity
-	if dst, err = h.exchangeServerIdentity(c); err != nil {
+	if dst, err = exchangeServerIdentity(own, c); err != nil {
 		return err
 	}
 	// verify the ServerIdentity if its the same we are supposed to connect
-	if dst.ID != e.ID {
-		log.Lvl3(fmt.Sprintf("Wanted to connect to %s (%x) but got %s (%x)", e.Address, e.ID, dst.Address, dst.ID))
+	if dst.ID != remote.ID {
+		log.Lvl3(fmt.Sprintf("Wanted to connect to %s (%x) but got %s (%x)", remote.Address, remote.ID, dst.Address, dst.ID))
 		log.Lvl4("IDs not the same", log.Stack())
 		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}

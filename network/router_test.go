@@ -187,7 +187,7 @@ func TestRouterExchange(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(c, entity1); err != nil {
+	if err := router2.negotiateOpen(entity1, c); err != nil {
 		t.Fatal("Wrong negotiation")
 	}
 	c.Close()
@@ -197,7 +197,7 @@ func TestRouterExchange(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(c, entity2); err == nil {
+	if err := router2.negotiateOpen(entity2, c); err == nil {
 		t.Fatal("negotiation should have aborted")
 	}
 	c.Close()
