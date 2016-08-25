@@ -12,7 +12,7 @@ var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 // ReadFirstNBlocks specifcy how many blocks in the the BlocksDir it must read
 // (so you only have to copy the first blocks to deterLab)
-const ReadFirstNBlocks = 400
+const ReadFirstNBlocks = 10000
 
 // Client is a client simulation. At the moment we do not measure the
 // communication between client and server. Hence, we do not even open a real
