@@ -90,7 +90,7 @@ func GetBlockDir() string {
 	if err != nil {
 		log.Fatal("Couldn't get working dir:", err)
 	}
-	return dir + "/blocks"
+	return SimulDirToBlockDir(dir)
 }
 
 // DownloadBlock takes 'dir' as the directory where to download the block.
@@ -124,10 +124,10 @@ func EnsureBlockIsAvailable(dir string) error {
 			return err
 		}
 	}
-	destDir := dir + "/blocks"
-	if err := os.Mkdir(destDir, 0777); err != nil {
-		return err
-	}
+	destDir := SimulDirToBlockDir(dir)
+	//if err := os.Mkdir(destDir, 0777); err != nil {
+	//	return err
+	//}
 	cmd := exec.Command("cp", block, destDir)
 	if err := cmd.Start(); err != nil {
 		return err
