@@ -38,7 +38,7 @@ import (
 	_ "github.com/dedis/cothority/protocols/randhound"
 	// ByzCoin has some strange library which uses 'seelog' that doesn't
 	// free all go-routines
-	//_ "github.com/dedis/cothority/protocols/byzcoin"
-	//_ "github.com/dedis/cothority/protocols/byzcoin/ntree"
-	//_ "github.com/dedis/cothority/protocols/byzcoin/pbft"
+	_ "github.com/dedis/cothority/protocols/byzcoin"
+	_ "github.com/dedis/cothority/protocols/byzcoin/ntree"
+	_ "github.com/dedis/cothority/protocols/byzcoin/pbft"
 )
