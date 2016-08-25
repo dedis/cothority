@@ -24,7 +24,7 @@ const (
 	// PURB represents a PURB encryption connection over TCP
 	PURB = "purb"
 	// Chan represents a channel based connection type
-	Chan = "chan"
+	Local = "local"
 	// Unvalid represents a non valid connection type
 	UnvalidConnType = "wrong"
 )
@@ -35,8 +35,11 @@ const typeAddressSep = "://"
 
 func connType(t string) ConnType {
 	ct := ConnType(t)
-	if ct == PlainTCP || ct == TLS || ct == PURB {
-		return ct
+	types := []ConnType{PlainTCP, TLS, PURB, Local}
+	for _, t := range types {
+		if t == ct {
+			return ct
+		}
 	}
 	return UnvalidConnType
 }
@@ -91,4 +94,37 @@ func (a Address) Valid() bool {
 		return false
 	}
 	return true
+}
+
+func (a Address) String() string {
+	return string(a)
+}
+
+func (a Address) Host() string {
+	na := a.NetworkAddress()
+	if na == "" {
+		return ""
+	}
+	h, _, e := net.SplitHostPort(a.NetworkAddress())
+	if e != nil {
+		return ""
+	}
+	return h
+}
+
+func (a Address) Port() string {
+	na := a.NetworkAddress()
+	if na == "" {
+		return ""
+	}
+	_, p, e := net.SplitHostPort(na)
+	if e != nil {
+		return ""
+	}
+	return p
+
+}
+
+func NewAddress(t ConnType, network string) Address {
+	return Address(string(t) + typeAddressSep + network)
 }

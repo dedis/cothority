@@ -260,7 +260,7 @@ func (cc *LocalConn) Tx() uint64 {
 }
 
 func (cc *LocalConn) Type() ConnType {
-	return Chan
+	return Local
 }
 
 type LocalListener struct {
@@ -303,7 +303,7 @@ func (ll *LocalListener) Stop() error {
 }
 
 func (ll *LocalListener) IncomingType() ConnType {
-	return Chan
+	return Local
 }
 
 type LocalHost struct {

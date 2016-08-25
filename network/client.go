@@ -93,3 +93,7 @@ func ErrMsg(em *Packet, err error) error {
 	}
 	return nil
 }
+
+func init() {
+	RegisterMessageType(&StatusRet{})
+}
