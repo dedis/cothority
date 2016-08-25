@@ -1,3 +1,4 @@
+# If you want to run this uncomment the lines in protocols/protocols.go
 Servers = 36
 Simulation = "ByzCoin"
 NumClientTxs = 100000
