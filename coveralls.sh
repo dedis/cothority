@@ -9,7 +9,7 @@ echo "mode: count" > profile.cov
 
 for dir in ${DIR_SOURCE};
 do
-    go test -short -covermode=count -coverprofile=$dir/profile.tmp $dir
+    go test -short -race -covermode=count -coverprofile=$dir/profile.tmp $dir
     if [ -f $dir/profile.tmp ]
     then
         cat $dir/profile.tmp | tail -n +2 >> profile.cov
