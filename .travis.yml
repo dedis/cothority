@@ -14,7 +14,6 @@ env:
 
 script:
   - make test
-  - ./coveralls.sh
 
 notifications:
   email: false
