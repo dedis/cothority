@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
-	. "github.com/dedis/cothority/services/medco/libmedco"
+	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
 // numberGrpAttr is the number of group attributes.
@@ -33,7 +33,7 @@ func TestService(t *testing.T) {
 	// Send a request to the service
 	client := medco.NewMedcoClient(el.List[0])
 
-	surveyDesc := SurveyDescription{1, 10}
+	surveyDesc := libmedco.SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
 	if err != nil {
 		t.Fatal("Service did not start.")
