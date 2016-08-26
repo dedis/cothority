@@ -1,4 +1,4 @@
-package medco_test
+package medco
 
 import (
 	"reflect"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/medco"
 	"github.com/dedis/cothority/services/medco/libmedco"
 )
 
@@ -31,7 +30,7 @@ func TestService(t *testing.T) {
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := medco.NewMedcoClient(el.List[0])
+	client := NewMedcoClient(el.List[0])
 
 	surveyDesc := libmedco.SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
@@ -42,9 +41,9 @@ func TestService(t *testing.T) {
 	//save values in a map to verify them at the end
 	expectedResults := make(map[[numberGrpAttr]int64][]int64)
 	log.Lvl1("Sending response data... ")
-	dataHolder := make([]*medco.API, 10)
+	dataHolder := make([]*API, 10)
 	for i := 0; i < numberAttr; i++ {
-		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
+		dataHolder[i] = NewMedcoClient(el.List[i%5])
 		grp := [numberGrpAttr]int64{}
 		aggr := make([]int64, 10)
 		grp[0] = int64(i % 4)
