@@ -36,8 +36,9 @@ test_playground:
 test_verbose:
 	go test -v -race -short ./...
 
+# use test_verbose instead if you want to use this Makefile locally
 test_go:
-	go test -race -short ./...
+	./coveralls.sh
 
 test: test_fmt test_lint test_go
 
