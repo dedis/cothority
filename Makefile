@@ -6,7 +6,7 @@ test_fmt:
 		echo "Files not properly formatted: $$files"; \
 		exit 1; \
 		fi; \
-		if ! go vet ./...; then \
+		if ! go vet -x ./...; then \
 		exit 1; \
 		fi \
 	}
@@ -42,4 +42,4 @@ test_go:
 
 test: test_fmt test_lint test_go
 
-all: install test
+all: test
