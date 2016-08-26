@@ -1,4 +1,4 @@
-package libmedco
+package libmedco_test
 
 import (
 	"reflect"
