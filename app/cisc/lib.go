@@ -29,31 +29,37 @@ type ciscConfig struct {
 	Follow []*identity.Identity
 }
 
-// loadConfig will try to load the configuration and fail if it can't load it.
-func loadConfig(c *cli.Context) (*ciscConfig, bool) {
+// loadConfig will try to load the configuration and `fatal` if it is there but
+// not valid. If the config-file is missing altogether, loaded will be false and
+// an empty config-file will be returned.
+func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
+	cfg = &ciscConfig{Identity: &identity.Identity{}}
+	loaded = true
+
 	configFile := getConfig(c)
 	log.Lvl2("Loading from", configFile)
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &ciscConfig{Identity: &identity.Identity{}},
-				true
+			return
 		}
 		log.ErrFatal(err)
 	}
 	_, msg, err := network.UnmarshalRegistered(buf)
 	log.ErrFatal(err)
-	cfg, ok := msg.(*ciscConfig)
-	if !ok {
+	cfg, loaded = msg.(*ciscConfig)
+	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}
-	return cfg, false
+	return
 }
 
 // loadConfigOrFail tries to load the config and fails if it doesn't succeed.
+// If a configuration has been loaded, it will update the config and propose
+// part of the identity.
 func loadConfigOrFail(c *cli.Context) *ciscConfig {
-	cfg, empty := loadConfig(c)
-	if cfg == nil || empty {
+	cfg, loaded := loadConfig(c)
+	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
 	}
 	log.ErrFatal(cfg.ConfigUpdate())
@@ -90,9 +96,10 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	authFile := dir + "/authorized_keys"
 	// Make backup
 	b, err := ioutil.ReadFile(authFile)
-	log.ErrFatal(err)
-	err = ioutil.WriteFile(authFile+".back", b, 0600)
-	log.ErrFatal(err)
+	if err == nil {
+		err = ioutil.WriteFile(authFile+".back", b, 0600)
+		log.ErrFatal(err)
+	}
 	log.Info("Made a backup of your", authFile, "before creating new one.")
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
@@ -170,11 +177,12 @@ func getGroup(c *cli.Context) *config.Group {
 	return groups
 }
 
-// retrieves ssh-config-name and ssh-directory
-func sshDirConfig(c *cli.Context) (string, string) {
-	sshDir := config.TildeToHome(c.GlobalString("cs"))
+// retrieves ssh-directory and ssh-config-name.
+func sshDirConfig(c *cli.Context) (sshDir string, sshConfig string) {
+	sshDir = config.TildeToHome(c.GlobalString("cs"))
 	log.ErrFatal(mkdir(sshDir, 0700))
-	return sshDir, sshDir + "/config"
+	sshConfig = sshDir + "/config"
+	return
 }
 
 // MakeSSHKeyPair make a pair of public and private keys for SSH access.

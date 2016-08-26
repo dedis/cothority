@@ -68,10 +68,29 @@ type Storage struct {
 	Data     *skipchain.SkipBlock
 }
 
-// AddIdentity will register a new SkipChain and add it to our list of
+// NewProtocol is called by the Overlay when a new protocol request comes in.
+func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", conf)
+	switch tn.ProtocolName() {
+	case "Propagate":
+		pi, err := manage.NewPropagateProtocol(tn)
+		if err != nil {
+			return nil, err
+		}
+		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
+		return pi, err
+	}
+	return nil, nil
+}
+
+/*
+ * API messages
+ */
+
+// CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
-	log.Lvlf3("%s Adding identity %x", s, ai.ID)
+func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
+	log.Lvlf3("%s Creating new identity with config %+v", s, ai.Config)
 	ids := &Storage{
 		Latest: ai.Config,
 	}
@@ -101,7 +120,7 @@ func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (netw
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
 	s.save()
 
-	return &AddIdentityReply{
+	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
 	}, nil
@@ -116,9 +135,8 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 	sid.Lock()
 	defer sid.Unlock()
 	log.Lvl3(s, "Sending config-update")
-	return &ConfigUpdate{
-		ID:          cu.ID,
-		AccountList: sid.Latest,
+	return &ConfigUpdateReply{
+		Config: sid.Latest,
 	}, nil
 }
 
@@ -151,9 +169,8 @@ func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) 
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ProposeUpdate{
-		ID:          cnc.ID,
-		AccountList: sid.Proposed,
+	return &ProposeUpdateReply{
+		Propose: sid.Proposed,
 	}, nil
 }
 
@@ -230,25 +247,14 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			return nil, err
 		}
 		s.save()
-		return sid.Data, nil
+		return &ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
 }
 
-// NewProtocol is called by the Overlay when a new protocol request comes in.
-func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", conf)
-	switch tn.ProtocolName() {
-	case "Propagate":
-		pi, err := manage.NewPropagateProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
-		return pi, err
-	}
-	return nil, nil
-}
+/*
+ * Internal messages
+ */
 
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.Body) {
@@ -376,7 +382,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		log.Error(err)
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.AddIdentity, s.ProposeUpdate, s.ConfigUpdate} {
+		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}

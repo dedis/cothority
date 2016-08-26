@@ -178,37 +178,45 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
-// AddIdentity starts a new identity-skipchain
-type AddIdentity struct {
-	*Config
-	*sda.Roster
+// CreateIdentity starts a new identity-skipchain with the initial
+// Config and asking all nodes in Roster to participate.
+type CreateIdentity struct {
+	Config *Config
+	Roster *sda.Roster
 }
 
-// AddIdentityReply is the reply when a new Identity has been added
-type AddIdentityReply struct {
+// CreateIdentityReply is the reply when a new Identity has been added. It
+// returns the Root and Data-skipchain.
+type CreateIdentityReply struct {
 	Root *skipchain.SkipBlock
 	Data *skipchain.SkipBlock
 }
 
-// AttachToIdentity requests to attach the manager-device to an
-// existing identity
-type AttachToIdentity struct {
-	ID     ID
-	Public abstract.Point
-}
-
-// ProposeUpdate verifies if a new config is available. On sending,
-// the ID is given, on receiving, the AccountList is given.
-type ProposeUpdate struct {
-	ID          ID
-	AccountList *Config
-}
-
-// ConfigUpdate verifies if a new update is available. On sending,
-// the ID is given, on receiving, the AccountList is given.
+// ConfigUpdate verifies if a new update is available.
 type ConfigUpdate struct {
-	ID          ID
-	AccountList *Config
+	ID ID
+}
+
+// ConfigUpdateReply returns the updated configuration.
+type ConfigUpdateReply struct {
+	Config *Config
+}
+
+// ProposeSend sends a new proposition to be stored in all identities. It
+// either replies a nil-message for success or an error.
+type ProposeSend struct {
+	ID ID
+	*Config
+}
+
+// ProposeUpdate verifies if a new config is available.
+type ProposeUpdate struct {
+	ID ID
+}
+
+// ProposeUpdateReply returns the updated propose-configuration.
+type ProposeUpdateReply struct {
+	Propose *Config
 }
 
 // ProposeVote sends the signature for a specific IdentityList. It replies nil
@@ -219,17 +227,17 @@ type ProposeVote struct {
 	Signature *crypto.SchnorrSig
 }
 
+// ProposeVoteReply returns the signed new skipblock if the threshold of
+// votes have arrived.
+type ProposeVoteReply struct {
+	Data *skipchain.SkipBlock
+}
+
 // Messages to be sent from one identity to another
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
 	*Storage
-}
-
-// ProposeSend sends a new proposition to be stored in all identities
-type ProposeSend struct {
-	ID ID
-	*Config
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock

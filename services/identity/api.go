@@ -10,7 +10,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
@@ -23,20 +22,25 @@ to vote on these configurations.
 
 func init() {
 	for _, s := range []interface{}{
+		// Structures
 		&Device{},
 		&Identity{},
 		&Config{},
 		&Storage{},
 		&Service{},
-		&AddIdentity{},
-		&AddIdentityReply{},
-		&PropagateIdentity{},
-		&ProposeSend{},
-		&AttachToIdentity{},
-		&ProposeUpdate{},
+		// API messages
+		&CreateIdentity{},
+		&CreateIdentityReply{},
 		&ConfigUpdate{},
-		&UpdateSkipBlock{},
+		&ConfigUpdateReply{},
+		&ProposeSend{},
+		&ProposeUpdate{},
+		&ProposeUpdateReply{},
 		&ProposeVote{},
+		&ProposeVoteReply{},
+		// Internal messages
+		&PropagateIdentity{},
+		&UpdateSkipBlock{},
 	} {
 		network.RegisterPacketType(s)
 	}
@@ -149,11 +153,11 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &AddIdentity{i.Config, i.Cothority})
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
 	if err != nil {
 		return err
 	}
-	air := msg.Msg.(AddIdentityReply)
+	air := msg.Msg.(CreateIdentityReply)
 	i.ID = ID(air.Data.Hash)
 
 	return nil
@@ -171,14 +175,13 @@ func (i *Identity) ProposeSend(il *Config) error {
 // needs approval from clients
 func (i *Identity) ProposeUpdate() error {
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
-		ID:          i.ID,
-		AccountList: nil,
+		ID: i.ID,
 	})
 	if err != nil {
 		return err
 	}
-	cnc := msg.Msg.(ProposeUpdate)
-	i.Proposed = cnc.AccountList
+	cnc := msg.Msg.(ProposeUpdateReply)
+	i.Proposed = cnc.Propose
 	return nil
 }
 
@@ -208,7 +211,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	_, ok := msg.Msg.(skipchain.SkipBlock)
+	_, ok := msg.Msg.(ProposeVoteReply)
 	if ok {
 		log.Lvl2("Threshold reached and signed")
 		i.Config = i.Proposed
@@ -229,8 +232,8 @@ func (i *Identity) ConfigUpdate() error {
 	if err != nil {
 		return err
 	}
-	cu := msg.Msg.(ConfigUpdate)
+	cu := msg.Msg.(ConfigUpdateReply)
 	// TODO - verify new config
-	i.Config = cu.AccountList
+	i.Config = cu.Config
 	return nil
 }

@@ -305,19 +305,21 @@ func sshDel(c *cli.Context) error {
 	if c.NArg() == 0 {
 		log.Fatal("Please give alias or host to delete from ssh")
 	}
-	ah := c.Args().First()
-	if len(cfg.Config.GetValue("ssh", cfg.DeviceName, ah)) == 0 {
-		log.Error("Didn't find alias or host", ah, "here is what I know:")
+	sc, err := NewSSHConfigFromFile(sshConfig)
+	log.ErrFatal(err)
+	// Converting ah to a hostname if found in ssh-config
+	host := sc.ConvertAliasToHostname(c.Args().First())
+	if len(cfg.Config.GetValue("ssh", cfg.DeviceName, host)) == 0 {
+		log.Error("Didn't find alias or host", host, "here is what I know:")
 		sshLs(c)
 		log.Fatal("Unknown alias or host.")
 	}
-	sc, err := NewSSHConfigFromFile(sshConfig)
-	log.ErrFatal(err)
-	sc.DelHost(ah)
+
+	sc.DelHost(host)
 	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
 	log.ErrFatal(err)
 	prop := cfg.GetProposed()
-	delete(prop.Data, "ssh:"+cfg.DeviceName+":"+ah)
+	delete(prop.Data, "ssh:"+cfg.DeviceName+":"+host)
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }

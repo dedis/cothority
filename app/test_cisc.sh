@@ -5,7 +5,7 @@ DBG_SHOW=1
 DBG_APP=2
 DBG_SRV=0
 # Uncomment to build in local dir
-STATICDIR=test
+#STATICDIR=test
 # Needs 4 clients
 NBR=4
 
@@ -71,16 +71,16 @@ testSSHDel(){
 	testOK runCl 1 ssh add -a s2 service2
 	testOK runCl 1 ssh add -a s3 service3
 	testGrep service1 runCl 1 ssh ls
-	testReGrep s2
-	testReGrep s3
+	testReGrep service2
+	testReGrep service3
 	testOK runCl 1 ssh rm service1
 	testNGrep service1 runCl 1 ssh ls
-	testReGrep s2
-	testReGrep s3
+	testReGrep service2
+	testReGrep service3
 	testOK runCl 1 ssh rm s2
-	testNGrep s2 runCl 1 ssh ls
-	testFail runCl 1 ssh rm service3
-	testGrep s3 runCl 1 ssh ls
+	testNGrep service2 runCl 1 ssh ls
+	testOK runCl 1 ssh rm service3
+	testNGrep service3 runCl 1 ssh ls
 }
 
 testSSHAdd(){
@@ -95,7 +95,7 @@ testSSHAdd(){
 	testFileGrep "Host s2\n\tHostName service2\n\tIdentityFile cl1/key_s2" cl1/config
 	testFile cl1/key_s2.pub
 	testFile cl1/key_s2
-	testGrep s2 runCl 1 ssh ls
+	testGrep service2 runCl 1 ssh ls
 	testReGrep client1
 
 	testOK runCl 1 ssh add -sec 4096 service3
