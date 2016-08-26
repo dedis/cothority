@@ -6,7 +6,7 @@ test_fmt:
 		echo "Files not properly formatted: $$files"; \
 		exit 1; \
 		fi; \
-		if ! go vet ./...; then \
+		if ! go vet -x ./...; then \
 		exit 1; \
 		fi \
 	}
