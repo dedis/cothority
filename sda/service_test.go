@@ -463,7 +463,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	hosts, el, _ := local.GenTree(4, false)
 
 	// create client
-	client := NewClient("BackForth")
+	client := local.NewClient("BackForth")
 
 	// create request
 	r := &SimpleRequest{
@@ -491,7 +491,7 @@ func TestClient_Send(t *testing.T) {
 	})
 	// create hosts
 	hosts, el, _ := local.GenTree(4, false)
-	client := NewClient("BackForth")
+	client := local.NewClient("BackForth")
 
 	r := &SimpleRequest{
 		ServerIdentities: el,
@@ -518,7 +518,7 @@ func TestClient_LocalSend(t *testing.T) {
 	})
 	// create hosts
 	hosts, el, _ := local.GenTree(4, false)
-	client := NewClient("BackForth")
+	client := local.NewClient("BackForth")
 
 	r := &SimpleRequest{
 		ServerIdentities: el,
@@ -534,6 +534,7 @@ func TestClient_LocalSend(t *testing.T) {
 
 func TestClient_Parallel(t *testing.T) {
 	log.AfterTest(t)
+	nbrNodes := 4
 	nbrParallel := 2
 	local := NewLocalTest()
 	defer local.CloseAll()
@@ -545,12 +546,7 @@ func TestClient_Parallel(t *testing.T) {
 		}
 	})
 	// create hosts
-	h1 := NewTCPHost(2000)
-	h2 := NewTCPHost(2001)
-	defer h1.Close()
-	defer h2.Close()
-
-	roster := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
+	hosts, el, _ := local.GenTree(nbrNodes, true)
 
 	wg := sync.WaitGroup{}
 	wg.Add(nbrParallel)
@@ -558,11 +554,11 @@ func TestClient_Parallel(t *testing.T) {
 		go func(i int) {
 			log.Lvl1("Starting message", i)
 			r := &SimpleRequest{
-				ServerIdentities: roster,
+				ServerIdentities: el,
 				Val:              10 * i,
 			}
-			client := NewClient("BackForth")
-			nm, err := client.Send(h1.ServerIdentity, r)
+			client := local.NewClient("BackForth")
+			nm, err := client.Send(hosts[0].ServerIdentity, r)
 			log.ErrFatal(err)
 
 			assert.Equal(t, nm.MsgType, SimpleResponseType)
@@ -699,15 +695,15 @@ func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *Clien
 		if err := s.ctx.SendRaw(e, &SimpleResponse{
 			Val: n,
 		}); err != nil {
-			log.Error(err)
+			log.Print(err)
 		}
 	})
 	if err != nil {
-		log.Error(err)
+		log.Print(err)
 		return
 	}
 	if err := s.ctx.RegisterProtocolInstance(proto); err != nil {
-		log.Error(err)
+		log.Print(err)
 	}
 	go proto.Start()
 }

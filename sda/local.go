@@ -25,11 +25,19 @@ type LocalTest struct {
 	Trees map[TreeID]*Tree
 	// All single nodes
 	Nodes []*TreeNodeInstance
+	// are we running tcp or local layer
+	mode string
 }
+
+var (
+	TCP   = "tcp"
+	Local = "local"
+)
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
+	network.LocalReset()
 	return &LocalTest{
 		Hosts:    make(map[network.ServerIdentityID]*Host),
 		Overlays: make(map[network.ServerIdentityID]*Overlay),
@@ -37,7 +45,16 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
+		mode:     Local,
 	}
+}
+
+// NewTCPTest returns a LocalTest but using a TCPRouter as the underlying
+// communication layer.
+func NewTCPTest() *LocalTest {
+	t := NewLocalTest()
+	t.mode = TCP
+	return t
 }
 
 // StartProtocol takes a name and a tree and will create a
@@ -70,7 +87,7 @@ func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, erro
 
 // GenHosts returns n Hosts with a localRouter
 func (l *LocalTest) GenHosts(n int) []*Host {
-	hosts := GenLocalHosts(n)
+	hosts := l.GenLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
@@ -285,11 +302,27 @@ func NewLocalHost(port int) *Host {
 	return h
 }
 
+func (l *LocalTest) NewClient(serviceName string) *Client {
+	switch l.mode {
+	case TCP:
+		return NewClient(serviceName)
+	default:
+		return NewLocalClient(serviceName)
+	}
+}
+
 // GenLocalHosts returns n hosts created with a localRouter
-func GenLocalHosts(n int) []*Host {
+func (l *LocalTest) GenLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewTCPHost(2000 + i*10)
+		var host *Host
+		port := 2000 + i*10
+		switch l.mode {
+		case TCP:
+			host = NewTCPHost(port)
+		default:
+			host = NewLocalHost(port)
+		}
 		hosts[i] = host
 	}
 	return hosts

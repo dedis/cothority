@@ -337,7 +337,6 @@ func negotiateOpen(own, remote *ServerIdentity, c Conn) error {
 	}
 	// verify the ServerIdentity if its the same we are supposed to connect
 	if dst.ID != remote.ID {
-		log.Lvl3(fmt.Sprintf("Wanted to connect to %s (%x) but got %s (%x)", remote.Address, remote.ID, dst.Address, dst.ID))
 		log.Lvl4("IDs not the same", log.Stack())
 		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}

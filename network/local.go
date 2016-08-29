@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -43,6 +44,36 @@ func (e *endpoints) reverse() endpoints {
 var localConnStore = &localConnStore_{
 	queues:    make(map[endpoints]*connQueue),
 	listening: make(map[Address]func(Conn)),
+}
+
+// String returns the string representation of this local store.
+func (ccc *localConnStore_) String() string {
+	var b bytes.Buffer
+	fmt.Fprintf(&b, "(LocalConnStore) Listening: ")
+	for a := range ccc.listening {
+		fmt.Fprintf(&b, "%s ", a)
+	}
+	fmt.Fprintf(&b, "\n(localConnStore) Connections: ")
+	for a := range ccc.queues {
+		fmt.Fprintf(&b, "[ %s -> %s ] ", a.local, a.remote)
+	}
+	return b.String()
+}
+
+// LocalDump returns a view of the local connections + listener present at
+// this time
+func LocalDump() string {
+	return localConnStore.String()
+}
+
+// LocalReset reset the whole map of connections + listener so it is like
+// a fresh localConnStore.
+func LocalReset() {
+	localConnStore = &localConnStore_{
+		queues:    make(map[endpoints]*connQueue),
+		listening: make(map[Address]func(Conn)),
+	}
+
 }
 
 // Put takes a new local connection object and stores it

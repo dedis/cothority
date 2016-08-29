@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/dedis/crypto/config"
@@ -32,7 +34,8 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 // the appropriate error as a network.Packet.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
-	sid := NewServerIdentity(kp.Public, "localClient")
+	id := rand.Intn(256) + 1
+	sid := NewServerIdentity(kp.Public, NewLocalAddress("localhost:"+strconv.Itoa(id)))
 
 	var c Conn
 	var err error
