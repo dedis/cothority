@@ -63,6 +63,7 @@ func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *
 }
 
 func (dm *DummyProtocol) Start() error {
+	log.Print(dm.Name(), "Start()")
 	dm.link <- true
 	if dm.config.Send {
 		/* if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {*/
@@ -70,15 +71,17 @@ func (dm *DummyProtocol) Start() error {
 		/*}*/
 		// also send to the children if any
 		if !dm.IsLeaf() {
-			if err := dm.SendTo(dm.Children()[0], &DummyMsg{}); err != nil {
+			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
 				log.Error(err)
 			}
+			log.Print(dm.Name(), "Sento to children?")
 		}
 	}
 	return nil
 }
 
 func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
+	log.Print(dm.Name(), "waiting in ProcessProtocolMsg")
 	dm.link <- true
 }
 
@@ -239,8 +242,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
-	go host.Start()
-	log.Lvl1("Host created and listening")
 	defer host.Stop()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity})
@@ -273,56 +274,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// wait for the link from the
 	// NOW expect false
 	waitOrFatalValue(ds.link, false, t)
-}
-
-func TestServiceProtocolProcessMessage(t *testing.T) {
-	log.AfterTest(t)
-	ds := &DummyService{
-		link: make(chan bool),
-	}
-	var count int
-	RegisterNewService("DummyService", func(c *Context, path string) Service {
-		if count == 0 {
-			count++
-			// the client does not need a Service
-			return &DummyService{link: make(chan bool)}
-		}
-		ds.c = c
-		ds.path = path
-		ds.Config = DummyConfig{
-			Send: true,
-		}
-		return ds
-	})
-
-	defer DeleteNewService("DummyService")
-	// fake a client
-	client := NewLocalHost(2010)
-	defer client.Close()
-
-	host := NewLocalHost(2000)
-	log.Lvl1("Host created and listening")
-	defer host.Close()
-	// create the entityList and tree
-	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity})
-	tree := el.GenerateBinaryTree()
-	// give it to the service
-	ds.fakeTree = tree
-
-	// Send a request to the service
-	b, err := network.MarshalRegisteredType(&DummyMsg{10})
-	log.ErrFatal(err)
-	re := &ClientRequest{
-		Service: ServiceFactory.ServiceID("DummyService"),
-		Data:    b,
-	}
-	log.Lvl1("Sending request to service...")
-	if err := client.Send(host.ServerIdentity, re); err != nil {
-		t.Fatal(err)
-	}
-	// wait for the link from the protocol
-	waitOrFatalValue(ds.link, true, t)
-
 }
 
 // test for calling the NewProtocol method on a remote Service
@@ -358,12 +309,10 @@ func TestServiceNewProtocol(t *testing.T) {
 
 	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
-	go host.Start()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
 	host2 := NewLocalHost(2002)
-	go host2.Start()
 	defer host2.Close()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
@@ -419,7 +368,6 @@ func TestServiceProcessor(t *testing.T) {
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
 	h1 := NewLocalHost(2000)
-	go h1.Start()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request
