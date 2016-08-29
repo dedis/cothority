@@ -22,9 +22,9 @@ type Conn interface {
 	// Type returns the type of this connection
 	Type() ConnType
 	// Gives the address of the remote endpoint
-	Remote() string
+	Remote() Address
 	// Returns the local address and port
-	Local() string
+	Local() Address
 	// reconnect is used when sending a message to a Conn, we might want to try
 	// to reconnect directly if an error occured to send the message again.
 	//reconnect() error
@@ -35,18 +35,19 @@ type Conn interface {
 // Listener is responsible for listening for incoming Conn on a particular
 // address.It can only accept one type of incoming Conn.
 type Listener interface {
-	// Listen will start listening for incoming connections on the given
-	// address. Each time there is an incoming Conn, it will call the given
+	// Listen will start listening for incoming connections
+	// Each time there is an incoming Conn, it will call the given
 	// function in a go routine with the incoming Conn as parameter.
 	// The call is BLOCKING.
-	Listen(string, func(Conn)) error
+	Listen(func(Conn)) error
 	// Stop will stop the listening. Implementations must take care of making
 	// Stop() a blocking call. Stop() should return when the Listener really
 	// has stopped listening,i.e. the call to Listen has returned.
 	Stop() error
-	// Type returns which type of connections does this listener accept as
-	// incoming connection.
-	IncomingType() ConnType
+
+	// what is the address this listener is listening to + what type of
+	// connection does it accept (address.ConnType())
+	Address() Address
 }
 
 // Host is an interface that can Listen for a specific type of Conn and can
@@ -55,5 +56,5 @@ type Listener interface {
 type Host interface {
 	Listener
 
-	Connect(sid *ServerIdentity) (Conn, error)
+	Connect(addr Address) (Conn, error)
 }

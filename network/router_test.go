@@ -8,17 +8,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func NewTestRouterTCP(port int) *Router {
-	h := NewTestTCPHost(port)
-	return NewRouter(h.id, h)
+func NewTestRouterTCP(port int) (*Router, error) {
+	h, err := NewTestTCPHost(port)
+	if err != nil {
+		return nil, err
+	}
+	id := NewTestServerIdentity(h.addr)
+	return NewRouter(id, h), nil
 }
 
-func NewTestRouterLocal(port int) *Router {
-	h := NewTestLocalHost(port)
-	return NewRouter(h.id, h)
+func NewTestRouterLocal(port int) (*Router, error) {
+	h, err := NewTestLocalHost(port)
+	if err != nil {
+		return nil, err
+	}
+	id := NewTestServerIdentity(h.addr)
+	return NewRouter(id, h), nil
 }
 
-type routerFactory func(port int) *Router
+type routerFactory func(port int) (*Router, error)
 
 // Test if router fits the interface such as calling Run(), then Stop(),
 // should return
@@ -30,7 +38,10 @@ func TestRouterLocal(t *testing.T) {
 }
 
 func testRouter(t *testing.T, fac routerFactory) {
-	h := fac(2004)
+	h, err := fac(2004)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var stop = make(chan bool)
 	go func() {
 		stop <- true
@@ -59,8 +70,8 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
-	h1 := fac(2007)
-	h2 := fac(2008)
+	h1, err := fac(2007)
+	h2, err := fac(2008)
 	go h2.Start()
 
 	proc := newSimpleMessageProc(t)
@@ -68,10 +79,9 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	defer func() {
 		h1.Stop()
 		h2.Stop()
-		time.Sleep(250 * time.Millisecond)
 	}()
 
-	err := h1.Send(h2.id, &SimpleMessage{12})
+	err = h1.Send(h2.id, &SimpleMessage{12})
 	if err != nil {
 		t.Fatal("Couldn't send message:", err)
 	}
@@ -86,8 +96,12 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 // Test connection of multiple Hosts and sending messages back and forth
 // also tests for the counterIO interface that it works well
 func TestRouterMessaging(t *testing.T) {
-	h1 := NewTestRouterTCP(2009)
-	h2 := NewTestRouterTCP(2010)
+	h1, err1 := NewTestRouterTCP(2009)
+	h2, err2 := NewTestRouterTCP(2010)
+	if err1 != nil || err2 != nil {
+		t.Fatal("Could not setup hosts")
+	}
+
 	go h1.Start()
 	go h2.Start()
 
@@ -136,8 +150,11 @@ func TestRouterSendMsgDuplexLocal(t *testing.T) {
 	testRouterSendMsgDuplex(t, NewTestRouterLocal)
 }
 func testRouterSendMsgDuplex(t *testing.T, fac routerFactory) {
-	h1 := fac(2011)
-	h2 := fac(2012)
+	h1, err1 := fac(2011)
+	h2, err2 := fac(2012)
+	if err1 != nil || err2 != nil {
+		t.Fatal("Could not setup hosts")
+	}
 	go h1.Start()
 	go h2.Start()
 
@@ -168,12 +185,11 @@ func testRouterSendMsgDuplex(t *testing.T, fac routerFactory) {
 }
 
 func TestRouterExchange(t *testing.T) {
-
-	entity1 := NewTestServerIdentity("tcp://localhost:7878")
-	entity2 := NewTestServerIdentity("tcp://localhost:8787")
-
-	router1 := NewRouter(entity1, NewTCPHost(entity1))
-	router2 := NewRouter(entity2, NewTCPHost(entity2))
+	router1, err := NewTestRouterTCP(7878)
+	router2, err2 := NewTestRouterTCP(8787)
+	if err != nil || err2 != nil {
+		t.Fatal("Could not setup host", err, err2)
+	}
 
 	done := make(chan bool)
 	go func() {
@@ -183,31 +199,31 @@ func TestRouterExchange(t *testing.T) {
 	}()
 	<-done
 	// try correctly
-	c, err := NewTCPConn(entity1.Address.NetworkAddress())
+	c, err := NewTCPConn(router1.id.Address)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(entity1, c); err != nil {
+	if err := router2.negotiateOpen(router1.id, c); err != nil {
 		t.Fatal("Wrong negotiation")
 	}
 	c.Close()
 
 	// try giving wrong id
-	c, err = NewTCPConn(entity1.Address.NetworkAddress())
+	c, err = NewTCPConn(router1.id.Address)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(entity2, c); err == nil {
+	if err := router2.negotiateOpen(router2.id, c); err == nil {
 		t.Fatal("negotiation should have aborted")
 	}
 	c.Close()
 
 	log.Lvl4("Closing connections")
 	if err := router2.Stop(); err != nil {
-		t.Fatal("Couldn't close host", router2)
+		t.Fatal("Couldn't close host", err)
 	}
 	if err := router1.Stop(); err != nil {
-		t.Fatal("Couldn't close host", router1)
+		t.Fatal("Couldn't close host", err)
 	}
 	<-done
 }

@@ -55,7 +55,7 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 func (r *Router) Start() {
 	// The function given to the listener  does the exchange of ServerIdentity
 	// and pass the connection along to the router.
-	err := r.host.Listen(r.id.Address.NetworkAddress(), func(c Conn) {
+	err := r.host.Listen(func(c Conn) {
 		dst, err := r.exchangeServerIdentity(c)
 		if err != nil {
 			log.Error("ExchangeServerIdentity failed:", err)
@@ -93,7 +93,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	defer r.connsMut.Unlock()
 	// connect function to connect + exchange + register + handle
 	var connect = func() (Conn, error) {
-		c, err := r.host.Connect(e)
+		c, err := r.host.Connect(e.Address)
 
 		if err != nil {
 			return nil, err
@@ -157,12 +157,15 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			r.closedMut.Lock()
 			log.Lvlf4("%+v got error (%+s) while receiving message (isClosed=%+v)",
 				r.id.String(), err, r.isClosed)
+
 			if r.isClosed {
 				// request to finish handling conn
 				r.handleConnQuit <- true
 			} else if err == ErrClosed || err == ErrEOF || err == ErrTemp {
+				// remote connection closed
 				r.closeConnection(remote, c)
 			} else {
+				// weird error let's try again
 				r.closedMut.Unlock()
 				log.Error(r.id, "Error with connection", address, "=>", err)
 				continue
@@ -306,7 +309,6 @@ func (h *Router) negotiateOpen(e *ServerIdentity, c Conn) error {
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
 	// Send our ServerIdentity to the remote endpoint
 	log.Lvl4(own.Address, "Sending our identity to", c.Remote())
-
 	if err := c.Send(context.TODO(), own); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}

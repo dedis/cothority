@@ -18,8 +18,11 @@ type SimplePacket struct {
 }
 
 func TestTCPConnListenerExample(t *testing.T) {
-	server := NewTCPListener()
-	addr := "127.0.0.1:2000"
+	addr := NewTCPAddress("127.0.0.1:2000")
+	server, err := NewTCPListener(addr)
+	if err != nil {
+		t.Fatal("Could not setup listener")
+	}
 	serverName := "server"
 	clientName := "client"
 
@@ -29,7 +32,7 @@ func TestTCPConnListenerExample(t *testing.T) {
 	srvConMu := sync.Mutex{}
 	cConMu := sync.Mutex{}
 	go func() {
-		err := server.Listen(addr, func(c Conn) {
+		err := server.Listen(func(c Conn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()

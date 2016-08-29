@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dedis/crypto/config"
@@ -33,9 +34,16 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	sid := NewServerIdentity(kp.Public, "localClient")
 
-	c, err := cl.connector(sid, dst)
-	if err != nil {
-		return nil, err
+	var c Conn
+	var err error
+	for i := 0; i < MaxRetry; i++ {
+		c, err = cl.connector(sid, dst)
+		if err == nil {
+			break
+		} else if i == MaxRetry-1 {
+			return nil, fmt.Errorf("Could not connect", err)
+		}
+		time.Sleep(WaitRetry)
 	}
 	defer c.Close()
 

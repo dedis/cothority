@@ -33,7 +33,7 @@ func TestTCPConn(t *testing.T) {
 
 	// get addr
 	listeningAddr := <-addr
-	c, err := NewTCPConn(listeningAddr)
+	c, err := NewTCPConn(NewTCPAddress(listeningAddr))
 	assert.Nil(t, err)
 	assert.Nil(t, c.Close())
 	// tell the listener to close
@@ -43,12 +43,15 @@ func TestTCPConn(t *testing.T) {
 }
 
 func TestTCPConnWithListener(t *testing.T) {
-	ln := NewTCPListener()
+	addr := NewTCPAddress("127.0.0.1:5678")
+	ln, err := NewTCPListener(addr)
+	if err != nil {
+		t.Fatal("error setup listener", err)
+	}
 	ready := make(chan bool)
 	stop := make(chan bool)
 	connStat := make(chan uint64)
 
-	addr := "127.0.0.1:5678"
 	connFn := func(c Conn) {
 		connStat <- c.Rx()
 		c.Receive(context.TODO())
@@ -56,7 +59,7 @@ func TestTCPConnWithListener(t *testing.T) {
 	}
 	go func() {
 		ready <- true
-		err := ln.Listen(addr, connFn)
+		err := ln.Listen(connFn)
 		assert.Nil(t, err, "Listener stop incorrectly")
 		stop <- true
 	}()
@@ -86,25 +89,28 @@ func TestTCPConnWithListener(t *testing.T) {
 
 // will create a TCPListener & open a golang net.TCPConn to it
 func TestTCPListener(t *testing.T) {
-	ln := NewTCPListener()
+	addr := NewTCPAddress("127.0.0.1:5678")
+	ln, err := NewTCPListener(addr)
+	if err != nil {
+		t.Fatal("Error setup listener:", err)
+	}
 	ready := make(chan bool)
 	stop := make(chan bool)
 	connReceived := make(chan bool)
 
-	addr := "127.0.0.1:5678"
 	connFn := func(c Conn) {
 		connReceived <- true
 		c.Close()
 	}
 	go func() {
 		ready <- true
-		err := ln.Listen(addr, connFn)
+		err := ln.Listen(connFn)
 		assert.Nil(t, err, "Listener stop incorrectly")
 		stop <- true
 	}()
 
 	<-ready
-	_, err := net.Dial("tcp", addr)
+	_, err = net.Dial("tcp", addr.NetworkAddress())
 	assert.Nil(t, err, "Could not open connection")
 	<-connReceived
 	assert.Nil(t, ln.Stop(), "Error stopping listener")
@@ -117,11 +123,11 @@ func TestTCPListener(t *testing.T) {
 
 // Test setting up of Host
 func TestTCPHostNew(t *testing.T) {
-	h1 := NewTestTCPHost(2000)
-	if h1 == nil {
+	h1, err := NewTestTCPHost(2000)
+	if err != nil {
 		t.Fatal("Couldn't setup a Host")
 	}
-	err := h1.Stop()
+	err = h1.Stop()
 	if err != nil {
 		t.Fatal("Couldn't close", err)
 	}
@@ -129,10 +135,16 @@ func TestTCPHostNew(t *testing.T) {
 
 // Test closing and opening of Host on same address
 func TestTCPHostClose(t *testing.T) {
-	h1 := NewTestTCPHost(2001)
-	h2 := NewTestTCPHost(2002)
-	go h1.Listen(h1.id.Address.NetworkAddress(), acceptAndClose)
-	_, err := h2.Connect(h1.id)
+	h1, err := NewTestTCPHost(2001)
+	if err != nil {
+		t.Fatal("Error setup TestTCPHost")
+	}
+	h2, err2 := NewTestTCPHost(2002)
+	if err2 != nil {
+		t.Fatal("Error setup TestTCPHost2")
+	}
+	go h1.Listen(acceptAndClose)
+	_, err = h2.Connect(h1.addr)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
 	}
@@ -147,9 +159,12 @@ func TestTCPHostClose(t *testing.T) {
 		t.Fatal("Couldn't close:", err)
 	}
 	log.Lvl3("Finished first connection, starting 2nd")
-	h3 := NewTestTCPHost(2003)
-	go h3.Listen(h3.id.Address.NetworkAddress(), acceptAndClose)
-	_, err = h2.Connect(h3.id)
+	h3, err3 := NewTestTCPHost(2003)
+	if err3 != nil {
+		t.Fatal("Could not setup host", err)
+	}
+	go h3.Listen(acceptAndClose)
+	_, err = h2.Connect(h3.addr)
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
@@ -251,15 +266,15 @@ func init() {
 	SimpleMessageType = RegisterMessageType(SimpleMessage{})
 }
 
-func NewTestTCPHost(port int) *TCPHost {
-	addr := "tcp://127.0.0.1:" + strconv.Itoa(port)
-	return NewTCPHost(NewTestServerIdentity(addr))
+func NewTestTCPHost(port int) (*TCPHost, error) {
+	addr := NewTCPAddress("127.0.0.1:" + strconv.Itoa(port))
+	return NewTCPHost(addr)
 }
 
 // Returns a ServerIdentity out of the address
-func NewTestServerIdentity(address string) *ServerIdentity {
+func NewTestServerIdentity(address Address) *ServerIdentity {
 	kp := config.NewKeyPair(Suite)
-	e := NewServerIdentity(kp.Public, Address(address))
+	e := NewServerIdentity(kp.Public, address)
 	return e
 }
 

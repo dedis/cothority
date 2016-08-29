@@ -15,15 +15,19 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-func NewTCPRouter(sid *ServerIdentity) *Router {
-	return NewRouter(sid, NewTCPHost(sid))
+func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
+	h, err := NewTCPHost(sid.Address)
+	if err != nil {
+		return nil, err
+	}
+	return NewRouter(sid, h), nil
 }
 
 // TCPConn is the underlying implementation of
 // Conn using plain Tcp.
 type TCPConn struct {
 	// The name of the endpoint we are connected to.
-	endpoint string
+	endpoint Address
 
 	// The connection used
 	conn net.Conn
@@ -44,11 +48,12 @@ type TCPConn struct {
 }
 
 // NewTCPConn will open a TCPConn to the given address.
-func NewTCPConn(address string) (*TCPConn, error) {
+func NewTCPConn(addr Address) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
+	netAddr := addr.NetworkAddress()
 	for i := 0; i < MaxRetry; i++ {
-		conn, err = net.Dial("tcp", address)
+		conn, err = net.Dial("tcp", netAddr)
 		if err != nil {
 			time.Sleep(WaitRetry)
 		} else {
@@ -57,10 +62,10 @@ func NewTCPConn(address string) (*TCPConn, error) {
 		time.Sleep(WaitRetry)
 	}
 	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s: %s", address, err)
+		return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
 	}
 	c := TCPConn{
-		endpoint: address,
+		endpoint: addr,
 		conn:     conn,
 	}
 	return &c, err
@@ -184,13 +189,13 @@ func (c *TCPConn) send(b []byte) error {
 
 // Remote returns the name of the peer at the end point of
 // the connection
-func (c *TCPConn) Remote() string {
+func (c *TCPConn) Remote() Address {
 	return c.endpoint
 }
 
 // Local returns the local address and port
-func (c *TCPConn) Local() string {
-	return c.conn.LocalAddr().String()
+func (c *TCPConn) Local() Address {
+	return NewTCPAddress(c.conn.LocalAddr().String())
 }
 
 func (c *TCPConn) Type() ConnType {
@@ -279,34 +284,30 @@ type TCPListener struct {
 	listeningLock sync.Mutex
 	listening     bool
 
-	connType ConnType
+	// listening addr (actual). Useful for listening on :0 port
+	addr net.Addr
 }
 
-// NewTCPLIstener returns a Listener that listens on a TCP port
-func NewTCPListener() *TCPListener {
-	return &TCPListener{
+// NewTCPLIstener returns a Listener. This function tries to bind to the given
+// address already.It returns the listener and an error if one occured during
+// the binding. A subsequent call to Address() will give the real listening
+// address (useful if you set it to port :0).
+func NewTCPListener(addr Address) (*TCPListener, error) {
+	l := &TCPListener{
 		quit:         make(chan bool),
 		quitListener: make(chan bool),
-		connType:     PlainTCP,
 	}
+	return l, l.bind(addr)
 }
 
-// Listen implements the Listener interface
-func (t *TCPListener) Listen(addr string, fn func(Conn)) error {
-	receiver := func(tc *TCPConn) {
-		go fn(tc)
-	}
-	return t.listen(addr, receiver)
-}
-
-// listen is the private function that takes a function that takes a TCPConn.
-// That way we can control what to do of the TCPConn before returning it to the
-// function given by the user. fn is called in the same routine.
-func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
+func (t *TCPListener) bind(addr Address) error {
 	t.listeningLock.Lock()
+	defer t.listeningLock.Unlock()
+	if t.listening == true {
+		return errors.New("Already listening")
+	}
 	t.listening = true
-	t.quit = make(chan bool)
-	global, _ := GlobalBind(addr)
+	global, _ := GlobalBind(addr.NetworkAddress())
 	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)
 		if err == nil {
@@ -318,8 +319,22 @@ func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
 		}
 		time.Sleep(WaitRetry)
 	}
+	t.addr = t.listener.Addr()
+	return nil
+}
 
-	t.listeningLock.Unlock()
+// Listen implements the Listener interface
+func (t *TCPListener) Listen(fn func(Conn)) error {
+	receiver := func(tc *TCPConn) {
+		go fn(tc)
+	}
+	return t.listen(receiver)
+}
+
+// listen is the private function that takes a function that takes a TCPConn.
+// That way we can control what to do of the TCPConn before returning it to the
+// function given by the user. fn is called in the same routine.
+func (t *TCPListener) listen(fn func(*TCPConn)) error {
 	for {
 		conn, err := t.listener.Accept()
 		if err != nil {
@@ -332,7 +347,7 @@ func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
 			continue
 		}
 		c := TCPConn{
-			endpoint: conn.RemoteAddr().String(),
+			endpoint: NewTCPAddress(conn.RemoteAddr().String()),
 			conn:     conn,
 		}
 		fn(&c)
@@ -342,14 +357,13 @@ func (t *TCPListener) listen(addr string, fn func(*TCPConn)) error {
 // Stop will stop the listener. It is a blocking call.
 func (t *TCPListener) Stop() error {
 	// lets see if we launched a listening routing
-	var listening bool
 	t.listeningLock.Lock()
-	listening = t.listening
 	defer t.listeningLock.Unlock()
 	// we are NOT listening
-	if !listening {
+	if !t.listening {
 		return nil
 	}
+	t.listening = false
 
 	close(t.quit)
 
@@ -357,6 +371,9 @@ func (t *TCPListener) Stop() error {
 	for !stop {
 		if t.listener != nil {
 			if err := t.listener.Close(); err != nil {
+				if handleError(err) == ErrClosed {
+					return nil
+				}
 				return err
 			}
 		}
@@ -367,41 +384,48 @@ func (t *TCPListener) Stop() error {
 			continue
 		}
 	}
+	t.quit = make(chan bool)
 	return nil
 }
 
-func (t *TCPListener) IncomingType() ConnType {
-	return t.connType
+func (t *TCPListener) Address() Address {
+	t.listeningLock.Lock()
+	defer t.listeningLock.Unlock()
+	return NewAddress(PlainTCP, t.addr.String())
 }
 
 // TCPHost implements the Host interface
 type TCPHost struct {
-	// Mostly there for logging purposes
-	id *ServerIdentity
-
+	addr Address
 	*TCPListener
 }
 
 // NewTCPHost returns a fresh Host using TCP connection based type
-func NewTCPHost(sid *ServerIdentity) *TCPHost {
-	return &TCPHost{
-		id:          sid,
-		TCPListener: NewTCPListener(),
+func NewTCPHost(addr Address) (*TCPHost, error) {
+	h := &TCPHost{
+		addr: addr,
 	}
+	var err error
+	h.TCPListener, err = NewTCPListener(addr)
+	return h, err
 }
 
-func (t *TCPHost) Connect(sid *ServerIdentity) (Conn, error) {
-	switch sid.Address.ConnType() {
+func (t *TCPHost) Connect(addr Address) (Conn, error) {
+	switch addr.ConnType() {
 	case PlainTCP:
-		c, err := NewTCPConn(sid.Address.NetworkAddress())
+		c, err := NewTCPConn(addr)
 		return c, err
 	}
-	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", t.id, sid.Address.ConnType())
+	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", addr, addr.ConnType())
 }
 
 func NewTCPClient() *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		return NewTCPConn(remote.Address.NetworkAddress())
+		return NewTCPConn(remote.Address)
 	}
 	return newClient(fn)
+}
+
+func NewTCPAddress(addr string) Address {
+	return NewAddress(PlainTCP, addr)
 }

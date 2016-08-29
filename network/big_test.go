@@ -42,13 +42,18 @@ func TestTCPHugeConnections(t *testing.T) {
 	// are no connections from one host to itself.
 	conns := make([][]Conn, nbrHosts)
 	wg := sync.WaitGroup{}
+	var err error
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
-		ids[i] = NewTestServerIdentity("tcp://localhost:" + strconv.Itoa(2000+i))
-		hosts[i] = NewTCPListener()
+		addr := NewTCPAddress("localhost:" + strconv.Itoa(2000+i))
+		ids[i] = NewTestServerIdentity(addr)
+		hosts[i], err = NewTCPListener(addr)
+		if err != nil {
+			t.Fatal("Error setting up host:", err)
+		}
 		log.Lvl5("Host is", hosts[i], "id is", ids[i])
 		go func(h int) {
-			err := hosts[h].Listen(ids[h].Address.NetworkAddress(), func(c Conn) {
+			err := hosts[h].Listen(func(c Conn) {
 				log.Lvl5(2000+h, "got a connection")
 				nm, err := c.Receive(context.TODO())
 				if err != nil {
@@ -85,7 +90,7 @@ func TestTCPHugeConnections(t *testing.T) {
 			wg.Add(1)
 			var err error
 			log.Lvl5("Connecting", ids[i], "with", ids[j])
-			conns[i][j], err = NewTCPConn(ids[j].Address.NetworkAddress())
+			conns[i][j], err = NewTCPConn(ids[j].Address)
 			if err != nil {
 				t.Fatal("Couldn't open:", err)
 			}

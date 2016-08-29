@@ -17,7 +17,10 @@ func TestClientLocal(t *testing.T) {
 type clientFactory func() *Client
 
 func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
-	r := fac(2000)
+	r, err := fac(2000)
+	if err != nil {
+		t.Fatal(err)
+	}
 	go r.Start()
 	defer r.Stop()
 

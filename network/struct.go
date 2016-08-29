@@ -55,7 +55,7 @@ type Packet struct {
 	// ServerIdentity of the others.
 	ServerIdentity *ServerIdentity
 	// the origin of the message
-	From string
+	From Address
 	// What kind of msg do we have
 	MsgType MessageTypeID
 	// The underlying message
