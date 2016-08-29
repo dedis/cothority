@@ -28,11 +28,11 @@ func NewBlockchain(path string, magic [4]byte) (blockchain *Blockchain, err erro
 
 	f, err := os.Open(blkfilename(path, 0))
 	if err != nil {
-		return
+		return blockchain, err
 	}
 
 	blockchain.CurrentFile = f
-	return
+	return blockchain, err
 }
 
 // NextBlock() returns the next block in the chain

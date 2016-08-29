@@ -26,7 +26,10 @@ func NewParser(path string, magic [4]byte) (parser *Parser, err error) {
 
 func (p *Parser) Parse(first_block, last_block int) ([]blkparser.Tx, error) {
 
-	Chain, _ := blkparser.NewBlockchain(p.Path, p.Magic)
+	Chain, err := blkparser.NewBlockchain(p.Path, p.Magic)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var transactions []blkparser.Tx
 
