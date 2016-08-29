@@ -15,10 +15,6 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
-
 func TestCopy(t *testing.T) {
 	// Create random-file with length (nearly) double of the blocksize.
 	tmpfile, err := ioutil.TempFile("", "test")
