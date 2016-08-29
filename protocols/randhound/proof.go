@@ -27,10 +27,10 @@ type ProofBase struct {
 
 // ProofCore contains the core elements of the NIZK dlog-equality proof.
 type ProofCore struct {
-	c  abstract.Scalar // challenge
-	r  abstract.Scalar // response
-	vG abstract.Point  // public commitment with respect to base point G
-	vH abstract.Point  // public commitment with respect to base point H
+	C  abstract.Scalar // challenge
+	R  abstract.Scalar // response
+	VG abstract.Point  // public commitment with respect to base point G
+	VH abstract.Point  // public commitment with respect to base point H
 }
 
 // NewProof creates a new NIZK dlog-equality proof.
@@ -49,8 +49,8 @@ func NewProof(suite abstract.Suite, g []abstract.Point, h []abstract.Point, core
 	return &Proof{suite: suite, base: base, core: core}, nil
 }
 
-// Setup initializes the proof by randomly selecting a commitment v and then
-// determining the challenge c = H(xG,xH,vG,vH) and the response r = v - cx.
+// Setup initializes the proof by randomly selecting a commitment v,
+// determining the challenge c = H(xG,xH,vG,vH), and the response r = v - cx.
 func (p *Proof) Setup(scalar ...abstract.Scalar) ([]abstract.Point, []abstract.Point, []ProofCore, error) {
 
 	if len(scalar) != len(p.base) {
@@ -142,14 +142,14 @@ func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, error) 
 	var failed []int
 	for i := 0; i < len(p.base); i++ {
 
-		rG := p.suite.Point().Mul(p.base[i].g, p.core[i].r)
-		rH := p.suite.Point().Mul(p.base[i].h, p.core[i].r)
-		cxG := p.suite.Point().Mul(xG[i], p.core[i].c)
-		cxH := p.suite.Point().Mul(xH[i], p.core[i].c)
+		rG := p.suite.Point().Mul(p.base[i].g, p.core[i].R)
+		rH := p.suite.Point().Mul(p.base[i].h, p.core[i].R)
+		cxG := p.suite.Point().Mul(xG[i], p.core[i].C)
+		cxH := p.suite.Point().Mul(xH[i], p.core[i].C)
 		a := p.suite.Point().Add(rG, cxG)
 		b := p.suite.Point().Add(rH, cxH)
 
-		if !(p.core[i].vG.Equal(a) && p.core[i].vH.Equal(b)) {
+		if !(p.core[i].VG.Equal(a) && p.core[i].VH.Equal(b)) {
 			failed = append(failed, i)
 		}
 	}
@@ -174,8 +174,8 @@ func NewPVSS(s abstract.Suite, h abstract.Point, t int) *PVSS {
 	return &PVSS{suite: s, h: h, t: t}
 }
 
-// Split creates PVSS shares encrypted with the keys in X and furthermore
-// provides NIZK encryption consistency proofs.
+// Split creates PVSS shares encrypted by the public keys in X and
+// provides a NIZK encryption consistency proof for each share.
 func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Point, []ProofCore, []byte, error) {
 
 	n := len(X)
@@ -189,7 +189,7 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Po
 	// Create public polynomial commitments with respect to basis H
 	P := new(poly.PubPoly).Commit(p, pv.h)
 
-	// Prepare data for verification proofs
+	// Prepare data for encryption consistency proofs ...
 	share := make([]abstract.Scalar, n)
 	H := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
@@ -197,7 +197,7 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Po
 		H[i] = pv.h
 	}
 
-	// Create encryption consistency proof
+	// ... and create them
 	proof, err := NewProof(pv.suite, H, X, nil)
 	if err != nil {
 		return nil, nil, nil, err
@@ -245,13 +245,13 @@ func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]abstract.Point, error)
 		if err := P.UnmarshalBinary(polyBin[i]); err != nil {
 			return nil, err
 		}
-		sH[i] = P.Eval(index[i]) // XXX: probably needs an index parameter to better control which commits are reconstructed
+		sH[i] = P.Eval(index[i])
 	}
 	return sH, nil
 }
 
 // Reveal decrypts the shares in xS using the secret key x and creates an NIZK
-// decryption consistency proof.
+// decryption consistency proof for each share.
 func (pv *PVSS) Reveal(x abstract.Scalar, xS []abstract.Point) ([]abstract.Point, []ProofCore, error) {
 
 	// Decrypt shares

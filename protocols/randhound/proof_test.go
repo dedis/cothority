@@ -28,7 +28,7 @@ func TestProof(t *testing.T) {
 	// 2nd secret value
 	y := suite.Scalar().Pick(random.Stream)
 
-	// Create proof
+	// Create proofs
 	g := []abstract.Point{g1, g2}
 	h := []abstract.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
@@ -41,7 +41,7 @@ func TestProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Verify proof
+	// Verify proofs
 	q, err := randhound.NewProof(suite, g, h, core)
 	if err != nil {
 		t.Fatal(err)
@@ -133,7 +133,7 @@ func TestPVSS(t *testing.T) {
 	// (2) Share-Decryption (Trustee)
 	pbx := make([][]byte, n)
 	for i := 0; i < n; i++ {
-		pbx[i] = pb // NOTE: polynomials can be  different
+		pbx[i] = pb // NOTE: polynomials can be different
 	}
 	sH, err := pvss.Commits(pbx, index)
 	if err != nil {
@@ -164,7 +164,7 @@ func TestPVSS(t *testing.T) {
 		t.Fatal("decProof:", err, e)
 	}
 
-	// (3) Share-Recovery (Dealer)
+	// (3) Secret-Recovery (Dealer)
 	recovered, err := pvss.Recover(S)
 	if err != nil {
 		t.Fatal(err)

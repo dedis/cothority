@@ -11,11 +11,13 @@ import (
 
 func TestRandHound(t *testing.T) {
 
+	// XXX: nodes 17, groups 3 fails
+
 	var name = "RandHound"
 	var nodes uint32 = 10
 	var faulty uint32 = 2
 	var purpose string = "RandHound test run"
-	var groups uint32 = 1
+	var groups uint32 = 2
 
 	_ = faulty
 	_ = purpose
@@ -38,7 +40,9 @@ func TestRandHound(t *testing.T) {
 	}
 	//log.Lvlf1("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
 	log.Lvlf1("RandHound - groups: %d\n", groups)
-	protocol.Start()
+	if err := protocol.Start(); err != nil {
+		t.Fatal(err)
+	}
 
 	select {
 	case <-rh.Done:
