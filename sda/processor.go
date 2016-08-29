@@ -129,14 +129,14 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.MessageTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
-		return &StatusRet{"Didn't register message-handler: " + mt.String()}
+		return &network.StatusRet{"Didn't register message-handler: " + mt.String()}
 	}
 
 	//to0 := reflect.TypeOf(fu).In(0)
 	to1 := reflect.TypeOf(fu).In(1)
 	f := reflect.ValueOf(fu)
 
-	log.Lvl4("Dispatching to", e.Addresses)
+	log.Lvl4("Dispatching to", e.Address)
 	arg0 := reflect.New(reflect.TypeOf(network.ServerIdentity{}))
 	arg0.Elem().Set(reflect.ValueOf(e).Elem())
 	arg1 := reflect.New(to1.Elem())
@@ -147,12 +147,12 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.Messag
 	errI := ret[1].Interface()
 
 	if errI != nil {
-		return &StatusRet{errI.(error).Error()}
+		return &network.StatusRet{errI.(error).Error()}
 	}
 
 	reply := ret[0].Interface()
 	if reply == nil {
-		reply = StatusOK
+		reply = network.StatusOK
 	}
 	return reply
 }

@@ -3,9 +3,10 @@ package sda
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"testing"
 )
 
 var testProto = "test"
@@ -71,9 +72,14 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 	return nil
 }
 
+type SimpleMessage struct {
+	I int
+}
+
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
+	log.AfterTest(t)
 	testProtoName := "testProto"
 	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
 	if !ProtocolExists(testProtoID) {
@@ -91,6 +97,7 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
+	log.AfterTest(t)
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)

@@ -234,34 +234,6 @@ func TestTCPHostClose(t *testing.T) {
 //[>log.ErrFatal(sendrcv_proc(h1, h2))<]
 /*}*/
 
-// Testing exchange of entity
-
-func TestChanHost(t *testing.T) {
-	/*m1 := NewLocalHost(NewTestServerIdentity("127.0.0.1:2000"))*/
-	//go m1.Start()
-	//defer m1.Stop()
-	//m2 := NewLocalHost(NewTestServerIdentity("127.0.0.1:4000"))
-	//go m2.Start()
-	//defer m2.Stop()
-	//assert.NotNil(t, chanHosts.Get(m1.identity))
-	//assert.NotNil(t, chanHosts.Get(m2.identity))
-
-	//p := newSimpleProcessor()
-	//m2.RegisterProcessor(p, statusMsgID)
-
-	//status := &statusMessage{true, 10}
-	//assert.Nil(t, m1.Send(m2.identity, status))
-
-	//select {
-	//case m := <-p.relay:
-	//if !m.Ok || m.Val != 10 {
-	//t.Fatal("Wrong value")
-	//}
-	//case <-time.After(250 * time.Millisecond):
-	//t.Fatal("waited too long")
-	/*}*/
-}
-
 func init() {
 	SimpleMessageType = RegisterMessageType(SimpleMessage{})
 }

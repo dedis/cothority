@@ -9,72 +9,19 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
-	"github.com/stretchr/testify/assert"
 )
-
-type basicProcessor struct {
-	msgChan chan network.Packet
-}
-
-func (bp *basicProcessor) Process(msg *network.Packet) {
-	bp.msgChan <- *msg
-}
-
-type basicMessage struct {
-	Value int
-}
-
-var basicMessageType network.MessageTypeID
-
-func TestBlockingDispatcher(t *testing.T) {
-	defer log.AfterTest(t)
-
-	dispatcher := NewBlockingDispatcher()
-	processor := &basicProcessor{make(chan network.Packet, 1)}
-
-	dispatcher.RegisterProcessor(processor, basicMessageType)
-	dispatcher.Dispatch(&network.Packet{
-		Msg:     basicMessage{10},
-		MsgType: basicMessageType})
-
-	select {
-	case m := <-processor.msgChan:
-		msg, ok := m.Msg.(basicMessage)
-		assert.True(t, ok)
-		assert.Equal(t, msg.Value, 10)
-	default:
-		t.Error("No message received")
-	}
-}
-
-func TestProcessorHost(t *testing.T) {
-	defer log.AfterTest(t)
-	h1 := NewLocalHost(2000)
-	defer h1.Close()
-
-	proc := &basicProcessor{make(chan network.Packet, 1)}
-	h1.RegisterProcessor(proc, basicMessageType)
-	assert.Nil(t, h1.Dispatch(&network.Packet{
-		Msg:     basicMessage{10},
-		MsgType: basicMessageType}))
-
-	m := <-proc.msgChan
-	basic, ok := m.Msg.(basicMessage)
-	assert.True(t, ok)
-	assert.Equal(t, basic.Value, 10)
-}
 
 var testServiceID ServiceID
 var testMsgID network.MessageTypeID
 
 func init() {
-	basicMessageType = network.RegisterMessageType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
 	testMsgID = network.RegisterMessageType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
+	log.AfterTest(t)
 	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
@@ -104,6 +51,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
+	log.AfterTest(t)
 	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
@@ -122,7 +70,7 @@ func TestProcessor_GetReply(t *testing.T) {
 	}
 
 	rep = p.GetReply(e, testMsgID, testMsg{42})
-	errMsg, ok := rep.(*StatusRet)
+	errMsg, ok := rep.(*network.StatusRet)
 	if !ok {
 		t.Fatal("42 should return an error")
 	}
@@ -132,15 +80,21 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 
 	// generate 5 hosts,
 	h := local.GenHosts(1)[0]
+	h.Stop()
 	defer local.CloseAll()
 
 	s := local.Services[h.ServerIdentity.ID]
 	ts := s[testServiceID]
 	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
+	// This call will generate an error using the Local network communication
+	// since it does not support the connection to itself. It generates an error
+	// using the TCPRouter since otherwise we wait for *too long* because
+	// there's no receiving client address.
 	ts.ProcessClientRequest(h.ServerIdentity, cr)
 	msg := ts.(*testService).Msg
 	if msg == nil {

@@ -170,7 +170,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	defer o.transmitMux.Unlock()
 	// do we have the entitylist ? if not, ask for it.
 	if o.Roster(sdaMsg.To.RosterID) == nil {
-		log.Lvl4(o.host.Address(), "Will ask the Roster", sdaMsg.To.RosterID, len(o.entityLists), "to", sdaMsg.ServerIdentity.First())
+		log.Lvl4(o.host.Address(), "Will ask the Roster", sdaMsg.To.RosterID, len(o.entityLists), "to", sdaMsg.ServerIdentity.Address)
 		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
 	tree := o.Tree(sdaMsg.To.TreeID)
@@ -257,7 +257,7 @@ func (o *Overlay) sendSDAData(e *network.ServerIdentity, sdaMsg *ProtocolMsg) er
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
-	log.Lvl4(o.host.Address(), "Sending to", e.Addresses)
+	log.Lvl4(o.host.Address(), "Sending to", e.Address)
 	return o.host.Send(e, sdaMsg)
 }
 
@@ -412,7 +412,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) er
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
-	log.Lvl4(o.host.Address(), "Sending to entity", to.ServerIdentity.Addresses)
+	log.Lvl4(o.host.Address(), "Sending to entity", to.ServerIdentity.Address)
 	return o.sendSDAData(to.ServerIdentity, sda)
 }
 

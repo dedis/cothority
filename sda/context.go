@@ -8,7 +8,7 @@ type Context struct {
 	host    *Host
 	servID  ServiceID
 	manager *serviceManager
-	Dispatcher
+	network.Dispatcher
 }
 
 // defaultContext is the implementation of the Context interface. It is
@@ -20,7 +20,7 @@ func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) 
 		host:       h,
 		servID:     servID,
 		manager:    manager,
-		Dispatcher: NewBlockingDispatcher(),
+		Dispatcher: network.NewBlockingDispatcher(),
 	}
 }
 
@@ -75,7 +75,7 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 
 // RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
 // It delegates the dispatching to the serviceManager.
-func (c *Context) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (c *Context) RegisterProcessor(p network.Processor, msgType network.MessageTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
 

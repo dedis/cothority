@@ -19,12 +19,10 @@ type Host struct {
 	// Our private-key
 	private abstract.Scalar
 	suite   abstract.Suite
-	Router
+	*network.Router
 	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
 	overlay *Overlay
-	// The open connections
-	connections map[network.ServerIdentityID]network.SecureConn
 	// lock associated to access trees
 	treesLock            sync.Mutex
 	serviceManager       *serviceManager
@@ -37,12 +35,15 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
 		private:              pkey,
-		connections:          make(map[network.ServerIdentityID]network.SecureConn),
 		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
-		Router:               NewTCPRouter(e, pkey),
 	}
 
+	var err error
+	h.Router, err = network.NewTCPRouter(e)
+	if err != nil {
+		panic(err)
+	}
 	h.overlay = NewOverlay(h)
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
@@ -50,11 +51,10 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 }
 
 // NewHostWithRouter returns a fresh Host with a given Router.
-func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r Router) *Host {
+func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Host {
 	h := &Host{
-		ServerIdentity: e,
-		private:        pkey,
-		connections:    make(map[network.ServerIdentityID]network.SecureConn), suite: network.Suite,
+		ServerIdentity:       e,
+		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 	}
@@ -77,13 +77,18 @@ func (h *Host) GetStatus() Status {
 	a := ServiceFactory.RegisteredServicesName()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
-	router := h.Router.GetStatus()
-	return router.Merge(m)
+	return m
+	//router := h.Router.GetStatus()
+	//return router.Merge(m)
 
 }
 
 // Close closes the overlay and the Router
 func (h *Host) Close() error {
 	h.overlay.Close()
-	return h.Router.Close()
+	return h.Router.Stop()
+}
+
+func (h *Host) Address() network.Address {
+	return h.ServerIdentity.Address
 }

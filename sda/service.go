@@ -5,24 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"strings"
 
-	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
-
-func init() {
-	network.RegisterMessageType(&StatusRet{})
-	network.RegisterMessageType(&TCPClient{})
-}
 
 // Service is a generic interface to define any type of services.
 // A Service has multiple roles:
@@ -45,7 +36,7 @@ type Service interface {
 	// a complex logic is used for these messages, it's best to put that logic
 	// into a ProtocolInstance that the Service will launch, since there's nicer
 	// utilities for ProtocolInstance.
-	Processor
+	network.Processor
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -214,7 +205,7 @@ type serviceManager struct {
 	// the sda host
 	host *Host
 	// the dispather can take registration of Processors
-	Dispatcher
+	network.Dispatcher
 }
 
 const configFolder = "config"
@@ -233,7 +224,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
-	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
+	s := &serviceManager{services, configs, h, network.NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -291,7 +282,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 // This behavior with go routine is fine for the moment but for better
 // performance / memory / resilience, it may be changed to a real queuing
 // system later.
-func (s *serviceManager) RegisterProcessor(p Processor, msgType network.MessageTypeID) {
+func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.MessageTypeID) {
 	// delegate message to host so the host will pass the message to ourself
 	s.host.RegisterProcessor(s, msgType)
 	// handle the message ourself (will be launched in a go routine)
@@ -383,53 +374,34 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
-// Client is a simple interface to be used when wanting to connect to services.
-// Two implementations are done: TcpClient to use for applications and
-// deployement,and localClient to use for local testing alongside with
-// LocalRouter.
-type Client interface {
-	// Send will send the message to the destination service and return the
-	// reply.
-	// The error-handling is done using the ErrorRet structure which can be returned
-	// in place of the standard reply. This method will catch that and return
-	// the appropriate error as a network.Packet.
-	Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error)
-	SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error)
-}
-
-// TCPClient is a client that will connect to a Host using a Tcp connection.
-type TCPClient struct {
-	host      *network.SecureTCPHost
+// Client is a struct used to communicate with a remote Service running on a
+// sda.Conode
+type Client struct {
 	ServiceID ServiceID
-	sync.Mutex
+	net       *network.Client
 }
 
-// NewClient returns a client using the service s. It's a TCPClient by
-// default.
-func NewClient(s string) Client {
-	return &TCPClient{
+// NewClient returns a client using the service s. It uses TCP communication by
+// default
+func NewClient(s string) *Client {
+	return &Client{
 		ServiceID: ServiceFactory.ServiceID(s),
+		net:       network.NewTCPClient(),
 	}
 }
 
-// Send opens the connection to 'dst' and sends the message 'req'. The
-// reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *TCPClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
-	c.Lock()
-	defer c.Unlock()
-	if c.host == nil {
-		kp := config.NewKeyPair(network.Suite)
-		c.host = network.NewSecureTCPHost(kp.Secret,
-			network.NewServerIdentity(kp.Public, ""))
+// NewLocalClient is for test mainly, it uses the local coomunication network
+// offered by the network package.
+func NewLocalClient(s string) *Client {
+	return &Client{
+		ServiceID: ServiceFactory.ServiceID(s),
+		net:       network.NewLocalClient(),
 	}
+}
 
-	// Connect to the root
-	log.Lvl4("Opening connection to", dst)
-	con, err := c.host.Open(dst)
-	defer c.host.Close()
-	if err != nil {
-		return nil, err
-	}
+// Send will marshal the message into a ClientRequest message and sends it
+// through the network
+func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 
 	m, err := network.NewNetworkMessage(msg)
 	if err != nil {
@@ -445,40 +417,14 @@ func (c *TCPClient) Send(dst *network.ServerIdentity, msg network.Body) (*networ
 		Service: c.ServiceID,
 		Data:    b,
 	}
-	pchan := make(chan network.Packet)
-	go func() {
-		// send the request
-		log.Lvlf4("Sending request %x", serviceReq.Service)
-		if err := con.Send(context.TODO(), serviceReq); err != nil {
-			close(pchan)
-			return
-		}
-		log.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
-		// wait for the response
-		packet, err := con.Receive(context.TODO())
-		if err != nil {
-			packet.Msg = StatusRet{err.Error()}
-			packet.MsgType = network.TypeFromData(&StatusRet{})
-		}
-		pchan <- packet
-	}()
-	select {
-	case response := <-pchan:
-		log.Lvlf5("Response: %+v %+v", response, response.Msg)
-		// Catch an eventual error
-		err := ErrMsg(&response, nil)
-		if err != nil {
-			return nil, err
-		}
-		return &response, nil
-	case <-time.After(time.Second * 10):
-		return &network.Packet{}, errors.New("Timeout on sending message")
-	}
+	// send the request
+	log.Lvlf4("Sending request %x", serviceReq.Service)
+	return c.net.Send(dst, serviceReq)
 }
 
 // SendToAll sends a message to all ServerIdentities of the Roster and returns
 // all errors encountered concatenated together as a string.
-func (c *TCPClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
+func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
 	msgs := make([]*network.Packet, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {
@@ -493,112 +439,4 @@ func (c *TCPClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet,
 		err = errors.New(strings.Join(errstrs, "\n"))
 	}
 	return msgs, err
-}
-
-// StatusRet is used when a status is returned - mostly an error
-type StatusRet struct {
-	Status string
-}
-
-// StatusOK is used when there is no error but nothing to return
-var StatusOK = &StatusRet{""}
-
-// ErrMsg converts a combined err and status-message to an error. It
-// returns either the error, or the errormsg, if there is one.
-func ErrMsg(em *network.Packet, err error) error {
-	if err != nil {
-		return err
-	}
-	status, ok := em.Msg.(StatusRet)
-	if !ok {
-		return nil
-	}
-	statusStr := status.Status
-	if statusStr != "" {
-		return errors.New("Remote-error: " + statusStr)
-	}
-	return nil
-}
-
-// LocalClient is an implementation of the Client interface using local go
-// routines and channels to communicate with localRouters
-type LocalClient struct {
-	msgChan   chan *network.Packet
-	identity  *network.ServerIdentity
-	serviceID ServiceID
-}
-
-// NewLocalClient returns a LocalClient that is communicating to the hosts
-// through channels and go routine as in LocalRouter
-func NewLocalClient(s string) *LocalClient {
-	kp := config.NewKeyPair(network.Suite)
-	lc := &LocalClient{
-		msgChan:   make(chan *network.Packet),
-		identity:  network.NewServerIdentity(kp.Public, ""),
-		serviceID: ServiceFactory.ServiceID(s),
-	}
-	localRelays.Put(lc)
-	return lc
-}
-
-func (c *LocalClient) send(dest *network.ServerIdentity, msg network.Body) error {
-	r := localRelays.Get(dest)
-	if r == nil {
-		return errors.New("No mock routers at this entity")
-	}
-
-	b, err := network.MarshalRegisteredType(msg)
-	if err != nil {
-		return err
-	}
-
-	serviceReq := ClientRequest{
-		Service: c.serviceID,
-		Data:    b,
-	}
-
-	nm := network.Packet{
-		MsgType:        ClientRequestID,
-		Msg:            serviceReq,
-		ServerIdentity: c.identity,
-	}
-	r.receive(&nm)
-	return nil
-}
-
-func (c *LocalClient) receive(msg *network.Packet) {
-	c.msgChan <- msg
-}
-
-// Send implements the Client interface
-func (c *LocalClient) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
-	c.send(dst, msg)
-	reply := <-c.msgChan
-	err := ErrMsg(reply, nil)
-	if err != nil {
-		return nil, err
-	}
-	return reply, nil
-}
-
-// SendToAll implements the Client interface
-func (c *LocalClient) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
-	msgs := make([]*network.Packet, len(dst.List))
-	var errstrs []string
-	for i, e := range dst.List {
-		var err error
-		msgs[i], err = c.Send(e, msg)
-		if err != nil {
-			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
-		}
-	}
-	var err error
-	if len(errstrs) > 0 {
-		err = errors.New(strings.Join(errstrs, "\n"))
-	}
-	return msgs, err
-}
-
-func (c *LocalClient) serverIdentity() *network.ServerIdentity {
-	return c.identity
 }

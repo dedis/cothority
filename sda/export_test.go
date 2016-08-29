@@ -1,9 +1,6 @@
 package sda
 
-import (
-	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/network"
-)
+import "github.com/dedis/cothority/network"
 
 // Export some private functions of Host for testing
 
@@ -52,25 +49,4 @@ func (h *Host) AddTree(t *Tree) {
 // Useful for unit-testing only.
 func (h *Host) AddRoster(el *Roster) {
 	h.overlay.RegisterRoster(el)
-}
-
-func (t *TCPRouter) AbortConnections() error {
-	t.closeConnections()
-	return t.host.Close()
-}
-
-func (t *TCPRouter) closeConnections() error {
-	t.networkLock.Lock()
-	defer t.networkLock.Unlock()
-	for _, c := range t.connections {
-		log.Lvl4(t.serverIdentity.First(), "Closing connection", c, c.Remote(), c.Local())
-		err := c.Close()
-		if err != nil {
-			log.Error(t.serverIdentity.First(), "Couldn't close connection", c)
-			return err
-		}
-	}
-	log.Lvl4(t.serverIdentity.First(), "Closing tcpHost")
-	t.connections = make(map[network.ServerIdentityID]network.SecureConn)
-	return t.host.Close()
 }

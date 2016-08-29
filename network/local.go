@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -81,8 +82,6 @@ func (ccc *localConnStore_) StopListening(addr Address) {
 	delete(ccc.listening, addr)
 }
 
-var errNotListening = errors.New("Remote address is not listening")
-
 // Connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
@@ -95,7 +94,7 @@ func (ccc *localConnStore_) Connect(local, remote Address) (*LocalConn, error) {
 
 	fn, ok := ccc.listening[remote]
 	if !ok {
-		return nil, errNotListening
+		return nil, fmt.Errorf("%s can't connect to %s: it's not listening", local, remote)
 	}
 
 	outgoing := newLocalConn(local, remote)

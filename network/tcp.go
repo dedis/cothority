@@ -284,6 +284,10 @@ type TCPListener struct {
 	listeningLock sync.Mutex
 	listening     bool
 
+	// closed is used to tell the listen routine to return immediatly if a
+	// Stop() have been made (concurrency into place here)
+	closed bool
+
 	// listening addr (actual). Useful for listening on :0 port
 	addr net.Addr
 }
@@ -306,7 +310,6 @@ func (t *TCPListener) bind(addr Address) error {
 	if t.listening == true {
 		return errors.New("Already listening")
 	}
-	t.listening = true
 	global, _ := GlobalBind(addr.NetworkAddress())
 	for i := 0; i < MaxRetry; i++ {
 		ln, err := net.Listen("tcp", global)
@@ -314,7 +317,6 @@ func (t *TCPListener) bind(addr Address) error {
 			t.listener = ln
 			break
 		} else if i == MaxRetry-1 {
-			t.listeningLock.Unlock()
 			return errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(WaitRetry)
@@ -335,6 +337,13 @@ func (t *TCPListener) Listen(fn func(Conn)) error {
 // That way we can control what to do of the TCPConn before returning it to the
 // function given by the user. fn is called in the same routine.
 func (t *TCPListener) listen(fn func(*TCPConn)) error {
+	t.listeningLock.Lock()
+	if t.closed == true {
+		t.listeningLock.Unlock()
+		return nil
+	}
+	t.listening = true
+	t.listeningLock.Unlock()
 	for {
 		conn, err := t.listener.Accept()
 		if err != nil {
@@ -359,32 +368,31 @@ func (t *TCPListener) Stop() error {
 	// lets see if we launched a listening routing
 	t.listeningLock.Lock()
 	defer t.listeningLock.Unlock()
-	// we are NOT listening
-	if !t.listening {
-		return nil
-	}
-	t.listening = false
 
 	close(t.quit)
 
-	var stop bool
-	for !stop {
-		if t.listener != nil {
-			if err := t.listener.Close(); err != nil {
-				if handleError(err) == ErrClosed {
-					return nil
-				}
+	if t.listener != nil {
+		if err := t.listener.Close(); err != nil {
+			if handleError(err) != ErrClosed {
 				return err
 			}
 		}
-		select {
-		case <-t.quitListener:
-			stop = true
-		case <-time.After(time.Millisecond * 50):
-			continue
+	}
+	var stop bool
+	if t.listening {
+		for !stop {
+			select {
+			case <-t.quitListener:
+				stop = true
+			case <-time.After(time.Millisecond * 50):
+				continue
+			}
 		}
 	}
+
 	t.quit = make(chan bool)
+	t.listening = false
+	t.closed = true
 	return nil
 }
 

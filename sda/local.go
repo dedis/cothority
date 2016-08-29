@@ -4,8 +4,6 @@ import (
 	"errors"
 	"strconv"
 
-	"time"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -134,7 +132,7 @@ func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
 		err := host.Close()
 		if err != nil {
-			log.Error("Closing host", host.ServerIdentity.First(),
+			log.Error("Closing host", host.ServerIdentity.Address,
 				"gives error", err)
 		}
 		delete(l.Hosts, host.ServerIdentity.ID)
@@ -144,7 +142,7 @@ func (l *LocalTest) CloseAll() {
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
 	// Give the nodes some time to correctly close down
-	time.Sleep(time.Millisecond * 500)
+	//time.Sleep(time.Millisecond * 500)
 }
 
 // GetTree returns the tree of the given TreeNode
@@ -253,7 +251,7 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 // NewPrivIdentity returns a secret + ServerIdentity. The SI will have
 // "localhost:+port as first address.
 func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
-	address := "localhost:" + strconv.Itoa(port)
+	address := network.NewAddress(network.Local, "127.0.0.1:"+strconv.Itoa(port))
 	priv, pub := PrivPub()
 	id := network.NewServerIdentity(pub, address)
 	return priv, id
@@ -263,7 +261,14 @@ func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 // address.
 func NewTCPHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	return NewHost(id, priv)
+	id.Address = network.NewAddress(network.PlainTCP, id.Address.NetworkAddress())
+	tcpRouter, err := network.NewTCPRouter(id)
+	if err != nil {
+		panic(err)
+	}
+	h := NewHostWithRouter(id, priv, tcpRouter)
+	go h.Start()
+	return h
 }
 
 // NewLocalHost returns a new host using a LocalRouter (channels) to communicate.
@@ -271,16 +276,20 @@ func NewTCPHost(port int) *Host {
 // routine.
 func NewLocalHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	localRouter := NewLocalRouter(id)
-	go localRouter.Run()
-	return NewHostWithRouter(id, priv, localRouter)
+	localRouter, err := network.NewLocalRouter(id)
+	if err != nil {
+		panic(err)
+	}
+	h := NewHostWithRouter(id, priv, localRouter)
+	go h.Start()
+	return h
 }
 
 // GenLocalHosts returns n hosts created with a localRouter
 func GenLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
+		host := NewTCPHost(2000 + i*10)
 		hosts[i] = host
 	}
 	return hosts

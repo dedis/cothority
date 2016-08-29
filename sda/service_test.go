@@ -12,6 +12,7 @@ import (
 )
 
 func TestServiceRegistration(t *testing.T) {
+	log.AfterTest(t)
 	var name = "dummy"
 	RegisterNewService(name, func(c *Context, path string) Service {
 		return &DummyService{}
@@ -64,9 +65,9 @@ func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *
 func (dm *DummyProtocol) Start() error {
 	dm.link <- true
 	if dm.config.Send {
-		if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {
-			log.Error(err)
-		}
+		/* if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {*/
+		//log.Error(err)
+		/*}*/
 		// also send to the children if any
 		if !dm.IsLeaf() {
 			if err := dm.SendTo(dm.Children()[0], &DummyMsg{}); err != nil {
@@ -133,6 +134,7 @@ func (ds *DummyService) Process(packet *network.Packet) {
 }
 
 func TestServiceNew(t *testing.T) {
+	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -153,6 +155,7 @@ func TestServiceNew(t *testing.T) {
 }
 
 func TestServiceChannels(t *testing.T) {
+	log.AfterTest(t)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
@@ -189,6 +192,7 @@ func TestServiceChannels(t *testing.T) {
 }
 
 func TestServiceProcessRequest(t *testing.T) {
+	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -223,6 +227,7 @@ func TestServiceProcessRequest(t *testing.T) {
 
 // Test if a request that makes the service create a new protocol works
 func TestServiceRequestNewProtocol(t *testing.T) {
+	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -234,9 +239,9 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
-	go host.Run()
+	go host.Start()
 	log.Lvl1("Host created and listening")
-	defer host.Close()
+	defer host.Stop()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity})
 	tree := el.GenerateBinaryTree()
@@ -271,6 +276,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 }
 
 func TestServiceProtocolProcessMessage(t *testing.T) {
+	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -291,8 +297,8 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 
 	defer DeleteNewService("DummyService")
 	// fake a client
-	h2 := NewLocalHost(2010)
-	defer h2.Close()
+	client := NewLocalHost(2010)
+	defer client.Close()
 
 	host := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
@@ -311,19 +317,17 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 		Data:    b,
 	}
 	log.Lvl1("Sending request to service...")
-	if err := h2.Send(host.ServerIdentity, re); err != nil {
+	if err := client.Send(host.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the protocol
 	waitOrFatalValue(ds.link, true, t)
 
-	// now wait for the same link as the protocol should have sent a message to
-	// himself !
-	waitOrFatalValue(ds.link, true, t)
 }
 
 // test for calling the NewProtocol method on a remote Service
 func TestServiceNewProtocol(t *testing.T) {
+	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 		Config: DummyConfig{
@@ -354,12 +358,12 @@ func TestServiceNewProtocol(t *testing.T) {
 
 	defer DeleteNewService("DummyService")
 	host := NewLocalHost(2000)
-	go host.Run()
+	go host.Start()
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 
 	host2 := NewLocalHost(2002)
-	go host2.Run()
+	go host2.Start()
 	defer host2.Close()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity, host2.ServerIdentity})
@@ -383,15 +387,13 @@ func TestServiceNewProtocol(t *testing.T) {
 	}
 	// wait for the link from the protocol that Starts
 	waitOrFatalValue(ds1.link, true, t)
-	// now wait for the same link as the protocol should have sent a message to
-	// himself !
-	waitOrFatalValue(ds1.link, true, t)
 	// now wait for the SECOND LINK on the SECOND HOST that the SECOND SERVICE
 	// should have started (ds2) in ProcessRequest
 	waitOrFatalValue(ds2.link, true, t)
 }
 
-func TestServiceProcessServiceMessage(t *testing.T) {
+func TestServiceProcessor(t *testing.T) {
+	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 	}
@@ -417,7 +419,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 	h2 := NewLocalHost(2010)
 	defer h2.Close()
 	h1 := NewLocalHost(2000)
-	go h1.Run()
+	go h1.Start()
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request
@@ -430,23 +432,24 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 
 type clientProc struct {
 	t     *testing.T
-	relay chan simpleResponse
+	relay chan SimpleResponse
 }
 
 func newClientProc(t *testing.T) *clientProc {
 	return &clientProc{
-		relay: make(chan simpleResponse),
+		relay: make(chan SimpleResponse),
 	}
 }
 
 func (c *clientProc) Process(p *network.Packet) {
-	if p.MsgType != simpleResponseType {
-		c.t.Fatal("Message type not simpleResponseType")
+	if p.MsgType != SimpleResponseType {
+		c.t.Fatal("Message type not SimpleResponseType")
 	}
-	c.relay <- p.Msg.(simpleResponse)
+	c.relay <- p.Msg.(SimpleResponse)
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -460,30 +463,23 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	hosts, el, _ := local.GenTree(4, false)
 
 	// create client
-	client := NewLocalHost(5000)
-	defer client.Close()
-	proc := newClientProc(t)
-	client.RegisterProcessor(proc, simpleResponseType)
+	client := NewClient("BackForth")
 
 	// create request
-	r := &simpleRequest{
+	r := &SimpleRequest{
 		ServerIdentities: el,
 		Val:              10,
 	}
-	buff, err := network.MarshalRegisteredType(r)
-	assert.Nil(t, err)
-
-	req := &ClientRequest{
-		Service: ServiceFactory.ServiceID("BackForth"),
-		Data:    buff,
+	resp, err := client.Send(hosts[0].ServerIdentity, r)
+	if err != nil {
+		t.Fatal(t, err)
 	}
-	assert.Nil(t, client.Send(hosts[0].ServerIdentity, req))
 
-	msg := <-proc.relay
-	assert.Equal(t, msg.Val, 10)
+	assert.Equal(t, resp.Msg.(SimpleResponse).Val, 10)
 }
 
 func TestClient_Send(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -495,21 +491,22 @@ func TestClient_Send(t *testing.T) {
 	})
 	// create hosts
 	hosts, el, _ := local.GenTree(4, false)
-	client := NewLocalClient("BackForth")
+	client := NewClient("BackForth")
 
-	r := &simpleRequest{
+	r := &SimpleRequest{
 		ServerIdentities: el,
 		Val:              10,
 	}
 	nm, err := client.Send(hosts[0].ServerIdentity, r)
 	log.ErrFatal(err)
 
-	assert.Equal(t, nm.MsgType, simpleResponseType)
-	resp := nm.Msg.(simpleResponse)
+	assert.Equal(t, nm.MsgType, SimpleResponseType)
+	resp := nm.Msg.(SimpleResponse)
 	assert.Equal(t, resp.Val, 10)
 }
 
 func TestClient_LocalSend(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -521,21 +518,22 @@ func TestClient_LocalSend(t *testing.T) {
 	})
 	// create hosts
 	hosts, el, _ := local.GenTree(4, false)
-	client := NewLocalClient("BackForth")
+	client := NewClient("BackForth")
 
-	r := &simpleRequest{
+	r := &SimpleRequest{
 		ServerIdentities: el,
 		Val:              10,
 	}
 	nm, err := client.Send(hosts[0].ServerIdentity, r)
 	log.ErrFatal(err)
 
-	assert.Equal(t, nm.MsgType, simpleResponseType)
-	resp := nm.Msg.(simpleResponse)
+	assert.Equal(t, nm.MsgType, SimpleResponseType)
+	resp := nm.Msg.(SimpleResponse)
 	assert.Equal(t, resp.Val, 10)
 }
 
 func TestClient_Parallel(t *testing.T) {
+	log.AfterTest(t)
 	nbrParallel := 2
 	local := NewLocalTest()
 	defer local.CloseAll()
@@ -551,8 +549,6 @@ func TestClient_Parallel(t *testing.T) {
 	h2 := NewTCPHost(2001)
 	defer h1.Close()
 	defer h2.Close()
-	go h1.Run()
-	go h2.Run()
 
 	roster := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 
@@ -561,7 +557,7 @@ func TestClient_Parallel(t *testing.T) {
 	for i := 0; i < nbrParallel; i++ {
 		go func(i int) {
 			log.Lvl1("Starting message", i)
-			r := &simpleRequest{
+			r := &SimpleRequest{
 				ServerIdentities: roster,
 				Val:              10 * i,
 			}
@@ -569,8 +565,8 @@ func TestClient_Parallel(t *testing.T) {
 			nm, err := client.Send(h1.ServerIdentity, r)
 			log.ErrFatal(err)
 
-			assert.Equal(t, nm.MsgType, simpleResponseType)
-			resp := nm.Msg.(simpleResponse)
+			assert.Equal(t, nm.MsgType, SimpleResponseType)
+			resp := nm.Msg.(SimpleResponse)
 			assert.Equal(t, resp.Val, 10*i)
 			log.Lvl1("Done with message", i)
 			wg.Done()
@@ -674,17 +670,17 @@ func (sp *BackForthProtocol) dispatch() {
 }
 
 // Client API request / response emulation
-type simpleRequest struct {
+type SimpleRequest struct {
 	ServerIdentities *Roster
 	Val              int
 }
 
-type simpleResponse struct {
+type SimpleResponse struct {
 	Val int
 }
 
-var simpleRequestType = network.RegisterMessageType(simpleRequest{})
-var simpleResponseType = network.RegisterMessageType(simpleResponse{})
+var SimpleRequestType = network.RegisterMessageType(SimpleRequest{})
+var SimpleResponseType = network.RegisterMessageType(SimpleResponse{})
 
 type simpleService struct {
 	ctx *Context
@@ -693,14 +689,14 @@ type simpleService struct {
 func (s *simpleService) ProcessClientRequest(e *network.ServerIdentity, r *ClientRequest) {
 	msgT, pm, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
 	log.ErrFatal(err)
-	if msgT != simpleRequestType {
+	if msgT != SimpleRequestType {
 		return
 	}
-	req := pm.(simpleRequest)
+	req := pm.(SimpleRequest)
 	tree := req.ServerIdentities.GenerateBinaryTree()
 	tni := s.ctx.NewTreeNodeInstance(tree, tree.Root, "BackForth")
 	proto, err := newBackForthProtocolRoot(tni, req.Val, func(n int) {
-		if err := s.ctx.SendRaw(e, &simpleResponse{
+		if err := s.ctx.SendRaw(e, &SimpleResponse{
 			Val: n,
 		}); err != nil {
 			log.Error(err)

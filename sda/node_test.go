@@ -1,10 +1,11 @@
 package sda
 
 import (
+	"testing"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
-	"testing"
 )
 
 func init() {
@@ -19,6 +20,7 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -40,6 +42,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -75,6 +78,7 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -110,7 +114,8 @@ func TestNodeChannel(t *testing.T) {
 }
 
 // Test instantiation of Node
-func TestNewNode(t *testing.T) {
+func TestNodeNew(t *testing.T) {
+	log.AfterTest(t)
 	h1, h2 := TwoTestHosts()
 	// Add tree + entitylist
 	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
@@ -136,7 +141,8 @@ func TestNewNode(t *testing.T) {
 	h2.Close()
 }
 
-func TestProtocolHandlers(t *testing.T) {
+func TestTreeNodeProtocolHandlers(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
@@ -170,6 +176,7 @@ func TestProtocolHandlers(t *testing.T) {
 }
 
 func TestTreeNodeMsgAggregation(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
@@ -208,6 +215,7 @@ func TestTreeNodeMsgAggregation(t *testing.T) {
 }
 
 func TestTreeNodeFlags(t *testing.T) {
+	log.AfterTest(t)
 	testType := network.MessageTypeID(uuid.Nil)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
@@ -357,7 +365,8 @@ func (p *ProtocolHandlers) Release() {
 	p.Done()
 }
 
-func TestBlocking(t *testing.T) {
+func TestNodeBlocking(t *testing.T) {
+	log.AfterTest(t)
 	l := NewLocalTest()
 	_, _, tree := l.GenTree(2, true)
 	defer l.CloseAll()

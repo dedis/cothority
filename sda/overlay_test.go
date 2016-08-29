@@ -3,6 +3,7 @@ package sda
 import (
 	"testing"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
@@ -27,6 +28,7 @@ func (po *ProtocolOverlay) Release() {
 }
 
 func TestOverlayDone(t *testing.T) {
+	log.AfterTest(t)
 	// setup
 	h1 := NewLocalHost(2000)
 	defer h1.Close()
@@ -69,6 +71,7 @@ func TestOverlayDone(t *testing.T) {
 // Test when a peer receives a New Roster, it can create the trees that are
 // waiting on this specific entitiy list, to be constructed.
 func TestOverlayPendingTreeMarshal(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -120,6 +123,7 @@ func (op *overlayProc) Types() []network.MessageTypeID {
 
 // Test propagation of roster - both known and unknown
 func TestOverlayRosterPropagation(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -174,6 +178,7 @@ func TestOverlayRosterPropagation(t *testing.T) {
 
 // Test propagation of tree - both known and unknown
 func TestOverlayTreePropagation(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -238,6 +243,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 // h1 ask for the entitylist (because it dont know)
 // h2 respond with the entitylist
 func TestOverlayRosterTreePropagation(t *testing.T) {
+	log.AfterTest(t)
 	local := NewLocalTest()
 	hosts, el, tree := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -292,6 +298,7 @@ func TestOverlayRosterTreePropagation(t *testing.T) {
 }
 
 func TestTokenId(t *testing.T) {
+	log.AfterTest(t)
 	t1 := &Token{
 		RosterID: RosterID(uuid.NewV1()),
 		TreeID:   TreeID(uuid.NewV1()),
