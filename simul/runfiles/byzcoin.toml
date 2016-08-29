@@ -1,8 +1,8 @@
-Servers = 1
+Servers = 2
 Simulation = "ByzCoin"
-NumClientTxs = 100000
-Rounds = 5
-BF = 5
+NumClientTxs = 10240
+Rounds = 10
+BF = 3
 CloseWait = 300
 
 Hosts, Blocksize, TimeoutMs, Fail
