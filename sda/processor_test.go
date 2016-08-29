@@ -85,28 +85,28 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	// generate 5 hosts,
 	h := local.GenHosts(1)[0]
-	h.Stop()
 	defer local.CloseAll()
 
 	s := local.Services[h.ServerIdentity.ID]
 	ts := s[testServiceID]
-	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
-	// This call will generate an error using the Local network communication
-	// since it does not support the connection to itself. It generates an error
-	// using the TCPRouter since otherwise we wait for *too long* because
-	// there's no receiving client address.
-	ts.ProcessClientRequest(h.ServerIdentity, cr)
+	client := local.NewClient("testService")
+
+	resp, err := client.Send(h.ServerIdentity, &testMsg{12})
+	if err != nil {
+		t.Fatal("error sending /receiving with client")
+	}
 	msg := ts.(*testService).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
 	}
-	tm, ok := msg.(*testMsg)
+	tm, ok := resp.Msg.(testMsg)
 	if !ok {
 		t.Fatalf("Couldn't cast to *testMsg - %+v", tm)
 	}
 	if tm.I != 12 {
 		t.Fatal("Didn't send 12")
 	}
+
 }
 
 func mkClientRequest(msg network.Body) []byte {

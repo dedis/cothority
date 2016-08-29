@@ -324,26 +324,27 @@ func (ll *LocalListener) bind(addr Address) error {
 		return errors.New("Wrong address type for local listener")
 	}
 	ll.addr = addr
-	ll.listening = true
 	return nil
 }
 
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
+	ll.quit = make(chan bool)
+	ll.listening = true
 	localConnStore.Listening(ll.addr, fn)
 	ll.Unlock()
 
 	<-ll.quit
-	ll.quit = make(chan bool)
 	return nil
 }
 
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
-	addr := ll.addr
-	localConnStore.StopListening(addr)
-	ll.Unlock()
-	close(ll.quit)
+	defer ll.Unlock()
+	localConnStore.StopListening(ll.addr)
+	if ll.listening {
+		close(ll.quit)
+	}
 	return nil
 }
 

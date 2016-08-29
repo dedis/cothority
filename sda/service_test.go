@@ -148,12 +148,15 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	defer DeleteNewService("DummyService")
+	hostCh := make(chan *Host)
 	go func() {
 		h := NewLocalHost(2000)
-		h.Close()
+		hostCh <- h
 	}()
 
 	waitOrFatal(ds.link, t)
+	host := <-hostCh
+	host.Close()
 
 }
 
