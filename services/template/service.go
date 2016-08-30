@@ -36,7 +36,7 @@ type Template struct {
 func (t *Template) ClockRequest(e *network.ServerIdentity, req *ClockRequest) (network.Body, error) {
 	t.Count += 1
 	tree := req.Roster.GenerateBinaryTree()
-	pi, err := t.CreateProtocolSDA(tree, template.Name)
+	pi, err := t.CreateProtocolSDA(template.Name, tree)
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +72,8 @@ func newTemplate(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-	for _, req := range []interface{}{
-		s.ClockRequest, s.CountRequest,
-	} {
-		err := s.RegisterMessage(req)
-		if err != nil {
-			log.ErrFatal(err, "Couldn't register message:")
-		}
+	if err := s.RegisterMessages(s.ClockRequest, s.CountRequest); err != nil {
+		log.ErrFatal(err, "Couldn't register messages")
 	}
 	return s
 }

@@ -19,8 +19,8 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(Announce{})
-	network.RegisterMessageType(Reply{})
+	network.RegisterPacketType(Announce{})
+	network.RegisterPacketType(Reply{})
 	sda.ProtocolRegisterName(Name, NewProtocol)
 }
 

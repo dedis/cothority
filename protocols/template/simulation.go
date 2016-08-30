@@ -76,7 +76,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocolSDA(config.Tree, "Template")
+		p, err := config.Overlay.CreateProtocolSDA("Template", config.Tree)
 		if err != nil {
 			return err
 		}
