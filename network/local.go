@@ -11,49 +11,43 @@ import (
 )
 
 func NewLocalRouter(sid *ServerIdentity) (*Router, error) {
-	h, err := NewLocalHost(sid.Address)
+	return NewLocalRouterWithContext(defaultLocalContext, sid)
+}
+
+func NewLocalRouterWithContext(ctx *LocalContext, sid *ServerIdentity) (*Router, error) {
+	h, err := NewLocalHostWithContext(ctx, sid.Address)
 	if err != nil {
 		return nil, err
 	}
 	return NewRouter(sid, h), nil
 }
 
-// localConnStore_ keeps reference to all opened local connections
+// LocalContext keeps reference to all opened local connections
 // It also keeps tracks of who is "listening", so it's possible to mimics
 // Conn & Listener.
-type localConnStore_ struct {
+type LocalContext struct {
 	queues map[endpoints]*connQueue
 	sync.Mutex
 	listening map[Address]func(Conn)
 }
 
-// endpoints represents the two end points of a connection
-type endpoints struct {
-	local  Address
-	remote Address
-}
-
-// reverse simply reverse the endpoints from local <-> remote
-func (e *endpoints) reverse() endpoints {
-	return endpoints{
-		local:  e.remote,
-		remote: e.local,
+func NewLocalContext() *LocalContext {
+	return &LocalContext{
+		queues:    make(map[endpoints]*connQueue),
+		listening: make(map[Address]func(Conn)),
 	}
 }
 
-var localConnStore = &localConnStore_{
-	queues:    make(map[endpoints]*connQueue),
-	listening: make(map[Address]func(Conn)),
-}
+var defaultLocalContext = NewLocalContext()
 
 // String returns the string representation of this local store.
-func (ccc *localConnStore_) String() string {
+func (ccc *LocalContext) String() string {
 	var b bytes.Buffer
-	fmt.Fprintf(&b, "(LocalConnStore) Listening: ")
+	fmt.Fprintf(&b, "LocalContext: Listening ")
 	for a := range ccc.listening {
 		fmt.Fprintf(&b, "%s ", a)
 	}
-	fmt.Fprintf(&b, "\n(localConnStore) Connections: ")
+	fmt.Fprintf(&b, "\n(LocalContext) Connections: ")
 	for a := range ccc.queues {
 		fmt.Fprintf(&b, "[ %s -> %s ] ", a.local, a.remote)
 	}
@@ -63,13 +57,13 @@ func (ccc *localConnStore_) String() string {
 // LocalDump returns a view of the local connections + listener present at
 // this time
 func LocalDump() string {
-	return localConnStore.String()
+	return defaultLocalContext.String()
 }
 
 // LocalReset reset the whole map of connections + listener so it is like
-// a fresh localConnStore.
+// a fresh defaultLocalContext.
 func LocalReset() {
-	localConnStore = &localConnStore_{
+	defaultLocalContext = &LocalContext{
 		queues:    make(map[endpoints]*connQueue),
 		listening: make(map[Address]func(Conn)),
 	}
@@ -77,21 +71,21 @@ func LocalReset() {
 }
 
 // Put takes a new local connection object and stores it
-func (ccc *localConnStore_) Put(e endpoints, c *connQueue) {
+func (ccc *LocalContext) Put(e endpoints, c *connQueue) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	ccc.queues[e] = c
 }
 
 // Del removes the local connection object
-func (ccc *localConnStore_) Del(e endpoints, c *connQueue) {
+func (ccc *LocalContext) Del(e endpoints, c *connQueue) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	delete(ccc.queues, e)
 }
 
 // Islistening returns true if the remote address is listening "virtually"
-func (ccc *localConnStore_) IsListening(remote Address) bool {
+func (ccc *LocalContext) IsListening(remote Address) bool {
 	ccc.Lock()
 	defer ccc.Unlock()
 	_, ok := ccc.listening[remote]
@@ -100,14 +94,14 @@ func (ccc *localConnStore_) IsListening(remote Address) bool {
 
 // Listening put the address as "listening" mode. If a user connects to this
 // addr, this function will be called.
-func (ccc *localConnStore_) Listening(addr Address, fn func(Conn)) {
+func (ccc *LocalContext) Listening(addr Address, fn func(Conn)) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	ccc.listening[addr] = fn
 }
 
 // StopListening remove the address from the "listening" mode
-func (ccc *localConnStore_) StopListening(addr Address) {
+func (ccc *LocalContext) StopListening(addr Address) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	delete(ccc.listening, addr)
@@ -116,7 +110,7 @@ func (ccc *localConnStore_) StopListening(addr Address) {
 // Connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
-func (ccc *localConnStore_) Connect(local, remote Address) (*LocalConn, error) {
+func (ccc *LocalContext) Connect(local, remote Address) (*LocalConn, error) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	if local == remote {
@@ -128,8 +122,8 @@ func (ccc *localConnStore_) Connect(local, remote Address) (*LocalConn, error) {
 		return nil, fmt.Errorf("%s can't connect to %s: it's not listening", local, remote)
 	}
 
-	outgoing := newLocalConn(local, remote)
-	incoming := newLocalConn(remote, local)
+	outgoing := newLocalConn(ccc, local, remote)
+	incoming := newLocalConn(ccc, remote, local)
 
 	ccc.queues[outgoing.endpoints] = outgoing.connQueue
 	ccc.queues[incoming.endpoints] = incoming.connQueue
@@ -141,7 +135,7 @@ func (ccc *localConnStore_) Connect(local, remote Address) (*LocalConn, error) {
 // Send will get the connection denoted by this endpoint and will call queueMsg
 // with the packet as argument on it. It returns ErrClosed if it does not find
 // the connection.
-func (ccc *localConnStore_) Send(e endpoints, nm Packet) error {
+func (ccc *LocalContext) Send(e endpoints, nm Packet) error {
 	ccc.Lock()
 	defer ccc.Unlock()
 	q, ok := ccc.queues[e]
@@ -155,7 +149,7 @@ func (ccc *localConnStore_) Send(e endpoints, nm Packet) error {
 
 // Close will get the connection denoted by this endpoint and will Close it if
 // present.
-func (ccc *localConnStore_) Close(local *LocalConn) {
+func (ccc *LocalContext) Close(local *LocalConn) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	// delete this conn
@@ -170,7 +164,7 @@ func (ccc *localConnStore_) Close(local *LocalConn) {
 }
 
 // Len returns how many local connections is there
-func (ccc *localConnStore_) Len() int {
+func (ccc *LocalContext) Len() int {
 	ccc.Lock()
 	defer ccc.Unlock()
 	return len(ccc.queues)
@@ -180,28 +174,36 @@ func (ccc *localConnStore_) Len() int {
 type LocalConn struct {
 	endpoints
 
+	// connQueue is the part that is accesible from the LocalContext (i.e. is
+	// shared). Reason why we can't directly share LocalConn is because go test
+	// -race detects as data race (while it's *protected*)
 	*connQueue
 
-	mut sync.Mutex
+	ctx *LocalContext
 }
 
 // newLocalConn simply init the fields of a LocalConn but do not try to
 // connect. It should not be used as-is, most user wants to call NewLocalConn.
-func newLocalConn(local, remote Address) *LocalConn {
+func newLocalConn(ctx *LocalContext, local, remote Address) *LocalConn {
 	return &LocalConn{
 		endpoints: endpoints{
 			remote: remote,
 			local:  local,
 		},
 		connQueue: newConnQueue(),
+		ctx:       ctx,
 	}
 }
 
 // Returns a new channel connection from local to remote
 // Mimics the behavior of NewTCPConn => tries connecting right away.
+// It uses the default local context.
 func NewLocalConn(local, remote Address) (*LocalConn, error) {
-	c, err := localConnStore.Connect(local, remote)
-	return c, err
+	return NewLocalConnWithContext(defaultLocalContext, local, remote)
+}
+
+func NewLocalConnWithContext(ctx *LocalContext, local, remote Address) (*LocalConn, error) {
+	return ctx.Connect(local, remote)
 }
 
 func (cc LocalConn) Send(ctx context.Context, msg Body) error {
@@ -218,7 +220,7 @@ func (cc LocalConn) Send(ctx context.Context, msg Body) error {
 		MsgType: typ,
 		Msg:     body,
 	}
-	return localConnStore.Send(cc.reverse(), nm)
+	return cc.ctx.Send(cc.reverse(), nm)
 }
 
 func (cc *LocalConn) Receive(ctx context.Context) (Packet, error) {
@@ -236,7 +238,7 @@ func (cc *LocalConn) Remote() Address {
 func (cc *LocalConn) Close() error {
 	cc.connQueue.Close()
 	// close the remote conn also
-	localConnStore.Close(cc)
+	cc.ctx.Close(cc)
 	return nil
 }
 
@@ -308,11 +310,18 @@ type LocalListener struct {
 
 	// quit is used to stop the listening routine
 	quit chan bool
+
+	ctx *LocalContext
 }
 
 func NewLocalListener(addr Address) (*LocalListener, error) {
+	return NewLocalListenerWithContext(defaultLocalContext, addr)
+}
+
+func NewLocalListenerWithContext(ctx *LocalContext, addr Address) (*LocalListener, error) {
 	l := &LocalListener{
 		quit: make(chan bool),
+		ctx:  ctx,
 	}
 	return l, l.bind(addr)
 }
@@ -323,6 +332,9 @@ func (ll *LocalListener) bind(addr Address) error {
 	if addr.ConnType() != Local {
 		return errors.New("Wrong address type for local listener")
 	}
+	if ll.ctx.IsListening(addr) {
+		return fmt.Errorf("%s is already listening: can't listen again", addr)
+	}
 	ll.addr = addr
 	return nil
 }
@@ -330,7 +342,7 @@ func (ll *LocalListener) bind(addr Address) error {
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	ll.quit = make(chan bool)
-	localConnStore.Listening(ll.addr, fn)
+	ll.ctx.Listening(ll.addr, fn)
 	ll.listening = true
 	ll.Unlock()
 
@@ -341,7 +353,7 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
-	localConnStore.StopListening(ll.addr)
+	ll.ctx.StopListening(ll.addr)
 	close(ll.quit)
 	return nil
 }
@@ -361,15 +373,22 @@ func (ll *LocalListener) Listening() bool {
 type LocalHost struct {
 	addr Address
 	*LocalListener
+	ctx *LocalContext
 }
 
 func NewLocalHost(addr Address) (*LocalHost, error) {
+	return NewLocalHostWithContext(defaultLocalContext, addr)
+}
+
+func NewLocalHostWithContext(ctx *LocalContext, addr Address) (*LocalHost, error) {
 	lh := &LocalHost{
 		addr: addr,
+		ctx:  ctx,
 	}
 	var err error
-	lh.LocalListener, err = NewLocalListener(addr)
+	lh.LocalListener, err = NewLocalListenerWithContext(ctx, addr)
 	return lh, err
+
 }
 
 func (lh *LocalHost) Connect(addr Address) (Conn, error) {
@@ -378,7 +397,7 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 	}
 	var finalErr error
 	for i := 0; i < MaxRetryConnect; i++ {
-		c, err := NewLocalConn(lh.addr, addr)
+		c, err := NewLocalConnWithContext(lh.ctx, lh.addr, addr)
 		if err == nil {
 			return c, nil
 		}
@@ -390,14 +409,33 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 }
 
 func NewLocalClient() *Client {
+	return NewLocalClientWithContext(defaultLocalContext)
+}
+
+func NewLocalClientWithContext(ctx *LocalContext) *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		return NewLocalConn(own.Address, remote.Address)
+		return NewLocalConnWithContext(ctx, own.Address, remote.Address)
 	}
 	return newClient(fn)
+
 }
 
 func NewLocalAddress(addr string) Address {
 	return NewAddress(Local, addr)
+}
+
+// endpoints represents the two end points of a connection
+type endpoints struct {
+	local  Address
+	remote Address
+}
+
+// reverse simply reverse the endpoints from local <-> remote
+func (e *endpoints) reverse() endpoints {
+	return endpoints{
+		local:  e.remote,
+		remote: e.local,
+	}
 }
 
 /*// GetStatus implements the Host interface*/

@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -9,6 +10,116 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+// Test if we can run two parallel local network using two different contexts
+func TestLocalContext(t *testing.T) {
+	ctx1 := NewLocalContext()
+	ctx2 := NewLocalContext()
+
+	addrListener := NewLocalAddress("127.0.0.1:2000")
+	addrConn := NewLocalAddress("127.0.0.1:2001")
+
+	done1 := make(chan error)
+	done2 := make(chan error)
+
+	go testConnListener(ctx1, done1, addrListener, addrConn, 1)
+	go testConnListener(ctx2, done2, addrListener, addrConn, 2)
+
+	var confirmed int
+	for confirmed != 2 {
+		var err error
+		select {
+		case err = <-done1:
+		case err = <-done2:
+		}
+
+		if err != nil {
+			t.Fatal(err)
+		}
+		confirmed++
+	}
+}
+
+// launch a listener, then a Conn and communicate their own address + individual
+// val
+func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address, secret int) {
+	listener, err := NewLocalListenerWithContext(ctx, listenA)
+	if err != nil {
+		done <- err
+		return
+	}
+
+	var ok = make(chan error)
+
+	// make the listener send and receive a struct that only they can know (this
+	// listener + conn
+	handshake := func(c Conn, sending, receiving Address) error {
+		err := c.Send(context.TODO(), &AddressTest{sending, secret})
+		if err != nil {
+			return err
+		}
+		p, err := c.Receive(context.TODO())
+		if err != nil {
+			return err
+		}
+
+		at := p.Msg.(AddressTest)
+		if at.Addr != receiving {
+			return fmt.Errorf("Receiveid wrong address")
+		}
+		if at.Val != secret {
+			return fmt.Errorf("Received wrong secret")
+		}
+		return nil
+	}
+
+	go func() {
+		ok <- nil
+		listener.Listen(func(c Conn) {
+			ok <- nil
+			err := handshake(c, listenA, connA)
+			ok <- err
+		})
+		ok <- nil
+	}()
+	// wait go routine to start
+	<-ok
+
+	// trick to use host because it already tries multiple times to connect if
+	// the listening routine is not up yet.
+	h, err := NewLocalHostWithContext(ctx, connA)
+	if err != nil {
+		done <- err
+		return
+	}
+	c, err := h.Connect(listenA)
+	if err != nil {
+		done <- err
+		return
+	}
+
+	// wait listening function to start for the incoming conn
+	<-ok
+	err = handshake(c, connA, listenA)
+	if err != nil {
+		done <- err
+		return
+	}
+	// wait for any err of the handshake from the listening PoV
+	err = <-ok
+	if err != nil {
+		done <- err
+		return
+	}
+	if err := c.Close(); err != nil {
+		done <- err
+		return
+	}
+
+	listener.Stop()
+	<-ok
+	done <- nil
+}
 
 func TestLocalConnDiffAddress(t *testing.T) {
 	testLocalConn(t, NewLocalAddress("127.0.0.1:2000"), NewLocalAddress("127.0.0.1:2001"))
@@ -127,7 +238,7 @@ func TestLocalManyConn(t *testing.T) {
 
 func waitListeningUp(addr Address) bool {
 	for i := 0; i < 5; i++ {
-		if localConnStore.IsListening(addr) {
+		if defaultLocalContext.IsListening(addr) {
 			return true
 		}
 		time.Sleep(50 * time.Millisecond)
@@ -139,3 +250,10 @@ func NewTestLocalHost(port int) (*LocalHost, error) {
 	addr := NewLocalAddress("127.0.0.1:" + strconv.Itoa(port))
 	return NewLocalHost(addr)
 }
+
+type AddressTest struct {
+	Addr Address
+	Val  int
+}
+
+var AddressTestType = RegisterPacketType(&AddressTest{})

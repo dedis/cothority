@@ -186,6 +186,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			//t.networkChan <- packet
 			if err := r.Dispatch(&packet); err != nil {
 				log.Lvl3("Error dispatching:", err)
+				log.Print("Error dispatching:", err)
 			}
 		} else {
 			// signal we are done with this go routine.
