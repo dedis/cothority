@@ -74,13 +74,13 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 
 // CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
 	for _, h := range l.Hosts {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(t, name)
+			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -148,6 +148,7 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
+		log.Lvl3("Closing host", host.ServerIdentity)
 		err := host.Close()
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.Address,
@@ -156,6 +157,7 @@ func (l *LocalTest) CloseAll() {
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
+		log.Lvl3("Closing node", node)
 		node.Close()
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
@@ -222,7 +224,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	}
 	sdaMsg := &ProtocolMsg{
 		MsgSlice: b,
-		MsgType:  network.TypeToMessageTypeID(msg),
+		MsgType:  network.TypeToPacketTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}
@@ -269,7 +271,7 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 // NewPrivIdentity returns a secret + ServerIdentity. The SI will have
 // "localhost:+port as first address.
 func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
-	address := network.NewAddress(network.Local, "127.0.0.1:"+strconv.Itoa(port))
+	address := network.NewLocalAddress("127.0.0.1:" + strconv.Itoa(port))
 	priv, pub := PrivPub()
 	id := network.NewServerIdentity(pub, address)
 	return priv, id
@@ -279,7 +281,7 @@ func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 // address.
 func NewTCPHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	id.Address = network.NewAddress(network.PlainTCP, id.Address.NetworkAddress())
+	id.Address = network.NewTCPAddress(id.Address.NetworkAddress())
 	tcpRouter, err := network.NewTCPRouter(id)
 	if err != nil {
 		panic(err)
@@ -331,6 +333,7 @@ func (l *LocalTest) GenLocalHosts(n int) []*Host {
 		for !h.Listening() {
 			time.Sleep(40 * time.Millisecond)
 		}
+		l.Hosts[h.ServerIdentity.ID] = h
 	}
 	return hosts
 }

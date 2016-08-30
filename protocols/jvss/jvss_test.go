@@ -36,7 +36,7 @@ func TestJVSS(t *testing.T) {
 	defer local.CloseAll()
 
 	log.Lvl1("JVSS - starting")
-	leader, err := local.CreateProtocol(tree, name)
+	leader, err := local.CreateProtocol(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}

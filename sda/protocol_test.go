@@ -114,7 +114,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 		return &ps, nil
 	}
 
-	network.RegisterMessageType(SimpleMessage{})
+	network.RegisterPacketType(SimpleMessage{})
 	ProtocolRegisterName(simpleProto, fn)
 	h1, h2 := TwoTestHosts()
 	defer h1.Close()

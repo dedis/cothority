@@ -279,12 +279,12 @@ func (c *connQueue) Pop() (Packet, error) {
 	defer c.L.Unlock()
 	for len(c.queue) == 0 {
 		if c.isClosed {
-			return EmptyApplicationMessage, ErrClosed
+			return EmptyApplicationPacket, ErrClosed
 		}
 		c.Wait()
 	}
 	if c.isClosed {
-		return EmptyApplicationMessage, ErrClosed
+		return EmptyApplicationPacket, ErrClosed
 	}
 	nm := c.queue[0]
 	c.queue = c.queue[1:]
@@ -330,8 +330,8 @@ func (ll *LocalListener) bind(addr Address) error {
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	ll.quit = make(chan bool)
-	ll.listening = true
 	localConnStore.Listening(ll.addr, fn)
+	ll.listening = true
 	ll.Unlock()
 
 	<-ll.quit
@@ -377,7 +377,7 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 		return nil, errors.New("Can't connect to non-Local address")
 	}
 	var finalErr error
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		c, err := NewLocalConn(lh.addr, addr)
 		if err == nil {
 			return c, nil

@@ -21,7 +21,7 @@ func TestRegister(t *testing.T) {
 		t.Fatal("TestRegister should not yet be there")
 	}
 
-	trType := RegisterMessageType(&TestRegisterS{})
+	trType := RegisterPacketType(&TestRegisterS{})
 	if uuid.Equal(uuid.UUID(trType), uuid.Nil) {
 		t.Fatal("Couldn't register TestRegister-struct")
 	}
@@ -35,8 +35,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestRegisterReflect(t *testing.T) {
-	typ := RegisterMessageType(TestRegisterS{})
-	typReflect := RTypeToMessageTypeID(reflect.TypeOf(TestRegisterS{}))
+	typ := RegisterPacketType(TestRegisterS{})
+	typReflect := RTypeToPacketTypeID(reflect.TypeOf(TestRegisterS{}))
 	if typ != typReflect {
 		t.Fatal("Register does not work")
 	}

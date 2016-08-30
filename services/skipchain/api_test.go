@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(&testData{})
+	network.RegisterPacketType(&testData{})
 }
 
 func TestClient_ProposeSkipBlock(t *testing.T) {

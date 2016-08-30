@@ -9,7 +9,7 @@ func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
 }
 
 func (h *Host) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
-	return h.overlay.CreateProtocolSDA(t, name)
+	return h.overlay.CreateProtocolSDA(name, t)
 }
 
 func (h *Host) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {

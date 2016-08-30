@@ -6,22 +6,15 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	sda.RegisterNewService(ServiceName, func(c *sda.Context, path string) sda.Service {
-		s := newIdentityService(c, path).(*Service)
-		s.skipchain = skipchain.NewLocalClient()
-		return s
-	})
 	log.MainTest(m)
 }
 
-func TestService_AddIdentity(t *testing.T) {
-	log.TestOutput(true, 3)
+func TestService_CreateIdentity2(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(5, identityService)
@@ -29,12 +22,12 @@ func TestService_AddIdentity(t *testing.T) {
 
 	keypair := config.NewKeyPair(network.Suite)
 	il := NewConfig(50, keypair.Public, "one")
-	msg, err := service.AddIdentity(nil, &AddIdentity{il, el})
+	msg, err := service.CreateIdentity(nil, &CreateIdentity{il, el})
 	log.ErrFatal(err)
-	air := msg.(*AddIdentityReply)
+	air := msg.(*CreateIdentityReply)
 
 	data := air.Data
-	id, ok := service.identities[string(data.Hash)]
+	id, ok := service.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }

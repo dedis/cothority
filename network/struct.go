@@ -13,8 +13,12 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// MaxRetry defines how many times should we try to connect
-const MaxRetry = 10
+// MaxRetryConnectConnect defines how many times should we try to connect
+const MaxRetryConnect = 10
+
+// MaxIdentityExchange is the maximum time waited for an exchange of
+// the identity to happen.
+const MaxIdentityExchange = 5 * time.Second
 
 // WaitRetry defines how much time should we wait before trying again
 const WaitRetry = 100 * time.Millisecond
@@ -57,7 +61,7 @@ type Packet struct {
 	// the origin of the message
 	From Address
 	// What kind of msg do we have
-	MsgType MessageTypeID
+	MsgType PacketTypeID
 	// The underlying message
 	Msg Body
 	// which constructors are used
@@ -86,16 +90,16 @@ func (eid ServerIdentityID) Equal(other ServerIdentityID) bool {
 }
 
 func (e *ServerIdentity) String() string {
-	return string(e.Address)
+	return e.Address.String()
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
-var ServerIdentityType = RegisterMessageType(ServerIdentity{})
+var ServerIdentityType = RegisterPacketType(ServerIdentity{})
 
 // ServerIdentityToml is the struct that can be marshalled into a toml file
 type ServerIdentityToml struct {
 	Public  string
-	Address string
+	Address Address
 }
 
 // NewServerIdentity creates a new ServerIdentity based on a public key and with a slice
@@ -111,31 +115,31 @@ func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 }
 
 // Equal tests on same public key
-func (e *ServerIdentity) Equal(e2 *ServerIdentity) bool {
-	return e.Public.Equal(e2.Public)
+func (si *ServerIdentity) Equal(e2 *ServerIdentity) bool {
+	return si.Public.Equal(e2.Public)
 }
 
 // Toml converts an ServerIdentity to a Toml-structure
-func (e *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
+func (si *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 	var buf bytes.Buffer
-	if err := crypto.WritePub64(suite, &buf, e.Public); err != nil {
+	if err := crypto.WritePub64(suite, &buf, si.Public); err != nil {
 		log.Error("Error while writing public key:", err)
 	}
 	return &ServerIdentityToml{
-		Address: string(e.Address),
+		Address: si.Address,
 		Public:  buf.String(),
 	}
 }
 
 // ServerIdentity converts an ServerIdentityToml structure back to an ServerIdentity
-func (e *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdentity {
-	pub, err := crypto.ReadPub64(suite, strings.NewReader(e.Public))
+func (si *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdentity {
+	pub, err := crypto.ReadPub64(suite, strings.NewReader(si.Public))
 	if err != nil {
 		log.Error("Error while reading public key:", err)
 	}
 	return &ServerIdentity{
 		Public:  pub,
-		Address: Address(e.Address),
+		Address: si.Address,
 	}
 }
 

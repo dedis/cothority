@@ -18,8 +18,8 @@ The protocol waits for the `Close`-message to arrive at the root.
 */
 
 func init() {
-	network.RegisterMessageType(PrepareClose{})
-	network.RegisterMessageType(Close{})
+	network.RegisterPacketType(PrepareClose{})
+	network.RegisterPacketType(Close{})
 	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
 }
 
@@ -95,15 +95,16 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 			log.Error(p.Info(), "couldn't send 'close' tp parent",
 				p.Parent(), err)
 		}
-	} else {
-		log.Lvl2("Root received Close")
-		p.Done <- true
 	}
 	time.Sleep(time.Second)
 	log.Lvl3("Closing host", p.ServerIdentity().Address)
 	err := p.TreeNodeInstance.CloseHost()
 	if err != nil {
 		log.Error("Couldn't close:", err)
+	}
+	if p.IsRoot() {
+		log.Lvl2("Root received Close")
+		p.Done <- true
 	}
 	p.TreeNodeInstance.Done()
 }

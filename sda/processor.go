@@ -13,27 +13,39 @@ import (
 // ServiceProcessor allows for an easy integration of external messages
 // into the Services. You have to embed it into your Service-structer,
 // then it will offer an 'RegisterMessage'-method that takes a message of type
-// 	func ReceiveMsg(e *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
+// 	func ReceiveMsg(si *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
 // wants to send.
 type ServiceProcessor struct {
-	functions map[network.MessageTypeID]interface{}
+	functions map[network.PacketTypeID]interface{}
 	*Context
 }
 
 // NewServiceProcessor initializes your ServiceProcessor.
 func NewServiceProcessor(c *Context) *ServiceProcessor {
 	return &ServiceProcessor{
-		functions: make(map[network.MessageTypeID]interface{}),
+		functions: make(map[network.PacketTypeID]interface{}),
 		Context:   c,
 	}
 }
 
-// RegisterMessage puts a new message in the message-handler
-// XXX More comments are needed as it's not clear whether RegisterMessage waits
-// for message for/from Clients or for/from Services.
+// RegisterMessage will store the given handler that will be used by the service.
+// f must be a function of the following form:
+// func(sId *network.ServerIdentity, structPtr *MyMessageStruct)(network.Body, error)
+//
+// In other words:
+// f must be a function that takes two arguments:
+//  * network.ServerIdentity: from whom the message is coming from.
+//  * Pointer to a struct: message that the service is ready to handle.
+// f must have two return values:
+//  * Pointer to a struct: message that the service has generated as a reply and
+//  that will be sent to the requester (the sender).
+//  * Error in any case there is an error.
+// f can be used to treat internal service messages as well as external requests
+// from clients.
+// XXX Name should be changed but need to change also in dedis/cosi
 func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check we have the correct channel-type
@@ -54,20 +66,31 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Second argument must be a pointer to *struct*")
 	}
 	if ft.NumOut() != 2 {
-		return errors.New("Need 2 return values: network.ProtocolMessage and error")
+		return errors.New("Need 2 return values: network.Body and error")
 	}
 	if ft.Out(0) != reflect.TypeOf((*network.Body)(nil)).Elem() {
-		return errors.New("Need 2 return values: *network.ProtocolMessage* and error")
+		return errors.New("Need 2 return values: *network.Body* and error")
 	}
 	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
-		return errors.New("Need 2 return values: network.ProtocolMessage and *error*")
+		return errors.New("Need 2 return values: network.Body and *error*")
 	}
 	// Automatic registration of the message to the network library.
 	log.Lvl4("Registering handler", cr1.String())
-	typ := network.RegisterMessageUUID(network.RTypeToMessageTypeID(
+	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
 		cr1.Elem()),
 		cr1.Elem())
 	p.functions[typ] = f
+	return nil
+}
+
+// RegisterMessages takes a vararg of messages to register and returns
+// the first error encountered or nil if everything was OK.
+func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
+	for _, pr := range procs {
+		if err := p.RegisterMessage(pr); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -79,7 +102,7 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
+func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 	cr *ClientRequest) {
 	// unmarshal the inner message
 	mt, m, err := network.UnmarshalRegisteredType(cr.Data,
@@ -88,21 +111,21 @@ func (p *ServiceProcessor) ProcessClientRequest(e *network.ServerIdentity,
 		log.Error("Err unmarshal client request:" + err.Error())
 		return
 	}
-	reply := p.GetReply(e, mt, m)
-	if err := p.SendRaw(e, reply); err != nil {
+	reply := p.GetReply(si, mt, m)
+	if err := p.SendRaw(si, reply); err != nil {
 		log.Error(err)
 	}
 }
 
 // SendISM takes the message and sends it to the corresponding service
-func (p *ServiceProcessor) SendISM(e *network.ServerIdentity, msg network.Body) error {
+func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body) error {
 	sName := ServiceFactory.Name(p.Context.ServiceID())
 	sm, err := CreateServiceMessage(sName, msg)
 	if err != nil {
 		return err
 	}
-	log.Lvl4("Raw-sending to", e)
-	return p.SendRaw(e, sm)
+	log.Lvl4("Raw-sending to", si)
+	return p.SendRaw(si, sm)
 }
 
 // SendISMOthers sends an InterServiceMessage to all other services
@@ -126,7 +149,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 
 // GetReply takes msgType and a message. It dispatches the msg to the right
 // function registered, then sends the responses to the sender.
-func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.MessageTypeID, m network.Body) network.Body {
+func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.PacketTypeID, m network.Body) network.Body {
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &network.StatusRet{"Didn't register message-handler: " + mt.String()}
@@ -136,9 +159,9 @@ func (p *ServiceProcessor) GetReply(e *network.ServerIdentity, mt network.Messag
 	to1 := reflect.TypeOf(fu).In(1)
 	f := reflect.ValueOf(fu)
 
-	log.Lvl4("Dispatching to", e.Address)
+	log.Lvl4("Dispatching to", si.Address)
 	arg0 := reflect.New(reflect.TypeOf(network.ServerIdentity{}))
-	arg0.Elem().Set(reflect.ValueOf(e).Elem())
+	arg0.Elem().Set(reflect.ValueOf(si).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))
 

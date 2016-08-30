@@ -17,7 +17,7 @@ type PropagateMsg struct {
 }
 
 func init() {
-	network.RegisterMessageType(PropagateMsg{})
+	network.RegisterPacketType(PropagateMsg{})
 }
 
 // Tests an n-node system
@@ -32,7 +32,7 @@ func TestPropagate(t *testing.T) {
 
 		tree := el.GenerateNaryTreeWithRoot(8, o.ServerIdentity())
 		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-		pi, err := o.CreateProtocolSDA(tree, "Propagate")
+		pi, err := o.CreateProtocolSDA("Propagate", tree)
 		log.ErrFatal(err)
 		nodes, err := propagateStartAndWait(pi, msg, 1000,
 			func(m network.Body) {

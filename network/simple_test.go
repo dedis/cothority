@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-var SimplePacketType MessageTypeID
+var SimplePacketType PacketTypeID
 
 func init() {
-	SimplePacketType = RegisterMessageType(SimplePacket{})
+	SimplePacketType = RegisterPacketType(SimplePacket{})
 }
 
 type SimplePacket struct {
@@ -51,7 +51,7 @@ func TestTCPConnListenerExample(t *testing.T) {
 		if err != nil {
 			panic("Couldn't listen:" + err.Error())
 		}
-		close(done)
+		done <- true
 	}()
 	cConMu.Lock()
 	conn, err := NewTCPConn(addr)

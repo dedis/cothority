@@ -19,7 +19,7 @@ type basicMessage struct {
 	Value int
 }
 
-var basicMessageType = RegisterMessageType(&basicMessage{})
+var basicMessageType = RegisterPacketType(&basicMessage{})
 
 func TestBlockingDispatcher(t *testing.T) {
 	defer log.AfterTest(t)

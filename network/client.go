@@ -39,11 +39,11 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 
 	var c Conn
 	var err error
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		c, err = cl.connector(sid, dst)
 		if err == nil {
 			break
-		} else if i == MaxRetry-1 {
+		} else if i == MaxRetryConnect-1 {
 			return nil, fmt.Errorf("Could not connect", err)
 		}
 		time.Sleep(WaitRetry)
@@ -106,5 +106,5 @@ func ErrMsg(em *Packet, err error) error {
 }
 
 func init() {
-	RegisterMessageType(&StatusRet{})
+	RegisterPacketType(&StatusRet{})
 }

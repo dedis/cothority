@@ -23,11 +23,11 @@ type Dispatcher interface {
 	// **NOTE** In the current version, if a subequent call to RegisterProcessor
 	// happens, for the same msgType, the latest Processor will be used; there
 	// is no *copy* or *duplication* of messages.
-	RegisterProcessor(p Processor, msgType ...MessageTypeID)
+	RegisterProcessor(p Processor, msgType ...PacketTypeID)
 	// RegisterProcessorFunc enables to register directly a function that will
 	// be called for each packet of type msgType. It's a shorter way of
 	// registering a Processor.
-	RegisterProcessorFunc(MessageTypeID, func(*Packet))
+	RegisterProcessorFunc(PacketTypeID, func(*Packet))
 	// Dispatch will find the right processor to dispatch the packet to. The id
 	// is the identity of the author / sender of the packet.
 	// It can be called for example by the network layer.
@@ -50,18 +50,18 @@ type Processor interface {
 // It can be re-used for more complex dispatcher.
 type BlockingDispatcher struct {
 	sync.Mutex
-	procs map[MessageTypeID]Processor
+	procs map[PacketTypeID]Processor
 }
 
 // NewBlockingDispatcher will return a freshly initialized BlockingDispatcher.
 func NewBlockingDispatcher() *BlockingDispatcher {
 	return &BlockingDispatcher{
-		procs: make(map[MessageTypeID]Processor),
+		procs: make(map[PacketTypeID]Processor),
 	}
 }
 
 // RegisterProcessor saves the given processor in the dispatcher.
-func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...MessageTypeID) {
+func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...PacketTypeID) {
 	d.Lock()
 	defer d.Unlock()
 	for _, t := range msgType {
@@ -69,7 +69,7 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...MessageTy
 	}
 }
 
-func (d *BlockingDispatcher) RegisterProcessorFunc(msgType MessageTypeID, fn func(*Packet)) {
+func (d *BlockingDispatcher) RegisterProcessorFunc(msgType PacketTypeID, fn func(*Packet)) {
 	p := &defaultProcessor{
 		fn: fn,
 	}

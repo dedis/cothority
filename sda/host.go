@@ -18,7 +18,6 @@ type Host struct {
 	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
-	suite   abstract.Suite
 	*network.Router
 	// Overlay handles the mapping from tree and entityList to ServerIdentity.
 	// It uses tokens to represent an unique ProtocolInstance in the system
@@ -35,7 +34,6 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		ServerIdentity:       e,
 		private:              pkey,
-		suite:                network.Suite,
 		statusReporterStruct: newStatusReporterStruct(),
 	}
 
@@ -68,7 +66,7 @@ func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *netwo
 // Currently the suite is hardcoded into the network library.
 // Don't use network.Suite but Host's Suite function instead if possible.
 func (h *Host) Suite() abstract.Suite {
-	return h.suite
+	return network.Suite
 }
 
 // GetStatus is a function that returns the status report of the server.

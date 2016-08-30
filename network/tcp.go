@@ -52,7 +52,7 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
 	netAddr := addr.NetworkAddress()
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		conn, err = net.Dial("tcp", netAddr)
 		if err != nil {
 			time.Sleep(WaitRetry)
@@ -73,24 +73,24 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 
 // Receive calls the receive routine to get the bytes from the connection then
 // it tries to decode the buffer. Returns the Packet with the Msg field decoded
-// or EmptyApplicationMessage and an error if something wrong occured.
+// or EmptyApplicationPacket and an error if something wrong occured.
 func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			e = fmt.Errorf("Error Received message: %v", err)
-			nm = EmptyApplicationMessage
+			nm = EmptyApplicationPacket
 		}
 	}()
 
 	var am Packet
 	buff, err := c.receive()
 	if err != nil {
-		return EmptyApplicationMessage, err
+		return EmptyApplicationPacket, err
 	}
 
 	err = am.UnmarshalBinary(buff)
 	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
 	return am, nil
@@ -140,7 +140,7 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := NewNetworkMessage(obj)
+	am, err := NewNetworkPacket(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
@@ -311,12 +311,12 @@ func (t *TCPListener) bind(addr Address) error {
 		return errors.New("Already listening")
 	}
 	global, _ := GlobalBind(addr.NetworkAddress())
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		ln, err := net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
-		} else if i == MaxRetry-1 {
+		} else if i == MaxRetryConnect-1 {
 			return errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(WaitRetry)

@@ -26,21 +26,22 @@ var Suite = ed25519.NewAES128SHA256Ed25519(false)
 // Body is a type for any message that the user wants to send
 type Body interface{}
 
-// MessageTypeID is the ID used to uniquely identify different registered messages
-type MessageTypeID uuid.UUID
+// PacketTypeID is the ID used to uniquely identify different registered messages
+type PacketTypeID uuid.UUID
 
 // ErrorType is reserved by the network library. When you receive a message of
 // ErrorType, it is generally because an error happened, then you can call
 // Error() on it.
-var ErrorType = MessageTypeID(uuid.Nil)
+var ErrorType = PacketTypeID(uuid.Nil)
 
-// String returns the canonical string representation of the MessageTypeID
-func (mId MessageTypeID) String() string {
+// String returns the name of the structure if it is known, else it returns
+// the hexadecimal value of the Id.
+func (mId PacketTypeID) String() string {
 	t, ok := registry.get(mId)
-	if !ok {
-		return uuid.UUID(mId).String()
+	if ok {
+		return t.String()
 	}
-	return t.String()
+	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
 // NamespaceURL is the basic namespace used for uuid
@@ -48,25 +49,25 @@ func (mId MessageTypeID) String() string {
 // cothority/packages should be expected to use that.
 const NamespaceURL = "https://dedis.epfl.ch/"
 
-// NamespaceProtocolMessageType is the namespace used for MessageTypeID
-const NamespaceProtocolMessageType = NamespaceURL + "/protocolType/"
+// NamespaceBodyType is the namespace used for PacketTypeID
+const NamespaceBodyType = NamespaceURL + "/protocolType/"
 
-// RegisterMessageType registers a custom "struct" / "packet" and returns the
-// corresponding MessageTypeID.
+// RegisterPacketType registers a custom "struct" / "packet" and returns the
+// corresponding PacketTypeID.
 // Simply pass your non-initialized struct.
-func RegisterMessageType(msg Body) MessageTypeID {
-	msgType := TypeToMessageTypeID(msg)
+func RegisterPacketType(msg Body) PacketTypeID {
+	msgType := TypeToPacketTypeID(msg)
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 	t := val.Type()
-	return RegisterMessageUUID(msgType, t)
+	return RegisterPacketUUID(msgType, t)
 }
 
-// RegisterMessageUUID can be used if the uuid and the type is already known
+// RegisterPacketUUID can be used if the uuid and the type is already known
 // NOTE: be sure to only registers VALUE message and not POINTERS to message.
-func RegisterMessageUUID(mt MessageTypeID, rt reflect.Type) MessageTypeID {
+func RegisterPacketUUID(mt PacketTypeID, rt reflect.Type) PacketTypeID {
 	if _, typeRegistered := registry.get(mt); typeRegistered {
 		return mt
 	}
@@ -75,10 +76,10 @@ func RegisterMessageUUID(mt MessageTypeID, rt reflect.Type) MessageTypeID {
 	return mt
 }
 
-// TypeFromData returns the MessageTypeID corresponding to the given structure.
+// TypeFromData returns the PacketTypeID corresponding to the given structure.
 // It returns 'ErrorType' if the type wasn't found or an error occurred.
-func TypeFromData(msg Body) MessageTypeID {
-	msgType := TypeToMessageTypeID(msg)
+func TypeFromData(msg Body) PacketTypeID {
+	msgType := TypeToPacketTypeID(msg)
 	_, ok := registry.get(msgType)
 	if !ok {
 		return ErrorType
@@ -86,21 +87,22 @@ func TypeFromData(msg Body) MessageTypeID {
 	return msgType
 }
 
-// TypeToMessageTypeID converts a ProtocolMessage to a MessageTypeID
-func TypeToMessageTypeID(msg Body) MessageTypeID {
+// TypeToPacketTypeID converts a Body to a PacketTypeID
+func TypeToPacketTypeID(msg Body) PacketTypeID {
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
-	url := NamespaceProtocolMessageType + val.Type().String()
+	url := NamespaceBodyType + val.Type().String()
 	u := uuid.NewV5(uuid.NamespaceURL, url)
-	return MessageTypeID(u)
+	log.Lvl5("Reflecting", reflect.TypeOf(msg), "to", u)
+	return PacketTypeID(u)
 }
 
-// RTypeToMessageTypeID converts a reflect.Type to a MessageTypeID
-func RTypeToMessageTypeID(msg reflect.Type) MessageTypeID {
-	url := NamespaceProtocolMessageType + msg.String()
-	return MessageTypeID(uuid.NewV5(uuid.NamespaceURL, url))
+// RTypeToPacketTypeID converts a reflect.Type to a PacketTypeID
+func RTypeToPacketTypeID(msg reflect.Type) PacketTypeID {
+	url := NamespaceBodyType + msg.String()
+	return PacketTypeID(uuid.NewV5(uuid.NamespaceURL, url))
 }
 
 // DumpTypes is used for debugging - it prints out all known types
@@ -133,20 +135,20 @@ func (am *Packet) SetError(err error) {
 }
 
 type typeRegistry struct {
-	types map[MessageTypeID]reflect.Type
+	types map[PacketTypeID]reflect.Type
 	lock  sync.Mutex
 }
 
 func newTypeRegistry() *typeRegistry {
 	return &typeRegistry{
-		types: make(map[MessageTypeID]reflect.Type),
+		types: make(map[PacketTypeID]reflect.Type),
 		lock:  sync.Mutex{},
 	}
 }
 
-// get returns the reflect.Type corresponding to the registered MessageTypeID
+// get returns the reflect.Type corresponding to the registered PacketTypeID
 // an a boolean indicating if the type is actually registered or not.
-func (tr *typeRegistry) get(id MessageTypeID) (reflect.Type, bool) {
+func (tr *typeRegistry) get(id PacketTypeID) (reflect.Type, bool) {
 	tr.lock.Lock()
 	defer tr.lock.Unlock()
 	t, ok := tr.types[id]
@@ -154,7 +156,7 @@ func (tr *typeRegistry) get(id MessageTypeID) (reflect.Type, bool) {
 }
 
 // put stores the given type in the typeRegistry.
-func (tr *typeRegistry) put(id MessageTypeID, typ reflect.Type) {
+func (tr *typeRegistry) put(id PacketTypeID, typ reflect.Type) {
 	tr.lock.Lock()
 	defer tr.lock.Unlock()
 	tr.types[id] = typ
@@ -164,15 +166,15 @@ var registry = newTypeRegistry()
 
 var globalOrder = binary.BigEndian
 
-// EmptyApplicationMessage is the default empty message that is returned in case
+// EmptyApplicationPacket is the default empty message that is returned in case
 // something went wrong.
 //
 // FIXME currently there seems no way with go1.6 for this to compile without repeating
-// the definition of ErrorType above as MessageTypeID(uuid.Nil).
+// the definition of ErrorType above as PacketTypeID(uuid.Nil).
 // Somehow it still gets inlined (maybe through the indirection).
 // should be fixed properly in go1.7:
 // https://github.com/golang/go/commit/feb2a5d6103dad76b6374c5f346e33d55612cb2a
-var EmptyApplicationMessage = Packet{MsgType: MessageTypeID(uuid.Nil)}
+var EmptyApplicationPacket = Packet{MsgType: PacketTypeID(uuid.Nil)}
 
 // global mutex for MarshalRegisteredType
 var marshalLock sync.Mutex
@@ -183,7 +185,7 @@ var marshalLock sync.Mutex
 func MarshalRegisteredType(data Body) ([]byte, error) {
 	marshalLock.Lock()
 	defer marshalLock.Unlock()
-	var msgType MessageTypeID
+	var msgType PacketTypeID
 	if msgType = TypeFromData(data); msgType == ErrorType {
 		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))
 	}
@@ -194,8 +196,8 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 	var buf []byte
 	var err error
 	if buf, err = protobuf.Encode(data); err != nil {
-		log.Error("Error for protobuf encoding:", err)
-		if log.DebugVisible() >= 3 {
+		log.Errorf("Error for protobuf encoding: %s %+v", err, data)
+		if log.DebugVisible() > 0 {
 			log.Error(log.Stack())
 		}
 		return nil, err
@@ -207,9 +209,9 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 // UnmarshalRegisteredType returns the type, the data and an error trying to
 // decode a message from a buffer.
 // The type must be registered to the network library in order to be decodable.
-func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (MessageTypeID, Body, error) {
+func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (PacketTypeID, Body, error) {
 	b := bytes.NewBuffer(buf)
-	var tID MessageTypeID
+	var tID PacketTypeID
 	if err := binary.Read(b, globalOrder, &tID); err != nil {
 		return ErrorType, nil, err
 	}
@@ -228,16 +230,16 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Me
 
 // UnmarshalRegistered is like UnmarshalRegisteredType but it uses a
 // default constructor and returns a pointer to struct.
-func UnmarshalRegistered(buf []byte) (MessageTypeID, Body, error) {
+func UnmarshalRegistered(buf []byte) (PacketTypeID, Body, error) {
 	b := bytes.NewBuffer(buf)
-	var tID MessageTypeID
+	var tID PacketTypeID
 	if err := binary.Read(b, globalOrder, &tID); err != nil {
 		return ErrorType, nil, err
 	}
 	typ, ok := registry.get(tID)
 	if !ok {
 		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
-			typ.Name())
+			tID)
 	}
 	ptrVal := reflect.New(typ)
 	ptr := ptrVal.Interface()
@@ -248,14 +250,14 @@ func UnmarshalRegistered(buf []byte) (MessageTypeID, Body, error) {
 	return tID, ptrVal.Interface(), nil
 }
 
-// MarshalBinary the application message => to bytes
+// MarshalBinary the application packet => to bytes
 // Implements BinaryMarshaler interface so it will be used when sending with protobuf
 func (am *Packet) MarshalBinary() ([]byte, error) {
 	return MarshalRegisteredType(am.Msg)
 }
 
 // UnmarshalBinary will decode the incoming bytes
-// It uses protobuf for decoding (using the constructors in the NetworkMessage).
+// It uses protobuf for decoding (using the constructors in the Packet).
 func (am *Packet) UnmarshalBinary(buf []byte) error {
 	t, msg, err := UnmarshalRegisteredType(buf, DefaultConstructors(Suite))
 	am.MsgType = t
@@ -263,9 +265,9 @@ func (am *Packet) UnmarshalBinary(buf []byte) error {
 	return err
 }
 
-// NewNetworkMessage takes a ProtocolMessage and then constructs a
+// NewNetworkPacket takes a Body and then constructs a
 // Message from it. Error if the type is unknown
-func NewNetworkMessage(obj Body) (*Packet, error) {
+func NewNetworkPacket(obj Body) (*Packet, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")

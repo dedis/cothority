@@ -235,7 +235,7 @@ func TestTCPHostClose(t *testing.T) {
 /*}*/
 
 func init() {
-	SimpleMessageType = RegisterMessageType(SimpleMessage{})
+	SimpleMessageType = RegisterPacketType(SimpleMessage{})
 }
 
 func NewTestTCPHost(port int) (*TCPHost, error) {
@@ -255,7 +255,7 @@ type SimpleMessage struct {
 	I int
 }
 
-var SimpleMessageType MessageTypeID
+var SimpleMessageType PacketTypeID
 
 type simpleMessageProc struct {
 	t     *testing.T
@@ -282,7 +282,7 @@ type statusMessage struct {
 	Val int
 }
 
-var statusMsgID MessageTypeID = RegisterMessageType(statusMessage{})
+var statusMsgID = RegisterPacketType(statusMessage{})
 
 type simpleProcessor struct {
 	relay chan statusMessage

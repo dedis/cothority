@@ -43,13 +43,15 @@ type Router struct {
 // NewRouter returns a fresh Router giving its identity, and the host we want to
 // use.
 func NewRouter(own *ServerIdentity, h Host) *Router {
-	return &Router{
+	r := &Router{
 		id:             own,
 		connections:    make(map[ServerIdentityID]Conn),
 		host:           h,
 		Dispatcher:     NewBlockingDispatcher(),
 		handleConnQuit: make(chan bool),
 	}
+	own.Address = h.Address()
+	return r
 }
 
 func (r *Router) Start() {
