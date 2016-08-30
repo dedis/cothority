@@ -1,1 +1,75 @@
 package platform
+
+import (
+	"testing"
+
+	"strconv"
+
+	"fmt"
+
+	"github.com/dedis/cothority/log"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestMiniNet_getHostList(t *testing.T) {
+	testVector := []struct {
+		Servers    int
+		Hosts      int
+		HostsSlice []string
+		List       string
+	}{
+		{1, 1,
+			[]string{"10.1.0.2"},
+			"local1 10.1.0.0/16 1\n"},
+		{1, 2,
+			[]string{"10.1.0.2", "10.1.0.3"},
+			"local1 10.1.0.0/16 2\n"},
+		{2, 1,
+			[]string{"10.1.0.2"},
+			"local1 10.1.0.0/16 1\n"},
+		{2, 2,
+			[]string{"10.1.0.2", "10.2.0.2"},
+			"local1 10.1.0.0/16 1\nlocal2 10.2.0.0/16 1\n"},
+		{2, 3,
+			[]string{"10.1.0.2", "10.2.0.2", "10.1.0.3"},
+			"local1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\n"},
+		{3, 1,
+			[]string{"10.1.0.2"},
+			"local1 10.1.0.0/16 1\n"},
+		{3, 4,
+			[]string{"10.1.0.2", "10.2.0.2", "10.3.0.2",
+				"10.1.0.3"},
+			"local1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\nlocal3 10.3.0.0/16 1\n"},
+	}
+	for _, tv := range testVector {
+		mn := &MiniNet{}
+		for i := 1; i <= tv.Servers; i++ {
+			mn.HostIPs = append(mn.HostIPs, fmt.Sprintf("local%d", i))
+		}
+
+		rc := makeRunConfig(tv.Servers, tv.Hosts)
+		h, l, err := mn.getHostList(rc)
+		log.ErrFatal(err)
+		errStr := fmt.Sprintf("Servers: %d - Hosts: %d",
+			tv.Servers, tv.Hosts)
+		assert.Equal(t, tv.HostsSlice, h, errStr)
+		assert.Equal(t, tv.List, l, errStr)
+	}
+}
+
+func TestMiniNet_getHostList2(t *testing.T) {
+	mn := &MiniNet{HostIPs: []string{"local1"}}
+	h, _, err := mn.getHostList(makeRunConfig(1, 256))
+	log.ErrFatal(err)
+	assert.Equal(t, "10.1.0.254", h[252])
+	assert.Equal(t, "10.1.0.255", h[253])
+	assert.Equal(t, "10.1.1.0", h[254])
+	assert.Equal(t, "10.1.1.1", h[255])
+}
+
+func makeRunConfig(servers, hosts int) RunConfig {
+	return RunConfig{map[string]string{
+		"servers": strconv.Itoa(servers),
+		"hosts":   strconv.Itoa(hosts),
+	}}
+}

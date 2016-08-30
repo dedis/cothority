@@ -11,12 +11,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
+
+	"net"
+
+	"io/ioutil"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
 )
 
@@ -143,11 +145,24 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 		return err
 	}
 	log.Lvl3("Creating hosts")
-	mininet.readHosts()
+	mininet.readServers()
 	log.Lvl3("Writing the config file :", mininet)
 	sda.WriteTomlConfig(mininet, mininetConfig, m.buildDir)
 
-	simulConfig, err := sim.Setup(m.buildDir, mininet.HostIPs)
+	if err = m.readServers(); err != nil {
+		return err
+	}
+	hosts, list, err := m.getHostList(rc)
+	if err != nil {
+		return err
+	}
+	log.Lvl3("Hosts are:", hosts)
+	log.Lvl3("List is:", list)
+	err = ioutil.WriteFile(m.buildDir+"/list", []byte(list), 0660)
+	if err != nil {
+		return err
+	}
+	simulConfig, err := sim.Setup(m.buildDir, hosts)
 	if err != nil {
 		return err
 	}
@@ -208,7 +223,7 @@ func (m *MiniNet) Start(args ...string) error {
 	}
 	go func() {
 		log.LLvl3("Starting simulation over mininet")
-		_, err := SSHRun(m.Login, m.Host, "cd mininet_run; ./start.py network go")
+		_, err := SSHRun(m.Login, m.Host, "cd mininet_run; ./start.py list go")
 		if err != nil {
 			log.Lvl3(err)
 		}
@@ -246,33 +261,74 @@ func (m *MiniNet) Wait() error {
 	return nil
 }
 
-/*
-* connect to the MiniNet server and check how many servers we got attributed
- */
-func (m *MiniNet) readHostsIcsil() error {
-	// Updating the available servers
-	_, err := SSHRun(m.Login, m.Host, "cd mininet; ./icsil1_search_server.py icsil1.servers.json")
-	if err != nil {
-		return err
+// Returns the servers to use for mininet.
+// TODO: make it more user-definable.
+func (m *MiniNet) readServers() error {
+	m.HostIPs = []string{}
+	for _, h := range []string{"iccluster026", "iccluster027"} {
+		ips, err := net.LookupIP(h + ".iccluster.epfl.ch")
+		if err != nil {
+			return err
+		}
+		log.LLvl3("Found IP for", h, ":", ips[0])
+		m.HostIPs = append(m.HostIPs, ips[0].String())
 	}
-	cmd := fmt.Sprintf("cd mininet/conodes && ./dispatched.py %d %s %d && "+
-		"cat sites/icsil1/nodes.txt", m.Debug, m.Simulation, monitor.DefaultSinkPort)
-	nodesSlice, err := SSHRun(m.Login, m.Host, cmd)
-	if err != nil {
-		return err
-	}
-	nodes := strings.Split(string(nodesSlice), "\n")
-	num_servers := len(nodes) - 2
-
-	m.HostIPs = make([]string, num_servers)
-	copy(m.HostIPs, nodes[2:])
-	log.Lvl4("Nodes are:", m.HostIPs)
+	log.LLvl3("Nodes are:", m.HostIPs)
 	return nil
 }
 
-// Setting hosts for the iccluster
-func (m *MiniNet) readHosts() error {
-	m.HostIPs = []string{"iccluster026", "iccluster028"}
-	log.LLvl3("Nodes are:", m.HostIPs)
-	return nil
+// getHostList returns the hosts that will be used for the communication
+// and the list for `start.py`.
+func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err error) {
+	hosts = []string{}
+	list = ""
+	physicalServers := len(m.HostIPs)
+	nets := make([]*net.IPNet, physicalServers)
+	ips := make([]net.IP, physicalServers)
+	for n := range nets {
+		ips[n], nets[n], err = net.ParseCIDR(fmt.Sprintf("10.%d.0.0/16", n+1))
+		if err != nil {
+			return
+		}
+		// We'll have to start with 10.1.0.2 as the first host.
+		// So we set the LSByte to 1 which will be increased later.
+		ips[n][len(ips[n])-1] = byte(1)
+	}
+	hosts = []string{}
+	nbrServers, err := rc.GetInt("Servers")
+	if err != nil {
+		log.Print(rc)
+		return
+	}
+	if nbrServers > physicalServers {
+		log.Warn("Fewer physical servers available than requested.")
+	}
+	nbrHosts, err := rc.GetInt("Hosts")
+	if err != nil {
+		log.Print(rc)
+		return
+	}
+	for i := 0; i < nbrHosts; i++ {
+		ip := ips[i%physicalServers]
+		for j := len(ip) - 1; j >= 0; j-- {
+			ip[j]++
+			if ip[j] > 0 {
+				break
+			}
+		}
+		ips[i%physicalServers] = ip
+		hosts = append(hosts, ip.String())
+	}
+	for i, s := range nets {
+		if i >= nbrHosts {
+			break
+		}
+		// Magical formula to get how many hosts run on each
+		// physical server if we distribute them evenly, starting
+		// from the first server.
+		h := (nbrHosts + physicalServers - 1 - i) / physicalServers
+		list += fmt.Sprintf("%s %s %d\n",
+			m.HostIPs[i], s.String(), h)
+	}
+	return
 }
