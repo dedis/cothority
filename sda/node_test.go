@@ -116,13 +116,11 @@ func TestNodeChannel(t *testing.T) {
 // Test instantiation of Node
 func TestNodeNew(t *testing.T) {
 	log.AfterTest(t)
-	h1, h2 := TwoTestHosts()
-	// Add tree + entitylist
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	h1.AddRoster(el)
-	tree := el.GenerateBinaryTree()
-	h1.AddTree(tree)
+	local := NewLocalTest()
+	defer local.CloseAll()
 
+	hosts, _, tree := local.GenTree(2, true)
+	h1 := hosts[0]
 	// Try directly StartNewNode
 	proto, err := h1.StartProtocol(testProto, tree)
 	if err != nil {
@@ -137,8 +135,6 @@ func TestNodeNew(t *testing.T) {
 	if m != "Start" {
 		t.Fatal("Start() not called - msg is:", m)
 	}
-	h1.Close()
-	h2.Close()
 }
 
 func TestTreeNodeProtocolHandlers(t *testing.T) {

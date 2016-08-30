@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 	"sync"
 	"time"
@@ -314,6 +315,7 @@ func NewLocalListener(addr Address) (*LocalListener, error) {
 	l := &LocalListener{
 		quit: make(chan bool),
 	}
+	log.Print("Creating local listener")
 	return l, l.bind(addr)
 }
 
@@ -342,9 +344,7 @@ func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
 	localConnStore.StopListening(ll.addr)
-	if ll.listening {
-		close(ll.quit)
-	}
+	close(ll.quit)
 	return nil
 }
 

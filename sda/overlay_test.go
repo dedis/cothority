@@ -30,18 +30,16 @@ func (po *ProtocolOverlay) Release() {
 func TestOverlayDone(t *testing.T) {
 	log.AfterTest(t)
 	// setup
-	h1 := NewLocalHost(2000)
-	defer h1.Close()
+	local := NewLocalTest()
+	defer local.CloseAll()
 	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := ProtocolOverlay{
 			TreeNodeInstance: n,
 		}
 		return &ps, nil
 	}
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity})
-	h1.AddRoster(el)
-	tree := el.GenerateBinaryTree()
-	h1.AddTree(tree)
+	h, _, tree := local.GenTree(1, true)
+	h1 := h[0]
 	ProtocolRegisterName("ProtocolOverlay", fn)
 	p, err := h1.CreateProtocol("ProtocolOverlay", tree)
 	if err != nil {

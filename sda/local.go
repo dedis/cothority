@@ -45,7 +45,7 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     Local,
+		mode:     TCP,
 	}
 }
 
@@ -321,6 +321,7 @@ func (l *LocalTest) GenLocalHosts(n int) []*Host {
 		case TCP:
 			host = NewTCPHost(port)
 		default:
+			log.Print("Created localhost")
 			host = NewLocalHost(port)
 		}
 		hosts[i] = host
