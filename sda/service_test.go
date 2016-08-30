@@ -63,7 +63,6 @@ func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *
 }
 
 func (dm *DummyProtocol) Start() error {
-	log.Print(dm.Name(), "Start()")
 	dm.link <- true
 	if dm.config.Send {
 		/* if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {*/
@@ -74,14 +73,12 @@ func (dm *DummyProtocol) Start() error {
 			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
 				log.Error(err)
 			}
-			log.Print(dm.Name(), "Sento to children?")
 		}
 	}
 	return nil
 }
 
 func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
-	log.Print(dm.Name(), "waiting in ProcessProtocolMsg")
 	dm.link <- true
 }
 

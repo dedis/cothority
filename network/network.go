@@ -48,6 +48,11 @@ type Listener interface {
 	// what is the address this listener is listening to + what type of
 	// connection does it accept (address.ConnType())
 	Address() Address
+
+	// Returns whether this listener is actually listening or not. Sadly this
+	// function is mainly useful for tests where we need to make sure the
+	// listening routine is started.
+	Listening() bool
 }
 
 // Host is an interface that can Listen for a specific type of Conn and can

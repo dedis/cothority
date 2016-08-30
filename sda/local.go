@@ -3,6 +3,7 @@ package sda
 import (
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -45,7 +46,7 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     TCP,
+		mode:     Local,
 	}
 }
 
@@ -321,10 +322,15 @@ func (l *LocalTest) GenLocalHosts(n int) []*Host {
 		case TCP:
 			host = NewTCPHost(port)
 		default:
-			log.Print("Created localhost")
 			host = NewLocalHost(port)
 		}
 		hosts[i] = host
+	}
+
+	for _, h := range hosts {
+		for !h.Listening() {
+			time.Sleep(40 * time.Millisecond)
+		}
 	}
 	return hosts
 }

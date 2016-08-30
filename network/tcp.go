@@ -402,6 +402,12 @@ func (t *TCPListener) Address() Address {
 	return NewAddress(PlainTCP, t.addr.String())
 }
 
+func (t *TCPListener) Listening() bool {
+	t.listeningLock.Lock()
+	defer t.listeningLock.Unlock()
+	return t.listening
+}
+
 // TCPHost implements the Host interface
 type TCPHost struct {
 	addr Address

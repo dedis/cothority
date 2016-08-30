@@ -290,6 +290,10 @@ func (r *Router) Rx() uint64 {
 	return rx
 }
 
+func (r *Router) Listening() bool {
+	return r.host.Listening()
+}
+
 // exchangeServerIdentity takes a fresh new conn issued by the listener and
 // proceed to the exchanges of the server identities of both parties. It returns
 // the ServerIdentity of the remote party.
