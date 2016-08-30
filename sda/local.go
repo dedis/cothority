@@ -2,7 +2,6 @@ package sda
 
 import (
 	"errors"
-	"strconv"
 
 	"time"
 
@@ -58,13 +57,13 @@ func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error
 
 // CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
-func (l *LocalTest) CreateProtocol(t *Tree, name string) (ProtocolInstance, error) {
+func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
 	for _, h := range l.Hosts {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
-			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(t, name)
+			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(name, t)
 		}
 	}
 	return nil, errors.New("Didn't find host for tree-root")
@@ -78,7 +77,7 @@ func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
-		l.Services[host.ServerIdentity.ID] = host.serviceStore.services
+		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
 	}
 	return hosts
 }
@@ -134,6 +133,7 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
+		log.Lvl3("Closing host", host.ServerIdentity)
 		err := host.Close()
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.First(),
@@ -142,9 +142,12 @@ func (l *LocalTest) CloseAll() {
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
+		log.Lvl3("Closing node", node)
 		node.Close()
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
+	// Give the nodes some time to correctly close down
+	time.Sleep(time.Millisecond * 500)
 }
 
 // GetTree returns the tree of the given TreeNode
@@ -206,7 +209,7 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	}
 	sdaMsg := &ProtocolMsg{
 		MsgSlice: b,
-		MsgType:  network.TypeToMessageTypeID(msg),
+		MsgType:  network.TypeToPacketTypeID(msg),
 		From:     from.token,
 		To:       to.token,
 	}
@@ -217,13 +220,13 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 // known trees, also triggering dispatching of SDA-messages waiting for that
 // tree
 func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
-	h.addPendingTreeMarshal(tm)
+	h.overlay.addPendingTreeMarshal(tm)
 }
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
 func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *Roster) {
-	h.checkPendingTreeMarshal(el)
+	h.overlay.checkPendingTreeMarshal(el)
 }
 
 // GetPrivate returns the private key of a host
@@ -249,21 +252,20 @@ func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
-// NewLocalHost creates a new host with the given address and registers it.
-func NewLocalHost(port int) *Host {
-	address := "localhost:" + strconv.Itoa(port)
+// NewLocalHost creates a new host searching for an open port and registers it.
+func NewLocalHost() *Host {
 	priv, pub := PrivPub()
-	id := network.NewServerIdentity(pub, address)
+	id := network.NewServerIdentity(pub, "localhost:0")
 	return NewHost(id, priv)
 }
 
 // GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true.
+// the other nodes if connect is true. It will take the port-number from
+// the global variable LocalHostPort.
 func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
-
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost(2000 + i*10)
+		host := NewLocalHost()
 		hosts[i] = host
 	}
 	root := hosts[0]

@@ -27,7 +27,6 @@ import (
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol
-	"github.com/dedis/cothority/app/lib/ui"
 	"github.com/dedis/crypto/cosi"
 	// For the moment, the server only serves CoSi requests
 	_ "github.com/dedis/cosi/protocol"
@@ -60,8 +59,8 @@ var RequestTimeOut = time.Second * 1
 // InteractiveConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
 func InteractiveConfig(binaryName string) {
-	ui.Info("Setting up a cothority-server.")
-	str := ui.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
+	log.Info("Setting up a cothority-server.")
+	str := config.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
 	// let's dissect the port / IP
 	var hostStr string
 	var ipProvided = true
@@ -71,7 +70,7 @@ func InteractiveConfig(binaryName string) {
 		str = ":" + str
 	}
 	host, port, err := net.SplitHostPort(str)
-	ui.ErrFatal(err, "Couldn't interpret", str)
+	log.ErrFatal(err, "Couldn't interpret", str)
 
 	if str == "" {
 		portStr = strconv.Itoa(DefaultPort)
@@ -90,12 +89,12 @@ func InteractiveConfig(binaryName string) {
 
 	serverBinding = hostStr + ":" + portStr
 	if net.ParseIP(hostStr) == nil {
-		ui.Fatal("Invalid connection  information for", serverBinding)
+		log.Fatal("Invalid connection  information for", serverBinding)
 	}
 
-	ui.Info("We now need to get a reachable address for other CoSi servers")
-	ui.Info("and clients to contact you. This address will be put in a group definition")
-	ui.Info("file that you can share and combine with others to form a Cothority roster.")
+	log.Info("We now need to get a reachable address for other CoSi servers")
+	log.Info("and clients to contact you. This address will be put in a group definition")
+	log.Info("file that you can share and combine with others to form a Cothority roster.")
 
 	var publicAddress string
 	var failedPublic bool
@@ -104,13 +103,13 @@ func InteractiveConfig(binaryName string) {
 		resp, err := http.Get("http://myexternalip.com/raw")
 		// cant get the public ip then ask the user for a reachable one
 		if err != nil {
-			ui.Error("Could not get your public IP address")
+			log.Error("Could not get your public IP address")
 			failedPublic = true
 		} else {
 			buff, err := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 			if err != nil {
-				ui.Error("Could not parse your public IP address", err)
+				log.Error("Could not parse your public IP address", err)
 				failedPublic = true
 			} else {
 				publicAddress = strings.TrimSpace(string(buff)) + ":" + portStr
@@ -127,13 +126,13 @@ func InteractiveConfig(binaryName string) {
 		if isPublicIP(publicAddress) {
 			// try  to connect to ipfound:portgiven
 			tryIP := publicAddress
-			ui.Info("Check if the address", tryIP, "is reachable from Internet...")
+			log.Info("Check if the address", tryIP, "is reachable from Internet...")
 			if err := tryConnect(tryIP, serverBinding); err != nil {
-				ui.Error("Could not connect to your public IP")
+				log.Error("Could not connect to your public IP")
 				publicAddress = askReachableAddress(portStr)
 			} else {
 				publicAddress = tryIP
-				ui.Info("Address", publicAddress, "is publicly available from Internet.")
+				log.Info("Address", publicAddress, "is publicly available from Internet.")
 			}
 		}
 	}
@@ -154,15 +153,15 @@ func InteractiveConfig(binaryName string) {
 
 	for !configDone {
 		// get name of config file and write to config file
-		configFolder = ui.Input(defaultFolder, "Please enter a folder for the configuration files")
+		configFolder = config.Input(defaultFolder, "Please enter a folder for the configuration files")
 		configFile = path.Join(configFolder, DefaultServerConfig)
 		groupFile = path.Join(configFolder, DefaultGroupFile)
 
 		// check if the directory exists
 		if _, err := os.Stat(configFolder); os.IsNotExist(err) {
-			ui.Info("Creating inexistant directory configuration", configFolder)
+			log.Info("Creating inexistant directory configuration", configFolder)
 			if err = os.MkdirAll(configFolder, 0744); err != nil {
-				ui.Fatalf("Could not create directory configuration %s %v", configFolder, err)
+				log.Fatalf("Could not create directory configuration %s %v", configFolder, err)
 			}
 		}
 
@@ -173,28 +172,28 @@ func InteractiveConfig(binaryName string) {
 
 	public, err := crypto.ReadPubHex(network.Suite, pubStr)
 	if err != nil {
-		ui.Fatal("Impossible to parse public key:", err)
+		log.Fatal("Impossible to parse public key:", err)
 	}
 
 	server := config.NewServerToml(network.Suite, public, publicAddress)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
-	ui.Info("All configurations saved, ready to serve signatures now.")
+	log.Info("All configurations saved, ready to serve signatures now.")
 }
 
 // CheckConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func CheckConfig(tomlFileName string) error {
 	f, err := os.Open(tomlFileName)
-	ui.ErrFatal(err, "Couldn't open group definition file")
+	log.ErrFatal(err, "Couldn't open group definition file")
 	group, err := config.ReadGroupDescToml(f)
-	ui.ErrFatal(err, "Error while reading group definition file", err)
+	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
-		ui.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
+		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
 			tomlFileName)
 	}
-	ui.Info("Checking the availability and responsiveness of the servers in the group...")
+	log.Info("Checking the availability and responsiveness of the servers in the group...")
 	return CheckServers(group)
 }
 
@@ -243,18 +242,18 @@ func checkList(list *sda.Roster, descs []string) error {
 	}
 	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	ui.Info("Checking server(s) ", serverStr, ": ")
+	log.Info("Checking server(s) ", serverStr, ": ")
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		ui.Error(err)
+		log.Error(err)
 		return err
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		ui.Errorf("Invalid signature: %v", err)
+		log.Errorf("Invalid signature: %v", err)
 		return err
 	}
-	ui.Info("Success")
+	log.Info("Success")
 	return nil
 }
 
@@ -335,18 +334,18 @@ func isPublicIP(ip string) bool {
 func checkOverwrite(file string) bool {
 	// check if the file exists and ask for override
 	if _, err := os.Stat(file); err == nil {
-		return ui.InputYN(true, "Configuration file "+file+" already exists. Override?")
+		return config.InputYN(true, "Configuration file "+file+" already exists. Override?")
 	}
 	return true
 }
 
 // createKeyPair returns the private and public key hexadecimal representation
 func createKeyPair() (string, string) {
-	ui.Info("Creating ed25519 private and public keys.")
+	log.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
 	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
 	if err != nil {
-		ui.Fatal("Error formating private key to hexadecimal. Abort.")
+		log.Fatal("Error formating private key to hexadecimal. Abort.")
 	}
 	var point abstract.Point
 	// use the transformation for EdDSA signatures
@@ -354,24 +353,24 @@ func createKeyPair() (string, string) {
 	point = kp.Public
 	pubStr, err := crypto.PubHex(network.Suite, point)
 	if err != nil {
-		ui.Fatal("Could not parse public key. Abort.")
+		log.Fatal("Could not parse public key. Abort.")
 	}
 
-	ui.Info("Public key: ", pubStr, "\n")
+	log.Info("Public key: ", pubStr, "\n")
 	return privStr, pubStr
 }
 
 func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.GroupToml, fileGroup string) {
 	if err := conf.Save(fileConf); err != nil {
-		ui.Fatal("Unable to write the config to file:", err)
+		log.Fatal("Unable to write the config to file:", err)
 	}
-	ui.Info("Sucess! You can now use the CoSi server with the config file", fileConf)
+	log.Info("Sucess! You can now use the CoSi server with the config file", fileConf)
 	// group definition part
 	if err := group.Save(fileGroup); err != nil {
-		ui.Fatal("Could not write your group file snippet:", err)
+		log.Fatal("Could not write your group file snippet:", err)
 	}
 
-	ui.Info("Saved a group definition snippet for your server at", fileGroup,
+	log.Info("Saved a group definition snippet for your server at", fileGroup,
 		group.String())
 
 }
@@ -380,9 +379,9 @@ func getDefaultConfigFile(binaryName string) string {
 	u, err := user.Current()
 	// can't get the user dir, so fallback to current working dir
 	if err != nil {
-		ui.Error("Could not get your home-directory (", err.Error(), "). Switching back to current dir.")
+		log.Error("Could not get your home-directory (", err.Error(), "). Switching back to current dir.")
 		if curr, err := os.Getwd(); err != nil {
-			ui.Fatal("Impossible to get the current directory:", err)
+			log.Fatal("Impossible to get the current directory:", err)
 		} else {
 			return path.Join(curr, DefaultServerConfig)
 		}
@@ -398,19 +397,19 @@ func getDefaultConfigFile(binaryName string) string {
 }
 
 func askReachableAddress(port string) string {
-	ipStr := ui.Input(DefaultAddress, "IP-address where your server can be reached")
+	ipStr := config.Input(DefaultAddress, "IP-address where your server can be reached")
 
 	splitted := strings.Split(ipStr, ":")
 	if len(splitted) == 2 && splitted[1] != port {
 		// if the client gave a port number, it must be the same
-		ui.Fatal("The port you gave is not the same as the one your server will be listening. Abort.")
+		log.Fatal("The port you gave is not the same as the one your server will be listening. Abort.")
 	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) == nil {
 		// of if the IP address is wrong
-		ui.Fatal("Invalid IP:port address given:", ipStr)
+		log.Fatal("Invalid IP:port address given:", ipStr)
 	} else if len(splitted) == 1 {
 		// check if the ip is valid
 		if net.ParseIP(ipStr) == nil {
-			ui.Fatal("Invalid IP address given:", ipStr)
+			log.Fatal("Invalid IP address given:", ipStr)
 		}
 		// add the port
 		ipStr = ipStr + ":" + port
@@ -429,7 +428,7 @@ func tryConnect(ip string, binding string) error {
 	go func() {
 		ln, err := net.Listen("tcp", binding)
 		if err != nil {
-			ui.Error("Trouble with binding to the address:", err)
+			log.Error("Trouble with binding to the address:", err)
 			return
 		}
 		con, _ := ln.Accept()

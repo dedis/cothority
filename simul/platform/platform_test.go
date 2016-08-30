@@ -16,16 +16,17 @@ Ppm, Rounds
 4, 30`
 
 func TestReadRunfile(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 2)
 	tplat := &TPlat{}
 
-	tmpfile := "/tmp/testrun.toml"
-	err := ioutil.WriteFile(tmpfile, []byte(testfile), 0666)
+	tmpfile, err := ioutil.TempFile("", "testrun.toml")
+	log.ErrFatal(err)
+	_, err = tmpfile.Write([]byte(testfile))
 	if err != nil {
-		log.Fatal("Couldn't create file:", err)
+		log.Fatal("Couldn't write to tmp-file:", err)
 	}
+	tmpfile.Close()
 
-	tests := platform.ReadRunFile(tplat, tmpfile)
+	tests := platform.ReadRunFile(tplat, tmpfile.Name())
 	log.Lvl2(tplat)
 	log.Lvlf2("%+v\n", tests[0])
 	if tplat.App != "sign" {

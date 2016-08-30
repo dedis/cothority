@@ -9,9 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 func TestServiceStatus(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -26,7 +28,7 @@ func TestServiceStatus(t *testing.T) {
 	log.ErrFatal(err)
 	log.Lvl1(stat)
 	assert.Equal(t, "2", stat.Msg["Status"]["Total"])
-	pi, err := local.CreateProtocol(tr, "ExampleChannels")
+	pi, err := local.CreateProtocol("ExampleChannels", tr)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)
 	}

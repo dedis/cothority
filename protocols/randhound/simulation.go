@@ -44,7 +44,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
-	leader, err := config.Overlay.CreateProtocolSDA(config.Tree, "RandHound")
+	leader, err := config.Overlay.CreateProtocolSDA("RandHound", config.Tree)
 	if err != nil {
 		return err
 	}

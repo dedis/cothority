@@ -25,8 +25,8 @@ import (
 // It contains the PeerId of the parent and the sub tree of the children.
 
 func init() {
-	network.RegisterMessageType(Tree{})
-	network.RegisterMessageType(tbmStruct{})
+	network.RegisterPacketType(Tree{})
+	network.RegisterPacketType(tbmStruct{})
 }
 
 // Tree is a topology to be used by any network layer/host layer
@@ -285,7 +285,7 @@ func (tm *TreeMarshal) String() string {
 }
 
 // TreeMarshalTypeID of TreeMarshal message as registered in network
-var TreeMarshalTypeID = network.RegisterMessageType(TreeMarshal{})
+var TreeMarshalTypeID = network.RegisterPacketType(TreeMarshal{})
 
 // TreeMarshalCopyTree takes a TreeNode and returns a corresponding
 // TreeMarshal
@@ -352,7 +352,7 @@ func (elId RosterID) String() string {
 }
 
 // RosterTypeID of Roster message as registered in network
-var RosterTypeID = network.RegisterMessageType(Roster{})
+var RosterTypeID = network.RegisterPacketType(Roster{})
 
 // NewRoster creates a new ServerIdentity from a list of entities. It also
 // adds a UUID which is randomly chosen.
@@ -497,15 +497,15 @@ func (el *Roster) GenerateBinaryTree() *Tree {
 	return el.GenerateNaryTree(2)
 }
 
-// GetRandom returns a random element of the Roster
-func (el *Roster) GetRandom() *network.ServerIdentity {
+// RandomServerIdentity returns a random element of the Roster.
+func (el *Roster) RandomServerIdentity() *network.ServerIdentity {
 	if el.List == nil || len(el.List) == 0 {
 		return nil
 	}
 	return el.List[rand.Int()%len(el.List)]
 }
 
-// addNary is a recursive function to create the binary tree
+// addNary is a recursive function to create the binary tree.
 func (el *Roster) addNary(parent *TreeNode, N, start, end int) *TreeNode {
 	if !(start <= end && end < len(el.List)) {
 		return nil
@@ -561,7 +561,7 @@ func (t *TreeNode) Name() string {
 	return t.ServerIdentity.First()
 }
 
-var _ = network.RegisterMessageType(TreeNode{})
+var _ = network.RegisterPacketType(TreeNode{})
 
 // NewTreeNode creates a new TreeNode with the proper Id
 func NewTreeNode(entityIdx int, ni *network.ServerIdentity) *TreeNode {
@@ -577,13 +577,13 @@ func NewTreeNode(entityIdx int, ni *network.ServerIdentity) *TreeNode {
 
 // IsConnectedTo checks if the TreeNode can communicate with its parent or
 // children.
-func (t *TreeNode) IsConnectedTo(e *network.ServerIdentity) bool {
-	if t.Parent != nil && t.Parent.ServerIdentity.Equal(e) {
+func (t *TreeNode) IsConnectedTo(si *network.ServerIdentity) bool {
+	if t.Parent != nil && t.Parent.ServerIdentity.Equal(si) {
 		return true
 	}
 
 	for i := range t.Children {
-		if t.Children[i].ServerIdentity.Equal(e) {
+		if t.Children[i].ServerIdentity.Equal(si) {
 			return true
 		}
 	}

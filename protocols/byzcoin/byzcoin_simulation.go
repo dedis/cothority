@@ -5,10 +5,10 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/cosi"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -91,7 +91,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	pi, err := sdaConf.Overlay.CreateProtocolSDA(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
 	if err != nil {
 		return err
 	}

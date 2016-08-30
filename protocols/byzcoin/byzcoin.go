@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/cosi"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
