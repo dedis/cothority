@@ -11,6 +11,8 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
+const ProtcolName = "CoSiUpdate"
+
 // This Cosi protocol is a CoSi version with
 // four phases:
 //  - Announcement: The message is being passed into this pass down the tree
