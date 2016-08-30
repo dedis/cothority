@@ -68,17 +68,17 @@ func main() {
 		// Starting all hosts for that server
 		host := sc.Host
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
-		log.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Addresses)
+		log.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Address)
 		// Launch a host and notifies when it's done
 
 		wg.Add(1)
 		go func(h *sda.Host, m monitor.Measure) {
 			ready <- true
 			defer wg.Done()
-			h.Run()
+			h.Start()
 			// record bandwidth
 			m.Record()
-			log.Lvl3(hostAddress, "Simulation closed host", h.ServerIdentity.First())
+			log.Lvl3(hostAddress, "Simulation closed host", h.ServerIdentity)
 		}(host, measures[i])
 		// wait to be sure the goroutine started
 		<-ready
@@ -100,7 +100,7 @@ func main() {
 	}
 	if rootSim != nil {
 		// If this cothority has the root-host, it will start the simulation
-		log.Lvl2("Starting protocol", simul, "on host", rootSC.Host.ServerIdentity.Addresses)
+		log.Lvl2("Starting protocol", simul, "on host", rootSC.Host.ServerIdentity.Address)
 		//log.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
@@ -162,7 +162,7 @@ func main() {
 		}
 	}
 
-	log.Lvl3(hostAddress, scs[0].Host.ServerIdentity.First(), "is waiting for all hosts to close")
+	log.Lvl3(hostAddress, scs[0].Host.ServerIdentity, "is waiting for all hosts to close")
 	wg.Wait()
 	log.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()

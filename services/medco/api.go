@@ -14,7 +14,7 @@ import (
 
 // API represents a client with the server to which he is connected and its public/private key pair.
 type API struct {
-	sda.Client
+	*sda.Client
 	entryPoint        *network.ServerIdentity
 	localClientNumber int64
 	public            abstract.Point

@@ -46,7 +46,7 @@ func init() {
 // in 'Cothority'
 type Identity struct {
 	// Client is included for easy `Send`-methods.
-	sda.Client
+	*sda.Client
 	// IdentityData holds all the data related to this identity
 	// It can be stored and loaded from a config file.
 	Data
@@ -220,7 +220,6 @@ func (i *Identity) ProposeVote(accept bool) error {
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	})
-	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
 	}
