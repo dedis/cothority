@@ -6,13 +6,10 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/skipchain"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/eddsa"
 )
 
 /*
@@ -23,20 +20,27 @@ to vote on these configurations.
 
 func init() {
 	for _, s := range []interface{}{
+		// Structures
 		&Device{},
 		&Identity{},
 		&Config{},
-		&AddIdentity{},
-		&AddIdentityReply{},
-		&PropagateIdentity{},
-		&ProposeSend{},
-		&AttachToIdentity{},
-		&ProposeFetch{},
+		&Storage{},
+		&Service{},
+		// API messages
+		&CreateIdentity{},
+		&CreateIdentityReply{},
 		&ConfigUpdate{},
-		&UpdateSkipBlock{},
+		&ConfigUpdateReply{},
+		&ProposeSend{},
+		&ProposeUpdate{},
+		&ProposeUpdateReply{},
 		&ProposeVote{},
+		&ProposeVoteReply{},
+		// Internal messages
+		&PropagateIdentity{},
+		&UpdateSkipBlock{},
 	} {
-		network.RegisterMessageType(s)
+		network.RegisterPacketType(s)
 	}
 }
 
@@ -46,10 +50,10 @@ func init() {
 type Identity struct {
 	// Client is included for easy `Send`-methods.
 	*sda.Client
-	// Private key for that device.
-	Private abstract.Scalar
-	// Public key for that device - will be stored in the identity-skipchain.
-	Public abstract.Point
+	// The eddsa-compatible key - cannot take suite.Private as the
+	// eddsa-signaure needs access to the seed and the prefix of the
+	// private key.
+	EdDSA *eddsa.EdDSA
 	// ID of the skipchain this device is tied to.
 	ID ID
 	// Config is the actual, valid configuration of the identity-skipchain.
@@ -66,16 +70,15 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
+func NewIdentity(cothority *sda.Roster, threshold int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
-	kp := config.NewKeyPair(network.Suite)
+	ed := eddsa.NewEdDSA(nil)
 	return &Identity{
 		Client:     client,
-		Private:    kp.Secret,
-		Public:     kp.Public,
-		Config:     NewConfig(majority, kp.Public, owner),
+		Config:     NewConfig(threshold, ed.Public, owner),
 		DeviceName: owner,
 		Cothority:  cothority,
+		EdDSA:      ed,
 	}
 }
 
@@ -137,7 +140,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Device[i.DeviceName] = &Device{i.Public}
+	confPropose.Device[i.DeviceName] = &Device{i.EdDSA.Public}
 	err = i.ProposeSend(confPropose)
 	if err != nil {
 		return err
@@ -147,11 +150,11 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &AddIdentity{i.Config, i.Cothority})
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
 	if err != nil {
 		return err
 	}
-	air := msg.Msg.(AddIdentityReply)
+	air := msg.Msg.(CreateIdentityReply)
 	i.ID = ID(air.Data.Hash)
 
 	return nil
@@ -165,18 +168,17 @@ func (i *Identity) ProposeSend(il *Config) error {
 	return err
 }
 
-// ProposeFetch verifies if there is a new configuration awaiting that
+// ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
-func (i *Identity) ProposeFetch() error {
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeFetch{
-		ID:          i.ID,
-		AccountList: nil,
+func (i *Identity) ProposeUpdate() error {
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
+		ID: i.ID,
 	})
 	if err != nil {
 		return err
 	}
-	cnc := msg.Msg.(ProposeFetch)
-	i.Proposed = cnc.AccountList
+	cnc := msg.Msg.(ProposeUpdateReply)
+	i.Proposed = cnc.Propose
 	return nil
 }
 
@@ -193,20 +195,21 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+	log.Print(i.EdDSA)
+	sig, err := i.EdDSA.Sign(hash)
 	if err != nil {
 		return err
 	}
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
-		Signature: &sig,
+		Signature: sig,
 	})
 	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
 	}
-	_, ok := msg.Msg.(skipchain.SkipBlock)
+	_, ok := msg.Msg.(ProposeVoteReply)
 	if ok {
 		log.Lvl2("Threshold reached and signed")
 		i.Config = i.Proposed
@@ -227,8 +230,8 @@ func (i *Identity) ConfigUpdate() error {
 	if err != nil {
 		return err
 	}
-	cu := msg.Msg.(ConfigUpdate)
+	cu := msg.Msg.(ConfigUpdateReply)
 	// TODO - verify new config
-	i.Config = cu.AccountList
+	i.Config = cu.Config
 	return nil
 }

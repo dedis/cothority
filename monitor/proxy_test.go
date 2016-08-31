@@ -4,14 +4,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/log"
 )
 
 func TestProxy(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"

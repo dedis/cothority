@@ -2,40 +2,39 @@
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
-DBG_SHOW=1
+DBG_SHOW=2
+STATICDIR=test
 
 main(){
     startTest
     build
-    test Build
-    test SignFile
+#    test Build
+    test Network
     stopTest
 }
 
-testSignFile(){
+testNetwork(){
     cothoritySetup
     cp group.toml cl1
-    testOut "Running first sign"
-    echo "My Test Message File" > foo.txt
-    echo "My Second Test Message File" > bar.txt
-    testOK runCl 1 sign foo.txt
-    testOut "Running second sign"
-    testOK runCl 1 sign foo.txt -o cl1/signature
-    testOK runCl 1 verify foo.txt -s cl1/signature
-    testFail runCl 1 verify bar.txt -s cl1/signature
-    rm foo.txt
-    rm bar.txt
+    testOut "Running Guard"
+    testOK runCl 1 su cl1/group.toml
+    testOK runCl 1 s evan dadada Hello
+    testFail runCl 1 r evan dadadas
+    testOK runCl 1 r evan dadada
+    testNGrep "Hello" runCl 1 r evan dadadas
+    testGrep "Hello" runCl 1 r evan dadada
+
 }
 
 testBuild(){
-    testOK ./cosi --help
+    testOK ./guard --help
     testOK ./cothorityd --help
 }
 
 runCl(){
     D=cl$1/group.toml
     shift
-    dbgRun ./cosi -d 3 -g $D $@
+    dbgRun ./guard -d 0 $@
 }
 
 build(){
@@ -48,7 +47,7 @@ build(){
     mkdir -p $DIR
     cd $DIR
     testOut "Building in $DIR"
-    for app in cosi cothorityd; do
+    for app in guard cothorityd; do
         if [ ! -e $app -o "$BUILD" ]; then
             go build -o $app $BUILDDIR/$app/*go
         fi
@@ -64,7 +63,7 @@ build(){
 }
 
 if [ "$1" -a "$STATICDIR" ]; then
-    rm -f $STATICDIR/{cothorityd,cosi}
+    rm -f $STATICDIR/{cothorityd,guard}
 fi
 
 main

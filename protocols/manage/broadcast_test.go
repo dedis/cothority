@@ -12,13 +12,11 @@ import (
 
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 3)
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		_, _, tree := local.GenTree(nbrNodes, false, true, true)
 
-		pi, err := local.CreateProtocol(tree, "Broadcast")
+		pi, err := local.CreateProtocol("Broadcast", tree)
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
@@ -28,7 +26,7 @@ func TestBroadcast(t *testing.T) {
 			done <- true
 		})
 		protocol.Start()
-		timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
+		timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 		select {
 		case <-done:
 			log.Lvl2("Done with connecting everybody")

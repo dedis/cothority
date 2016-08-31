@@ -24,6 +24,10 @@ import (
 
 	"errors"
 
+	"strconv"
+
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -35,10 +39,11 @@ import (
 // If constructors == nil, it will take an empty one.
 func NewTCPHost() *TCPHost {
 	return &TCPHost{
-		peers:        make(map[string]Conn),
-		quit:         make(chan bool),
-		constructors: DefaultConstructors(Suite),
-		quitListener: make(chan bool),
+		listeningPort: make(chan int, 1),
+		peers:         make(map[string]Conn),
+		quit:          make(chan bool),
+		constructors:  DefaultConstructors(Suite),
+		quitListener:  make(chan bool),
 	}
 }
 
@@ -134,7 +139,7 @@ func (t *TCPHost) Tx() uint64 {
 func (t *TCPHost) openTCPConn(name string) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
-	for i := 0; i < MaxRetry; i++ {
+	for i := 0; i < MaxRetryConnect; i++ {
 		conn, err = net.Dial("tcp", name)
 		if err != nil {
 			//log.Lvl5("(", i, "/", maxRetry, ") Error opening connection to", name)
@@ -163,16 +168,32 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 	t.listeningLock.Lock()
 	t.listening = true
 	global, _ := GlobalBind(addr)
-	for i := 0; i < MaxRetry; i++ {
-		ln, err := net.Listen("tcp", global)
+	var ln net.Listener
+	for i := 0; i < MaxRetryConnect; i++ {
+		var err error
+		ln, err = net.Listen("tcp", global)
 		if err == nil {
 			t.listener = ln
 			break
-		} else if i == MaxRetry-1 {
+		} else if i == MaxRetryConnect-1 {
 			t.listeningLock.Unlock()
 			return errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(WaitRetry)
+	}
+
+	// Send the actual listening port through the channel, in case
+	// it was a ":0"-address where the system choses its own
+	// port.
+	_, p, _ := net.SplitHostPort(ln.Addr().String())
+	port, err := strconv.Atoi(p)
+	if err != nil {
+		return errors.New("Couldn't find port: " + err.Error())
+	}
+	if len(t.listeningPort) == 0 {
+		// If the channel is empty, else we'd block.
+		log.Lvl3("Sending port", port, "over", t.listeningPort)
+		t.listeningPort <- port
 	}
 
 	t.listeningLock.Unlock()
@@ -202,33 +223,32 @@ func (t *TCPHost) listen(addr string, fn func(*TCPConn)) error {
 // NewSecureTCPHost returns a Secure Tcp Host
 // If the entity is nil, it will not verify the identity of the
 // remote host
-func NewSecureTCPHost(private abstract.Scalar, e *ServerIdentity) *SecureTCPHost {
+func NewSecureTCPHost(private abstract.Scalar, si *ServerIdentity) *SecureTCPHost {
 	addr := ""
-	if e != nil {
-		addr = e.First()
+	if si != nil {
+		addr = si.First()
 	}
 	return &SecureTCPHost{
 		private:        private,
-		entity:         e,
+		serverIdentity: si,
 		TCPHost:        NewTCPHost(),
 		workingAddress: addr,
 	}
 }
 
 // Listen will try each addresses it the host ServerIdentity.
-// Returns an error if it can listen on any address
+// Returns an error if it can't listen on any of the addresses.
 func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 	receiver := func(c *TCPConn) {
-		log.Lvl3(st.workingAddress, "connected with", c.Remote())
 		stc := &SecureTCPConn{
 			TCPConn:       c,
 			SecureTCPHost: st,
 		}
 		// if negotiation fails we drop the connection
 		if err := stc.exchangeServerIdentity(); err != nil {
-			log.Error("Negotiation failed:", err)
+			log.Warn("Negotiation failed:", err)
 			if err := stc.Close(); err != nil {
-				log.Error("Couldn't close secure connection:",
+				log.Warn("Couldn't close secure connection:",
 					err)
 			}
 			return
@@ -238,25 +258,37 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 		st.connMutex.Unlock()
 		go fn(stc)
 	}
-	var addr string
 	var err error
-	if st.entity == nil {
+	if st.serverIdentity == nil {
 		return errors.New("Can't listen without ServerIdentity")
 	}
-	log.Lvl3("Addresses are", st.entity.Addresses)
-	for _, addr = range st.entity.Addresses {
+	log.Lvl3("Addresses are", st.serverIdentity.Addresses)
+	for i, addr := range st.serverIdentity.Addresses {
 		log.Lvl3("Starting to listen on", addr)
-		st.lockAddress.Lock()
-		st.workingAddress = addr
-		st.lockAddress.Unlock()
-		if err = st.TCPHost.listen(addr, receiver); err != nil {
+		go func() {
+			err = st.TCPHost.listen(addr, receiver)
 			// The listening is over
-			if err == ErrClosed || err == ErrEOF {
-				return nil
+			if err == nil || err == ErrClosed || err == ErrEOF {
+				return
 			}
-		} else {
+			st.TCPHost.listeningPort <- -1
+		}()
+		port := <-st.TCPHost.listeningPort
+		if port > 0 {
+			// If the port we asked for is '0', we need to
+			// update the address.
+			if strings.HasSuffix(addr, ":0") {
+				log.Lvl3("Got port", port)
+				addr = strings.TrimRight(addr, "0") +
+					strconv.Itoa(port)
+				st.serverIdentity.Addresses[i] = addr
+				st.lockAddress.Lock()
+				st.workingAddress = addr
+				st.lockAddress.Unlock()
+			}
 			return nil
 		}
+		err = fmt.Errorf("Couldn't open address %s", addr)
 	}
 	return fmt.Errorf("No address worked for listening on this host %+s.",
 		err.Error())
@@ -265,11 +297,11 @@ func (st *SecureTCPHost) Listen(fn func(SecureConn)) error {
 // Open will try any address that is in the ServerIdentity and connect to the first
 // one that works. Then it exchanges the ServerIdentity to verify it is talking with the
 // right host.
-func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
+func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 	var secure SecureTCPConn
 	var success bool
 	// try all names
-	for _, addr := range e.Addresses {
+	for _, addr := range si.Addresses {
 		// try to connect with this name
 		log.Lvl4("Trying address", addr)
 		c, err := st.TCPHost.openTCPConn(addr)
@@ -279,9 +311,9 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 		}
 		// create the secure connection
 		secure = SecureTCPConn{
-			TCPConn:       c,
-			SecureTCPHost: st,
-			entity:        e,
+			TCPConn:        c,
+			SecureTCPHost:  st,
+			serverIdentity: si,
 		}
 		success = true
 		break
@@ -290,7 +322,7 @@ func (st *SecureTCPHost) Open(e *ServerIdentity) (SecureConn, error) {
 		return nil, errors.New("Could not connect to any address tied to this ServerIdentity")
 	}
 	// Exchange and verify entities
-	err := secure.negotiateOpen(e)
+	err := secure.negotiateOpen(si)
 	if err == nil {
 		st.connMutex.Lock()
 		st.conns = append(st.conns, &secure)
@@ -330,6 +362,13 @@ func (st *SecureTCPHost) Rx() uint64 {
 	return b
 }
 
+// WorkingAddress returns the working address
+func (st *SecureTCPHost) WorkingAddress() string {
+	st.lockAddress.Lock()
+	defer st.lockAddress.Unlock()
+	return st.workingAddress
+}
+
 // Remote returns the name of the peer at the end point of
 // the connection
 func (c *TCPConn) Remote() string {
@@ -355,13 +394,15 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	var total Size
 	defer func() {
 		if err := recover(); err != nil {
-			nm = EmptyApplicationMessage
+			nm = EmptyApplicationPacket
 			e = fmt.Errorf("Error Received message (size=%d): %v", total, err)
 		}
 	}()
+	log.Lvl5("Starting to receive on", c.Local(), "from", c.Remote())
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
-		return EmptyApplicationMessage, handleError(err)
+		return EmptyApplicationPacket, handleError(err)
 	}
+	log.Lvl5("Received some bytes", total)
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
@@ -371,19 +412,22 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 		// if error then quit
 		if err != nil {
 			e := handleError(err)
-			return EmptyApplicationMessage, e
+			return EmptyApplicationPacket, e
 		}
 		// put it in the longterm buffer
 		if _, err := buffer.Write(b[:n]); err != nil {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
+		b = b[n:]
 		log.Lvl5("Read", read, "out of", total, "bytes")
 	}
 
 	err = am.UnmarshalBinary(buffer.Bytes())
 	if err != nil {
-		return EmptyApplicationMessage, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
+		log.Errorf("Read %d out of %d - buffer is %x", read, total, buffer.Bytes())
+		DumpTypes()
+		return EmptyApplicationPacket, fmt.Errorf("Error unmarshaling message type %s: %s", am.MsgType.String(), err.Error())
 	}
 	am.From = c.Remote()
 	// set the size read
@@ -402,11 +446,11 @@ const maxChunkSize Size = 1400
 func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
-	am, err := NewNetworkMessage(obj)
+	am, err := NewNetworkPacket(obj)
 	if err != nil {
 		return fmt.Errorf("Error converting packet: %v\n", err)
 	}
-	log.Lvlf5("Message SEND => %+v", am)
+	log.Lvlf5("%s->%s: Message SEND => %+v", c.Local(), c.Remote(), am)
 	var b []byte
 	b, err = am.MarshalBinary()
 	if err != nil {
@@ -431,6 +475,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		n, err := c.conn.Write(b[:length])
 		if err != nil {
 			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
+			log.Error(log.Stack())
 			return handleError(err)
 		}
 		sent += Size(n)
@@ -439,6 +484,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 		// bytes left to send
 		b = b[n:]
 	}
+	log.Lvl5(c.Local(), c.Remote(), "Sent a total of", sent, "bytes")
 	// update stats on the connection
 	c.addWrittenBytes(uint64(packetSize))
 	return nil
@@ -447,6 +493,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
+	log.Lvl4("Closing connection", c.Local(), c.Remote())
 	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
@@ -493,60 +540,65 @@ func (c *TCPConn) addWrittenBytes(b uint64) {
 // message
 func (sc *SecureTCPConn) Receive(ctx context.Context) (Packet, error) {
 	nm, err := sc.TCPConn.Receive(ctx)
-	nm.ServerIdentity = sc.entity
+	nm.ServerIdentity = sc.serverIdentity
 	return nm, err
 }
 
 // ServerIdentity returns the underlying entity tied to this connection
 func (sc *SecureTCPConn) ServerIdentity() *ServerIdentity {
-	return sc.entity
+	return sc.serverIdentity
 }
 
 // exchangeServerIdentity is made to exchange the ServerIdentity between the two parties.
 // when a connection request is made during listening
 func (sc *SecureTCPConn) exchangeServerIdentity() error {
-	ourEnt := sc.SecureTCPHost.entity
+	ourEnt := sc.SecureTCPHost.serverIdentity
 	if ourEnt == nil {
 		ourEnt = NewServerIdentity(config.NewKeyPair(Suite).Public, "")
 	}
 	// Send our ServerIdentity to the remote endpoint
-	log.Lvl4("Sending our identity", ourEnt.ID, "to",
+	log.Lvlf4("Sending our identity %x to %s", ourEnt.ID,
 		sc.TCPConn.conn.RemoteAddr().String())
 	if err := sc.TCPConn.Send(context.TODO(), ourEnt); err != nil {
-		return fmt.Errorf("Error while sending indentity during negotiation:%s", err)
+		log.Error(err)
+		return fmt.Errorf("Error while sending indentity during negotiation: %s", err)
 	}
+
+	log.Lvl4(sc.workingAddress, "waiting for identity")
+	// Wait for a packet to arrive
 	// Receive the other ServerIdentity
 	nm, err := sc.TCPConn.Receive(context.TODO())
 	if err != nil {
-		return fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
+		return fmt.Errorf("%s: Error while receiving ServerIdentity during negotiation: %s",
+			sc.workingAddress, err)
 	}
 	// Check if it is correct
 	if nm.MsgType != ServerIdentityType {
-		return fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
+		return fmt.Errorf("Received wrong type during negotiation: %s", nm.MsgType.String())
 	}
 
 	// Set the ServerIdentity for this connection
 	e := nm.Msg.(ServerIdentity)
-	log.Lvl4(ourEnt.ID, "Received identity", e.ID)
+	log.Lvlf4("%x: Received identity %x", ourEnt.ID, e.ID)
 
-	sc.entity = &e
+	sc.serverIdentity = &e
 	log.Lvl4("Identity exchange complete")
 	return nil
 }
 
 // negotiateOpen is called when Open a connection is called. Plus
 // negotiateListen it also verify the ServerIdentity.
-func (sc *SecureTCPConn) negotiateOpen(e *ServerIdentity) error {
+func (sc *SecureTCPConn) negotiateOpen(si *ServerIdentity) error {
 	if err := sc.exchangeServerIdentity(); err != nil {
 		return err
 	}
-	if sc.SecureTCPHost.entity == nil {
+	if sc.SecureTCPHost.serverIdentity == nil {
 		return nil
 	}
 	// verify the ServerIdentity if its the same we are supposed to connect
-	if sc.ServerIdentity().ID != e.ID {
-		log.Lvl3("Wanted to connect to", e, e.ID, "but got", sc.ServerIdentity(), sc.ServerIdentity().ID)
-		log.Lvl3(e.Public, sc.ServerIdentity().Public)
+	if sc.ServerIdentity().ID != si.ID {
+		log.Lvl3("Wanted to connect to", si, si.ID, "but got", sc.ServerIdentity(), sc.ServerIdentity().ID)
+		log.Lvl3(si.Public, sc.ServerIdentity().Public)
 		log.Lvl4("IDs not the same", log.Stack())
 		return errors.New("Warning: ServerIdentity received during negotiation is wrong.")
 	}

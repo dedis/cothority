@@ -21,7 +21,7 @@ import (
 const ProbabilisticSwitchingProtocolName = "ProbabilisticSwitching"
 
 func init() {
-	network.RegisterMessageType(ProbabilisticSwitchedMessage{})
+	network.RegisterPacketType(ProbabilisticSwitchedMessage{})
 	sda.ProtocolRegisterName(ProbabilisticSwitchingProtocolName, NewProbabilisticSwitchingProtocol)
 }
 

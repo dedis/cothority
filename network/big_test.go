@@ -1,7 +1,6 @@
 package network
 
 import (
-	"strconv"
 	"sync"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 )
 
 /*
-On MacOSX, for maximum number of hosts, use
+On MacOSX, for maximum number of connections, use
 http://b.oldhu.com/2012/07/19/increase-tcp-max-connections-on-mac-os-x/
 sudo sysctl -w kern.maxfiles=12288
 sudo sysctl -w kern.maxfilesperproc=10240
@@ -24,19 +23,21 @@ sudo sysctl -w kern.ipc.somaxconn=2048
 // It generates one connection between each host and then starts sending
 // messages all around.
 func TestHugeConnections(t *testing.T) {
-	defer log.AfterTest(t)
-	// How many hosts are run
+	if testing.Short() {
+		t.Skip("Long test - skipping in short mode")
+	}
+	// How many hosts are run - if you try with nbrHosts >= 15, increase
+	// the maximum number of connections using the above snippet.
 	nbrHosts := 10
-	// 16MB of message size
+	// 1MB of message size
 	msgSize := 1024 * 1024 * 1
 	big := bigMessage{
 		Msize: msgSize,
 		Msg:   make([]byte, msgSize),
 		Pcrc:  25,
 	}
-	bigMessageType := RegisterMessageType(big)
+	bigMessageType := RegisterPacketType(big)
 
-	log.TestOutput(testing.Verbose(), 3)
 	privkeys := make([]abstract.Scalar, nbrHosts)
 	ids := make([]*ServerIdentity, nbrHosts)
 	hosts := make([]SecureHost, nbrHosts)
@@ -48,47 +49,45 @@ func TestHugeConnections(t *testing.T) {
 	wg := sync.WaitGroup{}
 	// Create all hosts and open the connections
 	for i := 0; i < nbrHosts; i++ {
-		privkeys[i], ids[i] = genServerIdentity("localhost:" + strconv.Itoa(2000+i))
+		privkeys[i], ids[i] = genServerIdentity("localhost:0")
 		hosts[i] = NewSecureTCPHost(privkeys[i], ids[i])
-		log.Lvl5("Host is", hosts[i], "id is", ids[i])
-		go func(h int) {
-			err := hosts[h].Listen(func(c SecureConn) {
-				log.Lvl5(2000+h, "got a connection")
-				nm, err := c.Receive(context.TODO())
-				if err != nil {
-					t.Fatal("Couldn't receive msg:", err)
-				}
-				if nm.MsgType != bigMessageType {
-					t.Fatal("Received message type is wrong")
-				}
-				big_copy := nm.Msg.(bigMessage)
-				if big_copy.Msize != msgSize {
-					t.Fatal(h, "Message-size is wrong:", big_copy.Msize, big_copy, big)
-				}
-				if big_copy.Pcrc != 25 {
-					t.Fatal("CRC is wrong")
-				}
-				// And send it back
-				log.Lvl3(h, "sends it back")
-
-				go func(h int) {
-					log.Lvl3(h, "Sending back")
-					err := c.Send(context.TODO(), &big)
-					if err != nil {
-						t.Fatal(h, "couldn't send message:", err)
-					}
-				}(h)
-				log.Lvl3(h, "done sending messages")
-			})
+		log.Lvl3("Host is", hosts[i], "id is", ids[i])
+		err := hosts[i].Listen(func(c SecureConn) {
+			log.Lvl3("Host", i, "got a connection")
+			nm, err := c.Receive(context.TODO())
 			if err != nil {
-				t.Fatal(err)
+				t.Fatal("Couldn't receive msg:", err)
 			}
-		}(i)
+			if nm.MsgType != bigMessageType {
+				t.Fatal("Received message type is wrong")
+			}
+			big_copy := nm.Msg.(bigMessage)
+			if big_copy.Msize != msgSize {
+				t.Fatal(i, "Message-size is wrong:", big_copy.Msize, big_copy, big)
+			}
+			if big_copy.Pcrc != 25 {
+				t.Fatal("CRC is wrong")
+			}
+			// And send it back
+			log.Lvl3(i, "sends it back")
+
+			go func(h int) {
+				log.Lvl3(h, "Sending back")
+				err := c.Send(context.TODO(), &big)
+				if err != nil {
+					t.Fatal(h, "couldn't send message:", err)
+				}
+			}(i)
+			log.Lvl3(i, "done sending messages")
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
 		conns[i] = make([]SecureConn, nbrHosts)
 		for j := 0; j < i; j++ {
 			wg.Add(1)
 			var err error
-			log.Lvl5("Connecting", ids[i], "with", ids[j])
+			log.Lvl3("Connecting", ids[i], "with", ids[j])
 			conns[i][j], err = hosts[i].Open(ids[j])
 			if err != nil {
 				t.Fatal("Couldn't open:", err)

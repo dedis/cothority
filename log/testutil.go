@@ -26,7 +26,8 @@ func interestingGoroutines() (gs []string) {
 			strings.Contains(stack, "runtime.goexit") ||
 			strings.Contains(stack, "interestingGoroutines") ||
 			strings.Contains(stack, "created by runtime.gc") ||
-			strings.Contains(stack, "runtime.MHeap_Scavenger") {
+			strings.Contains(stack, "runtime.MHeap_Scavenger") ||
+			strings.Contains(stack, "log.MainTest") {
 			continue
 		}
 		gs = append(gs, stack)
