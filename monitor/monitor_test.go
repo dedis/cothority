@@ -10,31 +10,11 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-// setupMonitor launches a basic monitor with a created Stats object
-// When finished with the monitor, just call `End()`
-func setupMonitor(t *testing.T) (*Monitor, *Stats) {
-	log.TestOutput(testing.Verbose(), 2)
-	m := make(map[string]string)
-	m["servers"] = "1"
-	stat := NewStats(m)
-	// First set up monitor listening
-	mon := NewMonitor(stat)
-	go mon.Listen()
-	time.Sleep(100 * time.Millisecond)
-
-	// Then measure
-	err := ConnectSink("localhost:" + strconv.Itoa(mon.SinkPort))
-	EnableMeasure(true)
-	if err != nil {
-		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
-	}
-	return mon, stat
+func TestMain(m *testing.M) {
+	log.MainTest(m)
 }
 
 func TestReadyNormal(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	stat := NewStats(m)
@@ -61,13 +41,9 @@ func TestReadyNormal(t *testing.T) {
 	if updated == fresh {
 		t.Fatal("Stats not updated ?")
 	}
-
 }
 
 func TestKeyOrder(t *testing.T) {
-	defer log.AfterTest(t)
-
-	log.TestOutput(testing.Verbose(), 3)
 	m := make(map[string]string)
 	m["servers"] = "1"
 	m["hosts"] = "1"
@@ -92,4 +68,24 @@ func TestKeyOrder(t *testing.T) {
 	if !bytes.Equal(str.Bytes(), str2.Bytes()) {
 		t.Fatal("KeyOrder / output not the same for same stats")
 	}
+}
+
+// setupMonitor launches a basic monitor with a created Stats object
+// When finished with the monitor, just call `End()`
+func setupMonitor(t *testing.T) (*Monitor, *Stats) {
+	m := make(map[string]string)
+	m["servers"] = "1"
+	stat := NewStats(m)
+	// First set up monitor listening
+	mon := NewMonitor(stat)
+	go mon.Listen()
+	time.Sleep(100 * time.Millisecond)
+
+	// Then measure
+	err := ConnectSink("localhost:" + strconv.Itoa(mon.SinkPort))
+	EnableMeasure(true)
+	if err != nil {
+		t.Fatal(fmt.Sprintf("Error starting monitor: %s", err))
+	}
+	return mon, stat
 }

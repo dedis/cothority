@@ -55,6 +55,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, service := makeHELS(local, 5)
+	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot := makeGenesisRoster(service, el)
@@ -173,12 +174,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
-	// Wait for block-propagation
-	//time.Sleep(time.Millisecond * 100)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
-		log.Lvl2(skipchainSID)
+		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 		m, err := s.GetUpdateChain(h.ServerIdentity, &GetUpdateChain{sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")

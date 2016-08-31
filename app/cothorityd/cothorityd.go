@@ -56,7 +56,7 @@ func main() {
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
-			Value: 1,
+			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 	}

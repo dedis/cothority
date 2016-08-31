@@ -20,10 +20,16 @@ import (
 )
 
 func init() {
-	network.RegisterMessageType(&StatusRet{})
+	network.RegisterPacketType(&StatusRet{})
 }
 
 // Service is a generic interface to define any type of services.
+// A Service has multiple roles:
+// * Processing sda-external client requests with ProcessClientRequests
+// * Handling sda-external information to ProtocolInstances created with
+//  	NewProtocol
+// * Handling any kind of messages between Services between different hosts with
+//   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
 	// ProcessRequest is the function that will be called when a external client
@@ -32,8 +38,13 @@ type Service interface {
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
-	// ProcessServiceRequest takes a message from another Service
-	ProcessServiceMessage(*network.ServerIdentity, *InterServiceMessage)
+	// Processor makes a Service being able to handle any kind of packets
+	// directly from the network. It is used for inter service communications,
+	// which are mostly single packets with no or little interactions needed. If
+	// a complex logic is used for these messages, it's best to put that logic
+	// into a ProtocolInstance that the Service will launch, since there's nicer
+	// utilities for ProtocolInstance.
+	Processor
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -57,12 +68,11 @@ type NewServiceFunc func(c *Context, path string) Service
 // protocols. It is passed down to the service NewProtocol function.
 type GenericConfig struct {
 	Type uuid.UUID
-	//Data network.ProtocolMessage
 }
 
 // GenericConfigID is the ID used by the network library for sending / receiving
 // GenericCOnfig
-var GenericConfigID = network.RegisterMessageType(GenericConfig{})
+var GenericConfigID = network.RegisterPacketType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
@@ -72,6 +82,7 @@ type serviceFactory struct {
 	translations map[string]ServiceID
 	// Inverse mapping of ServiceId => string
 	inverseTr map[ServiceID]string
+	mutex     sync.Mutex
 }
 
 // ServiceFactory is the global service factory to instantiate Services
@@ -85,6 +96,7 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
+	s.mutex.Lock()
 	if _, ok := s.constructors[id]; ok {
 		// called at init time so better panic than to continue
 		log.Lvl1("RegisterService():", name)
@@ -92,6 +104,7 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
 	s.constructors[id] = fn
 	s.translations[name] = id
 	s.inverseTr[id] = name
+	s.mutex.Unlock()
 }
 
 // RegisterNewService is a wrapper around service factory
@@ -101,6 +114,8 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
 	for id := range s.constructors {
 		ids = append(ids, id)
@@ -110,6 +125,8 @@ func (s *serviceFactory) registeredServicesID() []ServiceID {
 
 // RegisteredServicesByName returns all the names of the services registered
 func (s *serviceFactory) RegisteredServicesName() []string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var names = make([]string, 0, len(s.translations))
 	for n := range s.translations {
 		names = append(names, n)
@@ -119,6 +136,8 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	id, ok := s.translations[name]
 	if !ok {
 		return NilServiceID
@@ -128,6 +147,8 @@ func (s *serviceFactory) ServiceID(name string) ServiceID {
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	var name string
 	var ok bool
 	if name, ok = s.inverseTr[id]; !ok {
@@ -138,28 +159,36 @@ func (s *serviceFactory) Name(id ServiceID) string {
 
 // start launches a new service
 func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
+	s.mutex.Lock()
 	var id ServiceID
 	var ok bool
 	if id, ok = s.translations[name]; !ok {
+		s.mutex.Unlock()
 		return nil, errors.New("No Service for this name: " + name)
 	}
 	var fn NewServiceFunc
 	if fn, ok = s.constructors[id]; !ok {
+		s.mutex.Unlock()
 		return nil, fmt.Errorf("No Service for this id: %+v", id)
 	}
+	s.mutex.Unlock()
 	serv := fn(c, path)
-	log.Lvl2("Instantiated service", name)
+	log.Lvl3("Instantiated service", name)
 	return serv, nil
 }
 
-// serviceStore is the place where all instantiated services are stored
-// It gives access to :  all the currently running services and is handling the
+// serviceManager is the place where all instantiated services are stored
+// It gives access to: all the currently running services and is handling the
 // configuration path for them
-type serviceStore struct {
+type serviceManager struct {
 	// the actual services
 	services map[ServiceID]Service
 	// the config paths
 	paths map[ServiceID]string
+	// the sda host
+	host *Host
+	// the dispatcher can take registration of Processors
+	Dispatcher
 }
 
 const configFolder = "config"
@@ -167,9 +196,9 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceStore(h *Host, o *Overlay) *serviceStore {
+func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	// check if we have a config folder
-	if err := os.MkdirAll(configFolder, 0777); err != nil {
+	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
 		if !ok {
 			// we cannot continue from here
@@ -178,6 +207,7 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
+	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -186,40 +216,78 @@ func newServiceStore(h *Host, o *Overlay) *serviceStore {
 			log.Panic(err)
 		}
 		configName := path.Join(pwd, configFolder, name)
-		if err := os.MkdirAll(configName, 0666); err != nil {
+		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(h, o, id)
+		c := newContext(h, o, id, s)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
-		log.Lvl2("Started Service", name, " (config in", configName, ")")
+		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
-		// !! register to the ProtocolFactory !!
-		//ProtocolFactory.registerService(id, s.NewProtocol)
 	}
-	log.Lvl3(h.workingAddress, "instantiated all services")
-	return &serviceStore{services, configs}
+	log.Lvl3(h.Address(), "instantiated all services")
+
+	// registering messages that services are expecting
+	h.RegisterProcessor(s, ClientRequestID)
+	return s
+}
+
+// Process implements the Processor interface: service manager will relay
+// messages to the right Service.
+func (s *serviceManager) Process(data *network.Packet) {
+	id := data.ServerIdentity
+	switch data.MsgType {
+	case ClientRequestID:
+		r := data.Msg.(ClientRequest)
+		// check if the target service is indeed existing
+		s, ok := s.serviceByID(r.Service)
+		if !ok {
+			log.Error("Received a request for an unknown service", r.Service)
+			// XXX TODO should reply with some generic response =>
+			// 404 Service Unknown
+			return
+		}
+		go s.ProcessClientRequest(id, &r)
+	default:
+		// will launch a go routine for that message
+		s.Dispatch(data)
+	}
+}
+
+// RegisterProcessor the processor to the service manager and tells the host to dispatch
+// this message to the service manager. The service manager will then dispatch
+// the message in a go routine. XXX This is needed because we need to have
+// messages for service dispatched in asyncrhonously regarding the protocols.
+// This behavior with go routine is fine for the moment but for better
+// performance / memory / resilience, it may be changed to a real queuing
+// system later.
+func (s *serviceManager) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
+	// delegate message to host so the host will pass the message to ourself
+	s.host.RegisterProcessor(s, msgType)
+	// handle the message ourself (will be launched in a go routine)
+	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
 // TODO
-func (s *serviceStore) AvailableServices() []string {
+func (s *serviceManager) AvailableServices() []string {
 	panic("not implemented")
 }
 
-// TODO
-func (s *serviceStore) Service(name string) Service {
+// Service returns the Service implementation being registered to this name
+// TODO use serviceByString not implemented
+func (s *serviceManager) Service(name string) Service {
 	return s.serviceByString(name)
 }
 
 // TODO
-func (s *serviceStore) serviceByString(name string) Service {
+func (s *serviceManager) serviceByString(name string) Service {
 	panic("Not implemented")
 }
 
-func (s *serviceStore) serviceByID(id ServiceID) (Service, bool) {
+func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
 	var serv Service
 	var ok bool
 	if serv, ok = s.services[id]; !ok {
@@ -240,8 +308,8 @@ type ClientRequest struct {
 	Data []byte
 }
 
-// RequestID is the type that registered by the network library
-var RequestID = network.RegisterMessageType(ClientRequest{})
+// ClientRequestID is the type that registered by the network library
+var ClientRequestID = network.RegisterPacketType(ClientRequest{})
 
 // CreateClientRequest creates a Request message out of any message that is
 // destined to a Service. XXX For the moment it uses protobuf, as it is already
@@ -271,7 +339,7 @@ type InterServiceMessage struct {
 }
 
 // ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterMessageType(InterServiceMessage{})
+var ServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
 
 // CreateServiceMessage takes a service name and some data and encodes the whole
 // as a ServiceMessage.
@@ -288,16 +356,12 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
-/*
-A simple client structure to be used when wanting to connect to services. It
-holds the private and public key and allows to connect to a service through
-the network.
-The error-handling is done using the ErrorRet structure which can be returned
-in place of the standard reply. The Client.Send method will catch that and return
- the appropriate error.
-*/
-
-// Client for a service
+// Client is a simple client structure to be used when wanting to connect to services. It
+// holds the private and public key and allows to connect to a service through
+// the network.
+// The error-handling is done using the ErrorRet structure which can be returned
+// in place of the standard reply. The Client.Send method will catch that and return
+// the appropriate error.
 type Client struct {
 	host      *network.SecureTCPHost
 	ServiceID ServiceID
@@ -330,7 +394,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		return nil, err
 	}
 
-	m, err := network.NewNetworkMessage(msg)
+	m, err := network.NewNetworkPacket(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -371,6 +435,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		}
 		return &response, nil
 	case <-time.After(time.Second * 10):
+		log.Lvl2(log.Stack())
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }

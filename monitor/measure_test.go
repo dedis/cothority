@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"testing"
 	"time"
-
-	"github.com/dedis/cothority/log"
 )
 
 type DummyCounterIO struct {
@@ -24,7 +22,6 @@ func (dm *DummyCounterIO) Tx() uint64 {
 }
 
 func TestCounterIOMeasureRecord(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	mon, _ := setupMonitor(t)
 	dm := &DummyCounterIO{0, 0}
 	// create the counter measure
@@ -50,11 +47,13 @@ func TestCounterIOMeasureRecord(t *testing.T) {
 	wr, re := stat.Value("dummy_tx"), stat.Value("dummy_rx")
 	if wr == nil || wr.Avg() != 10 {
 		t.Logf("stats => %v", stat.values)
-		t.Logf("wr.Avg() = %f", wr.Avg())
-		t.Fatal("Stats don't have the right value (write)")
+		if wr != nil {
+			t.Logf("wr.Avg() = %f", wr.Avg())
+		}
+		t.Fatal("Stats doesn't have the right value (write)")
 	}
 	if re == nil || re.Avg() != 10 {
-		t.Fatal("Stats don't have the right value (read)")
+		t.Fatal("Stats doesn't have the right value (read)")
 	}
 	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)

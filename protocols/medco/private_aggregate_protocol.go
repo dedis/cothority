@@ -45,8 +45,8 @@ type CothorityAggregatedData struct {
 }
 
 func init() {
-	network.RegisterMessageType(DataReferenceMessage{})
-	network.RegisterMessageType(ChildAggregatedDataMessage{})
+	network.RegisterPacketType(DataReferenceMessage{})
+	network.RegisterPacketType(ChildAggregatedDataMessage{})
 	sda.ProtocolRegisterName(PrivateAggregateProtocolName, NewPrivateAggregate)
 }
 

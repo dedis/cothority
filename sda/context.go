@@ -7,16 +7,20 @@ type Context struct {
 	overlay *Overlay
 	host    *Host
 	servID  ServiceID
+	manager *serviceManager
+	Dispatcher
 }
 
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
 
-func newContext(h *Host, o *Overlay, servID ServiceID) *Context {
+func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
-		overlay: o,
-		host:    h,
-		servID:  servID,
+		overlay:    o,
+		host:       h,
+		servID:     servID,
+		manager:    manager,
+		Dispatcher: NewBlockingDispatcher(),
 	}
 }
 
@@ -26,8 +30,8 @@ func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *
 }
 
 // SendRaw sends a message to the entity.
-func (c *Context) SendRaw(e *network.ServerIdentity, msg interface{}) error {
-	return c.host.SendRaw(e, msg)
+func (c *Context) SendRaw(si *network.ServerIdentity, msg interface{}) error {
+	return c.host.SendRaw(si, msg)
 }
 
 // ServerIdentity returns the entity the service uses.
@@ -42,15 +46,15 @@ func (c *Context) ServiceID() ServiceID {
 
 // CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
 // prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
-func (c *Context) CreateProtocolService(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolService(c.servID, t, name)
+func (c *Context) CreateProtocolService(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := c.overlay.CreateProtocolService(name, t, c.servID)
 	return pi, err
 }
 
 // CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
 // so it will be handled automatically by the SDA.
-func (c *Context) CreateProtocolSDA(t *Tree, name string) (ProtocolInstance, error) {
-	pi, err := c.overlay.CreateProtocolSDA(t, name)
+func (c *Context) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := c.overlay.CreateProtocolSDA(name, t)
 	return pi, err
 }
 
@@ -67,4 +71,15 @@ func (c *Context) ReportStatus() map[string]Status {
 // RegisterStatusReporter registers the Status Reporter.
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
+}
+
+// RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
+// It delegates the dispatching to the serviceManager.
+func (c *Context) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
+	c.manager.RegisterProcessor(p, msgType)
+}
+
+// String returns the host it's running on
+func (c *Context) String() string {
+	return c.host.ServerIdentity.String()
 }

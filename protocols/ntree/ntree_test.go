@@ -9,10 +9,11 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
-func TestNtree(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
+func TestNtree(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
 		log.Lvl2("Running ntree with", nbrHosts, "hosts")
 		local := sda.NewLocalTest()
@@ -32,7 +33,7 @@ func TestNtree(t *testing.T) {
 		}
 
 		// Start the protocol
-		pi, err := local.CreateProtocol(tree, "NaiveTree")
+		pi, err := local.CreateProtocol("NaiveTree", tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}

@@ -10,9 +10,12 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 // Tests a 2-node system
 func TestNode(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, false, true, true)
@@ -24,7 +27,7 @@ func TestNode(t *testing.T) {
 		t.Fatal("Couldn't start protocol:", err)
 	}
 	protocol := pi.(*handlers.ProtocolExampleHandlers)
-	timeout := network.WaitRetry * time.Duration(network.MaxRetry*nbrNodes*2) * time.Millisecond
+	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 	select {
 	case children := <-protocol.ChildCount:
 		log.Lvl2("Instance 1 is done")
