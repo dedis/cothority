@@ -3,7 +3,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"testing"
@@ -11,6 +10,36 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+// Test whether a call to a conn.Close() will stop the remote Receive() call
+func TestLocalConnCloseReceive(t *testing.T) {
+	addr := NewLocalAddress("127.0.0.1:2000")
+	listener, err := NewLocalListener(addr)
+	if err != nil {
+		t.Fatal("Could not listen", err)
+	}
+
+	var ready = make(chan bool)
+	go func() {
+		ready <- true
+		listener.Listen(func(c Conn) {
+			ready <- true
+			assert.Nil(t, c.Close())
+		})
+	}()
+	<-ready
+
+	outgoing, err := NewLocalConn(addr, addr)
+	if err != nil {
+		t.Fatal("erro NewLocalConn:", err)
+	}
+	<-ready
+
+	_, err = outgoing.Receive(context.TODO())
+	assert.Equal(t, ErrClosed, err)
+	assert.Nil(t, listener.Stop())
+
+}
 
 // Test if we can run two parallel local network using two different contexts
 func TestLocalContext(t *testing.T) {
@@ -177,7 +206,6 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	nm, err := outgoing.Receive(context.TODO())
 	assert.Nil(t, err)
 	assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
-	log.Print("here?")
 	outgoingConn <- true
 
 	// close the incoming conn, so Receive here should return an error

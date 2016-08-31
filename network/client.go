@@ -35,7 +35,7 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	id := rand.Intn(256) + 1
-	sid := NewServerIdentity(kp.Public, NewLocalAddress("localhost:"+strconv.Itoa(id)))
+	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.Itoa(id)))
 
 	var c Conn
 	var err error

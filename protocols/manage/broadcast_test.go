@@ -34,5 +34,6 @@ func TestBroadcast(t *testing.T) {
 			t.Fatal("Didn't finish in time")
 		}
 		local.CloseAll()
+		log.AfterTest(t)
 	}
 }

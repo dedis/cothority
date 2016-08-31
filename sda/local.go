@@ -28,6 +28,9 @@ type LocalTest struct {
 	Nodes []*TreeNodeInstance
 	// are we running tcp or local layer
 	mode string
+	// the context for the local connections
+	// it enables to have multiple local test running simultaneously
+	ctx *network.LocalContext
 }
 
 var (
@@ -38,7 +41,6 @@ var (
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
-	network.LocalReset()
 	return &LocalTest{
 		Hosts:    make(map[network.ServerIdentityID]*Host),
 		Overlays: make(map[network.ServerIdentityID]*Overlay),
@@ -46,7 +48,8 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     Local,
+		mode:     TCP,
+		ctx:      network.NewLocalContext(),
 	}
 }
 
@@ -148,7 +151,7 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
-		log.Lvl3("Closing host", host.ServerIdentity)
+		log.Lvl3("Closing host", host.ServerIdentity.Address)
 		err := host.Close()
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.Address,
@@ -305,12 +308,31 @@ func NewLocalHost(port int) *Host {
 	return h
 }
 
+func (l *LocalTest) NewLocalHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
+	localRouter, err := network.NewLocalRouterWithContext(l.ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	h := NewHostWithRouter(id, priv, localRouter)
+	go h.Start()
+	return h
+
+}
+
 func (l *LocalTest) NewClient(serviceName string) *Client {
 	switch l.mode {
 	case TCP:
 		return NewClient(serviceName)
 	default:
-		return NewLocalClient(serviceName)
+		return l.NewLocalClient(serviceName)
+	}
+}
+
+func (l *LocalTest) NewLocalClient(serviceName string) *Client {
+	return &Client{
+		ServiceID: ServiceFactory.ServiceID(serviceName),
+		net:       network.NewLocalClientWithContext(l.ctx),
 	}
 }
 
@@ -322,9 +344,9 @@ func (l *LocalTest) GenLocalHosts(n int) []*Host {
 		port := 2000 + i*10
 		switch l.mode {
 		case TCP:
-			host = NewTCPHost(port)
+			host = NewTCPHost(0)
 		default:
-			host = NewLocalHost(port)
+			host = l.NewLocalHost(port)
 		}
 		hosts[i] = host
 	}

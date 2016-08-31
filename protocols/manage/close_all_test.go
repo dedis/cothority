@@ -5,19 +5,17 @@ import (
 
 	"time"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
 
 // Tests a 2-node system
 func TestCloseAll(t *testing.T) {
 	local := sda.NewLocalTest()
+	defer log.AfterTest(t)
 	nbrNodes := 2
-<<<<<<< HEAD
 	_, _, tree := local.GenTree(nbrNodes, true)
 	defer local.CloseAll()
-=======
-	_, _, tree := local.GenTree(nbrNodes, false, true, true)
->>>>>>> master
 
 	pi, err := local.CreateProtocol("CloseAll", tree)
 	if err != nil {

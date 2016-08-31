@@ -22,7 +22,7 @@ func init() {
 
 // Tests an n-node system
 func TestPropagate(t *testing.T) {
-	for _, nbrNodes := range []int{3, 10, 14} {
+	for _, nbrNodes := range []int{3 /*10, 14*/} {
 		local := sda.NewLocalTest()
 		_, el, _ := local.GenTree(nbrNodes, true)
 		o := local.Overlays[el.List[0].ID]
@@ -50,5 +50,6 @@ func TestPropagate(t *testing.T) {
 			t.Fatal("Not all nodes replied")
 		}
 		local.CloseAll()
+		log.AfterTest(t)
 	}
 }

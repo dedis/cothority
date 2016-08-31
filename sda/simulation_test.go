@@ -48,6 +48,7 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestSimulationBigTree(t *testing.T) {
+	t.Skip()
 	log.AfterTest(t)
 	if testing.Short() {
 		t.Skip()

@@ -143,59 +143,52 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 // handleConn is the main routine for a connection to wait for incoming
 // messages.
 func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
+	log.Lvl3(r.id.Address, "HandleConn r.Closed() to ", remote.Address)
+	if r.Closed() {
+		log.Lvl3(r.id.Address, r.id.Address, "handleConn closeConnection()")
+		//		r.handleConnQuit <- true
+		return
+	}
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
 		ctx := context.TODO()
+		log.Lvl3(r.id.Address, "Got message BEFORE")
 		packet, err := c.Receive(ctx)
 		// So the receiver can know about the error
 		packet.SetError(err)
 		packet.From = address
 		packet.ServerIdentity = remote
 		log.Lvl5(r.id.Address, "Got message", packet)
+		log.Lvl3(r.id.Address, "Got message AFTER")
+
+		// whether the router is closed
+		if r.Closed() {
+			log.Lvl3(r.id.Address, "handlConn Closed() before")
+			// signal we are done with this go routine.
+			//r.handleConnQuit <- true
+			log.Lvl3(r.id.Address, "handleConn is asked to stop for", remote.Address)
+			return
+		}
+
 		if err != nil {
 			// something went wrong on this connection
-			r.closedMut.Lock()
-			log.Lvlf4("%+v got error (%+s) while receiving message (isClosed=%+v)",
-				r.id.String(), err, r.isClosed)
+			log.Lvlf4("%+v got error (%+s) while receiving message", r.id.String(), err)
 
-			if r.isClosed {
-				// request to finish handling conn
-				log.Lvl3(r.id.Address, "handleConn is asked to stop for", remote.Address)
-				r.closedMut.Unlock()
-				r.handleConnQuit <- true
-			} else if err == ErrClosed || err == ErrEOF || err == ErrTemp {
+			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// remote connection closed
-				r.closedMut.Unlock()
 				r.closeConnection(remote, c)
 				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
-			} else {
-				// weird error let's try again
-				r.closedMut.Unlock()
-				log.Error(r.id, "Error with connection", address, "=>", err)
-				continue
+				return
 			}
-			return
+			// weird error let's try again
+			log.Error(r.id, "Error with connection", address, "=>", err)
+			continue
 		}
 
-		r.closedMut.Lock()
-		if !r.isClosed {
-			// XXX Let's get rid of this processMessages: It's a blocking
-			// channel, so only one connection is dispatching message at a time.
-			// The layer of indirection does not bring any advantages at all...
-			//log.Lvl5(t.workingAddress, "Send message to networkChan", len(t.networkChan))
-			//t.networkChan <- packet
-			if err := r.Dispatch(&packet); err != nil {
-				log.Lvl3("Error dispatching:", err)
-			}
-		} else {
-			// signal we are done with this go routine.
-			r.handleConnQuit <- true
-			r.closedMut.Unlock()
-			log.Lvl3(r.id.Address, "leaving out handleConn for", remote.Address)
-			return
+		if err := r.Dispatch(&packet); err != nil {
+			log.Lvl3("Error dispatching:", err)
 		}
-		r.closedMut.Unlock()
 	}
 }
 
@@ -239,30 +232,44 @@ func (r *Router) reset() {
 // Close shuts down all network connections and returns once all processing go
 // routines are done.
 func (r *Router) stopHandling() error {
-	r.closedMut.Lock()
-	if r.isClosed {
-		r.closedMut.Unlock()
-		return errors.New("Already closing")
+	if r.Closed() {
+		return errors.New("Router already closed")
 	}
-	r.isClosed = true
-	r.closedMut.Unlock()
+	r.close()
 
 	r.connsMut.Lock()
-	defer r.connsMut.Unlock()
-	lenConn := len(r.connections)
+	//lenConn := len(r.connections)
 	for id, c := range r.connections {
 		delete(r.connections, id)
 		if err := c.Close(); err != nil {
+			r.connsMut.Unlock()
 			return err
 		}
 	}
-	// wait for all handleConn to finish
-	var finished int
-	for finished < lenConn {
-		<-r.handleConnQuit
-		finished++
-	}
+	r.connsMut.Unlock()
+	/*// wait for all handleConn to finish*/
+	//var finished int
+	//for finished < lenConn {
+	//<-r.handleConnQuit
+	//finished++
+	/*}*/
 	return nil
+}
+
+// Closed returns true if the router is closed (or is closing). For a router
+// to be closed means that a call to Stop() must have been made.
+func (r *Router) Closed() bool {
+	r.closedMut.Lock()
+	defer r.closedMut.Unlock()
+	return r.isClosed
+}
+
+// close set the isClosed variable to true, any subsequent call to Closed()
+// will return true.
+func (r *Router) close() {
+	r.closedMut.Lock()
+	defer r.closedMut.Unlock()
+	r.isClosed = true
 }
 
 // Tx implements monitor/CounterIO

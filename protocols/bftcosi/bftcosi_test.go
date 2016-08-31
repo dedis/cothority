@@ -49,7 +49,7 @@ var counters = &Counters{}
 var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 5)
 }
 
 func TestBftCoSi(t *testing.T) {

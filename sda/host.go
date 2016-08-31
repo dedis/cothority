@@ -84,7 +84,9 @@ func (h *Host) GetStatus() Status {
 // Close closes the overlay and the Router
 func (h *Host) Close() error {
 	h.overlay.Close()
-	return h.Router.Stop()
+	err := h.Router.Stop()
+	return err
+
 }
 
 func (h *Host) Address() network.Address {

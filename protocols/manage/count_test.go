@@ -13,6 +13,7 @@ import (
 // Tests a 2-node system
 func TestCount(t *testing.T) {
 	local := sda.NewLocalTest()
+	defer log.AfterTest(t)
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, true)
 	defer local.CloseAll()

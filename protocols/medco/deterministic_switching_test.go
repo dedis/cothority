@@ -13,11 +13,7 @@ import (
 )
 
 func TestDeterministicSwitching(t *testing.T) {
-<<<<<<< HEAD
-
 	defer log.AfterTest(t)
-=======
->>>>>>> master
 	local := sda.NewLocalTest()
 	_, entityList, tree := local.GenTree(5, true)
 	sda.ProtocolRegisterName("DeterministicSwitchingTest", NewDeterministicSwitchingTest)
