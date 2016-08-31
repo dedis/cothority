@@ -11,16 +11,11 @@ import (
 
 func TestRandHound(t *testing.T) {
 
-	// XXX: nodes 17, groups 3 fails
-
 	var name = "RandHound"
-	var nodes int = 21
+	var nodes int = 256
 	var faulty int = 2
-	var groups int = 4
+	var groups int = 20
 	var purpose string = "RandHound test run"
-
-	_ = faulty
-	_ = purpose
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), false, true, true)
@@ -47,7 +42,7 @@ func TestRandHound(t *testing.T) {
 	select {
 	case <-rh.Done:
 		log.Lvlf1("RandHound - done")
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Second * time.Duration(nodes) * 2):
 		t.Fatal("RandHound – time out")
 	}
 

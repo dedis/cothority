@@ -229,7 +229,7 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 	// Create sharding of the current Roster according to the above permutation
 	el := rh.List()
-	n := int(nodes / shards)
+	n := int(nodes/shards) + 1
 	sharding := [][]*sda.TreeNode{}
 	shard := []*sda.TreeNode{}
 	keys := [][]abstract.Point{}
@@ -244,6 +244,8 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 			k = make([]abstract.Point, 0)
 		}
 	}
+
+	log.Lvlf1("%v", m)
 
 	// Ensure that the last shard has at least two elements
 	if shards > 1 && len(keys[shards-1]) == 1 {
@@ -298,6 +300,8 @@ func (rh *RandHound) Start() error {
 		}
 
 		rh.Group[i] = g
+
+		log.Lvlf1("%v %v", g.Idx, len(g.Idx))
 	}
 
 	sid, err := rh.SessionID()
@@ -509,7 +513,12 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 			}
 		}
 
-		log.Lvlf1("RandHound - collective randomness: %v", rnd)
+		rb, err := rnd.MarshalBinary()
+		if err != nil {
+			return err
+		}
+
+		log.Lvlf1("RandHound - collective randomness: %v", rb)
 
 		rh.Done <- true
 	}
