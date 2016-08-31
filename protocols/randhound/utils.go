@@ -12,7 +12,7 @@ import (
 // based on a seed and a number of requested shards.
 func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abstract.Point, error) {
 
-	nodes := rh.Transcript.Session.Nodes
+	nodes := rh.Nodes
 
 	if shards == 0 || nodes < shards {
 		return nil, nil, fmt.Errorf("Number of requested shards not supported")
