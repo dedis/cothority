@@ -14,10 +14,10 @@ func TestRandHound(t *testing.T) {
 	// XXX: nodes 17, groups 3 fails
 
 	var name = "RandHound"
-	var nodes uint32 = 10
-	var faulty uint32 = 2
+	var nodes int = 21
+	var faulty int = 2
+	var groups int = 4
 	var purpose string = "RandHound test run"
-	var groups uint32 = 2
 
 	_ = faulty
 	_ = purpose

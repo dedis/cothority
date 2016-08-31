@@ -10,7 +10,7 @@ import (
 
 // Shard produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
-func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*sda.TreeNode, [][]abstract.Point, error) {
+func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abstract.Point, error) {
 
 	nodes := rh.Transcript.Session.Nodes
 
@@ -44,5 +44,17 @@ func (rh *RandHound) Shard(seed []byte, shards uint32) ([][]*sda.TreeNode, [][]a
 			k = make([]abstract.Point, 0)
 		}
 	}
+
+	// Ensure that the last shard has at least two elements
+	if shards > 1 && len(keys[shards-1]) == 1 {
+		l := len(sharding[shards-2])
+		x := sharding[shards-2][l-1]
+		y := keys[shards-2][l-1]
+		sharding[shards-1] = append(sharding[shards-1], x)
+		keys[shards-1] = append(keys[shards-1], y)
+		sharding[shards-2] = sharding[shards-2][:l-1]
+		keys[shards-2] = keys[shards-2][:l-1]
+	}
+
 	return sharding, keys, nil
 }

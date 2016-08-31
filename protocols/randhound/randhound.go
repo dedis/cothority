@@ -22,14 +22,15 @@ func init() {
 // RandHound ...
 type RandHound struct {
 	*sda.TreeNodeInstance
-	Transcript    *Transcript       // Transcript of a protocol run
-	Done          chan bool         // To signal that a protocol run is finished
-	mutex         sync.Mutex        // ...
-	counter       uint32            // XXX: dummy, remove later
-	Server        [][]*sda.TreeNode // Grouped servers (with connection infos)
-	ServerToGroup []int             // Server to group mapping
-	NumR1s        []int             // Number of valid R1 messages arrived per group
-	NumR2s        []int             // Number of valid R2 messages arrived per group
+	Transcript    *Transcript              // Transcript of a protocol run
+	Done          chan bool                // To signal that a protocol run is finished
+	mutex         sync.Mutex               // ...
+	counter       int                      // XXX: dummy, remove later
+	Server        [][]*sda.TreeNode        // Grouped servers (with connection infos)
+	ServerToGroup []int                    // Server to group mapping
+	NumR1s        []int                    // Number of valid R1 messages arrived per group
+	NumR2s        []int                    // Number of valid R2 messages arrived per group
+	Commit        map[int][]abstract.Point // Commitments to server polynomials
 }
 
 // Transcript ...
@@ -42,8 +43,8 @@ type Transcript struct {
 
 // Session ...
 type Session struct {
-	Nodes   uint32    // Total number of nodes (client + servers)
-	Faulty  uint32    // Maximum number of Byzantine servers
+	Nodes   int       // Total number of nodes (client + servers)
+	Faulty  int       // Maximum number of Byzantine servers
 	Purpose string    // Purpose of the protocol run
 	Time    time.Time // Timestamp of initiation
 	Rand    []byte    // Client-chosen randomness
@@ -74,12 +75,10 @@ type R1 struct {
 
 // I2 message
 type I2 struct {
-	SID       []byte           // Session identifier
-	EncShare  []abstract.Point // Encrypted shares
-	EncProof  []ProofCore      // Encryption consistency proofs
-	PolyBin   [][]byte         // Marshalled commitment polynomials
-	Threshold int              // Secret sharing threshold XXX: probably remove later
-	Idx       int              // Index of the server within the group
+	SID      []byte           // Session identifier
+	EncShare []abstract.Point // Encrypted shares
+	EncProof []ProofCore      // Encryption consistency proofs
+	Commit   []abstract.Point // Polynomial commitments
 }
 
 // R2 message
@@ -133,7 +132,7 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 }
 
 // Setup ...
-func (rh *RandHound) Setup(nodes uint32, faulty uint32, groups uint32, purpose string) error {
+func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) error {
 
 	rh.Transcript = &Transcript{}
 	rh.Transcript.Session = &Session{
@@ -147,6 +146,7 @@ func (rh *RandHound) Setup(nodes uint32, faulty uint32, groups uint32, purpose s
 
 	rh.NumR1s = make([]int, groups)
 	rh.NumR2s = make([]int, groups)
+	rh.Commit = make(map[int][]abstract.Point, nodes)
 
 	rh.Done = make(chan bool, 1)
 	rh.counter = 0
@@ -159,11 +159,11 @@ func (rh *RandHound) SID() ([]byte, error) {
 
 	buf := new(bytes.Buffer)
 
-	if err := binary.Write(buf, binary.LittleEndian, rh.Transcript.Session.Nodes); err != nil {
+	if err := binary.Write(buf, binary.LittleEndian, uint32(rh.Transcript.Session.Nodes)); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, rh.Transcript.Session.Faulty); err != nil {
+	if err := binary.Write(buf, binary.LittleEndian, uint32(rh.Transcript.Session.Faulty)); err != nil {
 		return nil, err
 	}
 
@@ -225,7 +225,7 @@ func (rh *RandHound) Start() error {
 	rh.Transcript.Session.Rand = rand
 
 	// Determine server grouping
-	serverGroup, keyGroup, err := rh.Shard(rand, uint32(len(rh.Transcript.Session.Group)))
+	serverGroup, keyGroup, err := rh.Shard(rand, len(rh.Transcript.Session.Group))
 	if err != nil {
 		return err
 	}
@@ -246,6 +246,8 @@ func (rh *RandHound) Start() error {
 		}
 
 		rh.Transcript.Session.Group[i] = g
+
+		log.Lvlf1("%v\n", g.Idx)
 	}
 
 	// Determine session identifier
@@ -315,10 +317,12 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		pbx[i] = msg.PolyBin
 		index[i] = i
 	}
-	sH, err := pvss.Commits(pbx, index) // XXX: buffer sH!
+
+	sH, err := pvss.Commits(pbx, index)
 	if err != nil {
 		return err
 	}
+	rh.Commit[idx] = sH
 
 	f, err := pvss.Verify(H, rh.Transcript.Session.Group[grp].Key, sH, msg.EncShare, msg.EncProof)
 	if err != nil {
@@ -328,11 +332,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		return errors.New(fmt.Sprintf("%v:%v\n", err, f))
 	}
 
-	rh.mutex.Lock()
 	//defer rh.mutex.Unlock()
-
 	// Record message in the transcript
 	// XXX: Spec first records and then verifies a message. What's better?
+	rh.mutex.Lock()
 	rh.Transcript.R1s[idx] = msg
 	rh.NumR1s[grp] += 1
 	rh.mutex.Unlock()
@@ -350,35 +353,32 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		group := rh.Transcript.Session.Group[grp]
 		n := len(group.Idx)
 
-		// XXX: i is the local server index *within* the group to which we send
-		// the re-shuffled message
+		// XXX: i is the (local) group server index to which we send the
+		// re-shuffled message
 		for i := 0; i < n; i++ {
 
-			sX := make([]abstract.Point, n) // buffer!
+			encShare := make([]abstract.Point, n)
 			encProof := make([]ProofCore, n)
-			polyBin := make([][]byte, n)
+			commit := make([]abstract.Point, n)
 
-			//  k is the local server index, j is the global server index
+			//  k is the group server index, j is the global server index
 			for k, j := range group.Idx {
 				r1 := rh.Transcript.R1s[j]
-				sX[k] = r1.EncShare[i]
+				encShare[k] = r1.EncShare[i]
 				encProof[k] = r1.EncProof[i]
-				polyBin[k] = r1.PolyBin
+				commit[k] = rh.Commit[j][i]
 			}
 
 			i2 := &I2{
-				SID:       sid,
-				EncShare:  sX,
-				EncProof:  encProof,
-				PolyBin:   polyBin, // XXX: send only (buffered) sH later
-				Threshold: rh.Transcript.Session.Group[grp].Threshold,
-				Idx:       i,
+				SID:      sid,
+				EncShare: encShare,
+				EncProof: encProof,
+				Commit:   commit,
 			}
 
 			if err := rh.SendTo(rh.Server[grp][i], i2); err != nil {
 				return err
 			}
-
 		}
 	}
 	return nil
@@ -392,27 +392,18 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	// Map SID to base point H
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
 
-	// Init PVSS
-	pvss := NewPVSS(rh.Suite(), H, msg.Threshold)
-
-	// Verify encryption consistency proof
+	// Prepare data
 	n := len(msg.EncShare)
-	pbx := make([][]byte, n)
-	index := make([]int, n)
 	X := make([]abstract.Point, n)
 	x := make([]abstract.Scalar, n)
 	for i := 0; i < n; i++ {
-		pbx[i] = msg.PolyBin[i]
-		index[i] = msg.Idx
 		X[i] = rh.Public()
 		x[i] = rh.Private()
 	}
-	sH, err := pvss.Commits(pbx, index)
-	if err != nil {
-		return err
-	}
 
-	f, err := pvss.Verify(H, X, sH, msg.EncShare, msg.EncProof)
+	// Verify encryption consistency proof
+	pvss := NewPVSS(rh.Suite(), H, 0)
+	f, err := pvss.Verify(H, X, msg.Commit, msg.EncShare, msg.EncProof)
 	if err != nil {
 		//log.Lvlf1("RandHound - I2 - Verification failed: %v %v %v\n", rh.index(), f, err)
 		// XXX: We probably shouldn't return an error here. Instead just drop
@@ -423,10 +414,13 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	//log.Lvlf1("RandHound - I2 - Encryption verification passed: %v\n", rh.Index())
 
 	// Decrypt shares
-	shares, decProof, err := pvss.Reveal(rh.Private(), msg.EncShare)
+	decShare, decProof, err := pvss.Reveal(rh.Private(), msg.EncShare)
+	if err != nil {
+		return err
+	}
 
 	hi2 := []byte{3}
-	r2 := &R2{HI2: hi2, DecShare: shares, DecProof: decProof}
+	r2 := &R2{HI2: hi2, DecShare: decShare, DecProof: decProof}
 	return rh.SendTo(rh.Root(), r2)
 }
 
@@ -463,8 +457,6 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	// Init PVSS
 	pvss := NewPVSS(rh.Suite(), H, rh.Transcript.Session.Group[grp].Threshold)
-	_ = pvss
-
 	e, err := pvss.Verify(rh.Suite().Point().Base(), msg.DecShare, X, sX, msg.DecProof)
 	if err != nil {
 		//log.Lvlf1("RandHound - R2 - Verification failed: %v %v %v\n", idx, e, err)
@@ -477,13 +469,12 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	//log.Lvlf1("RandHound - R2: %v %v\n", rh.index(), &r2.R2)
 
-	rh.mutex.Lock()
 	// Record message in the transcript
 	// XXX: Spec first records and then verifies a message. What's better?
+	rh.mutex.Lock()
 	rh.Transcript.R2s[idx] = msg
 	rh.NumR2s[grp] += 1
 	rh.counter++
-	//log.Lvlf1("%v %v\n", idx, rh.Transcript.R2s[idx].S)
 	rh.mutex.Unlock()
 
 	//log.Lvlf1("RandHound - R2 - Counter: %v %v\n", rh.index(), rh.counter)
