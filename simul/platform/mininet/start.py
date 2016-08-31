@@ -12,7 +12,7 @@ It will create nbr+1 entries for each net, where the ".1" is the
 router for the net, and ".2"..".nbr+1" will be the nodes.
 """
 
-import sys, time, threading, os, datetime
+import sys, time, threading, os, datetime, contextlib, errno
 
 from mininet.topo import Topo
 from mininet.net import Mininet
@@ -26,25 +26,28 @@ from subprocess import Popen, PIPE, call
 # The port used for socat
 socatPort = 5000
 # If this is true, only a dummy-function will be started on each mininet-node
-cothorityDummy = True
+cothorityDummy = False
 # What debugging-level to use
 debugging = 3
 # Logging-file
-logfile = "/tmp/stdout.gw"
+logfile = "/tmp/mininet.log"
+logsocat = "/tmp/socat.log"
+# Whether a ssh-daemon should be launched
+runSSHD = False
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
     def config( self, rootLog=None, **params ):
         super(BaseRouter, self).config(**params)
         print "Starting router at", self.IP(), rootLog
+        if runSSHD:
+            self.cmd('/usr/sbin/sshd -D &')
+
         self.cmd( 'sysctl net.ipv4.ip_forward=1' )
         socat = "socat %s udp4-listen:%d,reuseaddr,fork" % (logfile, socatPort)
-        print "Running socat on gw:", socat
         self.cmd( '%s &' % socat )
-        # self.cmd('ping -c 2 10.2.0.1 >> /tmp/ping')
-        # self.cmd('ip a >> /tmp/ping')
         if rootLog:
-            self.cmd('tail -f /tmp/stdout.gw | socat - udp-sendto:%s:%d &' % (rootLog, socatPort))
+            self.cmd('tail -f %s | socat - udp-sendto:%s:%d &' % (logfile, rootLog, socatPort))
 
     def terminate( self ):
         print "Stopping router"
@@ -58,22 +61,21 @@ class Cothority(Host):
     def config(self, gw=None, simul="", **params):
         super(Cothority, self).config(**params)
         print "Starting cothority-node on", self.IP()
+        if runSSHD:
+            self.cmd('/usr/sbin/sshd -D &')
+
         # TODO: this will fail on other nodes than the root.
         self.cmd('cd ~/mininet_run')
-        socat="socat -v - udp-sendto:%s:%d 2> /tmp/socat" % (gw, socatPort)
+        socat="socat -v - udp-sendto:%s:%d 2>> %s" % (gw, socatPort, logsocat)
         print "Socat is", socat, "on", self.IP()
-        # self.cmd('sleep 10')
-        # socat="socat -v >> /tmp/socat"
+
         if cothorityDummy:
-            print "Starting dummy"
-            # self.cmd('while (ip a | grep "inet 10" ); do sleep 1; done | %s &' % socat)
-            # self.cmd('ping -c 2 10.2.0.1 | %s &' % socat)
-            self.cmd('ping -c 2 10.1.0.1 >> /tmp/socat')
-            # self.cmd('ip a | %s &' % socat)
+            print "Starting dummy with gw", gw
+            self.cmd('while (ip a | grep "inet 10" ); do sleep 1; done | %s &' % socat)
         else:
             print "Starting cothority on node", self.IP(), socat
-            self.cmd('( pwd; ./cothority -debug %s -address %s:2000 -simul %s ) | %s &' %
-		        ( debugging, self.IP(), simul, socat ))
+            self.cmd('( ip a | grep "inet 10"; ./cothority -debug %s -address %s:2000 -simul %s ) | %s &' %
+                     ( debugging, self.IP(), simul, socat ))
 
     def terminate(self):
         print "Stopping cothority"
@@ -98,7 +100,6 @@ class InternetTopo(Topo):
                                   ip='%s/%d' % (gw, prefix),
                                   inNamespace=False,
                                   rootLog=rootLog)
-            # hostgw = self.addNode('h0', ip='%s/%d' % (gw, prefix))
             self.addLink(switch, hostgw)
 
             for i in range(1, int(n) + 1):
@@ -107,7 +108,6 @@ class InternetTopo(Topo):
                                     ip = '%s/%d' % (ipStr, prefix),
                                     defaultRoute='via %s' % gw,
 			                	    simul="CoSimul", gw=gw)
-                # host = self.addHost('h%d' % i, ip = '%s/%d' % (ipStr, prefix))
                 print "Adding link", host, switch
                 self.addLink(host, switch)
 
@@ -126,51 +126,12 @@ def RunNet():
     for (gw, n, i) in otherNets:
         print "Adding route for", n, gw
         net['h0'].cmd( 'route add -net %s gw %s' % (n, gw) )
-    CLI(net)
-    time.sleep(5)
+    # CLI(net)
+    time.sleep(20)
     for (gw, n, i) in otherNets:
         net['h0'].cmd( 'route del -net %s gw %s' % (n, gw) )
 
     print "Stopping on", myNet
-    net.stop()
-
-class InternetTopoEx(Topo):
-    "Single switch connected to n hosts."
-    def __init__(self, n=2, **opts):
-        Topo.__init__(self, **opts)
-
-        # set up inet switch
-        inetSwitch = self.addSwitch('s0')
-        # add inet host
-        inetHost = self.addHost('h0')
-        self.addLink(inetSwitch, inetHost)
-
-        # add local nets
-        for i in irange(1, n):
-            inetIntf = 'nat%d-eth0' % i
-            localIntf = 'nat%d-eth1' % i
-            localIP = '192.168.%d.1' % i
-            localSubnet = '192.168.%d.0/24' % i
-            natParams = { 'ip' : '%s/24' % localIP }
-            # add NAT to topology
-            nat = self.addNode('nat%d' % i, cls=NAT, subnet=localSubnet,
-                               inetIntf=inetIntf, localIntf=localIntf)
-            switch = self.addSwitch('s%d' % i)
-            # connect NAT to inet and local switches
-            self.addLink(nat, inetSwitch, intfName1=inetIntf)
-            self.addLink(nat, switch, intfName1=localIntf, params1=natParams)
-            # add host and connect to local switch
-            host = self.addHost('h%d' % i,
-                                ip='192.168.%d.100/24' % i,
-                                defaultRoute='via %s' % localIP)
-            self.addLink(host, switch)
-
-def RunNetEx():
-    "Create network and run the CLI"
-    topo = InternetTopo()
-    net = Mininet(topo=topo)
-    net.start()
-    CLI(net)
     net.stop()
 
 def GetNetworks(filename):
@@ -201,10 +162,17 @@ def GetNetworks(filename):
 
     return myNet, otherNets
 
+def rm_file(file):
+    try:
+        os.remove(file)
+    except OSError:
+        pass
+
 # The only argument given to the script is the server-list. Everything
 # else will be read from that and searched in the computer-configuration.
 if __name__ == '__main__':
     setLogLevel('info')
+    # Mininet doesn't set up correctly if we put this loglevel
     # lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         print "please give list-name"
@@ -214,19 +182,19 @@ if __name__ == '__main__':
     myNet, otherNets = GetNetworks(list_file)
 
     if myNet:
+        print "Cleaning up mininet and logfiles"
+        rm_file(logfile)
+        rm_file(logsocat)
+        call("mn -c", shell=True)
         print "Starting mininet for", myNet
         t1 = threading.Thread(target=RunNet)
         t1.start()
 
     if len(sys.argv) > 2:
-        os.remove(logfile)
-        with open(logfile, mode='a') as lfile:
-            lfile.write('Starting log at %s.\n' %
-                            datetime.datetime.now())
         for (server, mn, nbr) in otherNets:
             print "Going to copy things %s to %s and run %s hosts in net %s" % \
                   (list_file, server, nbr, mn)
-            call("scp -q cothority start.py %s %s:" % (list_file, server), shell=True)
+            call("scp -q simulation.bin cothority start.py %s %s:" % (list_file, server), shell=True)
             # print("going to clean mininet")
             # call("ssh %s /usr/local/bin/mn -c" % server, shell=True)
             print "Launching script on %s" % server
