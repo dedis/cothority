@@ -266,7 +266,7 @@ func (s *Service) Propagate(msg network.Body) {
 		id = msg.(*UpdateSkipBlock).ID
 	case *PropagateIdentity:
 		pi := msg.(*PropagateIdentity)
-		id = ID(pi.Data.Hash)
+		id = ID(pi.Storage.Data.Hash)
 		if s.getIdentityStorage(id) != nil {
 			log.Error("Couldn't store new identity")
 			return
@@ -287,7 +287,7 @@ func (s *Service) Propagate(msg network.Body) {
 		switch msg.(type) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
-			sid.Proposed = p.Config
+			sid.Proposed = p.Propose
 			sid.Votes = make(map[string][]byte)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
