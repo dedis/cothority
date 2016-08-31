@@ -80,7 +80,7 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(c.Device[s])
+		b, err := c.Device[s].Point.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
@@ -226,8 +226,8 @@ type PropagateIdentity struct {
 
 // ProposeSend sends a new proposition to be stored in all identities
 type ProposeSend struct {
-	ID ID
-	*Config
+	ID     ID
+	Config *Config
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
