@@ -13,16 +13,11 @@ package identity
 
 import (
 	"errors"
-
-	"sync"
-
-	"reflect"
-
-	"io/ioutil"
-
-	"os"
-
 	"fmt"
+	"io/ioutil"
+	"os"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"

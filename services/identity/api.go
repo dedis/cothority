@@ -85,23 +85,14 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
-<<<<<<< HEAD
 		Client: client,
 		Data: Data{
 			Private:    kp.Secret,
 			Public:     kp.Public,
-			Config:     NewConfig(majority, kp.Public, owner),
+			Config:     NewConfig(threshold, kp.Public, owner),
 			DeviceName: owner,
 			Cothority:  cothority,
 		},
-=======
-		Client:     client,
-		Private:    kp.Secret,
-		Public:     kp.Public,
-		Config:     NewConfig(threshold, kp.Public, owner),
-		DeviceName: owner,
-		Cothority:  cothority,
->>>>>>> master
 	}
 }
 
@@ -180,11 +171,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
-<<<<<<< HEAD
-	msg, err := i.Client.Send(i.Cothority.RandomServerIdentity(), &AddIdentity{i.Config, i.Cothority})
-=======
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
->>>>>>> master
 	if err != nil {
 		return err
 	}
@@ -204,16 +191,9 @@ func (i *Identity) ProposeSend(il *Config) error {
 
 // ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
-<<<<<<< HEAD
-func (i *Identity) ProposeFetch() error {
-	msg, err := i.Client.Send(i.Cothority.RandomServerIdentity(), &ProposeFetch{
-		ID:          i.ID,
-		AccountList: nil,
-=======
 func (i *Identity) ProposeUpdate() error {
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
 		ID: i.ID,
->>>>>>> master
 	})
 	if err != nil {
 		return err

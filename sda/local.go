@@ -48,7 +48,7 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     TCP,
+		mode:     Local,
 		ctx:      network.NewLocalContext(),
 	}
 }

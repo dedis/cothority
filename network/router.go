@@ -159,7 +159,6 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		packet.SetError(err)
 		packet.From = address
 		packet.ServerIdentity = remote
-		log.Lvl5(r.id.Address, "Got message", packet)
 		log.Lvl3(r.id.Address, "Got message AFTER")
 
 		// whether the router is closed
