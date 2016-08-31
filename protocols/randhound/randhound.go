@@ -3,6 +3,7 @@ package randhound
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"sync"
 	"time"
 
@@ -21,7 +22,8 @@ import (
 // - Hashing of I-messages and client-side verification
 // - Handling of failing encryption/decryption proofs
 // - Sane conditions on client-side when to proceed
-// - import / export transcript in JSON
+// - Import / export transcript in JSON
+// - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -73,7 +75,7 @@ type I1 struct {
 // R1 message
 type R1 struct {
 	HI1        []byte           // Hash of I1
-	EncShare   []abstract.Point // Encrypted Shares
+	EncShare   []abstract.Point // Encrypted shares
 	EncProof   []ProofCore      // Encryption consistency proofs
 	CommitPoly []byte           // Marshalled commitment polynomial
 }
@@ -206,6 +208,57 @@ func (rh *RandHound) SessionID() ([]byte, error) {
 	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
 }
 
+// Shard produces a pseudorandom sharding of the network entity list
+// based on a seed and a number of requested shards.
+func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abstract.Point, error) {
+
+	nodes := rh.Nodes
+
+	if shards == 0 || nodes < shards {
+		return nil, nil, fmt.Errorf("Number of requested shards not supported")
+	}
+
+	// Compute a random permutation of [1,n-1]
+	prng := rh.Suite().Cipher(seed)
+	m := make([]uint32, nodes-1)
+	for i := range m {
+		j := int(random.Uint64(prng) % uint64(i+1))
+		m[i] = m[j]
+		m[j] = uint32(i) + 1
+	}
+
+	// Create sharding of the current Roster according to the above permutation
+	el := rh.List()
+	n := int(nodes / shards)
+	sharding := [][]*sda.TreeNode{}
+	shard := []*sda.TreeNode{}
+	keys := [][]abstract.Point{}
+	k := []abstract.Point{}
+	for i, j := range m {
+		shard = append(shard, el[j])
+		k = append(k, el[j].ServerIdentity.Public)
+		if (i%n == n-1) || (i == len(m)-1) {
+			sharding = append(sharding, shard)
+			shard = make([]*sda.TreeNode, 0)
+			keys = append(keys, k)
+			k = make([]abstract.Point, 0)
+		}
+	}
+
+	// Ensure that the last shard has at least two elements
+	if shards > 1 && len(keys[shards-1]) == 1 {
+		l := len(sharding[shards-2])
+		x := sharding[shards-2][l-1]
+		y := keys[shards-2][l-1]
+		sharding[shards-1] = append(sharding[shards-1], x)
+		keys[shards-1] = append(keys[shards-1], y)
+		sharding[shards-2] = sharding[shards-2][:l-1]
+		keys[shards-2] = keys[shards-2][:l-1]
+	}
+
+	return sharding, keys, nil
+}
+
 // Start ...
 func (rh *RandHound) Start() error {
 
@@ -301,8 +354,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		index[i] = i
 	}
 
-	// XXX: Store shares in a "sorted way" for later
-
 	// Init PVSS and recover commits
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
 	pvss := NewPVSS(rh.Suite(), H, rh.Group[grp].Threshold)
@@ -367,9 +418,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	msg := &i2.I2
 	//log.Lvlf1("RandHound - I2: %v\n", rh.index())
 
-	// Map SID to base point H
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
-
 	// Prepare data
 	n := len(msg.EncShare)
 	X := make([]abstract.Point, n)
@@ -379,7 +427,8 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		x[i] = rh.Private()
 	}
 
-	// Verify encryption consistency proof
+	// Init PVSS and verify encryption consistency proof
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
 	pvss := NewPVSS(rh.Suite(), H, 0)
 	f, err := pvss.Verify(H, X, msg.Commit, msg.EncShare, msg.EncProof)
 	if err != nil {
@@ -387,7 +436,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		for i := range f {
 			msg.Commit[i] = nil
 			msg.EncShare[i] = nil
-			msg.EncProof[i] = ProofCore{} // XXX: hack
+			msg.EncProof[i] = ProofCore{}
 		}
 	}
 	//log.Lvlf1("RandHound - I2 - Encryption verification passed: %v\n", rh.Index())
@@ -412,7 +461,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
-	sX := make([]abstract.Point, n)
+	encShare := make([]abstract.Point, n)
 
 	group := rh.Group[grp]
 	for i := 0; i < n; i++ {
@@ -423,13 +472,13 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	i := rh.ServerIdxToGroupIdx[idx]
 	for j, k := range group.Idx {
 		r1 := rh.Group[grp].R1s[k]
-		sX[j] = r1.EncShare[i]
+		encShare[j] = r1.EncShare[i]
 	}
 
 	// Init PVSS and verify shares
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
 	pvss := NewPVSS(rh.Suite(), H, rh.Group[grp].Threshold)
-	f, err := pvss.Verify(rh.Suite().Point().Base(), msg.DecShare, X, sX, msg.DecProof)
+	f, err := pvss.Verify(rh.Suite().Point().Base(), msg.DecShare, X, encShare, msg.DecProof)
 	if err != nil {
 		// Erase invalid data
 		for i := range f {
