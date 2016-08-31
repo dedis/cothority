@@ -127,7 +127,6 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	err = c.Send(context.TODO(), msg)
 	if err != nil {
 		log.Lvl2("Couldn't send to", e, ":", err, "trying again")
-		delete(r.connections, e.ID)
 		c, err := connect()
 		if err != nil {
 			return err
@@ -162,18 +161,20 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if r.isClosed {
 				// request to finish handling conn
+				log.Lvl3(r.id.Address, "handleConn is asked to stop for", remote.Address)
+				r.closedMut.Unlock()
 				r.handleConnQuit <- true
 			} else if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// remote connection closed
+				r.closedMut.Unlock()
 				r.closeConnection(remote, c)
+				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 			} else {
 				// weird error let's try again
 				r.closedMut.Unlock()
 				log.Error(r.id, "Error with connection", address, "=>", err)
 				continue
 			}
-			log.Lvl3(r.id.Address, "leaving out handleConn for", remote.Address)
-			r.closedMut.Unlock()
 			return
 		}
 
@@ -186,7 +187,6 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			//t.networkChan <- packet
 			if err := r.Dispatch(&packet); err != nil {
 				log.Lvl3("Error dispatching:", err)
-				log.Print("Error dispatching:", err)
 			}
 		} else {
 			// signal we are done with this go routine.
@@ -231,10 +231,6 @@ func (r *Router) connection(id *ServerIdentity) Conn {
 }
 
 func (r *Router) reset() {
-	r.connsMut.Lock()
-	r.connections = make(map[ServerIdentityID]Conn)
-	r.connsMut.Unlock()
-
 	r.closedMut.Lock()
 	r.isClosed = false
 	r.closedMut.Unlock()

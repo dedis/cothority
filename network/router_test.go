@@ -91,6 +91,9 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	if msg.I != 12 {
 		t.Fatal("Simple message got distorted")
 	}
+
+	assert.Equal(t, 1, len(h1.connections))
+	assert.Equal(t, 1, len(h2.connections))
 }
 
 // Test connection of multiple Hosts and sending messages back and forth

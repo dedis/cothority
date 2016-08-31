@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 	"testing"
@@ -163,11 +164,6 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 
 	outgoing, err := NewLocalConn(addr2, addr1)
 	if err != nil {
-		listener.Stop()
-		<-ready
-		if addr1 == addr2 {
-			return // all is good as we should not be able to connect
-		}
 		t.Fatal("erro NewLocalConn:", err)
 	}
 
@@ -181,6 +177,7 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	nm, err := outgoing.Receive(context.TODO())
 	assert.Nil(t, err)
 	assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
+	log.Print("here?")
 	outgoingConn <- true
 
 	// close the incoming conn, so Receive here should return an error
