@@ -6,13 +6,11 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	"github.com/dedis/crypto/eddsa"
 )
 
 /*
@@ -46,10 +44,10 @@ func init() {
 type Identity struct {
 	// Client is included for easy `Send`-methods.
 	*sda.Client
-	// Private key for that device.
-	Private abstract.Scalar
-	// Public key for that device - will be stored in the identity-skipchain.
-	Public abstract.Point
+	// The eddsa-compatible key - cannot take suite.Private as the
+	// eddsa-signaure needs access to the seed and the prefix of the
+	// private key.
+	EdDSA *eddsa.EdDSA
 	// ID of the skipchain this device is tied to.
 	ID ID
 	// Config is the actual, valid configuration of the identity-skipchain.
@@ -68,14 +66,13 @@ type Identity struct {
 // different accounts
 func NewIdentity(cothority *sda.Roster, majority int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
-	kp := config.NewKeyPair(network.Suite)
+	ed := eddsa.NewEdDSA(nil)
 	return &Identity{
 		Client:     client,
-		Private:    kp.Secret,
-		Public:     kp.Public,
-		Config:     NewConfig(majority, kp.Public, owner),
+		Config:     NewConfig(majority, ed.Public, owner),
 		DeviceName: owner,
 		Cothority:  cothority,
+		EdDSA:      ed,
 	}
 }
 
@@ -137,7 +134,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Device[i.DeviceName] = &Device{i.Public}
+	confPropose.Device[i.DeviceName] = &Device{i.EdDSA.Public}
 	err = i.ProposeSend(confPropose)
 	if err != nil {
 		return err
@@ -193,14 +190,15 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+	log.Print(i.EdDSA)
+	sig, err := i.EdDSA.Sign(hash)
 	if err != nil {
 		return err
 	}
 	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
-		Signature: &sig,
+		Signature: sig,
 	})
 	err = sda.ErrMsg(msg, err)
 	if err != nil {

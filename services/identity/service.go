@@ -18,12 +18,12 @@ import (
 
 	"reflect"
 
-	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
+	"github.com/dedis/crypto/eddsa"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -50,7 +50,7 @@ type storage struct {
 	sync.Mutex
 	Latest   *Config
 	Proposed *Config
-	Votes    map[string]*crypto.SchnorrSig
+	Votes    map[string][]byte
 	Root     *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
 }
@@ -166,7 +166,7 @@ func (s *Service) ProposeVote(e *network.ServerIdentity, v *ProposeVote) (networ
 	}
 	log.Lvl3(v.Signer, "voted", v.Signature)
 	if v.Signature != nil {
-		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+		err = eddsa.Verify(owner.Point, hash, v.Signature)
 		if err != nil {
 			return nil, errors.New("Wrong signature: " + err.Error())
 		}
@@ -256,7 +256,7 @@ func (s *Service) Propagate(msg network.Body) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Config
-			sid.Votes = make(map[string]*crypto.SchnorrSig)
+			sid.Votes = make(map[string][]byte)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			sid.Votes[v.Signer] = v.Signature

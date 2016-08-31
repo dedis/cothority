@@ -83,7 +83,7 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 
 	assert.NotNil(t, c2.Config)
 	o1 := c2.Config.Device[c1.DeviceName]
-	if !o1.Point.Equal(c1.Public) {
+	if !o1.Point.Equal(c1.EdDSA.Public) {
 		t.Fatal("Owner is not c1")
 	}
 }

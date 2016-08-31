@@ -214,7 +214,7 @@ type ConfigUpdate struct {
 type ProposeVote struct {
 	ID        ID
 	Signer    string
-	Signature *crypto.SchnorrSig
+	Signature []byte
 }
 
 // Messages to be sent from one identity to another
