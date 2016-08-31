@@ -67,7 +67,7 @@ type I1 struct {
 // R1 message
 type R1 struct {
 	HI1      []byte           // Hash of I1
-	SX       []abstract.Point // Encrypted Shares
+	EncShare []abstract.Point // Encrypted Shares
 	EncProof []ProofCore      // Encryption consistency proofs
 	PolyBin  []byte           // Marshalled commitment polynomial
 }
@@ -75,7 +75,7 @@ type R1 struct {
 // I2 message
 type I2 struct {
 	SID       []byte           // Session identifier
-	SX        []abstract.Point // Encrypted shares
+	EncShare  []abstract.Point // Encrypted shares
 	EncProof  []ProofCore      // Encryption consistency proofs
 	PolyBin   [][]byte         // Marshalled commitment polynomials
 	Threshold int              // Secret sharing threshold XXX: probably remove later
@@ -85,7 +85,7 @@ type I2 struct {
 // R2 message
 type R2 struct {
 	HI2      []byte           // Hash of I2
-	S        []abstract.Point // Decrypted shares
+	DecShare []abstract.Point // Decrypted shares
 	DecProof []ProofCore      // Decryption consistency proofs
 }
 
@@ -288,7 +288,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// Send message back to client
 	hi1 := []byte{1} // XXX: compute hash of I1
-	r1 := &R1{HI1: hi1, SX: sX, EncProof: encProof, PolyBin: pb}
+	r1 := &R1{HI1: hi1, EncShare: sX, EncProof: encProof, PolyBin: pb}
 	//log.Lvlf1("RandHound - I1: %v\n%v\n", rh.index(), encProof)
 	return rh.SendTo(rh.Root(), r1)
 }
@@ -320,7 +320,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		return err
 	}
 
-	f, err := pvss.Verify(H, rh.Transcript.Session.Group[grp].Key, sH, msg.SX, msg.EncProof)
+	f, err := pvss.Verify(H, rh.Transcript.Session.Group[grp].Key, sH, msg.EncShare, msg.EncProof)
 	if err != nil {
 		// XXX: We probably shouldn't return an error here. Instead just drop
 		// the message and record nil (?) in the transcript and don't increase
@@ -361,14 +361,14 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			//  k is the local server index, j is the global server index
 			for k, j := range group.Idx {
 				r1 := rh.Transcript.R1s[j]
-				sX[k] = r1.SX[i]
+				sX[k] = r1.EncShare[i]
 				encProof[k] = r1.EncProof[i]
 				polyBin[k] = r1.PolyBin
 			}
 
 			i2 := &I2{
 				SID:       sid,
-				SX:        sX,
+				EncShare:  sX,
 				EncProof:  encProof,
 				PolyBin:   polyBin, // XXX: send only (buffered) sH later
 				Threshold: rh.Transcript.Session.Group[grp].Threshold,
@@ -396,7 +396,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	pvss := NewPVSS(rh.Suite(), H, msg.Threshold)
 
 	// Verify encryption consistency proof
-	n := len(msg.SX)
+	n := len(msg.EncShare)
 	pbx := make([][]byte, n)
 	index := make([]int, n)
 	X := make([]abstract.Point, n)
@@ -412,7 +412,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
-	f, err := pvss.Verify(H, X, sH, msg.SX, msg.EncProof)
+	f, err := pvss.Verify(H, X, sH, msg.EncShare, msg.EncProof)
 	if err != nil {
 		//log.Lvlf1("RandHound - I2 - Verification failed: %v %v %v\n", rh.index(), f, err)
 		// XXX: We probably shouldn't return an error here. Instead just drop
@@ -423,10 +423,10 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	//log.Lvlf1("RandHound - I2 - Encryption verification passed: %v\n", rh.Index())
 
 	// Decrypt shares
-	shares, decProof, err := pvss.Reveal(rh.Private(), msg.SX)
+	shares, decProof, err := pvss.Reveal(rh.Private(), msg.EncShare)
 
 	hi2 := []byte{3}
-	r2 := &R2{HI2: hi2, S: shares, DecProof: decProof}
+	r2 := &R2{HI2: hi2, DecShare: shares, DecProof: decProof}
 	return rh.SendTo(rh.Root(), r2)
 }
 
@@ -437,7 +437,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	idx := r2.ServerIdentityIdx  // global server index
 	grp := rh.ServerToGroup[idx] // group
 
-	n := len(msg.S)
+	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
 	sX := make([]abstract.Point, n)
 
@@ -455,7 +455,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	for k, j := range group.Idx {
 		r1 := rh.Transcript.R1s[j]
-		sX[k] = r1.SX[i]
+		sX[k] = r1.EncShare[i]
 	}
 
 	// Map SID to base point H
@@ -465,7 +465,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	pvss := NewPVSS(rh.Suite(), H, rh.Transcript.Session.Group[grp].Threshold)
 	_ = pvss
 
-	e, err := pvss.Verify(rh.Suite().Point().Base(), msg.S, X, sX, msg.DecProof)
+	e, err := pvss.Verify(rh.Suite().Point().Base(), msg.DecShare, X, sX, msg.DecProof)
 	if err != nil {
 		//log.Lvlf1("RandHound - R2 - Verification failed: %v %v %v\n", idx, e, err)
 		// XXX: We probably shouldn't return an error here. Instead just drop
@@ -497,7 +497,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 			for _, j := range group.Idx {
 				_ = j
 				//log.Lvlf1("%v\n", rh.Transcript.R2s[j].S)
-				ps, err := pvss.Recover(rh.Transcript.R2s[j].S)
+				ps, err := pvss.Recover(rh.Transcript.R2s[j].DecShare)
 				if err != nil {
 					return err
 				}
