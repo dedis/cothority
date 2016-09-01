@@ -23,9 +23,9 @@ const (
 	TLS = "tls"
 	// PURB represents a PURB encryption connection over TCP
 	PURB = "purb"
-	// Chan represents a channel based connection type
+	// Local represents a channel based connection type
 	Local = "local"
-	// Unvalid represents a non valid connection type
+	// UnvalidConnType represents a non valid connection type
 	UnvalidConnType = "wrong"
 )
 
@@ -101,6 +101,8 @@ func (a Address) String() string {
 	return string(a)
 }
 
+// Host returns the host part of the address.
+// ex: "tcp://127.0.0.1:2000" => "127.0.0.1"
 func (a Address) Host() string {
 	na := a.NetworkAddress()
 	if na == "" {
@@ -113,6 +115,7 @@ func (a Address) Host() string {
 	return h
 }
 
+// Port will return the port part of the Address
 func (a Address) Port() string {
 	na := a.NetworkAddress()
 	if na == "" {
@@ -126,6 +129,8 @@ func (a Address) Port() string {
 
 }
 
+// NewAddress takes a connection type and the raw address. It returns a
+// correctly formatted address, which will be of type t.
 func NewAddress(t ConnType, network string) Address {
 	return Address(string(t) + typeAddressSep + network)
 }

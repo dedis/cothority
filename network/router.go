@@ -54,6 +54,8 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 	return r
 }
 
+// Start will start the listening routine of the underlying Host. It is a
+// blocking call until the listening is done (by calling r.Stop()).
 func (r *Router) Start() {
 	// The function given to the listener  does the exchange of ServerIdentity
 	// and pass the connection along to the router.
@@ -77,6 +79,10 @@ func (r *Router) Start() {
 	}
 }
 
+// Stop will stop the listening routine, and stop any routine of handling
+// connections. Calling r.Start(), then r.Stop() then r.Start() again leads to
+// an undefined behaviour. Callers should most of the time re-create a fresh
+// Router.
 func (r *Router) Stop() error {
 	err := r.host.Stop()
 	err2 := r.stopHandling()
@@ -295,6 +301,7 @@ func (r *Router) Rx() uint64 {
 	return rx
 }
 
+// Listening returns true if this router is listening or not.
 func (r *Router) Listening() bool {
 	return r.host.Listening()
 }
@@ -302,8 +309,8 @@ func (r *Router) Listening() bool {
 // exchangeServerIdentity takes a fresh new conn issued by the listener and
 // proceed to the exchanges of the server identities of both parties. It returns
 // the ServerIdentity of the remote party.
-func (h *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
-	return exchangeServerIdentity(h.id, c)
+func (r *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
+	return exchangeServerIdentity(r.id, c)
 }
 
 // negotiateOpen takes a fresh issued new Conn and the supposed destination's
@@ -311,8 +318,8 @@ func (h *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
 // we are correctly dealing with the right remote party.
 // NOTE: This version is non secure at all, it's just a simple verification.
 // Later will come the signing part,etc.
-func (h *Router) negotiateOpen(e *ServerIdentity, c Conn) error {
-	return negotiateOpen(h.id, e, c)
+func (r *Router) negotiateOpen(e *ServerIdentity, c Conn) error {
+	return negotiateOpen(r.id, e, c)
 }
 
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {

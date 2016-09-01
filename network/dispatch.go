@@ -69,6 +69,9 @@ func (d *BlockingDispatcher) RegisterProcessor(p Processor, msgType ...PacketTyp
 	}
 }
 
+// RegisterProcessorFunc takes a func, creates a Processor struct around it and
+// register it to the dispatcher. It's a more straightforward way to register a
+// Processor.
 func (d *BlockingDispatcher) RegisterProcessorFunc(msgType PacketTypeID, fn func(*Packet)) {
 	p := &defaultProcessor{
 		fn: fn,

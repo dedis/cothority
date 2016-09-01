@@ -13,7 +13,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// MaxRetryConnectConnect defines how many times should we try to connect
+// MaxRetryConnect defines how many times should we try to connect
 const MaxRetryConnect = 10
 
 // MaxIdentityExchange is the maximum time waited for an exchange of
@@ -89,8 +89,8 @@ func (eid ServerIdentityID) Equal(other ServerIdentityID) bool {
 	return uuid.Equal(uuid.UUID(eid), uuid.UUID(other))
 }
 
-func (e *ServerIdentity) String() string {
-	return e.Address.String()
+func (si *ServerIdentity) String() string {
+	return si.Address.String()
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message

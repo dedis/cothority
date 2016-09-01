@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
+// NewTCPRouter returns a fresh Router using TCPHost as the underlying Host.
 func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
 	h, err := NewTCPHost(sid.Address)
 	if err != nil {
@@ -198,6 +199,7 @@ func (c *TCPConn) Local() Address {
 	return NewTCPAddress(c.conn.LocalAddr().String())
 }
 
+// Type implements the Conn interface
 func (c *TCPConn) Type() ConnType {
 	return PlainTCP
 }
@@ -292,7 +294,7 @@ type TCPListener struct {
 	addr net.Addr
 }
 
-// NewTCPLIstener returns a Listener. This function tries to bind to the given
+// NewTCPListener returns a Listener. This function tries to bind to the given
 // address already.It returns the listener and an error if one occured during
 // the binding. A subsequent call to Address() will give the real listening
 // address (useful if you set it to port :0).
@@ -396,19 +398,21 @@ func (t *TCPListener) Stop() error {
 	return nil
 }
 
+// Address implements the Listener interface
 func (t *TCPListener) Address() Address {
 	t.listeningLock.Lock()
 	defer t.listeningLock.Unlock()
 	return NewAddress(PlainTCP, t.addr.String())
 }
 
+// Listening implements the Listener interface
 func (t *TCPListener) Listening() bool {
 	t.listeningLock.Lock()
 	defer t.listeningLock.Unlock()
 	return t.listening
 }
 
-// TCPHost implements the Host interface
+// TCPHost implements the Host interface using TCP connections.
 type TCPHost struct {
 	addr Address
 	*TCPListener
@@ -424,6 +428,7 @@ func NewTCPHost(addr Address) (*TCPHost, error) {
 	return h, err
 }
 
+// Connect implements the Host interface
 func (t *TCPHost) Connect(addr Address) (Conn, error) {
 	switch addr.ConnType() {
 	case PlainTCP:
@@ -433,6 +438,8 @@ func (t *TCPHost) Connect(addr Address) (Conn, error) {
 	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", addr, addr.ConnType())
 }
 
+// NewTCPClient returns a fresh client using the TCP network communication
+// layer.
 func NewTCPClient() *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
 		return NewTCPConn(remote.Address)
@@ -440,6 +447,8 @@ func NewTCPClient() *Client {
 	return newClient(fn)
 }
 
+// NewTCPAddress returns a new Address that has type PlainTCP with the given
+// addr
 func NewTCPAddress(addr string) Address {
 	return NewAddress(PlainTCP, addr)
 }

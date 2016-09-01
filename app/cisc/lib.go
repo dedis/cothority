@@ -48,6 +48,7 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	_, msg, err := network.UnmarshalRegistered(buf)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
+	//log.Printf("cfg loaded: %+v", cfg.Identity)
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}
@@ -73,6 +74,7 @@ func (cfg *ciscConfig) saveConfig(c *cli.Context) error {
 	if cfg == nil {
 		return errors.New("Cannot save empty clientApp")
 	}
+	log.Print("config:", cfg)
 	buf, err := network.MarshalRegisteredType(cfg)
 	if err != nil {
 		log.Error(err)

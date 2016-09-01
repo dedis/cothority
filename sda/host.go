@@ -89,6 +89,7 @@ func (h *Host) Close() error {
 
 }
 
+// Address returns the address used by the Router.
 func (h *Host) Address() network.Address {
 	return h.ServerIdentity.Address
 }

@@ -9,10 +9,14 @@ import (
 	"time"
 )
 
+// NewLocalRouter returns a fresh router which uses local connections. It takes
+// the default context.
 func NewLocalRouter(sid *ServerIdentity) (*Router, error) {
 	return NewLocalRouterWithContext(defaultLocalContext, sid)
 }
 
+// NewLocalRouterWithContext is the same as NewLocalRouter but takes a specific
+// LocalContext. This is useful to run parallel different local overlays.
 func NewLocalRouterWithContext(ctx *LocalContext, sid *ServerIdentity) (*Router, error) {
 	h, err := NewLocalHostWithContext(ctx, sid.Address)
 	if err != nil {
@@ -31,9 +35,11 @@ type LocalContext struct {
 	sync.Mutex
 	listening map[Address]func(Conn)
 
-	baseUid uint64
+	baseUID uint64
 }
 
+// NewLocalContext returns a fresh new context that can be used by LocalConn,
+// LocalListener & LocalHost.
 func NewLocalContext() *LocalContext {
 	return &LocalContext{
 		queues:    make(map[endpoint]*connQueue),
@@ -60,7 +66,7 @@ func LocalReset() {
 
 }
 
-// Islistening returns true if the remote address is listening "virtually"
+// IsListening returns true if the remote address is listening "virtually"
 func (ccc *LocalContext) IsListening(remote Address) bool {
 	ccc.Lock()
 	defer ccc.Unlock()
@@ -95,11 +101,11 @@ func (ccc *LocalContext) Connect(local, remote Address) (*LocalConn, error) {
 		return nil, fmt.Errorf("%s can't connect to %s: it's not listening", local, remote)
 	}
 
-	outEndpoint := endpoint{local, ccc.baseUid}
-	ccc.baseUid++
+	outEndpoint := endpoint{local, ccc.baseUID}
+	ccc.baseUID++
 
-	incEndpoint := endpoint{remote, ccc.baseUid}
-	ccc.baseUid++
+	incEndpoint := endpoint{remote, ccc.baseUID}
+	ccc.baseUID++
 
 	outgoing := newLocalConn(ccc, outEndpoint, incEndpoint)
 	incoming := newLocalConn(ccc, incEndpoint, outEndpoint)
@@ -151,7 +157,7 @@ func (ccc *LocalContext) Len() int {
 	return len(ccc.queues)
 }
 
-// ChannConn is a connection that send and receive messages through channels
+// LocalConn is a connection that send and receive messages through channels
 type LocalConn struct {
 	local  endpoint
 	remote endpoint
@@ -175,17 +181,20 @@ func newLocalConn(ctx *LocalContext, local, remote endpoint) *LocalConn {
 	}
 }
 
-// Returns a new channel connection from local to remote
+// NewLocalConn returns a new channel connection from local to remote
 // Mimics the behavior of NewTCPConn => tries connecting right away.
 // It uses the default local context.
 func NewLocalConn(local, remote Address) (*LocalConn, error) {
 	return NewLocalConnWithContext(defaultLocalContext, local, remote)
 }
 
+// NewLocalConnWithContext is similar to NewLocalConn but takes a specific
+// LocalContext.
 func NewLocalConnWithContext(ctx *LocalContext, local, remote Address) (*LocalConn, error) {
 	return ctx.Connect(local, remote)
 }
 
+// Send implements the Conn interface.
 func (cc LocalConn) Send(ctx context.Context, msg Body) error {
 
 	var body Body
@@ -203,18 +212,22 @@ func (cc LocalConn) Send(ctx context.Context, msg Body) error {
 	return cc.ctx.Send(cc.remote, nm)
 }
 
+// Receive implements the Conn interface.
 func (cc *LocalConn) Receive(ctx context.Context) (Packet, error) {
 	return cc.Pop()
 }
 
+// Local implements the Conn interface
 func (cc *LocalConn) Local() Address {
 	return cc.local.addr
 }
 
+// Remote implements the Conn interface
 func (cc *LocalConn) Remote() Address {
 	return cc.remote.addr
 }
 
+// Close implements the Conn interface
 func (cc *LocalConn) Close() error {
 	cc.connQueue.Close()
 	// close the remote conn also
@@ -222,14 +235,17 @@ func (cc *LocalConn) Close() error {
 	return nil
 }
 
+// Rx implements the Conn interface
 func (cc *LocalConn) Rx() uint64 {
 	return 0
 }
 
+// Tx implements the Conn interface
 func (cc *LocalConn) Tx() uint64 {
 	return 0
 }
 
+// Type implements the Conn interface
 func (cc *LocalConn) Type() ConnType {
 	return Local
 }
@@ -280,6 +296,9 @@ func (c *connQueue) Close() {
 	c.Signal()
 }
 
+// LocalListener is a Listener that uses LocalConn to communicate. It tries to
+// behave as much as possible as a real golang net.Listener but using LocalConn
+// as the underlying communication layer.
 type LocalListener struct {
 	// addr is the addr we're listening to + mut
 	addr Address
@@ -294,10 +313,14 @@ type LocalListener struct {
 	ctx *LocalContext
 }
 
+// NewLocalListener returns a fresh LocalListener which implements the Listener
+// interface.
 func NewLocalListener(addr Address) (*LocalListener, error) {
 	return NewLocalListenerWithContext(defaultLocalContext, addr)
 }
 
+// NewLocalListenerWithContext is similar to NewLocalListener but taking a
+// specific LocalContext to use to communicate.
 func NewLocalListenerWithContext(ctx *LocalContext, addr Address) (*LocalListener, error) {
 	l := &LocalListener{
 		quit: make(chan bool),
@@ -319,6 +342,7 @@ func (ll *LocalListener) bind(addr Address) error {
 	return nil
 }
 
+// Listen implements the Listener interface
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	ll.quit = make(chan bool)
@@ -330,6 +354,7 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 	return nil
 }
 
+// Stop implements the Listener interface
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
@@ -341,28 +366,38 @@ func (ll *LocalListener) Stop() error {
 	return nil
 }
 
+// Address returns the listening address used.
 func (ll *LocalListener) Address() Address {
 	ll.Lock()
 	defer ll.Unlock()
 	return ll.addr
 }
 
+// Listening returns true if this Listener is actually listening for any
+// incoming connections.
 func (ll *LocalListener) Listening() bool {
 	ll.Lock()
 	defer ll.Unlock()
 	return ll.listening
 }
 
+// LocalHost is a Host implementation using LocalConn and LocalListener as
+// the underlying means of communication. It is a implementation of the Host
+// interface.
 type LocalHost struct {
 	addr Address
 	*LocalListener
 	ctx *LocalContext
 }
 
+// NewLocalHost returns a fresh Host using Local communication that will listen
+// on the given addr.
 func NewLocalHost(addr Address) (*LocalHost, error) {
 	return NewLocalHostWithContext(defaultLocalContext, addr)
 }
 
+// NewLocalHostWithContext is similar to NewLocalHost but specify which
+// LocalContext to use for communicating.
 func NewLocalHostWithContext(ctx *LocalContext, addr Address) (*LocalHost, error) {
 	lh := &LocalHost{
 		addr: addr,
@@ -374,6 +409,7 @@ func NewLocalHostWithContext(ctx *LocalContext, addr Address) (*LocalHost, error
 
 }
 
+// Connect implements the Host interface.
 func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 	if addr.ConnType() != Local {
 		return nil, errors.New("Can't connect to non-Local address")
@@ -391,10 +427,13 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 
 }
 
+// NewLocalClient returns Client that uses the Local communication layer.
 func NewLocalClient() *Client {
 	return NewLocalClientWithContext(defaultLocalContext)
 }
 
+// NewLocalClientWithContext is similar to NewLocalClient but takes a specific
+// LocalContext to communicate.
 func NewLocalClientWithContext(ctx *LocalContext) *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
 		return NewLocalConnWithContext(ctx, own.Address, remote.Address)
@@ -403,6 +442,7 @@ func NewLocalClientWithContext(ctx *LocalContext) *Client {
 
 }
 
+// NewLocalAddress returns an Address of type Local with the given raw addr.
 func NewLocalAddress(addr string) Address {
 	return NewAddress(Local, addr)
 }
