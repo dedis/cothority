@@ -62,7 +62,9 @@ type Group struct {
 	Idx       []int                    // Global indices of servers (= ServerIdentityIdx)
 	Key       []abstract.Point         // Public keys of servers
 	HI1       []byte                   // Hash of I1 message
+	SI1       crypto.SchnorrSig        // Signature to HI1 hash
 	HI2       [][]byte                 // Hashes of I2 messages
+	SI2       []crypto.SchnorrSig      // Signatures of HI2 hashes
 	R1s       map[int]*R1              // R1 messages received from servers
 	R2s       map[int]*R2              // R2 messages received from servers
 	Commit    map[int][]abstract.Point // Commitments of server polynomials
@@ -240,33 +242,12 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 	// Create sharding of the current Roster according to the above permutation
 	el := rh.List()
-	n := int(nodes/shards) + 1
-	sharding := [][]*sda.TreeNode{}
-	shard := []*sda.TreeNode{}
-	keys := [][]abstract.Point{}
-	k := []abstract.Point{}
+	sharding := make([][]*sda.TreeNode, shards)
+	keys := make([][]abstract.Point, shards)
+
 	for i, j := range m {
-		shard = append(shard, el[j])
-		k = append(k, el[j].ServerIdentity.Public)
-		if (i%n == n-1) || (i == len(m)-1) {
-			sharding = append(sharding, shard)
-			shard = make([]*sda.TreeNode, 0)
-			keys = append(keys, k)
-			k = make([]abstract.Point, 0)
-		}
-	}
-
-	log.Lvlf1("%v", m)
-
-	// Ensure that the last shard has at least two elements
-	if shards > 1 && len(keys[shards-1]) == 1 {
-		l := len(sharding[shards-2])
-		x := sharding[shards-2][l-1]
-		y := keys[shards-2][l-1]
-		sharding[shards-1] = append(sharding[shards-1], x)
-		keys[shards-1] = append(keys[shards-1], y)
-		sharding[shards-2] = sharding[shards-2][:l-1]
-		keys[shards-2] = keys[shards-2][:l-1]
+		sharding[i%shards] = append(sharding[i%shards], el[j])
+		keys[i%shards] = append(keys[i%shards], el[j].ServerIdentity.Public)
 	}
 
 	return sharding, keys, nil
@@ -301,6 +282,7 @@ func (rh *RandHound) Start() error {
 			Key:       keyGroup[i],
 			HI1:       make([]byte, 0),
 			HI2:       make([][]byte, len(group)),
+			SI2:       make([]crypto.SchnorrSig, len(group)),
 			R1s:       make(map[int]*R1),
 			R2s:       make(map[int]*R2),
 			Commit:    make(map[int][]abstract.Point),
@@ -337,6 +319,11 @@ func (rh *RandHound) Start() error {
 		}
 
 		rh.Group[i].HI1, err = crypto.HashBytes(rh.Suite().Hash(), i1b)
+		if err != nil {
+			return err
+		}
+
+		rh.Group[i].SI1, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i1b)
 		if err != nil {
 			return err
 		}
@@ -450,6 +437,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			}
 
 			rh.Group[grp].HI2[i], err = crypto.HashBytes(rh.Suite().Hash(), i2b)
+			if err != nil {
+				return err
+			}
+
+			rh.Group[grp].SI2[i], err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i2b)
 			if err != nil {
 				return err
 			}
