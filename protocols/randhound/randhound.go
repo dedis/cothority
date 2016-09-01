@@ -9,6 +9,7 @@ import (
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
@@ -127,98 +128,6 @@ type WI2 struct {
 type WR2 struct {
 	*sda.TreeNode
 	R2
-}
-
-// MarshalBinary ...
-func (i1 *I1) MarshalBinary() ([]byte, error) {
-
-	buf := new(bytes.Buffer)
-
-	if _, err := buf.Write(i1.SID); err != nil {
-		return nil, err
-	}
-
-	if err := binary.Write(buf, binary.LittleEndian, uint32(i1.Threshold)); err != nil {
-		return nil, err
-	}
-
-	for _, k := range i1.Key {
-		kb, err := k.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(kb); err != nil {
-			return nil, err
-		}
-	}
-
-	return buf.Bytes(), nil
-}
-
-// MarshalBinary ...
-func (i2 *I2) MarshalBinary() ([]byte, error) {
-
-	buf := new(bytes.Buffer)
-
-	if _, err := buf.Write(i2.SID); err != nil {
-		return nil, err
-	}
-
-	for _, k := range i2.EncShare {
-		kb, err := k.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(kb); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, k := range i2.EncProof {
-		cb, err := k.C.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(cb); err != nil {
-			return nil, err
-		}
-
-		rb, err := k.R.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(rb); err != nil {
-			return nil, err
-		}
-
-		vgb, err := k.VG.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(vgb); err != nil {
-			return nil, err
-		}
-
-		vhb, err := k.VH.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(vhb); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, k := range i2.Commit {
-		kb, err := k.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		if _, err := buf.Write(kb); err != nil {
-			return nil, err
-		}
-	}
-
-	return buf.Bytes(), nil
 }
 
 // NewRandHound ...
@@ -422,7 +331,7 @@ func (rh *RandHound) Start() error {
 			Key:       rh.Group[i].Key,
 		}
 
-		i1b, err := i1.MarshalBinary()
+		i1b, err := network.MarshalRegisteredType(i1)
 		if err != nil {
 			return err
 		}
@@ -451,7 +360,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
-	i1b, err := msg.MarshalBinary()
+	i1b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return err
 	}
@@ -535,7 +444,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				Commit:   commit,
 			}
 
-			i2b, err := i2.MarshalBinary()
+			i2b, err := network.MarshalRegisteredType(i2)
 			if err != nil {
 				return err
 			}
@@ -587,7 +496,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
-	i2b, err := msg.MarshalBinary()
+	i2b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return err
 	}
