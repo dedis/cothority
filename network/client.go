@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dedis/crypto/config"
@@ -27,6 +27,9 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 	return &Client{c}
 }
 
+var baseId uint64 = 0
+var baseIdLock sync.Mutex
+
 // Send will send the message to the destination service and return the
 // reply.
 // The error-handling is done using the ErrorRet structure which can be returned
@@ -34,8 +37,13 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 // the appropriate error as a network.Packet.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
-	id := rand.Intn(256) + 1
-	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.Itoa(id)))
+	// just create a random looking id for this client. Choosing higher values
+	// lower the chance of having a collision in the Router.
+	baseIdLock.Lock()
+	id := baseId
+	baseId++
+	baseIdLock.Unlock()
+	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
 
 	var c Conn
 	var err error

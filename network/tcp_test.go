@@ -324,7 +324,7 @@ func sendrcv_proc(from, to Router) error {
 
 func waitConnections(r Router, sid *ServerIdentity) error {
 	for i := 0; i < 10; i++ {
-		c := r.connection(sid)
+		c := r.connection(sid.ID)
 		if c != nil {
 			return nil
 		}

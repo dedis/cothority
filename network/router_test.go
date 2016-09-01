@@ -72,14 +72,21 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	h1, err := fac(2007)
+	if err != nil {
+		t.Fatal(err)
+	}
 	h2, err := fac(2008)
+	if err != nil {
+		t.Fatal(err)
+	}
 	go h2.Start()
 
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
+	h1.RegisterProcessor(proc, SimpleMessageType)
 	defer func() {
-		h1.Stop()
-		h2.Stop()
+		assert.Nil(t, h1.Stop())
+		assert.Nil(t, h2.Stop())
 	}()
 
 	err = h1.Send(h2.id, &SimpleMessage{12})
@@ -93,8 +100,13 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 		t.Fatal("Simple message got distorted")
 	}
 
-	assert.Equal(t, 1, len(h1.connections))
-	assert.Equal(t, 1, len(h2.connections))
+	h12 := h1.connection(h2.id.ID)
+	h21 := h2.connection(h1.id.ID)
+	if h12 == nil {
+		t.Error("h1 has no connection to h2")
+	} else if h21 == nil {
+		t.Error("h2 has no connection to h1")
+	}
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
@@ -153,35 +165,85 @@ func TestRouterLotsOfConnLocal(t *testing.T) {
 	testRouterLotsOfConn(t, NewTestRouterLocal)
 }
 
-func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
-	nbrConn := 20
+// nSquareProc will send back all packet sent and stop when it has received
+// enough, it releases the waitgroup.
+type nSquareProc struct {
+	t        *testing.T
+	r        *Router
+	expected int
+	actual   int
+	wg       *sync.WaitGroup
+}
 
-	main, err := fac(1999)
-	if err != nil {
-		t.Fatal(err)
+func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nSquareProc {
+	return &nSquareProc{t, r, expect, 0, wg}
+}
+
+func (p *nSquareProc) Process(pack *Packet) {
+	p.actual++
+	if p.actual == p.expected {
+		// release
+		p.wg.Done()
+		return
+	} else if p.actual > p.expected {
+		p.t.Fatal("Too many response ??")
 	}
-	go main.Start()
+	msg := pack.Msg.(SimpleMessage)
+	p.r.Send(pack.ServerIdentity, &msg)
+}
 
-	var wg sync.WaitGroup
-	wg.Add(nbrConn)
-	for i := 0; i < nbrConn; i++ {
+// Makes a big mesh where every host send and receive to every other hosts
+func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
+	log.TestOutput(true, 2)
+	nbrRouter := 2
+	// create all the routers
+	routers := make([]*Router, nbrRouter)
+	var wg1 sync.WaitGroup
+	wg1.Add(nbrRouter)
+	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
-			h, err := fac(2000 + j)
-			//log.Print("host", j, "/", nbrConn, " is starting", err)
+			r, err := fac(2000 + j)
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Nil(t, h.Send(main.id, &SimpleMessage{3}))
-			assert.Nil(t, h.Stop())
-			wg.Done()
+			go r.Start()
+			for !r.Listening() {
+				time.Sleep(20 * time.Millisecond)
+			}
+			routers[j] = r
+			wg1.Done()
 		}(i)
 	}
-	wg.Wait()
+	wg1.Wait()
 
-	assert.Nil(t, main.Stop())
+	var wg2 sync.WaitGroup
+	wg2.Add(nbrRouter)
+	for i := 0; i < nbrRouter; i++ {
+		go func(j int) {
+			r := routers[j]
+			// expect nbrRouter - 1 messages
+			proc := newNSquareProc(t, r, nbrRouter-1, &wg2)
+			r.RegisterProcessor(proc, SimpleMessageType)
+			for k := 0; k < nbrRouter; k++ {
+				if k == j {
+					// don't send to yourself
+					continue
+				}
+				// send to everyone else
+				if err := r.Send(routers[k].id, &SimpleMessage{3}); err != nil {
+					t.Fatal(err)
+				}
+			}
+		}(i)
+	}
+	wg2.Wait()
+	for i := 0; i < nbrRouter; i++ {
+		r := routers[i]
+		if err := r.Stop(); err != nil {
+			t.Fatal(err)
+		}
 
-	assert.Equal(t, 0, len(main.connections))
-
+	}
 }
 
 // Test sending data back and forth using the sendSDAData

@@ -29,7 +29,10 @@ type Router struct {
 
 	host Host
 	// connections keeps track of all active connections with the translation
-	connections map[ServerIdentityID]Conn
+	// use of an array because it happens that some connections are opened at
+	// the same time on both endpoints, and thus registered one after the other,
+	// erasing the first conn.
+	connections map[ServerIdentityID][]Conn
 	connsMut    sync.Mutex
 
 	// boolean flag indicating that the router is already clos{ing,ed}
@@ -37,18 +40,18 @@ type Router struct {
 	closedMut sync.Mutex
 
 	// we wait that all handleConn routines are done
-	handleConnQuit chan bool
+	wg    sync.WaitGroup
+	wgMut sync.Mutex
 }
 
 // NewRouter returns a fresh Router giving its identity, and the host we want to
 // use.
 func NewRouter(own *ServerIdentity, h Host) *Router {
 	r := &Router{
-		id:             own,
-		connections:    make(map[ServerIdentityID]Conn),
-		host:           h,
-		Dispatcher:     NewBlockingDispatcher(),
-		handleConnQuit: make(chan bool),
+		id:          own,
+		connections: make(map[ServerIdentityID][]Conn),
+		host:        h,
+		Dispatcher:  NewBlockingDispatcher(),
 	}
 	own.Address = h.Address()
 	return r
@@ -71,8 +74,7 @@ func (r *Router) Start() {
 			return
 		}
 		// pass it along
-		r.registerConnection(dst, c)
-		r.handleConn(dst, c)
+		r.launchHandleRoutine(dst, c)
 	})
 	if err != nil {
 		log.Error("Error listening:", err)
@@ -97,32 +99,14 @@ func (r *Router) Stop() error {
 
 // Send sends to an ServerIdentity without wrapping the msg into a SDAMessage
 func (r *Router) Send(e *ServerIdentity, msg Body) error {
-	r.connsMut.Lock()
-	defer r.connsMut.Unlock()
-	// connect function to connect + exchange + register + handle
-	var connect = func() (Conn, error) {
-		c, err := r.host.Connect(e.Address)
-
-		if err != nil {
-			return nil, err
-		}
-		if err := r.negotiateOpen(e, c); err != nil {
-			return nil, err
-		}
-
-		r.connections[e.ID] = c
-		go r.handleConn(e, c)
-		return c, nil
-	}
-
 	if msg == nil {
 		return errors.New("Can't send nil-packet")
 	}
 
-	c, ok := r.connections[e.ID]
-	if !ok {
+	c := r.connection(e.ID)
+	if c == nil {
 		var err error
-		c, err = connect()
+		c, err = r.connect(e)
 		if err != nil {
 			return err
 		}
@@ -132,8 +116,8 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	var err error
 	err = c.Send(context.TODO(), msg)
 	if err != nil {
-		log.Lvl2("Couldn't send to", e, ":", err, "trying again")
-		c, err := connect()
+		log.Lvl2(r.id.Address, "Couldn't send to", e, ":", err, "trying again")
+		c, err := r.connect(e)
 		if err != nil {
 			return err
 		}
@@ -146,12 +130,33 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	return nil
 }
 
+func (r *Router) connect(si *ServerIdentity) (Conn, error) {
+	c, err := r.host.Connect(si.Address)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.negotiateOpen(si, c); err != nil {
+		return nil, err
+	}
+
+	r.launchHandleRoutine(si, c)
+	return c, nil
+
+}
+
 // handleConn is the main routine for a connection to wait for incoming
 // messages.
 func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
+	defer func() {
+		// when leaving, unregister the connection
+		if err := c.Close(); err != nil {
+			log.Error(r.id.Address, "having error closing conn to ", remote.Address, ":", err)
+		}
+		// and release one on the waitgroup
+		r.wg.Done()
+	}()
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
-	//log.Print(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
 		ctx := context.TODO()
 		log.Lvl3(r.id.Address, "Got message BEFORE")
@@ -164,10 +169,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 		// whether the router is closed
 		if r.Closed() {
-			//log.Print(r.id.Address, "handleConn is asked to stop BEFORE for", remote.Address)
 			// signal we are done with this go routine.
-			r.handleConnQuit <- true
-			//log.Print(r.id.Address, "handleConn is asked to stop AFTER for", remote.Address)
 			return
 		}
 
@@ -177,12 +179,11 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// remote connection closed
-				r.closeConnection(remote, c)
 				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// weird error let's try again
-			log.Error(r.id, "Error with connection", address, "=>", err)
+			log.Lvl3(r.id, "Error with connection", address, "=>", err)
 			continue
 		}
 
@@ -190,6 +191,18 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			log.Lvl3("Error dispatching:", err)
 		}
 	}
+}
+
+// connection returns the connection associated with this ServerIdentity. Nil if
+// nothing found. It always return the first connection associated.
+func (r *Router) connection(sid ServerIdentityID) Conn {
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
+	arr := r.connections[sid]
+	if len(arr) == 0 {
+		return nil
+	}
+	return arr[0]
 }
 
 // registerConnection registers an ServerIdentity for a new connection, mapped with the
@@ -201,26 +214,9 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	defer r.connsMut.Unlock()
 	_, okc := r.connections[remote.ID]
 	if okc {
-		log.Lvl3("Connection already registered", okc)
+		log.Lvl2("Connection already registered", okc)
 	}
-	r.connections[remote.ID] = c
-}
-
-// closeConnection closes a connection and removes it from the connections-map
-// Calling this method will borrow the connsMut lock.
-func (r *Router) closeConnection(remote *ServerIdentity, c Conn) error {
-	r.connsMut.Lock()
-	defer r.connsMut.Unlock()
-	log.Lvl4("Closing connection", c, c.Remote(), c.Local())
-	err := c.Close()
-	delete(r.connections, remote.ID)
-	return err
-}
-
-func (r *Router) connection(id *ServerIdentity) Conn {
-	r.connsMut.Lock()
-	defer r.connsMut.Unlock()
-	return r.connections[id.ID]
+	r.connections[remote.ID] = append(r.connections[remote.ID], c)
 }
 
 func (r *Router) reset() {
@@ -229,33 +225,31 @@ func (r *Router) reset() {
 	r.closedMut.Unlock()
 }
 
+func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
+	r.wg.Add(1)
+	go r.handleConn(dst, c)
+}
+
 // Close shuts down all network connections and returns once all processing go
 // routines are done.
 func (r *Router) stopHandling() error {
-	if r.Closed() {
-		return errors.New("Router already closed")
-	}
 	// set the isClosed to true
 	r.close()
 
-	// then close all connections and wait for all go routines
+	// then close all connections
 	r.connsMut.Lock()
-	//lenConn := len(r.connections)
-	//log.Print(r.id.Address, "Will stop ", len(r.connections), " routines")
-	for id, c := range r.connections {
-		delete(r.connections, id)
-		if err := c.Close(); err != nil {
-			log.Error(err)
+	for _, arr := range r.connections {
+		// take all connections to close
+		for _, c := range arr {
+			if err := c.Close(); err != nil {
+				log.Error(err)
+			}
 		}
-		<-r.handleConnQuit
 	}
 	r.connsMut.Unlock()
-	/*// wait for all handleConn to finish*/
-	//var finished int
-	//for finished < lenConn {
-	//<-r.handleConnQuit
-	//finished++
-	/*}*/
+
+	// wait for all handleConn to finish
+	r.wg.Wait()
 	return nil
 }
 
@@ -281,8 +275,11 @@ func (r *Router) Tx() uint64 {
 	r.connsMut.Lock()
 	defer r.connsMut.Unlock()
 	var tx uint64
-	for _, c := range r.connections {
-		tx += c.Tx()
+	for _, arr := range r.connections {
+		if len(arr) == 0 {
+			continue
+		}
+		tx += arr[0].Tx()
 	}
 	return tx
 }
@@ -293,8 +290,11 @@ func (r *Router) Rx() uint64 {
 	r.connsMut.Lock()
 	defer r.connsMut.Unlock()
 	var rx uint64
-	for _, c := range r.connections {
-		rx += c.Rx()
+	for _, arr := range r.connections {
+		if len(arr) == 0 {
+			continue
+		}
+		rx += arr[0].Rx()
 	}
 	return rx
 }
@@ -306,18 +306,29 @@ func (r *Router) Listening() bool {
 
 // exchangeServerIdentity takes a fresh new conn issued by the listener and
 // proceed to the exchanges of the server identities of both parties. It returns
-// the ServerIdentity of the remote party.
+// the ServerIdentity of the remote party and register the connection.
 func (r *Router) exchangeServerIdentity(c Conn) (*ServerIdentity, error) {
-	return exchangeServerIdentity(r.id, c)
+	dst, err := exchangeServerIdentity(r.id, c)
+	if err != nil {
+		return nil, err
+	}
+	r.registerConnection(dst, c)
+	return dst, nil
 }
 
 // negotiateOpen takes a fresh issued new Conn and the supposed destination's
 // ServerIdentity. It proceeds to the exchange of identity and verifies that
-// we are correctly dealing with the right remote party.
+// we are correctly dealing with the right remote party. It then registers the
+// connection
 // NOTE: This version is non secure at all, it's just a simple verification.
 // Later will come the signing part,etc.
-func (r *Router) negotiateOpen(e *ServerIdentity, c Conn) error {
-	return negotiateOpen(r.id, e, c)
+func (r *Router) negotiateOpen(si *ServerIdentity, c Conn) error {
+	err := negotiateOpen(r.id, si, c)
+	if err != nil {
+		return err
+	}
+	r.registerConnection(si, c)
+	return nil
 }
 
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
