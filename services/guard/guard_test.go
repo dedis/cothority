@@ -9,8 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(t *testing.M) {
+	log.MainTest(t)
+}
+
 func TestServiceGuard(t *testing.T) {
-	log.TestOutput(testing.Verbose(), 4)
 	local := sda.NewLocalTest()
 	// This statement generates 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist.

@@ -1,5 +1,5 @@
 Servers = 36
-Simulation = "SimulationByzCoin"
+Simulation = "ByzCoin"
 NumClientTxs = 100000
 Rounds = 5
 BF = 5
