@@ -1,6 +1,7 @@
 package network
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -142,6 +143,45 @@ func TestRouterMessaging(t *testing.T) {
 		t.Logf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
 		t.Fatal("Something is wrong with Host.CounterIO")
 	}
+}
+
+func TestRouterLotsOfConnTCP(t *testing.T) {
+	testRouterLotsOfConn(t, NewTestRouterTCP)
+}
+
+func TestRouterLotsOfConnLocal(t *testing.T) {
+	testRouterLotsOfConn(t, NewTestRouterLocal)
+}
+
+func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
+	nbrConn := 20
+
+	main, err := fac(1999)
+	if err != nil {
+		t.Fatal(err)
+	}
+	go main.Start()
+
+	var wg sync.WaitGroup
+	wg.Add(nbrConn)
+	for i := 0; i < nbrConn; i++ {
+		go func(j int) {
+			h, err := fac(2000 + j)
+			//log.Print("host", j, "/", nbrConn, " is starting", err)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Nil(t, h.Send(main.id, &SimpleMessage{3}))
+			assert.Nil(t, h.Stop())
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	assert.Nil(t, main.Stop())
+
+	assert.Equal(t, 0, len(main.connections))
+
 }
 
 // Test sending data back and forth using the sendSDAData

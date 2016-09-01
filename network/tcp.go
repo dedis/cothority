@@ -123,6 +123,7 @@ func (c *TCPConn) receive() ([]byte, error) {
 			log.Error("Couldn't write to buffer:", err)
 		}
 		read += Size(n)
+		b = b[n:]
 	}
 
 	// set the size read

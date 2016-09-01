@@ -27,7 +27,7 @@ func TestSID(t *testing.T) {
 func TestJVSS(t *testing.T) {
 	// Setup parameters
 	var name string = "JVSS"      // Protocol name
-	var nodes uint32 = 5          // Number of nodes
+	var nodes uint32 = 2          // Number of nodes
 	var rounds int = 3            // Number of rounds
 	msg := []byte("Hello World!") // Message to-be-signed
 

@@ -149,14 +149,9 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 // handleConn is the main routine for a connection to wait for incoming
 // messages.
 func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
-	log.Lvl3(r.id.Address, "HandleConn r.Closed() to ", remote.Address)
-	if r.Closed() {
-		log.Lvl3(r.id.Address, r.id.Address, "handleConn closeConnection()")
-		//		r.handleConnQuit <- true
-		return
-	}
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
+	//log.Print(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
 		ctx := context.TODO()
 		log.Lvl3(r.id.Address, "Got message BEFORE")
@@ -169,10 +164,10 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 		// whether the router is closed
 		if r.Closed() {
-			log.Lvl3(r.id.Address, "handlConn Closed() before")
+			//log.Print(r.id.Address, "handleConn is asked to stop BEFORE for", remote.Address)
 			// signal we are done with this go routine.
-			//r.handleConnQuit <- true
-			log.Lvl3(r.id.Address, "handleConn is asked to stop for", remote.Address)
+			r.handleConnQuit <- true
+			//log.Print(r.id.Address, "handleConn is asked to stop AFTER for", remote.Address)
 			return
 		}
 
@@ -240,16 +235,19 @@ func (r *Router) stopHandling() error {
 	if r.Closed() {
 		return errors.New("Router already closed")
 	}
+	// set the isClosed to true
 	r.close()
 
+	// then close all connections and wait for all go routines
 	r.connsMut.Lock()
 	//lenConn := len(r.connections)
+	//log.Print(r.id.Address, "Will stop ", len(r.connections), " routines")
 	for id, c := range r.connections {
 		delete(r.connections, id)
 		if err := c.Close(); err != nil {
-			r.connsMut.Unlock()
-			return err
+			log.Error(err)
 		}
+		<-r.handleConnQuit
 	}
 	r.connsMut.Unlock()
 	/*// wait for all handleConn to finish*/

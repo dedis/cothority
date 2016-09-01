@@ -13,10 +13,13 @@ type Conn interface {
 	// obj should be a POINTER to the actual struct to send, or an interface.
 	// It should not be a Golang type.
 	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
+	// Receive any message through the connection. It is a blocking call that
+	// returns either when a message arrived or when Close() has been called, or
+	// when a network error occured.
 	Receive(ctx context.Context) (Packet, error)
-	// Close will close the connection. Any subsequent call to Send / Receive
-	// have undefined behavior.
+	// Close will close the connection. Implementations must take care that
+	// Close() makes Receive() returns with an error, and any subsequent Send()
+	// will return with an error.
 	Close() error
 
 	// Type returns the type of this connection
@@ -25,9 +28,6 @@ type Conn interface {
 	Remote() Address
 	// Returns the local address and port
 	Local() Address
-	// reconnect is used when sending a message to a Conn, we might want to try
-	// to reconnect directly if an error occured to send the message again.
-	//reconnect() error
 	// XXX Can we remove that ?
 	monitor.CounterIO
 }
