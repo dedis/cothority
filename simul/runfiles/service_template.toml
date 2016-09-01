@@ -1,0 +1,9 @@
+Servers = 16
+Simulation = "ServiceTemplate"
+BF = 2
+Rounds = 10
+
+Depth
+2
+3
+4

@@ -15,5 +15,4 @@ A simple protocol uses four files:
 - protocol_test.go tests the protocol in a local test
 - simulation.go tests the protocol on distant platforms like deterlab
 */
-
 package template

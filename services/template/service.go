@@ -19,11 +19,11 @@ import (
 const ServiceName = "Template"
 
 func init() {
-	sda.RegisterNewService(ServiceName, newTemplate)
+	sda.RegisterNewService(ServiceName, newService)
 }
 
-// Template is our example-service
-type Template struct {
+// Service is our template-service
+type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*sda.ServiceProcessor
@@ -33,10 +33,10 @@ type Template struct {
 }
 
 // ClockRequest starts a template-protocol and returns the run-time.
-func (t *Template) ClockRequest(e *network.ServerIdentity, req *ClockRequest) (network.Body, error) {
-	t.Count += 1
+func (s *Service) ClockRequest(e *network.ServerIdentity, req *ClockRequest) (network.Body, error) {
+	s.Count++
 	tree := req.Roster.GenerateBinaryTree()
-	pi, err := t.CreateProtocolSDA(template.Name, tree)
+	pi, err := s.CreateProtocolSDA(template.Name, tree)
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +48,8 @@ func (t *Template) ClockRequest(e *network.ServerIdentity, req *ClockRequest) (n
 }
 
 // CountRequest returns the number of instantiations of the protocol.
-func (t *Template) CountRequest(e *network.ServerIdentity, req *CountRequest) (network.Body, error) {
-	return &CountResponse{t.Count}, nil
+func (s *Service) CountRequest(e *network.ServerIdentity, req *CountRequest) (network.Body, error) {
+	return &CountResponse{s.Count}, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -59,7 +59,7 @@ func (t *Template) CountRequest(e *network.ServerIdentity, req *CountRequest) (n
 // instantiate the protocol on its own. If you need more control at the
 // instantiation of the protocol, use CreateProtocolService, and you can
 // give some extra-configuration to your protocol in here.
-func (t *Template) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	log.Lvl3("Not templated yet")
 	return nil, nil
 }
@@ -67,8 +67,8 @@ func (t *Template) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig
 // newTemplate receives the context and a path where it can write its
 // configuration, if desired. As we don't know when the service will exit,
 // we need to save the configuration on our own from time to time.
-func newTemplate(c *sda.Context, path string) sda.Service {
-	s := &Template{
+func newService(c *sda.Context, path string) sda.Service {
+	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}

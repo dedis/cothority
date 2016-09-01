@@ -9,7 +9,7 @@ so that it can find out who sent the message.
 
 import "github.com/dedis/cothority/sda"
 
-// This can be used from other packages to refer to this protocol.
+// Name can be used from other packages to refer to this protocol.
 const Name = "Template"
 
 // Announce is used to pass a message to all children.

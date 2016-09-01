@@ -163,8 +163,8 @@ func (sc *SimulationConfig) Save(dir string) error {
 }
 
 // GetService returns the service with the given name.
-func (sc *SimulationConfig) GetService(name string) Service{
-	if sc.Host.serviceManager
+func (sc *SimulationConfig) GetService(name string) Service {
+	return sc.Host.serviceManager.Service(name)
 }
 
 // SimulationRegister is must to be called to register a simulation.

@@ -1,9 +1,6 @@
-package manage
+package template
 
 import (
-	"errors"
-	"strconv"
-
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
@@ -11,11 +8,12 @@ import (
 )
 
 /*
-Defines the simulation for the count-protocol
-*/
+ * Defines the simulation for the service-template to be run with
+ * `cothority/simul`.
+ */
 
 func init() {
-	sda.SimulationRegister("Count", NewSimulation)
+	sda.SimulationRegister("ServiceTemplate", NewSimulation)
 }
 
 // Simulation only holds the BFTree simulation
@@ -54,17 +52,19 @@ func (e *simulation) Run(config *sda.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocolSDA("Count", config.Tree)
+		service, ok := config.GetService(ServiceName).(*Service)
+		if service == nil || !ok {
+			log.Fatal("Didn't find service", ServiceName)
+		}
+		ret, err := service.ClockRequest(nil, &ClockRequest{Roster: config.Roster})
 		if err != nil {
-			return err
+			log.Error(err)
 		}
-		go p.Start()
-		children := <-p.(*ProtocolCount).Count
+		resp, ok := ret.(*ClockResponse)
+		if resp.Time <= 0 {
+			log.Error("0 time elapsed")
+		}
 		round.Record()
-		if children != size {
-			return errors.New("Didn't get " + strconv.Itoa(size) +
-				" children")
-		}
 	}
 	return nil
 }
