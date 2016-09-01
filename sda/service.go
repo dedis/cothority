@@ -272,19 +272,21 @@ func (s *serviceManager) RegisterProcessor(p Processor, msgType network.PacketTy
 }
 
 // TODO
-func (s *serviceManager) AvailableServices() []string {
-	panic("not implemented")
+func (s *serviceManager) AvailableServices() (ret []string) {
+	for id := range s.services {
+		ret = append(ret, ServiceFactory.Name(id))
+	}
+	return
 }
 
 // Service returns the Service implementation being registered to this name
 // TODO use serviceByString not implemented
 func (s *serviceManager) Service(name string) Service {
-	return s.serviceByString(name)
-}
-
-// TODO
-func (s *serviceManager) serviceByString(name string) Service {
-	panic("Not implemented")
+	id := ServiceFactory.ServiceID(name)
+	if id == NilServiceID {
+		return nil
+	}
+	return s.services[id]
 }
 
 func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
