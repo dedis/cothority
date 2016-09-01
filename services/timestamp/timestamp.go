@@ -90,12 +90,12 @@ type SignatureRequest struct {
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	// The time in seconds when the request was started
-	Timestamp int32
+	Timestamp int64
 	// Proof is an Inclusion proof for the data the client requested
 	Proof crypto.Proof
 	// Collective signature on Timestamp||hash(treeroot)
 	Signature []byte
-	roster    *sda.Roster
+	// TODO should we use the return the roster used to sign this message?
 }
 
 // SignatureRequest treats external request to this service.
@@ -111,16 +111,14 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	// 3) run *one* cosi round on treeroot||timestamp
 	// see runLoop
 	// 4) return to each client: above signature, (inclusion) Proof, timestamp
-	// This function call is blocking. Hence:
-	// TODO as discussed with Nicolas: the easiest way (without having to
-	// write another implementation of sda.Processor) is to store who
-	// requested the signature on what message and return an
+	// see runLoop
 
 	// wait on my signature:
 	resp := <-respC
 	return resp, nil
 }
 
+// main loop
 func (s *Service) runLoop() {
 	go func() {
 		c := time.Tick(s.EpochDuration)
@@ -157,9 +155,8 @@ func (s *Service) runLoop() {
 			fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 			for i, respC := range s.requests.responseChannels {
 				respC <- &SignatureResponse{
-					Timestamp: now,
-					// Proof is an Inclusion proof for the data the client requested
-					Proof: proofs[i],
+					Timestamp: now.Unix(),
+					Proof:     proofs[i],
 					// Collective signature on Timestamp||hash(treeroot)
 					Signature: s.currentSig,
 				}
@@ -189,6 +186,7 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}
+	// start main loop:
 	s.runLoop()
 	return s
 }
