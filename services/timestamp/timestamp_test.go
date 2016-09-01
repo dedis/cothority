@@ -9,7 +9,8 @@ import (
 func TestRequestBuffer(t *testing.T) {
 	rb := &requestPool{}
 	for i := 0; i < 10; i++ {
-		rb.Add([]byte("data_" + strconv.Itoa(i)))
+		respC := make(chan *SignatureResponse)
+		rb.Add([]byte("data_"+strconv.Itoa(i)), respC)
 	}
 	//fmt.Println(string(rb.requestData[0]))
 	assert.Equal(t, len(rb.requestData), 10)

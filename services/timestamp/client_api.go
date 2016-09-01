@@ -22,7 +22,7 @@ func NewClient() *Client {
 // Roster
 func (c *Client) SignMsg(r *sda.Roster, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{
-		Roster:  r,
+		//		Roster:  r,
 		Message: msg,
 	}
 	if len(r.List) == 0 {

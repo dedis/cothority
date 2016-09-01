@@ -4,7 +4,6 @@
 package timestamp
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -42,34 +41,6 @@ func init() {
 	timestampSID = sda.ServiceFactory.ServiceID(ServiceName)
 	network.RegisterPacketType(&SignatureRequest{})
 	network.RegisterPacketType(&SignatureResponse{})
-}
-
-type tree struct {
-	proofs []crypto.Proof
-	root   crypto.HashID
-}
-
-type requestPool struct {
-	sync.Mutex
-	requestData []crypto.HashID
-}
-
-func (rb *requestPool) reset() {
-	rb.Lock()
-	defer rb.Unlock()
-	rb.requestData = nil
-}
-
-func (rb *requestPool) Add(data []byte) {
-	rb.Lock()
-	defer rb.Unlock()
-	rb.requestData = append(rb.requestData, data)
-}
-
-func (rb *requestPool) GetData() []byte {
-	rb.Lock()
-	defer rb.Unlock()
-	return rb.requestData
 }
 
 type Service struct {
@@ -129,25 +100,25 @@ type SignatureResponse struct {
 
 // SignatureRequest treats external request to this service.
 func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureRequest) (network.Body, error) {
-	// TODO is this blocking??? If yes this needs to happen in yet another
-	// go-routine.
 
 	// on every request:
 	// 1) If has the length of hashed nonce, add it to the local buffer of
 	//    of the service:
-	s.requests.Add(req.Message)
+	respC := make(chan *SignatureResponse)
+	s.requests.Add(req.Message, respC)
 	// 2) At epoch time: create the merkle tree
 	// see runLoop
 	// 3) run *one* cosi round on treeroot||timestamp
 	// see runLoop
 	// 4) return to each client: above signature, (inclusion) Proof, timestamp
+	// This function call is blocking. Hence:
+	// TODO as discussed with Nicolas: the easiest way (without having to
+	// write another implementation of sda.Processor) is to store who
+	// requested the signature on what message and return an
 
-	return &SignatureResponse{
-		// TODO timestamp
-		// TODO sort out correct Proof for client
-		//Sum:       req.Message,
-		Signature: s.currentSig,
-	}, nil
+	// wait on my signature:
+	resp := <-respC
+	return resp, nil
 }
 
 func (s *Service) runLoop() {
@@ -160,7 +131,7 @@ func (s *Service) runLoop() {
 			tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtcolName)
 			pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
 			if err != nil {
-				return nil, errors.New("Couldn't make new protocol: " + err.Error())
+				panic("Couldn't make new protocol: " + err.Error())
 			}
 			s.RegisterProtocolInstance(pi)
 			root, proofs := crypto.ProofTree(sha256.New, s.requests.GetData())
@@ -172,7 +143,7 @@ func (s *Service) runLoop() {
 			timeBuf := make([]byte, binary.MaxVarintLen64)
 			binary.PutVarint(timeBuf, now.Unix())
 			// message to be signed: treeroot||timestamp
-			msg := append(root, timeBuf)
+			msg := append(root, timeBuf...)
 			pi.SigningMessage(msg)
 			// Take the raw message (already expecting a hash for the timestamp
 			// service)
@@ -181,10 +152,20 @@ func (s *Service) runLoop() {
 				response <- sig
 				s.currentSig = sig
 			})
-			log.Lvl3("Cosi Service starting up root protocol")
 			go pi.Dispatch()
 			go pi.Start()
 			fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			for i, respC := range s.requests.responseChannels {
+				respC <- &SignatureResponse{
+					Timestamp: now,
+					// Proof is an Inclusion proof for the data the client requested
+					Proof: proofs[i],
+					// Collective signature on Timestamp||hash(treeroot)
+					Signature: s.currentSig,
+				}
+			}
+			s.requests.reset()
+			log.Lvl3("Cosi Service starting up root protocol")
 
 		}
 	}()
@@ -212,6 +193,39 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 	return s
 }
 
+type tree struct {
+	proofs []crypto.Proof
+	root   crypto.HashID
+}
+
+type requestPool struct {
+	sync.Mutex
+	requestData      []crypto.HashID
+	responseChannels []chan *SignatureResponse
+}
+
+func (rb *requestPool) reset() {
+	rb.Lock()
+	defer rb.Unlock()
+	rb.requestData = nil
+	// XXX do we need to close each channel separately?
+	rb.responseChannels = nil
+}
+
+func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
+	rb.Lock()
+	defer rb.Unlock()
+	rb.requestData = append(rb.requestData, data)
+	rb.responseChannels = append(rb.responseChannels, responseChan)
+}
+
+func (rb *requestPool) GetData() []crypto.HashID {
+	rb.Lock()
+	defer rb.Unlock()
+	return rb.requestData
+}
+
+// XXX this should probably be in some independent util package instead
 func readRoster(tomlFile string) (*sda.Roster, error) {
 	f, err := os.Open(tomlFile)
 	if err != nil {
