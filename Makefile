@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-install:
-	./install.sh
-=======
->>>>>>> master
 test_fmt:
 	@echo Checking correct formatting of files
 	@{ \
@@ -43,11 +38,7 @@ test_verbose:
 
 # use test_verbose instead if you want to use this Makefile locally
 test_go:
-<<<<<<< HEAD
-	go test -race -short ./...
-=======
 	./coveralls.sh
->>>>>>> master
 
 test: test_fmt test_lint test_go
 
