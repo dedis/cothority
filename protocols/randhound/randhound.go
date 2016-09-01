@@ -19,11 +19,12 @@ import (
 //	 randomness; currently simply all secrets are used
 // - Create transcript
 // - Verify transcript
-// - Hashing of I-messages and client-side verification
 // - Handling of failing encryption/decryption proofs
 // - Sane conditions on client-side when to proceed
 // - Import / export transcript in JSON
 // - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
+// - There seems to be still a bug in the sharding function that does not
+//	 assign all nodes to the groups
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -59,11 +60,20 @@ type Group struct {
 	Threshold int                      // Secret sharing threshold
 	Idx       []int                    // Global indices of servers (= ServerIdentityIdx)
 	Key       []abstract.Point         // Public keys of servers
+	HI1       []byte                   // Hash of I1 message
+	HI2       [][]byte                 // Hashes of I2 messages
 	R1s       map[int]*R1              // R1 messages received from servers
 	R2s       map[int]*R2              // R2 messages received from servers
 	Commit    map[int][]abstract.Point // Commitments of server polynomials
 	mutex     sync.Mutex
 }
+
+// Transcript ...
+//type Transcript struct {
+//	Random []byte             // Collective randomness
+//	Key    [][]abstract.Point // Grouped public keys
+//	Index  [][]int            // Grouped server indices
+//}
 
 // I1 message
 type I1 struct {
@@ -117,6 +127,98 @@ type WI2 struct {
 type WR2 struct {
 	*sda.TreeNode
 	R2
+}
+
+// MarshalBinary ...
+func (i1 *I1) MarshalBinary() ([]byte, error) {
+
+	buf := new(bytes.Buffer)
+
+	if _, err := buf.Write(i1.SID); err != nil {
+		return nil, err
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, uint32(i1.Threshold)); err != nil {
+		return nil, err
+	}
+
+	for _, k := range i1.Key {
+		kb, err := k.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(kb); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+// MarshalBinary ...
+func (i2 *I2) MarshalBinary() ([]byte, error) {
+
+	buf := new(bytes.Buffer)
+
+	if _, err := buf.Write(i2.SID); err != nil {
+		return nil, err
+	}
+
+	for _, k := range i2.EncShare {
+		kb, err := k.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(kb); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, k := range i2.EncProof {
+		cb, err := k.C.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(cb); err != nil {
+			return nil, err
+		}
+
+		rb, err := k.R.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(rb); err != nil {
+			return nil, err
+		}
+
+		vgb, err := k.VG.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(vgb); err != nil {
+			return nil, err
+		}
+
+		vhb, err := k.VH.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(vhb); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, k := range i2.Commit {
+		kb, err := k.MarshalBinary()
+		if err != nil {
+			return nil, err
+		}
+		if _, err := buf.Write(kb); err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
 }
 
 // NewRandHound ...
@@ -288,6 +390,8 @@ func (rh *RandHound) Start() error {
 			Threshold: 2 * len(keyGroup[i]) / 3,
 			Idx:       make([]int, len(group)),
 			Key:       keyGroup[i],
+			HI1:       make([]byte, 0),
+			HI2:       make([][]byte, len(group)),
 			R1s:       make(map[int]*R1),
 			R2s:       make(map[int]*R2),
 			Commit:    make(map[int][]abstract.Point),
@@ -318,6 +422,16 @@ func (rh *RandHound) Start() error {
 			Key:       rh.Group[i].Key,
 		}
 
+		i1b, err := i1.MarshalBinary()
+		if err != nil {
+			return err
+		}
+
+		rh.Group[i].HI1, err = crypto.HashBytes(rh.Suite().Hash(), i1b)
+		if err != nil {
+			return err
+		}
+
 		if err := rh.Multicast(i1, group...); err != nil {
 			return err
 		}
@@ -337,9 +451,17 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
-	hi1 := []byte{1}
-	r1 := &R1{HI1: hi1, EncShare: encShare, EncProof: encProof, CommitPoly: pb}
-	return rh.SendTo(rh.Root(), r1)
+	i1b, err := msg.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	hi1, err := crypto.HashBytes(rh.Suite().Hash(), i1b)
+	if err != nil {
+		return err
+	}
+
+	return rh.SendTo(rh.Root(), &R1{HI1: hi1, EncShare: encShare, EncProof: encProof, CommitPoly: pb})
 }
 
 func (rh *RandHound) handleR1(r1 WR1) error {
@@ -349,6 +471,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	idx := r1.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
+
+	if !bytes.Equal(rh.Group[grp].HI1, msg.HI1) {
+		return fmt.Errorf("Server %v of group %v replied to the wrong I1 message", idx, grp)
+	}
 
 	n := len(rh.Group[grp].Key)
 	pbx := make([][]byte, n)
@@ -409,6 +535,16 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				Commit:   commit,
 			}
 
+			i2b, err := i2.MarshalBinary()
+			if err != nil {
+				return err
+			}
+
+			rh.Group[grp].HI2[i], err = crypto.HashBytes(rh.Suite().Hash(), i2b)
+			if err != nil {
+				return err
+			}
+
 			if err := rh.SendTo(rh.Group[grp].Server[i], i2); err != nil {
 				return err
 			}
@@ -451,9 +587,17 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
-	hi2 := []byte{3}
-	r2 := &R2{HI2: hi2, DecShare: decShare, DecProof: decProof}
-	return rh.SendTo(rh.Root(), r2)
+	i2b, err := msg.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	hi2, err := crypto.HashBytes(rh.Suite().Hash(), i2b)
+	if err != nil {
+		return err
+	}
+
+	return rh.SendTo(rh.Root(), &R2{HI2: hi2, DecShare: decShare, DecProof: decProof})
 }
 
 func (rh *RandHound) handleR2(r2 WR2) error {
@@ -462,6 +606,10 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	idx := r2.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
+
+	if !bytes.Equal(rh.Group[grp].HI2[rh.ServerIdxToGroupIdx[idx]], msg.HI2) {
+		return fmt.Errorf("Server %v of group %v replied to the wrong I2 message", idx, grp)
+	}
 
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
@@ -525,5 +673,8 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	return nil
 }
 
-func createTranscript() {}
-func verifyTranscript() {}
+// CreateTranscript ...
+func CreateTranscript() {}
+
+// VerifyTranscript ...
+func VerifyTranscript() {}

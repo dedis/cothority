@@ -12,7 +12,7 @@ import (
 func TestRandHound(t *testing.T) {
 
 	var name = "RandHound"
-	var nodes int = 28
+	var nodes int = 27
 	var faulty int = 2
 	var groups int = 4
 	var purpose string = "RandHound test run"
