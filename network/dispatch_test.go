@@ -32,7 +32,7 @@ func TestBlockingDispatcher(t *testing.T) {
 		Msg:     basicMessage{10},
 		MsgType: basicMessageType})
 
-	if err != nil {
+	if err == nil {
 		t.Error("Dispatcher should have returned an error")
 	}
 
@@ -50,19 +50,20 @@ func TestBlockingDispatcher(t *testing.T) {
 		t.Error("No message received")
 	}
 
-	var okCh = make(chan bool, 1)
+	var found bool
 	dispatcher.RegisterProcessorFunc(basicMessageType, func(p *Packet) {
-		okCh <- true
+		found = true
 	})
+	dispatcher.Dispatch(&Packet{
+		Msg:     basicMessage{10},
+		MsgType: basicMessageType})
 
-	select {
-	case <-okCh:
-	default:
-		t.Error("no ack received?")
+	if !found {
+		t.Error("ProcessorFunc should have set to true")
 	}
 }
 
-func TestBlockingDispatcher(t *testing.T) {
+func TestRoutineDispatcher(t *testing.T) {
 	defer log.AfterTest(t)
 
 	dispatcher := NewRoutineDispatcher()
@@ -75,7 +76,7 @@ func TestBlockingDispatcher(t *testing.T) {
 		Msg:     basicMessage{10},
 		MsgType: basicMessageType})
 
-	if err != nil {
+	if err == nil {
 		t.Error("Dispatcher should have returned an error")
 	}
 
