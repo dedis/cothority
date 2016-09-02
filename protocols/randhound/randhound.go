@@ -26,6 +26,8 @@ import (
 // - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
 // - There seems to be still a bug in the sharding function that does not
 //	 assign all nodes to the groups
+// - Signatures of I-messages are currently not checked by the servers since
+//	 the latter are assumed to be stateless; should they know the public key of the client?
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -40,7 +42,7 @@ type RandHound struct {
 	Faulty  int       // Maximum number of Byzantine servers
 	Purpose string    // Purpose of the protocol run
 	Time    time.Time // Timestamp of initiation
-	Rand    []byte    // Client-chosen randomness
+	CliRand []byte    // Client-chosen randomness
 	SID     []byte    // Session identifier
 	Group   []*Group  // Server grouping
 
@@ -62,9 +64,7 @@ type Group struct {
 	Idx       []int                    // Global indices of servers (= ServerIdentityIdx)
 	Key       []abstract.Point         // Public keys of servers
 	HI1       []byte                   // Hash of I1 message
-	SI1       crypto.SchnorrSig        // Signature to HI1 hash
 	HI2       [][]byte                 // Hashes of I2 messages
-	SI2       []crypto.SchnorrSig      // Signatures of HI2 hashes
 	R1s       map[int]*R1              // R1 messages received from servers
 	R2s       map[int]*R2              // R2 messages received from servers
 	Commit    map[int][]abstract.Point // Commitments of server polynomials
@@ -72,40 +72,55 @@ type Group struct {
 }
 
 // Transcript ...
-//type Transcript struct {
-//	Random []byte             // Collective randomness
-//	Key    [][]abstract.Point // Grouped public keys
-//	Index  [][]int            // Grouped server indices
-//}
+type Transcript struct {
+	SID       []byte                 // Session identifier
+	Nodes     int                    // Total number of nodes (client + server)
+	Faulty    int                    // Maximum number of Byzantine servers
+	Purpose   string                 // Purpose of the protocol run
+	Time      time.Time              // Timestamp of initiation
+	CliRand   []byte                 // Client-chosen randomness (for sharding)
+	Threshold []int                  // Grouped secret sharing thresholds
+	Key       [][]abstract.Point     // Grouped public keys
+	R1s       [][]*R1                // Grouped R1 messages received from servers
+	R2s       [][]*R2                // Grouped R2 messages received from servers
+	SigI1     []*crypto.SchnorrSig   // Grouped Schnorr signatures of I1 messages
+	SigI2     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of I2 messages
+	SigR1     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of R1 messages
+	SigR2     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of R2 messages
+}
 
 // I1 message
 type I1 struct {
-	SID       []byte           // Session identifier
-	Threshold int              // Secret sharing threshold
-	Key       []abstract.Point // Public keys of trustees
+	Sig       crypto.SchnorrSig // Schnorr signature
+	SID       []byte            // Session identifier
+	Threshold int               // Secret sharing threshold
+	Key       []abstract.Point  // Public keys of trustees
 }
 
 // R1 message
 type R1 struct {
-	HI1        []byte           // Hash of I1
-	EncShare   []abstract.Point // Encrypted shares
-	EncProof   []ProofCore      // Encryption consistency proofs
-	CommitPoly []byte           // Marshalled commitment polynomial
+	Sig        crypto.SchnorrSig // Schnorr signature
+	HI1        []byte            // Hash of I1
+	EncShare   []abstract.Point  // Encrypted shares
+	EncProof   []ProofCore       // Encryption consistency proofs
+	CommitPoly []byte            // Marshalled commitment polynomial
 }
 
 // I2 message
 type I2 struct {
-	SID      []byte           // Session identifier
-	EncShare []abstract.Point // Encrypted shares
-	EncProof []ProofCore      // Encryption consistency proofs
-	Commit   []abstract.Point // Polynomial commitments
+	Sig      crypto.SchnorrSig // Schnorr signature
+	SID      []byte            // Session identifier
+	EncShare []abstract.Point  // Encrypted shares
+	EncProof []ProofCore       // Encryption consistency proofs
+	Commit   []abstract.Point  // Polynomial commitments
 }
 
 // R2 message
 type R2 struct {
-	HI2      []byte           // Hash of I2
-	DecShare []abstract.Point // Decrypted shares
-	DecProof []ProofCore      // Decryption consistency proofs
+	Sig      crypto.SchnorrSig // Schnorr signature
+	HI2      []byte            // Hash of I2
+	DecShare []abstract.Point  // Decrypted shares
+	DecProof []ProofCore       // Decryption consistency proofs
 }
 
 // WI1 is a SDA-wrapper around I1
@@ -164,15 +179,19 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 }
 
 // SessionID ...
-func (rh *RandHound) SessionID() ([]byte, error) {
+func (rh *RandHound) SessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, key [][]abstract.Point) ([]byte, error) {
 
 	buf := new(bytes.Buffer)
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(rh.Nodes)); err != nil {
+	if len(threshold) != len(key) {
+		return nil, fmt.Errorf("Non-matching number of group thresholds and keys")
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, uint32(nodes)); err != nil {
 		return nil, err
 	}
 
-	if err := binary.Write(buf, binary.LittleEndian, uint32(rh.Faulty)); err != nil {
+	if err := binary.Write(buf, binary.LittleEndian, uint32(faulty)); err != nil {
 		return nil, err
 	}
 
@@ -180,11 +199,11 @@ func (rh *RandHound) SessionID() ([]byte, error) {
 	//	return nil, err
 	//}
 
-	if _, err := buf.WriteString(rh.Purpose); err != nil {
+	if _, err := buf.WriteString(purpose); err != nil {
 		return nil, err
 	}
 
-	t, err := rh.Time.MarshalBinary()
+	t, err := time.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -193,19 +212,18 @@ func (rh *RandHound) SessionID() ([]byte, error) {
 		return nil, err
 	}
 
-	if _, err := buf.Write(rh.Rand); err != nil {
+	if _, err := buf.Write(rand); err != nil {
 		return nil, err
 	}
 
-	for _, group := range rh.Group {
-
-		// Write threshold
-		if err := binary.Write(buf, binary.LittleEndian, uint32(group.Threshold)); err != nil {
+	for _, t := range threshold {
+		if err := binary.Write(buf, binary.LittleEndian, uint32(t)); err != nil {
 			return nil, err
 		}
+	}
 
-		// Write keys
-		for _, k := range group.Key {
+	for _, gk := range key {
+		for _, k := range gk {
 			kb, err := k.MarshalBinary()
 			if err != nil {
 				return nil, err
@@ -214,8 +232,6 @@ func (rh *RandHound) SessionID() ([]byte, error) {
 				return nil, err
 			}
 		}
-
-		// XXX: Write indices?
 	}
 
 	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
@@ -233,18 +249,17 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 	// Compute a random permutation of [1,n-1]
 	prng := rh.Suite().Cipher(seed)
-	m := make([]uint32, nodes-1)
+	m := make([]int, nodes-1)
 	for i := range m {
 		j := int(random.Uint64(prng) % uint64(i+1))
 		m[i] = m[j]
-		m[j] = uint32(i) + 1
+		m[j] = i + 1
 	}
 
 	// Create sharding of the current Roster according to the above permutation
 	el := rh.List()
 	sharding := make([][]*sda.TreeNode, shards)
 	keys := make([][]abstract.Point, shards)
-
 	for i, j := range m {
 		sharding[i%shards] = append(sharding[i%shards], el[j])
 		keys[i%shards] = append(keys[i%shards], el[j].ServerIdentity.Public)
@@ -259,17 +274,19 @@ func (rh *RandHound) Start() error {
 	// Set timestamp
 	rh.Time = time.Now()
 
-	// Choose randomness
+	// Choose client randomness
 	hs := rh.Suite().Hash().Size()
 	rand := make([]byte, hs)
 	random.Stream.XORKeyStream(rand, rand)
-	rh.Rand = rand
+	rh.CliRand = rand
 
 	// Determine server grouping
 	serverGroup, keyGroup, err := rh.Shard(rand, len(rh.Group))
 	if err != nil {
 		return err
 	}
+
+	trh := make([]int, len(serverGroup))
 
 	rh.ServerIdxToGroupNum = make([]int, rh.Nodes)
 	rh.ServerIdxToGroupIdx = make([]int, rh.Nodes)
@@ -282,11 +299,12 @@ func (rh *RandHound) Start() error {
 			Key:       keyGroup[i],
 			HI1:       make([]byte, 0),
 			HI2:       make([][]byte, len(group)),
-			SI2:       make([]crypto.SchnorrSig, len(group)),
 			R1s:       make(map[int]*R1),
 			R2s:       make(map[int]*R2),
 			Commit:    make(map[int][]abstract.Point),
 		}
+
+		trh[i] = g.Threshold
 
 		for j, server := range group {
 			g.Idx[j] = server.ServerIdentityIdx                  // Record global server indices (=ServerIdentityIdx) that belong to this group
@@ -299,16 +317,16 @@ func (rh *RandHound) Start() error {
 		log.Lvlf1("%v %v", g.Idx, len(g.Idx))
 	}
 
-	sid, err := rh.SessionID()
+	rh.SID, err = rh.SessionID(rh.Nodes, rh.Faulty, rh.Purpose, rh.Time, rh.CliRand, trh, keyGroup)
 	if err != nil {
 		return err
 	}
-	rh.SID = sid
 
 	for i, group := range serverGroup {
 
 		i1 := &I1{
-			SID:       sid,
+			Sig:       crypto.SchnorrSig{},
+			SID:       rh.SID,
 			Threshold: rh.Group[i].Threshold,
 			Key:       rh.Group[i].Key,
 		}
@@ -323,7 +341,7 @@ func (rh *RandHound) Start() error {
 			return err
 		}
 
-		rh.Group[i].SI1, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i1b)
+		i1.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i1b)
 		if err != nil {
 			return err
 		}
@@ -347,6 +365,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
+	msg.Sig = crypto.SchnorrSig{} // XXX: hack
 	i1b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return err
@@ -357,16 +376,46 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
-	return rh.SendTo(rh.Root(), &R1{HI1: hi1, EncShare: encShare, EncProof: encProof, CommitPoly: pb})
+	r1 := &R1{
+		Sig:        crypto.SchnorrSig{}, // XXX: hack
+		HI1:        hi1,
+		EncShare:   encShare,
+		EncProof:   encProof,
+		CommitPoly: pb,
+	}
+
+	r1b, err := network.MarshalRegisteredType(r1)
+	if err != nil {
+		return err
+	}
+
+	r1.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), r1b)
+	if err != nil {
+		return err
+	}
+
+	return rh.SendTo(rh.Root(), r1)
 }
 
 func (rh *RandHound) handleR1(r1 WR1) error {
 
 	msg := &r1.R1
-	//log.Lvlf1("RandHound - R1: %v\n", rh.index())
 
 	idx := r1.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
+	i := rh.ServerIdxToGroupIdx[idx]
+
+	// Verify R1 message signature
+	sig := msg.Sig
+	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msgb, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return err
+	}
+
+	if err := crypto.VerifySchnorr(rh.Suite(), rh.Group[grp].Key[i], msgb, sig); err != nil {
+		return err
+	}
 
 	if !bytes.Equal(rh.Group[grp].HI1, msg.HI1) {
 		return fmt.Errorf("Server %v of group %v replied to the wrong I1 message", idx, grp)
@@ -425,6 +474,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			}
 
 			i2 := &I2{
+				Sig:      crypto.SchnorrSig{},
 				SID:      rh.SID,
 				EncShare: encShare,
 				EncProof: encProof,
@@ -441,7 +491,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				return err
 			}
 
-			rh.Group[grp].SI2[i], err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i2b)
+			i2.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i2b)
 			if err != nil {
 				return err
 			}
@@ -488,6 +538,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
+	msg.Sig = crypto.SchnorrSig{} // XXX: hack
 	i2b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return err
@@ -498,7 +549,24 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
-	return rh.SendTo(rh.Root(), &R2{HI2: hi2, DecShare: decShare, DecProof: decProof})
+	r2 := &R2{
+		Sig:      crypto.SchnorrSig{}, // XXX: hack
+		HI2:      hi2,
+		DecShare: decShare,
+		DecProof: decProof,
+	}
+
+	r2b, err := network.MarshalRegisteredType(r2)
+	if err != nil {
+		return err
+	}
+
+	r2.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), r2b)
+	if err != nil {
+		return err
+	}
+
+	return rh.SendTo(rh.Root(), r2)
 }
 
 func (rh *RandHound) handleR2(r2 WR2) error {
@@ -507,6 +575,19 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	idx := r2.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
+	i := rh.ServerIdxToGroupIdx[idx]
+
+	// Verify R2 message signature
+	sig := msg.Sig
+	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msgb, err := network.MarshalRegisteredType(msg)
+	if err != nil {
+		return err
+	}
+
+	if err := crypto.VerifySchnorr(rh.Suite(), rh.Group[grp].Key[i], msgb, sig); err != nil {
+		return err
+	}
 
 	if !bytes.Equal(rh.Group[grp].HI2[rh.ServerIdxToGroupIdx[idx]], msg.HI2) {
 		return fmt.Errorf("Server %v of group %v replied to the wrong I2 message", idx, grp)
@@ -522,7 +603,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	// Get encrypted shares intended for server idx
-	i := rh.ServerIdxToGroupIdx[idx]
+	//i = rh.ServerIdxToGroupIdx[idx]
 	for j, k := range group.Idx {
 		r1 := rh.Group[grp].R1s[k]
 		encShare[j] = r1.EncShare[i]
@@ -575,7 +656,31 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 }
 
 // CreateTranscript ...
-func CreateTranscript() {}
+func (rh *RandHound) CreateTranscript() Transcript {
+
+	n := len(rh.Group)
+
+	trh := make([]int, n)
+	key := make([][]abstract.Point, n)
+
+	for i, group := range rh.Group {
+		trh[i] = group.Threshold
+		key[i] = group.Key
+	}
+
+	return Transcript{
+		SID:       rh.SID,
+		Nodes:     rh.Nodes,
+		Faulty:    rh.Faulty,
+		Time:      rh.Time,
+		CliRand:   rh.CliRand,
+		Threshold: trh,
+		Key:       key,
+	}
+}
 
 // VerifyTranscript ...
-func VerifyTranscript() {}
+func (rh *RandHound) VerifyTranscript() bool {
+
+	return true
+}
