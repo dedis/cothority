@@ -42,6 +42,11 @@ func TestRandHound(t *testing.T) {
 	select {
 	case <-rh.Done:
 		log.Lvlf1("RandHound - done")
+		transcript := rh.CreateTranscript()
+		err = rh.VerifyTranscript(rh.Suite(), transcript)
+		if err != nil {
+			t.Fatal(err)
+		}
 	case <-time.After(time.Second * time.Duration(nodes) * 2):
 		t.Fatal("RandHound – time out")
 	}

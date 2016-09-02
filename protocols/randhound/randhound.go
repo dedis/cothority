@@ -25,6 +25,7 @@ import (
 // - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
+// - Client public key should go into SID
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -181,22 +182,40 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 	t := &Transcript{
 		SID:       rh.SID,
 		Nodes:     rh.Nodes,
+		Groups:    rh.Groups,
 		Faulty:    rh.Faulty,
+		Purpose:   rh.Purpose,
 		Time:      rh.Time,
 		CliRand:   rh.CliRand,
+		CliKey:    rh.Public(),
 		Threshold: rh.Threshold,
 		Key:       rh.Key,
 	}
 
-	// Index 0 (=client) below is always empty
+	index := make([][]int, rh.Groups)
+	sigI1 := make([]*crypto.SchnorrSig, rh.Groups)
+	sigI2 := make([]*crypto.SchnorrSig, rh.Nodes)
+
+	// Index 0 (=client) in r1s and r2s is always empty
 	r1s := make([]*R1, rh.Nodes)
 	r2s := make([]*R2, rh.Nodes)
 
-	for i := 1; i < rh.Nodes; i++ {
-		r1s[i] = rh.R1s[i]
-		r2s[i] = rh.R2s[i]
+	for i, group := range rh.Server {
+		idx := make([]int, len(group))
+		for j, server := range group {
+			k := server.ServerIdentityIdx
+			idx[j] = k
+			sigI2[k] = rh.SigI2[k]
+			r1s[k] = rh.R1s[k]
+			r2s[k] = rh.R2s[k]
+		}
+		index[i] = idx
+		sigI1[i] = rh.SigI1[i]
 	}
 
+	t.Index = index
+	t.SigI1 = sigI1
+	t.SigI2 = sigI2
 	t.R1s = r1s
 	t.R2s = r2s
 
@@ -204,9 +223,83 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 }
 
 // VerifyTranscript ...
-func (rh *RandHound) VerifyTranscript() bool {
+func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error {
 
-	return true
+	// Verify SID
+	sid, err := rh.sessionID(t.Nodes, t.Faulty, t.Purpose, t.Time, t.CliRand, t.Threshold, t.Key)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(t.SID, sid) {
+		return fmt.Errorf("Wrong session identifier")
+	}
+
+	// Verify I1 signatures
+	for i := 0; i < t.Groups; i++ {
+
+		i1 := &I1{
+			Sig:       crypto.SchnorrSig{},
+			SID:       t.SID,
+			Threshold: t.Threshold[i],
+			Key:       t.Key[i],
+		}
+
+		i1b, err := network.MarshalRegisteredType(i1)
+		if err != nil {
+			return err
+		}
+
+		if err := crypto.VerifySchnorr(suite, t.CliKey, i1b, *t.SigI1[i]); err != nil {
+			return err
+		}
+	}
+
+	for i, grp := range t.Index {
+
+		for j, k := range grp {
+
+			// Verify R1 signatures
+			r1 := t.R1s[k]
+			sig1 := r1.Sig
+			r1.Sig = crypto.SchnorrSig{}
+
+			r1b, err := network.MarshalRegisteredType(r1)
+			if err != nil {
+				return err
+			}
+
+			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r1b, sig1); err != nil {
+				return err
+			}
+
+			// Verify I2
+			//i2 := &I2{
+			//	Sig: crypto.SchnorrSig{},
+			//	SID: t.SID,
+			//}
+
+			// Verify R2 signatures
+			r2 := t.R2s[k]
+			sig2 := r2.Sig
+			r2.Sig = crypto.SchnorrSig{}
+
+			r2b, err := network.MarshalRegisteredType(r2)
+			if err != nil {
+				return err
+			}
+
+			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r2b, sig2); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Verify proofs
+
+	// Compare randomness
+
+	return nil
 }
 
 func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, key [][]abstract.Point) ([]byte, error) {
@@ -330,6 +423,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	if err := crypto.VerifySchnorr(rh.Suite(), rh.Key[grp][i], msgb, sig); err != nil {
 		return err
 	}
+	msg.Sig = sig
 
 	if !bytes.Equal(rh.HashI1[grp], msg.HI1) {
 		return fmt.Errorf("Server %v of group %v replied to the wrong I1 message", idx, grp)
@@ -507,6 +601,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	if err := crypto.VerifySchnorr(rh.Suite(), rh.Key[grp][i], msgb, sig); err != nil {
 		return err
 	}
+	msg.Sig = sig
 
 	if !bytes.Equal(rh.HashI2[idx], msg.HI2) {
 		return fmt.Errorf("Server %v of group %v replied to the wrong I2 message", idx, grp)

@@ -52,12 +52,14 @@ type RandHound struct {
 type Transcript struct {
 	SID       []byte               // Session identifier
 	Nodes     int                  // Total number of nodes (client + server)
+	Groups    int                  // Number of groups
 	Faulty    int                  // Maximum number of Byzantine servers
 	Purpose   string               // Purpose of the protocol run
 	Time      time.Time            // Timestamp of initiation
 	CliRand   []byte               // Client-chosen randomness (for sharding)
+	CliKey    abstract.Point       // Client public key
 	Index     [][]int              // Grouped server indices
-	Key       [][]abstract.Point   // Grouped public keys
+	Key       [][]abstract.Point   // Grouped server public keys
 	Threshold []int                // Grouped secret sharing thresholds
 	R1s       []*R1                // R1 messages received from servers
 	R2s       []*R2                // R2 messages received from servers
