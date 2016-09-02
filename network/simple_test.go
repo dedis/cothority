@@ -1,7 +1,7 @@
 package network
 
 import (
-	"context"
+	"golang.org/x/net/context"
 	"fmt"
 	"sync"
 	"testing"

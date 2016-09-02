@@ -2,7 +2,7 @@ package network
 
 import (
 	"bytes"
-	"context"
+	"golang.org/x/net/context"
 	"encoding/binary"
 	"errors"
 	"fmt"
