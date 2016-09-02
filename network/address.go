@@ -52,9 +52,6 @@ func (a Address) ConnType() ConnType {
 		return UnvalidConnType
 	}
 	vals := strings.Split(string(a), typeAddressSep)
-	if len(vals) == 0 {
-		return UnvalidConnType
-	}
 	return connType(vals[0])
 }
 
@@ -66,9 +63,6 @@ func (a Address) NetworkAddress() string {
 		return ""
 	}
 	vals := strings.Split(string(a), typeAddressSep)
-	if len(vals) != 2 {
-		return ""
-	}
 	return vals[1]
 }
 
