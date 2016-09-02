@@ -42,6 +42,8 @@ func TestAddress(t *testing.T) {
 		{"tlsx10.0.0.4:2000", false, UnvalidConnType, "", "", ""},
 		{"tls:10.0.0.4x2000", false, UnvalidConnType, "", "", ""},
 		{"tlsx10.0.0.4x2000", false, UnvalidConnType, "", "", ""},
+		{"tlxblurdie", false, UnvalidConnType, "", "", ""},
+		{"tls://blublublu", false, UnvalidConnType, "", "", ""},
 	}
 
 	for i, str := range tests {
