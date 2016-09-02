@@ -64,7 +64,7 @@ func (e *simulation) Run(config *sda.SimulationConfig) error {
 		if service == nil || !ok {
 			log.Fatal("Didn't find service", ServiceName)
 		}
-		err := service.StartSimul(blockchain.GetBlockDir(), e.Blocksize)
+		err := service.StartSimul(blockchain.GetBlockDir(), e.Blocksize, config.Roster)
 		if err != nil {
 			log.Error(err)
 		}

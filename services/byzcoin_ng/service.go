@@ -50,8 +50,8 @@ type Service struct {
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
-func (s *Service) StartSimul(blocksPath string, nTxs int) error {
-
+func (s *Service) StartSimul(blocksPath string, nTxs int, Roster *sda.Roster) error {
+	s.Roster = Roster
 	log.Lvl2("ByzCoin will trigger up to", nTxs, "transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
 
@@ -68,19 +68,8 @@ func (s *Service) StartSimul(blocksPath string, nTxs int) error {
 	if len(transactions) < nTxs {
 		log.Errorf("Read only %v but caller wanted %v", len(transactions), nTxs)
 	}
-	consumed := 0
-	if len(transactions) < nTxs {
-		consumed = len(transactions)
-	} else {
-		consumed = nTxs
-	}
-	for consumed > 0 {
-		for _, tr := range transactions {
-			// "send" transaction to server (we skip tcp connection on purpose here)
-			*s.transaction = append(*s.transaction, tr)
-		}
-		consumed--
-	}
+
+	s.transaction = &transactions
 
 	s.startEpoch()
 	return nil
@@ -88,22 +77,18 @@ func (s *Service) StartSimul(blocksPath string, nTxs int) error {
 
 func (s *Service) startEpoch() {
 	//number of rounds... should be viariable
-	s.lastBlock = "0"
-	s.lastKeyBlock = "0"
-	for i := 0; i < 10; i++ {
-		block, err := GetBlock(*s.transaction, s.lastBlock, s.lastKeyBlock)
-		if err != nil {
-			log.Fatal("cannot get block")
-		}
-
-		block.Roster = s.Roster
-		s.signNewBlock(block)
-		err = block.BlockSig.Verify(network.Suite, block.Roster.Publics())
-		if err != nil {
-			log.Lvl3("cannot verify block")
-		}
-
+	block, err := GetBlock(*s.transaction, s.lastBlock, s.lastKeyBlock)
+	if err != nil {
+		log.Fatal("cannot get block")
 	}
+
+	block.Roster = s.Roster
+	s.signNewBlock(block)
+	err = block.BlockSig.Verify(network.Suite, block.Roster.Publics())
+	if err != nil {
+		log.Lvl3("cannot verify block")
+	}
+
 	return
 }
 
@@ -127,7 +112,7 @@ func (s *Service) signNewBlock(block *MicroBlock) (*MicroBlock, error) {
 		if err != nil {
 			return nil, err
 		}
-
+		log.Lvl1("updating", s.ServiceProcessor.ServerIdentity().First())
 		s.lastBlock = block.HeaderHash
 
 		return block, nil
@@ -201,6 +186,9 @@ func newByzcoinNGService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
+		lastBlock:        "0",
+		lastKeyBlock:     "0",
+		transaction:      &[]blkparser.Tx{},
 	}
 	return s
 }
@@ -246,5 +234,8 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
 	// notify it
 	log.Lvl3("Verification of the block done =", verified)
+	if !verified {
+		log.Lvl3("header", block.Header.Parent, "cached", s.lastBlock)
+	}
 	return verified
 }
