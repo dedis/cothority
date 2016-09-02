@@ -280,7 +280,8 @@ func (s *serviceManager) AvailableServices() (ret []string) {
 	return
 }
 
-// Service returns the Service implementation being registered to this name
+// Service returns the Service implementation being registered to this name or
+// nil if no service by this name is available.
 func (s *serviceManager) Service(name string) Service {
 	id := ServiceFactory.ServiceID(name)
 	if id == NilServiceID {
