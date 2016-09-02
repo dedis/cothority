@@ -30,13 +30,15 @@ type RandHound struct {
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
 	// Message information
-	HashI1 map[int][]byte           // Hash of I1 message (index: group)
-	HashI2 map[int][]byte           // Hash of I2 message (index: server)
-	R1s    map[int]*R1              // R1 messages received from servers
-	R2s    map[int]*R2              // R2 messages received from servers
-	CR1    []int                    // Number of received R1 messages per group
-	CR2    []int                    // Number of received R2 messages per group
-	Commit map[int][]abstract.Point // Commitments of server polynomials (index: server)
+	HashI1 map[int][]byte             // Hash of I1 message (index: group)
+	HashI2 map[int][]byte             // Hash of I2 message (index: server)
+	SigI1  map[int]*crypto.SchnorrSig // Schnorr signatures of I1 messages (index: group)
+	SigI2  map[int]*crypto.SchnorrSig // Schnorr signatures of I2 messages (index: server)
+	R1s    map[int]*R1                // R1 messages received from servers
+	R2s    map[int]*R2                // R2 messages received from servers
+	CR1    []int                      // Number of received R1 messages per group
+	CR2    []int                      // Number of received R2 messages per group
+	Commit map[int][]abstract.Point   // Commitments of server polynomials (index: server)
 	mutex  sync.Mutex
 
 	// For signaling the end of a protocol run
@@ -48,20 +50,19 @@ type RandHound struct {
 
 // Transcript ...
 type Transcript struct {
-	SID       []byte                 // Session identifier
-	Nodes     int                    // Total number of nodes (client + server)
-	Faulty    int                    // Maximum number of Byzantine servers
-	Purpose   string                 // Purpose of the protocol run
-	Time      time.Time              // Timestamp of initiation
-	CliRand   []byte                 // Client-chosen randomness (for sharding)
-	Threshold []int                  // Grouped secret sharing thresholds
-	Key       [][]abstract.Point     // Grouped public keys
-	R1s       [][]*R1                // Grouped R1 messages received from servers
-	R2s       [][]*R2                // Grouped R2 messages received from servers
-	SigI1     []*crypto.SchnorrSig   // Grouped Schnorr signatures of I1 messages
-	SigI2     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of I2 messages
-	SigR1     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of R1 messages
-	SigR2     [][]*crypto.SchnorrSig // Grouped Schnorr signatures of R2 messages
+	SID       []byte               // Session identifier
+	Nodes     int                  // Total number of nodes (client + server)
+	Faulty    int                  // Maximum number of Byzantine servers
+	Purpose   string               // Purpose of the protocol run
+	Time      time.Time            // Timestamp of initiation
+	CliRand   []byte               // Client-chosen randomness (for sharding)
+	Index     [][]int              // Grouped server indices
+	Key       [][]abstract.Point   // Grouped public keys
+	Threshold []int                // Grouped secret sharing thresholds
+	R1s       []*R1                // R1 messages received from servers
+	R2s       []*R2                // R2 messages received from servers
+	SigI1     []*crypto.SchnorrSig // Schnorr signatures of I1 messages
+	SigI2     []*crypto.SchnorrSig // Schnorr signatures of I2 messages
 }
 
 // I1 message

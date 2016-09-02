@@ -49,8 +49,6 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	//log.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	//log.Printf("RandHound - shards: %d\n", rhs.Shards)
 	if err := rh.StartProtocol(); err != nil {
 		log.Error("Error while starting protcol:", err)
 	}
@@ -58,16 +56,6 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	select {
 	case <-rh.Done:
 		log.Print("RandHound - done")
-		//rnd, err := rh.Random()
-		//if err != nil {
-		//	panic(err)
-		//}
-		//sharding, err := rh.Shard(rnd, rhs.Shards)
-		//if err != nil {
-		//	panic(err)
-		//}
-		//log.Printf("RandHound - random bytes: %v\n", rnd)
-		//log.Printf("RandHound - sharding: %v\n", sharding)
 	case <-time.After(time.Second * time.Duration(rhs.Hosts) * 5):
 		log.Print("RandHound - time out")
 	}

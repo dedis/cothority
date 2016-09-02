@@ -58,6 +58,8 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.Threshold = make([]int, groups)
 	rh.HashI1 = make(map[int][]byte)
 	rh.HashI2 = make(map[int][]byte)
+	rh.SigI1 = make(map[int]*crypto.SchnorrSig)
+	rh.SigI2 = make(map[int]*crypto.SchnorrSig)
 	rh.R1s = make(map[int]*R1)
 	rh.R2s = make(map[int]*R2)
 	rh.CR1 = make([]int, groups)
@@ -91,6 +93,7 @@ func (rh *RandHound) Start() error {
 		return err
 	}
 
+	// Set some group parameters
 	for i, group := range rh.Server {
 		rh.Threshold[i] = 2 * len(group) / 3
 		rh.Commit[i] = make([]abstract.Point, len(group))
@@ -101,11 +104,13 @@ func (rh *RandHound) Start() error {
 		}
 	}
 
+	// Comptue session id
 	rh.SID, err = rh.sessionID(rh.Nodes, rh.Faulty, rh.Purpose, rh.Time, rh.CliRand, rh.Threshold, rh.Key)
 	if err != nil {
 		return err
 	}
 
+	// Multicast first message to servers
 	for i, group := range rh.Server {
 
 		i1 := &I1{
@@ -129,6 +134,8 @@ func (rh *RandHound) Start() error {
 		if err != nil {
 			return err
 		}
+
+		rh.SigI1[i] = &i1.Sig
 
 		if err := rh.Multicast(i1, group...); err != nil {
 			return err
@@ -156,7 +163,7 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 		m[j] = i + 1
 	}
 
-	// Create sharding of the current Roster according to the above permutation
+	// Create sharding of the current roster according to the above permutation
 	el := rh.List()
 	sharding := make([][]*sda.TreeNode, shards)
 	keys := make([][]abstract.Point, shards)
@@ -169,9 +176,9 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 }
 
 // CreateTranscript ...
-func (rh *RandHound) CreateTranscript() Transcript {
+func (rh *RandHound) CreateTranscript() *Transcript {
 
-	return Transcript{
+	t := &Transcript{
 		SID:       rh.SID,
 		Nodes:     rh.Nodes,
 		Faulty:    rh.Faulty,
@@ -180,6 +187,20 @@ func (rh *RandHound) CreateTranscript() Transcript {
 		Threshold: rh.Threshold,
 		Key:       rh.Key,
 	}
+
+	// Index 0 (=client) below is always empty
+	r1s := make([]*R1, rh.Nodes)
+	r2s := make([]*R2, rh.Nodes)
+
+	for i := 1; i < rh.Nodes; i++ {
+		r1s[i] = rh.R1s[i]
+		r2s[i] = rh.R2s[i]
+	}
+
+	t.R1s = r1s
+	t.R2s = r2s
+
+	return t
 }
 
 // VerifyTranscript ...
@@ -354,7 +375,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		n := len(rh.Server[grp])
 		for i, target := range rh.Server[grp] {
 
-			// Collect all shares, proofs, and commits intended for server i
+			// Collect all shares, proofs, and commits intended for target server
 			encShare := make([]abstract.Point, n)
 			encProof := make([]ProofCore, n)
 			commit := make([]abstract.Point, n)
@@ -390,6 +411,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			if err != nil {
 				return err
 			}
+
+			rh.SigI2[target.ServerIdentityIdx] = &i2.Sig
 
 			if err := rh.SendTo(target, i2); err != nil {
 				return err
