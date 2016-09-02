@@ -59,8 +59,8 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.Threshold = make([]int, groups)
 	rh.HashI1 = make(map[int][]byte)
 	rh.HashI2 = make(map[int][]byte)
-	rh.SigI1 = make(map[int]*crypto.SchnorrSig)
-	rh.SigI2 = make(map[int]*crypto.SchnorrSig)
+	rh.I1s = make(map[int]*I1)
+	rh.I2s = make(map[int]*I2)
 	rh.R1s = make(map[int]*R1)
 	rh.R2s = make(map[int]*R2)
 	rh.CR1 = make([]int, groups)
@@ -136,7 +136,9 @@ func (rh *RandHound) Start() error {
 			return err
 		}
 
-		rh.SigI1[i] = &i1.Sig
+		rh.mutex.Lock()
+		rh.I1s[i] = i1
+		rh.mutex.Unlock()
 
 		if err := rh.Multicast(i1, group...); err != nil {
 			return err
@@ -193,8 +195,8 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 	}
 
 	index := make([][]int, rh.Groups)
-	sigI1 := make([]*crypto.SchnorrSig, rh.Groups)
-	sigI2 := make([]*crypto.SchnorrSig, rh.Nodes)
+	i1s := make([]*I1, rh.Groups)
+	i2s := make([]*I2, rh.Nodes)
 
 	// Index 0 (=client) in r1s and r2s is always empty
 	r1s := make([]*R1, rh.Nodes)
@@ -205,17 +207,17 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 		for j, server := range group {
 			k := server.ServerIdentityIdx
 			idx[j] = k
-			sigI2[k] = rh.SigI2[k]
+			i2s[k] = rh.I2s[k]
 			r1s[k] = rh.R1s[k]
 			r2s[k] = rh.R2s[k]
 		}
 		index[i] = idx
-		sigI1[i] = rh.SigI1[i]
+		i1s[i] = rh.I1s[i]
 	}
 
 	t.Index = index
-	t.SigI1 = sigI1
-	t.SigI2 = sigI2
+	t.I1s = i1s
+	t.I2s = i2s
 	t.R1s = r1s
 	t.R2s = r2s
 
@@ -235,33 +237,27 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 		return fmt.Errorf("Wrong session identifier")
 	}
 
-	// Verify I1 signatures
-	for i := 0; i < t.Groups; i++ {
+	for i, grp := range t.Index {
 
-		i1 := &I1{
-			Sig:       crypto.SchnorrSig{},
-			SID:       t.SID,
-			Threshold: t.Threshold[i],
-			Key:       t.Key[i],
-		}
+		// Verify I1 signatures
+		i1 := t.I1s[i]
+		si1 := i1.Sig
+		i1.Sig = crypto.SchnorrSig{}
 
 		i1b, err := network.MarshalRegisteredType(i1)
 		if err != nil {
 			return err
 		}
 
-		if err := crypto.VerifySchnorr(suite, t.CliKey, i1b, *t.SigI1[i]); err != nil {
+		if err := crypto.VerifySchnorr(suite, t.CliKey, i1b, si1); err != nil {
 			return err
 		}
-	}
-
-	for i, grp := range t.Index {
 
 		for j, k := range grp {
 
 			// Verify R1 signatures
 			r1 := t.R1s[k]
-			sig1 := r1.Sig
+			sr1 := r1.Sig
 			r1.Sig = crypto.SchnorrSig{}
 
 			r1b, err := network.MarshalRegisteredType(r1)
@@ -269,15 +265,23 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 				return err
 			}
 
-			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r1b, sig1); err != nil {
+			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r1b, sr1); err != nil {
 				return err
 			}
 
-			// Verify I2
-			//i2 := &I2{
-			//	Sig: crypto.SchnorrSig{},
-			//	SID: t.SID,
-			//}
+			// Verify I2 signatures
+			i2 := t.I2s[k]
+			si2 := i2.Sig
+			i2.Sig = crypto.SchnorrSig{}
+
+			i2b, err := network.MarshalRegisteredType(i2)
+			if err != nil {
+				return err
+			}
+
+			if err := crypto.VerifySchnorr(suite, t.CliKey, i2b, si2); err != nil {
+				return err
+			}
 
 			// Verify R2 signatures
 			r2 := t.R2s[k]
@@ -506,7 +510,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				return err
 			}
 
-			rh.SigI2[target.ServerIdentityIdx] = &i2.Sig
+			rh.mutex.Lock()
+			rh.I2s[target.ServerIdentityIdx] = i2
+			rh.mutex.Unlock()
 
 			if err := rh.SendTo(target, i2); err != nil {
 				return err
