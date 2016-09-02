@@ -22,12 +22,19 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+var host_prefix = "iccluster0"
+
+//var hosts = []string{"30", "31", "32", "33"}
+
+var hosts = [...]string{"30", "31", "32", "33", "34", "35", "37", "38"}
+var host_postfix = ".iccluster.epfl.ch"
+
 type MiniNet struct {
 	// *** Mininet-related configuration
 	// The login on the platform
 	Login string
 	// The outside host on the platform
-	Host string
+	External string
 	// Directory we start - supposed to be `cothority/simul`
 	wd string
 	// Directory holding the cothority-go-file
@@ -69,7 +76,8 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.mininetDir = m.wd + "/platform/mininet"
 	m.buildDir = m.mininetDir + "/build"
 	m.Login = "root"
-	m.Host = "iccluster027.iccluster.epfl.ch"
+	m.parseServers()
+	m.External = m.HostIPs[0]
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
@@ -90,7 +98,7 @@ func (m *MiniNet) Configure(pc *Config) {
 // build is the name of the app to build
 // empty = all otherwise build specific package
 func (m *MiniNet) Build(build string, arg ...string) error {
-	log.Lvl1("Building for", m.Login, m.Host, build, "cothorityDir=", m.cothorityDir)
+	log.Lvl1("Building for", m.Login, m.External, build, "cothorityDir=", m.cothorityDir)
 	start := time.Now()
 
 	// Start with a clean build-directory
@@ -118,10 +126,10 @@ func (m *MiniNet) Cleanup() error {
 
 	// SSH to the MiniNet-server and end all running users-processes
 	log.Lvl3("Going to stop everything")
-	m.readServers()
+	m.parseServers()
 	for _, h := range m.HostIPs {
 		log.Lvl3("Cleaning up server", h)
-		_, err = SSHRun(m.Login, m.Host, "pkill -9 -f start.py")
+		_, err = SSHRun(m.Login, m.External, "pkill -9 -f start.py")
 		if err != nil {
 			log.Lvl2("Error while cleaning up:", err)
 		}
@@ -152,11 +160,11 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 		return err
 	}
 	log.Lvl3("Creating hosts")
-	mininet.readServers()
+	mininet.parseServers()
 	log.Lvl3("Writing the config file :", mininet)
 	sda.WriteTomlConfig(mininet, mininetConfig, m.buildDir)
 
-	if err = m.readServers(); err != nil {
+	if err = m.parseServers(); err != nil {
 		return err
 	}
 	hosts, list, err := m.getHostList(rc)
@@ -184,8 +192,8 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 		return err
 	}
 	// Copy everything over to MiniNet
-	log.Lvl1("Copying over to", m.Login, "@", m.Host)
-	err = Rsync(m.Login, m.Host, m.buildDir+"/", "mininet_run/")
+	log.Lvl1("Copying over to", m.Login, "@", m.External)
+	err = Rsync(m.Login, m.External, m.buildDir+"/", "mininet_run/")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -204,7 +212,7 @@ func (m *MiniNet) Start(args ...string) error {
 	var exCmd *exec.Cmd
 	if true {
 		redirection := fmt.Sprintf("*:%d:%s:%d", m.MonitorPort, m.ProxyAddress, m.MonitorPort)
-		login := fmt.Sprintf("%s@%s", m.Login, m.Host)
+		login := fmt.Sprintf("%s@%s", m.Login, m.External)
 		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 			redirection, login}
 		exCmd = exec.Command("ssh", cmd...)
@@ -229,7 +237,7 @@ func (m *MiniNet) Start(args ...string) error {
 	}
 	go func() {
 		log.Lvl3("Starting simulation over mininet")
-		err := SSHRunStdout(m.Login, m.Host, "cd mininet_run; ./start.py list go")
+		err := SSHRunStdout(m.Login, m.External, "cd mininet_run; ./start.py list go")
 		if err != nil {
 			log.Lvl3(err)
 		}
@@ -267,10 +275,10 @@ func (m *MiniNet) Wait() error {
 
 // Returns the servers to use for mininet.
 // TODO: make it more user-definable.
-func (m *MiniNet) readServers() error {
+func (m *MiniNet) parseServers() error {
 	m.HostIPs = []string{}
-	for _, h := range []string{"iccluster027", "iccluster028"} {
-		ips, err := net.LookupIP(h + ".iccluster.epfl.ch")
+	for _, h := range hosts {
+		ips, err := net.LookupIP(host_prefix + h + host_postfix)
 		if err != nil {
 			return err
 		}

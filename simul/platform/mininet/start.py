@@ -12,7 +12,7 @@ It will create nbr+1 entries for each net, where the ".1" is the
 router for the net, and ".2"..".nbr+1" will be the nodes.
 """
 
-import sys, time, threading, os, datetime, contextlib, errno
+import sys, time, threading, os, datetime, contextlib, errno, platform
 
 from mininet.topo import Topo
 from mininet.net import Mininet
@@ -25,24 +25,25 @@ from subprocess import Popen, PIPE, call
 
 # The port used for socat
 socatPort = 5000
-# If this is true, only a dummy-function will be started on each mininet-node
-cothorityDummy = False
 # What debugging-level to use
 debugging = 1
 # Logging-file
 logfile = "/tmp/mininet.log"
-logsocat = "/tmp/socat.log"
 logdone = "/tmp/done.log"
 # Whether a ssh-daemon should be launched
 runSSHD = False
+
+def dbg(lvl, *str):
+    if lvl <= 1:
+        print *str
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
     def config( self, rootLog=None, **params ):
         super(BaseRouter, self).config(**params)
-        print "Starting router at", self.IP(), rootLog
+        dbg( 2, "Starting router %s at %s" %( self.IP(), rootLog) )
         for (gw, n, i) in otherNets:
-            print "Adding route for", n, gw
+            dbg( 3, "Adding route for", n, gw )
             self.cmd( 'route add -net %s gw %s' % (n, gw) )
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
@@ -54,9 +55,9 @@ class BaseRouter(Node):
             self.cmd('tail -f %s | socat - udp-sendto:%s:%d &' % (logfile, rootLog, socatPort))
 
     def terminate( self ):
-        print "Stopping router"
+        dbg( 2, "Stopping router" )
         for (gw, n, i) in otherNets:
-            print "Deleting route for", n, gw
+            dbg( 3, "Deleting route for", n, gw )
             self.cmd( 'route del -net %s gw %s' % (n, gw) )
 
         self.cmd( 'sysctl net.ipv4.ip_forward=0' )
@@ -74,27 +75,20 @@ class Cothority(Host):
             self.cmd('/usr/sbin/sshd -D &')
 
     def startCothority(self):
-        # TODO: this will fail on other nodes than the root.
-        self.cmd('cd ~/mininet_run')
-        socat="socat -v - udp-sendto:%s:%d 2>> %s" % (self.gw, socatPort, logsocat)
-        # print "Socat is", socat, "on", self.IP()
+        socat="socat -v - udp-sendto:%s:%d" % (self.gw, socatPort)
 
-        if cothorityDummy:
-            # print "Starting dummy with gw", gw
-            self.cmd('while (ip a | grep "inet 10" ); do sleep 1; done | %s &' % socat)
-        else:
-            ldone = ""
-            if self.IP().endswith(".0.2"):
-                ldone = "; date > " + logdone
-            # print "Starting cothority on node", self.IP(), ldone
-            self.cmd('( ./cothority -debug %s -address %s:2000 -simul %s -monitor %s 2>&1 %s ) | %s &' %
-                 ( debugging, self.IP(), self.simul, "10.90.38.3:10000 ", ldone, socat ))
+        args = "-debug %s -address %s:2000 -simul %s" % (debugging, self.IP(), self.simul)
+        if True:
+            args += " -monitor %s:10000" % global_root
+        ldone = ""
+        if self.IP().endswith(".0.2"):
+            ldone = "; date > " + logdone
+        dbg( 3, "Starting cothority on node", self.IP(), ldone )
+        self.cmd('( ./cothority %s 2>&1 %s ) | %s &' %
+                     (args, ldone, socat ))
 
     def terminate(self):
-        # print "Stopping cothority"
-        if cothorityDummy:
-            self.cmd('killall while')
-
+        dbg( 3, "Stopping cothority" )
         self.cmd('killall socat cothority')
         super(Cothority, self).terminate()
 
@@ -108,7 +102,7 @@ class InternetTopo(Topo):
             switch = self.addSwitch('s0')
             baseIp, prefix = netParse(mn)
             gw = ipAdd(1, prefix, baseIp)
-            # print "Gw", gw, "baseIp", baseIp, prefix
+            dbg( 2, "Gw", gw, "baseIp", baseIp, prefix )
             hostgw = self.addNode('h0', cls=BaseRouter,
                                   ip='%s/%d' % (gw, prefix),
                                   inNamespace=False,
@@ -121,7 +115,7 @@ class InternetTopo(Topo):
                                     ip = '%s/%d' % (ipStr, prefix),
                                     defaultRoute='via %s' % gw,
 			                	    simul="CoSimul", gw=gw)
-                # print "Adding link", host, switch
+                dbg( 3, "Adding link", host, switch )
                 self.addLink(host, switch)
 
 def RunNet():
@@ -131,9 +125,9 @@ def RunNet():
     if myNet[1] > 0:
         i, p = netParse(otherNets[0][1])
         rootLog = ipAdd(1, p, i)
-    print "Creating network", myNet
+    dbg( 1, "Creating network", myNet )
     topo = InternetTopo(myNet=myNet, rootLog=rootLog)
-    print "Starting on", myNet
+    dbg( 3, "Starting on", myNet )
     net = Mininet(topo=topo)
     net.start()
 
@@ -142,17 +136,17 @@ def RunNet():
 
     # CLI(net)
     while not os.path.exists(logdone):
-        print "Waiting for cothority to finish"
+        dbg( 2, "Waiting for cothority to finish at " + platform.node() )
         time.sleep(1)
 
-    # print "cothority is finished"
-    print "Stopping on", myNet
+    dbg( 2, "cothority is finished %s" % myNet )
     net.stop()
 
 def GetNetworks(filename):
-    """GetServer will read the file and search if the current server
-    is in it and return those. It will also return whether we're in the
-    first line and thus the 'root'-server for logging."""
+    """GetServer reads the file and parses the data according to
+    server, net, count
+    It returns the first server encountered, our network if our ip is found
+    in the list and the other networks."""
 
     process = Popen(["ip", "a"], stdout=PIPE)
     (ips, err) = process.communicate()
@@ -175,7 +169,7 @@ def GetNetworks(filename):
             otherNets.append(t)
         pos += 1
 
-    return myNet, otherNets
+    return list[0][0], myNet, otherNets
 
 def rm_file(file):
     try:
@@ -184,7 +178,9 @@ def rm_file(file):
         pass
 
 def call_other(server, list_file):
+    dbg( 3, "Calling remote server with", server, list_file )
     call("ssh -q %s sudo python -u start.py %s" % (server, list_file), shell=True)
+    dbg( 3, "Done with start.py" )
 
 # The only argument given to the script is the server-list. Everything
 # else will be read from that and searched in the computer-configuration.
@@ -197,31 +193,33 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     list_file = sys.argv[1]
-    myNet, otherNets = GetNetworks(list_file)
+    global_root, myNet, otherNets = GetNetworks(list_file)
 
     if myNet:
-        print "Cleaning up mininet and logfiles"
+        dbg( 2, "Cleaning up mininet and logfiles" )
         rm_file(logfile)
-        rm_file(logsocat)
         rm_file(logdone)
         call("mn -c > /dev/null 2>&1", shell=True)
-        # print "Starting mininet for", myNet
+        dbg( 2, "Starting mininet for %s" % myNet )
         t1 = threading.Thread(target=RunNet)
         t1.start()
+        time.sleep(1)
 
     threads = []
     if len(sys.argv) > 2:
+        dbg( 2, "Starting remotely on nets", otherNets )
         for (server, mn, nbr) in otherNets:
-            call("ssh -q %s mn -c > /dev/null 2>&1" % server, shell=True)
-            # print "Going to copy things %s to %s and run %s hosts in net %s" % \
-            #       (list_file, server, nbr, mn)
+            dbg( 3, "Cleaning up", server )
+            call("ssh -q %s 'mn -c; pkill -9 -f start.py' > /dev/null 2>&1" % server, shell=True)
+            dbg( 3, "Going to copy things %s to %s and run %s hosts in net %s" % \
+                  (list_file, server, nbr, mn) )
             call("scp -q simulation.bin cothority start.py %s %s:" % (list_file, server), shell=True)
-            # print("going to clean mininet")
-            # call("ssh %s /usr/local/bin/mn -c" % server, shell=True)
-            # print "Launching script on %s" % server
-            threads.append(threading.Thread(target=call_other,
-                                            args=[server, list_file]))
-            threads[-1].start()
+            threads.append(threading.Thread(target=call_other, args=[server, list_file]))
+
+        time.sleep(1)
+        for thr in threads:
+            dbg( 3, "Starting thread", thr )
+            thr.start()
 
     if myNet:
         t1.join()
@@ -229,4 +227,4 @@ if __name__ == '__main__':
     for thr in threads:
         thr.join()
 
-    call("echo Done with main in $( hostname )", shell=True)
+    dbg( 3, "echo Done with main in %s" % platform.node())

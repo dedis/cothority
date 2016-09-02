@@ -83,8 +83,8 @@ func main() {
 			if err := monitor.ConnectSink(monitorAddress); err != nil {
 				log.Fatal("Couldn't connect monitor to sink:", err)
 			}
-		} else {
-			log.Fatal("No monitorAddress for root")
+			//} else {
+			//	log.Fatal("No monitorAddress for root")
 		}
 		// If this cothority has the root-host, it will start the simulation
 		log.Lvl2("Starting protocol", simul, "on host", rootSC.Host.ServerIdentity.Addresses)
