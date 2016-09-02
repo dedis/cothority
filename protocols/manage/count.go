@@ -102,7 +102,7 @@ func (p *ProtocolCount) Dispatch() error {
 		log.Lvl3(p.Info(), "waiting for message during", p.Timeout())
 		select {
 		case pc := <-p.PrepareCountChan:
-			log.Lvl3(p.Info(), "received from", pc.TreeNode.ServerIdentity.Addresses,
+			log.Lvl3(p.Info(), "received from", pc.TreeNode.ServerIdentity.Address,
 				pc.Timeout)
 			p.SetTimeout(pc.Timeout)
 			p.FuncPC()
@@ -145,7 +145,7 @@ func (p *ProtocolCount) FuncPC() {
 	if !p.IsLeaf() {
 		for _, child := range p.Children() {
 			go func(c *sda.TreeNode) {
-				log.Lvl3(p.Info(), "sending to", c.ServerIdentity.Addresses, c.ID, p.timeout)
+				log.Lvl3(p.Info(), "sending to", c.ServerIdentity.Address, c.ID, p.timeout)
 				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
 				if err != nil {
 					log.Error(p.Info(), "couldn't send to child",
@@ -166,7 +166,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		log.Lvl3(p.Info(), "Sends to", p.Parent().ID, p.Parent().ServerIdentity.Addresses)
+		log.Lvl3(p.Info(), "Sends to", p.Parent().ID, p.Parent().ServerIdentity.Address)
 		if err := p.SendTo(p.Parent(), &Count{count}); err != nil {
 			log.Error(p.Name(), "coouldn't send to parent",
 				p.Parent().Name())
@@ -174,7 +174,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	} else {
 		p.Count <- count
 	}
-	log.Lvl3(p.ServerIdentity().First(), "Done")
+	log.Lvl3(p.ServerIdentity(), "Done")
 }
 
 // SetTimeout sets the new timeout

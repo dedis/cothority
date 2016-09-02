@@ -6,7 +6,7 @@
 ## in dedis/cosi.
 
 # Temporarily overwrite the branch
-BRANCH=master
+BRANCH=refactor_mocking
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
