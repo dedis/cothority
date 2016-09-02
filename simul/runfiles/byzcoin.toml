@@ -1,9 +1,9 @@
-Servers = 2
+Servers = 8
 Simulation = "ServiceBNG"
-NumClientTxs = 10240
+NumClientTxs = 200000
 Rounds = 10
 BF = 3
 CloseWait = 300
 
 Hosts, Blocksize
-2, 1024
+8, 2200
