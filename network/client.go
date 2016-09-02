@@ -53,7 +53,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 		if err == nil {
 			break
 		} else if i == MaxRetryConnect-1 {
-			return nil, fmt.Errorf("Could not connect", err)
+			return nil, fmt.Errorf("Could not connect %x", err)
 		}
 		time.Sleep(WaitRetry)
 	}
@@ -109,7 +109,6 @@ func ErrMsg(em *Packet, err error) error {
 	statusStr := status.Status
 	if statusStr != "" {
 		return errors.New("Remote-error: " + statusStr)
-		return nil
 	}
 	return nil
 }

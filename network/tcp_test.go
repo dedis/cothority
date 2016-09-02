@@ -76,7 +76,7 @@ func TestTCPConnWithListener(t *testing.T) {
 	rx2 := <-connStat
 
 	if (tx2 - tx1) != (rx2 - rx1) {
-		t.Error("Connections did see same bytes? %d tx vs %d rx", (tx2 - tx1), (rx2 - rx1))
+		t.Errorf("Connections did see same bytes? %d tx vs %d rx", (tx2 - tx1), (rx2 - rx1))
 	}
 
 	assert.Nil(t, ln.Stop(), "Error stopping listener")
@@ -149,7 +149,6 @@ func TestTCPHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
 	}
-	//assert.Nil(t, waitConnections(h1, h2.id))
 
 	err = h1.Stop()
 	if err != nil {
@@ -169,7 +168,6 @@ func TestTCPHostClose(t *testing.T) {
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
 	}
-	//assert.Nil(t, waitConnections(h3.router, h2.id))
 	log.Lvl3("Closing h3")
 	err = h3.Stop()
 	if err != nil {
@@ -304,7 +302,7 @@ func (sp *simpleProcessor) Process(msg *Packet) {
 	sp.relay <- sm
 }
 
-func sendrcv_proc(from, to Router) error {
+func sendrcv_proc(from, to *Router) error {
 	sp := newSimpleProcessor()
 	// new processing
 	to.RegisterProcessor(sp, statusMsgID)
@@ -323,7 +321,7 @@ func sendrcv_proc(from, to Router) error {
 	return err
 }
 
-func waitConnections(r Router, sid *ServerIdentity) error {
+func waitConnections(r *Router, sid *ServerIdentity) error {
 	for i := 0; i < 10; i++ {
 		c := r.connection(sid.ID)
 		if c != nil {
