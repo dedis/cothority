@@ -34,7 +34,9 @@ type LocalTest struct {
 }
 
 var (
-	TCP   = "tcp"
+	// TCP represents the TCP mode of networking for this local test
+	TCP = "tcp"
+	// Local represents the Local mode of networking for this local test
 	Local = "local"
 )
 
@@ -308,6 +310,8 @@ func NewLocalHost(port int) *Host {
 	return h
 }
 
+// NewLocalHost returns a fresh Host using local connections within the context
+// of this LocalTest
 func (l *LocalTest) NewLocalHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
 	localRouter, err := network.NewLocalRouterWithContext(l.ctx, id)
@@ -320,6 +324,8 @@ func (l *LocalTest) NewLocalHost(port int) *Host {
 
 }
 
+// NewClient returns *Client for which the types depend on the mode of the
+// LocalContext.
 func (l *LocalTest) NewClient(serviceName string) *Client {
 	switch l.mode {
 	case TCP:
@@ -329,6 +335,8 @@ func (l *LocalTest) NewClient(serviceName string) *Client {
 	}
 }
 
+// NewLocalClient returns a new *Client using Local connections within the
+// context of this LocalTest.
 func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 	return &Client{
 		ServiceID: ServiceFactory.ServiceID(serviceName),

@@ -1,12 +1,13 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"errors"
 	"fmt"
 	"strconv"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/dedis/crypto/config"
 )
@@ -27,8 +28,8 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 	return &Client{c}
 }
 
-var baseId uint64 = 0
-var baseIdLock sync.Mutex
+var baseID uint64
+var baseIDLock sync.Mutex
 
 // Send will send the message to the destination service and return the
 // reply.
@@ -39,10 +40,10 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	// just create a random looking id for this client. Choosing higher values
 	// lower the chance of having a collision in the Router.
-	baseIdLock.Lock()
-	id := baseId
-	baseId++
-	baseIdLock.Unlock()
+	baseIDLock.Lock()
+	id := baseID
+	baseID++
+	baseIDLock.Unlock()
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
 
 	var c Conn

@@ -1,13 +1,14 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"errors"
 	"fmt"
 	"net"
 	"strconv"
 	"testing"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/config"
