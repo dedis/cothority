@@ -259,7 +259,7 @@ func (am *Packet) MarshalBinary() ([]byte, error) {
 // UnmarshalBinary will decode the incoming bytes
 // It uses protobuf for decoding (using the constructors in the Packet).
 func (am *Packet) UnmarshalBinary(buf []byte) error {
-	t, msg, err := UnmarshalRegisteredType(buf, am.Constructors)
+	t, msg, err := UnmarshalRegisteredType(buf, DefaultConstructors(Suite))
 	am.MsgType = t
 	am.Msg = msg
 	return err
