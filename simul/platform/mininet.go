@@ -69,8 +69,7 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.mininetDir = m.wd + "/platform/mininet"
 	m.buildDir = m.mininetDir + "/build"
 	m.Login = "root"
-	log.Print(m.wd, m.cothorityDir)
-	m.Host = "iccluster026.iccluster.epfl.ch"
+	m.Host = "iccluster027.iccluster.epfl.ch"
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
@@ -100,7 +99,7 @@ func (m *MiniNet) Build(build string, arg ...string) error {
 	src_rel, err := filepath.Rel(m.wd, m.cothorityDir)
 	log.ErrFatal(err)
 
-	log.LLvl3("Relative-path is", src_rel, " will build into ", m.buildDir)
+	log.Lvl3("Relative-path is", src_rel, " will build into ", m.buildDir)
 	out, err := Build("./"+src_rel, m.buildDir+"/cothority",
 		processor, system, arg...)
 	log.ErrFatal(err, out)
@@ -119,6 +118,14 @@ func (m *MiniNet) Cleanup() error {
 
 	// SSH to the MiniNet-server and end all running users-processes
 	log.Lvl3("Going to stop everything")
+	m.readServers()
+	for _, h := range m.HostIPs {
+		log.Lvl3("Cleaning up server", h)
+		_, err = SSHRun(m.Login, m.Host, "pkill -9 -f start.py")
+		if err != nil {
+			log.Lvl2("Error while cleaning up:", err)
+		}
+	}
 	//err = SSHRunStdout(m.Login, m.Host, "ps aux")
 	//if err != nil {
 	//	log.Lvl3(err)
@@ -196,7 +203,7 @@ func (m *MiniNet) Start(args ...string) error {
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
 	var exCmd *exec.Cmd
 	if true {
-		redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
+		redirection := fmt.Sprintf("*:%d:%s:%d", m.MonitorPort, m.ProxyAddress, m.MonitorPort)
 		login := fmt.Sprintf("%s@%s", m.Login, m.Host)
 		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 			redirection, login}
@@ -213,7 +220,6 @@ func (m *MiniNet) Start(args ...string) error {
 		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
 			redirection, login}
 		exCmd = exec.Command("ssh", cmd...)
-		log.Print(exCmd)
 		if err := exCmd.Start(); err != nil {
 			log.Fatal("Failed to start the 2nd ssh port forwarding:", err)
 		}
@@ -222,13 +228,11 @@ func (m *MiniNet) Start(args ...string) error {
 		}
 	}
 	go func() {
-		log.LLvl3("Starting simulation over mininet")
-		_, err := SSHRun(m.Login, m.Host, "cd mininet_run; ./start.py list go")
+		log.Lvl3("Starting simulation over mininet")
+		err := SSHRunStdout(m.Login, m.Host, "cd mininet_run; ./start.py list go")
 		if err != nil {
 			log.Lvl3(err)
 		}
-		log.Print("Finished ssh-command")
-		time.Sleep(time.Second * 100)
 		m.sshMininet <- "finished"
 	}()
 
@@ -265,15 +269,15 @@ func (m *MiniNet) Wait() error {
 // TODO: make it more user-definable.
 func (m *MiniNet) readServers() error {
 	m.HostIPs = []string{}
-	for _, h := range []string{"iccluster026", "iccluster027"} {
+	for _, h := range []string{"iccluster027", "iccluster028"} {
 		ips, err := net.LookupIP(h + ".iccluster.epfl.ch")
 		if err != nil {
 			return err
 		}
-		log.LLvl3("Found IP for", h, ":", ips[0])
+		log.Lvl3("Found IP for", h, ":", ips[0])
 		m.HostIPs = append(m.HostIPs, ips[0].String())
 	}
-	log.LLvl3("Nodes are:", m.HostIPs)
+	log.Lvl3("Nodes are:", m.HostIPs)
 	return nil
 }
 
@@ -297,7 +301,6 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	hosts = []string{}
 	nbrServers, err := rc.GetInt("Servers")
 	if err != nil {
-		log.Print(rc)
 		return
 	}
 	if nbrServers > physicalServers {
@@ -305,7 +308,6 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	}
 	nbrHosts, err := rc.GetInt("Hosts")
 	if err != nil {
-		log.Print(rc)
 		return
 	}
 	for i := 0; i < nbrHosts; i++ {

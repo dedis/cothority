@@ -116,7 +116,7 @@ func Build(path, out, goarch, goos string, buildArgs ...string) (string, error) 
 	cmd.Env = append([]string{"GOOS=" + goos, "GOARCH=" + goarch}, os.Environ()...)
 	wd, err := os.Getwd()
 	log.Lvl4(wd)
-	log.LLvl4("Command:", cmd.Args)
+	log.Lvl4("Command:", cmd.Args)
 	err = cmd.Run()
 	log.Lvl4(b.String())
 	return b.String(), err

@@ -28,10 +28,11 @@ socatPort = 5000
 # If this is true, only a dummy-function will be started on each mininet-node
 cothorityDummy = False
 # What debugging-level to use
-debugging = 3
+debugging = 1
 # Logging-file
 logfile = "/tmp/mininet.log"
 logsocat = "/tmp/socat.log"
+logdone = "/tmp/done.log"
 # Whether a ssh-daemon should be launched
 runSSHD = False
 
@@ -40,6 +41,9 @@ class BaseRouter(Node):
     def config( self, rootLog=None, **params ):
         super(BaseRouter, self).config(**params)
         print "Starting router at", self.IP(), rootLog
+        for (gw, n, i) in otherNets:
+            print "Adding route for", n, gw
+            self.cmd( 'route add -net %s gw %s' % (n, gw) )
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
 
@@ -51,6 +55,10 @@ class BaseRouter(Node):
 
     def terminate( self ):
         print "Stopping router"
+        for (gw, n, i) in otherNets:
+            print "Deleting route for", n, gw
+            self.cmd( 'route del -net %s gw %s' % (n, gw) )
+
         self.cmd( 'sysctl net.ipv4.ip_forward=0' )
         self.cmd( 'killall socat' )
         super(BaseRouter, self).terminate()
@@ -59,30 +67,35 @@ class BaseRouter(Node):
 class Cothority(Host):
     """A cothority running in a host"""
     def config(self, gw=None, simul="", **params):
+        self.gw = gw
+        self.simul = simul
         super(Cothority, self).config(**params)
-        print "Starting cothority-node on", self.IP()
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
 
+    def startCothority(self):
         # TODO: this will fail on other nodes than the root.
         self.cmd('cd ~/mininet_run')
-        socat="socat -v - udp-sendto:%s:%d 2>> %s" % (gw, socatPort, logsocat)
-        print "Socat is", socat, "on", self.IP()
+        socat="socat -v - udp-sendto:%s:%d 2>> %s" % (self.gw, socatPort, logsocat)
+        # print "Socat is", socat, "on", self.IP()
 
         if cothorityDummy:
-            print "Starting dummy with gw", gw
+            # print "Starting dummy with gw", gw
             self.cmd('while (ip a | grep "inet 10" ); do sleep 1; done | %s &' % socat)
         else:
-            print "Starting cothority on node", self.IP(), socat
-            self.cmd('( ip a | grep "inet 10"; ./cothority -debug %s -address %s:2000 -simul %s ) | %s &' %
-                     ( debugging, self.IP(), simul, socat ))
+            ldone = ""
+            if self.IP().endswith(".0.2"):
+                ldone = "; date > " + logdone
+            # print "Starting cothority on node", self.IP(), ldone
+            self.cmd('( ./cothority -debug %s -address %s:2000 -simul %s -monitor %s 2>&1 %s ) | %s &' %
+                 ( debugging, self.IP(), self.simul, "10.90.38.3:10000 ", ldone, socat ))
 
     def terminate(self):
-        print "Stopping cothority"
+        # print "Stopping cothority"
         if cothorityDummy:
             self.cmd('killall while')
 
-        self.cmd('killall socat')
+        self.cmd('killall socat cothority')
         super(Cothority, self).terminate()
 
 
@@ -95,7 +108,7 @@ class InternetTopo(Topo):
             switch = self.addSwitch('s0')
             baseIp, prefix = netParse(mn)
             gw = ipAdd(1, prefix, baseIp)
-            print "Gw", gw, "baseIp", baseIp, prefix
+            # print "Gw", gw, "baseIp", baseIp, prefix
             hostgw = self.addNode('h0', cls=BaseRouter,
                                   ip='%s/%d' % (gw, prefix),
                                   inNamespace=False,
@@ -108,7 +121,7 @@ class InternetTopo(Topo):
                                     ip = '%s/%d' % (ipStr, prefix),
                                     defaultRoute='via %s' % gw,
 			                	    simul="CoSimul", gw=gw)
-                print "Adding link", host, switch
+                # print "Adding link", host, switch
                 self.addLink(host, switch)
 
 def RunNet():
@@ -123,14 +136,16 @@ def RunNet():
     print "Starting on", myNet
     net = Mininet(topo=topo)
     net.start()
-    for (gw, n, i) in otherNets:
-        print "Adding route for", n, gw
-        net['h0'].cmd( 'route add -net %s gw %s' % (n, gw) )
-    # CLI(net)
-    time.sleep(20)
-    for (gw, n, i) in otherNets:
-        net['h0'].cmd( 'route del -net %s gw %s' % (n, gw) )
 
+    for host in net.hosts[1:]:
+        host.startCothority()
+
+    # CLI(net)
+    while not os.path.exists(logdone):
+        print "Waiting for cothority to finish"
+        time.sleep(1)
+
+    # print "cothority is finished"
     print "Stopping on", myNet
     net.stop()
 
@@ -168,12 +183,15 @@ def rm_file(file):
     except OSError:
         pass
 
+def call_other(server, list_file):
+    call("ssh -q %s sudo python -u start.py %s" % (server, list_file), shell=True)
+
 # The only argument given to the script is the server-list. Everything
 # else will be read from that and searched in the computer-configuration.
 if __name__ == '__main__':
-    setLogLevel('info')
+    # setLogLevel('info')
     # Mininet doesn't set up correctly if we put this loglevel
-    # lg.setLogLevel( 'critical')
+    lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         print "please give list-name"
         sys.exit(-1)
@@ -185,22 +203,30 @@ if __name__ == '__main__':
         print "Cleaning up mininet and logfiles"
         rm_file(logfile)
         rm_file(logsocat)
-        call("mn -c", shell=True)
-        print "Starting mininet for", myNet
+        rm_file(logdone)
+        call("mn -c > /dev/null 2>&1", shell=True)
+        # print "Starting mininet for", myNet
         t1 = threading.Thread(target=RunNet)
         t1.start()
 
+    threads = []
     if len(sys.argv) > 2:
         for (server, mn, nbr) in otherNets:
-            print "Going to copy things %s to %s and run %s hosts in net %s" % \
-                  (list_file, server, nbr, mn)
+            call("ssh -q %s mn -c > /dev/null 2>&1" % server, shell=True)
+            # print "Going to copy things %s to %s and run %s hosts in net %s" % \
+            #       (list_file, server, nbr, mn)
             call("scp -q simulation.bin cothority start.py %s %s:" % (list_file, server), shell=True)
             # print("going to clean mininet")
             # call("ssh %s /usr/local/bin/mn -c" % server, shell=True)
-            print "Launching script on %s" % server
-            call("ssh -q %s sudo python -u start.py %s &" % (server, list_file), shell=True)
-            time.sleep(0.1)
+            # print "Launching script on %s" % server
+            threads.append(threading.Thread(target=call_other,
+                                            args=[server, list_file]))
+            threads[-1].start()
 
     if myNet:
         t1.join()
-        time.sleep(1)
+
+    for thr in threads:
+        thr.join()
+
+    call("echo Done with main in $( hostname )", shell=True)
