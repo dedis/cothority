@@ -1,9 +1,10 @@
-Servers = 10
+Servers = 8
 Simulation = "RandHound"
 BF = 2
-Trustees = 5
+Rounds = 1
+Faulty = 2
+Groups = 2
 Purpose = "RandHound Test"
-Shards = 2
 
 Hosts
-10
+7
