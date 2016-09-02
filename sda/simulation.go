@@ -162,6 +162,11 @@ func (sc *SimulationConfig) Save(dir string) error {
 	return nil
 }
 
+// GetService returns the service with the given name.
+func (sc *SimulationConfig) GetService(name string) Service {
+	return sc.Host.serviceManager.Service(name)
+}
+
 // SimulationRegister is must to be called to register a simulation.
 // Protocol or simulation developers must not forget to call this function
 // with the protocol's name.
