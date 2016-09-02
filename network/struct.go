@@ -185,7 +185,7 @@ type Packet struct {
 	// ServerIdentity of the others.
 	ServerIdentity *ServerIdentity
 	// the origin of the message
-	From string
+	From Address
 	// What kind of msg do we have
 	MsgType PacketTypeID
 	// The underlying message
@@ -204,7 +204,7 @@ type ServerIdentity struct {
 	// The ServerIdentityID corresponding to that public key
 	ID ServerIdentityID
 	// A slice of addresses of where that Id might be found
-	Addresses []string
+	Address Address
 }
 
 // ServerIdentityID uniquely identifies an ServerIdentity struct
@@ -216,7 +216,7 @@ func (eid ServerIdentityID) Equal(other ServerIdentityID) bool {
 }
 
 func (si *ServerIdentity) String() string {
-	return fmt.Sprintf("%v", si.Addresses)
+	return si.Address.String()
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
@@ -224,28 +224,20 @@ var ServerIdentityType = RegisterPacketType(ServerIdentity{})
 
 // ServerIdentityToml is the struct that can be marshalled into a toml file
 type ServerIdentityToml struct {
-	Public    string
-	Addresses []string
+	Public  string
+	Address Address
 }
 
 // NewServerIdentity creates a new ServerIdentity based on a public key and with a slice
 // of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
-func NewServerIdentity(public abstract.Point, addresses ...string) *ServerIdentity {
+func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 	url := NamespaceURL + "id/" + public.String()
 	return &ServerIdentity{
-		Public:    public,
-		Addresses: addresses,
-		ID:        ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
+		Public:  public,
+		Address: address,
+		ID:      ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
-}
-
-// First returns the first address available
-func (si *ServerIdentity) First() string {
-	if len(si.Addresses) > 0 {
-		return si.Addresses[0]
-	}
-	return ""
 }
 
 // Equal tests on same public key
@@ -260,8 +252,8 @@ func (si *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 		log.Error("Error while writing public key:", err)
 	}
 	return &ServerIdentityToml{
-		Addresses: si.Addresses,
-		Public:    buf.String(),
+		Address: si.Address,
+		Public:  buf.String(),
 	}
 }
 
@@ -272,12 +264,13 @@ func (si *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdenti
 		log.Error("Error while reading public key:", err)
 	}
 	return &ServerIdentity{
-		Public:    pub,
-		Addresses: si.Addresses,
+		Public:  pub,
+		Address: si.Address,
 	}
 }
 
-// GlobalBind returns the global-binding address
+// GlobalBind returns the global-binding address. Given any IP:PORT combination,
+// it will return 0.0.0.0:PORT.
 func GlobalBind(address string) (string, error) {
 	addr := strings.Split(address, ":")
 	if len(addr) != 2 {

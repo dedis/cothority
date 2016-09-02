@@ -65,7 +65,7 @@ func InteractiveConfig(binaryName string) {
 	var hostStr string
 	var ipProvided = true
 	var portStr string
-	var serverBinding string
+	var serverBinding network.Address
 	if !strings.Contains(str, ":") {
 		str = ":" + str
 	}
@@ -87,16 +87,17 @@ func InteractiveConfig(binaryName string) {
 		portStr = port
 	}
 
-	serverBinding = hostStr + ":" + portStr
-	if net.ParseIP(hostStr) == nil {
-		log.Fatal("Invalid connection  information for", serverBinding)
+	serverBinding = network.NewTCPAddress(hostStr + ":" + portStr)
+	if !serverBinding.Valid() {
+		log.Error("Unable to validate address given", serverBinding)
+		return
 	}
 
 	log.Info("We now need to get a reachable address for other CoSi servers")
 	log.Info("and clients to contact you. This address will be put in a group definition")
 	log.Info("file that you can share and combine with others to form a Cothority roster.")
 
-	var publicAddress string
+	var publicAddress network.Address
 	var failedPublic bool
 	// if IP was not provided then let's get the public IP address
 	if !ipProvided {
@@ -112,7 +113,7 @@ func InteractiveConfig(binaryName string) {
 				log.Error("Could not parse your public IP address", err)
 				failedPublic = true
 			} else {
-				publicAddress = strings.TrimSpace(string(buff)) + ":" + portStr
+				publicAddress = network.NewTCPAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
 			}
 		}
 	} else {
@@ -137,12 +138,16 @@ func InteractiveConfig(binaryName string) {
 		}
 	}
 
+	if !publicAddress.Valid() {
+		log.Fatal("Could not validate public ip address:", publicAddress)
+	}
+
 	// create the keys
 	privStr, pubStr := createKeyPair()
 	conf := &config.CothoritydConfig{
-		Public:    pubStr,
-		Private:   privStr,
-		Addresses: []string{serverBinding},
+		Public:  pubStr,
+		Private: privStr,
+		Address: serverBinding,
 	}
 
 	var configDone bool
@@ -238,7 +243,7 @@ func checkList(list *sda.Roster, descs []string) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
-		serverStr += fmt.Sprintf("%s_%s ", s.Addresses[0], name)
+		serverStr += fmt.Sprintf("%s_%s ", s.Address, name)
 	}
 	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
@@ -319,10 +324,10 @@ func entityListToPublics(el *sda.Roster) []abstract.Point {
 	return publics
 }
 
-func isPublicIP(ip string) bool {
+func isPublicIP(ip network.Address) bool {
 	public, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
 		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
-		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip)
+		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip.NetworkAddress())
 	if err != nil {
 		log.Error(err)
 	}
@@ -396,7 +401,7 @@ func getDefaultConfigFile(binaryName string) string {
 	}
 }
 
-func askReachableAddress(port string) string {
+func askReachableAddress(port string) network.Address {
 	ipStr := config.Input(DefaultAddress, "IP-address where your server can be reached")
 
 	splitted := strings.Split(ipStr, ":")
@@ -414,19 +419,19 @@ func askReachableAddress(port string) string {
 		// add the port
 		ipStr = ipStr + ":" + port
 	}
-	return ipStr
+	return network.NewTCPAddress(ipStr)
 }
 
 // tryConnect will bind to the ip address and ask a internet service to try to
 // connect to it. binding is the address where we must listen (needed because
 // the reachable address might not be the same as the binding address => NAT, ip
 // rules etc).
-func tryConnect(ip string, binding string) error {
+func tryConnect(ip, binding network.Address) error {
 
 	stopCh := make(chan bool, 1)
 	// let's bind
 	go func() {
-		ln, err := net.Listen("tcp", binding)
+		ln, err := net.Listen("tcp", binding.NetworkAddress())
 		if err != nil {
 			log.Error("Trouble with binding to the address:", err)
 			return
@@ -437,7 +442,7 @@ func tryConnect(ip string, binding string) error {
 	}()
 	defer func() { stopCh <- true }()
 
-	_, port, err := net.SplitHostPort(ip)
+	_, port, err := net.SplitHostPort(ip.NetworkAddress())
 	if err != nil {
 		return err
 	}

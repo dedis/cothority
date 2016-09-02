@@ -31,9 +31,9 @@ func init() {
 
 // CothoritydConfig is the cothority daemon config
 type CothoritydConfig struct {
-	Public    string
-	Private   string
-	Addresses []string
+	Public  string
+	Private string
+	Address network.Address
 }
 
 // Save will save this CothoritydConfig to the given file name
@@ -67,12 +67,14 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	host := sda.NewHost(network.NewServerIdentity(point, hc.Addresses...), secret)
+	host := sda.NewHost(network.NewServerIdentity(point, hc.Address), secret)
 	return hc, host, nil
 }
 
 // CreateCothoritydConfig will ask through the command line to create a Private / Public
 // key, what is the listening address
+// It takes the default config file as argument, and returns the
+// CothoritydConfig created, the config file name and any error if occured.
 func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	var err error
@@ -81,13 +83,9 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	fmt.Println("[+] Type the IP:PORT (ipv4) address of this host (accessible from Internet):")
 	str, err = reader.ReadString('\n')
 	str = strings.TrimSpace(str)
-	h, _, errStr := net.SplitHostPort(str)
-	if err != nil || errStr != nil {
-		return nil, "", errors.New("Error reading IP:PORT (" + str + ") " + errStr.Error() + " => Abort")
-	}
-
-	if net.ParseIP(h) == nil {
-		return nil, "", errors.New("Invalid IP address " + h)
+	address := network.NewTCPAddress(str)
+	if !address.Valid() {
+		return nil, "", fmt.Errorf("Invalid address: %s", address)
 	}
 
 	fmt.Println("[+] Creation of the private and public keys...")
@@ -108,9 +106,9 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	fname = strings.TrimSpace(fname)
 
 	config := &CothoritydConfig{
-		Public:    pubStr,
-		Private:   privStr,
-		Addresses: []string{str},
+		Public:  pubStr,
+		Private: privStr,
+		Address: address,
 	}
 	return config, fname, err
 }
@@ -133,7 +131,7 @@ func NewGroupToml(servers ...*ServerToml) *GroupToml {
 // ServerToml is one entry in the group.toml file describing one server to use for
 // the cothority system.
 type ServerToml struct {
-	Addresses   []string
+	Address     network.Address
 	Public      string
 	Description string
 }
@@ -218,20 +216,20 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 	if err != nil {
 		return nil, err
 	}
-	return network.NewServerIdentity(public, s.Addresses...), nil
+	return network.NewServerIdentity(public, s.Address), nil
 }
 
 // NewServerToml returns  a ServerToml out of a public key and some addresses => to be printed
 // or written to a file
-func NewServerToml(suite abstract.Suite, public abstract.Point, addresses ...string) *ServerToml {
+func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
 		log.Error("Error writing public key")
 		return nil
 	}
 	return &ServerToml{
-		Addresses: addresses,
-		Public:    buff.String(),
+		Address: addr,
+		Public:  buff.String(),
 	}
 }
 
