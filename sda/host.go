@@ -51,7 +51,9 @@ type Host struct {
 	// tell processMessages to quit
 	ProcessMessagesQuit chan bool
 
-	serviceManager       *serviceManager
+	// entry point of all services
+	serviceManager *serviceManager
+	// status manager
 	statusReporterStruct *statusReporterStruct
 }
 
