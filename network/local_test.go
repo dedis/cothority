@@ -1,12 +1,13 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"fmt"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,11 +1,12 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"errors"
 	"fmt"
 	"runtime/debug"
 	"sync"
+
+	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/log"
 )

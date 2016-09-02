@@ -1,9 +1,9 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"errors"
 	"fmt"
+	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"

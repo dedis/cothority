@@ -1,10 +1,11 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"fmt"
 	"sync"
 	"testing"
+
+	"golang.org/x/net/context"
 )
 
 var SimplePacketType PacketTypeID

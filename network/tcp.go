@@ -2,7 +2,6 @@ package network
 
 import (
 	"bytes"
-	"golang.org/x/net/context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/log"
 )
