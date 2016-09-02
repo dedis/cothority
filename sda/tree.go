@@ -3,7 +3,6 @@ package sda
 import (
 	"errors"
 	"fmt"
-	"net"
 
 	"math/rand"
 
@@ -163,10 +162,10 @@ func (t *Tree) Dump() string {
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
 			ret += fmt.Sprintf("\n%2d - %s/%s has parent %s/%s", d,
-				tn.ID, tn.ServerIdentity.Addresses,
-				tn.Parent.ID, tn.Parent.ServerIdentity.Addresses)
+				tn.ID, tn.ServerIdentity.Address,
+				tn.Parent.ID, tn.Parent.ServerIdentity.Address)
 		} else {
-			ret += fmt.Sprintf("\n%s/%s is root", tn.ID, tn.ServerIdentity.Addresses)
+			ret += fmt.Sprintf("\n%s/%s is root", tn.ID, tn.ServerIdentity.Address)
 		}
 	})
 	return ret
@@ -429,11 +428,11 @@ func (el *Roster) GenerateBigNaryTree(N, nodes int) *Tree {
 				children = N
 			}
 			parent.Children = make([]*TreeNode, children)
-			parentHost, _, _ := net.SplitHostPort(parent.ServerIdentity.Addresses[0])
+			parentHost := parent.ServerIdentity.Address.Host()
 			for n := 0; n < children; n++ {
 				// Check on host-address, so that no child is
 				// on the same host as the parent.
-				childHost, _, _ := net.SplitHostPort(el.List[elIndex].Addresses[0])
+				childHost := el.List[elIndex].Address.Host()
 				elIndexFirst := elIndex
 				notSameHost := true
 				for (notSameHost && childHost == parentHost && ilLen > 1) ||
@@ -454,7 +453,7 @@ func (el *Roster) GenerateBigNaryTree(N, nodes int) *Tree {
 					if elIndex == elIndexFirst {
 						break
 					}
-					childHost, _, _ = net.SplitHostPort(el.List[elIndex].Addresses[0])
+					childHost = el.List[elIndex].Address.Host()
 				}
 				child := NewTreeNode(elIndex, el.List[elIndex])
 				used[elIndex] = true
@@ -558,7 +557,7 @@ func (tId TreeNodeID) Equal(tID2 TreeNodeID) bool {
 
 // Name returns a human readable representation of the TreeNode (IP address).
 func (t *TreeNode) Name() string {
-	return t.ServerIdentity.First()
+	return t.ServerIdentity.Address.String()
 }
 
 var _ = network.RegisterPacketType(TreeNode{})

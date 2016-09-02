@@ -5,23 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"strings"
 
-	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/crypto/config"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
-
-func init() {
-	network.RegisterPacketType(&StatusRet{})
-}
 
 // Service is a generic interface to define any type of services.
 // A Service has multiple roles:
@@ -44,7 +36,7 @@ type Service interface {
 	// a complex logic is used for these messages, it's best to put that logic
 	// into a ProtocolInstance that the Service will launch, since there's nicer
 	// utilities for ProtocolInstance.
-	Processor
+	network.Processor
 }
 
 // ServiceID is a type to represent a uuid for a Service
@@ -112,6 +104,14 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 	ServiceFactory.Register(name, fn)
 }
 
+// DeleteNewService will remove the NewServiceFunc associated with *name*
+// from the global store of NewServiceFunc so it can't be initialized again.
+// If the service needs to be initialized again, a new call to
+// RegisterNewService must be made.
+func DeleteNewService(name string) {
+	ServiceFactory.DeleteNewService(name)
+}
+
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServicesID() []ServiceID {
 	s.mutex.Lock()
@@ -132,6 +132,22 @@ func (s *serviceFactory) RegisteredServicesName() []string {
 		names = append(names, n)
 	}
 	return names
+}
+
+// DeleteNewService will remove the NewServiceFunc from the global store of
+// NewServiceFunc so it can't be initialized again. If the service needs to be
+// initialized again, a new call to RegisterNewService must be made.
+func (s *serviceFactory) DeleteNewService(name string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	sid, ok := s.translations[name]
+	if !ok {
+		// we don't have any service registered to this name
+		return
+	}
+	delete(s.translations, name)
+	delete(s.constructors, sid)
+	delete(s.inverseTr, sid)
 }
 
 // ServiceID returns the ServiceID out of the name of the service
@@ -187,8 +203,8 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	host *Host
-	// the dispatcher can take registration of Processors
-	Dispatcher
+	// the dispather can take registration of Processors
+	network.Dispatcher
 }
 
 const configFolder = "config"
@@ -207,7 +223,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
-	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
+	s := &serviceManager{services, configs, h, network.NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServicesID()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -264,7 +280,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 // This behavior with go routine is fine for the moment but for better
 // performance / memory / resilience, it may be changed to a real queuing
 // system later.
-func (s *serviceManager) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
+func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.PacketTypeID) {
 	// delegate message to host so the host will pass the message to ourself
 	s.host.RegisterProcessor(s, msgType)
 	// handle the message ourself (will be launched in a go routine)
@@ -356,43 +372,34 @@ func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, 
 
 }
 
-// Client is a simple client structure to be used when wanting to connect to services. It
-// holds the private and public key and allows to connect to a service through
-// the network.
-// The error-handling is done using the ErrorRet structure which can be returned
-// in place of the standard reply. The Client.Send method will catch that and return
-// the appropriate error.
+// Client is a struct used to communicate with a remote Service running on a
+// sda.Conode
 type Client struct {
-	host      *network.SecureTCPHost
 	ServiceID ServiceID
-	sync.Mutex
+	net       *network.Client
 }
 
-// NewClient returns a random client using the service s
+// NewClient returns a client using the service s. It uses TCP communication by
+// default
 func NewClient(s string) *Client {
 	return &Client{
 		ServiceID: ServiceFactory.ServiceID(s),
+		net:       network.NewTCPClient(),
 	}
 }
 
-// Send opens the connection to 'dst' and sends the message 'req'. The
-// reply is returned, or an error if the timeout of 10 seconds is reached.
-func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
-	c.Lock()
-	defer c.Unlock()
-	if c.host == nil {
-		kp := config.NewKeyPair(network.Suite)
-		c.host = network.NewSecureTCPHost(kp.Secret,
-			network.NewServerIdentity(kp.Public, ""))
+// NewLocalClient is for test mainly, it uses the local coomunication network
+// offered by the network package.
+func NewLocalClient(s string) *Client {
+	return &Client{
+		ServiceID: ServiceFactory.ServiceID(s),
+		net:       network.NewLocalClient(),
 	}
+}
 
-	// Connect to the root
-	log.Lvl4("Opening connection to", dst)
-	con, err := c.host.Open(dst)
-	defer c.host.Close()
-	if err != nil {
-		return nil, err
-	}
+// Send will marshal the message into a ClientRequest message and sends it
+// through the network
+func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 
 	m, err := network.NewNetworkPacket(msg)
 	if err != nil {
@@ -408,36 +415,9 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		Service: c.ServiceID,
 		Data:    b,
 	}
-	pchan := make(chan network.Packet)
-	go func() {
-		// send the request
-		log.Lvlf4("Sending request %x", serviceReq.Service)
-		if err := con.Send(context.TODO(), serviceReq); err != nil {
-			close(pchan)
-			return
-		}
-		log.Lvl4("Waiting for the response from", reflect.ValueOf(con).Pointer())
-		// wait for the response
-		packet, err := con.Receive(context.TODO())
-		if err != nil {
-			packet.Msg = StatusRet{err.Error()}
-			packet.MsgType = network.TypeFromData(&StatusRet{})
-		}
-		pchan <- packet
-	}()
-	select {
-	case response := <-pchan:
-		log.Lvlf5("Response: %+v %+v", response, response.Msg)
-		// Catch an eventual error
-		err := ErrMsg(&response, nil)
-		if err != nil {
-			return nil, err
-		}
-		return &response, nil
-	case <-time.After(time.Second * 10):
-		log.Lvl2(log.Stack())
-		return &network.Packet{}, errors.New("Timeout on sending message")
-	}
+	// send the request
+	log.Lvlf4("Sending request %x", serviceReq.Service)
+	return c.net.Send(dst, serviceReq)
 }
 
 // SendToAll sends a message to all ServerIdentities of the Roster and returns
@@ -457,41 +437,4 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 		err = errors.New(strings.Join(errstrs, "\n"))
 	}
 	return msgs, err
-}
-
-// BinaryMarshaler can be used to store the client in a configuration-file
-func (c *Client) BinaryMarshaler() ([]byte, error) {
-	log.Fatal("Not yet implemented")
-	return nil, nil
-}
-
-// BinaryUnmarshaler sets the different values from a byte-slice
-func (c *Client) BinaryUnmarshaler(b []byte) error {
-	log.Fatal("Not yet implemented")
-	return nil
-}
-
-// StatusRet is used when a status is returned - mostly an error
-type StatusRet struct {
-	Status string
-}
-
-// StatusOK is used when there is no error but nothing to return
-var StatusOK = &StatusRet{""}
-
-// ErrMsg converts a combined err and status-message to an error. It
-// returns either the error, or the errormsg, if there is one.
-func ErrMsg(em *network.Packet, err error) error {
-	if err != nil {
-		return err
-	}
-	status, ok := em.Msg.(StatusRet)
-	if !ok {
-		return nil
-	}
-	statusStr := status.Status
-	if statusStr != "" {
-		return errors.New("Remote-error: " + statusStr)
-	}
-	return nil
 }

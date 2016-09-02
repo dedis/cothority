@@ -88,12 +88,12 @@ func (o *Overlay) Process(data *network.Packet) {
 		tree := o.Tree(tid)
 		var err error
 		if tree != nil {
-			err = o.host.SendRaw(data.ServerIdentity, tree.MakeTreeMarshal())
+			err = o.host.Send(data.ServerIdentity, tree.MakeTreeMarshal())
 		} else {
 			// XXX Take care here for we must verify at the other side that
 			// the tree is Nil. Should we think of a way of sending back an
 			// "error" ?
-			err = o.host.SendRaw(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
+			err = o.host.Send(data.ServerIdentity, (&Tree{}).MakeTreeMarshal())
 		}
 		if err != nil {
 			log.Error("Couldn't send tree:", err)
@@ -109,7 +109,7 @@ func (o *Overlay) Process(data *network.Packet) {
 		// The entity list does not exists, we should request that, too
 		if il == nil {
 			msg := &RequestRoster{tm.RosterID}
-			if err := o.host.SendRaw(data.ServerIdentity, msg); err != nil {
+			if err := o.host.Send(data.ServerIdentity, msg); err != nil {
 				log.Error("Requesting Roster in SendTree failed", err)
 			}
 
@@ -132,10 +132,10 @@ func (o *Overlay) Process(data *network.Packet) {
 		el := o.Roster(id)
 		var err error
 		if el != nil {
-			err = o.host.SendRaw(data.ServerIdentity, el)
+			err = o.host.Send(data.ServerIdentity, el)
 		} else {
 			log.Lvl2("Requested entityList that we don't have")
-			err = o.host.SendRaw(data.ServerIdentity, &Roster{})
+			err = o.host.Send(data.ServerIdentity, &Roster{})
 		}
 		if err != nil {
 			log.Error("Couldn't send empty entity list from host:",
@@ -238,8 +238,8 @@ func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) e
 	// put to nil so protobuf won't encode it and there won't be any error on the
 	// other side (because it doesn't know how to decode it)
 	sdaMsg.Msg = nil
-	log.Lvl4("Sending to", si.Addresses)
-	return o.host.SendRaw(si, sdaMsg)
+	log.Lvl4(o.host.Address(), "Sending to", si.Address)
+	return o.host.Send(si, sdaMsg)
 }
 
 // addPendingTreeMarshal adds a treeMarshal to the list.
@@ -316,7 +316,9 @@ func (o *Overlay) requestTree(si *network.ServerIdentity, sdaMsg *ProtocolMsg) e
 	o.pendingSDAsLock.Unlock()
 
 	treeRequest := &RequestTree{sdaMsg.To.TreeID}
-	return o.host.SendRaw(si, treeRequest)
+
+	var err = o.host.Send(si, treeRequest)
+	return err
 }
 
 // RegisterTree takes a tree and puts it in the map
@@ -337,8 +339,9 @@ func (o *Overlay) TreeFromToken(tok *Token) *Tree {
 // Tree returns the tree given by treeId or nil if not found
 func (o *Overlay) Tree(tid TreeID) *Tree {
 	o.treesMut.Lock()
-	defer o.treesMut.Unlock()
-	return o.trees[tid]
+	t := o.trees[tid]
+	o.treesMut.Unlock()
+	return t
 }
 
 // RegisterRoster puts an entityList in the map
@@ -390,7 +393,7 @@ func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) er
 		From: from,
 		To:   from.ChangeTreeNodeID(to.ID),
 	}
-	log.Lvl4("Sending to entity", to.ServerIdentity.Addresses)
+	log.Lvl4(o.host.Address(), "Sending to entity", to.ServerIdentity.Address)
 	return o.sendSDAData(to.ServerIdentity, sda)
 }
 
