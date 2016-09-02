@@ -9,7 +9,7 @@ import (
 
 	"crypto/sha256"
 	"os"
-	"path/filepath"
+	//	"path/filepath"
 	"sync"
 
 	"encoding/binary"
@@ -56,9 +56,8 @@ type Service struct {
 	// collected data for one epoch:
 	requests requestPool
 	roster   *sda.Roster
-
-	currentTree *tree
-	currentSig  []byte
+	// easy to change from one signer (cosi) to another (mock/BFTcosi):
+	signMsg func(m []byte) []byte
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -89,13 +88,16 @@ type SignatureRequest struct {
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
-	// The time in seconds when the request was started
+	// The time in seconds when the request was started:
 	Timestamp int64
-	// Proof is an Inclusion proof for the data the client requested
+	// The tree root that was signed:
+	Root crypto.HashID
+	// Proof is an Inclusion proof for the data the client requested:
 	Proof crypto.Proof
-	// Collective signature on Timestamp||hash(treeroot)
+	// Collective signature on Timestamp||hash(treeroot):
 	Signature []byte
-	// TODO should we use the return the roster used to sign this message?
+
+	// TODO should we return the roster used to sign this message?
 }
 
 // SignatureRequest treats external request to this service.
@@ -118,76 +120,91 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	return resp, nil
 }
 
+func (s *Service) cosiSign(msg []byte) []byte {
+	sdaTree := s.roster.GenerateBinaryTree()
+
+	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtcolName)
+	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
+	if err != nil {
+		panic("Couldn't make new protocol: " + err.Error())
+	}
+	s.RegisterProtocolInstance(pi)
+
+	pi.SigningMessage(msg)
+	// Take the raw message (already expecting a hash for the timestamp
+	// service)
+	response := make(chan []byte)
+	pi.RegisterSignatureHook(func(sig []byte) {
+		response <- sig
+	})
+	go pi.Dispatch()
+	go pi.Start()
+	return <-response
+
+}
+
 // main loop
 func (s *Service) runLoop() {
-	go func() {
-		c := time.Tick(s.EpochDuration)
-		for now := range c {
-			log.Print("Starting cosi: ", now, sha256.BlockSize)
+	c := time.Tick(s.EpochDuration)
+	for now := range c /*TODO interrupt the main loop must be possible*/ {
+		// only sign something if there was some data/requests:
+		numRequests := len(s.requests.GetData())
+		if numRequests > 0 {
+			log.Print("Signin tree root with timestampt:", now, "got", numRequests, "requests")
 
-			sdaTree := s.roster.GenerateBinaryTree()
-			tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtcolName)
-			pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
-			if err != nil {
-				panic("Couldn't make new protocol: " + err.Error())
-			}
-			s.RegisterProtocolInstance(pi)
+			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, s.requests.GetData())
-			s.currentTree = &tree{
-				root:   root,
-				proofs: proofs,
-			}
-
-			timeBuf := make([]byte, binary.MaxVarintLen64)
-			binary.PutVarint(timeBuf, now.Unix())
+			timeBuf := timestampToBytes(now.Unix())
 			// message to be signed: treeroot||timestamp
 			msg := append(root, timeBuf...)
-			pi.SigningMessage(msg)
-			// Take the raw message (already expecting a hash for the timestamp
-			// service)
-			response := make(chan []byte)
-			pi.RegisterSignatureHook(func(sig []byte) {
-				response <- sig
-				s.currentSig = sig
-			})
-			go pi.Dispatch()
-			go pi.Start()
+
+			signature := s.signMsg(msg)
 			fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			// Give (individual) response to anyone waiting:
 			for i, respC := range s.requests.responseChannels {
 				respC <- &SignatureResponse{
 					Timestamp: now.Unix(),
 					Proof:     proofs[i],
+					Root:      root,
 					// Collective signature on Timestamp||hash(treeroot)
-					Signature: s.currentSig,
+					Signature: signature,
 				}
 			}
 			s.requests.reset()
-			log.Lvl3("Cosi Service starting up root protocol")
-
+		} else {
+			log.Print("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
-	}()
+	}
+
 }
 
+func timestampToBytes(t int64) []byte {
+	timeBuf := make([]byte, binary.MaxVarintLen64)
+	binary.PutVarint(timeBuf, t)
+	return timeBuf
+}
 func newTimestampService(c *sda.Context, path string) sda.Service {
-	r, err := readRoster(filepath.Join(path, groupFileName))
-	if err != nil {
-		log.ErrFatal(err,
-			"Couldn't read roster from config. Put a valid roster definition in",
-			filepath.Join(path, groupFileName))
-	}
+	// r, err := readRoster(filepath.Join(path, groupFileName))
+	//if err != nil {
+	//	log.ErrFatal(err,
+	//		"Couldn't read roster from config. Put a valid roster definition in",
+	//		filepath.Join(path, groupFileName))
+	//}
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		requests:         requestPool{},
 		EpochDuration:    EpochDuration,
-		roster:           r,
+		//	roster:           r,
 	}
-	err = s.RegisterMessage(s.SignatureRequest)
-	if err != nil {
-		log.ErrFatal(err, "Couldn't register message:")
-	}
+	s.signMsg = s.cosiSign
+	//err = s.RegisterMessage(s.SignatureRequest)
+	//if err != nil {
+	//	log.ErrFatal(err, "Couldn't register message:")
+	//}
 	// start main loop:
-	s.runLoop()
+	go s.runLoop()
+
 	return s
 }
 
@@ -208,12 +225,14 @@ func (rb *requestPool) reset() {
 	rb.requestData = nil
 	// XXX do we need to close each channel separately?
 	rb.responseChannels = nil
+	log.Print("Reset")
 }
 
 func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
 	rb.Lock()
 	defer rb.Unlock()
 	rb.requestData = append(rb.requestData, data)
+	log.Print("Added request", len(rb.requestData))
 	rb.responseChannels = append(rb.responseChannels, responseChan)
 }
 
