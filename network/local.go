@@ -197,7 +197,7 @@ func NewLocalConnWithContext(ctx *LocalContext, local, remote Address) (*LocalCo
 }
 
 // Send implements the Conn interface.
-func (cc LocalConn) Send(ctx context.Context, msg Body) error {
+func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
 
 	var body Body
 	var val = reflect.ValueOf(msg)
@@ -211,44 +211,44 @@ func (cc LocalConn) Send(ctx context.Context, msg Body) error {
 		MsgType: typ,
 		Msg:     body,
 	}
-	return cc.ctx.Send(cc.remote, nm)
+	return lc.ctx.Send(lc.remote, nm)
 }
 
 // Receive implements the Conn interface.
-func (cc *LocalConn) Receive(ctx context.Context) (Packet, error) {
-	return cc.Pop()
+func (lc *LocalConn) Receive(ctx context.Context) (Packet, error) {
+	return lc.Pop()
 }
 
 // Local implements the Conn interface
-func (cc *LocalConn) Local() Address {
-	return cc.local.addr
+func (lc *LocalConn) Local() Address {
+	return lc.local.addr
 }
 
 // Remote implements the Conn interface
-func (cc *LocalConn) Remote() Address {
-	return cc.remote.addr
+func (lc *LocalConn) Remote() Address {
+	return lc.remote.addr
 }
 
 // Close implements the Conn interface
-func (cc *LocalConn) Close() error {
-	cc.connQueue.Close()
+func (lc *LocalConn) Close() error {
+	lc.connQueue.Close()
 	// close the remote conn also
-	cc.ctx.Close(cc)
+	lc.ctx.Close(lc)
 	return nil
 }
 
 // Rx implements the Conn interface
-func (cc *LocalConn) Rx() uint64 {
+func (lc *LocalConn) Rx() uint64 {
 	return 0
 }
 
 // Tx implements the Conn interface
-func (cc *LocalConn) Tx() uint64 {
+func (lc *LocalConn) Tx() uint64 {
 	return 0
 }
 
 // Type implements the Conn interface
-func (cc *LocalConn) Type() ConnType {
+func (lc *LocalConn) Type() ConnType {
 	return Local
 }
 
