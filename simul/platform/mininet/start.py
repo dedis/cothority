@@ -21,6 +21,7 @@ from mininet.log import lg, setLogLevel
 from mininet.node import Node, Host
 from mininet.util import netParse, ipAdd, irange
 from mininet.nodelib import NAT
+from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
 
 # The port used for socat
@@ -102,7 +103,8 @@ class InternetTopo(Topo):
             switch = self.addSwitch('s0')
             baseIp, prefix = netParse(mn)
             gw = ipAdd(1, prefix, baseIp)
-            dbg( 2, "Gw", gw, "baseIp", baseIp, prefix )
+            dbg( 2, "Gw", gw, "baseIp", baseIp, prefix,
+                 "Bandwidth:", bandwidth, "- delay:", delay)
             hostgw = self.addNode('h0', cls=BaseRouter,
                                   ip='%s/%d' % (gw, prefix),
                                   inNamespace=False,
@@ -116,7 +118,7 @@ class InternetTopo(Topo):
                                     defaultRoute='via %s' % gw,
 			                	    simul=simulation, gw=gw)
                 dbg( 3, "Adding link", host, switch )
-                self.addLink(host, switch)
+                self.addLink(host, switch, bw=bandwidth, delay=delay)
 
 def RunNet():
     """RunNet will start the mininet and add the routes to the other
@@ -128,7 +130,7 @@ def RunNet():
     dbg( 1, "Creating network", myNet )
     topo = InternetTopo(myNet=myNet, rootLog=rootLog)
     dbg( 3, "Starting on", myNet )
-    net = Mininet(topo=topo)
+    net = Mininet(topo=topo, link=TCLink)
     net.start()
 
     for host in net.hosts[1:]:
@@ -157,7 +159,9 @@ def GetNetworks(filename):
     with open(filename) as f:
         content = f.readlines()
 
-    simulation, bandwidth, delay = content.pop(0).rstrip().split(' ')
+    simulation, bw, d = content.pop(0).rstrip().split(' ')
+    bandwidth = int(bw)
+    delay = d + "ms"
 
     list = []
     for line in content:
