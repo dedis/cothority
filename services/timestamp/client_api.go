@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
 
@@ -13,24 +14,19 @@ type Client struct {
 	*sda.Client
 }
 
-// NewClient instantiates a new cosi.Client
+// NewClient instantiates a new Timestamp client
 func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
 // SignMsg sends a CoSi sign request to the Cothority defined by the given
 // Roster
-func (c *Client) SignMsg(r *sda.Roster, msg []byte) (*SignatureResponse, error) {
+func (c *Client) SignMsg(root *network.ServerIdentity, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{
-		//		Roster:  r,
 		Message: msg,
 	}
-	if len(r.List) == 0 {
-		return nil, errors.New("Got an empty roster-list")
-	}
-	dst := r.List[0]
-	log.Lvl4("Sending message to", dst)
-	reply, err := c.Send(dst, serviceReq)
+	log.Lvl4("Sending message to", root)
+	reply, err := c.Send(root, serviceReq)
 	if e := sda.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}

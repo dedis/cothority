@@ -116,11 +116,14 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	// see runLoop
 
 	// wait on my signature:
+	log.Print("Waiting on epoch end.")
 	resp := <-respC
 	return resp, nil
 }
 
 func (s *Service) cosiSign(msg []byte) []byte {
+	log.Print("Service?", s)
+	log.Print("Roster?", s.roster)
 	sdaTree := s.roster.GenerateBinaryTree()
 
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtcolName)
@@ -198,10 +201,11 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 		//	roster:           r,
 	}
 	s.signMsg = s.cosiSign
-	//err = s.RegisterMessage(s.SignatureRequest)
-	//if err != nil {
-	//	log.ErrFatal(err, "Couldn't register message:")
-	//}
+	err := s.RegisterMessage(s.SignatureRequest)
+	if err != nil {
+		log.ErrFatal(err, "Couldn't register message:")
+	}
+
 	// start main loop:
 	go s.runLoop()
 
