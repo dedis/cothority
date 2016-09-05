@@ -232,6 +232,10 @@ func (lc *LocalConn) Remote() Address {
 
 // Close implements the Conn interface
 func (lc *LocalConn) Close() error {
+	if lc.connQueue.isClosed() {
+		return ErrClosed
+	}
+
 	lc.connQueue.close()
 	// close the remote conn also
 	lc.manager.close(lc)
@@ -258,8 +262,8 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 type connQueue struct {
 	*sync.Cond
-	queue    []Packet
-	isClosed bool
+	queue  []Packet
+	closed bool
 }
 
 func newConnQueue() *connQueue {
@@ -269,10 +273,11 @@ func newConnQueue() *connQueue {
 }
 
 // push insert the packet into the queue.
+// push won't work if the connQueue is already closed.
 func (c *connQueue) push(p Packet) {
 	c.L.Lock()
 	defer c.L.Unlock()
-	if c.isClosed {
+	if c.closed {
 		return
 	}
 	c.queue = append(c.queue, p)
@@ -286,12 +291,12 @@ func (c *connQueue) pop() (Packet, error) {
 	c.L.Lock()
 	defer c.L.Unlock()
 	for len(c.queue) == 0 {
-		if c.isClosed {
+		if c.closed {
 			return EmptyApplicationPacket, ErrClosed
 		}
 		c.Wait()
 	}
-	if c.isClosed {
+	if c.closed {
 		return EmptyApplicationPacket, ErrClosed
 	}
 	nm := c.queue[0]
@@ -304,8 +309,15 @@ func (c *connQueue) pop() (Packet, error) {
 func (c *connQueue) close() {
 	c.L.Lock()
 	defer c.L.Unlock()
-	c.isClosed = true
+	c.closed = true
 	c.Broadcast()
+}
+
+// isClosed returns whether this queue is closed or not.
+func (c *connQueue) isClosed() bool {
+	c.L.Lock()
+	defer c.L.Unlock()
+	return c.closed
 }
 
 // LocalListener is a Listener that uses LocalConn to communicate. It tries to
@@ -357,6 +369,10 @@ func (ll *LocalListener) bind(addr Address) error {
 // Listen implements the Listener interface
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
+	if ll.listening {
+		ll.Unlock()
+		return fmt.Errorf("Already listening on %s", ll.addr)
+	}
 	ll.quit = make(chan bool)
 	ll.manager.setListening(ll.addr, fn)
 	ll.listening = true
@@ -370,10 +386,11 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
-	ll.manager.unsetListening(ll.addr)
-	if ll.listening {
-		close(ll.quit)
+	if !ll.listening {
+		return errors.New("Listener is not listening!")
 	}
+	ll.manager.unsetListening(ll.addr)
+	close(ll.quit)
 	ll.listening = false
 	return nil
 }
