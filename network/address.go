@@ -2,6 +2,8 @@ package network
 
 import (
 	"net"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -25,8 +27,8 @@ const (
 	PURB = "purb"
 	// Local represents a channel based connection type
 	Local = "local"
-	// UnvalidConnType represents a non valid connection type
-	UnvalidConnType = "wrong"
+	// InvalidConnType represents a non valid connection type
+	InvalidConnType = "wrong"
 )
 
 // typeAddressSep is the separator between the type of connection and the actual
@@ -41,7 +43,7 @@ func connType(t string) ConnType {
 			return ct
 		}
 	}
-	return UnvalidConnType
+	return InvalidConnType
 }
 
 // ConnType return the connection type from this address
@@ -49,12 +51,9 @@ func connType(t string) ConnType {
 // connection type is not known.
 func (a Address) ConnType() ConnType {
 	if !a.Valid() {
-		return UnvalidConnType
+		return InvalidConnType
 	}
 	vals := strings.Split(string(a), typeAddressSep)
-	if len(vals) == 0 {
-		return UnvalidConnType
-	}
 	return connType(vals[0])
 }
 
@@ -66,9 +65,6 @@ func (a Address) NetworkAddress() string {
 		return ""
 	}
 	vals := strings.Split(string(a), typeAddressSep)
-	if len(vals) != 2 {
-		return ""
-	}
 	return vals[1]
 }
 
@@ -76,19 +72,29 @@ func (a Address) NetworkAddress() string {
 // An address is well formed if it is of the form: ConnType:NetworkAddress.
 // ConnType must be one of the constants defined in this file,
 // NetworkAddress must contain the IP address + Port number.
+// The IP address is validated by net.ParseIP & the port must be included in the
+// range [0;65536]
 // Ex. tls:192.168.1.10:5678
 func (a Address) Valid() bool {
 	vals := strings.Split(string(a), typeAddressSep)
 	if len(vals) != 2 {
 		return false
 	}
-	if connType(vals[0]) == UnvalidConnType {
+	if connType(vals[0]) == InvalidConnType {
 		return false
 	}
 
-	if ip, _, e := net.SplitHostPort(vals[1]); e != nil {
+	ip, port, e := net.SplitHostPort(vals[1])
+	if e != nil {
 		return false
-	} else if ip == "localhost" {
+	}
+
+	p, err := strconv.Atoi(port)
+	if err != nil || p < 0 || p > 65536 {
+		return false
+	}
+
+	if ip == "localhost" {
 		// localhost is not recognized by net.ParseIP ?
 		return true
 	} else if net.ParseIP(ip) == nil {
@@ -127,6 +133,20 @@ func (a Address) Port() string {
 	}
 	return p
 
+}
+
+// Public returns true if the address is a public and valid one
+// or false otherwise.
+// Specifically it checks if it is a private address by checking
+// 192.168.**,10.***,127.***,172.**,169.254.**
+func (a Address) Public() bool {
+	private, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
+		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
+		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)|(^169\\.254)", a.NetworkAddress())
+	if err != nil {
+		return false
+	}
+	return !private && a.Valid()
 }
 
 // NewAddress takes a connection type and the raw address. It returns a
