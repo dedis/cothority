@@ -68,32 +68,33 @@ func LocalReset() {
 }
 
 // IsListening returns true if the remote address is listening "virtually"
-func (ccc *LocalContext) IsListening(remote Address) bool {
+func (ccc *LocalContext) isListening(remote Address) bool {
 	ccc.Lock()
 	defer ccc.Unlock()
 	_, ok := ccc.listening[remote]
 	return ok
 }
 
-// Listening put the address as "listening" mode. If a user connects to this
-// addr, this function will be called.
-func (ccc *LocalContext) Listening(addr Address, fn func(Conn)) {
+// setListening marks the address as being able to accept incoming connection.
+// For each incoming connection, fn will be called in a go routine.
+func (ccc *LocalContext) setListening(addr Address, fn func(Conn)) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	ccc.listening[addr] = fn
 }
 
-// StopListening remove the address from the "listening" mode
-func (ccc *LocalContext) StopListening(addr Address) {
+// unsetListening marks the address as *not* being able to accept incoming
+// connections.
+func (ccc *LocalContext) unsetListening(addr Address) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	delete(ccc.listening, addr)
 }
 
-// Connect will check if the remote address is listening, if yes it creates
+// connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
-func (ccc *LocalContext) Connect(local, remote Address) (*LocalConn, error) {
+func (ccc *LocalContext) connect(local, remote Address) (*LocalConn, error) {
 	ccc.Lock()
 	defer ccc.Unlock()
 
@@ -120,10 +121,10 @@ func (ccc *LocalContext) Connect(local, remote Address) (*LocalConn, error) {
 	return outgoing, nil
 }
 
-// Send will get the connection denoted by this endpoint and will call queueMsg
+// send will get the connection denoted by this endpoint and will call queueMsg
 // with the packet as argument on it. It returns ErrClosed if it does not find
 // the connection.
-func (ccc *LocalContext) Send(e endpoint, nm Packet) error {
+func (ccc *LocalContext) send(e endpoint, nm Packet) error {
 	ccc.Lock()
 	defer ccc.Unlock()
 	q, ok := ccc.queues[e]
@@ -135,9 +136,9 @@ func (ccc *LocalContext) Send(e endpoint, nm Packet) error {
 	return nil
 }
 
-// Close will get the connection denoted by this endpoint and will Close it if
+// close will get the connection denoted by this endpoint and will Close it if
 // present.
-func (ccc *LocalContext) Close(conn *LocalConn) {
+func (ccc *LocalContext) close(conn *LocalConn) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	// delete this conn
@@ -151,8 +152,8 @@ func (ccc *LocalContext) Close(conn *LocalConn) {
 	remote.Close()
 }
 
-// Len returns how many local connections is there
-func (ccc *LocalContext) Len() int {
+// len returns how many local connections is there
+func (ccc *LocalContext) len() int {
 	ccc.Lock()
 	defer ccc.Unlock()
 	return len(ccc.queues)
@@ -193,7 +194,7 @@ func NewLocalConn(local, remote Address) (*LocalConn, error) {
 // NewLocalConnWithContext is similar to NewLocalConn but takes a specific
 // LocalContext.
 func NewLocalConnWithContext(ctx *LocalContext, local, remote Address) (*LocalConn, error) {
-	return ctx.Connect(local, remote)
+	return ctx.connect(local, remote)
 }
 
 // Send implements the Conn interface.
@@ -211,7 +212,7 @@ func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
 		MsgType: typ,
 		Msg:     body,
 	}
-	return lc.ctx.Send(lc.remote, nm)
+	return lc.ctx.send(lc.remote, nm)
 }
 
 // Receive implements the Conn interface.
@@ -233,7 +234,7 @@ func (lc *LocalConn) Remote() Address {
 func (lc *LocalConn) Close() error {
 	lc.connQueue.Close()
 	// close the remote conn also
-	lc.ctx.Close(lc)
+	lc.ctx.close(lc)
 	return nil
 }
 
@@ -337,7 +338,7 @@ func (ll *LocalListener) bind(addr Address) error {
 	if addr.ConnType() != Local {
 		return errors.New("Wrong address type for local listener")
 	}
-	if ll.ctx.IsListening(addr) {
+	if ll.ctx.isListening(addr) {
 		return fmt.Errorf("%s is already listening: can't listen again", addr)
 	}
 	ll.addr = addr
@@ -348,7 +349,7 @@ func (ll *LocalListener) bind(addr Address) error {
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	ll.quit = make(chan bool)
-	ll.ctx.Listening(ll.addr, fn)
+	ll.ctx.setListening(ll.addr, fn)
 	ll.listening = true
 	ll.Unlock()
 
@@ -360,7 +361,7 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
-	ll.ctx.StopListening(ll.addr)
+	ll.ctx.unsetListening(ll.addr)
 	if ll.listening {
 		close(ll.quit)
 	}
