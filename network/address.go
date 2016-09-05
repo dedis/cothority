@@ -2,6 +2,7 @@ package network
 
 import (
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -25,8 +26,8 @@ const (
 	PURB = "purb"
 	// Local represents a channel based connection type
 	Local = "local"
-	// UnvalidConnType represents a non valid connection type
-	UnvalidConnType = "wrong"
+	// InvalidConnType represents a non valid connection type
+	InvalidConnType = "wrong"
 )
 
 // typeAddressSep is the separator between the type of connection and the actual
@@ -41,7 +42,7 @@ func connType(t string) ConnType {
 			return ct
 		}
 	}
-	return UnvalidConnType
+	return InvalidConnType
 }
 
 // ConnType return the connection type from this address
@@ -49,7 +50,7 @@ func connType(t string) ConnType {
 // connection type is not known.
 func (a Address) ConnType() ConnType {
 	if !a.Valid() {
-		return UnvalidConnType
+		return InvalidConnType
 	}
 	vals := strings.Split(string(a), typeAddressSep)
 	return connType(vals[0])
@@ -70,19 +71,29 @@ func (a Address) NetworkAddress() string {
 // An address is well formed if it is of the form: ConnType:NetworkAddress.
 // ConnType must be one of the constants defined in this file,
 // NetworkAddress must contain the IP address + Port number.
+// The IP address is validated by net.ParseIP & the port must be included in the
+// range [0;65536]
 // Ex. tls:192.168.1.10:5678
 func (a Address) Valid() bool {
 	vals := strings.Split(string(a), typeAddressSep)
 	if len(vals) != 2 {
 		return false
 	}
-	if connType(vals[0]) == UnvalidConnType {
+	if connType(vals[0]) == InvalidConnType {
 		return false
 	}
 
-	if ip, _, e := net.SplitHostPort(vals[1]); e != nil {
+	ip, port, e := net.SplitHostPort(vals[1])
+	if e != nil {
 		return false
-	} else if ip == "localhost" {
+	}
+
+	p, err := strconv.Atoi(port)
+	if err != nil || p < 0 || p > 65536 {
+		return false
+	}
+
+	if ip == "localhost" {
 		// localhost is not recognized by net.ParseIP ?
 		return true
 	} else if net.ParseIP(ip) == nil {
