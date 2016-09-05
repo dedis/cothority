@@ -139,15 +139,13 @@ func (rh *RandHound) Start() error {
 // based on a seed and a number of requested shards.
 func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abstract.Point, error) {
 
-	nodes := rh.Nodes
-
-	if shards == 0 || nodes < shards {
+	if shards == 0 || rh.Nodes < shards {
 		return nil, nil, fmt.Errorf("Number of requested shards not supported")
 	}
 
 	// Compute a random permutation of [1,n-1]
 	prng := rh.Suite().Cipher(seed)
-	m := make([]int, nodes-1)
+	m := make([]int, rh.Nodes-1)
 	for i := range m {
 		j := int(random.Uint64(prng) % uint64(i+1))
 		m[i] = m[j]
@@ -168,11 +166,8 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 // Random ...
 func (rh *RandHound) Random() ([]byte, *Transcript, error) {
-
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
-
 	rnd := rh.Suite().Point().Null()
-
 	for i, group := range rh.Server {
 		pvss := NewPVSS(rh.Suite(), H, rh.Threshold[i])
 		for _, server := range group {
@@ -184,7 +179,6 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 			rnd = rh.Suite().Point().Add(rnd, ps)
 		}
 	}
-
 	rb, err := rnd.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
@@ -305,7 +299,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				_ = f
 				log.Lvlf1("Enc: %v", f)
-				// mark invalid shares
+				// XXX: mark invalid shares
 			}
 
 			// Prepare data for decryption consistency proofs
@@ -322,7 +316,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				_ = f
 				log.Lvlf1("Dec: %v", f)
-				// mark invalid shares
+				// XXX: mark invalid shares
 			}
 		}
 	}
@@ -363,6 +357,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
+	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
 	i1b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
@@ -526,6 +521,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
+	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
 	i2b, err := network.MarshalRegisteredType(msg)
 	if err != nil {
@@ -612,7 +608,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	rh.mutex.Unlock()
 
 	// Continue once "enough" R2 messages have been collected
-	// XXX: this check should be replaced by a more sane one
+	// XXX: this check should be replaced by something more reasonable
 	if rh.counter == rh.Nodes-1 {
 		rh.Done <- true
 	}
