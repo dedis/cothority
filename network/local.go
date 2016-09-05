@@ -68,54 +68,54 @@ func LocalReset() {
 }
 
 // isListening returns true if the remote address is listening "virtually"
-func (ccc *LocalManager) isListening(remote Address) bool {
-	ccc.Lock()
-	defer ccc.Unlock()
-	_, ok := ccc.listening[remote]
+func (lm *LocalManager) isListening(remote Address) bool {
+	lm.Lock()
+	defer lm.Unlock()
+	_, ok := lm.listening[remote]
 	return ok
 }
 
 // setListening marks the address as being able to accept incoming connection.
 // For each incoming connection, fn will be called in a go routine.
-func (ccc *LocalManager) setListening(addr Address, fn func(Conn)) {
-	ccc.Lock()
-	defer ccc.Unlock()
-	ccc.listening[addr] = fn
+func (lm *LocalManager) setListening(addr Address, fn func(Conn)) {
+	lm.Lock()
+	defer lm.Unlock()
+	lm.listening[addr] = fn
 }
 
 // unsetListening marks the address as *not* being able to accept incoming
 // connections.
-func (ccc *LocalManager) unsetListening(addr Address) {
-	ccc.Lock()
-	defer ccc.Unlock()
-	delete(ccc.listening, addr)
+func (lm *LocalManager) unsetListening(addr Address) {
+	lm.Lock()
+	defer lm.Unlock()
+	delete(lm.listening, addr)
 }
 
 // connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
-func (ccc *LocalManager) connect(local, remote Address) (*LocalConn, error) {
-	ccc.Lock()
-	defer ccc.Unlock()
+func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
+	lm.Lock()
+	defer lm.Unlock()
 
-	fn, ok := ccc.listening[remote]
+	fn, ok := lm.listening[remote]
 	if !ok {
 		return nil, fmt.Errorf("%s can't connect to %s: it's not listening", local, remote)
 	}
 
-	outEndpoint := endpoint{local, ccc.baseUID}
-	ccc.baseUID++
+	outEndpoint := endpoint{local, lm.baseUID}
+	lm.baseUID++
 
-	incEndpoint := endpoint{remote, ccc.baseUID}
-	ccc.baseUID++
+	incEndpoint := endpoint{remote, lm.baseUID}
+	lm.baseUID++
 
-	outgoing := newLocalConn(ccc, outEndpoint, incEndpoint)
-	incoming := newLocalConn(ccc, incEndpoint, outEndpoint)
+	outgoing := newLocalConn(lm, outEndpoint, incEndpoint)
+	incoming := newLocalConn(lm, incEndpoint, outEndpoint)
 
 	// outgoing knows how to store packet into the incoming's queue
-	ccc.queues[outEndpoint] = outgoing.connQueue
+	lm.queues[outEndpoint] = outgoing.connQueue
 	// incoming knows how to store packet into the outgoing's queue
-	ccc.queues[incEndpoint] = incoming.connQueue
+	lm.queues[incEndpoint] = incoming.connQueue
 
 	go fn(incoming)
 	return outgoing, nil
@@ -124,10 +124,10 @@ func (ccc *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 // send will get the connection denoted by this endpoint and will call queueMsg
 // with the packet as argument on it. It returns ErrClosed if it does not find
 // the connection.
-func (ccc *LocalManager) send(e endpoint, nm Packet) error {
-	ccc.Lock()
-	defer ccc.Unlock()
-	q, ok := ccc.queues[e]
+func (lm *LocalManager) send(e endpoint, nm Packet) error {
+	lm.Lock()
+	defer lm.Unlock()
+	q, ok := lm.queues[e]
 	if !ok {
 		return ErrClosed
 	}
@@ -138,25 +138,25 @@ func (ccc *LocalManager) send(e endpoint, nm Packet) error {
 
 // close will get the connection denoted by this endpoint and will Close it if
 // present.
-func (ccc *LocalManager) close(conn *LocalConn) {
-	ccc.Lock()
-	defer ccc.Unlock()
+func (lm *LocalManager) close(conn *LocalConn) {
+	lm.Lock()
+	defer lm.Unlock()
 	// delete this conn
-	delete(ccc.queues, conn.local)
+	delete(lm.queues, conn.local)
 	// and delete the remote one + close it
-	remote, ok := ccc.queues[conn.remote]
+	remote, ok := lm.queues[conn.remote]
 	if !ok {
 		return
 	}
-	delete(ccc.queues, conn.remote)
+	delete(lm.queues, conn.remote)
 	remote.close()
 }
 
 // len returns how many local connections is there
-func (ccc *LocalManager) len() int {
-	ccc.Lock()
-	defer ccc.Unlock()
-	return len(ccc.queues)
+func (lm *LocalManager) len() int {
+	lm.Lock()
+	defer lm.Unlock()
+	return len(lm.queues)
 }
 
 // LocalConn is a connection that send and receive messages to other
