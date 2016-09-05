@@ -37,7 +37,7 @@ func TestAddress(t *testing.T) {
 	}{
 		{"tls://10.0.0.4:2000", true, TLS, "10.0.0.4:2000", "10.0.0.4", "2000", false},
 		{"tcp://10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000", "10.0.0.4", "2000", false},
-		{"tcp://67.43.129.85:2000", true, PlainTCP, "10.0.0.4:2000", "10.0.0.4", "2000", true},
+		{"tcp://67.43.129.85:2000", true, PlainTCP, "67.43.129.85:2000", "67.43.129.85", "2000", true},
 		{"purb://10.0.0.4:2000", true, PURB, "10.0.0.4:2000", "10.0.0.4", "2000", false},
 		{"tls4://10.0.0.4:2000", false, InvalidConnType, "", "", "", false},
 		{"tls://1000.0.0.4:2000", false, InvalidConnType, "", "", "", false},
@@ -57,5 +57,6 @@ func TestAddress(t *testing.T) {
 		assert.Equal(t, str.Address, add.NetworkAddress())
 		assert.Equal(t, str.Host, add.Host())
 		assert.Equal(t, str.Port, add.Port())
+		assert.Equal(t, str.Public, add.Public())
 	}
 }
