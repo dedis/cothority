@@ -19,7 +19,8 @@ type Conn interface {
 	Receive(ctx context.Context) (Packet, error)
 	// Close will close the connection. Implementations must take care that
 	// Close() makes Receive() returns with an error, and any subsequent Send()
-	// will return with an error.
+	// will return with an error. Calling Close() on a closed Conn will return
+	// ErrClosed.
 	Close() error
 
 	// Type returns the type of this connection
@@ -38,11 +39,13 @@ type Listener interface {
 	// Listen will start listening for incoming connections
 	// Each time there is an incoming Conn, it will call the given
 	// function in a go routine with the incoming Conn as parameter.
-	// The call is BLOCKING.
+	// The call is BLOCKING. If this listener is already Listening, Listen
+	// should return an error.
 	Listen(func(Conn)) error
 	// Stop will stop the listening. Implementations must take care of making
 	// Stop() a blocking call. Stop() should return when the Listener really
-	// has stopped listening,i.e. the call to Listen has returned.
+	// has stopped listening,i.e. the call to Listen has returned. Calling twice
+	// Stop() should return an error ErrClosed on the second call.
 	Stop() error
 
 	// what is the address this listener is listening to + what type of

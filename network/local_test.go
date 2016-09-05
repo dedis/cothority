@@ -12,6 +12,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLocalListener(t *testing.T) {
+	addr := NewLocalAddress("127.0.0.1:2000")
+	listener, err := NewLocalListener(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var ready = make(chan bool)
+	go func() {
+		ready <- true
+		err := listener.Listen(func(c Conn) {})
+		if err != nil {
+			t.Error("Should not have had error while listening")
+		}
+		ready <- true
+	}()
+
+	<-ready
+	// give it some time
+	time.Sleep(20 * time.Millisecond)
+	if err := listener.Listen(func(c Conn) {}); err == nil {
+		t.Error("listener should have returned an error when Listen twice")
+	}
+	assert.Nil(t, listener.Stop())
+	if err := listener.Stop(); err == nil {
+		t.Error("listener.Stop() twice should have returned an error")
+	}
+	<-ready
+}
+
 // Test whether a call to a conn.Close() will stop the remote Receive() call
 func TestLocalConnCloseReceive(t *testing.T) {
 	addr := NewLocalAddress("127.0.0.1:2000")
@@ -38,6 +68,7 @@ func TestLocalConnCloseReceive(t *testing.T) {
 
 	_, err = outgoing.Receive(context.TODO())
 	assert.Equal(t, ErrClosed, err)
+	assert.Equal(t, ErrClosed, outgoing.Close())
 	assert.Nil(t, listener.Stop())
 
 }
@@ -214,7 +245,7 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	if err != ErrClosed {
 		t.Error("Receive should have returned an error")
 	}
-	assert.Nil(t, outgoing.Close())
+	assert.Equal(t, ErrClosed, outgoing.Close())
 
 	// close the listener
 	assert.Nil(t, listener.Stop())
