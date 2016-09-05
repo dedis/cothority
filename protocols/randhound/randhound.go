@@ -27,7 +27,6 @@ import (
 // - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
-// - Client public key should go into SID
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -106,7 +105,7 @@ func (rh *RandHound) Start() error {
 	}
 
 	// Comptue session id
-	rh.SID, err = rh.sessionID(rh.Nodes, rh.Faulty, rh.Purpose, rh.Time, rh.CliRand, rh.Threshold, rh.Key)
+	rh.SID, err = rh.sessionID(rh.Nodes, rh.Faulty, rh.Purpose, rh.Time, rh.CliRand, rh.Threshold, rh.Public(), rh.Key)
 	if err != nil {
 		return err
 	}
@@ -219,7 +218,7 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error {
 
 	// Verify SID
-	sid, err := rh.sessionID(t.Nodes, t.Faulty, t.Purpose, t.Time, t.CliRand, t.Threshold, t.Key)
+	sid, err := rh.sessionID(t.Nodes, t.Faulty, t.Purpose, t.Time, t.CliRand, t.Threshold, t.CliKey, t.Key)
 	if err != nil {
 		return err
 	}
@@ -261,11 +260,11 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 	return nil
 }
 
-func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, key [][]abstract.Point) ([]byte, error) {
+func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, clientKey abstract.Point, serverKey [][]abstract.Point) ([]byte, error) {
 
 	buf := new(bytes.Buffer)
 
-	if len(threshold) != len(key) {
+	if len(threshold) != len(serverKey) {
 		return nil, fmt.Errorf("Non-matching number of group thresholds and keys")
 	}
 
@@ -298,13 +297,21 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 		return nil, err
 	}
 
+	cb, err := clientKey.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := buf.Write(cb); err != nil {
+		return nil, err
+	}
+
 	for _, t := range threshold {
 		if err := binary.Write(buf, binary.LittleEndian, uint32(t)); err != nil {
 			return nil, err
 		}
 	}
 
-	for _, gk := range key {
+	for _, gk := range serverKey {
 		for _, k := range gk {
 			kb, err := k.MarshalBinary()
 			if err != nil {
@@ -481,7 +488,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 			msg.EncProof[i] = ProofCore{}
 		}
 	}
-	//log.Lvlf1("RandHound - I2 - Encryption verification passed: %v\n", rh.Index())
 
 	// Decrypt shares
 	decShare, decProof, err := pvss.Reveal(rh.Private(), msg.EncShare)
@@ -516,7 +522,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 func (rh *RandHound) handleR2(r2 WR2) error {
 
-	//XXX: continue here
 	msg := &r2.R2
 
 	idx := r2.ServerIdentityIdx
@@ -529,7 +534,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		return err
 	}
 
-	// Verify that server replied to the correct I1 message
+	// Verify that server replied to the correct I2 message
 	if err := verifyMessage(rh.Suite(), rh.I2s[idx], msg.HI2); err != nil {
 		return err
 	}
