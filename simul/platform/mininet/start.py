@@ -35,7 +35,7 @@ runSSHD = False
 
 def dbg(lvl, *str):
     if lvl <= 1:
-        print *str
+        print str
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
@@ -114,7 +114,7 @@ class InternetTopo(Topo):
                 host = self.addHost('h%d' % i, cls=Cothority,
                                     ip = '%s/%d' % (ipStr, prefix),
                                     defaultRoute='via %s' % gw,
-			                	    simul="CoSimul", gw=gw)
+			                	    simul=simulation, gw=gw)
                 dbg( 3, "Adding link", host, switch )
                 self.addLink(host, switch)
 
@@ -148,12 +148,17 @@ def GetNetworks(filename):
     It returns the first server encountered, our network if our ip is found
     in the list and the other networks."""
 
+    global simulation, bandwidth, delay
+
     process = Popen(["ip", "a"], stdout=PIPE)
     (ips, err) = process.communicate()
     process.wait()
 
     with open(filename) as f:
         content = f.readlines()
+
+    simulation, bandwidth, delay = content.pop(0).rstrip().split(' ')
+
     list = []
     for line in content:
         list.append(line.rstrip().split(' '))

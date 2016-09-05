@@ -7,6 +7,13 @@ import (
 
 	"fmt"
 
+	"io/ioutil"
+
+	"path/filepath"
+
+	"os"
+	"path"
+
 	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -65,6 +72,19 @@ func TestMiniNet_getHostList2(t *testing.T) {
 	assert.Equal(t, "10.1.0.255", h[253])
 	assert.Equal(t, "10.1.1.0", h[254])
 	assert.Equal(t, "10.1.1.1", h[255])
+}
+
+func TestMiniNet_parseServers(t *testing.T) {
+	tmpfile, err := ioutil.TempFile("", "server_list")
+	log.ErrFatal(err)
+	tmpfile.WriteString("192.168.0.1\n")
+	tmpfile.WriteString("192.168.0.2\n")
+	tmpfile.Close()
+	os.Rename(tmpfile.Name(), path.Join(filepath.Dir(tmpfile.Name()), "server_list"))
+	m := MiniNet{mininetDir: filepath.Dir(tmpfile.Name())}
+	err = m.parseServers()
+	log.ErrFatal(err)
+	assert.Equal(t, 2, len(m.HostIPs))
 }
 
 func makeRunConfig(servers, hosts int) RunConfig {

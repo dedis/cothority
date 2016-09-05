@@ -17,17 +17,14 @@ import (
 
 	"io/ioutil"
 
+	"path"
+
+	"strings"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
-
-var host_prefix = "iccluster0"
-
-//var hosts = []string{"30", "31", "32", "33"}
-
-var hosts = [...]string{"30", "31", "32", "33", "34", "35", "37", "38"}
-var host_postfix = ".iccluster.epfl.ch"
 
 type MiniNet struct {
 	// *** Mininet-related configuration
@@ -66,6 +63,10 @@ type MiniNet struct {
 	Debug int
 	// The number of seconds to wait for closing the connection
 	CloseWait int
+	// Delay in ms of the network connection
+	Delay int
+	// Bandwidth in Mbps of the network connection
+	Bandwidth int
 }
 
 func (m *MiniNet) Configure(pc *Config) {
@@ -76,11 +77,13 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.mininetDir = m.wd + "/platform/mininet"
 	m.buildDir = m.mininetDir + "/build"
 	m.Login = "root"
-	m.parseServers()
+	log.ErrFatal(m.parseServers())
 	m.External = m.HostIPs[0]
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
+	m.Delay = 0
+	m.Bandwidth = 1000
 
 	// Clean the MiniNet-dir, create it and change into it
 	os.RemoveAll(m.buildDir)
@@ -159,11 +162,10 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	if err != nil {
 		return err
 	}
-	log.Lvl3("Creating hosts")
-	mininet.parseServers()
 	log.Lvl3("Writing the config file :", mininet)
 	sda.WriteTomlConfig(mininet, mininetConfig, m.buildDir)
 
+	log.Lvl3("Creating hosts")
 	if err = m.parseServers(); err != nil {
 		return err
 	}
@@ -276,14 +278,23 @@ func (m *MiniNet) Wait() error {
 // Returns the servers to use for mininet.
 // TODO: make it more user-definable.
 func (m *MiniNet) parseServers() error {
+	hosts, err := ioutil.ReadFile(path.Join(m.mininetDir, "server_list"))
+	if err != nil {
+		return err
+	}
 	m.HostIPs = []string{}
-	for _, h := range hosts {
-		ips, err := net.LookupIP(host_prefix + h + host_postfix)
-		if err != nil {
-			return err
+	for _, h_raw := range strings.Split(string(hosts), "\n") {
+		h := strings.Replace(h_raw, " ", "", -1)
+		if len(h) > 0 {
+			ips, err := net.LookupIP(h)
+			if err != nil {
+				// Hope it's an IP-address
+				m.HostIPs = append(m.HostIPs, h)
+			} else {
+				log.Lvl3("Found IP for", h, ":", ips[0])
+				m.HostIPs = append(m.HostIPs, ips[0].String())
+			}
 		}
-		log.Lvl3("Found IP for", h, ":", ips[0])
-		m.HostIPs = append(m.HostIPs, ips[0].String())
 	}
 	log.Lvl3("Nodes are:", m.HostIPs)
 	return nil
@@ -329,6 +340,17 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 		ips[i%physicalServers] = ip
 		hosts = append(hosts, ip.String())
 	}
+
+	bandwidth := m.Bandwidth
+	if bw, err := rc.GetInt("Bandwidth"); err == nil {
+		bandwidth = bw
+	}
+	delay := m.Delay
+	if d, err := rc.GetInt("Delay"); err == nil {
+		delay = d
+	}
+	list = fmt.Sprintf("%s %d %d\n", m.Simulation, bandwidth, delay)
+
 	for i, s := range nets {
 		if i >= nbrHosts {
 			break
