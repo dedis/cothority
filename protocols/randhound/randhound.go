@@ -3,7 +3,9 @@ package randhound
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
@@ -57,8 +59,6 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.Faulty = faulty
 	rh.Purpose = purpose
 	rh.Threshold = make([]int, groups)
-	rh.HashI1 = make(map[int][]byte)
-	rh.HashI2 = make(map[int][]byte)
 	rh.I1s = make(map[int]*I1)
 	rh.I2s = make(map[int]*I2)
 	rh.R1s = make(map[int]*R1)
@@ -115,29 +115,20 @@ func (rh *RandHound) Start() error {
 	for i, group := range rh.Server {
 
 		i1 := &I1{
-			Sig:       crypto.SchnorrSig{},
 			SID:       rh.SID,
 			Threshold: rh.Threshold[i],
 			Key:       rh.Key[i],
 		}
 
-		i1b, err := network.MarshalRegisteredType(i1)
-		if err != nil {
-			return err
-		}
-
-		rh.HashI1[i], err = crypto.HashBytes(rh.Suite().Hash(), i1b)
-		if err != nil {
-			return err
-		}
-
-		i1.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i1b)
-		if err != nil {
-			return err
-		}
-
 		rh.mutex.Lock()
+
+		// Sign I1 and store signature in i1.Sig
+		if err := signSchnorr(rh.Suite(), rh.Private(), i1); err != nil {
+			return err
+		}
+
 		rh.I1s[i] = i1
+
 		rh.mutex.Unlock()
 
 		if err := rh.Multicast(i1, group...); err != nil {
@@ -240,60 +231,24 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 	for i, grp := range t.Index {
 
 		// Verify I1 signatures
-		i1 := t.I1s[i]
-		si1 := i1.Sig
-		i1.Sig = crypto.SchnorrSig{}
-
-		i1b, err := network.MarshalRegisteredType(i1)
-		if err != nil {
-			return err
-		}
-
-		if err := crypto.VerifySchnorr(suite, t.CliKey, i1b, si1); err != nil {
+		if err := verifySchnorr(suite, t.CliKey, t.I1s[i]); err != nil {
 			return err
 		}
 
 		for j, k := range grp {
 
 			// Verify R1 signatures
-			r1 := t.R1s[k]
-			sr1 := r1.Sig
-			r1.Sig = crypto.SchnorrSig{}
-
-			r1b, err := network.MarshalRegisteredType(r1)
-			if err != nil {
-				return err
-			}
-
-			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r1b, sr1); err != nil {
+			if err := verifySchnorr(suite, t.Key[i][j], t.R1s[k]); err != nil {
 				return err
 			}
 
 			// Verify I2 signatures
-			i2 := t.I2s[k]
-			si2 := i2.Sig
-			i2.Sig = crypto.SchnorrSig{}
-
-			i2b, err := network.MarshalRegisteredType(i2)
-			if err != nil {
-				return err
-			}
-
-			if err := crypto.VerifySchnorr(suite, t.CliKey, i2b, si2); err != nil {
+			if err := verifySchnorr(suite, t.CliKey, t.I2s[k]); err != nil {
 				return err
 			}
 
 			// Verify R2 signatures
-			r2 := t.R2s[k]
-			sig2 := r2.Sig
-			r2.Sig = crypto.SchnorrSig{}
-
-			r2b, err := network.MarshalRegisteredType(r2)
-			if err != nil {
-				return err
-			}
-
-			if err := crypto.VerifySchnorr(suite, t.Key[i][j], r2b, sig2); err != nil {
+			if err := verifySchnorr(suite, t.Key[i][j], t.R2s[k]); err != nil {
 				return err
 			}
 		}
@@ -388,20 +343,14 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	}
 
 	r1 := &R1{
-		Sig:        crypto.SchnorrSig{}, // XXX: hack
 		HI1:        hi1,
 		EncShare:   encShare,
 		EncProof:   encProof,
 		CommitPoly: pb,
 	}
 
-	r1b, err := network.MarshalRegisteredType(r1)
-	if err != nil {
-		return err
-	}
-
-	r1.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), r1b)
-	if err != nil {
+	// Sign R1 and store signature in R1.Sig
+	if err := signSchnorr(rh.Suite(), rh.Private(), r1); err != nil {
 		return err
 	}
 
@@ -416,22 +365,17 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	grp := rh.ServerIdxToGroupNum[idx]
 	i := rh.ServerIdxToGroupIdx[idx]
 
+	rh.mutex.Lock()
 	// Verify R1 message signature
-	sig := msg.Sig
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	msgb, err := network.MarshalRegisteredType(msg)
-	if err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
 		return err
 	}
 
-	if err := crypto.VerifySchnorr(rh.Suite(), rh.Key[grp][i], msgb, sig); err != nil {
+	// Verify that server replied to the correct I1 message
+	if err := verifyMessage(rh.Suite(), rh.I1s[grp], msg.HI1); err != nil {
 		return err
 	}
-	msg.Sig = sig
-
-	if !bytes.Equal(rh.HashI1[grp], msg.HI1) {
-		return fmt.Errorf("Server %v of group %v replied to the wrong I1 message", idx, grp)
-	}
+	rh.mutex.Unlock()
 
 	n := len(rh.Key[grp])
 	pbx := make([][]byte, n)
@@ -495,22 +439,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				Commit:   commit,
 			}
 
-			i2b, err := network.MarshalRegisteredType(i2)
-			if err != nil {
-				return err
-			}
-
-			rh.HashI2[target.ServerIdentityIdx], err = crypto.HashBytes(rh.Suite().Hash(), i2b)
-			if err != nil {
-				return err
-			}
-
-			i2.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), i2b)
-			if err != nil {
-				return err
-			}
-
 			rh.mutex.Lock()
+			if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
+				return err
+			}
+
 			rh.I2s[target.ServerIdentityIdx] = i2
 			rh.mutex.Unlock()
 
@@ -568,19 +501,13 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	r2 := &R2{
-		Sig:      crypto.SchnorrSig{}, // XXX: hack
 		HI2:      hi2,
 		DecShare: decShare,
 		DecProof: decProof,
 	}
 
-	r2b, err := network.MarshalRegisteredType(r2)
-	if err != nil {
-		return err
-	}
-
-	r2.Sig, err = crypto.SignSchnorr(rh.Suite(), rh.Private(), r2b)
-	if err != nil {
+	// Sign R2 and store signature in R2.Sig
+	if err := signSchnorr(rh.Suite(), rh.Private(), r2); err != nil {
 		return err
 	}
 
@@ -596,22 +523,17 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	grp := rh.ServerIdxToGroupNum[idx]
 	i := rh.ServerIdxToGroupIdx[idx]
 
+	rh.mutex.Lock()
 	// Verify R2 message signature
-	sig := msg.Sig
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	msgb, err := network.MarshalRegisteredType(msg)
-	if err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
 		return err
 	}
 
-	if err := crypto.VerifySchnorr(rh.Suite(), rh.Key[grp][i], msgb, sig); err != nil {
+	// Verify that server replied to the correct I1 message
+	if err := verifyMessage(rh.Suite(), rh.I2s[idx], msg.HI2); err != nil {
 		return err
 	}
-	msg.Sig = sig
-
-	if !bytes.Equal(rh.HashI2[idx], msg.HI2) {
-		return fmt.Errorf("Server %v of group %v replied to the wrong I2 message", idx, grp)
-	}
+	rh.mutex.Unlock()
 
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
@@ -674,5 +596,83 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		log.Lvlf1("RandHound - collective randomness: %v", rb)
 		rh.Done <- true
 	}
+	return nil
+}
+
+func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error {
+
+	// Reset signature field
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+
+	// Marshal message
+	mb, err := network.MarshalRegisteredType(m)
+	if err != nil {
+		return err
+	}
+
+	// Sign message
+	sig, err := crypto.SignSchnorr(suite, key, mb)
+	if err != nil {
+		return err
+	}
+
+	// Store signature
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(sig)) // XXX: hack
+
+	return nil
+}
+
+func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) error {
+
+	// Make a copy of the signature
+	x := reflect.ValueOf(m).Elem().FieldByName("Sig")
+	sig := reflect.New(x.Type()).Elem()
+	sig.Set(x)
+
+	// Reset signature field
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+
+	// Marshal message
+	mb, err := network.MarshalRegisteredType(m)
+	if err != nil {
+		return err
+	}
+
+	// Copy back original signature
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(sig) // XXX: hack
+
+	return crypto.VerifySchnorr(suite, key, mb, sig.Interface().(crypto.SchnorrSig))
+}
+
+func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
+
+	// Make a copy of the signature
+	x := reflect.ValueOf(m).Elem().FieldByName("Sig")
+	sig := reflect.New(x.Type()).Elem()
+	sig.Set(x)
+
+	// Reset signature field
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+
+	// Marshal ...
+	mb, err := network.MarshalRegisteredType(m)
+	if err != nil {
+		return err
+	}
+
+	// ... and hash message
+	hash2, err := crypto.HashBytes(suite.Hash(), mb)
+	if err != nil {
+		return err
+	}
+
+	// Copy back original signature
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(sig) // XXX: hack
+
+	// Compare hashes
+	if !bytes.Equal(hash1, hash2) {
+		return errors.New("Message has a different hash than the given one")
+	}
+
 	return nil
 }

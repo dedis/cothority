@@ -30,10 +30,8 @@ type RandHound struct {
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
 	// Message information
-	HashI1 map[int][]byte           // Hash of I1 message (index: group)
-	HashI2 map[int][]byte           // Hash of I2 message (index: server)
-	I1s    map[int]*I1              // I1 messages sent to servers
-	I2s    map[int]*I2              // I2 messages sent to servers
+	I1s    map[int]*I1              // I1 messages sent to servers (index: group)
+	I2s    map[int]*I2              // I2 messages sent to servers (index: server)
 	R1s    map[int]*R1              // R1 messages received from servers
 	R2s    map[int]*R2              // R2 messages received from servers
 	CR1    []int                    // Number of received R1 messages per group
