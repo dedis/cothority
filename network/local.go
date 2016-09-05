@@ -67,7 +67,7 @@ func LocalReset() {
 
 }
 
-// IsListening returns true if the remote address is listening "virtually"
+// isListening returns true if the remote address is listening "virtually"
 func (ccc *LocalManager) isListening(remote Address) bool {
 	ccc.Lock()
 	defer ccc.Unlock()
@@ -132,7 +132,7 @@ func (ccc *LocalManager) send(e endpoint, nm Packet) error {
 		return ErrClosed
 	}
 
-	q.Push(nm)
+	q.push(nm)
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (ccc *LocalManager) close(conn *LocalConn) {
 		return
 	}
 	delete(ccc.queues, conn.remote)
-	remote.Close()
+	remote.close()
 }
 
 // len returns how many local connections is there
@@ -217,7 +217,7 @@ func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
 
 // Receive implements the Conn interface.
 func (lc *LocalConn) Receive(ctx context.Context) (Packet, error) {
-	return lc.Pop()
+	return lc.pop()
 }
 
 // Local implements the Conn interface
@@ -232,7 +232,7 @@ func (lc *LocalConn) Remote() Address {
 
 // Close implements the Conn interface
 func (lc *LocalConn) Close() error {
-	lc.connQueue.Close()
+	lc.connQueue.close()
 	// close the remote conn also
 	lc.manager.close(lc)
 	return nil
@@ -253,6 +253,9 @@ func (lc *LocalConn) Type() ConnType {
 	return Local
 }
 
+// connQueue is a struct that managers the message queue of a LocalConn.
+// Messages are pushed and retrieved FIFO style.
+// All operations are thread-safe.
 type connQueue struct {
 	*sync.Cond
 	queue    []Packet
@@ -265,7 +268,8 @@ func newConnQueue() *connQueue {
 	}
 }
 
-func (c *connQueue) Push(p Packet) {
+// push insert the packet into the queue.
+func (c *connQueue) push(p Packet) {
 	c.L.Lock()
 	defer c.L.Unlock()
 	if c.isClosed {
@@ -275,7 +279,10 @@ func (c *connQueue) Push(p Packet) {
 	c.Signal()
 }
 
-func (c *connQueue) Pop() (Packet, error) {
+// pop retrieve a packet out of the queue.
+// If there is no messages, then it blocks UNTIL there is a call to push() or
+// close(). pop also returns directly in case this queue is already closed.
+func (c *connQueue) pop() (Packet, error) {
 	c.L.Lock()
 	defer c.L.Unlock()
 	for len(c.queue) == 0 {
@@ -292,11 +299,13 @@ func (c *connQueue) Pop() (Packet, error) {
 	return nm, nil
 }
 
-func (c *connQueue) Close() {
+// close set that queue to be unusable and signal every current pop() operations
+// to return.
+func (c *connQueue) close() {
 	c.L.Lock()
 	defer c.L.Unlock()
 	c.isClosed = true
-	c.Signal()
+	c.Broadcast()
 }
 
 // LocalListener is a Listener that uses LocalConn to communicate. It tries to
