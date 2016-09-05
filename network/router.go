@@ -215,7 +215,7 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	defer r.connsMut.Unlock()
 	_, okc := r.connections[remote.ID]
 	if okc {
-		log.Lvl2("Connection already registered", okc)
+		log.Lvl5("Connection already registered. Appending new connection to same identity.")
 	}
 	r.connections[remote.ID] = append(r.connections[remote.ID], c)
 }
