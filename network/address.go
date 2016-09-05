@@ -2,6 +2,7 @@ package network
 
 import (
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -132,6 +133,20 @@ func (a Address) Port() string {
 	}
 	return p
 
+}
+
+// Public returns true if the address is a public and valid one
+// or false otherwise.
+// Specifically it checks if it is a private address by checking
+// 192.168.**,10.***,127.***,172.**,169.254.**
+func (a Address) Public() bool {
+	private, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
+		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
+		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)|(^169\\.254)", a.NetworkAddress())
+	if err != nil {
+		return false
+	}
+	return !private && a.Valid()
 }
 
 // NewAddress takes a connection type and the raw address. It returns a
