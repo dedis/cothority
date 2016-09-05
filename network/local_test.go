@@ -44,8 +44,8 @@ func TestLocalConnCloseReceive(t *testing.T) {
 
 // Test if we can run two parallel local network using two different contexts
 func TestLocalContext(t *testing.T) {
-	ctx1 := NewLocalContext()
-	ctx2 := NewLocalContext()
+	ctx1 := NewLocalManager()
+	ctx2 := NewLocalManager()
 
 	addrListener := NewLocalAddress("127.0.0.1:2000")
 	addrConn := NewLocalAddress("127.0.0.1:2001")
@@ -73,8 +73,8 @@ func TestLocalContext(t *testing.T) {
 
 // launch a listener, then a Conn and communicate their own address + individual
 // val
-func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address, secret int) {
-	listener, err := NewLocalListenerWithContext(ctx, listenA)
+func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address, secret int) {
+	listener, err := NewLocalListenerWithManager(ctx, listenA)
 	if err != nil {
 		done <- err
 		return
@@ -118,7 +118,7 @@ func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address
 
 	// trick to use host because it already tries multiple times to connect if
 	// the listening routine is not up yet.
-	h, err := NewLocalHostWithContext(ctx, connA)
+	h, err := NewLocalHostWithManager(ctx, connA)
 	if err != nil {
 		done <- err
 		return
@@ -264,7 +264,7 @@ func TestLocalManyConn(t *testing.T) {
 
 func waitListeningUp(addr Address) bool {
 	for i := 0; i < 5; i++ {
-		if defaultLocalContext.isListening(addr) {
+		if defaultLocalManager.isListening(addr) {
 			return true
 		}
 		time.Sleep(50 * time.Millisecond)
