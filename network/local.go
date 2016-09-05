@@ -312,7 +312,7 @@ func (c *connQueue) close() {
 // behave as much as possible as a real golang net.Listener but using LocalConn
 // as the underlying communication layer.
 type LocalListener struct {
-	// addr is the addr we're listening to + mut
+	// addr is the addr we're listening to
 	addr Address
 	// are we listening or not
 	listening bool
