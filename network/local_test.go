@@ -264,7 +264,7 @@ func TestLocalManyConn(t *testing.T) {
 
 func waitListeningUp(addr Address) bool {
 	for i := 0; i < 5; i++ {
-		if defaultLocalContext.IsListening(addr) {
+		if defaultLocalContext.isListening(addr) {
 			return true
 		}
 		time.Sleep(50 * time.Millisecond)
