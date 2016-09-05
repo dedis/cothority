@@ -23,8 +23,6 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 
-	"regexp"
-
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 	"github.com/dedis/crypto/cosi"
@@ -124,7 +122,7 @@ func InteractiveConfig(binaryName string) {
 	if failedPublic {
 		publicAddress = askReachableAddress(portStr)
 	} else {
-		if isPublicIP(publicAddress) {
+		if publicAddress.Public() {
 			// try  to connect to ipfound:portgiven
 			tryIP := publicAddress
 			log.Info("Check if the address", tryIP, "is reachable from Internet...")
@@ -322,16 +320,6 @@ func entityListToPublics(el *sda.Roster) []abstract.Point {
 		publics[i] = e.Public
 	}
 	return publics
-}
-
-func isPublicIP(ip network.Address) bool {
-	public, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
-		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
-		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip.NetworkAddress())
-	if err != nil {
-		log.Error(err)
-	}
-	return !public
 }
 
 // Returns true if file exists and user is OK to overwrite, or file dont exists
