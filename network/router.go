@@ -87,7 +87,10 @@ func (r *Router) Start() {
 // an undefined behaviour. Callers should most of the time re-create a fresh
 // Router.
 func (r *Router) Stop() error {
-	err := r.host.Stop()
+	var err error
+	if r.host.Listening() {
+		err = r.host.Stop()
+	}
 	err2 := r.stopHandling()
 	r.reset()
 	if err != nil {
