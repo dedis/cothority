@@ -11,25 +11,25 @@ import (
 )
 
 // NewLocalRouter returns a fresh router which uses local connections. It takes
-// the default context.
+// the default manager.
 func NewLocalRouter(sid *ServerIdentity) (*Router, error) {
-	return NewLocalRouterWithContext(defaultLocalContext, sid)
+	return NewLocalRouterWithManager(defaultLocalManager, sid)
 }
 
-// NewLocalRouterWithContext is the same as NewLocalRouter but takes a specific
-// LocalContext. This is useful to run parallel different local overlays.
-func NewLocalRouterWithContext(ctx *LocalContext, sid *ServerIdentity) (*Router, error) {
-	h, err := NewLocalHostWithContext(ctx, sid.Address)
+// NewLocalRouterWithmanager is the same as NewLocalRouter but takes a specific
+// Localmanager. This is useful to run parallel different local overlays.
+func NewLocalRouterWithManager(ctx *LocalManager, sid *ServerIdentity) (*Router, error) {
+	h, err := NewLocalHostWithManager(ctx, sid.Address)
 	if err != nil {
 		return nil, err
 	}
 	return NewRouter(sid, h), nil
 }
 
-// LocalContext keeps reference to all opened local connections
+// LocalManager keeps reference to all opened local connections
 // It also keeps tracks of who is "listening", so it's possible to mimics
 // Conn & Listener.
-type LocalContext struct {
+type LocalManager struct {
 	// queues maps a remote endpoint to its packet queue. It's the main
 	//stucture used to communicate.
 	queues map[endpoint]*connQueue
@@ -39,16 +39,16 @@ type LocalContext struct {
 	baseUID uint64
 }
 
-// NewLocalContext returns a fresh new context that can be used by LocalConn,
+// NewLocalManager returns a fresh new manager that can be used by LocalConn,
 // LocalListener & LocalHost.
-func NewLocalContext() *LocalContext {
-	return &LocalContext{
+func NewLocalManager() *LocalManager {
+	return &LocalManager{
 		queues:    make(map[endpoint]*connQueue),
 		listening: make(map[Address]func(Conn)),
 	}
 }
 
-var defaultLocalContext = NewLocalContext()
+var defaultLocalManager = NewLocalManager()
 
 // endpoint represents one endpoint of a connection.
 type endpoint struct {
@@ -61,14 +61,14 @@ type endpoint struct {
 }
 
 // LocalReset reset the whole map of connections + listener so it is like
-// a fresh defaultLocalContext.
+// a fresh defaultLocalManager.
 func LocalReset() {
-	defaultLocalContext = NewLocalContext()
+	defaultLocalManager = NewLocalManager()
 
 }
 
 // IsListening returns true if the remote address is listening "virtually"
-func (ccc *LocalContext) isListening(remote Address) bool {
+func (ccc *LocalManager) isListening(remote Address) bool {
 	ccc.Lock()
 	defer ccc.Unlock()
 	_, ok := ccc.listening[remote]
@@ -77,7 +77,7 @@ func (ccc *LocalContext) isListening(remote Address) bool {
 
 // setListening marks the address as being able to accept incoming connection.
 // For each incoming connection, fn will be called in a go routine.
-func (ccc *LocalContext) setListening(addr Address, fn func(Conn)) {
+func (ccc *LocalManager) setListening(addr Address, fn func(Conn)) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	ccc.listening[addr] = fn
@@ -85,7 +85,7 @@ func (ccc *LocalContext) setListening(addr Address, fn func(Conn)) {
 
 // unsetListening marks the address as *not* being able to accept incoming
 // connections.
-func (ccc *LocalContext) unsetListening(addr Address) {
+func (ccc *LocalManager) unsetListening(addr Address) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	delete(ccc.listening, addr)
@@ -94,7 +94,7 @@ func (ccc *LocalContext) unsetListening(addr Address) {
 // connect will check if the remote address is listening, if yes it creates
 // the two connections, and launch the listening function in a go routine.
 // It returns the outgoing connection with any error.
-func (ccc *LocalContext) connect(local, remote Address) (*LocalConn, error) {
+func (ccc *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 	ccc.Lock()
 	defer ccc.Unlock()
 
@@ -124,7 +124,7 @@ func (ccc *LocalContext) connect(local, remote Address) (*LocalConn, error) {
 // send will get the connection denoted by this endpoint and will call queueMsg
 // with the packet as argument on it. It returns ErrClosed if it does not find
 // the connection.
-func (ccc *LocalContext) send(e endpoint, nm Packet) error {
+func (ccc *LocalManager) send(e endpoint, nm Packet) error {
 	ccc.Lock()
 	defer ccc.Unlock()
 	q, ok := ccc.queues[e]
@@ -138,7 +138,7 @@ func (ccc *LocalContext) send(e endpoint, nm Packet) error {
 
 // close will get the connection denoted by this endpoint and will Close it if
 // present.
-func (ccc *LocalContext) close(conn *LocalConn) {
+func (ccc *LocalManager) close(conn *LocalConn) {
 	ccc.Lock()
 	defer ccc.Unlock()
 	// delete this conn
@@ -153,7 +153,7 @@ func (ccc *LocalContext) close(conn *LocalConn) {
 }
 
 // len returns how many local connections is there
-func (ccc *LocalContext) len() int {
+func (ccc *LocalManager) len() int {
 	ccc.Lock()
 	defer ccc.Unlock()
 	return len(ccc.queues)
@@ -165,35 +165,35 @@ type LocalConn struct {
 	local  endpoint
 	remote endpoint
 
-	// connQueue is the part that is accesible from the LocalContext (i.e. is
+	// connQueue is the part that is accesible from the LocalManager (i.e. is
 	// shared). Reason why we can't directly share LocalConn is because go test
 	// -race detects as data race (while it's *protected*)
 	*connQueue
 
-	ctx *LocalContext
+	manager *LocalManager
 }
 
 // newLocalConn simply init the fields of a LocalConn but do not try to
 // connect. It should not be used as-is, most user wants to call NewLocalConn.
-func newLocalConn(ctx *LocalContext, local, remote endpoint) *LocalConn {
+func newLocalConn(ctx *LocalManager, local, remote endpoint) *LocalConn {
 	return &LocalConn{
 		remote:    remote,
 		local:     local,
 		connQueue: newConnQueue(),
-		ctx:       ctx,
+		manager:   ctx,
 	}
 }
 
 // NewLocalConn returns a new channel connection from local to remote
 // Mimics the behavior of NewTCPConn => tries connecting right away.
-// It uses the default local context.
+// It uses the default local manager.
 func NewLocalConn(local, remote Address) (*LocalConn, error) {
-	return NewLocalConnWithContext(defaultLocalContext, local, remote)
+	return NewLocalConnWithManager(defaultLocalManager, local, remote)
 }
 
-// NewLocalConnWithContext is similar to NewLocalConn but takes a specific
-// LocalContext.
-func NewLocalConnWithContext(ctx *LocalContext, local, remote Address) (*LocalConn, error) {
+// NewLocalConnWithManager is similar to NewLocalConn but takes a specific
+// LocalManager.
+func NewLocalConnWithManager(ctx *LocalManager, local, remote Address) (*LocalConn, error) {
 	return ctx.connect(local, remote)
 }
 
@@ -212,7 +212,7 @@ func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
 		MsgType: typ,
 		Msg:     body,
 	}
-	return lc.ctx.send(lc.remote, nm)
+	return lc.manager.send(lc.remote, nm)
 }
 
 // Receive implements the Conn interface.
@@ -234,7 +234,7 @@ func (lc *LocalConn) Remote() Address {
 func (lc *LocalConn) Close() error {
 	lc.connQueue.Close()
 	// close the remote conn also
-	lc.ctx.close(lc)
+	lc.manager.close(lc)
 	return nil
 }
 
@@ -313,21 +313,21 @@ type LocalListener struct {
 	// quit is used to stop the listening routine
 	quit chan bool
 
-	ctx *LocalContext
+	manager *LocalManager
 }
 
 // NewLocalListener returns a fresh LocalListener which implements the Listener
 // interface.
 func NewLocalListener(addr Address) (*LocalListener, error) {
-	return NewLocalListenerWithContext(defaultLocalContext, addr)
+	return NewLocalListenerWithManager(defaultLocalManager, addr)
 }
 
-// NewLocalListenerWithContext is similar to NewLocalListener but taking a
-// specific LocalContext to use to communicate.
-func NewLocalListenerWithContext(ctx *LocalContext, addr Address) (*LocalListener, error) {
+// NewLocalListenerWithManager is similar to NewLocalListener but taking a
+// specific LocalManager to use to communicate.
+func NewLocalListenerWithManager(ctx *LocalManager, addr Address) (*LocalListener, error) {
 	l := &LocalListener{
-		quit: make(chan bool),
-		ctx:  ctx,
+		quit:    make(chan bool),
+		manager: ctx,
 	}
 	return l, l.bind(addr)
 }
@@ -338,7 +338,7 @@ func (ll *LocalListener) bind(addr Address) error {
 	if addr.ConnType() != Local {
 		return errors.New("Wrong address type for local listener")
 	}
-	if ll.ctx.isListening(addr) {
+	if ll.manager.isListening(addr) {
 		return fmt.Errorf("%s is already listening: can't listen again", addr)
 	}
 	ll.addr = addr
@@ -349,7 +349,7 @@ func (ll *LocalListener) bind(addr Address) error {
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	ll.quit = make(chan bool)
-	ll.ctx.setListening(ll.addr, fn)
+	ll.manager.setListening(ll.addr, fn)
 	ll.listening = true
 	ll.Unlock()
 
@@ -361,7 +361,7 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
-	ll.ctx.unsetListening(ll.addr)
+	ll.manager.unsetListening(ll.addr)
 	if ll.listening {
 		close(ll.quit)
 	}
@@ -390,24 +390,24 @@ func (ll *LocalListener) Listening() bool {
 type LocalHost struct {
 	addr Address
 	*LocalListener
-	ctx *LocalContext
+	ctx *LocalManager
 }
 
 // NewLocalHost returns a fresh Host using Local communication that will listen
 // on the given addr.
 func NewLocalHost(addr Address) (*LocalHost, error) {
-	return NewLocalHostWithContext(defaultLocalContext, addr)
+	return NewLocalHostWithManager(defaultLocalManager, addr)
 }
 
-// NewLocalHostWithContext is similar to NewLocalHost but specify which
-// LocalContext to use for communicating.
-func NewLocalHostWithContext(ctx *LocalContext, addr Address) (*LocalHost, error) {
+// NewLocalHostWithManager is similar to NewLocalHost but specify which
+// LocalManager to use for communicating.
+func NewLocalHostWithManager(ctx *LocalManager, addr Address) (*LocalHost, error) {
 	lh := &LocalHost{
 		addr: addr,
 		ctx:  ctx,
 	}
 	var err error
-	lh.LocalListener, err = NewLocalListenerWithContext(ctx, addr)
+	lh.LocalListener, err = NewLocalListenerWithManager(ctx, addr)
 	return lh, err
 
 }
@@ -419,7 +419,7 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 	}
 	var finalErr error
 	for i := 0; i < MaxRetryConnect; i++ {
-		c, err := NewLocalConnWithContext(lh.ctx, lh.addr, addr)
+		c, err := NewLocalConnWithManager(lh.ctx, lh.addr, addr)
 		if err == nil {
 			return c, nil
 		}
@@ -432,14 +432,14 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 
 // NewLocalClient returns Client that uses the Local communication layer.
 func NewLocalClient() *Client {
-	return NewLocalClientWithContext(defaultLocalContext)
+	return NewLocalClientWithManager(defaultLocalManager)
 }
 
-// NewLocalClientWithContext is similar to NewLocalClient but takes a specific
-// LocalContext to communicate.
-func NewLocalClientWithContext(ctx *LocalContext) *Client {
+// NewLocalClientWithManager is similar to NewLocalClient but takes a specific
+// LocalManager to communicate.
+func NewLocalClientWithManager(ctx *LocalManager) *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		return NewLocalConnWithContext(ctx, own.Address, remote.Address)
+		return NewLocalConnWithManager(ctx, own.Address, remote.Address)
 	}
 	return newClient(fn)
 
