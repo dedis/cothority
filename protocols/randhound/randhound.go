@@ -19,9 +19,7 @@ import (
 // TODO:
 // - Client commitments to the final list of secrets that will be used for the
 //	 randomness; currently simply all secrets are used
-// - Create transcript
-// - Verify transcript
-// - Handling of failing encryption/decryption proofs
+// - Handle failing encryption/decryption proofs
 // - Sane conditions on client-side when to proceed
 // - Import / export transcript in JSON
 // - When handling R1 client-side, maybe store encrypted shares in a sorted way for later...
@@ -168,6 +166,32 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 	return sharding, keys, nil
 }
 
+// Random ...
+func (rh *RandHound) Random() ([]byte, *Transcript, error) {
+
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
+
+	rnd := rh.Suite().Point().Null()
+
+	for i, group := range rh.Server {
+		pvss := NewPVSS(rh.Suite(), H, rh.Threshold[i])
+		for _, server := range group {
+			j := server.ServerIdentityIdx
+			ps, err := pvss.Recover(rh.R2s[j].DecShare)
+			if err != nil {
+				return nil, nil, err
+			}
+			rnd = rh.Suite().Point().Add(rnd, ps)
+		}
+	}
+
+	rb, err := rnd.MarshalBinary()
+	if err != nil {
+		return nil, nil, err
+	}
+	return rb, rh.CreateTranscript(), nil
+}
+
 // CreateTranscript ...
 func (rh *RandHound) CreateTranscript() *Transcript {
 
@@ -215,7 +239,7 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 }
 
 // VerifyTranscript ...
-func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error {
+func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Transcript) error {
 
 	// Verify SID
 	sid, err := rh.sessionID(t.Nodes, t.Faulty, t.Purpose, t.Time, t.CliRand, t.Threshold, t.CliKey, t.Key)
@@ -227,6 +251,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 		return fmt.Errorf("Wrong session identifier")
 	}
 
+	// Check message signatures
 	for i, grp := range t.Index {
 
 		// Verify I1 signatures
@@ -253,77 +278,77 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, t *Transcript) error
 		}
 	}
 
-	// Verify proofs
+	// Check zero knowledge proofs
+	H, _ := suite.Point().Pick(nil, suite.Cipher(t.SID))
+	for i, grp := range t.Index {
 
-	// Compare randomness
+		pvss := NewPVSS(suite, H, t.Threshold[i])
+
+		for j := 0; j < len(grp); j++ {
+
+			// Prepare data for commit recovery
+			pbx := make([][]byte, len(grp))
+			index := make([]int, len(grp))
+			for k := 0; k < len(grp); k++ {
+				pbx[k] = t.R1s[grp[j]].CommitPoly
+				index[k] = k
+			}
+
+			// Recover commits
+			commit, err := pvss.Commits(pbx, index)
+			if err != nil {
+				return err
+			}
+
+			// Verify encryption consistency proofs
+			f, err := pvss.Verify(H, t.Key[i], commit, t.R1s[grp[j]].EncShare, t.R1s[grp[j]].EncProof)
+			if err != nil {
+				_ = f
+				log.Lvlf1("Enc: %v", f)
+				// mark invalid shares
+			}
+
+			// Prepare data for decryption consistency proofs
+			X := make([]abstract.Point, len(grp))
+			encShare := make([]abstract.Point, len(grp))
+			for k := 0; k < len(grp); k++ {
+				r1 := t.R1s[grp[k]]
+				encShare[k] = r1.EncShare[j]
+				X[k] = t.Key[i][j]
+			}
+
+			// Verify decryption consistency proofs
+			f, err = pvss.Verify(suite.Point().Base(), t.R2s[grp[j]].DecShare, X, encShare, t.R2s[grp[j]].DecProof)
+			if err != nil {
+				_ = f
+				log.Lvlf1("Dec: %v", f)
+				// mark invalid shares
+			}
+		}
+	}
+
+	// Recover randomness
+	rnd := suite.Point().Null()
+	for i, grp := range t.Index {
+		pvss := NewPVSS(suite, H, rh.Threshold[i])
+		for j := 0; j < len(grp); j++ {
+			ps, err := pvss.Recover(t.R2s[grp[j]].DecShare)
+			if err != nil {
+				return err
+			}
+			rnd = suite.Point().Add(rnd, ps)
+		}
+	}
+	rb, err := rnd.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(random, rb) {
+		return errors.New("Random strings do not match")
+	}
 
 	return nil
-}
-
-func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, clientKey abstract.Point, serverKey [][]abstract.Point) ([]byte, error) {
-
-	buf := new(bytes.Buffer)
-
-	if len(threshold) != len(serverKey) {
-		return nil, fmt.Errorf("Non-matching number of group thresholds and keys")
-	}
-
-	if err := binary.Write(buf, binary.LittleEndian, uint32(nodes)); err != nil {
-		return nil, err
-	}
-
-	if err := binary.Write(buf, binary.LittleEndian, uint32(faulty)); err != nil {
-		return nil, err
-	}
-
-	//if err := binary.Write(buf, binary.LittleEndian, uint32(len(rh.Group))); err != nil {
-	//	return nil, err
-	//}
-
-	if _, err := buf.WriteString(purpose); err != nil {
-		return nil, err
-	}
-
-	t, err := time.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := buf.Write(t); err != nil {
-		return nil, err
-	}
-
-	if _, err := buf.Write(rand); err != nil {
-		return nil, err
-	}
-
-	cb, err := clientKey.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	if _, err := buf.Write(cb); err != nil {
-		return nil, err
-	}
-
-	for _, t := range threshold {
-		if err := binary.Write(buf, binary.LittleEndian, uint32(t)); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, gk := range serverKey {
-		for _, k := range gk {
-			kb, err := k.MarshalBinary()
-			if err != nil {
-				return nil, err
-			}
-			if _, err := buf.Write(kb); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
 }
 
 func (rh *RandHound) handleI1(i1 WI1) error {
@@ -373,6 +398,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	i := rh.ServerIdxToGroupIdx[idx]
 
 	rh.mutex.Lock()
+
 	// Verify R1 message signature
 	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
 		return err
@@ -382,6 +408,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	if err := verifyMessage(rh.Suite(), rh.I1s[grp], msg.HI1); err != nil {
 		return err
 	}
+
 	rh.mutex.Unlock()
 
 	n := len(rh.Key[grp])
@@ -413,9 +440,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// Record commit and message
 	rh.mutex.Lock()
+
 	rh.R1s[idx] = msg
 	rh.CR1[grp]++
 	rh.Commit[idx] = commit
+
 	rh.mutex.Unlock()
 
 	// Continue once "enough" R1 messages have been collected
@@ -447,11 +476,13 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			}
 
 			rh.mutex.Lock()
+
 			if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
 				return err
 			}
 
 			rh.I2s[target.ServerIdentityIdx] = i2
+
 			rh.mutex.Unlock()
 
 			if err := rh.SendTo(target, i2); err != nil {
@@ -529,6 +560,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	i := rh.ServerIdxToGroupIdx[idx]
 
 	rh.mutex.Lock()
+
 	// Verify R2 message signature
 	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
 		return err
@@ -538,16 +570,19 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	if err := verifyMessage(rh.Suite(), rh.I2s[idx], msg.HI2); err != nil {
 		return err
 	}
+
 	rh.mutex.Unlock()
 
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
 	encShare := make([]abstract.Point, n)
 
-	//group := rh.Group[grp]
 	for i := 0; i < n; i++ {
 		X[i] = r2.ServerIdentity.Public // XXX: get it from the local cache
 	}
+
+	// XXX: lengths of msg.DecShare and rh.Server[grp] can be different when
+	// previous encryption proofs failed
 
 	// Get encrypted shares intended for server idx
 	for j, server := range rh.Server[grp] {
@@ -569,39 +604,85 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	rh.mutex.Lock()
+
 	rh.R2s[idx] = msg
 	rh.CR2[grp]++
 	rh.counter++
+
 	rh.mutex.Unlock()
 
 	// Continue once "enough" R2 messages have been collected
 	// XXX: this check should be replaced by a more sane one
 	if rh.counter == rh.Nodes-1 {
-
-		rnd := rh.Suite().Point().Null()
-
-		for i, group := range rh.Server {
-			pvss := NewPVSS(rh.Suite(), H, rh.Threshold[i])
-
-			for _, server := range group {
-				j := server.ServerIdentityIdx
-				ps, err := pvss.Recover(rh.R2s[j].DecShare)
-				if err != nil {
-					return err
-				}
-				rnd = rh.Suite().Point().Add(rnd, ps)
-			}
-		}
-
-		rb, err := rnd.MarshalBinary()
-		if err != nil {
-			return err
-		}
-
-		log.Lvlf1("RandHound - collective randomness: %v", rb)
 		rh.Done <- true
 	}
 	return nil
+}
+
+func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, clientKey abstract.Point, serverKey [][]abstract.Point) ([]byte, error) {
+
+	buf := new(bytes.Buffer)
+
+	if len(threshold) != len(serverKey) {
+		return nil, fmt.Errorf("Non-matching number of group thresholds and keys")
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, uint32(nodes)); err != nil {
+		return nil, err
+	}
+
+	if err := binary.Write(buf, binary.LittleEndian, uint32(faulty)); err != nil {
+		return nil, err
+	}
+
+	//if err := binary.Write(buf, binary.LittleEndian, uint32(len(rh.Group))); err != nil {
+	//	return nil, err
+	//}
+
+	if _, err := buf.WriteString(purpose); err != nil {
+		return nil, err
+	}
+
+	t, err := time.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := buf.Write(t); err != nil {
+		return nil, err
+	}
+
+	if _, err := buf.Write(rand); err != nil {
+		return nil, err
+	}
+
+	cb, err := clientKey.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	if _, err := buf.Write(cb); err != nil {
+		return nil, err
+	}
+
+	for _, t := range threshold {
+		if err := binary.Write(buf, binary.LittleEndian, uint32(t)); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, gk := range serverKey {
+		for _, k := range gk {
+			kb, err := k.MarshalBinary()
+			if err != nil {
+				return nil, err
+			}
+			if _, err := buf.Write(kb); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
 }
 
 func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error {
