@@ -3,10 +3,11 @@ package network
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 // NewLocalRouter returns a fresh router which uses local connections. It takes
@@ -157,7 +158,8 @@ func (ccc *LocalContext) Len() int {
 	return len(ccc.queues)
 }
 
-// LocalConn is a connection that send and receive messages through channels
+// LocalConn is a connection that send and receive messages to other
+// connections locally
 type LocalConn struct {
 	local  endpoint
 	remote endpoint
