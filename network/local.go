@@ -11,14 +11,14 @@ import (
 
 // NewLocalRouter returns a fresh router which uses only local queues. It uses
 // the default local manager.
-// If you need multiple independant local-queues, use NewLocalRouterWithManager.
+// If you need multiple independent local-queues, use NewLocalRouterWithManager.
 // In case of an error it is returned together with a nil-Router.
 func NewLocalRouter(sid *ServerIdentity) (*Router, error) {
 	return NewLocalRouterWithManager(defaultLocalManager, sid)
 }
 
-// NewLocalRouterWithmanager is the same as NewLocalRouter but takes a specific
-// Localmanager. This is useful to run parallel different local overlays.
+// NewLocalRouterWithManager is the same as NewLocalRouter but takes a specific
+// LocalManager. This is useful to run parallel different local overlays.
 // In case of an error it is returned together with a nil-Router.
 func NewLocalRouterWithManager(lm *LocalManager, sid *ServerIdentity) (*Router, error) {
 	h, err := NewLocalHostWithManager(lm, sid.Address)
