@@ -33,14 +33,14 @@ func NewLocalRouterWithManager(lm *LocalManager, sid *ServerIdentity) (*Router, 
 // Conn & Listener.
 type LocalManager struct {
 	// queues maps a remote endpoint to its packet queue. It's the main
-	// stucture used to communicate.
+	// structure used to communicate.
 	queues map[endpoint]*connQueue
 	sync.Mutex
 	// The listening-functions used when a new connection-request arrives.
 	listening map[Address]func(Conn)
 
-	// Unique ID of this Local Manager.
-	baseUID uint64
+	// connection-counter for giving unique IDs for each connection.
+	counter uint64
 }
 
 // NewLocalManager returns a fresh new manager that can be used by LocalConn,
@@ -108,11 +108,11 @@ func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 		return nil, fmt.Errorf("%s can't connect to %s: it's not listening", local, remote)
 	}
 
-	outEndpoint := endpoint{local, lm.baseUID}
-	lm.baseUID++
+	outEndpoint := endpoint{local, lm.counter}
+	lm.counter++
 
-	incEndpoint := endpoint{remote, lm.baseUID}
-	lm.baseUID++
+	incEndpoint := endpoint{remote, lm.counter}
+	lm.counter++
 
 	outgoing := newLocalConn(lm, outEndpoint, incEndpoint)
 	incoming := newLocalConn(lm, incEndpoint, outEndpoint)
@@ -170,7 +170,7 @@ type LocalConn struct {
 	local  endpoint
 	remote endpoint
 
-	// connQueue is accesible from the LocalManager (i.e. is
+	// connQueue is accessible from the LocalManager (i.e. is
 	// shared). We can't directly share LocalConn because go test
 	// -race detects it as data race (while it's *protected*).
 	*connQueue
@@ -268,6 +268,7 @@ func (lc *LocalConn) Type() ConnType {
 // connQueue manages the message queue of a LocalConn.
 // Messages are pushed and retrieved in a FIFO.
 // All operations are thread-safe.
+// The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
 	*sync.Cond
 	queue  [][]byte
@@ -280,7 +281,7 @@ func newConnQueue() *connQueue {
 	}
 }
 
-// push inserts the packet in the queue.
+// push inserts a packet in the queue.
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
 	c.L.Lock()
