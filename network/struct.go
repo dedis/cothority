@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
@@ -151,4 +152,42 @@ func GlobalBind(address string) (string, error) {
 		return "", errors.New("Not a host:port address")
 	}
 	return "0.0.0.0:" + addr[1], nil
+}
+
+// counterSafe is a struct that enables to update two counters Rx & Tx
+// atomically that can be have increasing values.
+// It's main use is for Conn to update how many bytes they've
+// written / read. This struct implements the monitor.CounterIO interface.
+type counterSafe struct {
+	tx uint64
+	rx uint64
+	sync.Mutex
+}
+
+// Rx returns the rx counter
+func (c *counterSafe) Rx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.rx
+}
+
+// Tx returns the tx counter
+func (c *counterSafe) Tx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.tx
+}
+
+// UpdateRx adds delta to the rx counter
+func (c *counterSafe) updateRx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.rx += delta
+}
+
+// UpdateRx adds delta to the tx counter
+func (c *counterSafe) updateTx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.tx += delta
 }
