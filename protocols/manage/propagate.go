@@ -147,7 +147,7 @@ func (p *Propagate) Dispatch() error {
 			if p.received == p.subtree {
 				process = false
 			}
-		case <-time.After(timeout):
+		case <-time.After(20 * timeout):
 			log.Fatal("Timeout")
 			process = false
 		}
