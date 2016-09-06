@@ -41,12 +41,8 @@ type TCPConn struct {
 	receiveMutex sync.Mutex
 	// So we only handle one sending packet at a time
 	sendMutex sync.Mutex
-	// bRx is the number of bytes received on this connection
-	bRx     uint64
-	bRxLock sync.Mutex
-	// bTx in the number of bytes sent on this connection
-	bTx     uint64
-	bTxLock sync.Mutex
+
+	counterSafe
 }
 
 // NewTCPConn will open a TCPConn to the given address.
@@ -128,7 +124,7 @@ func (c *TCPConn) receive() ([]byte, error) {
 	}
 
 	// set the size read
-	c.addReadBytes(uint64(read))
+	c.updateRx(uint64(read))
 	return buffer.Bytes(), nil
 }
 
@@ -186,7 +182,7 @@ func (c *TCPConn) send(b []byte) error {
 		b = b[n:]
 	}
 	// update stats on the connection
-	c.addWrittenBytes(uint64(packetSize))
+	c.updateTx(uint64(packetSize))
 	return nil
 }
 
@@ -219,36 +215,6 @@ func (c *TCPConn) Close() error {
 		return handleError(err)
 	}
 	return nil
-}
-
-// Rx returns the number of bytes read by this connection
-// Needed so TCPConn implements the CounterIO interface from monitor
-func (c *TCPConn) Rx() uint64 {
-	c.bRxLock.Lock()
-	defer c.bRxLock.Unlock()
-	return c.bRx
-}
-
-// addReadBytes add b bytes to the total number of bytes read
-func (c *TCPConn) addReadBytes(b uint64) {
-	c.bRxLock.Lock()
-	defer c.bRxLock.Unlock()
-	c.bRx += b
-}
-
-// Tx returns the number of bytes written by this connection
-// Needed so TCPConn implements the CounterIO interface from monitor
-func (c *TCPConn) Tx() uint64 {
-	c.bTxLock.Lock()
-	defer c.bTxLock.Unlock()
-	return c.bTx
-}
-
-// addWrittenBytes add b bytes to the total number of bytes written
-func (c *TCPConn) addWrittenBytes(b uint64) {
-	c.bTxLock.Lock()
-	defer c.bTxLock.Unlock()
-	c.bTx += b
 }
 
 // handleError produces the higher layer error depending on the type
