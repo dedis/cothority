@@ -12,9 +12,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLocalRouter(t *testing.T) {
+	addr := &ServerIdentity{Address: NewLocalAddress("127.0.0.1:2000")}
+	wrongAddr1 := &ServerIdentity{Address: NewAddress(PlainTCP, addr.Address.NetworkAddress())}
+	_, err := NewLocalRouter(wrongAddr1)
+	if err == nil {
+		t.Error("Should have returned something..")
+	}
+	_, err = NewLocalRouter(addr)
+	if err != nil {
+		t.Error("Should not have returned something")
+	}
+
+}
+
 func TestLocalListener(t *testing.T) {
 	addr := NewLocalAddress("127.0.0.1:2000")
-	listener, err := NewLocalListener(addr)
+	wrongAddr1 := NewAddress(PlainTCP, addr.NetworkAddress())
+	listener, err := NewLocalListener(wrongAddr1)
+	if err == nil {
+		t.Error("Create listener with wrong address should fail")
+	}
+	defaultLocalManager.setListening(addr, func(c Conn) {})
+	listener, err = NewLocalListener(addr)
+	if err == nil {
+		t.Error("Create listener with already binded address should fail")
+	}
+	LocalReset()
+
+	listener, err = NewLocalListener(addr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,6 +89,12 @@ func TestLocalConnCloseReceive(t *testing.T) {
 	outgoing, err := NewLocalConn(addr, addr)
 	if err != nil {
 		t.Fatal("erro NewLocalConn:", err)
+	}
+	if outgoing.Type() != Local {
+		t.Error("Wrong type for Conn?")
+	}
+	if outgoing.Local() != addr {
+		t.Error("Wrong local addr for Conn!?")
 	}
 	<-ready
 
@@ -216,6 +248,7 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 			assert.Nil(t, err)
 			//wait ack
 			<-outgoingConn
+			assert.Equal(t, 2, listener.manager.len())
 			// close connection
 			assert.Nil(t, c.Close())
 		})
@@ -291,6 +324,13 @@ func TestLocalManyConn(t *testing.T) {
 
 	wg.Wait()
 	listener.Stop()
+}
+
+func TestDefaultLocalManager(t *testing.T) {
+	defaultLocalManager.setListening(NewLocalAddress("127.0.0.1"), func(c Conn) {})
+	assert.Equal(t, 1, len(defaultLocalManager.listening))
+	LocalReset()
+	assert.Equal(t, 0, len(defaultLocalManager.listening))
 }
 
 func waitListeningUp(addr Address) bool {
