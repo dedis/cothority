@@ -469,14 +469,3 @@ func NewLocalClientWithManager(ctx *LocalManager) *Client {
 func NewLocalAddress(addr string) Address {
 	return NewAddress(Local, addr)
 }
-
-/*// GetStatus implements the Host interface*/
-//func (l *chanHost) GetStatus() Status {
-//m := make(map[string]string)
-//m["Connections"] = strings.Join(l.conns.Get(), "\n")
-//m["Host"] = l.Address()
-//m["Total"] = strconv.Itoa(l.conns.Len())
-//m["Packets_Received"] = strconv.FormatUint(0, 10)
-//m["Packets_Sent"] = strconv.FormatUint(0, 10)
-//return m
-//}
