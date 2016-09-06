@@ -360,7 +360,8 @@ func NewLocalListenerWithManager(ctx *LocalManager, addr Address) (*LocalListene
 	return l, nil
 }
 
-// Listen implements the Listener interface
+// Listen implements the Listener interface. This call blocks until Stop() is
+// called on the listener.
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	if ll.listening {
