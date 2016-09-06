@@ -3,8 +3,6 @@ package network
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"io"
 	"net"
 	"strings"
 	"sync"
@@ -279,30 +277,6 @@ func GlobalBind(address string) (string, error) {
 	return "0.0.0.0:" + addr[1], nil
 }
 
-<<<<<<< HEAD
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
-
-	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
-
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
-=======
 // counterSafe is a struct that enables to update two counters Rx & Tx
 // atomically that can be have increasing values.
 // It's main use is for Conn to update how many bytes they've
@@ -339,5 +313,4 @@ func (c *counterSafe) updateTx(delta uint64) {
 	c.Lock()
 	defer c.Unlock()
 	c.tx += delta
->>>>>>> 429e587... more coverage (>95%) + tx/rx impl
 }
