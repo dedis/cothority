@@ -3,8 +3,6 @@ package network
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"io"
 	"net"
 	"strings"
 	"sync"
@@ -279,26 +277,40 @@ func GlobalBind(address string) (string, error) {
 	return "0.0.0.0:" + addr[1], nil
 }
 
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
+// counterSafe is a struct that enables to update two counters Rx & Tx
+// atomically that can be have increasing values.
+// It's main use is for Conn to update how many bytes they've
+// written / read. This struct implements the monitor.CounterIO interface.
+type counterSafe struct {
+	tx uint64
+	rx uint64
+	sync.Mutex
+}
 
-	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
+// Rx returns the rx counter
+func (c *counterSafe) Rx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.rx
+}
 
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
+// Tx returns the tx counter
+func (c *counterSafe) Tx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.tx
+}
+
+// UpdateRx adds delta to the rx counter
+func (c *counterSafe) updateRx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.rx += delta
+}
+
+// UpdateRx adds delta to the tx counter
+func (c *counterSafe) updateTx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.tx += delta
 }

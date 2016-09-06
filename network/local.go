@@ -3,7 +3,6 @@ package network
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 
@@ -121,10 +120,10 @@ func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 	return outgoing, nil
 }
 
-// send will get the connection denoted by this endpoint and will call queueMsg
-// with the packet as argument on it. It returns ErrClosed if it does not find
-// the connection.
-func (lm *LocalManager) send(e endpoint, nm Packet) error {
+// send gets the connection denoted by this endpoint and calls queueMsg
+// with the given msg slice  as argument on it. It returns ErrClosed if it does not find
+// the connection's queue.
+func (lm *LocalManager) send(e endpoint, buff []byte) error {
 	lm.Lock()
 	defer lm.Unlock()
 	q, ok := lm.queues[e]
@@ -132,7 +131,7 @@ func (lm *LocalManager) send(e endpoint, nm Packet) error {
 		return ErrClosed
 	}
 
-	q.push(nm)
+	q.push(buff)
 	return nil
 }
 
@@ -170,6 +169,9 @@ type LocalConn struct {
 	// -race detects as data race (while it's *protected*)
 	*connQueue
 
+	// counter to keep track of how many bytes read / written this connection
+	// has seen.
+	counterSafe
 	manager *LocalManager
 }
 
@@ -199,25 +201,27 @@ func NewLocalConnWithManager(ctx *LocalManager, local, remote Address) (*LocalCo
 
 // Send implements the Conn interface.
 func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
-
-	var body Body
-	var val = reflect.ValueOf(msg)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
+	buff, err := MarshalRegisteredType(msg)
+	if err != nil {
+		return err
 	}
-	body = val.Interface()
-
-	var typ = TypeFromData(body)
-	nm := Packet{
-		MsgType: typ,
-		Msg:     body,
-	}
-	return lc.manager.send(lc.remote, nm)
+	lc.updateTx(uint64(len(buff)))
+	return lc.manager.send(lc.remote, buff)
 }
 
 // Receive implements the Conn interface.
 func (lc *LocalConn) Receive(ctx context.Context) (Packet, error) {
-	return lc.pop()
+	buff, err := lc.pop()
+	if err != nil {
+		return EmptyApplicationPacket, err
+	}
+	lc.updateRx(uint64(len(buff)))
+
+	id, body, err := UnmarshalRegisteredType(buff, DefaultConstructors(Suite))
+	return Packet{
+		MsgType: id,
+		Msg:     body,
+	}, err
 }
 
 // Local implements the Conn interface
@@ -242,16 +246,6 @@ func (lc *LocalConn) Close() error {
 	return nil
 }
 
-// Rx implements the Conn interface
-func (lc *LocalConn) Rx() uint64 {
-	return 0
-}
-
-// Tx implements the Conn interface
-func (lc *LocalConn) Tx() uint64 {
-	return 0
-}
-
 // Type implements the Conn interface
 func (lc *LocalConn) Type() ConnType {
 	return Local
@@ -262,7 +256,7 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 type connQueue struct {
 	*sync.Cond
-	queue  []Packet
+	queue  [][]byte
 	closed bool
 }
 
@@ -272,32 +266,32 @@ func newConnQueue() *connQueue {
 	}
 }
 
-// push insert the packet into the queue.
+// push insert the buffer into the queue.
 // push won't work if the connQueue is already closed.
-func (c *connQueue) push(p Packet) {
+func (c *connQueue) push(buff []byte) {
 	c.L.Lock()
 	defer c.L.Unlock()
 	if c.closed {
 		return
 	}
-	c.queue = append(c.queue, p)
+	c.queue = append(c.queue, buff)
 	c.Signal()
 }
 
-// pop retrieve a packet out of the queue.
+// pop retrieve a buffer out of the queue.
 // If there is no messages, then it blocks UNTIL there is a call to push() or
 // close(). pop also returns directly in case this queue is already closed.
-func (c *connQueue) pop() (Packet, error) {
+func (c *connQueue) pop() ([]byte, error) {
 	c.L.Lock()
 	defer c.L.Unlock()
 	for len(c.queue) == 0 {
 		if c.closed {
-			return EmptyApplicationPacket, ErrClosed
+			return nil, ErrClosed
 		}
 		c.Wait()
 	}
 	if c.closed {
-		return EmptyApplicationPacket, ErrClosed
+		return nil, ErrClosed
 	}
 	nm := c.queue[0]
 	c.queue = c.queue[1:]
