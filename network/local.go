@@ -17,8 +17,8 @@ func NewLocalRouter(sid *ServerIdentity) (*Router, error) {
 
 // NewLocalRouterWithmanager is the same as NewLocalRouter but takes a specific
 // Localmanager. This is useful to run parallel different local overlays.
-func NewLocalRouterWithManager(ctx *LocalManager, sid *ServerIdentity) (*Router, error) {
-	h, err := NewLocalHostWithManager(ctx, sid.Address)
+func NewLocalRouterWithManager(lm *LocalManager, sid *ServerIdentity) (*Router, error) {
+	h, err := NewLocalHostWithManager(lm, sid.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -177,12 +177,12 @@ type LocalConn struct {
 
 // newLocalConn simply init the fields of a LocalConn but do not try to
 // connect. It should not be used as-is, most user wants to call NewLocalConn.
-func newLocalConn(ctx *LocalManager, local, remote endpoint) *LocalConn {
+func newLocalConn(lm *LocalManager, local, remote endpoint) *LocalConn {
 	return &LocalConn{
 		remote:    remote,
 		local:     local,
 		connQueue: newConnQueue(),
-		manager:   ctx,
+		manager:   lm,
 	}
 }
 
@@ -195,12 +195,12 @@ func NewLocalConn(local, remote Address) (*LocalConn, error) {
 
 // NewLocalConnWithManager is similar to NewLocalConn but takes a specific
 // LocalManager.
-func NewLocalConnWithManager(ctx *LocalManager, local, remote Address) (*LocalConn, error) {
-	return ctx.connect(local, remote)
+func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalConn, error) {
+	return lm.connect(local, remote)
 }
 
 // Send implements the Conn interface.
-func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
+func (lc *LocalConn) Send(lm context.Context, msg Body) error {
 	buff, err := MarshalRegisteredType(msg)
 	if err != nil {
 		return err
@@ -210,7 +210,7 @@ func (lc *LocalConn) Send(ctx context.Context, msg Body) error {
 }
 
 // Receive implements the Conn interface.
-func (lc *LocalConn) Receive(ctx context.Context) (Packet, error) {
+func (lc *LocalConn) Receive(lm context.Context) (Packet, error) {
 	buff, err := lc.pop()
 	if err != nil {
 		return EmptyApplicationPacket, err
@@ -339,10 +339,10 @@ func NewLocalListener(addr Address) (*LocalListener, error) {
 
 // NewLocalListenerWithManager is similar to NewLocalListener but taking a
 // specific LocalManager to use to communicate.
-func NewLocalListenerWithManager(ctx *LocalManager, addr Address) (*LocalListener, error) {
+func NewLocalListenerWithManager(lm *LocalManager, addr Address) (*LocalListener, error) {
 	l := &LocalListener{
 		quit:    make(chan bool),
-		manager: ctx,
+		manager: lm,
 	}
 	if addr.ConnType() != Local {
 		return nil, errors.New("Wrong address type for local listener")
@@ -404,7 +404,7 @@ func (ll *LocalListener) Listening() bool {
 type LocalHost struct {
 	addr Address
 	*LocalListener
-	ctx *LocalManager
+	lm *LocalManager
 }
 
 // NewLocalHost returns a fresh Host using Local communication that will listen
@@ -415,13 +415,13 @@ func NewLocalHost(addr Address) (*LocalHost, error) {
 
 // NewLocalHostWithManager is similar to NewLocalHost but specify which
 // LocalManager to use for communicating.
-func NewLocalHostWithManager(ctx *LocalManager, addr Address) (*LocalHost, error) {
+func NewLocalHostWithManager(lm *LocalManager, addr Address) (*LocalHost, error) {
 	lh := &LocalHost{
 		addr: addr,
-		ctx:  ctx,
+		lm:   lm,
 	}
 	var err error
-	lh.LocalListener, err = NewLocalListenerWithManager(ctx, addr)
+	lh.LocalListener, err = NewLocalListenerWithManager(lm, addr)
 	return lh, err
 
 }
@@ -433,7 +433,7 @@ func (lh *LocalHost) Connect(addr Address) (Conn, error) {
 	}
 	var finalErr error
 	for i := 0; i < MaxRetryConnect; i++ {
-		c, err := NewLocalConnWithManager(lh.ctx, lh.addr, addr)
+		c, err := NewLocalConnWithManager(lh.lm, lh.addr, addr)
 		if err == nil {
 			return c, nil
 		}
@@ -451,9 +451,9 @@ func NewLocalClient() *Client {
 
 // NewLocalClientWithManager is similar to NewLocalClient but takes a specific
 // LocalManager to communicate.
-func NewLocalClientWithManager(ctx *LocalManager) *Client {
+func NewLocalClientWithManager(lm *LocalManager) *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		return NewLocalConnWithManager(ctx, own.Address, remote.Address)
+		return NewLocalConnWithManager(lm, own.Address, remote.Address)
 	}
 	return newClient(fn)
 
