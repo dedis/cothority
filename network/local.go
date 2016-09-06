@@ -350,20 +350,14 @@ func NewLocalListenerWithManager(ctx *LocalManager, addr Address) (*LocalListene
 		quit:    make(chan bool),
 		manager: ctx,
 	}
-	return l, l.bind(addr)
-}
-
-func (ll *LocalListener) bind(addr Address) error {
-	ll.Lock()
-	defer ll.Unlock()
 	if addr.ConnType() != Local {
-		return errors.New("Wrong address type for local listener")
+		return nil, errors.New("Wrong address type for local listener")
 	}
-	if ll.manager.isListening(addr) {
-		return fmt.Errorf("%s is already listening: can't listen again", addr)
+	if l.manager.isListening(addr) {
+		return nil, fmt.Errorf("%s is already listening: can't listen again", addr)
 	}
-	ll.addr = addr
-	return nil
+	l.addr = addr
+	return l, nil
 }
 
 // Listen implements the Listener interface
