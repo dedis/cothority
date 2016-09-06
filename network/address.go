@@ -7,34 +7,36 @@ import (
 	"strings"
 )
 
-// ConnType is a type to represent what is the type of a Conn
-// It can be of different types such as TCP, TLS etc.
+// ConnType represents the type of a Connection.
+// The supported types are defined as constants of type ConnType.
 type ConnType string
 
 // Address contains the ConnType and the actual network address. It is used to connect
 // to a remote host with a Conn and to listen by a Listener.
-// A network address is comprised of the IP address and the port number joined
+// A network address holds an IP address and the port number joined
 // by a colon.
-// For the moment, there is no IPv6 support.
+// It doesn't support IPv6 yet.
 type Address string
 
 const (
-	// PlainTCP represents a vanilla TCP connection
+	// PlainTCP is an unencrypted TCP connection.
 	PlainTCP ConnType = "tcp"
-	// TLS represents a TLS encrypted connection over TCP
+	// TLS is a TLS encrypted connection over TCP.
 	TLS = "tls"
-	// PURB represents a PURB encryption connection over TCP
+	// PURB is a PURB encryption connection over TCP.
 	PURB = "purb"
-	// Local represents a channel based connection type
+	// Local is a channel based connection type.
 	Local = "local"
-	// InvalidConnType represents a non valid connection type
+	// InvalidConnType is an invalid connection type.
 	InvalidConnType = "wrong"
 )
 
-// typeAddressSep is the separator between the type of connection and the actual
-// ip address.
+// typeAddressSep is the separator between the type of the connection and the actual
+// IP address.
 const typeAddressSep = "://"
 
+// connType converts a string to a ConnType. In case of failure,
+// it returns InvalidConnType.
 func connType(t string) ConnType {
 	ct := ConnType(t)
 	types := []ConnType{PlainTCP, TLS, PURB, Local}
@@ -46,8 +48,8 @@ func connType(t string) ConnType {
 	return InvalidConnType
 }
 
-// ConnType return the connection type from this address
-// It returns an unvalid connection type if the address is not valid or if the
+// ConnType returns the connection type from the address.
+// It returns InvalidConnType if the address is not valid or if the
 // connection type is not known.
 func (a Address) ConnType() ConnType {
 	if !a.Valid() {
@@ -57,7 +59,7 @@ func (a Address) ConnType() ConnType {
 	return connType(vals[0])
 }
 
-// NetworkAddress returns the network address part of an Address. That includes
+// NetworkAddress returns the network address part of the address, which is
 // the IP address and the port joined by a colon.
 // It returns an empty string if the a.Valid() returns false.
 func (a Address) NetworkAddress() string {
@@ -69,11 +71,11 @@ func (a Address) NetworkAddress() string {
 }
 
 // Valid returns true if the address is well formed or false otherwise.
-// An address is well formed if it is of the form: ConnType:NetworkAddress.
+// An address is well formed if it is of the form: ConnType://NetworkAddress.
 // ConnType must be one of the constants defined in this file,
 // NetworkAddress must contain the IP address + Port number.
 // The IP address is validated by net.ParseIP & the port must be included in the
-// range [0;65536]
+// range [0;65536].
 // Ex. tls:192.168.1.10:5678
 func (a Address) Valid() bool {
 	vals := strings.Split(string(a), typeAddressSep)
@@ -103,12 +105,14 @@ func (a Address) Valid() bool {
 	return true
 }
 
+// String returns the address as a string.
 func (a Address) String() string {
 	return string(a)
 }
 
 // Host returns the host part of the address.
 // ex: "tcp://127.0.0.1:2000" => "127.0.0.1"
+// In case of an error, it returns an empty string.
 func (a Address) Host() string {
 	na := a.NetworkAddress()
 	if na == "" {
@@ -121,7 +125,9 @@ func (a Address) Host() string {
 	return h
 }
 
-// Port will return the port part of the Address
+// Port will return the port part of the Address. In the
+// case of an invalid address or an invalid port, it
+// will return "".
 func (a Address) Port() string {
 	na := a.NetworkAddress()
 	if na == "" {
@@ -138,7 +144,7 @@ func (a Address) Port() string {
 // Public returns true if the address is a public and valid one
 // or false otherwise.
 // Specifically it checks if it is a private address by checking
-// 192.168.**,10.***,127.***,172.**,169.254.**
+// 192.168.**,10.***,127.***,172.16-31.**,169.254.**
 func (a Address) Public() bool {
 	private, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
 		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
@@ -151,6 +157,7 @@ func (a Address) Public() bool {
 
 // NewAddress takes a connection type and the raw address. It returns a
 // correctly formatted address, which will be of type t.
+// It doesn't do any checking of ConnType or network.
 func NewAddress(t ConnType, network string) Address {
 	return Address(string(t) + typeAddressSep + network)
 }
