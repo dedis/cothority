@@ -1,9 +1,10 @@
-Servers = 8
+Servers = 32
 Simulation = "ServiceBNG"
-NumClientTxs = 200000
-Rounds = 10
+NumClientTxs = 350000
+Rounds = 5
 BF = 3
-CloseWait = 300
+RunWait = 3000
+CloseWait = 3000
 
 Hosts, Blocksize
-8, 2200
+144, 66000

@@ -12,6 +12,7 @@ import (
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
 	"sync"
 	"time"
@@ -71,25 +72,30 @@ func (s *Service) StartSimul(blocksPath string, nTxs int, Roster *sda.Roster) er
 
 	s.transaction = &transactions
 
-	s.startEpoch()
 	return nil
 }
 
-func (s *Service) startEpoch() {
+func (s *Service) startEpoch() (*MicroBlock, error) {
 	//number of rounds... should be viariable
 	block, err := GetBlock(*s.transaction, s.lastBlock, s.lastKeyBlock)
 	if err != nil {
-		log.Fatal("cannot get block")
+		log.Lvl1("cannot get block")
+		return nil, err
 	}
 
 	block.Roster = s.Roster
-	s.signNewBlock(block)
+	block, err = s.signNewBlock(block)
+	if err != nil {
+		log.Lvl1("cannot sign block")
+		return nil, err
+	}
 	err = block.BlockSig.Verify(network.Suite, block.Roster.Publics())
 	if err != nil {
-		log.Lvl3("cannot verify block")
+		log.Lvl1("cannot verify block")
+		return nil, err
 	}
 
-	return
+	return block, nil
 }
 
 // signNewBlock should start a BFT-signature on the newest block
@@ -112,7 +118,7 @@ func (s *Service) signNewBlock(block *MicroBlock) (*MicroBlock, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Lvl1("updating", s.ServiceProcessor.ServerIdentity().First())
+		//s.startPropagation(block)
 		s.lastBlock = block.HeaderHash
 
 		return block, nil
@@ -162,7 +168,7 @@ func (s *Service) startBFTSignature(block *MicroBlock) error {
 		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
-	case <-time.After(time.Second * 60):
+	case <-time.After(time.Second * 600):
 		return errors.New("Timed out while waiting for signature")
 	}
 	return nil
@@ -174,9 +180,18 @@ func (s *Service) startBFTSignature(block *MicroBlock) error {
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	var pi sda.ProtocolInstance
 	var err error
-
-	pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
+	switch tn.ProtocolName() {
+	case "Propagate":
+		pi, err = manage.NewPropagateProtocol(tn)
+		if err != nil {
+			return nil, err
+		}
+		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
+	case BNGBFT:
+		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
+	}
 	return pi, err
+
 }
 
 // newTemplate receives the context and a path where it can write its
@@ -229,7 +244,8 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	n = time.Duration(s1 / (500 * 1024))
 	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
 	// verification of the header
-	verified := block.Header.Parent == s.lastBlock //&& block.Header.ParentKey == s.lastKeyBlock
+	verified := true
+	//verified := block.Header.Parent == s.lastBlock //&& block.Header.ParentKey == s.lastKeyBlock
 	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
 	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
 	// notify it
@@ -238,4 +254,38 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		log.Lvl3("header", block.Header.Parent, "cached", s.lastBlock)
 	}
 	return verified
+}
+
+// notify other services about new/updated skipblock
+func (s *Service) startPropagation(block *MicroBlock) error {
+	log.Lvlf3("Starting to propagate for service %x", s.Context.ServerIdentity().ID[0:8])
+	roster := block.Roster
+	if roster == nil {
+		return errors.New("Didn't find Roster")
+	}
+	replies, err := manage.PropagateStartAndWait(s.Context, roster,
+		block, 100000, s.PropagateSkipBlock)
+	if err != nil {
+		return err
+	}
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
+	}
+	return nil
+}
+
+// PropagateSkipBlock will save a new SkipBlock
+func (s *Service) PropagateSkipBlock(msg network.Body) {
+	sb, ok := msg.(*MicroBlock)
+	if !ok {
+		log.Error("Couldn't convert to SkipBlock")
+		return
+	}
+	if err := sb.VerifySignatures(); err != nil {
+		log.Error(err)
+		return
+	}
+	s.lastBlock = sb.HeaderHash
+	//TODO: Handle Key blocks
+	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
 }

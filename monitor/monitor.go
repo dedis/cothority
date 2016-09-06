@@ -182,7 +182,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 			}
 		}
 
-		log.Lvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
+		log.LLvlf3("Monitor: received a Measure from %s: %+v", conn.RemoteAddr().String(), measure)
 		// Special case where the measurement is indicating a FINISHED step
 		switch strings.ToLower(measure.Name) {
 		case "end":

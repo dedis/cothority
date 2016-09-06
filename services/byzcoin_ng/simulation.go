@@ -56,19 +56,27 @@ func (e *simulation) Setup(dir string, hosts []string) (
 // rounds
 func (e *simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
+	service, ok := config.GetService(ServiceName).(*Service)
+	if service == nil || !ok {
+		log.Fatal("Didn't find service", ServiceName)
+	}
+	err := service.StartSimul(blockchain.GetBlockDir(), e.Blocksize, config.Roster)
+	if err != nil {
+		log.Error(err)
+	}
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		service, ok := config.GetService(ServiceName).(*Service)
-		if service == nil || !ok {
-			log.Fatal("Didn't find service", ServiceName)
-		}
-		err := service.StartSimul(blockchain.GetBlockDir(), e.Blocksize, config.Roster)
+		block, err := service.startEpoch()
 		if err != nil {
 			log.Error(err)
 		}
 		round.Record()
+		//TODO:propagate only the header
+		service.startPropagation(block)
 	}
+	log.Lvl2("done with measures")
+
 	return nil
 }
