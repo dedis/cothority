@@ -176,14 +176,14 @@ func (c *counterSafe) Tx() uint64 {
 	return c.tx
 }
 
-// UpdateRx adds delta to the rx counter
+// updateRx adds delta to the rx counter
 func (c *counterSafe) updateRx(delta uint64) {
 	c.Lock()
 	defer c.Unlock()
 	c.rx += delta
 }
 
-// UpdateRx adds delta to the tx counter
+// updateTx adds delta to the tx counter
 func (c *counterSafe) updateTx(delta uint64) {
 	c.Lock()
 	defer c.Unlock()
