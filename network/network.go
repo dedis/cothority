@@ -1,7 +1,5 @@
 package network
 
-import (
-
 // Conn represents any communication between two hosts.
 type Conn interface {
 	// Send a message through the connection.
