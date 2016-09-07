@@ -264,7 +264,7 @@ func (lc *LocalConn) Type() ConnType {
 }
 
 // connQueue manages the message queue of a LocalConn.
-// Messages are pushed and retrieved in a FIFO.
+// Messages are pushed and retrieved in a FIFO-queue.
 // All operations are thread-safe.
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
