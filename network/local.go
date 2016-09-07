@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 // NewLocalRouter returns a fresh router which uses local connections. It takes
@@ -200,7 +198,7 @@ func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalCon
 }
 
 // Send implements the Conn interface.
-func (lc *LocalConn) Send(lm context.Context, msg Body) error {
+func (lc *LocalConn) Send(msg Body) error {
 	buff, err := MarshalRegisteredType(msg)
 	if err != nil {
 		return err
@@ -210,7 +208,7 @@ func (lc *LocalConn) Send(lm context.Context, msg Body) error {
 }
 
 // Receive implements the Conn interface.
-func (lc *LocalConn) Receive(lm context.Context) (Packet, error) {
+func (lc *LocalConn) Receive() (Packet, error) {
 	buff, err := lc.pop()
 	if err != nil {
 		return EmptyApplicationPacket, err
