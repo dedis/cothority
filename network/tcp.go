@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -73,7 +71,7 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 // it decodes the buffer.
 // It returns the Packet with the Msg field decoded
 // or EmptyApplicationPacket and an error if something wrong happened.
-func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
+func (c *TCPConn) Receive() (nm Packet, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			e = fmt.Errorf("Error Received message: %v", err)
@@ -82,7 +80,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	}()
 
 	var am Packet
-	buff, err := c.receive()
+	buff, err := c.receiveRaw()
 	if err != nil {
 		return EmptyApplicationPacket, err
 	}
@@ -95,12 +93,12 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	return am, nil
 }
 
-// receive reads the size of the message, then the
+// receiveRaw reads the size of the message, then the
 // whole message. It returns the raw message as slice of bytes.
 // If there is no message available, it blocks until one becomes
 // available.
 // In case of an error it returns a nil slice and the error.
-func (c *TCPConn) receive() ([]byte, error) {
+func (c *TCPConn) receiveRaw() ([]byte, error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
 	// First read the size
@@ -112,14 +110,14 @@ func (c *TCPConn) receive() ([]byte, error) {
 	var read Size
 	var buffer bytes.Buffer
 	for read < total {
-		// read the size of the next packet
+		// Read the size of the next packet.
 		n, err := c.conn.Read(b)
-		// if error then quit
+		// Quit if there is an error.
 		if err != nil {
 
 			return nil, handleError(err)
 		}
-		// put it in the longterm buffer
+		// Append the read bytes into the buffer.
 		if _, err := buffer.Write(b[:n]); err != nil {
 			log.Error("Couldn't write to buffer:", err)
 		}
@@ -127,20 +125,15 @@ func (c *TCPConn) receive() ([]byte, error) {
 		b = b[n:]
 	}
 
-	// set the size read
+	// register how many bytes we read.
 	c.updateRx(uint64(read))
 	return buffer.Bytes(), nil
 }
 
-// Number of bytes to write to the socket at once. All sending packets will be
-// split into packets of this size.
-// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
-const maxChunkSize Size = 1400
-
 // Send converts the NetworkMessage into an ApplicationMessage
 // and sends it using send().
 // It returns an error if anything was wrong.
-func (c *TCPConn) Send(ctx context.Context, obj Body) error {
+func (c *TCPConn) Send(obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkPacket(obj)
@@ -153,39 +146,28 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
-	return c.send(b)
+	return c.sendRaw(b)
 }
 
-// send writes the number of bytes of the message to the network then the
+// sendRaw writes the number of bytes of the message to the network then the
 // whole message b in slices of size maxChunkSize.
 // In case of an error it aborts and returns error.
-func (c *TCPConn) send(b []byte) error {
-	// First write the size of the message.
+func (c *TCPConn) sendRaw(b []byte) error {
+	// First write the size
 	packetSize := Size(len(b))
 	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
 		return err
 	}
-	// Then send everything through the connection, in chunks the
-	// size of maxChunkSize.
+	// Then send everything through the connection
+	// Send chunk by chunk
+	log.Lvl5("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 	var sent Size
 	for sent < packetSize {
-		length := packetSize - sent
-		if length > maxChunkSize {
-			length = maxChunkSize
-		}
-
-		// Sending 'length' bytes.
-		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
-		n, err := c.conn.Write(b[:length])
+		n, err := c.conn.Write(b[sent:])
 		if err != nil {
-			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			return handleError(err)
 		}
 		sent += Size(n)
-		log.Lvl5("Sent", sent, "out of", packetSize)
-
-		// bytes left to send.
-		b = b[n:]
 	}
 	// update stats on the connection.
 	c.updateTx(uint64(packetSize))
@@ -214,7 +196,7 @@ func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
 	if c.closed == true {
-		return nil
+		return ErrClosed
 	}
 	err := c.conn.Close()
 	c.closed = true
