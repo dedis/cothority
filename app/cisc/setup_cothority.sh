@@ -22,8 +22,8 @@ for n in $( seq $NBR_NODES ); do
   rm -rf $c
   echo -e "$p\n$IP\n$c" | ./cothorityd setup
   tail -n 4 $c/group.toml >> group.toml
-  # Start cothorityd in background
-  ./cothorityd -c $c/config.toml &
+  # Start cothorityd in background in its own directory.
+  ( cd $c; ../cothorityd -c config.toml & )
 done
 
 # Create a new identity-skipchain
