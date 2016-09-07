@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
@@ -55,7 +53,7 @@ func TestTCPConnWithListener(t *testing.T) {
 
 	connFn := func(c Conn) {
 		connStat <- c.Rx()
-		c.Receive(context.TODO())
+		c.Receive()
 		connStat <- c.Rx()
 	}
 	go func() {
@@ -71,7 +69,7 @@ func TestTCPConnWithListener(t *testing.T) {
 	// Test bandwitdth measurements also
 	rx1 := <-connStat
 	tx1 := c.Tx()
-	assert.Nil(t, c.Send(context.TODO(), &SimpleMessage{3}))
+	assert.Nil(t, c.Send(&SimpleMessage{3}))
 	tx2 := c.Tx()
 	rx2 := <-connStat
 
