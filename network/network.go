@@ -1,23 +1,19 @@
 package network
 
 import (
-	"golang.org/x/net/context"
-
-	"github.com/dedis/cothority/monitor"
-)
 
 // Conn represents any communication between two hosts.
 type Conn interface {
 	// Send a message through the connection.
 	// obj should be a POINTER to the actual struct to send, or an interface.
 	// It should not be a Golang type.
-	Send(ctx context.Context, obj Body) error
+	Send(obj Body) error
 	// Receive any message through the connection. It is a blocking call that
 	// returns either when a message arrived or when Close() has been called, or
 	// when a network error occurred.
-	Receive(ctx context.Context) (Packet, error)
-	// Close the connection. Implementations must take care of the fact that
-	// Close() makes Receive() return with an error, and any subsequent Send()
+	Receive() (Packet, error)
+	// Close will close the connection. Implementations must take care that
+	// Close() makes Receive() returns with an error, and any subsequent Send()
 	// will return with an error. Calling Close() on a closed Conn will return
 	// ErrClosed.
 	Close() error
@@ -28,8 +24,10 @@ type Conn interface {
 	Remote() Address
 	// Returns the local address and port.
 	Local() Address
-	// XXX Can we remove that ?
-	monitor.CounterIO
+	// Tx returns how many bytes this connection has written
+	Tx() uint64
+	// Rx returns how many bytes this connection has read
+	Rx() uint64
 }
 
 // Listener is responsible for listening for incoming Conns on a particular
