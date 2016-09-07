@@ -6,8 +6,6 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -118,14 +116,14 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 
 	log.Lvlf4("%s sends to %s msg: %+v", r.id.Address, e, msg)
 	var err error
-	err = c.Send(context.TODO(), msg)
+	err = c.Send(msg)
 	if err != nil {
 		log.Lvl2(r.id.Address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
 			return err
 		}
-		err = c.Send(context.TODO(), msg)
+		err = c.Send(msg)
 		if err != nil {
 			return err
 		}
@@ -162,9 +160,8 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
-		ctx := context.TODO()
 		log.Lvl3(r.id.Address, "Got message BEFORE")
-		packet, err := c.Receive(ctx)
+		packet, err := c.Receive()
 		// So the receiver can know about the error
 		packet.SetError(err)
 		packet.From = address
@@ -338,11 +335,11 @@ func (r *Router) negotiateOpen(si *ServerIdentity, c Conn) error {
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
 	// Send our ServerIdentity to the remote endpoint
 	log.Lvl4(own.Address, "Sending our identity to", c.Remote())
-	if err := c.Send(context.TODO(), own); err != nil {
+	if err := c.Send(own); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}
 	// Receive the other ServerIdentity
-	nm, err := c.Receive(context.TODO())
+	nm, err := c.Receive()
 	if err != nil {
 		return nil, fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
 	}

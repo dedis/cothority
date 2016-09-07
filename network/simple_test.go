@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-
-	"golang.org/x/net/context"
 )
 
 var SimplePacketType PacketTypeID
@@ -37,7 +35,7 @@ func TestTCPConnListenerExample(t *testing.T) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()
-			nm, _ := c.Receive(context.TODO())
+			nm, _ := c.Receive()
 			if nm.MsgType != SimplePacketType {
 				c.Close()
 				panic("Packet received not conform")
@@ -46,7 +44,7 @@ func TestTCPConnListenerExample(t *testing.T) {
 			if simplePacket.Name != clientName {
 				panic("Not the right name")
 			}
-			c.Send(context.TODO(), &SimplePacket{serverName})
+			c.Send(&SimplePacket{serverName})
 			//c.Close()
 		})
 		if err != nil {
@@ -62,8 +60,8 @@ func TestTCPConnListenerExample(t *testing.T) {
 	// wait for the listen callback to be called at least once:
 	<-listenCB
 
-	conn.Send(context.TODO(), &SimplePacket{clientName})
-	nm, err := conn.Receive(context.TODO())
+	conn.Send(&SimplePacket{clientName})
+	nm, err := conn.Receive()
 	cConMu.Unlock()
 	if err != nil {
 		panic(err)
