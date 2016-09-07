@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/crypto/config"
 )
 
@@ -66,11 +64,11 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	msgCh := make(chan Packet)
 	errCh := make(chan error)
 	go func() {
-		if err := c.Send(context.TODO(), msg); err != nil {
+		if err := c.Send(msg); err != nil {
 			errCh <- err
 			return
 		}
-		p, err := c.Receive(context.TODO())
+		p, err := c.Receive()
 		if ret := ErrMsg(&p, err); ret != nil {
 			errCh <- ret
 		} else {
