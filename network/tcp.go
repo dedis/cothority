@@ -189,7 +189,7 @@ func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
 	if c.closed == true {
-		return nil
+		return ErrClosed
 	}
 	err := c.conn.Close()
 	c.closed = true
