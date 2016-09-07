@@ -249,18 +249,9 @@ type TCPListener struct {
 // the binding. A subsequent call to Address() will give the real listening
 // address (useful if you set it to port :0).
 func NewTCPListener(addr Address) (*TCPListener, error) {
-	l := &TCPListener{
+	t := &TCPListener{
 		quit:         make(chan bool),
 		quitListener: make(chan bool),
-	}
-	return l, l.bind(addr)
-}
-
-func (t *TCPListener) bind(addr Address) error {
-	t.listeningLock.Lock()
-	defer t.listeningLock.Unlock()
-	if t.listening == true {
-		return errors.New("Already listening")
 	}
 	global, _ := GlobalBind(addr.NetworkAddress())
 	for i := 0; i < MaxRetryConnect; i++ {
@@ -269,12 +260,12 @@ func (t *TCPListener) bind(addr Address) error {
 			t.listener = ln
 			break
 		} else if i == MaxRetryConnect-1 {
-			return errors.New("Error opening listener: " + err.Error())
+			return nil, errors.New("Error opening listener: " + err.Error())
 		}
 		time.Sleep(WaitRetry)
 	}
 	t.addr = t.listener.Addr()
-	return nil
+	return t, nil
 }
 
 // Listen implements the Listener interface
