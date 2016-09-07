@@ -37,7 +37,7 @@ type LocalManager struct {
 	// The listening-functions used when a new connection-request arrives.
 	listening map[Address]func(Conn)
 
-	// connection-counter for giving unique IDs for each connection.
+	// connection-counter for giving unique IDs to each connection.
 	counter uint64
 }
 
