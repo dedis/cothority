@@ -79,7 +79,7 @@ func (c *TCPConn) Receive() (nm Packet, e error) {
 	}()
 
 	var am Packet
-	buff, err := c.receive()
+	buff, err := c.receiveRaw()
 	if err != nil {
 		return EmptyApplicationPacket, err
 	}
@@ -92,9 +92,9 @@ func (c *TCPConn) Receive() (nm Packet, e error) {
 	return am, nil
 }
 
-// receive is responsible for getting first the size of the message, then the
+// receiveRaw is responsible for getting first the size of the message, then the
 // whole message. It returns the raw message as slice of bytes.
-func (c *TCPConn) receive() ([]byte, error) {
+func (c *TCPConn) receiveRaw() ([]byte, error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
 	// First read the size
@@ -147,11 +147,11 @@ func (c *TCPConn) Send(obj Body) error {
 	if err != nil {
 		return fmt.Errorf("Error marshaling  message: %s", err.Error())
 	}
-	return c.send(b)
+	return c.sendRaw(b)
 }
 
-// send takes care of sending this slice of bytes FULLY to the connection
-func (c *TCPConn) send(b []byte) error {
+// sendRaw takes care of sending this slice of bytes FULLY to the connection
+func (c *TCPConn) sendRaw(b []byte) error {
 	// First write the size
 	packetSize := Size(len(b))
 	if err := binary.Write(c.conn, globalOrder, packetSize); err != nil {
