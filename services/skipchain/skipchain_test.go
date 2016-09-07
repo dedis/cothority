@@ -35,7 +35,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 
 func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, false, false, false)
+	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
 	sbd1.Roster = el
@@ -54,7 +54,8 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	// First create a roster to attach the data to it
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 5)
+	_, el, genService := local.MakeHELS(5, skipchainSID)
+	service := genService.(*Service)
 	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
@@ -112,7 +113,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 3
-	_, el, s := makeHELS(local, sbLength)
+	_, el, gs := local.MakeHELS(sbLength, skipchainSID)
+	s := gs.(*Service)
 	sbs := make([]*SkipBlock, sbLength)
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
@@ -167,7 +169,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	hosts, el, service := makeHELS(local, nodesRoot)
+	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID)
+	service := genService.(*Service)
 
 	// Setting up two chains and linking one to the other
 	sbRoot := makeGenesisRoster(service, el)
@@ -221,7 +224,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 func TestService_MultiLevel(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 3)
+	_, el, genService := local.MakeHELS(3, skipchainSID)
+	service := genService.(*Service)
 
 	for base := 1; base <= 3; base++ {
 		for height := 1; height <= 3; height++ {
@@ -291,7 +295,9 @@ func TestService_Verification(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 4
-	_, el, service := makeHELS(local, sbLength)
+	_, el, genService := local.MakeHELS(sbLength, skipchainSID)
+	service := genService.(*Service)
+
 	elRoot := sda.NewRoster(el.List[0:3])
 	sbRoot := makeGenesisRoster(service, elRoot)
 
@@ -346,7 +352,8 @@ func TestService_SignBlock(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 3)
+	_, el, genService := local.MakeHELS(3, skipchainSID)
+	service := genService.(*Service)
 
 	sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
 	el2 := sda.NewRoster(el.List[0:2])
@@ -367,7 +374,8 @@ func TestService_ProtocolVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	hosts, el, s1 := makeHELS(local, 3)
+	hosts, el, s := local.MakeHELS(3, skipchainSID)
+	s1 := s.(*Service)
 	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
 	s3 := local.Services[hosts[2].ServerIdentity.ID][skipchainSID].(*Service)
 	services := []*Service{s1, s2, s3}
@@ -416,11 +424,4 @@ func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
 
 func makeGenesisRoster(s *Service, el *sda.Roster) *SkipBlock {
 	return makeGenesisRosterArgs(s, el, nil, VerifyNone, 1, 1)
-}
-
-// Makes a Host, an Roster, and a service
-func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.Roster, *Service) {
-	hosts := local.GenLocalHosts(nbr, false, true)
-	el := local.GenRosterFromHost(hosts...)
-	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/medco"
 	. "github.com/dedis/cothority/services/medco/libmedco"
@@ -20,6 +21,12 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
+func NewTestMedcoClient(entryPoint *network.ServerIdentity) *medco.API {
+	a := medco.NewMedcoClient(entryPoint)
+	a.Client = sda.NewLocalClient(medco.ServiceName)
+	return a
+}
+
 // TestService tests medco complete service execution.
 func TestService(t *testing.T) {
 	t.Skip("Issue with deadlock occuring in the medco protocol: https://github.com/dedis/cothority/issues/479")
@@ -27,11 +34,11 @@ func TestService(t *testing.T) {
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	_, el, _ := local.GenTree(5, true, true, true)
+	_, el, _ := local.GenTree(5, true)
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := medco.NewMedcoClient(el.List[0])
+	client := NewTestMedcoClient(el.List[0])
 
 	surveyDesc := SurveyDescription{1, 10}
 	surveyID, err := client.CreateSurvey(el, surveyDesc)
@@ -44,7 +51,7 @@ func TestService(t *testing.T) {
 	log.Lvl1("Sending response data... ")
 	dataHolder := make([]*medco.API, 10)
 	for i := 0; i < numberAttr; i++ {
-		dataHolder[i] = medco.NewMedcoClient(el.List[i%5])
+		dataHolder[i] = NewTestMedcoClient(el.List[i%5])
 		grp := [numberGrpAttr]int64{}
 		aggr := make([]int64, 10)
 		grp[0] = int64(i % 4)

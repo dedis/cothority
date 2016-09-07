@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for app
 DBG_APP=2
 DBG_SRV=0
 # Uncomment to build in local dir
-#STATICDIR=test
+STATICDIR=test
 # Needs 4 clients
 NBR=4
 
@@ -279,7 +279,7 @@ clientSetup(){
     local CLIENTS=${1:-0} c b
 	cothoritySetup
 	local DBG_OLD=$DBG_SHOW
-    DBG_SHOW=0
+    DBG_SHOW=2
     testOK runCl 1 id cr group.toml client1
     runGrepSed ID "s/.* //" runCl 1 config ls
     ID=$SED

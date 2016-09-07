@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -73,9 +72,14 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 	return nil
 }
 
+type SimpleMessage struct {
+	I int
+}
+
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
+	log.AfterTest(t)
 	testProtoName := "testProto"
 	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
 	if !ProtocolExists(testProtoID) {
@@ -93,6 +97,7 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
+	log.AfterTest(t)
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
@@ -111,10 +116,9 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 	network.RegisterPacketType(SimpleMessage{})
 	ProtocolRegisterName(simpleProto, fn)
-	h1, h2 := SetupTwoHosts(t, true)
+	h1, h2 := TwoTestHosts()
 	defer h1.Close()
 	defer h2.Close()
-	h1.StartProcessMessages()
 	// create small Tree
 	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
 	h1.AddRoster(el)
@@ -129,18 +133,9 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}()
 
 	// we are supposed to receive something from host1 from Start()
-	select {
-	case _ = <-chanH1:
-		break
-	case <-time.After(200 * time.Millisecond):
-		t.Fatal("Could not receive from channel of host 1")
-	}
+	_ = <-chanH1
+
 	// Then we are supposed to receive from h2 after he got the tree and the
 	// entity list from h1
-	select {
-	case _ = <-chanH2:
-		break
-	case <-time.After(2 * time.Second):
-		t.Fatal("Could not receive from channel of host 1")
-	}
+	<-chanH2
 }

@@ -1,10 +1,9 @@
 package identity
 
 import (
-	"testing"
-
 	"io/ioutil"
 	"os"
+	"testing"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -13,12 +12,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func NewTestIdentity(cothority *sda.Roster, majority int, owner string, local *sda.LocalTest) *Identity {
+	id := NewIdentity(cothority, majority, owner)
+	id.Client = local.NewClient(ServiceName)
+	return id
+}
+
 func TestIdentity_ConfigNewCheck(t *testing.T) {
-	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
@@ -41,18 +46,18 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
-	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	for _, s := range services {
 		s.(*Service).clearIdentities()
 	}
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewIdentity(el, 50, "two")
+	c2 := NewTestIdentity(el, 50, "two", l)
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	for _, s := range services {
 		is := s.(*Service)
@@ -65,14 +70,14 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 }
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
-	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewIdentity(el, 50, "two")
+	c2 := NewTestIdentity(el, 50, "two", l)
 	c2.ID = c1.ID
 	log.ErrFatal(c2.ConfigUpdate())
 
@@ -84,11 +89,11 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 }
 
 func TestIdentity_CreateIdentity(t *testing.T) {
-	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(3, true, true, true)
+	l := sda.NewTCPTest()
+	_, el, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
-	c := NewIdentity(el, 50, "one")
+	c := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c.CreateIdentity())
 
 	// Check we're in the configuration
@@ -96,12 +101,12 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 }
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
-	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(3, true, true, true)
+	l := sda.NewTCPTest()
+	hosts, el, _ := l.GenTree(3, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
+	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
@@ -125,15 +130,15 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 }
 
 func TestIdentity_ProposeVote(t *testing.T) {
-	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
 		log.Lvl3(s.(*Service).Identities)
 	}
 
-	c1 := NewIdentity(el, 50, "one1")
+	c1 := NewTestIdentity(el, 50, "one1", l)
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
@@ -150,8 +155,8 @@ func TestIdentity_ProposeVote(t *testing.T) {
 }
 
 func TestIdentity_SaveToStream(t *testing.T) {
-	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 	id := NewIdentity(el, 50, "one1")
 	tmpfile, err := ioutil.TempFile("", "example")
@@ -179,8 +184,8 @@ func TestIdentity_SaveToStream(t *testing.T) {
 }
 
 func TestCrashAfterRevocation(t *testing.T) {
-	l := sda.NewLocalTest()
-	hosts, el, _ := l.GenTree(5, true, true, true)
+	l := sda.NewTCPTest()
+	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {

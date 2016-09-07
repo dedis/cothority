@@ -23,41 +23,41 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 
-	"regexp"
-
-	// Empty imports to have the init-functions called which should
-	// register the protocol
+	// CoSi-protocol is not part of the cothority.
 	"github.com/dedis/crypto/cosi"
-	// For the moment, the server only serves CoSi requests
+	// Empty imports to have the init-functions called which should
+	// register the protocol.
 	_ "github.com/dedis/cosi/protocol"
+	// For the moment, the server only serves CoSi requests
 	s "github.com/dedis/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )
 
-// DefaultServerConfig is the name of the default file to lookup for server
-// configuration file
+// DefaultServerConfig is the default server configuration file-name.
 const DefaultServerConfig = "config.toml"
 
-// DefaultGroupFile is the name of the default file to lookup for group
-// definition
+// DefaultGroupFile is the default group definition file-name.
 const DefaultGroupFile = "group.toml"
 
-// DefaultPort where to listen; At time of writing, this port is not listed in
+// DefaultPort to listen and connect to. As of this writing, this port is not listed in
 // /etc/services
 const DefaultPort = 6879
 
-// DefaultAddress where to be contacted by other servers
+// DefaultAddress where to be contacted by other servers.
 const DefaultAddress = "127.0.0.1"
 
-// Service used to get the port connection service
+// Service used to get the public IP-address.
 const whatsMyIP = "http://www.whatsmyip.org/"
 
-// RequestTimeOut is how long we're willing to wait for a signature
+// RequestTimeOut is how long we're willing to wait for a signature.
 var RequestTimeOut = time.Second * 1
 
-// InteractiveConfig will ask through the command line to create a Private / Public
-// key, what is the listening address
+// InteractiveConfig uses stdin to get the [address:]PORT of the server.
+// If no address is given, whatsMyIP is used to find the public IP. In case
+// no public IP can be configured, localhost will be used.
+// If everything is OK, the configuration-files will be written.
+// In case of an error this method Fatals.
 func InteractiveConfig(binaryName string) {
 	log.Info("Setting up a cothority-server.")
 	str := config.Inputf(strconv.Itoa(DefaultPort), "Please enter the [address:]PORT for incoming requests")
@@ -65,7 +65,7 @@ func InteractiveConfig(binaryName string) {
 	var hostStr string
 	var ipProvided = true
 	var portStr string
-	var serverBinding string
+	var serverBinding network.Address
 	if !strings.Contains(str, ":") {
 		str = ":" + str
 	}
@@ -87,16 +87,17 @@ func InteractiveConfig(binaryName string) {
 		portStr = port
 	}
 
-	serverBinding = hostStr + ":" + portStr
-	if net.ParseIP(hostStr) == nil {
-		log.Fatal("Invalid connection  information for", serverBinding)
+	serverBinding = network.NewTCPAddress(hostStr + ":" + portStr)
+	if !serverBinding.Valid() {
+		log.Error("Unable to validate address given", serverBinding)
+		return
 	}
 
 	log.Info("We now need to get a reachable address for other CoSi servers")
 	log.Info("and clients to contact you. This address will be put in a group definition")
 	log.Info("file that you can share and combine with others to form a Cothority roster.")
 
-	var publicAddress string
+	var publicAddress network.Address
 	var failedPublic bool
 	// if IP was not provided then let's get the public IP address
 	if !ipProvided {
@@ -112,7 +113,7 @@ func InteractiveConfig(binaryName string) {
 				log.Error("Could not parse your public IP address", err)
 				failedPublic = true
 			} else {
-				publicAddress = strings.TrimSpace(string(buff)) + ":" + portStr
+				publicAddress = network.NewTCPAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
 			}
 		}
 	} else {
@@ -123,7 +124,7 @@ func InteractiveConfig(binaryName string) {
 	if failedPublic {
 		publicAddress = askReachableAddress(portStr)
 	} else {
-		if isPublicIP(publicAddress) {
+		if publicAddress.Public() {
 			// try  to connect to ipfound:portgiven
 			tryIP := publicAddress
 			log.Info("Check if the address", tryIP, "is reachable from Internet...")
@@ -137,12 +138,16 @@ func InteractiveConfig(binaryName string) {
 		}
 	}
 
+	if !publicAddress.Valid() {
+		log.Fatal("Could not validate public ip address:", publicAddress)
+	}
+
 	// create the keys
 	privStr, pubStr := createKeyPair()
 	conf := &config.CothoritydConfig{
-		Public:    pubStr,
-		Private:   privStr,
-		Addresses: []string{serverBinding},
+		Public:  pubStr,
+		Private: privStr,
+		Address: serverBinding,
 	}
 
 	var configDone bool
@@ -184,6 +189,8 @@ func InteractiveConfig(binaryName string) {
 
 // CheckConfig contacts all servers and verifies if it receives a valid
 // signature from each.
+// If the roster is empty it will return an error.
+// If a server doesn't reply in time, it will return an error.
 func CheckConfig(tomlFileName string) error {
 	f, err := os.Open(tomlFileName)
 	log.ErrFatal(err, "Couldn't open group definition file")
@@ -198,7 +205,10 @@ func CheckConfig(tomlFileName string) error {
 }
 
 // CheckServers contacts all servers in the entity-list and then makes checks
-// on each pair. If 'descs' is 'nil', it doesn't print the description.
+// on each pair. If server-descriptions are available, it will print them
+// along with the IP-address of the server.
+// In case a server doesn't reply in time or there is an error in the
+// signature, an error is returned.
 func CheckServers(g *config.Group) error {
 	success := true
 	// First check all servers individually
@@ -233,12 +243,15 @@ func CheckServers(g *config.Group) error {
 	return nil
 }
 
-// checkList sends a message to the list and waits for the reply
+// checkList sends a message to the cothority defined by list and
+// waits for the reply.
+// If the reply doesn't arrive in time, it will return an
+// error.
 func checkList(list *sda.Roster, descs []string) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
-		serverStr += fmt.Sprintf("%s_%s ", s.Addresses[0], name)
+		serverStr += fmt.Sprintf("%s_%s ", s.Address, name)
 	}
 	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
@@ -257,8 +270,10 @@ func checkList(list *sda.Roster, descs []string) error {
 	return nil
 }
 
-// signStatement can be used to sign the contents passed in the io.Reader
-// (pass an io.File or use an strings.NewReader for strings)
+// signStatement signs the contents passed in the io.Reader
+// (pass an io.File or use an strings.NewReader for strings). It uses
+// the roster el to create the collective signature.
+// In case the signature fails, an error is returned.
 func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	error) {
 	//publics := entityListToPublics(el)
@@ -294,6 +309,9 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	}
 }
 
+// verifySignatureHash verifies if the message b is correctly signed by signature
+// sig from roster el.
+// If the signature-check fails for any reason, an error is returned.
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
@@ -311,6 +329,9 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) err
 	}
 	return nil
 }
+
+// entityListToPublics returns a slice of Points of all elements
+// of the roster.
 func entityListToPublics(el *sda.Roster) []abstract.Point {
 	publics := make([]abstract.Point, len(el.List))
 	for i, e := range el.List {
@@ -319,18 +340,8 @@ func entityListToPublics(el *sda.Roster) []abstract.Point {
 	return publics
 }
 
-func isPublicIP(ip string) bool {
-	public, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
-		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
-		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)", ip)
-	if err != nil {
-		log.Error(err)
-	}
-	return !public
-}
-
-// Returns true if file exists and user is OK to overwrite, or file dont exists
-// Return false if file exists and user is NOT OK to overwrite.
+// Returns true if file exists and user confirms overwriting, or if file doesn't exist.
+// Returns false if file exists and user doesn't confirm overwriting.
 func checkOverwrite(file string) bool {
 	// check if the file exists and ask for override
 	if _, err := os.Stat(file); err == nil {
@@ -339,7 +350,7 @@ func checkOverwrite(file string) bool {
 	return true
 }
 
-// createKeyPair returns the private and public key hexadecimal representation
+// createKeyPair returns the private and public key in hexadecimal representation.
 func createKeyPair() (string, string) {
 	log.Info("Creating ed25519 private and public keys.")
 	kp := crypconf.NewKeyPair(network.Suite)
@@ -360,6 +371,9 @@ func createKeyPair() (string, string) {
 	return privStr, pubStr
 }
 
+// saveFiles takes a CothoritydConfig and its filename, and a GroupToml and its filename,
+// and saves the data to these files.
+// In case of a failure it Fatals.
 func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.GroupToml, fileGroup string) {
 	if err := conf.Save(fileConf); err != nil {
 		log.Fatal("Unable to write the config to file:", err)
@@ -375,6 +389,9 @@ func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.Gro
 
 }
 
+// getDefaultConfigFile returns the default path to the configuration-path, which
+// is ~/.config/binaryName for Unix and ~/Library/binaryName for MacOSX.
+// In case of an error it Fatals.
 func getDefaultConfigFile(binaryName string) string {
 	u, err := user.Current()
 	// can't get the user dir, so fallback to current working dir
@@ -386,7 +403,7 @@ func getDefaultConfigFile(binaryName string) string {
 			return path.Join(curr, DefaultServerConfig)
 		}
 	}
-	// let's try to stick to usual OS folders
+	// Fetch standard folders.
 	switch runtime.GOOS {
 	case "darwin":
 		return path.Join(u.HomeDir, "Library", binaryName, DefaultServerConfig)
@@ -396,7 +413,10 @@ func getDefaultConfigFile(binaryName string) string {
 	}
 }
 
-func askReachableAddress(port string) string {
+// askReachableAddress uses stdin to get the contactable IP-address of the server
+// and adding port if necessary.
+// In case of an error, it will Fatal.
+func askReachableAddress(port string) network.Address {
 	ipStr := config.Input(DefaultAddress, "IP-address where your server can be reached")
 
 	splitted := strings.Split(ipStr, ":")
@@ -414,19 +434,20 @@ func askReachableAddress(port string) string {
 		// add the port
 		ipStr = ipStr + ":" + port
 	}
-	return ipStr
+	return network.NewTCPAddress(ipStr)
 }
 
-// tryConnect will bind to the ip address and ask a internet service to try to
+// tryConnect binds to the given IP address and ask an internet service to
 // connect to it. binding is the address where we must listen (needed because
 // the reachable address might not be the same as the binding address => NAT, ip
 // rules etc).
-func tryConnect(ip string, binding string) error {
+// In case anything goes wrong, an error is returned.
+func tryConnect(ip, binding network.Address) error {
 
 	stopCh := make(chan bool, 1)
 	// let's bind
 	go func() {
-		ln, err := net.Listen("tcp", binding)
+		ln, err := net.Listen("tcp", binding.NetworkAddress())
 		if err != nil {
 			log.Error("Trouble with binding to the address:", err)
 			return
@@ -437,7 +458,7 @@ func tryConnect(ip string, binding string) error {
 	}()
 	defer func() { stopCh <- true }()
 
-	_, port, err := net.SplitHostPort(ip)
+	_, port, err := net.SplitHostPort(ip.NetworkAddress())
 	if err != nil {
 		return err
 	}

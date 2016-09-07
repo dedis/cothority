@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-
-	"strconv"
-
-	"golang.org/x/net/context"
 )
 
 var SimplePacketType PacketTypeID
@@ -20,71 +16,76 @@ type SimplePacket struct {
 	Name string
 }
 
-func TestSimple(t *testing.T) {
-	client := NewTCPHost()
-	clientName := "client"
-	server := NewTCPHost()
+func TestTCPConnListenerExample(t *testing.T) {
+	addr := NewTCPAddress("127.0.0.1:2000")
+	server, err := NewTCPListener(addr)
+	if err != nil {
+		t.Fatal("Could not setup listener")
+	}
 	serverName := "server"
+	clientName := "client"
 
 	done := make(chan bool)
 	listenCB := make(chan bool)
 
 	srvConMu := sync.Mutex{}
 	cConMu := sync.Mutex{}
-
 	go func() {
-		err := server.Listen("localhost:0", func(c Conn) {
+		err := server.Listen(func(c Conn) {
 			listenCB <- true
 			srvConMu.Lock()
 			defer srvConMu.Unlock()
-			nm, _ := c.Receive(context.TODO())
+			nm, _ := c.Receive()
 			if nm.MsgType != SimplePacketType {
 				c.Close()
-				t.Fatal("Packet received not conform")
+				panic("Packet received not conform")
 			}
 			simplePacket := nm.Msg.(SimplePacket)
 			if simplePacket.Name != clientName {
-				t.Fatal("Not the right name")
+				panic("Not the right name")
 			}
-			c.Send(context.TODO(), &SimplePacket{serverName})
+			c.Send(&SimplePacket{serverName})
 			//c.Close()
 		})
 		if err != nil {
-			t.Fatal("Couldn't listen:", err)
+			panic("Couldn't listen:" + err.Error())
 		}
 		done <- true
 	}()
 	cConMu.Lock()
-	conn, err := client.Open("localhost:" + strconv.Itoa(<-server.listeningPort))
+	conn, err := NewTCPConn(addr)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	// wait for the listen callback to be called at least once:
 	<-listenCB
 
-	conn.Send(context.TODO(), &SimplePacket{clientName})
-	nm, err := conn.Receive(context.TODO())
+	conn.Send(&SimplePacket{clientName})
+	nm, err := conn.Receive()
 	cConMu.Unlock()
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	if nm.MsgType != SimplePacketType {
-		t.Fatal(fmt.Sprintf("Packet received non conform %+v", nm))
+		panic(fmt.Sprintf("Packet received non conform %+v", nm))
 	}
 	sp := nm.Msg.(SimplePacket)
 	if sp.Name != serverName {
-		t.Fatal("Name no right")
+		panic("Name no right")
 	}
 	cConMu.Lock()
-	if err := client.Close(); err != nil {
-		t.Fatal("Couldn't close client connection")
+	if err := conn.Close(); err != nil {
+		panic("Couldn't close client connection")
 	}
 	cConMu.Unlock()
 
 	srvConMu.Lock()
 	defer srvConMu.Unlock()
-	if err := server.Close(); err != nil {
-		t.Fatal("Couldn't close server connection")
+	if err := server.Stop(); err != nil {
+		panic("Couldn't close server connection")
 	}
 	<-done
+	// Output
+	// Client received server
+	// Server received client
 }
