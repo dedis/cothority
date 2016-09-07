@@ -11,8 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -72,7 +70,7 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 // Receive calls the receive routine to get the bytes from the connection then
 // it tries to decode the buffer. Returns the Packet with the Msg field decoded
 // or EmptyApplicationPacket and an error if something wrong occured.
-func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
+func (c *TCPConn) Receive() (nm Packet, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			e = fmt.Errorf("Error Received message: %v", err)
@@ -136,7 +134,7 @@ const maxChunkSize Size = 1400
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with send()
 // Returns an error if anything was wrong
-func (c *TCPConn) Send(ctx context.Context, obj Body) error {
+func (c *TCPConn) Send(obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkPacket(obj)
