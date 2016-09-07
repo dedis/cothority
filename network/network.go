@@ -1,18 +1,16 @@
 package network
 
-import "golang.org/x/net/context"
-
 // Conn is the basic interface to represent any communication mean
 // between two host.
 type Conn interface {
 	// Send a message through the connection.
 	// obj should be a POINTER to the actual struct to send, or an interface.
 	// It should not be a Golang type.
-	Send(ctx context.Context, obj Body) error
+	Send(obj Body) error
 	// Receive any message through the connection. It is a blocking call that
 	// returns either when a message arrived or when Close() has been called, or
 	// when a network error occured.
-	Receive(ctx context.Context) (Packet, error)
+	Receive() (Packet, error)
 	// Close will close the connection. Implementations must take care that
 	// Close() makes Receive() returns with an error, and any subsequent Send()
 	// will return with an error. Calling Close() on a closed Conn will return
