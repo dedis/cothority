@@ -1,10 +1,6 @@
 package network
 
-import (
-	"golang.org/x/net/context"
-
-	"github.com/dedis/cothority/monitor"
-)
+import "golang.org/x/net/context"
 
 // Conn is the basic interface to represent any communication mean
 // between two host.
@@ -29,8 +25,10 @@ type Conn interface {
 	Remote() Address
 	// Returns the local address and port
 	Local() Address
-	// XXX Can we remove that ?
-	monitor.CounterIO
+	// Tx returns how many bytes this connection has written
+	Tx() uint64
+	// Rx returns how many bytes this connection has read
+	Rx() uint64
 }
 
 // Listener is responsible for listening for incoming Conn on a particular
