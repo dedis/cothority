@@ -17,7 +17,7 @@ fi
 rm group.toml
 killall cothorityd
 for n in $( seq $NBR_NODES ); do
-  p=$(( 2000 + n ))
+  p=$(( 2000 + 2 * n ))
   c=config$n
   rm -rf $c
   echo -e "$p\n$IP\n$c" | ./cothorityd setup
