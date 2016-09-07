@@ -80,7 +80,7 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(c.Device[s])
+		b, err := c.Device[s].Point.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
@@ -205,8 +205,8 @@ type ConfigUpdateReply struct {
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
-	ID ID
-	*Config
+	ID      ID
+	Propose *Config
 }
 
 // ProposeUpdate verifies if a new config is available.
@@ -224,7 +224,7 @@ type ProposeUpdateReply struct {
 type ProposeVote struct {
 	ID        ID
 	Signer    string
-	Signature *crypto.SchnorrSig
+	Signature []byte
 }
 
 // ProposeVoteReply returns the signed new skipblock if the threshold of
@@ -237,7 +237,7 @@ type ProposeVoteReply struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*Storage
+	Storage *Storage
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
