@@ -126,11 +126,6 @@ func (c *TCPConn) receiveRaw() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// how many bytes do we write at once on the socket
-// 1400 seems a safe choice regarding the size of a ethernet packet.
-// https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection
-const maxChunkSize Size = 1400
-
 // Send will convert the NetworkMessage into an ApplicationMessage
 // and send it with send()
 // Returns an error if anything was wrong
@@ -159,25 +154,14 @@ func (c *TCPConn) sendRaw(b []byte) error {
 	}
 	// Then send everything through the connection
 	// Send chunk by chunk
+	log.Lvl5("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
 	var sent Size
 	for sent < packetSize {
-		length := packetSize - sent
-		if length > maxChunkSize {
-			length = maxChunkSize
-		}
-
-		// Sending 'length' bytes
-		log.Lvl4("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
-		n, err := c.conn.Write(b[:length])
+		n, err := c.conn.Write(b[sent:])
 		if err != nil {
-			log.Error("Couldn't write chunk starting at", sent, "size", length, err)
 			return handleError(err)
 		}
 		sent += Size(n)
-		log.Lvl5("Sent", sent, "out of", packetSize)
-
-		// bytes left to send
-		b = b[n:]
 	}
 	// update stats on the connection
 	c.updateTx(uint64(packetSize))
