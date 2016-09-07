@@ -288,7 +288,7 @@ func (t *TCPListener) bind(addr Address) error {
 
 // Listen starts to listen for incoming connections and calls fn for every
 // connection-request it receives.
-// In case of an error it returns it.
+// If the connection is closed, an error will be returned.
 func (t *TCPListener) Listen(fn func(Conn)) error {
 	receiver := func(tc *TCPConn) {
 		go fn(tc)
