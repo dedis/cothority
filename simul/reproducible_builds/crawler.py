@@ -12,6 +12,19 @@ except:
     raise
 
 
+packages_required = ['attr', 'base-files', 'base-passwd', 'coreutils', 'debconf', 'debianutils', 'diffutils',
+                     'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
+                     'lsb', 'mawk', 'pam', 'sed', 'sysvinit', 'pcre3', 'perl', 'tar', 'util-linux', 'zlib']
+
+packages_popular = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 'cpio', 'logrotate',
+                    'debian-archive-keyring', 'liblocale-gettext-perl', 'net-tools', 'ucf', 'popularity-contest',
+                    'cron', 'manpages', 'libtext-wrapi18n-perl', 'iptables', 'ifupdown', 'man-db', 'mime-support',
+                    'pciutils', 'libxml2', 'initramfs-tools', 'libcap2', 'dmidecode', 'busybox', 'file', 'less',
+                    'ca-certificates', 'psmisc', 'nano', 'tasksel', 'insserv', 'installation-report',
+                    'laptop-detect', 'linux-base', 'xml-core', 'aptitude', 'bzip2', 'os-prober', 'acpid',
+                    'discover-data', 'bash-completion', 'dictionaries-common', 'eject']
+
+
 # Modifier for a dependency line
 def parse_dpnd(li):
     li = li.replace(' ', '')
@@ -92,10 +105,11 @@ def get_packages(option):
     packs = []
 
     if option == 'required':
-        packs = ['acl', 'attr', 'base-files', 'base-passwd', 'debconf', 'debianutils', 'diffutils',
-                 'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'lsb', 'mawk', 'pam',
-                 'sed', 'sysvinit', 'pcre3', 'perl', 'tar', 'util-linux', 'zlib']
+        packs = packages_required
         # packs = ['acl', 'attr']
+
+    elif option == 'popular':
+        packs = packages_popular
 
     elif option == 'random':
         SET_SIZE = 3
