@@ -22,6 +22,7 @@ import (
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -443,6 +444,15 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 				return true
 			}
 		}
+	case VerifySwup:
+		log.Fatal("Not implemented")
+		var pkgName string
+		verifyT := monitor.NewTimeMeasure("verify_" + pkgName)
+		// Verify all signatures
+		verifyT.Record()
+		buildT := monitor.NewTimeMeasure("build_" + pkgName)
+		// launch the reproducible build
+		buildT.Record()
 	}
 	return false
 }
