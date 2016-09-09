@@ -50,9 +50,6 @@ type Service struct {
 	path   string
 	// testVerify is set to true if a verification happened - only for testing
 	testVerify bool
-	// All known verification functions - this must be initialized
-	// by all children.
-	verifications map[VerifierID]bftcosi.VerificationFunction
 }
 
 // SkipBlockMap holds the map to the skipblocks so it can be marshaled.
@@ -232,15 +229,6 @@ func (s *Service) PropagateSkipBlock(msg network.Body) {
 	}
 	s.storeSkipBlock(sb)
 	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
-}
-
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
-func (s *Service) RegisterVerification(v VerifierID, f bftcosi.VerificationFunction) error {
-	s.gMutex.Lock()
-	s.verifications[v] = f
-	s.gMutex.Unlock()
-	return nil
 }
 
 // signNewSkipBlock should start a BFT-signature on the newest block
@@ -466,7 +454,7 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		// launch the reproducible build
 		buildT.Record()
 	default:
-		f, ok := s.verifications[sb.VerifierID]
+		f, ok := verifiers[sb.VerifierID]
 		if ok {
 			log.Lvlf3("Found user verification %x", sb.VerifierID)
 			return f(msg, data)
@@ -536,7 +524,6 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
-		verifications:    map[VerifierID]bftcosi.VerificationFunction{},
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
