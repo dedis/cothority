@@ -53,8 +53,13 @@ type storage struct {
 // - initialize the skipchains
 // - return an id of how this project can be referred to
 func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) (network.Body, error) {
-	log.LLvlf3("%s Creating project %v", cs, *cp.Policy)
-	sc := &SwupChain{}
+	policy := cp.Release.Policy
+	log.LLvlf3("%s Creating package %s version %s", cs,
+		policy.Name, policy.Version)
+	sc := &SwupChain{
+		Release:   cp.Release,
+		Timestamp: &Timestamp{"", []byte{}, ""},
+	}
 	log.Lvl3("Creating Root-skipchain")
 	var err error
 	sc.Root, err = cs.skipchain.CreateRoster(cp.Roster, cp.Base, cp.Height,
@@ -64,11 +69,11 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	}
 	log.Lvl3("Creating Data-skipchain")
 	sc.Root, sc.Data, err = cs.skipchain.CreateData(sc.Root, 2, 10,
-		verifierID, cp.Policy)
+		verifierID, cp.Release)
 	if err != nil {
 		return nil, err
 	}
-	cs.StorageMap.Storage[cp.Policy.Name] =
+	cs.StorageMap.Storage[policy.Name] =
 		&storage{sc}
 	cs.save()
 
@@ -87,7 +92,35 @@ func (cs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig
 
 // verifierFunc will return whether the block is valid.
 func verifierFunc(msg, data []byte) bool {
-	return false
+	_, sbBuf, err := network.UnmarshalRegistered(data)
+	sb, ok := sbBuf.(*skipchain.SkipBlock)
+	if err != nil || !ok {
+		log.Error(err, ok)
+		return false
+	}
+	_, relBuf, err := network.UnmarshalRegistered(sb.Data)
+	release, ok := relBuf.(*Release)
+	if err != nil || !ok {
+		log.Error(err, ok)
+		return false
+	}
+	policy := release.Policy
+	policyBin, err := network.MarshalRegisteredType(policy)
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+	log.Printf("Verifying release %s/%s", policy.Name, policy.Version)
+	for i, s := range release.Signatures {
+		err := NewPGPPublic(policy.Keys[i]).Verify(
+			policyBin, s)
+		if err != nil {
+			log.Print("Wrong signature")
+			return false
+		}
+	}
+	log.Print("Congrats, verified")
+	return true
 }
 
 // saves the actual identity

@@ -63,7 +63,6 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 		var isFirstPacket bool
 		// Fetch the policy-file and the signatures
 		var lineFile string
-		sigs := NewSignatures("")
 		policy, err := NewPolicy(lineFile)
 		log.ErrFatal(err)
 		round := monitor.NewTimeMeasure("build_" + policy.Name)
@@ -71,11 +70,9 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 			// Create the skipchain, will build
 			service.CreatePackage(nil,
 				&CreatePackage{
-					Roster:     config.Roster,
-					Policy:     policy,
-					Signatures: sigs,
-					Base:       e.Base,
-					Height:     e.Height,
+					Roster: config.Roster,
+					Base:   e.Base,
+					Height: e.Height,
 				})
 		} else {
 			// Append to skipchain, will build

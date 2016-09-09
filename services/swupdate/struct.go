@@ -11,20 +11,12 @@ import (
 
 func init() {
 	for _, msg := range []interface{}{
-		Signature{},
 		Policy{},
+		Release{},
 		storageMap{},
 	} {
 		network.RegisterPacketType(msg)
 	}
-}
-
-type Signature struct {
-	Sig string
-}
-
-func NewSignatures(sigs string) []*Signature {
-	return []*Signature{}
 }
 
 type Policy struct {
@@ -45,12 +37,17 @@ func NewPolicy(str string) (*Policy, error) {
 	return p, err
 }
 
-type SwupChain struct {
-	Root       *skipchain.SkipBlock
-	Data       *skipchain.SkipBlock
+// Niktin calls this 'Snapshot'
+type Release struct {
 	Policy     *Policy
-	Signatures []*Signature
-	Timestamp  *Timestamp
+	Signatures []string
+}
+
+type SwupChain struct {
+	Root      *skipchain.SkipBlock
+	Data      *skipchain.SkipBlock
+	Release   *Release
+	Timestamp *Timestamp
 }
 
 type Timestamp struct {
@@ -67,11 +64,10 @@ func NewTimestamp(hash []byte) *Timestamp {
 type ProjectID uuid.UUID
 
 type CreatePackage struct {
-	Roster     *sda.Roster
-	Policy     *Policy
-	Signatures []*Signature
-	Base       int
-	Height     int
+	Roster  *sda.Roster
+	Release *Release
+	Base    int
+	Height  int
 }
 
 type CreatePackageRet struct {
@@ -79,9 +75,8 @@ type CreatePackageRet struct {
 }
 
 type UpdatePackage struct {
-	SwupChain  *SwupChain
-	Policy     *Policy
-	Signatures []*Signature
+	SwupChain *SwupChain
+	Release   *Release
 }
 
 type UpdatePackageRet struct {
