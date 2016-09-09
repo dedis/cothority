@@ -21,7 +21,7 @@ import (
  */
 
 // Yay - security!
-const PGPBits = 512
+const PGPBits = 2048
 
 type PGP struct {
 	Public  *packet.PublicKey

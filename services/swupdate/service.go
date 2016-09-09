@@ -7,6 +7,8 @@ import (
 
 	"sync"
 
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -134,6 +136,8 @@ func verifierFunc(msg, data []byte) bool {
 			return false
 		}
 	}
+	// Verify the reproducible build
+	time.Sleep(5 * time.Second)
 	log.Print("Congrats, verified")
 	return true
 }

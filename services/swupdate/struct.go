@@ -29,6 +29,7 @@ type Policy struct {
 	Keys       []string
 	Threshold  int
 	BinaryHash string
+	SourceHash string
 }
 
 func NewPolicy(str string) (*Policy, error) {
