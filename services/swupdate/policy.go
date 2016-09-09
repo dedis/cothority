@@ -24,6 +24,8 @@ type DebianRelease struct {
 	Signatures []string
 }
 
+var policyKeys []*PGP
+
 func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
 	log.Print(entries)
@@ -42,7 +44,10 @@ func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 			return nil, err
 		}
 		for k := 0; k < dr.Policy.Threshold; k++ {
-			pgp := NewPGP()
+			if k >= len(policyKeys) {
+				policyKeys = append(policyKeys, NewPGP())
+			}
+			pgp := policyKeys[k]
 			pub := pgp.ArmorPublic()
 			dr.Policy.Keys = append(dr.Policy.Keys, pub)
 			sig, err := pgp.Sign([]byte(dr.Policy.SourceHash))
