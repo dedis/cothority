@@ -20,9 +20,20 @@ packages_popular = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 
                     'debian-archive-keyring', 'liblocale-gettext-perl', 'net-tools', 'ucf', 'popularity-contest',
                     'cron', 'manpages', 'libtext-wrapi18n-perl', 'iptables', 'ifupdown', 'man-db', 'mime-support',
                     'pciutils', 'libxml2', 'initramfs-tools', 'libcap2', 'dmidecode', 'busybox', 'file', 'less',
-                    'ca-certificates', 'psmisc', 'nano', 'tasksel', 'insserv', 'installation-report',
-                    'laptop-detect', 'linux-base', 'xml-core', 'aptitude', 'bzip2', 'os-prober', 'acpid',
-                    'discover-data', 'bash-completion', 'dictionaries-common', 'eject']
+                    'ca-certificates', 'psmisc', 'nano', 'tasksel', 'insserv', 'installation-report', 'laptop-detect',
+                    'linux-base', 'xml-core', 'aptitude', 'bzip2', 'os-prober', 'acpid', 'discover-data',
+                    'bash-completion', 'dictionaries-common', 'eject', 'kmod', 'whois', 'iso-codes', 'geoip-database',
+                    'bc', 'acpi', 'libtimedate-perl', 'm4', 'reportbug', 'libuuid-perl', 'usbutils', 'fontconfig', 'at',
+                    'time', 'liburi-perl', 'w3m', 'python-debian', 'procmail', 'libhtml-tagset-perl',
+                    'libhtml-parser-perl', 'texinfo', 'libhtml-tree-perl', 'libwww-perl', 'bsd-mailx',
+                    'apt-listchanges', 'hicolor-icon-theme', 'libnet-ssleay-perl', 'libswitch-perl',
+                    'libclass-isa-perl', 'python-debianbts', 'libmailtools-perl', 'libio-socket-ssl-perl', 'unzip',
+                    'libhttp-date-perl', 'libencode-locale-perl', 'liblwp-mediatypes-perl', 'libhttp-message-perl',
+                    'libfont-afm-perl', 'libhtml-format-perl', 'ssl-cert', 'libfile-listing-perl',
+                    'libwww-robotrules-perl', 'libnet-http-perl', 'libhttp-negotiate-perl', 'libhttp-cookies-perl',
+                    'liblwp-protocol-https-perl', 'libxml-parser-perl', 'rpcbind', 'libhttp-daemon-perl',
+                    'libio-socket-ip-perl', 'update-inetd', 'libhtml-form-perl', 'libfile-copy-recursive-perl',
+                    'python-soappy', 'aspell', 'xdg-user-dirs']
 
 
 # Modifier for a dependency line
@@ -42,7 +53,7 @@ def compile_bin(name, bina):
     with open(name + '.log', 'w') as flog:
         wall_start_time = time.perf_counter()
         cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
-        process = subprocess.run(['docker', 'build', '--tag=reprod:' + name, '--force-rm', '.'], stdout=flog,
+        subprocess.run(['docker', 'build', '--tag=reprod:' + name, '--force-rm', '.'], stdout=flog,
                                  universal_newlines=True)
 
     try:
@@ -50,6 +61,7 @@ def compile_bin(name, bina):
                                                  bina]).decode('ascii', 'ignore').partition(' ')[0]
         cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
         wall_time = time.perf_counter() - wall_start_time
+        subprocess.run(['docker', 'rmi', 'reprod:'+name])
 
     except:
         print("Some error while building", name)
@@ -106,10 +118,11 @@ def get_packages(option):
 
     if option == 'required':
         packs = packages_required
-        # packs = ['acl', 'attr']
+        # packs = ['libsepol']
 
     elif option == 'popular':
         packs = packages_popular
+        # packs = ['libsepol']
 
     elif option == 'random':
         SET_SIZE = 3
@@ -124,7 +137,7 @@ def get_packages(option):
     return packs
 
 
-packages = get_packages('required')
+packages = get_packages('popular')
 baseurl = 'https://tests.reproducible-builds.org'
 url = 'https://tests.reproducible-builds.org/debian/rb-pkg/testing/amd64/'
 hash_match, hash_differ, failed = [], [], []
@@ -162,8 +175,10 @@ for p in packages:
                     else:
                         version = short_version = words[1]
                 elif words[0] == 'Binary:':  # To know binary name for the verified package
-                    if (' ' + p + ' ') in line:
+                    if p in words:
                         name = p
+                    elif (p + '1') in words:
+                        name = p + '1'
                     else:
                         name = words[1]
                 elif words[0] == 'Source:':  # To know a name of the folder where to compile a package
@@ -206,7 +221,7 @@ for p in packages:
         print("Hashes match for", name, computed_hash)
     else:
         if computed_hash == '':
-            failed.append((p, binary, size, -1, -1, -1, 'f'))
+            failed.append((p, binary, size, wtime, utime, stime, 'f'))
             print('Fail in the build process')
         else:
             hash_differ.append((p, binary, size, wtime, utime, stime, 'n'))
