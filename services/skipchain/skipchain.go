@@ -18,11 +18,11 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
-	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 // ServiceName can be used to refer to the name of this service

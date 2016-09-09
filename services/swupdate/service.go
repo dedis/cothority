@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
@@ -127,18 +128,22 @@ func verifierFunc(msg, data []byte) bool {
 		log.Error(err)
 		return false
 	}
-	log.Printf("Verifying release %s/%s", policy.Name, policy.Version)
+	ver := monitor.NewTimeMeasure("verification_" + policy.Name)
+	//log.Printf("Verifying release %s/%s", policy.Name, policy.Version)
 	for i, s := range release.Signatures {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
 			policyBin, s)
 		if err != nil {
-			log.Print("Wrong signature")
+			log.Error("Wrong signature")
 			return false
 		}
 	}
+	ver.Record()
+	build := monitor.NewTimeMeasure("build_" + policy.Name)
 	// Verify the reproducible build
-	time.Sleep(5 * time.Second)
-	log.Print("Congrats, verified")
+	time.Sleep(1 * time.Second)
+	build.Record()
+	//log.Print("Congrats, verified")
 	return true
 }
 
@@ -188,9 +193,9 @@ func newSwupdate(c *sda.Context, path string) sda.Service {
 		skipchain:        skipchain.NewClient(),
 		StorageMap:       &storageMap{map[string]*storage{}},
 	}
-	if err := s.tryLoad(); err != nil {
-		log.Error(err)
-	}
+	//if err := s.tryLoad(); err != nil {
+	//	log.Error(err)
+	//}
 	err := s.RegisterMessages(s.CreatePackage, s.UpdatePackage)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message")

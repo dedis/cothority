@@ -9,6 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 )
 
 /*
@@ -18,8 +19,6 @@ import (
 
 type DebianRelease struct {
 	Snapshot   string
-	Name       string
-	Version    string
 	Policy     *Policy
 	Signatures []string
 }
@@ -28,29 +27,34 @@ var policyKeys []*PGP
 
 func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
-	log.Print(entries)
 	if len(entries) != 3 {
 		return nil, errors.New("Should have three entries")
 	}
-	dr := &DebianRelease{entries[0], entries[1], entries[2],
-		&Policy{}, []string{}}
+	policy := &Policy{Name: entries[1], Version: entries[2]}
+	dr := &DebianRelease{entries[0], policy, []string{}}
 	if dir != "" {
-		polBuf, err := ioutil.ReadFile(path.Join(dir, dr.Name, "policy-"+dr.Version))
+		polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
 		if err != nil {
 			return nil, err
 		}
-		_, err = toml.Decode(string(polBuf), dr.Policy)
+		_, err = toml.Decode(string(polBuf), policy)
 		if err != nil {
 			return nil, err
 		}
-		for k := 0; k < dr.Policy.Threshold; k++ {
+		for k := 0; k < policy.Threshold; k++ {
 			if k >= len(policyKeys) {
 				policyKeys = append(policyKeys, NewPGP())
 			}
 			pgp := policyKeys[k]
 			pub := pgp.ArmorPublic()
-			dr.Policy.Keys = append(dr.Policy.Keys, pub)
-			sig, err := pgp.Sign([]byte(dr.Policy.SourceHash))
+			policy.Keys = append(policy.Keys, pub)
+		}
+		policyBin, err := network.MarshalRegisteredType(policy)
+		if err != nil {
+			return nil, err
+		}
+		for i := range policy.Keys {
+			sig, err := policyKeys[i].Sign(policyBin)
 			if err != nil {
 				return nil, err
 			}

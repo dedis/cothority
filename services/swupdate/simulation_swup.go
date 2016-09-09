@@ -52,32 +52,39 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	//var packages []string
-	var csvLines []string
 	service, ok := config.GetService(ServiceName).(*Service)
 	if service == nil || !ok {
 		log.Fatal("Didn't find service", ServiceName)
 	}
-	for _, line := range csvLines {
-		log.Lvl1("Parsing line", line)
+
+	packets := make(map[string]*SwupChain)
+	drs, err := GetReleases("../../../services/swupdate/snapshot/updates.csv")
+	if err != nil {
+		return err
+	}
+	for _, dr := range drs {
+		pol := dr.Policy
+		log.Lvl1("Building", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
-		var isFirstPacket bool
-		// Fetch the policy-file and the signatures
-		var lineFile string
-		policy, err := NewPolicy(lineFile)
-		log.ErrFatal(err)
-		round := monitor.NewTimeMeasure("build_" + policy.Name)
-		if isFirstPacket {
-			// Create the skipchain, will build
-			service.CreatePackage(nil,
-				&CreatePackage{
-					Roster: config.Roster,
-					Base:   e.Base,
-					Height: e.Height,
-				})
-		} else {
+		sc, knownPacket := packets[pol.Name]
+		release := &Release{pol, dr.Signatures}
+		round := monitor.NewTimeMeasure("full_" + pol.Name)
+		if knownPacket {
 			// Append to skipchain, will build
 			service.UpdatePackage(nil,
-				&UpdatePackage{})
+				&UpdatePackage{sc, release})
+		} else {
+			// Create the skipchain, will build
+			cp, err := service.CreatePackage(nil,
+				&CreatePackage{
+					Roster:  config.Roster,
+					Base:    e.Base,
+					Height:  e.Height,
+					Release: release})
+			if err != nil {
+				return err
+			}
+			packets[pol.Name] = cp.(*CreatePackageRet).SwupChain
 		}
 		round.Record()
 	}
