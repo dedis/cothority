@@ -50,11 +50,14 @@ func WriteScalar64(suite abstract.Suite, w io.Writer, scalar abstract.Scalar) er
 
 // ReadScalar64 takes a Base64-encoded scalar and returns that scalar,
 // optionally an error
-func ReadScalar64(suite abstract.Suite, r io.Reader) (abstract.Scalar, error) {
-	s := suite.Scalar()
-	dec := base64.NewDecoder(base64.StdEncoding, r)
-	err := suite.Read(dec, &s)
-	return s, err
+func ReadScalar64String(suite abstract.Suite, s string) (abstract.Scalar, error) {
+	scalar := suite.Scalar()
+	dec, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	err = scalar.UnmarshalBinary(dec)
+	return scalar, err
 }
 
 // PubHex converts a Public point to a hexadecimal representation
