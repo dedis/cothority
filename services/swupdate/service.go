@@ -82,7 +82,22 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 
 // SignatureRequest treats external request to this service.
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
-	return nil, nil
+	sc := &SwupChain{
+		Release:   up.Release,
+		Timestamp: &Timestamp{"", []byte{}, ""},
+	}
+	rel := up.Release
+	log.Lvl3("Creating Data-skipchain")
+	var err error
+	sc.Root, sc.Data, err = cs.skipchain.CreateData(up.SwupChain.Root, 2, 10,
+		verifierID, rel)
+	if err != nil {
+		return nil, err
+	}
+	cs.StorageMap.Storage[rel.Policy.Name] = &storage{sc}
+	cs.save()
+
+	return &UpdatePackageRet{sc}, nil
 }
 
 // NewProtocol will instantiate a new protocol if needed.

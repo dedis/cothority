@@ -79,7 +79,7 @@ func TestService_UpdatePackage(t *testing.T) {
 			Release:   release2,
 		})
 	log.ErrFatal(err)
-	sc = upr.(*SwupChain)
+	sc = upr.(*UpdatePackageRet).SwupChain
 	assert.NotNil(t, sc)
 	assert.Equal(t, *policy2, *sc.Release.Policy)
 }
