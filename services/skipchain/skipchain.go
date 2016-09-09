@@ -46,10 +46,13 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	*SkipBlockMap
-	sbMutex sync.Mutex
-	path    string
+	gMutex sync.Mutex
+	path   string
 	// testVerify is set to true if a verification happened - only for testing
 	testVerify bool
+	// All known verification functions - this must be initialized
+	// by all children.
+	verifications map[VerifierID]bftcosi.VerificationFunction
 }
 
 // SkipBlockMap holds the map to the skipblocks so it can be marshaled.
@@ -229,6 +232,15 @@ func (s *Service) PropagateSkipBlock(msg network.Body) {
 	}
 	s.storeSkipBlock(sb)
 	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) RegisterVerification(v VerifierID, f bftcosi.VerificationFunction) error {
+	s.gMutex.Lock()
+	s.verifications[v] = f
+	s.gMutex.Unlock()
+	return nil
 }
 
 // signNewSkipBlock should start a BFT-signature on the newest block
@@ -453,30 +465,36 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		buildT := monitor.NewTimeMeasure("build_" + pkgName)
 		// launch the reproducible build
 		buildT.Record()
+	default:
+		f, ok := s.verifications[sb.VerifierID]
+		if ok {
+			log.Lvlf3("Found user verification %x", sb.VerifierID)
+			return f(msg, data)
+		}
 	}
 	return false
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	b, ok := s.SkipBlocks[string(sbID)]
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return b, ok
 }
 
 // storeSkipBlock stores the given SkipBlock in the service-list
 func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	s.SkipBlocks[string(sb.Hash)] = sb
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return sb.Hash
 }
 
 // lenSkipBlock returns the actual length using mutexes
 func (s *Service) lenSkipBlocks() int {
-	s.sbMutex.Lock()
-	defer s.sbMutex.Unlock()
+	s.gMutex.Lock()
+	defer s.gMutex.Unlock()
 	return len(s.SkipBlocks)
 }
 
@@ -518,6 +536,7 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
+		verifications:    map[VerifierID]bftcosi.VerificationFunction{},
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
