@@ -13,7 +13,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 
-	"github.com/dedis/cothority/protocols/swupdate/verification/parsers"
+	"github.com/dedis/cothority/services/swupdate/verification/parsers"
 	"golang.org/x/crypto/openpgp"
 )
 

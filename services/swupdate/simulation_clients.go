@@ -48,4 +48,5 @@ func (e *clientSimulation) Setup(dir string, hosts []string) (
 func (e *clientSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	return nil
 }

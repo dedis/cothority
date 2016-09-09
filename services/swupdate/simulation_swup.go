@@ -51,7 +51,7 @@ func (e *createSimulation) Setup(dir string, hosts []string) (
 func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
-	var packages []string
+	//var packages []string
 	var csvLines []string
 	service, ok := config.GetService(ServiceName).(*Service)
 	if service == nil || !ok {
@@ -63,16 +63,24 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 		var isFirstPacket bool
 		// Fetch the policy-file and the signatures
 		var lineFile string
-		var sigsFile []string
-		policy := NewPolicy(lineFile)
-		pkg := NewPackage(policy, sigsFile)
-		round := monitor.NewTimeMeasure("build_" + pkg)
+		sigs := NewSignatures("")
+		policy, err := NewPolicy(lineFile)
+		log.ErrFatal(err)
+		round := monitor.NewTimeMeasure("build_" + policy.Name)
 		if isFirstPacket {
 			// Create the skipchain, will build
-			service.CreatePackage(pkg, e.Height, e.Base)
+			service.CreatePackage(nil,
+				&CreatePackage{
+					Roster:     config.Roster,
+					Policy:     policy,
+					Signatures: sigs,
+					Base:       e.Base,
+					Height:     e.Height,
+				})
 		} else {
 			// Append to skipchain, will build
-			service.UpdatePackage(pkg)
+			service.UpdatePackage(nil,
+				&UpdatePackage{})
 		}
 		round.Record()
 	}
