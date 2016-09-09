@@ -187,7 +187,7 @@ func NewByzCoinRootProtocol(n *sda.TreeNodeInstance, transactions []blkparser.Tx
 	if err != nil {
 		return nil, err
 	}
-	bz.tempBlock, err = GetBlock(transactions, bz.lastBlock, bz.lastKeyBlock)
+	bz.transactions = transactions
 	bz.rootFailMode = failMode
 	bz.rootTimeout = timeOutMs
 	return bz, err
@@ -409,6 +409,11 @@ func (bz *ByzCoin) handleCommit(ann Commitment) error {
 // startPrepareChallenge create the challenge and send its down the tree
 func (bz *ByzCoin) startChallengePrepare() error {
 	// make the challenge out of it
+	var err error
+	bz.tempBlock, err = GetBlock(bz.transactions, bz.lastBlock, bz.lastKeyBlock)
+	if err != nil {
+		return err
+	}
 	trblock := bz.tempBlock
 	marshalled, err := json.Marshal(trblock)
 	if err != nil {

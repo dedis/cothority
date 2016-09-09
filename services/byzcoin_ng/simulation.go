@@ -6,6 +6,8 @@ import (
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/sda"
+	"sync"
+	"time"
 )
 
 /*
@@ -22,6 +24,8 @@ type simulation struct {
 	sda.SimulationBFTree
 	// your simulation specific fields:
 	Blocksize int
+	lock      sync.Mutex
+	Threads   int
 }
 
 // NewSimulation returns the new simulation, where all fields are
@@ -55,7 +59,7 @@ func (e *simulation) Setup(dir string, hosts []string) (
 // Run is used on the destination machines and runs a number of
 // rounds
 func (e *simulation) Run(config *sda.SimulationConfig) error {
-	size := config.Tree.Size()
+	//size := config.Tree.Size()
 	service, ok := config.GetService(ServiceName).(*Service)
 	if service == nil || !ok {
 		log.Fatal("Didn't find service", ServiceName)
@@ -64,18 +68,40 @@ func (e *simulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		log.Error(err)
 	}
-	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
-	for round := 0; round < e.Rounds; round++ {
-		log.Lvl1("Starting round", round)
-		round := monitor.NewTimeMeasure("round")
-		block, err := service.startEpoch()
-		if err != nil {
-			log.Error(err)
-		}
-		round.Record()
-		//TODO:propagate only the header
-		service.startPropagation(block)
+	log.Lvl1("Size is:", e.Blocksize, "rounds:", e.Rounds)
+	var wg sync.WaitGroup
+	round1 := monitor.NewTimeMeasure("round")
+	for i := 0; i < e.Threads; i++ {
+		wg.Add(1)
+		go func(j int) {
+			for {
+				e.lock.Lock()
+				if e.Rounds > 0 {
+					e.Rounds--
+					round := e.Rounds
+					e.lock.Unlock()
+					lat := monitor.NewTimeMeasure("lat")
+					log.Lvl1("Starting round", round, "at thread", j)
+					_, err := service.startEpoch(round, e.Blocksize)
+					if err != nil {
+						log.Error("problem after epoch")
+					}
+					lat.Record()
+				} else {
+					e.lock.Unlock()
+					break
+				}
+			}
+			wg.Done()
+		}(i)
+		time.Sleep(1000 * time.Millisecond)
+
+		//Propagation is not needed but bftcosi does not save the block
+		//service.startPropagation(block)
 	}
+	wg.Wait()
+	round1.Record()
+
 	log.Lvl2("done with measures")
 
 	return nil
