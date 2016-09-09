@@ -27,6 +27,7 @@ type MicroBlock struct {
 	*blockchain.TrBlock
 	BlockSig *bftcosi.BFTSignature
 	Roster   *sda.Roster
+	Priority int
 }
 
 // VerifySignatures returns whether all signatures are correctly signed

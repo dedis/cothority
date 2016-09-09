@@ -5,6 +5,7 @@ Defines the service of Byzcoin-NG that intatiates one bfrcosi protocol per block
 */
 
 import (
+	"container/heap"
 	"encoding/json"
 	"errors"
 	"github.com/dedis/cothority/log"
@@ -22,7 +23,7 @@ import (
 // package.
 const ServiceName = "ByzcoinNG"
 const BNGBFT = "Byzcoin_NG_BFT"
-const ReadFirstNBlocks = 10000
+const ReadFirstNBlocks = 66000
 
 func init() {
 	sda.RegisterNewService(ServiceName, newByzcoinNGService)
@@ -39,6 +40,8 @@ type Service struct {
 	*sda.ServiceProcessor
 	path string
 	//Mutex that emulates the hardware bottleneck
+	QMutex  sync.RWMutex
+	PQueue  *PriorityQueue
 	HWMutex sync.Mutex
 	//TODO push this inside the blocks
 	Roster *sda.Roster
@@ -55,6 +58,7 @@ func (s *Service) StartSimul(blocksPath string, nTxs int, Roster *sda.Roster) er
 	s.Roster = Roster
 	log.Lvl2("ByzCoin will trigger up to", nTxs, "transactions")
 	parser, err := blockchain.NewParser(blocksPath, magicNum)
+	log.Lvl1(blocksPath)
 
 	transactions, err := parser.Parse(0, ReadFirstNBlocks)
 	if len(transactions) == 0 {
@@ -75,16 +79,16 @@ func (s *Service) StartSimul(blocksPath string, nTxs int, Roster *sda.Roster) er
 	return nil
 }
 
-func (s *Service) startEpoch() (*MicroBlock, error) {
+func (s *Service) startEpoch(priority int, size int) (*MicroBlock, error) {
 	//number of rounds... should be viariable
-	block, err := GetBlock(*s.transaction, s.lastBlock, s.lastKeyBlock)
+	block, err := GetBlock(size, *s.transaction, s.lastBlock, s.lastKeyBlock, priority)
 	if err != nil {
 		log.Lvl1("cannot get block")
 		return nil, err
 	}
 
 	block.Roster = s.Roster
-	block, err = s.signNewBlock(block)
+	s.signNewBlock(block)
 	if err != nil {
 		log.Lvl1("cannot sign block")
 		return nil, err
@@ -196,7 +200,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 
 // newTemplate receives the context and a path where it can write its
 // configuration, if desired. As we don't know when the service will exit,
-// we need to save the configuration on our own from time to time.
+// we need to save the clconfiguration on our own from time to time.
 func newByzcoinNGService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
@@ -204,22 +208,24 @@ func newByzcoinNGService(c *sda.Context, path string) sda.Service {
 		lastBlock:        "0",
 		lastKeyBlock:     "0",
 		transaction:      &[]blkparser.Tx{},
+		PQueue:           &PriorityQueue{},
 	}
+	heap.Init(s.PQueue)
 	return s
 }
 
 // GetBlock returns the next block available from the transaction pool.
-func GetBlock(transactions []blkparser.Tx, lastBlock string, lastKeyBlock string) (*MicroBlock, error) {
+func GetBlock(size int, transactions []blkparser.Tx, lastBlock string, lastKeyBlock string, priority int) (*MicroBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
 
-	trlist := blockchain.NewTransactionList(transactions, len(transactions))
+	trlist := blockchain.NewTransactionList(transactions, size)
 	header := blockchain.NewHeader(trlist, lastBlock, lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
 	block := &MicroBlock{}
 	block.TrBlock = trblock
-
+	block.Priority = priority
 	return block, nil
 }
 
@@ -237,12 +243,47 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		return false
 	}
 	block := sbN.(*MicroBlock)
+	item := &Item{
+		value:    block.HeaderHash,
+		priority: block.Priority,
+	}
+	s.QMutex.Lock()
+	heap.Push(s.PQueue, item)
+	s.QMutex.Unlock()
+
+	for {
+		s.HWMutex.Lock()
+		s.HWMutex.Unlock()
+		s.QMutex.RLock()
+		temp := s.PQueue.Peak()
+		if block.Priority == temp {
+			s.HWMutex.Lock()
+			s.QMutex.RUnlock()
+			s.QMutex.Lock()
+			item = s.PQueue.Pop().(*Item)
+			if block.Priority != item.priority {
+				heap.Push(s.PQueue, item)
+				s.QMutex.Unlock()
+
+				s.HWMutex.Unlock()
+				continue
+			}
+			s.QMutex.Unlock()
+			break
+		} else {
+			s.QMutex.RUnlock()
+		}
+
+	}
 
 	b, _ := json.Marshal(block)
 	s1 := len(b)
 	var n time.Duration
 	n = time.Duration(s1 / (500 * 1024))
+
 	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
+	s.HWMutex.Unlock()
+
 	// verification of the header
 	verified := true
 	//verified := block.Header.Parent == s.lastBlock //&& block.Header.ParentKey == s.lastKeyBlock
