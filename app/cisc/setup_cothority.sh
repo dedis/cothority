@@ -30,3 +30,21 @@ done
 ./cisc id create group.toml
 # Print the corresponding qrcode
 ./cisc id qrcode
+
+echo "Scan QR-Code to join the Skipchain"
+read
+
+./cisc config vote
+echo "Voted on new device"
+read
+
+echo "Add SSH-key to owner"
+read
+
+cp -a ~/.ssh ssh-backup.$( date +%s )
+./cisc ssh add $HOSTNAME
+
+echo "Accept owner's SSH-key"
+read
+
+./cisc config list

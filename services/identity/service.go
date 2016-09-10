@@ -384,5 +384,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 			log.Fatal("Registration error:", err)
 		}
 	}
+	// TODO c.(h)ost.ServerIdentity.Addresses[0], field no public
+	NewJsonID(s, "192.168.192.17:2000")
 	return s
 }

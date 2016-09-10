@@ -10,7 +10,9 @@ package main
 import (
 	"os"
 
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 
 	"path"
 
@@ -22,6 +24,7 @@ import (
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/services/identity"
+	"github.com/qantik/qrgo"
 	"gopkg.in/codegangsta/cli.v1"
 )
 
@@ -128,6 +131,28 @@ func idDel(c *cli.Context) error {
 	cfg.proposeSendVoteUpdate(prop)
 	return nil
 }
+
+type jsonQR struct {
+	ID   string
+	Host string
+	Port string
+}
+
+func idQrCode(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	if c.Bool("roster") {
+		// TODO print roster
+	} else {
+		id64 := base64.StdEncoding.EncodeToString([]byte(cfg.ID))
+		jqr := jsonQR{ID: id64, Host: "192.168.192.17", Port: "2000"}
+		enc, _ := json.Marshal(jqr)
+
+		qr, _ := qrgo.NewQR(string(enc))
+		qr.OutputTerminal()
+	}
+	return nil
+}
+
 func idCheck(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
