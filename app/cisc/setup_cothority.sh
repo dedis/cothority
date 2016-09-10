@@ -47,4 +47,11 @@ cp -a ~/.ssh ssh-backup.$( date +%s )
 echo "Accept owner's SSH-key"
 read
 
+echo "Add SSH-key"
+read
+./cisc config vote
+
+echo "Voted on new SSH key"
+read
+
 ./cisc config list
