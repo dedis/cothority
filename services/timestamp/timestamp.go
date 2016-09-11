@@ -4,16 +4,13 @@
 package timestamp
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
+	"sync"
 	"time"
 
-	"crypto/sha256"
-	"os"
-	//	"path/filepath"
-	"sync"
-
-	"encoding/binary"
-	"github.com/dedis/cothority/app/lib/config"
+	"bytes"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -24,15 +21,15 @@ import (
 // ServiceName can be used to refer to the name of the timestamp service
 const ServiceName = "Timestamp"
 
-// TODO make this a config parameter:
-const EpochDuration = (time.Second * 10)
-
-const groupFileName = "group.toml"
-
 var timestampSID sda.ServiceID
 
-var dummyVerfier = func(data []byte) bool {
-	log.Print("Got time", string(data))
+var dummyVerfier = func(rootAndTimestamp []byte) bool {
+	l := len(rootAndTimestamp)
+	t, err := bytesToTimestamp(rootAndTimestamp[l-10 : l])
+	if err != nil {
+		log.Error("Got some invalid timestamp.")
+	}
+	log.Print("Got time", t)
 	return true
 }
 
@@ -41,6 +38,8 @@ func init() {
 	timestampSID = sda.ServiceFactory.ServiceID(ServiceName)
 	network.RegisterPacketType(&SignatureRequest{})
 	network.RegisterPacketType(&SignatureResponse{})
+	network.RegisterPacketType(&SetupRosterRequest{})
+	network.RegisterPacketType(&SetupRosterResponse{})
 }
 
 type Service struct {
@@ -50,6 +49,9 @@ type Service struct {
 	// of statements collected. Reasonable choices would be from 10 seconds
 	// upto some hours.
 	EpochDuration time.Duration
+
+	// mainly for testing purposes:
+	maxEpoch int
 
 	// config path for service:
 	path string
@@ -65,15 +67,8 @@ type Service struct {
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	log.Lvl2("Timestamp Service received New Protocol event")
-	var pi sda.ProtocolInstance
-	var err error
-	// TODO does this work? Maybe each node should have a unique protocol
-	// name instead
-	sda.ProtocolRegisterName("UpdateCosi", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		// XXX for now we provide a dummy verification function. It
-		// just prints out the timestamp, received in the Announcement.
-		return swupdate.NewCoSiUpdate(n, dummyVerfier)
-	})
+	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
+	go pi.Dispatch()
 	return pi, err
 }
 
@@ -84,6 +79,15 @@ type SignatureRequest struct {
 	// Different requests will be signed by the same roster
 	// Hence, it doesn't make sense for every client to send his Roster
 	// Roster  *sda.Roster
+}
+
+type SetupRosterRequest struct {
+	Roster        *sda.Roster
+	EpochDuration time.Duration
+}
+
+type SetupRosterResponse struct {
+	ID *sda.RosterID
 }
 
 // SignatureResponse is what the Cosi service will reply to clients.
@@ -121,12 +125,21 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	return resp, nil
 }
 
+// XXX later we'll give it an ID instead of the actual roster?
+func (s *Service) SetupCoSiRoster(si *network.ServerIdentity, setup *SetupRosterRequest) (network.Body, error) {
+	s.roster = setup.Roster
+	s.EpochDuration = setup.EpochDuration
+	go s.runLoop()
+	log.Lvl1("Started main loop with epoch duration:", s.EpochDuration)
+	return &SetupRosterResponse{ID: &s.roster.ID}, nil
+}
+
 func (s *Service) cosiSign(msg []byte) []byte {
 	log.Print("Service?", s)
 	log.Print("Roster?", s.roster)
 	sdaTree := s.roster.GenerateBinaryTree()
 
-	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtcolName)
+	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
 	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
 	if err != nil {
 		panic("Couldn't make new protocol: " + err.Error())
@@ -138,18 +151,29 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	// service)
 	response := make(chan []byte)
 	pi.RegisterSignatureHook(func(sig []byte) {
+		log.Print("Writing signature to channel!!!")
 		response <- sig
 	})
 	go pi.Dispatch()
 	go pi.Start()
-	return <-response
+	log.Print("Waiting on cosi response ...")
+	res := <-response
+	log.Print("... DONE: Waiting on cosi response")
+	return res
 
 }
 
 // main loop
 func (s *Service) runLoop() {
 	c := time.Tick(s.EpochDuration)
+	counter := 0
+	log.Lvl4("Starting main loop:")
 	for now := range c /*TODO interrupt the main loop must be possible*/ {
+		counter++
+		if counter > s.maxEpoch && s.maxEpoch > 0 {
+			log.Print("Max epoch reached...")
+			break
+		}
 		// only sign something if there was some data/requests:
 		numRequests := len(s.requests.GetData())
 		if numRequests > 0 {
@@ -157,7 +181,9 @@ func (s *Service) runLoop() {
 
 			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, s.requests.GetData())
+			log.Print(len(proofs))
 			timeBuf := timestampToBytes(now.Unix())
+
 			// message to be signed: treeroot||timestamp
 			msg := append(root, timeBuf...)
 
@@ -186,7 +212,17 @@ func timestampToBytes(t int64) []byte {
 	binary.PutVarint(timeBuf, t)
 	return timeBuf
 }
+
+func bytesToTimestamp(b []byte) (int64, error) {
+	t, err := binary.ReadVarint(bytes.NewReader(b))
+	if err != nil {
+		return t, err
+	}
+	return t, nil
+}
+
 func newTimestampService(c *sda.Context, path string) sda.Service {
+	log.Lvl4("New Service created!")
 	// r, err := readRoster(filepath.Join(path, groupFileName))
 	//if err != nil {
 	//	log.ErrFatal(err,
@@ -197,17 +233,24 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		requests:         requestPool{},
-		EpochDuration:    EpochDuration,
-		//	roster:           r,
+		// TODO make this configurable:
+		maxEpoch:      1,
+		EpochDuration: time.Millisecond * 100,
 	}
 	s.signMsg = s.cosiSign
 	err := s.RegisterMessage(s.SignatureRequest)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}
+	err = s.RegisterMessage(s.SetupCoSiRoster)
+	if err != nil {
+		log.ErrFatal(err, "Couldn't register message:")
+	}
 
 	// start main loop:
-	go s.runLoop()
+	// XXX will be triggered by init. message instead, makes the simulation
+	// easier
+	//go s.runLoop()
 
 	return s
 }
@@ -236,7 +279,7 @@ func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
 	rb.Lock()
 	defer rb.Unlock()
 	rb.requestData = append(rb.requestData, data)
-	log.Print("Added request", len(rb.requestData))
+	log.LLvl5("Added request", len(rb.requestData), string(data))
 	rb.responseChannels = append(rb.responseChannels, responseChan)
 }
 
@@ -244,17 +287,4 @@ func (rb *requestPool) GetData() []crypto.HashID {
 	rb.Lock()
 	defer rb.Unlock()
 	return rb.requestData
-}
-
-// XXX this should probably be in some independent util package instead
-func readRoster(tomlFile string) (*sda.Roster, error) {
-	f, err := os.Open(tomlFile)
-	if err != nil {
-		return nil, err
-	}
-	el, err := config.ReadGroupToml(f)
-	if err != nil {
-		return nil, err
-	}
-	return el, nil
 }

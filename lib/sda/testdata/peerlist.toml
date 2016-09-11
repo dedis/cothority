@@ -1,9 +1,0 @@
-# PeerListId = []
-
-[Peers]
-  [Peers."localhost:1010"]
-    Address = "localhost:1010"
-    [Peers."localhost:1010".Public]
-  [Peers."localhost:1012"]
-    Address = "localhost:1012"
-    [Peers."localhost:1012".Public]

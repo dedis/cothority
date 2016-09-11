@@ -1,6 +1,0 @@
-Description = "Description of your cothority roster"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2000"]
-  Public = "ew3h5bJuN3xb0w7SW1c4nH3K4n7Yzh9wDoVsdr2gDdM="
-  Description = "Description of your server"

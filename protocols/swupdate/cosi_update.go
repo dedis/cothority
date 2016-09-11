@@ -11,7 +11,7 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
-const ProtcolName = "CoSiUpdate"
+const ProtocolName = "CoSiUpdate"
 
 // This Cosi protocol is a CoSi version with
 // four phases:

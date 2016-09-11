@@ -67,9 +67,13 @@ func (p Proof) Calc(newHash HashFunc, leaf []byte) []byte {
 
 // Check a purported Proof against given root and leaf hashes.
 func (p Proof) Check(newHash HashFunc, root, leaf []byte) bool {
+	log.Print("Proof", p)
+	log.Print("leaf", leaf)
 	chk := p.Calc(newHash, leaf)
+	log.Print("root", root)
+	log.Print("chk", chk)
 	// compare returns 1 if equal, so return is true when check is good
-	// log.Println(chk, root)
+	// log.Print(chk, root)
 	return subtle.ConstantTimeCompare(chk, root) != 0
 }
 

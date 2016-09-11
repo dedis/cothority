@@ -1,6 +1,0 @@
-Machines = 3
-App = "medco"
-suite = "Ed25519"
-
-ppm, bf
-1, 1
