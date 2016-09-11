@@ -47,14 +47,16 @@ func TestProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f, err := q.Verify(xG, xH)
+	correct, failed, err := q.Verify(xG, xH)
 	if err != nil {
 		t.Fatal(err)
 	}
+	_ = correct
+	_ = failed
 
-	if len(f) != 0 {
-		t.Fatal("Verification of discrete logarithm proof(s) failed:", f)
-	}
+	//if len(f) != 0 {
+	//	t.Fatal("Verification of discrete logarithm proof(s) failed:", f)
+	//}
 
 }
 
@@ -95,10 +97,16 @@ func TestProofCollective(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	f, err := q.Verify(xG, xH)
+	correct, failed, err := q.Verify(xG, xH)
 	if err != nil {
-		t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
+		t.Fatal(err)
 	}
+	_ = correct
+	_ = failed
+
+	//if err != nil {
+	//	t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
+	//}
 
 }
 
@@ -125,7 +133,7 @@ func TestPVSS(t *testing.T) {
 
 	// (1) Share-Distribution (Dealer)
 	pvss := randhound.NewPVSS(suite, H, threshold)
-	sX, encProof, pb, err := pvss.Split(X, secret)
+	idx, sX, encProof, pb, err := pvss.Split(X, secret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,10 +149,16 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Check that log_H(sH) == log_X(sX) using encProof
-	f, err := pvss.Verify(H, X, sH, sX, encProof)
+	correct, failed, err := pvss.Verify(H, X, sH, sX, encProof)
 	if err != nil {
-		t.Fatal("encProof:", err, f)
+		t.Fatal(err)
+
 	}
+	_ = correct
+	_ = failed
+	//if err != nil {
+	//	t.Fatal("encProof:", err, f)
+	//}
 
 	// Decrypt shares
 	S := make([]abstract.Point, n)
@@ -159,13 +173,18 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Check that log_G(S) == log_X(sX) using decProof
-	e, err := pvss.Verify(G, S, X, sX, decProof)
+	correct, failed, err = pvss.Verify(G, S, X, sX, decProof)
 	if err != nil {
-		t.Fatal("decProof:", err, e)
+		t.Fatal(err)
 	}
+	_ = correct
+	_ = failed
+	//if err != nil {
+	//	t.Fatal("decProof:", err, e)
+	//}
 
 	// (3) Secret-Recovery (Dealer)
-	recovered, err := pvss.Recover(S)
+	recovered, err := pvss.Recover(idx, S, len(S))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -24,45 +24,55 @@ type RandHound struct {
 
 	// Group information
 	Server              [][]*sda.TreeNode  // Grouped servers
+	Group               [][]int            // Grouped server indices
 	Threshold           []int              // Group thresholds
 	Key                 [][]abstract.Point // Grouped server public keys
 	ServerIdxToGroupNum []int              // Mapping of gloabl server index to group number
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
 	// Message information
-	I1s    map[int]*I1              // I1 messages sent to servers (index: group)
-	I2s    map[int]*I2              // I2 messages sent to servers (index: server)
-	R1s    map[int]*R1              // R1 messages received from servers
-	R2s    map[int]*R2              // R2 messages received from servers
-	CR1    []int                    // Number of received R1 messages per group
-	CR2    []int                    // Number of received R2 messages per group
-	Commit map[int][]abstract.Point // Commitments of server polynomials (index: server)
-	mutex  sync.Mutex
+	I1s          map[int]*I1              // I1 messages sent to servers (index: group)
+	I2s          map[int]*I2              // I2 messages sent to servers (index: server)
+	R1s          map[int]*R1              // R1 messages received from servers (index: server)
+	R2s          map[int]*R2              // R2 messages received from servers (index: server)
+	PolyCommit   map[int][]abstract.Point // Commitments of server polynomials (index: server)
+	Secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
+	ChosenSecret map[int][]int            // Chosen secrets that contribute to collective randomness
+
+	mutex sync.Mutex
 
 	// For signaling the end of a protocol run
-	Done chan bool
+	Done        chan bool
+	SecretReady bool
+	Counter     int
+}
 
-	// XXX: Dummy, remove later
-	counter int
+// Share ...
+type Share struct {
+	Source int            // Source server index
+	Target int            // Target server index
+	Gen    int            // Share generation index
+	Val    abstract.Point // Share value
 }
 
 // Transcript ...
 type Transcript struct {
-	SID       []byte             // Session identifier
-	Nodes     int                // Total number of nodes (client + server)
-	Groups    int                // Number of groups
-	Faulty    int                // Maximum number of Byzantine servers
-	Purpose   string             // Purpose of the protocol run
-	Time      time.Time          // Timestamp of initiation
-	CliRand   []byte             // Client-chosen randomness (for sharding)
-	CliKey    abstract.Point     // Client public key
-	Index     [][]int            // Grouped server indices
-	Key       [][]abstract.Point // Grouped server public keys
-	Threshold []int              // Grouped secret sharing thresholds
-	I1s       []*I1              // I1 messages sent to servers
-	I2s       []*I2              // I2 messages sent to servers
-	R1s       []*R1              // R1 messages received from servers
-	R2s       []*R2              // R2 messages received from servers
+	SID          []byte             // Session identifier
+	Nodes        int                // Total number of nodes (client + server)
+	Groups       int                // Number of groups
+	Faulty       int                // Maximum number of Byzantine servers
+	Purpose      string             // Purpose of the protocol run
+	Time         time.Time          // Timestamp of initiation
+	CliRand      []byte             // Client-chosen randomness (for sharding)
+	CliKey       abstract.Point     // Client public key
+	Group        [][]int            // Grouped server indices
+	Key          [][]abstract.Point // Grouped server public keys
+	Threshold    []int              // Grouped secret sharing thresholds
+	ChosenSecret map[int][]int      // Chosen secrets that contribute to collective randomness
+	I1s          map[int]*I1        // I1 messages sent to servers
+	I2s          map[int]*I2        // I2 messages sent to servers
+	R1s          map[int]*R1        // R1 messages received from servers
+	R2s          map[int]*R2        // R2 messages received from servers
 }
 
 // I1 message
@@ -70,6 +80,7 @@ type I1 struct {
 	Sig       crypto.SchnorrSig // Schnorr signature
 	SID       []byte            // Session identifier
 	Threshold int               // Secret sharing threshold
+	Group     []uint32          // Group indices
 	Key       []abstract.Point  // Public keys of trustees
 }
 
@@ -77,25 +88,26 @@ type I1 struct {
 type R1 struct {
 	Sig        crypto.SchnorrSig // Schnorr signature
 	HI1        []byte            // Hash of I1
-	EncShare   []abstract.Point  // Encrypted shares
+	EncShare   []Share           // Encrypted shares
 	EncProof   []ProofCore       // Encryption consistency proofs
 	CommitPoly []byte            // Marshalled commitment polynomial
 }
 
 // I2 message
 type I2 struct {
-	Sig      crypto.SchnorrSig // Schnorr signature
-	SID      []byte            // Session identifier
-	EncShare []abstract.Point  // Encrypted shares
-	EncProof []ProofCore       // Encryption consistency proofs
-	Commit   []abstract.Point  // Polynomial commitments
+	Sig          crypto.SchnorrSig // Schnorr signature
+	SID          []byte            // Session identifier
+	ChosenSecret [][]uint32        // Chosen secrets
+	EncShare     []Share           // Encrypted shares
+	EncProof     []ProofCore       // Encryption consistency proofs
+	PolyCommit   []abstract.Point  // Polynomial commitments
 }
 
 // R2 message
 type R2 struct {
 	Sig      crypto.SchnorrSig // Schnorr signature
 	HI2      []byte            // Hash of I2
-	DecShare []abstract.Point  // Decrypted shares
+	DecShare []Share           // Decrypted shares
 	DecProof []ProofCore       // Decryption consistency proofs
 }
 

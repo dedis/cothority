@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -55,18 +55,19 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.Groups = groups
 	rh.Faulty = faulty
 	rh.Purpose = purpose
+	rh.Group = make([][]int, groups)
 	rh.Threshold = make([]int, groups)
 	rh.I1s = make(map[int]*I1)
 	rh.I2s = make(map[int]*I2)
 	rh.R1s = make(map[int]*R1)
 	rh.R2s = make(map[int]*R2)
-	rh.CR1 = make([]int, groups)
-	rh.CR2 = make([]int, groups)
-	rh.Commit = make(map[int][]abstract.Point)
+	rh.PolyCommit = make(map[int][]abstract.Point)
+	rh.Secret = make(map[int][]int)
+	rh.ChosenSecret = make(map[int][]int)
 	rh.ServerIdxToGroupNum = make([]int, nodes)
 	rh.ServerIdxToGroupIdx = make([]int, nodes)
 	rh.Done = make(chan bool, 1)
-	rh.counter = 0
+	rh.SecretReady = false
 
 	return nil
 }
@@ -94,12 +95,15 @@ func (rh *RandHound) Start() error {
 	// Set some group parameters
 	for i, group := range rh.Server {
 		rh.Threshold[i] = 2 * len(group) / 3
-		rh.Commit[i] = make([]abstract.Point, len(group))
-		for j, server := range group {
-			l := server.ServerIdentityIdx
-			rh.ServerIdxToGroupNum[l] = i
-			rh.ServerIdxToGroupIdx[l] = j
+		rh.PolyCommit[i] = make([]abstract.Point, len(group))
+		g := make([]int, len(group))
+		for j, server0 := range group {
+			s0 := server0.ServerIdentityIdx
+			rh.ServerIdxToGroupNum[s0] = i
+			rh.ServerIdxToGroupIdx[s0] = j
+			g[j] = s0
 		}
+		rh.Group[i] = g
 	}
 
 	// Comptue session id
@@ -111,9 +115,15 @@ func (rh *RandHound) Start() error {
 	// Multicast first message to servers
 	for i, group := range rh.Server {
 
+		index := make([]uint32, len(group))
+		for j, server := range group {
+			index[j] = uint32(server.ServerIdentityIdx)
+		}
+
 		i1 := &I1{
 			SID:       rh.SID,
 			Threshold: rh.Threshold[i],
+			Group:     index,
 			Key:       rh.Key[i],
 		}
 
@@ -166,23 +176,48 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 // Random ...
 func (rh *RandHound) Random() ([]byte, *Transcript, error) {
+
+	if !rh.SecretReady {
+		return nil, nil, errors.New("Secret not (yet) recoverable")
+	}
+
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
 	rnd := rh.Suite().Point().Null()
-	for i, group := range rh.Server {
-		pvss := NewPVSS(rh.Suite(), H, rh.Threshold[i])
-		for _, server := range group {
-			j := server.ServerIdentityIdx
-			ps, err := pvss.Recover(rh.R2s[j].DecShare)
-			if err != nil {
-				return nil, nil, err
+
+	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
+
+	// Gather all valid shares for a given server
+	for source, target := range rh.Secret { // XXX: why iterate over Secret and not ChosenSecret?
+
+		//log.Lvlf1("%v: %v", source, target)
+		var share []abstract.Point
+		var pos []int
+		for _, t := range target {
+			r2 := rh.R2s[t]
+			for _, s := range r2.DecShare {
+				if s.Source == source {
+					share = append(share, s.Val)
+					pos = append(pos, s.Gen)
+				}
 			}
-			rnd = rh.Suite().Point().Add(rnd, ps)
 		}
+
+		grp := rh.ServerIdxToGroupNum[source]
+		pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
+		ps, err := pvss.Recover(pos, share, len(rh.Server[grp]))
+		if err != nil {
+			return nil, nil, err
+		}
+		rnd = rh.Suite().Point().Add(rnd, ps)
+		//log.Lvlf1("Random: %v %v", source, ps)
 	}
+
 	rb, err := rnd.MarshalBinary()
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return rb, rh.CreateTranscript(), nil
 }
 
@@ -190,50 +225,32 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 func (rh *RandHound) CreateTranscript() *Transcript {
 
 	t := &Transcript{
-		SID:       rh.SID,
-		Nodes:     rh.Nodes,
-		Groups:    rh.Groups,
-		Faulty:    rh.Faulty,
-		Purpose:   rh.Purpose,
-		Time:      rh.Time,
-		CliRand:   rh.CliRand,
-		CliKey:    rh.Public(),
-		Threshold: rh.Threshold,
-		Key:       rh.Key,
+		SID:          rh.SID,
+		Nodes:        rh.Nodes,
+		Groups:       rh.Groups,
+		Faulty:       rh.Faulty,
+		Purpose:      rh.Purpose,
+		Time:         rh.Time,
+		CliRand:      rh.CliRand,
+		CliKey:       rh.Public(),
+		Group:        rh.Group,
+		Threshold:    rh.Threshold,
+		ChosenSecret: rh.ChosenSecret,
+		Key:          rh.Key,
+		I1s:          rh.I1s,
+		I2s:          rh.I2s,
+		R1s:          rh.R1s,
+		R2s:          rh.R2s,
 	}
-
-	index := make([][]int, rh.Groups)
-	i1s := make([]*I1, rh.Groups)
-	i2s := make([]*I2, rh.Nodes)
-
-	// Index 0 (=client) in r1s and r2s is always empty
-	r1s := make([]*R1, rh.Nodes)
-	r2s := make([]*R2, rh.Nodes)
-
-	for i, group := range rh.Server {
-		idx := make([]int, len(group))
-		for j, server := range group {
-			k := server.ServerIdentityIdx
-			idx[j] = k
-			i2s[k] = rh.I2s[k]
-			r1s[k] = rh.R1s[k]
-			r2s[k] = rh.R2s[k]
-		}
-		index[i] = idx
-		i1s[i] = rh.I1s[i]
-	}
-
-	t.Index = index
-	t.I1s = i1s
-	t.I2s = i2s
-	t.R1s = r1s
-	t.R2s = r2s
 
 	return t
 }
 
 // VerifyTranscript ...
 func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Transcript) error {
+
+	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
 
 	// Verify SID
 	sid, err := rh.sessionID(t.Nodes, t.Faulty, t.Purpose, t.Time, t.CliRand, t.Threshold, t.CliKey, t.Key)
@@ -246,14 +263,14 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 	}
 
 	// Check message signatures
-	for i, grp := range t.Index {
+	for i, group := range t.Group {
 
 		// Verify I1 signatures
 		if err := verifySchnorr(suite, t.CliKey, t.I1s[i]); err != nil {
 			return err
 		}
 
-		for j, k := range grp {
+		for j, k := range group {
 
 			// Verify R1 signatures
 			if err := verifySchnorr(suite, t.Key[i][j], t.R1s[k]); err != nil {
@@ -272,67 +289,82 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 		}
 	}
 
-	// Check zero knowledge proofs
+	// Check zero knowledge proofs of chosen secrets
 	H, _ := suite.Point().Pick(nil, suite.Cipher(t.SID))
-	for i, grp := range t.Index {
 
-		pvss := NewPVSS(suite, H, t.Threshold[i])
-
-		for j := 0; j < len(grp); j++ {
-
-			// Prepare data for commit recovery
-			pbx := make([][]byte, len(grp))
-			index := make([]int, len(grp))
-			for k := 0; k < len(grp); k++ {
-				pbx[k] = t.R1s[grp[j]].CommitPoly
-				index[k] = k
-			}
-
-			// Recover commits
-			commit, err := pvss.Commits(pbx, index)
-			if err != nil {
-				return err
-			}
-
-			// Verify encryption consistency proofs
-			f, err := pvss.Verify(H, t.Key[i], commit, t.R1s[grp[j]].EncShare, t.R1s[grp[j]].EncProof)
-			if err != nil {
-				_ = f
-				log.Lvlf1("Enc: %v", f)
-				// XXX: mark invalid shares
-			}
-
-			// Prepare data for decryption consistency proofs
-			X := make([]abstract.Point, len(grp))
-			encShare := make([]abstract.Point, len(grp))
-			for k := 0; k < len(grp); k++ {
-				r1 := t.R1s[grp[k]]
-				encShare[k] = r1.EncShare[j]
-				X[k] = t.Key[i][j]
-			}
-
-			// Verify decryption consistency proofs
-			f, err = pvss.Verify(suite.Point().Base(), t.R2s[grp[j]].DecShare, X, encShare, t.R2s[grp[j]].DecProof)
-			if err != nil {
-				_ = f
-				log.Lvlf1("Dec: %v", f)
-				// XXX: mark invalid shares
-			}
-		}
-	}
-
-	// Recover randomness
 	rnd := suite.Point().Null()
-	for i, grp := range t.Index {
-		pvss := NewPVSS(suite, H, rh.Threshold[i])
-		for j := 0; j < len(grp); j++ {
-			ps, err := pvss.Recover(t.R2s[grp[j]].DecShare)
+	for _, val := range rh.ChosenSecret {
+
+		for _, src := range val {
+
+			grp := rh.ServerIdxToGroupNum[src]
+			r1 := t.R1s[src]
+
+			var poly [][]byte
+			var index []int
+			var encShare []abstract.Point
+			var decShare []abstract.Point
+			var decProof []ProofCore
+			var X []abstract.Point
+			var target []int
+			for i := 0; i < len(r1.EncShare); i++ {
+				poly = append(poly, r1.CommitPoly)
+				index = append(index, r1.EncShare[i].Gen)
+				encShare = append(encShare, r1.EncShare[i].Val)
+				X = append(X, t.Key[grp][index[i]]) // XXX: could fail if the encShare is not there
+
+				j := r1.EncShare[i].Target
+				r2 := t.R2s[j]
+				// XXX: there is still an error below
+				for k := 0; k < len(r2.DecShare); k++ {
+					if r2.DecShare[k].Source == src {
+						decShare = append(decShare, r2.DecShare[k].Val)
+						decProof = append(decProof, r2.DecProof[k])
+						target = append(target, r2.DecShare[k].Target)
+					}
+				}
+			}
+
+			pvss := NewPVSS(suite, H, t.Threshold[grp])
+			polyCommit, err := pvss.Commits(poly, index)
 			if err != nil {
 				return err
 			}
-			rnd = suite.Point().Add(rnd, ps)
+
+			goodEnc, badEnc, err := pvss.Verify(H, t.Key[grp], polyCommit, encShare, r1.EncProof)
+			if err != nil {
+				return err
+			}
+			_ = goodEnc
+			_ = badEnc
+
+			// remove bad shares from encShare!
+
+			//log.Lvlf1("Enc: %v %v", goodEnc, badEnc)
+
+			goodDec, badDec, err := pvss.Verify(suite.Point().Base(), decShare, X, encShare, decProof)
+			if err != nil {
+				return err
+			}
+			_ = goodDec
+			_ = badDec
+
+			// remove bad shares from decShare!
+
+			//log.Lvlf1("Dec: %v %v", goodDec, badDec)
+
+			//log.Lvlf1("Dec: %v %v %v", src, len(decShare), target)
+
+			ps, err := pvss.Recover(index, decShare, len(t.Group[grp])) // XXX: could fail when shares are missing
+			if err != nil {
+				return err
+			}
+			rnd = rh.Suite().Point().Add(rnd, ps)
+			//log.Lvlf1("Transcript: %v %v", src, ps)
+
 		}
 	}
+
 	rb, err := rnd.MarshalBinary()
 	if err != nil {
 		return err
@@ -349,14 +381,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	msg := &i1.I1
 
-	// Init PVSS and create shares
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
-	pvss := NewPVSS(rh.Suite(), H, msg.Threshold)
-	encShare, encProof, pb, err := pvss.Split(msg.Key, nil)
-	if err != nil {
-		return err
-	}
-
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
 	i1b, err := network.MarshalRegisteredType(msg)
@@ -369,9 +393,36 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
+	// Find out the server's index (we assume servers are stateless)
+	idx := 0
+	for i, j := range msg.Group {
+		if msg.Key[i].Equal(rh.Public()) {
+			idx = int(j)
+			break
+		}
+	}
+
+	// Init PVSS and create shares
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
+	pvss := NewPVSS(rh.Suite(), H, msg.Threshold)
+	idxShare, encShare, encProof, pb, err := pvss.Split(msg.Key, nil)
+	if err != nil {
+		return err
+	}
+
+	share := make([]Share, len(encShare))
+	for i := 0; i < len(encShare); i++ {
+		share[i] = Share{
+			Source: idx,
+			Target: int(msg.Group[i]),
+			Gen:    idxShare[i],
+			Val:    encShare[i],
+		}
+	}
+
 	r1 := &R1{
 		HI1:        hi1,
-		EncShare:   encShare,
+		EncShare:   share,
 		EncProof:   encProof,
 		CommitPoly: pb,
 	}
@@ -390,12 +441,13 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	idx := r1.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
-	i := rh.ServerIdxToGroupIdx[idx]
+	pos := rh.ServerIdxToGroupIdx[idx]
 
 	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
 
 	// Verify R1 message signature
-	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
 		return err
 	}
 
@@ -404,87 +456,176 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		return err
 	}
 
-	rh.mutex.Unlock()
+	// Record R1 message
+	rh.R1s[idx] = msg
 
-	n := len(rh.Key[grp])
-	pbx := make([][]byte, n)
+	// Prepare data for recovery of polynomial commits and verification of shares
+	n := len(msg.EncShare)
+	poly := make([][]byte, n)
 	index := make([]int, n)
+	encShare := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
-		pbx[i] = msg.CommitPoly
-		index[i] = i
+		poly[i] = msg.CommitPoly
+		index[i] = msg.EncShare[i].Gen
+		encShare[i] = msg.EncShare[i].Val
 	}
 
-	// Init PVSS and recover commits
+	// Init PVSS and recover polynomial commits
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
 	pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
-	commit, err := pvss.Commits(pbx, index)
+	polyCommit, err := pvss.Commits(poly, index)
 	if err != nil {
 		return err
 	}
 
+	// Record polynomial commits
+	rh.PolyCommit[idx] = polyCommit
+
+	// Return, if we already committed to secrets previously
+	if len(rh.ChosenSecret) > 0 {
+		return nil
+	}
+
 	// Verify encrypted shares
-	f, err := pvss.Verify(H, rh.Key[grp], commit, msg.EncShare, msg.EncProof)
+	good, _, err := pvss.Verify(H, rh.Key[grp], polyCommit, encShare, msg.EncProof)
 	if err != nil {
-		// Erase invalid data
-		for i := range f {
-			commit[i] = nil
-			msg.EncShare[i] = nil
-			msg.EncProof[i] = ProofCore{}
+		return err
+	}
+
+	// Record valid encrypted shares per secret/server
+	for i := 0; i < len(good); i++ {
+		j := good[i]
+		src := msg.EncShare[j].Source
+		if _, ok := rh.Secret[idx]; !ok {
+			rh.Secret[idx] = make([]int, 0)
+		}
+		rh.Secret[src] = append(rh.Secret[src], msg.EncShare[j].Target)
+	}
+
+	// Check if there is at least a threshold number of reconstructable secrets
+	// in each group. If yes we proceed to the next phase. Note the
+	// double-usage of the threshold which is used to determine if enough valid
+	// shares for a single secret are available and if enough secrets for a
+	// given group are available
+	goodSecret := make(map[int][]int)
+	for i, group := range rh.Server {
+		var secret []int
+		for _, server := range group {
+			j := server.ServerIdentityIdx
+			if share, ok := rh.Secret[j]; ok && rh.Threshold[i] <= len(share) {
+				secret = append(secret, j)
+			}
+		}
+		if rh.Threshold[i] <= len(secret) {
+			goodSecret[i] = secret
 		}
 	}
 
-	// Record commit and message
-	rh.mutex.Lock()
+	//log.Lvlf1("%v", goodSecret)
 
-	rh.R1s[idx] = msg
-	rh.CR1[grp]++
-	rh.Commit[idx] = commit
+	// XXX: abort if all servers replied but not enough shares are available to
+	// reconstruct enough secrets
+	//if len(rh.R2s) == rh.Nodes-1 && !proceed {
+	//	return errors.New("Some secrets are not reconstructable")
+	//}
 
-	rh.mutex.Unlock()
+	// If there are enough good secrets and we didn't make a commitment before, proceed ...
+	if len(goodSecret) == rh.Groups {
 
-	// Continue once "enough" R1 messages have been collected
-	if rh.CR1[grp] == len(rh.Server[grp]) {
+		// Reset secret for the next phase (see handleR2)
+		rh.Secret = make(map[int][]int)
 
-		n := len(rh.Server[grp])
-		for i, target := range rh.Server[grp] {
+		// Choose secrets that contribute to collective randomness
+		for i := range rh.Server {
 
-			// Collect all shares, proofs, and commits intended for target server
-			encShare := make([]abstract.Point, n)
-			encProof := make([]ProofCore, n)
-			commit := make([]abstract.Point, n)
+			// Randomly select a threshold of secrets for each group in an order preserving way
+			var secret []int
+			hs := rh.Suite().Hash().Size()
+			rand := make([]byte, hs)
+			random.Stream.XORKeyStream(rand, rand)
+			prng := rh.Suite().Cipher(rand)
 
-			//  j is the group server index, k is the global server index
-			for j, server := range rh.Server[grp] {
-				k := server.ServerIdentityIdx
-				r1 := rh.R1s[k]
-				encShare[j] = r1.EncShare[i]
-				encProof[j] = r1.EncProof[i]
-				commit[j] = rh.Commit[k][i]
+			//log.Lvlf1("%v", len(goodSecret[i]), rh.Threshold[i])
+
+			index := make([]int, len(goodSecret[i]))
+			for j := 0; j < len(goodSecret[i]); j++ {
+				index[j] = j
 			}
 
-			i2 := &I2{
-				Sig:      crypto.SchnorrSig{},
-				SID:      rh.SID,
-				EncShare: encShare,
-				EncProof: encProof,
-				Commit:   commit,
+			for j := 0; j < rh.Threshold[i]; j++ {
+				k := int(random.Uint32(prng) % uint32(len(index)))
+				secret = append(secret, index[k])
+				index = append(index[:k], index[k+1:]...)
+			}
+			sort.Ints(secret)
+
+			for j := 0; j < len(secret); j++ {
+				secret[j] = goodSecret[i][secret[j]]
 			}
 
-			rh.mutex.Lock()
+			rh.ChosenSecret[i] = secret
+		}
 
-			if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
-				return err
+		//log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
+
+		// Transformation of commitments from int to uint32 to avoid protobuff errors
+		var chosenSecret [][]uint32
+		for i := range rh.ChosenSecret {
+			var l []uint32
+			for j := range rh.ChosenSecret[i] {
+				l = append(l, uint32(rh.ChosenSecret[i][j]))
 			}
+			chosenSecret = append(chosenSecret, l)
+		}
 
-			rh.I2s[target.ServerIdentityIdx] = i2
+		// Prepare a message for each server of a group and send it
+		for i, group := range rh.Server {
+			for j, server := range group {
 
-			rh.mutex.Unlock()
+				// Among the chosen secrets collect all valid shares, proofs,
+				// and polynomial commits intended for target server
+				var encShare []Share
+				var encProof []ProofCore
+				var polyCommit []abstract.Point
+				for _, k := range rh.ChosenSecret[i] {
+					r1 := rh.R1s[k]
+					pc := rh.PolyCommit[k]
+					encShare = append(encShare, r1.EncShare[j])
+					encProof = append(encProof, r1.EncProof[j])
+					polyCommit = append(polyCommit, pc[j])
+				}
 
-			if err := rh.SendTo(target, i2); err != nil {
-				return err
+				// XXX: simulate bad data
+				//if server.ServerIdentityIdx == 1 || server.ServerIdentityIdx == 2 || server.ServerIdentityIdx == 3 || server.ServerIdentityIdx == 4 || server.ServerIdentityIdx == 5 || server.ServerIdentityIdx == 6 || server.ServerIdentityIdx == 7 || server.ServerIdentityIdx == 8 || server.ServerIdentityIdx == 9 {
+				//	bad := []int{0, 1, 2, 3}
+				//	for _, b := range bad {
+				//		encShare[b].Val = rh.Suite().Point().Null()
+				//		log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[b].Source, encShare[b].Target, encShare[b].Gen)
+				//	}
+				//}
+
+				i2 := &I2{
+					Sig:          crypto.SchnorrSig{},
+					SID:          rh.SID,
+					ChosenSecret: chosenSecret,
+					EncShare:     encShare,
+					EncProof:     encProof,
+					PolyCommit:   polyCommit,
+				}
+
+				if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
+					return err
+				}
+
+				rh.I2s[server.ServerIdentityIdx] = i2
+
+				if err := rh.SendTo(server, i2); err != nil {
+					return err
+				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -492,34 +633,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	msg := &i2.I2
 	//log.Lvlf1("RandHound - I2: %v\n", rh.index())
-
-	// Prepare data
-	n := len(msg.EncShare)
-	X := make([]abstract.Point, n)
-	x := make([]abstract.Scalar, n)
-	for i := 0; i < n; i++ {
-		X[i] = rh.Public()
-		x[i] = rh.Private()
-	}
-
-	// Init PVSS and verify encryption consistency proof
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
-	pvss := NewPVSS(rh.Suite(), H, 0)
-	f, err := pvss.Verify(H, X, msg.Commit, msg.EncShare, msg.EncProof)
-	if err != nil {
-		// Erase invalid data
-		for i := range f {
-			msg.Commit[i] = nil
-			msg.EncShare[i] = nil
-			msg.EncProof[i] = ProofCore{}
-		}
-	}
-
-	// Decrypt shares
-	decShare, decProof, err := pvss.Reveal(rh.Private(), msg.EncShare)
-	if err != nil {
-		return err
-	}
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
@@ -533,9 +646,61 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
+	// Prepare data
+	n := len(msg.EncShare)
+	X := make([]abstract.Point, n)
+	x := make([]abstract.Scalar, n)
+	encShare := make([]abstract.Point, n)
+	for i := 0; i < n; i++ {
+		X[i] = rh.Public()
+		x[i] = rh.Private()
+		encShare[i] = msg.EncShare[i].Val
+	}
+
+	// Init PVSS and verify encryption consistency proof
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
+	pvss := NewPVSS(rh.Suite(), H, 0)
+
+	//log.Lvlf1("%v %v %v", msg.PolyCommit, msg.EncShare, msg.EncProof)
+
+	good, bad, err := pvss.Verify(H, X, msg.PolyCommit, encShare, msg.EncProof)
+	if err != nil {
+		return err
+	}
+
+	// Remove bad shares
+	for i := len(bad) - 1; i >= 0; i-- {
+		j := bad[i]
+		encShare = append(encShare[:j], encShare[j+1:]...)
+	}
+
+	// Decrypt shares
+	decShare, decProof, err := pvss.Reveal(rh.Private(), encShare)
+	if err != nil {
+		return err
+	}
+
+	share := make([]Share, len(encShare))
+	for i := 0; i < len(encShare); i++ {
+		j := good[i]
+		share[i] = Share{
+			Source: msg.EncShare[j].Source,
+			Target: msg.EncShare[j].Target,
+			Gen:    msg.EncShare[j].Gen,
+			Val:    decShare[i],
+		}
+	}
+
+	// XXX: simulate bad decryption share
+	//if rh.Index() == 1 {
+	//	msg.EncShare[1] = rh.Suite().Point().Null()
+	//}
+
+	//log.Lvlf1("I2: %v %v %v %v %v", rh.Index(), good, bad, len(decShare), len(decProof))
+
 	r2 := &R2{
 		HI2:      hi2,
-		DecShare: decShare,
+		DecShare: share,
 		DecProof: decProof,
 	}
 
@@ -553,12 +718,13 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	idx := r2.ServerIdentityIdx
 	grp := rh.ServerIdxToGroupNum[idx]
-	i := rh.ServerIdxToGroupIdx[idx]
+	pos := rh.ServerIdxToGroupIdx[idx]
 
 	rh.mutex.Lock()
+	defer rh.mutex.Unlock()
 
 	// Verify R2 message signature
-	if err := verifySchnorr(rh.Suite(), rh.Key[grp][i], msg); err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
 		return err
 	}
 
@@ -567,49 +733,79 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		return err
 	}
 
-	rh.mutex.Unlock()
+	// Record R2 message
+	rh.R2s[idx] = msg
 
+	//log.Lvlf1("R2: %v %v %v %v", idx, len(msg.GoodShare), len(msg.DecShare), len(msg.DecProof))
+
+	//rh.mutex.Unlock()
+
+	// XXX: invalidate shares for which we did not remove a decryption proof (?)
+
+	// Get all valid encrypted shares corresponding to the received decrypted
+	// shares and intended for "target" (=idx)
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
 	encShare := make([]abstract.Point, n)
-
+	decShare := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
-		X[i] = r2.ServerIdentity.Public // XXX: get it from the local cache
-	}
-
-	// XXX: lengths of msg.DecShare and rh.Server[grp] can be different when
-	// previous encryption proofs failed
-
-	// Get encrypted shares intended for server idx
-	for j, server := range rh.Server[grp] {
-		k := server.ServerIdentityIdx
-		r1 := rh.R1s[k]
-		encShare[j] = r1.EncShare[i]
+		src := msg.DecShare[i].Source
+		X[i] = r2.ServerIdentity.Public
+		encShare[i] = rh.R1s[src].EncShare[pos].Val
+		decShare[i] = msg.DecShare[i].Val
+		//log.Lvlf1("pos: %v; %v %v %v", pos, msg.DecShare[i].Source, msg.DecShare[i].Target, msg.DecShare[i].Gen)
 	}
 
 	// Init PVSS and verify shares
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
 	pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
-	f, err := pvss.Verify(rh.Suite().Point().Base(), msg.DecShare, X, encShare, msg.DecProof)
+	good, bad, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, msg.DecProof)
 	if err != nil {
-		// Erase invalid data
-		for i := range f {
-			msg.DecShare[i] = nil
-			msg.DecProof[i] = ProofCore{}
+		return err
+	}
+	_ = bad
+	_ = good
+
+	//log.Lvlf1("R2: %v %v %v", idx, good, bad)
+
+	// Record valid decrypted shares per secret/server
+	for i := 0; i < len(good); i++ {
+		j := good[i]
+		src := msg.DecShare[j].Source
+		if _, ok := rh.Secret[src]; !ok {
+			rh.Secret[src] = make([]int, 0)
+		}
+		rh.Secret[src] = append(rh.Secret[src], msg.DecShare[j].Target)
+	}
+
+	proceed := true
+	for i, group := range rh.ChosenSecret {
+		for _, server := range group {
+			if len(rh.Secret[server]) < rh.Threshold[i] {
+				proceed = false
+			}
 		}
 	}
 
-	rh.mutex.Lock()
+	if len(rh.R2s) == rh.Nodes-1 && !proceed {
+		return errors.New("Some secrets are not reconstructable")
+	}
 
-	rh.R2s[idx] = msg
-	rh.CR2[grp]++
-	rh.counter++
+	rh.Counter++
 
-	rh.mutex.Unlock()
+	// XXX: there is still a racing condition somehwere in here; currently it
+	// only work if we wait until all messages have arrived
+	if proceed && !rh.SecretReady && rh.Counter == rh.Nodes-1 {
 
-	// Continue once "enough" R2 messages have been collected
-	// XXX: this check should be replaced by something more reasonable
-	if rh.counter == rh.Nodes-1 {
+		//for i := range rh.ChosenSecret {
+		//	for j := range rh.ChosenSecret[i] {
+		//		k := rh.ChosenSecret[i][j]
+		//		s := rh.Secret[k]
+		//		log.Lvlf1("%v %v %v", k, s, len(s))
+		//	}
+		//}
+
+		rh.SecretReady = true
 		rh.Done <- true
 	}
 	return nil

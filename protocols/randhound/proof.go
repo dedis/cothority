@@ -133,32 +133,33 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) ([]abstract.Point, []
 
 // Verify validates the proof against the given input by checking that
 // vG == rG + c(xG) and vH == rH + c(xH).
-func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, error) {
+func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, []int, error) {
 
 	if len(xG) != len(xH) {
-		return nil, errors.New("Received unexpected number of points")
+		return nil, nil, errors.New("Received unexpected number of points")
 	}
 
-	var failed []int
+	var good, bad []int
 	for i := 0; i < len(p.base); i++ {
+		if xG[i].Equal(p.suite.Point().Null()) || xH[i].Equal(p.suite.Point().Null()) {
+			bad = append(bad, i)
+		} else {
+			rG := p.suite.Point().Mul(p.base[i].g, p.core[i].R)
+			rH := p.suite.Point().Mul(p.base[i].h, p.core[i].R)
+			cxG := p.suite.Point().Mul(xG[i], p.core[i].C)
+			cxH := p.suite.Point().Mul(xH[i], p.core[i].C)
+			a := p.suite.Point().Add(rG, cxG)
+			b := p.suite.Point().Add(rH, cxH)
 
-		rG := p.suite.Point().Mul(p.base[i].g, p.core[i].R)
-		rH := p.suite.Point().Mul(p.base[i].h, p.core[i].R)
-		cxG := p.suite.Point().Mul(xG[i], p.core[i].C)
-		cxH := p.suite.Point().Mul(xH[i], p.core[i].C)
-		a := p.suite.Point().Add(rG, cxG)
-		b := p.suite.Point().Add(rH, cxH)
-
-		if !(p.core[i].VG.Equal(a) && p.core[i].VH.Equal(b)) {
-			failed = append(failed, i)
+			if p.core[i].VG.Equal(a) && p.core[i].VH.Equal(b) {
+				good = append(good, i)
+			} else {
+				bad = append(bad, i)
+			}
 		}
 	}
 
-	if len(failed) != 0 {
-		return failed, errors.New("Verification of discrete logarithm proofs failed")
-	}
-
-	return nil, nil
+	return good, bad, nil
 }
 
 // PVSS implements public verifiable secret sharing.
@@ -176,7 +177,7 @@ func NewPVSS(s abstract.Suite, h abstract.Point, t int) *PVSS {
 
 // Split creates PVSS shares encrypted by the public keys in X and
 // provides a NIZK encryption consistency proof for each share.
-func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Point, []ProofCore, []byte, error) {
+func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abstract.Point, []ProofCore, []byte, error) {
 
 	n := len(X)
 
@@ -192,7 +193,9 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Po
 	// Prepare data for encryption consistency proofs ...
 	share := make([]abstract.Scalar, n)
 	H := make([]abstract.Point, n)
+	idx := make([]int, n)
 	for i := 0; i < n; i++ {
+		idx[i] = i
 		share[i] = s.Share(i)
 		H[i] = pv.h
 	}
@@ -200,23 +203,23 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]abstract.Po
 	// ... and create them
 	proof, err := NewProof(pv.suite, H, X, nil)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	_, sX, encProof, err := proof.SetupCollective(share...)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	polyBin, err := P.MarshalBinary()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return sX, encProof, polyBin, nil
+	return idx, sX, encProof, polyBin, nil
 }
 
 // Verify checks that log_H(sH) == log_X(sX) using the given proof.
-func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) ([]int, error) {
+func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) ([]int, []int, error) {
 
 	n := len(X)
 	Y := make([]abstract.Point, n)
@@ -225,7 +228,7 @@ func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point
 	}
 	proof, err := NewProof(pv.suite, Y, X, core)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return proof.Verify(sH, sX)
 }
@@ -276,17 +279,19 @@ func (pv *PVSS) Reveal(x abstract.Scalar, xS []abstract.Point) ([]abstract.Point
 }
 
 // Recover recreates the PVSS secret from the given shares.
-func (pv *PVSS) Recover(S []abstract.Point) (abstract.Point, error) {
+func (pv *PVSS) Recover(pos []int, S []abstract.Point, n int) (abstract.Point, error) {
 
 	if len(S) < pv.t {
 		return nil, errors.New("Not enough shares to recover secret")
 	}
 
+	//log.Lvlf1("%v %v %v %v", pos, pv.t, len(pos), len(S))
+
 	pp := new(poly.PubPoly).InitNull(pv.suite, pv.t, pv.suite.Point().Base())
-	ps := new(poly.PubShares).Split(pp, len(S)) // XXX: ackward way to init shares
+	ps := new(poly.PubShares).Split(pp, n) // XXX: ackward way to init shares
 
 	for i := 0; i < len(S); i++ {
-		ps.SetShare(i, S[i])
+		ps.SetShare(pos[i], S[i])
 	}
 
 	return ps.SecretCommit(), nil
