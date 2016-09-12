@@ -198,6 +198,8 @@ func (s *Service) runLoop() {
 					// Collective signature on Timestamp||hash(treeroot)
 					Signature: signature,
 				}
+				// TODO remove this (only for debugging)
+				log.Print("Check:", proofs[i].Check(sha256.New, root, s.requests.GetData()[i]))
 			}
 			s.requests.reset()
 		} else {
