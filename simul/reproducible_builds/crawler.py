@@ -5,9 +5,8 @@ try:
     import subprocess
     import templates
     from datetime import datetime
-    import time
     import psutil
-    import csv
+    import csv, sys, os, time
 except:
     raise
 
@@ -16,14 +15,16 @@ packages_required = ['attr', 'base-files', 'base-passwd', 'coreutils', 'debconf'
                      'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
                      'lsb', 'mawk', 'pam', 'sed', 'sysvinit', 'pcre3', 'perl', 'tar', 'util-linux', 'zlib']
 
-packages_popular = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 'cpio', 'logrotate',
+packages_popular_1 = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 'cpio', 'logrotate',
                     'debian-archive-keyring', 'liblocale-gettext-perl', 'net-tools', 'ucf', 'popularity-contest',
                     'cron', 'manpages', 'libtext-wrapi18n-perl', 'iptables', 'ifupdown', 'man-db', 'mime-support',
                     'pciutils', 'libxml2', 'initramfs-tools', 'libcap2', 'dmidecode', 'busybox', 'file', 'less',
                     'ca-certificates', 'psmisc', 'nano', 'tasksel', 'insserv', 'installation-report', 'laptop-detect',
                     'linux-base', 'xml-core', 'aptitude', 'bzip2', 'os-prober', 'acpid', 'discover-data',
                     'bash-completion', 'dictionaries-common', 'eject', 'kmod', 'whois', 'iso-codes', 'geoip-database',
-                    'bc', 'acpi', 'libtimedate-perl', 'm4', 'reportbug', 'libuuid-perl', 'usbutils', 'fontconfig', 'at',
+                    'bc', 'acpi']
+
+packages_popular_2 = ['libtimedate-perl', 'm4', 'reportbug', 'libuuid-perl', 'usbutils', 'fontconfig', 'at',
                     'time', 'liburi-perl', 'w3m', 'python-debian', 'procmail', 'libhtml-tagset-perl',
                     'libhtml-parser-perl', 'texinfo', 'libhtml-tree-perl', 'libwww-perl', 'bsd-mailx',
                     'apt-listchanges', 'hicolor-icon-theme', 'libnet-ssleay-perl', 'libswitch-perl',
@@ -61,10 +62,13 @@ def compile_bin(name, bina):
                                                  bina]).decode('ascii', 'ignore').partition(' ')[0]
         cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
         wall_time = time.perf_counter() - wall_start_time
-        subprocess.run(['docker', 'rmi', 'reprod:'+name])
+        subprocess.run(['docker', 'rmi', 'reprod:'+name], stdout='/dev/null')
 
     except:
         print("Some error while building", name)
+        id = subprocess.check_output(['docker', 'images']).decode('ascii').split('\n')[1].split()[2]
+        print(id)
+        # subprocess.run(['docker', 'rmi', id], stdout='/dev/null')
 
     return comhash, round(wall_time, 3), round(cpu_user, 3), round(cpu_system, 3)
 
@@ -120,9 +124,11 @@ def get_packages(option):
         packs = packages_required
         # packs = ['libsepol']
 
-    elif option == 'popular':
-        packs = packages_popular
-        # packs = ['libsepol']
+    elif option == 'popular1':
+        packs = packages_popular_1
+
+    elif option == 'popular2':
+        packs = packages_popular_2
 
     elif option == 'random':
         SET_SIZE = 3
@@ -137,7 +143,7 @@ def get_packages(option):
     return packs
 
 
-packages = get_packages('popular')
+packages = get_packages(sys.argv[1])
 baseurl = 'https://tests.reproducible-builds.org'
 url = 'https://tests.reproducible-builds.org/debian/rb-pkg/testing/amd64/'
 hash_match, hash_differ, failed = [], [], []
