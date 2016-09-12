@@ -1,7 +1,7 @@
 package randhound_test
 
 import (
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/dedis/cothority/protocols/randhound"
@@ -47,16 +47,14 @@ func TestProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	correct, failed, err := q.Verify(xG, xH)
+	_, bad, err := q.Verify(xG, xH)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = correct
-	_ = failed
 
-	//if len(f) != 0 {
-	//	t.Fatal("Verification of discrete logarithm proof(s) failed:", f)
-	//}
+	if len(bad) != 0 {
+		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+	}
 
 }
 
@@ -97,16 +95,14 @@ func TestProofCollective(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	correct, failed, err := q.Verify(xG, xH)
+	_, bad, err := q.Verify(xG, xH)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = correct
-	_ = failed
 
-	//if err != nil {
-	//	t.Fatal("Verification of discrete logarithm proof(s) failed:", err, f)
-	//}
+	if len(bad) != 0 {
+		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+	}
 
 }
 
@@ -149,16 +145,15 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Check that log_H(sH) == log_X(sX) using encProof
-	correct, failed, err := pvss.Verify(H, X, sH, sX, encProof)
+	_, bad, err := pvss.Verify(H, X, sH, sX, encProof)
 	if err != nil {
 		t.Fatal(err)
 
 	}
-	_ = correct
-	_ = failed
-	//if err != nil {
-	//	t.Fatal("encProof:", err, f)
-	//}
+
+	if len(bad) != 0 {
+		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+	}
 
 	// Decrypt shares
 	S := make([]abstract.Point, n)
@@ -173,15 +168,14 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Check that log_G(S) == log_X(sX) using decProof
-	correct, failed, err = pvss.Verify(G, S, X, sX, decProof)
+	_, bad, err = pvss.Verify(G, S, X, sX, decProof)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = correct
-	_ = failed
-	//if err != nil {
-	//	t.Fatal("decProof:", err, e)
-	//}
+
+	if len(bad) != 0 {
+		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+	}
 
 	// (3) Secret-Recovery (Dealer)
 	recovered, err := pvss.Recover(idx, S, len(S))
@@ -191,6 +185,6 @@ func TestPVSS(t *testing.T) {
 
 	// Verify recovered secret
 	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
-		t.Fatal(errors.New("Recovered incorrect shared secret"))
+		t.Fatal(fmt.Errorf("Recovered incorrect shared secret"))
 	}
 }

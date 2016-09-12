@@ -33,8 +33,6 @@ func TestRandHound(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
-	//log.Lvlf1("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	//log.Lvlf1("RandHound - groups: %d\n", groups)
 	if err := protocol.Start(); err != nil {
 		t.Fatal(err)
 	}

@@ -13,6 +13,8 @@ import (
 type RandHound struct {
 	*sda.TreeNodeInstance
 
+	mutex sync.Mutex
+
 	// Session information
 	Nodes   int       // Total number of nodes (client + servers)
 	Groups  int       // Number of groups
@@ -39,19 +41,16 @@ type RandHound struct {
 	Secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
 	ChosenSecret map[int][]int            // Chosen secrets that contribute to collective randomness
 
-	mutex sync.Mutex
-
 	// For signaling the end of a protocol run
 	Done        chan bool
 	SecretReady bool
-	Counter     int
 }
 
 // Share ...
 type Share struct {
 	Source int            // Source server index
 	Target int            // Target server index
-	Gen    int            // Share generation index
+	Pos    int            // Share position
 	Val    abstract.Point // Share value
 }
 
