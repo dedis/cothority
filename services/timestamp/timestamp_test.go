@@ -94,7 +94,11 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 
 	log.Lvl1("Sending request to service...")
 	rootIdentity := localRoster.Get(0)
-	_, err := c0.SetupStamper(rootIdentity, localRoster, time.Millisecond*50)
+	numIterations := 1
+	// init stamper and start it, too:
+	_, err := c0.SetupStamper(rootIdentity, localRoster,
+		time.Millisecond*50, numIterations)
+
 	log.ErrFatal(err, "Coulnd't init roster")
 	log.Print("Setup done ...")
 	res1 := make(chan *SignatureResponse)

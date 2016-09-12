@@ -51,7 +51,7 @@ type Service struct {
 	EpochDuration time.Duration
 
 	// mainly for testing purposes:
-	maxEpoch int
+	maxIterations int
 
 	// config path for service:
 	path string
@@ -84,6 +84,7 @@ type SignatureRequest struct {
 type SetupRosterRequest struct {
 	Roster        *sda.Roster
 	EpochDuration time.Duration
+	MaxIterations int
 }
 
 type SetupRosterResponse struct {
@@ -129,6 +130,7 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 func (s *Service) SetupCoSiRoster(si *network.ServerIdentity, setup *SetupRosterRequest) (network.Body, error) {
 	s.roster = setup.Roster
 	s.EpochDuration = setup.EpochDuration
+	s.maxIterations = setup.MaxIterations
 	go s.runLoop()
 	log.Lvl1("Started main loop with epoch duration:", s.EpochDuration)
 	return &SetupRosterResponse{ID: &s.roster.ID}, nil
@@ -170,7 +172,7 @@ func (s *Service) runLoop() {
 	log.Lvl4("Starting main loop:")
 	for now := range c /*TODO interrupt the main loop must be possible*/ {
 		counter++
-		if counter > s.maxEpoch && s.maxEpoch > 0 {
+		if counter > s.maxIterations && s.maxIterations > 0 {
 			log.Print("Max epoch reached...")
 			break
 		}
@@ -235,9 +237,7 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		requests:         requestPool{},
-		// TODO make this configurable:
-		maxEpoch:      1,
-		EpochDuration: time.Millisecond * 100,
+		EpochDuration:    time.Second * 10,
 	}
 	s.signMsg = s.cosiSign
 	err := s.RegisterMessage(s.SignatureRequest)

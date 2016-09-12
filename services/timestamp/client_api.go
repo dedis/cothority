@@ -43,10 +43,11 @@ func (c *Client) SignMsg(root *network.ServerIdentity, msg []byte) (*SignatureRe
 // request.
 // XXX This is a quick hack which simplifies the simulations.
 func (c *Client) SetupStamper(root *network.ServerIdentity, roster *sda.Roster,
-	epochDuration time.Duration) (*SetupRosterResponse, error) {
+	epochDuration time.Duration, maxIterations int) (*SetupRosterResponse, error) {
 	serviceReq := &SetupRosterRequest{
 		Roster:        roster,
 		EpochDuration: epochDuration,
+		MaxIterations: maxIterations,
 	}
 	log.Lvl4("Sending message to:", root)
 	reply, err := c.Send(root, serviceReq)
