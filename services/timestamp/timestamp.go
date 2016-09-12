@@ -185,7 +185,9 @@ func (s *Service) runLoop() {
 			timeBuf := timestampToBytes(now.Unix())
 
 			// message to be signed: treeroot||timestamp
-			msg := append(root, timeBuf...)
+			msg := make([]byte, len(root)+len(timeBuf))
+			msg = append(msg, root...)
+			msg = append(msg, timeBuf...)
 
 			signature := s.signMsg(msg)
 			fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
@@ -198,8 +200,6 @@ func (s *Service) runLoop() {
 					// Collective signature on Timestamp||hash(treeroot)
 					Signature: signature,
 				}
-				// TODO remove this (only for debugging)
-				log.Print("Check:", proofs[i].Check(sha256.New, root, s.requests.GetData()[i]))
 			}
 			s.requests.reset()
 		} else {

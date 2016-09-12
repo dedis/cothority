@@ -79,7 +79,7 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 		t.Skip("Running the Timestamp service using an epoch & networking takes too long.")
 	}
 	defer log.AfterTest(t)
-	log.TestOutput(false, 1)
+	log.TestOutput(true, 1)
 	local := sda.NewLocalTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -88,13 +88,13 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 
 	// We need two different client instances, otherwise the service will
 	// block on the first (timestamp)request:
-	c0 := NewClient()
+	c0 := NewClient() // <- setup and run the stamper
 	c1 := NewClient()
 	c2 := NewClient()
-	//msg := "random hashed data"
+
 	log.Lvl1("Sending request to service...")
 	rootIdentity := localRoster.Get(0)
-	_, err := c0.SetupStamper(rootIdentity, localRoster, time.Millisecond*250)
+	_, err := c0.SetupStamper(rootIdentity, localRoster, time.Millisecond*50)
 	log.ErrFatal(err, "Coulnd't init roster")
 	log.Print("Setup done ...")
 	res1 := make(chan *SignatureResponse)
@@ -104,56 +104,61 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 		log.Print("Sending first request ...")
 		res, err := c1.SignMsg(rootIdentity, origMsg1)
 		log.ErrFatal(err, "Couldn't send")
-		log.LLvl3("First request sent and received a response.")
+		log.Lvl3("First request sent and received a response:", res.Proof)
 		res1 <- res
 	}()
-	time.Sleep(time.Millisecond * 10)
 	origMsg2 := []byte("random hashed data" + strconv.Itoa(1))
 	go func() {
 		log.Print("Sending second request ...")
 		res, err := c2.SignMsg(rootIdentity, origMsg2)
 		log.ErrFatal(err, "Couldn't send")
-		log.LLvl3("Second request sent and received a response.")
+		log.Lvl3("Second request sent and received a response.")
 		res2 <- res
 	}()
 	assert.NotEqual(t, origMsg1, origMsg2)
 
-	time.Sleep(time.Millisecond * 100)
-	log.LLvl1("Waiting on responses ...")
+	log.Lvl1("Waiting on responses ...")
 	resp1 := <-res1
 	resp2 := <-res2
-	log.LLvl1("... done waiting on responses.")
+	log.Lvl1("... done waiting on responses.")
+
+	// Do all kind of verifications:
 	assert.Equal(t, resp1.Timestamp, resp2.Timestamp)
 	assert.Equal(t, resp1.Root, resp2.Root)
 
+	// re-create signed message:
 	timeBuf1 := timestampToBytes(resp1.Timestamp)
 	timeBuf2 := timestampToBytes(resp2.Timestamp)
 
-	signedMsg1 := append(resp1.Root, timeBuf1...)
-	signedMsg2 := append(resp2.Root, timeBuf2...)
+	signedMsg1 := make([]byte, len(resp1.Root)+len(timeBuf1))
+	signedMsg1 = append(signedMsg1, resp1.Root...)
+	signedMsg1 = append(signedMsg1, timeBuf1...)
+
+	signedMsg2 := make([]byte, len(resp2.Root)+len(timeBuf2))
+	signedMsg2 = append(signedMsg2, resp2.Root...)
+	signedMsg2 = append(signedMsg2, timeBuf2...)
 
 	// verify signatures:
 	var publics []abstract.Point
 	for _, e := range localRoster.List {
 		publics = append(publics, e.Public)
 	}
-	assert.NoError(t, swupdate.VerifySignature(network.Suite, publics, signedMsg1, resp1.Signature))
-	assert.NoError(t, swupdate.VerifySignature(network.Suite, publics, signedMsg2, resp2.Signature))
+	assert.NoError(t, swupdate.VerifySignature(network.Suite, publics,
+		signedMsg1, resp1.Signature))
+	assert.NoError(t, swupdate.VerifySignature(network.Suite, publics,
+		signedMsg2, resp2.Signature))
 
 	// check if proofs are what we expect:
 	root, proofs := crypto.ProofTree(sha256.New, []crypto.HashID{origMsg1, origMsg2})
-	assert.True(t, proofs[0].Check(sha256.New, root, origMsg1))
-	assert.True(t, proofs[1].Check(sha256.New, root, origMsg2))
-
-	// FIXME the proofs don't survive sending them them via SDA ?!
 	assert.Equal(t, proofs[0], resp1.Proof)
 	assert.Equal(t, proofs[1], resp2.Proof)
+	assert.Equal(t, root, resp1.Root)
+	assert.Equal(t, root, resp2.Root)
 
 	// verify inclusion proofs (fix above problem first):
-	assert.True(t, resp1.Proof.Check(sha256.New, resp1.Root,
-		[]byte("random hashed data"+strconv.Itoa(0))),
+	log.Print("Received from channel:", resp1.Proof)
+	assert.True(t, resp1.Proof.Check(sha256.New, resp1.Root, origMsg1),
 		"Wrong inclusion proof for msg1")
-	assert.True(t, resp2.Proof.Check(sha256.New, resp2.Root,
-		[]byte("random hashed data"+strconv.Itoa(1))),
+	assert.True(t, resp2.Proof.Check(sha256.New, resp2.Root, origMsg2),
 		"Wrong inclusion proof for msg2")
 }

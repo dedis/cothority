@@ -3,10 +3,11 @@ package timestamp
 import (
 	"errors"
 
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"time"
 )
 
 // Client is a structure to communicate with the CoSi
