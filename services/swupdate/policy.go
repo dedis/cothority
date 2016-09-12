@@ -7,6 +7,8 @@ import (
 
 	"path"
 
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -19,6 +21,7 @@ import (
 
 type DebianRelease struct {
 	Snapshot   string
+	Time       time.Time
 	Policy     *Policy
 	Signatures []string
 }

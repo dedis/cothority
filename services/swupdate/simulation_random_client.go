@@ -1,10 +1,12 @@
 package swupdate
 
 import (
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 /*
@@ -13,20 +15,22 @@ import (
  */
 
 func init() {
-	sda.SimulationRegister("SwUpCreate", NewCreateSimulation)
+	sda.SimulationRegister("SwUpRandClient", NewRandClientSimulation)
 }
 
 // Simulation only holds the BFTree simulation
-type createSimulation struct {
+type randClientSimulation struct {
 	sda.SimulationBFTree
-	Height int
-	Base   int
+	// How many days between two updates
+	Frequency int
+	Base      int
+	Height    int
 }
 
 // NewSimulation returns the new simulation, where all fields are
 // initialised using the config-file
-func NewCreateSimulation(config string) (sda.Simulation, error) {
-	es := &createSimulation{}
+func NewRandClientSimulation(config string) (sda.Simulation, error) {
+	es := &randClientSimulation{Base: 2, Height: 10}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -35,7 +39,7 @@ func NewCreateSimulation(config string) (sda.Simulation, error) {
 }
 
 // Setup creates the tree used for that simulation
-func (e *createSimulation) Setup(dir string, hosts []string) (
+func (e *randClientSimulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
 	e.CreateRoster(sc, hosts, 2000)
@@ -47,22 +51,26 @@ func (e *createSimulation) Setup(dir string, hosts []string) (
 }
 
 // Run is used on the destination machines and runs a number of
-// rounds.
-func (e *createSimulation) Run(config *sda.SimulationConfig) error {
+// rounds
+func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
-	//var packages []string
 	service, ok := config.GetService(ServiceName).(*Service)
 	if service == nil || !ok {
 		log.Fatal("Didn't find service", ServiceName)
 	}
-
 	packets := make(map[string]*SwupChain)
 	drs, err := GetReleases("../../../services/swupdate/snapshot/updates.csv")
 	if err != nil {
 		return err
 	}
+	now := drs[0].Time
 	for _, dr := range drs {
+		if dr.Time.Sub(now) >= time.Duration(e.Frequency)*time.Hour*24 {
+			// Measure bandwidth-usage for updating client
+			now = dr.Time
+		}
+
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet

@@ -45,7 +45,10 @@ type Service struct {
 }
 
 type storageMap struct {
-	Storage map[string]*storage
+	// Timestamps of all known skipblocks, indexed by the
+	// skipchain-ID (which is the hash of the genesis-skipblock).
+	Timestamps map[string]*Timestamp
+	Storage    map[string]*storage
 }
 
 type storage struct {
@@ -101,6 +104,19 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	cs.save()
 
 	return &UpdatePackageRet{sc}, nil
+}
+
+// PackageSC searches for the skipchain containing the package. If it finds a
+// skipchain, it returns the first and the last block. If no skipchain for
+// that package is found, it returns nil for the first and last block.
+func (cs *Service) PackageSC(si *network.ServerIdentity, psc *PackageSC) (network.Body, error) {
+	return &PackageSCRet{}, nil
+}
+
+// LatestBlock returns the hash of the latest block together with a timestamp
+// signed by all nodes of the swupdate-skipchain responsible for that package.
+func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (network.Body, error) {
+	return &LatestBlockRet{}, nil
 }
 
 // NewProtocol will instantiate a new protocol if needed.

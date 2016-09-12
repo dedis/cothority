@@ -83,3 +83,30 @@ type UpdatePackage struct {
 type UpdatePackageRet struct {
 	SwupChain *SwupChain
 }
+
+// PackageSC searches for the skipchain responsible for the PackageName.
+type PackageSC struct {
+	PackageName string
+}
+
+// If no skipchain for PackageName is found, both first and last are nil.
+// If the skipchain has been found, both the genesis-block and the latest
+// block will be returned.
+type PackageSCRet struct {
+	First *skipchain.SkipBlock
+	Last  *skipchain.SkipBlock
+}
+
+// Request skipblocks needed to get to the latest version of the package.
+// LastKnownSB is the latest skipblock known to the client.
+type LatestBlock struct {
+	LastKnownSB skipchain.SkipBlockID
+}
+
+// Returns the timestamp of the latest skipblock, together with an eventual
+// shortes-link of skipblocks needed to go from the LastKnownSB to the
+// current skipblock.
+type LatestBlockRet struct {
+	Timestamp *Timestamp
+	Update    []*skipchain.SkipBlock
+}
