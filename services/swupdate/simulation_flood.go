@@ -57,21 +57,23 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	// Get all packages
-	packages := InitializePackages("", nil, 2, 10)
+	packages, err := InitializePackages("", service, config.Roster, 2, 10)
+	log.ErrFatal(err)
 	// Make a DOS-measurement of what the services can handle
-	pscRaw, err := service.PackageSC(nil, packages[0])
+	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
 	log.ErrFatal(err)
 	psc := pscRaw.(*PackageSCRet)
+	log.Print(psc)
 	wg := sync.WaitGroup{}
 	m := monitor.NewTimeMeasure("update_empty")
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.Last})
-			log.ErrFatal(err)
+			//lbret, err := service.LatestBlock(nil, &LatestBlock{psc.Last})
+			//log.ErrFatal(err)
 			// Get Timestamp from timestamper.
-			ts := &Timestamp{}
+			//ts := &Timestamp{}
 
 			// Verify the time is in the good range.
 
@@ -87,10 +89,10 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.First})
-			log.ErrFatal(err)
+			//lbret, err := service.LatestBlock(nil, &LatestBlock{psc.First})
+			//log.ErrFatal(err)
 			// Get Timestamp from timestamper.
-			ts := &Timestamp{}
+			//ts := &Timestamp{}
 
 			// Verify the time is in the good range.
 

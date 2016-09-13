@@ -34,7 +34,7 @@ func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 		return nil, errors.New("Should have three entries")
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
-	dr := &DebianRelease{entries[0], policy, []string{}}
+	dr := &DebianRelease{entries[0], time.Now(), policy, []string{}}
 	if dir != "" {
 		polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
 		if err != nil {

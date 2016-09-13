@@ -5,10 +5,18 @@ import (
 
 	"os"
 
+	"strconv"
+
+	"flag"
+	"runtime/pprof"
+	"time"
+
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -17,7 +25,31 @@ func init() {
 
 func TestMain(m *testing.M) {
 	os.RemoveAll("config")
-	log.MainTest(m)
+	rc := map[string]string{}
+	mon := monitor.NewMonitor(monitor.NewStats(rc))
+	go func() { log.ErrFatal(mon.Listen()) }()
+	local := "localhost:" + strconv.Itoa(monitor.DefaultSinkPort)
+	log.ErrFatal(monitor.ConnectSink(local))
+
+	// Copy of log.MainTest because we need to close the monitor before
+	// the tests end, else the go-routine will show up in 'log.AfterTest'.
+	flag.Parse()
+	log.TestOutput(testing.Verbose(), 2)
+	done := make(chan int)
+	go func() {
+		code := m.Run()
+		done <- code
+	}()
+	select {
+	case code := <-done:
+		monitor.EndAndCleanup()
+		log.AfterTest(nil)
+		os.Exit(code)
+	case <-time.After(log.MainTestWait):
+		log.Error("Didn't finish in time")
+		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		os.Exit(1)
+	}
 }
 
 func TestServiceSaveLoad(t *testing.T) {
@@ -41,7 +73,7 @@ func TestService_CreatePackage(t *testing.T) {
 	cpr, err := service.CreatePackage(nil,
 		&CreatePackage{
 			Roster:  roster,
-			Release: &Release{policy1, sigs2},
+			Release: &Release{policy1, sigs2, false},
 			Base:    2,
 			Height:  10,
 		})
@@ -55,7 +87,7 @@ func TestService_CreatePackage(t *testing.T) {
 	assert.NotNil(t, sc.Timestamp)
 	policy := sc.Release.Policy
 	assert.Equal(t, *policy1, *policy)
-	assert.Equal(t, *policy1, *service.StorageMap.Storage[policy.Name].Release.Policy)
+	assert.Equal(t, *policy1, *service.Storage.SwupChains[policy.Name].Release.Policy)
 }
 
 func TestService_UpdatePackage(t *testing.T) {
@@ -70,7 +102,7 @@ func TestService_UpdatePackage(t *testing.T) {
 	upr, err := service.UpdatePackage(nil,
 		&UpdatePackage{
 			SwupChain: sc,
-			Release:   &Release{policy2, sigs1},
+			Release:   &Release{policy2, sigs1, false},
 		})
 	assert.NotNil(t, err, "Updating packages with wrong signature should fail")
 	upr, err = service.UpdatePackage(nil,
@@ -82,6 +114,35 @@ func TestService_UpdatePackage(t *testing.T) {
 	sc = upr.(*UpdatePackageRet).SwupChain
 	assert.NotNil(t, sc)
 	assert.Equal(t, *policy2, *sc.Release.Policy)
+}
+
+func TestService_Timestamp(t *testing.T) {
+
+}
+
+func TestService_PackageSC(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s := local.MakeHELS(5, swupdateService)
+	service := s.(*Service)
+	cpr, err := service.CreatePackage(nil,
+		&CreatePackage{roster, release1, 2, 10})
+	log.ErrFatal(err)
+	sc := cpr.(*CreatePackageRet).SwupChain
+
+	pscret, err := service.PackageSC(nil, &PackageSC{"unknown"})
+	require.NotNil(t, err)
+	pscret, err = service.PackageSC(nil, &PackageSC{release1.Policy.Name})
+	log.ErrFatal(err)
+	sc2 := pscret.(*PackageSCRet).Last
+
+	require.Equal(t, sc.Data.Hash, sc2.Hash)
+	sc3 := service.Storage.SwupChains[release1.Policy.Name]
+	require.Equal(t, sc.Data.Hash, sc3.Data.Hash)
+}
+
+func TestService_LatestBlock(t *testing.T) {
+	TestInitializePackages(t)
 }
 
 var keys []*PGP
@@ -133,6 +194,6 @@ func initGlobals(nbrKeys int) {
 		sigs2 = append(sigs2, s2)
 	}
 
-	release1 = &Release{policy1, sigs1}
-	release2 = &Release{policy2, sigs2}
+	release1 = &Release{policy1, sigs1, false}
+	release2 = &Release{policy2, sigs2, false}
 }

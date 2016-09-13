@@ -75,7 +75,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		log.Lvl1("Building", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
 		sc, knownPacket := packets[pol.Name]
-		release := &Release{pol, dr.Signatures}
+		release := &Release{pol, dr.Signatures, false}
 		round := monitor.NewTimeMeasure("full_" + pol.Name)
 		if knownPacket {
 			// Append to skipchain, will build
