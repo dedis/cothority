@@ -14,7 +14,7 @@ import (
 // ProtocolName defines the name of this protocol.
 const ProtocolName = "CoSiUpdate"
 
-// This CoSiUpdate protocol is a CoSi version with
+// CoSiUpdate protocol is a CoSi version with
 // four phases:
 //  - Announcement: The message is being passed into this pass down the tree
 //  - Commitment: Each node have decided if they agree to sign or not and let
