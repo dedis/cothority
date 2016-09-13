@@ -260,31 +260,34 @@ func (s *serviceManager) Process(data *network.Packet) {
 // RegisterProcessor the processor to the service manager and tells the host to dispatch
 // this message to the service manager. The service manager will then dispatch
 // the message in a go routine. XXX This is needed because we need to have
-// messages for service dispatched in asyncrhonously regarding the protocols.
+// messages for service dispatched in asynchronously regarding the protocols.
 // This behavior with go routine is fine for the moment but for better
 // performance / memory / resilience, it may be changed to a real queuing
 // system later.
 func (s *serviceManager) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
 	// delegate message to host so the host will pass the message to ourself
 	s.host.RegisterProcessor(s, msgType)
-	// handle the message ourself (will be launched in a go routine)
+	// handle the message ourselves (will be launched in a go routine)
 	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
-// TODO
-func (s *serviceManager) AvailableServices() []string {
-	panic("not implemented")
+// AvailableServices returns a list of all services available to the serviceManager.
+// If no services are instantiated, it returns an empty list.
+func (s *serviceManager) AvailableServices() (ret []string) {
+	for id := range s.services {
+		ret = append(ret, ServiceFactory.Name(id))
+	}
+	return
 }
 
-// Service returns the Service implementation being registered to this name
-// TODO use serviceByString not implemented
+// Service returns the Service implementation being registered to this name or
+// nil if no service by this name is available.
 func (s *serviceManager) Service(name string) Service {
-	return s.serviceByString(name)
-}
-
-// TODO
-func (s *serviceManager) serviceByString(name string) Service {
-	panic("Not implemented")
+	id := ServiceFactory.ServiceID(name)
+	if id == NilServiceID {
+		return nil
+	}
+	return s.services[id]
 }
 
 func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {

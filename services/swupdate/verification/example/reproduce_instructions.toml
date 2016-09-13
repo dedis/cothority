@@ -1,0 +1,3 @@
+buildCommand = "docker run --rm -v $(pwd):/project -w /project whispersystems/signal-android:0.2 ./gradlew clean assembleRelease"
+
+pathToBuild = "build/output/apks/project-release-unsigned.apk"

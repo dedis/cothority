@@ -12,6 +12,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -396,6 +397,23 @@ func launchVerification(t *testing.T, services []*Service, n int, prev *SkipBloc
 }
 
 func TestService_ForwardSignature(t *testing.T) {
+}
+
+func TestService_RegisterVerification(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, el, s1 := makeHELS(local, 3)
+	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
+	ver := make(chan bool, 3)
+	verifier := func(msg, data []byte) bool {
+		ver <- true
+		return true
+	}
+	log.ErrFatal(VerificationRegistration(VerifyTest, verifier))
+	sb := makeGenesisRosterArgs(s1, el, nil, VerifyTest, 1, 1)
+	assert.NotNil(t, sb.Data)
+	assert.Equal(t, 3, len(ver))
 }
 
 // makes a genesis Roster-block
