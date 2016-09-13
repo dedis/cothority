@@ -47,8 +47,8 @@ type Service struct {
 type storageMap struct {
 	// Timestamps of all known skipblocks, indexed by the
 	// skipchain-ID (which is the hash of the genesis-skipblock).
-	Timestamps map[string]*Timestamp
 	Storage    map[string]*storage
+	Timestamps map[string]*Timestamp
 }
 
 type storage struct {
@@ -207,7 +207,10 @@ func newSwupdate(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		skipchain:        skipchain.NewClient(),
-		StorageMap:       &storageMap{map[string]*storage{}},
+		StorageMap: &storageMap{
+			Storage:    map[string]*storage{},
+			Timestamps: map[string]*Timestamp{},
+		},
 	}
 	//if err := s.tryLoad(); err != nil {
 	//	log.Error(err)

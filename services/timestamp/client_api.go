@@ -42,13 +42,14 @@ func (c *Client) SignMsg(root *network.ServerIdentity, msg []byte) (*SignatureRe
 // parameters. The root node will start the main loop upon receiving this
 // request.
 // XXX This is a quick hack which simplifies the simulations.
-func (c *Client) SetupStamper(root *network.ServerIdentity, roster *sda.Roster,
-	epochDuration time.Duration, maxIterations int) (*SetupRosterResponse, error) {
+func (c *Client) SetupStamper(roster *sda.Roster, epochDuration time.Duration,
+	maxIterations int) (*SetupRosterResponse, error) {
 	serviceReq := &SetupRosterRequest{
 		Roster:        roster,
 		EpochDuration: epochDuration,
 		MaxIterations: maxIterations,
 	}
+	root := roster.List[0]
 	log.Lvl4("Sending message to:", root)
 	reply, err := c.Send(root, serviceReq)
 	if e := sda.ErrMsg(reply, err); e != nil {

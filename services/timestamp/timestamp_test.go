@@ -98,8 +98,7 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 	rootIdentity := localRoster.Get(0)
 	numIterations := 1
 	// init stamper and start it, too:
-	_, err := c0.SetupStamper(rootIdentity, localRoster,
-		time.Millisecond*50, numIterations)
+	_, err := c0.SetupStamper(localRoster, time.Millisecond*50, numIterations)
 
 	log.ErrFatal(err, "Coulnd't init roster")
 	log.Print("Setup done ...")

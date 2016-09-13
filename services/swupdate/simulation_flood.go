@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/timestamp"
 	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
@@ -59,16 +60,18 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	// Get all packages
 	packages := InitializePackages("", nil, 2, 10)
 	// Make a DOS-measurement of what the services can handle
-	pscRaw, err := service.PackageSC(nil, packages[0])
+	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
 	log.ErrFatal(err)
 	psc := pscRaw.(*PackageSCRet)
 	wg := sync.WaitGroup{}
+	c := timestamp.NewClient()
+	//c.SetupStamper()
 	m := monitor.NewTimeMeasure("update_empty")
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.Last})
+			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.Last.Hash})
 			log.ErrFatal(err)
 			// Get Timestamp from timestamper.
 			ts := &Timestamp{}
@@ -87,7 +90,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.First})
+			lbret, err := service.LatestBlock(nil, &LatestBlock{psc.First.Hash})
 			log.ErrFatal(err)
 			// Get Timestamp from timestamper.
 			ts := &Timestamp{}
