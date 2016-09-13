@@ -1,4 +1,5 @@
-// timestamp contains a simplified timestamp server. It collects statements from
+// Package timestamp implements a simplified timestamp server.
+// During one epoch it collects statements from
 // clients, waits EpochDuration time and responds with a signature of the
 // requested data.
 package timestamp
@@ -6,7 +7,6 @@ package timestamp
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"fmt"
 	"sync"
 	"time"
 
@@ -42,6 +42,7 @@ func init() {
 	network.RegisterPacketType(&SetupRosterResponse{})
 }
 
+// Service handles client requests. It implements
 type Service struct {
 	*sda.ServiceProcessor
 	// Epoch is is the time that needs to pass until
@@ -81,12 +82,16 @@ type SignatureRequest struct {
 	// Roster  *sda.Roster
 }
 
+// SetupRosterRequest can be send by a client to initialize the service.
+// It defines the roster that will be used, the epoch duration and (optionally)
+// the number of iterations the service will run.
 type SetupRosterRequest struct {
 	Roster        *sda.Roster
 	EpochDuration time.Duration
 	MaxIterations int
 }
 
+// SetupRosterResponse returns the ID of the roster if the init. was successful.
 type SetupRosterResponse struct {
 	ID *sda.RosterID
 }
@@ -126,19 +131,25 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	return resp, nil
 }
 
+// SetupCoSiRoster handles `SetupRosterRequest`s requests
 // XXX later we'll give it an ID instead of the actual roster?
 func (s *Service) SetupCoSiRoster(si *network.ServerIdentity, setup *SetupRosterRequest) (network.Body, error) {
-	s.roster = setup.Roster
-	s.EpochDuration = setup.EpochDuration
-	s.maxIterations = setup.MaxIterations
-	go s.runLoop()
-	log.Lvl1("Started main loop with epoch duration:", s.EpochDuration)
+	if s.roster == nil && s.EpochDuration == 0 {
+		s.roster = setup.Roster
+		s.EpochDuration = setup.EpochDuration
+		s.maxIterations = setup.MaxIterations
+		go s.runLoop()
+		log.Lvl1("Started main loop with epoch duration:", s.EpochDuration)
+	} else {
+		log.Warnf("Timestamper already initialized and received init. request!"+
+			" Running with epoch duration %v (max. %v iterations) and with roster %v",
+			s.EpochDuration, s.maxIterations)
+	}
 	return &SetupRosterResponse{ID: &s.roster.ID}, nil
+
 }
 
 func (s *Service) cosiSign(msg []byte) []byte {
-	log.Print("Service?", s)
-	log.Print("Roster?", s.roster)
 	sdaTree := s.roster.GenerateBinaryTree()
 
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
@@ -158,9 +169,9 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	})
 	go pi.Dispatch()
 	go pi.Start()
-	log.Print("Waiting on cosi response ...")
+	log.Lvl1("Waiting on cosi response ...")
 	res := <-response
-	log.Print("... DONE: Waiting on cosi response")
+	log.Lvl1("... DONE: Recieved cosi response")
 	return res
 
 }
@@ -173,26 +184,20 @@ func (s *Service) runLoop() {
 	for now := range c /*TODO interrupt the main loop must be possible*/ {
 		counter++
 		if counter > s.maxIterations && s.maxIterations > 0 {
-			log.Print("Max epoch reached...")
+			log.Info("Max epoch reached... Quitting main loop.")
 			break
 		}
 		// only sign something if there was some data/requests:
 		numRequests := len(s.requests.GetData())
 		if numRequests > 0 {
-			log.Print("Signin tree root with timestampt:", now, "got", numRequests, "requests")
+			log.Lvl2("Signin tree root with timestampt:", now, "got", numRequests, "requests")
 
 			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, s.requests.GetData())
-			log.Print(len(proofs))
-			timeBuf := timestampToBytes(now.Unix())
-
-			// message to be signed: treeroot||timestamp
-			msg := make([]byte, len(root)+len(timeBuf))
-			msg = append(msg, root...)
-			msg = append(msg, timeBuf...)
+			msg := RecreateSignedMsg(root, now.Unix())
 
 			signature := s.signMsg(msg)
-			fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			log.Lvlf2("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 			// Give (individual) response to anyone waiting:
 			for i, respC := range s.requests.responseChannels {
 				respC <- &SignatureResponse{
@@ -227,17 +232,11 @@ func bytesToTimestamp(b []byte) (int64, error) {
 
 func newTimestampService(c *sda.Context, path string) sda.Service {
 	log.Lvl4("New Service created!")
-	// r, err := readRoster(filepath.Join(path, groupFileName))
-	//if err != nil {
-	//	log.ErrFatal(err,
-	//		"Couldn't read roster from config. Put a valid roster definition in",
-	//		filepath.Join(path, groupFileName))
-	//}
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		requests:         requestPool{},
-		EpochDuration:    time.Second * 10,
+		// EpochDuration must be initialized by sending a setup req.
 	}
 	s.signMsg = s.cosiSign
 	err := s.RegisterMessage(s.SignatureRequest)
@@ -251,7 +250,8 @@ func newTimestampService(c *sda.Context, path string) sda.Service {
 
 	// start main loop:
 	// XXX will be triggered by init. message instead, makes the simulation
-	// easier
+	// easier but has the big downside, that the client who sends the initial
+	//
 	//go s.runLoop()
 
 	return s
@@ -289,4 +289,14 @@ func (rb *requestPool) GetData() []crypto.HashID {
 	rb.Lock()
 	defer rb.Unlock()
 	return rb.requestData
+}
+
+// RecreateSignedMsg is a helper that can be used by the client to recreate the
+// message signed by the timestamp service (which is treeroot||timestamp)
+func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
+	timeB := timestampToBytes(timestamp)
+	m := make([]byte, len(treeroot)+len(timeB))
+	m = append(m, treeroot...)
+	m = append(m, timeB...)
+	return m
 }

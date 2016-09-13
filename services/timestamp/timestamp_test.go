@@ -47,10 +47,11 @@ func TestRunLoop(t *testing.T) {
 		requests:      requestPool{},
 		EpochDuration: time.Millisecond * 3,
 		// use ed25519 instead of cosi for a super quick test:
-		signMsg: mockSign,
+		signMsg:       mockSign,
+		maxIterations: 1, // run iteration and quit
 	}
 	go s.runLoop()
-	N := 2
+	N := 10
 	// send 3 consecutive "requests":
 	for i := 0; i < N; i++ {
 		s.requests.Add([]byte("random hashed data"+strconv.Itoa(i)), make(chan *SignatureResponse))
@@ -60,20 +61,21 @@ func TestRunLoop(t *testing.T) {
 	log.Print("Waiting for repsonses ...")
 	for i, respC := range s.requests.responseChannels {
 		resp := <-respC
-		//log.Print("Got response")
-		timeBuf := timestampToBytes(resp.Timestamp)
 		// this is data we sent:
 		leaf := []byte("random hashed data" + strconv.Itoa(i))
 		// msg = treeroot||timestamp
-		msg := append(resp.Root, timeBuf...)
-		assert.True(t, ed25519.Verify(pk, msg, resp.Signature), "Wrong signature")
+		msg := RecreateSignedMsg(resp.Root, resp.Timestamp)
 
+		assert.True(t, ed25519.Verify(pk, msg, resp.Signature),
+			"Wrong signature")
 		// Verify the inclusion proof:
-		assert.True(t, resp.Proof.Check(sha256.New, resp.Root, leaf), "Wrong inclusion proof for "+string(i))
+		assert.True(t, resp.Proof.Check(sha256.New, resp.Root, leaf),
+			"Wrong inclusion proof for "+string(i))
 	}
-	log.Print("Done one round. TODO shut down main loop (otherwise it leaks).")
+	log.Print("Done one round.")
 }
 
+// run the whole framework (including network etc)
 func TestTimestampRunLoopSDA(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Running the Timestamp service using an epoch & networking takes too long.")
@@ -131,16 +133,8 @@ func TestTimestampRunLoopSDA(t *testing.T) {
 	assert.Equal(t, resp1.Root, resp2.Root)
 
 	// re-create signed message:
-	timeBuf1 := timestampToBytes(resp1.Timestamp)
-	timeBuf2 := timestampToBytes(resp2.Timestamp)
-
-	signedMsg1 := make([]byte, len(resp1.Root)+len(timeBuf1))
-	signedMsg1 = append(signedMsg1, resp1.Root...)
-	signedMsg1 = append(signedMsg1, timeBuf1...)
-
-	signedMsg2 := make([]byte, len(resp2.Root)+len(timeBuf2))
-	signedMsg2 = append(signedMsg2, resp2.Root...)
-	signedMsg2 = append(signedMsg2, timeBuf2...)
+	signedMsg1 := RecreateSignedMsg(resp1.Root, resp1.Timestamp)
+	signedMsg2 := RecreateSignedMsg(resp2.Root, resp2.Timestamp)
 
 	// verify signatures:
 	var publics []abstract.Point
