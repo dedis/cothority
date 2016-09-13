@@ -2,10 +2,10 @@ package swupdate
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
+	"github.com/dedis/cothority/services/timestamp"
 	"github.com/satori/go.uuid"
 )
 
@@ -51,16 +51,8 @@ type SwupChain struct {
 	Timestamp *Timestamp
 }
 
-type Timestamp struct {
-	Signature      string
-	Hash           []byte
-	InclusionProof string
-}
-
-func NewTimestamp(hash []byte) *Timestamp {
-	log.Warn("Not yet implemented")
-	return &Timestamp{Hash: hash}
-}
+// XXX maybe don't alias the timestamp package's type?
+type Timestamp timestamp.SignatureResponse
 
 type ProjectID uuid.UUID
 

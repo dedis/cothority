@@ -64,7 +64,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 		policy.Name, policy.Version)
 	sc := &SwupChain{
 		Release:   cp.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
+		Timestamp: &Timestamp{},
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var err error
@@ -90,7 +90,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
 	sc := &SwupChain{
 		Release:   up.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
+		Timestamp: &Timestamp{},
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
