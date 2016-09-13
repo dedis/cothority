@@ -1,4 +1,4 @@
-// Package protocol implements a round of a Collective Signing protocol.
+// Package swupdate implements a round of a Collective Signing protocol (like .
 package swupdate
 
 import (
@@ -11,9 +11,10 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
+// ProtocolName defines the name of this protocol.
 const ProtocolName = "CoSiUpdate"
 
-// This Cosi protocol is a CoSi version with
+// This CoSiUpdate protocol is a CoSi version with
 // four phases:
 //  - Announcement: The message is being passed into this pass down the tree
 //  - Commitment: Each node have decided if they agree to sign or not and let
@@ -349,6 +350,9 @@ func (c *CoSiUpdate) RegisterSignatureHook(fn SignatureHook) {
 	c.signatureHook = fn
 }
 
+// RegisterVerificationHook can be used to register a handler which will be
+// called during the Announcement phase. It will be called on the message which
+// is passed during the announcement phase.
 func (c *CoSiUpdate) RegisterVerificationHook(fn VerificationHook) {
 	c.verificationHook = fn
 }
