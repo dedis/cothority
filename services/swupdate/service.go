@@ -11,6 +11,10 @@ import (
 
 	"errors"
 
+	"os/exec"
+
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
@@ -203,8 +207,22 @@ func verifierFunc(msg, data []byte) bool {
 	if release.VerifyBuild {
 		build := monitor.NewTimeMeasure("build_" + policy.Name)
 		// Verify the reproducible build
-		time.Sleep(1 * time.Second)
+		wd, _ := os.Getwd()
+		cmd := exec.Command("../../reproducible_builds/crawler.py",
+			"cli", policy.Name)
+		cmd.Stderr = os.Stderr
+		resultB, err := cmd.Output()
+		result := string(resultB)
 		build.Record()
+		if err != nil {
+			log.Error("While creating reproducible build:", err, result, wd)
+			return false
+		}
+		log.LLvl2("Build-output is", result)
+		pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
+		if strings.Index(result, pkgbuild) >= 0 {
+			return false
+		}
 	}
 	//log.Print("Congrats, verified")
 	return true

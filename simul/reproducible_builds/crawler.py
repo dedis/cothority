@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.5
+
 try:
     from bs4 import BeautifulSoup
     from urllib.request import urlopen
@@ -139,6 +141,9 @@ def get_packages(option):
         for p in soup.body.div.find('code').find_all('a', class_='package'):
             allpacks.append(p.string)
         packs = random.sample(allpacks, SET_SIZE)
+
+    elif option == 'cli':
+        packs = [sys.argv[2]]
 
     return packs
 

@@ -58,7 +58,7 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	}
 
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("../../../services/swupdate/snapshot/updates.csv")
+	drs, err := GetReleases("../../../services/swupdate/snapshot/snapshots_nik.csv")
 	if err != nil {
 		return err
 	}
