@@ -5,8 +5,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
-	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 /*

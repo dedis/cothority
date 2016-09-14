@@ -84,7 +84,6 @@ func TestService_CreatePackage(t *testing.T) {
 
 	sc := cpr.(*CreatePackageRet).SwupChain
 	assert.NotNil(t, sc.Data)
-	assert.NotNil(t, sc.Timestamp)
 	policy := sc.Release.Policy
 	assert.Equal(t, *policy1, *policy)
 	assert.Equal(t, *policy1, *service.Storage.SwupChains[policy.Name].Release.Policy)

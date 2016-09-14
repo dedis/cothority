@@ -70,9 +70,8 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	log.Lvlf3("%s Creating package %s version %s", cs,
 		policy.Name, policy.Version)
 	sc := &SwupChain{
-		Release:   cp.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
-		Root:      cs.Storage.Root,
+		Release: cp.Release,
+		Root:    cs.Storage.Root,
 	}
 	if cs.Storage.Root == nil {
 		log.Lvl3("Creating Root-skipchain")
@@ -101,8 +100,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 // SignatureRequest treats external request to this service.
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
 	sc := &SwupChain{
-		Release:   up.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
+		Release: up.Release,
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
@@ -168,7 +166,7 @@ func (cs *Service) timestamper() {
 				log.Error("Don't know message", msg)
 			}
 		case <-time.After(cs.Storage.TSInterval):
-			log.LLvl2("Interval is over - timestamping")
+			log.Lvl2("Interval is over - timestamping")
 		}
 		// Start timestamping
 	}
@@ -200,7 +198,7 @@ func verifierFunc(msg, data []byte) bool {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
 			policyBin, s)
 		if err != nil {
-			log.Error("Wrong signature")
+			log.Lvl2("Wrong signature")
 			return false
 		}
 	}
@@ -219,7 +217,7 @@ func verifierFunc(msg, data []byte) bool {
 			log.Error("While creating reproducible build:", err, result, wd)
 			return false
 		}
-		log.LLvl2("Build-output is", result)
+		log.Lvl2("Build-output is", result)
 		pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
 		if strings.Index(result, pkgbuild) >= 0 {
 			return false

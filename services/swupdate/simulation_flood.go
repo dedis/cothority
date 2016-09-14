@@ -3,9 +3,14 @@ package swupdate
 import (
 	"sync"
 
+	"crypto/rand"
+	"crypto/sha256"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/timestamp"
 	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
@@ -44,6 +49,13 @@ func (e *floodSimulation) Setup(dir string, hosts []string) (
 	if err != nil {
 		return nil, err
 	}
+	c := timestamp.NewClient()
+	// TODO move all params to config file:
+	maxIterations := 100
+	_, err = c.SetupStamper(sc.Roster, time.Millisecond*50, maxIterations)
+	if err != nil {
+		return nil, err
+	}
 	return sc, nil
 }
 
@@ -65,17 +77,34 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	psc := pscRaw.(*PackageSCRet)
 	log.Print(psc)
 	wg := sync.WaitGroup{}
+	timeClient := timestamp.NewClient()
 	m := monitor.NewTimeMeasure("update_empty")
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			//lbret, err := service.LatestBlock(nil, &LatestBlock{psc.Last})
-			//log.ErrFatal(err)
+			res, err := service.LatestBlock(nil, &LatestBlock{psc.Last.Hash})
+			log.ErrFatal(err)
+			lbret, ok := res.(*LatestBlockRet)
+			if !ok {
+				log.Fatal("Got invalid response.")
+			}
+
 			// Get Timestamp from timestamper.
-			//ts := &Timestamp{}
+			r := make([]byte, 20)
+			_, err = rand.Read(r)
+			log.ErrFatal(err, "Couldn't read random bytes:")
+			nonce := sha256.Sum256(r)
+			root := config.Roster.List[0]
+			resp, err := timeClient.SignMsg(root, nonce[:])
+			log.ErrFatal(err, "Couldn't sign nonce.")
 
 			// Verify the time is in the good range.
+			ts := time.Unix(resp.Timestamp, 0)
+			latesBlockTime := time.Unix(lbret.Timestamp.Timestamp, 0)
+			if ts.Sub(latesBlockTime) > time.Hour {
+				log.Warn("Timestamp of latest block is older than one hour!")
+			}
 
 			wg.Done()
 		}()
@@ -89,12 +118,28 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		wg.Add(1)
 		go func() {
 			// Request to the swupchain.
-			//lbret, err := service.LatestBlock(nil, &LatestBlock{psc.First})
-			//log.ErrFatal(err)
+			res, err := service.LatestBlock(nil, &LatestBlock{psc.First.Hash})
+			log.ErrFatal(err)
+			lbret, ok := res.(*LatestBlockRet)
+			if !ok {
+				log.Fatal("Got invalid response.")
+			}
+
 			// Get Timestamp from timestamper.
-			//ts := &Timestamp{}
+			r := make([]byte, 20)
+			_, err = rand.Read(r)
+			log.ErrFatal(err, "Couldn't read random bytes:")
+			nonce := sha256.Sum256(r)
+			root := config.Roster.List[0]
+			resp, err := timeClient.SignMsg(root, nonce[:])
+			log.ErrFatal(err, "Couldn't sign nonce.")
 
 			// Verify the time is in the good range.
+			ts := time.Unix(resp.Timestamp, 0)
+			latesBlockTime := time.Unix(lbret.Timestamp.Timestamp, 0)
+			if ts.Sub(latesBlockTime) > time.Hour {
+				log.Warn("Timestamp of latest block is older than one hour!")
+			}
 
 			wg.Done()
 		}()
