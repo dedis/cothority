@@ -23,6 +23,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/protocols/swupdate"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
@@ -98,8 +99,9 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 		return nil, err
 	}
 	cs.Storage.SwupChainsGenesis[policy.Name] = sc
-	cs.Storage.SwupChains[policy.Name] = sc
-	cs.save()
+	if err := cs.startPropagate(policy.Name, sc); err != nil {
+		return nil, err
+	}
 	cs.timestamp(time.Now())
 
 	return &CreatePackageRet{sc}, nil
@@ -118,11 +120,46 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	if err != nil {
 		return nil, err
 	}
-	cs.Storage.SwupChains[rel.Policy.Name] = sc
-	cs.save()
-	cs.timestamp(time.Now())
 
+	if err := cs.startPropagate(rel.Policy.Name, sc); err != nil {
+		return nil, err
+	}
+	cs.timestamp(time.Now())
 	return &UpdatePackageRet{sc}, nil
+}
+
+// PropagateSkipBlock will save a new SkipBlock
+func (cs *Service) PropagateSkipBlock(msg network.Body) {
+	sc, ok := msg.(*SwupChain)
+	if !ok {
+		log.Error("Couldn't convert to SkipBlock")
+		return
+	}
+	pkg := sc.Release.Policy.Name
+	log.Lvl2("saving swupchain for", pkg)
+	// TODO: verification
+	//if err := sb.VerifySignatures(); err != nil {
+	//	log.Error(err)
+	//	return
+	//}
+	if _, exists := cs.Storage.SwupChainsGenesis[pkg]; !exists {
+		cs.Storage.SwupChainsGenesis[pkg] = sc
+	}
+	cs.Storage.SwupChains[pkg] = sc
+}
+
+// Propagate the new block
+func (cs *Service) startPropagate(pkg string, sc *SwupChain) error {
+	roster := cs.Storage.Root.Roster
+	log.Lvl2("Propagating package", pkg, "to", roster.List)
+	replies, err := manage.PropagateStartAndWait(cs.Context, roster, sc, 1000, cs.PropagateSkipBlock)
+	if err != nil {
+		return err
+	}
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
+	}
+	return nil
 }
 
 // PackageSC searches for the skipchain containing the package. If it finds a
@@ -159,11 +196,25 @@ func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (net
 
 // NewProtocol will instantiate a new cosi-timestamp protocol.
 func (cs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl2("SWUpdate Service received New Protocol event")
-	pi, err := swupdate.NewCoSiUpdate(tn, cs.cosiVerify)
-	go pi.Dispatch()
+	var pi sda.ProtocolInstance
+	var err error
+	switch tn.ProtocolName() {
+	case "Propagate":
+		log.Lvl2("SWUpdate Service received New Protocol PROPAGATE  event")
+		pi, err = manage.NewPropagateProtocol(tn)
+		if err != nil {
+			return nil, err
+		}
+		pi.(*manage.Propagate).RegisterOnData(cs.PropagateSkipBlock)
+	default:
+		log.Lvl2("SWUpdate Service received New Protocol COSI event")
+		pi, err = swupdate.NewCoSiUpdate(tn, cs.cosiVerify)
+		if err != nil {
+			return nil, err
+		}
+		go pi.Dispatch()
+	}
 	return pi, err
-
 }
 
 // timestamper waits for n minutes before asking all nodes to timestamp
@@ -208,7 +259,7 @@ func verifierFunc(msg, data []byte) bool {
 		log.Error(err)
 		return false
 	}
-	ver := monitor.NewTimeMeasure("verification_" + policy.Name)
+	ver := monitor.NewTimeMeasure("verification")
 	//log.Printf("Verifying release %s/%s", policy.Name, policy.Version)
 	for i, s := range release.Signatures {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
@@ -220,8 +271,9 @@ func verifierFunc(msg, data []byte) bool {
 	}
 	ver.Record()
 	if release.VerifyBuild {
-		build := monitor.NewTimeMeasure("build_" + policy.Name)
+		build := monitor.NewTimeMeasure("build")
 		// Verify the reproducible build
+		log.Lvl1("Starting to build", policy.Name, policy.Version)
 		wd, _ := os.Getwd()
 		cmd := exec.Command("../../reproducible_builds/crawler.py",
 			"cli", policy.Name)
@@ -320,6 +372,7 @@ func (s *Service) timestamp(time time.Time) {
 	root, proofs := crypto.ProofTree(HashFunc(), ids)
 	msg := MarshalPair(root, time.Unix())
 	// run protocol
+	log.Printf("Start to timestamp root %x & time %v", root, time.Unix())
 	signature := s.cosiSign(msg)
 	// TODO XXX Here in a non-academical world we should test if the
 	// signature contains enough participants.
@@ -347,6 +400,7 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	})
 	go pi.Dispatch()
 	go pi.Start()
+	log.Printf("Cosi starting with public key %x & msg %x", s.Storage.Root.Roster.Aggregate, msg)
 	log.Lvl1("Waiting on cosi response ...")
 	res := <-response
 	log.Lvl1("... DONE: Recieved cosi response")
@@ -368,6 +422,7 @@ func (s *Service) cosiVerify(msg []byte) bool {
 	ids := s.orderedLatestSkipblocksID()
 	// create merkle tree + proofs and the final message
 	root, _ := crypto.ProofTree(HashFunc(), ids)
+	log.Printf("Timestamp verifying root %x", root)
 	// root of merkle tree is not secret, no need to use constant time.
 	if !bytes.Equal(root, signedRoot) {
 		log.Lvl2("Root of merkle root does not match")

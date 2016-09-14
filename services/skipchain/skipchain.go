@@ -133,7 +133,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 	if err != nil {
 		return nil, errors.New("Verification error: " + err.Error())
 	}
-	s.save()
+	//s.save()
 
 	reply := &ProposedSkipBlockReply{
 		Previous: prev,
@@ -192,7 +192,7 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 	// Parent-block is always of type roster, but child-block can be
 	// data or roster.
 	reply := &SetChildrenSkipBlockReply{parent, child}
-	s.save()
+	//s.save()
 
 	return reply, nil
 }

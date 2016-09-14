@@ -15,6 +15,9 @@ from mplot import MPlot
 from stats import CSVStats
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import numpy as np
+
+import csv
 
 
 def plotData(data, name,
@@ -240,6 +243,45 @@ def plotFull():
         csv_column="full_ls_wall"
     )
 
+def plotSBCreation():
+    plots = read_csvs("swup_create")[0]
+    plot_show("swup_create")
+    mplot.plotPrepareLogLog(0, 10)
+    x = plots.x
+    y = plots.get_values('verification_user').avg
+    print y
+    plt.bar(x, y, label="verification_user")
+    yn = plots.get_values('overall_nobuild_user').avg
+    print yn
+    plt.bar(x, yn, bottom=y, color='green', label="overall_nobuild")
+    plt.legend(loc='upper right')
+    plt.ylim(0.0001, 1)
+    mplot.plotEnd()
+
+def plotBuildCDF():
+    plots = []
+    plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
+    plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
+
+    mplot.plotPrepareLogLog(0, 0)
+    plot_show("repro_build_cdf")
+
+    for index, label in enumerate(['Debian 50 most popular', 'Debian basic']):
+        X = np.sort(np.array(plots[index].values()))
+        while X[0] < 100.0:
+            X = np.delete(X, 0)
+        Y = np.linspace(0, 100, len(X))
+
+        plt.plot(X, Y, label=label, linestyle='-', marker='o',
+                 color=colors[index][1])
+
+    plt.xlabel("Time [s]")
+    plt.ylabel("% of Packages Built")
+
+    plt.legend(loc='lower right')
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    mplot.plotEnd()
+
 
 # Colors for the Cothority
 colors = [['lightgreen', 'green'],
@@ -267,15 +309,32 @@ def read_csvs(*values):
     return read_csvs_xname("hosts", *values)
 
 
+def read_csv_pure(file, xname, yname):
+    ret = {}
+    with open(file) as csvfile:
+        reader = csv.DictReader(csvfile)
+        x = 0
+        for row in reader:
+            if xname != "":
+                x = row[xname]
+            else:
+                x += 1
+
+            ret[x] = float(row[yname])
+
+    return ret
+
 # Write to file
-write_file = False
+write_file = True
 # What file extension - .png, .eps
 file_extension = 'png'
-file_extension = 'eps'
+# file_extension = 'eps'
 # Show figure
 mplot.show_fig = True
+mplot.show_fig = False
 
 # Call all plot-functions
-plotVerify()
-plotFull()
+# plotVerify()
+# plotFull()
+plotSBCreation()
 # plotBuildCDF()
