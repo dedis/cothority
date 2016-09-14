@@ -282,7 +282,7 @@ func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
 	rb.Lock()
 	defer rb.Unlock()
 	rb.requestData = append(rb.requestData, data)
-	log.LLvl5("Added request", len(rb.requestData), string(data))
+	log.Lvl5("Added request", len(rb.requestData), string(data))
 	rb.responseChannels = append(rb.responseChannels, responseChan)
 }
 

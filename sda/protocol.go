@@ -69,7 +69,7 @@ func ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
 	}
 	protocolNames[u] = name
 	protocols[u] = protocol
-	log.LLvl4("Registered", name, "to", u)
+	log.Lvl4("Registered", name, "to", u)
 	return u
 }
 

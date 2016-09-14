@@ -71,7 +71,7 @@ func BuildVerification(r *Release) (bool, error) {
 		d1, er := ApprovalCheck(path.Join(dir, PolFile), path.Join(dir, SigFile), r.CommitId)
 		ch1 <- d1
 		if er != nil {
-			log.LLvlf1("Problem with signatures verification", er)
+			log.Lvlf1("Problem with signatures verification", er)
 		}
 	}()
 
@@ -87,12 +87,12 @@ func BuildVerification(r *Release) (bool, error) {
 		}
 		pathToBin, err := exec.Command(path.Join(dir, BuildFile), dir).Output()
 		if err != nil {
-			log.LLvlf1("Problem with building the source", err)
+			log.Lvlf1("Problem with building the source", err)
 		}
 		log.Print("is the problem after this?")
 		buf, err := ioutil.ReadFile(path.Join(dir, string(pathToBin)))
 		if err != nil {
-			log.LLvlf1("Cannot open the binary to hash: %v", err)
+			log.Lvlf1("Cannot open the binary to hash: %v", err)
 		}
 		hasher.Write(buf)
 		log.Lvlf1("Hash of the binary is %+v", hex.EncodeToString(hasher.Sum(nil)))

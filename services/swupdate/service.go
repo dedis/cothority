@@ -165,7 +165,7 @@ func (cs *Service) timestamper() {
 				log.Error("Don't know message", msg)
 			}
 		case <-time.After(cs.Storage.TSInterval):
-			log.LLvl2("Interval is over - timestamping")
+			log.Lvl2("Interval is over - timestamping")
 		}
 		// Start timestamping
 	}
@@ -216,7 +216,7 @@ func verifierFunc(msg, data []byte) bool {
 			log.Error("While creating reproducible build:", err, result, wd)
 			return false
 		}
-		log.LLvl2("Build-output is", result)
+		log.Lvl2("Build-output is", result)
 		pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
 		if strings.Index(result, pkgbuild) >= 0 {
 			return false
