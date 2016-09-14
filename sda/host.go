@@ -224,7 +224,6 @@ func (h *Host) SendRaw(si *network.ServerIdentity, msg network.Body) error {
 			return err
 		}
 	}
-	log.Print("Done sending")
 	return nil
 }
 
