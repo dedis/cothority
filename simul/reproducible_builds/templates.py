@@ -1,10 +1,10 @@
 Header1 = """FROM debian:jessie
 
 # Add unstable repos with newest package versions
-RUN echo 'deb http://httpredir.debian.org/debian stretch main' >> /etc/apt/sources.list \\
- && echo 'deb-src http://httpredir.debian.org/debian stretch main' >> /etc/apt/sources.list \\
- && echo 'deb http://reproducible.alioth.debian.org/debian/ ./' | tee -a /etc/apt/sources.list \\
- && echo 'deb-src http://reproducible.alioth.debian.org/debian/ ./' | tee -a /etc/apt/sources.list \\
+# RUN echo 'deb http://debian.ethz.ch/debian/ stretch main' > /etc/apt/sources.list \\
+#  && echo 'deb-src http://debian.ethz.ch/debian stretch main' >> /etc/apt/sources.list
+RUN echo 'deb http://reproducible.alioth.debian.org/debian/ ./' > /etc/apt/sources.list \\
+ && echo 'deb-src http://reproducible.alioth.debian.org/debian/ ./' >> /etc/apt/sources.list \\
  """
 
 Header2 = """
@@ -23,6 +23,10 @@ RUN apt-get update -y
 # RUN apt-get install -y host
 # RUN host snapshot.debian.org
 
-RUN apt-get install -y --force-yes """
+# RUN apt-get update -y -o Acquire::Check-Valid-Until=false -o Acquire::BrokenProxy=true
+
+RUN apt-get install -y --force-yes dpkg-dev
+# RUN apt-get install -y --force-yes
+"""
 
 Closer = "RUN apt-get autoremove -y && apt-get clean -y"
