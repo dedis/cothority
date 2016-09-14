@@ -46,10 +46,9 @@ type Release struct {
 }
 
 type SwupChain struct {
-	Root      *skipchain.SkipBlock
-	Data      *skipchain.SkipBlock
-	Release   *Release
-	Timestamp *Timestamp
+	Root    *skipchain.SkipBlock
+	Data    *skipchain.SkipBlock
+	Release *Release
 }
 
 // XXX maybe don't alias the timestamp package's type?

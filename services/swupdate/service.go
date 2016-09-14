@@ -69,9 +69,8 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	log.Lvlf3("%s Creating package %s version %s", cs,
 		policy.Name, policy.Version)
 	sc := &SwupChain{
-		Release:   cp.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
-		Root:      cs.Storage.Root,
+		Release: cp.Release,
+		Root:    cs.Storage.Root,
 	}
 	if cs.Storage.Root == nil {
 		log.Lvl3("Creating Root-skipchain")
@@ -100,8 +99,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 // SignatureRequest treats external request to this service.
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
 	sc := &SwupChain{
-		Release:   up.Release,
-		Timestamp: &Timestamp{},
+		Release: up.Release,
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
