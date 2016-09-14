@@ -144,6 +144,41 @@ func TestService_LatestBlock(t *testing.T) {
 	TestInitializePackages(t)
 }
 
+func TestService_PropagateBlock(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	hosts, roster, s := local.MakeHELS(5, swupdateService)
+	service := s.(*Service)
+
+	cpr, err := service.CreatePackage(nil,
+		&CreatePackage{roster, release1, 2, 10})
+	log.ErrFatal(err)
+	sc := cpr.(*CreatePackageRet).SwupChain
+	verifyExistence(t, hosts, sc, policy1.Name, true)
+
+	upr, err := service.UpdatePackage(nil,
+		&UpdatePackage{sc, release2})
+	log.ErrFatal(err)
+	sc = upr.(*UpdatePackageRet).SwupChain
+	verifyExistence(t, hosts, sc, policy2.Name, false)
+}
+
+func verifyExistence(t *testing.T, hosts []*sda.Host, sc *SwupChain,
+	name string, genesis bool) {
+	for _, h := range hosts {
+		log.Lvl2("Verifying host", h)
+		s := h.GetService(ServiceName).(*Service)
+		if genesis {
+			swup, ok := s.Storage.SwupChainsGenesis[name]
+			require.True(t, ok)
+			require.Equal(t, swup.Data.Hash, sc.Data.Hash)
+		}
+		swup, ok := s.Storage.SwupChains[name]
+		require.True(t, ok)
+		require.Equal(t, swup.Data.Hash, sc.Data.Hash)
+	}
+}
+
 var keys []*PGP
 var keysPublic []string
 

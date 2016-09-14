@@ -14,6 +14,7 @@ func init() {
 		Policy{},
 		Release{},
 		storage{},
+		SwupChain{},
 	} {
 		network.RegisterPacketType(msg)
 	}
