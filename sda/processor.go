@@ -190,7 +190,6 @@ func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
 // Process implements the Processor interface and dispatches ClientRequest message
 // and InterServiceMessage
 func (p *ServiceProcessor) Process(packet *network.Packet) {
-	log.Lvlf1("Processing %#v", packet)
 	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)
 }
 
@@ -205,7 +204,6 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 		log.Error("Err unmarshal client request:" + err.Error())
 		return
 	}
-	log.Lvlf1("Processing client request: %#v, %#v, %#v", si, mt, m)
 	reply := p.GetReply(si, mt, m)
 	if err := p.SendRaw(si, reply); err != nil {
 		log.Error(err)
@@ -260,7 +258,6 @@ func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.Packe
 	arg0.Elem().Set(reflect.ValueOf(si).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))
-	log.Lvlf1("arg0 %#v", arg0)
 	ret := f.Call([]reflect.Value{arg0, arg1})
 
 	errI := ret[1].Interface()

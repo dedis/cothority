@@ -91,7 +91,6 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	}
 	cs.Storage.SwupChainsGenesis[policy.Name] = sc
 	cs.Storage.SwupChains[policy.Name] = sc
-	cs.save()
 
 	return &CreatePackageRet{sc}, nil
 }
@@ -110,7 +109,6 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 		return nil, err
 	}
 	cs.Storage.SwupChains[rel.Policy.Name] = sc
-	cs.save()
 
 	return &UpdatePackageRet{sc}, nil
 }

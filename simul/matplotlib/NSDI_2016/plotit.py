@@ -243,6 +243,11 @@ def plotFull():
         csv_column="full_ls_wall"
     )
 
+def plotSBCreation():
+    plotData(
+        [['swup_']]
+    )
+
 def plotBuildCDF():
     plots = []
     plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
@@ -251,7 +256,7 @@ def plotBuildCDF():
     mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
-    for index, label in enumerate(['Debian popular', 'Debian basic']):
+    for index, label in enumerate(['Debian 50 most popular', 'Debian basic']):
         X = np.sort(np.array(plots[index].values()))
         while X[0] < 100.0:
             X = np.delete(X, 0)
@@ -261,7 +266,7 @@ def plotBuildCDF():
                  color=colors[index][1])
 
     plt.xlabel("Time [s]")
-    plt.ylabel("Packages [%]")
+    plt.ylabel("% of Packages Built")
 
     plt.legend(loc='lower right')
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
@@ -321,4 +326,5 @@ mplot.show_fig = False
 # Call all plot-functions
 # plotVerify()
 # plotFull()
+plotSBCreation()
 plotBuildCDF()

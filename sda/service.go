@@ -434,11 +434,14 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
+			log.Lvl4("Closing connection to", dst)
 			return nil, err
 		}
+		log.Lvl4("Closing connection to", dst)
 		return &response, nil
-	case <-time.After(time.Minute * 30):
+	case <-time.After(time.Second * 10):
 		log.Lvl2(log.Stack())
+		log.Lvl4("Closing connection to", dst)
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }
