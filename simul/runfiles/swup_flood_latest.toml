@@ -1,4 +1,4 @@
-Simulation = "SwUpCreate"
+Simulation = "SwUpFlood"
 Servers = 4
 Bf = 2
 Rounds = 10
