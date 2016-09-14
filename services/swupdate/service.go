@@ -9,6 +9,12 @@ import (
 
 	"time"
 
+	"errors"
+
+	"os/exec"
+
+	"strings"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
@@ -38,21 +44,21 @@ func init() {
 // Swupdate allows decentralized software-update-signing and verification.
 type Service struct {
 	*sda.ServiceProcessor
-	path       string
-	skipchain  *skipchain.Client
-	StorageMap *storageMap
+	path      string
+	skipchain *skipchain.Client
+	Storage   *storage
+	tsChannel chan string
 	sync.Mutex
 }
 
-type storageMap struct {
-	// Timestamps of all known skipblocks, indexed by the
-	// skipchain-ID (which is the hash of the genesis-skipblock).
-	Storage    map[string]*storage
-	Timestamps map[string]*Timestamp
-}
-
 type storage struct {
-	*SwupChain
+	// A timestamp over all skipchains where all skipblocks are
+	// included in a Merkle-tree.
+	Timestamp         *Timestamp
+	SwupChainsGenesis map[string]*SwupChain
+	SwupChains        map[string]*SwupChain
+	Root              *skipchain.SkipBlock
+	TSInterval        time.Duration
 }
 
 // CreateProject is the starting point of the software-update and will
@@ -60,27 +66,32 @@ type storage struct {
 // - return an id of how this project can be referred to
 func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) (network.Body, error) {
 	policy := cp.Release.Policy
-	log.LLvlf3("%s Creating package %s version %s", cs,
+	log.Lvlf3("%s Creating package %s version %s", cs,
 		policy.Name, policy.Version)
 	sc := &SwupChain{
 		Release:   cp.Release,
-		Timestamp: &Timestamp{},
+		Timestamp: &Timestamp{"", []byte{}, ""},
+		Root:      cs.Storage.Root,
 	}
-	log.Lvl3("Creating Root-skipchain")
-	var err error
-	sc.Root, err = cs.skipchain.CreateRoster(cp.Roster, cp.Base, cp.Height,
-		skipchain.VerifyNone, nil)
-	if err != nil {
-		return nil, err
+	if cs.Storage.Root == nil {
+		log.Lvl3("Creating Root-skipchain")
+		var err error
+		cs.Storage.Root, err = cs.skipchain.CreateRoster(cp.Roster, cp.Base, cp.Height,
+			skipchain.VerifyNone, nil)
+		if err != nil {
+			return nil, err
+		}
+		sc.Root = cs.Storage.Root
 	}
 	log.Lvl3("Creating Data-skipchain")
+	var err error
 	sc.Root, sc.Data, err = cs.skipchain.CreateData(sc.Root, 2, 10,
 		verifierID, cp.Release)
 	if err != nil {
 		return nil, err
 	}
-	cs.StorageMap.Storage[policy.Name] =
-		&storage{sc}
+	cs.Storage.SwupChainsGenesis[policy.Name] = sc
+	cs.Storage.SwupChains[policy.Name] = sc
 	cs.save()
 
 	return &CreatePackageRet{sc}, nil
@@ -100,7 +111,7 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	if err != nil {
 		return nil, err
 	}
-	cs.StorageMap.Storage[rel.Policy.Name] = &storage{sc}
+	cs.Storage.SwupChains[rel.Policy.Name] = sc
 	cs.save()
 
 	return &UpdatePackageRet{sc}, nil
@@ -110,18 +121,56 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 // skipchain, it returns the first and the last block. If no skipchain for
 // that package is found, it returns nil for the first and last block.
 func (cs *Service) PackageSC(si *network.ServerIdentity, psc *PackageSC) (network.Body, error) {
-	return &PackageSCRet{}, nil
+	sc, ok := cs.Storage.SwupChains[psc.PackageName]
+	if !ok {
+		return nil, errors.New("Does not exist.")
+	}
+	lbRet, err := cs.LatestBlock(nil, &LatestBlock{sc.Data.Hash})
+	if err != nil {
+		return nil, err
+	}
+	update := lbRet.(*LatestBlockRet).Update
+	return &PackageSCRet{
+		First: cs.Storage.SwupChainsGenesis[psc.PackageName].Data,
+		Last:  update[len(update)-1],
+	}, nil
 }
 
 // LatestBlock returns the hash of the latest block together with a timestamp
 // signed by all nodes of the swupdate-skipchain responsible for that package.
 func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (network.Body, error) {
-	return &LatestBlockRet{}, nil
+	gucRet, err := cs.skipchain.GetUpdateChain(cs.Storage.Root, lb.LastKnownSB)
+	if err != nil {
+		return nil, err
+	}
+	return &LatestBlockRet{nil, gucRet.Update}, nil
 }
 
 // NewProtocol will instantiate a new protocol if needed.
 func (cs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	return nil, nil
+}
+
+// timestamper waits for n minutes before asking all nodes to timestamp
+// on the latest version of all skipblocks.
+// This function only returns when "close" is sent through the
+// tsChannel.
+func (cs *Service) timestamper() {
+	for true {
+		select {
+		case msg := <-cs.tsChannel:
+			switch msg {
+			case "close":
+				return
+			case "update":
+			default:
+				log.Error("Don't know message", msg)
+			}
+		case <-time.After(cs.Storage.TSInterval):
+			log.LLvl2("Interval is over - timestamping")
+		}
+		// Start timestamping
+	}
 }
 
 // verifierFunc will return whether the block is valid.
@@ -150,15 +199,31 @@ func verifierFunc(msg, data []byte) bool {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
 			policyBin, s)
 		if err != nil {
-			log.Error("Wrong signature")
+			log.Lvl2("Wrong signature")
 			return false
 		}
 	}
 	ver.Record()
-	build := monitor.NewTimeMeasure("build_" + policy.Name)
-	// Verify the reproducible build
-	time.Sleep(1 * time.Second)
-	build.Record()
+	if release.VerifyBuild {
+		build := monitor.NewTimeMeasure("build_" + policy.Name)
+		// Verify the reproducible build
+		wd, _ := os.Getwd()
+		cmd := exec.Command("../../reproducible_builds/crawler.py",
+			"cli", policy.Name)
+		cmd.Stderr = os.Stderr
+		resultB, err := cmd.Output()
+		result := string(resultB)
+		build.Record()
+		if err != nil {
+			log.Error("While creating reproducible build:", err, result, wd)
+			return false
+		}
+		log.LLvl2("Build-output is", result)
+		pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
+		if strings.Index(result, pkgbuild) >= 0 {
+			return false
+		}
+	}
 	//log.Print("Congrats, verified")
 	return true
 }
@@ -166,7 +231,7 @@ func verifierFunc(msg, data []byte) bool {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.StorageMap)
+	b, err := network.MarshalRegisteredType(s.Storage)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -192,9 +257,9 @@ func (s *Service) tryLoad() error {
 		}
 		// Only overwrite storage if we have a content,
 		// else keep the pre-defined storage-map.
-		if len(msg.(*storageMap).Storage) > 0 {
-			log.LLvl3("Successfully loaded")
-			s.StorageMap = msg.(*storageMap)
+		if len(msg.(*storage).SwupChains) > 0 {
+			log.Lvl3("Successfully loaded")
+			s.Storage = msg.(*storage)
 		}
 	}
 	return nil
@@ -207,9 +272,9 @@ func newSwupdate(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		skipchain:        skipchain.NewClient(),
-		StorageMap: &storageMap{
-			Storage:    map[string]*storage{},
-			Timestamps: map[string]*Timestamp{},
+		Storage: &storage{
+			SwupChains:        map[string]*SwupChain{},
+			SwupChainsGenesis: map[string]*SwupChain{},
 		},
 	}
 	//if err := s.tryLoad(); err != nil {

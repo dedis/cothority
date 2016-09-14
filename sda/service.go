@@ -437,10 +437,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 			return nil, err
 		}
 		return &response, nil
-		// FIXME this must be configurable (at least if want to experiment
-	// with clients to wait for timestamp response for longer than 10 sec
-	// epochs)
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Minute * 30):
 		log.Lvl2(log.Stack())
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
