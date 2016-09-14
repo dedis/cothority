@@ -116,7 +116,30 @@ func TestService_UpdatePackage(t *testing.T) {
 }
 
 func TestService_Timestamp(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s := local.MakeHELS(5, swupdateService)
+	service := s.(*Service)
+	body, err := service.CreatePackage(nil,
+		&CreatePackage{roster, release1, 2, 10})
+	log.ErrFatal(err)
+	// XXX Why these methods return Body and not message ?
+	cpr := body.(*CreatePackageRet)
 
+	now := time.Now()
+	service.timestamp(now)
+
+	body2, err := service.LatestBlock(nil, &LatestBlock{cpr.SwupChain.Data.Hash})
+	log.ErrFatal(err)
+	lbr := body2.(*LatestBlockRet)
+
+	tr, err := service.TimestampProof(nil, &TimestampRequest{release1.Policy.Name})
+	log.ErrFatal(err)
+	proof := tr.(*TimestampRet).Proof
+	leaf := lbr.Update[len(lbr.Update)-1].Hash
+
+	c := proof.Check(HashFunc(), lbr.Timestamp.Root, leaf)
+	assert.True(t, c)
 }
 
 func TestService_PackageSC(t *testing.T) {
