@@ -9,9 +9,10 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/cothority/services/timestamp"
-	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 /*
@@ -77,35 +78,12 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	psc := pscRaw.(*PackageSCRet)
 	log.Print(psc)
 	wg := sync.WaitGroup{}
-	timeClient := timestamp.NewClient()
+
 	m := monitor.NewTimeMeasure("update_empty")
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
-			// Request to the swupchain.
-			res, err := service.LatestBlock(nil, &LatestBlock{psc.Last.Hash})
-			log.ErrFatal(err)
-			lbret, ok := res.(*LatestBlockRet)
-			if !ok {
-				log.Fatal("Got invalid response.")
-			}
-
-			// Get Timestamp from timestamper.
-			r := make([]byte, 20)
-			_, err = rand.Read(r)
-			log.ErrFatal(err, "Couldn't read random bytes:")
-			nonce := sha256.Sum256(r)
-			root := config.Roster.List[0]
-			resp, err := timeClient.SignMsg(root, nonce[:])
-			log.ErrFatal(err, "Couldn't sign nonce.")
-
-			// Verify the time is in the good range.
-			ts := time.Unix(resp.Timestamp, 0)
-			latesBlockTime := time.Unix(lbret.Timestamp.Timestamp, 0)
-			if ts.Sub(latesBlockTime) > time.Hour {
-				log.Warn("Timestamp of latest block is older than one hour!")
-			}
-
+			runClientRequests(config, psc.Last.Hash)
 			wg.Done()
 		}()
 	}
@@ -117,34 +95,41 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
-			// Request to the swupchain.
-			res, err := service.LatestBlock(nil, &LatestBlock{psc.First.Hash})
-			log.ErrFatal(err)
-			lbret, ok := res.(*LatestBlockRet)
-			if !ok {
-				log.Fatal("Got invalid response.")
-			}
-
-			// Get Timestamp from timestamper.
-			r := make([]byte, 20)
-			_, err = rand.Read(r)
-			log.ErrFatal(err, "Couldn't read random bytes:")
-			nonce := sha256.Sum256(r)
-			root := config.Roster.List[0]
-			resp, err := timeClient.SignMsg(root, nonce[:])
-			log.ErrFatal(err, "Couldn't sign nonce.")
-
-			// Verify the time is in the good range.
-			ts := time.Unix(resp.Timestamp, 0)
-			latesBlockTime := time.Unix(lbret.Timestamp.Timestamp, 0)
-			if ts.Sub(latesBlockTime) > time.Hour {
-				log.Warn("Timestamp of latest block is older than one hour!")
-			}
-
+			runClientRequests(config, psc.First.Hash)
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 	m.Record()
 	return nil
+}
+
+func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlockID) {
+	service, ok := config.GetService(ServiceName).(*Service)
+	res, err := service.LatestBlock(nil, &LatestBlock{LastKnownSB: blockID})
+	log.ErrFatal(err)
+	lbret, ok := res.(*LatestBlockRet)
+	if !ok {
+		log.Fatal("Got invalid response.")
+	}
+
+	// Get Timestamp from timestamper.
+	timeClient := timestamp.NewClient()
+	// create nonce:
+	r := make([]byte, 20)
+	_, err = rand.Read(r)
+	log.ErrFatal(err, "Couldn't read random bytes:")
+	nonce := sha256.Sum256(r)
+
+	root := config.Roster.List[0]
+	// send request:
+	resp, err := timeClient.SignMsg(root, nonce[:])
+	log.ErrFatal(err, "Couldn't sign nonce.")
+
+	// Verify the time is in the good range:
+	ts := time.Unix(resp.Timestamp, 0)
+	latesBlockTime := time.Unix(lbret.Timestamp.Timestamp, 0)
+	if ts.Sub(latesBlockTime) > time.Hour {
+		log.Warn("Timestamp of latest block is older than one hour!")
+	}
 }
