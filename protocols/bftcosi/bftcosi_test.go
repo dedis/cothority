@@ -192,9 +192,8 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, roster, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
+	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
 	log.Lvl3("Tree is:", tree.Dump())
-	log.Lvl2(roster)
 
 	done := make(chan bool)
 	// create the message we want to sign for this round
@@ -238,7 +237,6 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 			return fmt.Errorf("%s Verification of the signature refused: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
 		if !succeed && err == nil {
-			log.Print("Fail")
 			return fmt.Errorf("%s: Shouldn't have succeeded for %d hosts, but signed for count: %d",
 				root.Name(), nbrHosts, refuseCount)
 		}
