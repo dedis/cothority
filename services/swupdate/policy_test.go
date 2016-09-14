@@ -13,7 +13,8 @@ func TestNewDebianRelease(t *testing.T) {
 	dr, err := NewDebianRelease("", "")
 	require.NotNil(err)
 
-	dr, err = NewDebianRelease("197001010000,ls,0.01", "")
+	dr, err = NewDebianRelease("197001010000,ls,0.01,hash1,hash2", "")
+	log.ErrFatal(err)
 	require.Equal("197001010000", dr.Snapshot)
 	require.Equal("ls", dr.Policy.Name)
 	require.Equal("0.01", dr.Policy.Version)

@@ -48,6 +48,8 @@ func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 		}
 	} else {
 		policy.Threshold = 3
+		policy.BinaryHash = entries[3]
+		policy.SourceHash = entries[4]
 	}
 
 	for k := 0; k < policy.Threshold; k++ {
@@ -85,7 +87,7 @@ func GetReleases(file string) ([]*DebianRelease, error) {
 		if err == nil {
 			ret = append(ret, dr)
 		} else {
-			log.Warn(err)
+			log.Lvl2(err, line)
 		}
 	}
 	return ret, nil

@@ -199,7 +199,7 @@ func verifierFunc(msg, data []byte) bool {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
 			policyBin, s)
 		if err != nil {
-			log.Error("Wrong signature")
+			log.Lvl2("Wrong signature")
 			return false
 		}
 	}
