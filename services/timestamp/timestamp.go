@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"bytes"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"

@@ -69,11 +69,13 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	// Get all packages
-	packages := InitializePackages("", nil, 2, 10)
+	packages, err := InitializePackages("", service, config.Roster, 2, 10)
+	log.ErrFatal(err)
 	// Make a DOS-measurement of what the services can handle
 	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
 	log.ErrFatal(err)
 	psc := pscRaw.(*PackageSCRet)
+	log.Print(psc)
 	wg := sync.WaitGroup{}
 	timeClient := timestamp.NewClient()
 	m := monitor.NewTimeMeasure("update_empty")

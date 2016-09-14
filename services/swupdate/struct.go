@@ -13,7 +13,7 @@ func init() {
 	for _, msg := range []interface{}{
 		Policy{},
 		Release{},
-		storageMap{},
+		storage{},
 	} {
 		network.RegisterPacketType(msg)
 	}
@@ -40,8 +40,9 @@ func NewPolicy(str string) (*Policy, error) {
 
 // Niktin calls this 'Snapshot'
 type Release struct {
-	Policy     *Policy
-	Signatures []string
+	Policy      *Policy
+	Signatures  []string
+	VerifyBuild bool
 }
 
 type SwupChain struct {

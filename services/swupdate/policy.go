@@ -30,40 +30,48 @@ var policyKeys []*PGP
 
 func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
-	if len(entries) != 3 {
-		return nil, errors.New("Should have three entries")
+	if len(entries) != 5 {
+		return nil, errors.New("Should have five entries")
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
-	dr := &DebianRelease{entries[0], time.Time{}, policy, []string{}}
-	if dir != "" {
-		polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
-		if err != nil {
-			return nil, err
-		}
-		_, err = toml.Decode(string(polBuf), policy)
-		if err != nil {
-			return nil, err
-		}
-		for k := 0; k < policy.Threshold; k++ {
-			if k >= len(policyKeys) {
-				policyKeys = append(policyKeys, NewPGP())
-			}
-			pgp := policyKeys[k]
-			pub := pgp.ArmorPublic()
-			policy.Keys = append(policy.Keys, pub)
-		}
-		policyBin, err := network.MarshalRegisteredType(policy)
-		if err != nil {
-			return nil, err
-		}
-		for i := range policy.Keys {
-			sig, err := policyKeys[i].Sign(policyBin)
+	dr := &DebianRelease{entries[0], time.Now(), policy, []string{}}
+	if false {
+		if dir != "" {
+			polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
 			if err != nil {
 				return nil, err
 			}
-			dr.Signatures = append(dr.Signatures, sig)
+			_, err = toml.Decode(string(polBuf), policy)
+			if err != nil {
+				return nil, err
+			}
 		}
+	} else {
+		policy.Threshold = 3
+		policy.BinaryHash = entries[3]
+		policy.SourceHash = entries[4]
 	}
+
+	for k := 0; k < policy.Threshold; k++ {
+		if k >= len(policyKeys) {
+			policyKeys = append(policyKeys, NewPGP())
+		}
+		pgp := policyKeys[k]
+		pub := pgp.ArmorPublic()
+		policy.Keys = append(policy.Keys, pub)
+	}
+	policyBin, err := network.MarshalRegisteredType(policy)
+	if err != nil {
+		return nil, err
+	}
+	for i := range policy.Keys {
+		sig, err := policyKeys[i].Sign(policyBin)
+		if err != nil {
+			return nil, err
+		}
+		dr.Signatures = append(dr.Signatures, sig)
+	}
+
 	return dr, nil
 }
 
@@ -74,12 +82,12 @@ func GetReleases(file string) ([]*DebianRelease, error) {
 		return nil, err
 	}
 	dir := path.Dir(file)
-	for _, line := range strings.Split(string(buf), "\n") {
+	for _, line := range strings.Split(string(buf), "\n")[1:] {
 		dr, err := NewDebianRelease(line, dir)
 		if err == nil {
 			ret = append(ret, dr)
 		} else {
-			log.Warn(err)
+			log.Lvl2(err, line)
 		}
 	}
 	return ret, nil
