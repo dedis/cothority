@@ -101,7 +101,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
 	sc := &SwupChain{
 		Release:   up.Release,
-		Timestamp: &Timestamp{"", []byte{}, ""},
+		Timestamp: &Timestamp{},
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
