@@ -54,19 +54,19 @@ func (e *floodSimulation) Setup(dir string, hosts []string) (
 	if err != nil {
 		return nil, err
 	}
-	c := timestamp.NewClient()
-	// TODO move all params to config file:
-	maxIterations := 100
-	_, err = c.SetupStamper(sc.Roster, time.Millisecond*50, maxIterations)
-	if err != nil {
-		return nil, err
-	}
 	return sc, nil
 }
 
 // Run is used on the destination machines and runs a number of
 // rounds
 func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
+	c := timestamp.NewClient()
+	// TODO move all params to config file:
+	maxIterations := 100
+	_, err := c.SetupStamper(config.Roster, time.Millisecond*50, maxIterations)
+	if err != nil {
+		return err
+	}
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	service, ok := config.GetService(ServiceName).(*Service)
@@ -74,7 +74,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	// Get all packages
-	packages, err := InitializePackages("", service, config.Roster, 2, 10)
+	packages, err := InitializePackages("../../../services/swupdate/snapshot/snapshots_nik.csv", service, config.Roster, 2, 10)
 	log.ErrFatal(err)
 	// Make a DOS-measurement of what the services can handle
 	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
