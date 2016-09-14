@@ -244,9 +244,19 @@ def plotFull():
     )
 
 def plotSBCreation():
-    plotData(
-        [['swup_']]
-    )
+    plots = read_csvs("swup_create")[0]
+    plot_show("swup_create")
+    mplot.plotPrepareLogLog(0, 10)
+    x = plots.x
+    y = plots.get_values('verification_user').avg
+    print y
+    plt.bar(x, y, label="verification_user")
+    yn = plots.get_values('overall_nobuild_user').avg
+    print yn
+    plt.bar(x, yn, bottom=y, color='green', label="overall_nobuild")
+    plt.legend(loc='upper right')
+    plt.ylim(0.0001, 1)
+    mplot.plotEnd()
 
 def plotBuildCDF():
     plots = []
@@ -327,4 +337,4 @@ mplot.show_fig = False
 # plotVerify()
 # plotFull()
 plotSBCreation()
-plotBuildCDF()
+# plotBuildCDF()

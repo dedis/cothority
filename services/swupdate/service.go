@@ -189,7 +189,7 @@ func verifierFunc(msg, data []byte) bool {
 		log.Error(err)
 		return false
 	}
-	ver := monitor.NewTimeMeasure("verification_" + policy.Name)
+	ver := monitor.NewTimeMeasure("verification")
 	//log.Printf("Verifying release %s/%s", policy.Name, policy.Version)
 	for i, s := range release.Signatures {
 		err := NewPGPPublic(policy.Keys[i]).Verify(
@@ -201,8 +201,9 @@ func verifierFunc(msg, data []byte) bool {
 	}
 	ver.Record()
 	if release.VerifyBuild {
-		build := monitor.NewTimeMeasure("build_" + policy.Name)
+		build := monitor.NewTimeMeasure("build")
 		// Verify the reproducible build
+		log.Lvl1("Starting to build", policy.Name, policy.Version)
 		wd, _ := os.Getwd()
 		cmd := exec.Command("../../reproducible_builds/crawler.py",
 			"cli", policy.Name)

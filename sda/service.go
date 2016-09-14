@@ -439,7 +439,7 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		}
 		log.Lvl4("Closing connection to", dst)
 		return &response, nil
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Minute * 30):
 		log.Lvl2(log.Stack())
 		log.Lvl4("Closing connection to", dst)
 		return &network.Packet{}, errors.New("Timeout on sending message")
