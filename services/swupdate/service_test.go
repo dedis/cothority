@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/protocols/swupdate"
 	"github.com/dedis/cothority/sda"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -115,10 +116,22 @@ func TestService_UpdatePackage(t *testing.T) {
 	assert.Equal(t, *policy2, *sc.Release.Policy)
 }
 
+func TestPairMarshalling(t *testing.T) {
+	root := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+	t1 := time.Now().Unix()
+
+	buff := MarshalPair(root, t1)
+
+	root2, t2 := UnmarshalPair(buff)
+	assert.Equal(t, root, []byte(root2))
+	assert.Equal(t, t1, t2)
+}
+
 func TestService_Timestamp(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, roster, s := local.MakeHELS(5, swupdateService)
+
 	service := s.(*Service)
 	body, err := service.CreatePackage(nil,
 		&CreatePackage{roster, release1, 2, 10})
@@ -138,8 +151,11 @@ func TestService_Timestamp(t *testing.T) {
 	proof := tr.(*TimestampRet).Proof
 	leaf := lbr.Update[len(lbr.Update)-1].Hash
 
+	// verify proof
 	c := proof.Check(HashFunc(), lbr.Timestamp.Root, leaf)
 	assert.True(t, c)
+	// verify timestamp signature
+	assert.Nil(t, swupdate.VerifySignature(network.Suite, roster.Publics(), lbr.Timestamp.Root, lbr.Timestamp.SignatureResponse.Signature))
 }
 
 func TestService_PackageSC(t *testing.T) {

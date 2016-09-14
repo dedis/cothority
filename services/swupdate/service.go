@@ -100,6 +100,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	cs.Storage.SwupChainsGenesis[policy.Name] = sc
 	cs.Storage.SwupChains[policy.Name] = sc
 	cs.save()
+	cs.timestamp(time.Now())
 
 	return &CreatePackageRet{sc}, nil
 }
@@ -119,6 +120,7 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	}
 	cs.Storage.SwupChains[rel.Policy.Name] = sc
 	cs.save()
+	cs.timestamp(time.Now())
 
 	return &UpdatePackageRet{sc}, nil
 }
@@ -419,6 +421,8 @@ func (s *Service) updateTimestampInfo(rootID crypto.HashID, proofs []crypto.Proo
 	var t *Timestamp
 	if s.Storage.Timestamp == nil {
 		s.Storage.Timestamp = &Timestamp{}
+		t = s.Storage.Timestamp
+	} else {
 		t = s.Storage.Timestamp
 	}
 	t.Timestamp = ts
