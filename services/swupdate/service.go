@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"sync"
 
@@ -263,6 +264,37 @@ func (s *Service) tryLoad() error {
 		}
 	}
 	return nil
+}
+
+// timestamp creates a merkle tree of all the latests skipblocks of each
+// skipchains, run a timestamp protocol and store the results in
+// s.latestTimestamps.
+func (s *Service) timestamp() error {
+	// order all packets and marshal them
+	ids := orderedLatestSkipblocksID()
+	// create merkle tree + proofs
+
+	// run protocol
+
+	// verify & store signature
+
+}
+
+// orderedLatestSkipblocksID sorts the latests blocks of all skipchains and
+// return all ids in an array (array of slice of byte for ease of use with
+// merkle tree).
+func (s *Service) orderedLatestSkipblocksID() [][]byte {
+	keys := make([]string, 0)
+	for k := range s.Storage.SwupChains {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	ids := make([][]byte, 0)
+	for _, v := range s.Storage.SwupChains {
+		ids = append(ids, []byte(v))
+	}
+	return ids
 }
 
 // newSwupdate create a new service and tries to load an eventually
