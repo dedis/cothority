@@ -1,0 +1,13 @@
+Simulation = "SwUpCreate"
+Servers = 4
+Bf = 2
+Rounds = 10
+CloseWait = 6000
+Height = 10
+Base = 4
+Requests = 5
+Latest = false
+RunWait = 3600
+
+Depth
+1
