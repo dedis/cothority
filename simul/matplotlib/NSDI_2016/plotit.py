@@ -261,12 +261,15 @@ def plotSBCreation():
 def plotBuildCDF():
     plots = []
     plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
-    plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
+    plots.append(read_csv_pure('repro_builds_popular1_old.csv', "", "wall_time"))
+    plots.append(read_csv_pure('repro_builds_required.csv', "", "wall_time"))
 
     mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
-    for index, label in enumerate(['Debian 50 most popular', 'Debian basic']):
+    for index, label in enumerate(['Debian 50 most popular',
+                                   'Debian 50 most popular 1st',
+                                   'Debian required packages']):
         X = np.sort(np.array(plots[index].values()))
         while X[0] < 100.0:
             X = np.delete(X, 0)
@@ -336,5 +339,5 @@ mplot.show_fig = False
 # Call all plot-functions
 # plotVerify()
 # plotFull()
-plotSBCreation()
-# plotBuildCDF()
+# plotSBCreation()
+plotBuildCDF()
