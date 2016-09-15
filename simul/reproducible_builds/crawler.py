@@ -216,14 +216,14 @@ for p in packages:
         else:
             # Parsing dependencies
             i += 1
-            # if not first:
-            #     if i % 3 == 1 and line != "":
-            #         f.write(' \\ \n')
-            #     else:
-            #         f.write(' ')
-            # else:
-            #     first = False
-            # f.write(parse_dpnd(line))
+            if not first:
+                if i % 3 == 1 and line != "":
+                    f.write(' \\ \n')
+                else:
+                    f.write(' ')
+            else:
+                first = False
+            f.write(parse_dpnd(line))
 
     print(binary)
     f.write('\n\n' + templates.Closer + '\n')
