@@ -58,15 +58,16 @@ def compile_bin(name, bina):
     with open(name + '.log', 'w') as flog:
         wall_start_time = time.perf_counter()
         cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
-        subprocess.run(['docker', 'build', '--tag=reprod:' + name, '--force-rm', '.'], stdout=flog,
+        tag = "reprod:" + name + "-" + os.getpid()
+        subprocess.run(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
                                  universal_newlines=True)
 
     try:
-        comhash = subprocess.check_output(['docker', 'run', '--rm', 'reprod:' + name, 'sha256sum',
+        comhash = subprocess.check_output(['docker', 'run', '--rm', tag, 'sha256sum',
                                                  bina]).decode('ascii', 'ignore').partition(' ')[0]
         cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
         wall_time = time.perf_counter() - wall_start_time
-        subprocess.run(['docker', 'rmi', 'reprod:'+name], stdout='/dev/null')
+        subprocess.run(['docker', 'rmi', tag], stdout='/dev/null')
 
     except:
         print("Some error while building", name)
