@@ -248,8 +248,9 @@ func verifierFunc(msg, data []byte) bool {
 		}
 	}
 	ver.Record()
+	build := monitor.NewTimeMeasure("build")
+	success := true
 	if release.VerifyBuild {
-		build := monitor.NewTimeMeasure("build")
 		// Verify the reproducible build
 		log.Lvl1("Starting to build", policy.Name, policy.Version)
 		wd, _ := os.Getwd()
@@ -258,19 +259,22 @@ func verifierFunc(msg, data []byte) bool {
 		cmd.Stderr = os.Stderr
 		resultB, err := cmd.Output()
 		result := string(resultB)
-		build.Record()
 		if err != nil {
 			log.Error("While creating reproducible build:", err, result, wd)
-			return false
-		}
-		log.Lvl2("Build-output is", result)
-		pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
-		if strings.Index(result, pkgbuild) >= 0 {
-			return false
+			success = false
+		} else {
+			log.Lvl2("Build-output is", result)
+			pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
+			if strings.Index(result, pkgbuild) >= 0 {
+				success = false
+			}
 		}
 	}
-	log.LLvl2("Congrats, verified", policy.Name, policy.Version)
-	return true
+	build.Record()
+	if success {
+		log.LLvl2("Congrats, verified", policy.Name, policy.Version)
+	}
+	return success
 }
 
 // saves the actual identity
