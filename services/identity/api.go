@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/eddsa"
 )
 
@@ -36,6 +37,8 @@ func init() {
 		&ProposeUpdateReply{},
 		&ProposeVote{},
 		&ProposeVoteReply{},
+		&GetUpdateChain{},
+		&GetUpdateChainReply{},
 		// Internal messages
 		&PropagateIdentity{},
 		&UpdateSkipBlock{},
@@ -218,6 +221,17 @@ func (i *Identity) ProposeVote(accept bool) error {
 		log.Lvl2("Threshold not reached")
 	}
 	return nil
+}
+
+// GetUpdateChain returns the individual skipblocks for verification by
+// the client
+func (i *Identity) GetUpdateChain(id ID) ([]*skipchain.SkipBlock, error) {
+	msg, err := i.Send(i.Cothority.RandomServerIdentity(),
+		&skipchain.GetUpdateChain{skipchain.SkipBlockID(id)})
+	if err != nil {
+		return nil, err
+	}
+	return msg.Msg.(*skipchain.GetUpdateChainReply).Update, nil
 }
 
 // ConfigUpdate asks if there is any new config available that has already

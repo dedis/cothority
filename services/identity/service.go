@@ -249,6 +249,10 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	return nil, nil
 }
 
+func (s *Service) GetUpdateChain(si *network.ServerIdentity, guc *GetUpdateChain) (network.Body, error) {
+	return s.skipchain.GetUpdateChain(s.getIdentityStorage(guc.LatestID))
+}
+
 /*
  * Internal messages
  */

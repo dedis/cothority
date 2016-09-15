@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
@@ -147,6 +148,31 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	if len(c1.Config.Device) != 2 {
 		t.Fatal("Should have two owners now")
 	}
+}
+
+func TestIdentity_GetUpdate(t *testing.T) {
+	l := sda.NewLocalTest()
+	hosts, el, _ := l.GenTree(5, true, true, true)
+	services := l.GetServices(hosts, identityService)
+	defer l.CloseAll()
+	for _, s := range services {
+		log.Lvl3(s.(*Service).Identities)
+	}
+
+	c1 := NewIdentity(el, 50, "one1")
+	log.ErrFatal(c1.CreateIdentity())
+
+	conf2 := c1.Config.Copy()
+	kp2 := config.NewKeyPair(network.Suite)
+	conf2.Device["two2"] = &Device{kp2.Public}
+	conf2.Data["two2"] = "public2"
+	log.ErrFatal(c1.ProposeSend(conf2))
+	log.ErrFatal(c1.ProposeUpdate())
+	log.ErrFatal(c1.ProposeVote(true))
+
+	updateChain, err := c1.GetUpdateChain(c1.ID)
+	log.ErrFatal(err)
+	require.Equal(t, 2, len(updateChain))
 }
 
 func TestIdentity_SaveToStream(t *testing.T) {

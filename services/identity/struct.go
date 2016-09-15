@@ -233,6 +233,14 @@ type ProposeVoteReply struct {
 	Data *skipchain.SkipBlock
 }
 
+type GetUpdateChain struct {
+	skipchain.GetUpdateChain
+}
+
+type GetUpdateChainReply struct {
+	skipchain.GetUpdateChainReply
+}
+
 // Messages to be sent from one identity to another
 
 // PropagateIdentity sends a new identity to other identityServices
@@ -240,7 +248,7 @@ type PropagateIdentity struct {
 	Storage *Storage
 }
 
-// UpdateSkipBlock asks the service to fetch the latest SkipBlock
+// UpdateSkipBlock asks the service to store that last skipblock.
 type UpdateSkipBlock struct {
 	ID     ID
 	Latest *skipchain.SkipBlock
