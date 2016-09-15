@@ -148,7 +148,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		monitor.EndAndCleanup()
 	}
 
 	// Wait for all hosts to be closed
@@ -167,4 +166,5 @@ func main() {
 	log.Lvl3(hostAddress, scs[0].Host.ServerIdentity.First(), "is waiting for all hosts to close")
 	<-allClosed
 	log.Lvl2(hostAddress, "has all hosts closed")
+	monitor.EndAndCleanup()
 }
