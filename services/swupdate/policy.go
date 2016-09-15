@@ -87,7 +87,7 @@ func GetReleases(file string) ([]*DebianRelease, error) {
 		if err == nil {
 			ret = append(ret, dr)
 		} else {
-			log.Lvl2(err, line)
+			log.Error(err, line)
 		}
 	}
 	return ret, nil
