@@ -271,11 +271,11 @@ func verifierFunc(msg, data []byte) bool {
 				success = false
 			}
 		}
+		if success {
+			log.LLvl2("Congrats, verified", policy.Name, policy.Version)
+		}
 	}
 	build.Record()
-	if success {
-		log.LLvl2("Congrats, verified", policy.Name, policy.Version)
-	}
 	return success
 }
 

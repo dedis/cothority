@@ -229,10 +229,14 @@ def plotCheckingNtree():
 
 def plotVerify():
     plotData(
-        [['test_swupcreate'],
-         ['Software-update']],
-        'verification_ls',
-        csv_column="verification_ls_wall"
+        [['swup_verification'],
+         ['PGP key verification']],
+        'swup_verification',
+        loglog=[10, 10],
+        xname="pgpkeys",
+        csv_column="verification_wall",
+        xlabel="Number of PGP-signatures on release",
+        ylabel="Time to verify PGP-signatures"
     )
 
 def plotFull():
@@ -247,14 +251,23 @@ def plotSBCreation():
     plots = read_csvs("swup_create")[0]
     plot_show("swup_create")
     mplot.plotPrepareLogLog(0, 10)
-    x = np.arange(len(plots.x)) * 2 - 0.5
-    y = plots.get_values('verification_user').avg
-    plt.bar(x, y, label="verification_user")
-    yn = plots.get_values('overall_nobuild_user').avg
-    plt.bar(x, yn, bottom=y, color='green', label="overall_nobuild")
+    width = 0.5
+    x = np.arange(len(plots.x))
+    yb = np.zeros(len(x))
+    vls = [['verification_wall', 'PGP Signature verification'],
+           ['add_block_wall', 'SkipBlock adding'],
+           ['build_wall', 'Reproducible build']]
+    for index, vl in enumerate(vls):
+        value, label = vl
+        y = np.array(plots.get_values(value).avg)
+        if value == 'build_wall':
+            y = np.ones(len(x)) * y[0]
+        plt.bar(x, y, width, bottom=yb, label=label, color=colors[index][0])
+        yb += y
 
-    plt.legend(loc='upper right')
-    plt.ylim(0.0001, 1)
+    plt.xticks(x + width / 2, plots.x)
+    plt.legend(loc='lower right')
+    plt.ylim(0.0001, 500)
     mplot.plotEnd()
 
 def plotBuildCDF():
@@ -262,13 +275,15 @@ def plotBuildCDF():
     plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
     plots.append(read_csv_pure('repro_builds_popular1_old.csv', "", "wall_time"))
     plots.append(read_csv_pure('repro_builds_required.csv', "", "wall_time"))
+    plots.append(read_csv_pure('repro_builds_required_iccloud.csv', "", "wall_time"))
 
     mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
     for index, label in enumerate(['Debian 50 most popular',
                                    'Debian 50 most popular 1st',
-                                   'Debian required packages']):
+                                   'Debian required packages',
+                                   'Debian required packages iccloud']):
         X = np.sort(np.array(plots[index].values()))
         while X[0] < 100.0:
             X = np.delete(X, 0)
@@ -336,7 +351,7 @@ mplot.show_fig = True
 mplot.show_fig = False
 
 # Call all plot-functions
-# plotVerify()
+plotVerify()
 # plotFull()
 plotSBCreation()
-# plotBuildCDF()
+plotBuildCDF()

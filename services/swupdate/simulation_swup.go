@@ -23,12 +23,13 @@ type createSimulation struct {
 	Base        int
 	DockerBuild bool
 	Snapshot    string
+	PGPKeys     int
 }
 
 // NewSimulation returns the new simulation, where all fields are
 // initialised using the config-file
 func NewCreateSimulation(config string) (sda.Simulation, error) {
-	es := &createSimulation{}
+	es := &createSimulation{PGPKeys: 5}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -60,11 +61,10 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	}
 
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("../../../services/swupdate/snapshot/" + e.Snapshot)
+	drs, err := GetReleasesKey("../../../services/swupdate/snapshot/"+e.Snapshot, e.PGPKeys)
 	if err != nil {
 		return err
 	}
-	log.Print(e.DockerBuild)
 	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Adding to the skipchain:", pol.Name, pol.Version)

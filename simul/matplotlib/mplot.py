@@ -69,6 +69,8 @@ class MPlot:
     # Plots the Minimum, Maximum, Average on the same plot.
     def plotMMA(self, stats, values, plot_color, plot_z, args):
         val = stats.get_values(values)
+        print val.x
+        print val.avg
         plt.plot(val.x, val.avg, **args)
         self.plotFilledLegend(val, "min-max", plot_color, z=plot_z)
         return val
@@ -157,8 +159,8 @@ class MPlot:
     def plotPrepareLogLog(self, logx=2, logy=2):
         plt.clf()
         plt.Figure()
-        plt.ylabel('Total seconds over all rounds')
-        plt.xlabel('Number of witnesses')
+        plt.ylabel('CPU-time spent on each node')
+        plt.xlabel('Number of nodes')
         if logx > 0:
             plt.xscale(u'log', basex=logx)
         if logy > 0:

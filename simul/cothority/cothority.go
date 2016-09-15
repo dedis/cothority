@@ -78,7 +78,7 @@ func main() {
 		}
 	}
 	if monitorAddress != "" {
-		log.Print("Connecting to monitor", monitorAddress)
+		log.Lvl2("Connecting to monitor", monitorAddress)
 		if err := monitor.ConnectSink(monitorAddress); err != nil {
 			log.Fatal("Couldn't connect monitor to sink:", err)
 			//}

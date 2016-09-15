@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
 
@@ -28,7 +27,7 @@ type DebianRelease struct {
 
 var policyKeys []*PGP
 
-func NewDebianRelease(line, dir string) (*DebianRelease, error) {
+func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
 	if len(entries) != 5 {
 		return nil, errors.New("Should have five entries")
@@ -47,14 +46,15 @@ func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 			}
 		}
 	} else {
-		policy.Threshold = 3
+		policy.Threshold = keys
 		policy.BinaryHash = entries[3]
 		policy.SourceHash = entries[4]
 	}
 
+	key := NewPGP()
 	for k := 0; k < policy.Threshold; k++ {
 		if k >= len(policyKeys) {
-			policyKeys = append(policyKeys, NewPGP())
+			policyKeys = append(policyKeys, key)
 		}
 		pgp := policyKeys[k]
 		pub := pgp.ArmorPublic()
@@ -76,6 +76,10 @@ func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 }
 
 func GetReleases(file string) ([]*DebianRelease, error) {
+	return GetReleasesKey(file, 5)
+}
+
+func GetReleasesKey(file string, keys int) ([]*DebianRelease, error) {
 	var ret []*DebianRelease
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -83,11 +87,11 @@ func GetReleases(file string) ([]*DebianRelease, error) {
 	}
 	dir := path.Dir(file)
 	for _, line := range strings.Split(string(buf), "\n")[1:] {
-		dr, err := NewDebianRelease(line, dir)
+		dr, err := NewDebianRelease(line, dir, keys)
 		if err == nil {
 			ret = append(ret, dr)
-		} else {
-			log.Error(err, line)
+			//} else {
+			//	log.Error(err, line)
 		}
 	}
 	return ret, nil
