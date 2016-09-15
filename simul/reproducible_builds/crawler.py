@@ -99,12 +99,12 @@ def find_snapshots(btime, f):
     if len(snapbuf) > 1:
         f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
-            'href'] + ' sid main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
+        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-2][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
         f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' sid main\' >> /etc/apt/sources.list \n\n')
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
+        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-1][
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \n\n')
     elif len(snapbuf) == 1:
         f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
