@@ -6,11 +6,9 @@ CloseWait = 6000
 Height = 10
 Base = 4
 RunWait = 3600
-Snapshot = snapshot_limited_6.csv
+DockerBuild = false
 
-Depth, DockerBuild
-1, true
-2, false
-3, false
-4, false
-6, false
+Depth
+1
+2
+3

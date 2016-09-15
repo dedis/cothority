@@ -22,6 +22,7 @@ type createSimulation struct {
 	Height      int
 	Base        int
 	DockerBuild bool
+	Snapshot    string
 }
 
 // NewSimulation returns the new simulation, where all fields are
@@ -59,7 +60,7 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	}
 
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("../../../services/swupdate/snapshot/snapshots_limited.csv")
+	drs, err := GetReleases("../../../services/swupdate/snapshot/" + e.Snapshot)
 	if err != nil {
 		return err
 	}
