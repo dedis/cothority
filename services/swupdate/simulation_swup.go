@@ -19,8 +19,9 @@ func init() {
 // Simulation only holds the BFTree simulation
 type createSimulation struct {
 	sda.SimulationBFTree
-	Height int
-	Base   int
+	Height      int
+	Base        int
+	DockerBuild bool
 }
 
 // NewSimulation returns the new simulation, where all fields are
@@ -68,7 +69,7 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 		// Verify if it's the first version of that packet
 		sc, knownPacket := packets[pol.Name]
 		// Only the first packet is built - not the subsequent ones.
-		release := &Release{pol, dr.Signatures, !knownPacket}
+		release := &Release{pol, dr.Signatures, !knownPacket && e.DockerBuild}
 		var round *monitor.TimeMeasure
 		if knownPacket {
 			round = monitor.NewTimeMeasure("overall_nobuild")
