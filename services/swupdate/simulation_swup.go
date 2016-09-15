@@ -63,6 +63,7 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
+	log.Print(e.DockerBuild)
 	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Adding to the skipchain:", pol.Name, pol.Version)
