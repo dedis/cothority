@@ -7,5 +7,14 @@ Height = 10
 Base = 4
 RunWait = 3600
 
-Depth
-1
+Depth, DockerBuild
+# 1, true
+2, false
+3, false
+4, false
+6, false
+8, false
+10, false
+12, false
+14, false
+16, false

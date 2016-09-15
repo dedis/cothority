@@ -339,5 +339,5 @@ mplot.show_fig = False
 # Call all plot-functions
 # plotVerify()
 # plotFull()
-# plotSBCreation()
-plotBuildCDF()
+plotSBCreation()
+# plotBuildCDF()
