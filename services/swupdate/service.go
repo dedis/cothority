@@ -99,10 +99,10 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 		return nil, err
 	}
 	cs.Storage.SwupChainsGenesis[policy.Name] = sc
+	cs.timestamp(time.Now())
 	if err := cs.startPropagate(policy.Name, sc); err != nil {
 		return nil, err
 	}
-	cs.timestamp(time.Now())
 
 	return &CreatePackageRet{sc}, nil
 }
@@ -121,10 +121,10 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 		return nil, err
 	}
 
+	cs.timestamp(time.Now())
 	if err := cs.startPropagate(rel.Policy.Name, sc); err != nil {
 		return nil, err
 	}
-	cs.timestamp(time.Now())
 	return &UpdatePackageRet{sc}, nil
 }
 
@@ -366,6 +366,7 @@ func (s *Service) TimestampProof(si *network.ServerIdentity, req *TimestampReque
 // skipchains, run a timestamp protocol and store the results in
 // s.latestTimestamps.
 func (s *Service) timestamp(time time.Time) {
+	measure := monitor.NewTimeMeasure("swup_timestamp")
 	// order all packets and marshal them
 	ids := s.orderedLatestSkipblocksID()
 	// create merkle tree + proofs and the final message
@@ -378,6 +379,7 @@ func (s *Service) timestamp(time time.Time) {
 	// signature contains enough participants.
 	// store informations
 	s.updateTimestampInfo(root, proofs, time.Unix(), signature)
+	measure.Record()
 }
 
 func (s *Service) cosiSign(msg []byte) []byte {
