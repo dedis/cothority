@@ -373,7 +373,6 @@ func (s *Service) timestamp(time time.Time) {
 	root, proofs := crypto.ProofTree(HashFunc(), ids)
 	msg := MarshalPair(root, time.Unix())
 	// run protocol
-	log.Printf("Start to timestamp root %x & time %v", root, time.Unix())
 	signature := s.cosiSign(msg)
 	// TODO XXX Here in a non-academical world we should test if the
 	// signature contains enough participants.
@@ -397,12 +396,10 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	// service)
 	response := make(chan []byte)
 	pi.RegisterSignatureHook(func(sig []byte) {
-		log.Print("Writing signature to channel!!!")
 		response <- sig
 	})
 	go pi.Dispatch()
 	go pi.Start()
-	log.Printf("Cosi starting with public key %x & msg %x", s.Storage.Root.Roster.Aggregate, msg)
 	log.Lvl1("Waiting on cosi response ...")
 	res := <-response
 	log.Lvl1("... DONE: Recieved cosi response")
@@ -424,7 +421,6 @@ func (s *Service) cosiVerify(msg []byte) bool {
 	ids := s.orderedLatestSkipblocksID()
 	// create merkle tree + proofs and the final message
 	root, _ := crypto.ProofTree(HashFunc(), ids)
-	log.Printf("Timestamp verifying root %x", root)
 	// root of merkle tree is not secret, no need to use constant time.
 	if !bytes.Equal(root, signedRoot) {
 		log.Lvl2("Root of merkle root does not match")

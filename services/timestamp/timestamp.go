@@ -211,7 +211,7 @@ func (s *Service) runLoop() {
 			}
 			s.requests.reset()
 		} else {
-			log.Print("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			log.Lvl5("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
 	}
 

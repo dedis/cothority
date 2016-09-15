@@ -80,7 +80,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
 	log.ErrFatal(err)
 	psc := pscRaw.(*PackageSCRet)
-	log.Print(psc)
+	//log.Print(psc)
 	wg := sync.WaitGroup{}
 	var m *monitor.TimeMeasure
 	var blockID skipchain.SkipBlockID
@@ -144,5 +144,6 @@ func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlock
 	if !proof.Check(HashFunc(), lbret.Timestamp.Root, leaf) {
 		log.Warn("Proof of inclusion is not correct")
 	}
+	log.Print("Proof verification!")
 	proofVeri.Record()
 }
