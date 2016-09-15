@@ -100,6 +100,8 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 
 // SignatureRequest treats external request to this service.
 func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) (network.Body, error) {
+	addBlock := monitor.NewTimeMeasure("add_block")
+	defer addBlock.Record()
 	sc := &SwupChain{
 		Release: up.Release,
 	}

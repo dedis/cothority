@@ -5,7 +5,7 @@ Header1 = """FROM debian:jessie
 #  && echo 'deb-src http://debian.ethz.ch/debian stretch main' >> /etc/apt/sources.list
 RUN echo 'deb http://reproducible.alioth.debian.org/debian/ ./' > /etc/apt/sources.list \\
  && echo 'deb-src http://reproducible.alioth.debian.org/debian/ ./' >> /etc/apt/sources.list \\
- """
+"""
 
 Header2 = """
 # Add a public of repository for reproducible versions of packages
@@ -20,8 +20,8 @@ ENV LD_LIBRARY_PATH /lib-override
 RUN echo snapshot.debian.org 193.62.202.30 >> /tmp/hosts
 
 RUN apt-get update -y
-# RUN apt-get install -y host
-# RUN host snapshot.debian.org
+RUN apt-get install -y host
+RUN host snapshot.debian.org
 
 # RUN apt-get update -y -o Acquire::Check-Valid-Until=false -o Acquire::BrokenProxy=true
 
