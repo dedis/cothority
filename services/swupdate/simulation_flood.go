@@ -60,10 +60,11 @@ func (e *floodSimulation) Setup(dir string, hosts []string) (
 // Run is used on the destination machines and runs a number of
 // rounds
 func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
+	log.Print("WHY??????")
 	c := timestamp.NewClient()
 	// TODO move all params to config file:
-	maxIterations := 100
-	_, err := c.SetupStamper(config.Roster, time.Millisecond*50, maxIterations)
+	maxIterations := 0
+	_, err := c.SetupStamper(config.Roster, time.Millisecond*250, maxIterations)
 	if err != nil {
 		return err
 	}
@@ -74,13 +75,15 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	// Get all packages
+	log.Print("Before init pakages")
 	packages, err := InitializePackages("../../../services/swupdate/snapshot/snapshots_nik.csv", service, config.Roster, 2, 10)
 	log.ErrFatal(err)
+	log.Print("After init packages")
 	// Make a DOS-measurement of what the services can handle
 	pscRaw, err := service.PackageSC(nil, &PackageSC{packages[0]})
 	log.ErrFatal(err)
 	psc := pscRaw.(*PackageSCRet)
-	log.Print(psc)
+	//log.Print(psc)
 	wg := sync.WaitGroup{}
 	var m *monitor.TimeMeasure
 	var blockID skipchain.SkipBlockID
@@ -93,10 +96,11 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		m = monitor.NewTimeMeasure("update_full")
 		blockID = psc.First.Hash
 	}
+	log.Print("Before client erquests.")
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
-			runClientRequests(config, blockID)
+			runClientRequests(config, blockID, packages[0])
 			wg.Done()
 		}()
 	}
@@ -106,7 +110,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	return nil
 }
 
-func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlockID) {
+func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlockID, name string) {
 	service, ok := config.GetService(ServiceName).(*Service)
 	res, err := service.LatestBlock(nil, &LatestBlock{LastKnownSB: blockID})
 	log.ErrFatal(err)
@@ -134,4 +138,16 @@ func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlock
 	if ts.Sub(latesBlockTime) > time.Hour {
 		log.Warn("Timestamp of latest block is older than one hour!")
 	}
+	// verify proof of inclusion of the last skipblock of this package's chain
+	// in the merkle tree of the timestamper included in the swupdate service.
+	proofVeri := monitor.NewTimeMeasure("client_proof")
+	tr, err := service.TimestampProof(nil, &TimestampRequest{name})
+	log.ErrFatal(err)
+	proof := tr.(*TimestampRet).Proof
+	leaf := lbret.Update[len(lbret.Update)-1].Hash
+	if !proof.Check(HashFunc(), lbret.Timestamp.Root, leaf) {
+		log.Warn("Proof of inclusion is not correct")
+	}
+	log.Print("Proof verification!")
+	proofVeri.Record()
 }

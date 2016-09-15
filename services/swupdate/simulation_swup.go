@@ -64,19 +64,19 @@ func (e *createSimulation) Run(config *sda.SimulationConfig) error {
 	}
 	for _, dr := range drs {
 		pol := dr.Policy
-		log.Lvl1("Building", pol.Name, pol.Version)
+		log.Lvl1("Adding to the skipchain:", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
 		sc, knownPacket := packets[pol.Name]
 		// Only the first packet is built - not the subsequent ones.
 		release := &Release{pol, dr.Signatures, !knownPacket}
 		var round *monitor.TimeMeasure
 		if knownPacket {
-			round = monitor.NewTimeMeasure("nobuild_" + pol.Name)
+			round = monitor.NewTimeMeasure("overall_nobuild")
 			// Append to skipchain, will NOT build
 			service.UpdatePackage(nil,
 				&UpdatePackage{sc, release})
 		} else {
-			round = monitor.NewTimeMeasure("full_" + pol.Name)
+			round = monitor.NewTimeMeasure("overall_build")
 			// Create the skipchain, will build
 			cp, err := service.CreatePackage(nil,
 				&CreatePackage{
