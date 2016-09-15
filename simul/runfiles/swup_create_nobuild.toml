@@ -7,9 +7,7 @@ Height = 10
 Base = 4
 RunWait = 3600
 DockerBuild = false
-Snapshot = "snapshots_limited_6.csv"
+Snapshot = "snapshots_limited_1.csv"
 
 Depth
 1
-2
-3
