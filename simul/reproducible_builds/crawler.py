@@ -58,7 +58,7 @@ def compile_bin(name, bina):
     with open(name + '.log', 'w') as flog:
         wall_start_time = time.perf_counter()
         cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
-        tag = "reprod:" + name + "-" + os.getpid()
+        tag = "reprod:" + name + "-" + str(os.getpid())
         subprocess.run(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
                                  universal_newlines=True)
 
