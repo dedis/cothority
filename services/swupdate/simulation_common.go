@@ -11,7 +11,7 @@ import (
 func InitializePackages(releaseFile string, service *Service, roster *sda.Roster, base, height int) ([]string, error) {
 	// Read all packages from the releaseFile
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("snapshot/updates.csv")
+	drs, err := GetReleases(releaseFile)
 	if err != nil {
 		return nil, err
 	}
