@@ -15,7 +15,7 @@ RUN echo 'Acquire::Check-Valid-Until "false";' >> /etc/apt/apt.conf
 ENV HOSTS "echo snapshot.debian.org 193.62.202.30 >> /tmp/hosts"
 
 RUN ${HOSTS}; apt-get update -y
-RUN ${HOSTS}; apt-get install -y --force-yes dpkg-dev """
+RUN ${HOSTS}; apt-get install -y --force-yes """
 
 Closer = "RUN apt-get autoremove -y && apt-get clean -y"
 
