@@ -269,7 +269,7 @@ func verifierFunc(msg, data []byte) bool {
 			return false
 		}
 	}
-	//log.Print("Congrats, verified")
+	log.LLvl2("Congrats, verified", policy.Name, policy.Version)
 	return true
 }
 
