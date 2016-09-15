@@ -61,13 +61,13 @@ func (e *floodSimulation) Setup(dir string, hosts []string) (
 // rounds
 func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	log.Print("WHY??????")
-	c := timestamp.NewClient()
+	//c := timestamp.NewClient()
 	// TODO move all params to config file:
-	maxIterations := 0
-	_, err := c.SetupStamper(config.Roster, time.Millisecond*250, maxIterations)
-	if err != nil {
-		return err
-	}
+	//maxIterations := 0
+	//_, err := c.SetupStamper(config.Roster, time.Millisecond*250, maxIterations)
+	//if err != nil {
+	//	return err
+	//}
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	service, ok := config.GetService(ServiceName).(*Service)
@@ -76,7 +76,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	}
 	// Get all packages
 	log.Print("Before init pakages")
-	packages, err := InitializePackages("../../../services/swupdate/snapshot/snapshots_nik.csv", service, config.Roster, 2, 10)
+	packages, err := InitializePackages("../../../services/swupdate/snapshot/snapshots_nik_short.csv", service, config.Roster, 2, 10)
 	log.ErrFatal(err)
 	log.Print("After init packages")
 	// Make a DOS-measurement of what the services can handle
@@ -96,11 +96,11 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 		m = monitor.NewTimeMeasure("update_full")
 		blockID = psc.First.Hash
 	}
-	log.Print("Before client erquests.")
+	log.Print("Before client requests. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", blockID)
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
-			runClientRequests(config, blockID, packages[0])
+			//runClientRequests(config, blockID, packages[0])
 			wg.Done()
 		}()
 	}
