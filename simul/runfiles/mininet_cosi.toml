@@ -1,16 +1,12 @@
 Simulation = "CoSimul"
 Servers = 16
-Bf = 2
+Bf = 8
 Rounds = 10
 CloseWait = 6000
+Hosts = 40
 
-Depth
-4
-5
-6
-7
-8
-9
-10
-11
-12
+Delay, Bandwidth
+0, 1000
+100, 1000
+0, 1
+100, 1
