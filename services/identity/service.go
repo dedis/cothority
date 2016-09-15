@@ -173,7 +173,7 @@ func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) 
 
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
-// An empty signature signifies that the vote has been rejected.
+// An empty signature signifies that the threshold has not been reached yet.
 func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
@@ -384,7 +384,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 			log.Fatal("Registration error:", err)
 		}
 	}
-	// TODO c.(h)ost.ServerIdentity.Addresses[0], field no public
-	NewJsonID(s, "192.168.192.17:2000")
+	err := NewJsonID(s, c.ServerIdentity().Addresses[0])
+	log.ErrFatal(err)
 	return s
 }
