@@ -228,10 +228,10 @@ for p in packages:
     print(binary)
     f.write('\n\n' + templates.Closer + '\n')
     f.write('\nWORKDIR /project')
-    f.write('\nRUN apt-get source ' + name + '=' + version)
-    f.write('\nRUN apt-get build-dep -y --force-yes ' + name + '=' + version)
+    f.write('\nRUN ${HOSTS}; apt-get source ' + name + '=' + version)
+    f.write('\nRUN ${HOSTS}; apt-get build-dep -y --force-yes ' + name + '=' + version)
     f.write('\nWORKDIR /project/' + dir + '-' + short_version.partition('-')[0] + '/')
-    f.write('\nRUN dpkg-buildpackage -us -uc -tc')
+    f.write('\nRUN ${HOSTS}; dpkg-buildpackage -us -uc -tc')
     f.write('\nWORKDIR /project')
     f.close()
 
