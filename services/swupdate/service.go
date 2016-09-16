@@ -197,8 +197,21 @@ func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (net
 	return &LatestBlockRet{cs.Storage.Timestamp, gucRet.Update}, nil
 }
 
-func (cs *Service) LatestsBlock(si *network.ServerIdentity, lbs *LatestBlocks) (network.Body, error) {
-	updates := make(map[string][]*skipchain.SkipBlock)
+func (cs *Service) LatestBlocks(si *network.ServerIdentity, lbs *LatestBlocks) (network.Body, error) {
+	updates := make([][]*skipchain.SkipBlock, len(lbs.LastKnownSBs))
+	var t *Timestamp
+	for i, id := range lbs.LastKnownSBs {
+		b, err := cs.LatestBlock(nil, &LatestBlock{id})
+		if err != nil {
+			return nil, err
+		}
+		lb := b.(*LatestBlockRet)
+		updates[i] = lb.Update
+		if t == nil {
+			t = lb.Timestamp
+		}
+	}
+	return &LatestBlocksRet{t, updates}, nil
 }
 
 // NewProtocol will instantiate a new cosi-timestamp protocol.
@@ -343,6 +356,29 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
+func (s *Service) TimestampProofs(si *network.ServerIdentity, req *TimestampRequests) (network.Body, error) {
+	// get the indexes in the list of packages
+	keys := s.getOrderedPackageNames()
+	var indexes []int
+	for _, name := range req.Names {
+		i := sort.SearchStrings(keys, name)
+		if i < 0 || keys[i] != name {
+			log.Error("No package at this name")
+			return nil, errors.New("No package at this name")
+		}
+		indexes = append(indexes, i)
+	}
+
+	// then take all the proofs from these indexes
+	p := s.Storage.Timestamp.Proofs
+	var proofs = make(map[string]crypto.Proof)
+	for _, i := range indexes {
+		name := keys[i]
+		proofs[name] = p[i]
+	}
+	return &TimestampRets{proofs}, nil
+}
+
 // TimestampProof takes a package name and returns the latest proof of inclusion
 // of the latest block's Hash in the timestamp Merkle Tree.
 func (s *Service) TimestampProof(si *network.ServerIdentity, req *TimestampRequest) (network.Body, error) {
@@ -476,7 +512,11 @@ func newSwupdate(c *sda.Context, path string) sda.Service {
 		// default value
 		ReasonableTime: time.Hour,
 	}
-	err := s.RegisterMessages(s.CreatePackage, s.UpdatePackage, s.TimestampProof)
+	err := s.RegisterMessages(s.CreatePackage,
+		s.UpdatePackage,
+		s.TimestampProof,
+		s.LatestBlocks,
+		s.TimestampProofs)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message")
 	}

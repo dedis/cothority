@@ -8,6 +8,8 @@ Base = 4
 RunWait = 3600
 Snapshot = "snapshots_limited_6.csv"
 Depth = 3
+Delay = 50
+Bandwidth = 100
 
 Frequency
 1

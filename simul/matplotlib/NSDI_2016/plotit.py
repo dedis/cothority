@@ -272,7 +272,7 @@ def plotSBCreation():
 
     total = np.array(plots.get_values('overall_nobuild_wall').avg) + y
     oa = plt.plot(x+width / 2, total, color=colors[len(vls)][1], marker='x')
-    labels.insert(0, "Total for new package")
+    labels.append("Total for new package")
     plt.xticks(x + width / 2, plots.x)
     plt.legend(oa + handles[::-1], labels[::-1], loc='center right')
     plt.ylim(0.001, 500)
@@ -365,6 +365,6 @@ mplot.show_fig = False
 
 # Call all plot-functions
 # plotFull()
-# plotVerify()
+plotVerify()
 plotSBCreation()
-# plotBuildCDF()
+plotBuildCDF()

@@ -108,7 +108,7 @@ type LatestBlock struct {
 // Similar to LatestBlock but asking update information for all blocks being
 // managed by the service.
 type LatestBlocks struct {
-	LastKnownSBs skipchain.SkipBlockID
+	LastKnownSBs []skipchain.SkipBlockID
 }
 
 // Returns the timestamp of the latest skipblock, together with an eventual
@@ -122,8 +122,8 @@ type LatestBlockRet struct {
 // Similar to LatestBlockRet but gives information on *all* packages
 type LatestBlocksRet struct {
 	Timestamp *Timestamp
-	// Each updates for each packages denoted by its name
-	Updates map[string][]*skipchain.SkipBlock
+	// Each updates for each packages ordered in same order that in LatestBlocks
+	Updates [][]*skipchain.SkipBlock
 }
 
 // TimestampRequest asks the swupdate service to give back the proof of
@@ -133,8 +133,19 @@ type TimestampRequest struct {
 	Name string
 }
 
+// Similar to TimestampRequest but asking more multiple proof at the same time
+type TimestampRequests struct {
+	Names []string
+}
+
 // Returns the Proofs to use to verify the inclusion of the package given in
 // TimestampRequest
 type TimestampRet struct {
 	Proof crypto.Proof
+}
+
+// Similar to TimestampRet but returns the requested proofs designated by
+// package names.
+type TimestampRets struct {
+	Proofs map[string]crypto.Proof
 }
