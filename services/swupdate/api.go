@@ -1,6 +1,9 @@
 package swupdate
 
-import "github.com/dedis/cothority/sda"
+import (
+	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/skipchain"
+)
 
 // Client is a structure to communicate with the software-update service.
 type Client struct {
@@ -16,4 +19,9 @@ func NewClient(r *sda.Roster, policy *Policy) *Client {
 		Client: sda.NewClient(ServiceName),
 		Roster: r,
 	}
+}
+
+func LatestUpdates(latestIDs []skipchain.SkipBlockID) (*LatestBlocksRet, error) {
+	// TODO
+
 }

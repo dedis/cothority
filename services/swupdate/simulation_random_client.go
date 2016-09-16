@@ -75,13 +75,10 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 	now := drs[0].Time
 	updateFrequency := time.Duration(e.Frequency) * time.Hour * 24
 	log.Lvl1("Frequency is", updateFrequency)
-	for _, dr := range drs {
-		if dr.Time.Sub(now) >= updateFrequency {
-			// Measure bandwidth-usage for updating client
-			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
-			now = dr.Time
-		}
 
+	// latests block known by the client for all packages
+	latest := make(map[string]SkipBlockID)
+	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
@@ -106,6 +103,13 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			packets[pol.Name] = cp.(*CreatePackageRet).SwupChain
 		}
 		round.Record()
+		if dr.Time.Sub(now) >= updateFrequency {
+			// Measure bandwidth-usage for updating client
+			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
+			now = dr.Time
+
+		}
+
 	}
 	return nil
 }

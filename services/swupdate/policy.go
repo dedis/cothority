@@ -30,7 +30,8 @@ var policyKeys []*PGP
 func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
 	if len(entries) != 5 {
-		return nil, errors.New("Should have five entries")
+
+		return nil, errors.New("Should have five entries" + line)
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
 	// //	Mon Jan 2 15:04:05 -0700 MST 2006
