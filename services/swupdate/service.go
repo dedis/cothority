@@ -189,6 +189,7 @@ func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (net
 		return nil, err
 	}
 	if cs.Storage.Timestamp == nil {
+		log.Print("Before the panic ..................")
 		panic("something's wrong with the service")
 	}
 	return &LatestBlockRet{cs.Storage.Timestamp, gucRet.Update}, nil
@@ -351,11 +352,13 @@ func (s *Service) TimestampProof(si *network.ServerIdentity, req *TimestampReque
 		}
 	}
 	if !found {
+		log.Error("No package at this name")
 		return nil, errors.New("No package at this name")
 	}
 	// then get the proof
 	p := s.Storage.Timestamp.Proofs
 	if len(p) < idx {
+		log.Print("Before: something's wrong with this service")
 		panic("something's wrong with this service")
 	}
 
