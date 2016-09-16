@@ -33,7 +33,12 @@ func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 		return nil, errors.New("Should have five entries")
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
-	dr := &DebianRelease{entries[0], time.Now(), policy, []string{}}
+	// //	Mon Jan 2 15:04:05 -0700 MST 2006
+	t, err := time.Parse("20060102150405", entries[0])
+	if err != nil {
+		return nil, err
+	}
+	dr := &DebianRelease{entries[0], t, policy, []string{}}
 	if false {
 		if dir != "" {
 			polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
