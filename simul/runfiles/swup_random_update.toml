@@ -1,13 +1,13 @@
 Simulation = "SwUpRandClient"
 Servers = 4
-Bf = 4
+Bf = 3
 Rounds = 10
 CloseWait = 6000
 Height = 10
 Base = 4
 RunWait = 3600
 Snapshot = "snapshots_nik.csv"
-Depth = 4
+Depth = 3
 
 # The frequency the client updates in days
 Frequency
