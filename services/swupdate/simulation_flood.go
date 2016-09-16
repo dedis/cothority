@@ -1,6 +1,8 @@
 package swupdate
 
 import (
+	"encoding/hex"
+	"fmt"
 	"sync"
 
 	"crypto/rand"
@@ -100,7 +102,7 @@ func (e *floodSimulation) Run(config *sda.SimulationConfig) error {
 	for req := 0; req < e.Requests; req++ {
 		wg.Add(1)
 		go func() {
-			runClientRequests(config, blockID, packages[0], psc.Last.Hash)
+			runClientRequests(config, blockID, packages[0], service.Storage.SwupChains[packages[0]].Data.Hash)
 			wg.Done()
 		}()
 	}
@@ -141,13 +143,22 @@ func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlock
 	// verify proof of inclusion of the last skipblock of this package's chain
 	// in the merkle tree of the timestamper included in the swupdate service.
 	proofVeri := monitor.NewTimeMeasure("client_proof")
+	/*res, err = service.LatestBlock(nil, &LatestBlock{LastKnownSB: proofID})*/
+	//log.ErrFatal(err)
+	//lbret, ok = res.(*LatestBlockRet)
+	//if !ok {
+	//log.Fatal("Got invalid response.")
+	//}
+	/*leaf := lbret.Update[len(lbret.Update)-1].Hash*/
+	leaf := service.Storage.SwupChains[name].Data.Hash
+
 	tr, err := service.TimestampProof(nil, &TimestampRequest{name})
 	log.ErrFatal(err)
 	proof := tr.(*TimestampRet).Proof
-	if !proof.Check(HashFunc(), lbret.Timestamp.Root, proofID) {
-		log.Warn("Proof of inclusion is not correct")
+	if !proof.Check(HashFunc(), lbret.Timestamp.Root, leaf) {
+		log.Warn("Proof of inclusion is not correct for", fmt.Sprintf("%s (%d)", hex.EncodeToString(leaf), len(leaf)), " (proofId ", fmt.Sprintf("%s (%d)", hex.EncodeToString(proofID), len(proofID)), ")")
 	} else {
-		log.Print("Proof verification!")
+		log.Lvl2("Proof verification!")
 	}
 
 	// verify signature
@@ -156,7 +167,7 @@ func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlock
 	if err != nil {
 		log.Warn("Signature timestamp invalid")
 	} else {
-		log.Print("Signature timestamp Valid :)")
+		log.Lvl2("Signature timestamp Valid :)")
 	}
 	proofVeri.Record()
 }

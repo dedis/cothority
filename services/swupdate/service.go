@@ -336,12 +336,10 @@ func (s *Service) tryLoad() error {
 // TimestampProof takes a package name and returns the latest proof of inclusion
 // of the latest block's Hash in the timestamp Merkle Tree.
 func (s *Service) TimestampProof(si *network.ServerIdentity, req *TimestampRequest) (network.Body, error) {
+	s.Lock()
+	defer s.Unlock()
 	// get the index in the list of packages
-	keys := make([]string, 0)
-	for k := range s.Storage.SwupChains {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := s.getOrderedPackageNames()
 	var idx int
 	var found bool
 	for i, s := range keys {
@@ -361,8 +359,16 @@ func (s *Service) TimestampProof(si *network.ServerIdentity, req *TimestampReque
 		log.Print("Before: something's wrong with this service")
 		panic("something's wrong with this service")
 	}
-
 	return &TimestampRet{p[idx]}, nil
+}
+
+func (s *Service) getOrderedPackageNames() []string {
+	keys := make([]string, 0)
+	for k := range s.Storage.SwupChains {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // timestamp creates a merkle tree of all the latests skipblocks of each
@@ -379,7 +385,6 @@ func (s *Service) timestamp(time time.Time) {
 	signature := s.cosiSign(msg)
 	// TODO XXX Here in a non-academical world we should test if the
 	// signature contains enough participants.
-	// store informations
 	s.updateTimestampInfo(root, proofs, time.Unix(), signature)
 	measure.Record()
 }
@@ -403,9 +408,9 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	})
 	go pi.Dispatch()
 	go pi.Start()
-	log.Lvl1("Waiting on cosi response ...")
+	log.Lvl2("Waiting on cosi response ...")
 	res := <-response
-	log.Lvl1("... DONE: Recieved cosi response")
+	log.Lvl2("... DONE: Recieved cosi response")
 	return res
 }
 
@@ -437,15 +442,12 @@ func (s *Service) cosiVerify(msg []byte) bool {
 // orderedLatestSkipblocksID sorts the latests blocks of all skipchains and
 // return all ids in an array of HashID
 func (s *Service) orderedLatestSkipblocksID() []crypto.HashID {
-	keys := make([]string, 0)
-	for k := range s.Storage.SwupChains {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := s.getOrderedPackageNames()
 
 	ids := make([]crypto.HashID, 0)
-	for _, v := range s.Storage.SwupChains {
-		ids = append(ids, crypto.HashID(v.Data.Hash))
+	chains := s.Storage.SwupChains
+	for _, key := range keys {
+		ids = append(ids, crypto.HashID(chains[key].Data.Hash))
 	}
 	return ids
 }
@@ -474,13 +476,10 @@ func newSwupdate(c *sda.Context, path string) sda.Service {
 func (s *Service) updateTimestampInfo(rootID crypto.HashID, proofs []crypto.Proof, ts int64, sig []byte) {
 	s.Lock()
 	defer s.Unlock()
-	var t *Timestamp
 	if s.Storage.Timestamp == nil {
 		s.Storage.Timestamp = &Timestamp{}
-		t = s.Storage.Timestamp
-	} else {
-		t = s.Storage.Timestamp
 	}
+	var t = s.Storage.Timestamp
 	t.Timestamp = ts
 	t.Root = rootID
 	t.Signature = sig
