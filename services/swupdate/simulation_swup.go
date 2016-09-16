@@ -1,11 +1,7 @@
 package swupdate
 
 import (
-	"os"
-	"path"
-
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
@@ -50,17 +46,9 @@ func (e *createSimulation) Setup(dir string, hosts []string) (
 	if err != nil {
 		return nil, err
 	}
-	wd, err := os.Getwd()
-	log.ErrFatal(err)
-	log.Print(wd)
-	for _, file := range []string{path.Join("snapshot", e.Snapshot),
-		"reprobuild/crawler.py",
-		"reprobuild/templates.py"} {
-		err = config.Copy(path.Join(dir, path.Base(file)),
-			"../services/swupdate/"+file)
-		if err != nil {
-			return nil, err
-		}
+	err = CopyFiles(dir, e.Snapshot)
+	if err != nil {
+		return nil, err
 	}
 	return sc, nil
 }

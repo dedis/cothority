@@ -251,11 +251,11 @@ def plotSBCreation():
     plots = read_csvs("swup_create")[0]
     plot_show("swup_create")
     mplot.plotPrepareLogLog(0, 10)
-    width = 0.5
+    width = 0.25
     x = np.arange(len(plots.x))
     yb = np.zeros(len(x))
     vls = [['verification_wall', 'PGP Signature verification'],
-           ['add_block_wall', 'SkipBlock adding'],
+           ['add_block_wall', 'Collective signing'],
            ['build_wall', 'Reproducible build']]
     handles = []
     labels = []
@@ -264,34 +264,44 @@ def plotSBCreation():
         y = np.array(plots.get_values(value).avg)
         if value == 'build_wall':
             y = np.ones(len(x)) * y[0]
-        h = plt.bar(x, y, width, bottom=yb, label=label, color=colors[index][0])
+        h = plt.bar(x+(index-1)*width, y, width, label=label, color=colors[index][0])
+        # h = plt.bar(x, y, width, bottom=yb, label=label, color=colors[index][0])
         handles.append(h)
         labels.append(label)
         yb += y
 
+    total = np.array(plots.get_values('overall_nobuild_wall').avg) + y
+    oa = plt.plot(x+width / 2, total, color=colors[len(vls)][1], marker='x')
+    labels.insert(0, "Total for new package")
     plt.xticks(x + width / 2, plots.x)
-    plt.legend(handles[::-1], labels[::-1], loc='lower right')
-    plt.ylim(0.0001, 500)
+    plt.legend(oa + handles[::-1], labels[::-1], loc='center right')
+    plt.ylim(0.001, 500)
+    plt.xlim(x[0]-width, x[-1]+2*width)
     mplot.plotEnd()
 
 def plotBuildCDF():
-    files = [['repro_builds_popular1.csv', 'Debian 50 most popular'],
-             ['repro_builds_popular1_iccloud.csv', 'Debian 50 most popular iccloud'],
-             ['repro_builds_required.csv', 'Debian required packages'],
-             ['repro_builds_required_iccloud.csv', 'Debian required packages iccloud']]
+    files = [['repro_builds_popular1', 'Debian 50 most popular'],
+             ['repro_builds_required', 'Debian required packages'],
+             ['repro_builds_random', 'Random set of Debian packages']]
 
     mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
     for index, fl in enumerate(files):
         file, label = fl
-        values = read_csv_pure(file, "", "wall_time").values()
-        X = np.sort(np.array(values))
-        while X[0] < 100.0:
-            X = np.delete(X, 0)
-        Y = np.linspace(0, 100, len(X))
+        for name, marker in [['', 'o'], ['_iccloud', 'x']]:
+            fname = file + name + ".csv"
+            if not os.path.isfile(fname):
+                print fname, "is not here"
+                continue
 
-        plt.plot(X, Y, label=label, linestyle='-', marker='o',
+            values = read_csv_pure(fname, "", "wall_time").values()
+            X = np.sort(np.array(values))
+            while X[0] < 100.0:
+                X = np.delete(X, 0)
+            Y = np.linspace(0, 100, len(X))
+
+            plt.plot(X, Y, label=label + name, linestyle='-', marker=marker,
                  color=colors[index][1])
 
     plt.xlabel("Time [s]")
@@ -313,7 +323,8 @@ mplot = MPlot()
 
 def plot_show(file):
     if write_file:
-        mplot.pngname = file + '.' + file_extension
+        mplot.pngname = file
+        # mplot.pngname = file + '.' + file_extension
 
 
 def read_csvs_xname(xname, *values):
@@ -347,13 +358,13 @@ def read_csv_pure(file, xname, yname):
 write_file = True
 # What file extension - .png, .eps
 file_extension = 'png'
-file_extension = 'eps'
+# file_extension = 'eps'
 # Show figure
 mplot.show_fig = True
 mplot.show_fig = False
 
 # Call all plot-functions
-plotVerify()
 # plotFull()
-# plotSBCreation()
+# plotVerify()
+plotSBCreation()
 # plotBuildCDF()

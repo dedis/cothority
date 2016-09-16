@@ -157,7 +157,7 @@ class MPlot:
     def plotPrepareLogLog(self, logx=2, logy=2):
         plt.clf()
         plt.Figure()
-        plt.ylabel('CPU-time spent on each node')
+        plt.ylabel('CPU-time per node')
         plt.xlabel('Number of nodes')
         if logx > 0:
             plt.xscale(u'log', basex=logx)
@@ -186,7 +186,8 @@ class MPlot:
             plt.show()
         else:
             print "Saving to", self.pngname
-            plt.savefig(self.pngname, bbox_inches='tight')
+            for ext in ['png', 'eps']:
+                plt.savefig(self.pngname + "." + ext, bbox_inches='tight')
 
         self.resetMinMax()
 

@@ -1,6 +1,9 @@
 package swupdate
 
 import (
+	"path"
+
+	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
@@ -8,10 +11,10 @@ import (
 
 // InitializePackages sets up all skipchains for the packages in releaseFile and
 // returns a slice of string with all packages encountered.
-func InitializePackages(releaseFile string, service *Service, roster *sda.Roster, base, height int) ([]string, error) {
+func InitializePackages(snapshot string, service *Service, roster *sda.Roster, base, height int) ([]string, error) {
 	// Read all packages from the releaseFile
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("snapshot/updates.csv")
+	drs, err := GetReleases(snapshot)
 	if err != nil {
 		return nil, err
 	}
@@ -46,4 +49,18 @@ func InitializePackages(releaseFile string, service *Service, roster *sda.Roster
 		packages = append(packages, k)
 	}
 	return packages, nil
+}
+
+// CopyFiles copies the files from the service/swupdate-directory
+// to the simulation-directory
+func CopyFiles(dir, snapshot string) error {
+	for _, file := range []string{path.Join("snapshot", snapshot),
+		"reprobuild/crawler.py",
+		"reprobuild/templates.py"} {
+		err := config.Copy(path.Join(dir, path.Base(file)),
+			"../services/swupdate/"+file)
+		if err != nil {
+			return err
+		}
+	}
 }

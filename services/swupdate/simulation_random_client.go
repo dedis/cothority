@@ -25,6 +25,8 @@ type randClientSimulation struct {
 	Frequency int
 	Base      int
 	Height    int
+	Snapshot  string
+	PGPKeys   int
 }
 
 // NewSimulation returns the new simulation, where all fields are
@@ -47,6 +49,10 @@ func (e *randClientSimulation) Setup(dir string, hosts []string) (
 	if err != nil {
 		return nil, err
 	}
+	err = CopyFiles(dir, e.Snapshot)
+	if err != nil {
+		return nil, err
+	}
 	return sc, nil
 }
 
@@ -60,7 +66,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	packets := make(map[string]*SwupChain)
-	drs, err := GetReleases("../../../services/swupdate/snapshot/updates.csv")
+	drs, err := GetReleases(e.Snapshot)
 	if err != nil {
 		return err
 	}
