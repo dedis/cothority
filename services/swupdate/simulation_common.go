@@ -63,4 +63,5 @@ func CopyFiles(dir, snapshot string) error {
 			return err
 		}
 	}
+	return nil
 }
