@@ -13,9 +13,9 @@ func TestNewDebianRelease(t *testing.T) {
 	dr, err := NewDebianRelease("", "", 3)
 	require.NotNil(err)
 
-	dr, err = NewDebianRelease("197001010000,ls,0.01,hash1,hash2", "", 3)
+	dr, err = NewDebianRelease("19700101000000,ls,0.01,hash1,hash2", "", 3)
 	log.ErrFatal(err)
-	require.Equal("197001010000", dr.Snapshot)
+	require.Equal("19700101000000", dr.Snapshot)
 	require.Equal("ls", dr.Policy.Name)
 	require.Equal("0.01", dr.Policy.Version)
 }
@@ -34,7 +34,7 @@ func TestGetReleases(t *testing.T) {
 		p := d.Policy
 		require.Equal("1234caffee", p.BinaryHash)
 		require.Equal("deadbeef", p.SourceHash)
-		require.Equal(3, p.Threshold)
+		require.Equal(5, p.Threshold)
 		for i, k := range p.Keys {
 			pgp := NewPGPPublic(k)
 			policyBin, err := network.MarshalRegisteredType(p)

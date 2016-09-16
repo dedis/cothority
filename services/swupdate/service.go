@@ -113,15 +113,17 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	defer addBlock.Record()
 	sc := &SwupChain{
 		Release: up.Release,
+		Root:    up.SwupChain.Root,
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
 	var err error
-	sc.Root, sc.Data, err = cs.skipchain.CreateData(up.SwupChain.Root, 2, 10,
-		verifierID, rel)
+	psbrep, err := cs.skipchain.ProposeData(up.SwupChain.Root,
+		up.SwupChain.Data, rel)
 	if err != nil {
 		return nil, err
 	}
+	sc.Data = psbrep.Latest
 
 	cs.timestamp(time.Now())
 	if err := cs.startPropagate(rel.Policy.Name, sc); err != nil {
