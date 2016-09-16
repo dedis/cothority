@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/manage"
@@ -45,8 +46,8 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	*SkipBlockMap
-	sbMutex sync.Mutex
-	path    string
+	gMutex sync.Mutex
+	path   string
 	// testVerify is set to true if a verification happened - only for testing
 	testVerify bool
 }
@@ -132,7 +133,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 	if err != nil {
 		return nil, errors.New("Verification error: " + err.Error())
 	}
-	s.save()
+	//s.save()
 
 	reply := &ProposedSkipBlockReply{
 		Previous: prev,
@@ -191,7 +192,7 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 	// Parent-block is always of type roster, but child-block can be
 	// data or roster.
 	reply := &SetChildrenSkipBlockReply{parent, child}
-	s.save()
+	//s.save()
 
 	return reply, nil
 }
@@ -334,7 +335,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
 			return errors.New("Couldn't verify signature")
 		}
-	case <-time.After(time.Second * 60):
+	case <-time.After(time.Minute * 30):
 		return errors.New("Timed out while waiting for signature")
 	}
 	return nil
@@ -443,30 +444,45 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 				return true
 			}
 		}
+	case VerifySwup:
+		log.Fatal("Not implemented")
+		var pkgName string
+		verifyT := monitor.NewTimeMeasure("verify_" + pkgName)
+		// Verify all signatures
+		verifyT.Record()
+		buildT := monitor.NewTimeMeasure("build_" + pkgName)
+		// launch the reproducible build
+		buildT.Record()
+	default:
+		f, ok := verifiers[sb.VerifierID]
+		if ok {
+			log.Lvlf3("Found user verification %x", sb.VerifierID)
+			return f(msg, data)
+		}
 	}
 	return false
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	b, ok := s.SkipBlocks[string(sbID)]
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return b, ok
 }
 
 // storeSkipBlock stores the given SkipBlock in the service-list
 func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	s.SkipBlocks[string(sb.Hash)] = sb
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return sb.Hash
 }
 
 // lenSkipBlock returns the actual length using mutexes
 func (s *Service) lenSkipBlocks() int {
-	s.sbMutex.Lock()
-	defer s.sbMutex.Unlock()
+	s.gMutex.Lock()
+	defer s.gMutex.Unlock()
 	return len(s.SkipBlocks)
 }
 

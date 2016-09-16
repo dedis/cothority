@@ -1,0 +1,5 @@
+snapshot, name, version, hash_bin, hash_src
+201501010000,ls,0.1,1234caffee,deadbeef
+201501010800,cp,0.1,1234caffee,deadbeef
+201501011600,cp,0.2,1234caffee,deadbeef
+201501011600,ls,0.2,1234caffee,deadbeef

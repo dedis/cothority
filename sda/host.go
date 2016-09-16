@@ -134,7 +134,7 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Lvl3("Host", h.Address(), "connected to", c.Remote())
+	log.Lvl3("Host", h.Address(), "connected to", c.Remote(), log.Stack())
 	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil
@@ -412,4 +412,9 @@ func (h *Host) GetStatus() Status {
 	m["Available_Services"] = strings.Join(a, ",")
 
 	return m
+}
+
+// GetService returns the service with the given name.
+func (h *Host) GetService(name string) Service {
+	return h.serviceManager.Service(name)
 }

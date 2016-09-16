@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.5
+
 try:
     from bs4 import BeautifulSoup
     from urllib.request import urlopen
@@ -10,6 +12,8 @@ try:
 except:
     raise
 
+
+packages_linus = ['acl']
 
 packages_required = ['attr', 'base-files', 'base-passwd', 'coreutils', 'debconf', 'debianutils', 'diffutils',
                      'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
@@ -88,19 +92,22 @@ def find_snapshots(btime, f):
             break
 
     # Adding retrieved snapshots as sources to Dockerfile
+    snap_url = "http://snapshot.debian.org"
+    # snap_url = "http://icsil1-conode1.epfl.ch:3142/snapshot.debian.org"
+    # snap_url = "http://icsil1-conode1.epfl.ch:3128/"
     if len(snapbuf) > 1:
-        f.write('&& echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-2][
+        f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-2][
+        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
             'href'] + ' sid main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-1][
+        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-1][
+        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
             'href'] + ' sid main\' >> /etc/apt/sources.list \n\n')
     elif len(snapbuf) == 1:
-        f.write(' && echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-1][
+        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
             'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb http://snapshot.debian.org/archive/debian/' + snapbuf[-1][
+        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
             'href'] + ' sid main\' >> /etc/apt/sources.list \n\n')
     else:
         print("The build is done before the first snapshot of the month!")
@@ -130,6 +137,9 @@ def get_packages(option):
     elif option == 'popular2':
         packs = packages_popular_2
 
+    elif option == 'linus':
+        packs = packages_linus
+
     elif option == 'random':
         SET_SIZE = 3
         allpacks = []
@@ -139,6 +149,9 @@ def get_packages(option):
         for p in soup.body.div.find('code').find_all('a', class_='package'):
             allpacks.append(p.string)
         packs = random.sample(allpacks, SET_SIZE)
+
+    elif option == 'cli':
+        packs = [sys.argv[2]]
 
     return packs
 
@@ -202,19 +215,20 @@ for p in packages:
         else:
             # Parsing dependencies
             i += 1
-            if not first:
-                if i % 3 == 1 and line != "":
-                    f.write(' \\ \n')
-                else:
-                    f.write(' ')
-            else:
-                first = False
-            f.write(parse_dpnd(line))
+            # if not first:
+            #     if i % 3 == 1 and line != "":
+            #         f.write(' \\ \n')
+            #     else:
+            #         f.write(' ')
+            # else:
+            #     first = False
+            # f.write(parse_dpnd(line))
 
     print(binary)
     f.write('\n\n' + templates.Closer + '\n')
     f.write('\nWORKDIR /project')
     f.write('\nRUN apt-get source ' + name + '=' + version)
+    f.write('\nRUN apt-get build-dep -y --force-yes ' + name + '=' + version)
     f.write('\nWORKDIR /project/' + dir + '-' + short_version.partition('-')[0] + '/')
     f.write('\nRUN dpkg-buildpackage -us -uc -tc')
     f.write('\nWORKDIR /project')
