@@ -129,7 +129,7 @@ def RunNet():
     if myNet[1] > 0:
         i, p = netParse(otherNets[0][1])
         rootLog = ipAdd(1, p, i)
-    dbg( 1, "Creating network", myNet )
+    dbg( 2, "Creating network", myNet )
     topo = InternetTopo(myNet=myNet, rootLog=rootLog)
     dbg( 3, "Starting on", myNet )
     net = Mininet(topo=topo, link=TCLink)
