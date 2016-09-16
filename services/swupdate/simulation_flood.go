@@ -143,13 +143,6 @@ func runClientRequests(config *sda.SimulationConfig, blockID skipchain.SkipBlock
 	// verify proof of inclusion of the last skipblock of this package's chain
 	// in the merkle tree of the timestamper included in the swupdate service.
 	proofVeri := monitor.NewTimeMeasure("client_proof")
-	/*res, err = service.LatestBlock(nil, &LatestBlock{LastKnownSB: proofID})*/
-	//log.ErrFatal(err)
-	//lbret, ok = res.(*LatestBlockRet)
-	//if !ok {
-	//log.Fatal("Got invalid response.")
-	//}
-	/*leaf := lbret.Update[len(lbret.Update)-1].Hash*/
 	leaf := service.Storage.SwupChains[name].Data.Hash
 
 	tr, err := service.TimestampProof(nil, &TimestampRequest{name})
