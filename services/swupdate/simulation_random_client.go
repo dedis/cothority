@@ -73,11 +73,13 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	now := drs[0].Time
+	updateFrequency := time.Duration(e.Frequency) * time.Hour * 24
+	log.Lvl1("Frequency is", updateFrequency)
 	for _, dr := range drs {
-		if dr.Time.Sub(now) >= time.Duration(e.Frequency)*time.Hour*24 {
+		if dr.Time.Sub(now) >= updateFrequency {
 			// Measure bandwidth-usage for updating client
+			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
-			log.Lvl1("Updating client at", now)
 		}
 
 		pol := dr.Policy

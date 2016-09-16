@@ -9,7 +9,6 @@ RunWait = 3600
 Snapshot = "snapshots_limited_6.csv"
 Depth = 3
 
-# The frequency the client updates in days
 Frequency
 1
 2

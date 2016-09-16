@@ -60,7 +60,7 @@ func CopyFiles(dir, snapshot string) error {
 	if err != nil {
 		return err
 	}
-	log.LLvl2("We're in", wd)
+	log.Lvl2("We're in", wd)
 	for _, file := range []string{path.Join("snapshot", snapshot),
 		"reprobuild/crawler.py",
 		"reprobuild/templates.py"} {
