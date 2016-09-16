@@ -134,7 +134,7 @@ func (h *Host) Connect(id *network.ServerIdentity) (network.SecureConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Lvl3("Host", h.Address(), "connected to", c.Remote(), log.Stack())
+	log.Lvl3("Host", h.Address(), "connected to", c.Remote())
 	h.registerConnection(c)
 	go h.handleConn(c)
 	return c, nil

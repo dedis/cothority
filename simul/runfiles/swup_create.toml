@@ -6,7 +6,9 @@ CloseWait = 6000
 Height = 10
 Base = 4
 RunWait = 3600
-Snapshot = "snapshots_limited_6.csv"
+Snapshot = "snapshots_limited_1.csv"
+Delay = 100
+Bandwidth = 100
 
 Depth, DockerBuild
 1, true

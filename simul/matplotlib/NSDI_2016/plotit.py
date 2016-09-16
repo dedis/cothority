@@ -236,7 +236,7 @@ def plotVerify():
         xname="pgpkeys",
         csv_column="verification_wall",
         xlabel="Number of PGP-signatures on release",
-        ylabel="Time to verify PGP-signatures"
+        ylabel="Time to verify PGP-signatures [s]"
     )
 
 def plotFull():
@@ -257,34 +257,36 @@ def plotSBCreation():
     vls = [['verification_wall', 'PGP Signature verification'],
            ['add_block_wall', 'SkipBlock adding'],
            ['build_wall', 'Reproducible build']]
+    handles = []
+    labels = []
     for index, vl in enumerate(vls):
         value, label = vl
         y = np.array(plots.get_values(value).avg)
         if value == 'build_wall':
             y = np.ones(len(x)) * y[0]
-        plt.bar(x, y, width, bottom=yb, label=label, color=colors[index][0])
+        h = plt.bar(x, y, width, bottom=yb, label=label, color=colors[index][0])
+        handles.append(h)
+        labels.append(label)
         yb += y
 
     plt.xticks(x + width / 2, plots.x)
-    plt.legend(loc='lower right')
+    plt.legend(handles[::-1], labels[::-1], loc='lower right')
     plt.ylim(0.0001, 500)
     mplot.plotEnd()
 
 def plotBuildCDF():
-    plots = []
-    plots.append(read_csv_pure('repro_builds_popular1.csv', "", "wall_time"))
-    plots.append(read_csv_pure('repro_builds_popular1_old.csv', "", "wall_time"))
-    plots.append(read_csv_pure('repro_builds_required.csv', "", "wall_time"))
-    plots.append(read_csv_pure('repro_builds_required_iccloud.csv', "", "wall_time"))
+    files = [['repro_builds_popular1.csv', 'Debian 50 most popular'],
+             ['repro_builds_popular1_iccloud.csv', 'Debian 50 most popular iccloud'],
+             ['repro_builds_required.csv', 'Debian required packages'],
+             ['repro_builds_required_iccloud.csv', 'Debian required packages iccloud']]
 
     mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
-    for index, label in enumerate(['Debian 50 most popular',
-                                   'Debian 50 most popular 1st',
-                                   'Debian required packages',
-                                   'Debian required packages iccloud']):
-        X = np.sort(np.array(plots[index].values()))
+    for index, fl in enumerate(files):
+        file, label = fl
+        values = read_csv_pure(file, "", "wall_time").values()
+        X = np.sort(np.array(values))
         while X[0] < 100.0:
             X = np.delete(X, 0)
         Y = np.linspace(0, 100, len(X))
@@ -345,7 +347,7 @@ def read_csv_pure(file, xname, yname):
 write_file = True
 # What file extension - .png, .eps
 file_extension = 'png'
-# file_extension = 'eps'
+file_extension = 'eps'
 # Show figure
 mplot.show_fig = True
 mplot.show_fig = False
@@ -353,5 +355,5 @@ mplot.show_fig = False
 # Call all plot-functions
 plotVerify()
 # plotFull()
-plotSBCreation()
-plotBuildCDF()
+# plotSBCreation()
+# plotBuildCDF()

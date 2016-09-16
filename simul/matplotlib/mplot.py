@@ -69,8 +69,6 @@ class MPlot:
     # Plots the Minimum, Maximum, Average on the same plot.
     def plotMMA(self, stats, values, plot_color, plot_z, args):
         val = stats.get_values(values)
-        print val.x
-        print val.avg
         plt.plot(val.x, val.avg, **args)
         self.plotFilledLegend(val, "min-max", plot_color, z=plot_z)
         return val

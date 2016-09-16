@@ -143,7 +143,7 @@ func (cs *Service) PropagateSkipBlock(msg network.Body) {
 func (cs *Service) startPropagate(pkg string, sc *SwupChain) error {
 	roster := cs.Storage.Root.Roster
 	log.Lvl2("Propagating package", pkg, "to", roster.List)
-	replies, err := manage.PropagateStartAndWait(cs.Context, roster, sc, 1000, cs.PropagateSkipBlock)
+	replies, err := manage.PropagateStartAndWait(cs.Context, roster, sc, 120000, cs.PropagateSkipBlock)
 	if err != nil {
 		return err
 	}
@@ -254,9 +254,9 @@ func verifierFunc(msg, data []byte) bool {
 	success := true
 	if release.VerifyBuild {
 		// Verify the reproducible build
-		log.Lvl1("Starting to build", policy.Name, policy.Version)
+		log.LLvl1("Starting to build", policy.Name, policy.Version)
 		wd, _ := os.Getwd()
-		cmd := exec.Command("../../reproducible_builds/crawler.py",
+		cmd := exec.Command("./crawler.py",
 			"cli", policy.Name)
 		cmd.Stderr = os.Stderr
 		resultB, err := cmd.Output()

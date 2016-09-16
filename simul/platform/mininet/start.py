@@ -50,6 +50,7 @@ class BaseRouter(Node):
             self.cmd('/usr/sbin/sshd -D &')
 
         self.cmd( 'sysctl net.ipv4.ip_forward=1' )
+        self.cmd( 'iptables -t nat -I POSTROUTING -j MASQUERADE' )
         socat = "socat %s udp4-listen:%d,reuseaddr,fork" % (logfile, socatPort)
         self.cmd( '%s &' % socat )
         if rootLog:
@@ -63,6 +64,7 @@ class BaseRouter(Node):
 
         self.cmd( 'sysctl net.ipv4.ip_forward=0' )
         self.cmd( 'killall socat' )
+        self.cmd( 'iptables -t nat -D POSTROUTING -j MASQUERADE' )
         super(BaseRouter, self).terminate()
 
 
@@ -136,6 +138,8 @@ def RunNet():
     for host in net.hosts[1:]:
         host.startCothority()
 
+    # Also set setLogLevel('info') if you want to use this, else
+    # there is no correct reporting on commands.
     # CLI(net)
     while not os.path.exists(logdone):
         dbg( 2, "Waiting for cothority to finish at " + platform.node() )
@@ -195,7 +199,7 @@ def call_other(server, list_file):
 # else will be read from that and searched in the computer-configuration.
 if __name__ == '__main__':
     # setLogLevel('info')
-    # Mininet doesn't set up correctly if we put this loglevel
+    # With this loglevel CLI(net) does not report correctly.
     lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         print "please give list-name"
@@ -222,7 +226,7 @@ if __name__ == '__main__':
             call("ssh -q %s 'mn -c; pkill -9 -f start.py' > /dev/null 2>&1" % server, shell=True)
             dbg( 3, "Going to copy things %s to %s and run %s hosts in net %s" % \
                   (list_file, server, nbr, mn) )
-            call("scp -q simulation.bin cothority start.py %s %s:" % (list_file, server), shell=True)
+            call("scp -q * %s %s:" % (list_file, server), shell=True)
             threads.append(threading.Thread(target=call_other, args=[server, list_file]))
 
         time.sleep(1)

@@ -398,7 +398,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			roster = sb.Roster
 		}
 		replies, err := manage.PropagateStartAndWait(s.Context, roster,
-			block, 1000, s.PropagateSkipBlock)
+			block, 120000, s.PropagateSkipBlock)
 		if err != nil {
 			return err
 		}
