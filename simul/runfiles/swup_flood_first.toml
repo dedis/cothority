@@ -5,7 +5,7 @@ Rounds = 10
 CloseWait = 6000
 Height = 10
 Base = 4
-Requests = 5
+Requests = 20000
 Latest = false
 RunWait = 3600
 

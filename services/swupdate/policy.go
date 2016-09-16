@@ -31,7 +31,8 @@ var policyKeys []*PGP
 func NewDebianRelease(line, dir string) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
 	if len(entries) != 5 {
-		return nil, errors.New("Should have five entries")
+
+		return nil, errors.New("Should have five entries" + line)
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
 	dr := &DebianRelease{entries[0], time.Now(), policy, []string{}}
@@ -87,7 +88,7 @@ func GetReleases(file string) ([]*DebianRelease, error) {
 		if err == nil {
 			ret = append(ret, dr)
 		} else {
-			log.Lvl2(err, line)
+			log.Error(err, line)
 		}
 	}
 	return ret, nil
