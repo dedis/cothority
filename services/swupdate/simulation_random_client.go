@@ -66,7 +66,9 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		log.Fatal("Didn't find service", ServiceName)
 	}
 	packets := make(map[string]*SwupChain)
+	log.Lvl1("Loading releases")
 	drs, err := GetReleases(e.Snapshot)
+	log.Lvl1("Loading releases - done")
 	if err != nil {
 		return err
 	}
@@ -75,6 +77,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		if dr.Time.Sub(now) >= time.Duration(e.Frequency)*time.Hour*24 {
 			// Measure bandwidth-usage for updating client
 			now = dr.Time
+			log.Lvl1("Updating client at", now)
 		}
 
 		pol := dr.Policy

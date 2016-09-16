@@ -3,6 +3,8 @@ package swupdate
 import (
 	"path"
 
+	"os"
+
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
@@ -54,13 +56,20 @@ func InitializePackages(snapshot string, service *Service, roster *sda.Roster, b
 // CopyFiles copies the files from the service/swupdate-directory
 // to the simulation-directory
 func CopyFiles(dir, snapshot string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	log.LLvl2("We're in", wd)
 	for _, file := range []string{path.Join("snapshot", snapshot),
 		"reprobuild/crawler.py",
 		"reprobuild/templates.py"} {
-		err := config.Copy(path.Join(dir, path.Base(file)),
-			"../services/swupdate/"+file)
-		if err != nil {
-			return err
+		dst := path.Join(dir, path.Base(file))
+		if _, err := os.Stat(dst); err != nil {
+			err := config.Copy(dst, "../services/swupdate/"+file)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
