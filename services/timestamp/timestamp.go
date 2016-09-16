@@ -183,24 +183,27 @@ func (s *Service) runLoop() {
 	counter := 0
 	log.Lvl4("Starting main loop:")
 	for now := range c /*TODO interrupt the main loop must be possible*/ {
+
 		counter++
 		if counter > s.maxIterations && s.maxIterations > 0 {
 			log.Info("Max epoch reached... Quitting main loop.")
 			break
 		}
 		// only sign something if there was some data/requests:
-		numRequests := len(s.requests.GetData())
+		data, channels := s.requests.GetData()
+		s.requests.reset()
+		numRequests := len(data)
 		if numRequests > 0 {
 			log.Lvl2("Signin tree root with timestampt:", now, "got", numRequests, "requests")
 
 			// create merkle tree and message to be signed:
-			root, proofs := crypto.ProofTree(sha256.New, s.requests.GetData())
+			root, proofs := crypto.ProofTree(sha256.New, data)
 			msg := RecreateSignedMsg(root, now.Unix())
 
 			signature := s.signMsg(msg)
 			log.Lvlf2("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 			// Give (individual) response to anyone waiting:
-			for i, respC := range s.requests.responseChannels {
+			for i, respC := range channels {
 				respC <- &SignatureResponse{
 					Timestamp: now.Unix(),
 					Proof:     proofs[i],
@@ -209,9 +212,8 @@ func (s *Service) runLoop() {
 					Signature: signature,
 				}
 			}
-			s.requests.reset()
 		} else {
-			log.Print("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			log.Lvl3("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
 	}
 
@@ -275,7 +277,6 @@ func (rb *requestPool) reset() {
 	rb.requestData = nil
 	// XXX do we need to close each channel separately?
 	rb.responseChannels = nil
-	log.Print("Reset")
 }
 
 func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
@@ -286,10 +287,10 @@ func (rb *requestPool) Add(data []byte, responseChan chan *SignatureResponse) {
 	rb.responseChannels = append(rb.responseChannels, responseChan)
 }
 
-func (rb *requestPool) GetData() []crypto.HashID {
+func (rb *requestPool) GetData() ([]crypto.HashID, []chan *SignatureResponse) {
 	rb.Lock()
 	defer rb.Unlock()
-	return rb.requestData
+	return rb.requestData, rb.responseChannels
 }
 
 // RecreateSignedMsg is a helper that can be used by the client to recreate the
