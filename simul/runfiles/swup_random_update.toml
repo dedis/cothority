@@ -1,13 +1,13 @@
 Simulation = "SwUpRandClient"
-Servers = 4
-Bf = 3
+Servers = 2
+Bf = 2
 Rounds = 10
 CloseWait = 6000
 Height = 10
 Base = 4
 RunWait = 3600
 Snapshot = "snapshots_limited_6.csv"
-Depth = 3
+Depth = 2
 Delay = 50
 Bandwidth = 100
 
