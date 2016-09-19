@@ -60,8 +60,21 @@ def compile_bin(name, bina):
         wall_start_time = time.perf_counter()
         cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
         tag = "reprod:" + name + "-" + str(os.getpid())
-        subprocess.run(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
+        docker = subprocess.popen(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
                                  universal_newlines=True)
+        user = 0
+        system = 0
+        while docker.poll is None:
+            print("Waiting to finish")
+            ddir = '/sys/fs/cgroup/cpuacct/docker'
+            ddirs = next(os.walk(ddir))[1]
+            for dps in ddirs:
+                with open(os.path.join(ddir, dps, 'cpuacct.stat'), 'r') as f:
+                    user = f.readline().strip().split(" ")[1]
+                    system = f.readline().strip().split(" ")[1]
+                    print("Got", user, system)
+            sleep(1)
+        print("Last user, system", user, system)
 
     try:
         comhash = subprocess.check_output(['docker', 'run', '--rm', tag, 'sha256sum',
@@ -79,7 +92,8 @@ def compile_bin(name, bina):
     return comhash, round(wall_time, 3), round(cpu_user, 3), round(cpu_system, 3)
 
 
-# Find and add two Debian snapshots preceding the build time
+# Find and add two Debian snapshots preceding the build time and one
+# following the build time
 def find_snapshots(btime, f):
     snappage = urlopen(
         'http://snapshot.debian.org/archive/debian/?year=' + datetime.strftime(btime, '%Y') + ';month='
@@ -97,22 +111,15 @@ def find_snapshots(btime, f):
     snap_url = "http://snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3142/snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3128/"
-    if len(snapbuf) > 1:
-        f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-2][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \n\n')
-    elif len(snapbuf) == 1:
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' sid main\' >> /etc/apt/sources.list \n\n')
-    else:
+    if len(snapbuf) == 0:
         print("The build is done before the first snapshot of the month!")
+    else:
+        for snap in snapbuf:
+            f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snap[
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
+            f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snap[
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
+        f.write('\n')
 
 
 # Save build results into csv file
