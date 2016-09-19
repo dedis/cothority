@@ -145,7 +145,6 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 }
 
 func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
-	// TODO
 	timeClient := timestamp.NewClient()
 	// create nonce:
 	r := make([]byte, 20)
@@ -154,20 +153,25 @@ func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *Lates
 	nonce := sha256.Sum256(r)
 
 	// send request:
-	resp, err := timeClient.SignMsg(c.Root, nonce[:])
+	//resp, err := timeClient.SignMsg(c.Root, nonce[:])
+	_, err = timeClient.SignMsg(c.Root, nonce[:])
 	log.ErrFatal(err, "Couldn't sign nonce.")
 
+	// XXX Skipping this test for simulation, we don't want to spoof time with
+	// the timestamp service...
 	// Verify the time is in the good range:
-	ts := time.Unix(resp.Timestamp, 0)
-	latesBlockTime := time.Unix(lbr.Timestamp.Timestamp, 0)
-	if ts.Sub(latesBlockTime) > time.Hour {
-		log.Warn("Timestamp of latest block is older than one hour!")
-	}
+	/*ts := time.Unix(resp.Timestamp, 0)*/
+	//latesBlockTime := time.Unix(lbr.Timestamp.Timestamp, 0)
+	//if ts.Sub(latesBlockTime) > time.Hour {
+	//log.Warn("Timestamp of latest block is older than one hour!")
+	/*}*/
 
 	names := orderName(latest)
+	ids := orderedIdsFromName(latest)
 	tr, err := c.TimestampRequests(names)
-	for i, n := range names {
-		proof := tr.Proofs[n]
+	for i := range ids {
+		name := names[i]
+		proof := tr.Proofs[name]
 		updates := lbr.Updates[i]
 		leaf := updates[len(updates)-1].Hash
 		log.ErrFatal(err)
