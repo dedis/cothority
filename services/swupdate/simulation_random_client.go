@@ -118,17 +118,17 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
-			client := NewClient(config.Roster)
-			ids := orderedIdsFromName(latest)
-			lbr, err := client.LatestUpdates(ids)
-			log.ErrFatal(err)
-			// do verification
-			verification(client, latest, lbr, config.Roster.Publics())
-			// update latest
-			for i, n := range orderName(latest) {
-				upds := lbr.Updates[i]
-				latest[n] = upds[len(upds)-1].Hash
-			}
+			/*         client := NewClient(config.Roster)*/
+			//ids := orderedIdsFromName(latest)
+			//lbr, err := client.LatestUpdates(ids)
+			//log.ErrFatal(err)
+			//// do verification
+			//verification(client, latest, lbr, config.Roster.Publics())
+			//// update latest
+			//for i, n := range orderName(latest) {
+			//upds := lbr.Updates[i]
+			//latest[n] = upds[len(upds)-1].Hash
+			/*}*/
 		}
 
 	}

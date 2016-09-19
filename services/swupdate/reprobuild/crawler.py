@@ -13,13 +13,14 @@ except:
     raise
 
 
-packages_linus = ['acl']
-
-packages_required = ['attr', 'base-files', 'base-passwd', 'coreutils', 'debconf', 'debianutils', 'diffutils',
+packages_required = ['attr', 'base-files', 'base-passwd', 'debconf', 'debianutils', 'diffutils',
                      'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
-                     'lsb', 'mawk', 'pam', 'sed', 'sysvinit', 'pcre3', 'perl', 'tar', 'util-linux', 'zlib']
+                     'lsb', 'mawk', 'sed', 'sysvinit', 'pcre3', 'perl', 'util-linux', 'zlib']
 
-packages_popular_1 = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 'cpio', 'logrotate',
+
+packages_essential = ['debianutils', 'diffutils', 'e2fsprogs', 'findutils', 'perl', 'sysvinit', 'tar']
+
+packages_popular = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils', 'cpio', 'logrotate',
                     'debian-archive-keyring', 'liblocale-gettext-perl', 'net-tools', 'ucf', 'popularity-contest',
                     'cron', 'manpages', 'libtext-wrapi18n-perl', 'iptables', 'ifupdown', 'man-db', 'mime-support',
                     'pciutils', 'libxml2', 'initramfs-tools', 'libcap2', 'dmidecode', 'busybox', 'file', 'less',
@@ -28,17 +29,17 @@ packages_popular_1 = ['hostname', 'netbase', 'adduser', 'tzdata', 'bsdmainutils'
                     'bash-completion', 'dictionaries-common', 'eject', 'kmod', 'whois', 'iso-codes', 'geoip-database',
                     'bc', 'acpi']
 
-packages_popular_2 = ['libtimedate-perl', 'm4', 'reportbug', 'libuuid-perl', 'usbutils', 'fontconfig', 'at',
-                    'time', 'liburi-perl', 'w3m', 'python-debian', 'procmail', 'libhtml-tagset-perl',
-                    'libhtml-parser-perl', 'texinfo', 'libhtml-tree-perl', 'libwww-perl', 'bsd-mailx',
-                    'apt-listchanges', 'hicolor-icon-theme', 'libnet-ssleay-perl', 'libswitch-perl',
-                    'libclass-isa-perl', 'python-debianbts', 'libmailtools-perl', 'libio-socket-ssl-perl', 'unzip',
-                    'libhttp-date-perl', 'libencode-locale-perl', 'liblwp-mediatypes-perl', 'libhttp-message-perl',
-                    'libfont-afm-perl', 'libhtml-format-perl', 'ssl-cert', 'libfile-listing-perl',
-                    'libwww-robotrules-perl', 'libnet-http-perl', 'libhttp-negotiate-perl', 'libhttp-cookies-perl',
-                    'liblwp-protocol-https-perl', 'libxml-parser-perl', 'rpcbind', 'libhttp-daemon-perl',
-                    'libio-socket-ip-perl', 'update-inetd', 'libhtml-form-perl', 'libfile-copy-recursive-perl',
-                    'python-soappy', 'aspell', 'xdg-user-dirs']
+packages_random = ['golang-github-hlandau-xlog', 'cal', 'libpath-dispatcher-declarative-perl', 'lunar-date', 'pmailq',
+                   'aolserver4-nsxml', 'node-tilelive-vector', 'golang-github-hashicorp-go-getter', 'yacpi',
+                   'libdata-stag-perl', 'libnet-oauth2-perl', 'libjs-jquery-dotdotdot', 'libclass-c3-adopt-next-perl',
+                   'libobject-remote-perl', 'libxml-rsslite-perl', 'python-click-log', 'cl-salza2',
+                   'globus-ftp-control', 'childsplay-alphabet-sounds-sl', 'fgetty', 'xmlextras', 'node-superagent',
+                   'django-memoize', 'libtemplate-plugin-stash-perl', 'systraq', 'libtpl',
+                   'libdist-zilla-plugin-config-git-perl', 'php-doctrine-cache-bundle', 'tz-converter', 'hackrf',
+                   'slice', 'xfce4-taskmanager', 'sshfs-fuse', 'node-simplesmtp', 'visionegg',
+                   'haskell-mutable-containers', 'gvfs', 'qdacco', 'haskell-ghc-events', 'ply', 'dymo-cups-drivers',
+                   'ruby-bacon', 'liblinux-usermod-perl', 'puppet-module-puppetlabs-postgresql', 'jalview', 'masscan',
+                   'octave-gsl', 'geronimo-ejb-3.2-spec', 'haskell-pcap', 'exuberant-ctags']
 
 
 # Modifier for a dependency line
@@ -59,8 +60,21 @@ def compile_bin(name, bina):
         wall_start_time = time.perf_counter()
         cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
         tag = "reprod:" + name + "-" + str(os.getpid())
-        subprocess.run(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
+        docker = subprocess.popen(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
                                  universal_newlines=True)
+        user = 0
+        system = 0
+        while docker.poll is None:
+            print("Waiting to finish")
+            ddir = '/sys/fs/cgroup/cpuacct/docker'
+            ddirs = next(os.walk(ddir))[1]
+            for dps in ddirs:
+                with open(os.path.join(ddir, dps, 'cpuacct.stat'), 'r') as f:
+                    user = f.readline().strip().split(" ")[1]
+                    system = f.readline().strip().split(" ")[1]
+                    print("Got", user, system)
+            sleep(1)
+        print("Last user, system", user, system)
 
     try:
         comhash = subprocess.check_output(['docker', 'run', '--rm', tag, 'sha256sum',
@@ -78,7 +92,8 @@ def compile_bin(name, bina):
     return comhash, round(wall_time, 3), round(cpu_user, 3), round(cpu_system, 3)
 
 
-# Find and add two Debian snapshots preceding the build time
+# Find and add two Debian snapshots preceding the build time and one
+# following the build time
 def find_snapshots(btime, f):
     snappage = urlopen(
         'http://snapshot.debian.org/archive/debian/?year=' + datetime.strftime(btime, '%Y') + ';month='
@@ -96,22 +111,15 @@ def find_snapshots(btime, f):
     snap_url = "http://snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3142/snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3128/"
-    if len(snapbuf) > 1:
-        f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-2][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-2][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \n\n')
-    elif len(snapbuf) == 1:
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write(' && echo \'deb ' + snap_url + '/archive/debian/' + snapbuf[-1][
-            'href'] + ' sid main\' >> /etc/apt/sources.list \n\n')
-    else:
+    if len(snapbuf) == 0:
         print("The build is done before the first snapshot of the month!")
+    else:
+        for snap in snapbuf:
+            f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snap[
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
+            f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snap[
+            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
+        f.write('\n')
 
 
 # Save build results into csv file
@@ -130,18 +138,17 @@ def get_packages(option):
 
     if option == 'required':
         packs = packages_required
-        # packs = ['libsepol']
 
-    elif option == 'popular1':
-        packs = packages_popular_1
+    elif option == 'essential':
+        packs = packages_essential
 
-    elif option == 'popular2':
-        packs = packages_popular_2
-
-    elif option == 'linus':
-        packs = packages_linus
+    elif option == 'popular':
+        packs = packages_popular
 
     elif option == 'random':
+        packs = packages_random
+
+    elif option == 'random_fresh':
         SET_SIZE = 3
         allpacks = []
         url = 'https://tests.reproducible-builds.org/debian/testing/amd64/index_reproducible.html'

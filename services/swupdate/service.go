@@ -99,10 +99,10 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 		return nil, err
 	}
 	cs.Storage.SwupChainsGenesis[policy.Name] = sc
-	cs.timestamp(time.Now())
 	if err := cs.startPropagate(policy.Name, sc); err != nil {
 		return nil, err
 	}
+	cs.timestamp(time.Now())
 
 	return &CreatePackageRet{sc}, nil
 }
@@ -113,20 +113,22 @@ func (cs *Service) UpdatePackage(si *network.ServerIdentity, up *UpdatePackage) 
 	defer addBlock.Record()
 	sc := &SwupChain{
 		Release: up.Release,
+		Root:    up.SwupChain.Root,
 	}
 	rel := up.Release
 	log.Lvl3("Creating Data-skipchain")
 	var err error
-	sc.Root, sc.Data, err = cs.skipchain.CreateData(up.SwupChain.Root, 2, 10,
-		verifierID, rel)
+	psbrep, err := cs.skipchain.ProposeData(up.SwupChain.Root,
+		up.SwupChain.Data, rel)
 	if err != nil {
 		return nil, err
 	}
+	sc.Data = psbrep.Latest
 
-	cs.timestamp(time.Now())
 	if err := cs.startPropagate(rel.Policy.Name, sc); err != nil {
 		return nil, err
 	}
+	cs.timestamp(time.Now())
 	return &UpdatePackageRet{sc}, nil
 }
 
@@ -232,7 +234,6 @@ func (cs *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig
 		if err != nil {
 			return nil, err
 		}
-		go pi.Dispatch()
 	}
 	return pi, err
 }
