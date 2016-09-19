@@ -1,6 +1,7 @@
 package swupdate
 
 import (
+	"errors"
 	"testing"
 
 	"os"
@@ -70,6 +71,9 @@ func TestService_CreatePackage(t *testing.T) {
 	defer local.CloseAll()
 	_, roster, s := local.MakeHELS(5, swupdateService)
 	service := s.(*Service)
+	release1 := chain1.blocks[0].release
+	policy1 := chain1.blocks[0].policy
+	sigs2 := chain2.blocks[1].sigs
 	// This should fail as the signatures are wrong
 	cpr, err := service.CreatePackage(nil,
 		&CreatePackage{
@@ -95,6 +99,10 @@ func TestService_UpdatePackage(t *testing.T) {
 	defer local.CloseAll()
 	_, roster, s := local.MakeHELS(5, swupdateService)
 	service := s.(*Service)
+	release1 := chain1.blocks[0].release
+	sigs1 := chain1.blocks[0].sigs
+	release2 := chain1.blocks[1].release
+	policy2 := chain1.blocks[1].policy
 	cpr, err := service.CreatePackage(nil,
 		&CreatePackage{roster, release1, 2, 10})
 	log.ErrFatal(err)
@@ -127,37 +135,61 @@ func TestPairMarshalling(t *testing.T) {
 	assert.Equal(t, t1, t2)
 }
 
-func TestService_Timestamp(t *testing.T) {
-	local := sda.NewLocalTest()
-	defer local.CloseAll()
-	_, roster, s := local.MakeHELS(5, swupdateService)
-
-	service := s.(*Service)
-	body, err := service.CreatePackage(nil,
-		&CreatePackage{roster, release1, 2, 10})
+// insertChain will insert every release into the service skipchains and returns
+// the last swupchain returned.
+func insertChain(service *Service, r *sda.Roster, c *packageChain) *SwupChain {
+	cpr, err := service.CreatePackage(nil,
+		&CreatePackage{r, c.blocks[0].release, 2, 10})
 	log.ErrFatal(err)
-	// XXX Why these methods return Body and not message ?
-	cpr := body.(*CreatePackageRet)
+	sc := cpr.(*CreatePackageRet).SwupChain
 
-	now := time.Now()
-	service.timestamp(now)
+	for _, block := range c.blocks[1:] {
+		upr, err := service.UpdatePackage(nil,
+			&UpdatePackage{
+				SwupChain: sc,
+				Release:   &Release{block.policy, block.sigs, false},
+			})
+		log.ErrFatal(err)
+		sc = upr.(*UpdatePackageRet).SwupChain
+	}
+	return sc
+}
 
-	body2, err := service.LatestBlock(nil, &LatestBlock{cpr.SwupChain.Data.Hash})
-	log.ErrFatal(err)
+func checkChain(s *Service, r *sda.Roster, name string, last *SwupChain) error {
+	body2, err := s.LatestBlock(nil, &LatestBlock{last.Data.Hash})
+	if err != nil {
+		return err
+	}
 	lbr := body2.(*LatestBlockRet)
 
-	tr, err := service.TimestampProof(nil, &TimestampRequest{release1.Policy.Name})
-	log.ErrFatal(err)
+	tr, err := s.TimestampProof(nil, &TimestampRequest{name})
+	if err != nil {
+		return err
+	}
 	proof := tr.(*TimestampRet).Proof
 	leaf := lbr.Update[len(lbr.Update)-1].Hash
 
 	// verify proof
 	c := proof.Check(HashFunc(), lbr.Timestamp.Root, leaf)
-	assert.True(t, c)
+	if !c {
+		return errors.New("Proof verification incorrect")
+	}
 	// verify timestamp signature
-	log.Printf("Verifying cosi signature with public %x msg %x", roster.Aggregate, []byte(lbr.Timestamp.Root.String()))
+	log.Printf("Verifying cosi signature with public %x msg %x", r.Aggregate, []byte(lbr.Timestamp.Root.String()))
 	msg := MarshalPair(lbr.Timestamp.Root, lbr.Timestamp.SignatureResponse.Timestamp)
-	assert.Nil(t, swupdate.VerifySignature(network.Suite, roster.Publics(), msg, lbr.Timestamp.SignatureResponse.Signature))
+	return swupdate.VerifySignature(network.Suite, r.Publics(), msg, lbr.Timestamp.SignatureResponse.Signature)
+
+}
+func TestService_Timestamp(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s := local.MakeHELS(5, swupdateService)
+	// XXX Why these methods return Body and not message ?
+	service := s.(*Service)
+	sw1 := insertChain(service, roster, chain1)
+	//sw2 := insertChain(service, roster, chain2)
+
+	assert.Nil(t, checkChain(service, roster, chain1.packag, sw1))
 }
 
 func TestService_PackageSC(t *testing.T) {
@@ -165,6 +197,7 @@ func TestService_PackageSC(t *testing.T) {
 	defer local.CloseAll()
 	_, roster, s := local.MakeHELS(5, swupdateService)
 	service := s.(*Service)
+	release1 := chain1.blocks[0].release
 	cpr, err := service.CreatePackage(nil,
 		&CreatePackage{roster, release1, 2, 10})
 	log.ErrFatal(err)
@@ -192,13 +225,13 @@ func TestService_PropagateBlock(t *testing.T) {
 	service := s.(*Service)
 
 	cpr, err := service.CreatePackage(nil,
-		&CreatePackage{roster, release1, 2, 10})
+		&CreatePackage{roster, chain1.blocks[0].release, 2, 10})
 	log.ErrFatal(err)
 	sc := cpr.(*CreatePackageRet).SwupChain
 	//verifyExistence(t, hosts, sc, policy1.Name, true)
 
 	upr, err := service.UpdatePackage(nil,
-		&UpdatePackage{sc, release2})
+		&UpdatePackage{sc, chain1.blocks[1].release})
 	log.ErrFatal(err)
 	sc = upr.(*UpdatePackageRet).SwupChain
 	//verifyExistence(t, hosts, sc, policy2.Name, false)
@@ -220,17 +253,26 @@ func TestService_PropagateBlock(t *testing.T) {
 //}
 //}
 
+// packageChain tracks all test releases for one fake package
+type packageChain struct {
+	packag string
+	blocks []*packageBlock
+}
+
+// packageBlock tracks all information on one release of a package
+type packageBlock struct {
+	keys       []*PGP
+	keysPublic []string
+	policy     *Policy
+	release    *Release
+	sigs       []string
+}
+
+var chain1 *packageChain
+var chain2 *packageChain
+
 var keys []*PGP
 var keysPublic []string
-
-var policy1 *Policy
-var policy2 *Policy
-
-var sigs1 []string
-var sigs2 []string
-
-var release1 *Release
-var release2 *Release
 
 func initGlobals(nbrKeys int) {
 	for i := 0; i < nbrKeys; i++ {
@@ -238,37 +280,41 @@ func initGlobals(nbrKeys int) {
 		keysPublic = append(keysPublic, keys[i].ArmorPublic())
 	}
 
-	policy1 = &Policy{
-		Name:       "test",
-		Version:    "1.2",
-		Source:     "https://github.com/dedis/cothority",
-		Threshold:  3,
-		Keys:       keysPublic,
-		BinaryHash: "0",
-	}
-	policy2 = &Policy{
-		Name:       "test",
-		Version:    "1.3",
-		Source:     "https://github.com/dedis/cothority",
-		Threshold:  3,
-		Keys:       keysPublic,
-		BinaryHash: "0",
-	}
-
-	p1, err := network.MarshalRegisteredType(policy1)
-	log.ErrFatal(err)
-	p2, err := network.MarshalRegisteredType(policy2)
-	log.ErrFatal(err)
-	for _, k := range keys {
-		s1, err := k.Sign(p1)
+	createBlock := func(name, version string) *packageBlock {
+		policy1 := &Policy{
+			Name:       name,
+			Version:    version,
+			Source:     "https://github.com/dedis/cothority",
+			Threshold:  3,
+			Keys:       keysPublic,
+			BinaryHash: "0",
+		}
+		p1, err := network.MarshalRegisteredType(policy1)
 		log.ErrFatal(err)
-		s2, err := k.Sign(p2)
-		log.ErrFatal(err)
-
-		sigs1 = append(sigs1, s1)
-		sigs2 = append(sigs2, s2)
+		var sigs1 []string
+		for _, k := range keys {
+			s1, err := k.Sign(p1)
+			log.ErrFatal(err)
+			sigs1 = append(sigs1, s1)
+		}
+		return &packageBlock{
+			keys:       keys,
+			keysPublic: keysPublic,
+			policy:     policy1,
+			release:    &Release{policy1, sigs1, false},
+			sigs:       sigs1,
+		}
 	}
 
-	release1 = &Release{policy1, sigs1, false}
-	release2 = &Release{policy2, sigs2, false}
+	createChain := func(pack string) *packageChain {
+		b1 := createBlock(pack, "1.2")
+		b2 := createBlock(pack, "1.3")
+		return &packageChain{
+			packag: pack,
+			blocks: []*packageBlock{b1, b2},
+		}
+	}
+
+	chain1 = createChain("test")
+	chain2 = createChain("test2")
 }
