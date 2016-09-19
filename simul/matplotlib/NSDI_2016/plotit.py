@@ -280,31 +280,28 @@ def plotSBCreation():
     mplot.plotEnd()
 
 def plotBuildCDF():
-    files = [['repro_builds_popular1', 'Debian 50 most popular'],
+    files = [['repro_builds_essential', 'Debian essential packages'],
              ['repro_builds_required', 'Debian required packages'],
-             ['repro_builds_random', 'Random set of Debian packages']]
+             ['repro_builds_random', 'Random set of 50 Debian packages'],
+             ['repro_builds_popular', '50 most popular Debian packages'],
+             ]
 
-    mplot.plotPrepareLogLog(0, 0)
+    mplot.plotPrepareLogLog(10, 0)
     plot_show("repro_build_cdf")
 
     for index, fl in enumerate(files):
         file, label = fl
-        for name, marker in [['', 'o'], ['_iccloud', 'x']]:
-            fname = file + name + ".csv"
-            if not os.path.isfile(fname):
-                print fname, "is not here"
-                continue
+        values = read_csv_pure(file, "", "wall_time").values()
+        X = np.sort(np.array(values))
+        while X[0] < 100.0:
+            X = np.delete(X, 0)
+        X /= 60
+        Y = np.linspace(0, 100, len(X))
 
-            values = read_csv_pure(fname, "", "wall_time").values()
-            X = np.sort(np.array(values))
-            while X[0] < 100.0:
-                X = np.delete(X, 0)
-            Y = np.linspace(0, 100, len(X))
-
-            plt.plot(X, Y, label=label + name, linestyle='-', marker=marker,
+        plt.plot(X, Y, label=label, linestyle='-', marker='o',
                  color=colors[index][1])
 
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [minutes]")
     plt.ylabel("% of Packages Built")
 
     plt.legend(loc='lower right')
@@ -341,7 +338,7 @@ def read_csvs(*values):
 
 def read_csv_pure(file, xname, yname):
     ret = {}
-    with open(file) as csvfile:
+    with open(file+'.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         x = 0
         for row in reader:
@@ -365,6 +362,6 @@ mplot.show_fig = False
 
 # Call all plot-functions
 # plotFull()
-plotVerify()
-plotSBCreation()
+# plotVerify()
+# plotSBCreation()
 plotBuildCDF()

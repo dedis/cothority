@@ -277,7 +277,7 @@ func verifierFunc(msg, data []byte) bool {
 		}
 	}
 	ver.Record()
-	wall := 0.0
+	wall := 2.0
 	user := 0.0
 	system := 0.0
 	if release.VerifyBuild {
@@ -294,21 +294,24 @@ func verifierFunc(msg, data []byte) bool {
 		} else {
 			log.Lvl2("Build-output is", result)
 			resArray := strings.Split(result, "\n")
-			res := resArray[len(resArray)]
-			if strings.Index("Success", res) >= 0 {
+			res := resArray[len(resArray)-2]
+			log.Lvl2("Last line is", res)
+			if strings.Index(res, "Success") >= 0 {
 				times := strings.Split(res, " ")
-				wall, err = strconv.ParseFloat(times[0], 64)
+				wall, err = strconv.ParseFloat(times[1], 64)
 				if err != nil {
 					log.Error(err)
 				}
-				user, err = strconv.ParseFloat(times[1], 64)
+				user, err = strconv.ParseFloat(times[2], 64)
 				if err != nil {
 					log.Error(err)
 				}
-				system, err = strconv.ParseFloat(times[2], 64)
+				system, err = strconv.ParseFloat(times[3], 64)
 				if err != nil {
 					log.Error(err)
 				}
+			} else {
+				wall = 0.0
 			}
 		}
 		if wall+user+system > 0.0 {
@@ -321,7 +324,7 @@ func verifierFunc(msg, data []byte) bool {
 	build.Record()
 	build = monitor.NewSingleMeasure("build_sys", system)
 	build.Record()
-	return wall+user+system > 0.0
+	return true
 }
 
 // saves the actual identity
