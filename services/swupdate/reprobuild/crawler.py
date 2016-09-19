@@ -6,7 +6,7 @@ try:
     import random
     import subprocess
     import templates
-    from datetime import datetime
+    from datetime import datetime, timedelta
     import psutil
     import csv, sys, os, time
 except:
@@ -51,76 +51,106 @@ def parse_dpnd(li):
 
     return li
 
+dlog = None
+
+def docker(cmd, args=[]):
+    cmds = ['docker'] + cmd.split(" ") + args
+    if dlog:
+        dlog.write(('\n\n--> %s\n\n' % '::'.join(cmds)).encode('utf-8'))
+        proc = subprocess.Popen(cmds, stdout=dlog, stderr=dlog)
+        proc.wait()
+        return ""
+    else:
+        # print('--> %s' % '::'.join(cmds))
+        proc = subprocess.Popen(cmds, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        proc.wait()
+        return proc.stdout.read().decode('utf-8').strip() +\
+               proc.stderr.read().decode('utf-8').strip()
+        # out = subprocess.check_output(cmds)
+
+def docker_build():
+    if not "repro_build" in docker('images repro_build'):
+        docker('build -t repro_build .')
+
+def docker_exec(name, cmd):
+    return docker('exec %s bash -c' % name, [cmd])
 
 # Build a container from the docker file and retrieve hash of the binary
-def compile_bin(name, bina):
+def compile_bin(dname, did, dependencies, version, short_version, bina):
+    global dlog
     comhash = ''
-    wall_time = cpu_user = cpu_system = -1.0
-    with open(name + '.log', 'w') as flog:
-        wall_start_time = time.perf_counter()
-        cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
-        tag = "reprod:" + name + "-" + str(os.getpid())
-        docker = subprocess.popen(['docker', 'build', '--tag=' + tag, '--force-rm', '.'], stdout=flog,
-                                 universal_newlines=True)
-        user = 0
-        system = 0
-        while docker.poll is None:
-            print("Waiting to finish")
-            ddir = '/sys/fs/cgroup/cpuacct/docker'
-            ddirs = next(os.walk(ddir))[1]
-            for dps in ddirs:
-                with open(os.path.join(ddir, dps, 'cpuacct.stat'), 'r') as f:
-                    user = f.readline().strip().split(" ")[1]
-                    system = f.readline().strip().split(" ")[1]
-                    print("Got", user, system)
-            sleep(1)
-        print("Last user, system", user, system)
+    wall_start_time = time.perf_counter()
+    cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
+    docker_exec(dname, "apt-get install -y " + ' '.join(dependencies))
+    full_pkg = name + '=' + version
+    docker_exec(dname, "apt-get source " + full_pkg)
+    docker_exec(dname, "apt-get build-dep -y --force-yes " + full_pkg)
+    src_dir = dir + '-' + short_version.partition('-')[0] + '/'
+    docker_exec(dname, "cd %s; dpkg-buildpackage -us -uc -tc" % src_dir)
+
+    cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
+    wall_time = time.perf_counter() - wall_start_time
+    ddir = os.path.join('/sys/fs/cgroup/cpuacct/docker', did, 'cpuacct.stat')
+    if os.path.isfile(ddir):
+        with open(ddir, 'r') as f:
+            user = float(f.readline().strip().split(" ")[1])/100.
+            system = float(f.readline().strip().split(" ")[1])/100.
+    else:
+        # No sysfs, probably MacOS, use system CPU time.
+        user = cpu_user
+        system = cpu_system
 
     try:
-        comhash = subprocess.check_output(['docker', 'run', '--rm', tag, 'sha256sum',
-                                                 bina]).decode('ascii', 'ignore').partition(' ')[0]
-        cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
-        wall_time = time.perf_counter() - wall_start_time
-        subprocess.run(['docker', 'rmi', tag], stdout='/dev/null')
-
+        dlog.close()
+        dlog = None
+        sha_cmd = 'sha256sum ' + bina
+        comhash = docker_exec(dname, sha_cmd).split(' ')[0]
+        docker('rm -f %s' % dname)
     except:
-        print("Some error while building", name)
-        id = subprocess.check_output(['docker', 'images']).decode('ascii').split('\n')[1].split()[2]
-        print(id)
-        # subprocess.run(['docker', 'rmi', id], stdout='/dev/null')
+        print("Some error while building", name, sys.exc_info()[0])
 
-    return comhash, round(wall_time, 3), round(cpu_user, 3), round(cpu_system, 3)
+    # print("User docker/psutil: %f/%f - System docker/psutil: %f/%f" %
+    #       (user, cpu_user, system, cpu_system))
+    return comhash, round(wall_time, 3), round(user, 3), round(system, 3)
 
 
 # Find and add two Debian snapshots preceding the build time and one
 # following the build time
-def find_snapshots(btime, f):
-    snappage = urlopen(
-        'http://snapshot.debian.org/archive/debian/?year=' + datetime.strftime(btime, '%Y') + ';month='
-        + datetime.strftime(build_time, '%m')).read()
-    snapsoup = BeautifulSoup(snappage, 'html.parser')
+def find_snapshots(btime, name):
     snapbuf = []
-    for snapshot in snapsoup.body.p.find_all('a'):
-        snaptime = datetime.strptime(snapshot.string, '%Y-%m-%d %H:%M:%S')
-        if snaptime < build_time:
-            snapbuf.append(snapshot)  # snapbuf is a list of snapshots before the build
-        else:
-            break
+    snapbuf_future = []
+    for day in [-1,0,1]:
+        atime = btime + timedelta(days=day)
+        # print("Fetching", atime)
+        snappage = urlopen(
+            'http://snapshot.debian.org/archive/debian/?year=%s;month=%s' %
+            ( atime.strftime('%Y'), atime.strftime('%m'))).read()
+        snapsoup = BeautifulSoup(snappage, 'html.parser')
+        for snapshot in snapsoup.body.p.find_all('a'):
+            snaptime = datetime.strptime(snapshot.string, '%Y-%m-%d %H:%M:%S')
+            if snaptime < build_time:
+                snapbuf.append(snapshot)  # snapbuf is a list of snapshots before the build
+            else:
+                snapbuf_future.append(snapshot)
+    # Also get the first snapshot in the future
+    snapbuf.append(snapbuf_future[0])
 
     # Adding retrieved snapshots as sources to Dockerfile
     snap_url = "http://snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3142/snapshot.debian.org"
     # snap_url = "http://icsil1-conode1.epfl.ch:3128/"
-    if len(snapbuf) == 0:
+    if len(snapbuf) < 3:
         print("The build is done before the first snapshot of the month!")
     else:
-        for snap in snapbuf:
-            f.write('&& echo \'deb ' + snap_url + '/archive/debian/' + snap[
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-            f.write(' && echo \'deb-src ' + snap_url + '/archive/debian/' + snap[
-            'href'] + ' stretch main\' >> /etc/apt/sources.list \\ \n')
-        f.write('\n')
-
+        for snap in snapbuf[-3:]:
+            for d in ['deb', 'deb-src']:
+                line = '%s %s/archive/debian/%s stretch main' % \
+                       (d, snap_url, snap['href'])
+                docker_exec(name, 'echo %s >> /etc/apt/sources.list' % line)
+    docker_exec(name, "echo 'Acquire::Check-Valid-Until \"false\";' >> /etc/apt/apt.conf" )
+    docker_exec(name, 'cat /etc/apt/sources.list')
+    docker_exec(name, 'apt-get update')
 
 # Save build results into csv file
 def save_results(yes, no, fail):
@@ -168,8 +198,11 @@ packages = get_packages(sys.argv[1])
 baseurl = 'https://tests.reproducible-builds.org'
 url = 'https://tests.reproducible-builds.org/debian/rb-pkg/testing/amd64/'
 hash_match, hash_differ, failed = [], [], []
+docker_build()
 
 for p in packages:
+    pkgstr = sys.argv[1]+'/'+p
+    # print("Reproducibly building package:", pkgstr)
     page = urlopen(url + p + '.html').read()
     soup = BeautifulSoup(page, 'html.parser')
 
@@ -177,10 +210,12 @@ for p in packages:
     timestr = soup.body.header.find('span', {'class': 'build-time'}).string.split()[1:3]
     build_time = datetime.strptime(' '.join(timestr), '%Y-%m-%d %H:%M')
 
-    f = open('Dockerfile', 'w')
-    f.write(templates.Header1)
-    find_snapshots(build_time, f)
-    f.write(templates.Header2)
+    dname = '-'.join(['repro', p, str(os.getpid())])
+    did = docker('run --name=%s -d repro_build bash -c' % dname,["sleep 3600"])
+    dlog = open(p+'.log', 'wb')
+    time.sleep(1)
+    docker_exec(dname, "echo 193.62.202.30 snapshot.debian.org >> /etc/hosts")
+    find_snapshots(build_time, dname)
 
     # Find all the dependencies
     page = urlopen(baseurl + soup.body.header.find('a', {'title': 'Show: build info'})['href']).read()
@@ -191,6 +226,7 @@ for p in packages:
     version = name = sha = binary = dir = short_version = size = ''
     first = True
     i = 0
+    dependencies = []
     for line in lines:  # Extracting describing data
         if not dflag:  # Parse data about the package at first
             words = line.split()
@@ -223,40 +259,34 @@ for p in packages:
         else:
             # Parsing dependencies
             i += 1
-            if not first:
-                if i % 3 == 1 and line != "":
-                    f.write(' \\ \n')
-                else:
-                    f.write(' ')
-            else:
-                first = False
-            f.write(parse_dpnd(line))
+            dependencies.append(parse_dpnd(line))
 
-    print(binary)
-    f.write('\n\n' + templates.Closer + '\n')
-    f.write('\nWORKDIR /project')
-    f.write('\nRUN ${HOSTS}; apt-get source ' + name + '=' + version)
-    f.write('\nRUN ${HOSTS}; apt-get build-dep -y --force-yes ' + name + '=' + version)
-    f.write('\nWORKDIR /project/' + dir + '-' + short_version.partition('-')[0] + '/')
-    f.write('\nRUN ${HOSTS}; dpkg-buildpackage -us -uc -tc')
-    f.write('\nWORKDIR /project')
-    f.close()
-
-    computed_hash, wtime, utime, stime = compile_bin(name, binary)
+    computed_hash, wtime, utime, stime = \
+        compile_bin(dname, did, dependencies, version, short_version, binary)
+    # computed_hash, wtime, utime, stime = sha, 1.5, 2.5, 3.5
+    # print("Got", computed_hash, wtime, utime, stime)
 
     if sha != '' and computed_hash == sha:
         hash_match.append((p, binary, size, wtime, utime, stime, 'y'))
-        print("Hashes match for", name, computed_hash)
+        print("Hashes match for %s: wall(%f) user(%f) system(%f)" %
+              (pkgstr, wtime, utime, stime))
     else:
         if computed_hash == '':
             failed.append((p, binary, size, wtime, utime, stime, 'f'))
             print('Fail in the build process')
         else:
             hash_differ.append((p, binary, size, wtime, utime, stime, 'n'))
-            print("Hashes differ for", name, computed_hash, "and", sha)
+            print("Hashes differ for", pkgstr, computed_hash, "and", sha)
 
 save_results(hash_match, hash_differ, failed)
 
 print('\nBuilt packages with matching hash: ', hash_match)
 print('Failed to build:', failed)
 print('Built packages with differed hash:', hash_differ)
+
+if sys.argv[1] == 'cli':
+    if len(hash_match) > 1:
+        print(sys.argv[2], hash_match[0])
+        print("Success", wtime, utime, stime)
+    else:
+        print("Failed")

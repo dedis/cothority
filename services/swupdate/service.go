@@ -19,6 +19,8 @@ import (
 
 	"strings"
 
+	"strconv"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
@@ -275,33 +277,51 @@ func verifierFunc(msg, data []byte) bool {
 		}
 	}
 	ver.Record()
-	build := monitor.NewTimeMeasure("build")
-	success := true
+	wall := 0.0
+	user := 0.0
+	system := 0.0
 	if release.VerifyBuild {
 		// Verify the reproducible build
 		log.LLvl1("Starting to build", policy.Name, policy.Version)
-		wd, _ := os.Getwd()
 		cmd := exec.Command("./crawler.py",
 			"cli", policy.Name)
 		cmd.Stderr = os.Stderr
 		resultB, err := cmd.Output()
 		result := string(resultB)
 		if err != nil {
+			wd, _ := os.Getwd()
 			log.Error("While creating reproducible build:", err, result, wd)
-			success = false
 		} else {
 			log.Lvl2("Build-output is", result)
-			pkgbuild := fmt.Sprintf("Failed to build: ['%s']", policy.Name)
-			if strings.Index(result, pkgbuild) >= 0 {
-				success = false
+			resArray := strings.Split(result, "\n")
+			res := resArray[len(resArray)]
+			if strings.Index("Success", res) >= 0 {
+				times := strings.Split(res, " ")
+				wall, err = strconv.ParseFloat(times[0], 64)
+				if err != nil {
+					log.Error(err)
+				}
+				user, err = strconv.ParseFloat(times[1], 64)
+				if err != nil {
+					log.Error(err)
+				}
+				system, err = strconv.ParseFloat(times[2], 64)
+				if err != nil {
+					log.Error(err)
+				}
 			}
 		}
-		if success {
-			log.LLvl2("Congrats, verified", policy.Name, policy.Version)
+		if wall+user+system > 0.0 {
+			log.LLvl2("Congrats, verified", policy.Name, policy.Version, "in", wall, user, system)
 		}
 	}
+	build := monitor.NewSingleMeasure("build_wall", user)
 	build.Record()
-	return success
+	build = monitor.NewSingleMeasure("build_usr", user)
+	build.Record()
+	build = monitor.NewSingleMeasure("build_sys", system)
+	build.Record()
+	return wall+user+system > 0.0
 }
 
 // saves the actual identity
