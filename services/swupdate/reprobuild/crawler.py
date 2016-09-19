@@ -12,6 +12,8 @@ try:
 except:
     raise
 
+simulate = False
+simulateSuccess = False
 
 packages_required = ['attr', 'base-files', 'base-passwd', 'debconf', 'debianutils', 'diffutils',
                      'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
@@ -57,6 +59,7 @@ def docker(cmd, args=[]):
     cmds = ['docker'] + cmd.split(" ") + args
     if dlog:
         dlog.write(('\n\n--> %s\n\n' % '::'.join(cmds)).encode('utf-8'))
+        dlog.flush()
         proc = subprocess.Popen(cmds, stdout=dlog, stderr=dlog)
         proc.wait()
         return ""
@@ -82,12 +85,13 @@ def compile_bin(dname, did, dependencies, version, short_version, bina):
     comhash = ''
     wall_start_time = time.perf_counter()
     cpu_user_start, cpu_system_start = psutil.cpu_times().user, psutil.cpu_times().system
-    docker_exec(dname, "apt-get install -y " + ' '.join(dependencies))
-    full_pkg = name + '=' + version
-    docker_exec(dname, "apt-get source " + full_pkg)
-    docker_exec(dname, "apt-get build-dep -y --force-yes " + full_pkg)
-    src_dir = dir + '-' + short_version.partition('-')[0] + '/'
-    docker_exec(dname, "cd %s; dpkg-buildpackage -us -uc -tc" % src_dir)
+    if not simulate:
+        docker_exec(dname, "apt-get install -y " + ' '.join(dependencies))
+        full_pkg = name + '=' + version
+        docker_exec(dname, "apt-get source " + full_pkg)
+        docker_exec(dname, "apt-get build-dep -y --force-yes " + full_pkg)
+        src_dir = dir + '-' + short_version.partition('-')[0] + '/'
+        docker_exec(dname, "cd %s; dpkg-buildpackage -us -uc -tc -j4" % src_dir)
 
     cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
     wall_time = time.perf_counter() - wall_start_time
@@ -150,7 +154,8 @@ def find_snapshots(btime, name):
                 docker_exec(name, 'echo %s >> /etc/apt/sources.list' % line)
     docker_exec(name, "echo 'Acquire::Check-Valid-Until \"false\";' >> /etc/apt/apt.conf" )
     docker_exec(name, 'cat /etc/apt/sources.list')
-    docker_exec(name, 'apt-get update')
+    if not simulate:
+        docker_exec(name, 'apt-get update')
 
 # Save build results into csv file
 def save_results(yes, no, fail):
@@ -261,10 +266,15 @@ for p in packages:
             i += 1
             dependencies.append(parse_dpnd(line))
 
-    computed_hash, wtime, utime, stime = \
+    if not simulate:
+        computed_hash, wtime, utime, stime = \
         compile_bin(dname, did, dependencies, version, short_version, binary)
-    # computed_hash, wtime, utime, stime = sha, 1.5, 2.5, 3.5
-    # print("Got", computed_hash, wtime, utime, stime)
+    else:
+        if simulateSuccess:
+            computed_hash, wtime, utime, stime = sha, 1.5, 2.5, 3.5
+        else:
+            computed_hash, wtime, utime, stime = "", 1.5, 2.5, 3.5
+        print("Got", computed_hash, wtime, utime, stime)
 
     if sha != '' and computed_hash == sha:
         hash_match.append((p, binary, size, wtime, utime, stime, 'y'))
@@ -285,7 +295,7 @@ print('Failed to build:', failed)
 print('Built packages with differed hash:', hash_differ)
 
 if sys.argv[1] == 'cli':
-    if len(hash_match) > 1:
+    if len(hash_match) > 0:
         print(sys.argv[2], hash_match[0])
         print("Success", wtime, utime, stime)
     else:
