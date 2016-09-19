@@ -12,11 +12,14 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/swupdate"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/skipchain"
+	"github.com/dedis/crypto/abstract"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -170,26 +173,62 @@ func checkChain(s *Service, r *sda.Roster, name string, last *SwupChain) error {
 	leaf := lbr.Update[len(lbr.Update)-1].Hash
 
 	// verify proof
-	c := proof.Check(HashFunc(), lbr.Timestamp.Root, leaf)
+	return verifyProof(proof, lbr.Timestamp.Root, crypto.HashID(leaf), lbr.Timestamp.SignatureResponse.Timestamp, r.Publics(), lbr.Timestamp.SignatureResponse.Signature)
+}
+
+func verifyProof(proof crypto.Proof, root, leaf crypto.HashID, ts int64, publics []abstract.Point, sig []byte) error {
+	c := proof.Check(HashFunc(), root, leaf)
 	if !c {
 		return errors.New("Proof verification incorrect")
 	}
 	// verify timestamp signature
-	log.Printf("Verifying cosi signature with public %x msg %x", r.Aggregate, []byte(lbr.Timestamp.Root.String()))
-	msg := MarshalPair(lbr.Timestamp.Root, lbr.Timestamp.SignatureResponse.Timestamp)
-	return swupdate.VerifySignature(network.Suite, r.Publics(), msg, lbr.Timestamp.SignatureResponse.Signature)
-
+	msg := MarshalPair(root, ts)
+	return swupdate.VerifySignature(network.Suite, publics, msg, sig)
 }
-func TestService_Timestamp(t *testing.T) {
+
+// Same as TestService_TimestampProof but checking all chains instead of just
+// one package / chain
+func TestService_TimestampProofBatch(t *testing.T) {
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s := local.MakeHELS(5, swupdateService)
+	service := s.(*Service)
+	sw1 := insertChain(service, roster, chain1)
+	sw2 := insertChain(service, roster, chain2)
+	// get all latests blocks
+	names := []string{chain1.packag, chain2.packag}
+	ids := []skipchain.SkipBlockID{sw1.Data.Hash, sw2.Data.Hash}
+	b, err := service.LatestBlocks(nil, &LatestBlocks{ids})
+	log.ErrFatal(err)
+	lbr := b.(*LatestBlocksRet)
+	// get all proofs
+	b, err = service.TimestampProofs(nil, &TimestampRequests{names})
+	log.ErrFatal(err)
+	tr := b.(*TimestampRets)
+
+	for i := range ids {
+		updates := lbr.Updates[i]
+		last := updates[len(updates)-1]
+		name := names[i]
+		proof, ok := tr.Proofs[name]
+		if !ok {
+			t.Fatal("Did not find the name in the proof responses")
+		}
+		e := verifyProof(proof, lbr.Timestamp.Root, crypto.HashID(last.Hash), lbr.Timestamp.SignatureResponse.Timestamp, roster.Publics(), lbr.Timestamp.SignatureResponse.Signature)
+		log.ErrFatal(e)
+	}
+}
+func TestService_TimestampProof(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, roster, s := local.MakeHELS(5, swupdateService)
 	// XXX Why these methods return Body and not message ?
 	service := s.(*Service)
 	sw1 := insertChain(service, roster, chain1)
-	//sw2 := insertChain(service, roster, chain2)
+	sw2 := insertChain(service, roster, chain2)
 
 	assert.Nil(t, checkChain(service, roster, chain1.packag, sw1))
+	assert.Nil(t, checkChain(service, roster, chain2.packag, sw2))
 }
 
 func TestService_PackageSC(t *testing.T) {
