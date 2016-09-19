@@ -2,6 +2,7 @@ package swupdate
 
 import (
 	"errors"
+	"reflect"
 
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -31,11 +32,11 @@ func (c *Client) LatestUpdates(latestIDs []skipchain.SkipBlockID) (*LatestBlocks
 	if err != nil {
 		return nil, err
 	}
-	lbr, ok := p.Msg.(*LatestBlocksRet)
+	lbr, ok := p.Msg.(LatestBlocksRet)
 	if !ok {
-		return nil, errors.New("Wrong message")
+		return nil, errors.New("Wrong message" + reflect.TypeOf(p.Msg).String())
 	}
-	return lbr, nil
+	return &lbr, nil
 }
 
 func (c *Client) TimestampRequests(names []string) (*TimestampRets, error) {
@@ -44,9 +45,9 @@ func (c *Client) TimestampRequests(names []string) (*TimestampRets, error) {
 	if err != nil {
 		return nil, err
 	}
-	tr, ok := r.Msg.(*TimestampRets)
+	tr, ok := r.Msg.(TimestampRets)
 	if !ok {
 		return nil, errors.New("Wrong Message")
 	}
-	return tr, nil
+	return &tr, nil
 }

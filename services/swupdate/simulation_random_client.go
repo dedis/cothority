@@ -69,6 +69,14 @@ func (e *randClientSimulation) Setup(dir string, hosts []string) (
 func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
+
+	c := timestamp.NewClient()
+	maxIterations := 0
+	_, err := c.SetupStamper(config.Roster, time.Millisecond*250, maxIterations)
+	if err != nil {
+		return err
+	}
+
 	service, ok := config.GetService(ServiceName).(*Service)
 	if service == nil || !ok {
 		log.Fatal("Didn't find service", ServiceName)
@@ -118,17 +126,18 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
-			/*         client := NewClient(config.Roster)*/
-			//ids := orderedIdsFromName(latest)
-			//lbr, err := client.LatestUpdates(ids)
-			//log.ErrFatal(err)
-			//// do verification
-			//verification(client, latest, lbr, config.Roster.Publics())
-			//// update latest
-			//for i, n := range orderName(latest) {
-			//upds := lbr.Updates[i]
-			//latest[n] = upds[len(upds)-1].Hash
-			/*}*/
+			client := NewClient(config.Roster)
+			ids := orderedIdsFromName(latest)
+			lbr, err := client.LatestUpdates(ids)
+			log.ErrFatal(err)
+			// do verification
+			verification(client, latest, lbr, config.Roster.Publics())
+			// update latest
+			for i, n := range orderName(latest) {
+				upds := lbr.Updates[i]
+				latest[n] = upds[len(upds)-1].Hash
+			}
+			log.Lvl1("Client update + verification done.")
 		}
 
 	}

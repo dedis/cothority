@@ -16,6 +16,8 @@ func init() {
 		Release{},
 		storage{},
 		SwupChain{},
+		LatestBlocksRet{},
+		TimestampRets{},
 	} {
 		network.RegisterPacketType(msg)
 	}
