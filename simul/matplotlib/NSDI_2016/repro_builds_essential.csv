@@ -1,0 +1,8 @@
+package,binary,size,wall_time,cpu_user_time,cpu_system_time,outcome
+debianutils,debianutils_4.8_amd64.deb,99550,109.82,56.27,32.98,y
+diffutils,diffutils_3.5-1_amd64.deb,311724,229.09,115.7,69.18,y
+sysvinit,sysvinit-core_2.88dsf-59.8_amd64.deb,133346,160.372,77.1,47.76,y
+e2fsprogs,e2fsprogs_1.43.1-1_amd64.deb,821132,336.591,190.18,95.5,n
+findutils,findutils_4.6.0+git+20160703-2_amd64.deb,616106,349.237,191.3,438.26,n
+perl,perl_5.22.2-5_amd64.deb,237536,2249.207,1358.51,267.4,n
+tar,tar_1.29b-1_amd64.deb,753268,196.513,94.02,58.91,n
