@@ -94,6 +94,8 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 
 	// latests block known by the client for all packages
 	latest := make(map[string]skipchain.SkipBlockID)
+	updateClient := NewClient(config.Roster)
+	timeClient := timestamp.NewClient()
 	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
@@ -126,28 +128,28 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
-			client := NewClient(config.Roster)
-			bw := monitor.NewCounterIOMeasure("client_bw", client)
+			bw_update := monitor.NewCounterIOMeasure("client_bw_swupdate", updateClient)
+			bw_time := monitor.NewCounterIOMeasure("client_bw_timestamp", timeClient)
 			ids := orderedIdsFromName(latest)
-			lbr, err := client.LatestUpdates(ids)
+			lbr, err := updateClient.LatestUpdates(ids)
 			log.ErrFatal(err)
 			// do verification
-			verification(client, latest, lbr, config.Roster.Publics())
+			verification(updateClient, timeClient, latest, lbr, config.Roster.Publics())
 			// update latest
 			for i, n := range orderName(latest) {
 				upds := lbr.Updates[i]
 				latest[n] = upds[len(upds)-1].Hash
 			}
 			log.Lvl1("Client update + verification done.")
-			bw.Record()
+			bw_update.Record()
+			bw_time.Record()
 		}
 
 	}
 	return nil
 }
 
-func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
-	timeClient := timestamp.NewClient()
+func verification(c *Client, timeClient *timestamp.Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
 	// create nonce:
 	r := make([]byte, 20)
 	_, err := rand.Read(r)
