@@ -19,8 +19,7 @@ url_repro_testing = 'https://tests.reproducible-builds.org/debian/rb-pkg/testing
 
 packages_required = ['attr', 'base-files', 'base-passwd', 'debconf', 'debianutils', 'diffutils',
                      'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
-                     'lsb', 'mawk', 'sed', 'sysvinit', 'pcre3', 'perl', 'util-linux', 'zlib']
-
+                     'lsb', 'mawk', 'sed', 'sysvinit', 'pcre3', 'util-linux', 'zlib']
 
 packages_essential = ['debianutils', 'diffutils', 'e2fsprogs', 'findutils', 'perl', 'sysvinit', 'tar']
 
@@ -44,7 +43,6 @@ packages_random = ['golang-github-hlandau-xlog', 'cal', 'libpath-dispatcher-decl
                    'haskell-mutable-containers', 'gvfs', 'qdacco', 'haskell-ghc-events', 'ply', 'dymo-cups-drivers',
                    'ruby-bacon', 'liblinux-usermod-perl', 'puppet-module-puppetlabs-postgresql', 'jalview', 'masscan',
                    'octave-gsl', 'geronimo-ejb-3.2-spec', 'haskell-pcap', 'exuberant-ctags']
-
 
 # Modifier for a dependency line
 def parse_dpnd(li):
@@ -80,6 +78,15 @@ def docker_build():
 
 def docker_exec(name, cmd):
     return docker('exec %s bash -c' % name, [cmd])
+
+def docker_run(pkg):
+    global dlog
+    dname = '-'.join(['repro', pkg, str(os.getpid())])
+    did = docker('run --name=%s -d repro_build bash -c' % dname,["sleep 3600"])
+    dlog = open(pkg + '.log', 'wb')
+    time.sleep(1)
+    docker_exec(dname, "echo 193.62.202.30 snapshot.debian.org >> /etc/hosts")
+    return dname, did
 
 # Build a container from the docker file and retrieve hash of the binary
 def compile_bin(dname, did, dependencies, version, short_version, bina):
@@ -209,15 +216,6 @@ def get_packages(option):
 packages = get_packages(sys.argv[1])
 hash_match, hash_differ, failed = [], [], []
 docker_build()
-
-def docker_run(pkg):
-    global dlog
-    dname = '-'.join(['repro', pkg, str(os.getpid())])
-    did = docker('run --name=%s -d repro_build bash -c' % dname,["sleep 3600"])
-    dlog = open(pkg + '.log', 'wb')
-    time.sleep(1)
-    docker_exec(dname, "echo 193.62.202.30 snapshot.debian.org >> /etc/hosts")
-    return dname, did
 
 def find_dependencies(pkg):
     page = urlopen(url_repro_testing + pkg + '.html').read()

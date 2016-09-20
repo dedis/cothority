@@ -274,13 +274,14 @@ def plotSBCreation():
     oa = plt.plot(x+width / 2, total, color=colors[len(vls)][1], marker='x')
     labels.append("Total for new package")
     plt.xticks(x + width / 2, plots.x)
-    plt.legend(oa + handles[::-1], labels[::-1], loc='center right')
+    plt.legend(oa + handles[::-1], labels[::-1], loc='lower right')
     plt.ylim(0.001, 500)
     plt.xlim(x[0]-width, x[-1]+2*width)
     mplot.plotEnd()
 
 def plotBuildCDF():
-    files = [['repro_builds_essential', 'Debian essential packages'],
+    files = [
+        # ['repro_builds_essential', 'Debian essential packages'],
              ['repro_builds_required', 'Debian required packages'],
              ['repro_builds_random', 'Random set of 50 Debian packages'],
              ['repro_builds_popular', '50 most popular Debian packages'],
@@ -307,13 +308,13 @@ def plotBuildCDF():
     plt.legend(loc='lower right')
     ax = plt.axes()
     ax.xaxis.grid(color='gray', linestyle='dashed', zorder=0)
-    ax.set_xticks([1, 10, 100])
-    ax.set_xticks([3, 30], minor=True)
     ax.grid(which='both')
     ax.grid(which='minor', alpha=0.2)
     ax.grid(which='major', alpha=0.5)
-    plt.xticks([1,3,10,30,100])
-
+    plt.xticks([1,2,3,6,10,20,30,50])
+    plt.yticks(np.linspace(0,100,11))
+    plt.xlim(1,50)
+    arrow(37, 100, "Perl", 0, -20, 'center')
     mplot.plotEnd()
 
 
