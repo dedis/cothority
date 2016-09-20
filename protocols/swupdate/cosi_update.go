@@ -2,6 +2,7 @@
 package swupdate
 
 import (
+	"encoding/hex"
 	"fmt"
 	"sync"
 
@@ -257,7 +258,7 @@ func (c *CoSiUpdate) startChallenge() error {
 	out := &Challenge{
 		Chall: challenge,
 	}
-	log.Lvl3(c.Name(), "Starting Chal=", fmt.Sprintf("%+v", challenge), " (message =", string(c.Message))
+	log.Lvl3(c.Name(), "Starting Chal=", fmt.Sprintf("%+v", challenge), " (message =", hex.EncodeToString(c.Message))
 	return c.handleChallenge(out)
 
 }

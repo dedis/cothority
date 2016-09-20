@@ -26,11 +26,10 @@ var timestampSID sda.ServiceID
 
 var dummyVerfier = func(rootAndTimestamp []byte) bool {
 	l := len(rootAndTimestamp)
-	t, err := bytesToTimestamp(rootAndTimestamp[l-10 : l])
+	_, err := bytesToTimestamp(rootAndTimestamp[l-10 : l])
 	if err != nil {
 		log.Error("Got some invalid timestamp.")
 	}
-	log.Print("Got time", t)
 	return true
 }
 
@@ -70,7 +69,6 @@ type Service struct {
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
 	log.Lvl2("Timestamp Service received New Protocol event")
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
-	go pi.Dispatch()
 	return pi, err
 }
 
@@ -165,7 +163,6 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	// service)
 	response := make(chan []byte)
 	pi.RegisterSignatureHook(func(sig []byte) {
-		log.Print("Writing signature to channel!!!")
 		response <- sig
 	})
 	go pi.Dispatch()
