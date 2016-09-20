@@ -305,7 +305,15 @@ def plotBuildCDF():
     plt.ylabel("% of Packages Built")
 
     plt.legend(loc='lower right')
-    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    ax = plt.axes()
+    ax.xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    ax.set_xticks([1, 10, 100])
+    ax.set_xticks([3, 30], minor=True)
+    ax.grid(which='both')
+    ax.grid(which='minor', alpha=0.2)
+    ax.grid(which='major', alpha=0.5)
+    plt.xticks([1,3,10,30,100])
+
     mplot.plotEnd()
 
 
@@ -363,5 +371,5 @@ mplot.show_fig = False
 # Call all plot-functions
 # plotFull()
 # plotVerify()
-# plotSBCreation()
+plotSBCreation()
 plotBuildCDF()
