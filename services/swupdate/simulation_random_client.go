@@ -127,6 +127,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
 			client := NewClient(config.Roster)
+			bw := monitor.NewCounterIOMeasure("client_bw", client)
 			ids := orderedIdsFromName(latest)
 			lbr, err := client.LatestUpdates(ids)
 			log.ErrFatal(err)
@@ -138,6 +139,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 				latest[n] = upds[len(upds)-1].Hash
 			}
 			log.Lvl1("Client update + verification done.")
+			bw.Record()
 		}
 
 	}
