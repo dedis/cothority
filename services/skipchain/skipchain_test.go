@@ -281,6 +281,7 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	if !l.Equal(latest) {
 		return errors.New("Last block from update is not the same as last block")
 	}
+	log.Print(base, height, len(updates))
 	if base > 1 && height > 1 && len(updates) == 10 {
 		return fmt.Errorf("Shouldn't need 10 blocks with base %d and height %d",
 			base, height)

@@ -17,6 +17,7 @@ func init() {
 		storage{},
 		SwupChain{},
 		LatestBlocksRet{},
+		LatestBlocksRetInternal{},
 		TimestampRets{},
 	} {
 		network.RegisterPacketType(msg)
@@ -126,6 +127,15 @@ type LatestBlocksRet struct {
 	Timestamp *Timestamp
 	// Each updates for each packages ordered in same order that in LatestBlocks
 	Updates [][]*skipchain.SkipBlock
+}
+
+// Internal structure with lengths
+type LatestBlocksRetInternal struct {
+	Timestamp *Timestamp
+	// Each updates for each packages ordered in same order that in LatestBlocks
+	Updates []*skipchain.SkipBlock
+	// STUPID: [][] is not correctly parsed by protobuf, so use lengths...
+	Lengths []int64
 }
 
 // TimestampRequest asks the swupdate service to give back the proof of

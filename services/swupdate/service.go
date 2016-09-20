@@ -195,27 +195,30 @@ func (cs *Service) LatestBlock(si *network.ServerIdentity, lb *LatestBlock) (net
 		return nil, err
 	}
 	if cs.Storage.Timestamp == nil {
-		log.Print("Before the panic ..................")
-		panic("something's wrong with the service")
+		return nil, errors.New("Timestamp-service missing!")
 	}
 	return &LatestBlockRet{cs.Storage.Timestamp, gucRet.Update}, nil
 }
 
 func (cs *Service) LatestBlocks(si *network.ServerIdentity, lbs *LatestBlocks) (network.Body, error) {
-	updates := make([][]*skipchain.SkipBlock, len(lbs.LastKnownSBs))
+	var updates []*skipchain.SkipBlock
+	var lengths []int64
 	var t *Timestamp
-	for i, id := range lbs.LastKnownSBs {
+	for _, id := range lbs.LastKnownSBs {
+		//log.Print(lbs.LastKnownSBs, id)
 		b, err := cs.LatestBlock(nil, &LatestBlock{id})
 		if err != nil {
 			return nil, err
 		}
 		lb := b.(*LatestBlockRet)
-		updates[i] = lb.Update
+		updates = append(updates, lb.Update...)
+		lengths = append(lengths, int64(len(lb.Update)))
 		if t == nil {
 			t = lb.Timestamp
 		}
+		//log.Print(i, updates, lb.Update)
 	}
-	return &LatestBlocksRet{t, updates}, nil
+	return &LatestBlocksRetInternal{t, updates, lengths}, nil
 }
 
 // NewProtocol will instantiate a new cosi-timestamp protocol.

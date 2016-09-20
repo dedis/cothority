@@ -132,6 +132,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			bw_time := monitor.NewCounterIOMeasure("client_bw_timestamp", timeClient)
 			ids := orderedIdsFromName(latest)
 			lbr, err := updateClient.LatestUpdates(ids)
+			log.Print("Got packets", len(lbr.Updates), latest, lbr.Updates)
 			log.ErrFatal(err)
 			// do verification
 			verification(updateClient, timeClient, latest, lbr, config.Roster.Publics())
@@ -139,6 +140,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			for i, n := range orderName(latest) {
 				upds := lbr.Updates[i]
 				latest[n] = upds[len(upds)-1].Hash
+				log.Print(latest[n])
 			}
 			log.Lvl1("Client update + verification done.")
 			bw_update.Record()

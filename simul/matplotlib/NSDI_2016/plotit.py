@@ -331,6 +331,34 @@ def plotBuildCDF():
     mplot.plotEnd()
 
 
+def plotBW3():
+    plotData(
+        [['swup_random_update_11_4', 'swup_random_update_5_7', 'swup_random_update_1_1'],
+         ['Linear skipchain', 'S5_7 skipchain', 'S11_4 skipchain']],
+        'update_bandwidth',
+        loglog=[10, 10],
+        xname="frequency",
+        csv_column="client_bw_swupdate_rx",
+        xlabel="Days between two updates",
+        ylabel="Bandwidth for 400 days of updates"
+    )
+
+def plotBW():
+    mplot.plotPrepareLogLog(2, 10)
+    plot_show('update_bandwidth')
+    for index, sparam in enumerate(['1_1', '5_7', '11_4']):
+        data = read_csvs_xname('frequency','swup_random_update_' + sparam)[0]
+        bandwidth = np.array(data.columns['client_bw_swupdate_tx_sum']) + \
+                    np.array(data.columns['client_bw_swupdate_rx_sum'])
+        print bandwidth
+        plt.plot(data.x, bandwidth, label="SkipChain S" + sparam)
+
+    plt.xlabel("Client update frequency")
+    plt.ylabel("Bandwidth for one update of the client")
+    plt.legend(loc='lower left')
+    mplot.plotEnd()
+
+
 # Colors for the Cothority
 colors = [['lightgreen', 'green'],
           ['lightblue', 'blue'],
@@ -385,5 +413,6 @@ mplot.show_fig = False
 # Call all plot-functions
 # plotFull()
 # plotVerify()
-plotSBCreation()
-plotBuildCDF()
+# plotSBCreation()
+# plotBuildCDF()
+plotBW()

@@ -32,11 +32,16 @@ func (c *Client) LatestUpdates(latestIDs []skipchain.SkipBlockID) (*LatestBlocks
 	if err != nil {
 		return nil, err
 	}
-	lbr, ok := p.Msg.(LatestBlocksRet)
+	lbr, ok := p.Msg.(LatestBlocksRetInternal)
 	if !ok {
 		return nil, errors.New("Wrong message" + reflect.TypeOf(p.Msg).String())
 	}
-	return &lbr, nil
+	var updates [][]*skipchain.SkipBlock
+	for _, l := range lbr.Lengths {
+		updates = append(updates, lbr.Updates[0:l])
+		lbr.Updates = lbr.Updates[l:]
+	}
+	return &LatestBlocksRet{lbr.Timestamp, updates}, nil
 }
 
 func (c *Client) TimestampRequests(names []string) (*TimestampRets, error) {
