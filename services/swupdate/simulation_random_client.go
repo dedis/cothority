@@ -94,8 +94,8 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 
 	// latests block known by the client for all packages
 	latest := make(map[string]skipchain.SkipBlockID)
-	clientSwup := NewClient(config.Roster)
-	clientTS := timestamp.NewClient()
+	updateClient := NewClient(config.Roster)
+	timeClient := timestamp.NewClient()
 	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
@@ -128,26 +128,28 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
+			bw_update := monitor.NewCounterIOMeasure("client_bw_swupdate", updateClient)
+			bw_time := monitor.NewCounterIOMeasure("client_bw_timestamp", timeClient)
 			ids := orderedIdsFromName(latest)
-			lbr, err := clientSwup.LatestUpdates(ids)
+			lbr, err := updateClient.LatestUpdates(ids)
 			log.ErrFatal(err)
 			// do verification
-			verification(clientSwup, clientTS,
-				latest, lbr, config.Roster.Publics())
+			verification(updateClient, timeClient, latest, lbr, config.Roster.Publics())
 			// update latest
 			for i, n := range orderName(latest) {
 				upds := lbr.Updates[i]
 				latest[n] = upds[len(upds)-1].Hash
 			}
-			log.Lvl2("Client update + verification done.")
+			log.Lvl1("Client update + verification done.")
+			bw_update.Record()
+			bw_time.Record()
 		}
 
 	}
 	return nil
 }
 
-func verification(clientSwup *Client, clientTS *timestamp.Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
-	// TODO
+func verification(c *Client, timeClient *timestamp.Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
 	// create nonce:
 	r := make([]byte, 20)
 	_, err := rand.Read(r)
@@ -155,20 +157,25 @@ func verification(clientSwup *Client, clientTS *timestamp.Client, latest map[str
 	nonce := sha256.Sum256(r)
 
 	// send request:
-	resp, err := clientTS.SignMsg(clientSwup.Root, nonce[:])
+	//resp, err := timeClient.SignMsg(c.Root, nonce[:])
+	_, err = timeClient.SignMsg(c.Root, nonce[:])
 	log.ErrFatal(err, "Couldn't sign nonce.")
 
+	// XXX Skipping this test for simulation, we don't want to spoof time with
+	// the timestamp service...
 	// Verify the time is in the good range:
-	ts := time.Unix(resp.Timestamp, 0)
-	latesBlockTime := time.Unix(lbr.Timestamp.Timestamp, 0)
-	if ts.Sub(latesBlockTime) > time.Hour {
-		log.Warn("Timestamp of latest block is older than one hour!")
-	}
+	/*ts := time.Unix(resp.Timestamp, 0)*/
+	//latesBlockTime := time.Unix(lbr.Timestamp.Timestamp, 0)
+	//if ts.Sub(latesBlockTime) > time.Hour {
+	//log.Warn("Timestamp of latest block is older than one hour!")
+	/*}*/
 
 	names := orderName(latest)
-	tr, err := clientSwup.TimestampRequests(names)
-	for i, n := range names {
-		proof := tr.Proofs[n]
+	ids := orderedIdsFromName(latest)
+	tr, err := c.TimestampRequests(names)
+	for i := range ids {
+		name := names[i]
+		proof := tr.Proofs[name]
 		updates := lbr.Updates[i]
 		leaf := updates[len(updates)-1].Hash
 		log.ErrFatal(err)

@@ -465,6 +465,20 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 	return msgs, err
 }
 
+func (c *Client) Rx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Rx()
+}
+
+func (c *Client) Tx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Tx()
+}
+
 // BinaryMarshaler can be used to store the client in a configuration-file
 func (c *Client) BinaryMarshaler() ([]byte, error) {
 	log.Fatal("Not yet implemented")
