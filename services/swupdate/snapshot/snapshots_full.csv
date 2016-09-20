@@ -1,4 +1,4 @@
-time, name, version, hash_source, hash_binary
+time, name, version, hash_binary
 20150501042823,acpi,1.7-1,a16749857a55ae555430745893aa9019
 20150501042823,acpid,1:2.0.23-2,ebb0ba01332a9c2cb610e426b7162fc1
 20150501042823,adduser,3.113+nmu3,9b7a9665cd1a6290786478931aafa9bc

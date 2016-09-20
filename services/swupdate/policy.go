@@ -29,8 +29,7 @@ var policyKeys []*PGP
 
 func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
-	if len(entries) != 5 {
-
+	if len(entries) != 4 {
 		return nil, errors.New("Should have five entries" + line)
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
@@ -54,7 +53,7 @@ func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	} else {
 		policy.Threshold = keys
 		policy.BinaryHash = entries[3]
-		policy.SourceHash = entries[4]
+		//policy.SourceHash = entries[4]
 	}
 
 	key := NewPGP()

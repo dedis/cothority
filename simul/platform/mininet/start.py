@@ -51,7 +51,7 @@ class BaseRouter(Node):
 
         self.cmd( 'sysctl net.ipv4.ip_forward=1' )
         self.cmd( 'iptables -t nat -I POSTROUTING -j MASQUERADE' )
-        socat = "socat %s udp4-listen:%d,reuseaddr,fork" % (logfile, socatPort)
+        socat = "socat OPEN:%s,creat,append udp4-listen:%d,reuseaddr,fork" % (logfile, socatPort)
         self.cmd( '%s &' % socat )
         if rootLog:
             self.cmd('tail -f %s | socat - udp-sendto:%s:%d &' % (logfile, rootLog, socatPort))
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
     if myNet:
         dbg( 2, "Cleaning up mininet and logfiles" )
-        rm_file(logfile)
+        # rm_file(logfile)
         rm_file(logdone)
         call("mn -c > /dev/null 2>&1", shell=True)
         dbg( 2, "Starting mininet for %s" % myNet )

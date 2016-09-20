@@ -125,7 +125,7 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	// see runLoop
 
 	// wait on my signature:
-	log.Print("Waiting on epoch end.")
+	log.Lvl2("Waiting on epoch end.")
 	resp := <-respC
 	return resp, nil
 }
@@ -167,9 +167,8 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	})
 	go pi.Dispatch()
 	go pi.Start()
-	log.Lvl1("Waiting on cosi response ...")
 	res := <-response
-	log.Lvl1("... DONE: Recieved cosi response")
+	log.Lvl2("Recieved cosi response")
 	return res
 
 }

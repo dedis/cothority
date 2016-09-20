@@ -334,7 +334,6 @@ func verifierFunc(msg, data []byte) bool {
 			log.LLvl2("Congrats, verified", policy.Name, policy.Version, "in", wall, user, system)
 		}
 	}
-	log.Print("Measuring")
 	build := monitor.NewSingleMeasure("build_wall", user)
 	build.Record()
 	build = monitor.NewSingleMeasure("build_usr", user)

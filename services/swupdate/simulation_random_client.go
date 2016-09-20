@@ -94,6 +94,8 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 
 	// latests block known by the client for all packages
 	latest := make(map[string]skipchain.SkipBlockID)
+	clientSwup := NewClient(config.Roster)
+	clientTS := timestamp.NewClient()
 	for _, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
@@ -126,27 +128,26 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
-			client := NewClient(config.Roster)
 			ids := orderedIdsFromName(latest)
-			lbr, err := client.LatestUpdates(ids)
+			lbr, err := clientSwup.LatestUpdates(ids)
 			log.ErrFatal(err)
 			// do verification
-			verification(client, latest, lbr, config.Roster.Publics())
+			verification(clientSwup, clientTS,
+				latest, lbr, config.Roster.Publics())
 			// update latest
 			for i, n := range orderName(latest) {
 				upds := lbr.Updates[i]
 				latest[n] = upds[len(upds)-1].Hash
 			}
-			log.Lvl1("Client update + verification done.")
+			log.Lvl2("Client update + verification done.")
 		}
 
 	}
 	return nil
 }
 
-func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
+func verification(clientSwup *Client, clientTS *timestamp.Client, latest map[string]skipchain.SkipBlockID, lbr *LatestBlocksRet, publics []abstract.Point) {
 	// TODO
-	timeClient := timestamp.NewClient()
 	// create nonce:
 	r := make([]byte, 20)
 	_, err := rand.Read(r)
@@ -154,7 +155,7 @@ func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *Lates
 	nonce := sha256.Sum256(r)
 
 	// send request:
-	resp, err := timeClient.SignMsg(c.Root, nonce[:])
+	resp, err := clientTS.SignMsg(clientSwup.Root, nonce[:])
 	log.ErrFatal(err, "Couldn't sign nonce.")
 
 	// Verify the time is in the good range:
@@ -165,14 +166,14 @@ func verification(c *Client, latest map[string]skipchain.SkipBlockID, lbr *Lates
 	}
 
 	names := orderName(latest)
-	tr, err := c.TimestampRequests(names)
+	tr, err := clientSwup.TimestampRequests(names)
 	for i, n := range names {
 		proof := tr.Proofs[n]
 		updates := lbr.Updates[i]
 		leaf := updates[len(updates)-1].Hash
 		log.ErrFatal(err)
 		if !proof.Check(HashFunc(), lbr.Timestamp.Root, leaf) {
-			log.Warn("Proof of inclusion is not correct")
+			log.Lvl2("Proof of inclusion is not correct")
 		} else {
 			log.Lvl2("Proof verification!")
 		}

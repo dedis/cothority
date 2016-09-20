@@ -287,7 +287,7 @@ def plotBuildCDF():
              ['repro_builds_popular', '50 most popular Debian packages'],
              ]
 
-    mplot.plotPrepareLogLog(10, 0)
+    mplot.plotPrepareLogLog(0, 0)
     plot_show("repro_build_cdf")
 
     for index, fl in enumerate(files):
@@ -311,10 +311,23 @@ def plotBuildCDF():
     ax.grid(which='both')
     ax.grid(which='minor', alpha=0.2)
     ax.grid(which='major', alpha=0.5)
-    plt.xticks([1,2,3,6,10,20,30,50])
+    plt.xticks(np.linspace(0,10,11))
     plt.yticks(np.linspace(0,100,11))
-    plt.xlim(1,50)
-    arrow(37, 100, "Perl", 0, -20, 'center')
+    plt.xlim(1,10)
+    plt.annotate("Aptitude: 13'", xy=(10, 95),
+                 xytext=(8, 95),
+                 # horizontalalignment='left',
+                 verticalalignment='top',
+                 arrowprops=dict(facecolor=colors[2][1], ec=colors[2][1],
+                                 headlength=5, width=0.1,
+                                 headwidth=8))
+    plt.annotate("Perl: 40'", xy=(10, 90),
+                 xytext=(8, 90),
+                 # horizontalalignment='left',
+                 verticalalignment='top',
+                 arrowprops=dict(facecolor=colors[0][1], ec=colors[0][1],
+                                 headlength=5, width=0.1,
+                                 headwidth=8))
     mplot.plotEnd()
 
 
