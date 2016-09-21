@@ -4,17 +4,15 @@ Bf = 2
 Rounds = 10
 CloseWait = 6000
 RunWait = 3600
-Snapshot = "snapshots_limited_6.csv"
+Snapshot = "snapshots_full.csv"
 Depth = 2
 Delay = 0
 Bandwidth = 100
-Frequency = 128
+Base = 2
+Height = 5
 
-Base, Height
-1, 1
-2, 1
-2, 2
-2, 3
-2, 4
-2, 5
-2, 6
+Frequency
+1
+8
+64
+256

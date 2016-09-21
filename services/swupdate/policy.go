@@ -9,7 +9,10 @@ import (
 
 	"time"
 
+	"strconv"
+
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
 
@@ -18,18 +21,25 @@ import (
  * interpreted debian-snapshot-data.
  */
 
+func init() {
+	key = NewPGP()
+}
+
 type DebianRelease struct {
-	Snapshot   string
-	Time       time.Time
-	Policy     *Policy
-	Signatures []string
+	Snapshot     string
+	Time         time.Time
+	Policy       *Policy
+	Signatures   []string
+	Binaries     []string
+	BinariesSize int
 }
 
 var policyKeys []*PGP
+var key *PGP
 
 func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	entries := strings.Split(line, ",")
-	if len(entries) != 4 {
+	if len(entries) != 6 {
 		return nil, errors.New("Should have five entries" + line)
 	}
 	policy := &Policy{Name: entries[1], Version: entries[2]}
@@ -38,7 +48,19 @@ func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 	if err != nil {
 		return nil, err
 	}
-	dr := &DebianRelease{entries[0], t, policy, []string{}}
+	bsize, err := strconv.Atoi(entries[5])
+	if err != nil {
+		log.LLvl2("Couldn't read binaries-size")
+		bsize = 0
+	}
+	dr := &DebianRelease{
+		Snapshot:     entries[0],
+		Time:         t,
+		Policy:       policy,
+		Signatures:   []string{},
+		Binaries:     strings.Split(entries[4], " "),
+		BinariesSize: bsize,
+	}
 	if false {
 		if dir != "" {
 			polBuf, err := ioutil.ReadFile(path.Join(dir, policy.Name, "policy-"+policy.Version))
@@ -52,11 +74,10 @@ func NewDebianRelease(line, dir string, keys int) (*DebianRelease, error) {
 		}
 	} else {
 		policy.Threshold = keys
-		policy.BinaryHash = entries[3]
-		//policy.SourceHash = entries[4]
+		//policy.BinaryHash = entries[3]
+		policy.SourceHash = entries[3]
 	}
 
-	key := NewPGP()
 	for k := 0; k < policy.Threshold; k++ {
 		if k >= len(policyKeys) {
 			policyKeys = append(policyKeys, key)

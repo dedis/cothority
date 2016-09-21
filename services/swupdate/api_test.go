@@ -51,4 +51,10 @@ func TestClient_LatestUpdates(t *testing.T) {
 	require.Equal(t, 2, len(lbret.Updates[1]))
 	require.Equal(t, sc2.Data.Hash, lbret.Updates[0][1].Hash)
 	require.Equal(t, sc4.Data.Hash, lbret.Updates[1][1].Hash)
+
+	lbret, err = client.LatestUpdates([]skipchain.SkipBlockID{sc2.Data.Hash,
+		sc3.Data.Hash})
+	log.ErrFatal(err)
+	require.Equal(t, 1, len(lbret.Updates))
+	require.Equal(t, 2, len(lbret.Updates[0]))
 }

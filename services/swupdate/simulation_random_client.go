@@ -96,7 +96,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 	latest := make(map[string]skipchain.SkipBlockID)
 	updateClient := NewClient(config.Roster)
 	timeClient := timestamp.NewClient()
-	for _, dr := range drs {
+	for i, dr := range drs {
 		pol := dr.Policy
 		log.Lvl1("Building", pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
@@ -124,7 +124,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			latest[pol.Name] = packets[pol.Name].Data.Hash
 		}
 		round.Record()
-		if dr.Time.Sub(now) >= updateFrequency {
+		if dr.Time.Sub(now) >= updateFrequency || i == len(drs)-1 {
 			// Measure bandwidth-usage for updating client
 			log.Lvlf1("Updating client at %s after %s", now, dr.Time.Sub(now))
 			now = dr.Time
@@ -132,17 +132,21 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			bw_time := monitor.NewCounterIOMeasure("client_bw_timestamp", timeClient)
 			ids := orderedIdsFromName(latest)
 			lbr, err := updateClient.LatestUpdates(ids)
-			log.Print("Got packets", len(lbr.Updates), latest, lbr.Updates)
+			log.Lvlf2("Got %d packets", len(lbr.Updates))
 			log.ErrFatal(err)
 			// do verification
 			verification(updateClient, timeClient, latest, lbr, config.Roster.Publics())
 			// update latest
-			for i, n := range orderName(latest) {
-				upds := lbr.Updates[i]
-				latest[n] = upds[len(upds)-1].Hash
-				log.Print(latest[n])
+			for k, v := range latest {
+				updates := getUpdate(lbr.Updates, v)
+				if updates != nil {
+					latest[k] = updates[len(updates)-1].Hash
+					download := monitor.NewSingleMeasure("download_binary", float64(dr.BinariesSize))
+					download.Record()
+					log.Lvl3("Updated package", k, v)
+				}
 			}
-			log.Lvl1("Client update + verification done.")
+			log.Lvl2("Client update + verification done.")
 			bw_update.Record()
 			bw_time.Record()
 		}
@@ -178,7 +182,10 @@ func verification(c *Client, timeClient *timestamp.Client, latest map[string]ski
 	for i := range ids {
 		name := names[i]
 		proof := tr.Proofs[name]
-		updates := lbr.Updates[i]
+		updates := getUpdate(lbr.Updates, ids[i])
+		if updates == nil {
+			continue
+		}
 		leaf := updates[len(updates)-1].Hash
 		log.ErrFatal(err)
 		if !proof.Check(HashFunc(), lbr.Timestamp.Root, leaf) {
@@ -189,13 +196,26 @@ func verification(c *Client, timeClient *timestamp.Client, latest map[string]ski
 	}
 
 	// verify signature
-	msg := MarshalPair(lbr.Timestamp.Root, lbr.Timestamp.SignatureResponse.Timestamp)
-	err = swupdate.VerifySignature(network.Suite, publics, msg, lbr.Timestamp.SignatureResponse.Signature)
-	if err != nil {
-		log.Warn("Signature timestamp invalid")
+	if lbr.Timestamp != nil {
+		msg := MarshalPair(lbr.Timestamp.Root, lbr.Timestamp.SignatureResponse.Timestamp)
+		err = swupdate.VerifySignature(network.Suite, publics, msg, lbr.Timestamp.SignatureResponse.Signature)
+		if err != nil {
+			log.Warn("Signature timestamp invalid")
+		} else {
+			log.Lvl2("Signature timestamp Valid :)")
+		}
 	} else {
-		log.Lvl2("Signature timestamp Valid :)")
+		log.Warn("No timestamper found")
 	}
+}
+
+func getUpdate(updates [][]*skipchain.SkipBlock, id skipchain.SkipBlockID) []*skipchain.SkipBlock {
+	for i := range updates {
+		if updates[i][0].Hash.Equal(id) {
+			return updates[i]
+		}
+	}
+	return nil
 }
 
 func orderName(m map[string]skipchain.SkipBlockID) []string {

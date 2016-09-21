@@ -346,7 +346,7 @@ def plotBW3():
 def plotBW():
     mplot.plotPrepareLogLog(2, 10)
     plot_show('update_bandwidth')
-    for index, sparam in enumerate(['1_1', '5_7', '11_4']):
+    for index, sparam in enumerate(['1_1', '2_5', '3_5', '4_5']):
         data = read_csvs_xname('frequency','swup_random_update_' + sparam)[0]
         bandwidth = np.array(data.columns['client_bw_swupdate_tx_sum']) + \
                     np.array(data.columns['client_bw_swupdate_rx_sum'])
@@ -354,6 +354,7 @@ def plotBW():
         plt.plot(data.x, bandwidth, label="SkipChain S" + sparam)
 
     plt.xlabel("Client update frequency")
+    plt.xticks(data.x)
     plt.ylabel("Bandwidth for one update of the client")
     plt.legend(loc='lower left')
     mplot.plotEnd()

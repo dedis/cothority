@@ -3,13 +3,13 @@ Servers = 2
 Bf = 2
 Rounds = 10
 CloseWait = 6000
-Height = 1
-Base = 1
 RunWait = 3600
-Snapshot = "snapshots_limited_full.csv"
+Snapshot = "snapshots_full.csv"
 Depth = 2
 Delay = 0
 Bandwidth = 100
+Base = 1
+Height = 1
 
 Frequency
 1

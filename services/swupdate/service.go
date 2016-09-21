@@ -95,7 +95,7 @@ func (cs *Service) CreatePackage(si *network.ServerIdentity, cp *CreatePackage) 
 	}
 	log.Lvl3("Creating Data-skipchain")
 	var err error
-	sc.Root, sc.Data, err = cs.skipchain.CreateData(sc.Root, 2, 10,
+	sc.Root, sc.Data, err = cs.skipchain.CreateData(sc.Root, cp.Base, cp.Height,
 		verifierID, cp.Release)
 	if err != nil {
 		return nil, err
@@ -211,12 +211,14 @@ func (cs *Service) LatestBlocks(si *network.ServerIdentity, lbs *LatestBlocks) (
 			return nil, err
 		}
 		lb := b.(*LatestBlockRet)
-		updates = append(updates, lb.Update...)
-		lengths = append(lengths, int64(len(lb.Update)))
-		if t == nil {
-			t = lb.Timestamp
+		if len(lb.Update) > 1 {
+			updates = append(updates, lb.Update...)
+			lengths = append(lengths, int64(len(lb.Update)))
+			if t == nil {
+				t = lb.Timestamp
+			}
+			//log.Print(i, updates, lb.Update)
 		}
-		//log.Print(i, updates, lb.Update)
 	}
 	return &LatestBlocksRetInternal{t, updates, lengths}, nil
 }
