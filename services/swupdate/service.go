@@ -341,9 +341,9 @@ func verifierFunc(msg, data []byte) bool {
 	}
 	build := monitor.NewSingleMeasure("build_wall", user)
 	build.Record()
-	build = monitor.NewSingleMeasure("build_usr", user)
+	build = monitor.NewSingleMeasure("build_user", user)
 	build.Record()
-	build = monitor.NewSingleMeasure("build_sys", system)
+	build = monitor.NewSingleMeasure("build_system", system)
 	build.Record()
 	return true
 }

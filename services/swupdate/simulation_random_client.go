@@ -102,7 +102,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 		// Verify if it's the first version of that packet
 		sc, knownPacket := packets[pol.Name]
 		release := &Release{pol, dr.Signatures, false}
-		round := monitor.NewTimeMeasure("full_" + pol.Name)
+		round := monitor.NewTimeMeasure("full")
 		if knownPacket {
 			// Append to skipchain, will build
 			upr, _ := service.UpdatePackage(nil,
@@ -143,7 +143,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 					latest[k] = updates[len(updates)-1].Hash
 					download := monitor.NewSingleMeasure("download_binary", float64(dr.BinariesSize))
 					download.Record()
-					log.Lvl3("Updated package", k, v)
+					log.LLvl3("Updated package", k, v)
 				}
 			}
 			log.Lvl2("Client update + verification done.")

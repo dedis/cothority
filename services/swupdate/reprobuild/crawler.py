@@ -17,9 +17,9 @@ simulateSuccess = False
 url_repro_build = 'https://tests.reproducible-builds.org'
 url_repro_testing = 'https://tests.reproducible-builds.org/debian/rb-pkg/testing/amd64/'
 
-packages_required = ['attr', 'base-files', 'base-passwd', 'debconf', 'debianutils', 'diffutils',
-                     'dpkg', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
-                     'lsb', 'mawk', 'sed', 'sysvinit', 'pcre3', 'util-linux', 'zlib']
+packages_required = ['acl', 'attr', 'base-files', 'base-passwd', 'coreutils', 'debconf', 'debianutils', 'diffutils',
+                     'dpkg', 'e2fsprogs', 'findutils', 'grep', 'gzip', 'init-system-helpers', 'libselinux', 'libsepol',
+                     'lsb', 'mawk',  'pam', 'pcre3', 'sed', 'sysvinit', 'tar', 'tzdata', 'util-linux', 'zlib']
 
 packages_essential = ['debianutils', 'diffutils', 'e2fsprogs', 'findutils', 'perl', 'sysvinit', 'tar']
 
