@@ -44,6 +44,8 @@ type RandHound struct {
 	// For signaling the end of a protocol run
 	Done        chan bool
 	SecretReady bool
+
+	Byzantine map[int]int // for simulating byzantine servers (= key)
 }
 
 // Share ...

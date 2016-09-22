@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -68,6 +68,13 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 
 	rh.Done = make(chan bool, 1)
 	rh.SecretReady = false
+
+	rh.Byzantine = make(map[int]int)
+	//rh.Byzantine[1] = 0
+	//rh.Byzantine[2] = 0
+	//rh.Byzantine[3] = 0
+	//rh.Byzantine[4] = 0
+	//rh.Byzantine[5] = 0
 
 	return nil
 }
@@ -208,6 +215,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		if err != nil {
 			return nil, nil, err
 		}
+		log.Lvlf1("Random: %v %v", source, ps)
 		rnd = rh.Suite().Point().Add(rnd, ps)
 	}
 
@@ -311,9 +319,10 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 		for _, src := range group {
 
 			var poly [][]byte
-			var index []int
+			var encPos []int
 			var encShare []abstract.Point
 			var encProof []ProofCore
+			var decPos []int
 			var decShare []abstract.Point
 			var decProof []ProofCore
 			var X []abstract.Point
@@ -335,7 +344,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 
 				// Gather data on encrypted shares
 				poly = append(poly, r1.CommitPoly)
-				index = append(index, r1.EncShare[j].Pos)
+				encPos = append(encPos, r1.EncShare[j].Pos)
 				encShare = append(encShare, r1.EncShare[j].Val)
 				encProof = append(encProof, r1.EncProof[j])
 				X = append(X, t.Key[i][r1.EncShare[j].Pos])
@@ -344,16 +353,36 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				r2 := t.R2s[target]
 				for k := 0; k < len(r2.DecShare); k++ {
 					if r2.DecShare[k].Source == src {
+						decPos = append(decPos, r2.DecShare[k].Pos)
 						decShare = append(decShare, r2.DecShare[k].Val)
 						decProof = append(decProof, r2.DecProof[k])
 					}
 				}
 			}
 
+			// Remove encrypted shares that do not have a corresponding decrypted shares
+			j := 0
+			for j < len(decPos) {
+				if encPos[j] != decPos[j] {
+					poly = append(poly[:j], poly[j+1:]...)
+					encPos = append(encPos[:j], encPos[j+1:]...)
+					encShare = append(encShare[:j], encShare[j+1:]...)
+					encProof = append(encProof[:j], encProof[j+1:]...)
+					X = append(X[:j], X[j+1:]...)
+				} else {
+					j++
+				}
+			}
+
+			// XXX: sync up encPos, decPos etc.
+
+			log.Lvlf1("Env vs Dec: %v %v", len(encShare), len(decShare))
+			log.Lvlf1("Env vs Dec: %v %v", encPos, decPos)
+
 			pvss := NewPVSS(suite, H, t.Threshold[i])
 
 			// Recover polynomial commits
-			polyCommit, err := pvss.Commits(poly, index)
+			polyCommit, err := pvss.Commits(poly, encPos)
 			if err != nil {
 				return err
 			}
@@ -366,9 +395,15 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			_ = goodEnc
 			_ = badEnc
 
-			//log.Lvlf1("Enc: %v %v", goodEnc, badEnc)
+			log.Lvlf1("Enc: %v %v", goodEnc, badEnc)
 
 			// XXX: remove bad values from encShare, decShare and decProof!
+			for i := len(badEnc) - 1; i >= 0; i-- {
+				j := badEnc[i]
+				encShare = append(encShare[:j], encShare[j+1:]...)
+				decShare = append(decShare[:j], decShare[j+1:]...)
+				decProof = append(decProof[:j], decProof[j+1:]...)
+			}
 
 			// Check decryption consistency proofs
 			goodDec, badDec, err := pvss.Verify(suite.Point().Base(), decShare, X, encShare, decProof)
@@ -379,16 +414,20 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			_ = badDec
 
 			// XXX: remove bad shares from decShare
+			for i := len(badDec) - 1; i >= 0; i-- {
+				j := badDec[i]
+				decShare = append(decShare[:j], decShare[j+1:]...)
+			}
 
-			//log.Lvlf1("Dec: %v %v", goodDec, badDec)
+			log.Lvlf1("Dec: %v %v", goodDec, badDec)
 
 			// Recover secret and add it to the collective random point
-			ps, err := pvss.Recover(index, decShare, len(t.Group[i]))
+			ps, err := pvss.Recover(decPos, decShare, len(t.Group[i]))
 			if err != nil {
 				return err
 			}
 			rnd = rh.Suite().Point().Add(rnd, ps)
-			//log.Lvlf1("Transcript: %v %v", src, ps)
+			log.Lvlf1("Transcript: %v %v", src, ps)
 
 		}
 	}
@@ -567,7 +606,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		for i := range rh.Server {
 
 			// Randomly select a threshold of secrets for each group in an order preserving way
-			var secret []int
 			hs := rh.Suite().Hash().Size()
 			rand := make([]byte, hs)
 			random.Stream.XORKeyStream(rand, rand)
@@ -575,17 +613,16 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 			//log.Lvlf1("%v", len(goodSecret[i]), rh.Threshold[i])
 
-			index := make([]int, len(goodSecret[i]))
+			secret := make([]int, len(goodSecret[i]))
 			for j := 0; j < len(goodSecret[i]); j++ {
-				index[j] = j
+				secret[j] = j
 			}
 
-			for j := 0; j < rh.Threshold[i]; j++ {
-				k := int(random.Uint32(prng) % uint32(len(index)))
-				secret = append(secret, index[k])
-				index = append(index[:k], index[k+1:]...)
+			// remove some values randomly
+			for j := 0; j < len(goodSecret[i])-rh.Threshold[i]; j++ {
+				k := int(random.Uint32(prng) % uint32(len(secret)))
+				secret = append(secret[:k], secret[k+1:]...)
 			}
-			sort.Ints(secret)
 
 			for j := 0; j < len(secret); j++ {
 				secret[j] = goodSecret[i][secret[j]]
@@ -594,7 +631,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			rh.ChosenSecret[i] = secret
 		}
 
-		//log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
+		log.Lvlf1("Grouping: %v", rh.Group)
+		log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
 		var chosenSecret [][]uint32
@@ -610,8 +648,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		for i, group := range rh.Server {
 			for j, server := range group {
 
-				// Among the chosen secrets collect all valid shares, proofs,
-				// and polynomial commits intended for target server
+				// Among the good secrets chosen previously collect all valid
+				// shares, proofs, and polynomial commits intended for the
+				// target server
 				var encShare []Share
 				var encProof []ProofCore
 				var polyCommit []abstract.Point
@@ -624,13 +663,13 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				}
 
 				// XXX: simulate bad data
-				//if server.ServerIdentityIdx == 1 || server.ServerIdentityIdx == 2 || server.ServerIdentityIdx == 3 || server.ServerIdentityIdx == 4 || server.ServerIdentityIdx == 5 || server.ServerIdentityIdx == 6 || server.ServerIdentityIdx == 7 || server.ServerIdentityIdx == 8 || server.ServerIdentityIdx == 9 {
-				//	bad := []int{0, 1, 2, 3}
-				//	for _, b := range bad {
-				//		encShare[b].Val = rh.Suite().Point().Null()
-				//		log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[b].Source, encShare[b].Target, encShare[b].Pos)
-				//	}
-				//}
+				if _, ok := rh.Byzantine[server.ServerIdentityIdx]; ok {
+					bad := []int{1}
+					for _, b := range bad {
+						encShare[b].Val = rh.Suite().Point().Null()
+						log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[b].Source, encShare[b].Target, encShare[b].Pos)
+					}
+				}
 
 				i2 := &I2{
 					Sig:          crypto.SchnorrSig{},
@@ -696,10 +735,16 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
+	if len(bad) != 0 {
+		log.Lvlf1("I2 - bad: %v", bad)
+		log.Lvlf1("I2 - encShare: %v", encShare)
+	}
+
 	// Remove bad shares
 	for i := len(bad) - 1; i >= 0; i-- {
 		j := bad[i]
 		encShare = append(encShare[:j], encShare[j+1:]...)
+		log.Lvlf1("I2 - encShare: %v", encShare)
 	}
 
 	// Decrypt shares
