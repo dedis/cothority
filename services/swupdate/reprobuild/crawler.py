@@ -100,7 +100,7 @@ def compile_bin(dname, did, dependencies, version, short_version, bina):
         docker_exec(dname, "apt-get source " + full_pkg)
         docker_exec(dname, "apt-get build-dep -y --force-yes " + full_pkg)
         src_dir = dir + '-' + short_version.partition('-')[0] + '/'
-        docker_exec(dname, "cd %s; dpkg-buildpackage -us -uc -tc -j4" % src_dir)
+        docker_exec(dname, "cd %s; dpkg-buildpackage -us -uc -tc -j8" % src_dir)
 
     cpu_user, cpu_system = psutil.cpu_times().user - cpu_user_start, psutil.cpu_times().system - cpu_system_start
     wall_time = time.perf_counter() - wall_start_time

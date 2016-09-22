@@ -12,7 +12,5 @@ Bandwidth = 100
 
 Depth, DockerBuild
 1, true
-2, false
 3, false
-4, false
 6, false

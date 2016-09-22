@@ -345,6 +345,8 @@ func verifierFunc(msg, data []byte) bool {
 	build.Record()
 	build = monitor.NewSingleMeasure("build_system", system)
 	build.Record()
+	build = monitor.NewSingleMeasure("build_cpu", user+system)
+	build.Record()
 	return true
 }
 

@@ -94,11 +94,12 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 
 	// latests block known by the client for all packages
 	latest := make(map[string]skipchain.SkipBlockID)
+	releases := make(map[string]*DebianRelease)
 	updateClient := NewClient(config.Roster)
 	timeClient := timestamp.NewClient()
 	for i, dr := range drs {
 		pol := dr.Policy
-		log.Lvl1("Building", pol.Name, pol.Version)
+		log.Lvl1("Building at", dr.Snapshot, pol.Name, pol.Version)
 		// Verify if it's the first version of that packet
 		sc, knownPacket := packets[pol.Name]
 		release := &Release{pol, dr.Signatures, false}
@@ -108,6 +109,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			upr, _ := service.UpdatePackage(nil,
 				&UpdatePackage{sc, release})
 			packets[pol.Name] = upr.(*UpdatePackageRet).SwupChain
+			releases[pol.Name] = dr
 		} else {
 			// Create the skipchain, will build
 			cp, err := service.CreatePackage(nil,
@@ -122,6 +124,7 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 			packets[pol.Name] = cp.(*CreatePackageRet).SwupChain
 			// suppose the client has the first packet
 			latest[pol.Name] = packets[pol.Name].Data.Hash
+			releases[pol.Name] = dr
 		}
 		round.Record()
 		if dr.Time.Sub(now) >= updateFrequency || i == len(drs)-1 {
@@ -141,9 +144,11 @@ func (e *randClientSimulation) Run(config *sda.SimulationConfig) error {
 				updates := getUpdate(lbr.Updates, v)
 				if updates != nil {
 					latest[k] = updates[len(updates)-1].Hash
-					download := monitor.NewSingleMeasure("download_binary", float64(dr.BinariesSize))
+					rel := releases[k]
+					download := monitor.NewSingleMeasure("download_binary", float64(rel.BinariesSize))
 					download.Record()
-					log.LLvl3("Updated package", k, v)
+					log.LLvl3("Updated package ", k, rel.Policy.Version,
+						rel.BinariesSize)
 				}
 			}
 			log.Lvl2("Client update + verification done.")
