@@ -1,7 +1,6 @@
 package skipchain
 
 import (
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
 )
@@ -26,7 +25,6 @@ func init() {
 		&Service{},
 	}
 	for _, m := range msgs {
-		log.Printf("Registering %#v", m)
 		network.RegisterPacketType(m)
 	}
 }

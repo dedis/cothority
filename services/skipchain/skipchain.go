@@ -518,6 +518,5 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 			log.Fatal("Registration error for msg", msg, err)
 		}
 	}
-	log.Print("started")
 	return s
 }
