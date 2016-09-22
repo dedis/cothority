@@ -3,8 +3,11 @@ package identity
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/dedis/cothority/crypto"
@@ -17,7 +20,16 @@ type jsonID struct {
 	service *Service
 }
 
-func NewJsonID(s *Service, address string) {
+func NewJsonID(s *Service, addr string) error {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return err
+	}
+	portNbr, err := strconv.Atoi(port)
+	if err != nil {
+		return err
+	}
+	address := fmt.Sprintf("%s:%d", host, portNbr+1)
 	jid := &jsonID{
 		address: address,
 		service: s,
@@ -32,6 +44,7 @@ func NewJsonID(s *Service, address string) {
 	go func() {
 		http.ListenAndServe(address, server)
 	}()
+	return nil
 }
 
 const (
@@ -217,8 +230,12 @@ func (jid *jsonID) pv(w http.ResponseWriter, r *http.Request) {
 		Signature: sig}
 
 	if msg, err := jid.service.ProposeVote(nil, &pv); err == nil {
-		_ = msg.(*ProposeVoteReply)
-		w.Write([]byte("success"))
+		if msg != nil {
+			_ = msg.(*ProposeVoteReply)
+			w.Write([]byte("success"))
+		} else {
+			w.Write([]byte("threshold not reached"))
+		}
 	} else {
 		w.WriteHeader(cothorityFailure)
 	}

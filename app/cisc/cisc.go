@@ -8,7 +8,9 @@ holds the skipchain and answers to requests from the cisc-binary.
 package main
 
 import (
+	"net"
 	"os"
+	"strconv"
 
 	"encoding/base64"
 	"encoding/hex"
@@ -144,7 +146,17 @@ func idQrCode(c *cli.Context) error {
 		// TODO print roster
 	} else {
 		id64 := base64.StdEncoding.EncodeToString([]byte(cfg.ID))
-		jqr := jsonQR{ID: id64, Host: "192.168.192.17", Port: "2000"}
+		host, port, err := net.SplitHostPort(cfg.Identity.Cothority.List[0].Addresses[0])
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		portNbr, err := strconv.Atoi(port)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		jqr := jsonQR{ID: id64, Host: host, Port: strconv.Itoa(portNbr + 1)}
 		enc, _ := json.Marshal(jqr)
 
 		qr, _ := qrgo.NewQR(string(enc))
