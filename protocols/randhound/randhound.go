@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"time"
 
@@ -32,6 +33,13 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	rh := &RandHound{
 		TreeNodeInstance: node,
 	}
+
+	rh.Byzantine = make(map[int]int)
+	rh.Byzantine[1] = 0
+	rh.Byzantine[2] = 0
+	rh.Byzantine[3] = 0
+	//rh.Byzantine[4] = 0
+	//rh.Byzantine[5] = 0
 
 	// Setup message handlers
 	h := []interface{}{
@@ -68,13 +76,6 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 
 	rh.Done = make(chan bool, 1)
 	rh.SecretReady = false
-
-	rh.Byzantine = make(map[int]int)
-	//rh.Byzantine[1] = 0
-	//rh.Byzantine[2] = 0
-	//rh.Byzantine[3] = 0
-	//rh.Byzantine[4] = 0
-	//rh.Byzantine[5] = 0
 
 	return nil
 }
@@ -188,7 +189,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 	defer rh.mutex.Unlock()
 
 	if !rh.SecretReady {
-		return nil, nil, errors.New("Secret not (yet) recoverable")
+		return nil, nil, errors.New("Secret not recoverable")
 	}
 
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
@@ -322,10 +323,11 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			var encPos []int
 			var encShare []abstract.Point
 			var encProof []ProofCore
+			var X []abstract.Point
+
 			var decPos []int
 			var decShare []abstract.Point
 			var decProof []ProofCore
-			var X []abstract.Point
 
 			// All R1 messages of the chosen secrets should be there
 			if _, ok := t.R1s[src]; !ok {
@@ -360,7 +362,9 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				}
 			}
 
-			// Remove encrypted shares that do not have a corresponding decrypted shares
+			log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v", encPos, decPos)
+
+			// Remove encrypted shares that do not have a corresponding decrypted share
 			j := 0
 			for j < len(decPos) {
 				if encPos[j] != decPos[j] {
@@ -373,11 +377,11 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 					j++
 				}
 			}
+			log.Lvlf1("Env vs Dec (Post-Sync): %v %v", encPos, decPos)
 
 			// XXX: sync up encPos, decPos etc.
 
-			log.Lvlf1("Env vs Dec: %v %v", len(encShare), len(decShare))
-			log.Lvlf1("Env vs Dec: %v %v", encPos, decPos)
+			//log.Lvlf1("Env vs Dec: %v %v", len(encShare), len(decShare))
 
 			pvss := NewPVSS(suite, H, t.Threshold[i])
 
@@ -392,12 +396,11 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				return err
 			}
-			_ = goodEnc
 			_ = badEnc
 
 			log.Lvlf1("Enc: %v %v", goodEnc, badEnc)
 
-			// XXX: remove bad values from encShare, decShare and decProof!
+			// Remove bad values
 			for i := len(badEnc) - 1; i >= 0; i-- {
 				j := badEnc[i]
 				encShare = append(encShare[:j], encShare[j+1:]...)
@@ -410,12 +413,12 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				return err
 			}
-			_ = goodDec
 			_ = badDec
 
-			// XXX: remove bad shares from decShare
+			// Remove bad shares
 			for i := len(badDec) - 1; i >= 0; i-- {
 				j := badDec[i]
+				decPos = append(decPos[:j], decPos[j+1:]...)
 				decShare = append(decShare[:j], decShare[j+1:]...)
 			}
 
@@ -664,7 +667,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 				// XXX: simulate bad data
 				if _, ok := rh.Byzantine[server.ServerIdentityIdx]; ok {
-					bad := []int{1}
+					bad := []int{0, 3}
 					for _, b := range bad {
 						encShare[b].Val = rh.Suite().Point().Null()
 						log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[b].Source, encShare[b].Target, encShare[b].Pos)
@@ -699,7 +702,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 func (rh *RandHound) handleI2(i2 WI2) error {
 
 	msg := &i2.I2
-	//log.Lvlf1("RandHound - I2: %v\n", rh.index())
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
@@ -735,16 +737,10 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		return err
 	}
 
-	if len(bad) != 0 {
-		log.Lvlf1("I2 - bad: %v", bad)
-		log.Lvlf1("I2 - encShare: %v", encShare)
-	}
-
 	// Remove bad shares
 	for i := len(bad) - 1; i >= 0; i-- {
 		j := bad[i]
 		encShare = append(encShare[:j], encShare[j+1:]...)
-		log.Lvlf1("I2 - encShare: %v", encShare)
 	}
 
 	// Decrypt shares
@@ -765,11 +761,17 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	// XXX: simulate bad decryption share
-	//if rh.Index() == 1 {
-	//	msg.EncShare[1] = rh.Suite().Point().Null()
-	//}
+	if _, ok := rh.Byzantine[rh.Index()]; ok {
+		for i := 0; i < len(share); i++ {
+			if rand.Intn(2) == 1 {
+				share[i].Val = rh.Suite().Point().Null()
+				log.Lvlf1("I2 - bad dec share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
 
-	//log.Lvlf1("I2: %v %v %v %v %v", rh.Index(), good, bad, len(decShare), len(decProof))
+			} else {
+				log.Lvlf1("I2 - non bad share")
+			}
+		}
+	}
 
 	r2 := &R2{
 		HI2:      hi2,
@@ -825,7 +827,6 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		X[i] = r2.ServerIdentity.Public
 		encShare[i] = rh.R1s[src].EncShare[pos].Val
 		decShare[i] = msg.DecShare[i].Val
-		//log.Lvlf1("pos: %v; %v %v %v", pos, msg.DecShare[i].Source, msg.DecShare[i].Target, msg.DecShare[i].Pos)
 	}
 
 	// Init PVSS and verify shares
@@ -837,8 +838,6 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 	_ = bad
 	_ = good
-
-	//log.Lvlf1("R2: %v %v %v", idx, good, bad)
 
 	// Record valid decrypted shares per secret/server
 	for i := 0; i < len(good); i++ {
@@ -860,6 +859,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	if len(rh.R2s) == rh.Nodes-1 && !proceed {
+		rh.Done <- true
 		return errors.New("Some secrets are not reconstructable")
 	}
 
