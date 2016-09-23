@@ -21,6 +21,8 @@ import (
 
 	"strings"
 
+	"sort"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
@@ -46,6 +48,8 @@ type MiniNet struct {
 	sshMininet chan string
 	// Whether the simulation is started
 	started bool
+	// RC-configuration
+	config string
 
 	// ProxyAddress : the proxy will redirect every traffic it
 	// receives to this address
@@ -184,6 +188,7 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 		return err
 	}
 	simulConfig.Config = string(rc.Toml())
+	m.config = simulConfig.Config
 	log.Lvl3("Saving configuration")
 	simulConfig.Save(m.buildDir)
 
@@ -238,7 +243,9 @@ func (m *MiniNet) Start(args ...string) error {
 		}
 	}
 	go func() {
-		log.Lvl3("Starting simulation over mininet")
+		config := strings.Split(m.config, "\n")
+		sort.Strings(config)
+		log.Lvlf1("Starting simulation %s over mininet", strings.Join(config, " :: "))
 		err := SSHRunStdout(m.Login, m.External, "cd mininet_run; ./start.py list go")
 		if err != nil {
 			log.Lvl3(err)
