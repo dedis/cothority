@@ -510,9 +510,8 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	//}
 
 	r1 := &R1{
-		HI1:      hi1,
-		EncShare: share,
-		//EncProof:   encProof,
+		HI1:        hi1,
+		EncShare:   share,
 		CommitPoly: pb,
 	}
 
@@ -612,7 +611,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		}
 	}
 
-	// Proceed, if there are enough good secrets and we did not make a commitment before
+	// Proceed, if there are enough good secrets
 	if len(goodSecret) == rh.groups {
 
 		// Reset secret for the next phase (see handleR2)
@@ -655,13 +654,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				// shares, proofs, and polynomial commits intended for the
 				// target server
 				var encShare []Share
-				//var encProof []ProofCore
 				var polyCommit []abstract.Point
 				for _, k := range rh.chosenSecret[i] {
 					r1 := rh.r1s[k]
 					pc := rh.polyCommit[k]
 					encShare = append(encShare, r1.EncShare[j])
-					//encProof = append(encProof, r1.EncProof[j])
 					polyCommit = append(polyCommit, pc[j])
 				}
 
@@ -683,8 +680,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					SID:          rh.sid,
 					ChosenSecret: chosenSecret,
 					EncShare:     encShare,
-					//EncProof:     encProof,
-					PolyCommit: polyCommit,
+					PolyCommit:   polyCommit,
 				}
 
 				if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
@@ -747,7 +743,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		encShare = append(encShare[:j], encShare[j+1:]...)
 	}
 
-	// Decrypt shares
+	// Decrypt good shares
 	decShare, decProof, err := pvss.Reveal(rh.Private(), encShare)
 	if err != nil {
 		return err
@@ -781,7 +777,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	r2 := &R2{
 		HI2:      hi2,
 		DecShare: share,
-		//DecProof: decProof,
 	}
 
 	// Sign R2 and store signature in R2.Sig
