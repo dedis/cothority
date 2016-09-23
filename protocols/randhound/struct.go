@@ -54,6 +54,7 @@ type Share struct {
 	Target int            // Target server index
 	Pos    int            // Share position
 	Val    abstract.Point // Share value
+	Proof  ProofCore      // ZK-verification proof
 }
 
 // Transcript ...
@@ -90,7 +91,6 @@ type R1 struct {
 	Sig        crypto.SchnorrSig // Schnorr signature
 	HI1        []byte            // Hash of I1
 	EncShare   []Share           // Encrypted shares
-	EncProof   []ProofCore       // Encryption consistency proofs
 	CommitPoly []byte            // Marshalled commitment polynomial
 }
 
@@ -100,7 +100,6 @@ type I2 struct {
 	SID          []byte            // Session identifier
 	ChosenSecret [][]uint32        // Chosen secrets
 	EncShare     []Share           // Encrypted shares
-	EncProof     []ProofCore       // Encryption consistency proofs
 	PolyCommit   []abstract.Point  // Polynomial commitments
 }
 
@@ -109,7 +108,6 @@ type R2 struct {
 	Sig      crypto.SchnorrSig // Schnorr signature
 	HI2      []byte            // Hash of I2
 	DecShare []Share           // Decrypted shares
-	DecProof []ProofCore       // Decryption consistency proofs
 }
 
 // WI1 is a SDA-wrapper around I1

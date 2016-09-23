@@ -344,7 +344,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				poly = append(poly, r1.CommitPoly)
 				encPos = append(encPos, r1.EncShare[j].Pos)
 				encShare = append(encShare, r1.EncShare[j].Val)
-				encProof = append(encProof, r1.EncProof[j])
+				encProof = append(encProof, r1.EncShare[j].Proof)
 				X = append(X, t.Key[i][r1.EncShare[j].Pos])
 
 				// Gather data on decrypted shares
@@ -353,7 +353,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 					if r2.DecShare[k].Source == src {
 						decPos = append(decPos, r2.DecShare[k].Pos)
 						decShare = append(decShare, r2.DecShare[k].Val)
-						decProof = append(decProof, r2.DecProof[k])
+						decProof = append(decProof, r2.DecShare[k].Proof)
 					}
 				}
 			}
@@ -492,6 +492,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 			Target: int(msg.Group[i]),
 			Pos:    idxShare[i],
 			Val:    encShare[i],
+			Proof:  encProof[i],
 		}
 	}
 
@@ -509,9 +510,9 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	//}
 
 	r1 := &R1{
-		HI1:        hi1,
-		EncShare:   share,
-		EncProof:   encProof,
+		HI1:      hi1,
+		EncShare: share,
+		//EncProof:   encProof,
 		CommitPoly: pb,
 	}
 
@@ -552,10 +553,12 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	poly := make([][]byte, n)
 	index := make([]int, n)
 	encShare := make([]abstract.Point, n)
+	encProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		poly[i] = msg.CommitPoly
 		index[i] = msg.EncShare[i].Pos
 		encShare[i] = msg.EncShare[i].Val
+		encProof[i] = msg.EncShare[i].Proof
 	}
 
 	// Init PVSS and recover polynomial commits
@@ -575,7 +578,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	}
 
 	// Verify encrypted shares
-	good, _, err := pvss.Verify(H, rh.key[grp], polyCommit, encShare, msg.EncProof)
+	good, _, err := pvss.Verify(H, rh.key[grp], polyCommit, encShare, encProof)
 	if err != nil {
 		return err
 	}
@@ -652,13 +655,13 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				// shares, proofs, and polynomial commits intended for the
 				// target server
 				var encShare []Share
-				var encProof []ProofCore
+				//var encProof []ProofCore
 				var polyCommit []abstract.Point
 				for _, k := range rh.chosenSecret[i] {
 					r1 := rh.r1s[k]
 					pc := rh.polyCommit[k]
 					encShare = append(encShare, r1.EncShare[j])
-					encProof = append(encProof, r1.EncProof[j])
+					//encProof = append(encProof, r1.EncProof[j])
 					polyCommit = append(polyCommit, pc[j])
 				}
 
@@ -680,8 +683,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					SID:          rh.sid,
 					ChosenSecret: chosenSecret,
 					EncShare:     encShare,
-					EncProof:     encProof,
-					PolyCommit:   polyCommit,
+					//EncProof:     encProof,
+					PolyCommit: polyCommit,
 				}
 
 				if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
@@ -720,9 +723,11 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	n := len(msg.EncShare)
 	X := make([]abstract.Point, n)
 	encShare := make([]abstract.Point, n)
+	encProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		X[i] = rh.Public()
 		encShare[i] = msg.EncShare[i].Val
+		encProof[i] = msg.EncShare[i].Proof
 	}
 
 	// Init PVSS and verify encryption consistency proof
@@ -731,7 +736,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	//log.Lvlf1("%v %v %v", msg.PolyCommit, msg.EncShare, msg.EncProof)
 
-	good, bad, err := pvss.Verify(H, X, msg.PolyCommit, encShare, msg.EncProof)
+	good, bad, err := pvss.Verify(H, X, msg.PolyCommit, encShare, encProof)
 	if err != nil {
 		return err
 	}
@@ -756,6 +761,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 			Target: msg.EncShare[j].Target,
 			Pos:    msg.EncShare[j].Pos,
 			Val:    decShare[i],
+			Proof:  decProof[i],
 		}
 	}
 
@@ -775,7 +781,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	r2 := &R2{
 		HI2:      hi2,
 		DecShare: share,
-		DecProof: decProof,
+		//DecProof: decProof,
 	}
 
 	// Sign R2 and store signature in R2.Sig
@@ -821,17 +827,19 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	X := make([]abstract.Point, n)
 	encShare := make([]abstract.Point, n)
 	decShare := make([]abstract.Point, n)
+	decProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		src := msg.DecShare[i].Source
 		X[i] = r2.ServerIdentity.Public
 		encShare[i] = rh.r1s[src].EncShare[pos].Val
 		decShare[i] = msg.DecShare[i].Val
+		decProof[i] = msg.DecShare[i].Proof
 	}
 
 	// Init PVSS and verify shares
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
 	pvss := NewPVSS(rh.Suite(), H, rh.threshold[grp])
-	good, bad, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, msg.DecProof)
+	good, bad, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, decProof)
 	if err != nil {
 		return err
 	}
