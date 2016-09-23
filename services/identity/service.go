@@ -18,6 +18,12 @@ import (
 
 	"reflect"
 
+	"io/ioutil"
+
+	"os"
+
+	"fmt"
+
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -34,19 +40,26 @@ var identityService sda.ServiceID
 func init() {
 	sda.RegisterNewService(ServiceName, newIdentityService)
 	identityService = sda.ServiceFactory.ServiceID(ServiceName)
+	network.RegisterPacketType(&StorageMap{})
+	network.RegisterPacketType(&Storage{})
 }
 
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	identities      map[string]*storage
+	*StorageMap
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
 	path            string
 }
 
-// Storage stores one identity together with the skipblocks
-type storage struct {
+// StorageMap holds the map to the storages so it can be marshaled.
+type StorageMap struct {
+	Identities map[string]*Storage
+}
+
+// Storage stores one identity together with the skipblocks.
+type Storage struct {
 	sync.Mutex
 	Latest   *Config
 	Proposed *Config
@@ -55,11 +68,30 @@ type storage struct {
 	Data     *skipchain.SkipBlock
 }
 
-// AddIdentity will register a new SkipChain and add it to our list of
-// managed identities
-func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (network.Body, error) {
-	log.Lvlf2("Adding identity %+v", *ai)
-	ids := &storage{
+// NewProtocol is called by the Overlay when a new protocol request comes in.
+func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", conf)
+	switch tn.ProtocolName() {
+	case "Propagate":
+		pi, err := manage.NewPropagateProtocol(tn)
+		if err != nil {
+			return nil, err
+		}
+		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
+		return pi, err
+	}
+	return nil, nil
+}
+
+/*
+ * API messages
+ */
+
+// CreateIdentity will register a new SkipChain and add it to our list of
+// managed identities.
+func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
+	log.Lvlf3("%s Creating new identity with config %+v", s, ai.Config)
+	ids := &Storage{
 		Latest: ai.Config,
 	}
 	log.Lvl3("Creating Root-skipchain")
@@ -85,8 +117,10 @@ func (s *Service) AddIdentity(si *network.ServerIdentity, ai *AddIdentity) (netw
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
+	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
+	s.save()
 
-	return &AddIdentityReply{
+	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
 	}, nil
@@ -100,15 +134,16 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ConfigUpdate{
-		ID:          cu.ID,
-		AccountList: sid.Latest,
+	log.Lvl3(s, "Sending config-update")
+	return &ConfigUpdateReply{
+		Config: sid.Latest,
 	}, nil
 }
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -125,17 +160,17 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 	return nil, nil
 }
 
-// ProposeFetch returns an eventual config-proposition
-func (s *Service) ProposeFetch(si *network.ServerIdentity, cnc *ProposeFetch) (network.Body, error) {
+// ProposeUpdate returns an eventual config-proposition
+func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
+	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ProposeFetch{
-		ID:          cnc.ID,
-		AccountList: sid.Proposed,
+	return &ProposeUpdateReply{
+		Propose: sid.Proposed,
 	}, nil
 }
 
@@ -143,35 +178,45 @@ func (s *Service) ProposeFetch(si *network.ServerIdentity, cnc *ProposeFetch) (n
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
 func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
-	sid.Lock()
-	log.Lvl3("Voting on", sid.Proposed.Device)
-	owner, ok := sid.Latest.Device[v.Signer]
-	if !ok {
-		return nil, errors.New("Didn't find signer")
-	}
-	if sid.Proposed == nil {
-		return nil, errors.New("No proposed block")
-	}
-	hash, err := sid.Proposed.Hash()
-	if err != nil {
-		return nil, errors.New("Couldn't get hash")
-	}
-	if _, exists := sid.Votes[v.Signer]; exists {
-		return nil, errors.New("Already voted for that block")
-	}
-	log.Lvl3(v.Signer, "voted", v.Signature)
-	if v.Signature != nil {
-		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
-		if err != nil {
-			return nil, errors.New("Wrong signature: " + err.Error())
+
+	// Putting this in a function because of the lock which needs to be held
+	// over all calls that might return an error.
+	err := func() error {
+		sid.Lock()
+		defer sid.Unlock()
+		log.Lvl3("Voting on", sid.Proposed.Device)
+		owner, ok := sid.Latest.Device[v.Signer]
+		if !ok {
+			return errors.New("Didn't find signer")
 		}
+		if sid.Proposed == nil {
+			return errors.New("No proposed block")
+		}
+		hash, err := sid.Proposed.Hash()
+		if err != nil {
+			return errors.New("Couldn't get hash")
+		}
+		if _, exists := sid.Votes[v.Signer]; exists {
+			return errors.New("Already voted for that block")
+		}
+		log.Lvl3(v.Signer, "voted", v.Signature)
+		if v.Signature != nil {
+			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+			if err != nil {
+				return errors.New("Wrong signature: " + err.Error())
+			}
+		}
+		return nil
+	}()
+	if err != nil {
+		return nil, err
 	}
-	sid.Unlock()
 
 	// Propagate the vote
 	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, 1000, s.Propagate)
@@ -201,25 +246,15 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		if err != nil {
 			return nil, err
 		}
-		return sid.Data, nil
+		s.save()
+		return &ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
 }
 
-// NewProtocol is called by the Overlay when a new protocol request comes in.
-func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", conf)
-	switch tn.ProtocolName() {
-	case "Propagate":
-		pi, err := manage.NewPropagateProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
-		return pi, err
-	}
-	return nil, nil
-}
+/*
+ * Internal messages
+ */
 
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.Body) {
@@ -240,7 +275,7 @@ func (s *Service) Propagate(msg network.Body) {
 			return
 		}
 		log.Lvl3("Storing identity in", s)
-		s.setIdentityStorage(id, pi.storage)
+		s.setIdentityStorage(id, pi.Storage)
 		return
 	}
 
@@ -281,10 +316,10 @@ func (s *Service) Propagate(msg network.Body) {
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id ID) *storage {
+func (s *Service) getIdentityStorage(id ID) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
-	is, ok := s.identities[string(id)]
+	is, ok := s.Identities[string(id)]
 	if !ok {
 		return nil
 	}
@@ -292,22 +327,62 @@ func (s *Service) getIdentityStorage(id ID) *storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id ID, is *storage) {
+func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
-	s.identities[string(id)] = is
+	s.Identities[string(id)] = is
+}
+
+// saves the actual identity
+func (s *Service) save() {
+	log.Lvl3("Saving service")
+	b, err := network.MarshalRegisteredType(s.StorageMap)
+	if err != nil {
+		log.Error("Couldn't marshal service:", err)
+	} else {
+		err = ioutil.WriteFile(s.path+"/identity.bin", b, 0660)
+		if err != nil {
+			log.Error("Couldn't save file:", err)
+		}
+	}
+}
+
+func (s *Service) clearIdentities() {
+	s.Identities = make(map[string]*Storage)
+}
+
+// Tries to load the configuration and updates if a configuration
+// is found, else it returns an error.
+func (s *Service) tryLoad() error {
+	configFile := s.path + "/identity.bin"
+	b, err := ioutil.ReadFile(configFile)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	}
+	if len(b) > 0 {
+		_, msg, err := network.UnmarshalRegistered(b)
+		if err != nil {
+			return fmt.Errorf("Couldn't unmarshal: %s", err)
+		}
+		log.Lvl3("Successfully loaded")
+		s.StorageMap = msg.(*StorageMap)
+	}
+	return nil
 }
 
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		identities:       make(map[string]*storage),
+		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 		path:             path,
 	}
+	if err := s.tryLoad(); err != nil {
+		log.Error(err)
+	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.AddIdentity, s.ProposeFetch, s.ConfigUpdate} {
+		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}

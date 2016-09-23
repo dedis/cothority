@@ -93,28 +93,51 @@ func (s *SSHConfig) AddHost(h *SSHHost) {
 }
 
 // DelHost searches for the host and removes it
-func (s *SSHConfig) DelHost(name string) {
+func (s *SSHConfig) DelHost(alias string) {
 	var hosts []*SSHHost
 	for _, h := range s.Host {
-		if h.Name != name {
+		if h.Alias != alias {
 			hosts = append(hosts, h)
 		}
 	}
 	s.Host = hosts
 }
 
+// SearchHost searches for an alias in the hosts and returns the
+// corresponding host or nil if no host is found.
+func (s *SSHConfig) SearchHost(alias string) *SSHHost {
+	for _, h := range s.Host {
+		if h.Alias == alias {
+			return h
+		}
+	}
+	return nil
+}
+
+// ConvertAliasToHostname takes an alias or a hostname and returns the
+// corresponding hostname if one is found in the configuration-file, or
+// the input-string is no alias is found in the configuration-file.
+func (s *SSHConfig) ConvertAliasToHostname(alias string) string {
+	if host := s.SearchHost(alias); host != nil {
+		if hostName := host.GetConfig("HostName"); hostName != "" {
+			return hostName
+		}
+	}
+	return alias
+}
+
 // SSHHost is one part of the config-file. It starts with an eventual comment
 // followed by the name and the configuration.
 type SSHHost struct {
 	Comment []string
-	Name    string
+	Alias   string
 	Config  []string
 }
 
 // NewSSHHost returns an SSHHost from a name, comment and configuration.
 func NewSSHHost(name string, conf ...string) *SSHHost {
 	return &SSHHost{
-		Name:   name,
+		Alias:  name,
 		Config: conf,
 	}
 }
@@ -143,13 +166,26 @@ func (s *SSHHost) AddConfigs(cfgs ...string) {
 	}
 }
 
+// GetConfig returns the value of the configuration-line starting with
+// name. If the configuration-value with name is not found, an empty
+// string is returned.
+func (s *SSHHost) GetConfig(name string) string {
+	for _, cfg := range s.Config {
+		cfgName := name + " "
+		if strings.HasPrefix(cfg, cfgName) {
+			return strings.TrimPrefix(cfg, cfgName)
+		}
+	}
+	return ""
+}
+
 // String returns one part of an ssh-configuration.
 func (s *SSHHost) String() string {
 	var ret []string
 	for _, c := range s.Comment {
 		ret = append(ret, "# "+c)
 	}
-	ret = append(ret, "Host "+s.Name)
+	ret = append(ret, "Host "+s.Alias)
 	for _, c := range s.Config {
 		ret = append(ret, "\t"+c)
 	}

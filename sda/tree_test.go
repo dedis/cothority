@@ -1,7 +1,6 @@
 package sda
 
 import (
-	"math/rand"
 	"net"
 	"strconv"
 	"testing"
@@ -136,16 +135,16 @@ func TestUnMarshalTree(t *testing.T) {
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
-	tree_binary, err := tree.Marshal()
+	treeBinary, err := tree.Marshal()
 
 	if err != nil {
 		t.Fatal("Error while marshaling:", err)
 	}
-	if len(tree_binary) == 0 {
+	if len(treeBinary) == 0 {
 		t.Fatal("Marshaled tree is empty")
 	}
 
-	tree2, err := NewTreeFromMarshal(tree_binary, peerList)
+	tree2, err := NewTreeFromMarshal(treeBinary, peerList)
 	if err != nil {
 		t.Fatal("Error while unmarshaling:", err)
 	}
@@ -188,23 +187,23 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 	tree := peerList.GenerateNaryTree(3)
 
 	ln := tree.List()
-	randomNode := ln[rand.Intn(len(ln))]
-	var idx int
-	for i, e := range peerList.List {
-		if e.Equal(randomNode.ServerIdentity) {
-			idx = i
-			break
+	for _, node := range ln {
+		idx := -1
+		for i, e := range peerList.List {
+			if e.Equal(node.ServerIdentity) {
+				idx = i
+				break
+			}
+		}
+
+		if idx == -1 {
+			t.Fatal("Could not find the entity in the node")
+		}
+
+		if node.ServerIdentityIdx != idx {
+			t.Fatal("Index of entity do not correlate")
 		}
 	}
-
-	if idx == 0 {
-		t.Fatal("Could not find the entity in the node")
-	}
-
-	if randomNode.ServerIdentityIdx != idx {
-		t.Fatal("Index of entity do not correlate")
-	}
-
 }
 
 func TestNaryTree(t *testing.T) {
@@ -330,23 +329,23 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 	// manual check for 2nd level of tree (left part)
 	lchild := tree.Root.Children[0]
 	n2, n4, n5 := lchild.ServerIdentity, lchild.Children[0].ServerIdentity, lchild.Children[1].ServerIdentity
-	agg_left := tSuite.Point().Add(n2.Public, n4.Public)
-	agg_left = agg_left.Add(agg_left, n5.Public)
-	if !tree.Root.Children[0].PublicAggregateSubTree.Equal(agg_left) {
+	aggLeft := tSuite.Point().Add(n2.Public, n4.Public)
+	aggLeft = aggLeft.Add(aggLeft, n5.Public)
+	if !tree.Root.Children[0].PublicAggregateSubTree.Equal(aggLeft) {
 		t.Fatal("Aggregate is not correct for the left part")
 	}
 
 	// right part
 	rchild := tree.Root.Children[1]
 	n3, n4, n5 := rchild.ServerIdentity, rchild.Children[0].ServerIdentity, rchild.Children[1].ServerIdentity
-	agg_right := tSuite.Point().Add(n3.Public, n4.Public)
-	agg_right = agg_right.Add(agg_right, n5.Public)
-	if !tree.Root.Children[1].PublicAggregateSubTree.Equal(agg_right) {
+	aggRight := tSuite.Point().Add(n3.Public, n4.Public)
+	aggRight = aggRight.Add(aggRight, n5.Public)
+	if !tree.Root.Children[1].PublicAggregateSubTree.Equal(aggRight) {
 		t.Fatal("Aggregate is not correct for the right part")
 	}
 
 	// root part
-	agg := tSuite.Point().Add(agg_right, agg_left)
+	agg := tSuite.Point().Add(aggRight, aggLeft)
 	agg = agg.Add(agg, tree.Root.ServerIdentity.Public)
 	if !tree.Root.PublicAggregateSubTree.Equal(agg) {
 		t.Fatal("Aggregate not correct for root")

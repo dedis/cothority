@@ -176,6 +176,17 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	return nil
 }
 
+// RegisterMessages takes a vararg of messages to register and returns
+// the first error encountered or nil if everything was OK.
+func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
+	for _, pr := range procs {
+		if err := p.RegisterMessage(pr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Process implements the Processor interface and dispatches ClientRequest message
 // and InterServiceMessage
 func (p *ServiceProcessor) Process(packet *network.Packet) {

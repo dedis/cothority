@@ -28,8 +28,6 @@ type basicMessage struct {
 var basicMessageType network.PacketTypeID
 
 func TestBlockingDispatcher(t *testing.T) {
-	defer log.AfterTest(t)
-
 	dispatcher := NewBlockingDispatcher()
 	processor := &basicProcessor{make(chan network.Packet, 1)}
 
@@ -49,7 +47,6 @@ func TestBlockingDispatcher(t *testing.T) {
 }
 
 func TestProcessorHost(t *testing.T) {
-	defer log.AfterTest(t)
 	h1 := newHostMock(network.Suite, "127.0.0.1:0")
 
 	proc := &basicProcessor{make(chan network.Packet, 1)}
@@ -103,6 +100,16 @@ func TestProcessor_AddMessage(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
 		}
+	}
+}
+
+func TestProcessor_RegisterMessages(t *testing.T) {
+	h1 := newHostMock(network.Suite, "127.0.0.1")
+	p := NewServiceProcessor(&Context{host: h1})
+	log.ErrFatal(p.RegisterMessages(procMsg, procMsg2))
+	err := p.RegisterMessages(procMsg, procMsgWrong1)
+	if err == nil {
+		t.Fatal("Registered wrong message and didn't get an error")
 	}
 }
 
@@ -172,6 +179,14 @@ func procMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
 		return nil, errors.New("6 * 9 != 42")
+	}
+	return msg, nil
+}
+
+func procMsg2(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
+	// Return an error for testing
+	if msg.I != 42 {
+		return nil, errors.New("Please give meaning of life.")
 	}
 	return msg, nil
 }

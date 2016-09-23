@@ -14,7 +14,7 @@ test_fmt:
 test_lint:
 	@echo Checking linting of files
 	@{ \
-		go get github.com/golang/lint/golint; \
+		go get -u github.com/golang/lint/golint; \
 		exclude="protocols/byzcoin|_test.go"; \
 		lintfiles=$$( golint ./... | egrep -v "($$exclude)" ); \
 		if [ -n "$$lintfiles" ]; then \
@@ -24,20 +24,21 @@ test_lint:
 		fi \
 	}
 
-# You can use `test_multi` to run any test or part of cothority
+# You can use `test_playground` to run any test or part of cothority
 # for more than once in Travis. Change `make test` in .travis.yml
-# to `make test_multi`.
-test_multi:
-	cd network; \
+# to `make test_playground`.
+test_playground:
+	cd services/skipchain; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -run Stress; \
-	done
+	  go test -v -race || exit 1 ; \
+	done;
 
 test_verbose:
 	go test -v -race -short ./...
 
+# use test_verbose instead if you want to use this Makefile locally
 test_go:
-	go test -race -short ./...
+	./coveralls.sh
 
 test: test_fmt test_lint test_go
 

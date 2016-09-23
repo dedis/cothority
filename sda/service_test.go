@@ -466,8 +466,8 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	nbrNodes := 2
-	nbrParallel := 2
+	nbrNodes := 4
+	nbrParallel := 20
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -501,6 +501,18 @@ func TestClient_Parallel(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
+}
+
+func TestServiceManager_Service(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	hosts, _, _ := local.GenTree(2, false, false, false)
+
+	services := hosts[0].serviceManager.AvailableServices()
+	assert.NotEqual(t, 0, len(services), "no services available")
+
+	service := hosts[0].serviceManager.Service("testService")
+	assert.NotNil(t, service, "Didn't find service testService")
 }
 
 // BackForthProtocolForth & Back are messages that go down and up the tree.
@@ -547,6 +559,9 @@ func newBackForthProtocol(tn *TreeNodeInstance) (*BackForthProtocol, error) {
 		return nil, err
 	}
 	err = s.RegisterChannel(&s.backChan)
+	if err != nil {
+		return nil, err
+	}
 	go s.dispatch()
 	return s, nil
 }
@@ -579,7 +594,7 @@ func (sp *BackForthProtocol) dispatch() {
 				}
 				return
 			}
-			// pass the message up
+		// pass the message up
 		case m := <-sp.backChan:
 			msg := m.SimpleMessageBack
 			// call the handler  if we are the root
