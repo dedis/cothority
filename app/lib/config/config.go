@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"strings"
 
 	"os/user"
@@ -287,4 +288,28 @@ func InputYN(def bool, args ...interface{}) bool {
 		defStr = "Ny"
 	}
 	return strings.ToLower(string(Input(defStr, args...)[0])) == "y"
+}
+
+// Copy makes a copy of a local file with the same file-mode-bits set.
+func Copy(dst, src string) error {
+	info, err := os.Stat(dst)
+	if err == nil && info.IsDir() {
+		return Copy(path.Join(dst, path.Base(src)), src)
+	}
+	fSrc, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer fSrc.Close()
+	stat, err := fSrc.Stat()
+	if err != nil {
+		return err
+	}
+	fDst, err := os.OpenFile(dst, os.O_CREATE|os.O_RDWR, stat.Mode())
+	if err != nil {
+		return err
+	}
+	defer fDst.Close()
+	_, err = io.Copy(fDst, fSrc)
+	return err
 }
