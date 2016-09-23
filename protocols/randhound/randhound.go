@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/crypto"
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -216,7 +215,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		log.Lvlf1("Random: %v %v", source, ps)
+		//log.Lvlf1("Random: %v %v", source, ps)
 		rnd = rh.Suite().Point().Add(rnd, ps)
 	}
 
@@ -362,7 +361,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				}
 			}
 
-			log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
+			//log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
 
 			// Remove encrypted shares that do not have a corresponding decrypted share
 			j := 0
@@ -387,7 +386,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				X = X[:l]
 			}
 
-			log.Lvlf1("Env vs Dec (Post-Sync): %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
+			//log.Lvlf1("Env vs Dec (Post-Sync): %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
 
 			pvss := NewPVSS(suite, H, t.Threshold[i])
 
@@ -402,9 +401,10 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				return err
 			}
+			_ = goodEnc
 			_ = badEnc
 
-			log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
+			//log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
 
 			// Remove bad values (XXX: there is still an out of bounds bug in here somewhere)
 			for i := len(badEnc) - 1; i >= 0; i-- {
@@ -420,6 +420,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			if err != nil {
 				return err
 			}
+			_ = goodDec
 			_ = badDec
 
 			// Remove bad shares
@@ -429,7 +430,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				decShare = append(decShare[:j], decShare[j+1:]...)
 			}
 
-			log.Lvlf1("Dec: %v %v", goodDec, badDec)
+			//log.Lvlf1("Dec: %v %v", goodDec, badDec)
 
 			// Recover secret and add it to the collective random point
 			ps, err := pvss.Recover(decPos, decShare, len(t.Group[i]))
@@ -437,7 +438,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				return err
 			}
 			rnd = rh.Suite().Point().Add(rnd, ps)
-			log.Lvlf1("Transcript: %v %v", src, ps)
+			//log.Lvlf1("Transcript: %v %v", src, ps)
 
 		}
 	}
@@ -800,9 +801,9 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	defer rh.mutex.Unlock()
 
 	// If the collective secret is already available, ignore all further incoming messages
-	//if rh.SecretReady {
-	//	return nil
-	//}
+	if rh.SecretReady {
+		return nil
+	}
 
 	// Verify R2 message signature
 	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
