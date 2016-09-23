@@ -1,0 +1,15 @@
+base-files
+base-passwd
+debianutils
+diffutils
+dpkg
+e2fsprogs
+findutils
+grep
+gzip
+hostname
+init-system-helpers
+perl
+sed
+sysvinit
+util-linux

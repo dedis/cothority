@@ -1,0 +1,16 @@
+Simulation = "SwUpCreate"
+Servers = 4
+Bf = 2
+Rounds = 10
+CloseWait = 6000
+Height = 10
+Base = 4
+RunWait = 3600
+Snapshot = "snapshots_limited_6.csv"
+Delay = 50
+Bandwidth = 100
+
+Depth, DockerBuild
+1, true
+3, false
+6, false

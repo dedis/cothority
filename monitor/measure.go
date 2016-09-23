@@ -7,6 +7,10 @@ import (
 	"net"
 	"time"
 
+	"io/ioutil"
+	"strconv"
+	"strings"
+
 	"github.com/dedis/cothority/log"
 )
 
@@ -183,6 +187,59 @@ func (cm *CounterIOMeasure) Record() {
 	// reset counters
 	cm.baseRx = bRx
 	cm.baseTx = bTx
+}
+
+// CounterDockerMeasure is a struct that takes a docker-id and measures
+// system and user time.
+type DockerMeasure struct {
+	name   string
+	docker []string
+	sys    []float64
+	user   []float64
+}
+
+// NewDockerMeasure returns an CounterIOMeasure fresh. The base value are set
+// to the current value of counter.Rx() and counter.Tx()
+func NewDockerMeasure(name string, docker []string) *DockerMeasure {
+	return &DockerMeasure{
+		name:   name,
+		docker: docker,
+	}
+}
+
+func (dm *DockerMeasure) Update() {
+	if len(dm.docker) == 0 {
+		// Search all docker images
+	}
+	for i, d := range dm.docker {
+		cpuFile := "/sys/fs/cgroup/cpuacct/docker/" + d + "/cpuacct.stat"
+		cpu, err := ioutil.ReadFile(cpuFile)
+		log.LLvl3("Getting docker-stats of", nil, cpuFile, cpu)
+		if err == nil {
+			times := strings.Split(string(cpu), "\n")
+			user := strings.TrimPrefix(times[0], "user ")
+			sys := strings.TrimPrefix(times[1], "system ")
+			dm.user[i], err = strconv.ParseFloat(user, 64)
+			if err != nil {
+				log.Error(err)
+			}
+			dm.sys[i], err = strconv.ParseFloat(sys, 64)
+			if err != nil {
+				log.Error(err)
+			}
+			log.LLvl3("Stats are", dm.user[i], dm.sys[i])
+		}
+	}
+}
+
+// Record send the actual number of bytes read and written (**name**_written &
+// **name**_read) and reset the counters.
+func (dm *DockerMeasure) Record() {
+	for i := range dm.docker {
+		dn := dm.name + "_"
+		NewSingleMeasure(dn+"sys", dm.sys[i]).Record()
+		NewSingleMeasure(dn+"user", dm.user[i]).Record()
+	}
 }
 
 // Send transmits the given struct over the network.

@@ -1,7 +1,10 @@
 package skipchain
 
 import (
+	"sync"
+
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/satori/go.uuid"
 )
 
@@ -33,6 +36,21 @@ func init() {
 // deny a SkipBlock.
 type VerifierID uuid.UUID
 
+var verifiers map[VerifierID]bftcosi.VerificationFunction
+var verifiersMutex sync.Mutex
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func VerificationRegistration(v VerifierID, f bftcosi.VerificationFunction) error {
+	verifiersMutex.Lock()
+	if len(verifiers) == 0 {
+		verifiers = map[VerifierID]bftcosi.VerificationFunction{}
+	}
+	verifiers[v] = f
+	verifiersMutex.Unlock()
+	return nil
+}
+
 var (
 	// VerifyNone does only basic syntax checking
 	VerifyNone = VerifierID(uuid.Nil)
@@ -45,6 +63,8 @@ var (
 	// VerifyTimeVault will make sure that a valid TimeVault asks for an
 	// additional SkipBlockData
 	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
+	// VerifySwup will trigger a reproducible build.
+	VerifySwup = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Swup"))
 )
 
 // This file holds all messages that can be sent to the SkipChain,

@@ -1,0 +1,20 @@
+Simulation = "SwUpRandClient"
+Servers = 2
+Bf = 2
+Rounds = 10
+CloseWait = 6000
+RunWait = 3600
+Snapshot = "snapshots_full.csv"
+Depth = 2
+Delay = 0
+Bandwidth = 100
+Base = 4
+Height = 5
+
+Frequency
+1
+8
+32
+64
+128
+256

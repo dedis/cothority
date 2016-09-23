@@ -1,0 +1,15 @@
+Total # of builds:	482
+Range in days:		506
+Average # of builds:
+	Per Day:    	0.9525479481934028
+	Per Month:  	28.576438445802086
+	Per Year:   	10430.40003271776
+Average building time:	5 minutes
+	Per Day:    	4.762739740967014
+	Per Month:  	142.88219222901043
+	Per Year:   	52152.000163588804
+Total bandwidth (B):    1125982118
+Average bandwidth:
+	Per Day:     	2225211.527392867
+	Per Month:     	66756345.821786016
+	Per Year:     	24366066224.951897
