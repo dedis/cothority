@@ -125,7 +125,7 @@ func (m *Monitor) Listen() error {
 				m.listenerLock.Lock()
 				if err := m.listener.Close(); err != nil {
 					log.Error("Couldn't close listener:",
-					err)
+						err)
 				}
 				m.listener = nil
 				finished = true

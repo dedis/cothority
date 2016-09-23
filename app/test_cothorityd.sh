@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
 
-. lib/test/libtest.sh
-. lib/test/cothorityd.sh
 DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=1
 # Debug-level for client
 DBG_CLIENT=1
+# For easier debugging
+STATICDIR=test
+
+. lib/test/libtest.sh
+. lib/test/cothorityd.sh
 
 main(){
     startTest
@@ -26,9 +29,9 @@ testCothorityd(){
     sleep 1
     cp co1/group.toml .
     tail -n 4 co2/group.toml >> group.toml
-    testOK runCosi -g group.toml check
+    testOK runCosi check -g group.toml
     tail -n 4 co3/group.toml >> group.toml
-    testFail runCosi -g group.toml check
+    testFail runCosi check -g group.toml
 }
 
 testBuild(){
@@ -50,10 +53,12 @@ build(){
     mkdir -p $DIR
     cd $DIR
     echo "Building in $DIR"
-    for app in cothorityd cosi; do
+
+    for appdir in $BUILDDIR/cothorityd $GOPATH/src/github.com/dedis/cosi; do
+        app=$(basename $appdir)
         if [ ! -e $app -o "$BUILD" ]; then
-            if ! go build -o $app $BUILDDIR/$app/*.go; then
-                fail "Couldn't build $app"
+            if ! go build -o $app $appdir/*.go; then
+                fail "Couldn't build $appdir"
             fi
         fi
     done

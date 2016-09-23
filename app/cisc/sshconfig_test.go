@@ -74,3 +74,29 @@ func TestSSHConfig_DelHost(t *testing.T) {
 	sc.DelHost("a3")
 	assert.Equal(t, 2, len(sc.Host))
 }
+
+func TestSSHConfig_SearchHost(t *testing.T) {
+	sc := NewSSHConfig(ssh_config)
+	host := sc.SearchHost("alias1")
+	assert.NotNil(t, host)
+	if host.GetConfig("HostName") != "host1" {
+		t.Fatal("Didn't receive correct host")
+	}
+	host = sc.SearchHost("alien1")
+	assert.Nil(t, host, "Shouldn't find alien1")
+}
+
+func TestSSHHost_GetConfig(t *testing.T) {
+	sc := NewSSHConfig(ssh_config)
+	host := sc.SearchHost("alias1")
+	cfg := host.GetConfig("HostName")
+	assert.Equal(t, "host1", cfg)
+	cfg = host.GetConfig("AlienName")
+	assert.Equal(t, "", cfg)
+}
+
+func TestSSHConfig_ConvertAliasToHostname(t *testing.T) {
+	sc := NewSSHConfig(ssh_config)
+	assert.Equal(t, "host1", sc.ConvertAliasToHostname("alias1"))
+	assert.Equal(t, "alien1", sc.ConvertAliasToHostname("alien1"))
+}
