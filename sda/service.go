@@ -465,6 +465,7 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 	return msgs, err
 }
 
+// Rx returns the number of bytes received.
 func (c *Client) Rx() uint64 {
 	if c.host == nil {
 		return 0
@@ -472,6 +473,7 @@ func (c *Client) Rx() uint64 {
 	return c.host.Rx()
 }
 
+// Tx returns the number of bytes sent.
 func (c *Client) Tx() uint64 {
 	if c.host == nil {
 		return 0
