@@ -33,11 +33,11 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		TreeNodeInstance: node,
 	}
 
-	rh.Byzantine = make(map[int]int)
-	rh.Byzantine[1] = 0
-	rh.Byzantine[2] = 0
-	rh.Byzantine[3] = 0
-	rh.Byzantine[4] = 0
+	//rh.Byzantine = make(map[int]int)
+	//rh.Byzantine[1] = 0
+	//rh.Byzantine[2] = 0
+	//rh.Byzantine[3] = 0
+	//rh.Byzantine[4] = 0
 	//rh.Byzantine[5] = 0
 
 	// Setup message handlers
@@ -621,7 +621,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		// Choose secrets that contribute to collective randomness
 		for i := range rh.Server {
 
-			// Randomly remove some secrets so that a threshold of secrets remain
+			// Randomly remove some secrets so that a threshold of secrets remains
 			hs := rh.Suite().Hash().Size()
 			rand := make([]byte, hs)
 			random.Stream.XORKeyStream(rand, rand)

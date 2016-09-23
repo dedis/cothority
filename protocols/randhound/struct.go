@@ -45,7 +45,7 @@ type RandHound struct {
 	Done        chan bool
 	SecretReady bool
 
-	Byzantine map[int]int // for simulating byzantine servers (= key)
+	//Byzantine map[int]int // for simulating byzantine servers (= key)
 }
 
 // Share ...
