@@ -120,7 +120,6 @@ func (m *Monitor) Listen() error {
 			log.Lvl3("Connections left:", len(m.conns))
 			m.mutexConn.Lock()
 			delete(m.conns, peer)
-			m.mutexConn.Unlock()
 			// end of monitoring,
 			if len(m.conns) == 0 {
 				m.listenerLock.Lock()
@@ -131,8 +130,8 @@ func (m *Monitor) Listen() error {
 				m.listener = nil
 				finished = true
 				m.listenerLock.Unlock()
-				break
 			}
+			m.mutexConn.Unlock()
 		}
 	}
 	log.Lvl2("Monitor finished waiting")
