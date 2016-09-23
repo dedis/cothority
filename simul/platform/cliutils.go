@@ -8,6 +8,10 @@ import (
 	"os"
 	"os/exec"
 
+	"io"
+
+	"path"
+
 	"github.com/dedis/cothority/log"
 )
 
@@ -23,6 +27,30 @@ func Scp(username, host, file, dest string) error {
 	return cmd.Run()
 }
 
+// Copy makes a copy of a local file with the same file-mode-bits set.
+func Copy(dst, src string) error {
+	info, err := os.Stat(dst)
+	if err == nil && info.IsDir() {
+		return Copy(path.Join(dst, path.Base(src)), src)
+	}
+	fSrc, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer fSrc.Close()
+	stat, err := fSrc.Stat()
+	if err != nil {
+		return err
+	}
+	fDst, err := os.OpenFile(dst, os.O_CREATE|os.O_RDWR, stat.Mode())
+	if err != nil {
+		return err
+	}
+	defer fDst.Close()
+	_, err = io.Copy(fDst, fSrc)
+	return err
+}
+
 // Rsync copies files or directories to the remote host. If the DebugVisible
 // is > 1, the rsync-operation is displayed on screen.
 func Rsync(username, host, file, dest string) error {
@@ -30,7 +58,7 @@ func Rsync(username, host, file, dest string) error {
 	if username != "" {
 		addr = username + "@" + addr
 	}
-	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -c arcfour -o Compression=no -x", file, addr)
+	cmd := exec.Command("rsync", "-Pauz", "-e", "ssh -T -o Compression=no -x", file, addr)
 	cmd.Stderr = os.Stderr
 	if log.DebugVisible() > 1 {
 		cmd.Stdout = os.Stdout

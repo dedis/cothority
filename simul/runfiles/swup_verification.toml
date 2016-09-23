@@ -1,0 +1,18 @@
+Simulation = "SwUpCreate"
+Servers = 4
+Bf = 5
+Rounds = 10
+CloseWait = 6000
+Height = 10
+Base = 4
+RunWait = 3600
+DockerBuild = false
+Snapshot = "snapshots_limited_1.csv"
+Depth = 1
+
+Depth, PGPKeys
+1, 1
+1, 10
+1, 100
+1, 1000
+1, 10000

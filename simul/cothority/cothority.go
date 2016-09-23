@@ -52,11 +52,6 @@ func main() {
 		log.Lvl2(err, hostAddress)
 		return
 	}
-	if monitorAddress != "" {
-		if err := monitor.ConnectSink(monitorAddress); err != nil {
-			log.Error("Couldn't connect monitor to sink:", err)
-		}
-	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
 	var rootSim sda.Simulation
@@ -80,6 +75,15 @@ func main() {
 			log.Lvl2(hostAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc
+		}
+	}
+	if monitorAddress != "" {
+		log.Lvl2("Connecting to monitor", monitorAddress)
+		if err := monitor.ConnectSink(monitorAddress); err != nil {
+			log.Fatal("Couldn't connect monitor to sink:", err)
+			//}
+			//} else {
+			//	log.Fatal("No monitorAddress in", hostAddress)
 		}
 	}
 	if rootSim != nil {
@@ -151,8 +155,10 @@ func main() {
 	go func() {
 		for i, sc := range scs {
 			sc.Host.WaitForClose()
-			// record the bandwidth
-			measures[i].Record()
+			if rootSim != nil && monitorAddress != "" {
+				// record the bandwidth only for root
+				measures[i].Record()
+			}
 			log.Lvl3(hostAddress, "Simulation closed host", sc.Host.ServerIdentity.Addresses, "closed")
 		}
 		allClosed <- true
