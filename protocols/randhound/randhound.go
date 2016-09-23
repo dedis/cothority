@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -223,11 +224,11 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		return nil, nil, err
 	}
 
-	return rb, rh.CreateTranscript(), nil
+	return rb, rh.createTranscript(), nil
 }
 
 // CreateTranscript ...
-func (rh *RandHound) CreateTranscript() *Transcript {
+func (rh *RandHound) createTranscript() *Transcript {
 
 	return &Transcript{
 		SID:          rh.sid,
@@ -306,6 +307,35 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 		}
 		if err := verifySchnorr(suite, key, r2); err != nil {
 			return err
+		}
+	}
+
+	// XXX: one should probably verify that all message hashes HI1 and HI2 are
+	// the same and abort if not; this might be important since these hashes
+	// ensure that each server received the same commitment from the client for
+	// example
+
+	// Verify message hashes HI1 and Hi2; it is okay if some messages are
+	// missing as long as there are enough to reconstruct the secret
+	for i, msg := range t.I1s {
+		for _, j := range t.Group[i] {
+			if _, ok := t.R1s[j]; ok {
+				if err := verifyMessage(suite, msg, t.R1s[j].HI1); err != nil {
+					return err
+				}
+			} else {
+				log.Lvlf2("Couldn't find R1 message of server %v", j)
+			}
+		}
+	}
+
+	for i, msg := range t.I2s {
+		if _, ok := t.R2s[i]; ok {
+			if err := verifyMessage(suite, msg, t.R2s[i].HI2); err != nil {
+				return err
+			}
+		} else {
+			log.Lvlf2("Couldn't find R2 message of server %v", i)
 		}
 	}
 
