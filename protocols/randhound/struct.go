@@ -16,30 +16,30 @@ type RandHound struct {
 	mutex sync.Mutex
 
 	// Session information
-	Nodes   int       // Total number of nodes (client + servers)
-	Groups  int       // Number of groups
-	Faulty  int       // Maximum number of Byzantine servers
-	Purpose string    // Purpose of protocol run
-	Time    time.Time // Timestamp of initiation
-	CliRand []byte    // Client-chosen randomness
-	SID     []byte    // Session identifier
+	nodes   int       // Total number of nodes (client + servers)
+	groups  int       // Number of groups
+	faulty  int       // Maximum number of Byzantine servers
+	purpose string    // Purpose of protocol run
+	time    time.Time // Timestamp of initiation
+	cliRand []byte    // Client-chosen randomness (for initial sharding)
+	sid     []byte    // Session identifier
 
 	// Group information
-	Server              [][]*sda.TreeNode  // Grouped servers
-	Group               [][]int            // Grouped server indices
-	Threshold           []int              // Group thresholds
-	Key                 [][]abstract.Point // Grouped server public keys
+	server              [][]*sda.TreeNode  // Grouped servers
+	group               [][]int            // Grouped server indices
+	threshold           []int              // Group thresholds
+	key                 [][]abstract.Point // Grouped server public keys
 	ServerIdxToGroupNum []int              // Mapping of gloabl server index to group number
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
 	// Message information
-	I1s          map[int]*I1              // I1 messages sent to servers (index: group)
-	I2s          map[int]*I2              // I2 messages sent to servers (index: server)
-	R1s          map[int]*R1              // R1 messages received from servers (index: server)
-	R2s          map[int]*R2              // R2 messages received from servers (index: server)
-	PolyCommit   map[int][]abstract.Point // Commitments of server polynomials (index: server)
-	Secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
-	ChosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
+	i1s          map[int]*I1              // I1 messages sent to servers (index: group)
+	i2s          map[int]*I2              // I2 messages sent to servers (index: server)
+	r1s          map[int]*R1              // R1 messages received from servers (index: server)
+	r2s          map[int]*R2              // R2 messages received from servers (index: server)
+	polyCommit   map[int][]abstract.Point // Commitments of server polynomials (index: server)
+	secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
+	chosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
 
 	// For signaling the end of a protocol run
 	Done        chan bool
@@ -64,7 +64,7 @@ type Transcript struct {
 	Faulty       int                // Maximum number of Byzantine servers
 	Purpose      string             // Purpose of protocol run
 	Time         time.Time          // Timestamp of initiation
-	CliRand      []byte             // Client-chosen randomness (for sharding)
+	CliRand      []byte             // Client-chosen randomness (for initial sharding)
 	CliKey       abstract.Point     // Client public key
 	Group        [][]int            // Grouped server indices
 	Key          [][]abstract.Point // Grouped server public keys

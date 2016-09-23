@@ -19,7 +19,6 @@ import (
 // - Import / export transcript in JSON
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
-// - sometimes verification still fails
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -53,25 +52,25 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // Setup ...
 func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) error {
 
-	rh.Nodes = nodes
-	rh.Groups = groups
-	rh.Faulty = faulty
-	rh.Purpose = purpose
+	rh.nodes = nodes
+	rh.groups = groups
+	rh.faulty = faulty
+	rh.purpose = purpose
 
-	rh.Server = make([][]*sda.TreeNode, groups)
-	rh.Group = make([][]int, groups)
-	rh.Threshold = make([]int, groups)
-	rh.Key = make([][]abstract.Point, groups)
+	rh.server = make([][]*sda.TreeNode, groups)
+	rh.group = make([][]int, groups)
+	rh.threshold = make([]int, groups)
+	rh.key = make([][]abstract.Point, groups)
 	rh.ServerIdxToGroupNum = make([]int, nodes)
 	rh.ServerIdxToGroupIdx = make([]int, nodes)
 
-	rh.I1s = make(map[int]*I1)
-	rh.I2s = make(map[int]*I2)
-	rh.R1s = make(map[int]*R1)
-	rh.R2s = make(map[int]*R2)
-	rh.PolyCommit = make(map[int][]abstract.Point)
-	rh.Secret = make(map[int][]int)
-	rh.ChosenSecret = make(map[int][]int)
+	rh.i1s = make(map[int]*I1)
+	rh.i2s = make(map[int]*I2)
+	rh.r1s = make(map[int]*R1)
+	rh.r2s = make(map[int]*R2)
+	rh.polyCommit = make(map[int][]abstract.Point)
+	rh.secret = make(map[int][]int)
+	rh.chosenSecret = make(map[int][]int)
 
 	rh.Done = make(chan bool, 1)
 	rh.SecretReady = false
@@ -85,24 +84,24 @@ func (rh *RandHound) Start() error {
 	var err error
 
 	// Set timestamp
-	rh.Time = time.Now()
+	rh.time = time.Now()
 
 	// Choose client randomness
 	hs := rh.Suite().Hash().Size()
 	rand := make([]byte, hs)
 	random.Stream.XORKeyStream(rand, rand)
-	rh.CliRand = rand
+	rh.cliRand = rand
 
 	// Determine server grouping
-	rh.Server, rh.Key, err = rh.Shard(rand, rh.Groups)
+	rh.server, rh.key, err = rh.Shard(rand, rh.groups)
 	if err != nil {
 		return err
 	}
 
 	// Set some group parameters
-	for i, group := range rh.Server {
-		rh.Threshold[i] = 2 * len(group) / 3
-		rh.PolyCommit[i] = make([]abstract.Point, len(group))
+	for i, group := range rh.server {
+		rh.threshold[i] = 2 * len(group) / 3
+		rh.polyCommit[i] = make([]abstract.Point, len(group))
 		g := make([]int, len(group))
 		for j, server0 := range group {
 			s0 := server0.ServerIdentityIdx
@@ -110,17 +109,17 @@ func (rh *RandHound) Start() error {
 			rh.ServerIdxToGroupIdx[s0] = j
 			g[j] = s0
 		}
-		rh.Group[i] = g
+		rh.group[i] = g
 	}
 
 	// Comptue session id
-	rh.SID, err = rh.sessionID(rh.Nodes, rh.Faulty, rh.Purpose, rh.Time, rh.CliRand, rh.Threshold, rh.Public(), rh.Key)
+	rh.sid, err = rh.sessionID(rh.nodes, rh.faulty, rh.purpose, rh.time, rh.cliRand, rh.threshold, rh.Public(), rh.key)
 	if err != nil {
 		return err
 	}
 
 	// Multicast first message to grouped servers
-	for i, group := range rh.Server {
+	for i, group := range rh.server {
 
 		index := make([]uint32, len(group))
 		for j, server := range group {
@@ -128,10 +127,10 @@ func (rh *RandHound) Start() error {
 		}
 
 		i1 := &I1{
-			SID:       rh.SID,
-			Threshold: rh.Threshold[i],
+			SID:       rh.sid,
+			Threshold: rh.threshold[i],
 			Group:     index,
-			Key:       rh.Key[i],
+			Key:       rh.key[i],
 		}
 
 		rh.mutex.Lock()
@@ -141,7 +140,7 @@ func (rh *RandHound) Start() error {
 			return err
 		}
 
-		rh.I1s[i] = i1
+		rh.i1s[i] = i1
 
 		rh.mutex.Unlock()
 
@@ -156,13 +155,13 @@ func (rh *RandHound) Start() error {
 // based on a seed and a number of requested shards.
 func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abstract.Point, error) {
 
-	if shards == 0 || rh.Nodes < shards {
+	if shards == 0 || rh.nodes < shards {
 		return nil, nil, fmt.Errorf("Number of requested shards not supported")
 	}
 
 	// Compute a random permutation of [1,n-1]
 	prng := rh.Suite().Cipher(seed)
-	m := make([]int, rh.Nodes-1)
+	m := make([]int, rh.nodes-1)
 	for i := range m {
 		j := int(random.Uint64(prng) % uint64(i+1))
 		m[i] = m[j]
@@ -191,16 +190,16 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		return nil, nil, errors.New("Secret not recoverable")
 	}
 
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
 	rnd := rh.Suite().Point().Null()
 
 	// Gather all valid shares for a given server
-	for source, target := range rh.Secret {
+	for source, target := range rh.secret {
 
 		var share []abstract.Point
 		var pos []int
 		for _, t := range target {
-			r2 := rh.R2s[t]
+			r2 := rh.r2s[t]
 			for _, s := range r2.DecShare {
 				if s.Source == source {
 					share = append(share, s.Val)
@@ -210,8 +209,8 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		}
 
 		grp := rh.ServerIdxToGroupNum[source]
-		pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
-		ps, err := pvss.Recover(pos, share, len(rh.Server[grp]))
+		pvss := NewPVSS(rh.Suite(), H, rh.threshold[grp])
+		ps, err := pvss.Recover(pos, share, len(rh.server[grp]))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -231,22 +230,22 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 func (rh *RandHound) CreateTranscript() *Transcript {
 
 	return &Transcript{
-		SID:          rh.SID,
-		Nodes:        rh.Nodes,
-		Groups:       rh.Groups,
-		Faulty:       rh.Faulty,
-		Purpose:      rh.Purpose,
-		Time:         rh.Time,
-		CliRand:      rh.CliRand,
+		SID:          rh.sid,
+		Nodes:        rh.nodes,
+		Groups:       rh.groups,
+		Faulty:       rh.faulty,
+		Purpose:      rh.purpose,
+		Time:         rh.time,
+		CliRand:      rh.cliRand,
 		CliKey:       rh.Public(),
-		Group:        rh.Group,
-		Threshold:    rh.Threshold,
-		ChosenSecret: rh.ChosenSecret,
-		Key:          rh.Key,
-		I1s:          rh.I1s,
-		I2s:          rh.I2s,
-		R1s:          rh.R1s,
-		R2s:          rh.R2s,
+		Group:        rh.group,
+		Threshold:    rh.threshold,
+		ChosenSecret: rh.chosenSecret,
+		Key:          rh.key,
+		I1s:          rh.i1s,
+		I2s:          rh.i2s,
+		R1s:          rh.r1s,
+		R2s:          rh.r2s,
 	}
 }
 
@@ -536,17 +535,17 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	defer rh.mutex.Unlock()
 
 	// Verify R1 message signature
-	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.key[grp][pos], msg); err != nil {
 		return err
 	}
 
 	// Verify that server replied to the correct I1 message
-	if err := verifyMessage(rh.Suite(), rh.I1s[grp], msg.HI1); err != nil {
+	if err := verifyMessage(rh.Suite(), rh.i1s[grp], msg.HI1); err != nil {
 		return err
 	}
 
 	// Record R1 message
-	rh.R1s[idx] = msg
+	rh.r1s[idx] = msg
 
 	// Prepare data for recovery of polynomial commits and verification of shares
 	n := len(msg.EncShare)
@@ -560,23 +559,23 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	}
 
 	// Init PVSS and recover polynomial commits
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
-	pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
+	pvss := NewPVSS(rh.Suite(), H, rh.threshold[grp])
 	polyCommit, err := pvss.Commits(poly, index)
 	if err != nil {
 		return err
 	}
 
 	// Record polynomial commits
-	rh.PolyCommit[idx] = polyCommit
+	rh.polyCommit[idx] = polyCommit
 
 	// Return, if we already committed to secrets previously
-	if len(rh.ChosenSecret) > 0 {
+	if len(rh.chosenSecret) > 0 {
 		return nil
 	}
 
 	// Verify encrypted shares
-	good, _, err := pvss.Verify(H, rh.Key[grp], polyCommit, encShare, msg.EncProof)
+	good, _, err := pvss.Verify(H, rh.key[grp], polyCommit, encShare, msg.EncProof)
 	if err != nil {
 		return err
 	}
@@ -585,10 +584,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	for i := 0; i < len(good); i++ {
 		j := good[i]
 		src := msg.EncShare[j].Source
-		if _, ok := rh.Secret[idx]; !ok {
-			rh.Secret[idx] = make([]int, 0)
+		if _, ok := rh.secret[idx]; !ok {
+			rh.secret[idx] = make([]int, 0)
 		}
-		rh.Secret[src] = append(rh.Secret[src], msg.EncShare[j].Target)
+		rh.secret[src] = append(rh.secret[src], msg.EncShare[j].Target)
 	}
 
 	// Check if there is at least a threshold number of reconstructable secrets
@@ -597,27 +596,27 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	// single secret are available and if enough secrets for a given group are
 	// available
 	goodSecret := make(map[int][]int)
-	for i, group := range rh.Server {
+	for i, group := range rh.server {
 		var secret []int
 		for _, server := range group {
 			j := server.ServerIdentityIdx
-			if share, ok := rh.Secret[j]; ok && rh.Threshold[i] <= len(share) {
+			if share, ok := rh.secret[j]; ok && rh.threshold[i] <= len(share) {
 				secret = append(secret, j)
 			}
 		}
-		if rh.Threshold[i] <= len(secret) {
+		if rh.threshold[i] <= len(secret) {
 			goodSecret[i] = secret
 		}
 	}
 
 	// Proceed, if there are enough good secrets and we did not make a commitment before
-	if len(goodSecret) == rh.Groups {
+	if len(goodSecret) == rh.groups {
 
 		// Reset secret for the next phase (see handleR2)
-		rh.Secret = make(map[int][]int)
+		rh.secret = make(map[int][]int)
 
 		// Choose secrets that contribute to collective randomness
-		for i := range rh.Server {
+		for i := range rh.server {
 
 			// Randomly remove some secrets so that a threshold of secrets remains
 			hs := rh.Suite().Hash().Size()
@@ -625,28 +624,28 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			random.Stream.XORKeyStream(rand, rand)
 			prng := rh.Suite().Cipher(rand)
 			secret := goodSecret[i]
-			for j := 0; j < len(secret)-rh.Threshold[i]; j++ {
+			for j := 0; j < len(secret)-rh.threshold[i]; j++ {
 				k := int(random.Uint32(prng) % uint32(len(secret)))
 				secret = append(secret[:k], secret[k+1:]...)
 			}
-			rh.ChosenSecret[i] = secret
+			rh.chosenSecret[i] = secret
 		}
 
-		//log.Lvlf1("Grouping: %v", rh.Group)
-		//log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
+		//log.Lvlf1("Grouping: %v", rh.group)
+		//log.Lvlf1("ChosenSecret: %v", rh.chosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
 		var chosenSecret [][]uint32
-		for i := range rh.ChosenSecret {
+		for i := range rh.chosenSecret {
 			var l []uint32
-			for j := range rh.ChosenSecret[i] {
-				l = append(l, uint32(rh.ChosenSecret[i][j]))
+			for j := range rh.chosenSecret[i] {
+				l = append(l, uint32(rh.chosenSecret[i][j]))
 			}
 			chosenSecret = append(chosenSecret, l)
 		}
 
 		// Prepare a message for each server of a group and send it
-		for i, group := range rh.Server {
+		for i, group := range rh.server {
 			for j, server := range group {
 
 				// Among the good secrets chosen previously collect all valid
@@ -655,9 +654,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				var encShare []Share
 				var encProof []ProofCore
 				var polyCommit []abstract.Point
-				for _, k := range rh.ChosenSecret[i] {
-					r1 := rh.R1s[k]
-					pc := rh.PolyCommit[k]
+				for _, k := range rh.chosenSecret[i] {
+					r1 := rh.r1s[k]
+					pc := rh.polyCommit[k]
 					encShare = append(encShare, r1.EncShare[j])
 					encProof = append(encProof, r1.EncProof[j])
 					polyCommit = append(polyCommit, pc[j])
@@ -678,7 +677,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 				i2 := &I2{
 					Sig:          crypto.SchnorrSig{},
-					SID:          rh.SID,
+					SID:          rh.sid,
 					ChosenSecret: chosenSecret,
 					EncShare:     encShare,
 					EncProof:     encProof,
@@ -689,7 +688,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					return err
 				}
 
-				rh.I2s[server.ServerIdentityIdx] = i2
+				rh.i2s[server.ServerIdentityIdx] = i2
 
 				if err := rh.SendTo(server, i2); err != nil {
 					return err
@@ -804,17 +803,17 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	// Verify R2 message signature
-	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
+	if err := verifySchnorr(rh.Suite(), rh.key[grp][pos], msg); err != nil {
 		return err
 	}
 
 	// Verify that server replied to the correct I2 message
-	if err := verifyMessage(rh.Suite(), rh.I2s[idx], msg.HI2); err != nil {
+	if err := verifyMessage(rh.Suite(), rh.i2s[idx], msg.HI2); err != nil {
 		return err
 	}
 
 	// Record R2 message
-	rh.R2s[idx] = msg
+	rh.r2s[idx] = msg
 
 	// Get all valid encrypted shares corresponding to the received decrypted
 	// shares and intended for the target server (=idx)
@@ -825,13 +824,13 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	for i := 0; i < n; i++ {
 		src := msg.DecShare[i].Source
 		X[i] = r2.ServerIdentity.Public
-		encShare[i] = rh.R1s[src].EncShare[pos].Val
+		encShare[i] = rh.r1s[src].EncShare[pos].Val
 		decShare[i] = msg.DecShare[i].Val
 	}
 
 	// Init PVSS and verify shares
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.SID))
-	pvss := NewPVSS(rh.Suite(), H, rh.Threshold[grp])
+	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
+	pvss := NewPVSS(rh.Suite(), H, rh.threshold[grp])
 	good, bad, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, msg.DecProof)
 	if err != nil {
 		return err
@@ -843,22 +842,22 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	for i := 0; i < len(good); i++ {
 		j := good[i]
 		src := msg.DecShare[j].Source
-		if _, ok := rh.Secret[src]; !ok {
-			rh.Secret[src] = make([]int, 0)
+		if _, ok := rh.secret[src]; !ok {
+			rh.secret[src] = make([]int, 0)
 		}
-		rh.Secret[src] = append(rh.Secret[src], msg.DecShare[j].Target)
+		rh.secret[src] = append(rh.secret[src], msg.DecShare[j].Target)
 	}
 
 	proceed := true
-	for i, group := range rh.ChosenSecret {
+	for i, group := range rh.chosenSecret {
 		for _, server := range group {
-			if len(rh.Secret[server]) < rh.Threshold[i] {
+			if len(rh.secret[server]) < rh.threshold[i] {
 				proceed = false
 			}
 		}
 	}
 
-	if len(rh.R2s) == rh.Nodes-1 && !proceed {
+	if len(rh.r2s) == rh.nodes-1 && !proceed {
 		rh.Done <- true
 		return errors.New("Some chosen secrets are not reconstructable")
 	}
@@ -886,7 +885,7 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 		return nil, err
 	}
 
-	//if err := binary.Write(buf, binary.LittleEndian, uint32(len(rh.Group))); err != nil {
+	//if err := binary.Write(buf, binary.LittleEndian, uint32(len(rh.group))); err != nil {
 	//	return nil, err
 	//}
 
