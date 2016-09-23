@@ -52,6 +52,7 @@ func TestRandHound(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		log.Lvlf1("RandHound - transcript: ok")
 
 	case <-time.After(time.Second * time.Duration(nodes) * 2):
 		t.Fatal("RandHound – time out")

@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/rand"
 	"reflect"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 // - Import / export transcript in JSON
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
+// - sometimes verification still fails
 
 func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
@@ -38,7 +38,7 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	rh.Byzantine[1] = 0
 	rh.Byzantine[2] = 0
 	rh.Byzantine[3] = 0
-	//rh.Byzantine[4] = 0
+	rh.Byzantine[4] = 0
 	//rh.Byzantine[5] = 0
 
 	// Setup message handlers
@@ -362,7 +362,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 				}
 			}
 
-			log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v", encPos, decPos)
+			log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
 
 			// Remove encrypted shares that do not have a corresponding decrypted share
 			j := 0
@@ -377,11 +377,17 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 					j++
 				}
 			}
-			log.Lvlf1("Env vs Dec (Post-Sync): %v %v", encPos, decPos)
+			if len(decPos) < len(encPos) {
+				// In this case all of the first values where equal and only the later ones where different
+				l := len(decPos)
+				poly = poly[:l]
+				encPos = encPos[:l]
+				encShare = encShare[:l]
+				encProof = encProof[:l]
+				X = X[:l]
+			}
 
-			// XXX: sync up encPos, decPos etc.
-
-			//log.Lvlf1("Env vs Dec: %v %v", len(encShare), len(decShare))
+			log.Lvlf1("Env vs Dec (Post-Sync): %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
 
 			pvss := NewPVSS(suite, H, t.Threshold[i])
 
@@ -398,11 +404,12 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			}
 			_ = badEnc
 
-			log.Lvlf1("Enc: %v %v", goodEnc, badEnc)
+			log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
 
-			// Remove bad values
+			// Remove bad values (XXX: there is still an out of bounds bug in here somewhere)
 			for i := len(badEnc) - 1; i >= 0; i-- {
 				j := badEnc[i]
+				X = append(X[:j], X[j+1:]...)
 				encShare = append(encShare[:j], encShare[j+1:]...)
 				decShare = append(decShare[:j], decShare[j+1:]...)
 				decProof = append(decProof[:j], decProof[j+1:]...)
@@ -490,6 +497,19 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		}
 	}
 
+	// XXX: simulate bad encryption share
+	//if _, ok := rh.Byzantine[rh.Index()]; ok {
+	//	for i := 0; i < len(share); i++ {
+	//		if rand.Intn(2) == 1 {
+	//			share[i].Val = rh.Suite().Point().Null()
+	//			log.Lvlf1("I1 - bad enc share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
+
+	//		} else {
+	//			log.Lvlf1("I1 - non enc share")
+	//		}
+	//	}
+	//}
+
 	r1 := &R1{
 		HI1:        hi1,
 		EncShare:   share,
@@ -573,10 +593,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	}
 
 	// Check if there is at least a threshold number of reconstructable secrets
-	// in each group. If yes we proceed to the next phase. Note the
-	// double-usage of the threshold which is used to determine if enough valid
-	// shares for a single secret are available and if enough secrets for a
-	// given group are available
+	// in each group. If yes proceed to the next phase. Note the double-usage
+	// of the threshold which is used to determine if enough valid shares for a
+	// single secret are available and if enough secrets for a given group are
+	// available
 	goodSecret := make(map[int][]int)
 	for i, group := range rh.Server {
 		var secret []int
@@ -591,15 +611,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		}
 	}
 
-	//log.Lvlf1("%v", goodSecret)
-
-	// XXX: abort if all servers replied but not enough shares are available to
-	// reconstruct enough secrets
-	//if len(rh.R2s) == rh.Nodes-1 && !proceed {
-	//	return errors.New("Some secrets are not reconstructable")
-	//}
-
-	// If there are enough good secrets and we didn't make a commitment before, proceed ...
+	// Proceed, if there are enough good secrets and we did not make a commitment before
 	if len(goodSecret) == rh.Groups {
 
 		// Reset secret for the next phase (see handleR2)
@@ -608,34 +620,21 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		// Choose secrets that contribute to collective randomness
 		for i := range rh.Server {
 
-			// Randomly select a threshold of secrets for each group in an order preserving way
+			// Randomly remove some secrets so that a threshold of secrets remain
 			hs := rh.Suite().Hash().Size()
 			rand := make([]byte, hs)
 			random.Stream.XORKeyStream(rand, rand)
 			prng := rh.Suite().Cipher(rand)
-
-			//log.Lvlf1("%v", len(goodSecret[i]), rh.Threshold[i])
-
-			secret := make([]int, len(goodSecret[i]))
-			for j := 0; j < len(goodSecret[i]); j++ {
-				secret[j] = j
-			}
-
-			// remove some values randomly
-			for j := 0; j < len(goodSecret[i])-rh.Threshold[i]; j++ {
+			secret := goodSecret[i]
+			for j := 0; j < len(secret)-rh.Threshold[i]; j++ {
 				k := int(random.Uint32(prng) % uint32(len(secret)))
 				secret = append(secret[:k], secret[k+1:]...)
 			}
-
-			for j := 0; j < len(secret); j++ {
-				secret[j] = goodSecret[i][secret[j]]
-			}
-
 			rh.ChosenSecret[i] = secret
 		}
 
-		log.Lvlf1("Grouping: %v", rh.Group)
-		log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
+		//log.Lvlf1("Grouping: %v", rh.Group)
+		//log.Lvlf1("ChosenSecret: %v", rh.ChosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
 		var chosenSecret [][]uint32
@@ -665,14 +664,18 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					polyCommit = append(polyCommit, pc[j])
 				}
 
-				// XXX: simulate bad data
-				if _, ok := rh.Byzantine[server.ServerIdentityIdx]; ok {
-					bad := []int{0, 3}
-					for _, b := range bad {
-						encShare[b].Val = rh.Suite().Point().Null()
-						log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[b].Source, encShare[b].Target, encShare[b].Pos)
-					}
-				}
+				// XXX: simulate bad encryption share
+				//if _, ok := rh.Byzantine[server.ServerIdentityIdx]; ok {
+				//	for k := 0; k < len(encShare); k++ {
+				//		if rand.Intn(2) == 1 {
+				//			encShare[k].Val = rh.Suite().Point().Null()
+				//			log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[k].Source, encShare[k].Target, encShare[k].Pos)
+
+				//		} else {
+				//			log.Lvlf1("R1 - non bad share")
+				//		}
+				//	}
+				//}
 
 				i2 := &I2{
 					Sig:          crypto.SchnorrSig{},
@@ -718,11 +721,9 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	// Prepare data
 	n := len(msg.EncShare)
 	X := make([]abstract.Point, n)
-	x := make([]abstract.Scalar, n)
 	encShare := make([]abstract.Point, n)
 	for i := 0; i < n; i++ {
 		X[i] = rh.Public()
-		x[i] = rh.Private()
 		encShare[i] = msg.EncShare[i].Val
 	}
 
@@ -761,17 +762,17 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	// XXX: simulate bad decryption share
-	if _, ok := rh.Byzantine[rh.Index()]; ok {
-		for i := 0; i < len(share); i++ {
-			if rand.Intn(2) == 1 {
-				share[i].Val = rh.Suite().Point().Null()
-				log.Lvlf1("I2 - bad dec share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
+	//if _, ok := rh.Byzantine[rh.Index()]; ok {
+	//	for i := 0; i < len(share); i++ {
+	//		if rand.Intn(2) == 1 {
+	//			share[i].Val = rh.Suite().Point().Null()
+	//			log.Lvlf1("I2 - bad dec share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
 
-			} else {
-				log.Lvlf1("I2 - non bad share")
-			}
-		}
-	}
+	//		} else {
+	//			log.Lvlf1("I2 - non bad share")
+	//		}
+	//	}
+	//}
 
 	r2 := &R2{
 		HI2:      hi2,
@@ -799,9 +800,9 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	defer rh.mutex.Unlock()
 
 	// If the collective secret is already available, ignore all further incoming messages
-	if rh.SecretReady {
-		return nil
-	}
+	//if rh.SecretReady {
+	//	return nil
+	//}
 
 	// Verify R2 message signature
 	if err := verifySchnorr(rh.Suite(), rh.Key[grp][pos], msg); err != nil {
@@ -817,7 +818,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	rh.R2s[idx] = msg
 
 	// Get all valid encrypted shares corresponding to the received decrypted
-	// shares and intended for "target" (=idx)
+	// shares and intended for the target server (=idx)
 	n := len(msg.DecShare)
 	X := make([]abstract.Point, n)
 	encShare := make([]abstract.Point, n)
