@@ -119,7 +119,7 @@ func (rh *RandHound) Start() error {
 		return err
 	}
 
-	// Multicast first message to servers
+	// Multicast first message to grouped servers
 	for i, group := range rh.Server {
 
 		index := make([]uint32, len(group))
@@ -230,7 +230,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 // CreateTranscript ...
 func (rh *RandHound) CreateTranscript() *Transcript {
 
-	t := &Transcript{
+	return &Transcript{
 		SID:          rh.SID,
 		Nodes:        rh.Nodes,
 		Groups:       rh.Groups,
@@ -248,8 +248,6 @@ func (rh *RandHound) CreateTranscript() *Transcript {
 		R1s:          rh.R1s,
 		R2s:          rh.R2s,
 	}
-
-	return t
 }
 
 // VerifyTranscript ...
@@ -862,7 +860,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	if len(rh.R2s) == rh.Nodes-1 && !proceed {
 		rh.Done <- true
-		return errors.New("Some secrets are not reconstructable")
+		return errors.New("Some chosen secrets are not reconstructable")
 	}
 
 	if proceed && !rh.SecretReady {

@@ -19,7 +19,7 @@ type RandHound struct {
 	Nodes   int       // Total number of nodes (client + servers)
 	Groups  int       // Number of groups
 	Faulty  int       // Maximum number of Byzantine servers
-	Purpose string    // Purpose of the protocol run
+	Purpose string    // Purpose of protocol run
 	Time    time.Time // Timestamp of initiation
 	CliRand []byte    // Client-chosen randomness
 	SID     []byte    // Session identifier
@@ -39,7 +39,7 @@ type RandHound struct {
 	R2s          map[int]*R2              // R2 messages received from servers (index: server)
 	PolyCommit   map[int][]abstract.Point // Commitments of server polynomials (index: server)
 	Secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
-	ChosenSecret map[int][]int            // Chosen secrets that contribute to collective randomness
+	ChosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
 
 	// For signaling the end of a protocol run
 	Done        chan bool
@@ -62,7 +62,7 @@ type Transcript struct {
 	Nodes        int                // Total number of nodes (client + server)
 	Groups       int                // Number of groups
 	Faulty       int                // Maximum number of Byzantine servers
-	Purpose      string             // Purpose of the protocol run
+	Purpose      string             // Purpose of protocol run
 	Time         time.Time          // Timestamp of initiation
 	CliRand      []byte             // Client-chosen randomness (for sharding)
 	CliKey       abstract.Point     // Client public key
