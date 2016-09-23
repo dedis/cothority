@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/protocols/manage"
@@ -444,15 +443,6 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 				return true
 			}
 		}
-	case VerifySwup:
-		log.Fatal("Not implemented")
-		var pkgName string
-		verifyT := monitor.NewTimeMeasure("verify_" + pkgName)
-		// Verify all signatures
-		verifyT.Record()
-		buildT := monitor.NewTimeMeasure("build_" + pkgName)
-		// launch the reproducible build
-		buildT.Record()
 	default:
 		f, ok := verifiers[sb.VerifierID]
 		if ok {

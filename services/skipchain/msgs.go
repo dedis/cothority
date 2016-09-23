@@ -63,8 +63,6 @@ var (
 	// VerifyTimeVault will make sure that a valid TimeVault asks for an
 	// additional SkipBlockData
 	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
-	// VerifySwup will trigger a reproducible build.
-	VerifySwup = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Swup"))
 )
 
 // This file holds all messages that can be sent to the SkipChain,
