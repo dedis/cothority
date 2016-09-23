@@ -411,6 +411,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
+	// XXX What's this variable for ?
 	s.testVerify = true
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
@@ -422,35 +423,32 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		log.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
 		return false
 	}
-	switch sb.VerifierID {
-	case VerifyNone:
-		log.Lvl4("No verification - accepted")
-		return true
-	case VerifyShard:
-		if sb.ParentBlockID.IsNull() {
-			log.Lvl3("No parent skipblock to verify against")
-		} else {
-			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
-			if !exists {
-				log.Lvl3("Parent skipblock doesn't exist")
-			} else {
-				for _, e := range sb.Roster.List {
-					if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
-						log.Lvl3("ServerIdentity in child doesn't exist in parent")
-						return false
-					}
-				}
-				return true
-			}
-		}
-	default:
-		f, ok := verifiers[sb.VerifierID]
-		if ok {
-			log.Lvlf3("Found user verification %x", sb.VerifierID)
-			return f(msg, data)
+
+	f, ok := verifiers[sb.VerifierID]
+	if !ok {
+		log.Lvl2("Found NO user verification for %x", sb.VerifierID)
+		return false
+	}
+	return f(msg, sb)
+}
+
+func (s *Service) VerifyShardFunc(msg []byte, sb *SkipBlock) bool {
+	if sb.ParentBlockID.IsNull() {
+		log.Lvl3("No parent skipblock to verify against")
+		return false
+	}
+	sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
+	if !exists {
+		log.Lvl3("Parent skipblock doesn't exist")
+		return false
+	}
+	for _, e := range sb.Roster.List {
+		if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
+			log.Lvl3("ServerIdentity in child doesn't exist in parent")
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
@@ -523,6 +521,9 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		if err := s.RegisterMessage(msg); err != nil {
 			log.Fatal("Registration error for msg", msg, err)
 		}
+	}
+	if err := RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
+		panic(err)
 	}
 	return s
 }

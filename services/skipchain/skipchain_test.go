@@ -407,7 +407,7 @@ func TestService_RegisterVerification(t *testing.T) {
 	_, el, s1 := makeHELS(local, 3)
 	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
 	ver := make(chan bool, 3)
-	verifier := func(msg, data []byte) bool {
+	verifier := func(msg []byte, s *SkipBlock) bool {
 		ver <- true
 		return true
 	}
