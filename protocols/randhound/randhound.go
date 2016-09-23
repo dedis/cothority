@@ -311,9 +311,9 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 	}
 
 	// XXX: one should probably verify that all message hashes HI1 and HI2 are
-	// the same and abort if not; this might be important since these hashes
-	// ensure that each server received the same commitment from the client for
-	// example
+	// the same and abort if not; this might be important since e.g. the HI2
+	// hashes ensure that each server received the same commitment from the
+	// client
 
 	// Verify message hashes HI1 and Hi2; it is okay if some messages are
 	// missing as long as there are enough to reconstruct the secret
