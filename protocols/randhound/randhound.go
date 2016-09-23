@@ -376,8 +376,8 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 					j++
 				}
 			}
+			// If all of the first values where equal remove trailing data on encrypted shares
 			if len(decPos) < len(encPos) {
-				// In this case all of the first values where equal and only the later ones where different
 				l := len(decPos)
 				poly = poly[:l]
 				encPos = encPos[:l]
@@ -406,7 +406,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 
 			//log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
 
-			// Remove bad values (XXX: there is still an out of bounds bug in here somewhere)
+			// Remove bad values
 			for i := len(badEnc) - 1; i >= 0; i-- {
 				j := badEnc[i]
 				X = append(X[:j], X[j+1:]...)
@@ -449,7 +449,7 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 	}
 
 	if !bytes.Equal(random, rb) {
-		return errors.New("Random strings do not match")
+		return errors.New("Bad randomness")
 	}
 
 	return nil
