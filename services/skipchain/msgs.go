@@ -41,7 +41,7 @@ var verifiersMutex sync.Mutex
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func VerificationRegistration(v VerifierID, f bftcosi.VerificationFunction) error {
+func RegisterVerification(v VerifierID, f bftcosi.VerificationFunction) error {
 	verifiersMutex.Lock()
 	if len(verifiers) == 0 {
 		verifiers = map[VerifierID]bftcosi.VerificationFunction{}
@@ -57,12 +57,6 @@ var (
 	// VerifyShard makes sure that the child SkipChain will always be
 	// a part of its parent SkipChain
 	VerifyShard = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
-	// VerifySSH makes sure that a given number of client-devices signed
-	// off on the changes
-	VerifySSH = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
-	// VerifyTimeVault will make sure that a valid TimeVault asks for an
-	// additional SkipBlockData
-	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
 )
 
 // This file holds all messages that can be sent to the SkipChain,

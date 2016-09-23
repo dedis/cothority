@@ -16,6 +16,9 @@ import (
 	"github.com/dedis/crypto/cosi"
 )
 
+// How many msec to wait before a timeout is generated in the propagation.
+const propagateTimeout = 10000
+
 // AppSkipBlock is the interface needed to add a new SkipBlockType with
 // a verification
 type AppSkipBlock interface {

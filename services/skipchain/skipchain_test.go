@@ -411,7 +411,7 @@ func TestService_RegisterVerification(t *testing.T) {
 		ver <- true
 		return true
 	}
-	log.ErrFatal(VerificationRegistration(VerifyTest, verifier))
+	log.ErrFatal(RegisterVerification(VerifyTest, verifier))
 	sb := makeGenesisRosterArgs(s1, el, nil, VerifyTest, 1, 1)
 	assert.NotNil(t, sb.Data)
 	assert.Equal(t, 3, len(ver))
