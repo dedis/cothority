@@ -113,6 +113,7 @@ func (n *TreeNodeInstance) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
+	//LUDOVIC BARMAN : ADD UDP HERE
 	return n.overlay.SendToTreeNode(n.token, to, msg)
 }
 
@@ -591,7 +592,7 @@ func (n *TreeNodeInstance) Host() *Host {
 func (n *TreeNodeInstance) TreeNodeInstance() *TreeNodeInstance {
 	return n
 }
-func (n *TreeNodeInstance) isBinded() bool {
+func (n *TreeNodeInstance) isBound() bool {
 	return n.instance != nil
 }
 

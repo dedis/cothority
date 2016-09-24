@@ -385,6 +385,22 @@ func TestTreeComputeSubtreeAggregate(t *testing.T) {
 
 }
 
+func TestTree_BinaryMarshaler(t *testing.T) {
+	tree, _ := genLocalTree(5, 2000)
+	b, err := tree.BinaryMarshaler()
+	dbg.ErrFatal(err)
+	tree2 := &sda.Tree{}
+	dbg.ErrFatal(tree2.BinaryUnmarshaler(b))
+	if !tree.Equal(tree2) {
+		t.Fatal("Unmarshalled tree is not equal")
+	}
+	if tree.Root == tree2.Root {
+		t.Fatal("Addresses should not be equal")
+	}
+	dbg.Lvl1(tree.Dump())
+	dbg.Lvl1(tree2.Dump())
+}
+
 // - public keys
 // - corner-case: accessing parent/children with multiple instances of the same peer
 // in the graph

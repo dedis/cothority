@@ -1,8 +1,16 @@
 Simulation = "PriFi"
-Servers = 2
-Bf = 1
-Rounds = 1
+Servers=1
+Bf = 100
+Rounds = 10
 CloseWait = 6000
+NTrustees = 2
+CellSizeUp = 1000
+CellSizeDown = 10000
+RelayWindowSize = 10
+RelayUseDummyDataDown = false
+RelayReportingLimit = 10
+UseUDP = true
+DoLatencyTests = true
 
 Hosts
-2
+5

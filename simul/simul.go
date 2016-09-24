@@ -147,7 +147,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 			continue
 		}
 		// Waiting for the document-branch to be merged, then uncomment this
-		//dbg.Lvl1("Starting run with parameters -", t.String())
+		dbg.Lvl1("Starting run with parameters -", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
@@ -191,7 +191,6 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	rc.Delete("simulation")
 	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
-
 	if err := deployP.Deploy(rc); err != nil {
 		dbg.Error(err)
 		return rs, err
@@ -269,6 +268,7 @@ func CheckHosts(rc platform.RunConfig) {
 		for calcHosts(bf, depth) < hosts {
 			depth++
 		}
+
 		rc.Put("depth", strconv.Itoa(depth))
 	}
 }
