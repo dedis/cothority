@@ -52,7 +52,7 @@ type ProtocolCosi struct {
 	tempResponse []*Response
 	// lock associated
 	tempResponseLock *sync.Mutex
-	DoneCallback     func(chal abstract.Secret, response abstract.Secret)
+	DoneCallback     func(chal abstract.Scalar, response abstract.Scalar)
 
 	// hooks related to the various phase of the protocol.
 	// XXX NOT DEPLOYED YET / NOT IN USE.
@@ -248,7 +248,7 @@ func (pc *ProtocolCosi) StartChallenge() error {
 // correct signature for this message using the aggregated public key.
 // This is copied from lib/cosi, so that you don't need to include both lib/cosi
 // and protocols/cosi
-func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Scalar) error {
 	return cosi.VerifySignature(suite, msg, public, challenge, secret)
 }
 
@@ -370,6 +370,6 @@ func (pc *ProtocolCosi) RegisterChallengeHook(fn ChallengeHook) {
 
 // RegisterDoneCallback allows for handling what should happen when a
 // the protocol is done
-func (pc *ProtocolCosi) RegisterDoneCallback(fn func(chal, resp abstract.Secret)) {
+func (pc *ProtocolCosi) RegisterDoneCallback(fn func(chal, resp abstract.Scalar)) {
 	pc.DoneCallback = fn
 }

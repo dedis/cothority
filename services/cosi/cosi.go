@@ -40,8 +40,8 @@ var CosiRequestType = network.RegisterMessageType(ServiceRequest{})
 // ServiceResponse is what the Cosi service will reply to clients.
 type ServiceResponse struct {
 	Sum       []byte
-	Challenge abstract.Secret
-	Response  abstract.Secret
+	Challenge abstract.Scalar
+	Response  abstract.Scalar
 }
 
 // CosiResponseType is the type that is embedded in the Request object for a
@@ -80,7 +80,7 @@ func (cs *Cosi) ProcessClientRequest(e *network.Entity, r *sda.ClientRequest) {
 		dbg.Error("Couldn't hash message:", err)
 		return
 	}
-	pcosi.RegisterDoneCallback(func(chall abstract.Secret, resp abstract.Secret) {
+	pcosi.RegisterDoneCallback(func(chall abstract.Scalar, resp abstract.Scalar) {
 		respMessage := &ServiceResponse{
 			Sum:       h,
 			Challenge: chall,

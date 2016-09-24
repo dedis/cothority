@@ -268,7 +268,7 @@ func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
 }
 
 // PrivPub creates a private/public key pair.
-func PrivPub() (abstract.Secret, abstract.Point) {
+func PrivPub() (abstract.Scalar, abstract.Point) {
 	keypair := config.NewKeyPair(network.Suite)
 	return keypair.Secret, keypair.Public
 }

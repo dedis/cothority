@@ -74,7 +74,7 @@ func (cs *Simulation) Run(config *sda.SimulationConfig) error {
 		proto.SigningMessage(msg)
 		// tell us when it is done
 		done := make(chan bool)
-		fn := func(chal, resp abstract.Secret) {
+		fn := func(chal, resp abstract.Scalar) {
 			roundM.Record()
 			//  No need to verify it twice here. It already happens in
 			//  handleResponse() even for the root.

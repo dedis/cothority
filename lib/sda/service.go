@@ -294,7 +294,7 @@ in place of the standard reply. The Client.Send method will catch that and retur
 
 // Client for a service
 type Client struct {
-	private abstract.Secret
+	private abstract.Scalar
 	*network.Entity
 	ServiceID ServiceID
 }

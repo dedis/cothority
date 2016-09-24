@@ -22,7 +22,7 @@ type Host struct {
 	// Our entity (i.e. identity over the network)
 	Entity *network.Entity
 	// Our private-key
-	private abstract.Secret
+	private abstract.Scalar
 	// The TCPHost
 	host network.SecureHost
 	// Overlay handles the mapping from tree and entityList to Entity.
@@ -72,7 +72,7 @@ type Host struct {
 
 // NewHost starts a new Host that will listen on the network for incoming
 // messages. It will store the private-key.
-func NewHost(e *network.Entity, pkey abstract.Secret) *Host {
+func NewHost(e *network.Entity, pkey abstract.Scalar) *Host {
 	h := &Host{
 		Entity:              e,
 		workingAddress:      e.First(),

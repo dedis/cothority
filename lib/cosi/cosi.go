@@ -45,26 +45,26 @@ type Cosi struct {
 	// Suite used
 	suite abstract.Suite
 	// the longterm private key we use during the rounds
-	private abstract.Secret
+	private abstract.Scalar
 	// timestamp of when the announcement is done (i.e. timestamp of the four
 	// phases)
 	timestamp int64
 	// random is our own secret that we wish to commit during the commitment phase.
-	random abstract.Secret
+	random abstract.Scalar
 	// commitment is our own commitment
 	commitment abstract.Point
 	// V_hat is the aggregated commit (our own + the children's)
 	aggregateCommitment abstract.Point
 	// challenge holds the challenge for this round
-	challenge abstract.Secret
+	challenge abstract.Scalar
 	// response is our own computed response
-	response abstract.Secret
+	response abstract.Scalar
 	// aggregateResponses is the aggregated response from the children + our own
-	aggregateResponse abstract.Secret
+	aggregateResponse abstract.Scalar
 }
 
 // NewCosi returns a new Cosi struct given the suite + longterm secret.
-func NewCosi(suite abstract.Suite, private abstract.Secret) *Cosi {
+func NewCosi(suite abstract.Suite, private abstract.Scalar) *Cosi {
 	return &Cosi{
 		suite:   suite,
 		private: private,
@@ -86,22 +86,22 @@ type Commitment struct {
 // Challenge is the Hash of V^0 || S, where S is the Timestamp
 // and the message
 type Challenge struct {
-	Challenge abstract.Secret
+	Challenge abstract.Scalar
 }
 
 // Response holds the actual node's response ri and the
 // aggregate response r^i
 type Response struct {
-	Response     abstract.Secret
-	ChildrenResp abstract.Secret
+	Response     abstract.Scalar
+	ChildrenResp abstract.Scalar
 }
 
 // Signature is the final message out of the Cosi-protocol. It can
 // be used together with the message and the aggregate public key
 // to verify that it's valid.
 type Signature struct {
-	Challenge abstract.Secret
-	Response  abstract.Secret
+	Challenge abstract.Scalar
+	Response  abstract.Scalar
 }
 
 // Exception is what a node that does not want to sign should include when
@@ -166,7 +166,7 @@ func (c *Cosi) CreateChallenge(msg []byte) (*Challenge, error) {
 	pb, err := c.aggregateCommitment.MarshalBinary()
 	cipher := c.suite.Cipher(pb)
 	cipher.Message(nil, nil, msg)
-	c.challenge = c.suite.Secret().Pick(cipher)
+	c.challenge = c.suite.Scalar().Pick(cipher)
 	return &Challenge{
 		Challenge: c.challenge,
 	}, err
@@ -193,7 +193,7 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 	if err := c.genResponse(); err != nil {
 		return nil, err
 	}
-	aggregateResponse := c.suite.Secret().Zero()
+	aggregateResponse := c.suite.Scalar().Zero()
 	for _, resp := range responses {
 		// add responses of child
 		aggregateResponse = aggregateResponse.Add(aggregateResponse, resp.Response)
@@ -204,7 +204,7 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 		}
 	}
 	// Add our own
-	c.aggregateResponse = c.suite.Secret().Add(aggregateResponse, c.response)
+	c.aggregateResponse = c.suite.Scalar().Add(aggregateResponse, c.response)
 	return &Response{
 		Response:     c.response,
 		ChildrenResp: aggregateResponse,
@@ -214,12 +214,12 @@ func (c *Cosi) Response(responses []*Response) (*Response, error) {
 
 // GetAggregateResponse returns the aggregated response that this cosi has
 // accumulated.
-func (c *Cosi) GetAggregateResponse() abstract.Secret {
+func (c *Cosi) GetAggregateResponse() abstract.Scalar {
 	return c.aggregateResponse
 }
 
 // GetChallenge returns the challenge that were passed down to this cosi.
-func (c *Cosi) GetChallenge() abstract.Secret {
+func (c *Cosi) GetChallenge() abstract.Scalar {
 	return c.challenge
 }
 
@@ -277,7 +277,7 @@ func (c *Cosi) genResponse() error {
 	}
 	// resp = random - challenge * privatekey
 	// i.e. ri = vi - c * xi
-	resp := c.suite.Secret().Mul(c.private, c.challenge)
+	resp := c.suite.Scalar().Mul(c.private, c.challenge)
 	c.response = resp.Sub(c.random, resp)
 	// no aggregation here
 	c.aggregateResponse = c.response
@@ -286,7 +286,7 @@ func (c *Cosi) genResponse() error {
 
 // VerifySignature verifies if the challenge and the secret (from the response phase) form a
 // correct signature for this message using the aggregated public key.
-func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Secret) error {
+func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, challenge, secret abstract.Scalar) error {
 	// recompute the challenge and check if it is the same
 	commitment := suite.Point()
 	commitment = commitment.Add(commitment.Mul(nil, secret), suite.Point().Mul(public, challenge))
@@ -295,7 +295,7 @@ func VerifySignature(suite abstract.Suite, msg []byte, public abstract.Point, ch
 
 }
 
-func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Point, challenge abstract.Secret) error {
+func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Point, challenge abstract.Scalar) error {
 	pb, err := commitment.MarshalBinary()
 	if err != nil {
 		return err
@@ -303,7 +303,7 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 	cipher := suite.Cipher(pb)
 	cipher.Message(nil, nil, msg)
 	// reconstructed challenge
-	reconstructed := suite.Secret().Pick(cipher)
+	reconstructed := suite.Scalar().Pick(cipher)
 	if !reconstructed.Equal(challenge) {
 		return errors.New("Reconstructed challenge not equal to one given")
 	}
@@ -314,7 +314,7 @@ func verifyCommitment(suite abstract.Suite, msg []byte, commitment abstract.Poin
 // the exceptions given. An exception is the pubilc key + commitment of a peer that did not
 // sign.
 // NOTE: No exception mechanism for "before" commitment has been yet coded.
-func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Secret, exceptions []Exception) error {
+func VerifySignatureWithException(suite abstract.Suite, public abstract.Point, msg []byte, challenge, secret abstract.Scalar, exceptions []Exception) error {
 	// first reduce the aggregate public key
 	subPublic := suite.Point().Add(suite.Point().Null(), public)
 	aggExCommit := suite.Point().Null()
