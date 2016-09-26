@@ -12,7 +12,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/config"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type BigMsg struct {
@@ -38,17 +38,9 @@ func TestTCPConnReceiveRaw(t *testing.T) {
 	msg := &BigMsg{Array: make([]byte, 7893)}
 	_ = RegisterPacketType(BigMsg{})
 	buff, err := MarshalRegisteredType(msg)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	fn := func(c net.Conn) {
-		checking = func() bool {
-			select {
-			case <-check:
-				return false
-			case <-time.After(20 * time.Millisecond):
-				return true
-			}
-		}
 		// different slices of bytes
 		maxChunk := 1400
 		slices := make([][]byte, 0)
@@ -62,42 +54,41 @@ func TestTCPConnReceiveRaw(t *testing.T) {
 		binary.Write(c, globalOrder, Size(len(buff)))
 		// then send pieces and check if the other side already returned or not
 		for i, slice := range slices[:len(slices)-1] {
-			t.Logf("Will write slice %d/%d...", i, len(slices))
+			log.Lvl1("Will write slice %d/%d...", i, len(slices))
 			if n, err := c.Write(slice); err != nil || n != len(slice) {
-				t.Fatal("Whut?")
+				t.Fatal("Could not write enough")
 			}
-			t.Logf(" OK\n")
+			log.Lvl1(" OK")
 			if !checking() {
 				t.Fatal("Already returned even if not finished")
 			}
 			time.Sleep(5 * time.Millisecond)
 		}
 		// the last one should make the other end return
-		t.Logf("Will write last piece...")
+		log.Lvl1("Will write last piece...")
 		if n, err := c.Write(slices[len(slices)-1]); n != len(slices[len(slices)-1]) || err != nil {
 			t.Fatal("could not send the last piece")
 		}
-		t.Logf(" OK\n")
+		log.Lvl1(" OK")
 		check <- true
 	}
 
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		addr <- ln.Addr().String()
 		c, err := ln.Accept()
-		assert.Nil(t, err)
-		// do the thing
+		require.Nil(t, err)
 		fn(c)
 		<-done
-		assert.Nil(t, ln.Close())
+		require.Nil(t, ln.Close())
 		done <- true
 	}()
 
 	// get addr
 	listeningAddr := <-addr
 	c, err := NewTCPConn(NewTCPAddress(listeningAddr))
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	buffRaw, err := c.receiveRaw()
 	checking()
@@ -107,7 +98,7 @@ func TestTCPConnReceiveRaw(t *testing.T) {
 		t.Error(err)
 	}
 
-	assert.Nil(t, c.Close())
+	require.Nil(t, c.Close())
 	// tell the listener to close
 	done <- true
 	// wait until it is closed
@@ -127,23 +118,23 @@ func TestTCPConn(t *testing.T) {
 	}
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		addr <- ln.Addr().String()
 		_, err = ln.Accept()
-		assert.Nil(t, err)
+		require.Nil(t, err)
 		// wait until it can be closed
 		<-done
-		assert.Nil(t, ln.Close())
+		require.Nil(t, ln.Close())
 		done <- true
 	}()
 
 	// get addr
 	listeningAddr := <-addr
 	c, err := NewTCPConn(NewTCPAddress(listeningAddr))
-	assert.Nil(t, err)
-	assert.Equal(t, c.Local().NetworkAddress(), c.conn.LocalAddr().String())
-	assert.Equal(t, c.Type(), PlainTCP)
-	assert.Nil(t, c.Close())
+	require.Nil(t, err)
+	require.Equal(t, c.Local().NetworkAddress(), c.conn.LocalAddr().String())
+	require.Equal(t, c.Type(), PlainTCP)
+	require.Nil(t, c.Close())
 	// tell the listener to close
 	done <- true
 	// wait until it is closed
@@ -168,17 +159,17 @@ func TestTCPConnWithListener(t *testing.T) {
 	go func() {
 		ready <- true
 		err := ln.Listen(connFn)
-		assert.Nil(t, err, "Listener stop incorrectly")
+		require.Nil(t, err, "Listener stop incorrectly")
 		stop <- true
 	}()
 
 	<-ready
 	c, err := NewTCPConn(addr)
-	assert.Nil(t, err, "Could not open connection")
+	require.Nil(t, err, "Could not open connection")
 	// Test bandwitdth measurements also
 	rx1 := <-connStat
 	tx1 := c.Tx()
-	assert.Nil(t, c.Send(&SimpleMessage{3}))
+	require.Nil(t, c.Send(&SimpleMessage{3}))
 	tx2 := c.Tx()
 	rx2 := <-connStat
 
@@ -186,7 +177,7 @@ func TestTCPConnWithListener(t *testing.T) {
 		t.Errorf("Connections did see same bytes? %d tx vs %d rx", (tx2 - tx1), (rx2 - rx1))
 	}
 
-	assert.Nil(t, ln.Stop(), "Error stopping listener")
+	require.Nil(t, ln.Stop(), "Error stopping listener")
 	select {
 	case <-stop:
 	case <-time.After(100 * time.Millisecond):
@@ -213,22 +204,22 @@ func TestTCPListener(t *testing.T) {
 	go func() {
 		ready <- true
 		err := ln.Listen(connFn)
-		assert.Nil(t, err, "Listener stop incorrectly")
+		require.Nil(t, err, "Listener stop incorrectly")
 		stop <- true
 	}()
 
 	<-ready
 	_, err = net.Dial("tcp", addr.NetworkAddress())
-	assert.Nil(t, err, "Could not open connection")
+	require.Nil(t, err, "Could not open connection")
 	<-connReceived
-	assert.Nil(t, ln.Stop(), "Error stopping listener")
+	require.Nil(t, ln.Stop(), "Error stopping listener")
 	select {
 	case <-stop:
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Could not stop listener")
 	}
 
-	assert.Nil(t, ln.listen(nil))
+	require.Nil(t, ln.listen(nil))
 }
 
 func TestTCPRouter(t *testing.T) {
@@ -312,76 +303,19 @@ func (d *dummyErr) Error() string {
 }
 
 func TestHandleError(t *testing.T) {
-	assert.Equal(t, ErrClosed, handleError(errors.New("use of closed")))
-	assert.Equal(t, ErrCanceled, handleError(errors.New("canceled")))
-	assert.Equal(t, ErrEOF, handleError(errors.New("EOF")))
+	require.Equal(t, ErrClosed, handleError(errors.New("use of closed")))
+	require.Equal(t, ErrCanceled, handleError(errors.New("canceled")))
+	require.Equal(t, ErrEOF, handleError(errors.New("EOF")))
 
-	assert.Equal(t, ErrUnknown, handleError(errors.New("Random error!")))
+	require.Equal(t, ErrUnknown, handleError(errors.New("Random error!")))
 
 	de := dummyErr{true, true}
-	assert.Equal(t, ErrTemp, handleError(&de))
+	require.Equal(t, ErrTemp, handleError(&de))
 	de.temporary = false
-	assert.Equal(t, ErrTimeout, handleError(&de))
+	require.Equal(t, ErrTimeout, handleError(&de))
 	de.timeout = false
-	assert.Equal(t, ErrUnknown, handleError(&de))
+	require.Equal(t, ErrUnknown, handleError(&de))
 }
-
-/*func TestTCPHostReconnection(t *testing.T) {*/
-//h1 := NewTestTCPHost(2005)
-//h2 := NewTestTCPHost(2006)
-//defer func() {
-//h1.Stop()
-//h2.Stop()
-//// Let some time to tcp
-//time.Sleep(250 * time.Millisecond)
-//}()
-
-//go h1.Start()
-//go h2.Start()
-
-//log.Lvl1("Sending h1->h2")
-//log.ErrFatal(sendrcv_proc(h1, h2))
-//log.Lvl1("Sending h2->h1")
-//log.ErrFatal(sendrcv_proc(h2, h1))
-//log.Lvl1("Closing h1")
-//log.ErrFatal(h1.Stop())
-
-////h1 = NewTestTCPHost(2005)
-
-//log.Lvl1("Listening again on h1")
-//go h1.Start()
-//time.Sleep(200 * time.Millisecond)
-//log.Lvl1("Sending h2->h1")
-//log.ErrFatal(sendrcv_proc(h2, h1))
-//log.Lvl1("Sending h1->h2")
-//log.ErrFatal(sendrcv_proc(h1, h2))
-
-//log.Lvl1("Shutting down listener of h2")
-
-//// closing h2, but simulate *hard* failure, without sending a FIN packet
-//// XXX Actually it DOES send a FIN packet: using tcphost.Close(), it closes
-//// the listener AND all the connections (calling golang tcp connection
-//// Close() which I'm pretty sure will send a FIN packet)
-//// This test is ambiguous as it does not really simulate a network hardware
-//// failure of a node, but merely a host which does weird abort
-//// connections...
-//// One idea if we really want to simulate that is calling tcphost.Close()
-//// and at the same time, at the IP level, blocking all FIN packet.
-//// Then start a new host with the same entity etc..
-//// See also https://github.com/tylertreat/comcast
-
-//[>c2 := h1.connection(h2.serverIdentity)<]
-////// making h2 fails
-////h2.AbortConnections()
-////log.Lvl1("asking h2 to listen again")
-////// making h2 backup again
-////go h2.listen()
-////// and re-registering the connection to h2 from h1
-////h1.registerConnection(c2)
-
-////log.Lvl1("Sending h1->h2")
-//[>log.ErrFatal(sendrcv_proc(h1, h2))<]
-/*}*/
 
 func init() {
 	SimpleMessageType = RegisterPacketType(SimpleMessage{})
