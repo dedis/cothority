@@ -1,7 +1,6 @@
 package network
 
-// Conn is the basic interface to represent any communication mean
-// between two host.
+// Conn represents any communication between two hosts.
 type Conn interface {
 	// Send a message through the connection.
 	// obj should be a POINTER to the actual struct to send, or an interface.
@@ -9,7 +8,7 @@ type Conn interface {
 	Send(obj Body) error
 	// Receive any message through the connection. It is a blocking call that
 	// returns either when a message arrived or when Close() has been called, or
-	// when a network error occured.
+	// when a network error occurred.
 	Receive() (Packet, error)
 	// Close will close the connection. Implementations must take care that
 	// Close() makes Receive() returns with an error, and any subsequent Send()
@@ -17,11 +16,11 @@ type Conn interface {
 	// ErrClosed.
 	Close() error
 
-	// Type returns the type of this connection
+	// Type returns the type of this connection.
 	Type() ConnType
-	// Gives the address of the remote endpoint
+	// Gives the address of the remote endpoint.
 	Remote() Address
-	// Returns the local address and port
+	// Returns the local address and port.
 	Local() Address
 	// Tx returns how many bytes this connection has written
 	Tx() uint64
@@ -29,34 +28,34 @@ type Conn interface {
 	Rx() uint64
 }
 
-// Listener is responsible for listening for incoming Conn on a particular
-// address.It can only accept one type of incoming Conn.
+// Listener is responsible for listening for incoming Conns on a particular
+// address. It can only accept one type of incoming Conn.
 type Listener interface {
-	// Listen will start listening for incoming connections
-	// Each time there is an incoming Conn, it will call the given
+	// Listen for incoming connections.
+	// Each time there is an incoming Conn, it calls the given
 	// function in a go routine with the incoming Conn as parameter.
-	// The call is BLOCKING. If this listener is already Listening, Listen
+	// The call is blocking. If this listener is already Listening, Listen
 	// should return an error.
 	Listen(func(Conn)) error
-	// Stop will stop the listening. Implementations must take care of making
+	// Stop the listening. Implementations must take care of making
 	// Stop() a blocking call. Stop() should return when the Listener really
-	// has stopped listening,i.e. the call to Listen has returned. Calling twice
+	// has stopped listening, i.e. the call to Listen has returned. Calling twice
 	// Stop() should return an error ErrClosed on the second call.
 	Stop() error
 
-	// what is the address this listener is listening to + what type of
-	// connection does it accept (address.ConnType())
+	// A complete address including the type this listener is listening
+	// to.
 	Address() Address
 
-	// Returns whether this listener is actually listening or not. Sadly this
+	// Returns whether this listener is actually listening or not. This
 	// function is mainly useful for tests where we need to make sure the
 	// listening routine is started.
 	Listening() bool
 }
 
-// Host is an interface that can Listen for a specific type of Conn and can
-// Connect to specific types of Conn. It used by the Router so the router can
-// manage connections all being oblivious to which type of connections.
+// Host listens for a specific type of Conn and can Connect to specific types
+// of Conn. It is used by the Router so the router can manage connections
+// while being oblivious to which type of connections it's handling.
 type Host interface {
 	Listener
 
