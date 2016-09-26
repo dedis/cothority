@@ -20,7 +20,8 @@ func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewRouter(sid, h), nil
+	r := NewRouter(sid, h)
+	return r, nil
 }
 
 // TCPConn implements the Conn interface using plain, unencrypted TCP.
@@ -114,7 +115,6 @@ func (c *TCPConn) receiveRaw() ([]byte, error) {
 		n, err := c.conn.Read(b)
 		// Quit if there is an error.
 		if err != nil {
-
 			return nil, handleError(err)
 		}
 		// Append the read bytes into the buffer.
@@ -201,7 +201,7 @@ func (c *TCPConn) Close() error {
 	err := c.conn.Close()
 	c.closed = true
 	if err != nil {
-		return handleError(err)
+		handleError(err)
 	}
 	return nil
 }
@@ -209,7 +209,6 @@ func (c *TCPConn) Close() error {
 // handleError translates the network-layer error to a set of errors
 // used in our packages.
 func handleError(err error) error {
-
 	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
 		return ErrClosed
 	} else if strings.Contains(err.Error(), "canceled") {
@@ -258,6 +257,9 @@ type TCPListener struct {
 // A subsequent call to Address() gives the actual listening
 // address which is different if you gave it a ":0"-address.
 func NewTCPListener(addr Address) (*TCPListener, error) {
+	if addr.ConnType() != PlainTCP {
+		return nil, errors.New("TCPListener can't listen on non-tcp address")
+	}
 	t := &TCPListener{
 		quit:         make(chan bool),
 		quitListener: make(chan bool),

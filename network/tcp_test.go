@@ -1,6 +1,8 @@
 package network
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -13,11 +15,116 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type BigMsg struct {
+	Array []byte
+}
+
+// Test the receiving part of a message for tcp connections if the response is
+// buffered correctly.
+func TestTCPConnReceiveRaw(t *testing.T) {
+	addr := make(chan string)
+	done := make(chan bool)
+	check := make(chan bool)
+
+	checking := func() bool {
+		select {
+		case <-check:
+			return false
+		case <-time.After(20 * time.Millisecond):
+			return true
+		}
+	}
+	// prepare the msg
+	msg := &BigMsg{Array: make([]byte, 7893)}
+	_ = RegisterPacketType(BigMsg{})
+	buff, err := MarshalRegisteredType(msg)
+	assert.Nil(t, err)
+
+	fn := func(c net.Conn) {
+		checking = func() bool {
+			select {
+			case <-check:
+				return false
+			case <-time.After(20 * time.Millisecond):
+				return true
+			}
+		}
+		// different slices of bytes
+		maxChunk := 1400
+		slices := make([][]byte, 0)
+		currentChunk := 0
+		for currentChunk+maxChunk < len(buff) {
+			slices = append(slices, buff[currentChunk:currentChunk+maxChunk])
+			currentChunk += maxChunk
+		}
+		slices = append(slices, buff[currentChunk:])
+		// send the size first
+		binary.Write(c, globalOrder, Size(len(buff)))
+		// then send pieces and check if the other side already returned or not
+		for i, slice := range slices[:len(slices)-1] {
+			t.Logf("Will write slice %d/%d...", i, len(slices))
+			if n, err := c.Write(slice); err != nil || n != len(slice) {
+				t.Fatal("Whut?")
+			}
+			t.Logf(" OK\n")
+			if !checking() {
+				t.Fatal("Already returned even if not finished")
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
+		// the last one should make the other end return
+		t.Logf("Will write last piece...")
+		if n, err := c.Write(slices[len(slices)-1]); n != len(slices[len(slices)-1]) || err != nil {
+			t.Fatal("could not send the last piece")
+		}
+		t.Logf(" OK\n")
+		check <- true
+	}
+
+	go func() {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		assert.Nil(t, err)
+		addr <- ln.Addr().String()
+		c, err := ln.Accept()
+		assert.Nil(t, err)
+		// do the thing
+		fn(c)
+		<-done
+		assert.Nil(t, ln.Close())
+		done <- true
+	}()
+
+	// get addr
+	listeningAddr := <-addr
+	c, err := NewTCPConn(NewTCPAddress(listeningAddr))
+	assert.Nil(t, err)
+
+	buffRaw, err := c.receiveRaw()
+	checking()
+	if !bytes.Equal(buff, buffRaw) {
+		t.Fatal("Bytes are not the same ")
+	} else if err != nil {
+		t.Error(err)
+	}
+
+	assert.Nil(t, c.Close())
+	// tell the listener to close
+	done <- true
+	// wait until it is closed
+	<-done
+
+}
+
 // test the creation of a new conn by opening a golang
 // listener and making a TCPConn connect to it,then close it.
 func TestTCPConn(t *testing.T) {
 	addr := make(chan string)
 	done := make(chan bool)
+
+	_, err := NewTCPConn(NewTCPAddress("127.0.0.1:7878"))
+	if err == nil {
+		t.Fatal("Should not be able to connect here")
+	}
 	go func() {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		assert.Nil(t, err)
@@ -34,6 +141,8 @@ func TestTCPConn(t *testing.T) {
 	listeningAddr := <-addr
 	c, err := NewTCPConn(NewTCPAddress(listeningAddr))
 	assert.Nil(t, err)
+	assert.Equal(t, c.Local().NetworkAddress(), c.conn.LocalAddr().String())
+	assert.Equal(t, c.Type(), PlainTCP)
 	assert.Nil(t, c.Close())
 	// tell the listener to close
 	done <- true
@@ -118,17 +227,25 @@ func TestTCPListener(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Could not stop listener")
 	}
+
+	assert.Nil(t, ln.listen(nil))
 }
 
-// Test setting up of Host
-func TestTCPHostNew(t *testing.T) {
-	h1, err := NewTestTCPHost(2000)
-	if err != nil {
-		t.Fatal("Couldn't setup a Host")
+func TestTCPRouter(t *testing.T) {
+	wrongAddr := &ServerIdentity{Address: NewLocalAddress("127.0.0.1:2000")}
+	_, err := NewTCPRouter(wrongAddr)
+	if err == nil {
+		t.Fatal("Should not setup Router with local address")
 	}
-	err = h1.Stop()
+	addr := &ServerIdentity{Address: NewTCPAddress("127.0.0.1:2000")}
+	h1, err := NewTCPRouter(addr)
 	if err != nil {
-		t.Fatal("Couldn't close", err)
+		t.Fatal("Could not setup host")
+	}
+	defer h1.Stop()
+	_, err = NewTCPRouter(addr)
+	if err == nil {
+		t.Fatal("Should not succeed with same port")
 	}
 }
 
@@ -143,6 +260,9 @@ func TestTCPHostClose(t *testing.T) {
 		t.Fatal("Error setup TestTCPHost2")
 	}
 	go h1.Listen(acceptAndClose)
+	if _, err := h2.Connect(NewLocalAddress("127.0.0.1:7878")); err == nil {
+		t.Fatal("Should not connect to dummy address or different type")
+	}
 	_, err = h2.Connect(h1.addr)
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
@@ -172,6 +292,38 @@ func TestTCPHostClose(t *testing.T) {
 		// try closing the underlying connection manually and fail
 		t.Fatal("Couldn't Stop()", h3)
 	}
+}
+
+type dummyErr struct {
+	timeout   bool
+	temporary bool
+}
+
+func (d *dummyErr) Timeout() bool {
+	return d.timeout
+}
+
+func (d *dummyErr) Temporary() bool {
+	return d.temporary
+}
+
+func (d *dummyErr) Error() string {
+	return "dummy error"
+}
+
+func TestHandleError(t *testing.T) {
+	assert.Equal(t, ErrClosed, handleError(errors.New("use of closed")))
+	assert.Equal(t, ErrCanceled, handleError(errors.New("canceled")))
+	assert.Equal(t, ErrEOF, handleError(errors.New("EOF")))
+
+	assert.Equal(t, ErrUnknown, handleError(errors.New("Random error!")))
+
+	de := dummyErr{true, true}
+	assert.Equal(t, ErrTemp, handleError(&de))
+	de.temporary = false
+	assert.Equal(t, ErrTimeout, handleError(&de))
+	de.timeout = false
+	assert.Equal(t, ErrUnknown, handleError(&de))
 }
 
 /*func TestTCPHostReconnection(t *testing.T) {*/
