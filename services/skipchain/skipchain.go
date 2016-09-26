@@ -434,17 +434,17 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 
 func (s *Service) VerifyShardFunc(msg []byte, sb *SkipBlock) bool {
 	if sb.ParentBlockID.IsNull() {
-		log.Lvl3("No parent skipblock to verify against")
+		log.LLvl3("No parent skipblock to verify against")
 		return false
 	}
 	sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
 	if !exists {
-		log.Lvl3("Parent skipblock doesn't exist")
+		log.LLvl3("Parent skipblock doesn't exist")
 		return false
 	}
 	for _, e := range sb.Roster.List {
 		if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
-			log.Lvl3("ServerIdentity in child doesn't exist in parent")
+			log.LLvl3("ServerIdentity in child doesn't exist in parent")
 			return false
 		}
 	}
