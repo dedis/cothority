@@ -310,13 +310,8 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 		}
 	}
 
-	// XXX: one should probably verify that all message hashes HI1 and HI2 are
-	// the same and abort if not; this might be important since e.g. the HI2
-	// hashes ensure that each server received the same commitment from the
-	// client
-
-	// Verify message hashes HI1 and Hi2; it is okay if some messages are
-	// missing as long as there are enough to reconstruct the secret
+	// Verify message hashes HI1 and HI2; it is okay if some messages are
+	// missing as long as there are enough to reconstruct the chosen secrets
 	for i, msg := range t.I1s {
 		for _, j := range t.Group[i] {
 			if _, ok := t.R1s[j]; ok {
@@ -336,6 +331,17 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			}
 		} else {
 			log.Lvlf2("Couldn't find R2 message of server %v", i)
+		}
+	}
+
+	// Verify that all servers received the same client commitment
+	for server, msg := range t.I2s {
+		for i, _ := range msg.ChosenSecret {
+			for j, _ := range msg.ChosenSecret[i] {
+				if int(msg.ChosenSecret[i][j]) != t.ChosenSecret[i][j] {
+					return fmt.Errorf("Server %v received wrong client commitment", server)
+				}
+			}
 		}
 	}
 
@@ -434,12 +440,12 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			//log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
 
 			// Remove bad values
-			for i := len(badEnc) - 1; i >= 0; i-- {
-				j := badEnc[i]
-				X = append(X[:j], X[j+1:]...)
-				encShare = append(encShare[:j], encShare[j+1:]...)
-				decShare = append(decShare[:j], decShare[j+1:]...)
-				decProof = append(decProof[:j], decProof[j+1:]...)
+			for j := len(badEnc) - 1; j >= 0; j-- {
+				k := badEnc[j]
+				X = append(X[:k], X[k+1:]...)
+				encShare = append(encShare[:k], encShare[k+1:]...)
+				decShare = append(decShare[:k], decShare[k+1:]...)
+				decProof = append(decProof[:k], decProof[k+1:]...)
 			}
 
 			// Check decryption consistency proofs
@@ -451,10 +457,10 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 			_ = badDec
 
 			// Remove bad shares
-			for i := len(badDec) - 1; i >= 0; i-- {
-				j := badDec[i]
-				decPos = append(decPos[:j], decPos[j+1:]...)
-				decShare = append(decShare[:j], decShare[j+1:]...)
+			for j := len(badDec) - 1; j >= 0; j-- {
+				k := badDec[j]
+				decPos = append(decPos[:k], decPos[k+1:]...)
+				decShare = append(decShare[:k], decShare[k+1:]...)
 			}
 
 			//log.Lvlf1("Dec: %v %v", goodDec, badDec)
@@ -616,8 +622,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	for i := 0; i < len(good); i++ {
 		j := good[i]
 		src := msg.EncShare[j].Source
-		if _, ok := rh.secret[idx]; !ok {
-			rh.secret[idx] = make([]int, 0)
+		if _, ok := rh.secret[src]; !ok {
+			rh.secret[src] = make([]int, 0)
 		}
 		rh.secret[src] = append(rh.secret[src], msg.EncShare[j].Target)
 	}
@@ -667,13 +673,13 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		//log.Lvlf1("ChosenSecret: %v", rh.chosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
-		var chosenSecret [][]uint32
+		var chosenSecret = make([][]uint32, len(rh.chosenSecret))
 		for i := range rh.chosenSecret {
 			var l []uint32
 			for j := range rh.chosenSecret[i] {
 				l = append(l, uint32(rh.chosenSecret[i][j]))
 			}
-			chosenSecret = append(chosenSecret, l)
+			chosenSecret[i] = l
 		}
 
 		// Prepare a message for each server of a group and send it
