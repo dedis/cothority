@@ -71,8 +71,6 @@ type SkipBlockFix struct {
 	AggregateResp abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
-	// Roster holds the roster-definition of that SkipBlock
-	Roster *sda.Roster
 }
 
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
@@ -98,6 +96,8 @@ type SkipBlock struct {
 	// BlockSig is the BFT-signature of the hash
 	BlockSig *bftcosi.BFTSignature
 
+	// Roster holds the roster-definition of that SkipBlock
+	Roster *sda.Roster
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
