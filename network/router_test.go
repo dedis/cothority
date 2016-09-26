@@ -71,14 +71,25 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
+	log.TestOutput(true, 5)
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
+	}
+	err = h1.Send(&ServerIdentity{Address: NewLocalAddress("127.1.2.3:2890")}, &SimpleMessage{12})
+	if err == nil {
+		t.Fatal("Should not be able to send")
 	}
 	h2, err := fac(2008)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = h1.Send(h2.id, nil)
+	if err == nil {
+		t.Fatal("Should not be able to send")
+	}
+
 	go h2.Start()
 
 	proc := newSimpleMessageProc(t)
@@ -106,6 +117,15 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 		t.Error("h1 has no connection to h2")
 	} else if h21 == nil {
 		t.Error("h2 has no connection to h1")
+	}
+
+	assert.Nil(t, h21.Close())
+	if err := h2.Stop(); err != nil {
+		t.Fatal("Should be able to stop h2")
+	}
+	err = h1.Send(h2.id, &SimpleMessage{12})
+	if err == nil {
+		t.Fatal("Should not be able to send stuff !!")
 	}
 }
 
@@ -311,6 +331,11 @@ func TestRouterExchange(t *testing.T) {
 	if err := router2.negotiateOpen(router1.id, c); err != nil {
 		t.Fatal("Wrong negotiation")
 	}
+	// triggers the dispatching conditional branch error router.go:
+	//  `log.Lvl3("Error dispatching:", err)`
+	if err := router2.Send(router1.id, &SimpleMessage{12}); err != nil {
+		t.Fatal("Could not send")
+	}
 	c.Close()
 
 	// try giving wrong id
@@ -323,6 +348,18 @@ func TestRouterExchange(t *testing.T) {
 	}
 	c.Close()
 
+	// try messing with the connections here
+	c, err = NewTCPConn(router1.id.Address)
+	if err != nil {
+		t.Fatal("Couldn't connect to host1:", err)
+	}
+	// closing before sending
+	c.Close()
+	if err := router2.negotiateOpen(router2.id, c); err == nil {
+		t.Fatal("negotiation should have aborted")
+	}
+
+	// stop everything
 	log.Lvl4("Closing connections")
 	if err := router2.Stop(); err != nil {
 		t.Fatal("Couldn't close host", err)
