@@ -3,7 +3,6 @@ package network
 import (
 	"errors"
 	"fmt"
-	"runtime/debug"
 	"sync"
 
 	"golang.org/x/net/context"
@@ -67,7 +66,6 @@ func (r *Router) Start() {
 		dst, err := r.exchangeServerIdentity(c)
 		if err != nil {
 			log.Error("ExchangeServerIdentity failed:", err)
-			debug.PrintStack()
 			if err := c.Close(); err != nil {
 				log.Error("Couldn't close secure connection:",
 					err)
@@ -159,14 +157,11 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	address := c.Remote()
 	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
 	for {
-		ctx := context.TODO()
-		log.Lvl3(r.id.Address, "Got message BEFORE")
-		packet, err := c.Receive(ctx)
+		packet, err := c.Receive()
 		// So the receiver can know about the error
 		packet.SetError(err)
 		packet.From = address
 		packet.ServerIdentity = remote
-		log.Lvl3(r.id.Address, "Got message AFTER")
 
 		// whether the router is closed
 		if r.Closed() {
@@ -210,7 +205,7 @@ func (r *Router) connection(sid ServerIdentityID) Conn {
 // real physical address of the connection and the connection itself
 // it locks (and unlocks when done):  networkLock
 func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
-	log.Lvl4("Registers", remote.Address)
+	log.Lvl4(r.address, "Registers", remote.Address)
 	r.connsMut.Lock()
 	defer r.connsMut.Unlock()
 	_, okc := r.connections[remote.ID]
@@ -277,10 +272,9 @@ func (r *Router) Tx() uint64 {
 	defer r.connsMut.Unlock()
 	var tx uint64
 	for _, arr := range r.connections {
-		if len(arr) == 0 {
-			continue
+		for _, c := range arr {
+			tx += c.Tx()
 		}
-		tx += arr[0].Tx()
 	}
 	return tx
 }
@@ -292,10 +286,9 @@ func (r *Router) Rx() uint64 {
 	defer r.connsMut.Unlock()
 	var rx uint64
 	for _, arr := range r.connections {
-		if len(arr) == 0 {
-			continue
+		for _, c := range arr {
+			rx += c.Rx()
 		}
-		rx += arr[0].Rx()
 	}
 	return rx
 }
