@@ -52,8 +52,8 @@ type endpoint struct {
 	addr Address
 	// uid is a unique identifier of the remote endpoint
 	// it's unique  for each direction:
-	// 127.0.0.1:2000 -> 127.0.0.1:2000 => 14
-	// 127.0.0.1:2000 <- 127.0.0.1:2000 => 15
+	// 127.0.0.1:2000 -> 127.0.0.1:7869 => 14
+	// 127.0.0.1:7869 <- 127.0.0.1:2000 => 15
 	uid uint64
 }
 
