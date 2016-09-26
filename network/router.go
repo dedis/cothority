@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -24,6 +22,8 @@ import (
 type Router struct {
 	// id is our own ServerIdentity
 	id *ServerIdentity
+	// address is the real-actual address used by the listener.
+	address Address
 	// Dispatcher is used to dispatch incoming message to the right recipient
 	Dispatcher
 
@@ -53,7 +53,9 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 		host:        h,
 		Dispatcher:  NewBlockingDispatcher(),
 	}
-	own.Address = h.Address()
+	r.address = h.Address()
+	r.host.Listening()
+	h.Listening()
 	return r
 }
 
@@ -85,7 +87,10 @@ func (r *Router) Start() {
 // an undefined behaviour. Callers should most of the time re-create a fresh
 // Router.
 func (r *Router) Stop() error {
-	err := r.host.Stop()
+	var err error
+	if r.host.Listening() {
+		err = r.host.Stop()
+	}
 	err2 := r.stopHandling()
 	r.reset()
 	if err != nil {
@@ -111,16 +116,16 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", r.id.Address, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", r.address, e, msg)
 	var err error
-	err = c.Send(context.TODO(), msg)
+	err = c.Send(msg)
 	if err != nil {
-		log.Lvl2(r.id.Address, "Couldn't send to", e, ":", err, "trying again")
+		log.Lvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
 			return err
 		}
-		err = c.Send(context.TODO(), msg)
+		err = c.Send(msg)
 		if err != nil {
 			return err
 		}
@@ -149,13 +154,13 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
 		// when leaving, unregister the connection
 		if err := c.Close(); err != nil {
-			log.Error(r.id.Address, "having error closing conn to ", remote.Address, ":", err)
+			log.Error(r.address, "having error closing conn to ", remote.Address, ":", err)
 		}
 		// and release one on the waitgroup
 		r.wg.Done()
 	}()
 	address := c.Remote()
-	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
+	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
 	for {
 		packet, err := c.Receive()
 		// So the receiver can know about the error
@@ -175,7 +180,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// remote connection closed
-				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// weird error let's try again
@@ -210,7 +215,7 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	defer r.connsMut.Unlock()
 	_, okc := r.connections[remote.ID]
 	if okc {
-		log.Lvl2("Connection already registered", okc)
+		log.Lvl5("Connection already registered. Appending new connection to same identity.")
 	}
 	r.connections[remote.ID] = append(r.connections[remote.ID], c)
 }
@@ -328,11 +333,11 @@ func (r *Router) negotiateOpen(si *ServerIdentity, c Conn) error {
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
 	// Send our ServerIdentity to the remote endpoint
 	log.Lvl4(own.Address, "Sending our identity to", c.Remote())
-	if err := c.Send(context.TODO(), own); err != nil {
+	if err := c.Send(own); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}
 	// Receive the other ServerIdentity
-	nm, err := c.Receive(context.TODO())
+	nm, err := c.Receive()
 	if err != nil {
 		return nil, fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
 	}
