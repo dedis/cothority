@@ -21,6 +21,9 @@ func TestClient_ProposeSkipBlock(t *testing.T) {
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Long run not good for Travis")
+	}
 	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true, true, true)
 	defer l.CloseAll()
