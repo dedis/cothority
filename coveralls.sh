@@ -16,3 +16,5 @@ do
         rm $dir/profile.tmp
     fi
 done
+
+goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $COVERALLS_TOKEN
