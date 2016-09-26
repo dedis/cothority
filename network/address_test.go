@@ -14,8 +14,8 @@ func TestConnType(t *testing.T) {
 		{"tcp", PlainTCP},
 		{"tls", TLS},
 		{"purb", PURB},
-		{"tcp4", UnvalidConnType},
-		{"_tls", UnvalidConnType},
+		{"tcp4", InvalidConnType},
+		{"_tls", InvalidConnType},
 	}
 
 	for _, str := range tests {
@@ -33,15 +33,21 @@ func TestAddress(t *testing.T) {
 		Address string
 		Host    string
 		Port    string
+		Public  bool
 	}{
-		{"tls://10.0.0.4:2000", true, TLS, "10.0.0.4:2000", "10.0.0.4", "2000"},
-		{"tcp://10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000", "10.0.0.4", "2000"},
-		{"purb://10.0.0.4:2000", true, PURB, "10.0.0.4:2000", "10.0.0.4", "2000"},
-		{"tls4://10.0.0.4:2000", false, UnvalidConnType, "", "", ""},
-		{"tls://1000.0.0.4:2000", false, UnvalidConnType, "", "", ""},
-		{"tlsx10.0.0.4:2000", false, UnvalidConnType, "", "", ""},
-		{"tls:10.0.0.4x2000", false, UnvalidConnType, "", "", ""},
-		{"tlsx10.0.0.4x2000", false, UnvalidConnType, "", "", ""},
+		{"tls://10.0.0.4:2000", true, TLS, "10.0.0.4:2000", "10.0.0.4", "2000", false},
+		{"tcp://10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000", "10.0.0.4", "2000", false},
+		{"tcp://67.43.129.85:2000", true, PlainTCP, "67.43.129.85:2000", "67.43.129.85", "2000", true},
+		{"purb://10.0.0.4:2000", true, PURB, "10.0.0.4:2000", "10.0.0.4", "2000", false},
+		{"tls4://10.0.0.4:2000", false, InvalidConnType, "", "", "", false},
+		{"tls://1000.0.0.4:2000", false, InvalidConnType, "", "", "", false},
+		{"tls://10.0.0.4:20000000", false, InvalidConnType, "", "", "", false},
+		{"tls://10.0.0.4:-10", false, InvalidConnType, "", "", "", false},
+		{"tlsx10.0.0.4:2000", false, InvalidConnType, "", "", "", false},
+		{"tls:10.0.0.4x2000", false, InvalidConnType, "", "", "", false},
+		{"tlsx10.0.0.4x2000", false, InvalidConnType, "", "", "", false},
+		{"tlxblurdie", false, InvalidConnType, "", "", "", false},
+		{"tls://blublublu", false, InvalidConnType, "", "", "", false},
 	}
 
 	for i, str := range tests {
@@ -51,5 +57,6 @@ func TestAddress(t *testing.T) {
 		assert.Equal(t, str.Address, add.NetworkAddress())
 		assert.Equal(t, str.Host, add.Host())
 		assert.Equal(t, str.Port, add.Port())
+		assert.Equal(t, str.Public, add.Public())
 	}
 }
