@@ -14,7 +14,7 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-// NewTCPRouter returns a fresh Router using TCPHost as the underlying Host.
+// NewTCPRouter returns a new Router using TCPHost as the underlying Host.
 func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
 	h, err := NewTCPHost(sid.Address)
 	if err != nil {
@@ -24,8 +24,7 @@ func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
 	return r, nil
 }
 
-// TCPConn is the underlying implementation of
-// Conn using plain Tcp.
+// TCPConn implements the Conn interface using plain, unencrypted TCP.
 type TCPConn struct {
 	// The name of the endpoint we are connected to.
 	endpoint Address
@@ -45,6 +44,7 @@ type TCPConn struct {
 }
 
 // NewTCPConn will open a TCPConn to the given address.
+// In case of an error it returns a nil TCPConn and the error.
 func NewTCPConn(addr Address) (*TCPConn, error) {
 	var err error
 	var conn net.Conn
@@ -69,8 +69,9 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 }
 
 // Receive calls the receive routine to get the bytes from the connection then
-// it tries to decode the buffer. Returns the Packet with the Msg field decoded
-// or EmptyApplicationPacket and an error if something wrong occured.
+// it decodes the buffer.
+// It returns the Packet with the Msg field decoded
+// or EmptyApplicationPacket and an error if something wrong happened.
 func (c *TCPConn) Receive() (nm Packet, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -93,8 +94,11 @@ func (c *TCPConn) Receive() (nm Packet, e error) {
 	return am, nil
 }
 
-// receiveRaw is responsible for getting first the size of the message, then the
+// receiveRaw reads the size of the message, then the
 // whole message. It returns the raw message as slice of bytes.
+// If there is no message available, it blocks until one becomes
+// available.
+// In case of an error it returns a nil slice and the error.
 func (c *TCPConn) receiveRaw() ([]byte, error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
@@ -107,13 +111,13 @@ func (c *TCPConn) receiveRaw() ([]byte, error) {
 	var read Size
 	var buffer bytes.Buffer
 	for read < total {
-		// read the size of the next packet
+		// Read the size of the next packet.
 		n, err := c.conn.Read(b)
-		// if error then quit
+		// Quit if there is an error.
 		if err != nil {
 			return nil, handleError(err)
 		}
-		// put it in the longterm buffer
+		// Append the read bytes into the buffer.
 		if _, err := buffer.Write(b[:n]); err != nil {
 			log.Error("Couldn't write to buffer:", err)
 		}
@@ -121,14 +125,14 @@ func (c *TCPConn) receiveRaw() ([]byte, error) {
 		b = b[n:]
 	}
 
-	// set the size read
+	// register how many bytes we read.
 	c.updateRx(uint64(read))
 	return buffer.Bytes(), nil
 }
 
-// Send will convert the NetworkMessage into an ApplicationMessage
-// and send it with send()
-// Returns an error if anything was wrong
+// Send converts the NetworkMessage into an ApplicationMessage
+// and sends it using send().
+// It returns an error if anything was wrong.
 func (c *TCPConn) Send(obj Body) error {
 	c.sendMutex.Lock()
 	defer c.sendMutex.Unlock()
@@ -145,7 +149,9 @@ func (c *TCPConn) Send(obj Body) error {
 	return c.sendRaw(b)
 }
 
-// sendRaw takes care of sending this slice of bytes FULLY to the connection
+// sendRaw writes the number of bytes of the message to the network then the
+// whole message b in slices of size maxChunkSize.
+// In case of an error it aborts and returns error.
 func (c *TCPConn) sendRaw(b []byte) error {
 	// First write the size
 	packetSize := Size(len(b))
@@ -163,28 +169,29 @@ func (c *TCPConn) sendRaw(b []byte) error {
 		}
 		sent += Size(n)
 	}
-	// update stats on the connection
+	// update stats on the connection.
 	c.updateTx(uint64(packetSize))
 	return nil
 }
 
 // Remote returns the name of the peer at the end point of
-// the connection
+// the connection.
 func (c *TCPConn) Remote() Address {
 	return c.endpoint
 }
 
-// Local returns the local address and port
+// Local returns the local address and port.
 func (c *TCPConn) Local() Address {
 	return NewTCPAddress(c.conn.LocalAddr().String())
 }
 
-// Type implements the Conn interface
+// Type returns PlainTCP.
 func (c *TCPConn) Type() ConnType {
 	return PlainTCP
 }
 
-// Close ... closes the connection
+// Close the connection.
+// Returns error if it couldn't close the connection.
 func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
 	defer c.closedMut.Unlock()
@@ -199,8 +206,8 @@ func (c *TCPConn) Close() error {
 	return nil
 }
 
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
+// handleError translates the network-layer error to a set of errors
+// used in our packages.
 func handleError(err error) error {
 	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
 		return ErrClosed
@@ -222,31 +229,33 @@ func handleError(err error) error {
 	return ErrUnknown
 }
 
-// TCPListener is the underlying implementation of
-// Host using Tcp as a communication channel
+// TCPListener implements the Host-interface using Tcp as a communication channel.
 type TCPListener struct {
-	// the underlying golang/net listener
+	// the underlying golang/net listener.
 	listener net.Listener
-	// the close channel used to indicate to the listener we want to quit
+	// the close channel used to indicate to the listener we want to quit.
 	quit chan bool
 	// quitListener is a channel to indicate to the closing function that the
-	// listener has actually really quit
+	// listener has actually really quit.
 	quitListener  chan bool
 	listeningLock sync.Mutex
 	listening     bool
 
-	// closed is used to tell the listen routine to return immediatly if a
-	// Stop() have been made (concurrency into place here)
+	// closed tells the listen routine to return immediately if a
+	// Stop() has been called.
 	closed bool
 
-	// listening addr (actual). Useful for listening on :0 port
+	// actual listening addr which might differ from initial address in
+	// case of ":0"-address.
 	addr net.Addr
 }
 
-// NewTCPListener returns a Listener. This function tries to bind to the given
-// address already.It returns the listener and an error if one occured during
-// the binding. A subsequent call to Address() will give the real listening
-// address (useful if you set it to port :0).
+// NewTCPListener returns a TCPListener. This function binds to the given
+// address.
+// It returns the listener and an error if one occurred during
+// the binding.
+// A subsequent call to Address() gives the actual listening
+// address which is different if you gave it a ":0"-address.
 func NewTCPListener(addr Address) (*TCPListener, error) {
 	if addr.ConnType() != PlainTCP {
 		return nil, errors.New("TCPListener can't listen on non-tcp address")
@@ -270,7 +279,9 @@ func NewTCPListener(addr Address) (*TCPListener, error) {
 	return t, nil
 }
 
-// Listen implements the Listener interface
+// Listen starts to listen for incoming connections and calls fn for every
+// connection-request it receives.
+// If the connection is closed, an error will be returned.
 func (t *TCPListener) Listen(fn func(Conn)) error {
 	receiver := func(tc *TCPConn) {
 		go fn(tc)
@@ -308,7 +319,9 @@ func (t *TCPListener) listen(fn func(*TCPConn)) error {
 	}
 }
 
-// Stop will stop the listener. It is a blocking call.
+// Stop the listener. It waits till all connections are closed
+// and returned from.
+// If there is no listener it will return an error.
 func (t *TCPListener) Stop() error {
 	// lets see if we launched a listening routing
 	t.listeningLock.Lock()
@@ -341,14 +354,14 @@ func (t *TCPListener) Stop() error {
 	return nil
 }
 
-// Address implements the Listener interface
+// Address returns the listening address.
 func (t *TCPListener) Address() Address {
 	t.listeningLock.Lock()
 	defer t.listeningLock.Unlock()
 	return NewAddress(PlainTCP, t.addr.String())
 }
 
-// Listening implements the Listener interface
+// Listening returns whether it's already listening.
 func (t *TCPListener) Listening() bool {
 	t.listeningLock.Lock()
 	defer t.listeningLock.Unlock()
@@ -361,7 +374,7 @@ type TCPHost struct {
 	*TCPListener
 }
 
-// NewTCPHost returns a fresh Host using TCP connection based type
+// NewTCPHost returns a new Host using TCP connection based type.
 func NewTCPHost(addr Address) (*TCPHost, error) {
 	h := &TCPHost{
 		addr: addr,
@@ -371,7 +384,8 @@ func NewTCPHost(addr Address) (*TCPHost, error) {
 	return h, err
 }
 
-// Connect implements the Host interface
+// Connect can only connect to PlainTCP connections.
+// It will return an error if it is not a PlainTCP-connection-type.
 func (t *TCPHost) Connect(addr Address) (Conn, error) {
 	switch addr.ConnType() {
 	case PlainTCP:
@@ -381,7 +395,7 @@ func (t *TCPHost) Connect(addr Address) (Conn, error) {
 	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", addr, addr.ConnType())
 }
 
-// NewTCPClient returns a fresh client using the TCP network communication
+// NewTCPClient returns a new client using the TCP network communication
 // layer.
 func NewTCPClient() *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
@@ -391,7 +405,7 @@ func NewTCPClient() *Client {
 }
 
 // NewTCPAddress returns a new Address that has type PlainTCP with the given
-// addr
+// address addr.
 func NewTCPAddress(addr string) Address {
 	return NewAddress(PlainTCP, addr)
 }
