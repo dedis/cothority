@@ -416,14 +416,17 @@ func TestService_RegisterVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, s1 := makeHELS(local, 3)
+	hosts, el, s1 := makeHELS(local, 3)
 	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
 	ver := make(chan bool, 3)
 	verifier := func(msg []byte, s *SkipBlock) bool {
 		ver <- true
 		return true
 	}
-	log.ErrFatal(RegisterVerification(VerifyTest, verifier))
+	for _, h := range hosts {
+		s := h.GetService(ServiceName).(*Service)
+		log.ErrFatal(s.RegisterVerification(VerifyTest, verifier))
+	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, VerifyTest, 1, 1)
 	log.ErrFatal(err)
 	assert.NotNil(t, sb.Data)

@@ -1,10 +1,10 @@
 package skipchain
 
 import (
-	"sync"
+	"errors"
 
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/satori/go.uuid"
 )
 
@@ -30,9 +30,6 @@ func init() {
 	for _, m := range msgs {
 		network.RegisterPacketType(m)
 	}
-	if err := RegisterVerification(VerifyNone, VerifyNoneFunc); err != nil {
-		panic(err)
-	}
 }
 
 // VerifierID represents one of the verifications used to accept or
@@ -44,19 +41,10 @@ type VerifierID uuid.UUID
 // around so it accepts a block.
 type SkipBlockVerifier func(msg []byte, s *SkipBlock) bool
 
-var verifiers map[VerifierID]SkipBlockVerifier
-var verifiersMutex sync.Mutex
-
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func RegisterVerification(v VerifierID, f SkipBlockVerifier) error {
-	verifiersMutex.Lock()
-	if len(verifiers) == 0 {
-		verifiers = map[VerifierID]SkipBlockVerifier{}
-	}
-	verifiers[v] = f
-	verifiersMutex.Unlock()
-	return nil
+func RegisterVerification(c *sda.Context, v VerifierID, f SkipBlockVerifier) error {
+	return errors.New("Not implemented")
 }
 
 var (
@@ -66,11 +54,6 @@ var (
 	// a part of its parent SkipChain
 	VerifyShard = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
 )
-
-func VerifyNoneFunc(msg []byte, s *SkipBlock) bool {
-	log.Lvl4("No verification - accepted")
-	return true
-}
 
 // This file holds all messages that can be sent to the SkipChain,
 // both from the outside and between instances of this service
