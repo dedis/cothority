@@ -23,6 +23,8 @@ import (
 type Router struct {
 	// id is our own ServerIdentity
 	id *ServerIdentity
+	// address is the real-actual address used by the listener.
+	address Address
 	// Dispatcher is used to dispatch incoming message to the right recipient
 	Dispatcher
 
@@ -46,13 +48,18 @@ type Router struct {
 // NewRouter returns a fresh Router giving its identity, and the host we want to
 // use.
 func NewRouter(own *ServerIdentity, h Host) *Router {
+	if own == nil || h == nil {
+		panic("Can't create router with nil arguments")
+	}
 	r := &Router{
 		id:          own,
 		connections: make(map[ServerIdentityID][]Conn),
 		host:        h,
 		Dispatcher:  NewBlockingDispatcher(),
 	}
-	own.Address = h.Address()
+	r.address = h.Address()
+	r.host.Listening()
+	h.Listening()
 	return r
 }
 
@@ -114,11 +121,11 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", r.id.Address, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", r.address, e, msg)
 	var err error
 	err = c.Send(msg)
 	if err != nil {
-		log.Lvl2(r.id.Address, "Couldn't send to", e, ":", err, "trying again")
+		log.Lvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
 			return err
@@ -152,21 +159,21 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
 		// when leaving, unregister the connection
 		if err := c.Close(); err != nil {
-			log.Error(r.id.Address, "having error closing conn to ", remote.Address, ":", err)
+			log.Error(r.address, "having error closing conn to ", remote.Address, ":", err)
 		}
 		// and release one on the waitgroup
 		r.wg.Done()
 	}()
 	address := c.Remote()
-	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
+	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
 	for {
-		log.Lvl3(r.id.Address, "Got message BEFORE")
+		log.Lvl3(r.address, "Got message BEFORE")
 		packet, err := c.Receive()
 		// So the receiver can know about the error
 		packet.SetError(err)
 		packet.From = address
 		packet.ServerIdentity = remote
-		log.Lvl3(r.id.Address, "Got message AFTER")
+		log.Lvl3(r.address, "Got message AFTER")
 
 		// whether the router is closed
 		if r.Closed() {
@@ -180,7 +187,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// remote connection closed
-				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// weird error let's try again
