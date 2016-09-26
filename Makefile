@@ -42,4 +42,4 @@ test_go:
 
 test: test_fmt test_lint test_go
 
-all: install test
+all: install test_playground
