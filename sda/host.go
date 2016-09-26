@@ -413,3 +413,8 @@ func (h *Host) GetStatus() Status {
 
 	return m
 }
+
+// GetService returns the service with the given name.
+func (h *Host) GetService(name string) Service {
+	return h.serviceManager.Service(name)
+}
