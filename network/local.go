@@ -194,7 +194,16 @@ func NewLocalConn(local, remote Address) (*LocalConn, error) {
 // NewLocalConnWithManager is similar to NewLocalConn but takes a specific
 // LocalManager.
 func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalConn, error) {
-	return lm.connect(local, remote)
+	for i := 0; i < MaxRetryConnect; i++ {
+		c, err := lm.connect(local, remote)
+		if err == nil {
+			return c, nil
+		} else if i == MaxRetryConnect-1 {
+			return nil, fmt.Errorf("Could not connect %x", err)
+		}
+		time.Sleep(WaitRetry)
+	}
+	return nil, errors.New("Could not connect")
 }
 
 // Send implements the Conn interface.
