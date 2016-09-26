@@ -414,6 +414,7 @@ func TestService_ForwardSignature(t *testing.T) {
 
 func TestService_RegisterVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
+	sda.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	hosts, el, s1 := makeHELS(local, 3)
@@ -429,8 +430,35 @@ func TestService_RegisterVerification(t *testing.T) {
 	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, VerifyTest, 1, 1)
 	log.ErrFatal(err)
-	assert.NotNil(t, sb.Data)
-	assert.Equal(t, 3, len(ver))
+	require.NotNil(t, sb.Data)
+	require.Equal(t, 3, len(ver))
+
+	sb, err = makeGenesisRosterArgs(s1, el, nil, ServiceVerifier, 1, 1)
+	log.ErrFatal(err)
+	require.NotNil(t, sb.Data)
+	require.Equal(t, 3, len(ServiceVerifierChan))
+}
+
+var ServiceVerifier = VerifierID(uuid.NewV5(uuid.NamespaceURL, "ServiceVerifier"))
+var ServiceVerifierChan = make(chan bool, 3)
+
+type ServiceVerify struct {
+	*sda.ServiceProcessor
+}
+
+func (sv *ServiceVerify) Verify(msg []byte, sb *SkipBlock) bool {
+	ServiceVerifierChan <- true
+	return true
+}
+
+func (sv *ServiceVerify) NewProtocol(tn *sda.TreeNodeInstance, c *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newServiceVerify(c *sda.Context, path string) sda.Service {
+	sv := &ServiceVerify{}
+	log.ErrFatal(RegisterVerification(c, ServiceVerifier, sv.Verify))
+	return sv
 }
 
 // makes a genesis Roster-block

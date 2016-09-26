@@ -77,7 +77,7 @@ var GenericConfigID = network.RegisterPacketType(GenericConfig{})
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
 	constructors []serviceEntry
-	mutex        sync.Mutex
+	mutex        sync.RWMutex
 }
 
 // A serviceEntry holds all references to a service
@@ -100,17 +100,19 @@ func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
 	}
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	s.constructors = append(s.constructors, serviceEntry{
 		constructor: fn,
 		serviceID:   id,
 		name:        name,
 	})
-	s.mutex.Unlock()
 	return nil
 }
 
 // Unregister - mainly for tests
 func (s *serviceFactory) Unregister(name string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	index := -1
 	for i, c := range s.constructors {
 		if c.name == name {
@@ -137,8 +139,8 @@ func UnregisterService(name string) error {
 
 // RegisteredServices returns all the services registered
 func (s *serviceFactory) registeredServiceIDs() []ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
 	for _, c := range s.constructors {
 		ids = append(ids, c.serviceID)
@@ -148,8 +150,8 @@ func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 
 // RegisteredServicesByName returns all the names of the services registered
 func (s *serviceFactory) RegisteredServiceNames() []string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	var names = make([]string, 0, len(s.constructors))
 	for _, n := range s.constructors {
 		names = append(names, n.name)
@@ -159,8 +161,8 @@ func (s *serviceFactory) RegisteredServiceNames() []string {
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	for _, c := range s.constructors {
 		if name == c.name {
 			return c.serviceID
@@ -171,8 +173,8 @@ func (s *serviceFactory) ServiceID(name string) ServiceID {
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	for _, c := range s.constructors {
 		if id == c.serviceID {
 			return c.name
@@ -183,8 +185,8 @@ func (s *serviceFactory) Name(id ServiceID) string {
 
 // start launches a new service
 func (s *serviceFactory) start(name string, con *Context, path string) (Service, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	for _, c := range s.constructors {
 		if name == c.name {
 			return c.constructor(con, path), nil

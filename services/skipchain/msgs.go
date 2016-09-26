@@ -44,7 +44,11 @@ type SkipBlockVerifier func(msg []byte, s *SkipBlock) bool
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
 func RegisterVerification(c *sda.Context, v VerifierID, f SkipBlockVerifier) error {
-	return errors.New("Not implemented")
+	scs := c.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).RegisterVerification(v, f)
 }
 
 var (

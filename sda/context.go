@@ -1,6 +1,10 @@
 package sda
 
-import "github.com/dedis/cothority/network"
+import (
+	"log"
+
+	"github.com/dedis/cothority/network"
+)
 
 // Context is the interface that is given to a Service
 type Context struct {
@@ -77,6 +81,12 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 // It delegates the dispatching to the serviceManager.
 func (c *Context) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
+}
+
+// Service returns the corresponding service.
+func (c *Context) Service(name string) Service {
+	log.Print()
+	return c.manager.Service(name)
 }
 
 // String returns the host it's running on

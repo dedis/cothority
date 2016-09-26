@@ -36,7 +36,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := range [1024]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, err = clients[i%8].GetUpdateChain(inter, inter.Hash)
+			_, err := clients[i%8].GetUpdateChain(inter, inter.Hash)
 			log.ErrFatal(err)
 			wg.Done()
 		}(i)

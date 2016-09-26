@@ -447,7 +447,6 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 // bftVerify takes a message and verifies it's valid
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	// XXX What's this variable for ?
 	s.testVerify = true
 	_, sbN, err := network.UnmarshalRegistered(data)
 	if err != nil {
@@ -462,7 +461,7 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 
 	f, ok := s.verifiers[sb.VerifierID]
 	if !ok {
-		log.Lvl2("Found NO user verification for %x", sb.VerifierID)
+		log.Lvlf2("Found no user verification for %x", sb.VerifierID)
 		return false
 	}
 	return f(msg, sb)
