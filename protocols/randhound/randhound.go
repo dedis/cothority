@@ -1,3 +1,7 @@
+// Package randhound is a client/server protocol for creating public random
+// strings in an unbiasable and verifiable way given that a threshold of
+// participants is honest. The protocol is driven by the client which scavenges
+// the public randomness from the servers over the course of two round-trips.
 package randhound
 
 import (
@@ -25,7 +29,7 @@ func init() {
 	sda.ProtocolRegisterName("RandHound", NewRandHound)
 }
 
-// NewRandHound ...
+// NewRandHound generates a new RandHound instance.
 func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 	// Setup RandHound protocol struct
@@ -50,7 +54,8 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return rh, err
 }
 
-// Setup ...
+// Setup configures a RandHound instance on client-side. Needs to be called
+// before Start.
 func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) error {
 
 	rh.nodes = nodes
@@ -79,7 +84,9 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	return nil
 }
 
-// Start ...
+// Start initiates the RandHound protocol run. The client pseudo-randomly
+// chooses the server grouping, forms an I1 message for each group, and sends
+// it to all servers of that group.
 func (rh *RandHound) Start() error {
 
 	var err error
@@ -181,7 +188,8 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 	return sharding, keys, nil
 }
 
-// Random ...
+// Random creates the collective randomness from the shares and the protocol
+// transcript.
 func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 
 	rh.mutex.Lock()
@@ -224,13 +232,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		return nil, nil, err
 	}
 
-	return rb, rh.createTranscript(), nil
-}
-
-// CreateTranscript ...
-func (rh *RandHound) createTranscript() *Transcript {
-
-	return &Transcript{
+	transcript := &Transcript{
 		SID:          rh.sid,
 		Nodes:        rh.nodes,
 		Groups:       rh.groups,
@@ -248,10 +250,12 @@ func (rh *RandHound) createTranscript() *Transcript {
 		R1s:          rh.r1s,
 		R2s:          rh.r2s,
 	}
+
+	return rb, transcript, nil
 }
 
-// VerifyTranscript ...
-func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Transcript) error {
+// Verify checks a given collective random string against a protocol transcript.
+func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 
 	rh.mutex.Lock()
 	defer rh.mutex.Unlock()
@@ -336,8 +340,8 @@ func (rh *RandHound) VerifyTranscript(suite abstract.Suite, random []byte, t *Tr
 
 	// Verify that all servers received the same client commitment
 	for server, msg := range t.I2s {
-		for i, _ := range msg.ChosenSecret {
-			for j, _ := range msg.ChosenSecret[i] {
+		for i := range msg.ChosenSecret {
+			for j := range msg.ChosenSecret[i] {
 				if int(msg.ChosenSecret[i][j]) != t.ChosenSecret[i][j] {
 					return fmt.Errorf("Server %v received wrong client commitment", server)
 				}

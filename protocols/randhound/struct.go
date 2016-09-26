@@ -9,7 +9,8 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// RandHound ...
+// RandHound is the main protocol struct and implements the
+// sda.ProtocolInstance interface.
 type RandHound struct {
 	*sda.TreeNodeInstance
 
@@ -41,14 +42,15 @@ type RandHound struct {
 	secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
 	chosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
 
-	// For signaling the end of a protocol run
-	Done        chan bool
-	SecretReady bool
+	// Misc
+	Done        chan bool // Channel to signal the end of a protocol run
+	SecretReady bool      // Boolean to indicate whether the collect randomness is ready or not
 
 	//Byzantine map[int]int // for simulating byzantine servers (= key)
 }
 
-// Share ...
+// Share encapsulates all information for encrypted or decrypted shares and the
+// respective consistency proofs.
 type Share struct {
 	Source int            // Source server index
 	Target int            // Target server index
@@ -57,7 +59,7 @@ type Share struct {
 	Proof  ProofCore      // ZK-verification proof
 }
 
-// Transcript ...
+// Transcript represents the record of a protocol run created by the client.
 type Transcript struct {
 	SID          []byte             // Session identifier
 	Nodes        int                // Total number of nodes (client + server)
@@ -77,7 +79,7 @@ type Transcript struct {
 	R2s          map[int]*R2        // R2 messages received from servers
 }
 
-// I1 message
+// I1 is the message sent by the client to the servers in step 1.
 type I1 struct {
 	Sig       crypto.SchnorrSig // Schnorr signature
 	SID       []byte            // Session identifier
@@ -86,7 +88,7 @@ type I1 struct {
 	Key       []abstract.Point  // Public keys of trustees
 }
 
-// R1 message
+// R1 is the reply sent by the servers to the client in step 2.
 type R1 struct {
 	Sig        crypto.SchnorrSig // Schnorr signature
 	HI1        []byte            // Hash of I1
@@ -94,7 +96,7 @@ type R1 struct {
 	CommitPoly []byte            // Marshalled commitment polynomial
 }
 
-// I2 message
+// I2 is the message sent by the client to the servers in step 3.
 type I2 struct {
 	Sig          crypto.SchnorrSig // Schnorr signature
 	SID          []byte            // Session identifier
@@ -103,32 +105,32 @@ type I2 struct {
 	PolyCommit   []abstract.Point  // Polynomial commitments
 }
 
-// R2 message
+// R2 is the reply sent by the servers to the client in step 4.
 type R2 struct {
 	Sig      crypto.SchnorrSig // Schnorr signature
 	HI2      []byte            // Hash of I2
 	DecShare []Share           // Decrypted shares
 }
 
-// WI1 is a SDA-wrapper around I1
+// WI1 is a SDA-wrapper around I1.
 type WI1 struct {
 	*sda.TreeNode
 	I1
 }
 
-// WR1 is a SDA-wrapper around R1
+// WR1 is a SDA-wrapper around R1.
 type WR1 struct {
 	*sda.TreeNode
 	R1
 }
 
-// WI2 is a SDA-wrapper around I2
+// WI2 is a SDA-wrapper around I2.
 type WI2 struct {
 	*sda.TreeNode
 	I2
 }
 
-// WR2 is a SDA-wrapper around R2
+// WR2 is a SDA-wrapper around R2.
 type WR2 struct {
 	*sda.TreeNode
 	R2
