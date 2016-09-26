@@ -434,11 +434,14 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
+			log.Lvl4("Closing connection to", dst)
 			return nil, err
 		}
+		log.Lvl4("Closing connection to", dst)
 		return &response, nil
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Minute * 30):
 		log.Lvl2(log.Stack())
+		log.Lvl4("Closing connection to", dst)
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }
@@ -460,6 +463,22 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 		err = errors.New(strings.Join(errstrs, "\n"))
 	}
 	return msgs, err
+}
+
+// Rx returns the number of bytes received.
+func (c *Client) Rx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Rx()
+}
+
+// Tx returns the number of bytes sent.
+func (c *Client) Tx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Tx()
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
