@@ -34,6 +34,7 @@ func TestTime(t *testing.T) {
 	if !strings.Contains(str, "With time") {
 		t.Fatal("Didn't get correct string: ", str)
 	}
+	t.Fatal("Fail on purpose to see if travis reports this (DON'T FORGET TO REMOVE THIS LINE WHEN DONE)")
 }
 
 func TestFlags(t *testing.T) {

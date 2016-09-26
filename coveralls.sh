@@ -17,9 +17,4 @@ do
     fi
 done
 
-# If you want to print the coverage of each file individually uncomment:
-# go tool cover -func profile.cov
-
-# To submit the test coverage result to coveralls.io,
-# use goveralls (https://github.com/mattn/goveralls)
 goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $COVERALLS_TOKEN
