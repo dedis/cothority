@@ -68,8 +68,7 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 	return &c, err
 }
 
-// Receive calls the receive routine to get the bytes from the connection then
-// it decodes the buffer.
+// Receive get the bytes from the connection then decodes the buffer.
 // It returns the Packet with the Msg field decoded
 // or EmptyApplicationPacket and an error if something wrong happened.
 func (c *TCPConn) Receive() (nm Packet, e error) {
@@ -221,9 +220,7 @@ func handleError(err error) error {
 	if !ok {
 		return ErrUnknown
 	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
+	if netErr.Timeout() {
 		return ErrTimeout
 	}
 	return ErrUnknown

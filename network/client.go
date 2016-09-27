@@ -54,7 +54,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	}
 	defer c.Close()
 
-	if err := negotiateOpen(sid, dst, c); err != nil {
+	if err := sendServerIdentity(sid, c); err != nil {
 		return nil, err
 	}
 
