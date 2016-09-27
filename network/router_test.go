@@ -332,23 +332,13 @@ func TestRouterExchange(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(router1.id, c); err != nil {
+	if err := router2.sendServerIdentity(c); err != nil {
 		t.Fatal("Wrong negotiation")
 	}
 	// triggers the dispatching conditional branch error router.go:
 	//  `log.Lvl3("Error dispatching:", err)`
 	if err := router2.Send(router1.id, &SimpleMessage{12}); err != nil {
 		t.Fatal("Could not send")
-	}
-	c.Close()
-
-	// try giving wrong id
-	c, err = NewTCPConn(router1.id.Address)
-	if err != nil {
-		t.Fatal("Couldn't connect to host1:", err)
-	}
-	if err := router2.negotiateOpen(router2.id, c); err == nil {
-		t.Fatal("negotiation should have aborted")
 	}
 	c.Close()
 
@@ -359,7 +349,7 @@ func TestRouterExchange(t *testing.T) {
 	}
 	// closing before sending
 	c.Close()
-	if err := router2.negotiateOpen(router2.id, c); err == nil {
+	if err := router2.sendServerIdentity(c); err == nil {
 		t.Fatal("negotiation should have aborted")
 	}
 
