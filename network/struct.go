@@ -15,13 +15,13 @@ import (
 )
 
 // MaxRetryConnect defines how many times we should try to connect.
-const MaxRetryConnect = 10
+const MaxRetryConnect = 5
 
 // MaxIdentityExchange is the timeout for an identityExchange.
 const MaxIdentityExchange = 5 * time.Second
 
 // WaitRetry is the timeout on connection-setups.
-const WaitRetry = 100 * time.Millisecond
+const WaitRetry = 20 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown

@@ -1,10 +1,10 @@
 package network
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,6 @@ func TestClientLocal(t *testing.T) {
 type clientFactory func() *Client
 
 func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
-	log.TestOutput(true, 3)
 	r, err := fac(2000)
 	if err != nil {
 		t.Fatal(err)
@@ -30,12 +29,14 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 	proc := NewSendBackProc(t, r)
 	r.RegisterProcessor(proc, SimpleMessageType)
 
+	fmt.Println("Before normal")
 	client := cl()
 	nm, err := client.Send(r.id, &SimpleMessage{3})
 	require.Nil(t, err)
 	require.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 
 	// client won't have any response
+	fmt.Println("Before timeout")
 	old := timeoutResponse
 	timeoutResponse = 10 * time.Millisecond
 	proc.drop = true
@@ -44,6 +45,7 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 	if err == nil {
 		t.Fatal("Client should not be able to have a response")
 	}
+	fmt.Println("before error")
 	// client will get an error message
 	proc.err = true
 	client = cl()

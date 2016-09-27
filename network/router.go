@@ -91,12 +91,31 @@ func (r *Router) Stop() error {
 	if r.host.Listening() {
 		err = r.host.Stop()
 	}
-	err2 := r.stopHandling()
-	r.reset()
+	// set the isClosed to true
+	r.closedMut.Lock()
+	r.isClosed = true
+	r.closedMut.Unlock()
+
+	// then close all connections
+	r.connsMut.Lock()
+	for _, arr := range r.connections {
+		// take all connections to close
+		for _, c := range arr {
+			if err := c.Close(); err != nil {
+				log.Error(err)
+			}
+		}
+	}
+	r.connsMut.Unlock()
+
+	// wait for all handleConn to finish
+	r.wg.Wait()
+
+	r.closedMut.Lock()
+	r.isClosed = false
+	r.closedMut.Unlock()
 	if err != nil {
 		return err
-	} else if err2 != nil {
-		return err2
 	}
 	return nil
 }
@@ -220,12 +239,6 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	r.connections[remote.ID] = append(r.connections[remote.ID], c)
 }
 
-func (r *Router) reset() {
-	r.closedMut.Lock()
-	r.isClosed = false
-	r.closedMut.Unlock()
-}
-
 func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
 	r.wg.Add(1)
 	go r.handleConn(dst, c)
@@ -234,23 +247,6 @@ func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
 // Close shuts down all network connections and returns once all processing go
 // routines are done.
 func (r *Router) stopHandling() error {
-	// set the isClosed to true
-	r.close()
-
-	// then close all connections
-	r.connsMut.Lock()
-	for _, arr := range r.connections {
-		// take all connections to close
-		for _, c := range arr {
-			if err := c.Close(); err != nil {
-				log.Error(err)
-			}
-		}
-	}
-	r.connsMut.Unlock()
-
-	// wait for all handleConn to finish
-	r.wg.Wait()
 	return nil
 }
 
@@ -265,9 +261,6 @@ func (r *Router) Closed() bool {
 // close set the isClosed variable to true, any subsequent call to Closed()
 // will return true.
 func (r *Router) close() {
-	r.closedMut.Lock()
-	defer r.closedMut.Unlock()
-	r.isClosed = true
 }
 
 // Tx implements monitor/CounterIO
