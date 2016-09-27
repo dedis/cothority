@@ -52,8 +52,8 @@ type endpoint struct {
 	addr Address
 	// uid is a unique identifier of the remote endpoint
 	// it's unique  for each direction:
-	// 127.0.0.1:2000 -> 127.0.0.1:2000 => 14
-	// 127.0.0.1:2000 <- 127.0.0.1:2000 => 15
+	// 127.0.0.1:2000 -> 127.0.0.1:7869 => 14
+	// 127.0.0.1:7869 <- 127.0.0.1:2000 => 15
 	uid uint64
 }
 
@@ -194,7 +194,16 @@ func NewLocalConn(local, remote Address) (*LocalConn, error) {
 // NewLocalConnWithManager is similar to NewLocalConn but takes a specific
 // LocalManager.
 func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalConn, error) {
-	return lm.connect(local, remote)
+	for i := 0; i < MaxRetryConnect; i++ {
+		c, err := lm.connect(local, remote)
+		if err == nil {
+			return c, nil
+		} else if i == MaxRetryConnect-1 {
+			return nil, fmt.Errorf("Could not connect %x", err)
+		}
+		time.Sleep(WaitRetry)
+	}
+	return nil, errors.New("Could not connect")
 }
 
 // Send implements the Conn interface.
@@ -352,8 +361,7 @@ func NewLocalListenerWithManager(lm *LocalManager, addr Address) (*LocalListener
 	return l, nil
 }
 
-// Listen implements the Listener interface. This call blocks until Stop() is
-// called on the listener.
+// Listen implements the Listener interface
 func (ll *LocalListener) Listen(fn func(Conn)) error {
 	ll.Lock()
 	if ll.listening {

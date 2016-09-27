@@ -30,7 +30,7 @@ type LocalTest struct {
 	mode string
 	// the context for the local connections
 	// it enables to have multiple local test running simultaneously
-	ctx *network.LocalContext
+	ctx *network.LocalManager
 }
 
 var (
@@ -51,7 +51,7 @@ func NewLocalTest() *LocalTest {
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
 		mode:     Local,
-		ctx:      network.NewLocalContext(),
+		ctx:      network.NewLocalManager(),
 	}
 }
 
@@ -314,7 +314,7 @@ func NewLocalHost(port int) *Host {
 // of this LocalTest
 func (l *LocalTest) NewLocalHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	localRouter, err := network.NewLocalRouterWithContext(l.ctx, id)
+	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
 	if err != nil {
 		panic(err)
 	}
@@ -340,7 +340,7 @@ func (l *LocalTest) NewClient(serviceName string) *Client {
 func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 	return &Client{
 		ServiceID: ServiceFactory.ServiceID(serviceName),
-		net:       network.NewLocalClientWithContext(l.ctx),
+		net:       network.NewLocalClientWithManager(l.ctx),
 	}
 }
 

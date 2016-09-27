@@ -5,8 +5,6 @@ import (
 	"sync"
 	"testing"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -61,7 +59,7 @@ func TestTCPHugeConnections(t *testing.T) {
 		go func(h int) {
 			err := hosts[h].Listen(func(c Conn) {
 				log.Lvl5(2000+h, "got a connection")
-				nm, err := c.Receive(context.TODO())
+				nm, err := c.Receive()
 				if err != nil {
 					t.Fatal("Couldn't receive msg:", err)
 				}
@@ -80,7 +78,7 @@ func TestTCPHugeConnections(t *testing.T) {
 
 				go func(h int) {
 					log.Lvl3(h, "Sending back")
-					err := c.Send(context.TODO(), &big)
+					err := c.Send(&big)
 					if err != nil {
 						t.Fatal(h, "couldn't send message:", err)
 					}
@@ -113,11 +111,10 @@ func TestTCPHugeConnections(t *testing.T) {
 			go func(conn Conn, i, j int) {
 				defer wg.Done()
 				log.Lvl3("Sending from", i, "to", j, ":")
-				ctx := context.TODO()
-				if err := conn.Send(ctx, &big); err != nil {
+				if err := conn.Send(&big); err != nil {
 					t.Fatal(i, j, "Couldn't send:", err)
 				}
-				nm, err := conn.Receive(context.TODO())
+				nm, err := conn.Receive()
 				if err != nil {
 					t.Fatal(i, j, "Couldn't receive:", err)
 				}

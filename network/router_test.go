@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -71,15 +72,18 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
-	log.TestOutput(true, 5)
+	//	log.TestOutput(true, 5)
+	fmt.Println("Before fac()")
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
 	}
+	fmt.Println("after fac()")
 	err = h1.Send(&ServerIdentity{Address: NewLocalAddress("127.1.2.3:2890")}, &SimpleMessage{12})
 	if err == nil {
 		t.Fatal("Should not be able to send")
 	}
+	fmt.Println("after send() #1")
 	h2, err := fac(2008)
 	if err != nil {
 		t.Fatal(err)

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/cothority/log"
 )
 
@@ -25,6 +23,8 @@ import (
 type Router struct {
 	// id is our own ServerIdentity
 	id *ServerIdentity
+	// address is the real-actual address used by the listener.
+	address Address
 	// Dispatcher is used to dispatch incoming message to the right recipient
 	Dispatcher
 	// Host listens for new connections
@@ -53,7 +53,9 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 		host:        h,
 		Dispatcher:  NewBlockingDispatcher(),
 	}
-	own.Address = h.Address()
+	r.address = h.Address()
+	r.host.Listening()
+	h.Listening()
 	return r
 }
 
@@ -86,13 +88,35 @@ func (r *Router) Start() {
 // an undefined behaviour. Callers should most of the time re-create a fresh
 // Router.
 func (r *Router) Stop() error {
-	err := r.host.Stop()
-	err2 := r.stopHandling()
-	r.reset()
+	var err error
+	if r.host.Listening() {
+		err = r.host.Stop()
+	}
+	// set the isClosed to true
+	r.closedMut.Lock()
+	r.isClosed = true
+	r.closedMut.Unlock()
+
+	// then close all connections
+	r.connsMut.Lock()
+	for _, arr := range r.connections {
+		// take all connections to close
+		for _, c := range arr {
+			if err := c.Close(); err != nil {
+				log.Error(err)
+			}
+		}
+	}
+	r.connsMut.Unlock()
+
+	// wait for all handleConn to finish
+	r.wg.Wait()
+
+	r.closedMut.Lock()
+	r.isClosed = false
+	r.closedMut.Unlock()
 	if err != nil {
 		return err
-	} else if err2 != nil {
-		return err2
 	}
 	return nil
 }
@@ -112,16 +136,16 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", r.id.Address, e, msg)
+	log.Lvlf4("%s sends to %s msg: %+v", r.address, e, msg)
 	var err error
-	err = c.Send(context.TODO(), msg)
+	err = c.Send(msg)
 	if err != nil {
-		log.Lvl2(r.id.Address, "Couldn't send to", e, ":", err, "trying again")
+		log.Lvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
 			return err
 		}
-		err = c.Send(context.TODO(), msg)
+		err = c.Send(msg)
 		if err != nil {
 			return err
 		}
@@ -153,12 +177,12 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
 		// Clean up the connection by making sure it's closed.
 		if err := c.Close(); err != nil {
-			log.Error(r.id.Address, "having error closing conn to ", remote.Address, ":", err)
+			log.Error(r.address, "having error closing conn to ", remote.Address, ":", err)
 		}
 		r.wg.Done()
 	}()
 	address := c.Remote()
-	log.Lvl3(r.id.Address, "Handling new connection to ", remote.Address)
+	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
 	for {
 		packet, err := c.Receive()
 		// Writes the error in the packet sent to the dispatcher.
@@ -175,7 +199,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
 				// Connection got closed.
-				log.Lvl3(r.id.Address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// Temporary error, continue.
@@ -210,15 +234,9 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	defer r.connsMut.Unlock()
 	_, okc := r.connections[remote.ID]
 	if okc {
-		log.Lvl2("Connection already registered", okc)
+		log.Lvl5("Connection already registered. Appending new connection to same identity.")
 	}
 	r.connections[remote.ID] = append(r.connections[remote.ID], c)
-}
-
-func (r *Router) reset() {
-	r.closedMut.Lock()
-	r.isClosed = false
-	r.closedMut.Unlock()
 }
 
 func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
@@ -229,23 +247,6 @@ func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
 // Close shuts down all network connections and returns once all processing go
 // routines are done.
 func (r *Router) stopHandling() error {
-	// set the isClosed to true
-	r.close()
-
-	// then close all connections
-	r.connsMut.Lock()
-	for _, arr := range r.connections {
-		// take all connections to close
-		for _, c := range arr {
-			if err := c.Close(); err != nil {
-				log.Error(err)
-			}
-		}
-	}
-	r.connsMut.Unlock()
-
-	// wait for all handleConn to finish
-	r.wg.Wait()
 	return nil
 }
 
@@ -260,9 +261,6 @@ func (r *Router) Closed() bool {
 // close set the isClosed variable to true, any subsequent call to Closed()
 // will return true.
 func (r *Router) close() {
-	r.closedMut.Lock()
-	defer r.closedMut.Unlock()
-	r.isClosed = true
 }
 
 // Tx implements monitor/CounterIO
@@ -328,11 +326,11 @@ func (r *Router) negotiateOpen(si *ServerIdentity, c Conn) error {
 func exchangeServerIdentity(own *ServerIdentity, c Conn) (*ServerIdentity, error) {
 	// Send our ServerIdentity to the remote endpoint
 	log.Lvl4(own.Address, "Sending our identity to", c.Remote())
-	if err := c.Send(context.TODO(), own); err != nil {
+	if err := c.Send(own); err != nil {
 		return nil, fmt.Errorf("Error while sending out identity during negotiation:%s", err)
 	}
 	// Receive the other ServerIdentity
-	nm, err := c.Receive(context.TODO())
+	nm, err := c.Receive()
 	if err != nil {
 		return nil, fmt.Errorf("Error while receiving ServerIdentity during negotiation %s", err)
 	}
@@ -361,29 +359,3 @@ func negotiateOpen(own, remote *ServerIdentity, c Conn) error {
 	}
 	return nil
 }
-
-/*// GetStatus is a function that returns the status of all connections managed:*/
-//// Connections: ip address of remote host
-//// Total: total number of managed connections
-//// Packets_Received: #bytes received from all connections
-//// Packets_Sent: #bytes sent from all connections
-//func (r *router) GetStatus() Status {
-//r.connsMut.Lock()
-//defer r.connsMut.Unlock()
-//m := make(map[string]string)
-//nbr := len(r.connections)
-//remote := make([]string, nbr)
-//iter := 0
-//var rx uint64
-//var tx uint64
-//for _, c := range r.connections {
-//remote[iter] = c.Remote()
-//rx += c.Rx()
-//tx += c.Tx()
-//iter = iter + 1
-//}
-//m["Connections"] = strings.Join(remote, "\n")
-//m["Total"] = strconv.Itoa(nbr)
-//m["Packets_Received"] = strconv.FormatUint(rx, 10)
-//m["Packets_Sent"] = strconv.FormatUint(tx, 10)
-//return m

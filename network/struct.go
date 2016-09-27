@@ -14,37 +14,35 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-// MaxRetryConnect defines how many times should we try to connect
-const MaxRetryConnect = 10
+// MaxRetryConnect defines how many times we should try to connect.
+const MaxRetryConnect = 5
 
-// MaxIdentityExchange is the maximum time waited for an exchange of
-// the identity to happen.
+// MaxIdentityExchange is the timeout for an identityExchange.
 const MaxIdentityExchange = 5 * time.Second
 
-// WaitRetry defines how much time should we wait before trying again
-const WaitRetry = 100 * time.Millisecond
+// WaitRetry is the timeout on connection-setups.
+const WaitRetry = 20 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
 
-// ErrClosed is when a connection has been closed
+// ErrClosed is when a connection has been closed.
 var ErrClosed = errors.New("Connection Closed")
 
-// ErrEOF is when the EOF signal comes to the connection (mostly means that it
-// is shutdown)
+// ErrEOF is when the connection sends an EOF signal (mostly because it has
+// been shut down).
 var ErrEOF = errors.New("EOF")
 
-// ErrCanceled means something went wrong with the sending or receiving
+// ErrCanceled means something went wrong in the sending or receiving part.
 var ErrCanceled = errors.New("Operation Canceled")
 
-// ErrTemp is a temporary error
+// ErrTemp is a temporary error, recovery possible.
 var ErrTemp = errors.New("Temporary Error")
 
-// ErrTimeout is raised if the connection has set a timeout on read or write,
-// and the operation lasted longer
+// ErrTimeout is raised if the timeout has been reached.
 var ErrTimeout = errors.New("Timeout Error")
 
-// ErrUnknown is an unknown error
+// ErrUnknown is an unknown error.
 var ErrUnknown = errors.New("Unknown Error")
 
 // Size is a type to reprensent the size that is sent before every packet to

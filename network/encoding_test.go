@@ -4,13 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/dedis/cothority/log"
 	"github.com/satori/go.uuid"
 )
-
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
 
 type TestRegisterS struct {
 	I int
