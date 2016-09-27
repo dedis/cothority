@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto/sha256"
-	"strconv"
 	"testing"
 )
 
