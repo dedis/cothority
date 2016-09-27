@@ -493,7 +493,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
-	log.Lvl4("Closing connection", c.Local(), c.Remote())
+	log.Lvl3("Closing connection", c.Local(), c.Remote())
 	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
