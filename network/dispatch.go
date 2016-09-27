@@ -110,6 +110,8 @@ func NewRoutineDispatcher() *RoutineDispatcher {
 // Dispatch implements the Dispatcher interface. It will give the packet to the
 // right Processor in a go routine.
 func (d *RoutineDispatcher) Dispatch(packet *Packet) error {
+	d.Lock()
+	defer d.Unlock()
 	var p = d.procs[packet.MsgType]
 	if p == nil {
 		return errors.New("No Processor attached to this message type.")

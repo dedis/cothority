@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/crypto/config"
 )
 
@@ -31,6 +29,8 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 var baseID uint64
 var baseIDLock sync.Mutex
 
+var timeoutResponse = 10 * time.Second
+
 // Send will send the message to the destination service and return the
 // reply.
 // The error-handling is done using the ErrorRet structure which can be returned
@@ -48,14 +48,9 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 
 	var c Conn
 	var err error
-	for i := 0; i < MaxRetryConnect; i++ {
-		c, err = cl.connector(sid, dst)
-		if err == nil {
-			break
-		} else if i == MaxRetryConnect-1 {
-			return nil, fmt.Errorf("Could not connect %x", err)
-		}
-		time.Sleep(WaitRetry)
+	c, err = cl.connector(sid, dst)
+	if err != nil {
+		return nil, fmt.Errorf("Could not connect %x", err)
 	}
 	defer c.Close()
 
@@ -66,11 +61,11 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	msgCh := make(chan Packet)
 	errCh := make(chan error)
 	go func() {
-		if err := c.Send(context.TODO(), msg); err != nil {
+		if err := c.Send(msg); err != nil {
 			errCh <- err
 			return
 		}
-		p, err := c.Receive(context.TODO())
+		p, err := c.Receive()
 		if ret := ErrMsg(&p, err); ret != nil {
 			errCh <- ret
 		} else {
@@ -83,7 +78,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 		return &resp, nil
 	case err := <-errCh:
 		return nil, err
-	case <-time.After(time.Second * 10):
+	case <-time.After(timeoutResponse):
 		return &Packet{}, errors.New("Timeout on sending message")
 	}
 }
@@ -107,10 +102,7 @@ func ErrMsg(em *Packet, err error) error {
 		return nil
 	}
 	statusStr := status.Status
-	if statusStr != "" {
-		return errors.New("Remote-error: " + statusStr)
-	}
-	return nil
+	return errors.New("Remote-error: " + statusStr)
 }
 
 func init() {

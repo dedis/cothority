@@ -525,6 +525,18 @@ func TestClient_Parallel(t *testing.T) {
 	wg.Wait()
 }
 
+func TestServiceManager_Service(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	hosts, _, _ := local.GenTree(2, false, false, false)
+
+	services := hosts[0].serviceManager.AvailableServices()
+	assert.NotEqual(t, 0, len(services), "no services available")
+
+	service := hosts[0].serviceManager.Service("testService")
+	assert.NotNil(t, service, "Didn't find service testService")
+}
+
 // BackForthProtocolForth & Back are messages that go down and up the tree.
 // => BackForthProtocol protocol / message
 type SimpleMessageForth struct {
