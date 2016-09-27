@@ -36,6 +36,8 @@ var timeoutResponse = 10 * time.Second
 // The error-handling is done using the ErrorRet structure which can be returned
 // in place of the standard reply. This method will catch that and return
 // the appropriate error as a network.Packet.
+// Send will timeout and return an error if it has not received any response
+// under 10 sec.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	// just create a random looking id for this client. Choosing higher values
