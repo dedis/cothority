@@ -528,7 +528,7 @@ func TestClient_Parallel(t *testing.T) {
 func TestServiceManager_Service(t *testing.T) {
 	local := NewLocalTest()
 	defer local.CloseAll()
-	hosts, _, _ := local.GenTree(2, false, false, false)
+	hosts, _, _ := local.GenTree(2, true)
 
 	services := hosts[0].serviceManager.AvailableServices()
 	assert.NotEqual(t, 0, len(services), "no services available")
