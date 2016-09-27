@@ -30,7 +30,7 @@ type TCPConn struct {
 	endpoint Address
 
 	// The connection used
-	conn net.Conn
+	conn *net.TCPConn
 
 	// closed indicator
 	closed    bool
@@ -63,7 +63,7 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 	}
 	c := TCPConn{
 		endpoint: addr,
-		conn:     conn,
+		conn:     conn.(*net.TCPConn),
 	}
 	return &c, err
 }
