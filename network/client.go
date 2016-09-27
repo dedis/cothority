@@ -48,9 +48,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	baseIDLock.Unlock()
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
 
-	var c Conn
-	var err error
-	c, err = cl.connector(sid, dst)
+	c, err := cl.connector(sid, dst)
 	if err != nil {
 		return nil, fmt.Errorf("Could not connect %x", err)
 	}
@@ -81,7 +79,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	case err := <-errCh:
 		return nil, err
 	case <-time.After(timeoutResponse):
-		return &Packet{}, errors.New("Timeout on sending message")
+		return nil, errors.New("Timeout on sending message")
 	}
 }
 
