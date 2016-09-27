@@ -76,105 +76,123 @@ var GenericConfigID = network.RegisterPacketType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
-	constructors map[ServiceID]NewServiceFunc
-	// translations between name of a Service and its ServiceID. Used to register a
-	// Service using a name.
-	translations map[string]ServiceID
-	// Inverse mapping of ServiceId => string
-	inverseTr map[ServiceID]string
-	mutex     sync.Mutex
+	constructors []serviceEntry
+	mutex        sync.RWMutex
+}
+
+// A serviceEntry holds all references to a service
+type serviceEntry struct {
+	constructor NewServiceFunc
+	serviceID   ServiceID
+	name        string
 }
 
 // ServiceFactory is the global service factory to instantiate Services
 var ServiceFactory = serviceFactory{
-	constructors: make(map[ServiceID]NewServiceFunc),
-	translations: make(map[string]ServiceID),
-	inverseTr:    make(map[ServiceID]string),
+	constructors: []serviceEntry{},
 }
 
 // RegisterByName takes a name, creates a ServiceID out of it and stores the
 // mapping and the creation function.
-func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
+func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
+	if s.ServiceID(name) != NilServiceID {
+		return fmt.Errorf("Service %s already registered.", name)
+	}
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	s.mutex.Lock()
-	if _, ok := s.constructors[id]; ok {
-		// called at init time so better panic than to continue
-		log.Lvl1("RegisterService():", name)
+	defer s.mutex.Unlock()
+	s.constructors = append(s.constructors, serviceEntry{
+		constructor: fn,
+		serviceID:   id,
+		name:        name,
+	})
+	return nil
+}
+
+// Unregister - mainly for tests
+func (s *serviceFactory) Unregister(name string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	index := -1
+	for i, c := range s.constructors {
+		if c.name == name {
+			index = i
+			break
+		}
 	}
-	s.constructors[id] = fn
-	s.translations[name] = id
-	s.inverseTr[id] = name
-	s.mutex.Unlock()
+	if index < 0 {
+		return errors.New("Didn't find service " + name)
+	}
+	s.constructors = append(s.constructors[:index], s.constructors[index+1:]...)
+	return nil
 }
 
 // RegisterNewService is a wrapper around service factory
-func RegisterNewService(name string, fn NewServiceFunc) {
-	ServiceFactory.Register(name, fn)
+func RegisterNewService(name string, fn NewServiceFunc) error {
+	return ServiceFactory.Register(name, fn)
+}
+
+// UnregisterService removes a service from the global pool.
+func UnregisterService(name string) error {
+	return ServiceFactory.Unregister(name)
 }
 
 // RegisteredServices returns all the services registered
-func (s *serviceFactory) registeredServicesID() []ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func (s *serviceFactory) registeredServiceIDs() []ServiceID {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
-	for id := range s.constructors {
-		ids = append(ids, id)
+	for _, c := range s.constructors {
+		ids = append(ids, c.serviceID)
 	}
 	return ids
 }
 
 // RegisteredServicesByName returns all the names of the services registered
-func (s *serviceFactory) RegisteredServicesName() []string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	var names = make([]string, 0, len(s.translations))
-	for n := range s.translations {
-		names = append(names, n)
+func (s *serviceFactory) RegisteredServiceNames() []string {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	var names = make([]string, 0, len(s.constructors))
+	for _, n := range s.constructors {
+		names = append(names, n.name)
 	}
 	return names
 }
 
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	id, ok := s.translations[name]
-	if !ok {
-		return NilServiceID
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if name == c.name {
+			return c.serviceID
+		}
 	}
-	return id
+	return NilServiceID
 }
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	var name string
-	var ok bool
-	if name, ok = s.inverseTr[id]; !ok {
-		return ""
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if id == c.serviceID {
+			return c.name
+		}
 	}
-	return name
+	return ""
 }
 
 // start launches a new service
-func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
-	s.mutex.Lock()
-	var id ServiceID
-	var ok bool
-	if id, ok = s.translations[name]; !ok {
-		s.mutex.Unlock()
-		return nil, errors.New("No Service for this name: " + name)
+func (s *serviceFactory) start(name string, con *Context, path string) (Service, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if name == c.name {
+			return c.constructor(con, path), nil
+		}
 	}
-	var fn NewServiceFunc
-	if fn, ok = s.constructors[id]; !ok {
-		s.mutex.Unlock()
-		return nil, fmt.Errorf("No Service for this id: %+v", id)
-	}
-	s.mutex.Unlock()
-	serv := fn(c, path)
-	log.Lvl3("Instantiated service", name)
-	return serv, nil
+	return nil, errors.New("Didn't find service " + name)
 }
 
 // serviceManager is the place where all instantiated services are stored
@@ -208,9 +226,10 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
 	s := &serviceManager{services, configs, h, NewRoutineDispatcher()}
-	ids := ServiceFactory.registeredServicesID()
+	ids := ServiceFactory.registeredServiceIDs()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
+		log.Lvl3("Starting service", name)
 		pwd, err := os.Getwd()
 		if err != nil {
 			log.Panic(err)
@@ -383,11 +402,11 @@ func NewClient(s string) *Client {
 func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.Lock()
 	defer c.Unlock()
-	//if c.host == nil {
-	kp := config.NewKeyPair(network.Suite)
-	c.host = network.NewSecureTCPHost(kp.Secret,
-		network.NewServerIdentity(kp.Public, ""))
-	//}
+	if c.host == nil {
+		kp := config.NewKeyPair(network.Suite)
+		c.host = network.NewSecureTCPHost(kp.Secret,
+			network.NewServerIdentity(kp.Public, ""))
+	}
 
 	// Connect to the root
 	log.Lvl4("Opening connection to", dst)
@@ -434,11 +453,14 @@ func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.P
 		// Catch an eventual error
 		err := ErrMsg(&response, nil)
 		if err != nil {
+			log.Lvl4("Closing connection to", dst)
 			return nil, err
 		}
+		log.Lvl4("Closing connection to", dst)
 		return &response, nil
-	case <-time.After(time.Second * 10):
+	case <-time.After(time.Minute * 30):
 		log.Lvl2(log.Stack())
+		log.Lvl4("Closing connection to", dst)
 		return &network.Packet{}, errors.New("Timeout on sending message")
 	}
 }
@@ -460,6 +482,22 @@ func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, er
 		err = errors.New(strings.Join(errstrs, "\n"))
 	}
 	return msgs, err
+}
+
+// Rx returns the number of bytes received.
+func (c *Client) Rx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Rx()
+}
+
+// Tx returns the number of bytes sent.
+func (c *Client) Tx() uint64 {
+	if c.host == nil {
+		return 0
+	}
+	return c.host.Tx()
 }
 
 // BinaryMarshaler can be used to store the client in a configuration-file
