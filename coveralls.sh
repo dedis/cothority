@@ -5,11 +5,15 @@ DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | 
 
 # Run test coverage on each subdirectories and merge the coverage profile.
 
-echo "mode: atomic" > profile.cov
+all_tests_passed=true
 
+echo "mode: atomic" > profile.cov
 for dir in ${DIR_SOURCE};
 do
     go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
+    if [ $? -ne 0 ]; then
+        all_tests_passed=false
+    fi
     if [ -f $dir/profile.tmp ]
     then
         cat $dir/profile.tmp | tail -n +2 >> profile.cov
@@ -17,9 +21,9 @@ do
     fi
 done
 
-# If you want to print the coverage of each file individually uncomment:
-# go tool cover -func profile.cov
-
-# To submit the test coverage result to coveralls.io,
-# use goveralls (https://github.com/mattn/goveralls)
-goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $COVERALLS_TOKEN
+if [[ $all_tests_passed = true ]];
+then
+    exit 0;
+else
+    exit 1;
+fi

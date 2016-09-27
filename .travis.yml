@@ -15,5 +15,8 @@ env:
 script:
   - make test_playground
 
+after_success:
+  - goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $COVERALLS_TOKEN
+
 notifications:
   email: false
