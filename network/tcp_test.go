@@ -19,6 +19,125 @@ type BigMsg struct {
 	Array []byte
 }
 
+type fakeConn struct {
+	// how many bytes does it write at maximum at each call
+	max int
+	// do we fail on the first write
+	fail1 bool
+	done1 bool
+	// do we fail on every successive write
+	failRest bool
+	// how many total bytes have we written
+	writtenBytes int
+}
+
+type fakeAddr string
+
+func (f fakeAddr) Network() string {
+	return "network"
+}
+
+func (f fakeAddr) String() string {
+	return "network-string"
+}
+
+func (f *fakeConn) Read(b []byte) (n int, e error) {
+	return 0, nil
+}
+
+func (f *fakeConn) Write(b []byte) (n int, e error) {
+	if !f.done1 && f.fail1 {
+		return 0, ErrUnknown
+	} else if f.failRest {
+		return 0, ErrUnknown
+	}
+	if len(b) < f.max {
+		f.writtenBytes += len(b)
+		return len(b), nil
+	}
+	f.writtenBytes += f.max
+	return f.max, nil
+}
+
+func (f *fakeConn) Close() error {
+	return nil
+}
+
+func (f *fakeConn) LocalAddr() net.Addr {
+	return fakeAddr("")
+}
+func (f *fakeConn) RemoteAddr() net.Addr {
+	return fakeAddr("")
+}
+
+func (f *fakeConn) SetDeadline(t time.Time) error {
+	return nil
+}
+
+func (f *fakeConn) SetReadDeadline(t time.Time) error {
+	return nil
+}
+func (f *fakeConn) SetWriteDeadline(t time.Time) error {
+	return nil
+}
+
+func TestTCPsendRaw(t *testing.T) {
+	tests := []struct {
+		msg           []byte
+		conn          *fakeConn
+		errExpected   bool
+		bytesExpected int
+	}{
+		{ // fail at writing size
+			make([]byte, 100),
+			&fakeConn{100, true, false, false, 0},
+			true,
+			0,
+		},
+		{ // fail at writing msg
+			make([]byte, 100),
+			&fakeConn{100, false, false, true, 0},
+			true,
+			0,
+		},
+		{ // write undersize message
+			make([]byte, 99),
+			&fakeConn{100, false, false, false, 0},
+			false,
+			99,
+		},
+		{ // write exact message
+			make([]byte, 100),
+			&fakeConn{100, false, false, false, 0},
+			false,
+			100,
+		},
+		{ // write oversize message
+			make([]byte, 101),
+			&fakeConn{100, false, false, false, 0},
+			false,
+			101,
+		},
+	}
+
+	for i, test := range tests {
+		tcp := &TCPConn{
+			conn: test.conn,
+		}
+		err := tcp.sendRaw(test.msg)
+		if test.errExpected {
+			if err == nil {
+				t.Error("Should have had an error here")
+			}
+			continue
+		}
+		// - 4 is for the size, uint32_t
+		if test.bytesExpected != test.conn.writtenBytes-4 {
+			t.Error(i, "Wrong number of bytes? ", test.bytesExpected, test.conn.writtenBytes)
+		}
+	}
+}
+
 // Test the receiving part of a message for tcp connections if the response is
 // buffered correctly.
 func TestTCPConnReceiveRaw(t *testing.T) {
