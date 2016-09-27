@@ -30,7 +30,7 @@ type LocalTest struct {
 	mode string
 	// the context for the local connections
 	// it enables to have multiple local test running simultaneously
-	ctx *network.LocalContext
+	ctx *network.LocalManager
 }
 
 var (
