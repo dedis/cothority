@@ -18,7 +18,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m, 2)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
