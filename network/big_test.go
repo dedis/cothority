@@ -1,10 +1,11 @@
 package network
 
 import (
-	"golang.org/x/net/context"
 	"strconv"
 	"sync"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	"github.com/dedis/cothority/log"
 )
