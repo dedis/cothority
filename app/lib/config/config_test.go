@@ -6,8 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"io/ioutil"
+
+	"os"
+
 	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var b bytes.Buffer
@@ -66,6 +71,22 @@ func TestInputYN(t *testing.T) {
 	setInput("")
 	assert.True(t, InputYN(true, "Are you sure?"))
 	assert.Equal(t, "Are you sure? [Yn]: ", getOutput(), "one")
+}
+
+func TestCopy(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "copy")
+	log.ErrFatal(err)
+	_, err = tmp.Write([]byte{3, 1, 4, 5, 9, 2, 6})
+	log.ErrFatal(err)
+	log.ErrFatal(tmp.Close())
+	nsrc := tmp.Name()
+	ndst := nsrc + "1"
+	log.ErrFatal(Copy(ndst, nsrc))
+	stat, err := os.Stat(ndst)
+	log.ErrFatal(err)
+	require.Equal(t, int64(7), stat.Size())
+	log.ErrFatal(os.Remove(nsrc))
+	log.ErrFatal(os.Remove(ndst))
 }
 
 func setInput(s string) {
