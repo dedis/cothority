@@ -56,7 +56,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	}
 	defer c.Close()
 
-	if err := sendServerIdentity(sid, c); err != nil {
+	if err := c.Send(sid); err != nil {
 		return nil, err
 	}
 

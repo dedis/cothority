@@ -155,7 +155,7 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := r.sendServerIdentity(c); err != nil {
+	if err := c.Send(r.id); err != nil {
 		return nil, err
 	}
 
@@ -288,26 +288,6 @@ func (r *Router) Listening() bool {
 // wait for the server identities of the remote party. It returns
 // the ServerIdentity of the remote party and register the connection.
 func (r *Router) receiveServerIdentity(c Conn) (*ServerIdentity, error) {
-	dst, err := receiveServerIdentity(c)
-	if err != nil {
-		return nil, err
-	}
-	log.Lvl4(r.address, "Identity received from ", dst.Address)
-	r.registerConnection(dst, c)
-	return dst, nil
-}
-
-// sendIdentity takes a fresh issued new Conn. It sends the router's identity
-// and then registers the connection.
-func (r *Router) sendServerIdentity(c Conn) error {
-	err := sendServerIdentity(r.id, c)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func receiveServerIdentity(c Conn) (*ServerIdentity, error) {
 	// Receive the other ServerIdentity
 	nm, err := c.Receive()
 	if err != nil {
@@ -318,11 +298,12 @@ func receiveServerIdentity(c Conn) (*ServerIdentity, error) {
 		return nil, fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 	// Set the ServerIdentity for this connection
-	e := nm.Msg.(ServerIdentity)
-	return &e, nil
+	dst := nm.Msg.(ServerIdentity)
 
-}
-
-func sendServerIdentity(own *ServerIdentity, c Conn) error {
-	return c.Send(own)
+	if err != nil {
+		return nil, err
+	}
+	log.Lvl4(r.address, "Identity received from ", dst.Address)
+	r.registerConnection(&dst, c)
+	return &dst, nil
 }
