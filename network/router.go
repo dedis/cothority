@@ -40,8 +40,7 @@ type Router struct {
 	closedMut sync.Mutex
 
 	// we wait that all handleConn routines are done
-	wg    sync.WaitGroup
-	wgMut sync.Mutex
+	wg sync.WaitGroup
 }
 
 // NewRouter returns a fresh Router giving its identity, and the host we want to
