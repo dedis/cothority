@@ -60,7 +60,7 @@ type Host interface {
 	monitor.CounterIO
 }
 
-// Conn represents a communication between two hosts. It is closely related
+// Conn represents a communication between two hosts. It is closely related 
 // to the underlying type of Host since a TcpHost will generate only TcpConn.
 type Conn interface {
 	// The address of the remote endpoint.
@@ -82,7 +82,7 @@ type TCPHost struct {
 	// listeningPort will channel the port used in the connection.
 	listeningPort chan int
 	// A list of connections maintained by this host.
-	peers map[string]Conn
+	peers    map[string]Conn
 	// Mutex on peers.
 	peersMut sync.Mutex
 	// The listener attached to this host.
