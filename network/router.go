@@ -359,29 +359,3 @@ func negotiateOpen(own, remote *ServerIdentity, c Conn) error {
 	}
 	return nil
 }
-
-/*// GetStatus is a function that returns the status of all connections managed:*/
-//// Connections: ip address of remote host
-//// Total: total number of managed connections
-//// Packets_Received: #bytes received from all connections
-//// Packets_Sent: #bytes sent from all connections
-//func (r *router) GetStatus() Status {
-//r.connsMut.Lock()
-//defer r.connsMut.Unlock()
-//m := make(map[string]string)
-//nbr := len(r.connections)
-//remote := make([]string, nbr)
-//iter := 0
-//var rx uint64
-//var tx uint64
-//for _, c := range r.connections {
-//remote[iter] = c.Remote()
-//rx += c.Rx()
-//tx += c.Tx()
-//iter = iter + 1
-//}
-//m["Connections"] = strings.Join(remote, "\n")
-//m["Total"] = strconv.Itoa(nbr)
-//m["Packets_Received"] = strconv.FormatUint(rx, 10)
-//m["Packets_Sent"] = strconv.FormatUint(tx, 10)
-//return m
