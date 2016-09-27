@@ -200,7 +200,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			// something went wrong on this connection
 			log.Lvlf4("%+v got error (%+s) while receiving message", r.id.String(), err)
 
-			if err == ErrClosed || err == ErrEOF || err == ErrTemp {
+			if err == ErrClosed || err == ErrEOF {
 				// remote connection closed
 				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
