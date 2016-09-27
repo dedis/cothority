@@ -220,9 +220,7 @@ func handleError(err error) error {
 	if !ok {
 		return ErrUnknown
 	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
+	if netErr.Timeout() {
 		return ErrTimeout
 	}
 	return ErrUnknown

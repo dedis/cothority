@@ -429,7 +429,6 @@ func TestHandleError(t *testing.T) {
 	require.Equal(t, ErrUnknown, handleError(errors.New("Random error!")))
 
 	de := dummyErr{true, true}
-	require.Equal(t, ErrTemp, handleError(&de))
 	de.temporary = false
 	require.Equal(t, ErrTimeout, handleError(&de))
 	de.timeout = false
