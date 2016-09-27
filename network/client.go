@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
+func init() {
+	RegisterPacketType(&StatusRet{})
+}
+
 // Client is an interface which is a simpler version of a Router. The main use
 // for a Client is to directly Send something and get a result back. It is used
 // intensively by Services to have a easy external API.
@@ -103,8 +107,4 @@ func ErrMsg(em *Packet, err error) error {
 	}
 	statusStr := status.Status
 	return errors.New("Remote-error: " + statusStr)
-}
-
-func init() {
-	RegisterPacketType(&StatusRet{})
 }
