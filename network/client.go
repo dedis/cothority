@@ -10,12 +10,7 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
-// Client is an interface which is a simpler version of a Router. The main use
-// for a Client is to directly Send something and get a result back. It is used
-// intensively by Services to have a easy external API.
-// Two implementations are done: TcpClient to use for applications and
-// deployement,and localClient to use for local testing alongside with
-// LocalRouter.
+// Client is the external APIs used for services.
 // NOTE: This interface is likely to be removed to be replaced by a full
 // pledged REST HTTP Api directly connected to the sda/services.
 type Client struct {
@@ -33,18 +28,16 @@ var timeoutResponse = 10 * time.Second
 
 // Send will send the message to the destination service and return the
 // reply.
-// The error-handling is done using the ErrorRet structure which can be returned
-// in place of the standard reply. This method will catch that and return
-// the appropriate error as a network.Packet.
+// In case of an error, it returns a nil-packet and the error.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
-	// just create a random looking id for this client. Choosing higher values
-	// lower the chance of having a collision in the Router.
+	// Use a unique ID for each connection.
 	baseIDLock.Lock()
 	id := baseID
 	baseID++
 	baseIDLock.Unlock()
-	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
+	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(),
+		"client:"+strconv.FormatUint(id, 10)))
 
 	var c Conn
 	var err error
