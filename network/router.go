@@ -36,8 +36,7 @@ type Router struct {
 	connsMut    sync.Mutex
 
 	// boolean flag indicating that the router is already clos{ing,ed}
-	isClosed  bool
-	closedMut sync.Mutex
+	isClosed bool
 
 	// we wait that all handleConn routines are done
 	wg sync.WaitGroup
@@ -91,13 +90,11 @@ func (r *Router) Stop() error {
 	if r.host.Listening() {
 		err = r.host.Stop()
 	}
+	r.connsMut.Lock()
 	// set the isClosed to true
-	r.closedMut.Lock()
 	r.isClosed = true
-	r.closedMut.Unlock()
 
 	// then close all connections
-	r.connsMut.Lock()
 	for _, arr := range r.connections {
 		// take all connections to close
 		for _, c := range arr {
@@ -111,9 +108,9 @@ func (r *Router) Stop() error {
 	// wait for all handleConn to finish
 	r.wg.Wait()
 
-	r.closedMut.Lock()
+	r.connsMut.Lock()
 	r.isClosed = false
-	r.closedMut.Unlock()
+	r.connsMut.Unlock()
 	if err != nil {
 		return err
 	}
@@ -246,23 +243,12 @@ func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
 	go r.handleConn(dst, c)
 }
 
-// Close shuts down all network connections and returns once all processing go
-// routines are done.
-func (r *Router) stopHandling() error {
-	return nil
-}
-
 // Closed returns true if the router is closed (or is closing). For a router
 // to be closed means that a call to Stop() must have been made.
 func (r *Router) Closed() bool {
-	r.closedMut.Lock()
-	defer r.closedMut.Unlock()
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
 	return r.isClosed
-}
-
-// close set the isClosed variable to true, any subsequent call to Closed()
-// will return true.
-func (r *Router) close() {
 }
 
 // Tx implements monitor/CounterIO
