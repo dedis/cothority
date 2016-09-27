@@ -17,45 +17,45 @@ import (
 	"golang.org/x/net/context"
 )
 
-// MaxRetryConnect defines how many times should we try to connect
+// MaxRetryConnect defines how many times we should try to connect.
 const MaxRetryConnect = 10
 
-// MaxIdentityExchange is the maximum time waited for an exchange of
-// the identity to happen.
+// MaxIdentityExchange is the timeout for an identityExchange.
 const MaxIdentityExchange = 5 * time.Second
 
-// WaitRetry defines how much time should we wait before trying again
+// WaitRetry is the timeout on connection-setups.
 const WaitRetry = 100 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
 
-// ErrClosed is when a connection has been closed
+// ErrClosed is when a connection has been closed.
 var ErrClosed = errors.New("Connection Closed")
 
-// ErrEOF is when the EOF signal comes to the connection (mostly means that it
-// is shutdown)
+// ErrEOF is when the connection sends an EOF signal (mostly because it has
+// been shut down).
 var ErrEOF = errors.New("EOF")
 
-// ErrCanceled means something went wrong with the sending or receiving
+// ErrCanceled means something went wrong in the sending or receiving part.
 var ErrCanceled = errors.New("Operation Canceled")
 
-// ErrTemp is a temporary error
+// ErrTemp is a temporary error, recovery possible.
 var ErrTemp = errors.New("Temporary Error")
 
-// ErrTimeout is raised if the connection has set a timeout on read or write,
-// and the operation lasted longer
+// ErrTimeout is raised if the timeout has been reached.
 var ErrTimeout = errors.New("Timeout Error")
 
-// ErrUnknown is an unknown error
+// ErrUnknown is an unknown error.
 var ErrUnknown = errors.New("Unknown Error")
 
 // Size is a type to reprensent the size that is sent before every packet to
 // correctly decode it.
 type Size uint32
 
-// Host is the basic interface to represent a Host of any kind
-// Host can open new Conn(ections) and Listen for any incoming Conn(...)
+// Host represent a given connection and transmission protocol.
+// Host can open new Conn(ections) and Listen for any incoming Conn(...).
+// Depending on the host it is possible that it can connect with hosts of
+// other types or not.
 type Host interface {
 	Open(name string) (Conn, error)
 	Listen(addr string, fn func(Conn)) error // the srv processing function
@@ -63,34 +63,34 @@ type Host interface {
 	monitor.CounterIO
 }
 
-// Conn is the basic interface to represent any communication mean
-// between two host. It is closely related to the underlying type of Host
-// since a TcpHost will generate only TcpConn
+// Conn represents a communication between two hosts. It is closely related 
+// to the underlying type of Host since a TcpHost will generate only TcpConn.
 type Conn interface {
-	// Gives the address of the remote endpoint
+	// The address of the remote endpoint.
 	Remote() string
-	// Returns the local address and port
+	// The local address and port.
 	Local() string
-	// Send a message through the connection. Always pass a pointer !
+	// Sends a message through the connection. The obj always has to be
+	// a pointer.
 	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
+	// Receives a message from the connection.
 	Receive(ctx context.Context) (Packet, error)
+	// Close shuts down the connection
 	Close() error
 	monitor.CounterIO
 }
 
-// TCPHost is the underlying implementation of
-// Host using Tcp as a communication channel
+// TCPHost implements Host to offer a bare, unencrypted TCP communication.
 type TCPHost struct {
-	// listeningPort is a channel where the port found will be
-	// sent through.
+	// listeningPort will channel the port used in the connection.
 	listeningPort chan int
-	// A list of connection maintained by this host
+	// A list of connections maintained by this host.
 	peers    map[string]Conn
+	// Mutex on peers.
 	peersMut sync.Mutex
-	// its listeners
+	// The listener attached to this host.
 	listener net.Listener
-	// the close channel used to indicate to the listener we want to quit
+	// the close channel used to indicate to the listener we want to quit.
 	quit chan bool
 	// quitListener is a channel to indicate to the closing function that the
 	// listener has actually really quit
