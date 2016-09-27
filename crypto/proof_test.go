@@ -30,26 +30,6 @@ func TestPath(t *testing.T) {
 	}
 }
 
-// can we also store sth. else in the leaves (not only hashIds)? The tree
-// should be agnostic about what is in the leaves.
-func TestPathWitLeafDataInsteadOfHash(t *testing.T) {
-	newHash := sha256.New
-	n := 16
-
-	leaves := make([]HashID, n)
-	for i := range leaves {
-		leaves[i] = []byte("data" + strconv.Itoa(i))
-		// fmt.Println("leaf", i, ":", leaves[i])
-	}
-
-	root, proofs := ProofTree(newHash, leaves)
-	for i := range proofs {
-		if proofs[i].Check(newHash, root, leaves[i]) == false {
-			t.Error("check failed at leaf", i)
-		}
-	}
-}
-
 func TestPathLong(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Test takes too long - skipping test in short mode.")
