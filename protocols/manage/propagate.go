@@ -121,7 +121,8 @@ func (p *Propagate) Dispatch() error {
 		p.Unlock()
 		select {
 		case msg := <-p.ChannelSD:
-			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity)
+			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Msec)
+			p.sd.Msec = msg.Msec
 			if p.onData != nil {
 				_, netMsg, err := network.UnmarshalRegistered(msg.Data)
 				if err == nil {
@@ -148,7 +149,8 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(timeout):
-			log.Fatal("Timeout")
+			_, a, err := network.UnmarshalRegistered(p.sd.Data)
+			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
 			process = false
 		}
 	}

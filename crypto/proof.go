@@ -43,12 +43,10 @@ func (c *hashContext) hashNode(buf []byte, left, right HashID) []byte {
 	h := c.hash
 
 	if n, err := h.Write(left); err != nil || n != len(left) {
-		log.Error("Written", n, "of", len(left), "bytes.")
-		log.Error(err)
+		log.Error("Error while writing", n, "of", len(left), "bytes:", err)
 	}
 	if n, err := h.Write(right); err != nil || n != len(right) {
-		log.Error("Written", n, "of", len(right), "bytes.")
-		log.Error(err)
+		log.Error("Error while writing", n, "of", len(left), "bytes:", err)
 	}
 
 	s := h.Sum(buf)
@@ -71,7 +69,6 @@ func (p Proof) Calc(newHash HashFunc, leaf []byte) []byte {
 func (p Proof) Check(newHash HashFunc, root, leaf []byte) bool {
 	chk := p.Calc(newHash, leaf)
 	// compare returns 1 if equal, so return is true when check is good
-	// log.Println(chk, root)
 	return subtle.ConstantTimeCompare(chk, root) != 0
 }
 
