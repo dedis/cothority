@@ -36,9 +36,6 @@ var ErrEOF = errors.New("EOF")
 // ErrCanceled means something went wrong in the sending or receiving part.
 var ErrCanceled = errors.New("Operation Canceled")
 
-// ErrTemp is a temporary error, recovery possible.
-var ErrTemp = errors.New("Temporary Error")
-
 // ErrTimeout is raised if the timeout has been reached.
 var ErrTimeout = errors.New("Timeout Error")
 
