@@ -120,14 +120,14 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 	} else {
 		ret = append(ret, sc)
 	}
-	addr := string(sc.Roster.List[0].Address)
-	if strings.Contains(addr, "127.0.0.") || strings.Contains(addr, "localhost") {
-		// Now strip all superfluous numbers of localhost
-		for i := range sc.Roster.List {
-			_, port, _ := net.SplitHostPort(sc.Roster.List[i].Address.NetworkAddress())
-			sc.Roster.List[i].Address = network.NewAddress(network.Local, "127.0.0.1:"+port)
-		}
-	}
+	/* addr := string(sc.Roster.List[0].Address)*/
+	//if strings.Contains(addr, "127.0.0.") || strings.Contains(addr, "localhost") {
+	//// Now strip all superfluous numbers of localhost
+	//for i := range sc.Roster.List {
+	//_, port, _ := net.SplitHostPort(sc.Roster.List[i].Address.NetworkAddress())
+	//sc.Roster.List[i].Address = network.NewAddress(network.Local, "127.0.0.1:"+port)
+	//}
+	/*}*/
 	return ret, nil
 }
 

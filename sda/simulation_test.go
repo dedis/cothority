@@ -47,11 +47,10 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestSimulationBigTree(t *testing.T) {
-	t.Skip()
 	if testing.Short() {
 		t.Skip()
 	}
-	for i := uint(12); i < 15; i++ {
+	for i := uint(4); i < 8; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
 		if err != nil {
 			t.Fatal(err)
@@ -121,7 +120,7 @@ func createBFTree(hosts, bf int) (*SimulationConfig, *SimulationBFTree, error) {
 		Hosts: hosts,
 		BF:    bf,
 	}
-	sb.CreateRoster(sc, []string{"127.0.0.1"}, 2000)
+	sb.CreateRoster(sc, []string{"127.0.0.1", "127.0.0.2"}, 2000)
 	if len(sc.Roster.List) != hosts {
 		return nil, nil, errors.New("Didn't get correct number of entities")
 	}

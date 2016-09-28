@@ -64,9 +64,6 @@ func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *
 func (dm *DummyProtocol) Start() error {
 	dm.link <- true
 	if dm.config.Send {
-		/* if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {*/
-		//log.Error(err)
-		/*}*/
 		// also send to the children if any
 		if !dm.IsLeaf() {
 			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
@@ -215,8 +212,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	// wait for the link
-	v := <-ds.link
-	if v {
+	if <-ds.link {
 		t.Fatal("was expecting false !")
 	}
 }
@@ -332,7 +328,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	log.Lvl1("Waiting for end")
 	// wait for the link from the protocol that Starts
 	waitOrFatalValue(ds1.link, true, t)
-	// now wait for the SECOND LINK on the SECOND HOST that the SECOND SERVICE
+	// now wait for the second link on the second HOST that the second service
 	// should have started (ds2) in ProcessRequest
 	waitOrFatalValue(ds2.link, true, t)
 	log.Lvl1("Done")

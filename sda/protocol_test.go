@@ -129,7 +129,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}()
 
 	// we are supposed to receive something from host1 from Start()
-	_ = <-chanH1
+	<-chanH1
 
 	// Then we are supposed to receive from h2 after he got the tree and the
 	// entity list from h1

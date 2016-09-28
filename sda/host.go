@@ -1,13 +1,13 @@
 package sda
 
 import (
-	"log"
 	"sync"
 
 	"strings"
 
 	"sort"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 )
@@ -39,7 +39,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	}
 
 	var err error
-	log.Print("NewHost ", e.Address)
+	log.Lvl3("NewHost ", e.Address)
 	h.Router, err = network.NewTCPRouter(e)
 	if err != nil {
 		panic(err)
@@ -58,7 +58,6 @@ func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *netwo
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 	}
-	log.Print("NewHost With Router", e.Address)
 	h.overlay = NewOverlay(h)
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
@@ -88,7 +87,7 @@ func (h *Host) GetStatus() Status {
 func (h *Host) Close() error {
 	h.overlay.Close()
 	err := h.Router.Stop()
-	log.Print("Host Close ", h.ServerIdentity.Address, "listening?", h.Router.Listening())
+	log.Lvl3("Host Close ", h.ServerIdentity.Address, "listening?", h.Router.Listening())
 	return err
 
 }

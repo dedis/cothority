@@ -161,8 +161,8 @@ func (l *LocalTest) CloseAll() {
 		}
 
 		for host.Listening() {
-			time.Sleep(10 * time.Millisecond)
 			log.Print("Sleeping while waiting to close...")
+			time.Sleep(10 * time.Millisecond)
 		}
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
