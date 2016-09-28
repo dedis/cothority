@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"log"
 	"sync"
 
 	"strings"
@@ -38,6 +39,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	}
 
 	var err error
+	log.Print("NewHost ", e.Address)
 	h.Router, err = network.NewTCPRouter(e)
 	if err != nil {
 		panic(err)
@@ -85,6 +87,7 @@ func (h *Host) GetStatus() Status {
 func (h *Host) Close() error {
 	h.overlay.Close()
 	err := h.Router.Stop()
+	log.Print("Host Close ", h.ServerIdentity.Address, "listening?", h.Router.Listening())
 	return err
 
 }

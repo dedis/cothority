@@ -79,7 +79,6 @@ type SimpleMessage struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	log.AfterTest(t)
 	testProtoName := "testProto"
 	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
 	if !ProtocolExists(testProtoID) {
@@ -97,8 +96,11 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
-	log.AfterTest(t)
 	// setup
+	log.AfterTest(t)
+	local := NewLocalTest()
+	defer local.CloseAll()
+	h, _, tree := local.GenTree(2, true)
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
 	chans := []chan bool{chanH1, chanH2}
@@ -116,14 +118,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 	network.RegisterPacketType(SimpleMessage{})
 	ProtocolRegisterName(simpleProto, fn)
-	h1, h2 := TwoTestHosts()
-	defer h1.Close()
-	defer h2.Close()
-	// create small Tree
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	h1.AddRoster(el)
-	tree := el.GenerateBinaryTree()
-	h1.AddTree(tree)
+	h1 := h[0]
 	// start the protocol
 	go func() {
 		_, err := h1.StartProtocol(simpleProto, tree)

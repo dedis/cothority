@@ -12,7 +12,6 @@ import (
 )
 
 func TestServiceRegistration(t *testing.T) {
-	log.AfterTest(t)
 	var name = "dummy"
 	RegisterNewService(name, func(c *Context, path string) Service {
 		return &DummyService{}
@@ -134,7 +133,6 @@ func (ds *DummyService) Process(packet *network.Packet) {
 }
 
 func TestServiceNew(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -176,15 +174,10 @@ func TestServiceChannels(t *testing.T) {
 	})
 
 	defer DeleteNewService("ChannelsService")
-	h1, h2 := TwoTestHosts()
-	defer h1.Close()
-	defer h2.Close()
-	// Add tree + entitylist
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	tree := el.GenerateBinaryTree()
+	local := NewLocalTest()
+	defer local.CloseAll()
+	_, _, tree := local.GenTree(2, true)
 	sc1.tree = *tree
-	h1.AddRoster(el)
-	h1.AddTree(tree)
 	sc1.ProcessClientRequest(nil, nil)
 
 	msg := <-Incoming
@@ -195,7 +188,6 @@ func TestServiceChannels(t *testing.T) {
 }
 
 func TestServiceProcessRequest(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -230,7 +222,6 @@ func TestServiceProcessRequest(t *testing.T) {
 
 // Test if a request that makes the service create a new protocol works
 func TestServiceRequestNewProtocol(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -278,7 +269,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 // test for calling the NewProtocol method on a remote Service
 func TestServiceNewProtocol(t *testing.T) {
-	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 		Config: DummyConfig{
@@ -348,7 +338,6 @@ func TestServiceNewProtocol(t *testing.T) {
 }
 
 func TestServiceProcessor(t *testing.T) {
-	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 	}
@@ -403,7 +392,6 @@ func (c *clientProc) Process(p *network.Packet) {
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -433,7 +421,6 @@ func TestServiceBackForthProtocol(t *testing.T) {
 }
 
 func TestClient_Send(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -460,7 +447,6 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_LocalSend(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -487,7 +473,6 @@ func TestClient_LocalSend(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	log.AfterTest(t)
 	nbrNodes := 4
 	nbrParallel := 20
 	local := NewLocalTest()

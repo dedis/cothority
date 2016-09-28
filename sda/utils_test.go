@@ -4,12 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCollectErrors(t *testing.T) {
-	log.AfterTest(t)
 	var testMap = []collectedErrors{
 		{"127.0.0.1", errors.New("We are offline, sorry.")},
 		{"127.0.0.2", errors.New("Timeout...")},

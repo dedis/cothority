@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"io/ioutil"
 
@@ -12,7 +13,6 @@ import (
 )
 
 func TestSimulationBF(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -49,7 +49,6 @@ func TestSimulationBF(t *testing.T) {
 
 func TestSimulationBigTree(t *testing.T) {
 	t.Skip()
-	log.AfterTest(t)
 	if testing.Short() {
 		t.Skip()
 	}
@@ -91,7 +90,7 @@ func TestSimulationMultipleInstances(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "local1")
+	sc2, err := LoadSimulationConfig(dir, "127.0.0.1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +105,14 @@ func TestSimulationMultipleInstances(t *testing.T) {
 
 func closeAll(scs []*SimulationConfig) {
 	for _, s := range scs {
-		s.Host.Close()
+		if err := s.Host.Close(); err != nil {
+			log.Error("Error closing host ", s.Host.ServerIdentity)
+		}
+
+		for s.Host.Router.Listening() {
+			log.Print("Sleeping while waiting for router to be closed")
+			time.Sleep(20 * time.Millisecond)
+		}
 	}
 }
 

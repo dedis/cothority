@@ -5,12 +5,10 @@ import (
 
 	"strconv"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSRStruct(t *testing.T) {
-	log.AfterTest(t)
 	srs := newStatusReporterStruct()
 	assert.NotNil(t, srs)
 	dtr := &dummyTestReporter{5}

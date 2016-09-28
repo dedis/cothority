@@ -106,11 +106,13 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 			ha += ":"
 		}
 		for _, e := range sc.Roster.List {
-			host := NewHost(e, scf.PrivateKeys[e.Address])
-			scNew := *sc
-			scNew.Host = host
-			scNew.Overlay = host.overlay
-			ret = append(ret, &scNew)
+			if strings.Contains(e.Address.String(), ha) {
+				host := NewHost(e, scf.PrivateKeys[e.Address])
+				scNew := *sc
+				scNew.Host = host
+				scNew.Overlay = host.overlay
+				ret = append(ret, &scNew)
+			}
 		}
 		if len(ret) == 0 {
 			return nil, errors.New("Didn't find address: " + ha)
