@@ -2,12 +2,11 @@ package sda
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
 	"time"
-
-	"io/ioutil"
 
 	"github.com/dedis/cothority/log"
 )
@@ -61,7 +60,6 @@ func TestSimulationBigTree(t *testing.T) {
 }
 
 func TestSimulationLoadSave(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -74,14 +72,13 @@ func TestSimulationLoadSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer closeAll(sc2)
 	if sc2[0].Tree.ID != sc.Tree.ID {
 		t.Fatal("Tree-id is not correct")
 	}
+	closeAll(sc2)
 }
 
 func TestSimulationMultipleInstances(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
