@@ -14,7 +14,7 @@ func init() {
 	RegisterPacketType(&StatusRet{})
 }
 
-// Client is the external APIs used for services.
+// Client is used for the external API of services.
 // NOTE: This interface is likely to be removed to be replaced by a full
 // pledged REST HTTP Api directly connected to the sda/services.
 type Client struct {
