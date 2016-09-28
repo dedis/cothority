@@ -3,10 +3,8 @@ package config
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"strings"
 
@@ -29,14 +27,16 @@ func init() {
 	out = os.Stdout
 }
 
-// CothoritydConfig is the cothority daemon config
+// CothoritydConfig is the configuration structure of the cothority daemon.
 type CothoritydConfig struct {
 	Public  string
 	Private string
 	Address network.Address
 }
 
-// Save will save this CothoritydConfig to the given file name
+// Save will save this CothoritydConfig to the given file name. It
+// will return an error if the file couldn't be created or if
+// there is an error in the encoding.
 func (hc *CothoritydConfig) Save(file string) error {
 	fd, err := os.Create(file)
 	if err != nil {
@@ -49,9 +49,9 @@ func (hc *CothoritydConfig) Save(file string) error {
 	return nil
 }
 
-// ParseCothorityd will try to parse the config file into a CothoritydConfig.
-// It returns the CothoritydConfig, the Host so we can already use it and an error if
-// occured.
+// ParseCothorityd parses the config file into a CothoritydConfig.
+// It returns the CothoritydConfig, the Host so we can already use it, and an error if
+// the file is inaccessible or has wrong values in it.
 func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	hc := &CothoritydConfig{}
 	_, err := toml.DecodeFile(file, hc)
@@ -71,10 +71,10 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	return hc, host, nil
 }
 
-// CreateCothoritydConfig will ask through the command line to create a Private / Public
-// key, what is the listening address
+// CreateCothoritydConfig uses stdin to get the address. Then it creates
+// a private/public key pair.
 // It takes the default config file as argument, and returns the
-// CothoritydConfig created, the config file name and any error if occured.
+// CothoritydConfig created, the config file name, and any error if occured.
 func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	var err error
@@ -113,7 +113,7 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	return config, fname, err
 }
 
-// GroupToml represents the structure of the group.toml file given to the cli.
+// GroupToml holds the data of the group.toml file.
 type GroupToml struct {
 	Description string
 	Servers     []*ServerToml `toml:"servers"`
@@ -121,7 +121,7 @@ type GroupToml struct {
 
 // NewGroupToml creates a new GroupToml struct from the given ServerTomls.
 // Currently used together with calling String() on the GroupToml to output
-// a snippet which is needed to define the CoSi group
+// a snippet which can be used to create a CoSi group.
 func NewGroupToml(servers ...*ServerToml) *GroupToml {
 	return &GroupToml{
 		Servers: servers,
@@ -129,26 +129,28 @@ func NewGroupToml(servers ...*ServerToml) *GroupToml {
 }
 
 // ServerToml is one entry in the group.toml file describing one server to use for
-// the cothority system.
+// the cothority.
 type ServerToml struct {
 	Address     network.Address
 	Public      string
 	Description string
 }
 
-// Group holds the Roster and the server-descriptions
+// Group holds the Roster and the server-description.
 type Group struct {
 	Roster      *sda.Roster
 	description map[*network.ServerIdentity]string
 }
 
-// GetDescription returns the description of an entity
+// GetDescription returns the description of a ServerIdentity.
 func (g *Group) GetDescription(e *network.ServerIdentity) string {
 	return g.description[e]
 }
 
 // ReadGroupDescToml reads a group.toml file and returns the list of ServerIdentities
 // and descriptions in the file.
+// If the file couldn't be decoded or doesn't hold valid ServerIdentities,
+// an error is returned.
 func ReadGroupDescToml(f io.Reader) (*Group, error) {
 	group := &GroupToml{}
 	_, err := toml.DecodeReader(f, group)
@@ -172,6 +174,7 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 
 // ReadGroupToml reads a group.toml file and returns the list of ServerIdentity
 // described in the file.
+// If the file holds an invalid ServerIdentity-description, an error is returned.
 func ReadGroupToml(f io.Reader) (*sda.Roster, error) {
 	group, err := ReadGroupDescToml(f)
 	if err != nil {
@@ -180,7 +183,9 @@ func ReadGroupToml(f io.Reader) (*sda.Roster, error) {
 	return group.Roster, nil
 }
 
-// Save writes the grouptoml definition into the file
+// Save writes the GroupToml definition into the file given by its name.
+// It will return an error if the file couldn't be created or if writing
+// to it failed.
 func (gt *GroupToml) Save(fname string) error {
 	file, err := os.Create(fname)
 	if err != nil {
@@ -191,7 +196,7 @@ func (gt *GroupToml) Save(fname string) error {
 	return err
 }
 
-// String returns the TOML representation of this GroupToml
+// String returns the TOML representation of this GroupToml.
 func (gt *GroupToml) String() string {
 	var buff bytes.Buffer
 	if gt.Description == "" {
@@ -209,7 +214,7 @@ func (gt *GroupToml) String() string {
 	return buff.String()
 }
 
-// toServerIdentity will convert this ServerToml struct to a network entity.
+// toServerIdentity converts this ServerToml struct to a ServerIdentity.
 func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIdentity, error) {
 	pubR := strings.NewReader(s.Public)
 	public, err := crypto.ReadPub64(suite, pubR)
@@ -219,8 +224,10 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 	return network.NewServerIdentity(public, s.Address), nil
 }
 
-// NewServerToml returns  a ServerToml out of a public key and some addresses => to be printed
-// or written to a file
+// NewServerToml takes a public key and an address and returns
+// the corresponding ServerToml.
+// If an error occurs, it will be printed to StdErr and nil
+// is returned.
 func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
@@ -233,7 +240,7 @@ func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Add
 	}
 }
 
-// Returns its TOML representation
+// String returns the TOML representation of the ServerToml.
 func (s *ServerToml) String() string {
 	var buff bytes.Buffer
 	if s.Description == "" {
@@ -246,7 +253,9 @@ func (s *ServerToml) String() string {
 	return buff.String()
 }
 
-// TildeToHome takes a path and replaces an eventual "~" with the home-directory
+// TildeToHome takes a path and replaces an eventual "~" with the home-directory.
+// If the user-directory is not defined it will return a path relative to the
+// root-directory "/".
 func TildeToHome(path string) string {
 	if strings.HasPrefix(path, "~/") {
 		usr, err := user.Current()
@@ -256,9 +265,10 @@ func TildeToHome(path string) string {
 	return path
 }
 
-// Input prints the arguments given with a 'input'-format and
+// Input prints the arguments given with an 'input'-format and
 // proposes the 'def' string as default. If the user presses
 // 'enter', the 'dev' will be returned.
+// In the case of an error it will Fatal.
 func Input(def string, args ...interface{}) string {
 	fmt.Fprint(out, args...)
 	fmt.Fprintf(out, " [%s]: ", def)
@@ -273,12 +283,14 @@ func Input(def string, args ...interface{}) string {
 	return str
 }
 
-// Inputf takes a format and calls Input
+// Inputf takes a format string and arguments and calls
+// Input.
 func Inputf(def string, f string, args ...interface{}) string {
 	return Input(def, fmt.Sprintf(f, args...))
 }
 
-// InputYN asks a Yes/No question
+// InputYN asks a Yes/No question. Anything else than upper/lower-case
+// 'y' will be interpreted as no.
 func InputYN(def bool, args ...interface{}) bool {
 	defStr := "Yn"
 	if !def {
