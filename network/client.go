@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
+func init() {
+	RegisterPacketType(&StatusRet{})
+}
+
 // Client is the external APIs used for services.
 // NOTE: This interface is likely to be removed to be replaced by a full
 // pledged REST HTTP Api directly connected to the sda/services.
@@ -29,6 +33,8 @@ var timeoutResponse = 10 * time.Second
 // Send will send the message to the destination service and return the
 // reply.
 // In case of an error, it returns a nil-packet and the error.
+// Send will timeout and return an error if it has not received any response
+// under 10 sec.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	// Use a unique ID for each connection.
@@ -39,15 +45,13 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(),
 		"client:"+strconv.FormatUint(id, 10)))
 
-	var c Conn
-	var err error
-	c, err = cl.connector(sid, dst)
+	c, err := cl.connector(sid, dst)
 	if err != nil {
 		return nil, fmt.Errorf("Could not connect %x", err)
 	}
 	defer c.Close()
 
-	if err := sendServerIdentity(sid, c); err != nil {
+	if err := c.Send(sid); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +76,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	case err := <-errCh:
 		return nil, err
 	case <-time.After(timeoutResponse):
-		return &Packet{}, errors.New("Timeout on sending message")
+		return nil, errors.New("Timeout on sending message")
 	}
 }
 
@@ -96,8 +100,4 @@ func ErrMsg(em *Packet, err error) error {
 	}
 	statusStr := status.Status
 	return errors.New("Remote-error: " + statusStr)
-}
-
-func init() {
-	RegisterPacketType(&StatusRet{})
 }

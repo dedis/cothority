@@ -36,12 +36,10 @@ type Router struct {
 	connsMut    sync.Mutex
 
 	// boolean flag indicating that the router is already clos{ing,ed}.
-	isClosed  bool
-	closedMut sync.Mutex
+	isClosed bool
 
 	// wg waits for all handleConn routines to be done.
-	wg    sync.WaitGroup
-	wgMut sync.Mutex
+	wg sync.WaitGroup
 }
 
 // NewRouter returns a new Router attached to a ServerIdentity and the host we want to
@@ -93,13 +91,11 @@ func (r *Router) Stop() error {
 	if r.host.Listening() {
 		err = r.host.Stop()
 	}
+	r.connsMut.Lock()
 	// set the isClosed to true
-	r.closedMut.Lock()
 	r.isClosed = true
-	r.closedMut.Unlock()
 
 	// then close all connections
-	r.connsMut.Lock()
 	for _, arr := range r.connections {
 		// take all connections to close
 		for _, c := range arr {
@@ -113,9 +109,9 @@ func (r *Router) Stop() error {
 	// wait for all handleConn to finish
 	r.wg.Wait()
 
-	r.closedMut.Lock()
+	r.connsMut.Lock()
 	r.isClosed = false
-	r.closedMut.Unlock()
+	r.connsMut.Unlock()
 	if err != nil {
 		return err
 	}
@@ -162,7 +158,7 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := r.sendServerIdentity(c); err != nil {
+	if err := c.Send(r.id); err != nil {
 		return nil, err
 	}
 
@@ -248,23 +244,12 @@ func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) {
 	go r.handleConn(dst, c)
 }
 
-// Close shuts down all network connections and returns once all processing go
-// routines are done.
-func (r *Router) stopHandling() error {
-	return nil
-}
-
 // Closed returns true if the router is closed (or is closing). For a router
 // to be closed means that a call to Stop() must have been made.
 func (r *Router) Closed() bool {
-	r.closedMut.Lock()
-	defer r.closedMut.Unlock()
+	r.connsMut.Lock()
+	defer r.connsMut.Unlock()
 	return r.isClosed
-}
-
-// close set the isClosed variable to true, any subsequent call to Closed()
-// will return true.
-func (r *Router) close() {
 }
 
 // Tx implements monitor/CounterIO
@@ -304,26 +289,6 @@ func (r *Router) Listening() bool {
 // wait for the server identities of the remote party. It returns
 // the ServerIdentity of the remote party and register the connection.
 func (r *Router) receiveServerIdentity(c Conn) (*ServerIdentity, error) {
-	dst, err := receiveServerIdentity(c)
-	if err != nil {
-		return nil, err
-	}
-	log.Lvl4(r.address, "Identity received from ", dst.Address)
-	r.registerConnection(dst, c)
-	return dst, nil
-}
-
-// sendIdentity takes a fresh issued new Conn. It sends the router's identity
-// and then registers the connection.
-func (r *Router) sendServerIdentity(c Conn) error {
-	err := sendServerIdentity(r.id, c)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func receiveServerIdentity(c Conn) (*ServerIdentity, error) {
 	// Receive the other ServerIdentity
 	nm, err := c.Receive()
 	if err != nil {
@@ -334,11 +299,12 @@ func receiveServerIdentity(c Conn) (*ServerIdentity, error) {
 		return nil, fmt.Errorf("Received wrong type during negotiation %s", nm.MsgType.String())
 	}
 	// Set the ServerIdentity for this connection
-	e := nm.Msg.(ServerIdentity)
-	return &e, nil
+	dst := nm.Msg.(ServerIdentity)
 
-}
-
-func sendServerIdentity(own *ServerIdentity, c Conn) error {
-	return c.Send(own)
+	if err != nil {
+		return nil, err
+	}
+	log.Lvl4(r.address, "Identity received from ", dst.Address)
+	r.registerConnection(&dst, c)
+	return &dst, nil
 }
