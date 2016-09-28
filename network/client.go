@@ -10,6 +10,10 @@ import (
 	"github.com/dedis/crypto/config"
 )
 
+func init() {
+	RegisterPacketType(&StatusRet{})
+}
+
 // Client is an interface which is a simpler version of a Router. The main use
 // for a Client is to directly Send something and get a result back. It is used
 // intensively by Services to have a easy external API.
@@ -36,6 +40,8 @@ var timeoutResponse = 10 * time.Second
 // The error-handling is done using the ErrorRet structure which can be returned
 // in place of the standard reply. This method will catch that and return
 // the appropriate error as a network.Packet.
+// Send will timeout and return an error if it has not received any response
+// under 10 sec.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
 	// just create a random looking id for this client. Choosing higher values
@@ -46,15 +52,13 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	baseIDLock.Unlock()
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
 
-	var c Conn
-	var err error
-	c, err = cl.connector(sid, dst)
+	c, err := cl.connector(sid, dst)
 	if err != nil {
 		return nil, fmt.Errorf("Could not connect %x", err)
 	}
 	defer c.Close()
 
-	if err := negotiateOpen(sid, dst, c); err != nil {
+	if err := c.Send(sid); err != nil {
 		return nil, err
 	}
 
@@ -79,7 +83,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	case err := <-errCh:
 		return nil, err
 	case <-time.After(timeoutResponse):
-		return &Packet{}, errors.New("Timeout on sending message")
+		return nil, errors.New("Timeout on sending message")
 	}
 }
 
@@ -103,8 +107,4 @@ func ErrMsg(em *Packet, err error) error {
 	}
 	statusStr := status.Status
 	return errors.New("Remote-error: " + statusStr)
-}
-
-func init() {
-	RegisterPacketType(&StatusRet{})
 }

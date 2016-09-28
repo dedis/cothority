@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +19,6 @@ func TestClientLocal(t *testing.T) {
 type clientFactory func() *Client
 
 func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
-	log.TestOutput(true, 3)
 	r, err := fac(2000)
 	if err != nil {
 		t.Fatal(err)
