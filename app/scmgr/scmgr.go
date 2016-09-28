@@ -33,9 +33,40 @@ func main() {
 					Action:    rootCreate,
 				},
 				{
-					Name:    "list",
-					Aliases: []string{"ls"},
-					Action:  rootList,
+					Name:      "join",
+					Aliases:   []string{"j"},
+					ArgsUsage: "root-id",
+					Action:    rootJoin,
+				},
+				{
+					Name:      "list",
+					Aliases:   []string{"ls"},
+					ArgsUsage: "root-id",
+					Action:    rootList,
+				},
+				{
+					Name:      "vote",
+					Aliases:   []string{"v"},
+					ArgsUsage: "root-id",
+					Action:    rootVote,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name: "yes, y",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name:    "pool",
+			Aliases: []string{"p"},
+			Usage:   "manage pool of config-skipchain",
+			Subcommands: []cli.Command{
+				{
+					Name:      "create",
+					Aliases:   []string{"c"},
+					ArgsUsage: "roster-file",
+					Action:    rootCreate,
 				},
 			},
 		},
@@ -61,11 +92,19 @@ func main() {
 }
 
 // Main command.
+func rootCreate(c *cli.Context) error {
+	log.Info("Main command")
+	return nil
+}
 func rootList(c *cli.Context) error {
 	log.Info("Main command")
 	return nil
 }
-func rootCreate(c *cli.Context) error {
+func rootJoin(c *cli.Context) error {
+	log.Info("Main command")
+	return nil
+}
+func rootVote(c *cli.Context) error {
 	log.Info("Main command")
 	return nil
 }

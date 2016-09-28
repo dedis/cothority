@@ -28,10 +28,19 @@ testConfig(){
 }
 
 testRoot(){
-	cothoritySetup 5 3
+	cothoritySetup 4 2
 	testOK scmgr 1 root create group.toml
-	testOK scmgr 2 root join $ID
+	testGrep "Node: 1" scmgr 1 ls
+	testReGrep "Node: 2"
+	testGrep "Node: 1" scmgr 2 ls
+	testReGrep "Node: 2"
+	testOK scmgr 3 root join $ID
+	testNGrep scmgr "Node: 3" scmgr 1 ls
 	testOK scmgr 1 root vote -y $ID
+	testNGrep scmgr "Node: 3" scmgr 2 ls
+	testOK scmgr 2 root vote -y $ID
+	testGrep scmgr "Node: 3" scmgr 1 ls
+	testGrep scmgr "Node: 3" scmgr 2 ls
 }
 
 testBuild(){
