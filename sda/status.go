@@ -26,7 +26,8 @@ func (s *statusReporterStruct) RegisterStatusReporter(name string, sr StatusRepo
 
 }
 
-// ReportStatus gets the status of all StatusReporters within the Registry and puts them in a map
+// ReportStatus gets the status of all StatusReporters within the Registry and
+// puts them in a map
 func (s *statusReporterStruct) ReportStatus() map[string]Status {
 	m := make(map[string]Status)
 	for key, val := range s.statusReporters {
