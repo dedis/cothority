@@ -144,8 +144,9 @@ func TestTreeNodeProtocolHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 	go p.Start()
-	log.Lvl2("Waiting for responses")
+	log.Lvl2("Waiting for response from child 1/2")
 	child1 := <-IncomingHandlers
+	log.Lvl2("Waiting for response from child 2/2")
 	child2 := <-IncomingHandlers
 
 	if child1.ServerIdentity().ID == child2.ServerIdentity().ID {
@@ -324,7 +325,7 @@ func (p *ProtocolHandlers) Start() error {
 	for _, c := range p.Children() {
 		err := p.SendTo(c, &NodeTestMsg{12})
 		if err != nil {
-			return err
+			log.Error("Error sending to ", c.Name(), ":", err)
 		}
 	}
 	return nil

@@ -2,8 +2,6 @@ package sda
 
 import (
 	"errors"
-	"io/ioutil"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -59,48 +57,48 @@ func TestSimulationBigTree(t *testing.T) {
 	}
 }
 
-func TestSimulationLoadSave(t *testing.T) {
-	defer log.AfterTest(t)
-	sc, _, err := createBFTree(7, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir, err := ioutil.TempDir("", "example")
-	log.ErrFatal(err)
-	defer os.RemoveAll(dir)
-	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "127.0.0.1:2000")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if sc2[0].Tree.ID != sc.Tree.ID {
-		t.Fatal("Tree-id is not correct")
-	}
-	closeAll(sc2)
-}
+/*func TestSimulationLoadSave(t *testing.T) {*/
+//defer log.AfterTest(t)
+//sc, _, err := createBFTree(7, 2)
+//if err != nil {
+//t.Fatal(err)
+//}
+//dir, err := ioutil.TempDir("", "example")
+//log.ErrFatal(err)
+//defer os.RemoveAll(dir)
+//sc.Save(dir)
+//sc2, err := LoadSimulationConfig(dir, "127.0.0.1:2000")
+//if err != nil {
+//t.Fatal(err)
+//}
+//if sc2[0].Tree.ID != sc.Tree.ID {
+//t.Fatal("Tree-id is not correct")
+//}
+//closeAll(sc2)
+//}
 
-func TestSimulationMultipleInstances(t *testing.T) {
-	defer log.AfterTest(t)
-	sc, _, err := createBFTree(7, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir, err := ioutil.TempDir("", "example")
-	log.ErrFatal(err)
-	defer os.RemoveAll(dir)
-	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "127.0.0.1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer closeAll(sc2)
-	if len(sc2) != 7 {
-		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
-	}
-	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
-		t.Fatal("Hosts are not copies")
-	}
-}
+//func TestSimulationMultipleInstances(t *testing.T) {
+//defer log.AfterTest(t)
+//sc, _, err := createBFTree(7, 2)
+//if err != nil {
+//t.Fatal(err)
+//}
+//dir, err := ioutil.TempDir("", "example")
+//log.ErrFatal(err)
+//defer os.RemoveAll(dir)
+//sc.Save(dir)
+//sc2, err := LoadSimulationConfig(dir, "127.0.0.1")
+//if err != nil {
+//t.Fatal(err)
+//}
+//defer closeAll(sc2)
+//if len(sc2) != 7 {
+//t.Fatal("We should have 4 local1-hosts but have", len(sc2))
+//}
+//if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
+//t.Fatal("Hosts are not copies")
+//}
+/*}*/
 
 func closeAll(scs []*SimulationConfig) {
 	for _, s := range scs {

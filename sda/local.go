@@ -50,7 +50,7 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     Local,
+		mode:     TCP,
 		ctx:      network.NewLocalManager(),
 	}
 }
@@ -291,12 +291,14 @@ func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 // address.
 func NewTCPHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	id.Address = network.NewTCPAddress(id.Address.NetworkAddress())
-	tcpRouter, err := network.NewTCPRouter(id)
+	addr := network.NewTCPAddress(id.Address.NetworkAddress())
+	tcpHost, err := network.NewTCPHost(addr)
 	if err != nil {
 		panic(err)
 	}
-	h := NewHostWithRouter(id, priv, tcpRouter)
+	id.Address = tcpHost.Address()
+	router := network.NewRouter(id, tcpHost)
+	h := NewHostWithRouter(id, priv, router)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
