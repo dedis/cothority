@@ -9,16 +9,17 @@ import (
 )
 
 // Router handles all networking operations such as:
-// * it listens to incoming connections using a host.Listener methods
-// * open up new connections using  host.Connect's method
-// * dispatch incoming message using a Dispatcher
-// * dispatch outgoing message maintaining a translation
+//   * listening to incoming connections using a host.Listener method
+//   * opening up new connections using host.Connect method
+//   * dispatching incoming message using a Dispatcher
+//   * dispatching outgoing message maintaining a translation
 //   between ServerIdentity <-> address
-// * manage the reconnections of non-working Conn,
+//   * managing the re-connections of non-working Conn
 // Most caller should use the creation function like NewTCPRouter(...),
 // NewLocalRouter(...) then use the Host such as:
-// `router.Start() // will listen for incoming Conn and block`
-// `router.Stop() // will stop the listening and the managing of all Conn`
+//
+//   router.Start() // will listen for incoming Conn and block
+//   router.Stop() // will stop the listening and the managing of all Conn
 type Router struct {
 	// id is our own ServerIdentity
 	id *ServerIdentity
@@ -26,23 +27,22 @@ type Router struct {
 	address Address
 	// Dispatcher is used to dispatch incoming message to the right recipient
 	Dispatcher
-
+	// Host listens for new connections
 	host Host
-	// connections keeps track of all active connections with the translation
-	// use of an array because it happens that some connections are opened at
-	// the same time on both endpoints, and thus registered one after the other,
-	// erasing the first conn.
+	// connections keeps track of all active connections. Because a connection
+	// can be opened at the same time on both endpoints, there can be more
+	// than one connection per ServerIdentityID.
 	connections map[ServerIdentityID][]Conn
 	connsMut    sync.Mutex
 
-	// boolean flag indicating that the router is already clos{ing,ed}
+	// boolean flag indicating that the router is already clos{ing,ed}.
 	isClosed bool
 
-	// we wait that all handleConn routines are done
+	// wg waits for all handleConn routines to be done.
 	wg sync.WaitGroup
 }
 
-// NewRouter returns a fresh Router giving its identity, and the host we want to
+// NewRouter returns a new Router attached to a ServerIdentity and the host we want to
 // use.
 func NewRouter(own *ServerIdentity, h Host) *Router {
 	r := &Router{
@@ -57,8 +57,8 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 	return r
 }
 
-// Start will start the listening routine of the underlying Host. It is a
-// blocking call until the listening is done (by calling r.Stop()).
+// Start the listening routine of the underlying Host. This is a
+// blocking call until r.Stop() is called.
 func (r *Router) Start() {
 	// Any incoming connection waits for the remote server identity
 	// and will create a new handling routine.
@@ -72,7 +72,8 @@ func (r *Router) Start() {
 			}
 			return
 		}
-		// pass it along
+		// start handleConn that waits for incoming messages and
+		// dispatches them.
 		r.launchHandleRoutine(dst, c)
 	})
 	if err != nil {
@@ -80,7 +81,7 @@ func (r *Router) Start() {
 	}
 }
 
-// Stop will stop the listening routine, and stop any routine of handling
+// Stop the listening routine, and stop any routine of handling
 // connections. Calling r.Start(), then r.Stop() then r.Start() again leads to
 // an undefined behaviour. Callers should most of the time re-create a fresh
 // Router.
@@ -149,6 +150,8 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	return nil
 }
 
+// connect starts a new connection and launches the listener for incoming
+// messages.
 func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 	c, err := r.host.Connect(si.Address)
 	if err != nil {
@@ -165,15 +168,15 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 
 }
 
-// handleConn is the main routine for a connection to wait for incoming
-// messages.
+// handleConn waits for incoming messages and calls the dispatcher for
+// each new message. It only quits if the connection is closed or another
+// unrecoverable error in the connection appears.
 func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
-		// when leaving, unregister the connection
+		// Clean up the connection by making sure it's closed.
 		if err := c.Close(); err != nil {
 			log.Error(r.address, "having error closing conn to ", remote.Address, ":", err)
 		}
-		// and release one on the waitgroup
 		r.wg.Done()
 	}()
 	address := c.Remote()
@@ -183,22 +186,19 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		packet.From = address
 		packet.ServerIdentity = remote
 
-		// whether the router is closed
 		if r.Closed() {
-			// signal we are done with this go routine.
 			return
 		}
 
 		if err != nil {
-			// something went wrong on this connection
 			log.Lvlf4("%+v got error (%+s) while receiving message", r.id.String(), err)
 
 			if err == ErrClosed || err == ErrEOF {
-				// remote connection closed
+				// Connection got closed.
 				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
-			// weird error let's try again
+			// Temporary error, continue.
 			log.Lvl3(r.id, "Error with connection", address, "=>", err)
 			continue
 		}
@@ -209,8 +209,8 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	}
 }
 
-// connection returns the connection associated with this ServerIdentity. Nil if
-// nothing found. It always return the first connection associated.
+// connection returns the first connection associated with this ServerIdentity.
+// If no connection is found, it returns nil.
 func (r *Router) connection(sid ServerIdentityID) Conn {
 	r.connsMut.Lock()
 	defer r.connsMut.Unlock()
@@ -221,9 +221,9 @@ func (r *Router) connection(sid ServerIdentityID) Conn {
 	return arr[0]
 }
 
-// registerConnection registers an ServerIdentity for a new connection, mapped with the
-// real physical address of the connection and the connection itself
-// it locks (and unlocks when done):  networkLock
+// registerConnection registers a ServerIdentity for a new connection, mapped with the
+// real physical address of the connection and the connection itself.
+// It uses the networkLock mutex.
 func (r *Router) registerConnection(remote *ServerIdentity, c Conn) {
 	log.Lvl4(r.address, "Registers", remote.Address)
 	r.connsMut.Lock()
@@ -276,7 +276,7 @@ func (r *Router) Rx() uint64 {
 	return rx
 }
 
-// Listening returns true if this router is listening or not.
+// Listening returns true if this router is started.
 func (r *Router) Listening() bool {
 	return r.host.Listening()
 }
