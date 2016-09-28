@@ -83,12 +83,11 @@ func (d *BlockingDispatcher) RegisterProcessorFunc(msgType PacketTypeID, fn func
 // blocking call if the Processor is blocking !
 func (d *BlockingDispatcher) Dispatch(packet *Packet) error {
 	d.Lock()
+	defer d.Unlock()
 	var p Processor
 	if p = d.procs[packet.MsgType]; p == nil {
-		d.Unlock()
 		return errors.New("No Processor attached to this message type " + packet.MsgType.String())
 	}
-	d.Unlock()
 	p.Process(packet)
 	return nil
 }
