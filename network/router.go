@@ -153,10 +153,13 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 // connect starts a new connection and launches the listener for incoming
 // messages.
 func (r *Router) connect(si *ServerIdentity) (Conn, error) {
+	log.Lvl3(r.address, "Connecting to ", si.Address)
 	c, err := r.host.Connect(si.Address)
 	if err != nil {
+		log.Lvl3("Could not connect to ", si.Address, err)
 		return nil, err
 	}
+	log.Lvl3(r.address, "Connected to ", si.Address)
 	if err := c.Send(r.id); err != nil {
 		return nil, err
 	}
@@ -207,6 +210,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		if err := r.Dispatch(&packet); err != nil {
 			log.Lvl3("Error dispatching:", err)
 		}
+
 	}
 }
 
