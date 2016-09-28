@@ -29,6 +29,7 @@ type fakeConn struct {
 	failRest bool
 	// how many total bytes have we written
 	writtenBytes int
+	*net.TCPConn
 }
 
 type fakeAddr string
@@ -59,28 +60,6 @@ func (f *fakeConn) Write(b []byte) (n int, e error) {
 	return f.max, nil
 }
 
-func (f *fakeConn) Close() error {
-	return nil
-}
-
-func (f *fakeConn) LocalAddr() net.Addr {
-	return fakeAddr("")
-}
-func (f *fakeConn) RemoteAddr() net.Addr {
-	return fakeAddr("")
-}
-
-func (f *fakeConn) SetDeadline(t time.Time) error {
-	return nil
-}
-
-func (f *fakeConn) SetReadDeadline(t time.Time) error {
-	return nil
-}
-func (f *fakeConn) SetWriteDeadline(t time.Time) error {
-	return nil
-}
-
 func TestTCPsendRaw(t *testing.T) {
 	tests := []struct {
 		msg           []byte
@@ -90,31 +69,31 @@ func TestTCPsendRaw(t *testing.T) {
 	}{
 		{ // fail at writing size
 			make([]byte, 100),
-			&fakeConn{100, true, false, false, 0},
+			&fakeConn{100, true, false, false, 0, &net.TCPConn{}},
 			true,
 			0,
 		},
 		{ // fail at writing msg
 			make([]byte, 100),
-			&fakeConn{100, false, false, true, 0},
+			&fakeConn{100, false, false, true, 0, &net.TCPConn{}},
 			true,
 			0,
 		},
 		{ // write undersize message
 			make([]byte, 99),
-			&fakeConn{100, false, false, false, 0},
+			&fakeConn{100, false, false, false, 0, &net.TCPConn{}},
 			false,
 			99,
 		},
 		{ // write exact message
 			make([]byte, 100),
-			&fakeConn{100, false, false, false, 0},
+			&fakeConn{100, false, false, false, 0, &net.TCPConn{}},
 			false,
 			100,
 		},
 		{ // write oversize message
 			make([]byte, 101),
-			&fakeConn{100, false, false, false, 0},
+			&fakeConn{100, false, false, false, 0, &net.TCPConn{}},
 			false,
 			101,
 		},
