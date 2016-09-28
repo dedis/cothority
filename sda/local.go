@@ -33,7 +33,7 @@ type LocalTest struct {
 	ctx *network.LocalManager
 }
 
-var (
+const (
 	// TCP represents the TCP mode of networking for this local test
 	TCP = "tcp"
 	// Local represents the Local mode of networking for this local test
