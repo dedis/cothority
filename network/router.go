@@ -60,13 +60,12 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 // Start the listening routine of the underlying Host. This is a
 // blocking call until r.Stop() is called.
 func (r *Router) Start() {
-	// The function given to the listener exchanges the ServerIdentities
-	// and passes the connection to the router.
+	// Any incoming connection waits for the remote server identity
+	// and will create a new handling routine.
 	err := r.host.Listen(func(c Conn) {
-		//dst, err := r.exchangeServerIdentity(c)
 		dst, err := r.receiveServerIdentity(c)
 		if err != nil {
-			log.Error("ExchangeServerIdentity failed:", err)
+			log.Error("receive server identity failed:", err)
 			if err := c.Close(); err != nil {
 				log.Error("Couldn't close secure connection:",
 					err)
@@ -184,8 +183,6 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
 	for {
 		packet, err := c.Receive()
-		// Writes the error in the packet sent to the dispatcher.
-		packet.SetError(err)
 		packet.From = address
 		packet.ServerIdentity = remote
 

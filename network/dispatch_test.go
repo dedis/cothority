@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +22,6 @@ type basicMessage struct {
 var basicMessageType = RegisterPacketType(&basicMessage{})
 
 func TestBlockingDispatcher(t *testing.T) {
-	defer log.AfterTest(t)
 
 	dispatcher := NewBlockingDispatcher()
 	processor := &basicProcessor{make(chan Packet, 1)}
@@ -64,7 +62,6 @@ func TestBlockingDispatcher(t *testing.T) {
 }
 
 func TestRoutineDispatcher(t *testing.T) {
-	defer log.AfterTest(t)
 
 	dispatcher := NewRoutineDispatcher()
 	if dispatcher == nil {
