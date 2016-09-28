@@ -72,6 +72,7 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
+	log.TestOutput(true, 4)
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
@@ -86,24 +87,25 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	}
 
 	err = h1.Send(h2.id, nil)
-	if err == nil {
-		t.Fatal("Should not be able to send")
-	}
+	require.NotNil(t, err)
 
 	go h2.Start()
+	for !h2.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	clean := func() {
+		assert.Nil(t, h1.Stop())
+		assert.Nil(t, h2.Stop())
+	}
+	defer clean()
 
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 	h1.RegisterProcessor(proc, SimpleMessageType)
-	defer func() {
-		assert.Nil(t, h1.Stop())
-		assert.Nil(t, h2.Stop())
-	}()
 
 	err = h1.Send(h2.id, &SimpleMessage{12})
-	if err != nil {
-		t.Fatal("Couldn't send message:", err)
-	}
+	require.Nil(t, err)
 
 	// Receive the message
 	msg := <-proc.relay
@@ -119,10 +121,11 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	if err := h2.Stop(); err != nil {
 		t.Fatal("Should be able to stop h2")
 	}
+	h2.connsMut.Lock()
+	delete(h2.connections, h1.id.ID)
+	h2.connsMut.Unlock()
 	err = h1.Send(h2.id, &SimpleMessage{12})
-	if err == nil {
-		t.Fatal("Should not be able to send stuff !!")
-	}
+	require.NotNil(t, err)
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
@@ -163,9 +166,9 @@ func TestRouterMessaging(t *testing.T) {
 	written := h1.Tx()
 	read := h2.Rx()
 	if written == 0 || read == 0 || written != read {
-		t.Logf("Tx = %d, Rx = %d", written, read)
-		t.Logf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
-		t.Fatal("Something is wrong with Host.CounterIO")
+		log.Error("Tx = %d, Rx = %d", written, read)
+		log.Error("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
+		log.Error("Something is wrong with Host.CounterIO")
 	}
 }
 
