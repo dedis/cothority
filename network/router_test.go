@@ -1,13 +1,13 @@
 package network
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewTestRouterTCP(port int) (*Router, error) {
@@ -72,18 +72,14 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
-	//	log.TestOutput(true, 5)
-	fmt.Println("Before fac()")
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println("after fac()")
 	err = h1.Send(&ServerIdentity{Address: NewLocalAddress("127.1.2.3:2890")}, &SimpleMessage{12})
 	if err == nil {
 		t.Fatal("Should not be able to send")
 	}
-	fmt.Println("after send() #1")
 	h2, err := fac(2008)
 	if err != nil {
 		t.Fatal(err)
@@ -117,12 +113,8 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 
 	h12 := h1.connection(h2.id.ID)
 	h21 := h2.connection(h1.id.ID)
-	if h12 == nil {
-		t.Error("h1 has no connection to h2")
-	} else if h21 == nil {
-		t.Error("h2 has no connection to h1")
-	}
-
+	assert.NotNil(t, h12)
+	require.NotNil(t, h21)
 	assert.Nil(t, h21.Close())
 	if err := h2.Stop(); err != nil {
 		t.Fatal("Should be able to stop h2")
@@ -157,13 +149,9 @@ func TestRouterMessaging(t *testing.T) {
 
 	msgSimple := &SimpleMessage{3}
 	err := h1.Send(h2.id, msgSimple)
-	if err != nil {
-		t.Fatal("Couldn't send from h2 -> h1:", err)
-	}
+	require.Nil(t, err)
 	decoded := <-proc.relay
-	if decoded.I != 3 {
-		t.Fatal("Received message from h2 -> h1 is wrong")
-	}
+	assert.Equal(t, 3, decoded.I)
 
 	// make sure the connection is registered in host1 (because it's launched in
 	// a go routine). Since we try to avoid random timeout, let's send a msg
@@ -218,7 +206,6 @@ func (p *nSquareProc) Process(pack *Packet) {
 
 // Makes a big mesh where every host send and receive to every other hosts
 func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
-	log.TestOutput(true, 2)
 	nbrRouter := 2
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
