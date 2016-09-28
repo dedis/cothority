@@ -52,8 +52,6 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 		Dispatcher:  NewBlockingDispatcher(),
 	}
 	r.address = h.Address()
-	r.host.Listening()
-	h.Listening()
 	return r
 }
 

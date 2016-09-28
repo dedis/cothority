@@ -377,6 +377,7 @@ func NewTCPHost(addr Address) (*TCPHost, error) {
 		addr: addr,
 	}
 	var err error
+	log.Print("NewTCPListener on ", addr)
 	h.TCPListener, err = NewTCPListener(addr)
 	return h, err
 }

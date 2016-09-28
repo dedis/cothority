@@ -22,6 +22,7 @@ func init() {
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
+	defer log.AfterTest(t)
 	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
@@ -60,6 +61,7 @@ func TestProcessor_RegisterMessages(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
+	defer log.AfterTest(t)
 	h1 := NewLocalHost(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
@@ -88,6 +90,7 @@ func TestProcessor_GetReply(t *testing.T) {
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
+	defer log.AfterTest(t)
 	local := NewLocalTest()
 
 	// generate 5 hosts,

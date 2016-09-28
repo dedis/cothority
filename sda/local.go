@@ -159,6 +159,11 @@ func (l *LocalTest) CloseAll() {
 			log.Error("Closing host", host.ServerIdentity.Address,
 				"gives error", err)
 		}
+
+		for host.Listening() {
+			time.Sleep(10 * time.Millisecond)
+			log.Print("Sleeping while waiting to close...")
+		}
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
@@ -293,6 +298,9 @@ func NewTCPHost(port int) *Host {
 	}
 	h := NewHostWithRouter(id, priv, tcpRouter)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 }
 
@@ -307,6 +315,9 @@ func NewLocalHost(port int) *Host {
 	}
 	h := NewHostWithRouter(id, priv, localRouter)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 }
 
@@ -320,6 +331,9 @@ func (l *LocalTest) NewLocalHost(port int) *Host {
 	}
 	h := NewHostWithRouter(id, priv, localRouter)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 
 }

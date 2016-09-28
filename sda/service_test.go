@@ -133,6 +133,7 @@ func (ds *DummyService) Process(packet *network.Packet) {
 }
 
 func TestServiceNew(t *testing.T) {
+	defer log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -156,7 +157,7 @@ func TestServiceNew(t *testing.T) {
 }
 
 func TestServiceChannels(t *testing.T) {
-	log.AfterTest(t)
+	defer log.AfterTest(t)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
