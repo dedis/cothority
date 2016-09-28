@@ -180,8 +180,6 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
 	for {
 		packet, err := c.Receive()
-		packet.From = address
-		packet.ServerIdentity = remote
 
 		// whether the router is closed
 		if r.Closed() {
@@ -202,6 +200,9 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			log.Lvl3(r.id, "Error with connection", address, "=>", err)
 			continue
 		}
+
+		packet.From = address
+		packet.ServerIdentity = remote
 
 		if err := r.Dispatch(&packet); err != nil {
 			log.Lvl3("Error dispatching:", err)
