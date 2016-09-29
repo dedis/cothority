@@ -12,7 +12,6 @@ import (
 )
 
 func TestServiceRegistration(t *testing.T) {
-	log.AfterTest(t)
 	var name = "dummy"
 	RegisterNewService(name, func(c *Context, path string) Service {
 		return &DummyService{}
@@ -65,9 +64,6 @@ func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *
 func (dm *DummyProtocol) Start() error {
 	dm.link <- true
 	if dm.config.Send {
-		/* if err := dm.SendTo(dm.TreeNode(), &DummyMsg{}); err != nil {*/
-		//log.Error(err)
-		/*}*/
 		// also send to the children if any
 		if !dm.IsLeaf() {
 			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
@@ -134,7 +130,6 @@ func (ds *DummyService) Process(packet *network.Packet) {
 }
 
 func TestServiceNew(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -158,7 +153,6 @@ func TestServiceNew(t *testing.T) {
 }
 
 func TestServiceChannels(t *testing.T) {
-	log.AfterTest(t)
 	sc1 := &ServiceChannels{}
 	sc2 := &ServiceChannels{}
 	var count int
@@ -176,15 +170,10 @@ func TestServiceChannels(t *testing.T) {
 	})
 
 	defer DeleteNewService("ChannelsService")
-	h1, h2 := TwoTestHosts()
-	defer h1.Close()
-	defer h2.Close()
-	// Add tree + entitylist
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	tree := el.GenerateBinaryTree()
+	local := NewLocalTest()
+	defer local.CloseAll()
+	_, _, tree := local.GenTree(2, true)
 	sc1.tree = *tree
-	h1.AddRoster(el)
-	h1.AddTree(tree)
 	sc1.ProcessClientRequest(nil, nil)
 
 	msg := <-Incoming
@@ -195,7 +184,6 @@ func TestServiceChannels(t *testing.T) {
 }
 
 func TestServiceProcessRequest(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -222,15 +210,13 @@ func TestServiceProcessRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	// wait for the link
-	v := <-ds.link
-	if v {
+	if <-ds.link {
 		t.Fatal("was expecting false !")
 	}
 }
 
 // Test if a request that makes the service create a new protocol works
 func TestServiceRequestNewProtocol(t *testing.T) {
-	log.AfterTest(t)
 	ds := &DummyService{
 		link: make(chan bool),
 	}
@@ -278,7 +264,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 // test for calling the NewProtocol method on a remote Service
 func TestServiceNewProtocol(t *testing.T) {
-	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 		Config: DummyConfig{
@@ -341,14 +326,13 @@ func TestServiceNewProtocol(t *testing.T) {
 	log.Lvl1("Waiting for end")
 	// wait for the link from the protocol that Starts
 	waitOrFatalValue(ds1.link, true, t)
-	// now wait for the SECOND LINK on the SECOND HOST that the SECOND SERVICE
+	// now wait for the second link on the second HOST that the second service
 	// should have started (ds2) in ProcessRequest
 	waitOrFatalValue(ds2.link, true, t)
 	log.Lvl1("Done")
 }
 
 func TestServiceProcessor(t *testing.T) {
-	log.AfterTest(t)
 	ds1 := &DummyService{
 		link: make(chan bool),
 	}
@@ -403,7 +387,6 @@ func (c *clientProc) Process(p *network.Packet) {
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -433,7 +416,6 @@ func TestServiceBackForthProtocol(t *testing.T) {
 }
 
 func TestClient_Send(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -460,7 +442,6 @@ func TestClient_Send(t *testing.T) {
 }
 
 func TestClient_LocalSend(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -487,7 +468,6 @@ func TestClient_LocalSend(t *testing.T) {
 }
 
 func TestClient_Parallel(t *testing.T) {
-	log.AfterTest(t)
 	nbrNodes := 4
 	nbrParallel := 20
 	local := NewLocalTest()
@@ -523,6 +503,18 @@ func TestClient_Parallel(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
+}
+
+func TestServiceManager_Service(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	hosts, _, _ := local.GenTree(2, true)
+
+	services := hosts[0].serviceManager.AvailableServices()
+	assert.NotEqual(t, 0, len(services), "no services available")
+
+	service := hosts[0].serviceManager.Service("testService")
+	assert.NotNil(t, service, "Didn't find service testService")
 }
 
 // BackForthProtocolForth & Back are messages that go down and up the tree.

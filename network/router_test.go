@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewTestRouterTCP(port int) (*Router, error) {
@@ -71,28 +72,40 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
+	log.TestOutput(true, 4)
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
+	}
+	err = h1.Send(&ServerIdentity{Address: NewLocalAddress("127.1.2.3:2890")}, &SimpleMessage{12})
+	if err == nil {
+		t.Fatal("Should not be able to send")
 	}
 	h2, err := fac(2008)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = h1.Send(h2.id, nil)
+	require.NotNil(t, err)
+
 	go h2.Start()
+	for !h2.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	clean := func() {
+		assert.Nil(t, h1.Stop())
+		assert.Nil(t, h2.Stop())
+	}
+	defer clean()
 
 	proc := newSimpleMessageProc(t)
 	h2.RegisterProcessor(proc, SimpleMessageType)
 	h1.RegisterProcessor(proc, SimpleMessageType)
-	defer func() {
-		assert.Nil(t, h1.Stop())
-		assert.Nil(t, h2.Stop())
-	}()
 
 	err = h1.Send(h2.id, &SimpleMessage{12})
-	if err != nil {
-		t.Fatal("Couldn't send message:", err)
-	}
+	require.Nil(t, err)
 
 	// Receive the message
 	msg := <-proc.relay
@@ -102,11 +115,17 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 
 	h12 := h1.connection(h2.id.ID)
 	h21 := h2.connection(h1.id.ID)
-	if h12 == nil {
-		t.Error("h1 has no connection to h2")
-	} else if h21 == nil {
-		t.Error("h2 has no connection to h1")
+	assert.NotNil(t, h12)
+	require.NotNil(t, h21)
+	assert.Nil(t, h21.Close())
+	if err := h2.Stop(); err != nil {
+		t.Fatal("Should be able to stop h2")
 	}
+	h2.connsMut.Lock()
+	delete(h2.connections, h1.id.ID)
+	h2.connsMut.Unlock()
+	err = h1.Send(h2.id, &SimpleMessage{12})
+	require.NotNil(t, err)
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
@@ -133,13 +152,9 @@ func TestRouterMessaging(t *testing.T) {
 
 	msgSimple := &SimpleMessage{3}
 	err := h1.Send(h2.id, msgSimple)
-	if err != nil {
-		t.Fatal("Couldn't send from h2 -> h1:", err)
-	}
+	require.Nil(t, err)
 	decoded := <-proc.relay
-	if decoded.I != 3 {
-		t.Fatal("Received message from h2 -> h1 is wrong")
-	}
+	assert.Equal(t, 3, decoded.I)
 
 	// make sure the connection is registered in host1 (because it's launched in
 	// a go routine). Since we try to avoid random timeout, let's send a msg
@@ -151,9 +166,9 @@ func TestRouterMessaging(t *testing.T) {
 	written := h1.Tx()
 	read := h2.Rx()
 	if written == 0 || read == 0 || written != read {
-		t.Logf("Tx = %d, Rx = %d", written, read)
-		t.Logf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
-		t.Fatal("Something is wrong with Host.CounterIO")
+		log.Error("Tx = %d, Rx = %d", written, read)
+		log.Error("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
+		log.Error("Something is wrong with Host.CounterIO")
 	}
 }
 
@@ -194,7 +209,6 @@ func (p *nSquareProc) Process(pack *Packet) {
 
 // Makes a big mesh where every host send and receive to every other hosts
 func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
-	log.TestOutput(true, 2)
 	nbrRouter := 2
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
@@ -308,21 +322,28 @@ func TestRouterExchange(t *testing.T) {
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(router1.id, c); err != nil {
+	if err := c.Send(router2.id); err != nil {
 		t.Fatal("Wrong negotiation")
+	}
+	// triggers the dispatching conditional branch error router.go:
+	//  `log.Lvl3("Error dispatching:", err)`
+	if err := router2.Send(router1.id, &SimpleMessage{12}); err != nil {
+		t.Fatal("Could not send")
 	}
 	c.Close()
 
-	// try giving wrong id
+	// try messing with the connections here
 	c, err = NewTCPConn(router1.id.Address)
 	if err != nil {
 		t.Fatal("Couldn't connect to host1:", err)
 	}
-	if err := router2.negotiateOpen(router2.id, c); err == nil {
+	// closing before sending
+	c.Close()
+	if err := c.Send(router2.id); err == nil {
 		t.Fatal("negotiation should have aborted")
 	}
-	c.Close()
 
+	// stop everything
 	log.Lvl4("Closing connections")
 	if err := router2.Stop(); err != nil {
 		t.Fatal("Couldn't close host", err)

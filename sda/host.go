@@ -7,6 +7,7 @@ import (
 
 	"sort"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 )
@@ -38,6 +39,7 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	}
 
 	var err error
+	log.Lvl3("NewHost ", e.Address)
 	h.Router, err = network.NewTCPRouter(e)
 	if err != nil {
 		panic(err)
@@ -85,6 +87,7 @@ func (h *Host) GetStatus() Status {
 func (h *Host) Close() error {
 	h.overlay.Close()
 	err := h.Router.Stop()
+	log.Lvl3("Host Close ", h.ServerIdentity.Address, "listening?", h.Router.Listening())
 	return err
 
 }

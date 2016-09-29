@@ -7,17 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/dedis/crypto/config"
 )
 
-// Client is an interface which is a simpler version of a Router. The main use
-// for a Client is to directly Send something and get a result back. It is used
-// intensively by Services to have a easy external API.
-// Two implementations are done: TcpClient to use for applications and
-// deployement,and localClient to use for local testing alongside with
-// LocalRouter.
+func init() {
+	RegisterPacketType(&StatusRet{})
+}
+
+// Client is used for the external API of services.
 // NOTE: This interface is likely to be removed to be replaced by a full
 // pledged REST HTTP Api directly connected to the sda/services.
 type Client struct {
@@ -31,46 +28,41 @@ func newClient(c func(own, remote *ServerIdentity) (Conn, error)) *Client {
 var baseID uint64
 var baseIDLock sync.Mutex
 
+var timeoutResponse = 10 * time.Second
+
 // Send will send the message to the destination service and return the
 // reply.
-// The error-handling is done using the ErrorRet structure which can be returned
-// in place of the standard reply. This method will catch that and return
-// the appropriate error as a network.Packet.
+// In case of an error, it returns a nil-packet and the error.
+// Send will timeout and return an error if it has not received any response
+// under 10 sec.
 func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	kp := config.NewKeyPair(Suite)
-	// just create a random looking id for this client. Choosing higher values
-	// lower the chance of having a collision in the Router.
+	// Use a unique ID for each connection.
 	baseIDLock.Lock()
 	id := baseID
 	baseID++
 	baseIDLock.Unlock()
-	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(), "client:"+strconv.FormatUint(id, 10)))
+	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(),
+		"client:"+strconv.FormatUint(id, 10)))
 
-	var c Conn
-	var err error
-	for i := 0; i < MaxRetryConnect; i++ {
-		c, err = cl.connector(sid, dst)
-		if err == nil {
-			break
-		} else if i == MaxRetryConnect-1 {
-			return nil, fmt.Errorf("Could not connect %x", err)
-		}
-		time.Sleep(WaitRetry)
+	c, err := cl.connector(sid, dst)
+	if err != nil {
+		return nil, fmt.Errorf("Could not connect %x", err)
 	}
 	defer c.Close()
 
-	if err := negotiateOpen(sid, dst, c); err != nil {
+	if err := c.Send(sid); err != nil {
 		return nil, err
 	}
 
 	msgCh := make(chan Packet)
 	errCh := make(chan error)
 	go func() {
-		if err := c.Send(context.TODO(), msg); err != nil {
+		if err := c.Send(msg); err != nil {
 			errCh <- err
 			return
 		}
-		p, err := c.Receive(context.TODO())
+		p, err := c.Receive()
 		if ret := ErrMsg(&p, err); ret != nil {
 			errCh <- ret
 		} else {
@@ -83,8 +75,8 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 		return &resp, nil
 	case err := <-errCh:
 		return nil, err
-	case <-time.After(time.Second * 10):
-		return &Packet{}, errors.New("Timeout on sending message")
+	case <-time.After(timeoutResponse):
+		return nil, errors.New("Timeout on sending message")
 	}
 }
 
@@ -107,12 +99,5 @@ func ErrMsg(em *Packet, err error) error {
 		return nil
 	}
 	statusStr := status.Status
-	if statusStr != "" {
-		return errors.New("Remote-error: " + statusStr)
-	}
-	return nil
-}
-
-func init() {
-	RegisterPacketType(&StatusRet{})
+	return errors.New("Remote-error: " + statusStr)
 }

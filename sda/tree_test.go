@@ -42,7 +42,7 @@ func TestTreeId(t *testing.T) {
 
 // Test if topology correctly handles the "virtual" connections in the topology
 func TestTreeConnectedTo(t *testing.T) {
-	names := genLocalhostPeerNames(3, 2000)
+	names := genLocalhostPeerNames(3, 0)
 	peerList := genRoster(tSuite, names)
 	// Generate two example topology
 	tree := peerList.GenerateBinaryTree()
@@ -57,7 +57,6 @@ func TestTreeConnectedTo(t *testing.T) {
 
 // Test initialisation of new peer-list
 func TestRosterNew(t *testing.T) {
-	log.AfterTest(t)
 	adresses := genLocalhostPeerNames(2, 2000)
 	pl := genRoster(tSuite, adresses)
 	if len(pl.List) != 2 {
@@ -267,7 +266,6 @@ func TestBigNaryTree(t *testing.T) {
 }
 
 func TestTreeIsColored(t *testing.T) {
-	log.AfterTest(t)
 	names := genLocalPeerName(2, 2)
 	peerList := genRoster(tSuite, names)
 	tree := peerList.GenerateBigNaryTree(3, 13)

@@ -2,29 +2,28 @@ package sda
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
-
-	"io/ioutil"
+	"time"
 
 	"github.com/dedis/cothority/log"
 )
 
 func TestSimulationBF(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	addresses := []string{
 		"127.0.0.1:2000",
+		"127.0.0.2:2000",
 		"127.0.0.1:2001",
+		"127.0.0.2:2001",
 		"127.0.0.1:2002",
+		"127.0.0.2:2002",
 		"127.0.0.1:2003",
-		"127.0.0.1:2004",
-		"127.0.0.1:2005",
-		"127.0.0.1:2006",
 	}
 	for i, a := range sc.Roster.List {
 		if a.Address.NetworkAddress() != addresses[i] {
@@ -48,12 +47,10 @@ func TestSimulationBF(t *testing.T) {
 }
 
 func TestSimulationBigTree(t *testing.T) {
-	t.Skip()
-	log.AfterTest(t)
 	if testing.Short() {
 		t.Skip()
 	}
-	for i := uint(12); i < 15; i++ {
+	for i := uint(4); i < 8; i++ {
 		_, _, err := createBFTree(1<<i-1, 2)
 		if err != nil {
 			t.Fatal(err)
@@ -62,7 +59,6 @@ func TestSimulationBigTree(t *testing.T) {
 }
 
 func TestSimulationLoadSave(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -75,14 +71,13 @@ func TestSimulationLoadSave(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer closeAll(sc2)
 	if sc2[0].Tree.ID != sc.Tree.ID {
 		t.Fatal("Tree-id is not correct")
 	}
+	closeAll(sc2)
 }
 
 func TestSimulationMultipleInstances(t *testing.T) {
-	log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -91,12 +86,12 @@ func TestSimulationMultipleInstances(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "local1")
+	sc2, err := LoadSimulationConfig(dir, "127.0.0.1")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer closeAll(sc2)
-	if len(sc2) != 7 {
+	if len(sc2) != 4 {
 		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
 	}
 	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
@@ -106,7 +101,14 @@ func TestSimulationMultipleInstances(t *testing.T) {
 
 func closeAll(scs []*SimulationConfig) {
 	for _, s := range scs {
-		s.Host.Close()
+		if err := s.Host.Close(); err != nil {
+			log.Error("Error closing host ", s.Host.ServerIdentity)
+		}
+
+		for s.Host.Router.Listening() {
+			log.Print("Sleeping while waiting for router to be closed")
+			time.Sleep(20 * time.Millisecond)
+		}
 	}
 }
 
@@ -116,7 +118,7 @@ func createBFTree(hosts, bf int) (*SimulationConfig, *SimulationBFTree, error) {
 		Hosts: hosts,
 		BF:    bf,
 	}
-	sb.CreateRoster(sc, []string{"127.0.0.1"}, 2000)
+	sb.CreateRoster(sc, []string{"127.0.0.1", "127.0.0.2"}, 2000)
 	if len(sc.Roster.List) != hosts {
 		return nil, nil, errors.New("Didn't get correct number of entities")
 	}

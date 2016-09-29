@@ -20,7 +20,6 @@ func init() {
 }
 
 func TestNodeChannelCreateSlice(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -42,7 +41,6 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 }
 
 func TestNodeChannelCreate(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -78,7 +76,6 @@ func TestNodeChannelCreate(t *testing.T) {
 }
 
 func TestNodeChannel(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
@@ -115,7 +112,6 @@ func TestNodeChannel(t *testing.T) {
 
 // Test instantiation of Node
 func TestNodeNew(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 
@@ -138,7 +134,6 @@ func TestNodeNew(t *testing.T) {
 }
 
 func TestTreeNodeProtocolHandlers(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
@@ -149,8 +144,9 @@ func TestTreeNodeProtocolHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 	go p.Start()
-	log.Lvl2("Waiting for responses")
+	log.Lvl2("Waiting for response from child 1/2")
 	child1 := <-IncomingHandlers
+	log.Lvl2("Waiting for response from child 2/2")
 	child2 := <-IncomingHandlers
 
 	if child1.ServerIdentity().ID == child2.ServerIdentity().ID {
@@ -172,7 +168,6 @@ func TestTreeNodeProtocolHandlers(t *testing.T) {
 }
 
 func TestTreeNodeMsgAggregation(t *testing.T) {
-	log.AfterTest(t)
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
@@ -330,7 +325,7 @@ func (p *ProtocolHandlers) Start() error {
 	for _, c := range p.Children() {
 		err := p.SendTo(c, &NodeTestMsg{12})
 		if err != nil {
-			return err
+			log.Error("Error sending to ", c.Name(), ":", err)
 		}
 	}
 	return nil
@@ -361,7 +356,6 @@ func (p *ProtocolHandlers) Release() {
 }
 
 func TestNodeBlocking(t *testing.T) {
-	log.AfterTest(t)
 	l := NewLocalTest()
 	_, _, tree := l.GenTree(2, true)
 	defer l.CloseAll()

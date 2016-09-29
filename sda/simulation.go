@@ -106,11 +106,13 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 			ha += ":"
 		}
 		for _, e := range sc.Roster.List {
-			host := NewHost(e, scf.PrivateKeys[e.Address])
-			scNew := *sc
-			scNew.Host = host
-			scNew.Overlay = host.overlay
-			ret = append(ret, &scNew)
+			if strings.Contains(e.Address.String(), ha) {
+				host := NewHost(e, scf.PrivateKeys[e.Address])
+				scNew := *sc
+				scNew.Host = host
+				scNew.Overlay = host.overlay
+				ret = append(ret, &scNew)
+			}
 		}
 		if len(ret) == 0 {
 			return nil, errors.New("Didn't find address: " + ha)
@@ -123,6 +125,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		// Now strip all superfluous numbers of localhost
 		for i := range sc.Roster.List {
 			_, port, _ := net.SplitHostPort(sc.Roster.List[i].Address.NetworkAddress())
+			// put 127.0.0.1 because 127.0.0.X is not reachable on Mac OS X
 			sc.Roster.List[i].Address = network.NewAddress(network.Local, "127.0.0.1:"+port)
 		}
 	}
