@@ -18,12 +18,12 @@ func TestSimulationBF(t *testing.T) {
 	}
 	addresses := []string{
 		"127.0.0.1:2000",
-		"127.0.0.1:2001",
-		"127.0.0.1:2002",
-		"127.0.0.1:2003",
 		"127.0.0.2:2000",
+		"127.0.0.1:2001",
 		"127.0.0.2:2001",
+		"127.0.0.1:2002",
 		"127.0.0.2:2002",
+		"127.0.0.1:2003",
 	}
 	for i, a := range sc.Roster.List {
 		if a.Address.NetworkAddress() != addresses[i] {
