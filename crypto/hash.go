@@ -10,6 +10,10 @@ import (
 	"encoding"
 	"reflect"
 
+	"fmt"
+
+	"encoding/binary"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 )
@@ -123,8 +127,22 @@ func convertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, 
 	var ret []encoding.BinaryMarshaler
 	for _, a := range args {
 		refl := reflect.ValueOf(a)
+		if !refl.IsValid() {
+			continue
+		}
+		//log.Lvlf2("Converting %s[%s] to BinaryMarshaler",
+		//	refl.Type(), refl.Kind())
 		switch refl.Kind() {
 		case reflect.Slice, reflect.Array:
+			if reflect.TypeOf(a).Elem().Kind() == reflect.Uint8 {
+				// It's a slice of byte, marshal it directly.
+				buf := make([]byte, refl.Len())
+				for i := range buf {
+					buf[i] = byte(refl.Index(i).Uint())
+				}
+				ret = append(ret, &byteBM{buf})
+				continue
+			}
 			for b := 0; b < refl.Len(); b++ {
 				el := refl.Index(b)
 				bms, err := convertToBinaryMarshaler(el.Interface())
@@ -133,13 +151,53 @@ func convertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, 
 				}
 				ret = append(ret, bms...)
 			}
+		case reflect.Struct:
+			for f := 0; f < refl.NumField(); f++ {
+				field := refl.Field(f)
+				bms, err := convertToBinaryMarshaler(field.Interface())
+				if err != nil {
+					return nil, err
+				}
+				ret = append(ret, bms...)
+			}
+		case reflect.Int:
+			ret = append(ret, &intBM{refl.Int()})
+		case reflect.String:
+			ret = append(ret, &stringBM{refl.String()})
 		default:
 			bm, ok := a.(encoding.BinaryMarshaler)
 			if !ok {
-				return nil, errors.New("Couldn't convert to BinaryMarshaler")
+				return nil, fmt.Errorf("Couldn't convert %s[%s] to BinaryMarshaler",
+					refl.Type(), refl.Kind())
 			}
 			ret = append(ret, bm)
 		}
 	}
 	return ret, nil
+}
+
+type intBM struct {
+	V int64
+}
+
+func (i *intBM) MarshalBinary() ([]byte, error) {
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, uint64(i.V))
+	return buf, nil
+}
+
+type stringBM struct {
+	S string
+}
+
+func (s *stringBM) MarshalBinary() ([]byte, error) {
+	return []byte(s.S), nil
+}
+
+type byteBM struct {
+	B []byte
+}
+
+func (b *byteBM) MarshalBinary() ([]byte, error) {
+	return b.B, nil
 }

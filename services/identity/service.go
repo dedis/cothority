@@ -250,7 +250,8 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 }
 
 func (s *Service) GetUpdateChain(si *network.ServerIdentity, guc *GetUpdateChain) (network.Body, error) {
-	return s.skipchain.GetUpdateChain(s.getIdentityStorage(guc.LatestID))
+	storage := s.getIdentityStorage(ID(guc.LatestID))
+	return s.skipchain.GetUpdateChain(storage.Root, storage.Data.Hash)
 }
 
 /*

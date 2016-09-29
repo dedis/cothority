@@ -50,8 +50,7 @@ func (c *Client) ProposeRoster(latest *SkipBlock, el *sda.Roster) (reply *Propos
 
 // CreateRoster will create a new SkipChainRoster with the parameters given
 func (c *Client) CreateRoster(el *sda.Roster, baseH, maxH int, ver VerifierID, parent SkipBlockID) (*SkipBlock, error) {
-	genesis := NewSkipBlock()
-	genesis.Roster = el
+	genesis := NewSkipBlock(el)
 	genesis.VerifierID = ver
 	genesis.MaximumHeight = maxH
 	genesis.BaseHeight = baseH
@@ -72,12 +71,11 @@ func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Bod
 // CreateData will create a new SkipChainData with the parameters given
 func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.Body) (
 	*SkipBlock, *SkipBlock, error) {
-	data := NewSkipBlock()
+	data := NewSkipBlock(parent.Roster)
 	data.MaximumHeight = maxH
 	data.BaseHeight = baseH
 	data.VerifierID = ver
 	data.ParentBlockID = parent.Hash
-	data.Roster = parent.Roster
 	dataMsg, err := c.proposeSkipBlock(data, nil, d)
 	if err != nil {
 		return nil, nil, err
@@ -131,10 +129,11 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.Roster, d network.B
 	if !hash.IsNull() {
 		// We have to create a new SkipBlock to propose to the
 		// service
-		propose = NewSkipBlock()
+		propose = NewSkipBlock(nil)
 		if d == nil {
 			// This is a RosterSkipBlock
 			propose.Roster = el
+			propose.Aggregate = el.Aggregate
 		} else {
 			// DataSkipBlock will be set later, just make sure that
 			// there will be a receiver

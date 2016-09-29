@@ -20,13 +20,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
-	sbd1 := NewSkipBlock()
+	sbd1 := NewSkipBlock(nil)
 	sbd1.Data = []byte("1")
 	sbd1.Height = 4
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := NewSkipBlock()
+	sbd2 := NewSkipBlock(nil)
 	sbd2.Data = []byte("2")
 	sbd1.Height = 2
 	h2 := sbd2.updateHash()
@@ -37,14 +37,12 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false, false, false)
 	defer local.CloseAll()
-	sbd1 := NewSkipBlock()
-	sbd1.Roster = el
+	sbd1 := NewSkipBlock(el)
 	sbd1.Height = 1
 	h1 := sbd1.updateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := NewSkipBlock()
-	sbd2.Roster = local.GenRosterFromHost(hosts[0])
+	sbd2 := NewSkipBlock(local.GenRosterFromHost(hosts[0]))
 	sbd2.Height = 1
 	h2 := sbd2.updateHash()
 	assert.NotEqual(t, h1, h2)
@@ -61,12 +59,11 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	sbRoot := makeGenesisRoster(service, el)
 
 	// send a ProposeBlock
-	genesis := NewSkipBlock()
+	genesis := NewSkipBlock(sbRoot.Roster)
 	genesis.Data = []byte("In the beginning God created the heaven and the earth.")
 	genesis.MaximumHeight = 2
 	genesis.BaseHeight = 2
 	genesis.ParentBlockID = sbRoot.Hash
-	genesis.Roster = sbRoot.Roster
 	blockCount := 0
 	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
 	assert.Nil(t, err)
@@ -78,13 +75,12 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	assert.Equal(t, 1, len(latest.BackLinkIds))
 	assert.NotEqual(t, 0, latest.BackLinkIds)
 
-	next := NewSkipBlock()
+	next := NewSkipBlock(sbRoot.Roster)
 	next.Data = []byte("And the earth was without form, and void; " +
 		"and darkness was upon the face of the deep. " +
 		"And the Spirit of God moved upon the face of the waters.")
 	next.MaximumHeight = 2
 	next.ParentBlockID = sbRoot.Hash
-	next.Roster = sbRoot.Roster
 	id := psbr.Latest.Hash
 	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, next})
 	assert.Nil(t, err)
@@ -117,8 +113,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbs[0] = makeGenesisRoster(s, el)
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
-		newSB := NewSkipBlock()
-		newSB.Roster = el
+		newSB := NewSkipBlock(el)
 		psbrMsg, err := s.ProposeSkipBlock(nil,
 			&ProposeSkipBlock{sbs[i-1].Hash, newSB})
 		assert.Nil(t, err)
@@ -233,8 +228,7 @@ func TestService_MultiLevel(t *testing.T) {
 			latest := sbRoot
 			log.Lvl1("Adding blocks for", base, height)
 			for sbi := 1; sbi < 10; sbi++ {
-				sb := NewSkipBlock()
-				sb.Roster = el
+				sb := NewSkipBlock(el)
 				psbr, err := service.ProposeSkipBlock(nil,
 					&ProposeSkipBlock{latest.Hash, sb})
 				log.ErrFatal(err)
@@ -296,8 +290,7 @@ func TestService_Verification(t *testing.T) {
 	sbRoot := makeGenesisRoster(service, elRoot)
 
 	log.Lvl1("Creating non-conforming skipBlock")
-	sb := NewSkipBlock()
-	sb.Roster = el
+	sb := NewSkipBlock(el)
 	sb.MaximumHeight = 1
 	sb.BaseHeight = 1
 	sb.ParentBlockID = sbRoot.Hash
@@ -327,7 +320,7 @@ func TestCopy(t *testing.T) {
 		t.Fatal("They should not be equal")
 	}
 
-	sb1 := NewSkipBlock()
+	sb1 := NewSkipBlock(nil)
 	sb1.ChildSL = NewBlockLink()
 	sb2 := sb1.Copy()
 	sb1.ChildSL.Signature = []byte{1}
@@ -350,8 +343,7 @@ func TestService_SignBlock(t *testing.T) {
 
 	sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
 	el2 := sda.NewRoster(el.List[0:2])
-	sb := NewSkipBlock()
-	sb.Roster = el2
+	sb := NewSkipBlock(el2)
 	psbr, err := service.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{sbRoot.Hash, sb})
 	log.ErrFatal(err)
@@ -379,8 +371,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 }
 
 func launchVerification(t *testing.T, services []*Service, n int, prev *SkipBlock) *SkipBlock {
-	next := NewSkipBlock()
-	next.Roster = prev.Roster
+	next := NewSkipBlock(prev.Roster)
 	for _, s := range services {
 		s.testVerify = false
 	}
@@ -401,8 +392,7 @@ func TestService_ForwardSignature(t *testing.T) {
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
 	vid VerifierID, base, height int) *SkipBlock {
-	sb := NewSkipBlock()
-	sb.Roster = el
+	sb := NewSkipBlock(el)
 	sb.MaximumHeight = height
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent

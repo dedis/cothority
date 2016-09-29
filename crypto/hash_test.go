@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
+	"github.com/stretchr/testify/require"
 )
 
 var hashSuite = ed25519.NewAES128SHA256Ed25519(false)
@@ -178,6 +179,33 @@ func TestHashArgs(t *testing.T) {
 	_, err = HashArgsSuite(hashSuite, X)
 
 	log.ErrFatal(err)
+}
+
+func TestHashArgsSuite(t *testing.T) {
+	s := hashTest{0, MySlice{3, 1, 4, 1}, []byte{5, 9, 2, 6},
+		[8]byte{3, 1, 4, 1, 5, 9, 2, 6},
+		hashSuite.Point().Base(), hashSuite.Scalar().Zero(),
+		"abraxas"}
+	h1, err := HashArgsSuite(hashSuite, s)
+	log.ErrFatal(err)
+	h2, err := HashArgsSuite(hashSuite, s)
+	log.ErrFatal(err)
+	require.Equal(t, h1, h2)
+	s.A = 1
+	h3, err := HashArgsSuite(hashSuite, s)
+	require.NotEqual(t, h1, h3)
+}
+
+type MySlice []byte
+
+type hashTest struct {
+	A int
+	B MySlice
+	C []byte
+	D [8]byte
+	E abstract.Point
+	F abstract.Scalar
+	S string
 }
 
 func TestConvertToBinaryMarshaler(t *testing.T) {
