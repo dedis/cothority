@@ -85,9 +85,9 @@ func (r *Router) Start() {
 // Router.
 func (r *Router) Stop() error {
 	var err error
-	if r.host.Listening() {
-		err = r.host.Stop()
-	}
+	//if r.host.Listening() {
+	err = r.host.Stop()
+	//}
 	r.connsMut.Lock()
 	// set the isClosed to true
 	r.isClosed = true
