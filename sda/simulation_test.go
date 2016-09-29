@@ -93,7 +93,7 @@ func TestSimulationMultipleInstances(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer closeAll(sc2)
-	if len(sc2) != 7 {
+	if len(sc2) != 4 {
 		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
 	}
 	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
