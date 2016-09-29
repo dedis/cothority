@@ -130,8 +130,6 @@ func convertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, 
 		if !refl.IsValid() {
 			continue
 		}
-		//log.Lvlf2("Converting %s[%s] to BinaryMarshaler",
-		//	refl.Type(), refl.Kind())
 		switch refl.Kind() {
 		case reflect.Slice, reflect.Array:
 			if reflect.TypeOf(a).Elem().Kind() == reflect.Uint8 {
