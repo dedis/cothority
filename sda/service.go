@@ -104,7 +104,7 @@ func RegisterNewService(name string, fn NewServiceFunc) {
 	ServiceFactory.Register(name, fn)
 }
 
-// DeleteNewService will remove the NewServiceFunc associated with *name*
+// DeleteNewService removes the NewServiceFunc associated with name
 // from the global store of NewServiceFunc so it can't be initialized again.
 // If the service needs to be initialized again, a new call to
 // RegisterNewService must be made.
@@ -112,7 +112,7 @@ func DeleteNewService(name string) {
 	ServiceFactory.DeleteNewService(name)
 }
 
-// RegisteredServices returns all the services registered
+// RegisteredServices returns all the services registered.
 func (s *serviceFactory) registeredServicesID() []ServiceID {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -123,7 +123,7 @@ func (s *serviceFactory) registeredServicesID() []ServiceID {
 	return ids
 }
 
-// RegisteredServicesByName returns all the names of the services registered
+// RegisteredServicesByName returns all the names of the services registered.
 func (s *serviceFactory) RegisteredServicesName() []string {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -203,7 +203,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	host *Host
-	// the dispather can take registration of Processors
+	// the dispatcher can take registration of Processors
 	network.Dispatcher
 }
 
@@ -391,7 +391,7 @@ func NewClient(s string) *Client {
 	}
 }
 
-// NewLocalClient is for test mainly, it uses the local coomunication network
+// NewLocalClient is for test mainly, it uses the local comunication network
 // offered by the network package.
 func NewLocalClient(s string) *Client {
 	return &Client{
@@ -400,8 +400,7 @@ func NewLocalClient(s string) *Client {
 	}
 }
 
-// Send will marshal the message into a ClientRequest message and sends it
-// through the network
+// Send will marshal the message into a ClientRequest message and send it.
 func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 
 	m, err := network.NewNetworkPacket(msg)
