@@ -399,12 +399,12 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 }
 
 // Stop shuts down listening.
-// It returns an error if the LocalListener is not listening yet.
+// It always returns nil whether ll is listening or not.
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
 	if !ll.listening {
-		return errors.New("Listener is not listening!")
+		return nil
 	}
 	ll.manager.unsetListening(ll.addr)
 	close(ll.quit)

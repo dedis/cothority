@@ -60,8 +60,8 @@ func TestLocalListener(t *testing.T) {
 		t.Error("listener should have returned an error when Listen twice")
 	}
 	assert.Nil(t, listener.Stop())
-	if err := listener.Stop(); err == nil {
-		t.Error("listener.Stop() twice should have returned an error")
+	if err := listener.Stop(); err != nil {
+		t.Error("listener.Stop() twice should not returns an error")
 	}
 	<-ready
 }
