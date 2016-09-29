@@ -407,7 +407,7 @@ func (h *Host) GetStatus() Status {
 	m["Total"] = strconv.Itoa(nbr)
 	m["Packets_Received"] = strconv.FormatUint(rx, 10)
 	m["Packets_Sent"] = strconv.FormatUint(tx, 10)
-	a := ServiceFactory.RegisteredServicesName()
+	a := ServiceFactory.RegisteredServiceNames()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
 

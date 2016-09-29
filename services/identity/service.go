@@ -110,7 +110,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 
 	roster := ids.Root.Roster
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
-		&PropagateIdentity{ids}, 1000, s.Propagate)
+		&PropagateIdentity{ids}, propagateTimeout, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 	}
 	roster := sid.Root.Roster
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
-		p, 1000, s.Propagate)
+		p, propagateTimeout, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	}
 
 	// Propagate the vote
-	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, 1000, s.Propagate)
+	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, propagateTimeout, s.Propagate)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			Latest: reply.Latest,
 		}
 		_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster,
-			usb, 1000, s.Propagate)
+			usb, propagateTimeout, s.Propagate)
 		if err != nil {
 			return nil, err
 		}
