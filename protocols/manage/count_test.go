@@ -14,7 +14,7 @@ import (
 func TestCount(t *testing.T) {
 	local := sda.NewLocalTest()
 	nbrNodes := 2
-	_, _, tree := local.GenTree(nbrNodes, false, true, true)
+	_, _, tree := local.GenTree(nbrNodes, false)
 	defer local.CloseAll()
 
 	pi, err := local.StartProtocol("Count", tree)

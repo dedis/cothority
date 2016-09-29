@@ -12,7 +12,7 @@ import (
 func TestCloseAll(t *testing.T) {
 	local := sda.NewLocalTest()
 	nbrNodes := 2
-	_, _, tree := local.GenTree(nbrNodes, false, true, true)
+	_, _, tree := local.GenTree(nbrNodes, false)
 
 	pi, err := local.CreateProtocol("CloseAll", tree)
 	if err != nil {
