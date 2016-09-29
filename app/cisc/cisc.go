@@ -8,9 +8,13 @@ holds the skipchain and answers to requests from the cisc-binary.
 package main
 
 import (
+	"net"
 	"os"
+	"strconv"
 
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 
 	"path"
 
@@ -22,6 +26,7 @@ import (
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/services/identity"
+	"github.com/qantik/qrgo"
 	"gopkg.in/codegangsta/cli.v1"
 )
 
@@ -128,6 +133,38 @@ func idDel(c *cli.Context) error {
 	cfg.proposeSendVoteUpdate(prop)
 	return nil
 }
+
+type jsonQR struct {
+	ID   string
+	Host string
+	Port string
+}
+
+func idQrCode(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	if c.Bool("roster") {
+		// TODO print roster
+	} else {
+		id64 := base64.StdEncoding.EncodeToString([]byte(cfg.ID))
+		host, port, err := net.SplitHostPort(cfg.Identity.Cothority.List[0].Addresses[0])
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		portNbr, err := strconv.Atoi(port)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		jqr := jsonQR{ID: id64, Host: host, Port: strconv.Itoa(portNbr + 1)}
+		enc, _ := json.Marshal(jqr)
+
+		qr, _ := qrgo.NewQR(string(enc))
+		qr.OutputTerminal()
+	}
+	return nil
+}
+
 func idCheck(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil

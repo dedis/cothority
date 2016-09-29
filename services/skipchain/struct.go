@@ -71,18 +71,12 @@ type SkipBlockFix struct {
 	AggregateResp abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
-	// Roster holds the roster-definition of that SkipBlock
-	Roster *sda.Roster
 }
 
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
-	b, err := network.MarshalRegisteredType(sbf)
-	if err != nil {
-		log.Panic("Couldn't marshal SkipBlockFix:", err)
-	}
-	h, err := crypto.HashBytes(network.Suite.Hash(), b)
+	h, err := crypto.HashArgsSuite(network.Suite, *sbf)
 	if err != nil {
 		log.Panic("Couldn't hash SkipBlockFix:", err)
 	}
@@ -98,6 +92,8 @@ type SkipBlock struct {
 	// BlockSig is the BFT-signature of the hash
 	BlockSig *bftcosi.BFTSignature
 
+	// Roster holds the roster-definition of that SkipBlock
+	Roster *sda.Roster
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
@@ -108,8 +104,8 @@ type SkipBlock struct {
 
 // NewSkipBlock pre-initialises the block so it can be sent over
 // the network
-func NewSkipBlock() *SkipBlock {
-	return &SkipBlock{
+func NewSkipBlock(r *sda.Roster) *SkipBlock {
+	sb := &SkipBlock{
 		SkipBlockFix: &SkipBlockFix{
 			Data: make([]byte, 0),
 		},
@@ -117,7 +113,12 @@ func NewSkipBlock() *SkipBlock {
 			Sig: make([]byte, 0),
 			Msg: make([]byte, 0),
 		},
+		Roster: r,
 	}
+	if r != nil {
+		sb.Aggregate = r.Aggregate
+	}
+	return sb
 }
 
 // VerifySignatures returns whether all signatures are correctly signed
@@ -165,9 +166,9 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	return &b
 }
 
-func (sb *SkipBlock) String() string {
-	return sb.Hash.String()
-}
+//func (sb *SkipBlock) String() string {
+//	return sb.Hash.String()
+//}
 
 // GetResponsible searches for the block that is responsible for us - for
 // - Data - it's his parent

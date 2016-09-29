@@ -41,6 +41,18 @@ func init() {
 				Action:  idDel,
 			},
 			{
+				Name:    "qrcode",
+				Aliases: []string{"qr"},
+				Usage:   "output qr-code to terminal",
+				Action:  idQrCode,
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "roster",
+						Usage: "print entire roster",
+					},
+				},
+			},
+			{
 				Name:    "check",
 				Aliases: []string{"ch"},
 				Usage:   "check the health of the cothority",
