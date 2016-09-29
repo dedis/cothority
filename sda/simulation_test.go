@@ -59,7 +59,6 @@ func TestSimulationBigTree(t *testing.T) {
 }
 
 func TestSimulationLoadSave(t *testing.T) {
-	defer log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)
@@ -79,7 +78,6 @@ func TestSimulationLoadSave(t *testing.T) {
 }
 
 func TestSimulationMultipleInstances(t *testing.T) {
-	defer log.AfterTest(t)
 	sc, _, err := createBFTree(7, 2)
 	if err != nil {
 		t.Fatal(err)

@@ -79,7 +79,6 @@ type SimpleMessage struct {
 // Test simple protocol-implementation
 // - registration
 func TestProtocolRegistration(t *testing.T) {
-	defer log.AfterTest(t)
 	testProtoName := "testProto"
 	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
 	if !ProtocolExists(testProtoID) {
@@ -98,7 +97,6 @@ func TestProtocolRegistration(t *testing.T) {
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// setup
-	defer log.AfterTest(t)
 	local := NewLocalTest()
 	defer local.CloseAll()
 	h, _, tree := local.GenTree(2, true)
