@@ -124,17 +124,18 @@ func TestServiceNew(t *testing.T) {
 	}()
 
 	waitOrFatal(ds.link, t)
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 func TestServiceProcessRequest(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	RegisterNewService("DummyService", func(c *Context, path string) Service {
+	log.ErrFatal(RegisterNewService("DummyService", func(c *Context, path string) Service {
 		ds.c = c
 		ds.path = path
 		return ds
-	})
+	}))
 	host := NewLocalHost()
 	host.Listen()
 	host.StartProcessMessages()
@@ -165,6 +166,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		t.Fatal("Too late")
 	}
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 // Test if a request that makes the service create a new protocol works
@@ -217,6 +219,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// wait for the link from the
 	// NOW expect false
 	waitOrFatalValue(ds.link, false, t)
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 func TestServiceProtocolProcessMessage(t *testing.T) {
@@ -273,6 +276,7 @@ func TestServiceProtocolProcessMessage(t *testing.T) {
 	// now wait for the same link as the protocol should have sent a message to
 	// himself !
 	waitOrFatalValue(ds.link, true, t)
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 // test for calling the NewProtocol method on a remote Service
@@ -354,6 +358,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	log.Lvl1("Waiting for end")
 	waitOrFatalValue(ds2.link, true, t)
 	log.Lvl1("Done")
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 func TestServiceProcessServiceMessage(t *testing.T) {
@@ -397,6 +402,7 @@ func TestServiceProcessServiceMessage(t *testing.T) {
 
 	// wait for the link from the Service on host 1
 	waitOrFatalValue(ds1.link, true, t)
+	log.ErrFatal(UnregisterService("DummyService"))
 }
 
 func TestServiceBackForthProtocol(t *testing.T) {
@@ -437,6 +443,7 @@ func TestServiceBackForthProtocol(t *testing.T) {
 	assert.Equal(t, nm.MsgType, simpleResponseType)
 	resp := nm.Msg.(simpleResponse)
 	assert.Equal(t, resp.Val, 10)
+	log.ErrFatal(UnregisterService("BackForth"))
 }
 
 func TestClient_Send(t *testing.T) {
@@ -463,6 +470,7 @@ func TestClient_Send(t *testing.T) {
 	assert.Equal(t, nm.MsgType, simpleResponseType)
 	resp := nm.Msg.(simpleResponse)
 	assert.Equal(t, resp.Val, 10)
+	log.ErrFatal(UnregisterService("BackForth"))
 }
 
 func TestClient_Parallel(t *testing.T) {
@@ -501,6 +509,7 @@ func TestClient_Parallel(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
+	log.ErrFatal(UnregisterService("BackForth"))
 }
 
 func TestServiceManager_Service(t *testing.T) {
