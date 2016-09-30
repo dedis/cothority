@@ -174,11 +174,7 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 	} else {
 		p.Count <- count
 	}
-<<<<<<< HEAD
-	log.Lvl3(p.ServerIdentity(), "Done")
-=======
 	log.Lvl3(p.ServerIdentity().Address, "Done")
->>>>>>> refactor_network_identity
 }
 
 // SetTimeout sets the new timeout

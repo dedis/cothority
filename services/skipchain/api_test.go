@@ -33,11 +33,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-<<<<<<< HEAD
-	c := NewLocalClient(l)
-=======
 	c := NewTestClient(l)
->>>>>>> refactor_network_identity
 	root, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
 	if root == nil || inter == nil {
@@ -62,11 +58,7 @@ func TestClient_CreateData(t *testing.T) {
 	_, el, _ := l.GenTree(2, true)
 	defer l.CloseAll()
 
-<<<<<<< HEAD
-	c := NewLocalClient(l)
-=======
 	c := NewTestClient(l)
->>>>>>> refactor_network_identity
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
 	td := &testData{1, "data-sc"}
@@ -93,11 +85,7 @@ func TestClient_ProposeData(t *testing.T) {
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-<<<<<<< HEAD
-	c := NewLocalClient(l)
-=======
 	c := NewTestClient(l)
->>>>>>> refactor_network_identity
 	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
@@ -125,11 +113,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
-<<<<<<< HEAD
-	c := NewLocalClient(l)
-=======
 	c := NewTestClient(l)
->>>>>>> refactor_network_identity
 	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)

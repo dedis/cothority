@@ -24,11 +24,7 @@ func init() {
 func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3 /*10, 14*/} {
 		local := sda.NewLocalTest()
-<<<<<<< HEAD
 		_, el, _ := local.GenTree(nbrNodes, true)
-=======
-		_, el, _ := local.GenTree(nbrNodes, false)
->>>>>>> refactor_network_identity
 		o := local.Overlays[el.List[0].ID]
 
 		i := 0

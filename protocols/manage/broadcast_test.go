@@ -14,11 +14,7 @@ import (
 func TestBroadcast(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
-<<<<<<< HEAD
-		_, _, tree := local.GenTree(nbrNodes, true)
-=======
 		_, _, tree := local.GenTree(nbrNodes, false)
->>>>>>> refactor_network_identity
 
 		pi, err := local.CreateProtocol("Broadcast", tree)
 		if err != nil {
