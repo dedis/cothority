@@ -61,37 +61,65 @@ func (s *Service) Listening() {
 			Addr:    webHost,
 			Handler: hand,
 		}
+		hand.Handle("/ping", websocket.Handler(s.pingHandler))
 		hand.Handle("/status", websocket.Handler(s.statusHandler))
 		log.ErrFatal(s.server.ListenAndServe())
 	}()
+}
+
+func (s *Service) pingHandler(ws *websocket.Conn) {
+	log.Lvl1("Got a ping")
+	_, err := ws.Write([]byte("pong"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Lvl1("Sent pong")
 }
 
 func (s *Service) statusHandler(ws *websocket.Conn) {
 	log.Lvl1("starting to handle")
 	sizeBuf := make([]byte, 2)
 	n, err := ws.Read(sizeBuf)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	if n != 2 {
-		log.Fatal("Couldn't read 2 bytes")
+		log.Error("Couldn't read 2 bytes")
+		return
 	}
 	size := binary.LittleEndian.Uint16(sizeBuf)
 	buf := make([]byte, size)
 	read, err := ws.Read(buf)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	if read != int(size) {
-		log.Fatal("Read only", read, "instead of", size)
+		log.Error("Read only", read, "instead of", size)
+		return
 	}
 	_, msg, err := network.UnmarshalRegistered(buf)
 	req, ok := msg.(*status.Request)
 	log.Lvlf1("Received request: %x %v %t", buf, req, ok)
 	stat := s.GetService(status.ServiceName)
 	reply, err := stat.(*status.Stat).Request(nil, req)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	log.Lvl1(s.ReportStatus())
 	buf, err = network.MarshalRegisteredType(reply)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	n, err = ws.Write(buf)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	log.Lvl1("Wrote", n, "bytes")
 }
 

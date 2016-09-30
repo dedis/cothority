@@ -18,10 +18,8 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func TestServiceTemplate(t *testing.T) {
+func TestStatus(t *testing.T) {
 	local := sda.NewLocalTest()
-	// generate 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
 	_, el, _ := local.GenTree(2, false, true, false)
 	defer local.CloseAll()
 
@@ -49,4 +47,20 @@ func TestServiceTemplate(t *testing.T) {
 	status, ok := stat.(*status.Response)
 	require.True(t, ok)
 	log.Lvl1("Received correct status-reply:", status)
+}
+
+func TestPong(t *testing.T) {
+	local := sda.NewLocalTest()
+	_, el, _ := local.GenTree(2, false, true, false)
+	defer local.CloseAll()
+
+	url, err := getWebHost(el.List[0])
+	log.ErrFatal(err)
+	ws, err := websocket.Dial("ws://"+url+"/ping", "", "http://localhost/")
+	log.ErrFatal(err)
+	err = websocket.Message.Send(ws, "ping")
+	var rcv []byte
+	err = websocket.Message.Receive(ws, &rcv)
+	log.ErrFatal(err)
+	log.Lvlf1("Received reply: %s", rcv)
 }
