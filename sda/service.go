@@ -410,11 +410,11 @@ func NewClient(s string) *Client {
 func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 	c.Lock()
 	defer c.Unlock()
-	if c.host == nil {
-		kp := config.NewKeyPair(network.Suite)
-		c.host = network.NewSecureTCPHost(kp.Secret,
-			network.NewServerIdentity(kp.Public, ""))
-	}
+	//if c.host == nil {
+	kp := config.NewKeyPair(network.Suite)
+	c.host = network.NewSecureTCPHost(kp.Secret,
+		network.NewServerIdentity(kp.Public, ""))
+	//}
 
 	// Connect to the root
 	log.Lvl4("Opening connection to", dst)
