@@ -275,5 +275,10 @@ func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.Packe
 
 // Dummy function so it can be overwritten.
 func (p *ServiceProcessor) Shutdown() {
-	log.Lvl3("Studding down service", p.String())
+	log.Lvl4("Shutting down service", p.ServerIdentity().Addresses[0])
+}
+
+// Dummy function so it can be overwritten.
+func (p *ServiceProcessor) Listening() {
+	log.Lvl4("Starting to listen", p.ServerIdentity().Addresses[0])
 }

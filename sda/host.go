@@ -98,6 +98,7 @@ func (h *Host) listen(wait bool) {
 	if err != nil {
 		log.Fatal("Couldn't listen on", h.Address(), ":", err)
 	}
+	h.serviceManager.Listening()
 	if wait {
 		for {
 			log.Lvl4(h.ServerIdentity.First(), "checking if listener is up")

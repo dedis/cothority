@@ -42,6 +42,10 @@ type Service interface {
 	// only done when the cothority is ending. It cannot be guaranteed that
 	// this is always called!
 	Shutdown()
+	// Listening is called when the host went into listening mode. This also
+	// means that the port is available in case of a simulation where the
+	// address ends in ":0"
+	Listening()
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -315,6 +319,18 @@ func (s *serviceManager) Service(name string) Service {
 
 // CloseAll sends Shutdown to all services.
 func (s *serviceManager) CloseAll() {
+	for _, name := range s.AvailableServices() {
+		log.Lvl3(s.host.ServerIdentity, "Shutting down service", name)
+		s.Service(name).Shutdown()
+	}
+}
+
+// Listening will call the Listening-method of all services.
+func (s *serviceManager) Listening() {
+	for _, name := range s.AvailableServices() {
+		log.Lvl3(s.host.ServerIdentity, "Listening for service", name)
+		s.Service(name).Listening()
+	}
 }
 
 func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {

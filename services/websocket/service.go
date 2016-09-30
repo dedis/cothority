@@ -11,11 +11,12 @@ import (
 
 	"fmt"
 
-	"time"
+	"io/ioutil"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/status"
 	"golang.org/x/net/websocket"
 )
 
@@ -30,7 +31,8 @@ func init() {
 // Service is our template-service
 type Service struct {
 	*sda.ServiceProcessor
-	path string
+	path   string
+	server *http.Server
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -49,16 +51,28 @@ func (s *Service) Shutdown() {
 	log.Lvl1("Shutting down service websocket")
 }
 
-func (s *Service) rootHandler(ws *websocket.Conn) {
-	buf := make([]byte, 256)
-	for {
-		n, err := ws.Read(buf)
+func (s *Service) Listening() {
+	go func() {
+		log.Lvl1("Starting to listen on", s.ServerIdentity())
+		webHost, err := getWebHost(s.ServerIdentity())
 		log.ErrFatal(err)
-		log.Print(string(buf))
-		if n == 256 {
-			break
+		hand := http.NewServeMux()
+		s.server = &http.Server{
+			Addr:    webHost,
+			Handler: hand,
 		}
-	}
+		hand.Handle("/status", websocket.Handler(s.statusHandler))
+		log.ErrFatal(s.server.ListenAndServe())
+	}()
+}
+
+func (s *Service) statusHandler(ws *websocket.Conn) {
+	buf, err := ioutil.ReadAll(ws)
+	log.ErrFatal(err)
+	_, msg, err := network.UnmarshalRegistered(buf)
+	req, ok := msg.(*status.Request)
+	log.Print(req, ok)
+	log.Print(s.ReportStatus())
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
@@ -82,14 +96,6 @@ func newService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-
-	http.Handle("/root", websocket.Handler(s.rootHandler))
-	go func() {
-		time.Sleep(1 * time.Second)
-		webHost, err := getWebHost(c.ServerIdentity())
-		log.ErrFatal(err)
-		log.ErrFatal(http.ListenAndServe(webHost, nil))
-	}()
 
 	return s
 }

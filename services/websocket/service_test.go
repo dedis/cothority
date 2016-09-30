@@ -3,10 +3,11 @@ package websocket
 import (
 	"testing"
 
-	"time"
-
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/status"
+	_ "github.com/dedis/cothority/services/status"
 	"golang.org/x/net/websocket"
 )
 
@@ -20,12 +21,14 @@ func TestServiceTemplate(t *testing.T) {
 	// don't register the tree or entitylist
 	_, el, _ := local.GenTree(2, false, true, false)
 	defer local.CloseAll()
-	time.Sleep(2 * time.Second)
 
 	url, err := getWebHost(el.List[0])
 	log.ErrFatal(err)
-	ws, err := websocket.Dial("ws://"+url+"/root", "", "http://localhost/")
+	ws, err := websocket.Dial("ws://"+url+"/status", "", "http://localhost/")
 	log.ErrFatal(err)
+	req := &status.Request{}
 	log.Print("Sending message")
-	websocket.Message.Send(ws, "hi there")
+	buf, err := network.MarshalRegisteredType(req)
+	log.ErrFatal(err)
+	websocket.Message.Send(ws, buf)
 }
