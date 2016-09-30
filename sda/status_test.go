@@ -1,16 +1,15 @@
 package sda
 
 import (
+	"strings"
 	"testing"
 
 	"strconv"
 
-	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSRStruct(t *testing.T) {
-	log.AfterTest(t)
 	srs := newStatusReporterStruct()
 	assert.NotNil(t, srs)
 	dtr := &dummyTestReporter{5}
@@ -18,6 +17,15 @@ func TestSRStruct(t *testing.T) {
 	assert.Equal(t, srs.ReportStatus()["Dummy"]["Connections"], "5")
 	dtr.Status = 10
 	assert.Equal(t, srs.ReportStatus()["Dummy"]["Connections"], "10")
+}
+
+func TestStatusHost(t *testing.T) {
+	h := NewTCPHost(2000)
+	defer h.Stop()
+	stats := h.GetStatus()
+	a := ServiceFactory.RegisteredServicesName()
+	services := strings.Split(stats["Available_Services"], ",")
+	assert.Equal(t, len(services), len(a))
 }
 
 type dummyTestReporter struct {

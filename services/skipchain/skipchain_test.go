@@ -425,3 +425,13 @@ func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
 func makeGenesisRoster(s *Service, el *sda.Roster) *SkipBlock {
 	return makeGenesisRosterArgs(s, el, nil, VerifyNone, 1, 1)
 }
+<<<<<<< HEAD
+=======
+
+// Makes a Host, an Roster, and a service
+func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.Roster, *Service) {
+	hosts := local.GenHosts(nbr)
+	el := local.GenRosterFromHost(hosts...)
+	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
+}
+>>>>>>> refactor_network_identity

@@ -23,7 +23,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c1 := NewTestIdentity(el, 50, "one", l)
+	c1 := NewIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()

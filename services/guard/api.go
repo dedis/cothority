@@ -25,8 +25,13 @@ func (c *Client) SendToGuard(dst *network.ServerIdentity, UID []byte, epoch []by
 	log.Lvl4("Sending Request to ", dst)
 	serviceReq := &Request{UID, epoch, t}
 	reply, err := c.Send(dst, serviceReq)
+<<<<<<< HEAD
 	if err != nil {
 		return nil, err
+=======
+	if e := network.ErrMsg(reply, err); e != nil {
+		return nil, e
+>>>>>>> refactor_network_identity
 	}
 	sr, ok := reply.Msg.(Response)
 	if !ok {

@@ -7,10 +7,64 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/stretchr/testify/assert"
 )
+
+func TestLocalRouter(t *testing.T) {
+	addr := &ServerIdentity{Address: NewLocalAddress("127.0.0.1:2000")}
+	wrongAddr1 := &ServerIdentity{Address: NewAddress(PlainTCP, addr.Address.NetworkAddress())}
+	_, err := NewLocalRouter(wrongAddr1)
+	if err == nil {
+		t.Error("Should have returned something..")
+	}
+	_, err = NewLocalRouter(addr)
+	if err != nil {
+		t.Error("Should not have returned something")
+	}
+
+}
+
+func TestLocalListener(t *testing.T) {
+	addr := NewLocalAddress("127.0.0.1:2000")
+	wrongAddr1 := NewAddress(PlainTCP, addr.NetworkAddress())
+	listener, err := NewLocalListener(wrongAddr1)
+	if err == nil {
+		t.Error("Create listener with wrong address should fail")
+	}
+	defaultLocalManager.setListening(addr, func(c Conn) {})
+	listener, err = NewLocalListener(addr)
+	if err == nil {
+		t.Error("Create listener with already binded address should fail")
+	}
+	LocalReset()
+
+	listener, err = NewLocalListener(addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var ready = make(chan bool)
+	go func() {
+		ready <- true
+		err := listener.Listen(func(c Conn) {})
+		if err != nil {
+			t.Error("Should not have had error while listening")
+		}
+		ready <- true
+	}()
+
+	<-ready
+	// give it some time
+	time.Sleep(20 * time.Millisecond)
+	if err := listener.Listen(func(c Conn) {}); err == nil {
+		t.Error("listener should have returned an error when Listen twice")
+	}
+	assert.Nil(t, listener.Stop())
+	if err := listener.Stop(); err != nil {
+		t.Error("listener.Stop() twice should not returns an error")
+	}
+	<-ready
+}
 
 // Test whether a call to a conn.Close() will stop the remote Receive() call
 func TestLocalConnCloseReceive(t *testing.T) {
@@ -34,18 +88,25 @@ func TestLocalConnCloseReceive(t *testing.T) {
 	if err != nil {
 		t.Fatal("erro NewLocalConn:", err)
 	}
+	if outgoing.Type() != Local {
+		t.Error("Wrong type for Conn?")
+	}
+	if outgoing.Local() != addr {
+		t.Error("Wrong local addr for Conn!?")
+	}
 	<-ready
 
-	_, err = outgoing.Receive(context.TODO())
+	_, err = outgoing.Receive()
 	assert.Equal(t, ErrClosed, err)
+	assert.Equal(t, ErrClosed, outgoing.Close())
 	assert.Nil(t, listener.Stop())
 
 }
 
 // Test if we can run two parallel local network using two different contexts
 func TestLocalContext(t *testing.T) {
-	ctx1 := NewLocalContext()
-	ctx2 := NewLocalContext()
+	ctx1 := NewLocalManager()
+	ctx2 := NewLocalManager()
 
 	addrListener := NewLocalAddress("127.0.0.1:2000")
 	addrConn := NewLocalAddress("127.0.0.1:2001")
@@ -73,8 +134,8 @@ func TestLocalContext(t *testing.T) {
 
 // launch a listener, then a Conn and communicate their own address + individual
 // val
-func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address, secret int) {
-	listener, err := NewLocalListenerWithContext(ctx, listenA)
+func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address, secret int) {
+	listener, err := NewLocalListenerWithManager(ctx, listenA)
 	if err != nil {
 		done <- err
 		return
@@ -85,11 +146,11 @@ func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address
 	// make the listener send and receive a struct that only they can know (this
 	// listener + conn
 	handshake := func(c Conn, sending, receiving Address) error {
-		err := c.Send(context.TODO(), &AddressTest{sending, secret})
+		err := c.Send(&AddressTest{sending, secret})
 		if err != nil {
 			return err
 		}
-		p, err := c.Receive(context.TODO())
+		p, err := c.Receive()
 		if err != nil {
 			return err
 		}
@@ -118,7 +179,7 @@ func testConnListener(ctx *LocalContext, done chan error, listenA, connA Address
 
 	// trick to use host because it already tries multiple times to connect if
 	// the listening routine is not up yet.
-	h, err := NewLocalHostWithContext(ctx, connA)
+	h, err := NewLocalHostWithManager(ctx, connA)
 	if err != nil {
 		done <- err
 		return
@@ -176,15 +237,16 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 		ready <- true
 		listener.Listen(func(c Conn) {
 			incomingConn <- true
-			nm, err := c.Receive(context.TODO())
+			nm, err := c.Receive()
 			assert.Nil(t, err)
 			assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 			// acknoledge the message
 			incomingConn <- true
-			err = c.Send(context.TODO(), &SimpleMessage{3})
+			err = c.Send(&SimpleMessage{3})
 			assert.Nil(t, err)
 			//wait ack
 			<-outgoingConn
+			assert.Equal(t, 2, listener.manager.len())
 			// close connection
 			assert.Nil(t, c.Close())
 		})
@@ -200,21 +262,21 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	// check if connection is opened on the listener
 	<-incomingConn
 	// send stg and wait for ack
-	assert.Nil(t, outgoing.Send(context.TODO(), &SimpleMessage{3}))
+	assert.Nil(t, outgoing.Send(&SimpleMessage{3}))
 	<-incomingConn
 
 	// receive stg and send ack
-	nm, err := outgoing.Receive(context.TODO())
+	nm, err := outgoing.Receive()
 	assert.Nil(t, err)
 	assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 	outgoingConn <- true
 
 	// close the incoming conn, so Receive here should return an error
-	nm, err = outgoing.Receive(context.TODO())
+	nm, err = outgoing.Receive()
 	if err != ErrClosed {
 		t.Error("Receive should have returned an error")
 	}
-	assert.Nil(t, outgoing.Close())
+	assert.Equal(t, ErrClosed, outgoing.Close())
 
 	// close the listener
 	assert.Nil(t, listener.Stop())
@@ -231,10 +293,10 @@ func TestLocalManyConn(t *testing.T) {
 	var wg sync.WaitGroup
 	go func() {
 		listener.Listen(func(c Conn) {
-			_, err := c.Receive(context.TODO())
+			_, err := c.Receive()
 			assert.Nil(t, err)
 
-			assert.Nil(t, c.Send(context.TODO(), &SimpleMessage{3}))
+			assert.Nil(t, c.Send(&SimpleMessage{3}))
 		})
 	}()
 
@@ -249,8 +311,8 @@ func TestLocalManyConn(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Nil(t, c.Send(context.TODO(), &SimpleMessage{3}))
-			nm, err := c.Receive(context.TODO())
+			assert.Nil(t, c.Send(&SimpleMessage{3}))
+			nm, err := c.Receive()
 			assert.Nil(t, err)
 			assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 			assert.Nil(t, c.Close())
@@ -262,9 +324,16 @@ func TestLocalManyConn(t *testing.T) {
 	listener.Stop()
 }
 
+func TestDefaultLocalManager(t *testing.T) {
+	defaultLocalManager.setListening(NewLocalAddress("127.0.0.1"), func(c Conn) {})
+	assert.Equal(t, 1, len(defaultLocalManager.listening))
+	LocalReset()
+	assert.Equal(t, 0, len(defaultLocalManager.listening))
+}
+
 func waitListeningUp(addr Address) bool {
 	for i := 0; i < 5; i++ {
-		if defaultLocalContext.IsListening(addr) {
+		if defaultLocalManager.isListening(addr) {
 			return true
 		}
 		time.Sleep(50 * time.Millisecond)

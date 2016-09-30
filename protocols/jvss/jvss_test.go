@@ -32,7 +32,11 @@ func TestJVSS(t *testing.T) {
 	msg := []byte("Hello World!") // Message to-be-signed
 
 	local := sda.NewLocalTest()
+<<<<<<< HEAD
 	_, _, tree := local.GenTree(int(nodes), true)
+=======
+	_, _, tree := local.GenTree(int(nodes), false)
+>>>>>>> refactor_network_identity
 	defer local.CloseAll()
 
 	log.Lvl1("JVSS - starting")

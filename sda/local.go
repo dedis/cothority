@@ -30,10 +30,10 @@ type LocalTest struct {
 	mode string
 	// the context for the local connections
 	// it enables to have multiple local test running simultaneously
-	ctx *network.LocalContext
+	ctx *network.LocalManager
 }
 
-var (
+const (
 	// TCP represents the TCP mode of networking for this local test
 	TCP = "tcp"
 	// Local represents the Local mode of networking for this local test
@@ -51,7 +51,7 @@ func NewLocalTest() *LocalTest {
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
 		mode:     Local,
-		ctx:      network.NewLocalContext(),
+		ctx:      network.NewLocalManager(),
 	}
 }
 
@@ -93,7 +93,7 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 
 // GenHosts returns n Hosts with a localRouter
 func (l *LocalTest) GenHosts(n int) []*Host {
-	hosts := l.GenLocalHosts(n)
+	hosts := l.genLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
@@ -158,6 +158,11 @@ func (l *LocalTest) CloseAll() {
 		if err != nil {
 			log.Error("Closing host", host.ServerIdentity.Address,
 				"gives error", err)
+		}
+
+		for host.Listening() {
+			log.Print("Sleeping while waiting to close...")
+			time.Sleep(10 * time.Millisecond)
 		}
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
@@ -286,13 +291,18 @@ func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 // address.
 func NewTCPHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	id.Address = network.NewTCPAddress(id.Address.NetworkAddress())
-	tcpRouter, err := network.NewTCPRouter(id)
+	addr := network.NewTCPAddress(id.Address.NetworkAddress())
+	tcpHost, err := network.NewTCPHost(addr)
 	if err != nil {
 		panic(err)
 	}
-	h := NewHostWithRouter(id, priv, tcpRouter)
+	id.Address = tcpHost.Address()
+	router := network.NewRouter(id, tcpHost)
+	h := NewHostWithRouter(id, priv, router)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 }
 
@@ -307,6 +317,9 @@ func NewLocalHost(port int) *Host {
 	}
 	h := NewHostWithRouter(id, priv, localRouter)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 }
 
@@ -314,12 +327,15 @@ func NewLocalHost(port int) *Host {
 // of this LocalTest
 func (l *LocalTest) NewLocalHost(port int) *Host {
 	priv, id := NewPrivIdentity(port)
-	localRouter, err := network.NewLocalRouterWithContext(l.ctx, id)
+	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	h := NewHostWithRouter(id, priv, localRouter)
 	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
 	return h
 
 }
@@ -340,12 +356,12 @@ func (l *LocalTest) NewClient(serviceName string) *Client {
 func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 	return &Client{
 		ServiceID: ServiceFactory.ServiceID(serviceName),
-		net:       network.NewLocalClientWithContext(l.ctx),
+		net:       network.NewLocalClientWithManager(l.ctx),
 	}
 }
 
-// GenLocalHosts returns n hosts created with a localRouter
-func (l *LocalTest) GenLocalHosts(n int) []*Host {
+// genLocalHosts returns n hosts created with a localRouter
+func (l *LocalTest) genLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		var host *Host

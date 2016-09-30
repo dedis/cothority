@@ -14,8 +14,12 @@ func TestCloseAll(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer log.AfterTest(t)
 	nbrNodes := 2
+<<<<<<< HEAD
 	_, _, tree := local.GenTree(nbrNodes, true)
 	defer local.CloseAll()
+=======
+	_, _, tree := local.GenTree(nbrNodes, false)
+>>>>>>> refactor_network_identity
 
 	pi, err := local.CreateProtocol("CloseAll", tree)
 	if err != nil {
