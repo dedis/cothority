@@ -22,12 +22,18 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 }
 
+func NewTestClient(l *sda.LocalTest) *Client {
+	c := NewClient()
+	c.Client = l.NewClient("Skipchain")
+	return c
+}
+
 func TestClient_CreateRootInter(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := NewTestClient(l)
 	root, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
 	if root == nil || inter == nil {
@@ -49,10 +55,10 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 func TestClient_CreateData(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(2, true, true, true)
+	_, el, _ := l.GenTree(2, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := NewTestClient(l)
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
 	td := &testData{1, "data-sc"}
@@ -76,10 +82,10 @@ func TestClient_CreateData(t *testing.T) {
 
 func TestClient_ProposeData(t *testing.T) {
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(5, true, true, true)
+	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := NewTestClient(l)
 	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)
@@ -104,10 +110,10 @@ func TestClient_ProposeData(t *testing.T) {
 func TestClient_ProposeRoster(t *testing.T) {
 	nbrHosts := 5
 	l := sda.NewLocalTest()
-	_, el, _ := l.GenTree(nbrHosts, true, true, true)
+	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := NewTestClient(l)
 	log.Lvl1("Creating root and control chain")
 	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(err)

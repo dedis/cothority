@@ -35,7 +35,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 
 func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, false, false, false)
+	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
 	sbd1.Roster = el
@@ -420,7 +420,7 @@ func makeGenesisRoster(s *Service, el *sda.Roster) *SkipBlock {
 
 // Makes a Host, an Roster, and a service
 func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.Roster, *Service) {
-	hosts := local.GenLocalHosts(nbr, false, true)
+	hosts := local.GenHosts(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }

@@ -50,7 +50,7 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     TCP,
+		mode:     Local,
 		ctx:      network.NewLocalManager(),
 	}
 }
@@ -93,7 +93,7 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 
 // GenHosts returns n Hosts with a localRouter
 func (l *LocalTest) GenHosts(n int) []*Host {
-	hosts := l.GenLocalHosts(n)
+	hosts := l.genLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
@@ -360,8 +360,8 @@ func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 	}
 }
 
-// GenLocalHosts returns n hosts created with a localRouter
-func (l *LocalTest) GenLocalHosts(n int) []*Host {
+// genLocalHosts returns n hosts created with a localRouter
+func (l *LocalTest) genLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
 		var host *Host
