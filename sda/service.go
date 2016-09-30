@@ -38,6 +38,10 @@ type Service interface {
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
+	// Shutdown is called when the service will be stopped. This is usually
+	// only done when the cothority is ending. It cannot be guaranteed that
+	// this is always called!
+	Shutdown()
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -307,6 +311,10 @@ func (s *serviceManager) Service(name string) Service {
 		return nil
 	}
 	return s.services[id]
+}
+
+// CloseAll sends Shutdown to all services.
+func (s *serviceManager) CloseAll() {
 }
 
 func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {

@@ -158,6 +158,7 @@ func (h *Host) Close() error {
 		return err
 	}
 	h.overlay.Close()
+	h.serviceManager.CloseAll()
 	return nil
 }
 

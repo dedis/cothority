@@ -11,6 +11,8 @@ import (
 
 	"fmt"
 
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -43,8 +45,20 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 	return nil, nil
 }
 
+func (s *Service) Shutdown() {
+	log.Lvl1("Shutting down service websocket")
+}
+
 func (s *Service) rootHandler(ws *websocket.Conn) {
-	log.Print(ws)
+	buf := make([]byte, 256)
+	for {
+		n, err := ws.Read(buf)
+		log.ErrFatal(err)
+		log.Print(string(buf))
+		if n == 256 {
+			break
+		}
+	}
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
@@ -70,9 +84,10 @@ func newService(c *sda.Context, path string) sda.Service {
 	}
 
 	http.Handle("/root", websocket.Handler(s.rootHandler))
-	webHost, err := getWebHost(c.ServerIdentity())
-	log.ErrFatal(err)
 	go func() {
+		time.Sleep(1 * time.Second)
+		webHost, err := getWebHost(c.ServerIdentity())
+		log.ErrFatal(err)
 		log.ErrFatal(http.ListenAndServe(webHost, nil))
 	}()
 
