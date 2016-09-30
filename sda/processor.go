@@ -150,6 +150,7 @@ func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 // GetReply takes msgType and a message. It dispatches the msg to the right
 // function registered, then sends the responses to the sender.
 func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.PacketTypeID, m network.Body) network.Body {
+	log.Lvl5("GetReply for", si.Address)
 	fu, ok := p.functions[mt]
 	if !ok {
 		return &network.StatusRet{
@@ -166,7 +167,6 @@ func (p *ServiceProcessor) GetReply(si *network.ServerIdentity, mt network.Packe
 	arg0.Elem().Set(reflect.ValueOf(si).Elem())
 	arg1 := reflect.New(to1.Elem())
 	arg1.Elem().Set(reflect.ValueOf(m))
-
 	ret := f.Call([]reflect.Value{arg0, arg1})
 
 	errI := ret[1].Interface()

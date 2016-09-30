@@ -79,6 +79,11 @@ func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketT
 	c.manager.RegisterProcessor(p, msgType)
 }
 
+// Service returns the corresponding service.
+func (c *Context) Service(name string) Service {
+	return c.manager.Service(name)
+}
+
 // String returns the host it's running on
 func (c *Context) String() string {
 	return c.host.ServerIdentity.String()

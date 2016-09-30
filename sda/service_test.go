@@ -17,7 +17,7 @@ func TestServiceRegistration(t *testing.T) {
 		return &DummyService{}
 	})
 
-	names := ServiceFactory.RegisteredServicesName()
+	names := ServiceFactory.RegisteredServiceNames()
 	var found bool
 	for _, n := range names {
 		if n == name {
@@ -27,8 +27,8 @@ func TestServiceRegistration(t *testing.T) {
 	if !found {
 		t.Fatal("Name not found !?")
 	}
-	DeleteNewService(name)
-	names = ServiceFactory.RegisteredServicesName()
+	ServiceFactory.Unregister(name)
+	names = ServiceFactory.RegisteredServiceNames()
 	for _, n := range names {
 		if n == name {
 			t.Fatal("Dummy should not be found!")
@@ -139,7 +139,7 @@ func TestServiceNew(t *testing.T) {
 		ds.link <- true
 		return ds
 	})
-	defer DeleteNewService("DummyService")
+	defer ServiceFactory.Unregister("DummyService")
 	hostCh := make(chan *Host)
 	go func() {
 		h := NewLocalHost(2000)
@@ -169,7 +169,7 @@ func TestServiceChannels(t *testing.T) {
 		return sc
 	})
 
-	defer DeleteNewService("ChannelsService")
+	defer ServiceFactory.Unregister("ChannelsService")
 	local := NewLocalTest()
 	defer local.CloseAll()
 	_, _, tree := local.GenTree(2, true)
@@ -187,13 +187,13 @@ func TestServiceProcessRequest(t *testing.T) {
 	ds := &DummyService{
 		link: make(chan bool),
 	}
-	RegisterNewService("DummyService", func(c *Context, path string) Service {
+	log.ErrFatal(RegisterNewService("DummyService", func(c *Context, path string) Service {
 		ds.c = c
 		ds.path = path
 		return ds
-	})
+	}))
 
-	defer DeleteNewService("DummyService")
+	defer ServiceFactory.Unregister("DummyService")
 	host := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
 	defer host.Close()
@@ -213,6 +213,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	if <-ds.link {
 		t.Fatal("was expecting false !")
 	}
+	log.ErrFatal(ServiceFactory.Unregister("DummyService"))
 }
 
 // Test if a request that makes the service create a new protocol works
@@ -226,7 +227,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		return ds
 	})
 
-	defer DeleteNewService("DummyService")
+	defer ServiceFactory.Unregister("DummyService")
 	host := NewLocalHost(2000)
 	defer host.Stop()
 	// create the entityList and tree
@@ -260,6 +261,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	// wait for the link from the
 	// NOW expect false
 	waitOrFatalValue(ds.link, false, t)
+	log.ErrFatal(ServiceFactory.Unregister("DummyService"))
 }
 
 // test for calling the NewProtocol method on a remote Service
@@ -296,7 +298,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		return localDs
 	})
 
-	defer DeleteNewService("DummyService")
+	defer ServiceFactory.Unregister("DummyService")
 	host1 := NewLocalHost(2000)
 	log.Lvl1("Host created and listening")
 	defer host1.Close()
@@ -330,6 +332,7 @@ func TestServiceNewProtocol(t *testing.T) {
 	// should have started (ds2) in ProcessRequest
 	waitOrFatalValue(ds2.link, true, t)
 	log.Lvl1("Done")
+	log.ErrFatal(ServiceFactory.Unregister("DummyService"))
 }
 
 func TestServiceProcessor(t *testing.T) {
@@ -353,7 +356,7 @@ func TestServiceProcessor(t *testing.T) {
 		return s
 	})
 
-	defer DeleteNewService("DummyService")
+	defer ServiceFactory.Unregister("DummyService")
 	// create two hosts
 	h2 := NewLocalHost(2001)
 	defer h2.Close()
@@ -366,6 +369,7 @@ func TestServiceProcessor(t *testing.T) {
 
 	// wait for the link from the Service on host 1
 	waitOrFatalValue(ds1.link, true, t)
+	log.ErrFatal(ServiceFactory.Unregister("DummyService"))
 }
 
 type clientProc struct {
@@ -439,6 +443,7 @@ func TestClient_Send(t *testing.T) {
 	assert.Equal(t, nm.MsgType, SimpleResponseType)
 	resp := nm.Msg.(SimpleResponse)
 	assert.Equal(t, resp.Val, 10)
+	log.ErrFatal(ServiceFactory.Unregister("BackForth"))
 }
 
 func TestClient_LocalSend(t *testing.T) {
@@ -465,6 +470,7 @@ func TestClient_LocalSend(t *testing.T) {
 	assert.Equal(t, nm.MsgType, SimpleResponseType)
 	resp := nm.Msg.(SimpleResponse)
 	assert.Equal(t, resp.Val, 10)
+	log.ErrFatal(ServiceFactory.Unregister("BackForth"))
 }
 
 func TestClient_Parallel(t *testing.T) {
@@ -503,6 +509,7 @@ func TestClient_Parallel(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
+	log.ErrFatal(ServiceFactory.Unregister("BackForth"))
 }
 
 func TestServiceManager_Service(t *testing.T) {

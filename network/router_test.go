@@ -166,9 +166,9 @@ func TestRouterMessaging(t *testing.T) {
 	written := h1.Tx()
 	read := h2.Rx()
 	if written == 0 || read == 0 || written != read {
-		log.Error("Tx = %d, Rx = %d", written, read)
-		log.Error("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
-		log.Error("Something is wrong with Host.CounterIO")
+		log.Errorf("Tx = %d, Rx = %d", written, read)
+		log.Errorf("h1.Tx() %d vs h2.Rx() %d", h1.Tx(), h2.Rx())
+		log.Errorf("Something is wrong with Host.CounterIO")
 	}
 }
 

@@ -5,6 +5,8 @@ import (
 
 	"bytes"
 
+	"sync"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -19,7 +21,30 @@ func TestClient_ProposeSkipBlock(t *testing.T) {
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Long run not good for Travis")
+	}
+	l := sda.NewLocalTest()
+	_, el, _ := l.GenTree(5, true)
+	defer l.CloseAll()
 
+	clients := make(map[int]*Client)
+	for i := range [8]byte{} {
+		clients[i] = NewTestClient(l)
+	}
+	_, inter, err := clients[0].CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(err)
+
+	wg := sync.WaitGroup{}
+	for i := range [1024]byte{} {
+		wg.Add(1)
+		go func(i int) {
+			_, err := clients[i%8].GetUpdateChain(inter, inter.Hash)
+			log.ErrFatal(err)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
 }
 
 func NewTestClient(l *sda.LocalTest) *Client {

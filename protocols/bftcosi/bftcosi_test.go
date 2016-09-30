@@ -239,7 +239,6 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 			return fmt.Errorf("%s Verification of the signature refused: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
 		if !succeed && err == nil {
-			log.Print("Fail")
 			return fmt.Errorf("%s: Shouldn't have succeeded for %d hosts, but signed for count: %d",
 				root.Name(), nbrHosts, refuseCount)
 		}
