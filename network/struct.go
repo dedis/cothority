@@ -3,28 +3,25 @@ package network
 import (
 	"bytes"
 	"errors"
-	"net"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
 
 // MaxRetryConnect defines how many times we should try to connect.
-const MaxRetryConnect = 10
+const MaxRetryConnect = 5
 
 // MaxIdentityExchange is the timeout for an identityExchange.
 const MaxIdentityExchange = 5 * time.Second
 
 // WaitRetry is the timeout on connection-setups.
-const WaitRetry = 100 * time.Millisecond
+const WaitRetry = 20 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
@@ -39,9 +36,6 @@ var ErrEOF = errors.New("EOF")
 // ErrCanceled means something went wrong in the sending or receiving part.
 var ErrCanceled = errors.New("Operation Canceled")
 
-// ErrTemp is a temporary error, recovery possible.
-var ErrTemp = errors.New("Temporary Error")
-
 // ErrTimeout is raised if the timeout has been reached.
 var ErrTimeout = errors.New("Timeout Error")
 
@@ -51,128 +45,6 @@ var ErrUnknown = errors.New("Unknown Error")
 // Size is a type to reprensent the size that is sent before every packet to
 // correctly decode it.
 type Size uint32
-
-// Host represent a given connection and transmission protocol.
-// Host can open new Conn(ections) and Listen for any incoming Conn(...).
-// Depending on the host it is possible that it can connect with hosts of
-// other types or not.
-type Host interface {
-	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) error // the srv processing function
-	Close() error
-	monitor.CounterIO
-}
-
-// Conn represents a communication between two hosts. It is closely related 
-// to the underlying type of Host since a TcpHost will generate only TcpConn.
-type Conn interface {
-	// The address of the remote endpoint.
-	Remote() string
-	// The local address and port.
-	Local() string
-	// Sends a message through the connection. The obj always has to be
-	// a pointer.
-	Send(ctx context.Context, obj Body) error
-	// Receives a message from the connection.
-	Receive(ctx context.Context) (Packet, error)
-	// Close shuts down the connection
-	Close() error
-	monitor.CounterIO
-}
-
-// TCPHost implements Host to offer a bare, unencrypted TCP communication.
-type TCPHost struct {
-	// listeningPort will channel the port used in the connection.
-	listeningPort chan int
-	// A list of connections maintained by this host.
-	peers    map[string]Conn
-	// Mutex on peers.
-	peersMut sync.Mutex
-	// The listener attached to this host.
-	listener net.Listener
-	// the close channel used to indicate to the listener we want to quit.
-	quit chan bool
-	// quitListener is a channel to indicate to the closing function that the
-	// listener has actually really quit
-	quitListener  chan bool
-	listeningLock sync.Mutex
-	listening     bool
-	// indicates whether this host is closed already or not
-	closed     bool
-	closedLock sync.Mutex
-	// a list of constructors for en/decoding
-	constructors protobuf.Constructors
-}
-
-// TCPConn is the underlying implementation of
-// Conn using Tcp
-type TCPConn struct {
-	// The name of the endpoint we are connected to.
-	Endpoint string
-
-	// The connection used
-	conn net.Conn
-
-	// closed indicator
-	closed    bool
-	closedMut sync.Mutex
-	// A pointer to the associated host (just-in-case)
-	host *TCPHost
-	// So we only handle one receiving packet at a time
-	receiveMutex sync.Mutex
-	// So we only handle one sending packet at a time
-	sendMutex sync.Mutex
-	// bRx is the number of bytes received on this connection
-	bRx     uint64
-	bRxLock sync.Mutex
-	// bTx in the number of bytes sent on this connection
-	bTx     uint64
-	bTxLock sync.Mutex
-}
-
-// SecureHost is the analog of Host but with secure communication
-// It is tied to an entity can only open connection with entities
-type SecureHost interface {
-	// Close terminates the `Listen()` function and closes all connections.
-	Close() error
-	Listen(func(SecureConn)) error
-	Open(*ServerIdentity) (SecureConn, error)
-	String() string
-	WorkingAddress() string
-	monitor.CounterIO
-}
-
-// SecureConn is the analog of Conn but for secure communication
-type SecureConn interface {
-	Conn
-	ServerIdentity() *ServerIdentity
-}
-
-// SecureTCPHost is a TcpHost but with the additional property that it handles
-// ServerIdentity.
-type SecureTCPHost struct {
-	*TCPHost
-	// workingAddress is the actual address we're listening. This can
-	// be one of the serverIdentity's Addresses or a chosen address if
-	// serverIdentity has ":0"-addresses.
-	workingAddress string
-	// ServerIdentity of this host
-	serverIdentity *ServerIdentity
-	// Private key tied to this entity
-	private abstract.Scalar
-	// Lock for accessing this structure
-	lockAddress sync.Mutex
-	// list of all connections this host has opened
-	conns     []*SecureTCPConn
-	connMutex sync.Mutex
-}
-
-// SecureTCPConn is a secured tcp connection using ServerIdentity as an identity.
-type SecureTCPConn struct {
-	*TCPConn
-	*SecureTCPHost
-	serverIdentity *ServerIdentity
-}
 
 // Packet is the container for any Msg
 type Packet struct {

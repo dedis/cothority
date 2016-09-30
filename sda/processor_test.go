@@ -1,82 +1,29 @@
 package sda
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"reflect"
 
-	"errors"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/config"
-	"github.com/stretchr/testify/assert"
 )
-
-type basicProcessor struct {
-	msgChan chan network.Packet
-}
-
-func (bp *basicProcessor) Process(msg *network.Packet) {
-	bp.msgChan <- *msg
-}
-
-type basicMessage struct {
-	Value int
-}
-
-var basicMessageType network.PacketTypeID
-
-func TestBlockingDispatcher(t *testing.T) {
-	dispatcher := NewBlockingDispatcher()
-	processor := &basicProcessor{make(chan network.Packet, 1)}
-
-	dispatcher.RegisterProcessor(processor, basicMessageType)
-	dispatcher.Dispatch(&network.Packet{
-		Msg:     basicMessage{10},
-		MsgType: basicMessageType})
-
-	select {
-	case m := <-processor.msgChan:
-		msg, ok := m.Msg.(basicMessage)
-		assert.True(t, ok)
-		assert.Equal(t, msg.Value, 10)
-	default:
-		t.Error("No message received")
-	}
-}
-
-func TestProcessorHost(t *testing.T) {
-	h1 := newHostMock(network.Suite, "127.0.0.1:0")
-
-	proc := &basicProcessor{make(chan network.Packet, 1)}
-	h1.RegisterProcessor(proc, basicMessageType)
-	h1.Dispatch(&network.Packet{
-		Msg:     basicMessage{10},
-		MsgType: basicMessageType})
-
-	select {
-	case m := <-proc.msgChan:
-		basic, ok := m.Msg.(basicMessage)
-		assert.True(t, ok)
-		assert.Equal(t, basic.Value, 10)
-	default:
-		t.Error("No message received on channel")
-	}
-}
 
 var testServiceID ServiceID
 var testMsgID network.PacketTypeID
 
 func init() {
-	basicMessageType = network.RegisterPacketType(&basicMessage{})
 	RegisterNewService("testService", newTestService)
 	testServiceID = ServiceFactory.ServiceID("testService")
 	testMsgID = network.RegisterPacketType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
-	h1 := newHostMock(network.Suite, "127.0.0.1")
+	h1 := NewLocalHost(2000)
+	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
@@ -104,8 +51,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 }
 
 func TestProcessor_RegisterMessages(t *testing.T) {
-	h1 := newHostMock(network.Suite, "127.0.0.1")
-	p := NewServiceProcessor(&Context{host: h1})
+	p := NewServiceProcessor(&Context{})
 	log.ErrFatal(p.RegisterMessages(procMsg, procMsg2))
 	err := p.RegisterMessages(procMsg, procMsgWrong1)
 	if err == nil {
@@ -114,7 +60,8 @@ func TestProcessor_RegisterMessages(t *testing.T) {
 }
 
 func TestProcessor_GetReply(t *testing.T) {
-	h1 := newHostMock(network.Suite, "127.0.0.1")
+	h1 := NewLocalHost(2000)
+	defer h1.Close()
 	p := NewServiceProcessor(&Context{host: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 
@@ -131,7 +78,7 @@ func TestProcessor_GetReply(t *testing.T) {
 	}
 
 	rep = p.GetReply(e, testMsgID, testMsg{42})
-	errMsg, ok := rep.(*StatusRet)
+	errMsg, ok := rep.(*network.StatusRet)
 	if !ok {
 		t.Fatal("42 should return an error")
 	}
@@ -143,26 +90,30 @@ func TestProcessor_GetReply(t *testing.T) {
 func TestProcessor_ProcessClientRequest(t *testing.T) {
 	local := NewLocalTest()
 
-	// generate 1 host, they don't connect, they process messages, and they
-	// don't register the tree or entitylist
-	h := local.GenLocalHosts(1, false, false)[0]
+	// generate 5 hosts,
+	h := local.GenHosts(1)[0]
 	defer local.CloseAll()
 
 	s := local.Services[h.ServerIdentity.ID]
 	ts := s[testServiceID]
-	cr := &ClientRequest{Data: mkClientRequest(&testMsg{12})}
-	ts.ProcessClientRequest(h.ServerIdentity, cr)
+	client := local.NewClient("testService")
+
+	resp, err := client.Send(h.ServerIdentity, &testMsg{12})
+	if err != nil {
+		t.Fatal("error sending /receiving with client")
+	}
 	msg := ts.(*testService).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
 	}
-	tm, ok := msg.(*testMsg)
+	tm, ok := resp.Msg.(testMsg)
 	if !ok {
 		t.Fatalf("Couldn't cast to *testMsg - %+v", tm)
 	}
 	if tm.I != 12 {
 		t.Fatal("Didn't send 12")
 	}
+
 }
 
 func mkClientRequest(msg network.Body) []byte {
@@ -178,7 +129,7 @@ type testMsg struct {
 func procMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
-		return nil, errors.New("6 * 9 != 42")
+		return nil, fmt.Errorf("ServiceProcessor received %d (actual) vs 42 (expected)", msg.I)
 	}
 	return msg, nil
 }

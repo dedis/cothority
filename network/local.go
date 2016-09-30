@@ -127,7 +127,7 @@ func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 // send gets the connection denoted by this endpoint and calls queueMsg
 // with the packet as argument to it.
 // It returns ErrClosed if it does not find the connection.
-func (lm *LocalManager) send(e endpoint, buff Packet) error {
+func (lm *LocalManager) send(e endpoint, msg []byte) error {
 	lm.Lock()
 	defer lm.Unlock()
 	q, ok := lm.queues[e]
@@ -135,7 +135,7 @@ func (lm *LocalManager) send(e endpoint, buff Packet) error {
 		return ErrClosed
 	}
 
-	q.push(buff)
+	q.push(msg)
 	return nil
 }
 
@@ -399,12 +399,12 @@ func (ll *LocalListener) Listen(fn func(Conn)) error {
 }
 
 // Stop shuts down listening.
-// It returns an error if the LocalListener is not listening yet.
+// It always returns nil whether ll is listening or not.
 func (ll *LocalListener) Stop() error {
 	ll.Lock()
 	defer ll.Unlock()
 	if !ll.listening {
-		return errors.New("Listener is not listening!")
+		return nil
 	}
 	ll.manager.unsetListening(ll.addr)
 	close(ll.quit)

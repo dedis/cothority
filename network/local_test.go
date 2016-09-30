@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,8 +60,8 @@ func TestLocalListener(t *testing.T) {
 		t.Error("listener should have returned an error when Listen twice")
 	}
 	assert.Nil(t, listener.Stop())
-	if err := listener.Stop(); err == nil {
-		t.Error("listener.Stop() twice should have returned an error")
+	if err := listener.Stop(); err != nil {
+		t.Error("listener.Stop() twice should not returns an error")
 	}
 	<-ready
 }
@@ -98,7 +96,7 @@ func TestLocalConnCloseReceive(t *testing.T) {
 	}
 	<-ready
 
-	_, err = outgoing.Receive(context.TODO())
+	_, err = outgoing.Receive()
 	assert.Equal(t, ErrClosed, err)
 	assert.Equal(t, ErrClosed, outgoing.Close())
 	assert.Nil(t, listener.Stop())
@@ -148,11 +146,11 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address
 	// make the listener send and receive a struct that only they can know (this
 	// listener + conn
 	handshake := func(c Conn, sending, receiving Address) error {
-		err := c.Send(context.TODO(), &AddressTest{sending, secret})
+		err := c.Send(&AddressTest{sending, secret})
 		if err != nil {
 			return err
 		}
-		p, err := c.Receive(context.TODO())
+		p, err := c.Receive()
 		if err != nil {
 			return err
 		}
@@ -239,12 +237,12 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 		ready <- true
 		listener.Listen(func(c Conn) {
 			incomingConn <- true
-			nm, err := c.Receive(context.TODO())
+			nm, err := c.Receive()
 			assert.Nil(t, err)
 			assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 			// acknoledge the message
 			incomingConn <- true
-			err = c.Send(context.TODO(), &SimpleMessage{3})
+			err = c.Send(&SimpleMessage{3})
 			assert.Nil(t, err)
 			//wait ack
 			<-outgoingConn
@@ -264,17 +262,17 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	// check if connection is opened on the listener
 	<-incomingConn
 	// send stg and wait for ack
-	assert.Nil(t, outgoing.Send(context.TODO(), &SimpleMessage{3}))
+	assert.Nil(t, outgoing.Send(&SimpleMessage{3}))
 	<-incomingConn
 
 	// receive stg and send ack
-	nm, err := outgoing.Receive(context.TODO())
+	nm, err := outgoing.Receive()
 	assert.Nil(t, err)
 	assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 	outgoingConn <- true
 
 	// close the incoming conn, so Receive here should return an error
-	nm, err = outgoing.Receive(context.TODO())
+	nm, err = outgoing.Receive()
 	if err != ErrClosed {
 		t.Error("Receive should have returned an error")
 	}
@@ -295,10 +293,10 @@ func TestLocalManyConn(t *testing.T) {
 	var wg sync.WaitGroup
 	go func() {
 		listener.Listen(func(c Conn) {
-			_, err := c.Receive(context.TODO())
+			_, err := c.Receive()
 			assert.Nil(t, err)
 
-			assert.Nil(t, c.Send(context.TODO(), &SimpleMessage{3}))
+			assert.Nil(t, c.Send(&SimpleMessage{3}))
 		})
 	}()
 
@@ -313,8 +311,8 @@ func TestLocalManyConn(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			assert.Nil(t, c.Send(context.TODO(), &SimpleMessage{3}))
-			nm, err := c.Receive(context.TODO())
+			assert.Nil(t, c.Send(&SimpleMessage{3}))
+			nm, err := c.Receive()
 			assert.Nil(t, err)
 			assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 			assert.Nil(t, c.Close())

@@ -2,39 +2,38 @@ package sda
 
 import "github.com/dedis/cothority/network"
 
-// Context is the interface that is given to a Service
+// Context represents the methods that are available to a service.
 type Context struct {
 	overlay *Overlay
 	host    *Host
 	servID  ServiceID
 	manager *serviceManager
-	Dispatcher
+	network.Dispatcher
 }
 
-// defaultContext is the implementation of the Context interface. It is
-// instantiated for each Service.
-
+// newContext returns a Context pointing to all necessary elements.
 func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
 		overlay:    o,
 		host:       h,
 		servID:     servID,
 		manager:    manager,
-		Dispatcher: NewBlockingDispatcher(),
+		Dispatcher: network.NewBlockingDispatcher(),
 	}
 }
 
-// NewTreeNodeInstance is a Context method.
+// NewTreeNodeInstance creates a TreeNodeInstance that is bound to a
+// service instead of the Overlay.
 func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
 	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID)
 }
 
-// SendRaw sends a message to the entity.
+// SendRaw sends a message to the ServerIdentity.
 func (c *Context) SendRaw(si *network.ServerIdentity, msg interface{}) error {
-	return c.host.SendRaw(si, msg)
+	return c.host.Send(si, msg)
 }
 
-// ServerIdentity returns the entity the service uses.
+// ServerIdentity returns this Conode's identity.
 func (c *Context) ServerIdentity() *network.ServerIdentity {
 	return c.host.ServerIdentity
 }
@@ -44,15 +43,14 @@ func (c *Context) ServiceID() ServiceID {
 	return c.servID
 }
 
-// CreateProtocolService makes a TreeNodeInstance from the root-node of the tree and
-// prepares for a 'name'-protocol. The ProtocolInstance has to be added later.
+// CreateProtocolService returns a ProtocolInstance bound to the service.
 func (c *Context) CreateProtocolService(name string, t *Tree) (ProtocolInstance, error) {
 	pi, err := c.overlay.CreateProtocolService(name, t, c.servID)
 	return pi, err
 }
 
-// CreateProtocolSDA is like CreateProtocolService but doesn't bind a service to it,
-// so it will be handled automatically by the SDA.
+// CreateProtocolSDA is like CreateProtocolService but doesn't bind it to a
+// service, so it will be handled automatically by the SDA.
 func (c *Context) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, error) {
 	pi, err := c.overlay.CreateProtocolSDA(name, t)
 	return pi, err
@@ -63,23 +61,23 @@ func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
 	return c.overlay.RegisterProtocolInstance(pi)
 }
 
-// ReportStatus is the status reporter but it works with context.
+// ReportStatus returns all status of the services.
 func (c *Context) ReportStatus() map[string]Status {
 	return c.host.statusReporterStruct.ReportStatus()
 }
 
-// RegisterStatusReporter registers the Status Reporter.
+// RegisterStatusReporter registers a new StatusReporter.
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
 }
 
-// RegisterProcessor overrides the RegisterProcessor methods of the dispatcher.
+// RegisterProcessor overrides the RegisterProcessor methods of the Dispatcher.
 // It delegates the dispatching to the serviceManager.
-func (c *Context) RegisterProcessor(p Processor, msgType network.PacketTypeID) {
+func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
 }
 
-// String returns the host it's running on
+// String returns the host it's running on.
 func (c *Context) String() string {
 	return c.host.ServerIdentity.String()
 }

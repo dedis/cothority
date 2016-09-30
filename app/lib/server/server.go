@@ -329,6 +329,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) err
 	}
 	return nil
 }
+
 // entityListToPublics returns a slice of Points of all elements
 // of the roster.
 func entityListToPublics(el *sda.Roster) []abstract.Point {

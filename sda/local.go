@@ -2,7 +2,7 @@ package sda
 
 import (
 	"errors"
-
+	"strconv"
 	"time"
 
 	"github.com/dedis/cothority/log"
@@ -26,7 +26,19 @@ type LocalTest struct {
 	Trees map[TreeID]*Tree
 	// All single nodes
 	Nodes []*TreeNodeInstance
+	// are we running tcp or local layer
+	mode string
+	// the context for the local connections
+	// it enables to have multiple local test running simultaneously
+	ctx *network.LocalManager
 }
+
+const (
+	// TCP represents the TCP mode of networking for this local test
+	TCP = "tcp"
+	// Local represents the Local mode of networking for this local test
+	Local = "local"
+)
 
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
@@ -38,7 +50,17 @@ func NewLocalTest() *LocalTest {
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
+		mode:     TCP,
+		ctx:      network.NewLocalManager(),
 	}
+}
+
+// NewTCPTest returns a LocalTest but using a TCPRouter as the underlying
+// communication layer.
+func NewTCPTest() *LocalTest {
+	t := NewLocalTest()
+	t.mode = TCP
+	return t
 }
 
 // StartProtocol takes a name and a tree and will create a
@@ -69,24 +91,22 @@ func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, erro
 	return nil, errors.New("Didn't find host for tree-root")
 }
 
-// GenLocalHosts returns a slice of 'n' Hosts. If 'connect' is true, the
-// hosts will be connected between each other. If 'processMsg' is true,
-// the ProcessMsg-method will be called.
-func (l *LocalTest) GenLocalHosts(n int, connect, processMsg bool) []*Host {
-	hosts := GenLocalHosts(n, connect, processMsg)
+// GenHosts returns n Hosts with a localRouter
+func (l *LocalTest) GenHosts(n int) []*Host {
+	hosts := l.GenLocalHosts(n)
 	for _, host := range hosts {
 		l.Hosts[host.ServerIdentity.ID] = host
 		l.Overlays[host.ServerIdentity.ID] = host.overlay
 		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
 	}
 	return hosts
+
 }
 
-// GenTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the Roster and Tree
-// will be registered with the overlay.
-func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenLocalHosts(n, connect, processMsg)
+// GenTree will create a tree of n hosts with a localRouter, and returns the
+// list of hosts and the associated roster / tree.
+func (l *LocalTest) GenTree(n int, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(n)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBinaryTree()
@@ -96,17 +116,17 @@ func (l *LocalTest) GenTree(n int, connect, processMsg, register bool) ([]*Host,
 		hosts[0].overlay.RegisterTree(tree)
 	}
 	return hosts, list, tree
+
 }
 
-// GenBigTree will create a tree of n hosts. If connect is true, they will
-// be connected to the root host. If register is true, the Roster and Tree
-// will be registered with the overlay.
+// GenBigTree will create a tree of n hosts.
+// If register is true, the Roster and Tree will be registered with the overlay.
 // 'nbrHosts' is how many hosts are created
 // 'nbrTreeNodes' is how many TreeNodes are created
 // nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
 // be used more than once in the tree.
-func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, connect bool, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenLocalHosts(nbrHosts, connect, true)
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, register bool) ([]*Host, *Roster, *Tree) {
+	hosts := l.GenHosts(nbrHosts)
 
 	list := l.GenRosterFromHost(hosts...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
@@ -133,11 +153,16 @@ func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
 // CloseAll takes a list of hosts that will be closed
 func (l *LocalTest) CloseAll() {
 	for _, host := range l.Hosts {
-		log.Lvl3("Closing host", host.ServerIdentity)
+		log.Lvl3("Closing host", host.ServerIdentity.Address)
 		err := host.Close()
 		if err != nil {
-			log.Error("Closing host", host.ServerIdentity.First(),
+			log.Error("Closing host", host.ServerIdentity.Address,
 				"gives error", err)
+		}
+
+		for host.Listening() {
+			log.Print("Sleeping while waiting to close...")
+			time.Sleep(10 * time.Millisecond)
 		}
 		delete(l.Hosts, host.ServerIdentity.ID)
 	}
@@ -147,7 +172,7 @@ func (l *LocalTest) CloseAll() {
 	}
 	l.Nodes = make([]*TreeNodeInstance, 0)
 	// Give the nodes some time to correctly close down
-	time.Sleep(time.Millisecond * 500)
+	//time.Sleep(time.Millisecond * 500)
 }
 
 // GetTree returns the tree of the given TreeNode
@@ -244,58 +269,117 @@ func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
 	return services
 }
 
-// MakeHELS is an abbreviation to make a Host, an Roster, and a service.
-// It returns the service of the first host in the slice.
+// MakeHELS creates nbr hosts, and will return the associated roster. It also
+// returns the Service object of the first hosts in the list having sid as a
+// ServiceID.
 func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
-	hosts := l.GenLocalHosts(nbr, false, true)
+	hosts := l.GenHosts(nbr)
 	el := l.GenRosterFromHost(hosts...)
 	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
 }
 
-// NewLocalHost creates a new host searching for an open port and registers it.
-func NewLocalHost() *Host {
+// NewPrivIdentity returns a secret + ServerIdentity. The SI will have
+// "localhost:+port as first address.
+func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
+	address := network.NewLocalAddress("127.0.0.1:" + strconv.Itoa(port))
 	priv, pub := PrivPub()
-	id := network.NewServerIdentity(pub, "localhost:0")
-	return NewHost(id, priv)
+	id := network.NewServerIdentity(pub, address)
+	return priv, id
 }
 
-// GenLocalHosts will create n hosts with the first one being connected to each of
-// the other nodes if connect is true. It will take the port-number from
-// the global variable LocalHostPort.
-func GenLocalHosts(n int, connect bool, processMessages bool) []*Host {
+// NewTCPHost creates a new host with a tcpRouter with "localhost:"+port as an
+// address.
+func NewTCPHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
+	addr := network.NewTCPAddress(id.Address.NetworkAddress())
+	tcpHost, err := network.NewTCPHost(addr)
+	if err != nil {
+		panic(err)
+	}
+	id.Address = tcpHost.Address()
+	router := network.NewRouter(id, tcpHost)
+	h := NewHostWithRouter(id, priv, router)
+	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+	return h
+}
+
+// NewLocalHost returns a new host using a LocalRouter (channels) to communicate.
+// At the return of this function, the router is already Run()ing in a go
+// routine.
+func NewLocalHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
+	localRouter, err := network.NewLocalRouter(id)
+	if err != nil {
+		panic(err)
+	}
+	h := NewHostWithRouter(id, priv, localRouter)
+	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+	return h
+}
+
+// NewLocalHost returns a fresh Host using local connections within the context
+// of this LocalTest
+func (l *LocalTest) NewLocalHost(port int) *Host {
+	priv, id := NewPrivIdentity(port)
+	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	h := NewHostWithRouter(id, priv, localRouter)
+	go h.Start()
+	for !h.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+	return h
+
+}
+
+// NewClient returns *Client for which the types depend on the mode of the
+// LocalContext.
+func (l *LocalTest) NewClient(serviceName string) *Client {
+	switch l.mode {
+	case TCP:
+		return NewClient(serviceName)
+	default:
+		return l.NewLocalClient(serviceName)
+	}
+}
+
+// NewLocalClient returns a new *Client using Local connections within the
+// context of this LocalTest.
+func (l *LocalTest) NewLocalClient(serviceName string) *Client {
+	return &Client{
+		ServiceID: ServiceFactory.ServiceID(serviceName),
+		net:       network.NewLocalClientWithManager(l.ctx),
+	}
+}
+
+// GenLocalHosts returns n hosts created with a localRouter
+func (l *LocalTest) GenLocalHosts(n int) []*Host {
 	hosts := make([]*Host, n)
 	for i := 0; i < n; i++ {
-		host := NewLocalHost()
+		var host *Host
+		port := 2000 + i*10
+		switch l.mode {
+		case TCP:
+			host = NewTCPHost(0)
+		default:
+			host = l.NewLocalHost(port)
+		}
 		hosts[i] = host
 	}
-	root := hosts[0]
-	for _, host := range hosts {
-		host.ListenAndBind()
-		log.Lvlf3("Listening on %s %x", host.ServerIdentity.First(), host.ServerIdentity.ID)
-		if processMessages {
-			host.StartProcessMessages()
+
+	for _, h := range hosts {
+		for !h.Listening() {
+			time.Sleep(40 * time.Millisecond)
 		}
-		if connect && root != host {
-			log.Lvl4("Connecting", host.ServerIdentity.First(), host.ServerIdentity.ID, "to",
-				root.ServerIdentity.First(), root.ServerIdentity.ID)
-			if _, err := host.Connect(root.ServerIdentity); err != nil {
-				log.Fatal(host.ServerIdentity.Addresses, "Could not connect hosts", root.ServerIdentity.Addresses, err)
-			}
-			// Wait for connection accepted in root
-			connected := false
-			for !connected {
-				time.Sleep(time.Millisecond * 10)
-				root.networkLock.Lock()
-				for id := range root.connections {
-					if id.Equal(host.ServerIdentity.ID) {
-						connected = true
-						break
-					}
-				}
-				root.networkLock.Unlock()
-			}
-			log.Lvl4(host.ServerIdentity.First(), "is connected to root")
-		}
+		l.Hosts[h.ServerIdentity.ID] = h
 	}
 	return hosts
 }
