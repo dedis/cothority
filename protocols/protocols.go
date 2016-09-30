@@ -33,7 +33,6 @@ import (
 	_ "github.com/dedis/cothority/protocols/example/handlers"
 	_ "github.com/dedis/cothority/protocols/jvss"
 	_ "github.com/dedis/cothority/protocols/manage"
-	_ "github.com/dedis/cothority/protocols/medco"
 	_ "github.com/dedis/cothority/protocols/ntree"
 	_ "github.com/dedis/cothority/protocols/randhound"
 	// ByzCoin has some strange library which uses 'seelog' that doesn't
