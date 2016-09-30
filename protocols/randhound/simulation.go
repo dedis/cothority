@@ -44,7 +44,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	rh := client.(*RandHound)
+	rh, _ := client.(*RandHound)
 	err = rh.Setup(rhs.Hosts, rhs.Faulty, rhs.Groups, rhs.Purpose)
 	if err != nil {
 		return err
@@ -56,6 +56,14 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	select {
 	case <-rh.Done:
 		log.Print("RandHound - done")
+		random, transcript, err := rh.Random()
+		if err != nil {
+			return err
+		}
+		log.Print("RandHound - collective randomness: ok")
+		_ = random
+		_ = transcript
+
 	case <-time.After(time.Second * time.Duration(rhs.Hosts) * 5):
 		log.Print("RandHound - time out")
 	}

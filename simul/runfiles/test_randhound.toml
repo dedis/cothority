@@ -2,9 +2,9 @@ Servers = 8
 Simulation = "RandHound"
 BF = 2
 Rounds = 1
-Faulty = 2
-Groups = 2
+Faulty = 0
+Groups = 1
 Purpose = "RandHound Test"
 
 Hosts
-7
+10
