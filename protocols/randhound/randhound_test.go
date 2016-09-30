@@ -23,11 +23,7 @@ func TestRandHound(t *testing.T) {
 	var shards uint32 = 2                     // Number of shards created from the randomness
 
 	local := sda.NewLocalTest()
-<<<<<<< HEAD
 	_, _, tree := local.GenTree(int(nodes), true)
-=======
-	_, _, tree := local.GenTree(int(nodes), false)
->>>>>>> refactor_network_identity
 	defer local.CloseAll()
 
 	// Setup and Start RandHound

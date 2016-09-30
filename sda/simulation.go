@@ -126,7 +126,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		for i := range sc.Roster.List {
 			_, port, _ := net.SplitHostPort(sc.Roster.List[i].Address.NetworkAddress())
 			// put 127.0.0.1 because 127.0.0.X is not reachable on Mac OS X
-			sc.Roster.List[i].Address = network.NewAddress(network.Local, "127.0.0.1:"+port)
+			sc.Roster.List[i].Address = network.NewAddress(network.PlainTCP, "127.0.0.1:"+port)
 		}
 	}
 	return ret, nil

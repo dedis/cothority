@@ -19,13 +19,7 @@ func NewLocalTestClient(l *sda.LocalTest) *Client {
 
 func TestServiceGuard(t *testing.T) {
 	local := sda.NewLocalTest()
-<<<<<<< HEAD
 	_, el, _ := local.GenTree(5, true)
-=======
-	// This statement generates 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist.
-	_, el, _ := local.GenTree(5, false)
->>>>>>> refactor_network_identity
 	defer local.CloseAll()
 
 	// Send a request to the service
