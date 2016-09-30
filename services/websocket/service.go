@@ -11,7 +11,7 @@ import (
 
 	"fmt"
 
-	"io/ioutil"
+	"encoding/binary"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -53,9 +53,9 @@ func (s *Service) Shutdown() {
 
 func (s *Service) Listening() {
 	go func() {
-		log.Lvl1("Starting to listen on", s.ServerIdentity())
 		webHost, err := getWebHost(s.ServerIdentity())
 		log.ErrFatal(err)
+		log.Lvl1("Starting to listen on", webHost)
 		hand := http.NewServeMux()
 		s.server = &http.Server{
 			Addr:    webHost,
@@ -67,16 +67,35 @@ func (s *Service) Listening() {
 }
 
 func (s *Service) statusHandler(ws *websocket.Conn) {
-	buf, err := ioutil.ReadAll(ws)
+	log.Lvl1("starting to handle")
+	sizeBuf := make([]byte, 2)
+	n, err := ws.Read(sizeBuf)
 	log.ErrFatal(err)
+	if n != 2 {
+		log.Fatal("Couldn't read 2 bytes")
+	}
+	size := binary.LittleEndian.Uint16(sizeBuf)
+	buf := make([]byte, size)
+	read, err := ws.Read(buf)
+	log.ErrFatal(err)
+	if read != int(size) {
+		log.Fatal("Read only", read, "instead of", size)
+	}
 	_, msg, err := network.UnmarshalRegistered(buf)
 	req, ok := msg.(*status.Request)
-	log.Print(req, ok)
-	log.Print(s.ReportStatus())
+	log.Lvlf1("Received request: %x %v %t", buf, req, ok)
+	stat := s.GetService(status.ServiceName)
+	reply, err := stat.(*status.Stat).Request(nil, req)
+	log.ErrFatal(err)
+	log.Lvl1(s.ReportStatus())
+	buf, err = network.MarshalRegisteredType(reply)
+	log.ErrFatal(err)
+	n, err = ws.Write(buf)
+	log.ErrFatal(err)
+	log.Lvl1("Wrote", n, "bytes")
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
-	log.Print(si.Addresses[0])
 	host, portStr, err := net.SplitHostPort(si.Addresses[0])
 	if err != nil {
 		return "", err

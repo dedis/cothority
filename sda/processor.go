@@ -282,3 +282,8 @@ func (p *ServiceProcessor) Shutdown() {
 func (p *ServiceProcessor) Listening() {
 	log.Lvl4("Starting to listen", p.ServerIdentity().Addresses[0])
 }
+
+// GetService is passed through from host.
+func (p *ServiceProcessor) GetService(name string) Service {
+	return p.host.GetService(name)
+}
