@@ -143,7 +143,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	}
 	d.addresses = make([]string, d.servers)
 	for i := range d.addresses {
-		d.addresses[i] = "localhost" + strconv.Itoa(i)
+		d.addresses[i] = "127.0.0." + strconv.Itoa(i)
 	}
 	d.sc, err = sim.Setup(d.runDir, d.addresses)
 	if err != nil {
