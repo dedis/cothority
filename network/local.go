@@ -362,6 +362,8 @@ func NewLocalListener(addr Address) (*LocalListener, error) {
 	return NewLocalListenerWithManager(defaultLocalManager, addr)
 }
 
+// NewLocalListenerWithManager returns a new LocalListener using the
+// given LocalManager.
 // In case of an error, the LocalListener is nil and the error is returned.
 // An error occurs in case the address is invalid or the manager is already
 // listening on that address.
