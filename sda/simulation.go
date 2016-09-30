@@ -254,8 +254,8 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		} else {
 			address += strconv.Itoa(port + c/nbrAddr)
 		}
-		entities[c] = network.NewServerIdentity(key.Public, address)
-		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
+		entities[c] = network.NewServerIdentity(hostPublicKey, address)
+		sc.PrivateKeys[entities[c].Addresses[0]] = hostSecretKey
 	}
 	// And close all our listeners
 	if localhosts {
