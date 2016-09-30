@@ -231,12 +231,15 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	}
 	entities := make([]*network.ServerIdentity, hosts)
 	log.Lvl3("Doing", hosts, "hosts")
-	key := config.NewKeyPair(network.Suite)
+	suite := network.Suite
+	key := config.NewKeyPair(suite)
 	for c := 0; c < hosts; c++ {
-		key.Secret.Add(key.Secret,
-			key.Suite.Scalar().One())
-		key.Public.Add(key.Public,
-			key.Suite.Point().Base())
+		hostSecretKey := key.Secret.Clone()
+		hostSecretKey.Add(hostSecretKey, suite.Scalar().One())
+		hostPublicKey := key.Public.Clone()
+		hostPublicKey.Add(key.Public, suite.Point().Base())
+		key.Secret = hostSecretKey
+		key.Public = hostPublicKey
 		address := addresses[c%nbrAddr] + ":"
 		if localhosts {
 			// If we have localhosts, we have to search for an empty port
@@ -251,8 +254,8 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		} else {
 			address += strconv.Itoa(port + c/nbrAddr)
 		}
-		entities[c] = network.NewServerIdentity(key.Public, address)
-		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
+		entities[c] = network.NewServerIdentity(hostPublicKey, address)
+		sc.PrivateKeys[entities[c].Addresses[0]] = hostSecretKey
 	}
 	// And close all our listeners
 	if localhosts {
