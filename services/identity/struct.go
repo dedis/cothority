@@ -234,7 +234,7 @@ type ProposeVoteReply struct {
 }
 
 type GetUpdateChain struct {
-	skipchain.GetUpdateChain
+	LatestID skipchain.SkipBlockID
 }
 
 type GetUpdateChainReply struct {
