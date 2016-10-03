@@ -15,6 +15,9 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
+// How many msec to wait before a timeout is generated in the propagation
+const propagateTimeout = 10000
+
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
@@ -106,9 +109,10 @@ func (c *Config) String() string {
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
-// GetKeys returns the unique keys up to the next ":". If given a slice of keys, it
-// will join them using ":" and return the unique keys with that prefix.
-func (c *Config) GetKeys(keys ...string) []string {
+// GetSuffixColumn returns the unique values up to the next ":" of the keys.
+// If given a slice of keys, it will join them using ":" and return the
+// unique keys with that prefix.
+func (c *Config) GetSuffixColumn(keys ...string) []string {
 	var ret []string
 	start := strings.Join(keys, ":")
 	if len(start) > 0 {
@@ -138,9 +142,10 @@ func (c *Config) GetValue(keys ...string) string {
 	return ""
 }
 
-// GetIntKeys returns the keys in the middle of prefix and suffix. Searching
-// for the keys, the method will add ":" after the prefix and before the suffix.
-func (c *Config) GetIntKeys(prefix, suffix string) []string {
+// GetIntermediateColumn returns the values of the column in the middle of
+// prefix and suffix. Searching for the column-values, the method will add ":"
+// after the prefix and before the suffix.
+func (c *Config) GetIntermediateColumn(prefix, suffix string) []string {
 	var ret []string
 	if len(prefix) > 0 {
 		prefix += ":"
@@ -176,37 +181,45 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
-// AddIdentity starts a new identity-skipchain
-type AddIdentity struct {
-	*Config
-	*sda.Roster
+// CreateIdentity starts a new identity-skipchain with the initial
+// Config and asking all nodes in Roster to participate.
+type CreateIdentity struct {
+	Config *Config
+	Roster *sda.Roster
 }
 
-// AddIdentityReply is the reply when a new Identity has been added
-type AddIdentityReply struct {
+// CreateIdentityReply is the reply when a new Identity has been added. It
+// returns the Root and Data-skipchain.
+type CreateIdentityReply struct {
 	Root *skipchain.SkipBlock
 	Data *skipchain.SkipBlock
 }
 
-// AttachToIdentity requests to attach the manager-device to an
-// existing identity
-type AttachToIdentity struct {
-	ID     ID
-	Public abstract.Point
-}
-
-// ProposeFetch verifies if a new config is available. On sending,
-// the ID is given, on receiving, the AccountList is given.
-type ProposeFetch struct {
-	ID          ID
-	AccountList *Config
-}
-
-// ConfigUpdate verifies if a new update is available. On sending,
-// the ID is given, on receiving, the AccountList is given.
+// ConfigUpdate verifies if a new update is available.
 type ConfigUpdate struct {
-	ID          ID
-	AccountList *Config
+	ID ID
+}
+
+// ConfigUpdateReply returns the updated configuration.
+type ConfigUpdateReply struct {
+	Config *Config
+}
+
+// ProposeSend sends a new proposition to be stored in all identities. It
+// either replies a nil-message for success or an error.
+type ProposeSend struct {
+	ID ID
+	*Config
+}
+
+// ProposeUpdate verifies if a new config is available.
+type ProposeUpdate struct {
+	ID ID
+}
+
+// ProposeUpdateReply returns the updated propose-configuration.
+type ProposeUpdateReply struct {
+	Propose *Config
 }
 
 // ProposeVote sends the signature for a specific IdentityList. It replies nil
@@ -217,17 +230,17 @@ type ProposeVote struct {
 	Signature *crypto.SchnorrSig
 }
 
+// ProposeVoteReply returns the signed new skipblock if the threshold of
+// votes have arrived.
+type ProposeVoteReply struct {
+	Data *skipchain.SkipBlock
+}
+
 // Messages to be sent from one identity to another
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*storage
-}
-
-// ProposeSend sends a new proposition to be stored in all identities
-type ProposeSend struct {
-	ID ID
-	*Config
+	*Storage
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock

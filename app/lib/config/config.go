@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"strings"
 
 	"os/user"
@@ -145,8 +146,8 @@ type Group struct {
 }
 
 // GetDescription returns the description of an entity
-func (g *Group) GetDescription(si *network.ServerIdentity) string {
-	return g.description[si]
+func (g *Group) GetDescription(e *network.ServerIdentity) string {
+	return g.description[e]
 }
 
 // ReadGroupDescToml reads a group.toml file and returns the list of ServerIdentities
@@ -287,4 +288,28 @@ func InputYN(def bool, args ...interface{}) bool {
 		defStr = "Ny"
 	}
 	return strings.ToLower(string(Input(defStr, args...)[0])) == "y"
+}
+
+// Copy makes a copy of a local file with the same file-mode-bits set.
+func Copy(dst, src string) error {
+	info, err := os.Stat(dst)
+	if err == nil && info.IsDir() {
+		return Copy(path.Join(dst, path.Base(src)), src)
+	}
+	fSrc, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer fSrc.Close()
+	stat, err := fSrc.Stat()
+	if err != nil {
+		return err
+	}
+	fDst, err := os.OpenFile(dst, os.O_CREATE|os.O_RDWR, stat.Mode())
+	if err != nil {
+		return err
+	}
+	defer fDst.Close()
+	_, err = io.Copy(fDst, fSrc)
+	return err
 }

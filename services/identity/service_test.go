@@ -11,11 +11,10 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.Info("Skipping because of bftcosi and skipchain - #482")
-	//log.MainTest(m)
+	log.MainTest(m)
 }
 
-func TestService_AddIdentity(t *testing.T) {
+func TestService_CreateIdentity2(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(5, identityService)
@@ -23,12 +22,12 @@ func TestService_AddIdentity(t *testing.T) {
 
 	keypair := config.NewKeyPair(network.Suite)
 	il := NewConfig(50, keypair.Public, "one")
-	msg, err := service.AddIdentity(nil, &AddIdentity{il, el})
+	msg, err := service.CreateIdentity(nil, &CreateIdentity{il, el})
 	log.ErrFatal(err)
-	air := msg.(*AddIdentityReply)
+	air := msg.(*CreateIdentityReply)
 
 	data := air.Data
-	id, ok := service.identities[string(data.Hash)]
+	id, ok := service.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }

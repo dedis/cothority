@@ -1,7 +1,10 @@
 package skipchain
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/satori/go.uuid"
 )
 
@@ -21,6 +24,8 @@ func init() {
 		&ForwardSignature{},
 		&SkipBlockFix{},
 		&SkipBlock{},
+		// Own service
+		&Service{},
 	}
 	for _, m := range msgs {
 		network.RegisterPacketType(m)
@@ -31,18 +36,27 @@ func init() {
 // deny a SkipBlock.
 type VerifierID uuid.UUID
 
+// SkipBlockVerifier is function that should return whether this skipblock is
+// accepted or not. This function is used during a BFTCosi round, but wrapped
+// around so it accepts a block.
+type SkipBlockVerifier func(msg []byte, s *SkipBlock) bool
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func RegisterVerification(c *sda.Context, v VerifierID, f SkipBlockVerifier) error {
+	scs := c.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).RegisterVerification(v, f)
+}
+
 var (
-	// VerifyNone does only basic syntax checking
+	// VerifyNone does nothing and returns true always.
 	VerifyNone = VerifierID(uuid.Nil)
 	// VerifyShard makes sure that the child SkipChain will always be
 	// a part of its parent SkipChain
 	VerifyShard = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
-	// VerifySSH makes sure that a given number of client-devices signed
-	// off on the changes
-	VerifySSH = VerifierID(uuid.NewV5(uuid.NamespaceURL, "SSH-ks"))
-	// VerifyTimeVault will make sure that a valid TimeVault asks for an
-	// additional SkipBlockData
-	VerifyTimeVault = VerifierID(uuid.NewV5(uuid.NamespaceURL, "TimeVault"))
 )
 
 // This file holds all messages that can be sent to the SkipChain,
