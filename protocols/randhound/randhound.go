@@ -59,8 +59,6 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // before Start.
 func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) error {
 
-	//log.Print("Setup")
-
 	rh.nodes = nodes
 	rh.groups = groups
 	rh.faulty = faulty
@@ -91,8 +89,6 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 // chooses the server grouping, forms an I1 message for each group, and sends
 // it to all servers of that group.
 func (rh *RandHound) Start() error {
-
-	//log.Print("Start")
 
 	var err error
 
@@ -498,8 +494,6 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 func (rh *RandHound) handleI1(i1 WI1) error {
 
-	//log.Print("I1")
-
 	msg := &i1.I1
 
 	// Compute hash of the client's message
@@ -570,8 +564,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 }
 
 func (rh *RandHound) handleR1(r1 WR1) error {
-
-	//log.Print("R1")
 
 	msg := &r1.R1
 
@@ -748,8 +740,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 func (rh *RandHound) handleI2(i2 WI2) error {
 
-	//log.Print("I2")
-
 	msg := &i2.I2
 
 	// Compute hash of the client's message
@@ -797,7 +787,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	share := make([]Share, len(encShare))
-	//X := make([]abstract.Point, len(encShare))
 	for i := 0; i < len(encShare); i++ {
 		X[i] = rh.Public()
 		j := good[i]
@@ -809,13 +798,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 			Proof:  decProof[i],
 		}
 	}
-
-	//good2, bad2, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, decProof)
-	//if err != nil {
-	//	return err
-	//}
-	//_ = good2
-	//_ = bad2
 
 	// XXX: simulate bad decryption share
 	//if _, ok := rh.Byzantine[rh.Index()]; ok {
@@ -844,8 +826,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 }
 
 func (rh *RandHound) handleR2(r2 WR2) error {
-
-	//log.Print("R2")
 
 	msg := &r2.R2
 
@@ -947,10 +927,6 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 	if err := binary.Write(buf, binary.LittleEndian, uint32(faulty)); err != nil {
 		return nil, err
 	}
-
-	//if err := binary.Write(buf, binary.LittleEndian, uint32(len(rh.group))); err != nil {
-	//	return nil, err
-	//}
 
 	if _, err := buf.WriteString(purpose); err != nil {
 		return nil, err
