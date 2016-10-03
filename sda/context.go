@@ -5,7 +5,7 @@ import "github.com/dedis/cothority/network"
 // Context is the interface that is given to a Service
 type Context struct {
 	overlay *Overlay
-	host    *Host
+	host    *Conode
 	servID  ServiceID
 	manager *serviceManager
 	network.Dispatcher
@@ -14,7 +14,7 @@ type Context struct {
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
 
-func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
+func newContext(h *Conode, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
 		overlay:    o,
 		host:       h,

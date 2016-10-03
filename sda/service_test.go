@@ -140,9 +140,9 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	defer ServiceFactory.Unregister("DummyService")
-	hostCh := make(chan *Host)
+	hostCh := make(chan *Conode)
 	go func() {
-		h := NewLocalHost(2000)
+		h := NewLocalConode(2000)
 		hostCh <- h
 	}()
 
@@ -194,7 +194,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	}))
 
 	defer ServiceFactory.Unregister("DummyService")
-	host := NewLocalHost(2000)
+	host := NewLocalConode(2000)
 	log.Lvl1("Host created and listening")
 	defer host.Close()
 	// Send a request to the service
@@ -203,7 +203,7 @@ func TestServiceProcessRequest(t *testing.T) {
 		Data:    []byte("a"),
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalConode(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
 	if err := h2.Send(host.ServerIdentity, re); err != nil {
@@ -228,7 +228,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	})
 
 	defer ServiceFactory.Unregister("DummyService")
-	host := NewLocalHost(2000)
+	host := NewLocalConode(2000)
 	defer host.Stop()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity})
@@ -244,7 +244,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	h2 := NewLocalHost(2010)
+	h2 := NewLocalConode(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
 	if err := h2.Send(host.ServerIdentity, re); err != nil {
@@ -299,11 +299,11 @@ func TestServiceNewProtocol(t *testing.T) {
 	})
 
 	defer ServiceFactory.Unregister("DummyService")
-	host1 := NewLocalHost(2000)
+	host1 := NewLocalConode(2000)
 	log.Lvl1("Host created and listening")
 	defer host1.Close()
 
-	host2 := NewLocalHost(2002)
+	host2 := NewLocalConode(2002)
 	defer host2.Close()
 	// create the entityList and tree
 	el := NewRoster([]*network.ServerIdentity{host1.ServerIdentity, host2.ServerIdentity})
@@ -319,7 +319,7 @@ func TestServiceNewProtocol(t *testing.T) {
 		Data:    b,
 	}
 	// fake a client
-	client := NewLocalHost(2010)
+	client := NewLocalConode(2010)
 	defer client.Close()
 	log.Lvl1("Sending request to service...")
 	if err := client.Send(host1.ServerIdentity, re); err != nil {
@@ -358,9 +358,9 @@ func TestServiceProcessor(t *testing.T) {
 
 	defer ServiceFactory.Unregister("DummyService")
 	// create two hosts
-	h2 := NewLocalHost(2001)
+	h2 := NewLocalConode(2001)
 	defer h2.Close()
-	h1 := NewLocalHost(2000)
+	h1 := NewLocalConode(2000)
 	defer h1.Close()
 	log.Lvl1("Host created and listening")
 	// create request

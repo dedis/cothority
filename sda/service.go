@@ -196,7 +196,7 @@ type serviceManager struct {
 	// the config paths
 	paths map[ServiceID]string
 	// the sda host
-	host *Host
+	host *Conode
 	// the dispather can take registration of Processors
 	network.Dispatcher
 }
@@ -206,7 +206,7 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceManager(h *Host, o *Overlay) *serviceManager {
+func newServiceManager(h *Conode, o *Overlay) *serviceManager {
 	// check if we have a config folder
 	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)

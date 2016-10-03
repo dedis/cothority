@@ -4,33 +4,33 @@ import "github.com/dedis/cothority/network"
 
 // Export some private functions of Host for testing
 
-func (h *Host) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
+func (h *Conode) SendSDAData(id *network.ServerIdentity, msg *ProtocolMsg) error {
 	return h.overlay.sendSDAData(id, msg)
 }
 
-func (h *Host) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
+func (h *Conode) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	return h.overlay.CreateProtocolSDA(name, t)
 }
 
-func (h *Host) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
+func (h *Conode) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	return h.overlay.StartProtocol(t, name)
 }
 
-func (h *Host) Roster(id RosterID) (*Roster, bool) {
+func (h *Conode) Roster(id RosterID) (*Roster, bool) {
 	el := h.overlay.Roster(id)
 	return el, el != nil
 }
 
-func (h *Host) GetTree(id TreeID) (*Tree, bool) {
+func (h *Conode) GetTree(id TreeID) (*Tree, bool) {
 	t := h.overlay.Tree(id)
 	return t, t != nil
 }
 
-func (h *Host) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) error {
+func (h *Conode) SendToTreeNode(from *Token, to *TreeNode, msg network.Body) error {
 	return h.overlay.SendToTreeNode(from, to, msg)
 }
 
-func (h *Host) Overlay() *Overlay {
+func (h *Conode) Overlay() *Overlay {
 	return h.overlay
 }
 
@@ -41,12 +41,12 @@ func (o *Overlay) TokenToNode(tok *Token) (*TreeNodeInstance, bool) {
 
 // AddTree registers the given Tree struct in the underlying overlay.
 // Useful for unit-testing only.
-func (h *Host) AddTree(t *Tree) {
+func (h *Conode) AddTree(t *Tree) {
 	h.overlay.RegisterTree(t)
 }
 
 // AddRoster registers the given Roster in the underlying overlay.
 // Useful for unit-testing only.
-func (h *Host) AddRoster(el *Roster) {
+func (h *Conode) AddRoster(el *Roster) {
 	h.overlay.RegisterRoster(el)
 }

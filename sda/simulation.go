@@ -60,7 +60,7 @@ type SimulationConfig struct {
 	// If non-nil, points to our overlay
 	Overlay *Overlay
 	// If non-nil, points to our host
-	Host *Host
+	Host *Conode
 	// Additional configuration used to run
 	Config string
 }
@@ -107,7 +107,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		}
 		for _, e := range sc.Roster.List {
 			if strings.Contains(e.Address.String(), ha) {
-				host := NewHost(e, scf.PrivateKeys[e.Address])
+				host := NewConode(e, scf.PrivateKeys[e.Address])
 				scNew := *sc
 				scNew.Host = host
 				scNew.Overlay = host.overlay

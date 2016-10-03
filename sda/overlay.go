@@ -14,7 +14,7 @@ import (
 // Overlay keeps all trees and entity-lists for a given host. It creates
 // Nodes and ProtocolInstances upon request and dispatches the messages.
 type Overlay struct {
-	host *Host
+	host *Conode
 	// mapping from Tree.Id to Tree
 	trees    map[TreeID]*Tree
 	treesMut sync.Mutex
@@ -48,7 +48,7 @@ type Overlay struct {
 }
 
 // NewOverlay creates a new overlay-structure
-func NewOverlay(h *Host) *Overlay {
+func NewOverlay(h *Conode) *Overlay {
 	o := &Overlay{
 		host:               h,
 		trees:              make(map[TreeID]*Tree),

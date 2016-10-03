@@ -72,7 +72,7 @@ func main() {
 		// Launch a host and notifies when it's done
 
 		wg.Add(1)
-		go func(h *sda.Host, m monitor.Measure) {
+		go func(h *sda.Conode, m monitor.Measure) {
 			ready <- true
 			defer wg.Done()
 			h.Start()
