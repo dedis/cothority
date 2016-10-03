@@ -37,14 +37,6 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		TreeNodeInstance: node,
 	}
 
-	// XXX: simulate Byzantine servers
-	//rh.Byzantine = make(map[int]int)
-	//rh.Byzantine[1] = 0
-	//rh.Byzantine[2] = 0
-	//rh.Byzantine[3] = 0
-	//rh.Byzantine[4] = 0
-	//rh.Byzantine[5] = 0
-
 	// Setup message handlers
 	h := []interface{}{
 		rh.handleI1, rh.handleI2,
@@ -536,19 +528,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		}
 	}
 
-	// XXX: simulate bad encryption share
-	//if _, ok := rh.Byzantine[rh.Index()]; ok {
-	//	for i := 0; i < len(share); i++ {
-	//		if rand.Intn(2) == 1 {
-	//			share[i].Val = rh.Suite().Point().Null()
-	//			log.Lvlf1("I1 - bad enc share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
-
-	//		} else {
-	//			log.Lvlf1("I1 - non enc share")
-	//		}
-	//	}
-	//}
-
 	r1 := &R1{
 		HI1:        hi1,
 		EncShare:   share,
@@ -701,19 +680,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					polyCommit = append(polyCommit, pc[j])
 				}
 
-				// XXX: simulate bad encryption share
-				//if _, ok := rh.Byzantine[server.ServerIdentityIdx]; ok {
-				//	for k := 0; k < len(encShare); k++ {
-				//		if rand.Intn(2) == 1 {
-				//			encShare[k].Val = rh.Suite().Point().Null()
-				//			log.Lvlf1("R1 - bad enc share: %v %v %v", encShare[k].Source, encShare[k].Target, encShare[k].Pos)
-
-				//		} else {
-				//			log.Lvlf1("R1 - non bad share")
-				//		}
-				//	}
-				//}
-
 				i2 := &I2{
 					Sig:          crypto.SchnorrSig{},
 					SID:          rh.sid,
@@ -798,19 +764,6 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 			Proof:  decProof[i],
 		}
 	}
-
-	// XXX: simulate bad decryption share
-	//if _, ok := rh.Byzantine[rh.Index()]; ok {
-	//	for i := 0; i < len(share); i++ {
-	//		if rand.Intn(2) == 1 {
-	//			share[i].Val = rh.Suite().Point().Null()
-	//			log.Lvlf1("I2 - bad dec share: %v %v %v", share[i].Source, share[i].Target, share[i].Pos)
-
-	//		} else {
-	//			log.Lvlf1("I2 - non bad share")
-	//		}
-	//	}
-	//}
 
 	r2 := &R2{
 		HI2:      hi2,
