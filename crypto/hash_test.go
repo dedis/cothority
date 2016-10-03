@@ -10,7 +10,6 @@ import (
 
 	"encoding"
 
-	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
@@ -176,7 +175,7 @@ func TestHashArgs(t *testing.T) {
 	X := make([]abstract.Point, 2)
 	X[0] = hashSuite.Point().Base()
 	X[1] = hashSuite.Point().Null()
-	_, err = crypto.HashArgsSuite(hashSuite, X)
+	_, err = HashArgsSuite(hashSuite, X)
 	log.ErrFatal(err)
 }
 
@@ -185,17 +184,17 @@ func TestConvertToBinaryMarshaler(t *testing.T) {
 	X[0] = hashSuite.Point().Base()
 	X[1] = hashSuite.Point().Null()
 
-	bm, err := crypto.ConvertToBinaryMarshaler(X)
+	bm, err := ConvertToBinaryMarshaler(X)
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])
 
-	bm, err = crypto.ConvertToBinaryMarshaler(X[0], X[1])
+	bm, err = ConvertToBinaryMarshaler(X[0], X[1])
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])
 
-	bm, err = crypto.ConvertToBinaryMarshaler(X, X)
+	bm, err = ConvertToBinaryMarshaler(X, X)
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])

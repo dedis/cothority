@@ -5,6 +5,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/sda"
 )
 
@@ -40,6 +41,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
+	randM := monitor.NewTimeMeasure("random")
 	client, err := config.Overlay.CreateProtocolSDA("RandHound", config.Tree)
 	if err != nil {
 		return err
@@ -60,12 +62,15 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
+		randM.Record()
 		log.Lvlf1("RandHound - collective randomness: ok")
 
+		verifyM := monitor.NewTimeMeasure("verify")
 		err = rh.Verify(rh.Suite(), random, transcript)
 		if err != nil {
 			return err
 		}
+		verifyM.Record()
 		log.Lvlf1("RandHound - verification: ok")
 
 	case <-time.After(time.Second * time.Duration(rhs.Hosts) * 5):
