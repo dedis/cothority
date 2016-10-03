@@ -68,13 +68,21 @@ func (s *Service) Listening() {
 }
 
 func (s *Service) pingHandler(ws *websocket.Conn) {
-	log.Lvl1("Got a ping")
-	_, err := ws.Write([]byte("pong"))
+	log.Lvl1("Started ping")
+	buf := make([]byte, 4)
+	_, err := ws.Read(buf)
+	log.Print("Received", buf)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	_, err = ws.Write([]byte("pong"))
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	log.Lvl1("Sent pong")
+	s.pingHandler(ws)
 }
 
 func (s *Service) statusHandler(ws *websocket.Conn) {

@@ -58,9 +58,11 @@ func TestPong(t *testing.T) {
 	log.ErrFatal(err)
 	ws, err := websocket.Dial("ws://"+url+"/ping", "", "http://localhost/")
 	log.ErrFatal(err)
-	err = websocket.Message.Send(ws, "ping")
-	var rcv []byte
-	err = websocket.Message.Receive(ws, &rcv)
-	log.ErrFatal(err)
-	log.Lvlf1("Received reply: %s", rcv)
+	for i := 0; i < 2; i++ {
+		err = websocket.Message.Send(ws, "ping")
+		var rcv []byte
+		err = websocket.Message.Receive(ws, &rcv)
+		log.ErrFatal(err)
+		log.Lvlf1("Received reply: %s", rcv)
+	}
 }
