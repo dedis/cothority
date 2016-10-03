@@ -37,6 +37,7 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		TreeNodeInstance: node,
 	}
 
+	// XXX: simulate Byzantine servers
 	//rh.Byzantine = make(map[int]int)
 	//rh.Byzantine[1] = 0
 	//rh.Byzantine[2] = 0
@@ -182,21 +183,12 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*sda.TreeNode, [][]abst
 
 	// Create sharding of the current roster according to the above permutation
 	el := rh.List()
-	//log.Lvlf1("EL = %v", el)
-
-	//for i := range el {
-	//	log.Lvlf1("%v %v", i, el[i].ServerIdentity.Public)
-	//}
-
 	sharding := make([][]*sda.TreeNode, shards)
 	keys := make([][]abstract.Point, shards)
-	log.Lvlf1("m = %v", m)
 	for i, j := range m {
-		log.Lvlf1("i,j = %v,%v", i, j)
 		sharding[i%shards] = append(sharding[i%shards], el[j])
 		keys[i%shards] = append(keys[i%shards], el[j].ServerIdentity.Public)
 	}
-	//log.Lvlf1("KEYS: %v", keys)
 
 	return sharding, keys, nil
 }
@@ -236,7 +228,6 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		//log.Lvlf1("Random: %v %v", source, ps)
 		rnd = rh.Suite().Point().Add(rnd, ps)
 	}
 
@@ -551,13 +542,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		}
 	}
 
-	//if rh.Index() == 5 {
-	//	for i := range share {
-	//		log.Lvlf1("I1 - %v %v %v", i, share[i].Val, encShare[i])
-	//	}
-	//}
-	//}
-
 	// XXX: simulate bad encryption share
 	//if _, ok := rh.Byzantine[rh.Index()]; ok {
 	//	for i := 0; i < len(share); i++ {
@@ -649,14 +633,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	// Record valid encrypted shares per secret/server
 	for i := 0; i < len(good); i++ {
 		j := good[i]
-		//src := msg.EncShare[j].Source
-		//log.Print("(idx,src) = (", idx, ",", src, ")")
 		if _, ok := rh.secret[idx]; !ok {
 			rh.secret[idx] = make([]int, 0)
 		}
 		rh.secret[idx] = append(rh.secret[idx], msg.EncShare[j].Target)
 	}
-	//log.Print("secret", rh.secret)
 
 	// Check if there is at least a threshold number of reconstructable secrets
 	// in each group. If yes proceed to the next phase. Note the double-usage
@@ -672,7 +653,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				secret = append(secret, j)
 			}
 		}
-		//log.Print("secret", secret)
 		if rh.threshold[i] <= len(secret) {
 			goodSecret[i] = secret
 		}
@@ -700,9 +680,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			rh.chosenSecret[i] = secret
 		}
 
-		log.Lvlf1("Key: %v", rh.key)
-		log.Lvlf1("Grouping: %v", rh.group)
-		log.Lvlf1("ChosenSecret: %v", rh.chosenSecret)
+		//log.Lvlf1("Grouping: %v", rh.group)
+		//log.Lvlf1("ChosenSecret: %v", rh.chosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
 		var chosenSecret = make([][]uint32, len(rh.chosenSecret))
@@ -800,14 +779,10 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
 	pvss := NewPVSS(rh.Suite(), H, 0)
 
-	//log.Lvlf1("%v %v %v", msg.PolyCommit, msg.EncShare, msg.EncProof)
-
 	good, bad, err := pvss.Verify(H, X, msg.PolyCommit, encShare, encProof)
 	if err != nil {
 		return err
 	}
-
-	log.Lvlf1("I2: %v %v %v", rh.Index(), good, bad)
 
 	// Remove bad shares
 	for i := len(bad) - 1; i >= 0; i-- {
@@ -835,18 +810,12 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		}
 	}
 
-	if rh.Index() == 5 {
-		log.Lvlf1("I2: %v %v %v %v", rh.Index(), encShare, decShare, decProof)
-	}
-
-	good2, bad2, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, decProof)
-	if err != nil {
-		return err
-	}
-	_ = good2
-	_ = bad2
-
-	log.Lvlf1("I2 dec: %v %v %v", rh.Index(), good2, bad2)
+	//good2, bad2, err := pvss.Verify(rh.Suite().Point().Base(), decShare, X, encShare, decProof)
+	//if err != nil {
+	//	return err
+	//}
+	//_ = good2
+	//_ = bad2
 
 	// XXX: simulate bad decryption share
 	//if _, ok := rh.Byzantine[rh.Index()]; ok {
@@ -916,19 +885,10 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 		src := msg.DecShare[i].Source
 		//tgt := msg.DecShare[i].Target
 		//X[i] = rh.key[grp][pos] //r2.ServerIdentity.Public
-		X[i] = r2.ServerIdentity.Public
+		X[i] = rh.key[grp][pos]
 		encShare[i] = rh.r1s[src].EncShare[pos].Val
 		decShare[i] = msg.DecShare[i].Val
 		decProof[i] = msg.DecShare[i].Proof
-	}
-
-	if idx == 5 {
-		log.Lvlf1("R2: %v %v %v %v", idx, encShare, decShare, decProof)
-		for i := 0; i < n; i++ {
-			src := msg.DecShare[i].Source
-			log.Lvlf1("%v %v", i, rh.r1s[src].EncShare[pos].Val)
-		}
-
 	}
 
 	// Init PVSS and verify shares
@@ -940,8 +900,6 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 	_ = bad
 	_ = good
-
-	log.Lvlf1("%v %v %v", idx, good, bad)
 
 	// Record valid decrypted shares per secret/server
 	for i := 0; i < len(good); i++ {
@@ -964,12 +922,10 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	if len(rh.r2s) == rh.nodes-1 && !proceed {
 		rh.Done <- true
-		log.Print("Error!!!")
 		return errors.New("Some chosen secrets are not reconstructable")
 	}
 
 	if proceed && !rh.SecretReady {
-		log.Print("Done!!!")
 		rh.SecretReady = true
 		rh.Done <- true
 	}

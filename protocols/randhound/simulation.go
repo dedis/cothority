@@ -55,14 +55,18 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 
 	select {
 	case <-rh.Done:
-		log.Print("RandHound - done")
+		log.Lvlf1("RandHound - done")
 		random, transcript, err := rh.Random()
 		if err != nil {
 			return err
 		}
-		log.Print("RandHound - collective randomness: ok")
-		_ = random
-		_ = transcript
+		log.Lvlf1("RandHound - collective randomness: ok")
+
+		err = rh.Verify(rh.Suite(), random, transcript)
+		if err != nil {
+			return err
+		}
+		log.Lvlf1("RandHound - verification: ok")
 
 	case <-time.After(time.Second * time.Duration(rhs.Hosts) * 5):
 		log.Print("RandHound - time out")

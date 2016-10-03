@@ -3,8 +3,10 @@ Simulation = "RandHound"
 BF = 2
 Rounds = 1
 Faulty = 0
-Groups = 1
 Purpose = "RandHound Test"
 
-Hosts
-10
+Hosts, Groups
+8, 1
+16, 2
+24, 3
+32, 4
