@@ -45,8 +45,10 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	*SkipBlockMap
-	sbMutex sync.Mutex
-	path    string
+	gMutex    sync.Mutex
+	path      string
+	verifiers map[VerifierID]SkipBlockVerifier
+
 	// testVerify is set to true if a verification happened - only for testing
 	testVerify bool
 }
@@ -230,6 +232,40 @@ func (s *Service) PropagateSkipBlock(msg network.Body) {
 	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
 }
 
+// VerifyShardFunc makes sure that the cothority of the child-skipchain is
+// part of the root-cothority.
+func (s *Service) VerifyShardFunc(msg []byte, sb *SkipBlock) bool {
+	if sb.ParentBlockID.IsNull() {
+		log.Lvl3("No parent skipblock to verify against")
+		return false
+	}
+	sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
+	if !exists {
+		log.Lvl3("Parent skipblock doesn't exist")
+		return false
+	}
+	for _, e := range sb.Roster.List {
+		if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
+			log.Lvl3("ServerIdentity in child doesn't exist in parent")
+			return false
+		}
+	}
+	return true
+}
+
+// VerifyNoneFunc returns always true.
+func (s *Service) VerifyNoneFunc(msg []byte, sb *SkipBlock) bool {
+	log.Lvl4("No verification - accepted")
+	return true
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) RegisterVerification(v VerifierID, f SkipBlockVerifier) error {
+	s.verifiers[v] = f
+	return nil
+}
+
 // signNewSkipBlock should start a BFT-signature on the newest block
 // which will propagate and update all forward-links of all blocks.
 // As a simple solution it verifies the validity of the block,
@@ -397,7 +433,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			roster = sb.Roster
 		}
 		replies, err := manage.PropagateStartAndWait(s.Context, roster,
-			block, 1000, s.PropagateSkipBlock)
+			block, propagateTimeout, s.PropagateSkipBlock)
 		if err != nil {
 			return err
 		}
@@ -422,51 +458,35 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		log.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
 		return false
 	}
-	switch sb.VerifierID {
-	case VerifyNone:
-		log.Lvl4("No verification - accepted")
-		return true
-	case VerifyShard:
-		if sb.ParentBlockID.IsNull() {
-			log.Lvl3("No parent skipblock to verify against")
-		} else {
-			sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
-			if !exists {
-				log.Lvl3("Parent skipblock doesn't exist")
-			} else {
-				for _, e := range sb.Roster.List {
-					if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
-						log.Lvl3("ServerIdentity in child doesn't exist in parent")
-						return false
-					}
-				}
-				return true
-			}
-		}
+
+	f, ok := s.verifiers[sb.VerifierID]
+	if !ok {
+		log.Lvlf2("Found no user verification for %x", sb.VerifierID)
+		return false
 	}
-	return false
+	return f(msg, sb)
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	b, ok := s.SkipBlocks[string(sbID)]
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return b, ok
 }
 
 // storeSkipBlock stores the given SkipBlock in the service-list
 func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
-	s.sbMutex.Lock()
+	s.gMutex.Lock()
 	s.SkipBlocks[string(sb.Hash)] = sb
-	s.sbMutex.Unlock()
+	s.gMutex.Unlock()
 	return sb.Hash
 }
 
 // lenSkipBlock returns the actual length using mutexes
 func (s *Service) lenSkipBlocks() int {
-	s.sbMutex.Lock()
-	defer s.sbMutex.Unlock()
+	s.gMutex.Lock()
+	defer s.gMutex.Unlock()
 	return len(s.SkipBlocks)
 }
 
@@ -508,6 +528,7 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
+		verifiers:        map[VerifierID]SkipBlockVerifier{},
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
@@ -517,6 +538,12 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		if err := s.RegisterMessage(msg); err != nil {
 			log.Fatal("Registration error for msg", msg, err)
 		}
+	}
+	if err := s.RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
+		log.Panic(err)
+	}
+	if err := s.RegisterVerification(VerifyNone, s.VerifyNoneFunc); err != nil {
+		log.Panic(err)
 	}
 	return s
 }

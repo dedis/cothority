@@ -76,7 +76,7 @@ func (t *TCPHost) Close() error {
 	t.peersMut.Lock()
 	defer t.peersMut.Unlock()
 	for _, c := range t.peers {
-		// log.Lvl4("Closing peer", c)
+		log.Lvl4("Closing peer", c.Remote(), c.Local())
 		if err := c.Close(); err != nil {
 			return handleError(err)
 		}
@@ -304,14 +304,14 @@ func (st *SecureTCPHost) Open(si *ServerIdentity) (SecureConn, error) {
 	for _, addr := range si.Addresses {
 		// try to connect with this name
 		log.Lvl4("Trying address", addr)
-		c, err := st.TCPHost.openTCPConn(addr)
+		c, err := st.TCPHost.Open(addr)
 		if err != nil {
 			log.Lvl3("Address didn't accept connection:", addr, "=>", err)
 			continue
 		}
 		// create the secure connection
 		secure = SecureTCPConn{
-			TCPConn:        c,
+			TCPConn:        c.(*TCPConn),
 			SecureTCPHost:  st,
 			serverIdentity: si,
 		}
@@ -402,7 +402,7 @@ func (c *TCPConn) Receive(ctx context.Context) (nm Packet, e error) {
 	if err = binary.Read(c.conn, globalOrder, &total); err != nil {
 		return EmptyApplicationPacket, handleError(err)
 	}
-	log.Lvl5("Received some bytes", total)
+	log.Lvl5("Received some bytes on", c.Local(), "from", c.Remote(), total)
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
@@ -493,7 +493,7 @@ func (c *TCPConn) Send(ctx context.Context, obj Body) error {
 // Close ... closes the connection
 func (c *TCPConn) Close() error {
 	c.closedMut.Lock()
-	log.Lvl4("Closing connection", c.Local(), c.Remote())
+	log.Lvl3("Closing connection", c.Local(), c.Remote())
 	defer c.closedMut.Unlock()
 	if c.closed == true {
 		return nil
