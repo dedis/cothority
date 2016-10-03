@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/status"
 	_ "github.com/dedis/cothority/services/status"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/websocket"
 )
@@ -28,7 +29,7 @@ func TestStatus(t *testing.T) {
 	ws, err := websocket.Dial("ws://"+url+"/status", "", "http://localhost/")
 	log.ErrFatal(err)
 	req := &status.Request{}
-	log.Print("Sending message")
+	log.Printf("Sending message Request: %x", uuid.UUID(network.TypeFromData(req)).Bytes())
 	buf, err := network.MarshalRegisteredType(req)
 	log.ErrFatal(err)
 	size := make([]byte, 2)
@@ -65,4 +66,17 @@ func TestPong(t *testing.T) {
 		log.ErrFatal(err)
 		log.Lvlf1("Received reply: %s", rcv)
 	}
+}
+
+func TestDebug(t *testing.T) {
+	local := sda.NewLocalTest()
+	_, el, _ := local.GenTree(2, false, true, false)
+	defer local.CloseAll()
+
+	url, err := getWebHost(el.List[0])
+	log.ErrFatal(err)
+	ws, err := websocket.Dial("ws://"+url+"/debug", "", "http://localhost/")
+	log.ErrFatal(err)
+	err = websocket.Message.Send(ws, "ping")
+	log.ErrFatal(err)
 }

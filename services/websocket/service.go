@@ -61,10 +61,23 @@ func (s *Service) Listening() {
 			Addr:    webHost,
 			Handler: hand,
 		}
+		hand.Handle("/debug", websocket.Handler(s.debugHandler))
 		hand.Handle("/ping", websocket.Handler(s.pingHandler))
 		hand.Handle("/status", websocket.Handler(s.statusHandler))
 		log.ErrFatal(s.server.ListenAndServe())
 	}()
+}
+
+func (s *Service) debugHandler(ws *websocket.Conn) {
+	log.Lvl1("Started debug")
+	for {
+		buf := make([]byte, 1)
+		_, err := ws.Read(buf)
+		if err != nil {
+			return
+		}
+		log.Printf("Received %x", buf)
+	}
 }
 
 func (s *Service) pingHandler(ws *websocket.Conn) {
