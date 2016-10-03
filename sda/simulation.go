@@ -107,10 +107,10 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		}
 		for _, e := range sc.Roster.List {
 			if strings.Contains(e.Address.String(), ha) {
-				host := NewConode(e, scf.PrivateKeys[e.Address])
+				conode := NewConode(e, scf.PrivateKeys[e.Address])
 				scNew := *sc
-				scNew.Host = host
-				scNew.Overlay = host.overlay
+				scNew.Host = conode
+				scNew.Overlay = conode.overlay
 				ret = append(ret, &scNew)
 			}
 		}
@@ -218,7 +218,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)
-	if strings.Contains("localhost", addresses[0]) || strings.Contains("127.0.0.", addresses[0]) {
+	if strings.Contains(addresses[0], "localhost") || strings.Contains(addresses[0], "127.0.0.") {
 		localhosts = true
 	}
 	entities := make([]*network.ServerIdentity, hosts)
@@ -231,6 +231,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 			key.Suite.Point().Base())
 		address := addresses[c%nbrAddr] + ":"
 		var add network.Address
+		log.Print("Generating address", c, ":", address, " (localhost=", localhosts, ")", strings.Contains(address, "127.0.0."))
 		if localhosts {
 			// If we have localhosts, we have to search for an empty port
 			var err error
@@ -238,6 +239,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 			if err != nil {
 				log.Fatal("Couldn't search for empty port:", err)
 			}
+			log.Print("Listening on tcp:0")
 			_, p, _ := net.SplitHostPort(listeners[c].Addr().String())
 			address += p
 			add = network.NewTCPAddress(address)

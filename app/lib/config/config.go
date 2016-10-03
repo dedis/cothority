@@ -68,8 +68,8 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	host := sda.NewConode(network.NewServerIdentity(point, hc.Address), secret)
-	return hc, host, nil
+	conode := sda.NewConode(network.NewServerIdentity(point, hc.Address), secret)
+	return hc, conode, nil
 }
 
 // CreateCothoritydConfig uses stdin to get the address. Then it creates

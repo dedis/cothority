@@ -246,7 +246,6 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 		log.Lvl1("Going to break because of timeout")
 		return errors.New("Waited " + wait.String() + " for BFTCoSi to finish ...")
 	}
-	log.Print("out of runProtocolOnceGo")
 	return nil
 }
 
