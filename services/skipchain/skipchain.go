@@ -78,6 +78,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 		prop.ParentBlockID = prev.ParentBlockID
 		prop.VerifierID = prev.VerifierID
 		prop.Index = prev.Index + 1
+		prop.Roster = prev.Roster
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
