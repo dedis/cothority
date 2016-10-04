@@ -196,7 +196,7 @@ type serviceManager struct {
 	// the config paths
 	paths map[ServiceID]string
 	// the sda host
-	host *Conode
+	conode *Conode
 	// the dispather can take registration of Processors
 	network.Dispatcher
 }
@@ -206,7 +206,7 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceManager(h *Conode, o *Overlay) *serviceManager {
+func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 	// check if we have a config folder
 	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
@@ -217,7 +217,7 @@ func newServiceManager(h *Conode, o *Overlay) *serviceManager {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
-	s := &serviceManager{services, configs, h, network.NewRoutineDispatcher()}
+	s := &serviceManager{services, configs, c, network.NewRoutineDispatcher()}
 	ids := ServiceFactory.registeredServiceIDs()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
@@ -230,7 +230,7 @@ func newServiceManager(h *Conode, o *Overlay) *serviceManager {
 		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(h, o, id, s)
+		c := newContext(c, o, id, s)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
@@ -239,10 +239,10 @@ func newServiceManager(h *Conode, o *Overlay) *serviceManager {
 		services[id] = s
 		configs[id] = configName
 	}
-	log.Lvl3(h.Address(), "instantiated all services")
+	log.Lvl3(c.Address(), "instantiated all services")
 
 	// registering messages that services are expecting
-	h.RegisterProcessor(s, ClientRequestID)
+	c.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
@@ -277,7 +277,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 // system later.
 func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.PacketTypeID) {
 	// delegate message to host so the host will pass the message to ourself
-	s.host.RegisterProcessor(s, msgType)
+	s.conode.RegisterProcessor(s, msgType)
 	// handle the message ourselves (will be launched in a go routine)
 	s.Dispatcher.RegisterProcessor(p, msgType)
 }

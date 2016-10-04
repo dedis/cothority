@@ -244,19 +244,19 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 // AddPendingTreeMarshal takes a treeMarshal and adds it to the list of the
 // known trees, also triggering dispatching of SDA-messages waiting for that
 // tree
-func (l *LocalTest) AddPendingTreeMarshal(h *Conode, tm *TreeMarshal) {
-	h.overlay.addPendingTreeMarshal(tm)
+func (l *LocalTest) AddPendingTreeMarshal(c *Conode, tm *TreeMarshal) {
+	c.overlay.addPendingTreeMarshal(tm)
 }
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
-func (l *LocalTest) CheckPendingTreeMarshal(h *Conode, el *Roster) {
-	h.overlay.checkPendingTreeMarshal(el)
+func (l *LocalTest) CheckPendingTreeMarshal(c *Conode, el *Roster) {
+	c.overlay.checkPendingTreeMarshal(el)
 }
 
 // GetPrivate returns the private key of a conode
-func (l *LocalTest) GetPrivate(h *Conode) abstract.Scalar {
-	return h.private
+func (l *LocalTest) GetPrivate(c *Conode) abstract.Scalar {
+	return c.private
 }
 
 // GetServices returns a slice of all services asked for.

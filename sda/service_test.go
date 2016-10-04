@@ -140,15 +140,14 @@ func TestServiceNew(t *testing.T) {
 		return ds
 	})
 	defer ServiceFactory.Unregister("DummyService")
-	hostCh := make(chan *Conode)
+	conode := make(chan *Conode)
 	go func() {
 		h := NewLocalConode(2000)
-		hostCh <- h
+		conode <- h
 	}()
 
 	waitOrFatal(ds.link, t)
-	host := <-hostCh
-	host.Close()
+	(<-conode).Close()
 
 }
 
