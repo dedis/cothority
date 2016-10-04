@@ -221,12 +221,11 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 		done <- true
 	})
 	go node.Start()
-	log.Print("Launched protocol")
+	log.Lvl1("Launched protocol")
 	// are we done yet?
 	wait := time.Second * 60
 	select {
 	case <-done:
-		log.Print("Done arrived!")
 		counter.Lock()
 		if counter.veriCount != nbrHosts {
 			return errors.New("Each host should have called verification.")

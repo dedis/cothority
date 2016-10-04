@@ -608,7 +608,7 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 // Host returns the underlying Host of this node.
 // WARNING: you should not play with that feature unless you know what you are
 // doing. This feature is mean to access the low level parts of the API. For
-// example it is used to add a new tree config / new entity list to the host.
+// example it is used to add a new tree config / new entity list to the Conode.
 func (n *TreeNodeInstance) Host() *Conode {
 	return n.overlay.conode
 }

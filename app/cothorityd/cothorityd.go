@@ -106,11 +106,11 @@ func runServer(ctx *cli.Context) {
 		log.Fatalf("[-] Configuration file does not exists. %s", config)
 	}
 	// Let's read the config
-	_, host, err := c.ParseCothorityd(config)
+	_, conode, err := c.ParseCothorityd(config)
 	if err != nil {
 		log.Fatal("Couldn't parse config:", err)
 	}
-	host.Start()
+	conode.Start()
 }
 
 func getDefaultConfigFile() string {

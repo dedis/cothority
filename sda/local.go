@@ -161,7 +161,7 @@ func (l *LocalTest) CloseAll() {
 		}
 
 		for conode.Listening() {
-			log.Print("Sleeping while waiting to close...")
+			log.Lvl1("Sleeping while waiting to close...")
 			time.Sleep(10 * time.Millisecond)
 		}
 		delete(l.Conodes, conode.ServerIdentity.ID)

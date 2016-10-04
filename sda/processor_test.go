@@ -24,7 +24,7 @@ func init() {
 func TestProcessor_AddMessage(t *testing.T) {
 	h1 := NewLocalConode(2000)
 	defer h1.Close()
-	p := NewServiceProcessor(&Context{host: h1})
+	p := NewServiceProcessor(&Context{conode: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
@@ -62,7 +62,7 @@ func TestProcessor_RegisterMessages(t *testing.T) {
 func TestProcessor_GetReply(t *testing.T) {
 	h1 := NewLocalConode(2000)
 	defer h1.Close()
-	p := NewServiceProcessor(&Context{host: h1})
+	p := NewServiceProcessor(&Context{conode: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 
 	pair := config.NewKeyPair(network.Suite)

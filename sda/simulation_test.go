@@ -106,7 +106,7 @@ func closeAll(scs []*SimulationConfig) {
 		}
 
 		for s.Conode.Router.Listening() {
-			log.Print("Sleeping while waiting for router to be closed")
+			log.Lvl2("Sleeping while waiting for router to be closed")
 			time.Sleep(20 * time.Millisecond)
 		}
 	}
