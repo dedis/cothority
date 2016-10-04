@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+DBG_SHOW=1
+#STATICDIR=test
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
-DBG_SHOW=2
-STATICDIR=test
 
 main(){
     startTest
