@@ -74,7 +74,7 @@ func (h *Host) Suite() abstract.Suite {
 // GetStatus is a function that returns the status report of the server.
 func (h *Host) GetStatus() Status {
 	m := make(map[string]string)
-	a := ServiceFactory.RegisteredServicesName()
+	a := ServiceFactory.RegisteredServiceNames()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
 	return m
@@ -95,4 +95,9 @@ func (h *Host) Close() error {
 // Address returns the address used by the Router.
 func (h *Host) Address() network.Address {
 	return h.ServerIdentity.Address
+}
+
+// GetService returns the service with the given name.
+func (h *Host) GetService(name string) Service {
+	return h.serviceManager.Service(name)
 }

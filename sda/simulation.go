@@ -154,6 +154,11 @@ func (sc *SimulationConfig) Save(dir string) error {
 	return nil
 }
 
+// GetService returns the service with the given name.
+func (sc *SimulationConfig) GetService(name string) Service {
+	return sc.Host.serviceManager.Service(name)
+}
+
 // SimulationRegister is must to be called to register a simulation.
 // Protocol or simulation developers must not forget to call this function
 // with the protocol's name.
@@ -241,9 +246,17 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 			address += strconv.Itoa(port + c/nbrAddr)
 			add = network.NewTCPAddress(address)
 		}
-		entities[c] = network.NewServerIdentity(key.Public, add)
-		sc.PrivateKeys[entities[c].Address] = key.Secret
+		entities[c] = network.NewServerIdentity(key.Public.Clone(), add)
+		sc.PrivateKeys[entities[c].Address] = key.Secret.Clone()
 	}
+	if hosts > 1 {
+		if sc.PrivateKeys[entities[0].Address].Equal(
+			sc.PrivateKeys[entities[1].Address]) {
+			log.Fatal("Please update dedis/crypto with\n" +
+				"go get -u github.com/dedis/crypto")
+		}
+	}
+
 	// And close all our listeners
 	if localhosts {
 		for _, l := range listeners {

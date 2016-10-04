@@ -23,7 +23,7 @@ func TestStatusHost(t *testing.T) {
 	h := NewTCPHost(2000)
 	defer h.Stop()
 	stats := h.GetStatus()
-	a := ServiceFactory.RegisteredServicesName()
+	a := ServiceFactory.RegisteredServiceNames()
 	services := strings.Split(stats["Available_Services"], ",")
 	assert.Equal(t, len(services), len(a))
 }
