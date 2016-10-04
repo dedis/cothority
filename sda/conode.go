@@ -12,9 +12,9 @@ import (
 	"github.com/dedis/crypto/abstract"
 )
 
-// Host is the structure responsible for holding information about the current
+// Conode is the structure responsible for holding information about the current
 // state
-type Host struct {
+type Conode struct {
 	// Our entity (i.e. identity over the network)
 	ServerIdentity *network.ServerIdentity
 	// Our private-key
@@ -29,10 +29,10 @@ type Host struct {
 	statusReporterStruct *statusReporterStruct
 }
 
-// NewHost returns a new Host that out of a private-key and its relating public
+// NewConode returns a new Host that out of a private-key and its relating public
 // key within the ServerIdentity. The host will create a default TcpRouter as Router.
-func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
-	h := &Host{
+func NewConode(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
+	h := &Conode{
 		ServerIdentity:       e,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
@@ -50,9 +50,9 @@ func NewHost(e *network.ServerIdentity, pkey abstract.Scalar) *Host {
 	return h
 }
 
-// NewHostWithRouter returns a fresh Host with a given Router.
-func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Host {
-	h := &Host{
+// NewConodeWithRouter returns a fresh Host with a given Router.
+func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
+	h := &Conode{
 		ServerIdentity:       e,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
@@ -67,12 +67,12 @@ func NewHostWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *netwo
 // Suite can (and should) be used to get the underlying abstract.Suite.
 // Currently the suite is hardcoded into the network library.
 // Don't use network.Suite but Host's Suite function instead if possible.
-func (h *Host) Suite() abstract.Suite {
+func (c *Conode) Suite() abstract.Suite {
 	return network.Suite
 }
 
 // GetStatus is a function that returns the status report of the server.
-func (h *Host) GetStatus() Status {
+func (c *Conode) GetStatus() Status {
 	m := make(map[string]string)
 	a := ServiceFactory.RegisteredServiceNames()
 	sort.Strings(a)
@@ -84,20 +84,20 @@ func (h *Host) GetStatus() Status {
 }
 
 // Close closes the overlay and the Router
-func (h *Host) Close() error {
-	h.overlay.Close()
-	err := h.Router.Stop()
-	log.Lvl3("Host Close ", h.ServerIdentity.Address, "listening?", h.Router.Listening())
+func (c *Conode) Close() error {
+	c.overlay.Close()
+	err := c.Router.Stop()
+	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
 	return err
 
 }
 
 // Address returns the address used by the Router.
-func (h *Host) Address() network.Address {
-	return h.ServerIdentity.Address
+func (c *Conode) Address() network.Address {
+	return c.ServerIdentity.Address
 }
 
 // GetService returns the service with the given name.
-func (h *Host) GetService(name string) Service {
-	return h.serviceManager.Service(name)
+func (c *Conode) GetService(name string) Service {
+	return c.serviceManager.Service(name)
 }

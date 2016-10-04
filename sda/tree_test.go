@@ -363,7 +363,7 @@ func TestTree_BinaryMarshaler(t *testing.T) {
 		t.Fatal("Unmarshalled tree is not equal")
 	}
 	if tree.Root == tree2.Root {
-		t.Fatal("Addresses should not be equal")
+		t.Fatal("Address should not be equal")
 	}
 	log.Lvl1(tree.Dump())
 	log.Lvl1(tree2.Dump())

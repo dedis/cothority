@@ -8,7 +8,7 @@ import (
 
 func TestGenLocalHost(t *testing.T) {
 	l := NewLocalTest()
-	hosts := l.GenLocalHosts(2)
+	hosts := l.genLocalHosts(2)
 	defer l.CloseAll()
 
 	log.Lvl4("Hosts are:", hosts[0].Address(), hosts[1].Address())

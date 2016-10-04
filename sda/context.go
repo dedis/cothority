@@ -5,17 +5,18 @@ import "github.com/dedis/cothority/network"
 // Context represents the methods that are available to a service.
 type Context struct {
 	overlay *Overlay
-	host    *Host
+	conode  *Conode
 	servID  ServiceID
 	manager *serviceManager
 	network.Dispatcher
 }
 
-// newContext returns a Context pointing to all necessary elements.
-func newContext(h *Host, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
+// defaultContext is the implementation of the Context interface. It is
+// instantiated for each Service.
+func newContext(c *Conode, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
 		overlay:    o,
-		host:       h,
+		conode:     c,
 		servID:     servID,
 		manager:    manager,
 		Dispatcher: network.NewBlockingDispatcher(),
@@ -30,12 +31,12 @@ func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *
 
 // SendRaw sends a message to the ServerIdentity.
 func (c *Context) SendRaw(si *network.ServerIdentity, msg interface{}) error {
-	return c.host.Send(si, msg)
+	return c.conode.Send(si, msg)
 }
 
 // ServerIdentity returns this Conode's identity.
 func (c *Context) ServerIdentity() *network.ServerIdentity {
-	return c.host.ServerIdentity
+	return c.conode.ServerIdentity
 }
 
 // ServiceID returns the service-id.
@@ -63,12 +64,12 @@ func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
 
 // ReportStatus returns all status of the services.
 func (c *Context) ReportStatus() map[string]Status {
-	return c.host.statusReporterStruct.ReportStatus()
+	return c.conode.statusReporterStruct.ReportStatus()
 }
 
 // RegisterStatusReporter registers a new StatusReporter.
 func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
-	c.host.statusReporterStruct.RegisterStatusReporter(name, s)
+	c.conode.statusReporterStruct.RegisterStatusReporter(name, s)
 }
 
 // RegisterProcessor overrides the RegisterProcessor methods of the Dispatcher.
@@ -82,7 +83,7 @@ func (c *Context) Service(name string) Service {
 	return c.manager.Service(name)
 }
 
-// String returns the host it's running on
+// String returns the host it's running on.
 func (c *Context) String() string {
-	return c.host.ServerIdentity.String()
+	return c.conode.ServerIdentity.String()
 }

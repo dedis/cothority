@@ -14,8 +14,8 @@ import (
 
 // LocalTest represents all that is needed for a local test-run
 type LocalTest struct {
-	// A map of ServerIdentity.Id to Hosts
-	Hosts map[network.ServerIdentityID]*Host
+	// A map of ServerIdentity.Id to Conode
+	Conodes map[network.ServerIdentityID]*Conode
 	// A map of ServerIdentity.Id to Overlays
 	Overlays map[network.ServerIdentityID]*Overlay
 	// A map of ServerIdentity.Id to Services
@@ -44,13 +44,13 @@ const (
 // locally
 func NewLocalTest() *LocalTest {
 	return &LocalTest{
-		Hosts:    make(map[network.ServerIdentityID]*Host),
+		Conodes:  make(map[network.ServerIdentityID]*Conode),
 		Overlays: make(map[network.ServerIdentityID]*Overlay),
 		Services: make(map[network.ServerIdentityID]map[ServiceID]Service),
 		Rosters:  make(map[RosterID]*Roster),
 		Trees:    make(map[TreeID]*Tree),
 		Nodes:    make([]*TreeNodeInstance, 0, 1),
-		mode:     TCP,
+		mode:     Local,
 		ctx:      network.NewLocalManager(),
 	}
 }
@@ -67,104 +67,104 @@ func NewTCPTest() *LocalTest {
 // new Node with the protocol 'name' running from the tree-root
 func (l *LocalTest) StartProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
-	for _, h := range l.Hosts {
+	for _, h := range l.Conodes {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.ServerIdentity.ID].StartProtocol(t, name)
 		}
 	}
-	return nil, errors.New("Didn't find host for tree-root")
+	return nil, errors.New("Didn't find conode for tree-root")
 }
 
 // CreateProtocol takes a name and a tree and will create a
 // new Node with the protocol 'name' without running it
 func (l *LocalTest) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
 	rootServerIdentityID := t.Root.ServerIdentity.ID
-	for _, h := range l.Hosts {
+	for _, h := range l.Conodes {
 		if h.ServerIdentity.ID.Equal(rootServerIdentityID) {
 			// XXX do we really need multiples overlays ? Can't we just use the
 			// Node, since it is already dispatched as like a TreeNode ?
 			return l.Overlays[h.ServerIdentity.ID].CreateProtocolSDA(name, t)
 		}
 	}
-	return nil, errors.New("Didn't find host for tree-root")
+	return nil, errors.New("Didn't find conode for tree-root")
 }
 
-// GenHosts returns n Hosts with a localRouter
-func (l *LocalTest) GenHosts(n int) []*Host {
-	hosts := l.GenLocalHosts(n)
-	for _, host := range hosts {
-		l.Hosts[host.ServerIdentity.ID] = host
-		l.Overlays[host.ServerIdentity.ID] = host.overlay
-		l.Services[host.ServerIdentity.ID] = host.serviceManager.services
+// GenConodes returns n Hosts with a localRouter
+func (l *LocalTest) GenConodes(n int) []*Conode {
+	conodes := l.genLocalHosts(n)
+	for _, conode := range conodes {
+		l.Conodes[conode.ServerIdentity.ID] = conode
+		l.Overlays[conode.ServerIdentity.ID] = conode.overlay
+		l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
 	}
-	return hosts
+	return conodes
 
 }
 
-// GenTree will create a tree of n hosts with a localRouter, and returns the
-// list of hosts and the associated roster / tree.
-func (l *LocalTest) GenTree(n int, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenHosts(n)
+// GenTree will create a tree of n conodes with a localRouter, and returns the
+// list of conodes and the associated roster / tree.
+func (l *LocalTest) GenTree(n int, register bool) ([]*Conode, *Roster, *Tree) {
+	conodes := l.GenConodes(n)
 
-	list := l.GenRosterFromHost(hosts...)
+	list := l.GenRosterFromHost(conodes...)
 	tree := list.GenerateBinaryTree()
 	l.Trees[tree.ID] = tree
 	if register {
-		hosts[0].overlay.RegisterRoster(list)
-		hosts[0].overlay.RegisterTree(tree)
+		conodes[0].overlay.RegisterRoster(list)
+		conodes[0].overlay.RegisterTree(tree)
 	}
-	return hosts, list, tree
+	return conodes, list, tree
 
 }
 
-// GenBigTree will create a tree of n hosts.
+// GenBigTree will create a tree of n conodes.
 // If register is true, the Roster and Tree will be registered with the overlay.
-// 'nbrHosts' is how many hosts are created
+// 'nbrConodes' is how many conodes are created
 // 'nbrTreeNodes' is how many TreeNodes are created
-// nbrHosts can be smaller than nbrTreeNodes, in which case a given host will
+// nbrConodes can be smaller than nbrTreeNodes, in which case a given conode will
 // be used more than once in the tree.
-func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrHosts, bf int, register bool) ([]*Host, *Roster, *Tree) {
-	hosts := l.GenHosts(nbrHosts)
+func (l *LocalTest) GenBigTree(nbrTreeNodes, nbrConodes, bf int, register bool) ([]*Conode, *Roster, *Tree) {
+	conodes := l.GenConodes(nbrConodes)
 
-	list := l.GenRosterFromHost(hosts...)
+	list := l.GenRosterFromHost(conodes...)
 	tree := list.GenerateBigNaryTree(bf, nbrTreeNodes)
 	l.Trees[tree.ID] = tree
 	if register {
-		hosts[0].overlay.RegisterRoster(list)
-		hosts[0].overlay.RegisterTree(tree)
+		conodes[0].overlay.RegisterRoster(list)
+		conodes[0].overlay.RegisterTree(tree)
 	}
-	return hosts, list, tree
+	return conodes, list, tree
 }
 
-// GenRosterFromHost takes a number of hosts as arguments and creates
+// GenRosterFromHost takes a number of conodes as arguments and creates
 // an Roster.
-func (l *LocalTest) GenRosterFromHost(hosts ...*Host) *Roster {
+func (l *LocalTest) GenRosterFromHost(conodes ...*Conode) *Roster {
 	var entities []*network.ServerIdentity
-	for i := range hosts {
-		entities = append(entities, hosts[i].ServerIdentity)
+	for i := range conodes {
+		entities = append(entities, conodes[i].ServerIdentity)
 	}
 	list := NewRoster(entities)
 	l.Rosters[list.ID] = list
 	return list
 }
 
-// CloseAll takes a list of hosts that will be closed
+// CloseAll takes a list of conodes that will be closed
 func (l *LocalTest) CloseAll() {
-	for _, host := range l.Hosts {
-		log.Lvl3("Closing host", host.ServerIdentity.Address)
-		err := host.Close()
+	for _, conode := range l.Conodes {
+		log.Lvl3("Closing conode", conode.ServerIdentity.Address)
+		err := conode.Close()
 		if err != nil {
-			log.Error("Closing host", host.ServerIdentity.Address,
+			log.Error("Closing conode", conode.ServerIdentity.Address,
 				"gives error", err)
 		}
 
-		for host.Listening() {
-			log.Print("Sleeping while waiting to close...")
+		for conode.Listening() {
+			log.Lvl1("Sleeping while waiting to close...")
 			time.Sleep(10 * time.Millisecond)
 		}
-		delete(l.Hosts, host.ServerIdentity.ID)
+		delete(l.Conodes, conode.ServerIdentity.ID)
 	}
 	for _, node := range l.Nodes {
 		log.Lvl3("Closing node", node)
@@ -244,42 +244,42 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 // AddPendingTreeMarshal takes a treeMarshal and adds it to the list of the
 // known trees, also triggering dispatching of SDA-messages waiting for that
 // tree
-func (l *LocalTest) AddPendingTreeMarshal(h *Host, tm *TreeMarshal) {
-	h.overlay.addPendingTreeMarshal(tm)
+func (l *LocalTest) AddPendingTreeMarshal(c *Conode, tm *TreeMarshal) {
+	c.overlay.addPendingTreeMarshal(tm)
 }
 
 // CheckPendingTreeMarshal looks whether there are any treeMarshals to be
 // called
-func (l *LocalTest) CheckPendingTreeMarshal(h *Host, el *Roster) {
-	h.overlay.checkPendingTreeMarshal(el)
+func (l *LocalTest) CheckPendingTreeMarshal(c *Conode, el *Roster) {
+	c.overlay.checkPendingTreeMarshal(el)
 }
 
-// GetPrivate returns the private key of a host
-func (l *LocalTest) GetPrivate(h *Host) abstract.Scalar {
-	return h.private
+// GetPrivate returns the private key of a conode
+func (l *LocalTest) GetPrivate(c *Conode) abstract.Scalar {
+	return c.private
 }
 
 // GetServices returns a slice of all services asked for.
 // The sid is the id of the service that will be collected.
-func (l *LocalTest) GetServices(hosts []*Host, sid ServiceID) []Service {
-	services := make([]Service, len(hosts))
-	for i, h := range hosts {
+func (l *LocalTest) GetServices(conodes []*Conode, sid ServiceID) []Service {
+	services := make([]Service, len(conodes))
+	for i, h := range conodes {
 		services[i] = l.Services[h.ServerIdentity.ID][sid]
 	}
 	return services
 }
 
-// MakeHELS creates nbr hosts, and will return the associated roster. It also
-// returns the Service object of the first hosts in the list having sid as a
+// MakeHELS creates nbr conodes, and will return the associated roster. It also
+// returns the Service object of the first conodes in the list having sid as a
 // ServiceID.
-func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Host, *Roster, Service) {
-	hosts := l.GenHosts(nbr)
-	el := l.GenRosterFromHost(hosts...)
-	return hosts, el, l.Services[hosts[0].ServerIdentity.ID][sid]
+func (l *LocalTest) MakeHELS(nbr int, sid ServiceID) ([]*Conode, *Roster, Service) {
+	conodes := l.GenConodes(nbr)
+	el := l.GenRosterFromHost(conodes...)
+	return conodes, el, l.Services[conodes[0].ServerIdentity.ID][sid]
 }
 
 // NewPrivIdentity returns a secret + ServerIdentity. The SI will have
-// "localhost:+port as first address.
+// "localconode:+port as first address.
 func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 	address := network.NewLocalAddress("127.0.0.1:" + strconv.Itoa(port))
 	priv, pub := PrivPub()
@@ -287,9 +287,9 @@ func NewPrivIdentity(port int) (abstract.Scalar, *network.ServerIdentity) {
 	return priv, id
 }
 
-// NewTCPHost creates a new host with a tcpRouter with "localhost:"+port as an
+// NewTCPConode creates a new conode with a tcpRouter with "localconode:"+port as an
 // address.
-func NewTCPHost(port int) *Host {
+func NewTCPConode(port int) *Conode {
 	priv, id := NewPrivIdentity(port)
 	addr := network.NewTCPAddress(id.Address.NetworkAddress())
 	tcpHost, err := network.NewTCPHost(addr)
@@ -298,7 +298,7 @@ func NewTCPHost(port int) *Host {
 	}
 	id.Address = tcpHost.Address()
 	router := network.NewRouter(id, tcpHost)
-	h := NewHostWithRouter(id, priv, router)
+	h := NewConodeWithRouter(id, priv, router)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
@@ -306,16 +306,16 @@ func NewTCPHost(port int) *Host {
 	return h
 }
 
-// NewLocalHost returns a new host using a LocalRouter (channels) to communicate.
+// NewLocalConode returns a new conode using a LocalRouter (channels) to communicate.
 // At the return of this function, the router is already Run()ing in a go
 // routine.
-func NewLocalHost(port int) *Host {
+func NewLocalConode(port int) *Conode {
 	priv, id := NewPrivIdentity(port)
 	localRouter, err := network.NewLocalRouter(id)
 	if err != nil {
 		panic(err)
 	}
-	h := NewHostWithRouter(id, priv, localRouter)
+	h := NewConodeWithRouter(id, priv, localRouter)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
@@ -323,15 +323,15 @@ func NewLocalHost(port int) *Host {
 	return h
 }
 
-// NewLocalHost returns a fresh Host using local connections within the context
+// NewLocalConode returns a fresh Host using local connections within the context
 // of this LocalTest
-func (l *LocalTest) NewLocalHost(port int) *Host {
+func (l *LocalTest) NewLocalConode(port int) *Conode {
 	priv, id := NewPrivIdentity(port)
 	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
 	if err != nil {
 		panic(err)
 	}
-	h := NewHostWithRouter(id, priv, localRouter)
+	h := NewConodeWithRouter(id, priv, localRouter)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
@@ -360,28 +360,28 @@ func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 	}
 }
 
-// GenLocalHosts returns n hosts created with a localRouter
-func (l *LocalTest) GenLocalHosts(n int) []*Host {
-	hosts := make([]*Host, n)
+// genLocalHosts returns n conodes created with a localRouter
+func (l *LocalTest) genLocalHosts(n int) []*Conode {
+	conodes := make([]*Conode, n)
 	for i := 0; i < n; i++ {
-		var host *Host
+		var conode *Conode
 		port := 2000 + i*10
 		switch l.mode {
 		case TCP:
-			host = NewTCPHost(0)
+			conode = NewTCPConode(0)
 		default:
-			host = l.NewLocalHost(port)
+			conode = l.NewLocalConode(port)
 		}
-		hosts[i] = host
+		conodes[i] = conode
 	}
 
-	for _, h := range hosts {
+	for _, h := range conodes {
 		for !h.Listening() {
 			time.Sleep(40 * time.Millisecond)
 		}
-		l.Hosts[h.ServerIdentity.ID] = h
+		l.Conodes[h.ServerIdentity.ID] = h
 	}
-	return hosts
+	return conodes
 }
 
 // PrivPub creates a private/public key pair.

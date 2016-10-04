@@ -97,7 +97,7 @@ func (r *Router) Stop() error {
 		// take all connections to close
 		for _, c := range arr {
 			if err := c.Close(); err != nil {
-				log.Error(err)
+				log.Lvl5(err)
 			}
 		}
 	}
@@ -176,7 +176,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
 		// Clean up the connection by making sure it's closed.
 		if err := c.Close(); err != nil {
-			log.Error(r.address, "having error closing conn to ", remote.Address, ":", err)
+			log.Lvl5(r.address, "having error closing conn to ", remote.Address, ":", err)
 		}
 		r.wg.Done()
 	}()

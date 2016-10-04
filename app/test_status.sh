@@ -17,8 +17,8 @@ testNetwork(){
     cothoritySetup
     cp group.toml cl1
     testOut "Running network"
-    testGrep "Connections:" runCl 1
-    testGrep "Packets_Sent:" runCl 1
+    testGrep "Available_Services" runCl 1
+    testGrep "Available_Services" runCl 1
 }
 
 testBuild(){

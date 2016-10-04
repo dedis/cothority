@@ -24,7 +24,7 @@ func (c *Client) GetStatus(dst *network.ServerIdentity) (*Response, error) {
 	//send request to all entities in the network
 	log.Lvl4("Sending Request to ", dst)
 	reply, err := c.Send(dst, ServiceReq)
-	if e := sda.ErrMsg(reply, err); e != nil {
+	if e := network.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
 	sr, ok := reply.Msg.(Response)

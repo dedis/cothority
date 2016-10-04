@@ -99,5 +99,8 @@ func ErrMsg(em *Packet, err error) error {
 		return nil
 	}
 	statusStr := status.Status
+	if statusStr == "" {
+		return nil
+	}
 	return errors.New("Remote-error: " + statusStr)
 }

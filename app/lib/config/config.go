@@ -53,7 +53,7 @@ func (hc *CothoritydConfig) Save(file string) error {
 // ParseCothorityd parses the config file into a CothoritydConfig.
 // It returns the CothoritydConfig, the Host so we can already use it, and an error if
 // the file is inaccessible or has wrong values in it.
-func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
+func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	hc := &CothoritydConfig{}
 	_, err := toml.DecodeFile(file, hc)
 	if err != nil {
@@ -68,8 +68,8 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	host := sda.NewHost(network.NewServerIdentity(point, hc.Address), secret)
-	return hc, host, nil
+	conode := sda.NewConode(network.NewServerIdentity(point, hc.Address), secret)
+	return hc, conode, nil
 }
 
 // CreateCothoritydConfig uses stdin to get the address. Then it creates
