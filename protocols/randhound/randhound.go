@@ -113,7 +113,7 @@ func (rh *RandHound) Start() error {
 		rh.group[i] = g
 	}
 
-	// Comptue session id
+	// Compute session id
 	rh.sid, err = rh.sessionID(rh.nodes, rh.faulty, rh.purpose, rh.time, rh.cliRand, rh.threshold, rh.Public(), rh.key)
 	if err != nil {
 		return err
@@ -390,8 +390,6 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 				}
 			}
 
-			//log.Lvlf1("Env vs Dec (Pre-Sync):  %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
-
 			// Remove encrypted shares that do not have a corresponding decrypted share
 			j := 0
 			for j < len(decPos) {
@@ -415,8 +413,6 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 				X = X[:l]
 			}
 
-			//log.Lvlf1("Env vs Dec (Post-Sync): %v %v %v %v %v %v %v", encPos, decPos, len(X), len(encShare), len(encProof), len(decShare), len(decProof))
-
 			pvss := NewPVSS(suite, H, t.Threshold[i])
 
 			// Recover polynomial commits
@@ -432,8 +428,6 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 			}
 			_ = goodEnc
 			_ = badEnc
-
-			//log.Lvlf1("Enc: %v %v %v %v %v %v", goodEnc, badEnc, len(X), len(encShare), len(decShare), len(decProof))
 
 			// Remove bad values
 			for j := len(badEnc) - 1; j >= 0; j-- {
@@ -459,16 +453,12 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 				decShare = append(decShare[:k], decShare[k+1:]...)
 			}
 
-			//log.Lvlf1("Dec: %v %v", goodDec, badDec)
-
 			// Recover secret and add it to the collective random point
 			ps, err := pvss.Recover(decPos, decShare, len(t.Group[i]))
 			if err != nil {
 				return err
 			}
 			rnd = rh.Suite().Point().Add(rnd, ps)
-			//log.Lvlf1("Transcript: %v %v", src, ps)
-
 		}
 	}
 
@@ -602,12 +592,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	}
 
 	// Record valid encrypted shares per secret/server
-	for i := 0; i < len(good); i++ {
-		j := good[i]
+	for _, g := range good {
 		if _, ok := rh.secret[idx]; !ok {
 			rh.secret[idx] = make([]int, 0)
 		}
-		rh.secret[idx] = append(rh.secret[idx], msg.EncShare[j].Target)
+		rh.secret[idx] = append(rh.secret[idx], msg.EncShare[g].Target)
 	}
 
 	// Check if there is at least a threshold number of reconstructable secrets
@@ -651,8 +640,8 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 			rh.chosenSecret[i] = secret
 		}
 
-		//log.Lvlf1("Grouping: %v", rh.group)
-		//log.Lvlf1("ChosenSecret: %v", rh.chosenSecret)
+		log.Lvlf3("Grouping: %v", rh.group)
+		log.Lvlf3("ChosenSecret: %v", rh.chosenSecret)
 
 		// Transformation of commitments from int to uint32 to avoid protobuff errors
 		var chosenSecret = make([][]uint32, len(rh.chosenSecret))

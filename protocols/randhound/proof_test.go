@@ -1,9 +1,9 @@
 package randhound_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/randhound"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
@@ -33,27 +33,27 @@ func TestProof(t *testing.T) {
 	h := []abstract.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	xG, xH, core, err := p.Setup(x, y)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	// Verify proofs
 	q, err := randhound.NewProof(suite, g, h, core)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	_, bad, err := q.Verify(xG, xH)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	if len(bad) != 0 {
-		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+		log.Fatalf("Some proofs failed: %v", bad)
 	}
 
 }
@@ -81,27 +81,27 @@ func TestProofCollective(t *testing.T) {
 	h := []abstract.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	xG, xH, core, err := p.SetupCollective(x, y)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	// Verify proof
 	q, err := randhound.NewProof(suite, g, h, core)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	_, bad, err := q.Verify(xG, xH)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	if len(bad) != 0 {
-		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+		log.Fatalf("Some proofs failed: %v", bad)
 	}
 
 }
@@ -131,7 +131,7 @@ func TestPVSS(t *testing.T) {
 	pvss := randhound.NewPVSS(suite, H, threshold)
 	idx, sX, encProof, pb, err := pvss.Split(X, secret)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	// (2) Share-Decryption (Trustee)
@@ -141,18 +141,18 @@ func TestPVSS(t *testing.T) {
 	}
 	sH, err := pvss.Commits(pbx, index)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	// Check that log_H(sH) == log_X(sX) using encProof
 	_, bad, err := pvss.Verify(H, X, sH, sX, encProof)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 
 	}
 
 	if len(bad) != 0 {
-		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+		log.Fatalf("Some proofs failed: %v", bad)
 	}
 
 	// Decrypt shares
@@ -161,7 +161,7 @@ func TestPVSS(t *testing.T) {
 	for i := 0; i < n; i++ {
 		s, d, err := pvss.Reveal(x[i], sX[i:i+1])
 		if err != nil {
-			t.Fatal(err)
+			log.ErrFatal(err)
 		}
 		S[i] = s[0]
 		decProof[i] = d[0]
@@ -170,21 +170,21 @@ func TestPVSS(t *testing.T) {
 	// Check that log_G(S) == log_X(sX) using decProof
 	_, bad, err = pvss.Verify(G, S, X, sX, decProof)
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	if len(bad) != 0 {
-		t.Fatal(fmt.Errorf("Some proofs failed: %v", bad))
+		log.Fatalf("Some proofs failed: %v", bad)
 	}
 
 	// (3) Secret-Recovery (Dealer)
 	recovered, err := pvss.Recover(idx, S, len(S))
 	if err != nil {
-		t.Fatal(err)
+		log.ErrFatal(err)
 	}
 
 	// Verify recovered secret
 	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
-		t.Fatal(fmt.Errorf("Recovered incorrect shared secret"))
+		log.Fatalf("Recovered incorrect shared secret")
 	}
 }

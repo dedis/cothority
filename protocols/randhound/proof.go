@@ -42,7 +42,7 @@ func NewProof(suite abstract.Suite, g []abstract.Point, h []abstract.Point, core
 
 	n := len(g)
 	base := make([]ProofBase, n)
-	for i := 0; i < n; i++ {
+	for i := range base {
 		base[i] = ProofBase{g: g[i], h: h[i]}
 	}
 
@@ -140,7 +140,7 @@ func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, []int, 
 	}
 
 	var good, bad []int
-	for i := 0; i < len(p.base); i++ {
+	for i := range p.base {
 		if xG[i].Equal(p.suite.Point().Null()) || xH[i].Equal(p.suite.Point().Null()) {
 			bad = append(bad, i)
 		} else {
@@ -182,21 +182,21 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abst
 	n := len(X)
 
 	// Create secret sharing polynomial
-	p := new(poly.PriPoly).Pick(pv.suite, pv.t, secret, random.Stream)
+	priPoly := new(poly.PriPoly).Pick(pv.suite, pv.t, secret, random.Stream)
 
 	// Create secret set of shares
-	s := new(poly.PriShares).Split(p, n)
+	shares := new(poly.PriShares).Split(priPoly, n)
 
 	// Create public polynomial commitments with respect to basis H
-	P := new(poly.PubPoly).Commit(p, pv.h)
+	pubPoly := new(poly.PubPoly).Commit(priPoly, pv.h)
 
 	// Prepare data for encryption consistency proofs ...
 	share := make([]abstract.Scalar, n)
 	H := make([]abstract.Point, n)
 	idx := make([]int, n)
-	for i := 0; i < n; i++ {
+	for i := range idx {
 		idx[i] = i
-		share[i] = s.Share(i)
+		share[i] = shares.Share(i)
 		H[i] = pv.h
 	}
 
@@ -210,7 +210,7 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abst
 		return nil, nil, nil, nil, err
 	}
 
-	polyBin, err := P.MarshalBinary()
+	polyBin, err := pubPoly.MarshalBinary()
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -242,7 +242,7 @@ func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]abstract.Point, error)
 
 	n := len(polyBin)
 	sH := make([]abstract.Point, n)
-	for i := 0; i < n; i++ {
+	for i := range sH {
 		P := new(poly.PubPoly)
 		P.Init(pv.suite, pv.t, pv.h)
 		if err := P.UnmarshalBinary(polyBin[i]); err != nil {
@@ -290,8 +290,8 @@ func (pv *PVSS) Recover(pos []int, S []abstract.Point, n int) (abstract.Point, e
 	pp := new(poly.PubPoly).InitNull(pv.suite, pv.t, pv.suite.Point().Base())
 	ps := new(poly.PubShares).Split(pp, n) // XXX: ackward way to init shares
 
-	for i := 0; i < len(S); i++ {
-		ps.SetShare(pos[i], S[i])
+	for i, s := range S {
+		ps.SetShare(pos[i], s)
 	}
 
 	return ps.SecretCommit(), nil
