@@ -92,7 +92,7 @@ func (a Address) Valid() bool {
 	}
 
 	p, err := strconv.Atoi(port)
-	if err != nil || p < 0 || p > 65536 {
+	if err != nil || p < 0 || p > 65535 {
 		return false
 	}
 
