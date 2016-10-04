@@ -251,9 +251,17 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		} else {
 			address += strconv.Itoa(port + c/nbrAddr)
 		}
-		entities[c] = network.NewServerIdentity(key.Public, address)
-		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret
+		entities[c] = network.NewServerIdentity(key.Public.Clone(), address)
+		sc.PrivateKeys[entities[c].Addresses[0]] = key.Secret.Clone()
 	}
+	if hosts > 1 {
+		if sc.PrivateKeys[entities[0].Addresses[0]].Equal(
+			sc.PrivateKeys[entities[1].Addresses[0]]) {
+			log.Fatal("Please update dedis/crypto with\n" +
+				"go get -u github.com/dedis/crypto")
+		}
+	}
+
 	// And close all our listeners
 	if localhosts {
 		for _, l := range listeners {
