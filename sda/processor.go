@@ -11,8 +11,8 @@ import (
 )
 
 // ServiceProcessor allows for an easy integration of external messages
-// into the Services. You have to embed it into your Service-structer,
-// then it will offer an 'RegisterMessage'-method that takes a message of type
+// into the Services. You have to embed it into your Service-struct,
+// then it will offer a 'RegisterMessage'-method that takes a message of type
 // 	func ReceiveMsg(si *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
 // where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
 // with the network. Once 'anyMessageType' is received by the service,
@@ -45,10 +45,11 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 //  * Error in any case there is an error.
 // f can be used to treat internal service messages as well as external requests
 // from clients.
+//
 // XXX Name should be changed but need to change also in dedis/cosi
 func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
-	// Check we have the correct channel-type
+	// Check that we have the correct channel-type.
 	if ft.Kind() != reflect.Func {
 		return errors.New("Input is not function")
 	}
@@ -95,7 +96,7 @@ func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
 }
 
 // Process implements the Processor interface and dispatches ClientRequest message
-// and InterServiceMessage
+// and InterServiceMessage.
 func (p *ServiceProcessor) Process(packet *network.Packet) {
 	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)
 }
@@ -117,7 +118,7 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 	}
 }
 
-// SendISM takes the message and sends it to the corresponding service
+// SendISM takes the message and sends it to the corresponding service.
 func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body) error {
 	sName := ServiceFactory.Name(p.Context.ServiceID())
 	sm, err := CreateServiceMessage(sName, msg)
@@ -128,7 +129,7 @@ func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body)
 	return p.SendRaw(si, sm)
 }
 
-// SendISMOthers sends an InterServiceMessage to all other services
+// SendISMOthers sends an InterServiceMessage to all other services.
 func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
 	var errStrs []string
 	for _, e := range el.List {

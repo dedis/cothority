@@ -195,9 +195,7 @@ func TestOverlayTreePropagation(t *testing.T) {
 	// Now add the list to h2 and try again
 	h2.AddTree(tree)
 	err = h1.Send(h2.ServerIdentity, &RequestTree{TreeID: tree.ID})
-	if err != nil {
-		t.Fatal("Couldn't send message to h2:", err)
-	}
+	require.Nil(t, err)
 
 	msg = <-proc.treeMarshal
 	assert.Equal(t, msg.TreeID, tree.ID)

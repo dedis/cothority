@@ -386,7 +386,7 @@ func NewClient(s string) *Client {
 	}
 }
 
-// NewLocalClient is for test mainly, it uses the local coomunication network
+// NewLocalClient is for test mainly, it uses the local comunication network
 // offered by the network package.
 func NewLocalClient(s string) *Client {
 	return &Client{
@@ -395,8 +395,7 @@ func NewLocalClient(s string) *Client {
 	}
 }
 
-// Send will marshal the message into a ClientRequest message and sends it
-// through the network
+// Send will marshal the message into a ClientRequest message and send it.
 func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 
 	m, err := network.NewNetworkPacket(msg)
