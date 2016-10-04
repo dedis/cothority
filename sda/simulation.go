@@ -60,7 +60,7 @@ type SimulationConfig struct {
 	// If non-nil, points to our overlay
 	Overlay *Overlay
 	// If non-nil, points to our host
-	Host *Host
+	Conode *Conode
 	// Additional configuration used to run
 	Config string
 }
@@ -107,10 +107,10 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		}
 		for _, e := range sc.Roster.List {
 			if strings.Contains(e.Address.String(), ha) {
-				host := NewHost(e, scf.PrivateKeys[e.Address])
+				conode := NewConode(e, scf.PrivateKeys[e.Address])
 				scNew := *sc
-				scNew.Host = host
-				scNew.Overlay = host.overlay
+				scNew.Conode = conode
+				scNew.Overlay = conode.overlay
 				ret = append(ret, &scNew)
 			}
 		}
@@ -121,12 +121,12 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		ret = append(ret, sc)
 	}
 	addr := string(sc.Roster.List[0].Address)
-	if strings.Contains(addr, "127.0.0.") || strings.Contains(addr, "localhost") {
+	if strings.Contains(addr, "127.0.0.") /*|| strings.Contains(addr, "localhost") */ {
 		// Now strip all superfluous numbers of localhost
 		for i := range sc.Roster.List {
 			_, port, _ := net.SplitHostPort(sc.Roster.List[i].Address.NetworkAddress())
 			// put 127.0.0.1 because 127.0.0.X is not reachable on Mac OS X
-			sc.Roster.List[i].Address = network.NewAddress(network.Local, "127.0.0.1:"+port)
+			sc.Roster.List[i].Address = network.NewAddress(network.PlainTCP, "127.0.0.1:"+port)
 		}
 	}
 	return ret, nil
@@ -152,6 +152,11 @@ func (sc *SimulationConfig) Save(dir string) error {
 	}
 
 	return nil
+}
+
+// GetService returns the service with the given name.
+func (sc *SimulationConfig) GetService(name string) Service {
+	return sc.Conode.serviceManager.Service(name)
 }
 
 // SimulationRegister is must to be called to register a simulation.
@@ -213,7 +218,7 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)
-	if strings.Contains("localhost", addresses[0]) || strings.Contains("127.0.0.", addresses[0]) {
+	if /*strings.Contains(addresses[0], "localhost") || */ strings.Contains(addresses[0], "127.0.0.") {
 		localhosts = true
 	}
 	entities := make([]*network.ServerIdentity, hosts)

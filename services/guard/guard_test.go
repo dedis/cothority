@@ -13,15 +13,17 @@ func TestMain(t *testing.M) {
 	log.MainTest(t)
 }
 
+func NewLocalTestClient(l *sda.LocalTest) *Client {
+	return &Client{l.NewClient(ServiceName)}
+}
+
 func TestServiceGuard(t *testing.T) {
 	local := sda.NewLocalTest()
-	// This statement generates 5 hosts, they don't connect, they process messages, and they
-	// don't register the tree or entitylist.
-	_, el, _ := local.GenTree(5, false, true, false)
+	_, el, _ := local.GenTree(5, true)
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := NewClient()
+	client := NewLocalTestClient(local)
 	log.Lvl1("Sending request to service...")
 	UID := []byte("USER")
 	Epoch := []byte("EPOCH")

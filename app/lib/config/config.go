@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 
 	"os/user"
@@ -52,7 +53,7 @@ func (hc *CothoritydConfig) Save(file string) error {
 // ParseCothorityd parses the config file into a CothoritydConfig.
 // It returns the CothoritydConfig, the Host so we can already use it, and an error if
 // the file is inaccessible or has wrong values in it.
-func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
+func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	hc := &CothoritydConfig{}
 	_, err := toml.DecodeFile(file, hc)
 	if err != nil {
@@ -67,8 +68,8 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Host, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	host := sda.NewHost(network.NewServerIdentity(point, hc.Address), secret)
-	return hc, host, nil
+	conode := sda.NewConode(network.NewServerIdentity(point, hc.Address), secret)
+	return hc, conode, nil
 }
 
 // CreateCothoritydConfig uses stdin to get the address. Then it creates
@@ -297,4 +298,28 @@ func InputYN(def bool, args ...interface{}) bool {
 		defStr = "Ny"
 	}
 	return strings.ToLower(string(Input(defStr, args...)[0])) == "y"
+}
+
+// Copy makes a copy of a local file with the same file-mode-bits set.
+func Copy(dst, src string) error {
+	info, err := os.Stat(dst)
+	if err == nil && info.IsDir() {
+		return Copy(path.Join(dst, path.Base(src)), src)
+	}
+	fSrc, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer fSrc.Close()
+	stat, err := fSrc.Stat()
+	if err != nil {
+		return err
+	}
+	fDst, err := os.OpenFile(dst, os.O_CREATE|os.O_RDWR, stat.Mode())
+	if err != nil {
+		return err
+	}
+	defer fDst.Close()
+	_, err = io.Copy(fDst, fSrc)
+	return err
 }

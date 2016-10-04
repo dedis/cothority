@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,29 +13,30 @@ import (
 )
 
 func TestSimulationBF(t *testing.T) {
-	sc, _, err := createBFTree(7, 2)
+	sc, _, err := createBFTree(7, 2, []string{"test1", "test2"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	addresses := []string{
-		"127.0.0.1:2000",
-		"127.0.0.2:2000",
-		"127.0.0.1:2001",
-		"127.0.0.2:2001",
-		"127.0.0.1:2002",
-		"127.0.0.2:2002",
-		"127.0.0.1:2003",
+		"test1:2000",
+		"test2:2000",
+		"test1:2001",
+		"test2:2001",
+		"test1:2002",
+		"test2:2002",
+		"test1:2003",
 	}
+
 	for i, a := range sc.Roster.List {
-		if a.Address.NetworkAddress() != addresses[i] {
-			t.Fatal("Address", a.Address.NetworkAddress(), "should be", addresses[i])
+		if !strings.Contains(string(a.Address), addresses[i]) {
+			t.Fatal("Address", string(a.Address), "should be", addresses[i])
 		}
 	}
 	if !sc.Tree.IsBinary(sc.Tree.Root) {
 		t.Fatal("Created tree is not binary")
 	}
 
-	sc, _, err = createBFTree(13, 3)
+	sc, _, err = createBFTree(13, 3, []string{"test1", "test2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +53,7 @@ func TestSimulationBigTree(t *testing.T) {
 		t.Skip()
 	}
 	for i := uint(4); i < 8; i++ {
-		_, _, err := createBFTree(1<<i-1, 2)
+		_, _, err := createBFTree(1<<i-1, 2, []string{"test1", "test2"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -59,7 +61,7 @@ func TestSimulationBigTree(t *testing.T) {
 }
 
 func TestSimulationLoadSave(t *testing.T) {
-	sc, _, err := createBFTree(7, 2)
+	sc, _, err := createBFTree(7, 2, []string{"127.0.0.1", "127.0.0.2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +69,7 @@ func TestSimulationLoadSave(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "127.0.0.1:2000")
+	sc2, err := LoadSimulationConfig(dir, sc.Roster.List[0].Address.NetworkAddress())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +80,7 @@ func TestSimulationLoadSave(t *testing.T) {
 }
 
 func TestSimulationMultipleInstances(t *testing.T) {
-	sc, _, err := createBFTree(7, 2)
+	sc, _, err := createBFTree(7, 2, []string{"127.0.0.1", "127.0.0.2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +88,7 @@ func TestSimulationMultipleInstances(t *testing.T) {
 	log.ErrFatal(err)
 	defer os.RemoveAll(dir)
 	sc.Save(dir)
-	sc2, err := LoadSimulationConfig(dir, "127.0.0.1")
+	sc2, err := LoadSimulationConfig(dir, sc.Roster.List[0].Address.Host())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,31 +96,31 @@ func TestSimulationMultipleInstances(t *testing.T) {
 	if len(sc2) != 4 {
 		t.Fatal("We should have 4 local1-hosts but have", len(sc2))
 	}
-	if sc2[0].Host.ServerIdentity.ID == sc2[1].Host.ServerIdentity.ID {
+	if sc2[0].Conode.ServerIdentity.ID == sc2[1].Conode.ServerIdentity.ID {
 		t.Fatal("Hosts are not copies")
 	}
 }
 
 func closeAll(scs []*SimulationConfig) {
 	for _, s := range scs {
-		if err := s.Host.Close(); err != nil {
-			log.Error("Error closing host ", s.Host.ServerIdentity)
+		if err := s.Conode.Close(); err != nil {
+			log.Error("Error closing host ", s.Conode.ServerIdentity)
 		}
 
-		for s.Host.Router.Listening() {
-			log.Print("Sleeping while waiting for router to be closed")
+		for s.Conode.Router.Listening() {
+			log.Lvl2("Sleeping while waiting for router to be closed")
 			time.Sleep(20 * time.Millisecond)
 		}
 	}
 }
 
-func createBFTree(hosts, bf int) (*SimulationConfig, *SimulationBFTree, error) {
+func createBFTree(hosts, bf int, addresses []string) (*SimulationConfig, *SimulationBFTree, error) {
 	sc := &SimulationConfig{}
 	sb := &SimulationBFTree{
 		Hosts: hosts,
 		BF:    bf,
 	}
-	sb.CreateRoster(sc, []string{"127.0.0.1", "127.0.0.2"}, 2000)
+	sb.CreateRoster(sc, addresses, 2000)
 	if len(sc.Roster.List) != hosts {
 		return nil, nil, errors.New("Didn't get correct number of entities")
 	}

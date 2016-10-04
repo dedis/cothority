@@ -68,129 +68,123 @@ var GenericConfigID = network.RegisterPacketType(GenericConfig{})
 
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
-	constructors map[ServiceID]NewServiceFunc
-	// translations between name of a Service and its ServiceID. Used to register a
-	// Service using a name.
-	translations map[string]ServiceID
-	// Inverse mapping of ServiceId => string
-	inverseTr map[ServiceID]string
-	mutex     sync.Mutex
+	constructors []serviceEntry
+	mutex        sync.RWMutex
+}
+
+// A serviceEntry holds all references to a service
+type serviceEntry struct {
+	constructor NewServiceFunc
+	serviceID   ServiceID
+	name        string
 }
 
 // ServiceFactory is the global service factory to instantiate Services
 var ServiceFactory = serviceFactory{
-	constructors: make(map[ServiceID]NewServiceFunc),
-	translations: make(map[string]ServiceID),
-	inverseTr:    make(map[ServiceID]string),
+	constructors: []serviceEntry{},
 }
 
 // RegisterByName takes a name, creates a ServiceID out of it and stores the
 // mapping and the creation function.
-func (s *serviceFactory) Register(name string, fn NewServiceFunc) {
+func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
+	if s.ServiceID(name) != NilServiceID {
+		return fmt.Errorf("Service %s already registered.", name)
+	}
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	s.mutex.Lock()
-	if _, ok := s.constructors[id]; ok {
-		// called at init time so better panic than to continue
-		log.Lvl1("RegisterService():", name)
+	defer s.mutex.Unlock()
+	s.constructors = append(s.constructors, serviceEntry{
+		constructor: fn,
+		serviceID:   id,
+		name:        name,
+	})
+	return nil
+}
+
+// Unregister - mainly for tests
+func (s *serviceFactory) Unregister(name string) error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	index := -1
+	for i, c := range s.constructors {
+		if c.name == name {
+			index = i
+			break
+		}
 	}
-	s.constructors[id] = fn
-	s.translations[name] = id
-	s.inverseTr[id] = name
-	s.mutex.Unlock()
+	if index < 0 {
+		return errors.New("Didn't find service " + name)
+	}
+	s.constructors = append(s.constructors[:index], s.constructors[index+1:]...)
+	return nil
 }
 
 // RegisterNewService is a wrapper around service factory
-func RegisterNewService(name string, fn NewServiceFunc) {
-	ServiceFactory.Register(name, fn)
+func RegisterNewService(name string, fn NewServiceFunc) error {
+	return ServiceFactory.Register(name, fn)
 }
 
-// DeleteNewService removes the NewServiceFunc associated with name
-// from the global store of NewServiceFunc so it can't be initialized again.
-// If the service needs to be initialized again, a new call to
-// RegisterNewService must be made.
-func DeleteNewService(name string) {
-	ServiceFactory.DeleteNewService(name)
+// UnregisterService removes a service from the global pool.
+func UnregisterService(name string) error {
+	return ServiceFactory.Unregister(name)
 }
 
-// RegisteredServices returns all the services registered.
-func (s *serviceFactory) registeredServicesID() []ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+// RegisteredServices returns all the services registered
+func (s *serviceFactory) registeredServiceIDs() []ServiceID {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	var ids = make([]ServiceID, 0, len(s.constructors))
-	for id := range s.constructors {
-		ids = append(ids, id)
+	for _, c := range s.constructors {
+		ids = append(ids, c.serviceID)
 	}
 	return ids
 }
 
-// RegisteredServicesByName returns all the names of the services registered.
-func (s *serviceFactory) RegisteredServicesName() []string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	var names = make([]string, 0, len(s.translations))
-	for n := range s.translations {
-		names = append(names, n)
+// RegisteredServicesByName returns all the names of the services registered
+func (s *serviceFactory) RegisteredServiceNames() []string {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	var names = make([]string, 0, len(s.constructors))
+	for _, n := range s.constructors {
+		names = append(names, n.name)
 	}
 	return names
 }
 
-// DeleteNewService will remove the NewServiceFunc from the global store of
-// NewServiceFunc so it can't be initialized again. If the service needs to be
-// initialized again, a new call to RegisterNewService must be made.
-func (s *serviceFactory) DeleteNewService(name string) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	sid, ok := s.translations[name]
-	if !ok {
-		// we don't have any service registered to this name
-		return
-	}
-	delete(s.translations, name)
-	delete(s.constructors, sid)
-	delete(s.inverseTr, sid)
-}
-
 // ServiceID returns the ServiceID out of the name of the service
 func (s *serviceFactory) ServiceID(name string) ServiceID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	id, ok := s.translations[name]
-	if !ok {
-		return NilServiceID
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if name == c.name {
+			return c.serviceID
+		}
 	}
-	return id
+	return NilServiceID
 }
 
 // Name returns the Name out of the ID
 func (s *serviceFactory) Name(id ServiceID) string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	var name string
-	var ok bool
-	if name, ok = s.inverseTr[id]; !ok {
-		return ""
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if id == c.serviceID {
+			return c.name
+		}
 	}
-	return name
+	return ""
 }
 
 // start launches a new service
-func (s *serviceFactory) start(name string, c *Context, path string) (Service, error) {
-	s.mutex.Lock()
-	var id ServiceID
-	var ok bool
-	if id, ok = s.translations[name]; !ok {
-		s.mutex.Unlock()
-		return nil, errors.New("No Service for this name: " + name)
+func (s *serviceFactory) start(name string, con *Context, path string) (Service, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	for _, c := range s.constructors {
+		if name == c.name {
+			return c.constructor(con, path), nil
+		}
 	}
-	var fn NewServiceFunc
-	if fn, ok = s.constructors[id]; !ok {
-		s.mutex.Unlock()
-		return nil, fmt.Errorf("No Service for this id: %+v", id)
-	}
-	s.mutex.Unlock()
-	serv := fn(c, path)
-	log.Lvl3("Instantiated service", name)
-	return serv, nil
+	return nil, errors.New("Didn't find service " + name)
 }
 
 // serviceManager is the place where all instantiated services are stored
@@ -202,8 +196,8 @@ type serviceManager struct {
 	// the config paths
 	paths map[ServiceID]string
 	// the sda host
-	host *Host
-	// the dispatcher can take registration of Processors
+	conode *Conode
+	// the dispather can take registration of Processors
 	network.Dispatcher
 }
 
@@ -212,7 +206,7 @@ const configFolder = "config"
 // newServiceStore will create a serviceStore out of all the registered Service
 // it creates the path for the config folder of each service. basically
 // ```configFolder / *nameOfService*```
-func newServiceManager(h *Host, o *Overlay) *serviceManager {
+func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 	// check if we have a config folder
 	if err := os.MkdirAll(configFolder, 0770); err != nil {
 		_, ok := err.(*os.PathError)
@@ -223,10 +217,11 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 	}
 	services := make(map[ServiceID]Service)
 	configs := make(map[ServiceID]string)
-	s := &serviceManager{services, configs, h, network.NewRoutineDispatcher()}
-	ids := ServiceFactory.registeredServicesID()
+	s := &serviceManager{services, configs, c, network.NewRoutineDispatcher()}
+	ids := ServiceFactory.registeredServiceIDs()
 	for _, id := range ids {
 		name := ServiceFactory.Name(id)
+		log.Lvl3("Starting service", name)
 		pwd, err := os.Getwd()
 		if err != nil {
 			log.Panic(err)
@@ -235,7 +230,7 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(h, o, id, s)
+		c := newContext(c, o, id, s)
 		s, err := ServiceFactory.start(name, c, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
@@ -244,10 +239,10 @@ func newServiceManager(h *Host, o *Overlay) *serviceManager {
 		services[id] = s
 		configs[id] = configName
 	}
-	log.Lvl3(h.Address(), "instantiated all services")
+	log.Lvl3(c.Address(), "instantiated all services")
 
 	// registering messages that services are expecting
-	h.RegisterProcessor(s, ClientRequestID)
+	c.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
@@ -282,7 +277,7 @@ func (s *serviceManager) Process(data *network.Packet) {
 // system later.
 func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.PacketTypeID) {
 	// delegate message to host so the host will pass the message to ourself
-	s.host.RegisterProcessor(s, msgType)
+	s.conode.RegisterProcessor(s, msgType)
 	// handle the message ourselves (will be launched in a go routine)
 	s.Dispatcher.RegisterProcessor(p, msgType)
 }

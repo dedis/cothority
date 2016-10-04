@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_CreateIdentity2(t *testing.T) {
-	local := sda.NewLocalTest()
+	local := sda.NewTCPTest()
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(5, identityService)
 	service := s.(*Service)
