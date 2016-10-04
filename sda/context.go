@@ -14,10 +14,10 @@ type Context struct {
 // defaultContext is the implementation of the Context interface. It is
 // instantiated for each Service.
 
-func newContext(h *Conode, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
+func newContext(c *Conode, o *Overlay, servID ServiceID, manager *serviceManager) *Context {
 	return &Context{
 		overlay:    o,
-		conode:     h,
+		conode:     c,
 		servID:     servID,
 		manager:    manager,
 		Dispatcher: network.NewBlockingDispatcher(),

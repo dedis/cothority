@@ -48,9 +48,9 @@ type Overlay struct {
 }
 
 // NewOverlay creates a new overlay-structure
-func NewOverlay(h *Conode) *Overlay {
+func NewOverlay(c *Conode) *Overlay {
 	o := &Overlay{
-		conode:             h,
+		conode:             c,
 		trees:              make(map[TreeID]*Tree),
 		entityLists:        make(map[RosterID]*Roster),
 		cache:              NewTreeNodeCache(),
@@ -61,7 +61,7 @@ func NewOverlay(h *Conode) *Overlay {
 		pendingSDAs:        make([]*ProtocolMsg, 0),
 	}
 	// messages going to protocol instances
-	h.RegisterProcessor(o,
+	c.RegisterProcessor(o,
 		SDADataMessageID,       // protocol instance's messages
 		RequestTreeMessageID,   // request a tree
 		SendTreeMessageID,      // send a tree back to a request

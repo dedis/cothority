@@ -72,13 +72,13 @@ func main() {
 		// Launch a conode and notifies when it's done
 
 		wg.Add(1)
-		go func(h *sda.Conode, m monitor.Measure) {
+		go func(c *sda.Conode, m monitor.Measure) {
 			ready <- true
 			defer wg.Done()
-			h.Start()
+			c.Start()
 			// record bandwidth
 			m.Record()
-			log.Lvl3(conodeAddress, "Simulation closed conode", h.ServerIdentity)
+			log.Lvl3(conodeAddress, "Simulation closed conode", c.ServerIdentity)
 		}(conode, measures[i])
 		// wait to be sure the goroutine started
 		<-ready
