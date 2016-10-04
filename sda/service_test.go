@@ -194,9 +194,9 @@ func TestServiceProcessRequest(t *testing.T) {
 	}))
 
 	defer ServiceFactory.Unregister("DummyService")
-	host := NewLocalConode(2000)
+	conode := NewLocalConode(2000)
 	log.Lvl1("Host created and listening")
-	defer host.Close()
+	defer conode.Close()
 	// Send a request to the service
 	re := &ClientRequest{
 		Service: ServiceFactory.ServiceID("DummyService"),
@@ -206,7 +206,7 @@ func TestServiceProcessRequest(t *testing.T) {
 	h2 := NewLocalConode(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
-	if err := h2.Send(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(conode.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link
@@ -228,10 +228,10 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	})
 
 	defer ServiceFactory.Unregister("DummyService")
-	host := NewLocalConode(2000)
-	defer host.Stop()
+	conode := NewLocalConode(2000)
+	defer conode.Stop()
 	// create the entityList and tree
-	el := NewRoster([]*network.ServerIdentity{host.ServerIdentity})
+	el := NewRoster([]*network.ServerIdentity{conode.ServerIdentity})
 	tree := el.GenerateBinaryTree()
 	// give it to the service
 	ds.fakeTree = tree
@@ -247,7 +247,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	h2 := NewLocalConode(2010)
 	defer h2.Close()
 	log.Lvl1("Sending request to service...")
-	if err := h2.Send(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(conode.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the
@@ -255,7 +255,7 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 
 	// Now RESEND the value so we instantiate using the SAME TREENODE
 	log.Lvl1("Sending request AGAIN to service...")
-	if err := h2.Send(host.ServerIdentity, re); err != nil {
+	if err := h2.Send(conode.ServerIdentity, re); err != nil {
 		t.Fatal(err)
 	}
 	// wait for the link from the

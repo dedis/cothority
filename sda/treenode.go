@@ -610,7 +610,7 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 // doing. This feature is mean to access the low level parts of the API. For
 // example it is used to add a new tree config / new entity list to the host.
 func (n *TreeNodeInstance) Host() *Conode {
-	return n.overlay.host
+	return n.overlay.conode
 }
 
 // TreeNodeInstance returns itself (XXX quick hack for this services2 branch

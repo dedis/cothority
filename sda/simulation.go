@@ -60,7 +60,7 @@ type SimulationConfig struct {
 	// If non-nil, points to our overlay
 	Overlay *Overlay
 	// If non-nil, points to our host
-	Host *Conode
+	Conode *Conode
 	// Additional configuration used to run
 	Config string
 }
@@ -109,7 +109,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 			if strings.Contains(e.Address.String(), ha) {
 				conode := NewConode(e, scf.PrivateKeys[e.Address])
 				scNew := *sc
-				scNew.Host = conode
+				scNew.Conode = conode
 				scNew.Overlay = conode.overlay
 				ret = append(ret, &scNew)
 			}
@@ -156,7 +156,7 @@ func (sc *SimulationConfig) Save(dir string) error {
 
 // GetService returns the service with the given name.
 func (sc *SimulationConfig) GetService(name string) Service {
-	return sc.Host.serviceManager.Service(name)
+	return sc.Conode.serviceManager.Service(name)
 }
 
 // SimulationRegister is must to be called to register a simulation.

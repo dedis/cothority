@@ -66,7 +66,7 @@ func main() {
 	var ready = make(chan bool)
 	for i, sc := range scs {
 		// Starting all hosts for that server
-		host := sc.Host
+		host := sc.Conode
 		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
 		log.Lvl3(hostAddress, "Starting host", host.ServerIdentity.Address)
 		// Launch a host and notifies when it's done
@@ -100,7 +100,7 @@ func main() {
 	}
 	if rootSim != nil {
 		// If this cothority has the root-host, it will start the simulation
-		log.Lvl2("Starting protocol", simul, "on host", rootSC.Host.ServerIdentity.Address)
+		log.Lvl2("Starting protocol", simul, "on host", rootSC.Conode.ServerIdentity.Address)
 		//log.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
@@ -132,7 +132,7 @@ func main() {
 		}
 		childrenWait.Record()
 		log.Lvl1("Starting new node", simul)
-		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Conode)
 		err := rootSim.Run(rootSC)
 		if err != nil {
 			log.Fatal(err)
@@ -162,7 +162,7 @@ func main() {
 		}
 	}
 
-	log.Lvl3(hostAddress, scs[0].Host.ServerIdentity, "is waiting for all hosts to close")
+	log.Lvl3(hostAddress, scs[0].Conode.ServerIdentity, "is waiting for all hosts to close")
 	wg.Wait()
 	log.Lvl2(hostAddress, "has all hosts closed")
 	monitor.EndAndCleanup()
