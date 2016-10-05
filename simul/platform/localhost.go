@@ -143,7 +143,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	}
 	d.addresses = make([]string, d.servers)
 	for i := range d.addresses {
-		d.addresses[i] = "localhost" + strconv.Itoa(i)
+		d.addresses[i] = "127.0.0." + strconv.Itoa(i)
 	}
 	d.sc, err = sim.Setup(d.runDir, d.addresses)
 	if err != nil {
@@ -171,7 +171,7 @@ func (d *Localhost) Start(args ...string) error {
 	for index := 0; index < d.servers; index++ {
 		d.wgRun.Add(1)
 		log.Lvl3("Starting", index)
-		host := "localhost" + strconv.Itoa(index)
+		host := "127.0.0." + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
 			"localhost:" + strconv.Itoa(d.monitorPort),
 			"-simul", d.Simulation,

@@ -86,9 +86,10 @@ func (jv *JVSS) handleSecInit(m WSecInitMsg) error {
 
 	// Finalise shared secret
 	if err := jv.finaliseSecret(msg.SID); err != nil {
+		log.Error(jv.Index(), err)
 		return err
 	}
-	log.Lvl4("Finalised secret", jv.Name(), msg.SID)
+	log.Lvl4("Finished handleSecInit", jv.Name(), msg.SID)
 	return nil
 }
 
@@ -96,7 +97,8 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	msg := m.SecConfMsg
 	secret, err := jv.secrets.secret(msg.SID)
 	if err != nil {
-		return err
+		log.Lvl2(jv.Index(), err, "for sid=", msg.SID)
+		return nil
 	}
 
 	isShortTermSecret := strings.HasPrefix(string(msg.SID), string(STSS))
@@ -108,7 +110,6 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 		secret.nLongConfirmsMtx.Lock()
 		defer secret.nLongConfirmsMtx.Unlock()
 		secret.numLongtermConfs++
-
 	}
 
 	// Check if we are the initiator node and have enough confirmations to proceed
@@ -119,7 +120,6 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	} else if msg.SID.IsSTSS() && secret.numShortConfs == len(jv.List()) && jv.sidStore.exists(msg.SID) {
 		log.Lvl4("Writing to shortTermSecDone")
 		jv.shortTermSecDone <- true
-		log.Lvl4("Wrote to shortTermSecDone")
 		secret.numShortConfs = 0
 	} else {
 		n := secret.numLongtermConfs
