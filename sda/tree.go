@@ -161,11 +161,11 @@ func (t *Tree) Dump() string {
 	ret := "Tree " + t.ID.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
-			ret += fmt.Sprintf("\n%2d - %s/%s has parent %s/%s", d,
-				tn.ID, tn.ServerIdentity.Address,
-				tn.Parent.ID, tn.Parent.ServerIdentity.Address)
+			ret += fmt.Sprintf("\n%s - %s/%s has parent %s/%s", d,
+				tn.ServerIdentity.Public, tn.ServerIdentity.Address,
+				tn.Parent.ServerIdentity.Public, tn.Parent.ServerIdentity.Address)
 		} else {
-			ret += fmt.Sprintf("\n%s/%s is root", tn.ID, tn.ServerIdentity.Address)
+			ret += fmt.Sprintf("\n%s/%s is root", tn.ServerIdentity.Public, tn.ServerIdentity.Address)
 		}
 	})
 	return ret
@@ -318,10 +318,10 @@ func (tm TreeMarshal) MakeTree(el *Roster) (*Tree, error) {
 func (tm *TreeMarshal) MakeTreeFromList(parent *TreeNode, el *Roster) *TreeNode {
 	idx, ent := el.Search(tm.ServerIdentityID)
 	tn := &TreeNode{
-		Parent:            parent,
-		ID:                tm.TreeNodeID,
-		ServerIdentity:    ent,
-		ServerIdentityIdx: idx,
+		Parent:         parent,
+		ID:             tm.TreeNodeID,
+		ServerIdentity: ent,
+		RosterIndex:    idx,
 	}
 	for _, c := range tm.Children {
 		tn.Children = append(tn.Children, c.MakeTreeFromList(tn, el))
@@ -530,8 +530,8 @@ type TreeNode struct {
 	// The ServerIdentity points to the corresponding host. One given host
 	// can be used more than once in a tree.
 	ServerIdentity *network.ServerIdentity
-	// ServerIdentityIdx is the index in the Roster where the `ServerIdentity` is located
-	ServerIdentityIdx int
+	// RosterIndex is the index in the Roster where the `ServerIdentity` is located
+	RosterIndex int
 	// Parent link
 	Parent *TreeNode
 	// Children links
@@ -565,11 +565,11 @@ var _ = network.RegisterPacketType(TreeNode{})
 // NewTreeNode creates a new TreeNode with the proper Id
 func NewTreeNode(entityIdx int, ni *network.ServerIdentity) *TreeNode {
 	tn := &TreeNode{
-		ServerIdentity:    ni,
-		ServerIdentityIdx: entityIdx,
-		Parent:            nil,
-		Children:          make([]*TreeNode, 0),
-		ID:                TreeNodeID(uuid.NewV4()),
+		ServerIdentity: ni,
+		RosterIndex:    entityIdx,
+		Parent:         nil,
+		Children:       make([]*TreeNode, 0),
+		ID:             TreeNodeID(uuid.NewV4()),
 	}
 	return tn
 }

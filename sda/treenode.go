@@ -533,7 +533,7 @@ func (n *TreeNodeInstance) List() []*TreeNode {
 
 // Index returns the index of the node in the Roster
 func (n *TreeNodeInstance) Index() int {
-	return n.TreeNode().ServerIdentityIdx
+	return n.TreeNode().RosterIndex
 }
 
 // Broadcast sends a given message from the calling node directly to all other TreeNodes

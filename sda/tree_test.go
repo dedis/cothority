@@ -199,7 +199,7 @@ func TestTreeNodeServerIdentityIndex(t *testing.T) {
 			t.Fatal("Could not find the entity in the node")
 		}
 
-		if node.ServerIdentityIdx != idx {
+		if node.RosterIndex != idx {
 			t.Fatal("Index of entity do not correlate")
 		}
 	}
