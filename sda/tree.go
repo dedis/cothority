@@ -161,7 +161,7 @@ func (t *Tree) Dump() string {
 	ret := "Tree " + t.ID.String() + " is:"
 	t.Root.Visit(0, func(d int, tn *TreeNode) {
 		if tn.Parent != nil {
-			ret += fmt.Sprintf("\n%s - %s/%s has parent %s/%s", d,
+			ret += fmt.Sprintf("\n%d - %s/%s has parent %s/%s", d,
 				tn.ServerIdentity.Public, tn.ServerIdentity.Address,
 				tn.Parent.ServerIdentity.Public, tn.Parent.ServerIdentity.Address)
 		} else {
