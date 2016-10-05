@@ -1,3 +1,4 @@
+# Directly affiliated with DEDIS
 Bryan Ford <bryan.ford@epfl.ch>
 Kokoris Kogias Eleftherios <eleftherios.kokoriskogias@epfl.ch>
 Ismail Khoffi <ismail.khoffi@epfl.ch>
@@ -5,3 +6,25 @@ Linus Gasser <linus.gasser@epfl.ch>
 Nicolas Gailly <nicolas.gailly@epfl.ch>
 Nikitin Kirill <kirill.nikitin@epfl.ch>
 Philipp Jovanovic <philipp.Jovanovic@epfl.ch>
+
+# NON-DEDIS - probably need a CAA or CLA
+Author: Benjamin Melançon <ben@agaric.com>
+Changed only an URL
+
+Author: Christian M <christian.mouchet@epfl.ch>
+Master student, worked with Patricia - lots of code
+
+Author: Evan Visher <evan.visher@gmail.com>
+Summer 2016 intern - is he DEDIS, as he signed a contract?
+
+Author: Mahdi Zamani <mahdi.zamani@yale.edu>
+PostDoc student from Yale - working on Prifi
+
+Author: david froelicher <david.froelicher@epfl.ch>
+PhD student from JP - working on MedCo
+
+Author: nalos <Command not found>
+Unknown - only some moving around of code
+
+Author: pegger <pegger@users.noreply.github.com>
+PhD student from JP - working on MedCo
