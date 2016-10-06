@@ -361,13 +361,12 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 			}
 			r1 := t.R1s[src]
 
-		OUTER:
 			for j := 0; j < len(r1.EncShare); j++ {
 
 				// Check availability of corresponding R2 messages, skip if not there
 				target := r1.EncShare[j].Target
 				if _, ok := t.R2s[target]; !ok {
-					continue OUTER
+					continue
 				}
 
 				// Gather data on encrypted shares
