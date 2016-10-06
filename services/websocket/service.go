@@ -136,12 +136,12 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 		log.Error(err)
 		return
 	}
-	n, err = ws.Write(buf)
+	err = websocket.Message.Send(ws, buf)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	log.Lvl1("Wrote", n, "bytes")
+	log.Lvl1("Sent message")
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
