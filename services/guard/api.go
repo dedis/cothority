@@ -25,7 +25,7 @@ func (c *Client) SendToGuard(dst *network.ServerIdentity, UID []byte, epoch []by
 	log.Lvl4("Sending Request to ", dst)
 	serviceReq := &Request{UID, epoch, t}
 	reply, err := c.Send(dst, serviceReq)
-	if e := sda.ErrMsg(reply, err); e != nil {
+	if e := network.ErrMsg(reply, err); e != nil {
 		return nil, e
 	}
 	sr, ok := reply.Msg.(Response)

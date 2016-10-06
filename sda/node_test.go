@@ -2,7 +2,6 @@ package sda
 
 import (
 	"testing"
-	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -22,7 +21,7 @@ func init() {
 
 func TestNodeChannelCreateSlice(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol("ProtocolChannels", tree)
@@ -43,7 +42,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 
 func TestNodeChannelCreate(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol("ProtocolChannels", tree)
@@ -78,7 +77,7 @@ func TestNodeChannelCreate(t *testing.T) {
 
 func TestNodeChannel(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(2, false, true, true)
+	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	p, err := local.CreateProtocol("ProtocolChannels", tree)
@@ -112,14 +111,12 @@ func TestNodeChannel(t *testing.T) {
 }
 
 // Test instantiation of Node
-func TestNewNode(t *testing.T) {
-	h1, h2 := SetupTwoHosts(t, false)
-	// Add tree + entitylist
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	h1.AddRoster(el)
-	tree := el.GenerateBinaryTree()
-	h1.AddTree(tree)
+func TestNodeNew(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
 
+	hosts, _, tree := local.GenTree(2, true)
+	h1 := hosts[0]
 	// Try directly StartNewNode
 	proto, err := h1.StartProtocol(testProto, tree)
 	if err != nil {
@@ -134,51 +131,11 @@ func TestNewNode(t *testing.T) {
 	if m != "Start" {
 		t.Fatal("Start() not called - msg is:", m)
 	}
-	h1.Close()
-	h2.Close()
 }
 
-func TestServiceChannels(t *testing.T) {
-	sc1 := &ServiceChannels{}
-	sc2 := &ServiceChannels{}
-	var count int
-	RegisterNewService("ChannelsService", func(c *Context, path string) Service {
-		var sc *ServiceChannels
-		if count == 0 {
-			sc = sc1
-		} else {
-			sc = sc2
-		}
-		count++
-		sc.ctx = c
-		sc.path = path
-		return sc
-	})
-	h1, h2 := SetupTwoHosts(t, true)
-	defer h1.Close()
-	defer h2.Close()
-	// Add tree + entitylist
-	el := NewRoster([]*network.ServerIdentity{h1.ServerIdentity, h2.ServerIdentity})
-	tree := el.GenerateBinaryTree()
-	sc1.tree = *tree
-	h1.AddRoster(el)
-	h1.AddTree(tree)
-	h1.StartProcessMessages()
-
-	sc1.ProcessClientRequest(nil, nil)
-	select {
-	case msg := <-Incoming:
-		if msg.I != 12 {
-			t.Fatal("Child should receive 12")
-		}
-	case <-time.After(time.Second * 3):
-		t.Fatal("Timeout")
-	}
-}
-
-func TestProtocolHandlers(t *testing.T) {
+func TestTreeNodeProtocolHandlers(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true, true)
+	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
 	log.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *TreeNodeInstance, 2)
@@ -187,8 +144,9 @@ func TestProtocolHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 	go p.Start()
-	log.Lvl2("Waiting for responses")
+	log.Lvl2("Waiting for response from child 1/2")
 	child1 := <-IncomingHandlers
+	log.Lvl2("Waiting for response from child 2/2")
 	child2 := <-IncomingHandlers
 
 	if child1.ServerIdentity().ID == child2.ServerIdentity().ID {
@@ -209,9 +167,9 @@ func TestProtocolHandlers(t *testing.T) {
 	}
 }
 
-func TestMsgAggregation(t *testing.T) {
+func TestTreeNodeMsgAggregation(t *testing.T) {
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(3, false, true, true)
+	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
 	root, err := local.StartProtocol("ProtocolChannels", tree)
 	if err != nil {
@@ -236,23 +194,21 @@ func TestMsgAggregation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	select {
-	case msgs := <-proto.IncomingAgg:
-		if msgs[0].I != 3 {
-			t.Fatal("First message should be 3")
-		}
-		if msgs[1].I != 4 {
-			t.Fatal("Second message should be 4")
-		}
-	case <-time.After(time.Second):
-		t.Fatal("Messages should BE there")
+
+	msgs := <-proto.IncomingAgg
+	if msgs[0].I != 3 {
+		t.Fatal("First message should be 3")
 	}
+	if msgs[1].I != 4 {
+		t.Fatal("Second message should be 4")
+	}
+
 }
 
-func TestFlags(t *testing.T) {
+func TestTreeNodeFlags(t *testing.T) {
 	testType := network.PacketTypeID(uuid.Nil)
 	local := NewLocalTest()
-	_, _, tree := local.GenTree(3, false, false, true)
+	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
 	p, err := local.CreateProtocol("ProtocolChannels", tree)
 	if err != nil {
@@ -369,7 +325,7 @@ func (p *ProtocolHandlers) Start() error {
 	for _, c := range p.Children() {
 		err := p.SendTo(c, &NodeTestMsg{12})
 		if err != nil {
-			return err
+			log.Error("Error sending to ", c.Name(), ":", err)
 		}
 	}
 	return nil
@@ -399,9 +355,9 @@ func (p *ProtocolHandlers) Release() {
 	p.Done()
 }
 
-func TestBlocking(t *testing.T) {
+func TestNodeBlocking(t *testing.T) {
 	l := NewLocalTest()
-	_, _, tree := l.GenTree(2, true, true, true)
+	_, _, tree := l.GenTree(2, true)
 	defer l.CloseAll()
 
 	n1, err := l.StartProtocol("ProtocolBlocking", tree)
@@ -436,14 +392,11 @@ func TestBlocking(t *testing.T) {
 	}()
 	// Release p2
 	p2.stopBlockChan <- true
-	select {
-	case <-p2.doneChan:
-		log.Lvl2("Node 2 done")
-		p1.stopBlockChan <- true
-		<-p1.doneChan
-	case <-time.After(time.Second):
-		t.Fatal("Node 2 didn't receive")
-	}
+	<-p2.doneChan
+	log.Lvl2("Node 2 done")
+	p1.stopBlockChan <- true
+	<-p1.doneChan
+
 }
 
 // BlockingProtocol is a protocol that will block until it receives a "continue"

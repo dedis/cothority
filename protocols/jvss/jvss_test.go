@@ -29,12 +29,13 @@ func TestSID(t *testing.T) {
 func TestJVSS(t *testing.T) {
 	// Setup parameters
 	var name string = "JVSS"      // Protocol name
-	var nodes uint32 = 5          // Number of nodes
-	var rounds int = 3            // Number of rounds
+	var nodes uint32 = 16         // Number of nodes
+	var rounds int = 1            // Number of rounds
 	msg := []byte("Hello World!") // Message to-be-signed
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(int(nodes), false, true, true)
+	_, _, tree := local.GenTree(int(nodes), true)
+
 	defer local.CloseAll()
 
 	log.Lvl1("JVSS - starting")

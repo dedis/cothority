@@ -283,11 +283,11 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
-		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Addresses)
+		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Address)
 		f.Call([]reflect.Value{msgs})
 	} else {
 		for _, msg := range msgSlice {
-			log.Lvl4("Dispatching to", n.ServerIdentity().Addresses)
+			log.Lvl4("Dispatching to", n.ServerIdentity().Address)
 			m := n.reflectCreate(to, msg)
 			f.Call([]reflect.Value{m})
 		}
@@ -317,7 +317,7 @@ func (n *TreeNodeInstance) DispatchChannel(msgSlice []*ProtocolMsg) error {
 		for i, msg := range msgSlice {
 			log.Lvl4("Dispatching aggregated to", to)
 			m := n.reflectCreate(to.Elem(), msg)
-			log.Lvl4("Adding msg", m, "to", n.ServerIdentity().Addresses)
+			log.Lvl4("Adding msg", m, "to", n.ServerIdentity().Address)
 			out.Index(i).Set(m)
 		}
 		reflect.ValueOf(n.channels[mt]).Send(out)
@@ -380,7 +380,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	var err error
 	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
 	if err != nil {
-		log.Error(n.ServerIdentity().First(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
+		log.Error(n.ServerIdentity(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
 	}
 	// Put the msg into SDAData
 	sdaMsg.MsgType = t
@@ -401,7 +401,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl4(n.Name(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
-		log.Lvl4("Dispatching to handler", n.ServerIdentity().Addresses)
+		log.Lvl4("Dispatching to handler", n.ServerIdentity().Address)
 		err = n.dispatchHandler(msgs)
 	default:
 		return errors.New("This message-type is not handled by this protocol")
@@ -440,7 +440,7 @@ func (n *TreeNodeInstance) aggregate(sdaMsg *ProtocolMsg) (network.PacketTypeID,
 	}
 	msgs := append(n.msgQueue[mt], sdaMsg)
 	n.msgQueue[mt] = msgs
-	log.Lvl4(n.ServerIdentity().Addresses, "received", len(msgs), "of", len(n.Children()), "messages")
+	log.Lvl4(n.ServerIdentity().Address, "received", len(msgs), "of", len(n.Children()), "messages")
 
 	// do we have everything yet or no
 	// get the node this host is in this tree
@@ -500,14 +500,14 @@ func (n *TreeNodeInstance) CloseHost() error {
 
 // Name returns a human readable name of this Node (IP address).
 func (n *TreeNodeInstance) Name() string {
-	return n.ServerIdentity().First()
+	return n.ServerIdentity().Address.String()
 }
 
 // Info returns a human readable representation name of this Node
 // (IP address and TokenID).
 func (n *TreeNodeInstance) Info() string {
 	tid := n.TokenID()
-	return fmt.Sprintf("%s (%s)", n.ServerIdentity().Addresses, tid.String())
+	return fmt.Sprintf("%s (%s)", n.ServerIdentity().Address, tid.String())
 }
 
 // TokenID returns the TokenID of the given node (to uniquely identify it)
@@ -533,7 +533,7 @@ func (n *TreeNodeInstance) List() []*TreeNode {
 
 // Index returns the index of the node in the Roster
 func (n *TreeNodeInstance) Index() int {
-	return n.TreeNode().ServerIdentityIdx
+	return n.TreeNode().RosterIndex
 }
 
 // Broadcast sends a given message from the calling node directly to all other TreeNodes
@@ -608,9 +608,9 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 // Host returns the underlying Host of this node.
 // WARNING: you should not play with that feature unless you know what you are
 // doing. This feature is mean to access the low level parts of the API. For
-// example it is used to add a new tree config / new entity list to the host.
-func (n *TreeNodeInstance) Host() *Host {
-	return n.overlay.host
+// example it is used to add a new tree config / new entity list to the Conode.
+func (n *TreeNodeInstance) Host() *Conode {
+	return n.overlay.conode
 }
 
 // TreeNodeInstance returns itself (XXX quick hack for this services2 branch
