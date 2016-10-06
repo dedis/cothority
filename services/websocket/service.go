@@ -131,7 +131,7 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 		return
 	}
 	log.Lvl1(s.ReportStatus())
-	buf, err = network.MarshalRegisteredType(reply)
+	buf, err = network.MarshalRegisteredType(s.ReportStatus()["Status"])
 	if err != nil {
 		log.Error(err)
 		return
@@ -142,6 +142,10 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 		return
 	}
 	log.Lvl1("Sent message")
+}
+
+type Stat struct {
+	Host map[string]string
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
@@ -165,5 +169,6 @@ func newService(c *sda.Context, path string) sda.Service {
 		path:             path,
 	}
 
+	network.RegisterPacketType(Stat{})
 	return s
 }
