@@ -30,17 +30,17 @@ func (po *ProtocolOverlay) Release() {
 
 func TestOverlayDone(t *testing.T) {
 	// setup
-	local := NewLocalTest()
-	defer local.CloseAll()
 	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := ProtocolOverlay{
 			TreeNodeInstance: n,
 		}
 		return &ps, nil
 	}
+	ProtocolRegisterName("ProtocolOverlay", fn)
+	local := NewLocalTest()
+	defer local.CloseAll()
 	h, _, tree := local.GenTree(1, true)
 	h1 := h[0]
-	ProtocolRegisterName("ProtocolOverlay", fn)
 	p, err := h1.CreateProtocol("ProtocolOverlay", tree)
 	if err != nil {
 		t.Fatal("error starting new node", err)

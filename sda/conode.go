@@ -7,6 +7,8 @@ import (
 
 	"sort"
 
+	"errors"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -27,41 +29,38 @@ type Conode struct {
 	treesLock            sync.Mutex
 	serviceManager       *serviceManager
 	statusReporterStruct *statusReporterStruct
+	// protocols holds a map of all available protocols and how to create an
+	// instance of it
+	protocols     map[ProtocolID]NewProtocol
+	protocolNames map[ProtocolID]string
 }
 
 // NewConode returns a new Host that out of a private-key and its relating public
 // key within the ServerIdentity. The host will create a default TcpRouter as Router.
 func NewConode(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
-	h := &Conode{
-		ServerIdentity:       e,
-		private:              pkey,
-		statusReporterStruct: newStatusReporterStruct(),
-	}
-
-	var err error
-	log.Lvl3("NewHost ", e.Address)
-	h.Router, err = network.NewTCPRouter(e)
-	if err != nil {
-		panic(err)
-	}
-	h.overlay = NewOverlay(h)
-	h.serviceManager = newServiceManager(h, h.overlay)
-	h.statusReporterStruct.RegisterStatusReporter("Status", h)
-	return h
+	r, err := network.NewTCPRouter(e)
+	log.ErrFatal(err)
+	return NewConodeWithRouter(e, pkey, r)
 }
 
 // NewConodeWithRouter returns a fresh Host with a given Router.
 func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
-	h := &Conode{
+	c := &Conode{
 		ServerIdentity:       e,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
+		protocols:            map[ProtocolID]NewProtocol{},
+		protocolNames:        map[ProtocolID]string{},
 	}
-	h.overlay = NewOverlay(h)
-	h.serviceManager = newServiceManager(h, h.overlay)
-	h.statusReporterStruct.RegisterStatusReporter("Status", h)
-	return h
+	c.overlay = NewOverlay(c)
+	c.serviceManager = newServiceManager(c, c.overlay)
+	c.statusReporterStruct.RegisterStatusReporter("Status", c)
+	for pid, name := range protocolNames {
+		log.Lvl4("Registering global protocol", name)
+		c.ProtocolRegisterName(name, protocols[pid])
+	}
+	return c
 }
 
 // Suite can (and should) be used to get the underlying abstract.Suite.
@@ -78,9 +77,6 @@ func (c *Conode) GetStatus() Status {
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
 	return m
-	//router := h.Router.GetStatus()
-	//return router.Merge(m)
-
 }
 
 // Close closes the overlay and the Router
@@ -100,4 +96,27 @@ func (c *Conode) Address() network.Address {
 // GetService returns the service with the given name.
 func (c *Conode) GetService(name string) Service {
 	return c.serviceManager.Service(name)
+}
+
+// ProtocolRegisterName will sign up a new protocol to this Conode.
+// It returns the ID of the protocol.
+func (c *Conode) ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
+	u := ProtocolNameToID(name)
+	if n, exists := c.protocolNames[u]; exists {
+		log.Warn("Protocol", n, "already exists - not overwriting")
+		return u
+	}
+	c.protocolNames[u] = name
+	c.protocols[u] = protocol
+	log.Lvl4("Registered", name, "to", u)
+	return u
+}
+
+// ProtocolInstantiate instantiate a protocol from its ID
+func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
+	fn, ok := c.protocols[protoID]
+	if !ok {
+		return nil, errors.New("No protocol constructor with this ID")
+	}
+	return fn(tni)
 }

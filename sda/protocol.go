@@ -1,8 +1,6 @@
 package sda
 
 import (
-	"errors"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
@@ -83,13 +81,4 @@ func ProtocolExists(protoID ProtocolID) bool {
 // String returns canonical string representation of the ID
 func (pid ProtocolID) String() string {
 	return uuid.UUID(pid).String()
-}
-
-// ProtocolInstantiate instantiate a protocol from its ID
-func ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
-	fn, ok := protocols[protoID]
-	if !ok {
-		return nil, errors.New("No protocol constructor with this ID")
-	}
-	return fn(tni)
 }

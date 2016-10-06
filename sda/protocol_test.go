@@ -97,9 +97,6 @@ func TestProtocolRegistration(t *testing.T) {
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// setup
-	local := NewLocalTest()
-	defer local.CloseAll()
-	h, _, tree := local.GenTree(2, true)
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
 	chans := []chan bool{chanH1, chanH2}
@@ -117,6 +114,9 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 	network.RegisterPacketType(SimpleMessage{})
 	ProtocolRegisterName(simpleProto, fn)
+	local := NewLocalTest()
+	defer local.CloseAll()
+	h, _, tree := local.GenTree(2, true)
 	h1 := h[0]
 	// start the protocol
 	go func() {
