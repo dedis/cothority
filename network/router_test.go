@@ -72,7 +72,6 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
-	log.TestOutput(true, 4)
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
@@ -105,7 +104,7 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	h1.RegisterProcessor(proc, SimpleMessageType)
 
 	err = h1.Send(h2.id, &SimpleMessage{12})
-	require.Nil(t, err)
+	log.ErrFatal(err)
 
 	// Receive the message
 	msg := <-proc.relay
@@ -125,7 +124,7 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	delete(h2.connections, h1.id.ID)
 	h2.connsMut.Unlock()
 	err = h1.Send(h2.id, &SimpleMessage{12})
-	require.NotNil(t, err)
+	log.ErrFatal(err)
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
