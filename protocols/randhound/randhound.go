@@ -88,9 +88,7 @@ func (rh *RandHound) Start() error {
 	rh.time = time.Now()
 
 	// Choose client randomness
-	hs := rh.Suite().Hash().Size()
-	rand := make([]byte, hs)
-	random.Stream.XORKeyStream(rand, rand)
+	rand := random.Bytes(rh.Suite().Hash().Size(), random.Stream)
 	rh.cliRand = rand
 
 	// Determine server grouping
@@ -628,9 +626,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		for i := range rh.server {
 
 			// Randomly remove some secrets so that a threshold of secrets remains
-			hs := rh.Suite().Hash().Size()
-			rand := make([]byte, hs)
-			random.Stream.XORKeyStream(rand, rand)
+			rand := random.Bytes(rh.Suite().Hash().Size(), random.Stream)
 			prng := rh.Suite().Cipher(rand)
 			secret := goodSecret[i]
 			for j := 0; j < len(secret)-rh.threshold[i]; j++ {
