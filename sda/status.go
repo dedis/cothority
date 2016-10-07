@@ -26,11 +26,21 @@ func (s *statusReporterStruct) RegisterStatusReporter(name string, sr StatusRepo
 
 }
 
-// ReportStatus gets the status of all StatusReporters within the Registry and puts them in a map
+// ReportStatus gets the status of all StatusReporters within the Registry and
+// puts them in a map
 func (s *statusReporterStruct) ReportStatus() map[string]Status {
 	m := make(map[string]Status)
 	for key, val := range s.statusReporters {
 		m[key] = val.GetStatus()
 	}
 	return m
+}
+
+// Merge will set s to contain both entries of s and s2
+// It returns s
+func (s Status) Merge(s2 Status) Status {
+	for k, v := range s2 {
+		s[k] = v
+	}
+	return s
 }

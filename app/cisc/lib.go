@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/identity"
 	"gopkg.in/codegangsta/cli.v1"
 )
@@ -48,6 +49,10 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	_, msg, err := network.UnmarshalRegistered(buf)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
+	cfg.Identity.Client = sda.NewClient(identity.ServiceName)
+	for _, f := range cfg.Follow {
+		f.Client = sda.NewClient(identity.ServiceName)
+	}
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}

@@ -18,7 +18,7 @@ func TestRandHound(t *testing.T) {
 	var purpose string = "RandHound test run"
 
 	local := sda.NewLocalTest()
-	_, _, tree := local.GenTree(int(nodes), false, true, true)
+	_, _, tree := local.GenTree(int(nodes), true)
 	defer local.CloseAll()
 
 	// Setup and start RandHound

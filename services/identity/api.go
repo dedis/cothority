@@ -37,6 +37,7 @@ func init() {
 		&ProposeUpdate{},
 		&ProposeUpdateReply{},
 		&ProposeVote{},
+		&Data{},
 		&ProposeVoteReply{},
 		// Internal messages
 		&PropagateIdentity{},
@@ -48,10 +49,18 @@ func init() {
 
 // Identity structure holds the data necessary for a client/device to use the
 // identity-service. Each identity-skipchain is tied to a roster that is defined
-// in 'Cothority'.
+// in 'Cothority'
 type Identity struct {
 	// Client is included for easy `Send`-methods.
 	*sda.Client
+	// IdentityData holds all the data related to this identity
+	// It can be stored and loaded from a config file.
+	Data
+}
+
+// Data contains the data that will be stored / loaded from / to a file
+// that enables a client to use the Identity service.
+type Data struct {
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
@@ -76,21 +85,25 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string) *Identity {
 	client := sda.NewClient(ServiceName)
 	kp := config.NewKeyPair(network.Suite)
 	return &Identity{
-		Client:     client,
-		Private:    kp.Secret,
-		Public:     kp.Public,
-		Config:     NewConfig(threshold, kp.Public, owner),
-		DeviceName: owner,
-		Cothority:  cothority,
+		Client: client,
+		Data: Data{
+			Private:    kp.Secret,
+			Public:     kp.Public,
+			Config:     NewConfig(threshold, kp.Public, owner),
+			DeviceName: owner,
+			Cothority:  cothority,
+		},
 	}
 }
 
 // NewIdentityFromCothority searches for a given cothority
 func NewIdentityFromCothority(el *sda.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
-		Client:    sda.NewClient(ServiceName),
-		Cothority: el,
-		ID:        id,
+		Client: sda.NewClient(ServiceName),
+		Data: Data{
+			Cothority: el,
+			ID:        id,
+		},
 	}
 	err := iden.ConfigUpdate()
 	if err != nil {
@@ -106,16 +119,21 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, id, err := network.UnmarshalRegistered(data)
+	_, i, err := network.UnmarshalRegistered(data)
 	if err != nil {
 		return nil, err
 	}
-	return id.(*Identity), nil
+	id := i.(*Data)
+	identity := &Identity{
+		Client: sda.NewClient(ServiceName),
+		Data:   *id,
+	}
+	return identity, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.MarshalRegisteredType(i)
+	data, err := network.MarshalRegisteredType(&i.Data)
 	if err != nil {
 		return err
 	}
@@ -166,7 +184,7 @@ func (i *Identity) CreateIdentity() error {
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
 func (i *Identity) ProposeSend(il *Config) error {
-	_, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
+	_, err := i.Client.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
 	i.Proposed = il
 	return err
 }
@@ -202,12 +220,11 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
+	msg, err := i.Client.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	})
-	err = sda.ErrMsg(msg, err)
 	if err != nil {
 		return err
 	}
@@ -228,7 +245,7 @@ func (i *Identity) ConfigUpdate() error {
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
-	msg, err := i.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
+	msg, err := i.Client.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
 	if err != nil {
 		return err
 	}
