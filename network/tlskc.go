@@ -26,7 +26,7 @@ type TLSKC struct {
 
 // NewTLSCert returns a x509-certificate valid for all CommonNames.
 func NewTLSCert(serial *big.Int, country, org, orgUnit string,
-	validYear int, subjectKeyId []byte) *x509.Certificate {
+	validYear int, subjectKeyID []byte) *x509.Certificate {
 	return &x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
@@ -37,7 +37,7 @@ func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(validYear, 0, 0),
-		SubjectKeyId:          subjectKeyId,
+		SubjectKeyId:          subjectKeyID,
 		BasicConstraintsValid: true,
 		IsCA:        true,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
