@@ -40,7 +40,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	randM := monitor.NewTimeMeasure("tgen-randhound")
-	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Host)
+	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Conode)
 	client, err := config.Overlay.CreateProtocolSDA("RandHound", config.Tree)
 	if err != nil {
 		return err

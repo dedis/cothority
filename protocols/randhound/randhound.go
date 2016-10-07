@@ -103,7 +103,7 @@ func (rh *RandHound) Start() error {
 		rh.polyCommit[i] = make([]abstract.Point, len(group))
 		g := make([]int, len(group))
 		for j, server0 := range group {
-			s0 := server0.ServerIdentityIdx
+			s0 := server0.RosterIndex
 			rh.ServerIdxToGroupNum[s0] = i
 			rh.ServerIdxToGroupIdx[s0] = j
 			g[j] = s0
@@ -122,7 +122,7 @@ func (rh *RandHound) Start() error {
 
 		index := make([]uint32, len(group))
 		for j, server := range group {
-			index[j] = uint32(server.ServerIdentityIdx)
+			index[j] = uint32(server.RosterIndex)
 		}
 
 		i1 := &I1{
@@ -533,7 +533,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	msg := &r1.R1
 
-	idx := r1.ServerIdentityIdx
+	idx := r1.RosterIndex
 	grp := rh.ServerIdxToGroupNum[idx]
 	pos := rh.ServerIdxToGroupIdx[idx]
 
@@ -605,7 +605,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	for i, group := range rh.server {
 		var secret []int
 		for _, server := range group {
-			j := server.ServerIdentityIdx
+			j := server.RosterIndex
 			if share, ok := rh.secret[j]; ok && rh.threshold[i] <= len(share) {
 				secret = append(secret, j)
 			}
@@ -676,7 +676,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					return err
 				}
 
-				rh.i2s[server.ServerIdentityIdx] = i2
+				rh.i2s[server.RosterIndex] = i2
 
 				if err := rh.SendTo(server, i2); err != nil {
 					return err
@@ -766,7 +766,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 
 	msg := &r2.R2
 
-	idx := r2.ServerIdentityIdx
+	idx := r2.RosterIndex
 	grp := rh.ServerIdxToGroupNum[idx]
 	pos := rh.ServerIdxToGroupIdx[idx]
 
