@@ -68,7 +68,7 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	conode := sda.NewConode(network.NewServerIdentity(point, hc.Address), secret)
+	conode := sda.NewConodeTCP(network.NewServerIdentity(point, hc.Address), secret)
 	return hc, conode, nil
 }
 

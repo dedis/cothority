@@ -151,13 +151,13 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 // connect starts a new connection and launches the listener for incoming
 // messages.
 func (r *Router) connect(si *ServerIdentity) (Conn, error) {
-	log.Lvl3(r.address, "Connecting to ", si.Address)
-	c, err := r.host.Connect(si.Address)
+	log.Lvl3(r.address, "Connecting to", si.Address)
+	c, err := r.host.Connect(si)
 	if err != nil {
-		log.Lvl3("Could not connect to ", si.Address, err)
+		log.Lvl3("Could not connect to", si.Address, err)
 		return nil, err
 	}
-	log.Lvl3(r.address, "Connected to ", si.Address)
+	log.Lvl3(r.address, "Connected to", si.Address)
 	if err := c.Send(r.id); err != nil {
 		return nil, err
 	}
@@ -176,12 +176,12 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 	defer func() {
 		// Clean up the connection by making sure it's closed.
 		if err := c.Close(); err != nil {
-			log.Lvl5(r.address, "having error closing conn to ", remote.Address, ":", err)
+			log.Lvl5(r.address, "having error closing conn to", remote.Address, ":", err)
 		}
 		r.wg.Done()
 	}()
 	address := c.Remote()
-	log.Lvl3(r.address, "Handling new connection to ", remote.Address)
+	log.Lvl3(r.address, "Handling new connection to", remote.Address)
 	for {
 		packet, err := c.Receive()
 
@@ -303,7 +303,7 @@ func (r *Router) receiveServerIdentity(c Conn) (*ServerIdentity, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Lvl4(r.address, "Identity received from ", dst.Address)
+	log.Lvl4(r.address, "Identity received from", dst.Address)
 	r.registerConnection(&dst, c)
 	return &dst, nil
 }

@@ -75,6 +75,9 @@ type ServerIdentity struct {
 	ID ServerIdentityID
 	// A slice of addresses of where that Id might be found
 	Address Address
+	// The Key and Certificate of an eventual TLS-identity. The
+	// Key-part can be empty if this is a remote ServerIdentity.
+	TLSKC *TLSKC
 }
 
 // ServerIdentityID uniquely identifies an ServerIdentity struct

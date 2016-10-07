@@ -29,29 +29,17 @@ type Conode struct {
 	statusReporterStruct *statusReporterStruct
 }
 
-// NewConode returns a new Host that out of a private-key and its relating public
+// NewConodeTCP returns a new Host that out of a private-key and its relating public
 // key within the ServerIdentity. The host will create a default TcpRouter as Router.
-func NewConode(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
-	h := &Conode{
-		ServerIdentity:       e,
-		private:              pkey,
-		statusReporterStruct: newStatusReporterStruct(),
-	}
-
-	var err error
-	log.Lvl3("NewHost ", e.Address)
-	h.Router, err = network.NewTCPRouter(e)
-	if err != nil {
-		panic(err)
-	}
-	h.overlay = NewOverlay(h)
-	h.serviceManager = newServiceManager(h, h.overlay)
-	h.statusReporterStruct.RegisterStatusReporter("Status", h)
-	return h
+func NewConodeTCP(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
+	r, err := network.NewTCPRouter(e)
+	log.ErrFatal(err)
+	return NewConode(e, pkey, r)
 }
 
-// NewConodeWithRouter returns a fresh Host with a given Router.
-func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
+// NewConode returns a fresh Host with a given Router.
+func NewConode(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
+	log.Lvl3("NewConode", e.Address)
 	h := &Conode{
 		ServerIdentity:       e,
 		private:              pkey,

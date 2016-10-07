@@ -152,7 +152,7 @@ func TestTCPConnReceiveRaw(t *testing.T) {
 		binary.Write(c, globalOrder, Size(len(buff)))
 		// then send pieces and check if the other side already returned or not
 		for i, slice := range slices[:len(slices)-1] {
-			log.Lvl1("Will write slice %d/%d...", i, len(slices))
+			log.Lvlf1("Will write slice %d/%d...", i, len(slices))
 			if n, err := c.Write(slice); err != nil || n != len(slice) {
 				t.Fatal("Could not write enough")
 			}
@@ -349,10 +349,11 @@ func TestTCPHostClose(t *testing.T) {
 		t.Fatal("Error setup TestTCPHost2")
 	}
 	go h1.Listen(acceptAndClose)
-	if _, err := h2.Connect(NewLocalAddress("127.0.0.1:7878")); err == nil {
+	si := NewTestServerIdentity(NewLocalAddress("127.0.0.1:7878"))
+	if _, err := h2.Connect(si); err == nil {
 		t.Fatal("Should not connect to dummy address or different type")
 	}
-	_, err = h2.Connect(h1.addr)
+	_, err = h2.Connect(NewTestServerIdentity(h1.addr))
 	if err != nil {
 		t.Fatal("Couldn't Connect()", err)
 	}
@@ -371,7 +372,7 @@ func TestTCPHostClose(t *testing.T) {
 		t.Fatal("Could not setup host", err)
 	}
 	go h3.Listen(acceptAndClose)
-	_, err = h2.Connect(h3.addr)
+	_, err = h2.Connect(NewTestServerIdentity(h3.addr))
 	if err != nil {
 		t.Fatal(h2, "Couldn Connect() to", h3)
 	}

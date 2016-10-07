@@ -59,5 +59,5 @@ type Listener interface {
 type Host interface {
 	Listener
 
-	Connect(addr Address) (Conn, error)
+	Connect(si *ServerIdentity) (Conn, error)
 }
