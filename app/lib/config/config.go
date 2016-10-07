@@ -33,6 +33,8 @@ type CothoritydConfig struct {
 	Public  string
 	Private string
 	Address network.Address
+	TLSCert string
+	TLSKey  string
 }
 
 // Save will save this CothoritydConfig to the given file name. It
@@ -68,7 +70,16 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	conode := sda.NewConodeTCP(network.NewServerIdentity(point, hc.Address), secret)
+	si := network.NewServerIdentity(point, hc.Address)
+	si.TLSKC = &network.TLSKC{[]byte(hc.TLSCert), []byte(hc.TLSKey)}
+	log.Print(si.Address)
+	log.Print(hc.Address)
+	log.Print(hc)
+	router, err := network.NewTLSRouter(si)
+	if err != nil {
+		return nil, nil, err
+	}
+	conode := sda.NewConode(router, secret)
 	return hc, conode, nil
 }
 

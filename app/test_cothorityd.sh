@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for server
-DBG_SRV=0
+DBG_SRV=2
 # Debug-level for client
 DBG_CLIENT=0
 # For easier debugging
-#STATICDIR=test
+STATICDIR=test
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -14,7 +14,7 @@ DBG_CLIENT=0
 main(){
     startTest
     build
-    test Build
+#    test Build
     test Cothorityd
     stopTest
 }

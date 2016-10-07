@@ -488,7 +488,7 @@ func sendrcv_proc(from, to *Router) error {
 	sp := newSimpleProcessor()
 	// new processing
 	to.RegisterProcessor(sp, statusMsgID)
-	if err := from.Send(to.id, &statusMessage{true, 10}); err != nil {
+	if err := from.Send(to.ServerIdentity, &statusMessage{true, 10}); err != nil {
 		return err
 	}
 	var err error

@@ -29,6 +29,8 @@ import (
 	// register the protocol.
 	_ "github.com/dedis/cosi/protocol"
 	// For the moment, the server only serves CoSi requests
+	"math/big"
+
 	s "github.com/dedis/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
@@ -87,7 +89,7 @@ func InteractiveConfig(binaryName string) {
 		portStr = port
 	}
 
-	serverBinding = network.NewTCPAddress(hostStr + ":" + portStr)
+	serverBinding = network.NewTLSAddress(hostStr + ":" + portStr)
 	if !serverBinding.Valid() {
 		log.Error("Unable to validate address given", serverBinding)
 		return
@@ -113,7 +115,7 @@ func InteractiveConfig(binaryName string) {
 				log.Error("Could not parse your public IP address", err)
 				failedPublic = true
 			} else {
-				publicAddress = network.NewTCPAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
+				publicAddress = network.NewTLSAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
 			}
 		}
 	} else {
@@ -144,10 +146,15 @@ func InteractiveConfig(binaryName string) {
 
 	// create the keys
 	privStr, pubStr := createKeyPair()
+	tlskc, err := network.NewTLSKC(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
+		1, []byte{}), 2048)
+	log.ErrFatal(err)
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,
 		Private: privStr,
 		Address: serverBinding,
+		TLSCert: string(tlskc.Cert),
+		TLSKey:  string(tlskc.Key),
 	}
 
 	var configDone bool
@@ -434,7 +441,7 @@ func askReachableAddress(port string) network.Address {
 		// add the port
 		ipStr = ipStr + ":" + port
 	}
-	return network.NewTCPAddress(ipStr)
+	return network.NewTLSAddress(ipStr)
 }
 
 // tryConnect binds to the given IP address and ask an internet service to

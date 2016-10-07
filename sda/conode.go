@@ -34,14 +34,14 @@ type Conode struct {
 func NewConodeTCP(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
 	r, err := network.NewTCPRouter(e)
 	log.ErrFatal(err)
-	return NewConode(e, pkey, r)
+	return NewConode(r, pkey)
 }
 
 // NewConode returns a fresh Host with a given Router.
-func NewConode(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
-	log.Lvl3("NewConode", e.Address)
+func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
+	log.Lvl3("NewConode", r.ServerIdentity.Address)
 	h := &Conode{
-		ServerIdentity:       e,
+		ServerIdentity:       r.ServerIdentity,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,

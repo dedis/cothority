@@ -68,7 +68,7 @@ type TLSListener struct {
 // A subsequent call to Address() gives the actual listening
 // address which is different if you gave it a ":0"-address.
 func NewTLSListener(si *ServerIdentity) (*TLSListener, error) {
-	log.Lvl3("Starting to listen on", si)
+	log.LLvl3("Starting to listen on", si)
 	addr := si.Address
 	if addr.ConnType() != TLS {
 		return nil, errors.New("TLSListener can't listen on non-TLS address")

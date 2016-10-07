@@ -22,7 +22,7 @@ import (
 //   router.Stop() // will stop the listening and the managing of all Conn
 type Router struct {
 	// id is our own ServerIdentity
-	id *ServerIdentity
+	ServerIdentity *ServerIdentity
 	// address is the real-actual address used by the listener.
 	address Address
 	// Dispatcher is used to dispatch incoming message to the right recipient
@@ -46,10 +46,10 @@ type Router struct {
 // use.
 func NewRouter(own *ServerIdentity, h Host) *Router {
 	r := &Router{
-		id:          own,
-		connections: make(map[ServerIdentityID][]Conn),
-		host:        h,
-		Dispatcher:  NewBlockingDispatcher(),
+		ServerIdentity: own,
+		connections:    make(map[ServerIdentityID][]Conn),
+		host:           h,
+		Dispatcher:     NewBlockingDispatcher(),
 	}
 	r.address = h.Address()
 	return r
@@ -158,7 +158,7 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 		return nil, err
 	}
 	log.Lvl3(r.address, "Connected to", si.Address)
-	if err := c.Send(r.id); err != nil {
+	if err := c.Send(r.ServerIdentity); err != nil {
 		return nil, err
 	}
 
@@ -190,7 +190,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		}
 
 		if err != nil {
-			log.Lvlf4("%+v got error (%+s) while receiving message", r.id.String(), err)
+			log.Lvlf4("%+v got error (%+s) while receiving message", r.ServerIdentity.String(), err)
 
 			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
@@ -198,7 +198,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 				return
 			}
 			// Temporary error, continue.
-			log.Lvl3(r.id, "Error with connection", address, "=>", err)
+			log.Lvl3(r.ServerIdentity, "Error with connection", address, "=>", err)
 			continue
 		}
 
