@@ -7,6 +7,8 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/require"
 )
 
 var testProto = "test"
@@ -87,6 +89,7 @@ func TestProtocolRegistration(t *testing.T) {
 	if ProtocolNameToID(testProtoName) != testProtoID {
 		t.Fatal("Not correct translation from string to ID")
 	}
+	require.Equal(t, "", protocols.ProtocolIDToName(ProtocolID(uuid.Nil)))
 	if protocols.ProtocolIDToName(testProtoID) != testProtoName {
 		t.Fatal("Not correct translation from ID to String")
 	}

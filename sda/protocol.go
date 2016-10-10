@@ -43,7 +43,7 @@ var protocols = NewProtocolStorage()
 // ProtocolStorage holds all protocols either globally or per-Conode.
 type ProtocolStorage struct {
 	// Instantiators maps the name of the protocols to the `NewProtocol`-
-	// methods
+	// methods.
 	Instantiators map[string]NewProtocol
 }
 
