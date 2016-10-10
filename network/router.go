@@ -60,6 +60,7 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 func (r *Router) Start() {
 	// Any incoming connection waits for the remote server identity
 	// and will create a new handling routine.
+	log.Print(r.host)
 	err := r.host.Listen(func(c Conn) {
 		dst, err := r.receiveServerIdentity(c)
 		if err != nil {

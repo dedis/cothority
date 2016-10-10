@@ -4,7 +4,7 @@ DBG_SHOW=2
 # Debug-level for server
 DBG_SRV=2
 # Debug-level for client
-DBG_CLIENT=0
+DBG_CLIENT=2
 # For easier debugging
 STATICDIR=test
 
@@ -27,9 +27,9 @@ testCothorityd(){
     runCoBG 2
     sleep 1
     cp co1/group.toml .
-    tail -n 4 co2/group.toml >> group.toml
+    tail -n 5 co2/group.toml >> group.toml
     testOK runCosi check -g group.toml
-    tail -n 4 co3/group.toml >> group.toml
+    tail -n 5 co3/group.toml >> group.toml
     testFail runCosi check -g group.toml
 }
 

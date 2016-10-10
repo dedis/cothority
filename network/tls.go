@@ -102,6 +102,18 @@ func NewTLSListener(si *ServerIdentity) (*TLSListener, error) {
 	return t, nil
 }
 
+// Listen starts to listen for incoming connections and calls fn for every
+// connection-request it receives.
+// If the connection is closed, an error will be returned.
+func (t *TLSListener) Listen(fn func(Conn)) error {
+	receiver := func(tc Conn) {
+		tls := TLSConn{TCPConn: tc.(*TCPConn)}
+		tls.endpoint = NewTLSAddress(tc.Remote().String())
+		go fn(tls)
+	}
+	return t.listen(receiver)
+}
+
 // TLSConn implements the Conn interface using TLS.
 type TLSConn struct {
 	*TCPConn
@@ -111,12 +123,12 @@ type TLSConn struct {
 // In case of an error it returns a nil TLSConn and the error.
 func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
 	addr := si.Address
-	var err error
 	netAddr := addr.NetworkAddress()
 	config, err := si.TLSKC.ConfigClient()
+	var conn *tls.Conn
 	for i := 0; i < MaxRetryConnect; i++ {
 		log.Lvl3("Connecting to", netAddr)
-		conn, err := tls.Dial("tcp", netAddr, config)
+		conn, err = tls.Dial("tcp", netAddr, config)
 		if err == nil {
 			log.Lvl3("client: connected to:", conn.RemoteAddr())
 
@@ -142,6 +154,7 @@ func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
 // layer.
 func NewTLSClient() *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
+		log.Print("Connecting to", remote)
 		return NewTLSConn(remote)
 	}
 	return newClient(fn)

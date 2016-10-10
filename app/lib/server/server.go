@@ -187,7 +187,8 @@ func InteractiveConfig(binaryName string) {
 		log.Fatal("Impossible to parse public key:", err)
 	}
 
-	server := config.NewServerToml(network.Suite, public, publicAddress)
+	log.Print(publicAddress)
+	server := config.NewServerToml(network.Suite, public, publicAddress, tlskc)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
@@ -435,7 +436,7 @@ func askReachableAddress(port string) network.Address {
 		log.Fatal("Invalid IP:port address given:", ipStr)
 	} else if len(splitted) == 1 {
 		// check if the ip is valid
-		if net.ParseIP(ipStr) == nil {
+		if net.ParseIP(ipStr) == nil && ipStr != "localhost" {
 			log.Fatal("Invalid IP address given:", ipStr)
 		}
 		// add the port

@@ -72,9 +72,6 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	}
 	si := network.NewServerIdentity(point, hc.Address)
 	si.TLSKC = &network.TLSKC{[]byte(hc.TLSCert), []byte(hc.TLSKey)}
-	log.Print(si.Address)
-	log.Print(hc.Address)
-	log.Print(hc)
 	router, err := network.NewTLSRouter(si)
 	if err != nil {
 		return nil, nil, err
@@ -146,6 +143,7 @@ type ServerToml struct {
 	Address     network.Address
 	Public      string
 	Description string
+	Cert        string
 }
 
 // Group holds the Roster and the server-description.
@@ -233,14 +231,20 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 	if err != nil {
 		return nil, err
 	}
-	return network.NewServerIdentity(public, s.Address), nil
+	si := network.NewServerIdentity(public, s.Address)
+	si.TLSKC = &network.TLSKC{
+		Cert: []byte(s.Cert),
+		Key:  []byte{},
+	}
+	return si, nil
 }
 
 // NewServerToml takes a public key and an address and returns
 // the corresponding ServerToml.
 // If an error occurs, it will be printed to StdErr and nil
 // is returned.
-func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address) *ServerToml {
+func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address,
+	tlskc *network.TLSKC) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
 		log.Error("Error writing public key")
@@ -249,6 +253,7 @@ func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Add
 	return &ServerToml{
 		Address: addr,
 		Public:  buff.String(),
+		Cert:    string(tlskc.Cert),
 	}
 }
 

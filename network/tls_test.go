@@ -27,6 +27,7 @@ func TestNewTLSKeyCert(t *testing.T) {
 }
 
 func TestNewTLSRouter(t *testing.T) {
+	log.Print(RegisterPacketType(&BigMsg{}))
 	si1 := NewTestServerIdentity("tls://localhost:2000")
 	si2 := NewTestServerIdentity("tls://localhost:2001")
 	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{})
@@ -43,6 +44,8 @@ func TestNewTLSRouter(t *testing.T) {
 	defer r1.Stop()
 	defer r2.Stop()
 
-	_, err = r2.connect(si1)
+	c21, err := r2.connect(si1)
 	log.ErrFatal(err)
+	msg := &BigMsg{Array: []byte{1, 2, 3}}
+	log.ErrFatal(c21.Send(msg))
 }

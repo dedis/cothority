@@ -130,7 +130,7 @@ func (c *TCPConn) Send(obj Body) error {
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkPacket(obj)
 	if err != nil {
-		return fmt.Errorf("Error converting packet: %v\n", err)
+		return fmt.Errorf("Error converting packet: %v", err)
 	}
 	log.Lvlf5("Message SEND => %+v", am)
 	var b []byte

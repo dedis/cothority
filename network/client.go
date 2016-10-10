@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/config"
 )
 
@@ -42,8 +43,11 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	id := baseID
 	baseID++
 	baseIDLock.Unlock()
+	log.Print(dst)
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(),
 		"client:"+strconv.FormatUint(id, 10)))
+	sid.TLSKC.Cert = dst.TLSKC.Cert
+	log.Print(sid)
 
 	c, err := cl.connector(sid, dst)
 	if err != nil {

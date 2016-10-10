@@ -110,6 +110,7 @@ func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 		Public:  public,
 		Address: address,
 		ID:      ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
+		TLSKC:   &TLSKC{Cert: []byte{}, Key: []byte{}},
 	}
 }
 
