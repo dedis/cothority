@@ -4,13 +4,17 @@ import (
 	"math/big"
 	"testing"
 
+	"net"
+
 	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewTLSCert(t *testing.T) {
-	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{})
-	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{})
+	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{},
+		[]net.IP{})
+	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{},
+		[]net.IP{})
 	require.Equal(t, []string{"ch"}, c2.Subject.Country)
 	require.Equal(t, []string{"ch"}, c1.Subject.Country)
 	require.Equal(t, []string{"dedis"}, c1.Subject.OrganizationalUnit)
@@ -18,8 +22,10 @@ func TestNewTLSCert(t *testing.T) {
 }
 
 func TestNewTLSKeyCert(t *testing.T) {
-	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{})
-	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{})
+	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{},
+		[]net.IP{})
+	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{},
+		[]net.IP{})
 	_, err := NewTLSKC(c1, 2048)
 	log.ErrFatal(err)
 	_, err = NewTLSKC(c2, 2048)
@@ -30,8 +36,10 @@ func TestNewTLSRouter(t *testing.T) {
 	log.Print(RegisterPacketType(&BigMsg{}))
 	si1 := NewTestServerIdentity("tls://localhost:2000")
 	si2 := NewTestServerIdentity("tls://localhost:2001")
-	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{})
-	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{})
+	ips, err := net.LookupIP("localhost")
+	log.ErrFatal(err)
+	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{}, ips)
+	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{}, ips)
 	si1.TLSKC, _ = NewTLSKC(c1, 2048)
 	si2.TLSKC, _ = NewTLSKC(c2, 2048)
 	r1, err := NewTLSRouter(si1)
@@ -48,4 +56,12 @@ func TestNewTLSRouter(t *testing.T) {
 	log.ErrFatal(err)
 	msg := &BigMsg{Array: []byte{1, 2, 3}}
 	log.ErrFatal(c21.Send(msg))
+	log.ErrFatal(c21.Close())
+
+	si1_numerical := NewTestServerIdentity("tls://127.0.0.1:2000")
+	si1_numerical.TLSKC = si1.TLSKC
+	c21, err = r2.connect(si1_numerical)
+	log.ErrFatal(err)
+	log.ErrFatal(c21.Send(msg))
+	log.ErrFatal(c21.Close())
 }

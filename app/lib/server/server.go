@@ -146,8 +146,10 @@ func InteractiveConfig(binaryName string) {
 
 	// create the keys
 	privStr, pubStr := createKeyPair()
+	ips, err := net.LookupIP(publicAddress.Host())
+	log.ErrFatal(err)
 	tlskc, err := network.NewTLSKC(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
-		1, []byte{}), 2048)
+		1, []byte{}, ips), 2048)
 	log.ErrFatal(err)
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,

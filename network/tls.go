@@ -125,6 +125,10 @@ func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
 	addr := si.Address
 	netAddr := addr.NetworkAddress()
 	config, err := si.TLSKC.ConfigClient()
+	if err != nil {
+		return nil, err
+	}
+	log.Print(config)
 	var conn *tls.Conn
 	for i := 0; i < MaxRetryConnect; i++ {
 		log.Lvl3("Connecting to", netAddr)

@@ -11,6 +11,8 @@ import (
 	"math/big"
 	"time"
 
+	"net"
+
 	"github.com/dedis/cothority/log"
 )
 
@@ -26,7 +28,9 @@ type TLSKC struct {
 
 // NewTLSCert returns a x509-certificate valid for all CommonNames.
 func NewTLSCert(serial *big.Int, country, org, orgUnit string,
-	validYear int, subjectKeyID []byte) *x509.Certificate {
+	validYear int, subjectKeyID []byte,
+	ips []net.IP) *x509.Certificate {
+	log.Print(ips)
 	return &x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
@@ -40,6 +44,7 @@ func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 		SubjectKeyId:          subjectKeyID,
 		BasicConstraintsValid: true,
 		IsCA:        true,
+		IPAddresses: ips,
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		KeyUsage: x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign |
 			x509.KeyUsageKeyAgreement,
@@ -72,7 +77,10 @@ func (t *TLSKC) ConfigClient() (*tls.Config, error) {
 	if !ok {
 		return nil, errors.New("Couldn't get root cert.")
 	}
-	return &tls.Config{RootCAs: roots, InsecureSkipVerify: false}, nil
+	return &tls.Config{
+		RootCAs:            roots,
+		InsecureSkipVerify: false,
+	}, nil
 }
 
 // ConfigServer returns a tls.Config usable for a call to tls.Listen.
@@ -81,5 +89,7 @@ func (t *TLSKC) ConfigServer() (*tls.Config, error) {
 	if err != nil {
 		panic(err)
 	}
-	return &tls.Config{Certificates: []tls.Certificate{cert}}, nil
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}, nil
 }
