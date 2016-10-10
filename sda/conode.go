@@ -78,9 +78,6 @@ func (c *Conode) GetStatus() Status {
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
 	return m
-	//router := h.Router.GetStatus()
-	//return router.Merge(m)
-
 }
 
 // Close closes the overlay and the Router

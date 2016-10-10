@@ -64,7 +64,11 @@ func TestJVSS(t *testing.T) {
 		jv.RegisterShortTermCB(func(*poly.SharedSecret) {
 			secret <- true
 		})
-		sig, err := jv.Sign(msg)
+		sid, err := jv.SignPrepare()
+		if err != nil {
+			t.Fatal("Could not generate sid")
+		}
+		sig, err := jv.SignComplete(sid, msg)
 		if err != nil {
 			t.Fatal("Error signature failed", err)
 		}

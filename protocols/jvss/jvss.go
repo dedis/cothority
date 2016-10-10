@@ -10,6 +10,7 @@
 package jvss
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -26,6 +27,7 @@ import (
 
 func init() {
 	sda.ProtocolRegisterName("JVSS", NewJVSS)
+	sda.ProtocolRegisterName("JVSSCoSi", NewJVSS)
 }
 
 // SID is the type of shared secret identifiers
@@ -66,6 +68,20 @@ type JVSS struct {
 
 	// keeps the set of SID this node has started/initiated
 	sidStore *sidStore
+
+	// cosiMode change the way the signature is generated - it is cosi
+	// compatible.
+	cosiMode bool
+}
+
+func NewJVSSCoSi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	p, err := NewJVSS(node)
+	if err != nil {
+		return nil, err
+	}
+	jv := p.(*JVSS)
+	jv.cosiMode = true
+	return jv, nil
 }
 
 // NewJVSS creates a new JVSS protocol instance and returns it.
@@ -144,12 +160,13 @@ func (jv *JVSS) Verify(msg []byte, sig *poly.SchnorrSig) error {
 	return jv.schnorr.VerifySchnorrSig(sig, h)
 }
 
-// Sign starts a new signing request amongst the JVSS group and returns a
-// Schnorr signature on success.
-func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
-
+// SignPrepare launches the first phase of the JVSS signature protocol: it
+// generates a new random distributed secret value amongst the group
+// participants. It returns a SID which uniquely identify the secret generated.
+// The usual next steps is to call jv.SignComplete giving this SID.
+func (jv *JVSS) SignPrepare() (SID, error) {
 	if !jv.ltssInit {
-		return nil, fmt.Errorf("Error, long-term shared secret has not been initialised")
+		return "", fmt.Errorf("Error, long-term shared secret has not been initialised")
 	}
 
 	log.Lvl3(jv.Name(), "index", jv.Index(), " => Sign starting")
@@ -158,12 +175,31 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	sid := newSID(STSS)
 	jv.sidStore.insert(sid)
 	if err := jv.initSecret(sid); err != nil {
-		return nil, err
+		return "", err
 	}
-
 	// Wait for setup of shared secrets to finish
 	log.Lvl2("Waiting on short-term secrets:", jv.Name())
 	<-jv.shortTermSecDone
+
+	secret, err := jv.secrets.secret(sid)
+	if err != nil {
+		return "", err
+	}
+	// signal the short term secret generation if a callback has been
+	// registered.
+	if jv.shortTermCB != nil {
+		jv.shortTermCB(secret.secret)
+	}
+	return sid, nil
+}
+
+// SignComplete takes the short term random distributed secret id *sid* and the
+// message to sign and completes the signature generation. The sid must have
+// been generated with the jv.SignPrepare call.
+// XXX Memory exhausting problem / stalled protocol ? What happens if an
+// attacker does not generate the partial signature ? Do any of the group member
+// gets blocked or not ?
+func (jv *JVSS) SignComplete(sid SID, msg []byte) (*poly.SchnorrSig, error) {
 	// Create partial signature ...
 	ps, err := jv.sigPartial(sid, msg)
 	if err != nil {
@@ -173,6 +209,8 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 	// ... and buffer it
 	secret, err := jv.secrets.secret(sid)
 	if err != nil {
+		// XXX We should probably not continue here as there's no right actions to do
+		// except aborting the protocol.
 		log.Error("Didn't find secret. Still continuing:", err)
 	}
 
@@ -190,8 +228,17 @@ func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
 
 	// Wait for complete signature
 	sig := <-jv.sigChan
-
 	return sig, nil
+}
+
+// Sign starts a new signing request amongst the JVSS group and returns a
+// Schnorr signature on success.
+func (jv *JVSS) Sign(msg []byte) (*poly.SchnorrSig, error) {
+	sid, err := jv.SignPrepare()
+	if err != nil {
+		return nil, err
+	}
+	return jv.SignComplete(sid, msg)
 }
 
 func (jv *JVSS) initSecret(sid SID) error {
@@ -302,18 +349,24 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 		return nil, err
 	}
 
-	// signal the short term secret generation if a callback has been
-	// registered.
-	if jv.shortTermCB != nil {
-		jv.shortTermCB(secret.secret)
-	}
-
-	hash := jv.keyPair.Suite.Hash()
-	if _, err := hash.Write(msg); err != nil {
-		return nil, err
-	}
-	if err := jv.schnorr.NewRound(secret.secret, hash); err != nil {
-		return nil, err
+	if jv.cosiMode {
+		// msg := H(aggCommit||aggPublic||msgToSign) || msgToSign
+		reader := bytes.NewBuffer(msg)
+		challenge := jv.Suite().Scalar()
+		if _, err := challenge.UnmarshalFrom(reader); err != nil {
+			panic(err)
+		}
+		if err := jv.schnorr.NewRoundWithHash(secret.secret, challenge); err != nil {
+			return nil, err
+		}
+	} else {
+		hash := jv.keyPair.Suite.Hash()
+		if _, err := hash.Write(msg); err != nil {
+			return nil, err
+		}
+		if err := jv.schnorr.NewRound(secret.secret, hash); err != nil {
+			return nil, err
+		}
 	}
 	ps := jv.schnorr.RevealPartialSig()
 	if ps == nil {
@@ -345,6 +398,15 @@ func (jv *JVSS) RegisterShortTermCB(fn func(*poly.SharedSecret)) {
 // Index returns the index of this node in the flattened tree.
 func (jv *JVSS) Index() int {
 	return jv.treeIndex
+}
+
+func (jv *JVSS) SharedSecret(sid SID) (*poly.SharedSecret, error) {
+	// XXX that's a lot of secret
+	s, err := jv.secrets.secret(sid)
+	if err != nil {
+		return nil, err
+	}
+	return s.secret, nil
 }
 
 // thread safe helpers for accessing shared (long and short-term) secrets:
