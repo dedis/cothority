@@ -16,7 +16,7 @@ This is the CoSi-protocol for simulation which supports
 var Name = "CoSimul"
 
 func init() {
-	sda.ProtocolRegisterName(Name, NewCoSimul)
+	sda.GlobalProtocolRegister(Name, NewCoSimul)
 }
 
 // VRType defines what verifications are done

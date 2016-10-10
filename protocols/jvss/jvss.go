@@ -26,8 +26,8 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("JVSS", NewJVSS)
-	sda.ProtocolRegisterName("JVSSCoSi", NewJVSS)
+	sda.GlobalProtocolRegister("JVSS", NewJVSS)
+	sda.GlobalProtocolRegister("JVSSCoSi", NewJVSS)
 }
 
 // SID is the type of shared secret identifiers
