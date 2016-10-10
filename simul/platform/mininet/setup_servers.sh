@@ -6,9 +6,11 @@ KEYS=/tmp/server_keys
 
 rm $KEYS
 for s in $SERVERS; do
+	ssh-keygen -R root@$s
 	ssh-copy-id root@$s
+	ssh root@$s ssh-keygen
 	ssh root@$s cat .ssh/id_rsa.pub >> $KEYS
-	scp install_mininet.sh root@$s
+	scp install_mininet.sh root@$s:
 	ssh root@$s "nohup . ./install_mininet.sh &"
 done
 
