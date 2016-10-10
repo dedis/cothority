@@ -20,7 +20,7 @@ The protocol waits for the `Close`-message to arrive at the root.
 func init() {
 	network.RegisterPacketType(PrepareClose{})
 	network.RegisterPacketType(Close{})
-	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
+	sda.GlobalProtocolRegister("CloseAll", NewCloseAll)
 }
 
 // ProtocolCloseAll is the structure used to hold the Done-channel

@@ -9,11 +9,11 @@ import (
 func TestConode_ProtocolRegisterName(t *testing.T) {
 	c := NewLocalConode(0)
 	defer c.Close()
-	plen := len(c.protocolNames)
+	plen := len(c.protocols.Instantiators)
 	require.True(t, plen > 0)
-	id := c.ProtocolRegisterName("ConodeProtocol", NewConodeProtocol)
+	id := c.ProtocolRegister("ConodeProtocol", NewConodeProtocol)
 	require.NotNil(t, id)
-	require.True(t, plen < len(c.protocolNames))
+	require.True(t, plen < len(c.protocols.Instantiators))
 }
 
 type ConodeProtocol struct {

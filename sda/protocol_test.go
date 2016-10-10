@@ -80,14 +80,14 @@ type SimpleMessage struct {
 // - registration
 func TestProtocolRegistration(t *testing.T) {
 	testProtoName := "testProto"
-	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
-	if !ProtocolExists(testProtoID) {
+	testProtoID := GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	if !protocols.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
 	if ProtocolNameToID(testProtoName) != testProtoID {
 		t.Fatal("Not correct translation from string to ID")
 	}
-	if ProtocolIDToName(testProtoID) != testProtoName {
+	if protocols.ProtocolIDToName(testProtoID) != testProtoName {
 		t.Fatal("Not correct translation from ID to String")
 	}
 }
@@ -113,7 +113,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterPacketType(SimpleMessage{})
-	ProtocolRegisterName(simpleProto, fn)
+	GlobalProtocolRegister(simpleProto, fn)
 	local := NewLocalTest()
 	defer local.CloseAll()
 	h, _, tree := local.GenTree(2, true)

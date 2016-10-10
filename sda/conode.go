@@ -31,8 +31,7 @@ type Conode struct {
 	statusReporterStruct *statusReporterStruct
 	// protocols holds a map of all available protocols and how to create an
 	// instance of it
-	protocols     map[ProtocolID]NewProtocol
-	protocolNames map[ProtocolID]string
+	protocols *ProtocolStorage
 }
 
 // NewConode returns a new Host that out of a private-key and its relating public
@@ -50,15 +49,14 @@ func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *net
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
-		protocols:            map[ProtocolID]NewProtocol{},
-		protocolNames:        map[ProtocolID]string{},
+		protocols:            NewProtocolStorage(),
 	}
 	c.overlay = NewOverlay(c)
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
-	for pid, name := range protocolNames {
+	for name, inst := range protocols.Instantiators {
 		log.Lvl4("Registering global protocol", name)
-		c.ProtocolRegisterName(name, protocols[pid])
+		c.ProtocolRegister(name, inst)
 	}
 	return c
 }
@@ -98,23 +96,15 @@ func (c *Conode) GetService(name string) Service {
 	return c.serviceManager.Service(name)
 }
 
-// ProtocolRegisterName will sign up a new protocol to this Conode.
+// ProtocolRegister will sign up a new protocol to this Conode.
 // It returns the ID of the protocol.
-func (c *Conode) ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
-	u := ProtocolNameToID(name)
-	if n, exists := c.protocolNames[u]; exists {
-		log.Warn("Protocol", n, "already exists - not overwriting")
-		return u
-	}
-	c.protocolNames[u] = name
-	c.protocols[u] = protocol
-	log.Lvl4("Registered", name, "to", u)
-	return u
+func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) ProtocolID {
+	return c.protocols.Register(name, protocol)
 }
 
 // ProtocolInstantiate instantiate a protocol from its ID
 func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
-	fn, ok := c.protocols[protoID]
+	fn, ok := c.protocols.Instantiators[c.protocols.ProtocolIDToName(protoID)]
 	if !ok {
 		return nil, errors.New("No protocol constructor with this ID")
 	}

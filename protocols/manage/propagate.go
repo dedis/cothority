@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("Propagate", NewPropagateProtocol)
+	sda.GlobalProtocolRegister("Propagate", NewPropagateProtocol)
 }
 
 // Propagate is a protocol that sends some data to all attached nodes

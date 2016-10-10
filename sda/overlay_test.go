@@ -36,7 +36,7 @@ func TestOverlayDone(t *testing.T) {
 		}
 		return &ps, nil
 	}
-	ProtocolRegisterName("ProtocolOverlay", fn)
+	GlobalProtocolRegister("ProtocolOverlay", fn)
 	local := NewLocalTest()
 	defer local.CloseAll()
 	h, _, tree := local.GenTree(1, true)

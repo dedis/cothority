@@ -198,7 +198,7 @@ func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNod
 		return nil, errors.New("Didn't find tree corresponding to TreeNode")
 	}
 	protID := ProtocolNameToID(protName)
-	if !ProtocolExists(protID) {
+	if !l.Conodes[tn.ServerIdentity.ID].protocols.ProtocolExists(protID) {
 		return nil, errors.New("Didn't find protocol: " + protName)
 	}
 	tok := &Token{
