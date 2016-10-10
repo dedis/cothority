@@ -14,7 +14,7 @@ func init() {
 // RandhoundCo holds all informations to run a round of a JVSS-based CoSi.
 // Basically, each node on the tree, except the root, represents a JVSS group
 // with other
-type RandhounCo struct {
+type RandhoundCo struct {
 }
 
 // NewRandhoundCoRoot returns a protocol instance which is used by the root of
