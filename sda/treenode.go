@@ -271,7 +271,7 @@ func (n *TreeNodeInstance) Close() error {
 
 // ProtocolName will return the string representing that protocol
 func (n *TreeNodeInstance) ProtocolName() string {
-	return ProtocolIDToName(n.token.ProtoID)
+	return n.overlay.conode.protocols.ProtocolIDToName(n.token.ProtoID)
 }
 
 func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {

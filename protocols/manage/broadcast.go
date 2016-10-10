@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	sda.ProtocolRegisterName("Broadcast", NewBroadcastProtocol)
+	sda.GlobalProtocolRegister("Broadcast", NewBroadcastProtocol)
 }
 
 // Broadcast ensures that all nodes are connected to each other. If you need

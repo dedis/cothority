@@ -56,7 +56,7 @@ func TestBftCoSi(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSi"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
@@ -68,7 +68,7 @@ func TestThreshold(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiThr"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
@@ -101,7 +101,7 @@ func TestCheckRefuse(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuse"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuse)
 	})
 
@@ -115,7 +115,7 @@ func TestCheckRefuseMore(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseMore"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseMore)
 	})
 
@@ -132,7 +132,7 @@ func TestCheckRefuseBit(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseBit"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseBit)
 	})
 
@@ -157,7 +157,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseParallel"
 
 	// Register test protocol using BFTCoSi
-	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseBit)
 	})
 

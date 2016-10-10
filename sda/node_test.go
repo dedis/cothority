@@ -9,10 +9,10 @@ import (
 )
 
 func init() {
-	ProtocolRegisterName("ProtocolHandlers", NewProtocolHandlers)
-	ProtocolRegisterName("ProtocolBlocking", NewProtocolBlocking)
-	ProtocolRegisterName("ProtocolChannels", NewProtocolChannels)
-	ProtocolRegisterName(testProto, NewProtocolTest)
+	GlobalProtocolRegister("ProtocolHandlers", NewProtocolHandlers)
+	GlobalProtocolRegister("ProtocolBlocking", NewProtocolBlocking)
+	GlobalProtocolRegister("ProtocolChannels", NewProtocolChannels)
+	GlobalProtocolRegister(testProto, NewProtocolTest)
 	Incoming = make(chan struct {
 		*TreeNode
 		NodeTestMsg

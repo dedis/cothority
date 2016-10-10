@@ -1,7 +1,7 @@
 package sda
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -11,10 +11,13 @@ import (
 // ProtocolID uniquely identifies a protocol
 type ProtocolID uuid.UUID
 
-// protocols holds a map of all available protocols and how to create an
-// instance of it
-var protocols map[ProtocolID]NewProtocol
-var protocolNames map[ProtocolID]string
+// String returns canonical string representation of the ID
+func (pid ProtocolID) String() string {
+	return uuid.UUID(pid).String()
+}
+
+// NewProtocol is the function-signature needed to instantiate a new protocol
+type NewProtocol func(*TreeNodeInstance) (ProtocolInstance, error)
 
 // ProtocolInstance is the interface that instances have to use in order to be
 // recognized as protocols
@@ -37,59 +40,63 @@ type ProtocolInstance interface {
 	Shutdown() error
 }
 
-// NewProtocol is the function-signature needed to instantiate a new protocol
-type NewProtocol func(*TreeNodeInstance) (ProtocolInstance, error)
+var protocols = newProtocolStorage()
 
-// ProtocolNameToID returns the ProtocolID corresponding to the given name
+// protocolStorage holds all protocols either globally or per-Conode.
+type protocolStorage struct {
+	// Instantiators maps the name of the protocols to the `NewProtocol`-
+	// methods.
+	instantiators map[string]NewProtocol
+}
+
+// newProtocolStorage returns an initialized ProtocolStorage-struct.
+func newProtocolStorage() *protocolStorage {
+	return &protocolStorage{
+		instantiators: map[string]NewProtocol{},
+	}
+}
+
+// ProtocolIDToName returns the name to the corresponding protocolID.
+func (ps *protocolStorage) ProtocolIDToName(id ProtocolID) string {
+	for n := range ps.instantiators {
+		if id == ProtocolNameToID(n) {
+			return n
+		}
+	}
+	return ""
+}
+
+// ProtocolExists returns whether a certain protocol already has been
+// registered.
+func (ps *protocolStorage) ProtocolExists(protoID ProtocolID) bool {
+	_, ok := ps.instantiators[ps.ProtocolIDToName(protoID)]
+	return ok
+}
+
+// Register takes a name and a NewProtocol and stores it in the structure.
+// If the protocol already exists, a warning is printed and the NewProtocol is
+// *not* stored.
+func (ps *protocolStorage) Register(name string, protocol NewProtocol) (ProtocolID, error) {
+	id := ProtocolNameToID(name)
+	if _, exists := ps.instantiators[name]; exists {
+		return ProtocolID(uuid.Nil),
+			fmt.Errorf("Protocol -%s- already exists - not overwriting", name)
+	}
+	ps.instantiators[name] = protocol
+	log.Lvl4("Registered", name, "to", id)
+	return id, nil
+}
+
+// ProtocolNameToID returns the ProtocolID corresponding to the given name.
 func ProtocolNameToID(name string) ProtocolID {
 	url := network.NamespaceURL + "protocolname/" + name
 	return ProtocolID(uuid.NewV3(uuid.NamespaceURL, url))
 }
 
-// ProtocolIDToName returns the name to the corresponding protocolID
-func ProtocolIDToName(id ProtocolID) string {
-	return protocolNames[id]
-}
-
-// ProtocolRegisterName is a convenience function to automatically generate
-// a UUID out of the name. If the protocol is alreday registere, it will
-// output an error.
-// Take care if you want to register the same protocol-name for different
-// service-instantiations, as you might run into problems when doing
-// tests and/or simulations.
-func ProtocolRegisterName(name string, protocol NewProtocol) ProtocolID {
-	u := ProtocolNameToID(name)
-	if protocols == nil {
-		protocols = make(map[ProtocolID]NewProtocol)
-		protocolNames = make(map[ProtocolID]string)
-	}
-	if n, exists := protocolNames[u]; exists {
-		log.Warn("Protocol", n, "already exists - not overwriting")
-		return u
-	}
-	protocolNames[u] = name
-	protocols[u] = protocol
-	log.Lvl4("Registered", name, "to", u)
-	return u
-}
-
-// ProtocolExists returns whether a certain protocol already has been
-// registered
-func ProtocolExists(protoID ProtocolID) bool {
-	_, ok := protocols[protoID]
-	return ok
-}
-
-// String returns canonical string representation of the ID
-func (pid ProtocolID) String() string {
-	return uuid.UUID(pid).String()
-}
-
-// ProtocolInstantiate instantiate a protocol from its ID
-func ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
-	fn, ok := protocols[protoID]
-	if !ok {
-		return nil, errors.New("No protocol constructor with this ID")
-	}
-	return fn(tni)
+// GlobalProtocolRegister registers a protocol in the global namespace.
+// This is used in protocols that register themselves in the `init`-method.
+// All registered protocols will be copied to every instantiated Conode. If a
+// protocol is tied to a service, use `Conode.ProtocolRegisterName`
+func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
+	return protocols.Register(name, protocol)
 }

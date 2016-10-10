@@ -31,7 +31,7 @@ const skipchainBFT = "SkipchainBFT"
 func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
-	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, nil)
 	})
 	network.RegisterPacketType(&SkipBlockMap{})
