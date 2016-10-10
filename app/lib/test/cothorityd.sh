@@ -31,6 +31,6 @@ cothoritySetup(){
     runCoBG 2
     sleep 1
     cp co1/group.toml .
-    tail -n 4 co2/group.toml >> group.toml
+    tail -n 5 co2/group.toml >> group.toml
     DBG_SHOW=$DBG_OLD
 }

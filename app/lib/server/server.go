@@ -148,15 +148,15 @@ func InteractiveConfig(binaryName string) {
 	privStr, pubStr := createKeyPair()
 	ips, err := net.LookupIP(publicAddress.Host())
 	log.ErrFatal(err)
-	tlskc, err := network.NewTLSKC(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
+	cert, key, err := network.NewCertKey(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
 		1, []byte{}, ips), 2048)
 	log.ErrFatal(err)
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,
 		Private: privStr,
 		Address: serverBinding,
-		TLSCert: string(tlskc.Cert),
-		TLSKey:  string(tlskc.Key),
+		TLSCert: string(cert),
+		TLSKey:  string(key),
 	}
 
 	var configDone bool
@@ -190,7 +190,7 @@ func InteractiveConfig(binaryName string) {
 	}
 
 	log.Print(publicAddress)
-	server := config.NewServerToml(network.Suite, public, publicAddress, tlskc)
+	server := config.NewServerToml(network.Suite, public, publicAddress, cert)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)

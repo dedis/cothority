@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for app
-DBG_APP=0
-DBG_SRV=0
+DBG_APP=2
+DBG_SRV=2
 # Uncomment to build in local dir
-#STATICDIR=test
+STATICDIR=test
 # Needs 4 clients
 NBR=4
 

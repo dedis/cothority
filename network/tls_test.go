@@ -26,25 +26,25 @@ func TestNewTLSKeyCert(t *testing.T) {
 		[]net.IP{})
 	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{},
 		[]net.IP{})
-	_, err := NewTLSKC(c1, 2048)
+	_, _, err := NewCertKey(c1, 2048)
 	log.ErrFatal(err)
-	_, err = NewTLSKC(c2, 2048)
+	_, _, err = NewCertKey(c2, 2048)
 	log.ErrFatal(err)
 }
 
 func TestNewTLSRouter(t *testing.T) {
-	log.Print(RegisterPacketType(&BigMsg{}))
 	si1 := NewTestServerIdentity("tls://localhost:2000")
 	si2 := NewTestServerIdentity("tls://localhost:2001")
 	ips, err := net.LookupIP("localhost")
 	log.ErrFatal(err)
 	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{}, ips)
 	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{}, ips)
-	si1.TLSKC, _ = NewTLSKC(c1, 2048)
-	si2.TLSKC, _ = NewTLSKC(c2, 2048)
-	r1, err := NewTLSRouter(si1)
+	var key1, key2 TLSKeyPEM
+	si1.Cert, key1, _ = NewCertKey(c1, 2048)
+	si2.Cert, key2, _ = NewCertKey(c2, 2048)
+	r1, err := NewTLSRouter(si1, key1)
 	log.ErrFatal(err)
-	r2, err := NewTLSRouter(si2)
+	r2, err := NewTLSRouter(si2, key2)
 	log.ErrFatal(err)
 
 	go r1.Start()
@@ -59,7 +59,7 @@ func TestNewTLSRouter(t *testing.T) {
 	log.ErrFatal(c21.Close())
 
 	si1_numerical := NewTestServerIdentity("tls://127.0.0.1:2000")
-	si1_numerical.TLSKC = si1.TLSKC
+	si1_numerical.Cert = si1.Cert
 	c21, err = r2.connect(si1_numerical)
 	log.ErrFatal(err)
 	log.ErrFatal(c21.Send(msg))

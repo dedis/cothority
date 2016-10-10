@@ -16,21 +16,13 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-// TLSKC is a TLS Key Cert storage with methods to return correct server-
-// and client-configurations.
-type TLSKC struct {
-	// PEM-encoded certificate.
-	Cert []byte
-	// PEM-encoded key - can be empty for a remote server where we don't
-	// have the key.
-	Key []byte
-}
+type TLSCertPEM []byte
+type TLSKeyPEM []byte
 
 // NewTLSCert returns a x509-certificate valid for all CommonNames.
 func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 	validYear int, subjectKeyID []byte,
 	ips []net.IP) *x509.Certificate {
-	log.Print(ips)
 	return &x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
@@ -52,44 +44,56 @@ func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 }
 
 // NewTLSKC returns a TLSKC-structure with a PEM-encoded certificate and key.
-func NewTLSKC(ca *x509.Certificate, keyLen int) (*TLSKC, error) {
-	tlskc := &TLSKC{}
+func NewCertKey(ca *x509.Certificate, keyLen int) (cert TLSCertPEM, key TLSKeyPEM, err error) {
 	if keyLen < 2048 {
 		log.Warn("Small key-length:", keyLen)
 	}
 	priv, _ := rsa.GenerateKey(rand.Reader, keyLen)
 	pub := &priv.PublicKey
-	cert, err := x509.CreateCertificate(rand.Reader, ca, ca, pub, priv)
+	x509cert, err := x509.CreateCertificate(rand.Reader, ca, ca, pub, priv)
 	if err != nil {
-		return nil, err
+		return
 	}
-	tlskc.Cert = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE",
-		Bytes: cert})
-	tlskc.Key = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY",
+	cert = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE",
+		Bytes: x509cert})
+	key = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(priv)})
-	return tlskc, nil
+	return
+}
+
+func secureConfig(c *tls.Config) *tls.Config {
+	c.CipherSuites = []uint16{tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256}
+	c.MinVersion = tls.VersionTLS12
+	return c
 }
 
 // ConfigClient returns a tls.Config usable for a call to tls.Dial.
-func (t *TLSKC) ConfigClient() (*tls.Config, error) {
+func (cert TLSCertPEM) ConfigClient() (*tls.Config, error) {
 	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(t.Cert)
+	ok := roots.AppendCertsFromPEM(cert)
 	if !ok {
 		return nil, errors.New("Couldn't get root cert.")
 	}
-	return &tls.Config{
+	return secureConfig(&tls.Config{
 		RootCAs:            roots,
 		InsecureSkipVerify: false,
-	}, nil
+	}), nil
 }
 
 // ConfigServer returns a tls.Config usable for a call to tls.Listen.
-func (t *TLSKC) ConfigServer() (*tls.Config, error) {
-	cert, err := tls.X509KeyPair(t.Cert, t.Key)
+func (key TLSKeyPEM) ConfigServer(cert TLSCertPEM) (*tls.Config, error) {
+	x509cert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
 		panic(err)
 	}
-	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}, nil
+	return secureConfig(&tls.Config{
+		Certificates: []tls.Certificate{x509cert},
+	}), nil
 }

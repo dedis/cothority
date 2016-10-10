@@ -75,9 +75,8 @@ type ServerIdentity struct {
 	ID ServerIdentityID
 	// A slice of addresses of where that Id might be found
 	Address Address
-	// The Key and Certificate of an eventual TLS-identity. The
-	// Key-part can be empty if this is a remote ServerIdentity.
-	TLSKC *TLSKC
+	// The self-signed TLS-certificate for that ServerIdentity, PEM-encoded.
+	Cert TLSCertPEM
 }
 
 // ServerIdentityID uniquely identifies an ServerIdentity struct
@@ -110,7 +109,7 @@ func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 		Public:  public,
 		Address: address,
 		ID:      ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
-		TLSKC:   &TLSKC{Cert: []byte{}, Key: []byte{}},
+		Cert:    []byte{},
 	}
 }
 

@@ -15,6 +15,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	RegisterPacketType(BigMsg{})
+	SimpleMessageType = RegisterPacketType(SimpleMessage{})
+}
+
 type BigMsg struct {
 	Array []byte
 }
@@ -134,7 +139,6 @@ func TestTCPConnReceiveRaw(t *testing.T) {
 	}
 	// prepare the msg
 	msg := &BigMsg{Array: make([]byte, 7893)}
-	_ = RegisterPacketType(BigMsg{})
 	buff, err := MarshalRegisteredType(msg)
 	require.Nil(t, err)
 
@@ -413,10 +417,6 @@ func TestHandleError(t *testing.T) {
 	require.Equal(t, ErrTimeout, handleError(&de))
 	de.timeout = false
 	require.Equal(t, ErrUnknown, handleError(&de))
-}
-
-func init() {
-	SimpleMessageType = RegisterPacketType(SimpleMessage{})
 }
 
 func NewTestTCPHost(port int) (*TCPHost, error) {

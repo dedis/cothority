@@ -17,8 +17,8 @@ will authenticate to the client.
 */
 
 // NewTLSRouter returns a new Router using TLSHost as the underlying Host.
-func NewTLSRouter(sid *ServerIdentity) (*Router, error) {
-	h, err := NewTLSHost(sid)
+func NewTLSRouter(sid *ServerIdentity, key TLSKeyPEM) (*Router, error) {
+	h, err := NewTLSHost(sid, key)
 	if err != nil {
 		return nil, err
 	}
@@ -29,18 +29,20 @@ func NewTLSRouter(sid *ServerIdentity) (*Router, error) {
 // TLSHost implements the Host interface using TLS connections.
 type TLSHost struct {
 	*TLSListener
-	addr  Address
-	tlskc *TLSKC
+	addr Address
+	cert TLSCertPEM
+	key  TLSKeyPEM
 }
 
 // NewTLSHost returns a new Host using TLS connection based type.
-func NewTLSHost(si *ServerIdentity) (*TLSHost, error) {
+func NewTLSHost(si *ServerIdentity, key TLSKeyPEM) (*TLSHost, error) {
 	h := &TLSHost{
-		addr:  si.Address,
-		tlskc: si.TLSKC,
+		addr: si.Address,
+		cert: si.Cert,
+		key:  key,
 	}
 	var err error
-	h.TLSListener, err = NewTLSListener(si)
+	h.TLSListener, err = NewTLSListener(si, key)
 	return h, err
 }
 
@@ -67,8 +69,8 @@ type TLSListener struct {
 // the binding.
 // A subsequent call to Address() gives the actual listening
 // address which is different if you gave it a ":0"-address.
-func NewTLSListener(si *ServerIdentity) (*TLSListener, error) {
-	log.LLvl3("Starting to listen on", si)
+func NewTLSListener(si *ServerIdentity, key TLSKeyPEM) (*TLSListener, error) {
+	log.Lvl3("Starting to listen on", si)
 	addr := si.Address
 	if addr.ConnType() != TLS {
 		return nil, errors.New("TLSListener can't listen on non-TLS address")
@@ -80,7 +82,7 @@ func NewTLSListener(si *ServerIdentity) (*TLSListener, error) {
 		},
 	}
 	global, _ := GlobalBind(addr.NetworkAddress())
-	config, err := si.TLSKC.ConfigServer()
+	config, err := key.ConfigServer(si.Cert)
 	if err != nil {
 		return nil, err
 	}
@@ -124,11 +126,10 @@ type TLSConn struct {
 func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
 	addr := si.Address
 	netAddr := addr.NetworkAddress()
-	config, err := si.TLSKC.ConfigClient()
+	config, err := si.Cert.ConfigClient()
 	if err != nil {
 		return nil, err
 	}
-	log.Print(config)
 	var conn *tls.Conn
 	for i := 0; i < MaxRetryConnect; i++ {
 		log.Lvl3("Connecting to", netAddr)
@@ -158,7 +159,6 @@ func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
 // layer.
 func NewTLSClient() *Client {
 	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		log.Print("Connecting to", remote)
 		return NewTLSConn(remote)
 	}
 	return newClient(fn)
