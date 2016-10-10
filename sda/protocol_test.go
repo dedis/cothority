@@ -82,7 +82,10 @@ type SimpleMessage struct {
 // - registration
 func TestProtocolRegistration(t *testing.T) {
 	testProtoName := "testProto"
-	testProtoID := GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	testProtoID, err := GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	log.ErrFatal(err)
+	_, err = GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	require.NotNil(t, err)
 	if !protocols.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}

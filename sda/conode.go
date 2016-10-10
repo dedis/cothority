@@ -31,7 +31,7 @@ type Conode struct {
 	statusReporterStruct *statusReporterStruct
 	// protocols holds a map of all available protocols and how to create an
 	// instance of it
-	protocols *ProtocolStorage
+	protocols *protocolStorage
 }
 
 // NewConode returns a new Host that out of a private-key and its relating public
@@ -49,7 +49,7 @@ func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *net
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
-		protocols:            NewProtocolStorage(),
+		protocols:            newProtocolStorage(),
 	}
 	c.overlay = NewOverlay(c)
 	c.serviceManager = newServiceManager(c, c.overlay)
@@ -98,7 +98,7 @@ func (c *Conode) GetService(name string) Service {
 
 // ProtocolRegister will sign up a new protocol to this Conode.
 // It returns the ID of the protocol.
-func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) ProtocolID {
+func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
 	return c.protocols.Register(name, protocol)
 }
 

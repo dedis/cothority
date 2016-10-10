@@ -3,6 +3,7 @@ package sda
 import (
 	"testing"
 
+	"github.com/dedis/cothority/log"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 )
@@ -12,14 +13,15 @@ func TestConode_ProtocolRegisterName(t *testing.T) {
 	defer c.Close()
 	plen := len(c.protocols.instantiators)
 	require.True(t, plen > 0)
-	id := c.ProtocolRegister("ConodeProtocol", NewConodeProtocol)
+	id, err := c.ProtocolRegister("ConodeProtocol", NewConodeProtocol)
+	log.ErrFatal(err)
 	require.NotNil(t, id)
 	require.True(t, plen < len(c.protocols.instantiators))
-	_, err := c.ProtocolInstantiate(ProtocolID(uuid.Nil), nil)
+	_, err = c.ProtocolInstantiate(ProtocolID(uuid.Nil), nil)
 	require.NotNil(t, err)
 	// Test for not overwriting
-	id2 := c.ProtocolRegister("ConodeProtocol", NewConodeProtocol2)
-	require.Equal(t, id, id2)
+	_, err = c.ProtocolRegister("ConodeProtocol", NewConodeProtocol2)
+	require.NotNil(t, err)
 }
 
 func TestConode_GetService(t *testing.T) {

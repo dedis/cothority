@@ -1,6 +1,8 @@
 package sda
 
 import (
+	"fmt"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
@@ -38,24 +40,24 @@ type ProtocolInstance interface {
 	Shutdown() error
 }
 
-var protocols = NewProtocolStorage()
+var protocols = newProtocolStorage()
 
-// ProtocolStorage holds all protocols either globally or per-Conode.
-type ProtocolStorage struct {
+// protocolStorage holds all protocols either globally or per-Conode.
+type protocolStorage struct {
 	// Instantiators maps the name of the protocols to the `NewProtocol`-
 	// methods.
 	instantiators map[string]NewProtocol
 }
 
-// NewProtocolStorage returns an initialized ProtocolStorage-struct.
-func NewProtocolStorage() *ProtocolStorage {
-	return &ProtocolStorage{
+// newProtocolStorage returns an initialized ProtocolStorage-struct.
+func newProtocolStorage() *protocolStorage {
+	return &protocolStorage{
 		instantiators: map[string]NewProtocol{},
 	}
 }
 
 // ProtocolIDToName returns the name to the corresponding protocolID.
-func (ps *ProtocolStorage) ProtocolIDToName(id ProtocolID) string {
+func (ps *protocolStorage) ProtocolIDToName(id ProtocolID) string {
 	for n := range ps.instantiators {
 		if id == ProtocolNameToID(n) {
 			return n
@@ -66,7 +68,7 @@ func (ps *ProtocolStorage) ProtocolIDToName(id ProtocolID) string {
 
 // ProtocolExists returns whether a certain protocol already has been
 // registered.
-func (ps *ProtocolStorage) ProtocolExists(protoID ProtocolID) bool {
+func (ps *protocolStorage) ProtocolExists(protoID ProtocolID) bool {
 	_, ok := ps.instantiators[ps.ProtocolIDToName(protoID)]
 	return ok
 }
@@ -74,15 +76,15 @@ func (ps *ProtocolStorage) ProtocolExists(protoID ProtocolID) bool {
 // Register takes a name and a NewProtocol and stores it in the structure.
 // If the protocol already exists, a warning is printed and the NewProtocol is
 // *not* stored.
-func (ps *ProtocolStorage) Register(name string, protocol NewProtocol) ProtocolID {
+func (ps *protocolStorage) Register(name string, protocol NewProtocol) (ProtocolID, error) {
 	id := ProtocolNameToID(name)
 	if _, exists := ps.instantiators[name]; exists {
-		log.Warn("Protocol", name, "already exists - not overwriting")
-		return id
+		return ProtocolID(uuid.Nil),
+			fmt.Errorf("Protocol -%s- already exists - not overwriting", name)
 	}
 	ps.instantiators[name] = protocol
 	log.Lvl4("Registered", name, "to", id)
-	return id
+	return id, nil
 }
 
 // ProtocolNameToID returns the ProtocolID corresponding to the given name.
@@ -95,6 +97,6 @@ func ProtocolNameToID(name string) ProtocolID {
 // This is used in protocols that register themselves in the `init`-method.
 // All registered protocols will be copied to every instantiated Conode. If a
 // protocol is tied to a service, use `Conode.ProtocolRegisterName`
-func GlobalProtocolRegister(name string, protocol NewProtocol) ProtocolID {
+func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
 	return protocols.Register(name, protocol)
 }
