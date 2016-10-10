@@ -54,7 +54,7 @@ func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *net
 	c.overlay = NewOverlay(c)
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
-	for name, inst := range protocols.Instantiators {
+	for name, inst := range protocols.instantiators {
 		log.Lvl4("Registering global protocol", name)
 		c.ProtocolRegister(name, inst)
 	}
@@ -104,7 +104,7 @@ func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) ProtocolID 
 
 // ProtocolInstantiate instantiate a protocol from its ID
 func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
-	fn, ok := c.protocols.Instantiators[c.protocols.ProtocolIDToName(protoID)]
+	fn, ok := c.protocols.instantiators[c.protocols.ProtocolIDToName(protoID)]
 	if !ok {
 		return nil, errors.New("No protocol constructor with this ID")
 	}

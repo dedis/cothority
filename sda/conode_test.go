@@ -10,11 +10,11 @@ import (
 func TestConode_ProtocolRegisterName(t *testing.T) {
 	c := NewLocalConode(0)
 	defer c.Close()
-	plen := len(c.protocols.Instantiators)
+	plen := len(c.protocols.instantiators)
 	require.True(t, plen > 0)
 	id := c.ProtocolRegister("ConodeProtocol", NewConodeProtocol)
 	require.NotNil(t, id)
-	require.True(t, plen < len(c.protocols.Instantiators))
+	require.True(t, plen < len(c.protocols.instantiators))
 	_, err := c.ProtocolInstantiate(ProtocolID(uuid.Nil), nil)
 	require.NotNil(t, err)
 	// Test for not overwriting

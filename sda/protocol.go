@@ -44,19 +44,19 @@ var protocols = NewProtocolStorage()
 type ProtocolStorage struct {
 	// Instantiators maps the name of the protocols to the `NewProtocol`-
 	// methods.
-	Instantiators map[string]NewProtocol
+	instantiators map[string]NewProtocol
 }
 
 // NewProtocolStorage returns an initialized ProtocolStorage-struct.
 func NewProtocolStorage() *ProtocolStorage {
 	return &ProtocolStorage{
-		Instantiators: map[string]NewProtocol{},
+		instantiators: map[string]NewProtocol{},
 	}
 }
 
-// ProtocolIDToName returns the name to the corresponding protocolID
+// ProtocolIDToName returns the name to the corresponding protocolID.
 func (ps *ProtocolStorage) ProtocolIDToName(id ProtocolID) string {
-	for n := range ps.Instantiators {
+	for n := range ps.instantiators {
 		if id == ProtocolNameToID(n) {
 			return n
 		}
@@ -65,26 +65,27 @@ func (ps *ProtocolStorage) ProtocolIDToName(id ProtocolID) string {
 }
 
 // ProtocolExists returns whether a certain protocol already has been
-// registered
+// registered.
 func (ps *ProtocolStorage) ProtocolExists(protoID ProtocolID) bool {
-	_, ok := ps.Instantiators[ps.ProtocolIDToName(protoID)]
+	_, ok := ps.instantiators[ps.ProtocolIDToName(protoID)]
 	return ok
 }
 
 // Register takes a name and a NewProtocol and stores it in the structure.
-// If the protocol already exists, a warning is printed.
+// If the protocol already exists, a warning is printed and the NewProtocol is
+// *not* stored.
 func (ps *ProtocolStorage) Register(name string, protocol NewProtocol) ProtocolID {
 	id := ProtocolNameToID(name)
-	if _, exists := ps.Instantiators[name]; exists {
+	if _, exists := ps.instantiators[name]; exists {
 		log.Warn("Protocol", name, "already exists - not overwriting")
 		return id
 	}
-	ps.Instantiators[name] = protocol
+	ps.instantiators[name] = protocol
 	log.Lvl4("Registered", name, "to", id)
 	return id
 }
 
-// ProtocolNameToID returns the ProtocolID corresponding to the given name
+// ProtocolNameToID returns the ProtocolID corresponding to the given name.
 func ProtocolNameToID(name string) ProtocolID {
 	url := network.NamespaceURL + "protocolname/" + name
 	return ProtocolID(uuid.NewV3(uuid.NamespaceURL, url))
