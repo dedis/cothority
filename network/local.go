@@ -460,7 +460,6 @@ func NewLocalHostWithManager(lm *LocalManager, addr Address) (*LocalHost, error)
 // Connect sets up a connection to addr. It retries up to
 // MaxRetryConnect while waiting between each try.
 // In case of an error, it will return a nil Conn.
-// TODO
 func (lh *LocalHost) Connect(si *ServerIdentity) (Conn, error) {
 	if si.Address.ConnType() != Local {
 		return nil, errors.New("Can't connect to non-Local address")
