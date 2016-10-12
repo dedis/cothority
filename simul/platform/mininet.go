@@ -5,12 +5,10 @@
 package platform
 
 import (
-	_ "errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"net"
@@ -28,6 +26,8 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+// MiniNet represents all the configuration that is necessary to run a simulation
+// on remote hosts running Mininet.
 type MiniNet struct {
 	// *** Mininet-related configuration
 	// The login on the platform
@@ -73,6 +73,8 @@ type MiniNet struct {
 	Bandwidth int
 }
 
+// Configure implements the Platform-interface. It is called once to set up
+// the necessary internal variables.
 func (m *MiniNet) Configure(pc *Config) {
 	// Directory setup - would also be possible in /tmp
 	// Supposes we're in `cothority/simul`
@@ -102,6 +104,7 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.sshMininet = make(chan string)
 }
 
+// Build implements the Platform interface and is called once per runlevel-file.
 // build is the name of the app to build
 // empty = all otherwise build specific package
 func (m *MiniNet) Build(build string, arg ...string) error {
@@ -111,11 +114,11 @@ func (m *MiniNet) Build(build string, arg ...string) error {
 	// Start with a clean build-directory
 	processor := "amd64"
 	system := "linux"
-	src_rel, err := filepath.Rel(m.wd, m.cothorityDir)
+	srcRel, err := filepath.Rel(m.wd, m.cothorityDir)
 	log.ErrFatal(err)
 
-	log.Lvl3("Relative-path is", src_rel, " will build into ", m.buildDir)
-	out, err := Build("./"+src_rel, m.buildDir+"/cothority",
+	log.Lvl3("Relative-path is", srcRel, " will build into ", m.buildDir)
+	out, err := Build("./"+srcRel, m.buildDir+"/cothority",
 		processor, system, arg...)
 	log.ErrFatal(err, out)
 
@@ -123,7 +126,7 @@ func (m *MiniNet) Build(build string, arg ...string) error {
 	return nil
 }
 
-// Kills all eventually remaining processes from the last Deploy-run
+// Cleanup kills all eventually remaining processes from the last Deploy-run
 func (m *MiniNet) Cleanup() error {
 	// Cleanup eventual ssh from the proxy-forwarding to the logserver
 	err := exec.Command("pkill", "-9", "-f", "ssh -nNTf").Run()
@@ -148,7 +151,7 @@ func (m *MiniNet) Cleanup() error {
 	return nil
 }
 
-// Creates the appropriate configuration-files and copies everything to the
+// Deploy creates the appropriate configuration-files and copies everything to the
 // MiniNet-installation.
 func (m *MiniNet) Deploy(rc RunConfig) error {
 	log.Lvl2("Localhost: Deploying and writing config-files")
@@ -192,12 +195,23 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	log.Lvl3("Saving configuration")
 	simulConfig.Save(m.buildDir)
 
+	// Verify the installation is correct
+	gw := m.HostIPs[0]
+	log.Lvl2("Verifying configuration on", gw)
+	out, err := exec.Command("ssh", "root@"+gw, "which mn").Output()
+	if err != nil || !strings.HasSuffix(string(out), "mininet") {
+		log.Error("While trying to connect to", gw, err)
+		log.Fatal("Please verify installation of mininet or run\n" +
+			"./platforms/mininet/setup_iccluster.sh")
+	}
+
 	// Copy our script
 	err = Copy(m.buildDir, m.mininetDir+"/start.py")
 	if err != nil {
 		log.Error(err)
 		return err
 	}
+
 	// Copy everything over to MiniNet
 	log.Lvl1("Copying over to", m.Login, "@", m.External)
 	err = Rsync(m.Login, m.External, m.buildDir+"/", "mininet_run/")
@@ -209,6 +223,7 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	return nil
 }
 
+// Start connects to the first of the remote servers to start the simulation.
 func (m *MiniNet) Start(args ...string) error {
 	// setup port forwarding for viewing log server
 	m.started = true
@@ -217,30 +232,16 @@ func (m *MiniNet) Start(args ...string) error {
 	// listening.
 	// -n = stdout == /Dev/null, -N => no command stream, -T => no tty
 	var exCmd *exec.Cmd
-	if true {
-		redirection := fmt.Sprintf("*:%d:%s:%d", m.MonitorPort, m.ProxyAddress, m.MonitorPort)
-		login := fmt.Sprintf("%s@%s", m.Login, m.External)
-		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-			redirection, login}
-		exCmd = exec.Command("ssh", cmd...)
-		if err := exCmd.Start(); err != nil {
-			log.Fatal("Failed to start the ssh port forwarding:", err)
-		}
-		if err := exCmd.Wait(); err != nil {
-			log.Fatal("ssh port forwarding exited in failure:", err)
-		}
-	} else {
-		redirection := strconv.Itoa(m.MonitorPort) + ":" + m.ProxyAddress + ":" + strconv.Itoa(m.MonitorPort)
-		login := fmt.Sprintf("%s@%s", m.Login, "icsil1-conodes-exp.epfl.ch")
-		cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
-			redirection, login}
-		exCmd = exec.Command("ssh", cmd...)
-		if err := exCmd.Start(); err != nil {
-			log.Fatal("Failed to start the 2nd ssh port forwarding:", err)
-		}
-		if err := exCmd.Wait(); err != nil {
-			log.Fatal("2nd ssh port forwarding exited in failure:", err)
-		}
+	redirection := fmt.Sprintf("*:%d:%s:%d", m.MonitorPort, m.ProxyAddress, m.MonitorPort)
+	login := fmt.Sprintf("%s@%s", m.Login, m.External)
+	cmd := []string{"-nNTf", "-o", "StrictHostKeyChecking=no", "-o", "ExitOnForwardFailure=yes", "-R",
+		redirection, login}
+	exCmd = exec.Command("ssh", cmd...)
+	if err := exCmd.Start(); err != nil {
+		log.Fatal("Failed to start the ssh port forwarding:", err)
+	}
+	if err := exCmd.Wait(); err != nil {
+		log.Fatal("ssh port forwarding exited in failure:", err)
 	}
 	go func() {
 		config := strings.Split(m.config, "\n")
@@ -256,7 +257,7 @@ func (m *MiniNet) Start(args ...string) error {
 	return nil
 }
 
-// Waiting for the process to finish
+// Wait blocks on the channel till the main-process finishes.
 func (m *MiniNet) Wait() error {
 	wait := m.CloseWait
 	if wait == 0 {
@@ -269,9 +270,8 @@ func (m *MiniNet) Wait() error {
 			if msg == "finished" {
 				log.Lvl3("Received finished-message, not killing users")
 				return nil
-			} else {
-				log.Lvl1("Received out-of-line message", msg)
 			}
+			log.Lvl1("Received out-of-line message", msg)
 		case <-time.After(time.Second * time.Duration(wait)):
 			log.Lvl1("Quitting after ", wait/60,
 				" minutes of waiting")
@@ -283,15 +283,14 @@ func (m *MiniNet) Wait() error {
 }
 
 // Returns the servers to use for mininet.
-// TODO: make it more user-definable.
 func (m *MiniNet) parseServers() error {
 	hosts, err := ioutil.ReadFile(path.Join(m.mininetDir, "server_list"))
 	if err != nil {
 		return err
 	}
 	m.HostIPs = []string{}
-	for _, h_raw := range strings.Split(string(hosts), "\n") {
-		h := strings.Replace(h_raw, " ", "", -1)
+	for _, hostRaw := range strings.Split(string(hosts), "\n") {
+		h := strings.Replace(hostRaw, " ", "", -1)
 		if len(h) > 0 {
 			ips, err := net.LookupIP(h)
 			if err != nil {

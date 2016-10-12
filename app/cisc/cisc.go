@@ -84,6 +84,7 @@ func idCreate(c *cli.Context) error {
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
 	log.Infof("IC is %x", cfg.ID)
+	log.Infof("Config to be saved: %+v", cfg.Identity.Cothority)
 	return cfg.saveConfig(c)
 }
 

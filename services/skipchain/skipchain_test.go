@@ -12,11 +12,13 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
+	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 2)
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -35,7 +37,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 
 func TestSkipBlock_Hash2(t *testing.T) {
 	local := sda.NewLocalTest()
-	hosts, el, _ := local.GenTree(2, false, false, false)
+	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
 	sbd1.Roster = el
@@ -54,11 +56,13 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	// First create a roster to attach the data to it
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 5)
+	_, el, genService := local.MakeHELS(5, skipchainSID)
+	service := genService.(*Service)
 	service.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
-	sbRoot := makeGenesisRoster(service, el)
+	sbRoot, err := makeGenesisRoster(service, el)
+	log.ErrFatal(err)
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -112,11 +116,16 @@ func TestService_GetUpdateChain(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 3
-	_, el, s := makeHELS(local, sbLength)
+	_, el, gs := local.MakeHELS(sbLength, skipchainSID)
+	s := gs.(*Service)
 	sbs := make([]*SkipBlock, sbLength)
-	sbs[0] = makeGenesisRoster(s, el)
+	var err error
+	sbs[0], err = makeGenesisRoster(s, el)
+	log.ErrFatal(err)
+	log.Lvl1("Initialize skipchain.")
 	// init skipchain
 	for i := 1; i < sbLength; i++ {
+		log.Lvl2("Doing skipblock", i)
 		newSB := NewSkipBlock()
 		newSB.Roster = el
 		psbrMsg, err := s.ProposeSkipBlock(nil,
@@ -167,11 +176,14 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	hosts, el, service := makeHELS(local, nodesRoot)
+	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID)
+	service := genService.(*Service)
 
 	// Setting up two chains and linking one to the other
-	sbRoot := makeGenesisRoster(service, el)
-	sbInter := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
+	sbRoot, err := makeGenesisRoster(service, el)
+	log.ErrFatal(err)
+	sbInter, err := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
+	log.ErrFatal(err)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 	// Verifying other nodes also got the updated chains
@@ -221,15 +233,17 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 func TestService_MultiLevel(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 3)
+	_, el, genService := local.MakeHELS(3, skipchainSID)
+	service := genService.(*Service)
 
 	for base := 1; base <= 3; base++ {
 		for height := 1; height <= 3; height++ {
 			if base == 1 && height > 1 {
 				break
 			}
-			sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone,
+			sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerifyNone,
 				base, height)
+			log.ErrFatal(err)
 			latest := sbRoot
 			log.Lvl1("Adding blocks for", base, height)
 			for sbi := 1; sbi < 10; sbi++ {
@@ -280,6 +294,7 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	if !l.Equal(latest) {
 		return errors.New("Last block from update is not the same as last block")
 	}
+	log.Lvl2(base, height, len(updates))
 	if base > 1 && height > 1 && len(updates) == 10 {
 		return fmt.Errorf("Shouldn't need 10 blocks with base %d and height %d",
 			base, height)
@@ -291,9 +306,12 @@ func TestService_Verification(t *testing.T) {
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 4
-	_, el, service := makeHELS(local, sbLength)
+	_, el, genService := local.MakeHELS(sbLength, skipchainSID)
+	service := genService.(*Service)
+
 	elRoot := sda.NewRoster(el.List[0:3])
-	sbRoot := makeGenesisRoster(service, elRoot)
+	sbRoot, err := makeGenesisRoster(service, elRoot)
+	log.ErrFatal(err)
 
 	log.Lvl1("Creating non-conforming skipBlock")
 	sb := NewSkipBlock()
@@ -302,17 +320,17 @@ func TestService_Verification(t *testing.T) {
 	sb.BaseHeight = 1
 	sb.ParentBlockID = sbRoot.Hash
 	sb.VerifierID = VerifyShard
-	_, err := service.ProposeSkipBlock(nil,
+	_, err = service.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{nil, sb})
-	if err == nil {
-		t.Fatal("Shouldn't accept a non-confoirming skipblock")
-	}
+	require.NotNil(t, err, "Shouldn't accept a non-confoirming skipblock")
 
 	log.Lvl1("Creating skipblock with same Roster as root")
-	sbInter := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, VerifyShard, 1, 1)
+	sbInter, err := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, VerifyShard, 1, 1)
+	log.ErrFatal(err)
 	log.Lvl1("Creating skipblock with sub-Roster from root")
 	elSub := sda.NewRoster(el.List[0:2])
-	sbInter = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, VerifyShard, 1, 1)
+	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, VerifyShard, 1, 1)
+	log.ErrFatal(err)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
 	service.SetChildrenSkipBlock(nil, scsb)
 }
@@ -346,9 +364,11 @@ func TestService_SignBlock(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, el, service := makeHELS(local, 3)
+	_, el, genService := local.MakeHELS(3, skipchainSID)
+	service := genService.(*Service)
 
-	sbRoot := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
+	sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerifyNone, 1, 1)
+	log.ErrFatal(err)
 	el2 := sda.NewRoster(el.List[0:2])
 	sb := NewSkipBlock()
 	sb.Roster = el2
@@ -367,12 +387,14 @@ func TestService_ProtocolVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	hosts, el, s1 := makeHELS(local, 3)
+	hosts, el, s := local.MakeHELS(3, skipchainSID)
+	s1 := s.(*Service)
 	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
 	s3 := local.Services[hosts[2].ServerIdentity.ID][skipchainSID].(*Service)
 	services := []*Service{s1, s2, s3}
 
-	sb := makeGenesisRosterArgs(s1, el, nil, VerifyNone, 1, 1)
+	sb, err := makeGenesisRosterArgs(s1, el, nil, VerifyNone, 1, 1)
+	log.ErrFatal(err)
 	for i := 0; i < 3; i++ {
 		sb = launchVerification(t, services, i, sb)
 	}
@@ -398,9 +420,58 @@ func launchVerification(t *testing.T, services []*Service, n int, prev *SkipBloc
 func TestService_ForwardSignature(t *testing.T) {
 }
 
+func TestService_RegisterVerification(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	sda.RegisterNewService("ServiceVerify", newServiceVerify)
+	local := sda.NewLocalTest()
+	defer local.CloseAll()
+	hosts, el, s1 := makeHELS(local, 3)
+	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
+	ver := make(chan bool, 3)
+	verifier := func(msg []byte, s *SkipBlock) bool {
+		ver <- true
+		return true
+	}
+	for _, h := range hosts {
+		s := h.GetService(ServiceName).(*Service)
+		log.ErrFatal(s.RegisterVerification(VerifyTest, verifier))
+	}
+	sb, err := makeGenesisRosterArgs(s1, el, nil, VerifyTest, 1, 1)
+	log.ErrFatal(err)
+	require.NotNil(t, sb.Data)
+	require.Equal(t, 3, len(ver))
+
+	sb, err = makeGenesisRosterArgs(s1, el, nil, ServiceVerifier, 1, 1)
+	log.ErrFatal(err)
+	require.NotNil(t, sb.Data)
+	require.Equal(t, 3, len(ServiceVerifierChan))
+}
+
+var ServiceVerifier = VerifierID(uuid.NewV5(uuid.NamespaceURL, "ServiceVerifier"))
+var ServiceVerifierChan = make(chan bool, 3)
+
+type ServiceVerify struct {
+	*sda.ServiceProcessor
+}
+
+func (sv *ServiceVerify) Verify(msg []byte, sb *SkipBlock) bool {
+	ServiceVerifierChan <- true
+	return true
+}
+
+func (sv *ServiceVerify) NewProtocol(tn *sda.TreeNodeInstance, c *sda.GenericConfig) (sda.ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newServiceVerify(c *sda.Context, path string) sda.Service {
+	sv := &ServiceVerify{}
+	log.ErrFatal(RegisterVerification(c, ServiceVerifier, sv.Verify))
+	return sv
+}
+
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
-	vid VerifierID, base, height int) *SkipBlock {
+	vid VerifierID, base, height int) (*SkipBlock, error) {
 	sb := NewSkipBlock()
 	sb.Roster = el
 	sb.MaximumHeight = height
@@ -409,18 +480,20 @@ func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
 	sb.VerifierID = vid
 	psbrMsg, err := s.ProposeSkipBlock(nil,
 		&ProposeSkipBlock{nil, sb})
-	log.ErrFatal(err)
+	if err != nil {
+		return nil, err
+	}
 	psbr := psbrMsg.(*ProposedSkipBlockReply)
-	return psbr.Latest
+	return psbr.Latest, nil
 }
 
-func makeGenesisRoster(s *Service, el *sda.Roster) *SkipBlock {
+func makeGenesisRoster(s *Service, el *sda.Roster) (*SkipBlock, error) {
 	return makeGenesisRosterArgs(s, el, nil, VerifyNone, 1, 1)
 }
 
 // Makes a Host, an Roster, and a service
-func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Host, *sda.Roster, *Service) {
-	hosts := local.GenLocalHosts(nbr, false, true)
+func makeHELS(local *sda.LocalTest, nbr int) ([]*sda.Conode, *sda.Roster, *Service) {
+	hosts := local.GenConodes(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }

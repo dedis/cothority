@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.6
+  - 1.7
 
 install:
   - ./install.sh
@@ -14,6 +14,9 @@ env:
 
 script:
   - make test
+
+after_success:
+  - goveralls -coverprofile=profile.cov -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 notifications:
   email: false

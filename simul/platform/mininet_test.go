@@ -27,29 +27,29 @@ func TestMiniNet_getHostList(t *testing.T) {
 	}{
 		{1, 1,
 			[]string{"10.1.0.2"},
-			"local1 10.1.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 1\n"},
 		{1, 2,
 			[]string{"10.1.0.2", "10.1.0.3"},
-			"local1 10.1.0.0/16 2\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 2\n"},
 		{2, 1,
 			[]string{"10.1.0.2"},
-			"local1 10.1.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 1\n"},
 		{2, 2,
 			[]string{"10.1.0.2", "10.2.0.2"},
-			"local1 10.1.0.0/16 1\nlocal2 10.2.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 1\nlocal2 10.2.0.0/16 1\n"},
 		{2, 3,
 			[]string{"10.1.0.2", "10.2.0.2", "10.1.0.3"},
-			"local1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\n"},
 		{3, 1,
 			[]string{"10.1.0.2"},
-			"local1 10.1.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 1\n"},
 		{3, 4,
 			[]string{"10.1.0.2", "10.2.0.2", "10.3.0.2",
 				"10.1.0.3"},
-			"local1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\nlocal3 10.3.0.0/16 1\n"},
+			"cosi 0 0\nlocal1 10.1.0.0/16 2\nlocal2 10.2.0.0/16 1\nlocal3 10.3.0.0/16 1\n"},
 	}
 	for _, tv := range testVector {
-		mn := &MiniNet{}
+		mn := &MiniNet{Simulation: "cosi"}
 		for i := 1; i <= tv.Servers; i++ {
 			mn.HostIPs = append(mn.HostIPs, fmt.Sprintf("local%d", i))
 		}

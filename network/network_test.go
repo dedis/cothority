@@ -1,4 +1,4 @@
-package libmedco_test
+package network
 
 import (
 	"testing"

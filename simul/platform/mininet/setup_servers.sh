@@ -22,7 +22,7 @@ for s in $SERVERS; do
 		exit 1
 	fi
 	scp install_mininet.sh $login:
-	ssh -f $login "./install_mininet.sh &> /dev/null"
+	ssh $login "./install_mininet.sh &> /dev/null"
 done
 
 echo -en "\n\nPlease press <enter> to start waiting on installation"

@@ -6,8 +6,14 @@ import (
 	"strings"
 	"testing"
 
+	"io/ioutil"
+
+	"os"
+
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var b bytes.Buffer
@@ -22,12 +28,12 @@ func TestMain(m *testing.M) {
 var serverGroup string = `Description = "Default Dedis Cosi servers"
 
 [[servers]]
-Addresses = ["5.135.161.91:2000"]
+Address = "tcp://5.135.161.91:2000"
 Public = "lLglU3nhHfUWe4p647hffn618TiUq+6FvTGzJw8eTGU="
 Description = "Nikkolasg's server: spreading the love of signing"
 
 [[servers]]
-Addresses = ["185.26.156.40:61117"]
+Address = "tcp://185.26.156.40:61117"
 Public = "apIWOKSt6JcOvNnjcVcPCNcaJJh/kPEjkbn2xSW+W+Q="
 Description = "Ismail's server"`
 
@@ -37,6 +43,10 @@ func TestReadGroupDescToml(t *testing.T) {
 
 	if len(group.Roster.List) != 2 {
 		t.Fatal("Should have 2 ServerIdentities")
+	}
+	nikkoAddr := group.Roster.List[0].Address
+	if !nikkoAddr.Valid() || nikkoAddr != network.NewTCPAddress("5.135.161.91:2000") {
+		t.Fatal("Address not valid " + group.Roster.List[0].Address.String())
 	}
 	if len(group.description) != 2 {
 		t.Fatal("Should have 2 descriptions")
@@ -66,6 +76,22 @@ func TestInputYN(t *testing.T) {
 	setInput("")
 	assert.True(t, InputYN(true, "Are you sure?"))
 	assert.Equal(t, "Are you sure? [Yn]: ", getOutput(), "one")
+}
+
+func TestCopy(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "copy")
+	log.ErrFatal(err)
+	_, err = tmp.Write([]byte{3, 1, 4, 5, 9, 2, 6})
+	log.ErrFatal(err)
+	log.ErrFatal(tmp.Close())
+	nsrc := tmp.Name()
+	ndst := nsrc + "1"
+	log.ErrFatal(Copy(ndst, nsrc))
+	stat, err := os.Stat(ndst)
+	log.ErrFatal(err)
+	require.Equal(t, int64(7), stat.Size())
+	log.ErrFatal(os.Remove(nsrc))
+	log.ErrFatal(os.Remove(ndst))
 }
 
 func setInput(s string) {
