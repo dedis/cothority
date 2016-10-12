@@ -116,8 +116,9 @@ var debugVisible = 1
 // If showTime is true, it will print the time for each line of debug-output.
 var showTime = false
 
-// If useColors is true, debug-output will be colored.
-var useColors = true
+// If useColors is true, debug-output will be colored (defaults to monochrome
+// output).
+var useColors = false
 
 // outputLines can be false to suppress outputting of lines in tests.
 var outputLines = true
