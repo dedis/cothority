@@ -180,7 +180,11 @@ func InteractiveConfig(binaryName string) {
 		log.Fatal("Impossible to parse public key:", err)
 	}
 
+<<<<<<< Updated upstream
 	server := config.NewServerToml(network.Suite, public, publicAddress)
+=======
+	server := config.NewServerToml(network.Suite, public, publicAddress, cert)
+>>>>>>> Stashed changes
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
