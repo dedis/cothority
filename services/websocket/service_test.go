@@ -45,7 +45,7 @@ func TestStatus(t *testing.T) {
 	log.ErrFatal(err)
 	log.Lvlf1("Received reply: %x", rcv)
 	_, stat, err := network.UnmarshalRegistered(rcv)
-	status, ok := stat.(*status.Response)
+	status, ok := stat.(*WSStatus)
 	require.True(t, ok)
 	log.Lvl1("Received correct status-reply:", status)
 }

@@ -26,6 +26,7 @@ const ServiceName = "WebSocket"
 
 func init() {
 	sda.RegisterNewService(ServiceName, newService)
+	network.RegisterPacketType(&WSStatus{})
 }
 
 // Service is our template-service
@@ -33,6 +34,11 @@ type Service struct {
 	*sda.ServiceProcessor
 	path   string
 	server *http.Server
+}
+
+// Simple status-example
+type WSStatus struct {
+	Status map[string]string
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -124,14 +130,14 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	_, msg, err := network.UnmarshalRegistered(buf)
 	req, ok := msg.(*status.Request)
 	log.Lvlf1("Received request: %x %v %t", buf, req, ok)
-	stat := s.GetService(status.ServiceName)
-	reply, err := stat.(*status.Stat).Request(nil, req)
-	if err != nil {
-		log.Error(err)
-		return
-	}
+	//stat := s.GetService(status.ServiceName)
+	//reply, err := stat.(*status.Stat).Request(nil, req)
+	//if err != nil {
+	//	log.Error(err)
+	//	return
+	//}
 	log.Lvl1(s.ReportStatus())
-	buf, err = network.MarshalRegisteredType(s.ReportStatus()["Status"])
+	buf, err = network.MarshalRegisteredType(&WSStatus{s.ReportStatus()["Status"]})
 	if err != nil {
 		log.Error(err)
 		return
