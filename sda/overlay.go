@@ -194,7 +194,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 		// no servies defined => check if there is a protocol that can be
 		// created
 		if !ok {
-			pi, err = ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
+			pi, err = o.conode.ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
 			if err != nil {
 				return err
 			}
@@ -446,7 +446,7 @@ func (o *Overlay) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, err
 // be picked up by the correct service and handled by its NewProtocol method.
 func (o *Overlay) CreateProtocolService(name string, t *Tree, sid ServiceID) (ProtocolInstance, error) {
 	tni := o.NewTreeNodeInstanceFromService(t, t.Root, ProtocolNameToID(name), sid)
-	pi, err := ProtocolInstantiate(tni.token.ProtoID, tni)
+	pi, err := o.conode.ProtocolInstantiate(tni.token.ProtoID, tni)
 	if err != nil {
 		return nil, err
 	}
