@@ -8,11 +8,9 @@ if [ -z "$1" ]; then
 fi
 
 ICCLUSTERS=""
-rm -f server_list
 for s in $@; do
   SERVER="iccluster0${s}.iccluster.epfl.ch"
   ICCLUSTERS="$ICCLUSTERS $SERVER"
-  echo $SERVER >> server_list
 done
 
 ./setup_servers.sh $ICCLUSTERS

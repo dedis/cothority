@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -e
 cd "$(dirname ${BASH_SOURCE[0]})"
 
 SERVER_GW="$1"
 SERVERS="$@"
 KEYS=/tmp/server_keys
 
-rm $KEYS
+rm -f $KEYS
 for s in $SERVERS; do
 	echo Starting to install on $s
 	login=root@$s
@@ -14,22 +14,18 @@ for s in $SERVERS; do
 	ssh-keygen -R $ip  > /dev/null
 	ssh-keyscan -t ssh-ed25519 $s >> ~/.ssh/known_hosts 2> /dev/null
 	ssh-copy-id $login 2> /dev/null
-	ssh $login "test ! -f .ssh/id_rsa && echo -e '\n\n\n\n' | ssh-keygen > /dev/null"
+	ssh $login "test ! -f .ssh/id_rsa && echo -e '\n\n\n\n' | ssh-keygen > /dev/null" || true
 	ssh $login cat .ssh/id_rsa.pub >> $KEYS
 	if ! ssh $login "egrep -q '(14.04|Debian GNU/Linux 8)' /etc/issue"; then
 		clear
-		echo "$s does not have Ubuntu 14.04 installed - aborting"
+		echo "$s does not have Ubuntu 14.04 or Debian 8 installed - aborting"
 		exit 1
 	fi
 	scp install_mininet.sh $login: > /dev/null
 	ssh -f $login "./install_mininet.sh &> /dev/null"
 done
 
-echo -e -n "\nPlease press <enter> to start waiting on installation"
-read
-
 DONE=0
-echo $SERVERS
 NBR=$( echo $SERVERS | wc -w )
 while [ $DONE -lt $NBR ]; do
 	DONE=0
@@ -48,10 +44,15 @@ done
 
 echo -e "\nAll servers are done installing - copying ssh-keys"
 
+rm -f server_list
 for s in $SERVERS; do
 	login=root@$s
 	cat $KEYS | ssh $login "cat - >> .ssh/authorized_keys"
 	ip=$( host $s | sed -e "s/.* //" )
 	ssh root@$SERVER_GW "ssh-keyscan -t ssh-ed25519 $s >> .ssh/known_hosts 2> /dev/null"
 	ssh root@$SERVER_GW "ssh-keyscan -t ssh-ed25519 $ip >> .ssh/known_hosts 2> /dev/null"
+	echo $s >> server_list
 done
+
+echo "Done installing to:"
+cat server_list
