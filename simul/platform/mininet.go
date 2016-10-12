@@ -199,7 +199,7 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	gw := m.HostIPs[0]
 	log.Lvl2("Verifying configuration on", gw)
 	out, err := exec.Command("ssh", "root@"+gw, "which mn").Output()
-	if err != nil || !strings.HasSuffix(string(out), "mininet") {
+	if err != nil || !strings.HasSuffix(string(out), "mn\n") {
 		log.Error("While trying to connect to", gw, err)
 		log.Fatal("Please verify installation of mininet or run\n" +
 			"./platforms/mininet/setup_iccluster.sh")
