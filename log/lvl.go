@@ -400,7 +400,7 @@ func MainTest(m *testing.M, ls ...int) {
 // ParseEnv looks at the following environment-variables:
 //   DEBUG_LVL - for the actual debug-lvl - default is 1
 //   DEBUG_TIME - whether to show the timestamp - default is false
-//   DEBUG_COLOR - whether to color the output - default is true
+//   DEBUG_COLOR - whether to color the output - default is false
 func ParseEnv() {
 	var err error
 	dv := os.Getenv("DEBUG_LVL")
