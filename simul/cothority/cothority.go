@@ -53,11 +53,6 @@ func main() {
 		log.Lvl2(err, conodeAddress)
 		return
 	}
-	if monitorAddress != "" {
-		if err := monitor.ConnectSink(monitorAddress); err != nil {
-			log.Error("Couldn't connect monitor to sink:", err)
-		}
-	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
 	var rootSim sda.Simulation
@@ -160,6 +155,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		monitor.EndAndCleanup()
 	}
 
 	log.Lvl3(conodeAddress, scs[0].Conode.ServerIdentity, "is waiting for all conodes to close")
