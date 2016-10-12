@@ -72,7 +72,6 @@ func TestRouterAutoConnectionLocal(t *testing.T) {
 }
 
 func testRouterAutoConnection(t *testing.T, fac routerFactory) {
-	log.TestOutput(true, 4)
 	h1, err := fac(2007)
 	if err != nil {
 		t.Fatal(err)
