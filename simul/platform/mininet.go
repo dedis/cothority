@@ -337,7 +337,7 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 		return
 	}
 	if nbrServers > physicalServers {
-		log.Warn(nbrServers, "required, but only", physicalServers,
+		log.Warn(nbrServers, "servers requested, but only", physicalServers,
 			"available - proceeding anyway.")
 	}
 	nbrHosts, err := rc.GetInt("Hosts")

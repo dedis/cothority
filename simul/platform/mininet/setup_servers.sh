@@ -1,5 +1,6 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
 cd "$(dirname ${BASH_SOURCE[0]})"
+set -e
 
 SERVER_GW="$1"
 SERVERS="$@"
@@ -22,7 +23,7 @@ for s in $SERVERS; do
 		exit 1
 	fi
 	scp install_mininet.sh $login: > /dev/null
-	ssh -f $login "./install_mininet.sh &> /dev/null"
+#	ssh -f $login "./install_mininet.sh &> /dev/null"
 done
 
 DONE=0

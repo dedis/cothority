@@ -12,8 +12,8 @@ It will create nbr+1 entries for each net, where the ".1" is the
 router for the net, and ".2"..".nbr+1" will be the nodes.
 """
 
-import sys, time, threading, os, datetime, contextlib, errno, platform
-
+from __future__ import print_function
+import sys, time, threading, os, datetime, contextlib, errno, platform, shutil
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.cli import CLI
@@ -36,7 +36,7 @@ runSSHD = False
 
 def dbg(lvl, *str):
     if lvl <= 1:
-        print str
+        print(str)
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
@@ -143,9 +143,12 @@ def RunNet():
     # Also set setLogLevel('info') if you want to use this, else
     # there is no correct reporting on commands.
     # CLI(net)
+    log = open(logfile, "r")
     while not os.path.exists(logdone):
         dbg( 2, "Waiting for cothority to finish at " + platform.node() )
+        print(log.read(), end="")
         time.sleep(1)
+    log.close()
 
     dbg( 2, "cothority is finished %s" % myNet )
     net.stop()
@@ -204,7 +207,7 @@ if __name__ == '__main__':
     # With this loglevel CLI(net) does not report correctly.
     lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
-        print "please give list-name"
+        print("please give list-name")
         sys.exit(-1)
 
     list_file = sys.argv[1]
@@ -228,6 +231,7 @@ if __name__ == '__main__':
             call("ssh -q %s 'mn -c; pkill -9 -f start.py' > /dev/null 2>&1" % server, shell=True)
             dbg( 3, "Going to copy things %s to %s and run %s hosts in net %s" % \
                   (list_file, server, nbr, mn) )
+            shutil.rmtree('config')
             call("scp -q * %s %s:" % (list_file, server), shell=True)
             threads.append(threading.Thread(target=call_other, args=[server, list_file]))
 
