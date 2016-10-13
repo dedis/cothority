@@ -364,15 +364,16 @@ func (l *LocalTest) NewConode(port int) *Conode {
 	default:
 		conode = l.NewLocalConode(port)
 	}
-	l.Conodes[conode.ServerIdentity.ID] = conode
-	l.Overlays[conode.ServerIdentity.ID] = conode.overlay
-	l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
 	return conode
 }
 
+// NewTCPConode returns a new TCP Conode attached to this LocalTest.
 func (l *LocalTest) NewTCPConode() *Conode {
 	conode := NewTCPConode(0)
 	l.Conodes[conode.ServerIdentity.ID] = conode
+	l.Overlays[conode.ServerIdentity.ID] = conode.overlay
+	l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
+
 	return conode
 }
 
@@ -390,6 +391,9 @@ func (l *LocalTest) NewLocalConode(port int) *Conode {
 		time.Sleep(10 * time.Millisecond)
 	}
 	l.Conodes[conode.ServerIdentity.ID] = conode
+	l.Overlays[conode.ServerIdentity.ID] = conode.overlay
+	l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
+
 	return conode
 
 }
