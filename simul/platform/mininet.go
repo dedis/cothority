@@ -22,6 +22,7 @@ import (
 	"sort"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 )
@@ -93,7 +94,7 @@ func (m *MiniNet) Configure(pc *Config) {
 
 	// Clean the MiniNet-dir, create it and change into it
 	os.RemoveAll(m.buildDir)
-	os.Mkdir(m.buildDir, 0700)
+	log.ErrFatal(os.Mkdir(m.buildDir, 0700))
 	sda.WriteTomlConfig(*m, m.mininetDir+"/mininet.toml", m.mininetDir)
 
 	if m.Simulation == "" {
@@ -136,7 +137,7 @@ func (m *MiniNet) Cleanup() error {
 
 	// SSH to the MiniNet-server and end all running users-processes
 	log.Lvl3("Going to stop everything")
-	m.parseServers()
+	log.ErrFatal(m.parseServers())
 	for _, h := range m.HostIPs {
 		log.Lvl3("Cleaning up server", h)
 		_, err = SSHRun(m.Login, m.External, "pkill -9 -f start.py")
@@ -144,10 +145,6 @@ func (m *MiniNet) Cleanup() error {
 			log.Lvl2("Error while cleaning up:", err)
 		}
 	}
-	//err = SSHRunStdout(m.Login, m.Host, "ps aux")
-	//if err != nil {
-	//	log.Lvl3(err)
-	//}
 	return nil
 }
 
@@ -206,7 +203,7 @@ func (m *MiniNet) Deploy(rc RunConfig) error {
 	}
 
 	// Copy our script
-	err = Copy(m.buildDir, m.mininetDir+"/start.py")
+	err = config.Copy(m.buildDir, m.mininetDir+"/start.py")
 	if err != nil {
 		log.Error(err)
 		return err
@@ -286,7 +283,8 @@ func (m *MiniNet) Wait() error {
 func (m *MiniNet) parseServers() error {
 	hosts, err := ioutil.ReadFile(path.Join(m.mininetDir, "server_list"))
 	if err != nil {
-		return err
+		return fmt.Errorf("Couldn't find %s/server_list - you can produce one with\n"+
+			"\t\t%s/setup_servers.sh", m.mininetDir, m.mininetDir)
 	}
 	m.HostIPs = []string{}
 	for _, hostRaw := range strings.Split(string(hosts), "\n") {
@@ -294,8 +292,7 @@ func (m *MiniNet) parseServers() error {
 		if len(h) > 0 {
 			ips, err := net.LookupIP(h)
 			if err != nil {
-				// Hope it's an IP-address
-				m.HostIPs = append(m.HostIPs, h)
+				return err
 			} else {
 				log.Lvl3("Found IP for", h, ":", ips[0])
 				m.HostIPs = append(m.HostIPs, ips[0].String())
@@ -306,14 +303,25 @@ func (m *MiniNet) parseServers() error {
 	return nil
 }
 
-// getHostList returns the hosts that will be used for the communication
-// and the list for `start.py`.
+// getHostList prepares the mapping from physical hosts to mininet-hosts. Each
+// physical host holds a 10.x/16-network with the .0.1 being the gateway and
+// .0.2 the first usable conode.
+//
+// hosts holds all addresses for all conodes, attributed in a round-robin fashion
+// over all mininet-addresses.
+//
+// list is used by platform/mininet/start.py and has the following format:
+// SimulationName BandwidthMbps DelayMS
+// physicalIP1 MininetNet1/16 NumberConodes1
+// physicalIP2 MininetNet2/16 NumberConodes2
 func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err error) {
 	hosts = []string{}
 	list = ""
 	physicalServers := len(m.HostIPs)
 	nets := make([]*net.IPNet, physicalServers)
 	ips := make([]net.IP, physicalServers)
+
+	// Create all mininet-networks
 	for n := range nets {
 		ips[n], nets[n], err = net.ParseCIDR(fmt.Sprintf("10.%d.0.0/16", n+1))
 		if err != nil {
@@ -329,12 +337,15 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 		return
 	}
 	if nbrServers > physicalServers {
-		log.Warn("Fewer physical servers available than requested.")
+		log.Warn(nbrServers, "required, but only", physicalServers,
+			"available - proceeding anyway.")
 	}
 	nbrHosts, err := rc.GetInt("Hosts")
 	if err != nil {
 		return
 	}
+
+	// Map all required conodes to Mininet-hosts
 	for i := 0; i < nbrHosts; i++ {
 		ip := ips[i%physicalServers]
 		for j := len(ip) - 1; j >= 0; j-- {
@@ -357,6 +368,8 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	}
 	list = fmt.Sprintf("%s %d %d\n", m.Simulation, bandwidth, delay)
 
+	// Add descriptions for `start.py` to know which mininet-network it has to
+	// run on what physical server with how many hosts.
 	for i, s := range nets {
 		if i >= nbrHosts {
 			break

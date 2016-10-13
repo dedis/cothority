@@ -84,6 +84,8 @@ class Cothority(Host):
         if True:
             args += " -monitor %s:10000" % global_root
         ldone = ""
+        # When the first conode on a physical server ends, tell `start.py`
+        # to go on. ".0.1" is the BaseRouter.
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
