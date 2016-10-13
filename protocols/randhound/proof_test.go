@@ -36,13 +36,13 @@ func TestProof(t *testing.T) {
 		log.ErrFatal(err)
 	}
 
-	xG, xH, core, err := p.Setup(x, y)
+	xG, xH, err := p.Setup(x, y)
 	if err != nil {
 		log.ErrFatal(err)
 	}
 
 	// Verify proofs
-	q, err := randhound.NewProof(suite, g, h, core)
+	q, err := randhound.NewProof(suite, g, h, p.Core)
 	if err != nil {
 		log.ErrFatal(err)
 	}
@@ -84,13 +84,13 @@ func TestProofCollective(t *testing.T) {
 		log.ErrFatal(err)
 	}
 
-	xG, xH, core, err := p.SetupCollective(x, y)
+	xG, xH, err := p.SetupCollective(x, y)
 	if err != nil {
 		log.ErrFatal(err)
 	}
 
 	// Verify proof
-	q, err := randhound.NewProof(suite, g, h, core)
+	q, err := randhound.NewProof(suite, g, h, p.Core)
 	if err != nil {
 		log.ErrFatal(err)
 	}

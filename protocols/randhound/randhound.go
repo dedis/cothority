@@ -136,6 +136,7 @@ func (rh *RandHound) Start() error {
 
 		// Sign I1 and store signature in i1.Sig
 		if err := signSchnorr(rh.Suite(), rh.Private(), i1); err != nil {
+			rh.mutex.Unlock()
 			return err
 		}
 
