@@ -26,7 +26,7 @@ import (
 //	 the latter are assumed to be stateless; should they know the public key of the client?
 
 func init() {
-	sda.ProtocolRegisterName("RandHound", NewRandHound)
+	sda.GlobalProtocolRegister("RandHound", NewRandHound)
 }
 
 // NewRandHound generates a new RandHound instance.
