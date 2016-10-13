@@ -366,7 +366,7 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	if d, err := rc.GetInt("Delay"); err == nil {
 		delay = d
 	}
-	list = fmt.Sprintf("%s %d %d\n", m.Simulation, bandwidth, delay)
+	list = fmt.Sprintf("%s %d %d %d\n", m.Simulation, m.Debug, bandwidth, delay)
 
 	// Add descriptions for `start.py` to know which mininet-network it has to
 	// run on what physical server with how many hosts.

@@ -35,8 +35,11 @@ logdone = "/tmp/done.log"
 runSSHD = False
 
 def dbg(lvl, *str):
-    if lvl <= 1:
-        print(str)
+    if lvl <= debugging:
+        print("start.py:", end=" ")
+        for s in str:
+            print(s, end=" ")
+        print()
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
@@ -159,7 +162,7 @@ def GetNetworks(filename):
     It returns the first server encountered, our network if our ip is found
     in the list and the other networks."""
 
-    global simulation, bandwidth, delay
+    global simulation, bandwidth, delay, debugging
 
     process = Popen(["ip", "a"], stdout=PIPE)
     (ips, err) = process.communicate()
@@ -168,8 +171,9 @@ def GetNetworks(filename):
     with open(filename) as f:
         content = f.readlines()
 
-    simulation, bw, d = content.pop(0).rstrip().split(' ')
+    simulation, dbg, bw, d = content.pop(0).rstrip().split(' ')
     bandwidth = int(bw)
+    debugging = int(dbg)
     delay = d + "ms"
 
     list = []
@@ -214,7 +218,7 @@ if __name__ == '__main__':
     global_root, myNet, otherNets = GetNetworks(list_file)
 
     if myNet:
-        dbg( 2, "Cleaning up mininet and logfiles" )
+        dbg( 1, "Cleaning up mininet and logfiles" )
         # rm_file(logfile)
         rm_file(logdone)
         call("mn -c > /dev/null 2>&1", shell=True)
@@ -225,13 +229,13 @@ if __name__ == '__main__':
 
     threads = []
     if len(sys.argv) > 2:
-        dbg( 2, "Starting remotely on nets", otherNets )
+        dbg( 1, "Starting remotely on nets", otherNets)
         for (server, mn, nbr) in otherNets:
             dbg( 3, "Cleaning up", server )
             call("ssh -q %s 'mn -c; pkill -9 -f start.py' > /dev/null 2>&1" % server, shell=True)
             dbg( 3, "Going to copy things %s to %s and run %s hosts in net %s" % \
                   (list_file, server, nbr, mn) )
-            shutil.rmtree('config')
+            shutil.rmtree('config', ignore_errors=True)
             call("scp -q * %s %s:" % (list_file, server), shell=True)
             threads.append(threading.Thread(target=call_other, args=[server, list_file]))
 
@@ -246,4 +250,4 @@ if __name__ == '__main__':
     for thr in threads:
         thr.join()
 
-    dbg( 3, "echo Done with main in %s" % platform.node())
+    dbg( 1, "Done with main in %s" % platform.node())
