@@ -605,6 +605,14 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 	return collectErrors("Error while sending to %s: %s\n", errs)
 }
 
+// CreateProtocol makes SDA instantiates a new protocol of name "name" and
+// returns it with any error that might have happened during the creation. This
+// protocol is only handled by SDA, no service are "attached" to it.
+func (n *TreeNodeInstance) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := n.overlay.CreateProtocolSDA(name, t)
+	return pi, err
+}
+
 // Host returns the underlying Host of this node.
 // WARNING: you should not play with that feature unless you know what you are
 // doing. This feature is mean to access the low level parts of the API. For
