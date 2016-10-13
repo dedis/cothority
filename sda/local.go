@@ -323,23 +323,6 @@ func NewLocalConode(port int) *Conode {
 	return h
 }
 
-// NewLocalConode returns a fresh Host using local connections within the context
-// of this LocalTest
-func (l *LocalTest) NewLocalConode(port int) *Conode {
-	priv, id := NewPrivIdentity(port)
-	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	h := NewConodeWithRouter(id, priv, localRouter)
-	go h.Start()
-	for !h.Listening() {
-		time.Sleep(10 * time.Millisecond)
-	}
-	return h
-
-}
-
 // NewClient returns *Client for which the types depend on the mode of the
 // LocalContext.
 func (l *LocalTest) NewClient(serviceName string) *Client {
@@ -364,24 +347,55 @@ func (l *LocalTest) NewLocalClient(serviceName string) *Client {
 func (l *LocalTest) genLocalHosts(n int) []*Conode {
 	conodes := make([]*Conode, n)
 	for i := 0; i < n; i++ {
-		var conode *Conode
 		port := 2000 + i*10
-		switch l.mode {
-		case TCP:
-			conode = NewTCPConode(0)
-		default:
-			conode = l.NewLocalConode(port)
-		}
-		conodes[i] = conode
-	}
-
-	for _, h := range conodes {
-		for !h.Listening() {
-			time.Sleep(40 * time.Millisecond)
-		}
-		l.Conodes[h.ServerIdentity.ID] = h
+		conodes[i] = l.NewConode(port)
 	}
 	return conodes
+}
+
+// NewConode returns a new conode which type is determined by the local mode:
+// TCP or Local. If it's TCP, then an available port is used, otherwise, the
+// port given in argument is used.
+func (l *LocalTest) NewConode(port int) *Conode {
+	var conode *Conode
+	switch l.mode {
+	case TCP:
+		conode = l.NewTCPConode()
+	default:
+		conode = l.NewLocalConode(port)
+	}
+	return conode
+}
+
+// NewTCPConode returns a new TCP Conode attached to this LocalTest.
+func (l *LocalTest) NewTCPConode() *Conode {
+	conode := NewTCPConode(0)
+	l.Conodes[conode.ServerIdentity.ID] = conode
+	l.Overlays[conode.ServerIdentity.ID] = conode.overlay
+	l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
+
+	return conode
+}
+
+// NewLocalConode returns a fresh Host using local connections within the context
+// of this LocalTest
+func (l *LocalTest) NewLocalConode(port int) *Conode {
+	priv, id := NewPrivIdentity(port)
+	localRouter, err := network.NewLocalRouterWithManager(l.ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	conode := NewConodeWithRouter(id, priv, localRouter)
+	go conode.Start()
+	for !conode.Listening() {
+		time.Sleep(10 * time.Millisecond)
+	}
+	l.Conodes[conode.ServerIdentity.ID] = conode
+	l.Overlays[conode.ServerIdentity.ID] = conode.overlay
+	l.Services[conode.ServerIdentity.ID] = conode.serviceManager.services
+
+	return conode
+
 }
 
 // PrivPub creates a private/public key pair.
