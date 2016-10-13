@@ -548,6 +548,16 @@ func (n *TreeNodeInstance) Broadcast(msg interface{}) error {
 	return nil
 }
 
+// Multicast ... XXX: should probably have a parallel more robust version like "SendToChildrenInParallel"
+func (n *TreeNodeInstance) Multicast(msg interface{}, nodes ...*TreeNode) error {
+	for _, node := range nodes {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SendToParent sends a given message to the parent of the calling node (unless it is the root)
 func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	if n.IsRoot() {

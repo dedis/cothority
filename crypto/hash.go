@@ -95,7 +95,7 @@ func HashFileSuite(suite abstract.Suite, file string) ([]byte, error) {
 // BinaryMarshaler.
 func HashArgs(hash h.Hash, args ...interface{}) ([]byte, error) {
 	var res, buf []byte
-	bmArgs, err := convertToBinaryMarshaler(args)
+	bmArgs, err := ConvertToBinaryMarshaler(args)
 	if err != nil {
 		return nil, err
 	}
@@ -118,22 +118,21 @@ func HashArgsSuite(suite abstract.Suite, args ...interface{}) ([]byte, error) {
 }
 
 // ConvertToBinaryMarshaler takes a slice of interfaces and returns
-// a slice of BinaryMarshalers.
-func convertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, error) {
+// a slice of BinaryMarshalers
+func ConvertToBinaryMarshaler(args ...interface{}) ([]encoding.BinaryMarshaler, error) {
 	var ret []encoding.BinaryMarshaler
 	for _, a := range args {
 		refl := reflect.ValueOf(a)
-		switch refl.Kind() {
-		case reflect.Slice, reflect.Array:
+		if refl.Kind() == reflect.Slice {
 			for b := 0; b < refl.Len(); b++ {
 				el := refl.Index(b)
-				bms, err := convertToBinaryMarshaler(el.Interface())
+				bms, err := ConvertToBinaryMarshaler(el.Interface())
 				if err != nil {
 					return nil, err
 				}
 				ret = append(ret, bms...)
 			}
-		default:
+		} else {
 			bm, ok := a.(encoding.BinaryMarshaler)
 			if !ok {
 				return nil, errors.New("Couldn't convert to BinaryMarshaler")
