@@ -29,14 +29,6 @@ type Conode struct {
 	statusReporterStruct *statusReporterStruct
 }
 
-// NewConodeTCP returns a new Host that out of a private-key and its relating public
-// key within the ServerIdentity. The host will create a default TcpRouter as Router.
-func NewConodeTCP(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
-	r, err := network.NewTCPRouter(e)
-	log.ErrFatal(err)
-	return NewConode(r, pkey)
-}
-
 // NewConode returns a fresh Host with a given Router.
 func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	log.Lvl3("NewConode", r.ServerIdentity.Address)
@@ -50,6 +42,14 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	h.serviceManager = newServiceManager(h, h.overlay)
 	h.statusReporterStruct.RegisterStatusReporter("Status", h)
 	return h
+}
+
+// NewConodeTCP returns a new Host that out of a private-key and its relating public
+// key within the ServerIdentity. The host will create a default TcpRouter as Router.
+func NewConodeTCP(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
+	r, err := network.NewTCPRouter(e)
+	log.ErrFatal(err)
+	return NewConode(r, pkey)
 }
 
 // Suite can (and should) be used to get the underlying abstract.Suite.
