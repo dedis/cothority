@@ -10,7 +10,7 @@ import (
 
 func init() {
 	// this is my comment
-	// This is my second comment
+	// this georgia second comment
 	network.RegisterPacketType(Announce{})
 	network.RegisterPacketType(Reply{})
 	sda.GlobalProtocolRegister("ExampleHandlers", NewExampleHandlers)
