@@ -37,15 +37,20 @@ func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 			OrganizationalUnit: []string{orgUnit},
 			CommonName:         "*",
 		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(validYear, 0, 0),
-		SubjectKeyId:          subjectKeyID,
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(validYear, 0, 0),
+		SubjectKeyId: subjectKeyID,
+		// Indicates to use IsCA
 		BasicConstraintsValid: true,
-		IsCA:        true,
+		// Is Certificate Authority - can sign keys
+		IsCA: true,
+		// The IP-addresses this certificate is valid for
 		IPAddresses: ips,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage: x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign |
-			x509.KeyUsageKeyAgreement,
+		// Extended key usage - the certificate can be used to authenticate the
+		// server.
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		// Standard key usage - only use for signing the certificate.
+		KeyUsage: x509.KeyUsageCertSign,
 	}
 }
 
@@ -88,6 +93,8 @@ func NewCertKey(ca *x509.Certificate, keyLen int) (cert TLSCertPEM, key TLSKeyPE
 }
 
 func secureConfig(c *tls.Config) *tls.Config {
+	// This makes sure that we only get a connection with ECDHE
+	// key-exchange.
 	c.CipherSuites = []uint16{
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
