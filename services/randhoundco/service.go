@@ -54,7 +54,10 @@ func (s *service) Setup(si *network.ServerIdentity, setup *SetupReq) (network.Bo
 	// lauch the setup protocol
 	tn := s.NewTreeNodeInstance(tree, tree.Root, randProto.SetupProto)
 
-	setupProto := randProto.NewSetupClient(tn, groups)
+	setupProto, err := randProto.NewSetupClient(tn, groups)
+	if err != nil {
+		return err
+	}
 	// Get the final groups when the setup is done
 	grCh := make(chan *randProto.Groups)
 	setupProto.RegisterOnDone(func(g *randProto.Groups) {
@@ -86,7 +89,7 @@ func (s *service) NewRound(si *network.ServerIdentity, req NewRoundReq) (network
 	if tn == nil {
 		return nil, err
 	}
-	proto, err := randProto.NewRandhoundCoNode(tn, msg, rootInfo.aggregate)
+	proto, err := randProto.NewRandhoundCoRoot(tn, msg, rootInfo.aggregate)
 	if err != nil {
 		return nil, err
 	}
