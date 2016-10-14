@@ -271,7 +271,7 @@ func (n *TreeNodeInstance) Close() error {
 
 // ProtocolName will return the string representing that protocol
 func (n *TreeNodeInstance) ProtocolName() string {
-	return ProtocolIDToName(n.token.ProtoID)
+	return n.overlay.conode.protocols.ProtocolIDToName(n.token.ProtoID)
 }
 
 func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
@@ -548,6 +548,16 @@ func (n *TreeNodeInstance) Broadcast(msg interface{}) error {
 	return nil
 }
 
+// Multicast ... XXX: should probably have a parallel more robust version like "SendToChildrenInParallel"
+func (n *TreeNodeInstance) Multicast(msg interface{}, nodes ...*TreeNode) error {
+	for _, node := range nodes {
+		if err := n.SendTo(node, msg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SendToParent sends a given message to the parent of the calling node (unless it is the root)
 func (n *TreeNodeInstance) SendToParent(msg interface{}) error {
 	if n.IsRoot() {
@@ -603,6 +613,14 @@ func (n *TreeNodeInstance) SendToChildrenInParallel(msg interface{}) error {
 	}
 	wg.Wait()
 	return collectErrors("Error while sending to %s: %s\n", errs)
+}
+
+// CreateProtocol makes SDA instantiates a new protocol of name "name" and
+// returns it with any error that might have happened during the creation. This
+// protocol is only handled by SDA, no service are "attached" to it.
+func (n *TreeNodeInstance) CreateProtocol(name string, t *Tree) (ProtocolInstance, error) {
+	pi, err := n.overlay.CreateProtocolSDA(name, t)
+	return pi, err
 }
 
 // Host returns the underlying Host of this node.

@@ -7,6 +7,8 @@ import (
 
 	"sort"
 
+	"errors"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -15,8 +17,6 @@ import (
 // Conode is the structure responsible for holding information about the current
 // state
 type Conode struct {
-	// Our entity (i.e. identity over the network)
-	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
 	*network.Router
@@ -27,21 +27,28 @@ type Conode struct {
 	treesLock            sync.Mutex
 	serviceManager       *serviceManager
 	statusReporterStruct *statusReporterStruct
+	// protocols holds a map of all available protocols and how to create an
+	// instance of it
+	protocols *protocolStorage
 }
 
 // NewConode returns a fresh Host with a given Router.
 func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	log.Lvl3("NewConode", r.ServerIdentity.Address)
-	h := &Conode{
-		ServerIdentity:       r.ServerIdentity,
+	c := &Conode{
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
+		protocols:            newProtocolStorage(),
 	}
-	h.overlay = NewOverlay(h)
-	h.serviceManager = newServiceManager(h, h.overlay)
-	h.statusReporterStruct.RegisterStatusReporter("Status", h)
-	return h
+	c.overlay = NewOverlay(c)
+	c.serviceManager = newServiceManager(c, c.overlay)
+	c.statusReporterStruct.RegisterStatusReporter("Status", c)
+	for name, inst := range protocols.instantiators {
+		log.Lvl4("Registering global protocol", name)
+		c.ProtocolRegister(name, inst)
+	}
+	return c
 }
 
 // NewConodeTCP returns a new Host that out of a private-key and its relating public
@@ -66,9 +73,6 @@ func (c *Conode) GetStatus() Status {
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
 	return m
-	//router := h.Router.GetStatus()
-	//return router.Merge(m)
-
 }
 
 // Close closes the overlay and the Router
@@ -88,4 +92,19 @@ func (c *Conode) Address() network.Address {
 // GetService returns the service with the given name.
 func (c *Conode) GetService(name string) Service {
 	return c.serviceManager.Service(name)
+}
+
+// ProtocolRegister will sign up a new protocol to this Conode.
+// It returns the ID of the protocol.
+func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
+	return c.protocols.Register(name, protocol)
+}
+
+// ProtocolInstantiate instantiate a protocol from its ID
+func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) (ProtocolInstance, error) {
+	fn, ok := c.protocols.instantiators[c.protocols.ProtocolIDToName(protoID)]
+	if !ok {
+		return nil, errors.New("No protocol constructor with this ID")
+	}
+	return fn(tni)
 }

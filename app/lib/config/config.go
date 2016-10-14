@@ -33,8 +33,8 @@ type CothoritydConfig struct {
 	Public  string
 	Private string
 	Address network.Address
-	TLSCert string
-	TLSKey  string
+	TLSCert network.TLSCertPEM
+	TLSKey  network.TLSKeyPEM
 }
 
 // Save will save this CothoritydConfig to the given file name. It
@@ -71,8 +71,8 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 		return nil, nil, err
 	}
 	si := network.NewServerIdentity(point, hc.Address)
-	si.Cert = []byte(hc.TLSCert)
-	router, err := network.NewTLSRouter(si, []byte(hc.TLSKey))
+	si.Cert = hc.TLSCert
+	router, err := network.NewTLSRouter(si, hc.TLSKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +143,7 @@ type ServerToml struct {
 	Address     network.Address
 	Public      string
 	Description string
-	Cert        string
+	Cert        network.TLSCertPEM
 }
 
 // Group holds the Roster and the server-description.
@@ -232,7 +232,7 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 		return nil, err
 	}
 	si := network.NewServerIdentity(public, s.Address)
-	si.Cert = []byte(s.Cert)
+	si.Cert = s.Cert
 	return si, nil
 }
 
@@ -250,7 +250,7 @@ func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Add
 	return &ServerToml{
 		Address: addr,
 		Public:  buff.String(),
-		Cert:    string(cert),
+		Cert:    cert,
 	}
 }
 

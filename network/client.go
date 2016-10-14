@@ -44,7 +44,6 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 	baseIDLock.Unlock()
 	sid := NewServerIdentity(kp.Public, NewAddress(dst.Address.ConnType(),
 		"client:"+strconv.FormatUint(id, 10)))
-	sid.Cert = dst.Cert
 
 	c, err := cl.connector(sid, dst)
 	if err != nil {

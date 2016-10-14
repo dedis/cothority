@@ -2,7 +2,6 @@ package network
 
 import (
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -13,11 +12,18 @@ import (
 
 	"net"
 
+	"crypto/ecdsa"
+
+	"crypto/elliptic"
+
 	"github.com/dedis/cothority/log"
 )
 
-type TLSCertPEM []byte
-type TLSKeyPEM []byte
+// TLSCertPEM is a PEM-encoded certificate for a TLS connection.
+type TLSCertPEM string
+
+// TLSKeyPEM is a PEM-encoded private key for a TLS connection.
+type TLSKeyPEM string
 
 // NewTLSCert returns a x509-certificate valid for all CommonNames.
 func NewTLSCert(serial *big.Int, country, org, orgUnit string,
@@ -43,32 +49,51 @@ func NewTLSCert(serial *big.Int, country, org, orgUnit string,
 	}
 }
 
-// NewTLSKC returns a TLSKC-structure with a PEM-encoded certificate and key.
+// NewCertKey returns a PEM-encoded certificate and key. If an error occurs,
+// both the cert and key are empty.
 func NewCertKey(ca *x509.Certificate, keyLen int) (cert TLSCertPEM, key TLSKeyPEM, err error) {
-	if keyLen < 2048 {
+	if keyLen < 256 {
 		log.Warn("Small key-length:", keyLen)
 	}
-	priv, _ := rsa.GenerateKey(rand.Reader, keyLen)
+	//priv, err := rsa.GenerateKey(rand.Reader, keyLen)
+	var priv *ecdsa.PrivateKey
+	var err error
+	switch keyLen {
+	case 224:
+		priv, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
+	case 256:
+		priv, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	case 384:
+		priv, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	case 521:
+		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	default:
+		err = errors.New("Unknown key-length - chose 224, 256, 384 or 521.")
+	}
+	if err != nil {
+		return
+	}
 	pub := &priv.PublicKey
 	x509cert, err := x509.CreateCertificate(rand.Reader, ca, ca, pub, priv)
 	if err != nil {
 		return
 	}
-	cert = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE",
-		Bytes: x509cert})
-	key = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	cert = TLSCertPEM(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE",
+		Bytes: x509cert}))
+	key = TLSKeyPEM(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(priv)}))
 	return
 }
 
 func secureConfig(c *tls.Config) *tls.Config {
-	c.CipherSuites = []uint16{tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+	c.CipherSuites = []uint16{
+		//tls.TLS_RSA_WITH_AES_128_CBC_SHA,
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		//tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		//tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		//tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256}
 	c.MinVersion = tls.VersionTLS12
 	return c
@@ -77,7 +102,7 @@ func secureConfig(c *tls.Config) *tls.Config {
 // ConfigClient returns a tls.Config usable for a call to tls.Dial.
 func (cert TLSCertPEM) ConfigClient() (*tls.Config, error) {
 	roots := x509.NewCertPool()
-	ok := roots.AppendCertsFromPEM(cert)
+	ok := roots.AppendCertsFromPEM([]byte(cert))
 	if !ok {
 		return nil, errors.New("Couldn't get root cert.")
 	}
@@ -89,7 +114,7 @@ func (cert TLSCertPEM) ConfigClient() (*tls.Config, error) {
 
 // ConfigServer returns a tls.Config usable for a call to tls.Listen.
 func (key TLSKeyPEM) ConfigServer(cert TLSCertPEM) (*tls.Config, error) {
-	x509cert, err := tls.X509KeyPair(cert, key)
+	x509cert, err := tls.X509KeyPair([]byte(cert), []byte(key))
 	if err != nil {
 		panic(err)
 	}

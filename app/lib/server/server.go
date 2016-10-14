@@ -155,8 +155,8 @@ func InteractiveConfig(binaryName string) {
 		Public:  pubStr,
 		Private: privStr,
 		Address: serverBinding,
-		TLSCert: string(cert),
-		TLSKey:  string(key),
+		TLSCert: cert,
+		TLSKey:  key,
 	}
 
 	var configDone bool

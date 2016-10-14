@@ -2,7 +2,7 @@
 
 import csv
 import unittest
-
+import numpy as np
 
 # Our CSVs have a space after the comma, so we need a new 'dialect', here
 # called 'deploy'
@@ -101,13 +101,13 @@ class Values:
     def __init__(self, x, column, columns):
         self.name = column
         self.columns = columns
-        self.x = x
+        self.x = np.array(x)
 
         # Set min, max, avg, dev-values from csv-file
-        self.min = self.has_column(column + "_min")
-        self.max = self.has_column(column + "_max")
-        self.avg = self.has_column(column + "_avg")
-        self.dev = self.has_column(column + "_dev")
+        self.min = np.array(self.has_column(column + "_min"))
+        self.max = np.array(self.has_column(column + "_max"))
+        self.avg = np.array(self.has_column(column + "_avg"))
+        self.dev = np.array(self.has_column(column + "_dev"))
         self.ymin = min(self.min)
         self.ymax = max(self.max)
 

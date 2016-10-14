@@ -176,7 +176,6 @@ func TestHashArgs(t *testing.T) {
 	X[0] = hashSuite.Point().Base()
 	X[1] = hashSuite.Point().Null()
 	_, err = HashArgsSuite(hashSuite, X)
-
 	log.ErrFatal(err)
 }
 
@@ -185,30 +184,22 @@ func TestConvertToBinaryMarshaler(t *testing.T) {
 	X[0] = hashSuite.Point().Base()
 	X[1] = hashSuite.Point().Null()
 
-	bm, err := convertToBinaryMarshaler(X)
+	bm, err := ConvertToBinaryMarshaler(X)
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])
 
-	bm, err = convertToBinaryMarshaler(X[0], X[1])
+	bm, err = ConvertToBinaryMarshaler(X[0], X[1])
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])
 
-	bm, err = convertToBinaryMarshaler(X, X)
+	bm, err = ConvertToBinaryMarshaler(X, X)
 	log.ErrFatal(err)
 	testEqual(t, bm[0], X[0])
 	testEqual(t, bm[1], X[1])
 	testEqual(t, bm[2], X[0])
 	testEqual(t, bm[3], X[1])
-
-	var Y [2]abstract.Point
-	Y[0] = hashSuite.Point().Base()
-	Y[1] = hashSuite.Point().Null()
-	bm, err = convertToBinaryMarshaler(Y)
-	log.ErrFatal(err)
-	testEqual(t, bm[0], Y[0])
-	testEqual(t, bm[1], Y[1])
 }
 
 func testEqual(t *testing.T, a, b encoding.BinaryMarshaler) {

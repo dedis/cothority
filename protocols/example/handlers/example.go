@@ -11,7 +11,7 @@ import (
 func init() {
 	network.RegisterPacketType(Announce{})
 	network.RegisterPacketType(Reply{})
-	sda.ProtocolRegisterName("ExampleHandlers", NewExampleHandlers)
+	sda.GlobalProtocolRegister("ExampleHandlers", NewExampleHandlers)
 }
 
 // ProtocolExampleHandlers just holds a message that is passed to all children. It

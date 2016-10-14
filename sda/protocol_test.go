@@ -7,6 +7,8 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/require"
 )
 
 var testProto = "test"
@@ -80,14 +82,18 @@ type SimpleMessage struct {
 // - registration
 func TestProtocolRegistration(t *testing.T) {
 	testProtoName := "testProto"
-	testProtoID := ProtocolRegisterName(testProtoName, NewProtocolTest)
-	if !ProtocolExists(testProtoID) {
+	testProtoID, err := GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	log.ErrFatal(err)
+	_, err = GlobalProtocolRegister(testProtoName, NewProtocolTest)
+	require.NotNil(t, err)
+	if !protocols.ProtocolExists(testProtoID) {
 		t.Fatal("Test should exist now")
 	}
 	if ProtocolNameToID(testProtoName) != testProtoID {
 		t.Fatal("Not correct translation from string to ID")
 	}
-	if ProtocolIDToName(testProtoID) != testProtoName {
+	require.Equal(t, "", protocols.ProtocolIDToName(ProtocolID(uuid.Nil)))
+	if protocols.ProtocolIDToName(testProtoID) != testProtoName {
 		t.Fatal("Not correct translation from ID to String")
 	}
 }
@@ -97,9 +103,6 @@ func TestProtocolRegistration(t *testing.T) {
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// setup
-	local := NewLocalTest()
-	defer local.CloseAll()
-	h, _, tree := local.GenTree(2, true)
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
 	chans := []chan bool{chanH1, chanH2}
@@ -116,7 +119,10 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	}
 
 	network.RegisterPacketType(SimpleMessage{})
-	ProtocolRegisterName(simpleProto, fn)
+	GlobalProtocolRegister(simpleProto, fn)
+	local := NewLocalTest()
+	defer local.CloseAll()
+	h, _, tree := local.GenTree(2, true)
 	h1 := h[0]
 	// start the protocol
 	go func() {
