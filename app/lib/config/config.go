@@ -70,8 +70,7 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	si := network.NewServerIdentity(point, hc.Address)
-	si.Cert = hc.TLSCert
+	si := network.NewServerIdentityTLS(point, hc.Address, hc.TLSCert)
 	router, err := network.NewTLSRouter(si, hc.TLSKey)
 	if err != nil {
 		return nil, nil, err
@@ -231,8 +230,7 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 	if err != nil {
 		return nil, err
 	}
-	si := network.NewServerIdentity(public, s.Address)
-	si.Cert = s.Cert
+	si := network.NewServerIdentityTLS(public, s.Address, s.Cert)
 	return si, nil
 }
 

@@ -112,6 +112,17 @@ func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 	}
 }
 
+// NewServerIdentityTLS creates a new ServerIdentity and initialises it with
+// the given certificate for a tls-connection.
+func NewServerIdentityTLS(public abstract.Point, address Address, cert TLSCertPEM) *ServerIdentity {
+	if address.ConnType() != TLS {
+		return nil
+	}
+	si := NewServerIdentity(public, address)
+	si.Cert = cert
+	return si
+}
+
 // Equal tests on same public key
 func (si *ServerIdentity) Equal(e2 *ServerIdentity) bool {
 	return si.Public.Equal(e2.Public)

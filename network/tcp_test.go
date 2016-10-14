@@ -427,8 +427,15 @@ func NewTestTCPHost(port int) (*TCPHost, error) {
 // Returns a ServerIdentity out of the address
 func NewTestServerIdentity(address Address) *ServerIdentity {
 	kp := config.NewKeyPair(Suite)
-	e := NewServerIdentity(kp.Public, address)
-	return e
+	si := NewServerIdentity(kp.Public, address)
+	return si
+}
+
+// Returns a new tls ServerIdentity
+func NewTestServerIdentityTLS(address Address, cert TLSCertPEM) *ServerIdentity {
+	si := NewTestServerIdentity(address)
+	si.Cert = cert
+	return si
 }
 
 // SimpleMessage is just used to transfer one integer

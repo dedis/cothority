@@ -58,8 +58,7 @@ func TestNewTLSRouter(t *testing.T) {
 	log.ErrFatal(c21.Send(msg))
 	log.ErrFatal(c21.Close())
 
-	si1_numerical := NewTestServerIdentity("tls://127.0.0.1:2000")
-	si1_numerical.Cert = si1.Cert
+	si1_numerical := NewTestServerIdentityTLS("tls://127.0.0.1:2000", si1.Cert)
 	c21, err = r2.connect(si1_numerical)
 	log.ErrFatal(err)
 	log.ErrFatal(c21.Send(msg))
