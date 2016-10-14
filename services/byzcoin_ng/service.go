@@ -27,9 +27,9 @@ const ReadFirstNBlocks = 66000
 
 func init() {
 	sda.RegisterNewService(ServiceName, newByzcoinNGService)
-	network.RegisterPacketType(&MicroBlock{})
+	network.RegisterPacketType(&bftcosi.MicroBlock{})
 	sda.ProtocolRegisterName(BNGBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, nil)
+		return bftcosi.NewBFTCoSiProtocol(n, nil, nil)
 	})
 }
 
@@ -40,11 +40,16 @@ type Service struct {
 	*sda.ServiceProcessor
 	path string
 	//Mutex that emulates the hardware bottleneck
-	QMutex  sync.RWMutex
-	PQueue  *PriorityQueue
-	HWMutex sync.Mutex
+	QMutex    sync.Mutex
+	QMutexver sync.RWMutex
+	PQueue    *bftcosi.PriorityQueue
+	PQueuever *bftcosi.PriorityQueue
+	HWMutex   sync.Mutex
+	Vempty    bool
 	//TODO push this inside the blocks
 	Roster *sda.Roster
+
+	SerilizeChan chan bftcosi.Item
 
 	lastBlock    string
 	lastKeyBlock string
@@ -79,7 +84,7 @@ func (s *Service) StartSimul(blocksPath string, nTxs int, Roster *sda.Roster) er
 	return nil
 }
 
-func (s *Service) startEpoch(priority int, size int) (*MicroBlock, error) {
+func (s *Service) startEpoch(priority int, size int) (*bftcosi.MicroBlock, error) {
 	//number of rounds... should be viariable
 	block, err := GetBlock(size, *s.transaction, s.lastBlock, s.lastKeyBlock, priority)
 	if err != nil {
@@ -104,7 +109,7 @@ func (s *Service) startEpoch(priority int, size int) (*MicroBlock, error) {
 
 // signNewBlock should start a BFT-signature on the newest block
 //it is invoked by the leader of the epoch
-func (s *Service) signNewBlock(block *MicroBlock) (*MicroBlock, error) {
+func (s *Service) signNewBlock(block *bftcosi.MicroBlock) (*bftcosi.MicroBlock, error) {
 	log.Lvl4("Signing new block", block)
 	if block == nil {
 		log.Lvl3("Block is empty")
@@ -130,7 +135,7 @@ func (s *Service) signNewBlock(block *MicroBlock) (*MicroBlock, error) {
 	return nil, nil
 }
 
-func (s *Service) startBFTSignature(block *MicroBlock) error {
+func (s *Service) startBFTSignature(block *bftcosi.MicroBlock) error {
 	log.Lvl3("Starting bftsignature with root-node=", s.ServerIdentity())
 	done := make(chan bool)
 	// create the message we want to sign for this round
@@ -153,6 +158,7 @@ func (s *Service) startBFTSignature(block *MicroBlock) error {
 		return errors.New("Couldn't marshal block: " + err.Error())
 	}
 	root.Data = data
+	root.ServiceChannel = s.SerilizeChan
 
 	// in testing-mode with more than one host and service per cothority-instance
 	// we might have the wrong verification-function, so set it again here.
@@ -163,7 +169,6 @@ func (s *Service) startBFTSignature(block *MicroBlock) error {
 	})
 	go node.Start()
 	select {
-	//ASK is this run on every node? update the blocks afterwards
 	case <-done:
 		block.BlockSig = root.Signature()
 		if len(block.BlockSig.Exceptions) != 0 {
@@ -192,7 +197,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
 	case BNGBFT:
-		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
+		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify, s.SerilizeChan)
 	}
 	return pi, err
 
@@ -208,14 +213,45 @@ func newByzcoinNGService(c *sda.Context, path string) sda.Service {
 		lastBlock:        "0",
 		lastKeyBlock:     "0",
 		transaction:      &[]blkparser.Tx{},
-		PQueue:           &PriorityQueue{},
+		Vempty:           true,
+		PQueue:           &bftcosi.PriorityQueue{},
+		PQueuever:        &bftcosi.PriorityQueue{},
+		SerilizeChan:     make(chan bftcosi.Item),
 	}
 	heap.Init(s.PQueue)
+	heap.Init(s.PQueuever)
+	go func() {
+		empty := true
+		for {
+			chanel := <-s.SerilizeChan
+			if chanel.Priority != -1 {
+				s.QMutex.Lock()
+				if empty {
+					empty = false
+					chanel.NotifyChan <- true
+					s.QMutex.Unlock()
+				} else {
+					heap.Push(s.PQueue, &chanel)
+					s.QMutex.Unlock()
+				}
+			} else {
+				s.QMutex.Lock()
+				if s.PQueue.Len() != 0 {
+					item := s.PQueue.Pop().(*bftcosi.Item)
+					item.NotifyChan <- true
+				} else {
+					empty = true
+				}
+				s.QMutex.Unlock()
+
+			}
+		}
+	}()
 	return s
 }
 
 // GetBlock returns the next block available from the transaction pool.
-func GetBlock(size int, transactions []blkparser.Tx, lastBlock string, lastKeyBlock string, priority int) (*MicroBlock, error) {
+func GetBlock(size int, transactions []blkparser.Tx, lastBlock string, lastKeyBlock string, priority int) (*bftcosi.MicroBlock, error) {
 	if len(transactions) < 1 {
 		return nil, errors.New("no transaction available")
 	}
@@ -223,7 +259,7 @@ func GetBlock(size int, transactions []blkparser.Tx, lastBlock string, lastKeyBl
 	trlist := blockchain.NewTransactionList(transactions, size)
 	header := blockchain.NewHeader(trlist, lastBlock, lastKeyBlock)
 	trblock := blockchain.NewTrBlock(trlist, header)
-	block := &MicroBlock{}
+	block := &bftcosi.MicroBlock{}
 	block.TrBlock = trblock
 	block.Priority = priority
 	return block, nil
@@ -242,47 +278,61 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 		log.Error("Couldn't unmarshal Block", data)
 		return false
 	}
-	block := sbN.(*MicroBlock)
-	item := &Item{
-		value:    block.HeaderHash,
-		priority: block.Priority,
+	block := sbN.(*bftcosi.MicroBlock)
+	item := &bftcosi.Item{
+		Priority:   block.Priority,
+		NotifyChan: make(chan bool),
 	}
-	s.QMutex.Lock()
-	heap.Push(s.PQueue, item)
-	s.QMutex.Unlock()
-
-	for {
-		s.HWMutex.Lock()
-		s.HWMutex.Unlock()
-		s.QMutex.RLock()
-		temp := s.PQueue.Peak()
-		if block.Priority == temp {
-			s.HWMutex.Lock()
-			s.QMutex.RUnlock()
-			s.QMutex.Lock()
-			item = s.PQueue.Pop().(*Item)
-			if block.Priority != item.priority {
-				heap.Push(s.PQueue, item)
-				s.QMutex.Unlock()
-
-				s.HWMutex.Unlock()
-				continue
-			}
-			s.QMutex.Unlock()
-			break
-		} else {
-			s.QMutex.RUnlock()
-		}
-
+	s.QMutexver.Lock()
+	if s.Vempty { //define s.Vempty
+		s.Vempty = false
+		s.QMutexver.Unlock()
+	} else {
+		heap.Push(s.PQueuever, item)
+		s.QMutexver.Unlock()
+		<-item.NotifyChan
 	}
+
+	// for {
+	// 	s.HWMutex.Lock()
+	// 	s.HWMutex.Unlock()
+	// 	s.QMutexver.RLock()
+	// 	temp := s.PQueuever.Peak()
+	// 	if block.Priority == temp {
+	// 		s.HWMutex.Lock()
+	// 		s.QMutexver.RUnlock()
+	// 		s.QMutexver.Lock()
+	// 		item = s.PQueuever.Pop().(*bftcosi.Item)
+	// 		if block.Priority != item.Priority {
+	// 			heap.Push(s.PQueuever, item)
+	// 			s.QMutexver.Unlock()
+
+	// 			s.HWMutex.Unlock()
+	// 			continue
+	// 		}
+	// 		s.QMutexver.Unlock()
+	// 		break
+	// 	} else {
+	// 		s.QMutexver.RUnlock()
+	// 	}
+
+	// }
 
 	b, _ := json.Marshal(block)
 	s1 := len(b)
 	var n time.Duration
 	n = time.Duration(s1 / (500 * 1024))
-
+	//s.HWMutex.Lock()
 	time.Sleep(150 * time.Millisecond * n) //verification of 174ms per 500KB simulated
-	s.HWMutex.Unlock()
+	//s.HWMutex.Unlock()
+	s.QMutexver.Lock()
+	if s.PQueuever.Len() != 0 {
+		item := s.PQueuever.Pop().(*bftcosi.Item)
+		item.NotifyChan <- true
+	} else {
+		s.Vempty = true
+	}
+	s.QMutexver.Unlock()
 
 	// verification of the header
 	verified := true
@@ -298,7 +348,7 @@ func (s *Service) bftVerify(msg []byte, data []byte) bool {
 }
 
 // notify other services about new/updated skipblock
-func (s *Service) startPropagation(block *MicroBlock) error {
+func (s *Service) startPropagation(block *bftcosi.MicroBlock) error {
 	log.Lvlf3("Starting to propagate for service %x", s.Context.ServerIdentity().ID[0:8])
 	roster := block.Roster
 	if roster == nil {
@@ -317,7 +367,7 @@ func (s *Service) startPropagation(block *MicroBlock) error {
 
 // PropagateSkipBlock will save a new SkipBlock
 func (s *Service) PropagateSkipBlock(msg network.Body) {
-	sb, ok := msg.(*MicroBlock)
+	sb, ok := msg.(*bftcosi.MicroBlock)
 	if !ok {
 		log.Error("Couldn't convert to SkipBlock")
 		return
