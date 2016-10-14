@@ -46,26 +46,19 @@ type TCPConn struct {
 // NewTCPConn will open a TCPConn to the given address.
 // In case of an error it returns a nil TCPConn and the error.
 func NewTCPConn(addr Address) (*TCPConn, error) {
-	var err error
-	var conn net.Conn
 	netAddr := addr.NetworkAddress()
+	var err error
 	for i := 0; i < MaxRetryConnect; i++ {
-		conn, err = net.Dial("tcp", netAddr)
-		if err != nil {
-			time.Sleep(WaitRetry)
-		} else {
-			break
+		conn, err := net.Dial("tcp", netAddr)
+		if err == nil {
+			return &TCPConn{
+				endpoint: addr,
+				conn:     conn,
+			}, nil
 		}
 		time.Sleep(WaitRetry)
 	}
-	if conn == nil {
-		return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
-	}
-	c := TCPConn{
-		endpoint: addr,
-		conn:     conn,
-	}
-	return &c, err
+	return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
 }
 
 // Receive get the bytes from the connection then decodes the buffer.
@@ -137,7 +130,7 @@ func (c *TCPConn) Send(obj Body) error {
 	defer c.sendMutex.Unlock()
 	am, err := NewNetworkPacket(obj)
 	if err != nil {
-		return fmt.Errorf("Error converting packet: %v\n", err)
+		return fmt.Errorf("Error converting packet: %v", err)
 	}
 	log.Lvlf5("Message SEND => %+v", am)
 	var b []byte
@@ -280,7 +273,7 @@ func NewTCPListener(addr Address) (*TCPListener, error) {
 // connection-request it receives.
 // If the connection is closed, an error will be returned.
 func (t *TCPListener) Listen(fn func(Conn)) error {
-	receiver := func(tc *TCPConn) {
+	receiver := func(tc Conn) {
 		go fn(tc)
 	}
 	return t.listen(receiver)
@@ -289,7 +282,7 @@ func (t *TCPListener) Listen(fn func(Conn)) error {
 // listen is the private function that takes a function that takes a TCPConn.
 // That way we can control what to do of the TCPConn before returning it to the
 // function given by the user. fn is called in the same routine.
-func (t *TCPListener) listen(fn func(*TCPConn)) error {
+func (t *TCPListener) listen(fn func(Conn)) error {
 	t.listeningLock.Lock()
 	if t.closed == true {
 		t.listeningLock.Unlock()
@@ -383,7 +376,8 @@ func NewTCPHost(addr Address) (*TCPHost, error) {
 
 // Connect can only connect to PlainTCP connections.
 // It will return an error if it is not a PlainTCP-connection-type.
-func (t *TCPHost) Connect(addr Address) (Conn, error) {
+func (t *TCPHost) Connect(si *ServerIdentity) (Conn, error) {
+	addr := si.Address
 	switch addr.ConnType() {
 	case PlainTCP:
 		c, err := NewTCPConn(addr)

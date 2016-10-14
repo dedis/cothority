@@ -110,12 +110,14 @@ func TestLocalContext(t *testing.T) {
 
 	addrListener := NewLocalAddress("127.0.0.1:2000")
 	addrConn := NewLocalAddress("127.0.0.1:2001")
+	siListener := NewTestServerIdentity(addrListener)
+	siConn := NewTestServerIdentity(addrConn)
 
 	done1 := make(chan error)
 	done2 := make(chan error)
 
-	go testConnListener(ctx1, done1, addrListener, addrConn, 1)
-	go testConnListener(ctx2, done2, addrListener, addrConn, 2)
+	go testConnListener(ctx1, done1, siListener, siConn, 1)
+	go testConnListener(ctx2, done2, siListener, siConn, 2)
 
 	var confirmed int
 	for confirmed != 2 {
@@ -134,8 +136,8 @@ func TestLocalContext(t *testing.T) {
 
 // launch a listener, then a Conn and communicate their own address + individual
 // val
-func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address, secret int) {
-	listener, err := NewLocalListenerWithManager(ctx, listenA)
+func testConnListener(ctx *LocalManager, done chan error, listenA, connA *ServerIdentity, secret int) {
+	listener, err := NewLocalListenerWithManager(ctx, listenA.Address)
 	if err != nil {
 		done <- err
 		return
@@ -169,7 +171,7 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address
 		ok <- nil
 		listener.Listen(func(c Conn) {
 			ok <- nil
-			err := handshake(c, listenA, connA)
+			err := handshake(c, listenA.Address, connA.Address)
 			ok <- err
 		})
 		ok <- nil
@@ -179,7 +181,7 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address
 
 	// trick to use host because it already tries multiple times to connect if
 	// the listening routine is not up yet.
-	h, err := NewLocalHostWithManager(ctx, connA)
+	h, err := NewLocalHostWithManager(ctx, connA.Address)
 	if err != nil {
 		done <- err
 		return
@@ -192,7 +194,7 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA Address
 
 	// wait listening function to start for the incoming conn
 	<-ok
-	err = handshake(c, connA, listenA)
+	err = handshake(c, connA.Address, listenA.Address)
 	if err != nil {
 		done <- err
 		return

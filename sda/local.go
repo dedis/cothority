@@ -298,7 +298,7 @@ func NewTCPConode(port int) *Conode {
 	}
 	id.Address = tcpHost.Address()
 	router := network.NewRouter(id, tcpHost)
-	h := NewConodeWithRouter(id, priv, router)
+	h := NewConode(router, priv)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
@@ -315,7 +315,7 @@ func NewLocalConode(port int) *Conode {
 	if err != nil {
 		panic(err)
 	}
-	h := NewConodeWithRouter(id, priv, localRouter)
+	h := NewConode(localRouter, priv)
 	go h.Start()
 	for !h.Listening() {
 		time.Sleep(10 * time.Millisecond)
@@ -385,7 +385,7 @@ func (l *LocalTest) NewLocalConode(port int) *Conode {
 	if err != nil {
 		panic(err)
 	}
-	conode := NewConodeWithRouter(id, priv, localRouter)
+	conode := NewConode(localRouter, priv)
 	go conode.Start()
 	for !conode.Listening() {
 		time.Sleep(10 * time.Millisecond)
