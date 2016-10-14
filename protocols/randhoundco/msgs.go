@@ -1,7 +1,8 @@
-package proto
+package randhoundco
 
 import (
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -48,4 +49,9 @@ type Groups struct {
 	Aggregate abstract.Point
 	// the list of JVSS groups
 	Groups []Group
+}
+
+type wrapGroups struct {
+	*sda.TreeNode
+	Groups
 }

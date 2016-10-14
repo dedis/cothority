@@ -1,4 +1,4 @@
-package proto
+package randhoundco
 
 import (
 	"errors"
@@ -77,7 +77,7 @@ func (s *setupClient) onResponse(tn *sda.TreeNode, groups Groups) error {
 
 // RegisterOnDone registers the callback function to call when all the groups
 // are created,i.e. at the end of the protocol.
-func (s *setupClient) RegisterOnDone(fn func(*Groups)) {
+func (s *setupClient) RegisterOnSetupDone(fn func(*Groups)) {
 	s.onDone = fn
 }
 
@@ -160,8 +160,8 @@ func (s *setupLeader) onResponse(tn *sda.TreeNode, groups Groups) error {
 	defer s.Done()
 	// wait for our longterm
 	long := <-s.longtermCh
-	if s.onJVSSLongterm != nil {
-		s.onJVSSLongterm(s.id, s.jvss)
+	if s.onJVSS != nil {
+		s.onJVSS(s.jvss)
 	}
 	// add our group to the global list
 	myGroup := Group{s.roster.List, long.Pub.SecretCommit()}
@@ -169,4 +169,8 @@ func (s *setupLeader) onResponse(tn *sda.TreeNode, groups Groups) error {
 	groups.Groups = allGroups
 	// and pass that up
 	return s.SendToParent(groups)
+}
+
+func (s *setupLeader) RegisterOnJVSS(fn func(*jvss.JVSS)) {
+	s.onJVSS = fn
 }
