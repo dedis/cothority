@@ -140,7 +140,7 @@ func (m *MiniNet) Cleanup() error {
 	log.ErrFatal(m.parseServers())
 	for _, h := range m.HostIPs {
 		log.Lvl3("Cleaning up server", h)
-		_, err = SSHRun(m.Login, m.External, "pkill -9 -f start.py")
+		_, err = SSHRun(m.Login, m.External, "pkill -9 -f start.py; mn -c; killall sshd")
 		if err != nil {
 			log.Lvl2("Error while cleaning up:", err)
 		}
