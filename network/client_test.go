@@ -29,7 +29,7 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 	r.RegisterProcessor(proc, SimpleMessageType)
 
 	client := cl()
-	nm, err := client.Send(r.id, &SimpleMessage{3})
+	nm, err := client.Send(r.ServerIdentity, &SimpleMessage{3})
 	require.Nil(t, err)
 	require.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 
@@ -38,14 +38,14 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 	timeoutResponse = 10 * time.Millisecond
 	proc.drop = true
 	client = cl()
-	_, err = client.Send(r.id, &SimpleMessage{3})
+	_, err = client.Send(r.ServerIdentity, &SimpleMessage{3})
 	if err == nil {
 		t.Fatal("Client should not be able to have a response")
 	}
 	// client will get an error message
 	proc.err = true
 	client = cl()
-	_, err = client.Send(r.id, &SimpleMessage{3})
+	_, err = client.Send(r.ServerIdentity, &SimpleMessage{3})
 	if err == nil {
 		t.Fatal("Client should return an error")
 	}
@@ -54,7 +54,7 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 	// client won't connect
 	r.Stop()
 	c2 := cl()
-	_, err = c2.Send(r.id, &SimpleMessage{3})
+	_, err = c2.Send(r.ServerIdentity, &SimpleMessage{3})
 	if err == nil {
 		t.Fatal("Should not be able to send !!")
 	}

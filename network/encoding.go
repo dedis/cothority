@@ -274,7 +274,7 @@ func NewNetworkPacket(obj Body) (*Packet, error) {
 	}
 	ty := TypeFromData(obj)
 	if ty == ErrorType {
-		return &Packet{}, fmt.Errorf("Packet to send is not known. Please register packet: %s\n",
+		return &Packet{}, fmt.Errorf("Packet to send is not known. Please register packet: %s",
 			reflect.TypeOf(obj).String())
 	}
 	return &Packet{

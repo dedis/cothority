@@ -1,0 +1,15 @@
+package server
+
+import (
+	"testing"
+
+	"github.com/dedis/cothority/log"
+)
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
+func TestInteractiveConfig(t *testing.T) {
+
+}
