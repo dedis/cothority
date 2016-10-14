@@ -167,17 +167,17 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 		return nil, err
 	}
 	// convert from ServerTomls to entities
-	var entities = make([]*network.ServerIdentity, len(group.Servers))
+	var sis = make([]*network.ServerIdentity, len(group.Servers))
 	var descs = make(map[*network.ServerIdentity]string)
 	for i, s := range group.Servers {
-		en, err := s.toServerIdentity(network.Suite)
+		si, err := s.toServerIdentity(network.Suite)
 		if err != nil {
 			return nil, err
 		}
-		entities[i] = en
-		descs[en] = s.Description
+		sis[i] = si
+		descs[si] = s.Description
 	}
-	el := sda.NewRoster(entities)
+	el := sda.NewRoster(sis)
 	return &Group{el, descs}, nil
 }
 

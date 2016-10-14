@@ -149,7 +149,7 @@ func InteractiveConfig(binaryName string) {
 	ips, err := net.LookupIP(publicAddress.Host())
 	log.ErrFatal(err)
 	cert, key, err := network.NewCertKey(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
-		1, []byte{}, ips), 2048)
+		1, []byte{}, ips), 256)
 	log.ErrFatal(err)
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,

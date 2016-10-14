@@ -2,9 +2,7 @@ package network
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
-	"time"
 
 	"fmt"
 
@@ -61,6 +59,7 @@ func (h *TLSHost) Connect(si *ServerIdentity) (Conn, error) {
 // TLSListener implements the Host-interface using TLS as a communication channel.
 type TLSListener struct {
 	*TCPListener
+	TLSConfig *tls.Config
 }
 
 // NewTLSListener returns a TLSListener. This function binds to the given
@@ -75,33 +74,16 @@ func NewTLSListener(si *ServerIdentity, key TLSKeyPEM) (*TLSListener, error) {
 	if addr.ConnType() != TLS {
 		return nil, errors.New("TLSListener can't listen on non-TLS address")
 	}
-	t := &TLSListener{
-		TCPListener: &TCPListener{
-			quit:         make(chan bool),
-			quitListener: make(chan bool),
-		},
-	}
-	global, _ := GlobalBind(addr.NetworkAddress())
 	config, err := key.ConfigServer(si.Cert)
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < MaxRetryConnect; i++ {
-		log.Lvl3("Calling listener on", global)
-
-		ln, err := tls.Listen("tcp", global, config)
-		if err == nil {
-			t.listener = ln
-			break
-		}
-		time.Sleep(WaitRetry)
+	tcpL, err := NewTCPListener(NewAddress(PlainTCP, si.Address.NetworkAddress()))
+	tlsL := &TLSListener{
+		TCPListener: tcpL,
+		TLSConfig:   config,
 	}
-	if t.listener == nil {
-		return nil, errors.New("Error opening listener: " + err.Error())
-	}
-	t.addr = t.listener.Addr()
-	log.Lvl3("Got address", t.addr)
-	return t, nil
+	return tlsL, err
 }
 
 // Listen starts to listen for incoming connections and calls fn for every
@@ -109,9 +91,16 @@ func NewTLSListener(si *ServerIdentity, key TLSKeyPEM) (*TLSListener, error) {
 // If the connection is closed, an error will be returned.
 func (t *TLSListener) Listen(fn func(Conn)) error {
 	receiver := func(tc Conn) {
-		tls := TLSConn{TCPConn: tc.(*TCPConn)}
-		tls.endpoint = NewTLSAddress(tc.Remote().String())
-		go fn(tls)
+		tcpc := tc.(*TCPConn)
+		tlsC := TLSConn{tcpc}
+		log.Lvl3("Starting handshake")
+		if err := tls.Server(tcpc.conn, t.TLSConfig).Handshake(); err != nil {
+			log.Error("Couldn't complete handshake:", err)
+			return
+		}
+		log.Lvl3("Handshake done")
+		tlsC.endpoint = NewTLSAddress(tc.Remote().String())
+		go fn(tlsC)
 	}
 	return t.listen(receiver)
 }
@@ -124,35 +113,24 @@ type TLSConn struct {
 // NewTLSConn will open a TLSConn to the given address.
 // In case of an error it returns a nil TLSConn and the error.
 func NewTLSConn(si *ServerIdentity) (*TLSConn, error) {
-	addr := si.Address
-	netAddr := addr.NetworkAddress()
+	//addr := si.Address
+	//netAddr := addr.NetworkAddress()
 	config, err := si.Cert.ConfigClient()
 	if err != nil {
 		return nil, err
 	}
-	var conn *tls.Conn
-	for i := 0; i < MaxRetryConnect; i++ {
-		log.Lvl3("Connecting to", netAddr)
-		conn, err = tls.Dial("tcp", netAddr, config)
-		if err == nil {
-			log.Lvl3("client: connected to:", conn.RemoteAddr())
-
-			state := conn.ConnectionState()
-			for _, v := range state.PeerCertificates {
-				b, _ := x509.MarshalPKIXPublicKey(v.PublicKey)
-				log.Lvlf3("Connection by %s with key %x",
-					v.Subject, b)
-			}
-			log.Lvl3("client: handshake:", state.HandshakeComplete)
-			log.Lvl3("client: mutual:", state.NegotiatedProtocolIsMutual)
-			return &TLSConn{&TCPConn{
-				endpoint: addr,
-				conn:     conn,
-			}}, nil
-		}
-		time.Sleep(WaitRetry)
+	if si.Address.ConnType() != TLS {
+		return nil, errors.New("This is not a TLS-address.")
 	}
-	return nil, errors.New("Error opening listener: " + err.Error())
+	c, err := NewTCPConn(si.Address)
+	if err != nil {
+		return nil, err
+	}
+	config.ServerName = si.Address.Host()
+	if err = tls.Client(c.conn, config).Handshake(); err != nil {
+		return nil, err
+	}
+	return &TLSConn{c}, nil
 }
 
 // NewTLSClient returns a new client using the TLS network communication
