@@ -54,3 +54,56 @@ func (s *spawnProto) Start() error {
 	go proto.Start()
 	return nil
 }
+
+func TestTreeNodeSendToItSelf(t *testing.T) {
+	log.TestOutput(true, 5)
+	GlobalProtocolRegister(ownName, newOwnProto)
+	local := NewLocalTest()
+	defer local.CloseAll()
+
+	hosts, _, tree := local.GenTree(1, true)
+	pi, err := hosts[0].overlay.CreateProtocolSDA(ownName, tree)
+	log.ErrFatal(err)
+	go pi.Start()
+
+	log.Print("waiting on ownCh")
+	<-ownCh
+
+}
+
+var ownCh = make(chan bool)
+
+const ownName = "Own"
+
+type OwnMessage struct {
+	Val int
+}
+
+type wrapOwn struct {
+	*TreeNode
+	OwnMessage
+}
+
+// ownProto is a protocol that sends a message to itself
+type ownProto struct {
+	*TreeNodeInstance
+}
+
+func newOwnProto(tn *TreeNodeInstance) (ProtocolInstance, error) {
+	o := &ownProto{tn}
+	o.RegisterHandler(o.receiveOwnMsg)
+	return o, nil
+}
+
+func (o *ownProto) Start() error {
+	log.Print("Sending to ourself")
+	err := o.SendTo(o.TreeNode(), &OwnMessage{12})
+	log.Print("Sent to ourself DONE", err)
+	return nil
+}
+
+func (o *ownProto) receiveOwnMsg(wrap wrapOwn) error {
+	ownCh <- true
+	o.Done()
+	return nil
+}
