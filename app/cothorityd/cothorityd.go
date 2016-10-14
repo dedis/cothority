@@ -20,7 +20,7 @@ import (
 
 	c "github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
-	"gopkg.in/codegangsta/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
@@ -99,8 +99,8 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// first check the options
-	log.SetDebugVisible(ctx.Int("debug"))
-	config := ctx.String("config")
+	log.SetDebugVisible(ctx.GlobalInt("debug"))
+	config := ctx.GlobalString("config")
 
 	if _, err := os.Stat(config); os.IsNotExist(err) {
 		log.Fatalf("[-] Configuration file does not exists. %s", config)

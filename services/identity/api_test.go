@@ -19,7 +19,7 @@ func NewTestIdentity(cothority *sda.Roster, majority int, owner string, local *s
 }
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
-	l := sda.NewTCPTest()
+	l := sda.NewLocalTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 

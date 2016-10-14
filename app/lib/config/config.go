@@ -33,6 +33,8 @@ type CothoritydConfig struct {
 	Public  string
 	Private string
 	Address network.Address
+	TLSCert network.TLSCertPEM
+	TLSKey  network.TLSKeyPEM
 }
 
 // Save will save this CothoritydConfig to the given file name. It
@@ -68,7 +70,12 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	conode := sda.NewConodeTCP(network.NewServerIdentity(point, hc.Address), secret)
+	si := network.NewServerIdentityTLS(point, hc.Address, hc.TLSCert)
+	router, err := network.NewTLSRouter(si, hc.TLSKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	conode := sda.NewConode(router, secret)
 	return hc, conode, nil
 }
 
@@ -135,6 +142,7 @@ type ServerToml struct {
 	Address     network.Address
 	Public      string
 	Description string
+	Cert        network.TLSCertPEM
 }
 
 // Group holds the Roster and the server-description.
@@ -159,17 +167,17 @@ func ReadGroupDescToml(f io.Reader) (*Group, error) {
 		return nil, err
 	}
 	// convert from ServerTomls to entities
-	var entities = make([]*network.ServerIdentity, len(group.Servers))
+	var sis = make([]*network.ServerIdentity, len(group.Servers))
 	var descs = make(map[*network.ServerIdentity]string)
 	for i, s := range group.Servers {
-		en, err := s.toServerIdentity(network.Suite)
+		si, err := s.toServerIdentity(network.Suite)
 		if err != nil {
 			return nil, err
 		}
-		entities[i] = en
-		descs[en] = s.Description
+		sis[i] = si
+		descs[si] = s.Description
 	}
-	el := sda.NewRoster(entities)
+	el := sda.NewRoster(sis)
 	return &Group{el, descs}, nil
 }
 
@@ -222,14 +230,16 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 	if err != nil {
 		return nil, err
 	}
-	return network.NewServerIdentity(public, s.Address), nil
+	si := network.NewServerIdentityTLS(public, s.Address, s.Cert)
+	return si, nil
 }
 
 // NewServerToml takes a public key and an address and returns
 // the corresponding ServerToml.
 // If an error occurs, it will be printed to StdErr and nil
 // is returned.
-func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address) *ServerToml {
+func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address,
+	cert network.TLSCertPEM) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
 		log.Error("Error writing public key")
@@ -238,6 +248,7 @@ func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Add
 	return &ServerToml{
 		Address: addr,
 		Public:  buff.String(),
+		Cert:    cert,
 	}
 }
 

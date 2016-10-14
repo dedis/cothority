@@ -34,6 +34,7 @@ type Conode struct {
 
 // NewConode returns a fresh Host with a given Router.
 func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
+	log.Lvl3("NewConode", r.ServerIdentity.Address)
 	c := &Conode{
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),

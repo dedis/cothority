@@ -29,6 +29,8 @@ import (
 	// register the protocol.
 	_ "github.com/dedis/cosi/protocol"
 	// For the moment, the server only serves CoSi requests
+	"math/big"
+
 	s "github.com/dedis/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
@@ -87,7 +89,7 @@ func InteractiveConfig(binaryName string) {
 		portStr = port
 	}
 
-	serverBinding = network.NewTCPAddress(hostStr + ":" + portStr)
+	serverBinding = network.NewTLSAddress(hostStr + ":" + portStr)
 	if !serverBinding.Valid() {
 		log.Error("Unable to validate address given", serverBinding)
 		return
@@ -113,7 +115,7 @@ func InteractiveConfig(binaryName string) {
 				log.Error("Could not parse your public IP address", err)
 				failedPublic = true
 			} else {
-				publicAddress = network.NewTCPAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
+				publicAddress = network.NewTLSAddress(strings.TrimSpace(string(buff)) + ":" + portStr)
 			}
 		}
 	} else {
@@ -144,10 +146,17 @@ func InteractiveConfig(binaryName string) {
 
 	// create the keys
 	privStr, pubStr := createKeyPair()
+	ips, err := net.LookupIP(publicAddress.Host())
+	log.ErrFatal(err)
+	cert, key, err := network.NewCertKey(network.NewTLSCert(big.NewInt(1), "ch", "epfl", "dedis",
+		1, []byte{}, ips), 256)
+	log.ErrFatal(err)
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,
 		Private: privStr,
 		Address: serverBinding,
+		TLSCert: cert,
+		TLSKey:  key,
 	}
 
 	var configDone bool
@@ -180,7 +189,8 @@ func InteractiveConfig(binaryName string) {
 		log.Fatal("Impossible to parse public key:", err)
 	}
 
-	server := config.NewServerToml(network.Suite, public, publicAddress)
+	log.Print(publicAddress)
+	server := config.NewServerToml(network.Suite, public, publicAddress, cert)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
@@ -428,13 +438,13 @@ func askReachableAddress(port string) network.Address {
 		log.Fatal("Invalid IP:port address given:", ipStr)
 	} else if len(splitted) == 1 {
 		// check if the ip is valid
-		if net.ParseIP(ipStr) == nil {
+		if net.ParseIP(ipStr) == nil && ipStr != "localhost" {
 			log.Fatal("Invalid IP address given:", ipStr)
 		}
 		// add the port
 		ipStr = ipStr + ":" + port
 	}
-	return network.NewTCPAddress(ipStr)
+	return network.NewTLSAddress(ipStr)
 }
 
 // tryConnect binds to the given IP address and ask an internet service to

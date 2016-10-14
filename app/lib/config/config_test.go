@@ -28,12 +28,12 @@ func TestMain(m *testing.M) {
 var serverGroup string = `Description = "Default Dedis Cosi servers"
 
 [[servers]]
-Address = "tcp://5.135.161.91:2000"
+Address = "tls://5.135.161.91:2000"
 Public = "lLglU3nhHfUWe4p647hffn618TiUq+6FvTGzJw8eTGU="
 Description = "Nikkolasg's server: spreading the love of signing"
 
 [[servers]]
-Address = "tcp://185.26.156.40:61117"
+Address = "tls://185.26.156.40:61117"
 Public = "apIWOKSt6JcOvNnjcVcPCNcaJJh/kPEjkbn2xSW+W+Q="
 Description = "Ismail's server"`
 
@@ -45,7 +45,7 @@ func TestReadGroupDescToml(t *testing.T) {
 		t.Fatal("Should have 2 ServerIdentities")
 	}
 	nikkoAddr := group.Roster.List[0].Address
-	if !nikkoAddr.Valid() || nikkoAddr != network.NewTCPAddress("5.135.161.91:2000") {
+	if !nikkoAddr.Valid() || nikkoAddr != network.NewTLSAddress("5.135.161.91:2000") {
 		t.Fatal("Address not valid " + group.Roster.List[0].Address.String())
 	}
 	if len(group.description) != 2 {

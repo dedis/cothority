@@ -355,14 +355,14 @@ var RosterTypeID = network.RegisterPacketType(Roster{})
 
 // NewRoster creates a new ServerIdentity from a list of entities. It also
 // adds a UUID which is randomly chosen.
-func NewRoster(ids []*network.ServerIdentity) *Roster {
+func NewRoster(sis []*network.ServerIdentity) *Roster {
 	// compute the aggregate key already
 	agg := network.Suite.Point().Null()
-	for _, e := range ids {
-		agg = agg.Add(agg, e.Public)
+	for _, si := range sis {
+		agg = agg.Add(agg, si.Public)
 	}
 	return &Roster{
-		List:      ids,
+		List:      sis,
 		Aggregate: agg,
 		ID:        RosterID(uuid.NewV4()),
 	}

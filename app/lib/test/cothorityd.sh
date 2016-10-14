@@ -3,7 +3,7 @@
 DBG_SRV=${DBG_SRV:-0}
 
 runCoCfg(){
-    echo -e "127.0.0.1:200$1\nco$1\n\n" | dbgRun runCo $1 setup
+    echo -e "localhost:200$1\nlocalhost\nco$1\n\n" | dbgRun runCo $1 setup
 }
 
 runCoBG(){
@@ -31,6 +31,6 @@ cothoritySetup(){
     runCoBG 2
     sleep 1
     cp co1/group.toml .
-    tail -n 4 co2/group.toml >> group.toml
+    tail -n 5 co2/group.toml >> group.toml
     DBG_SHOW=$DBG_OLD
 }

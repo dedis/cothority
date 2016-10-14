@@ -377,12 +377,12 @@ type Client struct {
 	net       *network.Client
 }
 
-// NewClient returns a client using the service s. It uses TCP communication by
+// NewClient returns a client using the service s. It uses TLS communication by
 // default
 func NewClient(s string) *Client {
 	return &Client{
 		ServiceID: ServiceFactory.ServiceID(s),
-		net:       network.NewTCPClient(),
+		net:       network.NewTLSClient(),
 	}
 }
 
