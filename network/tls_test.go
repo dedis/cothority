@@ -26,9 +26,9 @@ func TestNewTLSKeyCert(t *testing.T) {
 		[]net.IP{})
 	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{},
 		[]net.IP{})
-	_, _, err := NewCertKey(c1, 2048)
+	_, _, err := NewCertKey(c1, 256)
 	log.ErrFatal(err)
-	_, _, err = NewCertKey(c2, 2048)
+	_, _, err = NewCertKey(c2, 256)
 	log.ErrFatal(err)
 }
 
@@ -40,8 +40,8 @@ func TestNewTLSRouter(t *testing.T) {
 	c1 := NewTLSCert(big.NewInt(0), "ch", "epfl", "dedis", 10, []byte{}, ips)
 	c2 := NewTLSCert(big.NewInt(1), "ch", "epfl", "lca1", 10, []byte{}, ips)
 	var key1, key2 TLSKeyPEM
-	si1.Cert, key1, _ = NewCertKey(c1, 2048)
-	si2.Cert, key2, _ = NewCertKey(c2, 2048)
+	si1.Cert, key1, _ = NewCertKey(c1, 256)
+	si2.Cert, key2, _ = NewCertKey(c2, 256)
 	r1, err := NewTLSRouter(si1, key1)
 	log.ErrFatal(err)
 	r2, err := NewTLSRouter(si2, key2)

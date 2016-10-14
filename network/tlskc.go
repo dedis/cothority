@@ -57,7 +57,6 @@ func NewCertKey(ca *x509.Certificate, keyLen int) (cert TLSCertPEM, key TLSKeyPE
 	}
 	//priv, err := rsa.GenerateKey(rand.Reader, keyLen)
 	var priv *ecdsa.PrivateKey
-	var err error
 	switch keyLen {
 	case 224:
 		priv, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
@@ -80,20 +79,18 @@ func NewCertKey(ca *x509.Certificate, keyLen int) (cert TLSCertPEM, key TLSKeyPE
 	}
 	cert = TLSCertPEM(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE",
 		Bytes: x509cert}))
-	key = TLSKeyPEM(pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(priv)}))
+	b, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		return
+	}
+	key = TLSKeyPEM(pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: b}))
 	return
 }
 
 func secureConfig(c *tls.Config) *tls.Config {
 	c.CipherSuites = []uint16{
-		//tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		//tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		//tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		//tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256}
 	c.MinVersion = tls.VersionTLS12
 	return c
