@@ -32,7 +32,7 @@ func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
 	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, nil)
+		return bftcosi.NewBFTCoSiProtocol(n, nil, nil)
 	})
 	network.RegisterPacketType(&SkipBlockMap{})
 }
@@ -210,7 +210,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 		}
 		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
 	case skipchainBFT:
-		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
+		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify, nil)
 	}
 	return pi, err
 }
