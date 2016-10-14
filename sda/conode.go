@@ -17,8 +17,6 @@ import (
 // Conode is the structure responsible for holding information about the current
 // state
 type Conode struct {
-	// Our entity (i.e. identity over the network)
-	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
 	*network.Router
@@ -37,7 +35,6 @@ type Conode struct {
 // NewConode returns a fresh Host with a given Router.
 func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	c := &Conode{
-		ServerIdentity:       r.ServerIdentity,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
