@@ -178,7 +178,8 @@ func (r *roundClient) startChallenge(commits []abstract.Point) error {
 	hash.Write(r.msg)
 	challenge := r.Suite().Scalar().SetBytes(hash.Sum(nil))
 	packet := &cosip.Challenge{challenge}
-	log.Print(r.Name(), "Created challenge ", challenge)
+	log.Print(r.Name(), "Client: challenge ", challenge)
+	log.Print(r.Name(), "Client: AggLongterm ", r.aggJVSSLongterm)
 	return r.SendToChildren(packet)
 }
 

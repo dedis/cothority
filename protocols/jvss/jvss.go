@@ -27,7 +27,7 @@ import (
 
 func init() {
 	sda.GlobalProtocolRegister("JVSS", NewJVSS)
-	sda.GlobalProtocolRegister("JVSSCoSi", NewJVSS)
+	sda.GlobalProtocolRegister("JVSSCoSi", NewJVSSCoSi)
 }
 
 // SID is the type of shared secret identifiers
@@ -81,6 +81,7 @@ func NewJVSSCoSi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 	jv := p.(*JVSS)
 	jv.cosiMode = true
+	log.Print(jv.Name(), "Does it call JVSSCOSi !? YES ", jv.cosiMode)
 	return jv, nil
 }
 
@@ -350,13 +351,15 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 		return nil, err
 	}
 
+	log.Print(jv.Name(), jv.Index(), "sigPartial: cosiMode?", jv.cosiMode)
 	if jv.cosiMode {
-		// msg := H(aggCommit||aggPublic||msgToSign) || msgToSign
+		// msg := H(aggCommit||aggPublic||msgToSign)
 		reader := bytes.NewBuffer(msg)
 		challenge := jv.Suite().Scalar()
 		if _, err := challenge.UnmarshalFrom(reader); err != nil {
 			panic(err)
 		}
+		log.Print(jv.Name(), "JVSS NewRound: Challenge ", challenge)
 		if err := jv.schnorr.NewRoundWithHash(secret.secret, challenge); err != nil {
 			return nil, err
 		}

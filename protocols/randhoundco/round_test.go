@@ -1,6 +1,7 @@
 package randhoundco
 
 import (
+	"encoding/hex"
 	"sync"
 	"testing"
 
@@ -71,6 +72,10 @@ func TestJVSSCosiProto(t *testing.T) {
 
 	// verify the signature
 	sig := <-sigCh
+	log.Print("TEST Verifying signature:")
+	log.Print("AggLongterm: ", aggLongterm)
+	log.Print("msg: ", hex.EncodeToString(msg))
+	log.Print("Signature: ", sig)
 	assert.Nil(t, VerifySignature(network.Suite, aggLongterm, msg, sig))
 }
 
