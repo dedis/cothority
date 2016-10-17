@@ -97,7 +97,7 @@ func (jv *JVSS) handleSecConf(m WSecConfMsg) error {
 	msg := m.SecConfMsg
 	secret, err := jv.secrets.secret(msg.SID)
 	if err != nil {
-		log.Lvl2(jv.Index(), err, "for sid=", msg.SID)
+		log.Lvl2(jv.Name(), jv.Index(), err, "for sid=", msg.SID)
 		return nil
 	}
 

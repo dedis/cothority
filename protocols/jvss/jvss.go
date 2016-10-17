@@ -226,6 +226,7 @@ func (jv *JVSS) SignComplete(sid SID, msg []byte) (*poly.SchnorrSig, error) {
 		return nil, err
 	}
 
+	log.Lvl3(jv.Name(), jv.Index(), "waiting on complete signature")
 	// Wait for complete signature
 	sig := <-jv.sigChan
 	return sig, nil

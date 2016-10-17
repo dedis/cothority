@@ -97,7 +97,7 @@ type setupLeader struct {
 	// affiliated with this leader when it's ready.
 	longtermCh chan *poly.SharedSecret
 	// callback called when the jvss group + longterm secret has been generated
-	onJVSSLongterm func([]byte, *jvss.JVSS)
+	onJVSS func(*jvss.JVSS)
 }
 
 // NewSetupLeader  returns a setupLeader who receives a group requests, launch
