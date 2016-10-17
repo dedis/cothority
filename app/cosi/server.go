@@ -22,8 +22,8 @@ import (
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	_ "github.com/dedis/cosi/protocol"
-	_ "github.com/dedis/cosi/service"
+	_ "github.com/dedis/cothority/protocols/cosi"
+	_ "github.com/dedis/cothority/services/cosi"
 )
 
 func runServer(ctx *cli.Context) {
