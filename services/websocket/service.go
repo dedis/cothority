@@ -36,9 +36,14 @@ type Service struct {
 	server *http.Server
 }
 
+type Module struct {
+	Module map[string]string
+}
+
 // Simple status-example
 type WSStatus struct {
-	Status map[string]string
+	//Status map[string]string
+	Status map[string]Module
 	//Status map[string]sda.Status
 }
 
@@ -138,7 +143,12 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	//	return
 	//}
 	log.Lvl1(s.ReportStatus())
-	buf, err = network.MarshalRegisteredType(&WSStatus{s.ReportStatus()["Status"]})
+	msgStat := &WSStatus{Status: map[string]Module{}}
+	for k, v := range s.ReportStatus() {
+		msgStat.Status[k] = Module{v}
+	}
+	log.Lvl1("Sending", msgStat)
+	buf, err = network.MarshalRegisteredType(msgStat)
 	if err != nil {
 		log.Error(err)
 		return
