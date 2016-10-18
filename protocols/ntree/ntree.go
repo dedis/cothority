@@ -14,7 +14,7 @@ func init() {
 	// register network messages and protocol
 	network.RegisterPacketType(Message{})
 	network.RegisterPacketType(SignatureReply{})
-	sda.ProtocolRegisterName("NaiveTree", NewProtocol)
+	sda.GlobalProtocolRegister("NaiveTree", NewProtocol)
 }
 
 // Protocol implements the sda.ProtocolInstance interface
@@ -69,7 +69,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	// fill our own signature
 	p.signature = &SignatureReply{
 		Sig:   signature,
-		Index: p.TreeNode().ServerIdentityIdx}
+		Index: p.TreeNode().RosterIndex}
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &msg.Message)

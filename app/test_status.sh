@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+DBG_SHOW=1
+#STATICDIR=test
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
-DBG_SHOW=2
-STATICDIR=test
 
 main(){
     startTest
@@ -17,8 +17,8 @@ testNetwork(){
     cothoritySetup
     cp group.toml cl1
     testOut "Running network"
-    testGrep "Connections:" runCl 1
-    testGrep "Packets_Sent:" runCl 1
+    testGrep "Available_Services" runCl 1
+    testGrep "Available_Services" runCl 1
 }
 
 testBuild(){

@@ -6,7 +6,7 @@
 ## in dedis/cosi.
 
 # Temporarily overwrite the branch
-BRANCH=master
+BRANCH=protocols_conode_632
 
 if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   BRANCH=$TRAVIS_BRANCH
@@ -25,7 +25,8 @@ fi
 
 echo "Using branch $BRANCH"
 
-pattern="refactor_*"
+#pattern="refactor_*"
+pattern="protocols_conode_632"
 if [[ $BRANCH =~ $pattern ]]; then 
     echo "Using refactored branch $BRANCH - fetching cosi"
     repo=github.com/dedis/cosi

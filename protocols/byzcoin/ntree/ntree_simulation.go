@@ -11,7 +11,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("ByzCoinNtree", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoinNtree", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	sda.GlobalProtocolRegister("ByzCoinNtree", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) { return NewNtreeProtocol(n) })
 }
 
 // Simulation implements da.Simulation interface

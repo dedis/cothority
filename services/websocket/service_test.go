@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 
 func TestStatus(t *testing.T) {
 	local := sda.NewLocalTest()
-	_, el, _ := local.GenTree(2, false, true, false)
+	_, el, _ := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	url, err := getWebHost(el.List[0])
@@ -52,7 +52,7 @@ func TestStatus(t *testing.T) {
 
 func TestPong(t *testing.T) {
 	local := sda.NewLocalTest()
-	_, el, _ := local.GenTree(2, false, true, false)
+	_, el, _ := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	url, err := getWebHost(el.List[0])
@@ -70,7 +70,7 @@ func TestPong(t *testing.T) {
 
 func TestDebug(t *testing.T) {
 	local := sda.NewLocalTest()
-	_, el, _ := local.GenTree(2, false, true, false)
+	_, el, _ := local.GenTree(2, true)
 	defer local.CloseAll()
 
 	url, err := getWebHost(el.List[0])
