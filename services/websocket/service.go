@@ -38,7 +38,8 @@ type Service struct {
 
 // Simple status-example
 type WSStatus struct {
-	Status map[string]sda.Status
+	Status map[string]string
+	//Status map[string]sda.Status
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
@@ -137,7 +138,7 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	//	return
 	//}
 	log.Lvl1(s.ReportStatus())
-	buf, err = network.MarshalRegisteredType(&WSStatus{s.ReportStatus()})
+	buf, err = network.MarshalRegisteredType(&WSStatus{s.ReportStatus()["Status"]})
 	if err != nil {
 		log.Error(err)
 		return
