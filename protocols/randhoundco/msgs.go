@@ -1,10 +1,19 @@
 package randhoundco
 
 import (
+	"log"
+
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
+
+func init() {
+	network.RegisterPacketType(GroupRequest{})
+	network.RegisterPacketType(GroupRequests{})
+	network.RegisterPacketType(Group{})
+	network.RegisterPacketType(Groups{})
+}
 
 // GroupRequest is used by the leader of this group to know who it should
 // include in the JVSS group to form the longterm distributed secret.
@@ -26,7 +35,24 @@ type GroupRequests struct {
 	// mapping between the indices of the leaders in the Roster and the
 	// group it's responsible for. -1 the index to take into account the first
 	// node which is the client and does not participate.
-	Leaders []int
+	Leaders []int32
+}
+
+func (g *GroupRequests) Dump() {
+	log.Print("GroupRequestS: ID", g.Id)
+	log.Print("GroupRequestS: Leaders", g.Leaders)
+	for i, g := range g.Groups {
+		log.Printf("----------------%d--------------------", i)
+		for _, n := range g.Nodes {
+			log.Print("    ", n.Address)
+		}
+		log.Print("-------------------------------------")
+	}
+}
+
+type wrapGroupRequests struct {
+	*sda.TreeNode
+	GroupRequests
 }
 
 // Group designate a list of nodes participating in a JVSS groups.

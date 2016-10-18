@@ -2,6 +2,7 @@ package randhoundco
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/jvss"
@@ -22,6 +23,9 @@ type setupClient struct {
 	request GroupRequests
 	// groups received from the children in tree that needs to be buffered
 	childrenGroup []Group
+	// nb of response received from children
+	nbChildrenResp int
+	childrenMut    sync.Mutex
 	// the final grouping created
 	groups Groups
 
@@ -41,17 +45,18 @@ func NewSetupClient(tn *sda.TreeNodeInstance, groups GroupRequests) (*setupClien
 
 // Start sends down the request through the tree to the leaders.
 func (s *setupClient) Start() error {
+	log.Lvl2(s.Name(), "Client Start()")
 	return s.SendToChildren(&s.request)
 }
 
-func (s *setupClient) onResponse(tn *sda.TreeNode, groups Groups) error {
-	if !s.IsRoot() {
-		panic("come on, gimme root")
-	}
-
+func (s *setupClient) onResponse(wrap wrapGroups) error {
+	groups := wrap.Groups
 	// buffer the response
+	s.childrenMut.Lock()
+	defer s.childrenMut.Unlock()
 	s.childrenGroup = append(s.childrenGroup, groups.Groups...)
-	if len(s.childrenGroup) < len(s.Children()) {
+	s.nbChildrenResp++
+	if s.nbChildrenResp < len(s.Children()) {
 		return nil
 	}
 
@@ -59,7 +64,7 @@ func (s *setupClient) onResponse(tn *sda.TreeNode, groups Groups) error {
 
 	// compute the aggregate
 	agg := s.Suite().Point().Null()
-	for _, g := range groups.Groups {
+	for _, g := range s.childrenGroup {
 		agg.Add(agg, g.Longterm)
 	}
 
@@ -111,21 +116,26 @@ func NewSetupLeader(tn *sda.TreeNodeInstance) (*setupLeader, error) {
 	return s, s.RegisterHandlers(s.onRequest, s.onResponse)
 }
 
-func (s *setupLeader) onRequest(tn *sda.TreeNode, request GroupRequests) error {
-	// get our group
-	idx := s.Index()
+func (s *setupLeader) Start() error {
+	panic("Don't put me in this position I don't want")
+}
+
+func (s *setupLeader) onRequest(wrap wrapGroupRequests) error {
+	request := wrap.GroupRequests
+	// get our group index. -1 because the client is part of the roster.
+	idx := s.Index() - 1
 	if idx >= len(request.Leaders) {
 		return errors.New("Am i not a JVSS leader?")
 	}
-	grpIdx := request.Leaders[idx]
-	if grpIdx >= len(request.Groups) {
+	grpIdx := request.Leaders[int32(idx)]
+	if int(grpIdx) >= len(request.Groups) {
 		return errors.New("Is there no group for me ?")
 	}
 	group := request.Groups[grpIdx]
 	s.roster = sda.NewRoster(group.Nodes)
 	s.id = request.Id
 	tree := s.roster.GenerateNaryTree(len(s.roster.List) - 1)
-
+	log.Lvl2(s.Name(), "Launching JVSS idx", idx, " for request id", request.Id)
 	// launch the protocol and fetch the longterm
 	go func() {
 		jv, err := s.CreateProtocol("JVSSCoSi", tree)
@@ -142,33 +152,42 @@ func (s *setupLeader) onRequest(tn *sda.TreeNode, request GroupRequests) error {
 	}()
 
 	if s.IsLeaf() {
-		s.onResponse(nil, Groups{})
+		respGroups := Groups{
+			Id:     request.Id,
+			Groups: []Group{},
+		}
+		s.onResponse(wrapGroups{Groups: respGroups})
 	}
 	return s.SendToChildren(request)
 }
 
-func (s *setupLeader) onResponse(tn *sda.TreeNode, groups Groups) error {
+func (s *setupLeader) onResponse(wrap wrapGroups) error {
 	if s.IsRoot() {
 		panic("I shouldn't be in this embarrassing position")
 	}
+	groups := wrap.Groups
 	// buffer the response
 	s.childrenGroup = append(s.childrenGroup, groups.Groups...)
 	if len(s.childrenGroup) < len(s.Children()) {
 		return nil
 	}
-
 	defer s.Done()
+
 	// wait for our longterm
+	log.Lvl2(s.Name(), "Is waiting on JVSS's longterm")
 	long := <-s.longtermCh
+	log.Print(s.Name(), "Is DONE waiting on JVSS's longterm")
 	if s.onJVSS != nil {
+		log.Print(s.Name(), "Calling onJVSS")
 		s.onJVSS(s.jvss)
 	}
 	// add our group to the global list
+	log.Print(s.Name(), "Adding Longterm:", long.Pub.SecretCommit())
 	myGroup := Group{s.roster.List, long.Pub.SecretCommit()}
 	allGroups := append(s.childrenGroup, myGroup)
 	groups.Groups = allGroups
 	// and pass that up
-	return s.SendToParent(groups)
+	return s.SendToParent(&groups)
 }
 
 func (s *setupLeader) RegisterOnJVSS(fn func(*jvss.JVSS)) {

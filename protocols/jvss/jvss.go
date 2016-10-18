@@ -81,7 +81,6 @@ func NewJVSSCoSi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 	jv := p.(*JVSS)
 	jv.cosiMode = true
-	log.Print(jv.Name(), "Does it call JVSSCOSi !? YES ", jv.cosiMode)
 	return jv, nil
 }
 

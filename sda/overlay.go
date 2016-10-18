@@ -231,6 +231,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
+		log.Error(err)
 		return fmt.Errorf("Error marshaling message: %s (msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b

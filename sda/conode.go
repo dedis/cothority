@@ -55,7 +55,7 @@ func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *net
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
 	for name, inst := range protocols.instantiators {
-		log.Lvl4("Registering global protocol", name)
+		log.Lvl4("Overwriting global protocol", name)
 		c.ProtocolRegister(name, inst)
 	}
 	return c
