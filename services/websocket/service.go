@@ -144,7 +144,10 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	log.Lvl1(s.ReportStatus())
 	msgStat := &WSStatus{Status: map[string]Module{}}
 	for k, v := range s.ReportStatus() {
-		msgStat.Status[k] = Module{v}
+		msgStat.Status[k] = Module{Module: map[string]string{}}
+		for k2, v2 := range v {
+			msgStat.Status[k].Module[k2] = v2
+		}
 	}
 	log.Lvl1("Sending", msgStat)
 	buf, err = network.MarshalRegisteredType(msgStat)
