@@ -58,7 +58,11 @@ func NewTCPConn(addr Address) (*TCPConn, error) {
 		}
 		time.Sleep(WaitRetry)
 	}
-	return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
+	if err != nil {
+		return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
+	} else {
+		return nil, fmt.Errorf("Could not connect to %s", addr)
+	}
 }
 
 // Receive get the bytes from the connection then decodes the buffer.
