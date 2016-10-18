@@ -48,6 +48,7 @@ func TestStatus(t *testing.T) {
 	status, ok := stat.(*WSStatus)
 	require.True(t, ok)
 	log.Lvl1("Received correct status-reply:", status)
+	log.Lvl1(status.Status["Status"])
 }
 
 func TestPong(t *testing.T) {
