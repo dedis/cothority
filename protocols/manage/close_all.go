@@ -20,7 +20,7 @@ The protocol waits for the `Close`-message to arrive at the root.
 func init() {
 	network.RegisterPacketType(PrepareClose{})
 	network.RegisterPacketType(Close{})
-	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
+	sda.GlobalProtocolRegister("CloseAll", NewCloseAll)
 }
 
 // ProtocolCloseAll is the structure used to hold the Done-channel
@@ -73,11 +73,11 @@ func (p *ProtocolCloseAll) Start() error {
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
 func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
-	log.Lvl3(pc.ServerIdentity.Addresses, "sent PrepClose to", p.ServerIdentity().Addresses)
+	log.Lvl3(pc.ServerIdentity.Address, "sent PrepClose to", p.ServerIdentity().Address)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &PrepareClose{})
-			log.Lvl3(p.ServerIdentity().Addresses, "sends to", c.ServerIdentity.Addresses, "(err=", err, ")")
+			log.Lvl3(p.ServerIdentity().Address, "sends to", c.ServerIdentity.Address, "(err=", err, ")")
 		}
 	} else {
 		p.FuncClose(nil)
@@ -89,15 +89,15 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 // network communication.
 func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
-		log.Lvl3("Sending closeall from", p.ServerIdentity().Addresses,
-			"to", p.Parent().ServerIdentity.Addresses)
+		log.Lvl3("Sending closeall from", p.ServerIdentity().Address,
+			"to", p.Parent().ServerIdentity.Address)
 		if err := p.SendTo(p.Parent(), &Close{}); err != nil {
 			log.Error(p.Info(), "couldn't send 'close' tp parent",
 				p.Parent(), err)
 		}
 	}
 	time.Sleep(time.Second)
-	log.Lvl3("Closing host", p.ServerIdentity().Addresses)
+	log.Lvl3("Closing host", p.ServerIdentity().Address)
 	err := p.TreeNodeInstance.CloseHost()
 	if err != nil {
 		log.Error("Couldn't close:", err)

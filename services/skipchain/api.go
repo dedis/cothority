@@ -23,6 +23,11 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient("Skipchain")}
 }
 
+// NewLocalClient takes a LocalTest in order
+func NewLocalClient(local *sda.LocalTest) *Client {
+	return &Client{Client: local.NewClient("Skipchain")}
+}
+
 // CreateRootControl creates two Skipchains: a root SkipChain with
 // maximumHeight of maxHRoot and an control SkipChain with
 // maximumHeight of maxHControl. It connects both chains for later

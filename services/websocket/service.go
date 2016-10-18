@@ -6,7 +6,6 @@ package websocket
 import (
 	"net/http"
 
-	"net"
 	"strconv"
 
 	"fmt"
@@ -166,15 +165,11 @@ type Stat struct {
 }
 
 func getWebHost(si *network.ServerIdentity) (string, error) {
-	host, portStr, err := net.SplitHostPort(si.Addresses[0])
+	p, err := strconv.Atoi(si.Address.Port())
 	if err != nil {
 		return "", err
 	}
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%s:%d", host, port+100), nil
+	return fmt.Sprintf("%s:%d", si.Address.Host(), p+100), nil
 }
 
 // newTemplate receives the context and a path where it can write its
@@ -187,5 +182,6 @@ func newService(c *sda.Context, path string) sda.Service {
 	}
 
 	network.RegisterPacketType(Stat{})
+	s.Listening()
 	return s
 }

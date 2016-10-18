@@ -31,12 +31,14 @@ const skipchainBFT = "SkipchainBFT"
 func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
-	sda.ProtocolRegisterName(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, nil)
 	})
 	network.RegisterPacketType(&SkipBlockMap{})
 }
 
+// XXX Why skipchainSID is private ? Should we not be able to access it from
+// outside ?
 var skipchainSID sda.ServiceID
 
 // Service handles adding new SkipBlocks
@@ -321,7 +323,6 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 }
 
 func (s *Service) startBFTSignature(block *SkipBlock) error {
-	log.Lvl3("Starting bftsignature with root-node=", s.ServerIdentity())
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte(block.Hash)
