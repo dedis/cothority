@@ -26,6 +26,7 @@ const ServiceName = "WebSocket"
 func init() {
 	sda.RegisterNewService(ServiceName, newService)
 	network.RegisterPacketType(&WSStatus{})
+	network.RegisterPacketType(&Module{})
 }
 
 // Service is our template-service
