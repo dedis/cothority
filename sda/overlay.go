@@ -274,7 +274,7 @@ func (o *Overlay) checkPendingMessages(t *Tree) {
 				// if this message references t, instantiate it and go
 				err := o.TransmitMsg(msg)
 				if err != nil {
-					log.Error("TransmitMsg failed:", err)
+					log.Error(o.conode.ServerIdentity.Address, "TransmitMsg failed:", err)
 					continue
 				}
 			} else {

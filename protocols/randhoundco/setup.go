@@ -82,8 +82,8 @@ func (s *setupNode) Start() error {
 
 func (s *setupNode) onRequest(wrap wrapGroupRequests) error {
 	request := wrap.GroupRequests
-	// get our group index. -1 because the client is part of the roster.
-	idx := s.Index() - 1
+	// get our group index
+	idx := s.Index()
 	if idx >= len(request.Leaders) {
 		return errors.New("Am i not a JVSS leader?")
 	}
@@ -118,7 +118,7 @@ func (s *setupNode) onRequest(wrap wrapGroupRequests) error {
 		}
 		s.onResponse([]wrapGroups{wrapGroups{Groups: respGroups}})
 	}
-	return s.SendToChildren(request)
+	return s.SendToChildren(&request)
 }
 
 // onResponse call the setupNode.onResponse and then dispatch the grouping if a
