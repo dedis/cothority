@@ -11,3 +11,9 @@ for n in $( seq $NBR ); do
 	fi
 	./cothorityd -c co$n/config.toml -d 3 &
 done
+
+grep -vh Description co*/group.toml > group.toml
+
+go build github.com/dedis/cosi
+echo "Everything is set up - if you want to make some traffic, type"
+echo "./cosi check group.toml"
