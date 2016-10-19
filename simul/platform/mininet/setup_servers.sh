@@ -11,8 +11,8 @@ for s in $SERVERS; do
 	echo Starting to install on $s
 	login=root@$s
 	ip=$( host $s | sed -e "s/.* //" )
-	ssh-keygen -R $s > /dev/null
-	ssh-keygen -R $ip  > /dev/null
+	ssh-keygen -R $s > /dev/null || true
+	ssh-keygen -R $ip  > /dev/null || true
 	ssh-keyscan -t ssh-ed25519 $s >> ~/.ssh/known_hosts 2> /dev/null
 	ssh-copy-id $login 2> /dev/null
 	ssh $login "test ! -f .ssh/id_rsa && echo -e '\n\n\n\n' | ssh-keygen > /dev/null" || true
