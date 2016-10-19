@@ -2,7 +2,6 @@ package randhoundco
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/jvss"
@@ -13,19 +12,12 @@ import (
 // SetupProto is the name of the setup protocol
 const SetupProto = "RandhoundCoSetup"
 
-// setupClient is the protocol ran by the client who wishes to setup the full
+// setupRoot is the protocol ran by the client who wishes to setup the full
 // randhoundco system given some JVSS groups to create.
-type setupClient struct {
-	*sda.TreeNodeInstance
-	// id generated for this specific setup of randhoundco
-	systemID []byte
+type setupRoot struct {
+	*setupNode
 	// the groups requested
 	request GroupRequests
-	// groups received from the children in tree that needs to be buffered
-	childrenGroup []Group
-	// nb of response received from children
-	nbChildrenResp int
-	childrenMut    sync.Mutex
 	// the final grouping created
 	groups Groups
 
@@ -33,62 +25,9 @@ type setupClient struct {
 	onDone func(*Groups)
 }
 
-// NewSetupClient returns a setupClient who manages the creation of all the JVSS
-// groups. He is a client by definition so is not the leader of a JVSS group.
-func NewSetupClient(tn *sda.TreeNodeInstance, groups GroupRequests) (*setupClient, error) {
-	s := &setupClient{
-		TreeNodeInstance: tn,
-		request:          groups,
-	}
-	return s, s.RegisterHandler(s.onResponse)
-}
-
-// Start sends down the request through the tree to the leaders.
-func (s *setupClient) Start() error {
-	log.Lvl2(s.Name(), "Client Start()")
-	return s.SendToChildren(&s.request)
-}
-
-func (s *setupClient) onResponse(wrap wrapGroups) error {
-	groups := wrap.Groups
-	// buffer the response
-	s.childrenMut.Lock()
-	defer s.childrenMut.Unlock()
-	s.childrenGroup = append(s.childrenGroup, groups.Groups...)
-	s.nbChildrenResp++
-	if s.nbChildrenResp < len(s.Children()) {
-		return nil
-	}
-
-	defer s.Done()
-
-	// compute the aggregate
-	agg := s.Suite().Point().Null()
-	for _, g := range s.childrenGroup {
-		agg.Add(agg, g.Longterm)
-	}
-
-	s.groups = Groups{
-		Id:        s.request.Id,
-		Aggregate: agg,
-		Groups:    s.childrenGroup,
-	}
-
-	if s.onDone != nil {
-		s.onDone(&s.groups)
-	}
-	return nil
-}
-
-// RegisterOnDone registers the callback function to call when all the groups
-// are created,i.e. at the end of the protocol.
-func (s *setupClient) RegisterOnSetupDone(fn func(*Groups)) {
-	s.onDone = fn
-}
-
-// setupLeader is the protocol ran by all leaders of a JVSS groups that they
+// setupNode is the protocol ran by all leaders of a JVSS groups that they
 // will create.
-type setupLeader struct {
+type setupNode struct {
 	*sda.TreeNodeInstance
 	// id of the system received in from the client
 	id []byte
@@ -96,8 +35,8 @@ type setupLeader struct {
 	jvss *jvss.JVSS
 	// roster describing the JVSS group
 	roster *sda.Roster
-	// groups received from the children in tree that needs to be buffered
-	childrenGroup []Group
+	// groups received from the children + our own
+	aggGroups []Group
 	// channel used to communicate the longterm secret of the JVSS group
 	// affiliated with this leader when it's ready.
 	longtermCh chan *poly.SharedSecret
@@ -105,22 +44,43 @@ type setupLeader struct {
 	onJVSS func(*jvss.JVSS)
 }
 
-// NewSetupLeader  returns a setupLeader who receives a group requests, launch
+// NewSetupRoot returns a setupRoot who manages the creation of all the JVSS
+// groups. He is a client by definition so is not the leader of a JVSS group.
+func NewSetupRoot(tn *sda.TreeNodeInstance, groups GroupRequests) (*setupRoot, error) {
+	p, err := NewSetupNode(tn)
+	if err != nil {
+		return nil, err
+	}
+	s := &setupRoot{
+		setupNode: p,
+		request:   groups,
+	}
+	return s, s.RegisterHandler(s.onResponse)
+}
+
+// NewSetupNode  returns a setupNode who receives a group requests, launch
 // the JVSS protocol and aggregates the longterms keys of its children's group
-// and its own, and pass that up to the setupClient.
-func NewSetupLeader(tn *sda.TreeNodeInstance) (*setupLeader, error) {
-	s := &setupLeader{
+// and its own, and pass that up to the setupRoot.
+func NewSetupNode(tn *sda.TreeNodeInstance) (*setupNode, error) {
+	s := &setupNode{
 		TreeNodeInstance: tn,
 		longtermCh:       make(chan *poly.SharedSecret),
 	}
 	return s, s.RegisterHandlers(s.onRequest, s.onResponse)
 }
 
-func (s *setupLeader) Start() error {
+// Start sends down the request through the tree to the leaders.
+func (s *setupRoot) Start() error {
+	log.Lvl2(s.Name(), "Client Start()")
+	return s.onRequest(wrapGroupRequests{GroupRequests: s.request})
+}
+
+// Start is not supposed to be called on a setupNode.
+func (s *setupNode) Start() error {
 	panic("Don't put me in this position I don't want")
 }
 
-func (s *setupLeader) onRequest(wrap wrapGroupRequests) error {
+func (s *setupNode) onRequest(wrap wrapGroupRequests) error {
 	request := wrap.GroupRequests
 	// get our group index. -1 because the client is part of the roster.
 	idx := s.Index() - 1
@@ -156,40 +116,69 @@ func (s *setupLeader) onRequest(wrap wrapGroupRequests) error {
 			Id:     request.Id,
 			Groups: []Group{},
 		}
-		s.onResponse(wrapGroups{Groups: respGroups})
+		s.onResponse([]wrapGroups{wrapGroups{Groups: respGroups}})
 	}
 	return s.SendToChildren(request)
 }
 
-func (s *setupLeader) onResponse(wrap wrapGroups) error {
-	if s.IsRoot() {
-		panic("I shouldn't be in this embarrassing position")
+// onResponse call the setupNode.onResponse and then dispatch the grouping if a
+// hook have been registered.
+func (s *setupRoot) onResponse(wraps []wrapGroups) error {
+	if err := s.setupNode.onResponse(wraps); err != nil {
+		return err
 	}
-	groups := wrap.Groups
-	// buffer the response
-	s.childrenGroup = append(s.childrenGroup, groups.Groups...)
-	if len(s.childrenGroup) < len(s.Children()) {
-		return nil
+	aggregate := s.Suite().Point().Null()
+	for _, g := range s.aggGroups {
+		aggregate.Add(aggregate, g.Longterm)
 	}
+
+	s.groups = Groups{
+		Id:        s.request.Id,
+		Aggregate: aggregate,
+		Groups:    s.aggGroups,
+	}
+
+	if s.onDone != nil {
+		s.onDone(&s.groups)
+	}
+	return nil
+}
+
+// onResponse aggregates all groups received and create its own and sends that up
+// in the tree.
+func (s *setupNode) onResponse(wraps []wrapGroups) error {
 	defer s.Done()
+	// buffer the response
+	for _, wg := range wraps {
+		s.aggGroups = append(s.aggGroups, wg.Groups.Groups...)
+	}
 
 	// wait for our longterm
 	log.Lvl2(s.Name(), "Is waiting on JVSS's longterm")
 	long := <-s.longtermCh
 	log.Print(s.Name(), "Is DONE waiting on JVSS's longterm")
-	if s.onJVSS != nil {
-		log.Print(s.Name(), "Calling onJVSS")
-		s.onJVSS(s.jvss)
-	}
 	// add our group to the global list
 	log.Print(s.Name(), "Adding Longterm:", long.Pub.SecretCommit())
 	myGroup := Group{s.roster.List, long.Pub.SecretCommit()}
-	allGroups := append(s.childrenGroup, myGroup)
-	groups.Groups = allGroups
-	// and pass that up
-	return s.SendToParent(&groups)
+	s.aggGroups = append(s.aggGroups, myGroup)
+
+	if s.onJVSS != nil {
+		s.onJVSS(s.jvss)
+	}
+
+	if s.IsRoot() {
+		return nil
+	}
+	// pass that up
+	return s.SendToParent(&Groups{Id: s.id, Groups: s.aggGroups})
 }
 
-func (s *setupLeader) RegisterOnJVSS(fn func(*jvss.JVSS)) {
+func (s *setupNode) RegisterOnJVSS(fn func(*jvss.JVSS)) {
 	s.onJVSS = fn
+}
+
+// RegisterOnDone registers the callback function to call when all the groups
+// are created,i.e. at the end of the protocol.
+func (s *setupRoot) RegisterOnSetupDone(fn func(*Groups)) {
+	s.onDone = fn
 }

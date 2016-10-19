@@ -18,10 +18,10 @@ func TestMain(m *testing.M) {
 	log.MainTest(m, 3)
 }
 
-func TestJVSSCosiProto(t *testing.T) {
-	// number of total nodes participating - except the client
+func TestRound(t *testing.T) {
+	// number of total nodes participating
 	var nbNodes int = 10
-	//  number of JVSS groups
+	//  number of JVSS groups - # of leaders
 	var nbGroups int = 2
 	var msg = []byte("Hello World")
 	// Generate the entities and groups
@@ -33,37 +33,42 @@ func TestJVSSCosiProto(t *testing.T) {
 	// launch all JVSS protocol for all groups and get the longterms
 	secrets, jvssProtos := launchJVSS(groups, local)
 
-	// Create client + the client-and-leaders tree
-	client := local.NewConode(0)
-	list := make([]*network.ServerIdentity, len(groups)+1)
-	for i := range groups {
+	list := make([]*network.ServerIdentity, len(groups))
+	// register the NewProtocol, only for the intermediates nodes, not the
+	// leader.
+	for i, g := range groups[1:] {
 		// take the first entry in the list as the leader
-		list[i+1] = groups[i][0].ServerIdentity
-		idx := i
-		groups[i][0].ProtocolRegister(ProtoName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-			return NewRoundLeader(n, jvssProtos[idx])
+		list[i+1] = g[0].ServerIdentity
+		idx := i + 1
+		g[0].ProtocolRegister(ProtoName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+			return NewRoundNode(n, jvssProtos[idx])
 		})
 	}
-	list[0] = client.ServerIdentity
-	el := sda.NewRoster(list)
-	tree := el.GenerateBinaryTree()
-	log.Print("Tree is:")
-	log.Print(tree.Dump())
+
 	// compute the aggregation of the longterms
 	aggLongterm := network.Suite.Point().Null()
 	for _, s := range secrets {
 		aggLongterm.Add(aggLongterm, s.Pub.SecretCommit())
 	}
 
+	// register the root tree protocol
+	list[0] = groups[0][0].ServerIdentity
+	groups[0][0].ProtocolRegister(ProtoName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return NewRoundRoot(n, msg, aggLongterm, jvssProtos[0])
+	})
+
+	el := sda.NewRoster(list)
+	tree := el.GenerateBinaryTree()
+	log.Print("Tree is:")
+	log.Print(tree.Dump())
+
 	// start the protocol
-	tni := local.Overlays[client.ServerIdentity.ID].NewTreeNodeInstanceFromProtoName(tree, ProtoName)
-	p, err := NewRoundClient(tni, msg, aggLongterm)
+	p, err := local.CreateProtocol(ProtoName, tree)
 	log.ErrFatal(err)
-	log.ErrFatal(local.Overlays[client.ServerIdentity.ID].RegisterProtocolInstance(p))
-	roundCl := p.(*roundClient)
+	roundRoot := p.(*roundRoot)
 
 	var sigCh = make(chan []byte)
-	roundCl.RegisterOnSignature(func(sig []byte) {
+	roundRoot.RegisterOnSignature(func(sig []byte) {
 		sigCh <- sig
 	})
 
