@@ -50,7 +50,7 @@ type chanElgEncryptedMessage struct {
 type chanFullyPhEncryptedMessage struct {
 	*sda.TreeNode
 	FullyPhEncryptedMessage
-
+}
 type chanPartiallyPhDecryptedMessage struct {
 	*sda.TreeNode
 	PartiallyPhDecryptedMessage
