@@ -140,7 +140,7 @@ func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
 
 	if !c.IsLastToDecElg() {//already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
 	
-		out := c.ppsi.DecryptElgEncrptPH(in)   //to be implemented in crypto/ppsi
+		out := c.DecryptElgEncrptPH(in)   
 	
 		in.users[id] = in.users[id]+1 //need to decide on unique id-maybe the token that each node has?
 	
@@ -189,7 +189,7 @@ func (c *ppsi) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error 
 	
 	else{
 	
-		out := c.ppsi.DecryptPH(in)
+		out := c.DecryptPH(in)
 		in.users[id] = in.users[id]+1
 	
 		outMsg := &PartiallyPhDecryptedMessage{
@@ -209,7 +209,7 @@ func (c *ppsi) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage
 
 	if !c.IsLastToDecPH() {        //already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
 	
-		out := c.ppsi.DecryptPH(in)  //to be implemented in crypto/ppsi
+		out := c.DecryptPH(in)  
 		in.users[id] = in.users[id]+1
 		outMsg := &PartiallyPhDecryptedMessage{
 			Content: out,
@@ -287,11 +287,25 @@ func (c *ppsi) IsLastToDecElg() {
 func (c *ppsi) wantToDecrypt(size int) {
 	return size>MAX_SIZE
 }
+	
+func (c *ppsi) RegisterfinalIntersectionHook(fn finalIntersectionHook) {
+	c.FinalIntersectionHook = fn
+}
 
 func (c *ppsi) computeIntersection(in *FullyPhEncryptedMessage) {
 	//to be implemented
 }
-
-func (c *ppsi) RegisterfinalIntersectionHook(fn finalIntersectionHook) {
-	c.FinalIntersectionHook = fn
+	
+func (c *ppsi) DecryptElgEncrptPH(in *ElgEncryptedMessage) {
+	//to be implemented
 }
+	
+func (c *ppsi) DecryptPH(in *FullyPhEncryptedMessage) {
+	//to be implemented
+}
+	
+func (c *ppsi) DecryptPH(in *PartiallyPhDecryptedMessage) {
+	//to be implemented
+}
+	
+
