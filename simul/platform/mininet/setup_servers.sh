@@ -17,7 +17,7 @@ for s in $SERVERS; do
 	ip=$( host $s | sed -e "s/.* //" )
 	ssh-keygen -R $s > /dev/null || true
 	ssh-keygen -R $ip  > /dev/null || true
-	ssh-keyscan -t ssh-ed25519 $s >> ~/.ssh/known_hosts 2> /dev/null
+	ssh-keyscan $SSH_TYPE $s >> ~/.ssh/known_hosts 2> /dev/null
 	ssh-copy-id $login 2> /dev/null
 	ssh $login "test ! -f .ssh/id_rsa && echo -e '\n\n\n\n' | ssh-keygen > /dev/null" || true
 	ssh $login cat .ssh/id_rsa.pub >> $KEYS
