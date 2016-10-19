@@ -40,6 +40,7 @@ def dbg(lvl, *str):
         for s in str:
             print(s, end=" ")
         print()
+        sys.stdout.flush()
 
 class BaseRouter(Node):
     """"A Node with IP forwarding enabled."""
@@ -150,6 +151,7 @@ def RunNet():
     while not os.path.exists(logdone):
         dbg( 2, "Waiting for cothority to finish at " + platform.node() )
         print(log.read(), end="")
+        sys.stdout.flush()
         time.sleep(1)
     log.close()
 
@@ -209,9 +211,10 @@ def call_other(server, list_file):
 if __name__ == '__main__':
     # setLogLevel('info')
     # With this loglevel CLI(net) does not report correctly.
+    dbg(1, "mbp: ", sys.argv)
     lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
-        print("please give list-name")
+        dbg(0, "please give list-name")
         sys.exit(-1)
 
     list_file = sys.argv[1]
