@@ -5,6 +5,10 @@ set -e
 SERVER_GW="$1"
 SERVERS="$@"
 KEYS=/tmp/server_keys
+SSH_TYPE="-t ssh-ed25519"
+if grep -q "Debian.*7" /etc/issue; then
+	SSH_TYPE=""
+fi
 
 rm -f $KEYS
 for s in $SERVERS; do
@@ -54,8 +58,8 @@ for s in $SERVERS; do
 	login=root@$s
 	cat $KEYS | ssh $login "cat - >> .ssh/authorized_keys"
 	ip=$( host $s | sed -e "s/.* //" )
-	ssh root@$SERVER_GW "ssh-keyscan -t ssh-ed25519 $s >> .ssh/known_hosts 2> /dev/null"
-	ssh root@$SERVER_GW "ssh-keyscan -t ssh-ed25519 $ip >> .ssh/known_hosts 2> /dev/null"
+	ssh root@$SERVER_GW "ssh-keyscan $SSH_TYPE $s >> .ssh/known_hosts 2> /dev/null"
+	ssh root@$SERVER_GW "ssh-keyscan $SSH_TYPE $ip >> .ssh/known_hosts 2> /dev/null"
 	echo $s >> server_list
 done
 
