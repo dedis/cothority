@@ -13,7 +13,6 @@ import (
 )
 
 func TestSetup(t *testing.T) {
-	log.TestOutput(true, 3)
 	// number of total nodes participating - except the client
 	var nbNodes int = 10
 	//  number of JVSS groups

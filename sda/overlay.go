@@ -163,11 +163,11 @@ func (o *Overlay) Process(data *network.Packet) {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
+
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
 		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
-
 	o.transmitMux.Lock()
 	defer o.transmitMux.Unlock()
 	// TreeNodeInstance
@@ -190,11 +190,11 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 		tni := o.newTreeNodeInstanceFromToken(tn, sdaMsg.To)
 		// see if we know the Service Recipient
 		s, ok := o.conode.serviceManager.serviceByID(sdaMsg.To.ServiceID)
-
 		// no servies defined => check if there is a protocol that can be
 		// created
 		if !ok {
 			pi, err = o.conode.ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
+
 			if err != nil {
 				return err
 			}
@@ -220,8 +220,11 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
-
+	if o.conode.Address().NetworkAddress() == "127.0.0.1:2050" {
+		log.Print(o.conode.Address(), "sdaMsg from", sdaMsg.ServerIdentity)
+	}
 	// TODO Check if TreeNodeInstance is already Done
+	//log.Print("Processing message to treenode", sdaMsg.ServerIdentity.Address)
 	pi.ProcessProtocolMsg(sdaMsg)
 	return nil
 }

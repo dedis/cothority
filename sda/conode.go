@@ -83,7 +83,6 @@ func (c *Conode) Close() error {
 	err := c.Router.Stop()
 	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
 	return err
-
 }
 
 // Address returns the address used by the Router.
@@ -99,7 +98,8 @@ func (c *Conode) GetService(name string) Service {
 // ProtocolRegister will sign up a new protocol to this Conode.
 // It returns the ID of the protocol.
 func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
-	return c.protocols.Register(name, protocol)
+	p, e := c.protocols.Register(name, protocol)
+	return p, e
 }
 
 // ProtocolInstantiate instantiate a protocol from its ID

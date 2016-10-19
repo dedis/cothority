@@ -77,6 +77,19 @@ type Groups struct {
 	Groups []Group
 }
 
+func (g *Groups) Dump() {
+	log.Print("Groups: ID", g.Id)
+	log.Print("Groups: Aggregate", g.Aggregate)
+	for i, g := range g.Groups {
+		log.Printf("----------------%d--------------------", i)
+		log.Print(g.Longterm)
+		for _, n := range g.Identities {
+			log.Print("    ", n.Address)
+		}
+		log.Print("-------------------------------------")
+	}
+}
+
 type wrapGroups struct {
 	*sda.TreeNode
 	Groups

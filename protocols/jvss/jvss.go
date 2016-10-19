@@ -279,7 +279,6 @@ func (jv *JVSS) initSecret(sid SID) error {
 			Deal: db,
 		}
 		if err := jv.Broadcast(msg); err != nil {
-			log.Print(jv.Name(), "Error broadcast secInit:", err)
 			return err
 		}
 	}
@@ -350,7 +349,6 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 		return nil, err
 	}
 
-	log.Print(jv.Name(), jv.Index(), "sigPartial: cosiMode?", jv.cosiMode)
 	if jv.cosiMode {
 		// msg := H(aggCommit||aggPublic||msgToSign)
 		reader := bytes.NewBuffer(msg)
@@ -358,7 +356,6 @@ func (jv *JVSS) sigPartial(sid SID, msg []byte) (*poly.SchnorrPartialSig, error)
 		if _, err := challenge.UnmarshalFrom(reader); err != nil {
 			panic(err)
 		}
-		log.Print(jv.Name(), "JVSS NewRound: Challenge ", challenge)
 		if err := jv.schnorr.NewRoundWithHash(secret.secret, challenge); err != nil {
 			return nil, err
 		}

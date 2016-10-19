@@ -398,12 +398,16 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 
 	switch {
 	case n.channels[msgType] != nil:
+		if strings.Contains(n.Name(), "127.0.0.1:2050") {
+			log.Print(n.Name(), "dispatching msg to CHANNEL protocol", msgType, "", sdaMsg.ServerIdentity.Address)
+		}
 		log.Lvl4(n.Name(), "Dispatching to channel")
 		err = n.DispatchChannel(msgs)
 	case n.handlers[msgType] != nil:
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Address)
 		err = n.dispatchHandler(msgs)
 	default:
+		log.Error("This message-type is not handled by this protocol")
 		return errors.New("This message-type is not handled by this protocol")
 	}
 	return err
@@ -470,6 +474,7 @@ func (n *TreeNodeInstance) Done() {
 		}
 	}
 	log.Lvl3(n.Info(), "has finished. Deleting its resources")
+	log.Print(n.Info(), "has finished. Deleting its resources")
 	n.overlay.nodeDone(n.token)
 }
 
@@ -577,6 +582,7 @@ func (n *TreeNodeInstance) SendToChildren(msg interface{}) error {
 		return nil
 	}
 	for _, node := range n.Children() {
+		log.Print(n.Name(), "Sending to ", node.ServerIdentity.Address)
 		if err := n.SendTo(node, msg); err != nil {
 			return err
 		}

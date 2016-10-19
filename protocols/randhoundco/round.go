@@ -115,6 +115,7 @@ func (r *roundNode) onAnnouncement(in *cosip.Announcement) error {
 
 	// start the commit phase
 	if r.IsLeaf() {
+		log.Print(r.Name(), "Going into commitment")
 		return r.onCommitment([]abstract.Point{})
 	}
 

@@ -3,6 +3,7 @@ package network
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -130,7 +131,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", r.address, e, msg)
+	log.Lvlf4("%s sends to %s %s", r.address, e, reflect.TypeOf(msg))
 	var err error
 	err = c.Send(msg)
 	if err != nil {
