@@ -23,7 +23,11 @@ for s in $SERVERS; do
 		exit 1
 	fi
 	scp install_mininet.sh $login: > /dev/null
-#	ssh -f $login "./install_mininet.sh &> /dev/null"
+	if ! ssh $login which mn; then
+		ssh -f $login "./install_mininet.sh &> /dev/null"
+	else
+		echo "Mininet already installed on $login"
+	fi
 done
 
 DONE=0
