@@ -9,6 +9,12 @@ import (
 
 	"errors"
 
+	"strconv"
+
+	"time"
+
+	"os/exec"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -30,6 +36,8 @@ type Conode struct {
 	// protocols holds a map of all available protocols and how to create an
 	// instance of it
 	protocols *protocolStorage
+	// when this node has been started
+	started time.Time
 }
 
 // NewConode returns a fresh Host with a given Router.
@@ -39,6 +47,7 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 		protocols:            newProtocolStorage(),
+		started:              time.Now(),
 	}
 	c.overlay = NewOverlay(c)
 	c.serviceManager = newServiceManager(c, c.overlay)
@@ -71,6 +80,16 @@ func (c *Conode) GetStatus() Status {
 	a := ServiceFactory.RegisteredServiceNames()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
+	m["TX_bytes"] = strconv.FormatUint(c.Router.Tx(), 10)
+	m["RX_bytes"] = strconv.FormatUint(c.Router.Rx(), 10)
+	m["Uptime"] = time.Now().Sub(c.started).String()
+	uname, _ := exec.Command("uname", "-a").Output()
+	m["System"] = strings.TrimRight(string(uname), "\n\r")
+	m["Version"] = "0.9.0"
+	m["Host"] = c.ServerIdentity.Address.Host()
+	m["Port"] = c.ServerIdentity.Address.Port()
+	m["Description"] = c.ServerIdentity.Description
+	m["ConnType"] = string(c.ServerIdentity.Address.ConnType())
 	return m
 }
 

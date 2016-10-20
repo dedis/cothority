@@ -122,6 +122,10 @@ func (a Address) Host() string {
 	if e != nil {
 		return ""
 	}
+	// IPv6 local-link has to be in brackets for Connect.
+	if h == "::" {
+		h = "[::]"
+	}
 	return h
 }
 
