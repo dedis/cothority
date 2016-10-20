@@ -156,9 +156,7 @@ func (s *setupNode) onResponse(wraps []wrapGroups) error {
 	// wait for our longterm
 	log.Lvl2(s.Name(), "Is waiting on JVSS's longterm")
 	long := <-s.longtermCh
-	log.Print(s.Name(), "Is DONE waiting on JVSS's longterm")
 	// add our group to the global list
-	log.Print(s.Name(), "Adding Longterm:", long.Pub.SecretCommit())
 	myGroup := Group{s.roster.List, long.Pub.SecretCommit()}
 	s.aggGroups = append(s.aggGroups, myGroup)
 

@@ -115,7 +115,6 @@ func (r *roundNode) onAnnouncement(in *cosip.Announcement) error {
 
 	// start the commit phase
 	if r.IsLeaf() {
-		log.Print(r.Name(), "Going into commitment")
 		return r.onCommitment([]abstract.Point{})
 	}
 
@@ -141,8 +140,6 @@ func (r *roundRoot) onCommitment(commits []abstract.Point) error {
 	}
 	hash.Write(r.msg)
 	challenge := r.Suite().Scalar().SetBytes(hash.Sum(nil))
-	log.Print(r.Name(), "Client: challenge ", challenge)
-	log.Print(r.Name(), "Client: AggLongterm ", r.aggJVSSLongterm)
 	return r.onChallenge(challenge)
 }
 
@@ -183,7 +180,6 @@ func (r *roundNode) onChallenge(challenge abstract.Scalar) error {
 	go func() {
 		log.Lvl2(r.Name(), "Lauching jvss.SignComplete()")
 		sig, err := r.jvss.SignComplete(r.sid, msg)
-		log.Print(r.Name(), "Lauching jvss.SignComplete() DONE", err)
 		if err != nil {
 			log.Error(err)
 			sig = nil
@@ -203,7 +199,6 @@ func (r *roundNode) onChallenge(challenge abstract.Scalar) error {
 func (r *roundNode) onResponse(resps []abstract.Scalar) {
 	defer func() {
 		r.cosi.Done()
-		log.Print(r.Name(), "Calling Done()")
 	}()
 	// get the jvss signature
 	log.Lvl2(r.Name(), "Waiting on the signature")

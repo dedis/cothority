@@ -220,9 +220,6 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
-	if o.conode.Address().NetworkAddress() == "127.0.0.1:2050" {
-		log.Print(o.conode.Address(), "sdaMsg from", sdaMsg.ServerIdentity)
-	}
 	// TODO Check if TreeNodeInstance is already Done
 	//log.Print("Processing message to treenode", sdaMsg.ServerIdentity.Address)
 	pi.ProcessProtocolMsg(sdaMsg)

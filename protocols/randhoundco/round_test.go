@@ -1,7 +1,6 @@
 package randhoundco
 
 import (
-	"encoding/hex"
 	"sync"
 	"testing"
 
@@ -15,14 +14,14 @@ import (
 
 func TestMain(m *testing.M) {
 	log.SetUseColors(true)
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestRound(t *testing.T) {
 	// number of total nodes participating
-	var nbNodes int = 10
+	var nbNodes int = 20
 	//  number of JVSS groups - # of leaders
-	var nbGroups int = 2
+	var nbGroups int = 4
 	var msg = []byte("Hello World")
 	// Generate the entities and groups
 	local := sda.NewLocalTest()
@@ -59,8 +58,6 @@ func TestRound(t *testing.T) {
 
 	el := sda.NewRoster(list)
 	tree := el.GenerateBinaryTree()
-	log.Print("Tree is:")
-	log.Print(tree.Dump())
 
 	// start the protocol
 	p, err := local.CreateProtocol(ProtoName, tree)
@@ -72,15 +69,10 @@ func TestRound(t *testing.T) {
 		sigCh <- sig
 	})
 
-	log.Print("Starting protoClient")
 	go p.Start()
 
 	// verify the signature
 	sig := <-sigCh
-	log.Print("TEST Verifying signature:")
-	log.Print("AggLongterm: ", aggLongterm)
-	log.Print("msg: ", hex.EncodeToString(msg))
-	log.Print("Signature: ", sig)
 	assert.Nil(t, VerifySignature(network.Suite, aggLongterm, msg, sig))
 }
 
@@ -109,12 +101,10 @@ func launchJVSS(groups [][]*sda.Conode, local *sda.LocalTest) ([]*poly.SharedSec
 		wg.Add(1)
 		// start this JVSS group and collect the longterm
 		go func(idx int, leader *jvss.JVSS) {
-			log.Print("Got leader", idx, "starting!")
 			if err := leader.Start(); err != nil {
 				panic(err)
 			}
 			lg := leader.Longterm()
-			log.Print("Got leader", idx, "longterms")
 			longterms[idx] = lg
 			wg.Done()
 		}(i, leader)

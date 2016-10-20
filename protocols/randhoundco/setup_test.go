@@ -14,22 +14,14 @@ import (
 
 func TestSetup(t *testing.T) {
 	// number of total nodes participating - except the client
-	var nbNodes int = 10
+	var nbNodes int = 15
 	//  number of JVSS groups
-	var nbGroups int = 2
+	var nbGroups int = 3
 	// Generate the entities and groups
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
 	conodes := local.GenConodes(nbNodes)
 	coGroups, groupRequests, roster := groupsSetup(conodes, nbGroups)
-	log.Print("Roster:")
-	for i, c := range roster.List {
-		log.Printf("(%d) %s", i, c.Address)
-	}
-	log.Print("Conodes:")
-	for i, c := range coGroups {
-		log.Printf("(%d) %s", i, c[0].ServerIdentity.Address)
-	}
 	// register the protocol instantiation to get all the jvss instances
 	jvssProtos := make([]*jvss.JVSS, 0, len(conodes))
 	var jvMut sync.Mutex
@@ -37,14 +29,12 @@ func TestSetup(t *testing.T) {
 		_, err := c[0].ProtocolRegister(SetupProto, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 			setup, err := NewSetupNode(n)
 			setup.RegisterOnJVSS(func(jv *jvss.JVSS) {
-				log.Print(jv.Name(), "On Register JVSS")
 				jvMut.Lock()
 				defer jvMut.Unlock()
 				jvssProtos = append(jvssProtos, jv)
 			})
 			return setup, err
 		})
-		log.Print("Registering", SetupProto, "on ", c[0].ServerIdentity.Address)
 		log.ErrFatal(err)
 	}
 
@@ -54,7 +44,6 @@ func TestSetup(t *testing.T) {
 	_, err := coGroups[0][0].ProtocolRegister(SetupProto, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		setup, err := NewSetupRoot(n, groupRequests)
 		setup.RegisterOnJVSS(func(jv *jvss.JVSS) {
-			log.Print(jv.Name(), "On Register JVSS")
 			jvMut.Lock()
 			defer jvMut.Unlock()
 			jvssProtos = append(jvssProtos, jv)
@@ -67,8 +56,6 @@ func TestSetup(t *testing.T) {
 	log.ErrFatal(err)
 
 	tree := roster.GenerateBinaryTree()
-	log.Print("Tree is:")
-	log.Print(tree.Dump())
 	p, err := local.CreateProtocol(SetupProto, tree)
 	log.ErrFatal(err)
 
@@ -84,8 +71,6 @@ func TestSetup(t *testing.T) {
 	}
 
 	if !aggLongterm.Equal(groupsCreated.Aggregate) {
-		log.Print(aggLongterm)
-		log.Print(groupsCreated.Aggregate)
 		t.Error("longterms are not equals?")
 	}
 }
