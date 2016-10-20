@@ -3,7 +3,8 @@ package network
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/dedis/cothority/log"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConnType(t *testing.T) {
@@ -52,12 +53,13 @@ func TestAddress(t *testing.T) {
 	}
 
 	for i, str := range tests {
+		log.Lvl1("Testing", str)
 		add := Address(str.Value)
-		assert.Equal(t, str.Valid, add.Valid(), "Address (%d) %s", i, str.Value)
-		assert.Equal(t, str.Type, add.ConnType(), "Address (%d) %s", i, str.Value)
-		assert.Equal(t, str.Address, add.NetworkAddress())
-		assert.Equal(t, str.Host, add.Host())
-		assert.Equal(t, str.Port, add.Port())
-		assert.Equal(t, str.Public, add.Public())
+		require.Equal(t, str.Valid, add.Valid(), "Address (%d) %s", i, str.Value)
+		require.Equal(t, str.Type, add.ConnType(), "Address (%d) %s", i, str.Value)
+		require.Equal(t, str.Address, add.NetworkAddress())
+		require.Equal(t, str.Host, add.Host())
+		require.Equal(t, str.Port, add.Port())
+		require.Equal(t, str.Public, add.Public())
 	}
 }
