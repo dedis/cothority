@@ -88,6 +88,7 @@ func (c *Conode) GetStatus() Status {
 	m["Version"] = "0.9.0"
 	m["Host"] = c.ServerIdentity.Address.Host()
 	m["Port"] = c.ServerIdentity.Address.Port()
+	m["Description"] = c.ServerIdentity.Description
 	m["ConnType"] = string(c.ServerIdentity.Address.ConnType())
 	return m
 }

@@ -6,10 +6,16 @@ killall cothorityd || true
 go build ../../app/cothorityd
 
 for n in $( seq $NBR ); do
-	if [ ! -d co$n ]; then
-		echo -e "$((7000 + $n))\n\nco$n" | ./cothorityd setup
+	co=co$n
+	if ! grep -q Description $co/config.toml; then
+		echo "Detected old files - deleting"
+		rm -rf $co
 	fi
-	./cothorityd -c co$n/config.toml -d 3 &
+
+	if [ ! -d $co ]; then
+		echo -e "$((7000 + $n))\n\nConode $n\n$co" | ./cothorityd setup
+	fi
+	./cothorityd -c $co/config.toml -d 3 &
 done
 
 grep -vh Description co*/group.toml > group.toml
