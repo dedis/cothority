@@ -12,15 +12,11 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
-func init() {
-	sda.GlobalProtocolRegister("Propagate", NewPropagateProtocol)
-}
-
 // Propagate is a protocol that sends some data to all attached nodes
 // and waits for confirmation before returning.
 type Propagate struct {
 	*sda.TreeNodeInstance
-	onData    func(network.Body)
+	onData    PropagationStore
 	onDoneCb  func(int)
 	sd        *PropagateSendData
 	ChannelSD chan struct {
@@ -51,22 +47,48 @@ type PropagateReply struct {
 	Level int
 }
 
-// PropagateStartAndWait starts the propagation protocol and blocks until
+// PropagationFunc starts the propagation protocol and blocks until
 // all children stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-func PropagateStartAndWait(c *sda.Context, el *sda.Roster, msg network.Body, msec int, f func(network.Body)) (int, error) {
-	tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
-	log.Lvl3("Starting to propagate", reflect.TypeOf(msg))
-	pi, err := c.CreateProtocolService("Propagate", tree)
-	if err != nil {
-		return -1, err
-	}
-	return propagateStartAndWait(pi, msg, msec, f)
+type PropagationFunc func(el *sda.Roster, msg network.Body, msec int) (int, error)
+
+// PropagationStore is the function that will store the new data.
+type PropagationStore func(network.Body)
+
+// NewPropagationFunc registers a new protocol name with the context c and will
+// set f as handler for every new instance of that protocol.
+func NewPropagationFunc(c *sda.Context, name string, f PropagationStore) (PropagationFunc, error) {
+	pid, err := c.ProtocolRegister(name, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		p := &Propagate{
+			sd:               &PropagateSendData{[]byte{}, 1000},
+			TreeNodeInstance: n,
+			received:         0,
+			subtree:          n.TreeNode().SubtreeCount(),
+			onData:           f,
+		}
+		for _, h := range []interface{}{&p.ChannelSD, &p.ChannelReply} {
+			if err := p.RegisterChannel(h); err != nil {
+				return nil, err
+			}
+		}
+		return p, nil
+	})
+	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
+		name, pid)
+	return func(el *sda.Roster, msg network.Body, msec int) (int, error) {
+		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		log.Lvl3("Starting to propagate", reflect.TypeOf(msg))
+		pi, err := c.CreateProtocolSDA(name, tree)
+		if err != nil {
+			return -1, err
+		}
+		return propagateStartAndWait(pi, msg, msec, f)
+	}, err
 }
 
 // Separate function for testing
-func propagateStartAndWait(pi sda.ProtocolInstance, msg network.Body, msec int, f func(network.Body)) (int, error) {
+func propagateStartAndWait(pi sda.ProtocolInstance, msg network.Body, msec int, f PropagationStore) (int, error) {
 	d, err := network.MarshalRegisteredType(msg)
 	if err != nil {
 		return -1, err
@@ -86,22 +108,6 @@ func propagateStartAndWait(pi sda.ProtocolInstance, msg network.Body, msec int, 
 	ret := <-done
 	log.Lvl3("Finished propagation with", ret, "replies")
 	return ret, nil
-}
-
-// NewPropagateProtocol returns a new Propagate protocol
-func NewPropagateProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	p := &Propagate{
-		sd:               &PropagateSendData{[]byte{}, 1000},
-		TreeNodeInstance: n,
-		received:         0,
-		subtree:          n.TreeNode().SubtreeCount(),
-	}
-	for _, h := range []interface{}{&p.ChannelSD, &p.ChannelReply} {
-		if err := p.RegisterChannel(h); err != nil {
-			return nil, err
-		}
-	}
-	return p, nil
 }
 
 // Start will contact everyone and make the connections
@@ -173,7 +179,7 @@ func (p *Propagate) RegisterOnDone(fn func(int)) {
 // RegisterOnData takes a function that will be called once all connections
 // are set up. The argument to the function is the number of children that
 // sent OK after the propagation
-func (p *Propagate) RegisterOnData(fn func(network.Body)) {
+func (p *Propagate) RegisterOnData(fn PropagationStore) {
 	p.onData = fn
 }
 

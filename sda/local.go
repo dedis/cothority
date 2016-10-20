@@ -398,6 +398,11 @@ func (l *LocalTest) NewLocalConode(port int) *Conode {
 
 }
 
+// NewContext creates a context from a ServerIdentity.
+func (l *LocalTest) NewContext(si *network.ServerIdentity, servID ServiceID, manager *serviceManager) *Context {
+	return newContext(l.Conodes[si.ID], l.Overlays[si.ID], servID, manager)
+}
+
 // PrivPub creates a private/public key pair.
 func PrivPub() (abstract.Scalar, abstract.Point) {
 	keypair := config.NewKeyPair(network.Suite)
