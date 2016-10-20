@@ -47,7 +47,7 @@ type TCPConn struct {
 // In case of an error it returns a nil TCPConn and the error.
 func NewTCPConn(addr Address) (conn *TCPConn, err error) {
 	netAddr := addr.NetworkAddress()
-	for i := 0; i < MaxRetryConnect; i++ {
+	for i := 1; i <= MaxRetryConnect; i++ {
 		var c net.Conn
 		c, err = net.Dial("tcp", netAddr)
 		if err == nil {
@@ -57,9 +57,11 @@ func NewTCPConn(addr Address) (conn *TCPConn, err error) {
 			}
 			return
 		}
-		time.Sleep(WaitRetry)
+		if i < MaxRetryConnect {
+			time.Sleep(WaitRetry)
+		}
 	}
-	if err != nil {
+	if err == nil {
 		err = ErrTimeout
 	}
 	return
