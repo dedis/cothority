@@ -222,6 +222,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	}
 	// TODO Check if TreeNodeInstance is already Done
 	//log.Print("Processing message to treenode", sdaMsg.ServerIdentity.Address)
+
 	pi.ProcessProtocolMsg(sdaMsg)
 	return nil
 }

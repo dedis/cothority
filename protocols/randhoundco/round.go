@@ -49,6 +49,8 @@ type roundNode struct {
 	sigDone chan *poly.SchnorrSig
 	// the JVSS protocol used for the group the leader is responsible for
 	jvss *jvss.JVSS
+	// the function to call when the response phase is finished
+	onDoneFunc func()
 }
 
 // NewRoundRoot returns a protocol instance which is used by the root of
@@ -216,6 +218,10 @@ func (r *roundNode) onResponse(resps []abstract.Scalar) {
 		r.aggResponse.Add(r.aggResponse, resp)
 	}
 
+	if r.onDoneFunc != nil {
+		r.onDoneFunc()
+	}
+
 	if r.IsRoot() {
 		return
 	}
@@ -224,6 +230,12 @@ func (r *roundNode) onResponse(resps []abstract.Scalar) {
 	if err != nil {
 		log.Error(err)
 	}
+}
+
+// RegisterOnDone takes a func that will be called when the roundNode protocol
+// is finished (at the end of onResponse).
+func (r *roundNode) RegisterOnDone(fn func()) {
+	r.onDoneFunc = fn
 }
 
 // onResponse computes the aggregation of the children's response, and then
