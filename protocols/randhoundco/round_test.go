@@ -59,21 +59,24 @@ func TestRound(t *testing.T) {
 	el := sda.NewRoster(list)
 	tree := el.GenerateBinaryTree()
 
-	// start the protocol
-	p, err := local.CreateProtocol(ProtoName, tree)
-	log.ErrFatal(err)
-	roundRoot := p.(*roundRoot)
+	for i := 0; i < 2; i++ {
 
-	var sigCh = make(chan []byte)
-	roundRoot.RegisterOnSignature(func(sig []byte) {
-		sigCh <- sig
-	})
+		// start the protocol
+		p, err := local.CreateProtocol(ProtoName, tree)
+		log.ErrFatal(err)
+		roundRoot := p.(*roundRoot)
 
-	go p.Start()
+		var sigCh = make(chan []byte)
+		roundRoot.RegisterOnSignature(func(sig []byte) {
+			sigCh <- sig
+		})
 
-	// verify the signature
-	sig := <-sigCh
-	assert.Nil(t, VerifySignature(network.Suite, aggLongterm, msg, sig))
+		go p.Start()
+
+		// verify the signature
+		sig := <-sigCh
+		assert.Nil(t, VerifySignature(network.Suite, aggLongterm, msg, sig))
+	}
 }
 
 // Launch all JVSS groups and recolts the Longterm shares and the protocols of
