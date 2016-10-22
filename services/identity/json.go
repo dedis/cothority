@@ -56,6 +56,7 @@ const (
 	cothorityFailure = 502
 	noProposed       = 503
 	invalidBase64    = 504
+	threshold        = 505
 )
 
 type jsonConfig struct {
@@ -224,7 +225,7 @@ func (jid *jsonID) pu(w http.ResponseWriter, r *http.Request) {
 	if msg, err := jid.service.ProposeUpdate(nil, &pu); err == nil {
 		pur := msg.(*ProposeUpdateReply)
 		if pur.Propose == nil {
-			w.WriteHeader(noProposed)
+			w.Write([]byte("empty"))
 			return
 		}
 
@@ -265,7 +266,7 @@ func (jid *jsonID) pv(w http.ResponseWriter, r *http.Request) {
 			_ = msg.(*ProposeVoteReply)
 			w.Write([]byte("success"))
 		} else {
-			w.Write([]byte("threshold not reached"))
+			w.Write([]byte("threshold not reached."))
 		}
 	} else {
 		w.WriteHeader(cothorityFailure)
