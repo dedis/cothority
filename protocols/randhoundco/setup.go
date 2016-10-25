@@ -98,6 +98,7 @@ func (s *setupNode) onRequest(wrap wrapGroupRequests) error {
 	log.Lvl2(s.Name(), "Launching JVSS idx", idx, " for request id", request.Id)
 	// launch the protocol and fetch the longterm
 	go func() {
+		log.Print(s.Name(), "Launching JVSS with a tree of", tree.Size(), "nodes")
 		jv, err := s.CreateProtocol("JVSSCoSi", tree)
 		if err != nil {
 			log.Error(err)

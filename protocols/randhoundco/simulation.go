@@ -2,6 +2,7 @@ package randhoundco
 
 import (
 	"crypto/rand"
+	"fmt"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/log"
@@ -18,7 +19,11 @@ func init() {
 type Simulation struct {
 	sda.SimulationBFTree
 	// number of JVSS groups randhoundco will generate
+	// If not set, then GroupSize is used
 	Groups int
+	// number of nodes per JVSS groups
+	// If not set them Groups is used
+	GroupSize int
 }
 
 // NewSimulation creates a Randhoundco simulation
@@ -43,9 +48,10 @@ func (r *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, e
 func (r *Simulation) Run(config *sda.SimulationConfig) error {
 	var msg = []byte("Hello World")
 	// creating the groups requests
-	req, leaderRoster := CreateGroups(config.Roster, r.Groups)
+	req, leaderRoster := r.CreateGroups(config)
 	leaderTree := leaderRoster.GenerateBinaryTree()
 
+	log.Lvl1(fmt.Sprintf("Simulation with %d groups of %d nodes", len(req.Groups), len(req.Groups[len(req.Groups)-1].Nodes)))
 	tni := config.Overlay.NewTreeNodeInstanceFromProtoName(leaderTree, FullProto)
 	p, err := NewRootProtocol(tni, req)
 	if err != nil {
@@ -67,7 +73,7 @@ func (r *Simulation) Run(config *sda.SimulationConfig) error {
 	full := p.(*fullProto)
 	// launch the randomness
 	for round := 0; round < r.Rounds; round++ {
-		log.Lvl1("Starting randomness round ", round)
+		log.Lvl1("Starting randomness round ", round, ": ", fmt.Sprintf("%d hosts & %d groups", len(config.Roster.List), len(req.Groups)))
 		roundM := monitor.NewTimeMeasure("round")
 		_, err := full.NewRound(msg)
 		if err != nil {
@@ -77,6 +83,20 @@ func (r *Simulation) Run(config *sda.SimulationConfig) error {
 		roundM.Record()
 	}
 	return nil
+}
+
+func (r *Simulation) CreateGroups(config *sda.SimulationConfig) (GroupRequests, *sda.Roster) {
+	var nbGroups int
+	if r.Groups == 0 {
+		if r.GroupSize == 0 {
+			panic("Have to set either Groups or GroupSize fields for the simulation")
+		}
+		// use the group size
+		nbGroups = len(config.Roster.List) / r.GroupSize
+	} else {
+		nbGroups = r.Groups
+	}
+	return CreateGroups(config.Roster, nbGroups)
 }
 
 // CreateGroups takes a roster and a number of groups to generate. It create the
