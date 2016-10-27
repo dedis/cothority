@@ -24,6 +24,7 @@ import (
 // - Import / export transcript in JSON
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
+// - Add another round trip in the beginning for group randomization
 
 func init() {
 	sda.GlobalProtocolRegister("RandHound", NewRandHound)
