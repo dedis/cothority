@@ -1,13 +1,13 @@
-package example_channels
+package channels
 
 import (
 	"errors"
 	"strconv"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -39,7 +39,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err := e.CreateTree(sc)
 	if err != nil {
 		return nil, err
@@ -50,11 +50,11 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 // Run implements sda.Simulation.
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocol(config.Tree, "ExampleChannels")
+		p, err := config.Overlay.CreateProtocolSDA("ExampleChannels", config.Tree)
 		if err != nil {
 			return err
 		}

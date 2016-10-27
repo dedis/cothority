@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -150,7 +150,7 @@ func NewByzCoinProtocol(n *sda.TreeNodeInstance) (*ByzCoin, error) {
 	bz.timeoutChan = make(chan uint64, 1)
 
 	//bz.endProto, _ = end.NewEndProtocol(n)
-	bz.aggregatedPublic = n.EntityList().Aggregate
+	bz.aggregatedPublic = n.Roster().Aggregate
 	bz.threshold = int(math.Ceil(float64(len(bz.Tree().List())) / 3.0))
 	bz.viewChangeThreshold = int(math.Ceil(float64(len(bz.Tree().List())) * 2.0 / 3.0))
 
@@ -253,12 +253,12 @@ func (bz *ByzCoin) listen() {
 			err = bz.handleViewChange(msg.TreeNode, &msg.viewChange)
 		case <-bz.doneProcessing:
 			// we are done
-			dbg.Lvl2(bz.Name(), "ByzCoin Dispatches stop.")
+			log.Lvl2(bz.Name(), "ByzCoin Dispatches stop.")
 			bz.tempBlock = nil
 			return
 		}
 		if err != nil {
-			dbg.Error("Error handling messages:", err)
+			log.Error("Error handling messages:", err)
 		}
 	}
 }
@@ -276,7 +276,7 @@ func (bz *ByzCoin) startAnnouncementPrepare() error {
 		Announcement: ann,
 		Timeout:      bz.rootTimeout,
 	}
-	dbg.Lvl3("ByzCoin Start Announcement (PREPARE)")
+	log.Lvl3("ByzCoin Start Announcement (PREPARE)")
 	return bz.sendAnnouncement(bza)
 }
 
@@ -288,7 +288,7 @@ func (bz *ByzCoin) startAnnouncementCommit() error {
 		TYPE:         RoundCommit,
 		Announcement: ann,
 	}
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Announcement (COMMIT)")
+	log.Lvl3(bz.Name(), "ByzCoin Start Announcement (COMMIT)")
 	return bz.sendAnnouncement(bza)
 }
 
@@ -314,7 +314,7 @@ func (bz *ByzCoin) handleAnnouncement(ann Announce) error {
 
 		bz.timeoutChan <- ann.Timeout
 		// give the timeout
-		dbg.Lvl3(bz.Name(), "ByzCoin Handle Announcement PREPARE")
+		log.Lvl3(bz.Name(), "ByzCoin Handle Announcement PREPARE")
 
 		if bz.IsLeaf() {
 			return bz.startCommitmentPrepare()
@@ -324,7 +324,7 @@ func (bz *ByzCoin) handleAnnouncement(ann Announce) error {
 			TYPE:         RoundCommit,
 			Announcement: bz.commit.Announce(ann.Announcement),
 		}
-		dbg.Lvl3(bz.Name(), "ByzCoin Handle Announcement COMMIT")
+		log.Lvl3(bz.Name(), "ByzCoin Handle Announcement COMMIT")
 
 		if bz.IsLeaf() {
 			return bz.startCommitmentCommit()
@@ -343,7 +343,7 @@ func (bz *ByzCoin) handleAnnouncement(ann Announce) error {
 func (bz *ByzCoin) startCommitmentPrepare() error {
 	cm := bz.prepare.CreateCommitment()
 	err := bz.SendTo(bz.Parent(), &Commitment{TYPE: RoundPrepare, Commitment: cm})
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Commitment PREPARE")
+	log.Lvl3(bz.Name(), "ByzCoin Start Commitment PREPARE")
 	return err
 }
 
@@ -353,7 +353,7 @@ func (bz *ByzCoin) startCommitmentCommit() error {
 	cm := bz.commit.CreateCommitment()
 
 	err := bz.SendTo(bz.Parent(), &Commitment{TYPE: RoundCommit, Commitment: cm})
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Commitment COMMIT", err)
+	log.Lvl3(bz.Name(), "ByzCoin Start Commitment COMMIT", err)
 	return err
 }
 
@@ -378,7 +378,7 @@ func (bz *ByzCoin) handleCommit(ann Commitment) error {
 			TYPE:       RoundPrepare,
 			Commitment: commit,
 		}
-		dbg.Lvl3(bz.Name(), "ByzCoin handle Commit PREPARE")
+		log.Lvl3(bz.Name(), "ByzCoin handle Commit PREPARE")
 	case RoundCommit:
 		bz.tccMut.Lock()
 		bz.tempCommitCommit = append(bz.tempCommitCommit, ann.Commitment)
@@ -399,7 +399,7 @@ func (bz *ByzCoin) handleCommit(ann Commitment) error {
 			TYPE:       RoundCommit,
 			Commitment: commit,
 		}
-		dbg.Lvl3(bz.Name(), "ByzCoin handle Commit COMMIT")
+		log.Lvl3(bz.Name(), "ByzCoin handle Commit COMMIT")
 	}
 	err := bz.SendTo(bz.Parent(), commitment)
 	return err
@@ -424,7 +424,7 @@ func (bz *ByzCoin) startChallengePrepare() error {
 	}
 
 	go VerifyBlock(bz.tempBlock, bz.lastBlock, bz.lastKeyBlock, bz.verifyBlockChan)
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Challenge PREPARE")
+	log.Lvl3(bz.Name(), "ByzCoin Start Challenge PREPARE")
 	// send to children
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, bizChal)
@@ -452,7 +452,7 @@ func (bz *ByzCoin) startChallengeCommit() error {
 		Challenge: chal,
 		Signature: bz.prepare.Signature(),
 	}
-	dbg.Lvl3("ByzCoin Start Challenge COMMIT")
+	log.Lvl3("ByzCoin Start Challenge COMMIT")
 	for _, tn := range bz.Children() {
 		err = bz.SendTo(tn, bzc)
 	}
@@ -469,7 +469,7 @@ func (bz *ByzCoin) handleChallengePrepare(ch *ChallengePrepare) error {
 	chal := bz.prepare.Challenge(ch.Challenge)
 	ch.Challenge = chal
 
-	dbg.Lvl3(bz.Name(), "ByzCoin handle Challenge PREPARE")
+	log.Lvl3(bz.Name(), "ByzCoin handle Challenge PREPARE")
 	// go to response if leaf
 	if bz.IsLeaf() {
 		return bz.startResponsePrepare()
@@ -493,20 +493,20 @@ func (bz *ByzCoin) handleChallengeCommit(ch *ChallengeCommit) error {
 
 	// verify if the signature is correct
 	if err := cosi.VerifyCosiSignatureWithException(bz.suite, bz.aggregatedPublic, marshalled, ch.Signature, ch.Exceptions); err != nil {
-		dbg.Error(bz.Name(), "Verification of the signature failed:", err)
+		log.Error(bz.Name(), "Verification of the signature failed:", err)
 		bz.signRefusal = true
 	}
 
 	// Verify if we have no more than 1/3 failed nodes
 
 	if len(ch.Exceptions) > int(bz.threshold) {
-		dbg.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bz.EntityList().List))
+		log.Errorf("More than 1/3 (%d/%d) refused to sign ! ABORT", len(ch.Exceptions), len(bz.Roster().List))
 		bz.signRefusal = true
 	}
 
 	// store the exceptions for later usage
 	bz.tempExceptions = ch.Exceptions
-	dbg.Lvl3("ByzCoin handle Challenge COMMIT")
+	log.Lvl3("ByzCoin handle Challenge COMMIT")
 	if bz.IsLeaf() {
 		return bz.startResponseCommit()
 	}
@@ -532,7 +532,7 @@ func (bz *ByzCoin) startResponsePrepare() error {
 		// apend response only if OK
 		bzr.Response = resp
 	}
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Response PREPARE")
+	log.Lvl3(bz.Name(), "ByzCoin Start Response PREPARE")
 	// send to parent
 	return bz.SendTo(bz.Parent(), bzr)
 }
@@ -558,7 +558,7 @@ func (bz *ByzCoin) startResponseCommit() error {
 		}
 		bzr.Response = resp
 	}
-	dbg.Lvl3(bz.Name(), "ByzCoin Start Response COMMIT")
+	log.Lvl3(bz.Name(), "ByzCoin Start Response COMMIT")
 	// send to parent
 	err := bz.SendTo(bz.Parent(), bzr)
 	bz.Done()
@@ -595,7 +595,7 @@ func (bz *ByzCoin) handleResponseCommit(bzr *Response) error {
 
 	// notify we have finished to participate in this signature
 	bz.doneSigning <- true
-	dbg.Lvl3(bz.Name(), "ByzCoin handle Response COMMIT (refusal=", bz.signRefusal, ")")
+	log.Lvl3(bz.Name(), "ByzCoin handle Response COMMIT (refusal=", bz.signRefusal, ")")
 	// if root we have finished
 	if bz.IsRoot() {
 		sig := bz.Signature()
@@ -638,7 +638,7 @@ func (bz *ByzCoin) handleResponsePrepare(bzr *Response) error {
 		bz.tprMut.Unlock()
 	}
 
-	dbg.Lvl3("ByzCoin Handle Response PREPARE")
+	log.Lvl3("ByzCoin Handle Response PREPARE")
 	// if I'm root, we are finished, let's notify the "commit" round
 	if bz.IsRoot() {
 		// notify listeners (simulation) we finished
@@ -690,7 +690,7 @@ func VerifyBlock(block *blockchain.TrBlock, lastBlock, lastKeyBlock string, done
 	verified = verified && block.Header.MerkleRoot == blockchain.HashRootTransactions(block.TransactionList)
 	verified = verified && block.HeaderHash == blockchain.HashHeader(block.Header)
 	// notify it
-	dbg.Lvl3("Verification of the block done =", verified)
+	log.Lvl3("Verification of the block done =", verified)
 	done <- verified
 }
 
@@ -733,7 +733,7 @@ func (bz *ByzCoin) RegisterOnSignatureDone(fn func(*BlockSignature)) {
 // we start the view change protocol.
 func (bz *ByzCoin) startTimer(millis uint64) {
 	if bz.rootFailMode != 0 {
-		dbg.Lvl3(bz.Name(), "Started timer (", millis, ")...")
+		log.Lvl3(bz.Name(), "Started timer (", millis, ")...")
 		select {
 		case <-bz.doneSigning:
 			return
@@ -746,18 +746,18 @@ func (bz *ByzCoin) startTimer(millis uint64) {
 // sendAndMeasureViewChange is a method that creates the viewchange request,
 // broadcast it and measures the time it takes to accept it.
 func (bz *ByzCoin) sendAndMeasureViewchange() {
-	dbg.Lvl3(bz.Name(), "Created viewchange measure")
+	log.Lvl3(bz.Name(), "Created viewchange measure")
 	bz.vcMeasure = monitor.NewTimeMeasure("viewchange")
 	vc := newViewChange()
 	var err error
 	for _, n := range bz.Tree().List() {
 		// don't send to ourself
-		if n.Id.Equals(bz.TreeNode().Id) {
+		if n.ID.Equal(bz.TreeNode().ID) {
 			continue
 		}
 		err = bz.SendTo(n, vc)
 		if err != nil {
-			dbg.Error(bz.Name(), "Error sending view change", err)
+			log.Error(bz.Name(), "Error sending view change", err)
 		}
 	}
 }
@@ -786,7 +786,7 @@ func (bz *ByzCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 			bz.vcMeasure.Record()
 		}
 		if bz.IsRoot() {
-			dbg.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")
+			log.Lvl3(bz.Name(), "Viewchange threshold reached (2/3) of all nodes")
 			go bz.Done()
 			//	bz.endProto.Start()
 		}
@@ -798,9 +798,9 @@ func (bz *ByzCoin) handleViewChange(tn *sda.TreeNode, vc *viewChange) error {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bz *ByzCoin) nodeDone() bool {
-	dbg.Lvl3(bz.Name(), "nodeDone()      ----- ")
+	log.Lvl3(bz.Name(), "nodeDone()      ----- ")
 	bz.doneProcessing <- true
-	dbg.Lvl3(bz.Name(), "nodeDone()      +++++  ", bz.onDoneCallback)
+	log.Lvl3(bz.Name(), "nodeDone()      +++++  ", bz.onDoneCallback)
 	if bz.onDoneCallback != nil {
 		bz.onDoneCallback()
 	}

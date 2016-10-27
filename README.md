@@ -1,32 +1,21 @@
 [![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority)
+[![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg)](https://coveralls.io/github/dedis/cothority)
 
 # Cothority
 
-This repository implements a of the collective authority (cothority) framework. 
-The system is based on CoSi, a novel protocol for collective signing 
-which itself builds on Schnorr multi-signatures over elliptic curves. 
-CoSi enables authorities to have their statements collectively signed 
-(co-signed) by a diverse, decentralized, and scalable group of 
-(potentially thousands of) witnesses and, for example, could be employed 
-to proactively harden critical Internet authorities. 
-Among other things, one could imagine applications to Certificate 
-Transparency, DNSSEC, software distribution, the Tor anonymity 
-network, and cryptocurrencies.
+This repository implements the collective authority (cothority) framework.
+It offers a framework for simulating and deploying decentralized and 
+distributed cryptographic protocols.
 
-## Further Information
-
-Primary information sources:
-* Keeping Authorities "Honest or Bust" with Decentralized Witness 
-Cosigning: [paper](http://dedis.cs.yale.edu/dissent/papers/witness-abs), 
-[slides](http://dedis.cs.yale.edu/dissent/pres/151009-stanford-cothorities.pdf)
-* For questions and discussions please join the
-[mailing list](https://groups.google.com/forum/#!forum/cothority).
-
-Other cothority-related research papers:
-* Certificate Cothority - Towards Trustworthy Collective CAs: 
-[paper](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf)
-* Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing: [paper](http://arxiv.org/abs/1602.06997)
- 
+It works closely together with the cryptographic-library found in `dedis/crypto`
+and allows for setting up of *protocols*, *services*, and "apps". A protocol will
+send back and forth messages, mostly in a tree-based structure of
+nodes, but it can also broadcast or bypass the tree.
+A service interacts with clients and will spawn and wait for the result
+of different protocols.
+An app is an example of a user-space program that can communicate to one or more
+services of a cothority.
+You can find a list of protocols and services supported later.
 
 ## Warning
 **The software provided in this repository is highly experimental and under
@@ -46,210 +35,57 @@ including setting the GOPATH environment variable.
 You can run CoSi either as a standalone application or in testbed simulations,
 as described below. 
 
+## Versions
 
-# Command-line Interface
+For the moment we have two version: _v0_ and _master_.
 
-You can run `cosi`, a simple standalone collective signing application, 
-to request a collective signing group you define
-to witness and cosign any message you propose.
-In the current implementation,
-these witnesses do not validate or check the messages you propose
-in any way; they merely serve to provide transparency
-by publicly attesting the fact that
-they have observed and cosigned the message.
+### V0
 
-## Installation
+This is a stable version that depends on the v0-versions of the other dedis-packages. It will only receive bugfixes, but no changes that will make the code incompatible. You can find this version at:
 
-For convenience we provide x86-64 binaries for Linux and Mac OS X,
-which are self-contained and don't require Go to be installed.
-But of course you can also compile the tools from source.
- 
-### Installing binaries from .tar.gz
+https://github.com/dedis/cothority/tree/v0
 
-Download the latest package from 
-
-	https://github.com/dedis/cothority/releases/latest
-
-and untar into a directory that is in your `$PATH`:
-
-```bash
-tar xf conode-*tar.gz -C ~/bin
-```
-
-### Installing from source
-
-To install the command-line tools from source, make sure that
-[Go is installed](https://golang.org/doc/install)
-and that
-[`$GOPATH` and `$GOBIN` are set](https://golang.org/doc/code.html#GOPATH).
-
-```bash
-go get -u github.com/dedis/cothority/app/cosi
-go get -u github.com/dedis/cothority/app/cothorityd
-```
-
-The two binaries `cosi` and `cothorityd` will be installed in
-the directory indicated by `$GOBIN`.
-
-## Running your own CoSi server
-
-First you need to create a configuration file for the server including a 
-public/private key pair for the server. 
-You can create a default server configuration with a fresh 
-public/private key pair as follows:
-
-```bash
-cothorityd setup
-```
-
-Follow the instructions on the screen. At the end, you should have two files:
-* One local server configuration file which is used by your cothority server,
-* One group definition file that you will share with other cothority members and
-  clients that wants to contact you.
-
-To run the server, simply type:
-```bash
-cothorityd
-```
-
-The server will try to read the default configuration file; if you have put the
-file in a custom location, provide the path using:
-```base
-cothorityd -config path/file.toml
-``` 
-
-### Creating a Collective Signing Group
-By running several `cothorityd` instances (and copying the appropriate lines 
-of their output) you can create a `servers.toml` that looks like 
-this:
+If you write code that uses our library in the v0-version, be sure to reference it as
 
 ```
-Description = "My Test group"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2000"]
-  Public = "6T7FwlCuVixvu7XMI9gRPmyCuqxKk/WUaGbwVvhA+kc="
-  Description = "Local Server 1"
-
-[[servers]]
-  Addresses = ["127.0.0.1:2001"]
-  Public = "Aq0mVAeAvBZBxQPC9EbI8w6he2FHlz83D+Pz+zZTmJI="
-  Description = "Description of the server"
+import "gopkg.in/dedis/cothority.v0"
 ```
 
-Your list will look different, as the public keys will not be the same. But
-it is important that you run the servers on different ports. Here the ports
-are 2000 and 2001.
- 
-### Checking server-list
+### Master
 
-The `cosi`-binary has a command to verify the availability for all
-servers in a `servers.toml`-file:
+The master-branch is used for day-to-day development and will break your code about once a week. If you are using this branch, be sure to do
 
-```bash
-cosi check
+```
+go get -u -t ./...
 ```
 
-This will first contact each server individually, then make a small cothority-
-group of all possible pairs of servers. If there is a problem with regard to
-some firewalls or bad connections, you will see a "Timeout on signing" error
-message and you can fix the problem.
+from time to time, as all dedis-dependencies change quite often.
 
-### Publicly available DeDiS-CoSi-servers
+# Installation
 
-For the moment there are four publicly available signing-servers, without
-any guarantee that they'll be running. But you can try the following:
+There are three apps available:
 
-```bash
-cat > servers.toml <<EOF
+* [cothorityd](https://github.com/dedis/cothority/app/cothorityd) - which is the server-part that you can run to add a node
+* [cosi](https://github.com/dedis/cosi) - the cosi-protocol, service, and app,
+in its own repository
+* [status](https://github.com/dedis/cothority/app/status) - reads out the status of a cothority
 
-[[servers]]
-  Addresses = ["78.46.227.60:2000"]
-  Public = "2juBRFikJLTgZLVp5UV4LBJ2GSQAm8PtBcNZ6ivYZnA="
-  Description = "Profeda CoSi server"
+You will find a README.md in each of its directory. To build the apps, you can
+run the following commands:
 
-[[servers]]
- Addresses = ["5.135.161.91:2000"]
- Public = "jJq4W8KaIFbDu4snOm1TrtrtG79sZK0VCgshkUohycA="
- Description = "Nikkolasg's server"
-
-[[servers]]
-  Addresses = ["185.26.156.40:61117"]
-  Public = "XEe5N57Ar3gd6uzvZR9ol2XopBlAQl6rKCbPefnWYdI="
-  Description = "Ismail's server"
-
-[[servers]]
-  Addresses = ["95.143.172.241:62306"]
-  Public = "ag5YGeVtw3m7bIGF57X+n1X3qrHxOnpbaWBpEBT4COc="
-  Description = "Daeinar's server"
-EOF
+```
+go get github.com/dedis/cothority/app/cothorityd
+go get github.com/dedis/cosi
+go get github.com/dedis/cothority/app/status
 ```
 
-And use the created servers.toml for signing your messages and files.
+# Apps
 
-## Initiating the Collective Signing Protocol
-
-If you have a valid `servers.toml`-file, you can collectively 
-sign a text message specified on the command line as follows:
-
-```bash
-cosi sign msg "Hello CoSi"
-```
-
-cosi will contact the servers and print the signature to the STDOUT. If you
-copy that signature to a file called `msg.sig`, you can verify your message
-with
-
-```bash
-cosi verify msg "Hello CoSi" -sig msg.sig
-```
-
-If you would instead like to sign a message contained in a file you 
-specify (which may be either text or arbitrary binary data), you can do 
-this as follows:
-
-```bash
-cosi sign file file-to-be-signed
-```
-
-It will create a file `file-to-be-signed.sig` containing the sha256 hash
-of the the file and the signature.
-To verify the signature of a file you write:
-  
-```bash
-cosi verify file file-to-be-signed
-```
-    
-For all commands, if you chose another filename for the servers than `servers.toml`, you can
-give that on the command-line, so for example to sign a message:
-
-```bash
-cosi -servers my_servers.toml sign msg "Hello CoSi"
-```
-
-# Simulation
-Starting a simulation of one the provided protocols (or your own) either 
-on localhost or, if you have access, on [DeterLab](https://www.isi.deterlab.net) 
-is straight forward and described in the following sub-sections.
-
-## Localhost
-To run a simple signing check on localhost, execute the following 
-commands:
-
-```bash
-# download project and its dependencies
-go get -d github.com/dedis/cothority 
-# build the simulation binary
-cd $GOPATH/src/github.com/dedis/cothority/simul
-go build
-# run the simulation
-./simul runfiles/test_cosi.toml
-```
-
-## DeterLab
-
-For more realistic, large scale simulations you can use DeterLab. 
-Find more information on how to use [DeterLab here](Deterlab.md).
+* [cothorityd](app/cothorityd) - the basic 
+* [cosi](https://github.com/dedis/cosi) - collective signatures
+* [status](app/status) - returns the status of the given group
+* [cisc](app/cisc) - handle your ssh-keys on a blockchain
+* [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/cisc) - hotpets16-branch
 
 # Protocols
 
@@ -277,7 +113,6 @@ The JVSS protocol implements Schnorr signing using joint
 [verifiable](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=4568297&tag=1) 
 [secret sharing](http://link.springer.com/chapter/10.1007%2F3-540-68339-9_17).
 
-
 ## Naive and NTree
 
 Similar to JVSS these two protocols are included to compare their 
@@ -286,6 +121,30 @@ In the naive approach a leader simply collects standard individual
 signatures of all participants. 
 NTree is the same protocol but using a tree (n-ary) topology for 
 aggregating the individual signatures.
+
+# Simulation
+Starting a simulation of one the provided protocols (or your own) either 
+on localhost or, if you have access, on [DeterLab](https://www.isi.deterlab.net) 
+is straight forward and described in the following sub-sections.
+
+## Localhost
+To run a simple signing check on localhost, execute the following 
+commands:
+
+```bash
+# download project and its dependencies
+go get -d github.com/dedis/cothority 
+# build the simulation binary
+cd $GOPATH/src/github.com/dedis/cothority/simul
+go build
+# run the simulation
+./simul runfiles/test_cosi.toml
+```
+
+## DeterLab
+
+For more realistic, large scale simulations you can use DeterLab. 
+Find more information on how to use [DeterLab here](Deterlab.md).
 
 # SDA framework
 
@@ -296,7 +155,7 @@ kind of protocols which may rely on other, pre-defined protocols.
  
 Using the SDA-cothority framework, you can:
 
-* simulate up to 8192 nodes using Deterlab (which is based on 
+* simulate up to 32000 nodes using Deterlab (which is based on 
 [PlanetLab](https://www.planet-lab.org/))
 * run local simulations for up to as many nodes as your local machines
 allows
@@ -306,11 +165,11 @@ hosts which form a tree. Every protocol defines the steps needed to
 accomplish the calculations, and the framework makes sure that all 
 messages are passed between the hosts.
   
-The directory-structure is as follows:
+## Directory-structure
 
-* [`lib/`](lib/): contains all internally used libraries
-* [`lib/sda/`](lib/sda/): basic definition of our framework
-* [`protocols/`](protocols/): one directory per protocol, holds both the 
-definition and eventual initialisation necessary for a simulation
-* [`simul/`](simul/): used for running simulations on localhost and 
-DeterLab
+* [`sda/`](sda/): basic definition of our framework
+* `crypto/`, `log/`, `monitor/`, `network/`: additional libraries for the framework
+* [`simul/`](simul/): simulation-related code
+* [`app/`](app/): all apps in user-space
+* [`protocols/`](protocols/): the protocol-definitions for cothority
+* [`services/`](services/): services using the protocols

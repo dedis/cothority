@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/simul/platform"
 )
 
@@ -16,26 +16,27 @@ Ppm, Rounds
 4, 30`
 
 func TestReadRunfile(t *testing.T) {
-	dbg.TestOutput(testing.Verbose(), 2)
 	tplat := &TPlat{}
 
-	tmpfile := "/tmp/testrun.toml"
-	err := ioutil.WriteFile(tmpfile, []byte(testfile), 0666)
+	tmpfile, err := ioutil.TempFile("", "testrun.toml")
+	log.ErrFatal(err)
+	_, err = tmpfile.Write([]byte(testfile))
 	if err != nil {
-		dbg.Fatal("Couldn't create file:", err)
+		log.Fatal("Couldn't write to tmp-file:", err)
 	}
+	tmpfile.Close()
 
-	tests := platform.ReadRunFile(tplat, tmpfile)
-	dbg.Lvl2(tplat)
-	dbg.Lvlf2("%+v\n", tests[0])
+	tests := platform.ReadRunFile(tplat, tmpfile.Name())
+	log.Lvl2(tplat)
+	log.Lvlf2("%+v\n", tests[0])
 	if tplat.App != "sign" {
-		dbg.Fatal("App should be 'sign'")
+		log.Fatal("App should be 'sign'")
 	}
 	if len(tests) != 2 {
-		dbg.Fatal("There should be 2 tests")
+		log.Fatal("There should be 2 tests")
 	}
 	if tests[0].Get("machines") != "8" {
-		dbg.Fatal("Machines = 8 has not been copied into RunConfig")
+		log.Fatal("Machines = 8 has not been copied into RunConfig")
 	}
 }
 

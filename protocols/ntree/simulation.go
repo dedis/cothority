@@ -2,9 +2,9 @@ package ntree
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -35,7 +35,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (
 	*sda.SimulationConfig, error) {
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err := e.CreateTree(sc)
 	if err != nil {
 		return nil, err
@@ -47,14 +47,14 @@ func (e *Simulation) Setup(dir string, hosts []string) (
 func (e *Simulation) Run(config *sda.SimulationConfig) error {
 	msg := []byte(e.Message)
 	size := config.Tree.Size()
-	dbg.Lvl2("Size is:", size, "rounds:", e.Rounds)
+	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	for round := 0; round < e.Rounds; round++ {
-		dbg.Lvl1("Starting round", round, "with message", string(msg))
+		log.Lvl1("Starting round", round, "with message", string(msg))
 		round := monitor.NewTimeMeasure("round")
 
-		p, err := config.Overlay.CreateProtocol(config.Tree, "NaiveTree")
+		p, err := config.Overlay.CreateProtocolSDA("NaiveTree", config.Tree)
 		if err != nil {
-			dbg.Error("Quitting the simulation....", err)
+			log.Error("Quitting the simulation....", err)
 			return err
 		}
 		pi := p.(*Protocol)
@@ -68,7 +68,7 @@ func (e *Simulation) Run(config *sda.SimulationConfig) error {
 		})
 		err = pi.Start()
 		if err != nil {
-			dbg.Error("Quitting the simulation....", err)
+			log.Error("Quitting the simulation....", err)
 			return err
 		}
 		<-done

@@ -5,18 +5,18 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/protocols/byzcoin/cosi"
 	"github.com/dedis/cothority/protocols/manage"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
 func init() {
 	sda.SimulationRegister("ByzCoin", NewSimulation)
-	sda.ProtocolRegisterName("ByzCoin", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.GlobalProtocolRegister("ByzCoin", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
@@ -58,10 +58,10 @@ func NewSimulation(config string) (sda.Simulation, error) {
 func (e *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
-		dbg.Fatal("Couldn't get block:", err)
+		log.Fatal("Couldn't get block:", err)
 	}
 	sc := &sda.SimulationConfig{}
-	e.CreateEntityList(sc, hosts, 2000)
+	e.CreateRoster(sc, hosts, 2000)
 	err = e.CreateTree(sc)
 	if err != nil {
 		return nil, err
@@ -88,10 +88,10 @@ func (m *monitorMut) Record() {
 
 // Run implements sda.Simulation interface
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
-	dbg.Lvl2("Simulation starting with: Rounds=", e.Rounds)
+	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	pi, err := sdaConf.Overlay.CreateProtocol(sdaConf.Tree, "Broadcast")
+	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
 	if err != nil {
 		return err
 	}
@@ -110,11 +110,11 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		client := NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 		if err != nil {
-			dbg.Error("Error in ClientSimulation:", err)
+			log.Error("Error in ClientSimulation:", err)
 			return err
 		}
 
-		dbg.Lvl1("Starting round", round)
+		log.Lvl1("Starting round", round)
 		// create an empty node
 		tni := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "ByzCoin")
 		if err != nil {
@@ -132,10 +132,10 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
 			rComplete.Record()
-			if err := verifyBlockSignature(tni.Suite(), tni.EntityList().Aggregate, sig); err != nil {
-				dbg.Error("Round", round, "failed:", err)
+			if err := verifyBlockSignature(tni.Suite(), tni.Roster().Aggregate, sig); err != nil {
+				log.Error("Round", round, "failed:", err)
 			} else {
-				dbg.Lvl2("Round", round, "success")
+				log.Lvl2("Round", round, "success")
 			}
 		})
 
@@ -148,7 +148,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 			go func() {
 				err := bz.startAnnouncementPrepare()
 				if err != nil {
-					dbg.Error("Error while starting "+
+					log.Error("Error while starting "+
 						"announcment prepare:", err)
 				}
 			}()
@@ -156,14 +156,14 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		} else {
 			go func() {
 				if err := bz.Start(); err != nil {
-					dbg.Error("Couldn't start protocol",
+					log.Error("Couldn't start protocol",
 						err)
 				}
 			}()
 		}
 		// wait for the end
 		<-done
-		dbg.Lvl3("Round", round, "finished")
+		log.Lvl3("Round", round, "finished")
 
 	}
 	return nil

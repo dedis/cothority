@@ -3,9 +3,9 @@ package manage
 import (
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -18,9 +18,9 @@ The protocol waits for the `Close`-message to arrive at the root.
 */
 
 func init() {
-	network.RegisterMessageType(PrepareClose{})
-	network.RegisterMessageType(Close{})
-	sda.ProtocolRegisterName("CloseAll", NewCloseAll)
+	network.RegisterPacketType(PrepareClose{})
+	network.RegisterPacketType(Close{})
+	sda.GlobalProtocolRegister("CloseAll", NewCloseAll)
 }
 
 // ProtocolCloseAll is the structure used to hold the Done-channel
@@ -73,11 +73,11 @@ func (p *ProtocolCloseAll) Start() error {
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
 func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
-	dbg.Lvl3(pc.Entity.Addresses, "sent PrepClose to", p.Entity().Addresses)
+	log.Lvl3(pc.ServerIdentity.Address, "sent PrepClose to", p.ServerIdentity().Address)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &PrepareClose{})
-			dbg.Lvl3(p.Entity().Addresses, "sends to", c.Entity.Addresses, "(err=", err, ")")
+			log.Lvl3(p.ServerIdentity().Address, "sends to", c.ServerIdentity.Address, "(err=", err, ")")
 		}
 	} else {
 		p.FuncClose(nil)
@@ -89,21 +89,22 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 // network communication.
 func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 	if !p.IsRoot() {
-		dbg.Lvl3("Sending closeall from", p.Entity().Addresses,
-			"to", p.Parent().Entity.Addresses)
+		log.Lvl3("Sending closeall from", p.ServerIdentity().Address,
+			"to", p.Parent().ServerIdentity.Address)
 		if err := p.SendTo(p.Parent(), &Close{}); err != nil {
-			dbg.Error(p.Info(), "couldn't send 'close' tp parent",
+			log.Error(p.Info(), "couldn't send 'close' tp parent",
 				p.Parent(), err)
 		}
-	} else {
-		dbg.Lvl2("Root received Close")
-		p.Done <- true
 	}
 	time.Sleep(time.Second)
-	dbg.Lvl3("Closing host", p.Entity().Addresses)
+	log.Lvl3("Closing host", p.ServerIdentity().Address)
 	err := p.TreeNodeInstance.CloseHost()
 	if err != nil {
-		dbg.Error("Couldn't close:", err)
+		log.Error("Couldn't close:", err)
+	}
+	if p.IsRoot() {
+		log.Lvl2("Root received Close")
+		p.Done <- true
 	}
 	p.TreeNodeInstance.Done()
 }

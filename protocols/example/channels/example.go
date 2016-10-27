@@ -1,17 +1,17 @@
-package example_channels
+package channels
 
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
-	network.RegisterMessageType(Announce{})
-	network.RegisterMessageType(Reply{})
-	sda.ProtocolRegisterName("ExampleChannels", NewExampleChannels)
+	network.RegisterPacketType(Announce{})
+	network.RegisterPacketType(Reply{})
+	sda.GlobalProtocolRegister("ExampleChannels", NewExampleChannels)
 }
 
 // ProtocolExampleChannels just holds a message that is passed to all children.
@@ -42,12 +42,12 @@ func NewExampleChannels(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	return ExampleChannels, nil
 }
 
-// Starts the protocol
+// Start sends the Announce message to all children
 func (p *ProtocolExampleChannels) Start() error {
-	dbg.Lvl3("Starting ExampleChannels")
+	log.Lvl3("Starting ExampleChannels")
 	for _, c := range p.Children() {
 		if err := p.SendTo(c, &Announce{"Example is here"}); err != nil {
-			dbg.Error(p.Info(), "failed to send Announcment to",
+			log.Error(p.Info(), "failed to send Announcment to",
 				c.Name(), err)
 		}
 	}
@@ -64,7 +64,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 				for _, c := range p.Children() {
 					err := p.SendTo(c, &announcement.Announce)
 					if err != nil {
-						dbg.Error(p.Info(),
+						log.Error(p.Info(),
 							"failed to send to",
 							c.Name(), err)
 					}
@@ -73,7 +73,7 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 				// If we're the leaf, start to reply
 				err := p.SendTo(p.Parent(), &Reply{1})
 				if err != nil {
-					dbg.Error(p.Info(), "failed to send reply to",
+					log.Error(p.Info(), "failed to send reply to",
 						p.Parent().Name(), err)
 				}
 				return nil
@@ -83,16 +83,16 @@ func (p *ProtocolExampleChannels) Dispatch() error {
 			for _, c := range reply {
 				children += c.ChildrenCount
 			}
-			dbg.Lvl3(p.Entity().Addresses, "is done with total of", children)
+			log.Lvl3(p.ServerIdentity().Address, "is done with total of", children)
 			if !p.IsRoot() {
-				dbg.Lvl3("Sending to parent")
+				log.Lvl3("Sending to parent")
 				err := p.SendTo(p.Parent(), &Reply{children})
 				if err != nil {
-					dbg.Error(p.Info(), "failed to reply to",
+					log.Error(p.Info(), "failed to reply to",
 						p.Parent().Name(), err)
 				}
 			} else {
-				dbg.Lvl3("Root-node is done - nbr of children found:", children)
+				log.Lvl3("Root-node is done - nbr of children found:", children)
 				p.ChildCount <- children
 			}
 			return nil

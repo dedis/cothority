@@ -7,9 +7,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -73,7 +73,7 @@ func NewProtocol(n *sda.TreeNodeInstance) (*Protocol, error) {
 	pbft.nodeList = tree.List()
 	idx := notFound
 	for i, tn := range pbft.nodeList {
-		if tn.Id.Equals(n.TreeNode().Id) {
+		if tn.ID.Equal(n.TreeNode().ID) {
 			idx = i
 		}
 	}
@@ -113,7 +113,7 @@ func (p *Protocol) Dispatch() error {
 		case msg := <-p.commitChan:
 			p.handleCommit(&msg.Commit)
 		case <-p.finishChan:
-			dbg.Lvl3(p.Name(), "Got Done Message ! FINISH")
+			log.Lvl3(p.Name(), "Got Done Message ! FINISH")
 			p.Done()
 			return nil
 		}
@@ -129,7 +129,7 @@ func (p *Protocol) Start() error {
 func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
-	dbg.Lvl2(p.Name(), "Broadcast PrePrepare")
+	log.Lvl2(p.Name(), "Broadcast PrePrepare")
 	prep := &PrePrepare{p.trBlock}
 	p.broadcast(func(tn *sda.TreeNode) {
 		tempErr := p.SendTo(tn, prep)
@@ -138,7 +138,7 @@ func (p *Protocol) PrePrepare() error {
 		}
 		p.state = statePrepare
 	})
-	dbg.Lvl3(p.Name(), "Broadcast PrePrepare DONE")
+	log.Lvl3(p.Name(), "Broadcast PrePrepare DONE")
 	return err
 }
 
@@ -146,23 +146,23 @@ func (p *Protocol) PrePrepare() error {
 // enough.
 func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 	if p.state != statePrePrepare {
-		//dbg.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
+		//log.Lvl3(p.Name(), "DROP preprepare packet : Already broadcasted prepare")
 		return
 	}
 	// prepare: verify the structure of the block and broadcast
 	// prepare msg (with header hash of the block)
-	dbg.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
+	log.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msg")
 	var err error
 	if verifyBlock(prePre.TrBlock, "", "") {
 		// STATE TRANSITION PREPREPARE => PREPARE
 		p.state = statePrepare
 		prep := &Prepare{prePre.TrBlock.HeaderHash}
 		p.broadcast(func(tn *sda.TreeNode) {
-			//dbg.Print(p.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
+			//log.Print(p.Name(), "Sending PREPARE to", tn.Name(), "msg", prep)
 			tempErr := p.SendTo(tn, prep)
 			if tempErr != nil {
 				err = tempErr
-				dbg.Error(p.Name(), "Error broadcasting PREPARE =>", err)
+				log.Error(p.Name(), "Error broadcasting PREPARE =>", err)
 			}
 		})
 		// Already insert the previously received messages !
@@ -172,23 +172,23 @@ func (p *Protocol) handlePrePrepare(prePre *PrePrepare) {
 			}
 			p.tempPrepareMsg = nil
 		}()
-		dbg.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
+		log.Lvl3(p.Name(), "handlePrePrepare() BROADCASTING PREPARE msgs DONE")
 	} else {
-		dbg.Lvl3(p.Name(), "Block couldn't be verified")
+		log.Lvl3(p.Name(), "Block couldn't be verified")
 	}
 	if err != nil {
-		dbg.Error("Error while broadcasting Prepare msg", err)
+		log.Error("Error while broadcasting Prepare msg", err)
 	}
 }
 
 func (p *Protocol) handlePrepare(pre *Prepare) {
 	if p.state != statePrepare {
-		//dbg.Lvl3(p.Name(), "STORE prepare packet: wrong state")
+		//log.Lvl3(p.Name(), "STORE prepare packet: wrong state")
 		p.tempPrepareMsg = append(p.tempPrepareMsg, pre)
 		return
 	}
 	p.prepMsgCount++
-	//dbg.Lvl3(p.Name(), "Handle Prepare", p.prepMsgCount,
+	//log.Lvl3(p.Name(), "Handle Prepare", p.prepMsgCount,
 	//	"msgs and threshold is", p.threshold)
 	var localThreshold = p.threshold
 	// we dont have a "client", the root DONT send any prepare message
@@ -198,7 +198,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 	}
 	if p.prepMsgCount >= localThreshold {
 		// TRANSITION PREPARE => COMMIT
-		dbg.Lvl3(p.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
+		log.Lvl3(p.Name(), "Threshold (", localThreshold, ") reached: broadcast Commit")
 		p.state = stateCommit
 		// reset counter
 		p.prepMsgCount = 0
@@ -207,7 +207,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 		p.broadcast(func(tn *sda.TreeNode) {
 			tempErr := p.SendTo(tn, com)
 			if tempErr != nil {
-				dbg.Error(p.Name(), "Error while broadcasting Commit =>", tempErr)
+				log.Error(p.Name(), "Error while broadcasting Commit =>", tempErr)
 				err = tempErr
 			}
 		})
@@ -220,7 +220,7 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 		}()
 		// sends to the channel the already commited messages
 		if err != nil {
-			dbg.Error("Error while broadcasting Commit msg", err)
+			log.Error("Error while broadcasting Commit msg", err)
 		}
 	}
 }
@@ -229,24 +229,24 @@ func (p *Protocol) handlePrepare(pre *Prepare) {
 // enough of it.
 func (p *Protocol) handleCommit(com *Commit) {
 	if p.state != stateCommit {
-		//	dbg.Lvl3(p.Name(), "STORE handle commit packet")
+		//	log.Lvl3(p.Name(), "STORE handle commit packet")
 		p.tempCommitMsg = append(p.tempCommitMsg, com)
 		return
 	}
 	// finish after threshold of Commit msgs
 	p.commitMsgCount++
-	dbg.Lvl4(p.Name(), "----------------\nWe got", p.commitMsgCount,
+	log.Lvl4(p.Name(), "----------------\nWe got", p.commitMsgCount,
 		"COMMIT msgs and threshold is", p.threshold)
 	if p.IsRoot() {
-		dbg.Lvl4("Leader got ", p.commitMsgCount)
+		log.Lvl4("Leader got ", p.commitMsgCount)
 	}
 	if p.commitMsgCount >= p.threshold {
 		p.state = stateFinished
 		// reset counter
 		p.commitMsgCount = 0
-		dbg.Lvl3(p.Name(), "Threshold reached: We are done... CONSENSUS")
+		log.Lvl3(p.Name(), "Threshold reached: We are done... CONSENSUS")
 		if p.IsRoot() && p.onDoneCB != nil {
-			dbg.Lvl3(p.Name(), "We are root and threshold reached: return to the simulation.")
+			log.Lvl3(p.Name(), "We are root and threshold reached: return to the simulation.")
 			p.onDoneCB()
 			p.finish()
 		}
@@ -258,7 +258,7 @@ func (p *Protocol) handleCommit(com *Commit) {
 func (p *Protocol) finish() {
 	p.broadcast(func(tn *sda.TreeNode) {
 		if err := p.SendTo(tn, &Finish{"Finish"}); err != nil {
-			dbg.Error(p.Name(), "couldn't send 'finish' message to",
+			log.Error(p.Name(), "couldn't send 'finish' message to",
 				tn.Name(), err)
 		}
 	})

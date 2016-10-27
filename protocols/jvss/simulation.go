@@ -2,9 +2,9 @@ package jvss
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func NewSimulation(config string) (sda.Simulation, error) {
 // Setup configures a JVSS simulation
 func (jvs *Simulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	jvs.CreateEntityList(sim, hosts, 2000)
+	jvs.CreateRoster(sim, hosts, 2000)
 	err := jvs.CreateTree(sim)
 	return sim, err
 }
@@ -41,34 +41,34 @@ func (jvs *Simulation) Run(config *sda.SimulationConfig) error {
 	size := config.Tree.Size()
 	msg := []byte("Test message for JVSS simulation")
 
-	dbg.Lvl1("Size:", size, "rounds:", jvs.Rounds)
+	log.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	p, err := config.Overlay.CreateProtocol(config.Tree, "JVSS")
+	p, err := config.Overlay.CreateProtocolSDA("JVSS", config.Tree)
 	if err != nil {
 		return err
 	}
 	proto := p.(*JVSS)
 
-	dbg.Lvl1("Starting setup")
+	log.Lvl1("Starting setup")
 	proto.Start()
-	dbg.Lvl1("Setup done")
+	log.Lvl1("Setup done")
 
 	for round := 0; round < jvs.Rounds; round++ {
-		dbg.Lvl1("Starting signing round", round)
+		log.Lvl1("Starting signing round", round)
 		r := monitor.NewTimeMeasure("round")
-		dbg.Lvl2("Requesting signature")
+		log.Lvl2("Requesting signature")
 		sig, err := proto.Sign(msg)
 		if err != nil {
-			dbg.Error("Could not create signature")
+			log.Error("Could not create signature")
 			return err
 		}
 		if jvs.Verify {
-			dbg.Lvl2("Signature received")
+			log.Lvl2("Signature received")
 			if err := proto.Verify(msg, sig); err != nil {
-				dbg.Error("Signature invalid")
+				log.Error("Signature invalid")
 				return err
 			}
-			dbg.Lvl2("Signature valid")
+			log.Lvl2("Signature valid")
 		}
 		r.Record()
 	}

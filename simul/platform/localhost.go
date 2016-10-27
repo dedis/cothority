@@ -9,11 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 	// Import protocols so every protocols is registered to the sda
 	"strings"
 
+	// We implicitely imports all available protocols here since it's usually
+	// done in the main for production purpose
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
 )
@@ -72,10 +74,10 @@ func (d *Localhost) Configure(pc *Config) {
 	d.monitorPort = pc.MonitorPort
 	d.errChan = make(chan error)
 	if d.Simulation == "" {
-		dbg.Fatal("No simulation defined in simulation")
+		log.Fatal("No simulation defined in simulation")
 	}
-	dbg.Lvl3(fmt.Sprintf("Localhost dirs: RunDir %s", d.runDir))
-	dbg.Lvl3("Localhost configured ...")
+	log.Lvl3(fmt.Sprintf("Localhost dirs: RunDir %s", d.runDir))
+	log.Lvl3("Localhost configured ...")
 }
 
 // Build makes sure that the binary is available for our local platform
@@ -88,21 +90,21 @@ func (d *Localhost) Build(build string, arg ...string) error {
 		runtime.GOARCH, runtime.GOOS,
 		arg...)
 	if err != nil {
-		dbg.Fatal("Error while building for localhost (src", src, ", dst", dst, ":", res)
+		log.Fatal("Error while building for localhost (src", src, ", dst", dst, ":", res)
 	}
-	dbg.Lvl3("Localhost: Build src", src, ", dst", dst)
-	dbg.Lvl4("Localhost: Results of localhost build:", res)
-	dbg.Lvl2("Localhost: build finished in", time.Since(start))
+	log.Lvl3("Localhost: Build src", src, ", dst", dst)
+	log.Lvl4("Localhost: Results of localhost build:", res)
+	log.Lvl2("Localhost: build finished in", time.Since(start))
 	return err
 }
 
 // Cleanup kills all running cothority-binaryes
 func (d *Localhost) Cleanup() error {
-	dbg.Lvl3("Cleaning up")
+	log.Lvl3("Cleaning up")
 	ex := d.runDir + "/" + d.Simulation
 	err := exec.Command("pkill", "-f", ex).Run()
 	if err != nil {
-		dbg.Lvl3("Error stopping localhost", err)
+		log.Lvl3("Error stopping localhost", err)
 	}
 
 	// Wait for eventual connections to clean up
@@ -115,16 +117,16 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	if runtime.GOOS == "darwin" {
 		files, err := exec.Command("ulimit", "-n").Output()
 		if err != nil {
-			dbg.Fatal("Couldn't check for file-limit:", err)
+			log.Fatal("Couldn't check for file-limit:", err)
 		}
 		filesNbr, err := strconv.Atoi(strings.TrimSpace(string(files)))
 		if err != nil {
-			dbg.Fatal("Couldn't convert", files, "to a number:", err)
+			log.Fatal("Couldn't convert", files, "to a number:", err)
 		}
 		hosts, _ := strconv.Atoi(rc.Get("hosts"))
 		if filesNbr < hosts*2 {
 			maxfiles := 10000 + hosts*2
-			dbg.Fatalf("Maximum open files is too small. Please run the following command:\n"+
+			log.Fatalf("Maximum open files is too small. Please run the following command:\n"+
 				"sudo sysctl -w kern.maxfiles=%d\n"+
 				"sudo sysctl -w kern.maxfilesperproc=%d\n"+
 				"ulimit -n %d\n"+
@@ -134,14 +136,14 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	}
 
 	d.servers, _ = strconv.Atoi(rc.Get("servers"))
-	dbg.Lvl2("Localhost: Deploying and writing config-files for", d.servers, "servers")
+	log.Lvl2("Localhost: Deploying and writing config-files for", d.servers, "servers")
 	sim, err := sda.NewSimulation(d.Simulation, string(rc.Toml()))
 	if err != nil {
 		return err
 	}
 	d.addresses = make([]string, d.servers)
 	for i := range d.addresses {
-		d.addresses[i] = "localhost" + strconv.Itoa(i)
+		d.addresses[i] = "127.0.0." + strconv.Itoa(i)
 	}
 	d.sc, err = sim.Setup(d.runDir, d.addresses)
 	if err != nil {
@@ -151,7 +153,7 @@ func (d *Localhost) Deploy(rc RunConfig) error {
 	if err := d.sc.Save(d.runDir); err != nil {
 		return err
 	}
-	dbg.Lvl2("Localhost: Done deploying")
+	log.Lvl2("Localhost: Done deploying")
 	return nil
 
 }
@@ -162,33 +164,33 @@ func (d *Localhost) Start(args ...string) error {
 	if err := os.Chdir(d.runDir); err != nil {
 		return err
 	}
-	dbg.Lvl4("Localhost: chdir into", d.runDir)
+	log.Lvl4("Localhost: chdir into", d.runDir)
 	ex := d.runDir + "/" + d.Simulation
 	d.running = true
-	dbg.Lvl1("Starting", d.servers, "applications of", ex)
+	log.Lvl1("Starting", d.servers, "applications of", ex)
 	for index := 0; index < d.servers; index++ {
 		d.wgRun.Add(1)
-		dbg.Lvl3("Starting", index)
-		host := "localhost" + strconv.Itoa(index)
+		log.Lvl3("Starting", index)
+		host := "127.0.0." + strconv.Itoa(index)
 		cmdArgs := []string{"-address", host, "-monitor",
 			"localhost:" + strconv.Itoa(d.monitorPort),
 			"-simul", d.Simulation,
-			"-debug", strconv.Itoa(dbg.DebugVisible()),
+			"-debug", strconv.Itoa(log.DebugVisible()),
 		}
 		cmdArgs = append(args, cmdArgs...)
-		dbg.Lvl3("CmdArgs are", cmdArgs)
+		log.Lvl3("CmdArgs are", cmdArgs)
 		cmd := exec.Command(ex, cmdArgs...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		go func(i int, h string) {
-			dbg.Lvl3("Localhost: will start host", h)
+			log.Lvl3("Localhost: will start host", h)
 			err := cmd.Run()
 			if err != nil {
-				dbg.Error("Error running localhost", h, ":", err)
+				log.Error("Error running localhost", h, ":", err)
 				d.errChan <- err
 			}
 			d.wgRun.Done()
-			dbg.Lvl3("host (index", i, ")", h, "done")
+			log.Lvl3("host (index", i, ")", h, "done")
 		}(index, host)
 	}
 	return nil
@@ -196,12 +198,12 @@ func (d *Localhost) Start(args ...string) error {
 
 // Wait for all processes to finish
 func (d *Localhost) Wait() error {
-	dbg.Lvl3("Waiting for processes to finish")
+	log.Lvl3("Waiting for processes to finish")
 
 	var err error
 	go func() {
 		d.wgRun.Wait()
-		dbg.Lvl3("WaitGroup is 0")
+		log.Lvl3("WaitGroup is 0")
 		// write to error channel when done:
 		d.errChan <- nil
 	}()
@@ -209,16 +211,16 @@ func (d *Localhost) Wait() error {
 	// if one of the hosts fails, stop waiting and return the error:
 	select {
 	case e := <-d.errChan:
-		dbg.Lvl3("Finished waiting for hosts:", e)
+		log.Lvl3("Finished waiting for hosts:", e)
 		if e != nil {
 			if err := d.Cleanup(); err != nil {
-				dbg.Error("Couldn't cleanup running instances",
+				log.Error("Couldn't cleanup running instances",
 					err)
 			}
 			err = e
 		}
 	}
 
-	dbg.Lvl2("Processes finished")
+	log.Lvl2("Processes finished")
 	return err
 }

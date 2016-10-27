@@ -1,16 +1,17 @@
 // The simulation cothority used for all protocols.
 // This should not be used stand-alone and is only for
 // the simulations. It loads the simulation-file, initialises all
-// necessary hosts and starts the simulation on the root-node.
+// necessary conodes and starts the simulation on the root-node.
 package main
 
 import (
 	"flag"
+	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 
-	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/protocols/manage"
 	// Empty imports to have the init-functions called which should
 	// register the protocol
@@ -18,9 +19,9 @@ import (
 	_ "github.com/dedis/cothority/services"
 )
 
-// The address of this host - if there is only one host in the config
+// The address of this conode - if there is only one conode in the config
 // file, it will be derived from it automatically
-var hostAddress string
+var conodeAddress string
 
 // ip addr of the logger to connect to
 var monitorAddress string
@@ -33,59 +34,74 @@ var debugVisible int
 // Initialize before 'init' so we can directly use the fields as parameters
 // to 'Flag'
 func init() {
-	flag.StringVar(&hostAddress, "address", "", "our address to use")
+	flag.StringVar(&conodeAddress, "address", "", "our address to use")
 	flag.StringVar(&simul, "simul", "", "start simulating that protocol")
 	flag.StringVar(&monitorAddress, "monitor", "", "remote monitor")
 	flag.IntVar(&debugVisible, "debug", 1, "verbosity: 0-5")
 }
 
-// Main starts the host and will setup the protocol.
+// Main starts the conode and will setup the protocol.
 func main() {
 	flag.Parse()
-	dbg.SetDebugVisible(debugVisible)
-	dbg.Lvl3("Flags are:", hostAddress, simul, dbg.DebugVisible, monitorAddress)
+	log.SetDebugVisible(debugVisible)
+	log.Lvl3("Flags are:", conodeAddress, simul, log.DebugVisible, monitorAddress)
 
-	scs, err := sda.LoadSimulationConfig(".", hostAddress)
+	scs, err := sda.LoadSimulationConfig(".", conodeAddress)
 	measures := make([]*monitor.CounterIOMeasure, len(scs))
 	if err != nil {
 		// We probably are not needed
-		dbg.Lvl2(err, hostAddress)
+		log.Lvl2(err, conodeAddress)
 		return
 	}
 	if monitorAddress != "" {
 		if err := monitor.ConnectSink(monitorAddress); err != nil {
-			dbg.Error("Couldn't connect monitor to sink:", err)
+			log.Error("Couldn't connect monitor to sink:", err)
 		}
 	}
 	sims := make([]sda.Simulation, len(scs))
 	var rootSC *sda.SimulationConfig
 	var rootSim sda.Simulation
+	// having a waitgroup so the binary stops when all conodes are closed
+	var wg sync.WaitGroup
+	var ready = make(chan bool)
 	for i, sc := range scs {
-		// Starting all hosts for that server
-		host := sc.Host
-		measures[i] = monitor.NewCounterIOMeasure("bandwidth", host)
-		dbg.Lvl3(hostAddress, "Starting host", host.Entity.Addresses)
-		host.Listen()
-		host.StartProcessMessages()
+		// Starting all conodes for that server
+		conode := sc.Conode
+		measures[i] = monitor.NewCounterIOMeasure("bandwidth", conode)
+		log.Lvl3(conodeAddress, "Starting conode", conode.ServerIdentity.Address)
+		// Launch a conode and notifies when it's done
+
+		wg.Add(1)
+		go func(c *sda.Conode, m monitor.Measure) {
+			ready <- true
+			defer wg.Done()
+			c.Start()
+			// record bandwidth
+			m.Record()
+			log.Lvl3(conodeAddress, "Simulation closed conode", c.ServerIdentity)
+		}(conode, measures[i])
+		// wait to be sure the goroutine started
+		<-ready
+
 		sim, err := sda.NewSimulation(simul, sc.Config)
 		if err != nil {
-			dbg.Fatal(err)
+			log.Fatal(err)
 		}
 		err = sim.Node(sc)
 		if err != nil {
-			dbg.Fatal(err)
+			log.Fatal(err)
 		}
 		sims[i] = sim
-		if host.Entity.ID == sc.Tree.Root.Entity.ID {
-			dbg.Lvl2(hostAddress, "is root-node, will start protocol")
+		if conode.ServerIdentity.ID == sc.Tree.Root.ServerIdentity.ID {
+			log.Lvl2(conodeAddress, "is root-node, will start protocol")
 			rootSim = sim
 			rootSC = sc
 		}
 	}
 	if rootSim != nil {
-		// If this cothority has the root-host, it will start the simulation
-		dbg.Lvl2("Starting protocol", simul, "on host", rootSC.Host.Entity.Addresses)
-		//dbg.Lvl5("Tree is", rootSC.Tree.Dump())
+		// If this cothority has the root-conode, it will start the simulation
+		log.Lvl2("Starting protocol", simul, "on conode", rootSC.Conode.ServerIdentity.Address)
+		//log.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
 		childrenWait := monitor.NewTimeMeasure("ChildrenWait")
@@ -94,39 +110,39 @@ func main() {
 		// each level of the tree.
 		timeout := 1000
 		for wait {
-			p, err := rootSC.Overlay.CreateProtocol(rootSC.Tree, "Count")
+			p, err := rootSC.Overlay.CreateProtocolSDA("Count", rootSC.Tree)
 			if err != nil {
-				dbg.Fatal(err)
+				log.Fatal(err)
 			}
 			proto := p.(*manage.ProtocolCount)
 			proto.SetTimeout(timeout)
 			proto.Start()
-			dbg.Lvl1("Started counting children with timeout of", timeout)
+			log.Lvl1("Started counting children with timeout of", timeout)
 			select {
 			case count := <-proto.Count:
 				if count == rootSC.Tree.Size() {
-					dbg.Lvl1("Found all", count, "children")
+					log.Lvl1("Found all", count, "children")
 					wait = false
 				} else {
-					dbg.Lvl1("Found only", count, "children, counting again")
+					log.Lvl1("Found only", count, "children, counting again")
 				}
 			}
 			// Double the timeout and try again if not successful.
 			timeout *= 2
 		}
 		childrenWait.Record()
-		dbg.Lvl1("Starting new node", simul)
-		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Host)
+		log.Lvl1("Starting new node", simul)
+		measureNet := monitor.NewCounterIOMeasure("bandwidth_root", rootSC.Conode)
 		err := rootSim.Run(rootSC)
 		if err != nil {
-			dbg.Fatal(err)
+			log.Fatal(err)
 		}
 		measureNet.Record()
 
-		// Test if all Entities are used in the tree, else we'll run into
+		// Test if all ServerIdentities are used in the tree, else we'll run into
 		// troubles with CloseAll
 		if !rootSC.Tree.UsesList() {
-			dbg.Error("The tree doesn't use all Entities from the list!\n" +
+			log.Error("The tree doesn't use all ServerIdentities from the list!\n" +
 				"This means that the CloseAll will fail and the experiment never ends!")
 		}
 		closeTree := rootSC.Tree
@@ -135,30 +151,19 @@ func main() {
 			// entity only once, whereas rootSC.Tree will have the same
 			// entity at different TreeNodes, which makes it difficult to
 			// correctly close everything.
-			dbg.Lvl2("Making new root-tree for SingleHost config")
-			closeTree = rootSC.EntityList.GenerateBinaryTree()
+			log.Lvl2("Making new root-tree for SingleHost config")
+			closeTree = rootSC.Roster.GenerateBinaryTree()
 			rootSC.Overlay.RegisterTree(closeTree)
 		}
-		pi, err := rootSC.Overlay.CreateProtocol(closeTree, "CloseAll")
+		pi, err := rootSC.Overlay.CreateProtocolSDA("CloseAll", closeTree)
 		pi.Start()
 		if err != nil {
-			dbg.Fatal(err)
+			log.Fatal(err)
 		}
 	}
 
-	// Wait for all hosts to be closed
-	allClosed := make(chan bool)
-	go func() {
-		for i, sc := range scs {
-			sc.Host.WaitForClose()
-			// record the bandwidth
-			measures[i].Record()
-			dbg.Lvl3(hostAddress, "Simulation closed host", sc.Host.Entity.Addresses, "closed")
-		}
-		allClosed <- true
-	}()
-	dbg.Lvl3(hostAddress, scs[0].Host.Entity.First(), "is waiting for all hosts to close")
-	<-allClosed
-	dbg.Lvl2(hostAddress, "has all hosts closed")
+	log.Lvl3(conodeAddress, scs[0].Conode.ServerIdentity, "is waiting for all conodes to close")
+	wg.Wait()
+	log.Lvl2(conodeAddress, "has all conodes closed")
 	monitor.EndAndCleanup()
 }

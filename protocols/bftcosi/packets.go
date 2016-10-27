@@ -1,8 +1,11 @@
 package bftcosi
 
 import (
-	"github.com/dedis/cothority/lib/cosi"
-	"github.com/dedis/cothority/lib/sda"
+	"crypto/sha512"
+	"errors"
+
+	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
@@ -19,17 +22,74 @@ const (
 // BFTSignature is what a bftcosi protocol outputs. It contains the signature,
 // the message and some possible exceptions.
 type BFTSignature struct {
-	// cosi signature of the commit round.
-	Sig *cosi.Signature
+	// cosi signature
+	Sig []byte
 	Msg []byte
 	// List of peers that did not want to sign.
-	Exceptions []cosi.Exception
+	Exceptions []Exception
+}
+
+// Verify returns whether the verification of the signature succeeds or not.
+// Specifically, it adjusts the signature according to the exception in the
+// signature, so it can be verified by dedis/crypto/cosi.
+// publics is a slice of all public signatures, and the msg is the msg
+// being signed.
+func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
+	if bs == nil || bs.Sig == nil || bs.Msg == nil {
+		return errors.New("Invalid signature")
+	}
+	// compute the aggregate key of all the signers
+	aggPublic := s.Point().Null()
+	for i := range publics {
+		aggPublic.Add(aggPublic, publics[i])
+	}
+	// compute the reduced public aggregate key (all - exception)
+	aggReducedPublic := s.Point().Null().Add(s.Point().Null(), aggPublic)
+
+	// compute the aggregate commit of exception
+	aggExCommit := s.Point().Null()
+	for _, ex := range bs.Exceptions {
+		aggExCommit = aggExCommit.Add(aggExCommit, ex.Commitment)
+		aggReducedPublic.Sub(aggReducedPublic, publics[ex.Index])
+	}
+	// get back the commit to recreate  the challenge
+	origCommit := s.Point()
+	if err := origCommit.UnmarshalBinary(bs.Sig[0:32]); err != nil {
+		return err
+	}
+
+	// re create challenge
+	h := sha512.New()
+	if _, err := origCommit.MarshalTo(h); err != nil {
+		return err
+	}
+	if _, err := aggPublic.MarshalTo(h); err != nil {
+		return err
+	}
+	if _, err := h.Write(bs.Msg); err != nil {
+		return err
+	}
+
+	// redo like in cosi -k*A + r*B == C
+	// only with C being the reduced version
+	k := s.Scalar().SetBytes(h.Sum(nil))
+	minusPublic := s.Point().Neg(aggReducedPublic)
+	ka := s.Point().Mul(minusPublic, k)
+	r := s.Scalar().SetBytes(bs.Sig[32:64])
+	rb := s.Point().Mul(nil, r)
+	left := s.Point().Add(rb, ka)
+
+	right := s.Point().Sub(origCommit, aggExCommit)
+
+	if !left.Equal(right) {
+		return errors.New("Commit recreated is not equal to one given")
+	}
+	return nil
 }
 
 // Announce is the struct used during the announcement phase (of both
 // rounds)
 type Announce struct {
-	*cosi.Announcement
 	TYPE    RoundType
 	Timeout uint64
 }
@@ -43,8 +103,8 @@ type announceChan struct {
 
 // Commitment is the commitment packets that is sent for both rounds
 type Commitment struct {
-	TYPE RoundType
-	*cosi.Commitment
+	TYPE       RoundType
+	Commitment abstract.Point
 }
 
 // commitChan is the type of the channel that will be used to catch commitment
@@ -58,9 +118,9 @@ type commitChan struct {
 // It contains the basic challenge plus the message from which the challenge has
 // been generated.
 type ChallengePrepare struct {
-	TYPE RoundType
-	*cosi.Challenge
-	Msg []byte
+	Msg       []byte
+	Data      []byte
+	Challenge abstract.Scalar
 }
 
 // ChallengeCommit  is the challenge used by BftCoSi during the "commit"
@@ -72,14 +132,10 @@ type ChallengePrepare struct {
 // signature and to see how many peers did not sign. It's not spoofable because
 // otherwise the signature verification will be wrong.
 type ChallengeCommit struct {
-	TYPE RoundType
-	*cosi.Challenge
-	// Signature is the basic signature Challenge / response
-	Signature *cosi.Signature
-	// Exception is the list of peers that did not want to sign. It's needed for
-	// verifying the signature. It can not be spoofed otherwise the signature
-	// would be wrong.
-	Exceptions []cosi.Exception
+	// Challenge for the current round
+	Challenge abstract.Scalar
+	// Signature is the signature response generated at the previous round (prepare)
+	Signature *BFTSignature
 }
 
 // challengeChan is the type of the channel that will be used to catch the
@@ -98,8 +154,8 @@ type challengeCommitChan struct {
 // Response is the struct used by ByzCoin during the response. It
 // contains the response + the basic exception list.
 type Response struct {
-	*cosi.Response
-	Exceptions []cosi.Exception
+	Response   abstract.Scalar
+	Exceptions []Exception
 	TYPE       RoundType
 }
 
@@ -107,4 +163,15 @@ type Response struct {
 type responseChan struct {
 	*sda.TreeNode
 	Response
+}
+
+// Exception represents the exception mechanism used in BFTCosi to indicate a
+// signer did not want to sign.
+// The index is the index of the public key of the cosigner that do not want to
+// sign.
+// The commit is needed in order to be able to
+// correctly verify the signature
+type Exception struct {
+	Index      int
+	Commitment abstract.Point
 }

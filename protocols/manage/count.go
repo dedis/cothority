@@ -5,9 +5,9 @@ import (
 
 	"sync"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 /*
@@ -19,10 +19,10 @@ still goes on.
 */
 
 func init() {
-	network.RegisterMessageType(PrepareCount{})
-	network.RegisterMessageType(Count{})
-	network.RegisterMessageType(NodeIsUp{})
-	sda.ProtocolRegisterName("Count", NewCount)
+	network.RegisterPacketType(PrepareCount{})
+	network.RegisterPacketType(Count{})
+	network.RegisterPacketType(NodeIsUp{})
+	sda.GlobalProtocolRegister("Count", NewCount)
 }
 
 // ProtocolCount holds all channels. If a timeout occurs or the counting
@@ -75,13 +75,13 @@ func NewCount(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 	p.Count = make(chan int, 1)
 	if err := p.RegisterChannel(&p.CountChan); err != nil {
-		dbg.Error("Couldn't reister channel:", err)
+		log.Error("Couldn't reister channel:", err)
 	}
 	if err := p.RegisterChannel(&p.PrepareCountChan); err != nil {
-		dbg.Error("Couldn't reister channel:", err)
+		log.Error("Couldn't reister channel:", err)
 	}
 	if err := p.RegisterChannel(&p.NodeIsUpChan); err != nil {
-		dbg.Error("Couldn't reister channel:", err)
+		log.Error("Couldn't reister channel:", err)
 	}
 	return p, nil
 }
@@ -89,7 +89,7 @@ func NewCount(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 // Start the protocol
 func (p *ProtocolCount) Start() error {
 	// Send an empty message
-	dbg.Lvl3("Starting to count")
+	log.Lvl3("Starting to count")
 	p.FuncPC()
 	return nil
 }
@@ -99,10 +99,10 @@ func (p *ProtocolCount) Start() error {
 func (p *ProtocolCount) Dispatch() error {
 	running := true
 	for running {
-		dbg.Lvl3(p.Info(), "waiting for message during", p.Timeout())
+		log.Lvl3(p.Info(), "waiting for message during", p.Timeout())
 		select {
 		case pc := <-p.PrepareCountChan:
-			dbg.Lvl3(p.Info(), "received from", pc.TreeNode.Entity.Addresses,
+			log.Lvl3(p.Info(), "received from", pc.TreeNode.ServerIdentity.Address,
 				pc.Timeout)
 			p.SetTimeout(pc.Timeout)
 			p.FuncPC()
@@ -113,16 +113,16 @@ func (p *ProtocolCount) Dispatch() error {
 			if p.Parent() != nil {
 				err := p.SendTo(p.Parent(), &NodeIsUp{})
 				if err != nil {
-					dbg.Error(p.Info(), "couldn't send to parent",
+					log.Error(p.Info(), "couldn't send to parent",
 						p.Parent().Name(), err)
 				}
 			} else {
 				p.Replies++
 			}
 		case <-time.After(time.Duration(p.Timeout()) * time.Millisecond):
-			dbg.Lvl3(p.Info(), "timed out while waiting for", p.Timeout())
+			log.Lvl3(p.Info(), "timed out while waiting for", p.Timeout())
 			if p.IsRoot() {
-				dbg.Lvl2("Didn't get all children in time:", p.Replies)
+				log.Lvl2("Didn't get all children in time:", p.Replies)
 				p.Count <- p.Replies
 				running = false
 			}
@@ -138,17 +138,17 @@ func (p *ProtocolCount) FuncPC() {
 	if !p.IsRoot() {
 		err := p.SendTo(p.Parent(), &NodeIsUp{})
 		if err != nil {
-			dbg.Error(p.Info(), "couldn't send to parent",
+			log.Error(p.Info(), "couldn't send to parent",
 				p.Parent().Name(), err)
 		}
 	}
 	if !p.IsLeaf() {
 		for _, child := range p.Children() {
 			go func(c *sda.TreeNode) {
-				dbg.Lvl3(p.Info(), "sending to", c.Entity.Addresses, c.Id, p.timeout)
+				log.Lvl3(p.Info(), "sending to", c.ServerIdentity.Address, c.ID, p.timeout)
 				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
 				if err != nil {
-					dbg.Error(p.Info(), "couldn't send to child",
+					log.Error(p.Info(), "couldn't send to child",
 						c.Name())
 				}
 			}(child)
@@ -166,15 +166,15 @@ func (p *ProtocolCount) FuncC(cc []CountMsg) {
 		count += c.Count.Children
 	}
 	if !p.IsRoot() {
-		dbg.Lvl3(p.Info(), "Sends to", p.Parent().Id, p.Parent().Entity.Addresses)
+		log.Lvl3(p.Info(), "Sends to", p.Parent().ID, p.Parent().ServerIdentity.Address)
 		if err := p.SendTo(p.Parent(), &Count{count}); err != nil {
-			dbg.Error(p.Name(), "coouldn't send to parent",
+			log.Error(p.Name(), "coouldn't send to parent",
 				p.Parent().Name())
 		}
 	} else {
 		p.Count <- count
 	}
-	dbg.Lvl3(p.Entity().First(), "Done")
+	log.Lvl3(p.ServerIdentity().Address, "Done")
 }
 
 // SetTimeout sets the new timeout

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
@@ -52,13 +52,13 @@ func (sr *BlockReply) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	//dbg.Print("Preparing abstracts")
+	//log.Print("Preparing abstracts")
 	if err := suite.Write(&b, sr.Response, sr.Challenge, sr.AggCommit, sr.AggPublic); err != nil {
-		dbg.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
+		log.Lvl1("encoding stampreply response/challenge/AggCommit:", err)
 		return nil, err
 	}
 
-	//dbg.Print("Returning helper-struct")
+	//log.Print("Returning helper-struct")
 	return json.Marshal(&struct {
 		SignatureInfo []byte
 		*Alias
@@ -70,7 +70,7 @@ func (sr *BlockReply) MarshalJSON() ([]byte, error) {
 
 func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 	type Alias BlockReply
-	//dbg.Print("Starting unmarshal")
+	//log.Print("Starting unmarshal")
 	suite, err := suites.StringToSuite(sr.SuiteStr)
 	if err != nil {
 		return err
@@ -89,32 +89,32 @@ func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 		AggPublic: suite.Point(),
 		Alias:     (*Alias)(sr),
 	}
-	//dbg.Print("Doing JSON unmarshal")
+	//log.Print("Doing JSON unmarshal")
 	if err := json.Unmarshal(dataJSON, &aux); err != nil {
 		return err
 	}
 	if err := suite.Read(bytes.NewReader(aux.SignatureInfo), &sr.Response, &sr.Challenge, &sr.AggCommit, &sr.AggPublic); err != nil {
-		dbg.Fatal("decoding signature Response / Challenge / AggCommit: ", err)
+		log.Fatal("decoding signature Response / Challenge / AggCommit: ", err)
 		return err
 	}
 	return nil
 }
 
 func (Treq BlockReply) MarshalBinary() ([]byte, error) {
-	dbg.Fatal("Don't want to do that")
+	log.Fatal("Don't want to do that")
 	return nil, nil
 }
 func (Treq *BlockReply) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do that")
+	log.Fatal("Don't want to do that")
 	return nil
 }
 
 func (tsm BitCoSiMessage) MarshalBinary() ([]byte, error) {
-	dbg.Fatal("Don't want to do that")
+	log.Fatal("Don't want to do that")
 	return nil, nil
 }
 
 func (sm *BitCoSiMessage) UnmarshalBinary(data []byte) error {
-	dbg.Fatal("Don't want to do that")
+	log.Fatal("Don't want to do that")
 	return nil
 }

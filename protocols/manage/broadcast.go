@@ -3,12 +3,12 @@ package manage
 import (
 	"errors"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
-	sda.ProtocolRegisterName("Broadcast", NewBroadcastProtocol)
+	sda.GlobalProtocolRegister("Broadcast", NewBroadcastProtocol)
 }
 
 // Broadcast ensures that all nodes are connected to each other. If you need
@@ -28,7 +28,7 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 		tnIndex:          -1,
 	}
 	for i, tn := range n.Tree().List() {
-		if tn.Id == n.TreeNode().Id {
+		if tn.ID == n.TreeNode().ID {
 			b.tnIndex = i
 		}
 	}
@@ -46,11 +46,11 @@ func NewBroadcastProtocol(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error)
 	return b, nil
 }
 
-// Start will contact everyone and makes the connections
+// Start will contact everyone and make the connections
 func (b *Broadcast) Start() error {
 	n := len(b.Tree().List())
 	b.repliesLeft = n * (n - 1) / 2
-	dbg.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
+	log.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
 	b.SendTo(b.Root(), &ContactNodes{})
 	return nil
 }
@@ -61,19 +61,19 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	*sda.TreeNode
 	ContactNodes
 }) {
-	dbg.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
-	if msg.TreeNode.Id == b.Root().Id {
+	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
+	if msg.TreeNode.ID == b.Root().ID {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
-			dbg.Lvl3("Won't contact anybody - finishing")
+			log.Lvl3("Won't contact anybody - finishing")
 			b.SendTo(b.Root(), &Done{})
 			return
 		}
-		dbg.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
+		log.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
 		// Connect to all nodes that are later in the TreeNodeList, but only if
 		// the message comes from root
 		for _, tn := range b.Tree().List()[b.tnIndex+1:] {
-			dbg.Lvl3("Connecting to", tn.String())
+			log.Lvl3("Connecting to", tn.String())
 			err := b.SendTo(tn, &ContactNodes{})
 			if err != nil {
 				return
@@ -81,7 +81,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 		}
 	} else {
 		// Tell the caller we're done
-		dbg.Lvl3("Sending back to", msg.TreeNode.Entity.String())
+		log.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
 		b.SendTo(msg.TreeNode, &Done{})
 	}
 }
@@ -93,15 +93,15 @@ func (b *Broadcast) handleDone(msg struct {
 	Done
 }) {
 	b.repliesLeft--
-	dbg.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
+	log.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
 	if b.repliesLeft == 0 {
 		if b.onDoneCb != nil {
-			dbg.Lvl3("Done with broadcasting to everybody")
+			log.Lvl3("Done with broadcasting to everybody")
 			b.onDoneCb()
 		}
 		if !b.IsRoot() {
 			// Tell root we're done
-			dbg.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.Entity.String())
+			log.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
 			b.SendTo(b.Root(), &Done{})
 		}
 

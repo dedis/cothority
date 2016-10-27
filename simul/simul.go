@@ -12,8 +12,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/monitor"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/simul/platform"
 )
 
@@ -42,7 +42,7 @@ func init() {
 	flag.StringVar(&simRange, "range", simRange, "Range of simulations to run. 0: or 3:4 or :4")
 	flag.IntVar(&runWait, "runwait", runWait, "How long to wait for each simulation to finish - overwrites .toml-value")
 	flag.IntVar(&experimentWait, "experimentwait", experimentWait, "How long to wait for the whole experiment to finish")
-	dbg.AddFlags()
+	log.RegisterFlags()
 }
 
 // Reads in the platform that we want to use and prepares for the tests
@@ -50,33 +50,33 @@ func main() {
 	flag.Parse()
 	deployP = platform.NewPlatform(platformDst)
 	if deployP == nil {
-		dbg.Fatal("Platform not recognized.", platformDst)
+		log.Fatal("Platform not recognized.", platformDst)
 	}
-	dbg.Lvl1("Deploying to", platformDst)
+	log.Lvl1("Deploying to", platformDst)
 
 	simulations := flag.Args()
 	if len(simulations) == 0 {
-		dbg.Fatal("Please give a simulation to run")
+		log.Fatal("Please give a simulation to run")
 	}
 
 	for _, simulation := range simulations {
 		runconfigs := platform.ReadRunFile(deployP, simulation)
 
 		if len(runconfigs) == 0 {
-			dbg.Fatal("No tests found in", simulation)
+			log.Fatal("No tests found in", simulation)
 		}
 		deployP.Configure(&platform.Config{
 			MonitorPort: monitorPort,
-			Debug:       dbg.DebugVisible(),
+			Debug:       log.DebugVisible(),
 		})
 
 		if clean {
 			err := deployP.Deploy(runconfigs[0])
 			if err != nil {
-				dbg.Fatal("Couldn't deploy:", err)
+				log.Fatal("Couldn't deploy:", err)
 			}
 			if err := deployP.Cleanup(); err != nil {
-				dbg.Error("Couldn't cleanup correctly:", err)
+				log.Error("Couldn't cleanup correctly:", err)
 			}
 		} else {
 			logname := strings.Replace(filepath.Base(simulation), ".toml", "", 1)
@@ -88,9 +88,9 @@ func main() {
 			timeout := getExperimentWait(runconfigs)
 			select {
 			case <-testsDone:
-				dbg.Lvl3("Done with test", simulation)
+				log.Lvl3("Done with test", simulation)
 			case <-time.After(time.Second * time.Duration(timeout)):
-				dbg.Fatal("Test failed to finish in", timeout, "seconds")
+				log.Fatal("Test failed to finish in", timeout, "seconds")
 			}
 		}
 	}
@@ -103,12 +103,12 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	if nobuild == false {
 		if race {
 			if err := deployP.Build(build, "-race"); err != nil {
-				dbg.Error("Couln't finish build without errors:",
+				log.Error("Couln't finish build without errors:",
 					err)
 			}
 		} else {
 			if err := deployP.Build(build); err != nil {
-				dbg.Error("Couln't finish build without errors:",
+				log.Error("Couln't finish build without errors:",
 					err)
 			}
 		}
@@ -127,27 +127,27 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 	}
 	f, err := os.OpenFile(testFile(name), args, 0660)
 	if err != nil {
-		dbg.Fatal("error opening test file:", err)
+		log.Fatal("error opening test file:", err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			dbg.Error("Couln't close", f.Name())
+			log.Error("Couln't close", f.Name())
 		}
 	}()
 	err = f.Sync()
 	if err != nil {
-		dbg.Fatal("error syncing test file:", err)
+		log.Fatal("error syncing test file:", err)
 	}
 
 	start, stop := getStartStop(len(runconfigs))
 	for i, t := range runconfigs {
 		// Implement a simple range-argument that will skip checks not in range
 		if i < start || i > stop {
-			dbg.Lvl2("Skipping", t, "because of range")
+			log.Lvl2("Skipping", t, "because of range")
 			continue
 		}
 		// Waiting for the document-branch to be merged, then uncomment this
-		dbg.Lvl1("Starting run with parameters -", t.String())
+		//log.Lvl1("Starting run with parameters -", t.String())
 
 		// run test t nTimes times
 		// take the average of all successful runs
@@ -155,7 +155,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		for r := 0; r < nTimes; r++ {
 			stats, err := RunTest(t)
 			if err != nil {
-				dbg.Error("Error running test, trying again:", err)
+				log.Error("Error running test, trying again:", err)
 				continue
 			}
 
@@ -166,7 +166,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		}
 
 		if len(runs) == 0 {
-			dbg.Lvl1("unable to get any data for test:", t)
+			log.Lvl1("unable to get any data for test:", t)
 			continue
 		}
 
@@ -178,7 +178,7 @@ func RunTests(name string, runconfigs []platform.RunConfig) {
 		rs[i].WriteValues(f)
 		err = f.Sync()
 		if err != nil {
-			dbg.Fatal("error syncing data to test file:", err)
+			log.Fatal("error syncing data to test file:", err)
 		}
 	}
 }
@@ -191,40 +191,41 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	rc.Delete("simulation")
 	rs := monitor.NewStats(rc.Map(), "hosts", "bf")
 	monitor := monitor.NewMonitor(rs)
+
 	if err := deployP.Deploy(rc); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 		return rs, err
 	}
 
 	monitor.SinkPort = monitorPort
 	if err := deployP.Cleanup(); err != nil {
-		dbg.Error(err)
+		log.Error(err)
 		return rs, err
 	}
 	monitor.SinkPort = monitorPort
 	go func() {
 		if err := monitor.Listen(); err != nil {
-			dbg.Fatal("Could not monitor.Listen():", err)
+			log.Fatal("Could not monitor.Listen():", err)
 		}
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
 	err := deployP.Start()
 	if err != nil {
-		dbg.Error(err)
+		log.Error(err)
 		return rs, err
 	}
 
 	go func() {
 		var err error
 		if err = deployP.Wait(); err != nil {
-			dbg.Lvl3("Test failed:", err)
+			log.Lvl3("Test failed:", err)
 			if err := deployP.Cleanup(); err != nil {
-				dbg.Lvl3("Couldn't cleanup platform:", err)
+				log.Lvl3("Couldn't cleanup platform:", err)
 			}
 			done <- struct{}{}
 		}
-		dbg.Lvl3("Test complete:", rs)
+		log.Lvl3("Test complete:", rs)
 		done <- struct{}{}
 	}()
 
@@ -248,14 +249,14 @@ func CheckHosts(rc platform.RunConfig) {
 	depth, _ := rc.GetInt("depth")
 	if hosts == 0 {
 		if depth == 0 || bf == 0 {
-			dbg.Fatal("No Hosts and no Depth or BF given - stopping")
+			log.Fatal("No Hosts and no Depth or BF given - stopping")
 		}
 		hosts = calcHosts(bf, depth)
 		rc.Put("hosts", strconv.Itoa(hosts))
 	}
 	if bf == 0 {
 		if depth == 0 || hosts == 0 {
-			dbg.Fatal("No BF and no Depth or hosts given - stopping")
+			log.Fatal("No BF and no Depth or hosts given - stopping")
 		}
 		bf = 2
 		for calcHosts(bf, depth) < hosts {
@@ -268,7 +269,6 @@ func CheckHosts(rc platform.RunConfig) {
 		for calcHosts(bf, depth) < hosts {
 			depth++
 		}
-
 		rc.Put("depth", strconv.Itoa(depth))
 	}
 }
@@ -293,7 +293,7 @@ type runFile struct {
 func mkTestDir() {
 	err := os.MkdirAll("test_data/", 0777)
 	if err != nil {
-		dbg.Fatal("failed to make test directory")
+		log.Fatal("failed to make test directory")
 	}
 }
 
@@ -315,7 +315,7 @@ func getStartStop(rcs int) (int, int) {
 			}
 		}
 	}
-	dbg.Lvl2("Range is", start, ":", stop)
+	log.Lvl2("Range is", start, ":", stop)
 	return start, stop
 }
 

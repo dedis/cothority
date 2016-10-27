@@ -4,17 +4,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/cothority/lib/crypto"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/network"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/crypto"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
 	// register network messages and protocol
-	network.RegisterMessageType(Message{})
-	network.RegisterMessageType(SignatureReply{})
-	sda.ProtocolRegisterName("NaiveTree", NewProtocol)
+	network.RegisterPacketType(Message{})
+	network.RegisterPacketType(SignatureReply{})
+	sda.GlobalProtocolRegister("NaiveTree", NewProtocol)
 }
 
 // Protocol implements the sda.ProtocolInstance interface
@@ -46,17 +46,15 @@ func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 // Start implements sda.ProtocolInstance.
 func (p *Protocol) Start() error {
-	if p.IsRoot() {
-		if len(p.Children()) > 0 {
-			dbg.Lvl3("Starting ntree/naive")
-			return p.HandleSignRequest(structMessage{p.TreeNode(),
-				Message{p.Message, p.verifySignature}})
-		} else {
-			return errors.New("No children for root")
-		}
-	} else {
+	if !p.IsRoot() {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
+	if len(p.Children()) < 1 {
+		return errors.New("No children for root")
+	}
+	log.Lvl3("Starting ntree/naive")
+	return p.HandleSignRequest(structMessage{p.TreeNode(),
+		Message{p.Message, p.verifySignature}})
 }
 
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
@@ -71,7 +69,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	// fill our own signature
 	p.signature = &SignatureReply{
 		Sig:   signature,
-		Index: p.TreeNode().EntityIdx}
+		Index: p.TreeNode().RosterIndex}
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
 			err := p.SendTo(c, &msg.Message)
@@ -91,7 +89,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 // and verifying the children's signatures (verification level can be controlled
 // by the VerifySignature flag).
 func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
-	dbg.Lvl3("Appending our signature to the collected ones and send to parent")
+	log.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
 	sig.ChildSig = p.signature
 	// at least n signature from direct children
@@ -106,18 +104,18 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 		// see https://github.com/dedis/cothority/issues/260
 		if p.verifySignature == 1 || p.verifySignature == 2 {
 			s := p.verifySignatureReply(sigs.ChildSig)
-			dbg.Lvl3(p.Name(), "direct children verification:", s)
+			log.Lvl3(p.Name(), "direct children verification:", s)
 		}
 		// Verify also the whole subtree
 		if p.verifySignature == 2 {
-			dbg.Lvl3(p.Name(), "Doing Subtree verification")
+			log.Lvl3(p.Name(), "Doing Subtree verification")
 			for _, sub := range sigs.SubSigs {
 				s := p.verifySignatureReply(sub)
-				dbg.Lvl3(p.Name(), "verifying subtree signature:", s)
+				log.Lvl3(p.Name(), "verifying subtree signature:", s)
 			}
 		}
 		if p.verifySignature == 0 {
-			dbg.Lvl3(p.Name(), "Skipping signature verification..")
+			log.Lvl3(p.Name(), "Skipping signature verification..")
 		}
 		// add both the children signature + the sub tree signatures
 		sig.SubSigs = append(sig.SubSigs, sigs.ChildSig)
@@ -127,17 +125,17 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 	if !p.IsRoot() {
 		p.SendTo(p.Parent(), &sig)
 	} else {
-		dbg.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
+		log.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 		p.Done()
 	}
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
-	if sig.Index >= len(p.EntityList().List) {
-		dbg.Error("Index in signature reply out of range")
+	if sig.Index >= len(p.Roster().List) {
+		log.Error("Index in signature reply out of range")
 		return "FAIL"
 	}
-	entity := p.EntityList().List[sig.Index]
+	entity := p.Roster().List[sig.Index]
 	var s string
 	if err := crypto.VerifySchnorr(p.Suite(), entity.Public, p.Message, sig.Sig); err != nil {
 		s = "FAIL"

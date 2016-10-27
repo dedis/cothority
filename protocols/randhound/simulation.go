@@ -1,11 +1,10 @@
 package randhound
 
 import (
-	"time"
-
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/lib/dbg"
-	"github.com/dedis/cothority/lib/sda"
+	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
+	"github.com/dedis/cothority/sda"
 )
 
 func init() {
@@ -15,14 +14,14 @@ func init() {
 // RHSimulation implements a RandHound simulation
 type RHSimulation struct {
 	sda.SimulationBFTree
-	Trustees uint32
-	Purpose  string
-	Shards   uint32
+	Groups  int
+	Faulty  int
+	Purpose string
 }
 
 // NewRHSimulation creates a new RandHound simulation
 func NewRHSimulation(config string) (sda.Simulation, error) {
-	rhs := new(RHSimulation)
+	rhs := &RHSimulation{}
 	_, err := toml.Decode(config, rhs)
 	if err != nil {
 		return nil, err
@@ -33,47 +32,49 @@ func NewRHSimulation(config string) (sda.Simulation, error) {
 // Setup configures a RandHound simulation with certain parameters
 func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfig, error) {
 	sim := new(sda.SimulationConfig)
-	rhs.Hosts = len(hosts)
-	rhs.CreateEntityList(sim, hosts, 2000)
+	rhs.CreateRoster(sim, hosts, 2000)
 	err := rhs.CreateTree(sim)
-	if err != nil {
-		return nil, err
-	}
-	return sim, nil
+	return sim, err
 }
 
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
-	leader, err := config.Overlay.CreateProtocol(config.Tree, "RandHound")
+	randM := monitor.NewTimeMeasure("tgen-randhound")
+	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Conode)
+	client, err := config.Overlay.CreateProtocolSDA("RandHound", config.Tree)
 	if err != nil {
 		return err
 	}
-	rh := leader.(*RandHound)
-	err = rh.Setup(uint32(rhs.Hosts), rhs.Trustees, rhs.Purpose)
+	rh, _ := client.(*RandHound)
+	err = rh.Setup(rhs.Hosts, rhs.Faulty, rhs.Groups, rhs.Purpose)
 	if err != nil {
 		return err
 	}
-	dbg.Printf("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	dbg.Printf("RandHound - shards: %d\n", rhs.Shards)
 	if err := rh.StartProtocol(); err != nil {
-		dbg.Error("Error while starting protcol:", err)
+		log.Error("Error while starting protcol:", err)
 	}
 
 	select {
-	case <-rh.Leader.Done:
-		dbg.Print("RandHound - done")
-		rnd, err := rh.Random()
+	case <-rh.Done:
+		log.Lvlf1("RandHound - done")
+		random, transcript, err := rh.Random()
 		if err != nil {
-			panic(err)
+			return err
 		}
-		sharding, err := rh.Shard(rnd, rhs.Shards)
+		randM.Record()
+		bandW.Record()
+		log.Lvlf1("RandHound - collective randomness: ok")
+
+		verifyM := monitor.NewTimeMeasure("tver-randhound")
+		err = rh.Verify(rh.Suite(), random, transcript)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		dbg.Printf("RandHound - random bytes: %v\n", rnd)
-		dbg.Printf("RandHound - sharding: %v\n", sharding)
-	case <-time.After(time.Second * 60):
-		dbg.Print("RandHound - time out")
+		verifyM.Record()
+		log.Lvlf1("RandHound - verification: ok")
+
+		//case <-time.After(time.Second * time.Duration(rhs.Hosts) * 5):
+		//log.Print("RandHound - time out")
 	}
 
 	return nil
