@@ -137,10 +137,10 @@ func (c *ppsi) handleSetsRequest(in *SetsRequest) error {
   
 
 func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
-
+        phones := in.Content
 	if !c.IsLastToDecElg() {//already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
 	
-		out := c.DecryptElgEncrptPH(in)   
+		out := c.DecryptElgEncrptPH( phones)   
 	
 		in.users[id] = in.users[id]+1 //need to decide on unique id-maybe the token that each node has?
 	
@@ -154,9 +154,9 @@ func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
 	}
 	
 	else {
-	
+	        encPH := ExtractPHEncryptions(phones)
 		outMsg := &FullyPhEncryptedMessage{
-			Content: in.Content,
+			Content: encPH,
 			users: in.users,
 			mode: 1, 
 			}
@@ -167,9 +167,9 @@ func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
 }
 
 func (c *ppsi) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error {
-
+        phones := in.Content
 	if !c.IsLastToIntersect() {
-		intersect, size=c.computeIntersection(in)
+		intersect, size=c.computeIntersection( phones)
 	
 		if !wantToDecrypt(size) {
 			return c.handleIllegalIntersection(size)}
@@ -189,7 +189,7 @@ func (c *ppsi) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error 
 	
 	else{
 	
-		out := c.DecryptPH(in)
+		out := c.DecryptPH( phones)
 		in.users[id] = in.users[id]+1
 	
 		outMsg := &PartiallyPhDecryptedMessage{
@@ -206,10 +206,10 @@ func (c *ppsi) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error 
 
 
 func (c *ppsi) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage) error {
-
+        phones := in.Content
 	if !c.IsLastToDecPH() {        //already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
 	
-		out := c.DecryptPH(in)  
+		out := c.DecryptPH( phones)  
 		in.users[id] = in.users[id]+1
 		outMsg := &PartiallyPhDecryptedMessage{
 			Content: out,
@@ -221,10 +221,10 @@ func (c *ppsi) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage
 	}
 	
 	else {
-	
+		out := c.ExtractPlains( phones )
 		in.users[id] = in.users[id]+1
 		outMsg := &PlainMessage{
-			Content: in.Content
+			Content: out,
 			users: in.users,
 			mode: 3
 				}
@@ -292,20 +292,21 @@ func (c *ppsi) RegisterfinalIntersectionHook(fn finalIntersectionHook) {
 	c.FinalIntersectionHook = fn
 }
 
-func (c *ppsi) computeIntersection(in *FullyPhEncryptedMessage) {
-	//to be implemented
-}
+func (c *ppsi) computeIntersection(newSet []abstract.Point) {
 	
-func (c *ppsi) DecryptElgEncrptPH(in *ElgEncryptedMessage) {
-	//to be implemented
-}
+var newTempIntersection []abstract.Point
+	OUTER:
+	for i:=0; i<len(tempIntersection) ; i++ {
+		for v := 0; v < len(newSet); v++ {
+			if  tempIntersection[i]== newSet[v]{//equaity of points??
+				newTempIntersection.append(newTempIntersection, tempIntersection[i])
+				continue OUTER
+			}
+		}
+	}
 	
-func (c *ppsi) DecryptPH(in *FullyPhEncryptedMessage) {
-	//to be implemented
+	tempIntersection := newTempIntersection //possible?
 }
-	
-func (c *ppsi) DecryptPH(in *PartiallyPhDecryptedMessage) {
-	//to be implemented
-}
+
 	
 
