@@ -20,8 +20,7 @@ type PPSI struct {
 	publics []abstract.Point
 	private []abstract.Scalar //private abstract.Scalar
 	EncryptedPhoneSet []map[int]abstract.Point
-	encPH []abstract.Point
-	plain []string
+	
 	
 }
 
@@ -39,8 +38,7 @@ func NewPPSI(suite abstract.Suite, private []abstract.Scalar, publics []abstract
  
 func (c *PPSI) initPPSI(numPhones int)  {
 		c.EncryptedPhoneSet =  make([]map[int]abstract.Point, numPhones)
-		c.encPH =  make([]abstract.Point, numPhones)
-		c.plain =  make([]string, numPhones)
+		
 }
 
 
@@ -67,7 +65,7 @@ func  (c *PPSI) MultipleElgEncryption( message string, ids int) (
 		
 		return cipher
 		
-	}
+}
 	
 
 func (c *PPSI) EncryptionOneSetOfPhones(set []string, ids int){
@@ -82,7 +80,7 @@ func (c *PPSI) EncryptionOneSetOfPhones(set []string, ids int){
 
 
 	
-	func  (c *PPSI) DecryptElgEncrptPH(set []map[int]abstract.Point, id int)(
+func  (c *PPSI) DecryptElgEncrptPH(set []map[int]abstract.Point, id int)(
 		 UpdatedSet []map[int]abstract.Point){
 	 
 	     UpdatedSet =  make([]map[int]abstract.Point, len(set))
@@ -90,7 +88,6 @@ func (c *PPSI) EncryptionOneSetOfPhones(set []string, ids int){
 		for i:=0; i<len(set) ; i++ {
 			cipher:= set[i]
 			K := cipher[id]
-			
 			C := cipher[-1]
 		
 	   
@@ -103,64 +100,69 @@ func (c *PPSI) EncryptionOneSetOfPhones(set []string, ids int){
 	//} 
 			 UpdatedSet[i][-1] = resElg
 			 // UpdatedSet[i][-1] = resPH
-			//  var byteMessage []byte
-			//byteMessage, _ =    UpdatedSet[i][-1].Data()
-		  // var message string
-		  // message=string(byteMessage)
-			//println("Decryption succeeded: " + message)
+			
 		}
 		
 		return 
 		
-	}
+}
 	
-	func (c *PPSI) ExtractPHEncryptions(set []map[int]abstract.Point ){
 	
+	
+func (c *PPSI) ExtractPHEncryptions(set []map[int]abstract.Point )(
+         encryptedPH []abstract.Point){
+	 encryptedPH =  make([]abstract.Point, len(set))
+	   
 	  
-		for i:=0; i<len(set) ; i++ {
-			cipher:= set[i]
-			c.encPH[i] = cipher[-1]
-			 var byteMessage []byte
-			byteMessage, _ =  set[i][-1].Data()
-		   var message string
-		   message=string(byteMessage)
-			println("Decryption succeeded: " + message)
-			
-		}
-	}
+	 for i:=0; i<len(set) ; i++ {
+		cipher:= set[i]
+		encryptedPH[i] = cipher[-1]
+				
+	 }
+		return
+}
 	
 
+
 	
-	func (c *PPSI) DecryptPH(set []abstract.Point){
+func (c *PPSI) DecryptPH(set []abstract.Point)(
+	UpdatedSet []abstract.Point){
+	 
+	  UpdatedSet =  make([]abstract.Point, len(set))
+	  UpdatedSet=set
 	
 	  
-		for i:=0; i<len(set) ; i++ {
-			resPH, err := PohligHellman.PHDecrypt(set[i])
-				if err != nil {
-		panic("decryption failed: " + err.Error())
+	  for i:=0; i<len( UpdatedSet) ; i++ {
+		resPH, err := PohligHellman.PHDecrypt(UpdatedSet[i])
+		if err != nil {
+		    panic("decryption failed: " + err.Error())
 		}
-		set[i] = resPH		
-		}
-	}
+		UpdatedSet[i] = resPH		
+	  }
+		
+		return
+}
 	
-	func (c *PPSI) ExtractPlains(set []abstract.Point) {
 	
-	    var byteMessage []byte
-	    var message string
-	    a := c.suite.Scalar().Pick(random.Stream)
-	    A := c.suite.Point().Mul(nil, a)
-	    byteMessage, _ = A.Data()
-		for i:=0; i<len(set) ; i++ {
-			byteMessage, _ = set[i].Data()   
-			message=string(byteMessage)
-			c.plain[i] = message
-			println("Decryption succeeded: " + c.plain[i])
+func (c *PPSI) ExtractPlains(set []abstract.Point)(
+	 plain []string){
+	 plain =  make([]string, len(set)) 
+	
+	 var byteMessage []byte
+	 var message string
+	    
+	    
+	 for i:=0; i<len(set) ; i++ {
+		byteMessage, _ = set[i].Data()   
+		message=string(byteMessage)
+		plain[i] = message
+			
 				
-		}
+	 }
 		
+		return
 		
-		
-	}
+}
 
 func main() {
 		var root *PPSI
@@ -172,6 +174,7 @@ func main() {
 		B := suite.Point().Mul(nil, b) 
 		c := suite.Scalar().Pick(random.Stream) 
 		C := suite.Point().Mul(nil, c) 
+	
 		set := []string{"543323345", "543323045", "843323345"}
 
 		publics  := []abstract.Point{A,B,C}
@@ -179,16 +182,24 @@ func main() {
 		root=NewPPSI(suite, private, publics)
 		root.initPPSI(3)
 		root.EncryptionOneSetOfPhones(set, 3)
+	
 		var set1,set2,set3 []map[int]abstract.Point
+		var set4 []abstract.Point
+		var set5 []string
+	
 		set1 =root.DecryptElgEncrptPH(root.EncryptedPhoneSet,0)
-	    set2   =root.DecryptElgEncrptPH(set1,1)
-        set3  =root.DecryptElgEncrptPH(set2,2)
-        root.ExtractPHEncryptions(set3)
-        root.ExtractPlains(root.encPH)
-        println("Decryption : " + root.plain[0])
-        println("Decryption : " + root.plain[1])
-        println("Decryption : " + root.plain[2])
+	        set2   =root.DecryptElgEncrptPH(set1,1)
+                set3  =root.DecryptElgEncrptPH(set2,2)
+	
+                set4  =root.ExtractPHEncryptions(set3)
+                set5  =root.ExtractPlains(set4)
+	
+                println("Decryption : " + set5[0])
+                println("Decryption : " + set5[1])
+                println("Decryption : " + set5[2])
    
 }
+
+
 
 
