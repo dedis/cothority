@@ -200,7 +200,7 @@ def GetNetworks(filename):
     pos = 0
     totalHosts = 0
     for (server, net, count) in list:
-        totalHosts += count
+        totalHosts = totalHosts + count
         t = [server, net, count]
         if ips.find('inet %s/' % server) >= 0:
             myNet = [t, pos]
