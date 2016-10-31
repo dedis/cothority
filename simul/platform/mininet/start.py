@@ -24,8 +24,6 @@ from mininet.nodelib import NAT
 from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
 
-# The port used for socat
-socatPort = 5000
 # What debugging-level to use
 debugging = 1
 # Logging-file
@@ -33,6 +31,13 @@ logfile = "/tmp/mininet.log"
 logdone = "/tmp/done.log"
 # Whether a ssh-daemon should be launched
 runSSHD = False
+# The port used for socat
+socatPort = 5000
+# Socat formats
+# socatSend = "tcp4"
+# socatRcv = "tcp4-listen"
+socatSend = "udp-sendto"
+socatRcv = "udp4-listen"
 
 def dbg(lvl, *str):
     if lvl <= debugging:
@@ -55,10 +60,10 @@ class BaseRouter(Node):
 
         self.cmd( 'sysctl net.ipv4.ip_forward=1' )
         self.cmd( 'iptables -t nat -I POSTROUTING -j MASQUERADE' )
-        socat = "socat OPEN:%s,creat,append udp4-listen:%d,reuseaddr,fork" % (logfile, socatPort)
+        socat = "socat OPEN:%s,creat,append %s:%d,reuseaddr,fork" % (logfile, socatRcv, socatPort)
         self.cmd( '%s &' % socat )
         if rootLog:
-            self.cmd('tail -f %s | socat - udp-sendto:%s:%d &' % (logfile, rootLog, socatPort))
+            self.cmd('tail -f %s | socat - %s:%s:%d &' % (logfile, socatSend, rootLog, socatPort))
 
     def terminate( self ):
         dbg( 2, "Stopping router" )
@@ -74,15 +79,19 @@ class BaseRouter(Node):
 
 class Cothority(Host):
     """A cothority running in a host"""
-    def config(self, gw=None, simul="", **params):
+    def config(self, gw=None, simul="", rootLog=None, **params):
         self.gw = gw
         self.simul = simul
+        self.rootLog = rootLog
         super(Cothority, self).config(**params)
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
 
     def startCothority(self):
-        socat="socat -v - udp-sendto:%s:%d" % (self.gw, socatPort)
+        if self.rootLog:
+            socat="socat - %s:%s:%d" % (socatSend, self.rootLog, socatPort)
+        else:
+            socat="socat - %s:%s:%d" % (socatSend, self.gw, socatPort)
 
         args = "-debug %s -address %s:2000 -simul %s" % (debugging, self.IP(), self.simul)
         if True:
@@ -93,7 +102,7 @@ class Cothority(Host):
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
-        self.cmd('( ./cothority %s 2>&1 %s ) | %s &' %
+        self.cmd('( DEBUG_TIME=true ./cothority %s 2>&1 %s ) | %s &' %
                      (args, ldone, socat ))
 
     def terminate(self):
@@ -124,7 +133,8 @@ class InternetTopo(Topo):
                 host = self.addHost('h%d' % i, cls=Cothority,
                                     ip = '%s/%d' % (ipStr, prefix),
                                     defaultRoute='via %s' % gw,
-			                	    simul=simulation, gw=gw)
+			                	    simul=simulation, gw=gw,
+                                    rootLog=rootLog)
                 dbg( 3, "Adding link", host, switch )
                 self.addLink(host, switch, bw=bandwidth, delay=delay)
 
