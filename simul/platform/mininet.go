@@ -290,8 +290,8 @@ func (m *MiniNet) Wait() error {
 func (m *MiniNet) parseServers() error {
 	hosts, err := ioutil.ReadFile(path.Join(m.mininetDir, "server_list"))
 	if err != nil {
-		return fmt.Errorf("Couldn't find %s/server_list - you can produce one with\n"+
-			"\t\t%s/setup_servers.sh", m.mininetDir, m.mininetDir)
+		return fmt.Errorf("Couldn't find %[1]s/server_list - you can produce one with\n"+
+			"\t\t%[1]s/setup_servers.sh\n\t\tor\n\t\t%[1]s/setup_iccluster.sh", m.mininetDir)
 	}
 	m.HostIPs = []string{}
 	for _, hostRaw := range strings.Split(string(hosts), "\n") {
