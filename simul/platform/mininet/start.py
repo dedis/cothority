@@ -38,6 +38,8 @@ socatPort = 5000
 # socatRcv = "tcp4-listen"
 socatSend = "udp-sendto"
 socatRcv = "udp4-listen"
+# Whether to redirect all socats to the main-gateway at 10.1.0.1
+socatDirect = False
 
 def dbg(lvl, *str):
     if lvl <= debugging:
@@ -88,7 +90,7 @@ class Cothority(Host):
             self.cmd('/usr/sbin/sshd -D &')
 
     def startCothority(self):
-        if self.rootLog:
+        if self.rootLog and socatDirect:
             socat="socat - %s:%s:%d" % (socatSend, self.rootLog, socatPort)
         else:
             socat="socat - %s:%s:%d" % (socatSend, self.gw, socatPort)
@@ -102,6 +104,7 @@ class Cothority(Host):
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
+        # self.cmd('DEBUG_TIME=true ./cothority %s 2>&1 %s &' % (args, ldone ))
         self.cmd('( DEBUG_TIME=true ./cothority %s 2>&1 %s ) | %s &' %
                      (args, ldone, socat ))
 
