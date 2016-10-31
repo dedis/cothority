@@ -1,13 +1,15 @@
-# Directly affiliated with DEDIS
+# Directly affiliated with EPFL/DEDIS
 Bryan Ford <bryan.ford@epfl.ch>
+David Froelicher <david.froelicher@epfl.ch>
 Kokoris Kogias Eleftherios <eleftherios.kokoriskogias@epfl.ch>
 Ismail Khoffi <ismail.khoffi@epfl.ch>
 Linus Gasser <linus.gasser@epfl.ch>
 Nicolas Gailly <nicolas.gailly@epfl.ch>
 Nikitin Kirill <kirill.nikitin@epfl.ch>
+Patricia Egger <patricia.egger@epfl.ch>
 Philipp Jovanovic <philipp.Jovanovic@epfl.ch>
 
-# NON-DEDIS - probably need a CAA or CLA
+# NON-EPFL/DEDIS - need a CAA or CLA
 Author: Benjamin Melançon <ben@agaric.com>
 Changed only an URL
 
@@ -19,9 +21,3 @@ Summer 2016 intern - is he DEDIS, as he signed a contract?
 
 Author: Mahdi Zamani <mahdi.zamani@yale.edu>
 PostDoc student from Yale - working on Prifi
-
-Author: david froelicher <david.froelicher@epfl.ch>
-PhD student from JP - working on MedCo
-
-Author: pegger <pegger@users.noreply.github.com>
-PhD student from JP - working on MedCo
