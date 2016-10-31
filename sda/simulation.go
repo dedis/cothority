@@ -107,7 +107,7 @@ func LoadSimulationConfig(dir, ha string) ([]*SimulationConfig, error) {
 		}
 		for _, e := range sc.Roster.List {
 			if strings.Contains(e.Address.String(), ha) {
-				conode := NewConode(e, scf.PrivateKeys[e.Address])
+				conode := NewConodeTCP(e, scf.PrivateKeys[e.Address])
 				scNew := *sc
 				scNew.Conode = conode
 				scNew.Overlay = conode.overlay
