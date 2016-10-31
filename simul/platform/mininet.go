@@ -66,6 +66,10 @@ type MiniNet struct {
 	Hosts int
 	// Debugging-level: 0 is none - 5 is everything
 	Debug int
+	// Whether to show time in debugging messages
+	DebugTime bool
+	// Whether to show color debugging-messages
+	DebugColor bool
 	// The number of seconds to wait for closing the connection
 	CloseWait int
 	// Delay in ms of the network connection
@@ -89,6 +93,7 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
+
 	m.Delay = 0
 	m.Bandwidth = 1000
 
@@ -293,10 +298,9 @@ func (m *MiniNet) parseServers() error {
 			ips, err := net.LookupIP(h)
 			if err != nil {
 				return err
-			} else {
-				log.Lvl3("Found IP for", h, ":", ips[0])
-				m.HostIPs = append(m.HostIPs, ips[0].String())
 			}
+			log.Lvl3("Found IP for", h, ":", ips[0])
+			m.HostIPs = append(m.HostIPs, ips[0].String())
 		}
 	}
 	log.Lvl3("Nodes are:", m.HostIPs)
