@@ -293,10 +293,9 @@ func (m *MiniNet) parseServers() error {
 			ips, err := net.LookupIP(h)
 			if err != nil {
 				return err
-			} else {
-				log.Lvl3("Found IP for", h, ":", ips[0])
-				m.HostIPs = append(m.HostIPs, ips[0].String())
 			}
+			log.Lvl3("Found IP for", h, ":", ips[0])
+			m.HostIPs = append(m.HostIPs, ips[0].String())
 		}
 	}
 	log.Lvl3("Nodes are:", m.HostIPs)
