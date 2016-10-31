@@ -1,4 +1,4 @@
-package protocol
+package ppsi
 
 import (
 	"github.com/dedis/cothority/sda"
@@ -12,27 +12,27 @@ type SetsRequest struct {
 }
 
 type ElgEncryptedMessage struct {
-	Content []abstract.Scalar  //not sure about the by value/by reference with the []abstract.Scalar
+	Content []map[int]abstract.Point
 	users map[int]int
 	mode int
 }
 
 
 type FullyPhEncryptedMessage struct {
-	Content []abstract.Scalar
+	Content []abstract.Point
 	users map[int]int
 	mode int
 }
 
 
 type PartiallyPhDecryptedMessage struct {
-	Content []abstract.Scalar
+	Content []abstract.Point
 	users map[int]int
 	mode int
 }
 
 type PlainMessage struct {
-	Content []String  //do we want the plain phone numbers as Strings?
+	Content []string 
 	users map[int]int
 	mode int
 }
@@ -60,4 +60,3 @@ type chanPlainMessage struct {
 	*sda.TreeNode
 	PlainMessage
 }
-
