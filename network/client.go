@@ -2,7 +2,6 @@ package network
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -47,7 +46,7 @@ func (cl *Client) Send(dst *ServerIdentity, msg Body) (*Packet, error) {
 
 	c, err := cl.connector(sid, dst)
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect %x", err)
+		return nil, err
 	}
 	defer c.Close()
 

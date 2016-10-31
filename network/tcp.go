@@ -45,20 +45,26 @@ type TCPConn struct {
 
 // NewTCPConn will open a TCPConn to the given address.
 // In case of an error it returns a nil TCPConn and the error.
-func NewTCPConn(addr Address) (*TCPConn, error) {
+func NewTCPConn(addr Address) (conn *TCPConn, err error) {
 	netAddr := addr.NetworkAddress()
-	var err error
-	for i := 0; i < MaxRetryConnect; i++ {
-		conn, err := net.Dial("tcp", netAddr)
+	for i := 1; i <= MaxRetryConnect; i++ {
+		var c net.Conn
+		c, err = net.Dial("tcp", netAddr)
 		if err == nil {
-			return &TCPConn{
+			conn = &TCPConn{
 				endpoint: addr,
-				conn:     conn,
-			}, nil
+				conn:     c,
+			}
+			return
 		}
-		time.Sleep(WaitRetry)
+		if i < MaxRetryConnect {
+			time.Sleep(WaitRetry)
+		}
 	}
-	return nil, fmt.Errorf("Could not connect to %s: %s", addr, err)
+	if err == nil {
+		err = ErrTimeout
+	}
+	return
 }
 
 // Receive get the bytes from the connection then decodes the buffer.

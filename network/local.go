@@ -207,7 +207,7 @@ func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalCon
 		if err == nil {
 			return c, nil
 		} else if i == MaxRetryConnect-1 {
-			return nil, fmt.Errorf("Could not connect %x", err)
+			return nil, err
 		}
 		time.Sleep(WaitRetry)
 	}
