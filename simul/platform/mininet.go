@@ -93,6 +93,8 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
+	m.DebugTime = log.ShowTime()
+	m.DebugColor = log.UseColors()
 
 	m.Delay = 0
 	m.Bandwidth = 1000
@@ -370,7 +372,8 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	if d, err := rc.GetInt("Delay"); err == nil {
 		delay = d
 	}
-	list = fmt.Sprintf("%s %d %d %d\n", m.Simulation, m.Debug, bandwidth, delay)
+	list = fmt.Sprintf("%s %d %d\n%d %t %t\n", m.Simulation, bandwidth, delay,
+		m.Debug, m.DebugTime, m.DebugColor)
 
 	// Add descriptions for `start.py` to know which mininet-network it has to
 	// run on what physical server with how many hosts.

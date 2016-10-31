@@ -25,7 +25,9 @@ from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
 
 # What debugging-level to use
-debugging = 1
+debugLvl = 1
+# Debug-string for color and time
+debugStr = ""
 # Logging-file
 logfile = "/tmp/mininet.log"
 logdone = "/tmp/done.log"
@@ -42,7 +44,7 @@ socatRcv = "udp4-listen"
 socatDirect = True
 
 def dbg(lvl, *str):
-    if lvl <= debugging:
+    if lvl <= debugLvl:
         print("start.py:", end=" ")
         for s in str:
             print(s, end=" ")
@@ -95,7 +97,7 @@ class Cothority(Host):
         else:
             socat="socat - %s:%s:%d" % (socatSend, self.gw, socatPort)
 
-        args = "-debug %s -address %s:2000 -simul %s" % (debugging, self.IP(), self.simul)
+        args = "-debug %s -address %s:2000 -simul %s" % (debugLvl, self.IP(), self.simul)
         if True:
             args += " -monitor %s:10000" % global_root
         ldone = ""
@@ -104,9 +106,8 @@ class Cothority(Host):
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
-        # self.cmd('DEBUG_TIME=true ./cothority %s 2>&1 %s &' % (args, ldone ))
-        self.cmd('( DEBUG_TIME=true ./cothority %s 2>&1 %s ) | %s &' %
-                     (args, ldone, socat ))
+        self.cmd('( %s ./cothority %s 2>&1 %s ) | %s &' %
+                     (debugStr, args, ldone, socat ))
 
     def terminate(self):
         dbg( 3, "Stopping cothority" )
@@ -177,7 +178,7 @@ def GetNetworks(filename):
     It returns the first server encountered, our network if our ip is found
     in the list and the other networks."""
 
-    global simulation, bandwidth, delay, debugging, socatDirect
+    global simulation, bandwidth, delay, socatDirect, debugLvl, debugStr
 
     process = Popen(["ip", "a"], stdout=PIPE)
     (ips, err) = process.communicate()
@@ -186,10 +187,17 @@ def GetNetworks(filename):
     with open(filename) as f:
         content = f.readlines()
 
-    simulation, dbg, bw, d = content.pop(0).rstrip().split(' ')
+    # Interpret the first two lines of the file with regard to the
+    # simulation to run
+    simulation, bw, d = content.pop(0).rstrip().split(' ')
     bandwidth = int(bw)
-    debugging = int(dbg)
     delay = d + "ms"
+    dbgLvl, dbgTime, dbgColor = content.pop(0).rstrip().split(' ')
+    debugLvl = int(dbgLvl)
+    if dbgTime == "true":
+        debugStr = "DEBUG_TIME=true "
+    if dbgColor == "true":
+        debugStr += "DEBUG_COLOR=true"
 
     list = []
     for line in content:
@@ -200,7 +208,7 @@ def GetNetworks(filename):
     pos = 0
     totalHosts = 0
     for (server, net, count) in list:
-        totalHosts = totalHosts + count
+        totalHosts += int(count)
         t = [server, net, count]
         if ips.find('inet %s/' % server) >= 0:
             myNet = [t, pos]
