@@ -3,7 +3,6 @@
 
 DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | xargs -I {} dirname {} | sort | uniq)"
 
-
 BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 echo "Using branch $BRANCH"
 
@@ -17,7 +16,9 @@ if [[ $BRANCH =~ $pattern ]]; then
     echo $(git rev-parse --abbrev-ref HEAD)
 fi
 
-cd $TRAVIS_BUILD_DIR
+if [ "$TRAVIS_BUILD_DIR" ]; then
+    cd $TRAVIS_BUILD_DIR
+fi
 
 # Run test coverage on each subdirectories and merge the coverage profile.
 all_tests_passed=true
