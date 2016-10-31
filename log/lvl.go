@@ -116,8 +116,9 @@ var debugVisible = 1
 // If showTime is true, it will print the time for each line of debug-output.
 var showTime = false
 
-// If useColors is true, debug-output will be colored.
-var useColors = true
+// If useColors is true, debug-output will be colored (defaults to monochrome
+// output).
+var useColors = false
 
 // outputLines can be false to suppress outputting of lines in tests.
 var outputLines = true
@@ -399,7 +400,7 @@ func MainTest(m *testing.M, ls ...int) {
 // ParseEnv looks at the following environment-variables:
 //   DEBUG_LVL - for the actual debug-lvl - default is 1
 //   DEBUG_TIME - whether to show the timestamp - default is false
-//   DEBUG_COLOR - whether to color the output - default is true
+//   DEBUG_COLOR - whether to color the output - default is false
 func ParseEnv() {
 	var err error
 	dv := os.Getenv("DEBUG_LVL")

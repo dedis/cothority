@@ -3,178 +3,48 @@ package network
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"io"
-	"net"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"golang.org/x/net/context"
 )
 
-// MaxRetryConnect defines how many times should we try to connect
-const MaxRetryConnect = 10
+// MaxRetryConnect defines how many times we should try to connect.
+const MaxRetryConnect = 5
 
-// MaxIdentityExchange is the maximum time waited for an exchange of
-// the identity to happen.
+// MaxIdentityExchange is the timeout for an identityExchange.
 const MaxIdentityExchange = 5 * time.Second
 
-// WaitRetry defines how much time should we wait before trying again
-const WaitRetry = 100 * time.Millisecond
+// WaitRetry is the timeout on connection-setups.
+const WaitRetry = 20 * time.Millisecond
 
 // The various errors you can have
 // XXX not working as expected, often falls on errunknown
 
-// ErrClosed is when a connection has been closed
+// ErrClosed is when a connection has been closed.
 var ErrClosed = errors.New("Connection Closed")
 
-// ErrEOF is when the EOF signal comes to the connection (mostly means that it
-// is shutdown)
+// ErrEOF is when the connection sends an EOF signal (mostly because it has
+// been shut down).
 var ErrEOF = errors.New("EOF")
 
-// ErrCanceled means something went wrong with the sending or receiving
+// ErrCanceled means something went wrong in the sending or receiving part.
 var ErrCanceled = errors.New("Operation Canceled")
 
-// ErrTemp is a temporary error
-var ErrTemp = errors.New("Temporary Error")
-
-// ErrTimeout is raised if the connection has set a timeout on read or write,
-// and the operation lasted longer
+// ErrTimeout is raised if the timeout has been reached.
 var ErrTimeout = errors.New("Timeout Error")
 
-// ErrUnknown is an unknown error
+// ErrUnknown is an unknown error.
 var ErrUnknown = errors.New("Unknown Error")
 
 // Size is a type to reprensent the size that is sent before every packet to
 // correctly decode it.
 type Size uint32
-
-// Host is the basic interface to represent a Host of any kind
-// Host can open new Conn(ections) and Listen for any incoming Conn(...)
-type Host interface {
-	Open(name string) (Conn, error)
-	Listen(addr string, fn func(Conn)) error // the srv processing function
-	Close() error
-	monitor.CounterIO
-}
-
-// Conn is the basic interface to represent any communication mean
-// between two host. It is closely related to the underlying type of Host
-// since a TcpHost will generate only TcpConn
-type Conn interface {
-	// Gives the address of the remote endpoint
-	Remote() string
-	// Returns the local address and port
-	Local() string
-	// Send a message through the connection. Always pass a pointer !
-	Send(ctx context.Context, obj Body) error
-	// Receive any message through the connection.
-	Receive(ctx context.Context) (Packet, error)
-	Close() error
-	monitor.CounterIO
-}
-
-// TCPHost is the underlying implementation of
-// Host using Tcp as a communication channel
-type TCPHost struct {
-	// listeningPort is a channel where the port found will be
-	// sent through.
-	listeningPort chan int
-	// A list of connection maintained by this host
-	peers    map[string]Conn
-	peersMut sync.Mutex
-	// its listeners
-	listener net.Listener
-	// the close channel used to indicate to the listener we want to quit
-	quit chan bool
-	// quitListener is a channel to indicate to the closing function that the
-	// listener has actually really quit
-	quitListener  chan bool
-	listeningLock sync.Mutex
-	listening     bool
-	// indicates whether this host is closed already or not
-	closed     bool
-	closedLock sync.Mutex
-	// a list of constructors for en/decoding
-	constructors protobuf.Constructors
-}
-
-// TCPConn is the underlying implementation of
-// Conn using Tcp
-type TCPConn struct {
-	// The name of the endpoint we are connected to.
-	Endpoint string
-
-	// The connection used
-	conn net.Conn
-
-	// closed indicator
-	closed    bool
-	closedMut sync.Mutex
-	// A pointer to the associated host (just-in-case)
-	host *TCPHost
-	// So we only handle one receiving packet at a time
-	receiveMutex sync.Mutex
-	// So we only handle one sending packet at a time
-	sendMutex sync.Mutex
-	// bRx is the number of bytes received on this connection
-	bRx     uint64
-	bRxLock sync.Mutex
-	// bTx in the number of bytes sent on this connection
-	bTx     uint64
-	bTxLock sync.Mutex
-}
-
-// SecureHost is the analog of Host but with secure communication
-// It is tied to an entity can only open connection with entities
-type SecureHost interface {
-	// Close terminates the `Listen()` function and closes all connections.
-	Close() error
-	Listen(func(SecureConn)) error
-	Open(*ServerIdentity) (SecureConn, error)
-	String() string
-	WorkingAddress() string
-	monitor.CounterIO
-}
-
-// SecureConn is the analog of Conn but for secure communication
-type SecureConn interface {
-	Conn
-	ServerIdentity() *ServerIdentity
-}
-
-// SecureTCPHost is a TcpHost but with the additional property that it handles
-// ServerIdentity.
-type SecureTCPHost struct {
-	*TCPHost
-	// workingAddress is the actual address we're listening. This can
-	// be one of the serverIdentity's Addresses or a chosen address if
-	// serverIdentity has ":0"-addresses.
-	workingAddress string
-	// ServerIdentity of this host
-	serverIdentity *ServerIdentity
-	// Private key tied to this entity
-	private abstract.Scalar
-	// Lock for accessing this structure
-	lockAddress sync.Mutex
-	// list of all connections this host has opened
-	conns     []*SecureTCPConn
-	connMutex sync.Mutex
-}
-
-// SecureTCPConn is a secured tcp connection using ServerIdentity as an identity.
-type SecureTCPConn struct {
-	*TCPConn
-	*SecureTCPHost
-	serverIdentity *ServerIdentity
-}
 
 // Packet is the container for any Msg
 type Packet struct {
@@ -185,7 +55,7 @@ type Packet struct {
 	// ServerIdentity of the others.
 	ServerIdentity *ServerIdentity
 	// the origin of the message
-	From string
+	From Address
 	// What kind of msg do we have
 	MsgType PacketTypeID
 	// The underlying message
@@ -204,7 +74,7 @@ type ServerIdentity struct {
 	// The ServerIdentityID corresponding to that public key
 	ID ServerIdentityID
 	// A slice of addresses of where that Id might be found
-	Addresses []string
+	Address Address
 }
 
 // ServerIdentityID uniquely identifies an ServerIdentity struct
@@ -216,7 +86,7 @@ func (eid ServerIdentityID) Equal(other ServerIdentityID) bool {
 }
 
 func (si *ServerIdentity) String() string {
-	return fmt.Sprintf("%v", si.Addresses)
+	return si.Address.String()
 }
 
 // ServerIdentityType can be used to recognise an ServerIdentity-message
@@ -224,28 +94,20 @@ var ServerIdentityType = RegisterPacketType(ServerIdentity{})
 
 // ServerIdentityToml is the struct that can be marshalled into a toml file
 type ServerIdentityToml struct {
-	Public    string
-	Addresses []string
+	Public  string
+	Address Address
 }
 
 // NewServerIdentity creates a new ServerIdentity based on a public key and with a slice
 // of IP-addresses where to find that entity. The Id is based on a
 // version5-UUID which can include a URL that is based on it's public key.
-func NewServerIdentity(public abstract.Point, addresses ...string) *ServerIdentity {
+func NewServerIdentity(public abstract.Point, address Address) *ServerIdentity {
 	url := NamespaceURL + "id/" + public.String()
 	return &ServerIdentity{
-		Public:    public,
-		Addresses: addresses,
-		ID:        ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
+		Public:  public,
+		Address: address,
+		ID:      ServerIdentityID(uuid.NewV5(uuid.NamespaceURL, url)),
 	}
-}
-
-// First returns the first address available
-func (si *ServerIdentity) First() string {
-	if len(si.Addresses) > 0 {
-		return si.Addresses[0]
-	}
-	return ""
 }
 
 // Equal tests on same public key
@@ -260,8 +122,8 @@ func (si *ServerIdentity) Toml(suite abstract.Suite) *ServerIdentityToml {
 		log.Error("Error while writing public key:", err)
 	}
 	return &ServerIdentityToml{
-		Addresses: si.Addresses,
-		Public:    buf.String(),
+		Address: si.Address,
+		Public:  buf.String(),
 	}
 }
 
@@ -272,12 +134,13 @@ func (si *ServerIdentityToml) ServerIdentity(suite abstract.Suite) *ServerIdenti
 		log.Error("Error while reading public key:", err)
 	}
 	return &ServerIdentity{
-		Public:    pub,
-		Addresses: si.Addresses,
+		Public:  pub,
+		Address: si.Address,
 	}
 }
 
-// GlobalBind returns the global-binding address
+// GlobalBind returns the global-binding address. Given any IP:PORT combination,
+// it will return 0.0.0.0:PORT.
 func GlobalBind(address string) (string, error) {
 	addr := strings.Split(address, ":")
 	if len(addr) != 2 {
@@ -286,26 +149,40 @@ func GlobalBind(address string) (string, error) {
 	return "0.0.0.0:" + addr[1], nil
 }
 
-// handleError produces the higher layer error depending on the type
-// so user of the package can know what is the cause of the problem
-func handleError(err error) error {
+// counterSafe is a struct that enables to update two counters Rx & Tx
+// atomically that can be have increasing values.
+// It's main use is for Conn to update how many bytes they've
+// written / read. This struct implements the monitor.CounterIO interface.
+type counterSafe struct {
+	tx uint64
+	rx uint64
+	sync.Mutex
+}
 
-	if strings.Contains(err.Error(), "use of closed") || strings.Contains(err.Error(), "broken pipe") {
-		return ErrClosed
-	} else if strings.Contains(err.Error(), "canceled") {
-		return ErrCanceled
-	} else if err == io.EOF || strings.Contains(err.Error(), "EOF") {
-		return ErrEOF
-	}
+// Rx returns the rx counter
+func (c *counterSafe) Rx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.rx
+}
 
-	netErr, ok := err.(net.Error)
-	if !ok {
-		return ErrUnknown
-	}
-	if netErr.Temporary() {
-		return ErrTemp
-	} else if netErr.Timeout() {
-		return ErrTimeout
-	}
-	return ErrUnknown
+// Tx returns the tx counter
+func (c *counterSafe) Tx() uint64 {
+	c.Lock()
+	defer c.Unlock()
+	return c.tx
+}
+
+// updateRx adds delta to the rx counter
+func (c *counterSafe) updateRx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.rx += delta
+}
+
+// updateTx adds delta to the tx counter
+func (c *counterSafe) updateTx(delta uint64) {
+	c.Lock()
+	defer c.Unlock()
+	c.tx += delta
 }
