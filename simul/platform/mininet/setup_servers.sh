@@ -6,8 +6,17 @@ SERVER_GW="$1"
 SERVERS="$@"
 KEYS=/tmp/server_keys
 SSH_TYPE="-t ssh-ed25519"
-if grep -q "Debian.*7" /etc/issue; then
-	SSH_TYPE=""
+SSH_ID=~/.ssh/id_rsa
+if [ -f /etc/issue ]; then
+	echo Issue exists
+	if grep -q "Debian.*7" /etc/issue; then
+		SSH_TYPE=""
+	fi
+fi
+
+if [ ! -f $SSH_ID ]; then
+	echo "Creating global key"
+	echo -e '\n\n\n\n' | ssh-keygen
 fi
 
 rm -f $KEYS
@@ -18,7 +27,7 @@ for s in $SERVERS; do
 	ssh-keygen -R $s > /dev/null || true
 	ssh-keygen -R $ip  > /dev/null || true
 	ssh-keyscan $SSH_TYPE $s >> ~/.ssh/known_hosts 2> /dev/null
-	ssh-copy-id $login 2> /dev/null
+	ssh-copy-id -f -i $SSH_ID $login &> /dev/null
 	ssh $login "test ! -f .ssh/id_rsa && echo -e '\n\n\n\n' | ssh-keygen > /dev/null" || true
 	ssh $login cat .ssh/id_rsa.pub >> $KEYS
 	if ! ssh $login "egrep -q '(14.04|Debian GNU/Linux 8)' /etc/issue"; then

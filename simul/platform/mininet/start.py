@@ -39,7 +39,7 @@ socatPort = 5000
 socatSend = "udp-sendto"
 socatRcv = "udp4-listen"
 # Whether to redirect all socats to the main-gateway at 10.1.0.1
-socatDirect = False
+socatDirect = True
 
 def dbg(lvl, *str):
     if lvl <= debugging:
@@ -177,7 +177,7 @@ def GetNetworks(filename):
     It returns the first server encountered, our network if our ip is found
     in the list and the other networks."""
 
-    global simulation, bandwidth, delay, debugging
+    global simulation, bandwidth, delay, debugging, socatDirect
 
     process = Popen(["ip", "a"], stdout=PIPE)
     (ips, err) = process.communicate()
@@ -198,13 +198,19 @@ def GetNetworks(filename):
     otherNets = []
     myNet = None
     pos = 0
+    totalHosts = 0
     for (server, net, count) in list:
+        totalHosts += count
         t = [server, net, count]
         if ips.find('inet %s/' % server) >= 0:
             myNet = [t, pos]
         else:
             otherNets.append(t)
         pos += 1
+
+    if totalHosts > 2000:
+        dbg(0, "Redirection output through local gateway")
+        socatDirect = False
 
     return list[0][0], myNet, otherNets
 
