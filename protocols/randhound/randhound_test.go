@@ -9,52 +9,54 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
-
 func TestRandHound(t *testing.T) {
 
-	// Setup parameters
-	var name string = "RandHound"             // Protocol name
-	var nodes uint32 = 10                     // Number of nodes (peers + leader)
-	var trustees uint32 = 5                   // Number of trustees
-	var purpose string = "RandHound test run" // Purpose
-	var shards uint32 = 2                     // Number of shards created from the randomness
+	var name = "RandHound"
+	var nodes int = 28
+	var faulty int = 2
+	var groups int = 4
+	var purpose string = "RandHound test run"
 
 	local := sda.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), true)
 	defer local.CloseAll()
 
-	// Setup and Start RandHound
+	// Setup and start RandHound
+
 	log.Lvlf1("RandHound - starting")
-	leader, err := local.CreateProtocol(name, tree)
+	protocol, err := local.CreateProtocol(name, tree)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
-	rh := leader.(*randhound.RandHound)
-	err = rh.Setup(nodes, trustees, purpose)
+	rh := protocol.(*randhound.RandHound)
+	err = rh.Setup(nodes, faulty, groups, purpose)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
-	log.Lvlf1("RandHound - group config: %d %d %d %d %d %d\n", rh.Group.N, rh.Group.F, rh.Group.L, rh.Group.K, rh.Group.R, rh.Group.T)
-	log.Lvlf1("RandHound - shards: %d\n", shards)
-	leader.Start()
+	if err := protocol.Start(); err != nil {
+		t.Fatal(err)
+	}
 
 	select {
-	case <-rh.Leader.Done:
+	case <-rh.Done:
 		log.Lvlf1("RandHound - done")
-		rnd, err := rh.Random()
+
+		random, transcript, err := rh.Random()
 		if err != nil {
 			t.Fatal(err)
 		}
-		sharding, err := rh.Shard(rnd, shards)
+		log.Lvlf1("RandHound - collective randomness: ok")
+
+		//log.Lvlf1("RandHound - collective randomness: %v", random)
+
+		err = rh.Verify(rh.Suite(), random, transcript)
 		if err != nil {
 			t.Fatal(err)
 		}
-		log.Lvlf1("RandHound - random bytes: %v\n", rnd)
-		log.Lvlf1("RandHound - sharding: %v\n", sharding)
-	case <-time.After(time.Second * 60):
+		log.Lvlf1("RandHound - verification: ok")
+
+	case <-time.After(time.Second * time.Duration(nodes) * 2):
 		t.Fatal("RandHound – time out")
 	}
+
 }

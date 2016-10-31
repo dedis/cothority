@@ -17,8 +17,6 @@ import (
 // Conode is the structure responsible for holding information about the current
 // state
 type Conode struct {
-	// Our entity (i.e. identity over the network)
-	ServerIdentity *network.ServerIdentity
 	// Our private-key
 	private abstract.Scalar
 	*network.Router
@@ -34,18 +32,9 @@ type Conode struct {
 	protocols *protocolStorage
 }
 
-// NewConode returns a new Host that out of a private-key and its relating public
-// key within the ServerIdentity. The host will create a default TcpRouter as Router.
-func NewConode(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
-	r, err := network.NewTCPRouter(e)
-	log.ErrFatal(err)
-	return NewConodeWithRouter(e, pkey, r)
-}
-
-// NewConodeWithRouter returns a fresh Host with a given Router.
-func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *network.Router) *Conode {
+// NewConode returns a fresh Host with a given Router.
+func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	c := &Conode{
-		ServerIdentity:       e,
 		private:              pkey,
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
@@ -59,6 +48,14 @@ func NewConodeWithRouter(e *network.ServerIdentity, pkey abstract.Scalar, r *net
 		c.ProtocolRegister(name, inst)
 	}
 	return c
+}
+
+// NewConodeTCP returns a new Host that out of a private-key and its relating public
+// key within the ServerIdentity. The host will create a default TcpRouter as Router.
+func NewConodeTCP(e *network.ServerIdentity, pkey abstract.Scalar) *Conode {
+	r, err := network.NewTCPRouter(e)
+	log.ErrFatal(err)
+	return NewConode(r, pkey)
 }
 
 // Suite can (and should) be used to get the underlying abstract.Suite.

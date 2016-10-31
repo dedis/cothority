@@ -386,15 +386,6 @@ func NewClient(s string) *Client {
 	}
 }
 
-// NewLocalClient is for test mainly, it uses the local comunication network
-// offered by the network package.
-func NewLocalClient(s string) *Client {
-	return &Client{
-		ServiceID: ServiceFactory.ServiceID(s),
-		net:       network.NewLocalClient(),
-	}
-}
-
 // Send will marshal the message into a ClientRequest message and send it.
 func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
 
