@@ -14,7 +14,7 @@ func TestRandHound(t *testing.T) {
 	var name = "RandHound"
 	var nodes int = 28
 	var faulty int = 2
-	var groups int = 4
+	var groupSize int = 7
 	var purpose string = "RandHound test run"
 
 	local := sda.NewLocalTest()
@@ -29,7 +29,7 @@ func TestRandHound(t *testing.T) {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
 	rh := protocol.(*randhound.RandHound)
-	err = rh.Setup(nodes, faulty, groups, purpose)
+	err = rh.Setup(nodes, faulty, groupSize, purpose)
 	if err != nil {
 		t.Fatal("Couldn't initialise RandHound protocol:", err)
 	}
