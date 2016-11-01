@@ -424,7 +424,8 @@ func NewTestTCPHost(port int) (*TCPHost, error) {
 	return NewTCPHost(addr)
 }
 
-// Returns a ServerIdentity out of the address
+// NewTestServerIdentity returns a ServerIdentity initialized with Address
+// and with a random key. The private part of the key is lost!
 func NewTestServerIdentity(address Address) *ServerIdentity {
 	kp := config.NewKeyPair(Suite)
 	e := NewServerIdentity(kp.Public, address)

@@ -2,9 +2,11 @@ package jvss
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/poly"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,15 +44,38 @@ func TestJVSS(t *testing.T) {
 		t.Fatal("Couldn't initialise protocol tree:", err)
 	}
 	jv := leader.(*JVSS)
+	secret := make(chan bool)
+	go func() {
+		// wait for longterm generation
+		jv.Longterm()
+		secret <- true
+	}()
 	leader.Start()
+	select {
+	case <-secret:
+	case <-time.After(20 * time.Millisecond):
+		t.Fatal("Did not receive the longterm shared secret")
+	}
 	log.Lvl1("JVSS - setup done")
-
+	secret = make(chan bool, 1)
 	for i := 0; i < rounds; i++ {
 		log.Lvl1("JVSS - starting round", i)
 		log.Lvl1("JVSS - requesting signature")
-		sig, err := jv.Sign(msg)
+		jv.RegisterShortTermCB(func(*poly.SharedSecret) {
+			secret <- true
+		})
+		sid, err := jv.SignPrepare()
+		if err != nil {
+			t.Fatal("Could not generate sid")
+		}
+		sig, err := jv.SignComplete(sid, msg)
 		if err != nil {
 			t.Fatal("Error signature failed", err)
+		}
+		select {
+		case <-secret:
+		case <-time.After(20 * time.Millisecond):
+			t.Fatal("Could not get short term secret in time")
 		}
 		log.Lvl1("JVSS - signature received")
 		err = jv.Verify(msg, sig)

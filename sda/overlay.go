@@ -163,11 +163,11 @@ func (o *Overlay) Process(data *network.Packet) {
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
 func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
+
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
 		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg)
 	}
-
 	o.transmitMux.Lock()
 	defer o.transmitMux.Unlock()
 	// TreeNodeInstance
@@ -177,7 +177,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
-		log.Error("Message for TreeNodeInstance that is already finished")
+		log.Lvl2("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it
@@ -190,11 +190,11 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 		tni := o.newTreeNodeInstanceFromToken(tn, sdaMsg.To)
 		// see if we know the Service Recipient
 		s, ok := o.conode.serviceManager.serviceByID(sdaMsg.To.ServiceID)
-
 		// no servies defined => check if there is a protocol that can be
 		// created
 		if !ok {
 			pi, err = o.conode.ProtocolInstantiate(sdaMsg.To.ProtoID, tni)
+
 			if err != nil {
 				return err
 			}
@@ -220,8 +220,9 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 			fmt.Sprintf("%+v", sdaMsg.To))
 
 	}
-
 	// TODO Check if TreeNodeInstance is already Done
+	//log.Print("Processing message to treenode", sdaMsg.ServerIdentity.Address)
+
 	pi.ProcessProtocolMsg(sdaMsg)
 	return nil
 }
@@ -231,6 +232,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 func (o *Overlay) sendSDAData(si *network.ServerIdentity, sdaMsg *ProtocolMsg) error {
 	b, err := network.MarshalRegisteredType(sdaMsg.Msg)
 	if err != nil {
+		log.Error(err)
 		return fmt.Errorf("Error marshaling message: %s (msg = %+v)", err.Error(), sdaMsg.Msg)
 	}
 	sdaMsg.MsgSlice = b
@@ -273,7 +275,7 @@ func (o *Overlay) checkPendingMessages(t *Tree) {
 				// if this message references t, instantiate it and go
 				err := o.TransmitMsg(msg)
 				if err != nil {
-					log.Error("TransmitMsg failed:", err)
+					log.Error(o.conode.ServerIdentity.Address, "TransmitMsg failed:", err)
 					continue
 				}
 			} else {
