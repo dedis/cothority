@@ -106,7 +106,7 @@ func (rh *RandHound) Start() error {
 
 	// Set some group parameters
 	for i, group := range rh.server {
-		rh.threshold[i] = 2 * len(group) / 3
+		rh.threshold[i] = len(group)/3 + 1
 		rh.polyCommit[i] = make([]abstract.Point, len(group))
 		g := make([]int, len(group))
 		for j, server0 := range group {
