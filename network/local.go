@@ -292,11 +292,11 @@ func newConnQueue() *connQueue {
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
 	c.L.Lock()
-	defer c.L.Unlock()
 	if c.closed {
 		return
 	}
 	c.queue = append(c.queue, buff)
+	c.L.Unlock()
 	c.Signal()
 }
 
@@ -326,8 +326,8 @@ func (c *connQueue) pop() ([]byte, error) {
 // operations to return.
 func (c *connQueue) close() {
 	c.L.Lock()
-	defer c.L.Unlock()
 	c.closed = true
+	c.L.Unlock()
 	c.Broadcast()
 }
 
