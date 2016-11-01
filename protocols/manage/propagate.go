@@ -28,8 +28,8 @@ type Propagate struct {
 		PropagateReply
 	}
 
-	received int
-	subtree  int
+	received     int
+	subtreeCount int
 	sync.Mutex
 }
 
@@ -64,7 +64,7 @@ func NewPropagationFunc(c *sda.Context, name string, f PropagationStore) (Propag
 			sd:               &PropagateSendData{[]byte{}, 1000},
 			TreeNodeInstance: n,
 			received:         0,
-			subtree:          n.TreeNode().SubtreeCount(),
+			subtreeCount:     n.TreeNode().SubtreeCount(),
 			onData:           f,
 		}
 		for _, h := range []interface{}{&p.ChannelSD, &p.ChannelReply} {
@@ -78,7 +78,7 @@ func NewPropagationFunc(c *sda.Context, name string, f PropagationStore) (Propag
 		name, pid)
 	return func(el *sda.Roster, msg network.Body, msec int) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
-		log.Lvl3("Starting to propagate", reflect.TypeOf(msg))
+		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
 		pi, err := c.CreateProtocolSDA(name, tree)
 		if err != nil {
 			return -1, err
@@ -147,11 +147,11 @@ func (p *Propagate) Dispatch() error {
 			}
 		case <-p.ChannelReply:
 			p.received++
-			log.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtree)
+			log.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtreeCount)
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
-			if p.received == p.subtree {
+			if p.received == p.subtreeCount {
 				process = false
 			}
 		case <-time.After(timeout):
@@ -169,16 +169,15 @@ func (p *Propagate) Dispatch() error {
 	return nil
 }
 
-// RegisterOnDone takes a function that will be called once all connections
-// are set up. The argument to the function is the number of children that
-// sent OK after the propagation
+// RegisterOnDone takes a function that will be called once the data has been
+// sent to the whole tree. It receives the number of nodes that replied
+// successfully to the propagation.
 func (p *Propagate) RegisterOnDone(fn func(int)) {
 	p.onDoneCb = fn
 }
 
-// RegisterOnData takes a function that will be called once all connections
-// are set up. The argument to the function is the number of children that
-// sent OK after the propagation
+// RegisterOnData takes a function that will be called for that node if it
+// needs to update its data.
 func (p *Propagate) RegisterOnData(fn PropagationStore) {
 	p.onData = fn
 }
