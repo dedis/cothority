@@ -37,6 +37,11 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 	return sim, err
 }
 
+func (rhs *RHSimulation) Node(sc *sda.SimulationConfig) error {
+	sc.Conode
+	return rhs.SimulationBFTree.Node(sc)
+}
+
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	randM := monitor.NewTimeMeasure("tgen-randhound")
