@@ -82,6 +82,7 @@ func (r *Simulation) Run(config *sda.SimulationConfig) error {
 		}
 		roundM.Record()
 	}
+	log.Lvl1("Randhoundco simulation is finished.")
 	return nil
 }
 

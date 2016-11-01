@@ -2,7 +2,10 @@ Simulation = "Randhoundco"
 Servers = 10
 Bf = 2
 Rounds = 3
-Hosts = 32
+GroupSize = 64
 
-Groups
-16
+Hosts
+128
+256
+512
+1024
