@@ -260,7 +260,6 @@ func (lc *LocalConn) Close() error {
 	if lc.connQueue.isClosed() {
 		return ErrClosed
 	}
-
 	lc.connQueue.close()
 	// close the remote conn also
 	lc.manager.close(lc)
@@ -277,27 +276,27 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
-	*sync.Cond
-	queue  [][]byte
+	queue  chan []byte
 	closed bool
+	sync.Mutex
 }
 
 func newConnQueue() *connQueue {
 	return &connQueue{
-		Cond: sync.NewCond(&sync.Mutex{}),
+		queue: make(chan []byte, 200),
 	}
 }
 
 // push inserts a packet in the queue.
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
-	c.L.Lock()
-	defer c.L.Unlock()
+	c.Lock()
 	if c.closed {
+		c.Unlock()
 		return
 	}
-	c.queue = append(c.queue, buff)
-	c.Signal()
+	c.Unlock()
+	c.queue <- buff
 }
 
 // pop retrieves a packet out of the queue.
@@ -306,35 +305,31 @@ func (c *connQueue) push(buff []byte) {
 // pop returns with an error if the queue is closed or gets closed while waiting
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
-	c.L.Lock()
-	defer c.L.Unlock()
-	for len(c.queue) == 0 {
-		if c.closed {
-			return nil, ErrClosed
-		}
-		c.Wait()
-	}
+	c.Lock()
 	if c.closed {
+		c.Unlock()
 		return nil, ErrClosed
 	}
-	nm := c.queue[0]
-	c.queue = c.queue[1:]
-	return nm, nil
+	c.Unlock()
+	return <-c.queue, nil
 }
 
 // close sets the closed-field to true and signals to all ongoing pop()
 // operations to return.
 func (c *connQueue) close() {
-	c.L.Lock()
-	defer c.L.Unlock()
+	c.Lock()
+	defer c.Unlock()
+	if c.closed {
+		return
+	}
 	c.closed = true
-	c.Broadcast()
+	close(c.queue)
 }
 
 // isClosed returns whether this queue is closed or not.
 func (c *connQueue) isClosed() bool {
-	c.L.Lock()
-	defer c.L.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	return c.closed
 }
 
