@@ -3,6 +3,7 @@ Servers = 4
 Bf = 8
 Rounds = 10
 CloseWait = 6000
+Delay = 100
 
 Hosts
 129

@@ -251,12 +251,22 @@ def plotBW():
     mplot.plotEnd()
 
 def plotRandHerdSetup():
-    plots = read_csvs(snp17rh)
+    plots = read_csvs(snp17rhound, snp17rherd, snp17cosi)
     plot_show("swup_create")
     mplot.plotPrepareLogLog(0, 10)
     width = 0.2
     x = np.arange(len(plots.x))
-    zs = np.zeros(len(x))
+    rhound = np.zeros(len(plots.x), len(groupSizes))
+    rherd = np.zeros(len(plots.x), len(groupSizes))
+    cosi = np.zeros(len(plots.x), len(groupSizes))
+    for hosts in x:
+        for groupSize in groupSizes:
+            rhound[hosts][groupSize] = \
+                plots[0].get_values_filtered('tgen_randhound_wall', 'groupsize', groupSize)
+            rherd[hosts][groupSize] = \
+                plots[1].get_values_filtered('setup_wall', 'groupsize', groupSize)
+            cosi[hosts][groupSize] = \
+                plots[2].get_values('round_wall')
     os = np.ones(len(x))
     vls = [['verification', 'Dev-signature verification'],
            ['swup_timestamp', 'Creating timestamp'],
@@ -364,9 +374,10 @@ write_file = True
 # mplot.show_fig = True
 mplot.show_fig = False
 
-snp17rh = "snp17_randhound_small"
-snp17rhc = "snp17_randhoundco_small"
+snp17rhound = "snp17_randhound_small"
+snp17rherd = "snp17_randherd_small"
 snp17cosi = "snp17_cosi_small"
+groupSizes = [16,64]
 
 # Call all plot-functions
 plotRandHerdSetup()
