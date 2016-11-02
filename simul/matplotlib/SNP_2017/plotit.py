@@ -255,68 +255,33 @@ def plotRandHerdSetup():
     plot_show("swup_create")
     mplot.plotPrepareLogLog(0, 10)
     width = 0.2
-    x = np.arange(len(plots.x))
-    rhound = np.zeros(len(plots.x), len(groupSizes))
-    rherd = np.zeros(len(plots.x), len(groupSizes))
-    cosi = np.zeros(len(plots.x), len(groupSizes))
-    for hosts in x:
-        for groupSize in groupSizes:
-            rhound[hosts][groupSize] = \
-                plots[0].get_values_filtered('tgen_randhound_wall', 'groupsize', groupSize)
-            rherd[hosts][groupSize] = \
-                plots[1].get_values_filtered('setup_wall', 'groupsize', groupSize)
-            cosi[hosts][groupSize] = \
-                plots[2].get_values('round_wall')
-    os = np.ones(len(x))
-    vls = [['verification', 'Dev-signature verification'],
-           ['swup_timestamp', 'Creating timestamp'],
-           ['add_block', 'Collective signing'],
-           ['build', 'Reproducible build']]
-
+    host_list = plots[2].x
+    values = len(host_list)
+    x = np.arange(values)
+    os = np.ones(values)
     handles = []
-    labels = []
-    for index, vl in enumerate(vls):
-        value, label = vl
-        usr = plots.get_values(value+"_user")
-        sys = plots.get_values(value+"_system")
-        ycpu = usr.avg + sys.avg
-        wall = plots.get_values(value+"_wall")
-        ywall = wall.avg
-        yerr = [[ ycpu - sys.min - usr.min, sys.max + usr.max - ycpu ],
-                [ ywall - wall.min, wall.max - ywall ]]
-        if value == 'build':
-            ycpu = os * ycpu[0]
-            ywall = os * ywall[0]
-            yerr[0][0] = [ycpu[0] - 60]
-            yerr[1][0] = [ywall[0] - 60]
-            for i in [0,1,2,3]:
-                yerr[i/2][i%2] = os * yerr[i/2][i%2][0]
+    labels = ['RandHound', 'CoSi', 'JVSS-CoSi']
+    for index, groupSize in enumerate(groupSizes):
+        rhound_wall, rhound_cpu = getWallCPUAvg(plots[0], 'tgen_randhound_wall', 'groupsize', groupSize)
+        rherd_wall, rherd_cpu = getWallCPUAvg(plots[1], 'setup_wall', 'groupsize', groupSize)
+        cosi_wall, cosi_cpu = getWallCPUAvg(plots[2], 'round_wall')
 
-        plt.bar(x+(index-1.5)*width, ycpu, width/2, color=colors[index][0],
+        h1 = plt.bar(x+(index-1.5)*width, rhound_cpu, width/2, color=colors[0][0],
                 hatch='//', yerr=yerr[0], error_kw=dict(ecolor='black'))
-        h = plt.bar(x+(index-1)*width, ywall, width/2, color=colors[index][0],
-                    yerr=yerr[1], error_kw=dict(ecolor='black'))
-        handles.append(h)
-        labels.append(label)
+        h2 = plt.bar(x+(index-1.5)*width, rherd_cpu, width/2, color=colors[1][0],
+                hatch='\\\\', yerr=yerr[0], error_kw=dict(ecolor='black'))
+        h3 = plt.bar(x+(index-1.5)*width, cosi_cpu, width/2, color=colors[2][0],
+                hatch='\\\\', yerr=yerr[0], error_kw=dict(ecolor='black'))
 
-    labels.insert(0, "CPU / Wall")
+        if index == 0:
+            handles.append(h1, h2, h3)
 
-    total = plots.get_values('overall_nobuild_wall').avg + ywall
-    xtotal = x+width/2
-    xtotal = np.concatenate(([xtotal[0]-1], xtotal, [xtotal[-1]+1]))
-    total = np.concatenate(([total[0]], total, [total[-1]]))
-    print total, xtotal
-    oa_wall = plt.plot(xtotal, total, color=colors[len(vls)][1], marker='x')
-    labels.insert(0, "Wall-total over all nodes")
-    plt.xticks(x + width / 2, [3, 15, 127])
+    plt.xticks(x + width / 2, host_list)
 
 
-    plt.legend(oa_wall + [CustomObject()] + handles , labels, loc='upper center',
-               prop={'size':10}, handler_map={CustomObject: CustomObjectHandler()},
-               ncol=2)
-    plt.ylim(0.001, 100000)
-    plt.xlim(x[0]-2*width, x[-1]+3*width)
-    plt.ylabel("Average time spent on each node per package (sec)")
+    plt.legend(handles , labels, loc='upper center',
+               prop={'size':10})
+    plt.ylabel("CPU-time for setting up RandHerd")
     mplot.plotEnd()
 
 def plotRandHerdRound():
@@ -325,6 +290,18 @@ def plotRandHound():
 
 def plotBandwidth():
 
+def getWallCPUAvg(stats, column, filter_name=None, filter_value=None):
+    if filter_name is not None:
+        wall = stats.get_values_filtered(column+"_wall", filter_name, filter_value)
+        usr = stats.get_values_filtered(column+"_usr", filter_name, filter_value)
+        sys = stats.get_values_filtered(column+"_sys", filter_name, filter_value)
+    else:
+        wall = stats.get_values(column+"_wall")
+        usr = stats.get_values(column+"_usr")
+        sys = stats.get_values(column+"_sys")
+
+    cpu = usr.avg + sys.avg
+    return wall.avg, cpu
 
 # Colors for the Cothority
 colors = [['lightgreen', 'green'],
