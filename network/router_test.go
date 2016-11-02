@@ -195,15 +195,18 @@ func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nS
 
 func (p *nSquareProc) Process(pack *Packet) {
 	p.actual++
+	log.Print(p.r.ServerIdentity.Address, "Received message from", pack.ServerIdentity.Address, "=> ", p.actual, " messages so far")
 	if p.actual == p.expected {
 		// release
 		p.wg.Done()
+		log.Print(p.r.ServerIdentity.Address, "Done !")
 		return
 	} else if p.actual > p.expected {
 		p.t.Fatal("Too many response ??")
 	}
 	msg := pack.Msg.(SimpleMessage)
 	p.r.Send(pack.ServerIdentity, &msg)
+	log.Print(p.r.ServerIdentity, "Sent back to ", pack.ServerIdentity.Address)
 }
 
 // Makes a big mesh where every host send and receive to every other hosts
