@@ -250,9 +250,9 @@ def plotBW():
     plt.legend(loc=(0.4,0.2))
     mplot.plotEnd()
 
-def plotRandHerdSetup():
+def plotRandHerdSetup(timeStr):
     plots = read_csvs(snp17rhound, snp17rherd, snp17cosi)
-    plot_show("swup_create")
+    plot_show("randherd_setup_" + timeStr)
     mplot.plotPrepareLogLog(0, 10)
     width = 0.2
     host_list = plots[2].x
@@ -260,45 +260,56 @@ def plotRandHerdSetup():
     x = np.arange(values)
     os = np.ones(values)
     handles = []
-    labels = ['RandHound', 'CoSi', 'JVSS-CoSi']
+    labels = ['CoSi', 'JVSS-CoSi', 'RandHound']
     for index, groupSize in enumerate(groupSizes):
-        rhound_wall, rhound_cpu = getWallCPUAvg(plots[0], 'tgen_randhound_wall', 'groupsize', groupSize)
-        rherd_wall, rherd_cpu = getWallCPUAvg(plots[1], 'setup_wall', 'groupsize', groupSize)
-        cosi_wall, cosi_cpu = getWallCPUAvg(plots[2], 'round_wall')
+        cosi_wall, cosi_cpu = getWallCPUAvg(plots[2], 'round')
+        jvsscosi_wall, jvsscosi_cpu = getWallCPUAvg(plots[1], 'setup', 'groupsize', groupSize)
+        rhound_wall, rhound_cpu = getWallCPUAvg(plots[0], 'tgen-randhound', 'groupsize', groupSize)
+        if timeStr == 'CPU':
+            cosi, jvsscosi, rhound = cosi_cpu, jvsscosi_cpu, rhound_cpu
+        else:
+            cosi, jvsscosi, rhound = cosi_wall, jvsscosi_wall, rhound_wall
 
-        h1 = plt.bar(x+(index-1.5)*width, rhound_cpu, width/2, color=colors[0][0],
-                hatch='//', yerr=yerr[0], error_kw=dict(ecolor='black'))
-        h2 = plt.bar(x+(index-1.5)*width, rherd_cpu, width/2, color=colors[1][0],
-                hatch='\\\\', yerr=yerr[0], error_kw=dict(ecolor='black'))
-        h3 = plt.bar(x+(index-1.5)*width, cosi_cpu, width/2, color=colors[2][0],
-                hatch='\\\\', yerr=yerr[0], error_kw=dict(ecolor='black'))
+        print x, rhound_cpu.tolist()
+        h1 = plt.bar(x+(index-1.5)*width, cosi, width/2, color=colors[1][0])
+        h2 = plt.bar(x+(index-1.5)*width, jvsscosi, width/2, color=colors[2][0],
+                bottom=cosi)
+        h3 = plt.bar(x+(index-1.5)*width, rhound, width/2, color=colors[0][0],
+                bottom=cosi+jvsscosi)
 
         if index == 0:
-            handles.append(h1, h2, h3)
+            handles = [h1, h2, h3]
+            ymin = cosi[0]
+
+        if index == len(groupSizes) - 1:
+            lastx = values - 1
+            ymax = cosi[lastx] + jvsscosi[lastx] + rhound[lastx]
 
     plt.xticks(x + width / 2, host_list)
-
-
     plt.legend(handles , labels, loc='upper center',
                prop={'size':10})
-    plt.ylabel("CPU-time for setting up RandHerd")
+    plt.ylabel(timeStr + "-time for setting up RandHerd")
+    plt.ylim(ymin / 5, ymax * 5)
     mplot.plotEnd()
 
 def plotRandHerdRound():
+    print("Not implemented yet")
 
 def plotRandHound():
+    print("Not implemented yet")
 
 def plotBandwidth():
+    print("Not implemented yet")
 
 def getWallCPUAvg(stats, column, filter_name=None, filter_value=None):
     if filter_name is not None:
         wall = stats.get_values_filtered(column+"_wall", filter_name, filter_value)
-        usr = stats.get_values_filtered(column+"_usr", filter_name, filter_value)
-        sys = stats.get_values_filtered(column+"_sys", filter_name, filter_value)
+        usr = stats.get_values_filtered(column+"_user", filter_name, filter_value)
+        sys = stats.get_values_filtered(column+"_system", filter_name, filter_value)
     else:
         wall = stats.get_values(column+"_wall")
-        usr = stats.get_values(column+"_usr")
-        sys = stats.get_values(column+"_sys")
+        usr = stats.get_values(column+"_user")
+        sys = stats.get_values(column+"_system")
 
     cpu = usr.avg + sys.avg
     return wall.avg, cpu
@@ -357,7 +368,8 @@ snp17cosi = "snp17_cosi_small"
 groupSizes = [16,64]
 
 # Call all plot-functions
-plotRandHerdSetup()
+plotRandHerdSetup('Wall')
+plotRandHerdSetup('CPU')
 # plotRandHerdRound()
 # plotRandHound()
 # plotBandwidth()
