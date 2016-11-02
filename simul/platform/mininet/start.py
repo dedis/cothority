@@ -230,7 +230,6 @@ def call_other(server, list_file):
 if __name__ == '__main__':
     # setLogLevel('info')
     # With this loglevel CLI(net) does not report correctly.
-    dbg(1, "mbp: ", sys.argv)
     lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         dbg(0, "please give list-name")
@@ -240,7 +239,7 @@ if __name__ == '__main__':
     global_root, myNet, otherNets = GetNetworks(list_file)
 
     if myNet:
-        dbg( 1, "Cleaning up mininet and logfiles" )
+        dbg( 2, "Cleaning up mininet and logfiles" )
         # rm_file(logfile)
         rm_file(logdone)
         call("mn -c > /dev/null 2>&1", shell=True)

@@ -1,0 +1,18 @@
+Simulation = "Randhoundco"
+Servers = 4
+Bf = 2
+Rounds = 1
+RunWait = 3600
+Delay = 100
+
+Hosts, GroupSize
+129, 16
+129, 64
+257, 16
+257, 64
+513, 16
+513, 64
+769, 16
+769, 64
+1025, 16
+1025, 64

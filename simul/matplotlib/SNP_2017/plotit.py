@@ -250,6 +250,71 @@ def plotBW():
     plt.legend(loc=(0.4,0.2))
     mplot.plotEnd()
 
+def plotRandHerdSetup():
+    plots = read_csvs(snp17rh)
+    plot_show("swup_create")
+    mplot.plotPrepareLogLog(0, 10)
+    width = 0.2
+    x = np.arange(len(plots.x))
+    zs = np.zeros(len(x))
+    os = np.ones(len(x))
+    vls = [['verification', 'Dev-signature verification'],
+           ['swup_timestamp', 'Creating timestamp'],
+           ['add_block', 'Collective signing'],
+           ['build', 'Reproducible build']]
+
+    handles = []
+    labels = []
+    for index, vl in enumerate(vls):
+        value, label = vl
+        usr = plots.get_values(value+"_user")
+        sys = plots.get_values(value+"_system")
+        ycpu = usr.avg + sys.avg
+        wall = plots.get_values(value+"_wall")
+        ywall = wall.avg
+        yerr = [[ ycpu - sys.min - usr.min, sys.max + usr.max - ycpu ],
+                [ ywall - wall.min, wall.max - ywall ]]
+        if value == 'build':
+            ycpu = os * ycpu[0]
+            ywall = os * ywall[0]
+            yerr[0][0] = [ycpu[0] - 60]
+            yerr[1][0] = [ywall[0] - 60]
+            for i in [0,1,2,3]:
+                yerr[i/2][i%2] = os * yerr[i/2][i%2][0]
+
+        plt.bar(x+(index-1.5)*width, ycpu, width/2, color=colors[index][0],
+                hatch='//', yerr=yerr[0], error_kw=dict(ecolor='black'))
+        h = plt.bar(x+(index-1)*width, ywall, width/2, color=colors[index][0],
+                    yerr=yerr[1], error_kw=dict(ecolor='black'))
+        handles.append(h)
+        labels.append(label)
+
+    labels.insert(0, "CPU / Wall")
+
+    total = plots.get_values('overall_nobuild_wall').avg + ywall
+    xtotal = x+width/2
+    xtotal = np.concatenate(([xtotal[0]-1], xtotal, [xtotal[-1]+1]))
+    total = np.concatenate(([total[0]], total, [total[-1]]))
+    print total, xtotal
+    oa_wall = plt.plot(xtotal, total, color=colors[len(vls)][1], marker='x')
+    labels.insert(0, "Wall-total over all nodes")
+    plt.xticks(x + width / 2, [3, 15, 127])
+
+
+    plt.legend(oa_wall + [CustomObject()] + handles , labels, loc='upper center',
+               prop={'size':10}, handler_map={CustomObject: CustomObjectHandler()},
+               ncol=2)
+    plt.ylim(0.001, 100000)
+    plt.xlim(x[0]-2*width, x[-1]+3*width)
+    plt.ylabel("Average time spent on each node per package (sec)")
+    mplot.plotEnd()
+
+def plotRandHerdRound():
+
+def plotRandHound():
+
+def plotBandwidth():
+
 
 # Colors for the Cothority
 colors = [['lightgreen', 'green'],
@@ -299,8 +364,12 @@ write_file = True
 # mplot.show_fig = True
 mplot.show_fig = False
 
+snp17rh = "snp17_randhound_small"
+snp17rhc = "snp17_randhoundco_small"
+snp17cosi = "snp17_cosi_small"
+
 # Call all plot-functions
-# plotVerify()
-plotSBCreation()
-plotBuildCDF()
-plotBW()
+plotRandHerdSetup()
+# plotRandHerdRound()
+# plotRandHound()
+# plotBandwidth()

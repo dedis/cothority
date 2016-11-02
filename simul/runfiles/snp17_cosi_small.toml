@@ -1,0 +1,12 @@
+Simulation = "CoSimul"
+Servers = 4
+Bf = 8
+Rounds = 10
+CloseWait = 6000
+
+Hosts
+129
+257
+513
+769
+1025
