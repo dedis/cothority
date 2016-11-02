@@ -71,7 +71,7 @@ type MiniNet struct {
 	// Whether to show color debugging-messages
 	DebugColor bool
 	// The number of seconds to wait for closing the connection
-	CloseWait int
+	RunWait int
 	// Delay in ms of the network connection
 	Delay int
 	// Bandwidth in Mbps of the network connection
@@ -93,6 +93,8 @@ func (m *MiniNet) Configure(pc *Config) {
 	m.ProxyAddress = "localhost"
 	m.MonitorPort = pc.MonitorPort
 	m.Debug = pc.Debug
+	m.DebugTime = log.ShowTime()
+	m.DebugColor = log.UseColors()
 
 	m.Delay = 0
 	m.Bandwidth = 1000
@@ -261,7 +263,7 @@ func (m *MiniNet) Start(args ...string) error {
 
 // Wait blocks on the channel till the main-process finishes.
 func (m *MiniNet) Wait() error {
-	wait := m.CloseWait
+	wait := m.RunWait
 	if wait == 0 {
 		wait = 600
 	}
@@ -288,8 +290,8 @@ func (m *MiniNet) Wait() error {
 func (m *MiniNet) parseServers() error {
 	hosts, err := ioutil.ReadFile(path.Join(m.mininetDir, "server_list"))
 	if err != nil {
-		return fmt.Errorf("Couldn't find %s/server_list - you can produce one with\n"+
-			"\t\t%s/setup_servers.sh", m.mininetDir, m.mininetDir)
+		return fmt.Errorf("Couldn't find %[1]s/server_list - you can produce one with\n"+
+			"\t\t%[1]s/setup_servers.sh\n\t\tor\n\t\t%[1]s/setup_iccluster.sh", m.mininetDir)
 	}
 	m.HostIPs = []string{}
 	for _, hostRaw := range strings.Split(string(hosts), "\n") {
@@ -370,7 +372,8 @@ func (m *MiniNet) getHostList(rc RunConfig) (hosts []string, list string, err er
 	if d, err := rc.GetInt("Delay"); err == nil {
 		delay = d
 	}
-	list = fmt.Sprintf("%s %d %d %d\n", m.Simulation, m.Debug, bandwidth, delay)
+	list = fmt.Sprintf("%s %d %d\n%d %t %t\n", m.Simulation, bandwidth, delay,
+		m.Debug, m.DebugTime, m.DebugColor)
 
 	// Add descriptions for `start.py` to know which mininet-network it has to
 	// run on what physical server with how many hosts.
