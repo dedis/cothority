@@ -281,11 +281,13 @@ type connQueue struct {
 	sync.Mutex
 }
 
-const LOCAL_MAX_BUFFER = 200
+// LocalMaxBuffer is the size of packets that can be sent simultaneously to the
+// same address.
+const LocalMaxBuffer = 200
 
 func newConnQueue() *connQueue {
 	return &connQueue{
-		queue: make(chan []byte, LOCAL_MAX_BUFFER),
+		queue: make(chan []byte, LocalMaxBuffer),
 	}
 }
 
