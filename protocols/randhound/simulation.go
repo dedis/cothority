@@ -38,7 +38,6 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 }
 
 func (rhs *RHSimulation) Node(sc *sda.SimulationConfig) error {
-	sc.Conode
 	return rhs.SimulationBFTree.Node(sc)
 }
 
