@@ -1,5 +1,6 @@
 package ppsi
 
+
 import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -37,6 +38,10 @@ type PlainMessage struct {
 	mode int
 }
 
+type DoneMessage struct {
+	mode int
+}
+
 type chanSetsRequest struct {
 	*sda.TreeNode
 	SetsRequest
@@ -60,3 +65,4 @@ type chanPlainMessage struct {
 	*sda.TreeNode
 	PlainMessage
 }
+
