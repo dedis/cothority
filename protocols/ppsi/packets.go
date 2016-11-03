@@ -1,4 +1,4 @@
-package ppsi
+package main
 
 
 import (
@@ -9,6 +9,7 @@ import (
 
 type SetsRequest struct {
 	SetsIds []int
+	numAuthorities int
 	
 }
 
@@ -16,6 +17,8 @@ type ElgEncryptedMessage struct {
 	Content []map[int]abstract.Point
 	users map[int]int
 	mode int
+	numPhones int
+	sets int
 }
 
 
@@ -39,6 +42,7 @@ type PlainMessage struct {
 }
 
 type DoneMessage struct {
+	Src int
 	mode int
 }
 
