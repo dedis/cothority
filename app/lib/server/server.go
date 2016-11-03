@@ -27,9 +27,9 @@ import (
 	"github.com/dedis/crypto/cosi"
 	// Empty imports to have the init-functions called which should
 	// register the protocol.
-	_ "github.com/dedis/cosi/protocol"
+	_ "github.com/dedis/cothority/protocols/cosi"
 	// For the moment, the server only serves CoSi requests
-	s "github.com/dedis/cosi/service"
+	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )

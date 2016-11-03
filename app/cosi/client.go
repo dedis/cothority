@@ -12,13 +12,13 @@ import (
 
 	"fmt"
 
-	s "github.com/dedis/cosi/service"
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
 	"gopkg.in/urfave/cli.v1"

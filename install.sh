@@ -25,16 +25,5 @@ fi
 
 echo "Using branch $BRANCH"
 
-#pattern="refactor_*"
-pattern="protocols_conode_632"
-if [[ $BRANCH =~ $pattern ]]; then 
-    echo "Using refactored branch $BRANCH - fetching cosi"
-    repo=github.com/dedis/cosi
-    go get -d $repo
-    cd $GOPATH/src/$repo
-    git checkout -f $BRANCH
-    echo $(git rev-parse --abbrev-ref HEAD)
-fi
-
 cd $TRAVIS_BUILD_DIR
 go get -t ./...
