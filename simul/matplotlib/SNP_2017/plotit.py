@@ -251,7 +251,7 @@ def plotBW():
     mplot.plotEnd()
 
 def plotRandHerdSetup(timeStr):
-    plots = read_csvs(snp17rhound, snp17rherd, snp17cosi)
+    plots = read_csvs(snp17rhound, snp17jvsscosi, snp17cosi)
     plot_show("randherd_setup_" + timeStr)
     mplot.plotPrepareLogLog(0, 10)
     width = 0.2
@@ -260,7 +260,7 @@ def plotRandHerdSetup(timeStr):
     x = np.arange(values)
     os = np.ones(values)
     handles = []
-    labels = ['CoSi', 'JVSS-CoSi', 'RandHound']
+    labels = ['RandHound', 'JVSS-CoSi', 'CoSi']
     for index, groupSize in enumerate(groupSizes):
         cosi_wall, cosi_cpu = getWallCPUAvg(plots[2], 'round')
         jvsscosi_wall, jvsscosi_cpu = getWallCPUAvg(plots[1], 'setup', 'groupsize', groupSize)
@@ -278,7 +278,7 @@ def plotRandHerdSetup(timeStr):
                 bottom=cosi+jvsscosi)
 
         if index == 0:
-            handles = [h1, h2, h3]
+            handles = [h3, h2, h1]
             ymin = cosi[0]
 
         if index == len(groupSizes) - 1:
@@ -363,7 +363,7 @@ write_file = True
 mplot.show_fig = False
 
 snp17rhound = "snp17_randhound_small"
-snp17rherd = "snp17_randherd_small"
+snp17jvsscosi = "snp17_jvsscosi_small"
 snp17cosi = "snp17_cosi_small"
 groupSizes = [16,64]
 
