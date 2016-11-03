@@ -122,6 +122,10 @@ func (a Address) Host() string {
 	if e != nil {
 		return ""
 	}
+	// IPv6 unspecified address has to be in brackets.
+	if h == "::" {
+		h = "[::]"
+	}
 	return h
 }
 
@@ -148,7 +152,8 @@ func (a Address) Port() string {
 func (a Address) Public() bool {
 	private, err := regexp.MatchString("(^127\\.)|(^10\\.)|"+
 		"(^172\\.1[6-9]\\.)|(^172\\.2[0-9]\\.)|"+
-		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)|(^169\\.254)", a.NetworkAddress())
+		"(^172\\.3[0-1]\\.)|(^192\\.168\\.)|(^169\\.254)|"+
+		"(^\\[::\\])", a.NetworkAddress())
 	if err != nil {
 		return false
 	}

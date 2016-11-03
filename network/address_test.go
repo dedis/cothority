@@ -3,6 +3,7 @@ package network
 import (
 	"testing"
 
+	"github.com/dedis/cothority/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,6 +40,7 @@ func TestAddress(t *testing.T) {
 		{"tcp://10.0.0.4:2000", true, PlainTCP, "10.0.0.4:2000", "10.0.0.4", "2000", false},
 		{"tcp://67.43.129.85:2000", true, PlainTCP, "67.43.129.85:2000", "67.43.129.85", "2000", true},
 		{"purb://10.0.0.4:2000", true, PURB, "10.0.0.4:2000", "10.0.0.4", "2000", false},
+		{"tls://[::]:1000", true, TLS, "[::]:1000", "[::]", "1000", false},
 		{"tls4://10.0.0.4:2000", false, InvalidConnType, "", "", "", false},
 		{"tls://1000.0.0.4:2000", false, InvalidConnType, "", "", "", false},
 		{"tls://10.0.0.4:20000000", false, InvalidConnType, "", "", "", false},
@@ -51,6 +53,7 @@ func TestAddress(t *testing.T) {
 	}
 
 	for i, str := range tests {
+		log.Lvl1("Testing", str)
 		add := Address(str.Value)
 		assert.Equal(t, str.Valid, add.Valid(), "Address (%d) %s", i, str.Value)
 		assert.Equal(t, str.Type, add.ConnType(), "Address (%d) %s", i, str.Value)
