@@ -57,6 +57,15 @@ func (c *Context) CreateProtocolSDA(name string, t *Tree) (ProtocolInstance, err
 	return pi, err
 }
 
+// ProtocolRegister signs up a new protocol to this Conode. Contrary go
+// GlobalProtocolRegister, the protocol registered here is tied to that conode.
+// This is useful for simulations where more than one Conode exists in the
+// global namespace.
+// It returns the ID of the protocol.
+func (c *Context) ProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
+	return c.conode.ProtocolRegister(name, protocol)
+}
+
 // RegisterProtocolInstance registers a new instance of a protocol using overlay.
 func (c *Context) RegisterProtocolInstance(pi ProtocolInstance) error {
 	return c.overlay.RegisterProtocolInstance(pi)
