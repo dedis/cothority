@@ -391,13 +391,18 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	var err error
 	s.propagateIdentity, err =
 		manage.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
+	if err != nil {
+		return nil
+	}
 	s.propagateSkipBlock, err =
 		manage.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
+	if err != nil {
+		return nil
+	}
 	s.propagateConfig, err =
 		manage.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateConfigHandler)
 	if err != nil {
-		log.Error(err)
-		return nil
+		return nill
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

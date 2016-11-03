@@ -64,7 +64,6 @@ var stdOut io.Writer
 var stdErr io.Writer
 
 func init() {
-	ParseEnv()
 	stdOut = os.Stdout
 	stdErr = os.Stderr
 }

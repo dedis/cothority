@@ -10,7 +10,6 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/satori/go.uuid"
 )
 
 type PropagateMsg struct {
@@ -31,8 +30,8 @@ func TestPropagate(t *testing.T) {
 		propFuncs := make([]PropagationFunc, nbrNodes)
 		var err error
 		for n, conode := range conodes {
-			c := local.NewContext(conode.ServerIdentity, sda.ServiceID(uuid.Nil), nil)
-			propFuncs[n], err = NewPropagationFunc(c,
+			pc := &PC{conode, local.Overlays[conode.ServerIdentity.ID]}
+			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
 				func(m network.Body) {
 					if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
@@ -56,4 +55,20 @@ func TestPropagate(t *testing.T) {
 		local.CloseAll()
 		log.AfterTest(t)
 	}
+}
+
+type PC struct {
+	C *sda.Conode
+	O *sda.Overlay
+}
+
+func (pc *PC) ProtocolRegister(name string, protocol sda.NewProtocol) (sda.ProtocolID, error) {
+	return pc.C.ProtocolRegister(name, protocol)
+}
+func (pc *PC) ServerIdentity() *network.ServerIdentity {
+	return pc.C.ServerIdentity
+
+}
+func (pc *PC) CreateProtocolSDA(name string, t *sda.Tree) (sda.ProtocolInstance, error) {
+	return pc.O.CreateProtocolSDA(name, t)
 }

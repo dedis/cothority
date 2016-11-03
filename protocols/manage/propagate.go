@@ -56,9 +56,16 @@ type PropagationFunc func(el *sda.Roster, msg network.Body, msec int) (int, erro
 // PropagationStore is the function that will store the new data.
 type PropagationStore func(network.Body)
 
+// propagationContext is used for testing.
+type propagationContext interface {
+	ProtocolRegister(name string, protocol sda.NewProtocol) (sda.ProtocolID, error)
+	ServerIdentity() *network.ServerIdentity
+	CreateProtocolSDA(name string, t *sda.Tree) (sda.ProtocolInstance, error)
+}
+
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-func NewPropagationFunc(c *sda.Context, name string, f PropagationStore) (PropagationFunc, error) {
+func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, 1000},
