@@ -74,3 +74,4 @@ done
 
 echo "Done installing to:"
 cat server_list
+rm $KEYS

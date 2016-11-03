@@ -71,7 +71,7 @@ type MiniNet struct {
 	// Whether to show color debugging-messages
 	DebugColor bool
 	// The number of seconds to wait for closing the connection
-	CloseWait int
+	RunWait int
 	// Delay in ms of the network connection
 	Delay int
 	// Bandwidth in Mbps of the network connection
@@ -263,7 +263,7 @@ func (m *MiniNet) Start(args ...string) error {
 
 // Wait blocks on the channel till the main-process finishes.
 func (m *MiniNet) Wait() error {
-	wait := m.CloseWait
+	wait := m.RunWait
 	if wait == 0 {
 		wait = 600
 	}
