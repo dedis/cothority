@@ -1,4 +1,4 @@
-package ppsi
+package Elgamal //should be in the general crypto project
 
 import (
 	"github.com/dedis/crypto/abstract"
