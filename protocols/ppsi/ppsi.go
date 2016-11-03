@@ -1,23 +1,39 @@
-package protocol
+package main
 
 import (
-	"fmt"
-	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/ppsi"
-)
+	//"github.com/dedis/crypto/ppsi_crypto_utils"
+	)
 
 var Name = "PPSI"
 
+//0 root-initiateing authority
+//1-n-2 authorities
+//n-1 repository
+
 func init() {
-	sda.ProtocolRegisterName(Name, NewPPSI)
+	sda.GlobalProtocolRegister(Name, NewPPSI)
 }
 
 type PPSI struct {
+	
+	hasPlain int
+	
+	finalIntersection []string
+	
+	setsToIntersect int
+	
+	sets int
 
+	id int //?
+	
+	numAuthorities int
+	
+	tempIntersection []abstract.Point
+	
 	IdsToInterset []int
 	
 	SetsReq chan chanSetsRequest
@@ -26,7 +42,7 @@ type PPSI struct {
 	
 	FullyPhEncrypted chan chanFullyPhEncryptedMessage
 	
-	EncryptedSets map[int][]abstract.Scalar
+	EncryptedSets map[int][]map[int]abstract.Point
 	
 	PartiallyPhDecrypted chan chanPartiallyPhDecryptedMessage
 	
@@ -35,32 +51,48 @@ type PPSI struct {
 	done chan bool
   
         MAX_SIZE int // need to initialize it-user arguments? configuration file?
-	
-	FinalIntersectionHook finalIntersectionHook
 
-	next *TreeNode 
+	next int 
 	
 	*sda.TreeNodeInstance
 	
 	treeNodeID sda.TreeNodeID
 	
-	ppsi *ppsi.PPSI
+	ppsi *ppsi_crypto_utils.PPSI
+	
+	
 	
 }
 
-type  finalIntersectionHook func(in []abstract.Scalar) 
+
 	
 func NewPPSI(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) { 
 	var err error
+	
+	publics := make([]abstract.Point, len(node.Roster().List))
+	for i, e := range node.Roster().List {
+		publics[i] = e.Public
+	}
 
-	c := &ppsi{
-		ppsi:             ppsi.NewPPSI(node.Suite(), node.Private()),
+	c := &PPSI{
+		ppsi:             ppsi_crypto_utils.NewPPSI(node.Suite(), node.Private(), publics),
 		TreeNodeInstance: node,
 		done:             make(chan bool),
                 
 	}
 	
-	c.next := // need to initialize it-user arguments? configuration file?
+	
+	
+	c.numnodes =len(node.Roster().List)
+	c.next = c.id+1
+	//c.next := c.id+1
+	 if c.id== c.numnodes-2{ 
+		c.next = 0
+	}
+	  if c.id== c.numnodes-1 {
+		c.next = 0
+	}
+	
 	
     if err := node.RegisterChannel(&c.SetsReq); err != nil {
 		return c, err
@@ -107,54 +139,67 @@ func (c *PPSI) Dispatch() error {
 }
 
 
-func (c *ppsi) Start() error {
+
+func (c *PPSI) Start() error {
+	var id int
 	out := &SetsRequest{
-	    SetsIds: IdsToInterset,
+	    SetsIds: c.IdsToInterset,
+	    numAuthorities : c.numAuthorities,
+	
 		}
-	return c.SendTo(c.Parent(), out)
+	//id =c.numnodes-1
+	return //c.SendTo(id  , out)
 }
 
 
-
-func (c *ppsi) handleSetsRequest(in *SetsRequest) error {
-	var index i
-
-	for _, node := range c.Children() {
-		out=EncryptedSets[SetsIds[i]]
+func (c *PPSI) handleSetsRequest(in *SetsRequest) error {
+	
+	
+for i, e := range c.TreeNodeInstance.Roster().List {
+		
+	if e!=c.TreeNodeInstance{ //invalid operation: e != c.TreeNodeInstance (mismatched types *network.ServerIdentity and *sda.TreeNodeInstance)
+		users := make(map[int]int, in.numAuthorities)
+		
+		out :=c.EncryptedSets[in.SetsIds[i]]
 		outMsg := &ElgEncryptedMessage{
 				Content: out,
-				users: 0,   
+				users: users,   
 				mode: 0,
+				numPhones: len(out),
+				sets : len(SetsIds),
 				}
-		if err := c.SendTo(node, outMsg); err != nil {
+		if err := c.SendTo(e, outMsg); err != nil {
 			return err
-		}
-		i := i+1
+		
 	}
-	return nil
+	}
+}
 
-	
-  
+return nil
+}
 
-func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
-        phones := in.Content
-	if !c.IsLastToDecElg() {//already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
+func(c *PPSI) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
+	c.sets= in.sets
+     phones := in.Content
+	 if !c.IsLastToDecElg(in.users[c.id]) {
+	 	c.ppsi.initPPSI(in.numPhones)
+	   
+		out := c.ppsi.DecryptElgEncrptPH(phones, c.id)   //SHUFFLE?
 	
-		out := c.DecryptElgEncrptPH( phones)   
-	
-		in.users[id] = in.users[id]+1 //need to decide on unique id-maybe the token that each node has?
+		in.users[c.id] = in.users[c.id]+1 //need to decide on unique id-maybe the token that each node has?
 	
 		outMsg := &ElgEncryptedMessage{
 			 Content: out,
-			 users: in.users,   //reference? value?
+			 users: in.users,   
 			 mode: in.mode,
 			}
 		
 		return c.SendTo(c.next, outMsg)
 	}
 	
-	else {
-	        encPH := ExtractPHEncryptions(phones)
+	 if c.IsLastToDecElg(in.users[c.id]) {
+	    encPH := c.ppsi.ExtractPHEncryptions(phones)
+		c.tempIntersection = encPH
 		outMsg := &FullyPhEncryptedMessage{
 			Content: encPH,
 			users: in.users,
@@ -166,51 +211,87 @@ func (c *ppsi) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
 
 }
 
-func (c *ppsi) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error {
-        phones := in.Content
-	if !c.IsLastToIntersect() {
-		intersect, size=c.computeIntersection( phones)
-	
-		if !wantToDecrypt(size) {
-			return c.handleIllegalIntersection(size)}
-		}
-	
-		else {
+func (c *PPSI) handleFullyPhEncryptedMessage(in *FullyPhEncryptedMessage) error {
 
-		in.users[id] = in.users[id]+1
-		outMsg := &FullyPhEncryptedMessage{
-			Content: in.Content,
-			users: in.users,
-			mode: in.mode,
-				}
+    phones := in.Content
+	 
+	if !c.IsLastToIntersect(in.users[c.id]) { //first time I get the message
+	
+		c.computeIntersection(phones)
+	
+		c.setsToIntersect = c.setsToIntersect+1
 		
-		return c.SendTo(c.next, outMsg)
+		if c.setsToIntersect<c.sets {
+	
+			in.users[c.id] = in.users[c.id]+1
+			outMsg := &FullyPhEncryptedMessage{
+				Content: in.Content,
+				users: in.users,
+				mode: in.mode,
+					}
+		
+			return c.SendTo(c.next, outMsg)
 		}
 	
-	else{
-	
-		out := c.DecryptPH( phones)
-		in.users[id] = in.users[id]+1
-	
-		outMsg := &PartiallyPhDecryptedMessage{
-			Content: out,
-			users: in.users,
-			mode: 2,
+		if c.setsToIntersect==c.sets {
+	    
+			if !c.wantToDecrypt() {
+				return c.handleIllegalIntersection()
 			}
+			
+			if c.wantToDecrypt(){
+				out := c.ppsi.DecryptPH( c.tempIntersection )
+				in.users[c.id] = in.users[c.id]+1
 	
-		return c.SendTo(c.next, outMsg)
+				outMsg := &PartiallyPhDecryptedMessage{
+					Content: out,
+					users: in.users,
+					mode: 2,
+					}
 	
+				return c.SendTo(c.next, outMsg)
+	
+			}
+		}
 	}
-}
-
-
-
-func (c *ppsi) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage) error {
-        phones := in.Content
-	if !c.IsLastToDecPH() {        //already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
 	
-		out := c.DecryptPH( phones)  
-		in.users[id] = in.users[id]+1
+	if c.IsLastToIntersect(in.users[c.id]) { // already receives the message-hence already computed the intersection
+	
+		if c.setsToIntersect==c.sets {
+	        
+			if !c.wantToDecrypt() {
+				return c.handleIllegalIntersection()
+			}
+			
+			if c.wantToDecrypt(){
+				out := c.ppsi.DecryptPH( c.tempIntersection )
+				in.users[c.id] = in.users[c.id]+1
+	
+				outMsg := &PartiallyPhDecryptedMessage{
+					Content: out,
+					users: in.users,
+					mode: 2,
+					}
+	
+				return c.SendTo(c.next, outMsg)
+			}
+	    }
+	}
+	
+	return nil
+}
+	
+	 
+
+
+
+
+func (c *PPSI) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage) error {
+    phones := in.Content
+	if !c.IsLastToDecPH(in.users[c.id]) {        //already decrypted it elgamal and encrypted it ph-so stage 0 is finished and if not-this is an error-need to add tests for those error scenarios
+	  
+		out := c.ppsi.DecryptPH( phones ) 
+		in.users[c.id] = in.users[c.id]+1
 		outMsg := &PartiallyPhDecryptedMessage{
 			Content: out,
 			users: in.users,
@@ -220,93 +301,131 @@ func (c *ppsi) handlePartiallyPhDecryptedMessage(in *PartiallyPhDecryptedMessage
 		return c.SendTo(c.next, outMsg)
 	}
 	
-	else {
-		out := c.ExtractPlains( phones )
-		in.users[id] = in.users[id]+1
+	if c.IsLastToDecPH(in.users[c.id]) {
+	    out := c.ppsi.ExtractPlains( phones )
+		in.users[c.id] = in.users[c.id]+1
 		outMsg := &PlainMessage{
 			Content: out,
 			users: in.users,
-			mode: 3
+			mode: 3,
 				}
 	
 		return c.handlePlainMessage(outMsg)
 	}
-
+return nil
 }
 
 
-func (c *ppsi) handlePlainMessage(in *PlainMessage) error {
+func (c *PPSI) handlePlainMessage(in *PlainMessage) error {
 
-	defer func() {
-		close(c.done)
-		c.Done()
-	}()
+	
 	
 	c.finalIntersection=in.Content
 	
-	if !c.IsLast() {
-		in.users[id] = in.users[id]+1
+	if !c.IsLast(in.users[c.id]) {
+		in.users[c.id] = in.users[c.id]+1
 	
 		outMsg := &PlainMessage{
-			Content: in.Content
+			Content: in.Content,
 			users: in.users,
-			mode: in.mode
+			mode: in.mode,
 			}
 		
 		return c.SendTo(c.next, outMsg)
 	}
 	
-	else {
-	//query some accumulated field using c.FinalIntersectionHook
-	return nil
+	if c.IsLast(in.users[c.id]) {
+		if c.IsRoot() {
+		   c.hasPlain =c.hasPlain+1
+		   }
+		if !c.IsRoot(){
+	outMsg := &DoneMessage{
+			Src: c.id,//??
+			}
+		
+		return c.SendTo(c.Parent(), outMsg)
+		}
 	
 	}
+	return nil
+}
+
+func (c *PPSI) handleDoneMessage(in *DoneMessage) error {
+	//if c.IsRoot() {
+		//   c.done =c.done+1//locks??
+//	} 
+		
+	//	if c.done < c.authorities{
+	//		return nil
+	//	}
+
+	//	if c.done==  c.sets {
+		//done <- true
+		//	return nil
+		//}
+		
+		defer func() {
+		// protocol is finished
+		close(c.done)
+		c.Done()
+	}()
+
+return nil			
+}
+func (c *PPSI) handleIllegalIntersection() error {
+   
+	//		out := &IllegalIntersectionMessage{
+	//		Content: size,
+	//		}
+			
+	//	return c.SendTo(c.next, out)
+   return nil
+   
+}
+
+//func (c *PPSI) handleIllegalIntersectionMessage(in *IllegalIntersectionMessage) error {
+
 	
-}
-
-func (c *ppsi) handleIllegalIntersection(size int) error {
-  //to be implemented
-}
-
-func (c *ppsi) IsLast() {
-	return users[c.id]==4
-}
-
-func (c *ppsi) IsLastToDecPH() {
-	return users[c.id]==3
-}
-
-func (c *ppsi) IsLastToIntersect() {
-	return users[c.id]==2
-}
-
-func (c *ppsi) IsLastToDecElg() {
-	return users[c.id]==1
-}
-
-func (c *ppsi) wantToDecrypt(size int) {
-	return size>MAX_SIZE
-}
 	
-func (c *ppsi) RegisterfinalIntersectionHook(fn finalIntersectionHook) {
-	c.FinalIntersectionHook = fn
+	//if c.IsRoot() {
+	//	 c.illegal=c.illegal+1
+	
+	//}
+//}
+func (c *PPSI) IsLast(num int) bool{
+	return num==4
 }
 
-func (c *ppsi) computeIntersection(newSet []abstract.Point) {
-	
-var newTempIntersection []abstract.Point
+func (c *PPSI) IsLastToDecPH( num int) bool{
+	return num==3
+}
+
+func(c *PPSI)IsLastToIntersect(num int) bool{
+	return num==2
+}
+
+func (c *PPSI)IsLastToDecElg(num int) bool {
+	return num==1
+}
+
+func (c *PPSI) wantToDecrypt() bool{
+	return len(c.tempIntersection)>c.MAX_SIZE
+}
+
+
+func (c *PPSI) computeIntersection(newSet []abstract.Point) {
+
+	var newTempIntersection []abstract.Point
 	OUTER:
-	for i:=0; i<len(tempIntersection) ; i++ {
+	for i:=0; i<len(c.tempIntersection) ; i++ {
 		for v := 0; v < len(newSet); v++ {
-			if  tempIntersection[i]== newSet[v]{//equaity of points??
-				newTempIntersection.append(newTempIntersection, tempIntersection[i])
+			if  c.tempIntersection[i]== newSet[v]{//equaity of points??
+				newTempIntersection.append(newTempIntersection, c.tempIntersection[i])
 				continue OUTER
 			}
 		}
 	}
 	
-	tempIntersection := newTempIntersection //possible?
+	c.tempIntersection = newTempIntersection 
 }
-
 	
-
