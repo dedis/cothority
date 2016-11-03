@@ -402,7 +402,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	s.propagateConfig, err =
 		manage.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateConfigHandler)
 	if err != nil {
-		return nill
+		return nil
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
