@@ -116,12 +116,14 @@ class Values:
         self.max = np.array(self.has_column(column + "_max"))
         self.avg = np.array(self.has_column(column + "_avg"))
         self.dev = np.array(self.has_column(column + "_dev"))
+        self.sum = np.array(self.has_column(column + "_sum"))
         if filter is not None:
             self.x = np.transpose(np.choose(filter, self.x))
             self.min = np.transpose(np.choose(filter, self.min))[0]
             self.max = np.transpose(np.choose(filter, self.max))[0]
             self.avg = np.transpose(np.choose(filter, self.avg))[0]
             self.dev = np.transpose(np.choose(filter, self.dev))[0]
+            self.sum = np.transpose(np.choose(filter, self.sum))[0]
 
         self.ymin = min(self.min)
         self.ymax = max(self.max)

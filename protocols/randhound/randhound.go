@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"gopkg.in/dedis/cothority.v0/lib/monitor"
 )
 
 // TODO:
@@ -481,6 +482,9 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 func (rh *RandHound) handleI1(i1 WI1) error {
 
+	serverTime := monitor.NewTimeMeasure("randhound_server_i1")
+	defer serverTime.Record()
+
 	msg := &i1.I1
 
 	// Compute hash of the client's message
@@ -703,6 +707,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 }
 
 func (rh *RandHound) handleI2(i2 WI2) error {
+
+	serverTime := monitor.NewTimeMeasure("randhound_server_i2")
+	defer serverTime.Record()
 
 	msg := &i2.I2
 

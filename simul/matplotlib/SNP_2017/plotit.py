@@ -262,15 +262,10 @@ def plotRandHerdSetup(timeStr):
     handles = []
     labels = ['RandHound', 'JVSS-CoSi', 'CoSi']
     for index, groupSize in enumerate(groupSizes):
-        cosi_wall, cosi_cpu = getWallCPUAvg(plots[2], 'round')
-        jvsscosi_wall, jvsscosi_cpu = getWallCPUAvg(plots[1], 'setup', 'groupsize', groupSize)
-        rhound_wall, rhound_cpu = getWallCPUAvg(plots[0], 'tgen-randhound', 'groupsize', groupSize)
-        if timeStr == 'CPU':
-            cosi, jvsscosi, rhound = cosi_cpu, jvsscosi_cpu, rhound_cpu
-        else:
-            cosi, jvsscosi, rhound = cosi_wall, jvsscosi_wall, rhound_wall
+        cosi = getWallCPUAvg(plots[2], 'round', timeStr)
+        jvsscosi = getWallCPUAvg(plots[1], 'setup', timeStr, 'groupsize', groupSize)
+        rhound = getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
 
-        print x, rhound_cpu.tolist()
         h1 = plt.bar(x+(index-1.5)*width, cosi, width/2, color=colors[1][0])
         h2 = plt.bar(x+(index-1.5)*width, jvsscosi, width/2, color=colors[2][0],
                 bottom=cosi)
@@ -293,15 +288,72 @@ def plotRandHerdSetup(timeStr):
     mplot.plotEnd()
 
 def plotRandHerdRound():
-    print("Not implemented yet")
+    plot = read_csvs(snp17jvsscosi)[0]
+    plot_show("randherd_round")
+    mplot.plotPrepareLogLog(0, 10)
+    for index, groupSize in enumerate(groupSizes):
+        y = plot.get_values_filtered("round_wall", "groupsize", groupSize)
+        print y.x.tolist(), y.avg.tolist()
+        plt.plot(y.x[0], y.avg, color=colors[index][0],
+                 label="Group-size %d" % groupSize)
+    plt.legend(loc="lower right")
+    plt.ylabel("Wall-clock time for one randherd round")
+    mplot.plotEnd()
 
-def plotRandHound():
-    print("Not implemented yet")
+def plotRandHound(timeStr):
+    plot = read_csvs(snp17rhound)[0]
+    plot_show("randhound_" + timeStr)
+    mplot.plotPrepareLogLog(0, 10)
+    width = 0.2
+    host_list = list(set(plot.x))
+    values = len(host_list)
+    x = np.arange(values)
+    handles = []
+    labels = ['Verification', 'Generation', 'Server']
+    for index, groupSize in enumerate(groupSizes):
+        server = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize) / 2
+        generation = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize)
+        verification = getWallCPUAvg(plot, 'tver-randhound', timeStr, 'groupsize', groupSize)
 
-def plotBandwidth():
-    print("Not implemented yet")
+        print server.tolist(), x.tolist()
+        h1 = plt.bar(x+(index-1.5)*width, server, width/2, color=colors[0][0])
+        h2 = plt.bar(x+(index-1.5)*width, generation, width/2, color=colors[1][0],
+                     bottom=server)
+        h3 = plt.bar(x+(index-1.5)*width, verification, width/2, color=colors[2][0],
+                     bottom=server + generation)
 
-def getWallCPUAvg(stats, column, filter_name=None, filter_value=None):
+        if index == 0:
+            handles = [h3, h2, h1]
+            ymin = server[0]
+
+        if index == len(groupSizes) - 1:
+            lastx = values - 1
+            ymax = server[lastx] + generation[lastx] + verification[lastx]
+
+    plt.xticks(x + width / 2, host_list)
+    plt.legend(handles, labels, loc='upper center',
+               prop={'size':10})
+    plt.ylabel(timeStr + "-time for different group-sizes")
+    plt.ylim(ymin / 5, ymax * 5)
+    mplot.plotEnd()
+
+def plotBandwidth(gs):
+    plots = read_csvs(snp17rhound, snp17jvsscosi, snp17cosi)
+    plot_show("bandwidth_%d" % gs)
+    mplot.plotPrepareLogLog(0, 10)
+
+    y = plots[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
+    plt.plot(y.x[0], y.sum, color=colors[1][0], label="JVSS-CoSi")
+
+    y = plots[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
+    plt.plot(y.x[0], y.sum, color=colors[0][0], label="Randhound")
+
+    plt.legend(loc="lower right")
+    plt.ylabel("Bandwidth in MB")
+    mplot.plotEnd()
+
+
+def getWallCPUAvg(stats, column, timeStr, filter_name=None, filter_value=None):
     if filter_name is not None:
         wall = stats.get_values_filtered(column+"_wall", filter_name, filter_value)
         usr = stats.get_values_filtered(column+"_user", filter_name, filter_value)
@@ -311,8 +363,10 @@ def getWallCPUAvg(stats, column, filter_name=None, filter_value=None):
         usr = stats.get_values(column+"_user")
         sys = stats.get_values(column+"_system")
 
-    cpu = usr.avg + sys.avg
-    return wall.avg, cpu
+    if timeStr == "cpu":
+        return usr.avg + sys.avg
+    else:
+        return wall.avg
 
 # Colors for the Cothority
 colors = [['lightgreen', 'green'],
@@ -368,8 +422,9 @@ snp17cosi = "snp17_cosi_small"
 groupSizes = [16,64]
 
 # Call all plot-functions
-plotRandHerdSetup('Wall')
-plotRandHerdSetup('CPU')
+# plotRandHerdSetup('Wall')
+# plotRandHerdSetup('CPU')
 # plotRandHerdRound()
-# plotRandHound()
-# plotBandwidth()
+# plotRandHound('wall')
+# plotRandHound('cpu')
+plotBandwidth(64)
