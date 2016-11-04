@@ -302,15 +302,18 @@ def plotRandHerdRound():
 def plotRandHound(timeStr):
     plot = read_csvs(snp17rhound)[0]
     plot_show("randhound_" + timeStr)
-    mplot.plotPrepareLogLog(0, 10)
+    mplot.plotPrepareLogLog(0, 0)
     width = 0.2
-    host_list = list(set(plot.x))
+    # host_list = list(set(plot.x))
+    host_list = [128,256,512,768,1024]
     values = len(host_list)
     x = np.arange(values)
     handles = []
     labels = ['Verification', 'Generation', 'Server']
     for index, groupSize in enumerate(groupSizes):
-        server = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize) / 2
+        server = getWallCPUAvg(plot, 'randhound_server_i1', timeStr, 'groupsize', groupSize)
+        server += getWallCPUAvg(plot, 'randhound_server_i2', timeStr, 'groupsize', groupSize)
+        server *= host_list
         generation = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize)
         verification = getWallCPUAvg(plot, 'tver-randhound', timeStr, 'groupsize', groupSize)
 
@@ -332,7 +335,7 @@ def plotRandHound(timeStr):
     plt.legend(handles, labels, loc='upper center',
                prop={'size':10})
     plt.ylabel(timeStr + "-time for different group-sizes")
-    plt.ylim(ymin / 5, ymax * 5)
+    plt.ylim(ymin, ymax * 1.1)
     mplot.plotEnd()
 
 def plotBandwidth(gs):
@@ -362,7 +365,7 @@ def getWallCPUAvg(stats, column, timeStr, filter_name=None, filter_value=None):
         usr = stats.get_values(column+"_user")
         sys = stats.get_values(column+"_system")
 
-    if timeStr == "cpu":
+    if timeStr.lower() == "cpu":
         return usr.avg + sys.avg
     else:
         return wall.avg
@@ -415,15 +418,21 @@ write_file = True
 # mplot.show_fig = True
 mplot.show_fig = False
 
-snp17rhound = "snp17_randhound_small"
-snp17jvsscosi = "snp17_jvsscosi_small"
-snp17cosi = "snp17_cosi_small"
-groupSizes = [16,48]
+# if False:
+# snp17rhound = "snp17_randhound_small"
+# snp17jvsscosi = "snp17_jvsscosi_small"
+# snp17cosi = "snp17_cosi_small"
+# groupSizes = [16,48]
+# else:
+snp17rhound = "snp17_randhound"
+snp17jvsscosi = "snp17_jvsscosi"
+snp17cosi = "snp17_cosi"
+groupSizes = [16,32,48,64]
 
 # Call all plot-functions
-plotRandHerdSetup('Wall')
-plotRandHerdSetup('CPU')
-plotRandHerdRound()
-plotRandHound('wall')
-plotRandHound('cpu')
-plotBandwidth(48)
+# plotRandHerdSetup('Wall')
+# plotRandHerdSetup('CPU')
+# plotRandHerdRound()
+plotRandHound('Wall')
+plotRandHound('CPU')
+# plotBandwidth(groupSizes[-1])
