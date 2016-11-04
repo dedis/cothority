@@ -65,7 +65,7 @@ func NewRoundRoot(n *sda.TreeNodeInstance, msg []byte, aggJVSSLongterm abstract.
 		aggJVSSLongterm: aggJVSSLongterm,
 	}
 	rc.cosi.RegisterCommitmentHook(rc.onCommitment)
-	rc.cosi.RegisterResponseHook(rc.onResponse)
+	rc.cosi.RegisterResponseHook(rc.onResponse, true)
 	return rc, err
 }
 
@@ -88,7 +88,7 @@ func NewRoundNode(n *sda.TreeNodeInstance, jvssP *jvss.JVSS) (sda.ProtocolInstan
 	rc.cosi.RegisterAnnouncementHook(rc.onAnnouncement)
 	rc.cosi.RegisterCommitmentHook(rc.onCommitment)
 	rc.cosi.RegisterChallengeHook(rc.onChallenge)
-	rc.cosi.RegisterResponseHook(rc.onResponse)
+	rc.cosi.RegisterResponseHook(rc.onResponse, true)
 	return rc, nil
 }
 

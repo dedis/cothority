@@ -156,7 +156,6 @@ def plotSBCreation():
     xtotal = x+width/2
     xtotal = np.concatenate(([xtotal[0]-1], xtotal, [xtotal[-1]+1]))
     total = np.concatenate(([total[0]], total, [total[-1]]))
-    print total, xtotal
     oa_wall = plt.plot(xtotal, total, color=colors[len(vls)][1], marker='x')
     labels.insert(0, "Wall-total over all nodes")
     plt.xticks(x + width / 2, [3, 15, 127])
@@ -293,11 +292,11 @@ def plotRandHerdRound():
     mplot.plotPrepareLogLog(0, 10)
     for index, groupSize in enumerate(groupSizes):
         y = plot.get_values_filtered("round_wall", "groupsize", groupSize)
-        print y.x.tolist(), y.avg.tolist()
         plt.plot(y.x[0], y.avg, color=colors[index][0],
                  label="Group-size %d" % groupSize)
     plt.legend(loc="lower right")
     plt.ylabel("Wall-clock time for one randherd round")
+    plt.axes().set_xticks(plot.x)
     mplot.plotEnd()
 
 def plotRandHound(timeStr):
@@ -315,7 +314,6 @@ def plotRandHound(timeStr):
         generation = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize)
         verification = getWallCPUAvg(plot, 'tver-randhound', timeStr, 'groupsize', groupSize)
 
-        print server.tolist(), x.tolist()
         h1 = plt.bar(x+(index-1.5)*width, server, width/2, color=colors[0][0])
         h2 = plt.bar(x+(index-1.5)*width, generation, width/2, color=colors[1][0],
                      bottom=server)
@@ -350,6 +348,7 @@ def plotBandwidth(gs):
 
     plt.legend(loc="lower right")
     plt.ylabel("Bandwidth in MB")
+    plt.axes().set_xticks(y.x[0])
     mplot.plotEnd()
 
 
@@ -419,12 +418,12 @@ mplot.show_fig = False
 snp17rhound = "snp17_randhound_small"
 snp17jvsscosi = "snp17_jvsscosi_small"
 snp17cosi = "snp17_cosi_small"
-groupSizes = [16,64]
+groupSizes = [16,48]
 
 # Call all plot-functions
-# plotRandHerdSetup('Wall')
-# plotRandHerdSetup('CPU')
-# plotRandHerdRound()
-# plotRandHound('wall')
-# plotRandHound('cpu')
-plotBandwidth(64)
+plotRandHerdSetup('Wall')
+plotRandHerdSetup('CPU')
+plotRandHerdRound()
+plotRandHound('wall')
+plotRandHound('cpu')
+plotBandwidth(48)

@@ -158,7 +158,7 @@ class MPlot:
         plt.clf()
         plt.Figure()
         plt.ylabel('Total seconds over all rounds')
-        plt.xlabel('Number of witnesses')
+        plt.xlabel('Number of nodes')
         if logx > 0:
             plt.xscale(u'log', basex=logx)
         if logy > 0:

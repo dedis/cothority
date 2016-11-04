@@ -113,16 +113,15 @@ func main() {
 		log.Fatal("Couldn't start proxy:", err)
 	}
 
-	log.Lvl1("startin", deter.Servers, "cothorities for a total of", deter.Hosts, "processes.")
+	log.Lvl1("starting", deter.Servers, "cothorities for a total of", deter.Hosts, "processes.")
 	killing := false
 	for i, phys := range deter.Phys {
 		log.Lvl2("Launching cothority on", phys)
 		wg.Add(1)
 		go func(phys, internal string) {
-			log.Lvl4("running on", phys)
 			defer wg.Done()
 			monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(deter.MonitorPort)
-			log.LLvl4("Starting servers on physical machine ", internal, "with monitor = ",
+			log.Lvl4("Starting servers on physical machine ", internal, "with monitor = ",
 				monitorAddr)
 			args := " -address=" + internal +
 				" -simul=" + deter.Simulation +
