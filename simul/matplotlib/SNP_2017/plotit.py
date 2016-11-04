@@ -343,10 +343,10 @@ def plotBandwidth(gs):
     mplot.plotPrepareLogLog(0, 10)
 
     y = plots[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum, color=colors[1][0], label="JVSS-CoSi")
+    plt.plot(y.x[0], y.sum / 1e6, color=colors[1][0], label="JVSS-CoSi")
 
     y = plots[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum, color=colors[0][0], label="Randhound")
+    plt.plot(y.x[0], y.sum / 1e6, color=colors[0][0], label="Randhound")
 
     plt.legend(loc="lower right")
     plt.ylabel("Bandwidth in MB")

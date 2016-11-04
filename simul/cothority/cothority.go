@@ -44,7 +44,7 @@ func init() {
 func main() {
 	flag.Parse()
 	log.SetDebugVisible(debugVisible)
-	log.Lvl3("Flags are:", conodeAddress, simul, log.DebugVisible, monitorAddress)
+	log.LLvl3("Flags are:", conodeAddress, simul, log.DebugVisible, monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", conodeAddress)
 	measures := make([]*monitor.CounterIOMeasure, len(scs))
