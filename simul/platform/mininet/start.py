@@ -23,6 +23,7 @@ from mininet.util import netParse, ipAdd, irange
 from mininet.nodelib import NAT
 from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
+from resource import setrlimit, RLIMIT_NPROC, RLIMIT_NOFILE
 
 # What debugging-level to use
 debugLvl = 1
@@ -105,6 +106,17 @@ class Cothority(Host):
         # to go on. ".0.1" is the BaseRouter.
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
+
+        self.cmd("sudo sysctl -w kern.maxfiles=%d" % 64000)
+        self.cmd("sudo sysctl -w kern.maxfilesperproc=%d" % 64000)
+	self.cmd("ulimit -n %d" % 64000)
+	self.cmd("sudo sysctl -w kern.ipc.somaxconn=2048")
+
+        # increase file limit
+        dbg(1,"Increasing limit file to 32000")
+        setrlimit(RLIMIT_NPROC,(32000,32000))
+        setrlimit(RLIMIT_NOFILE,(32000,32000))
+
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
         self.cmd('( %s ./cothority %s 2>&1 %s ) | %s &' %
                      (debugStr, args, ldone, socat ))
@@ -132,6 +144,14 @@ class InternetTopo(Topo):
                                   rootLog=rootLog)
             self.addLink(switch, hostgw)
 
+                        # with open("/etc/security/limits.conf","a+") as f:
+                # f.write(""""
+# *    soft nofile 64000
+# *    hard nofile 64000
+# root soft nofile 64000
+# root hard nofile 64000
+# """)
+            
             for i in range(1, int(n) + 1):
                 ipStr = ipAdd(i + 1, prefix, baseIp)
                 host = self.addHost('h%d' % i, cls=Cothority,

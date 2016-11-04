@@ -1,4 +1,4 @@
-Servers = 8
+Servers = 4
 Simulation = "RandHound"
 BF = 2
 Rounds = 1
@@ -8,12 +8,3 @@ Purpose = "RandHound Test"
 Hosts, GroupSize
 8, 8
 16, 8
-24, 8
-32, 8
-64, 8
-100, 20
-200, 20
-400, 20
-600, 20
-800, 20
-1000, 20

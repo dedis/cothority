@@ -51,7 +51,7 @@ func (r *Simulation) Run(config *sda.SimulationConfig) error {
 	req, leaderRoster := r.CreateGroups(config)
 	leaderTree := leaderRoster.GenerateBinaryTree()
 
-	log.Lvl1(fmt.Sprintf("Simulation with %d groups of %d nodes", len(req.Groups), len(req.Groups[len(req.Groups)-1].Nodes)))
+	log.Lvl1(fmt.Sprintf("Simulation with %d groups of %d nodes", len(req.Groups), len(req.Groups[0].Nodes)))
 	tni := config.Overlay.NewTreeNodeInstanceFromProtoName(leaderTree, FullProto)
 	p, err := NewRootProtocol(tni, req)
 	if err != nil {
@@ -94,6 +94,7 @@ func (r *Simulation) CreateGroups(config *sda.SimulationConfig) (GroupRequests, 
 		}
 		// use the group size
 		nbGroups = len(config.Roster.List) / r.GroupSize
+		log.Printf("Using group size %d with %d nodes gives %d groups", r.GroupSize, len(config.Roster.List), nbGroups)
 	} else {
 		nbGroups = r.Groups
 	}
