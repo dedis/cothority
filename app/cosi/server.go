@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -10,10 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
-	"path"
-	"runtime"
-	"strings"
 
 	c "github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
@@ -49,61 +44,6 @@ func stderr(format string, a ...interface{}) {
 func stderrExit(format string, a ...interface{}) {
 	stderr(format, a...)
 	os.Exit(1)
-}
-
-func getDefaultConfigFile() string {
-	u, err := user.Current()
-	// can't get the user dir, so fallback to current working dir
-	if err != nil {
-		fmt.Print("[-] Could not get your home-directory (", err.Error(), "). Switching back to current dir.\n")
-		if curr, err := os.Getwd(); err != nil {
-			stderrExit("[-] Impossible to get the current directory. %v", err)
-		} else {
-			return path.Join(curr, DefaultServerConfig)
-		}
-	}
-	// let's try to stick to usual OS folders
-	switch runtime.GOOS {
-	case "darwin":
-		return path.Join(u.HomeDir, "Library", BinaryName, DefaultServerConfig)
-	default:
-		return path.Join(u.HomeDir, ".config", BinaryName, DefaultServerConfig)
-		// TODO WIndows ? FreeBSD ?
-	}
-}
-
-func readString(reader *bufio.Reader) string {
-	str, err := reader.ReadString('\n')
-	if err != nil {
-		stderrExit("[-] Could not read input.")
-	}
-	return strings.TrimSpace(str)
-}
-
-func askReachableAddress(reader *bufio.Reader, port string) network.Address {
-	fmt.Println("[*] Enter the IP address you would like others cothority servers and client to contact you.")
-	fmt.Print("[*] Type <Enter> to use the default address [ " + DefaultAddress + " ] if you plan to do local experiments:")
-	ipStr := readString(reader)
-	if ipStr == "" {
-		return network.NewTCPAddress(DefaultAddress + ":" + port)
-	}
-
-	splitted := strings.Split(ipStr, ":")
-	if len(splitted) == 2 && splitted[1] != port {
-		// if the client gave a port number, it must be the same
-		stderrExit("[-] The port you gave is not the same as the one your server will be listening. Abort.")
-	} else if len(splitted) == 2 && net.ParseIP(splitted[0]) == nil {
-		// of if the IP address is wrong
-		stderrExit("[-] Invalid IP:port address given (%s)", ipStr)
-	} else if len(splitted) == 1 {
-		// check if the ip is valid
-		if net.ParseIP(ipStr) == nil {
-			stderrExit("[-] Invalid IP address given (%s)", ipStr)
-		}
-		// add the port
-		ipStr = ipStr + ":" + port
-	}
-	return network.NewTCPAddress(ipStr)
 }
 
 // Service used to get the port connection service

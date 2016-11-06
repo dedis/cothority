@@ -152,7 +152,7 @@ func InteractiveConfig(binaryName string) {
 
 	var configDone bool
 	var configFolder string
-	var defaultFolder = path.Dir(getDefaultConfigFile(binaryName))
+	var defaultFolder = path.Dir(GetDefaultConfigFile(binaryName))
 	var configFile string
 	var groupFile string
 
@@ -389,10 +389,10 @@ func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.Gro
 
 }
 
-// getDefaultConfigFile returns the default path to the configuration-path, which
+// GetDefaultConfigFile returns the default path to the configuration-path, which
 // is ~/.config/binaryName for Unix and ~/Library/binaryName for MacOSX.
 // In case of an error it Fatals.
-func getDefaultConfigFile(binaryName string) string {
+func GetDefaultConfigFile(binaryName string) string {
 	u, err := user.Current()
 	// can't get the user dir, so fallback to current working dir
 	if err != nil {

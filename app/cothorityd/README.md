@@ -2,8 +2,7 @@
 
 This is the cothority-server for creating a node that can be
 used in any cothority. It loads automatically all protocols
-and services and can be used through the apps here or in
-https://github.com/dedis/cosi .
+and services and can be used through the apps here.
 
 ## Installation
 
