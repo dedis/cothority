@@ -103,6 +103,16 @@ class CSVStats:
             if len(self.x) == len(self.columns[c]):
                 del self.columns[c][i]
 
+    # Get the limits of the x and an additional other column
+    def get_limits(self, other):
+        x1, x2 = [], []
+        for i, v in enumerate(self.x.tolist()):
+            if not v in x1:
+                x1 += [int(v)]
+            o = self.columns[other][i]
+            if not o in x2:
+                x2 += [int(o)]
+        return np.array(x1), np.array(x2)
 
 # Value holds the min / max / avg / dev for a single named value
 class Values:
@@ -118,12 +128,12 @@ class Values:
         self.dev = np.array(self.has_column(column + "_dev"))
         self.sum = np.array(self.has_column(column + "_sum"))
         if filter is not None:
-            self.x = np.transpose(np.choose(filter, self.x))
-            self.min = np.transpose(np.choose(filter, self.min))[0]
-            self.max = np.transpose(np.choose(filter, self.max))[0]
-            self.avg = np.transpose(np.choose(filter, self.avg))[0]
-            self.dev = np.transpose(np.choose(filter, self.dev))[0]
-            self.sum = np.transpose(np.choose(filter, self.sum))[0]
+            self.x = np.transpose(Values.choose(filter, self.x))
+            self.min = np.transpose(Values.choose(filter, self.min))[0]
+            self.max = np.transpose(Values.choose(filter, self.max))[0]
+            self.avg = np.transpose(Values.choose(filter, self.avg))[0]
+            self.dev = np.transpose(Values.choose(filter, self.dev))[0]
+            self.sum = np.transpose(Values.choose(filter, self.sum))[0]
 
         self.ymin = min(self.min)
         self.ymax = max(self.max)
@@ -136,6 +146,12 @@ class Values:
             print "Didn't find column", column
             return np.ones(len(self.x))
 
+    @staticmethod
+    def choose(filter, values):
+        c = []
+        for f in filter:
+            c += [values[f]]
+        return np.array(c)
 
 # At least some tests for this module
 # Lost "test.csv"-file :(
@@ -174,15 +190,49 @@ class TestFilter(unittest.TestCase):
 16, 2, 1.0, 3.0, 2.0, 0.
 16, 4, 2.0, 6.0, 4.0, 0.
 32, 2, 3.0, 9.0, 6.0, 0.
-32, 4, 4.0, 12.0, 8.0, 0.""")
+32, 4, 4.0, 12.0, 8.0, 0.
+64, 2, 1.0, 3.0, 2.0, 0.
+64, 4, 2.0, 6.0, 4.0, 0.
+128, 2, 3.0, 9.0, 6.0, 0.
+128, 4, 4.0, 12.0, 8.0, 0.
+256, 2, 1.0, 3.0, 2.0, 0.
+256, 4, 2.0, 6.0, 4.0, 0.
+512, 2, 3.0, 9.0, 6.0, 0.
+512, 4, 4.0, 12.0, 8.0, 0.
+1024, 2, 1.0, 3.0, 2.0, 0.
+1024, 4, 2.0, 6.0, 4.0, 0.
+2048, 2, 3.0, 9.0, 6.0, 0.
+2048, 4, 4.0, 12.0, 8.0, 0.
+4096, 2, 1.0, 3.0, 2.0, 0.
+4096, 4, 2.0, 6.0, 4.0, 0.
+8192, 2, 3.0, 9.0, 6.0, 0.
+8192, 4, 4.0, 12.0, 8.0, 0.
+16384, 2, 1.0, 3.0, 2.0, 0.
+16384, 4, 2.0, 6.0, 4.0, 0.
+32768, 2, 3.0, 9.0, 6.0, 0.
+32768, 4, 4.0, 12.0, 8.0, 0.
+65536, 2, 1.0, 3.0, 2.0, 0.
+65536, 4, 2.0, 6.0, 4.0, 0.
+131072, 2, 3.0, 9.0, 6.0, 0.
+131072, 4, 4.0, 12.0, 8.0, 0.
+262144, 2, 1.0, 3.0, 2.0, 0.
+262144, 4, 2.0, 6.0, 4.0, 0.
+524288, 2, 3.0, 9.0, 6.0, 0.
+524288, 4, 4.0, 12.0, 8.0, 0.
+""")
+        self.stats = CSVStats("/tmp/test.csv", "hosts")
 
     def test_filter(self):
-        stats = CSVStats("/tmp/test.csv", "hosts")
-        print("Stats:", stats.x)
-        self.assertEqual(stats.x.tolist(), [16, 16, 32, 32], "x-values not correct")
-        filtered = stats.get_values_filtered('time', 'BF', 2.0)
-        print("Filtered:", filtered.min.tolist())
-        self.assertEqual(filtered.min.tolist(), [1.0, 3.0], "not good filter")
+        # print("Stats:", self.stats.x)
+        self.assertEqual(self.stats.x.tolist()[0:4], [16, 16, 32, 32], "x-values not correct")
+        filtered = self.stats.get_values_filtered('time', 'BF', 2.0)
+        # print("Filtered:", filtered.min.tolist())
+        self.assertEqual(filtered.min.tolist()[0:2], [1.0, 3.0], "not good filter")
+
+    def test_limits(self):
+        x1, x2 = self.stats.get_limits('BF')
+        self.assertEqual(x1.tolist()[0:2], [16, 32], "Didn't get all values")
+        self.assertEqual(x2.tolist()[0:2], [2, 4], "Didn't get all values")
 
 # Run the tests if we're run directly
 if __name__ == '__main__':

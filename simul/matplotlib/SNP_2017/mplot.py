@@ -157,8 +157,9 @@ class MPlot:
     def plotPrepareLogLog(self, logx=2, logy=2):
         plt.clf()
         plt.Figure()
+        plt.figure(figsize=(8, 5))
         plt.ylabel('Total seconds over all rounds')
-        plt.xlabel('Number of nodes')
+        plt.xlabel('Number of Nodes')
         if logx > 0:
             plt.xscale(u'log', basex=logx)
         if logy > 0:
@@ -187,6 +188,7 @@ class MPlot:
         else:
             print "Saving to", self.pngname
             plt.savefig(self.pngname, bbox_inches='tight')
+            plt.savefig(self.pngname + ".eps", bbox_inches='tight')
 
         self.resetMinMax()
 
