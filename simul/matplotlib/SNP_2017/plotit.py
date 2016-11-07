@@ -175,6 +175,10 @@ def plotRandHound(timeStr):
     plt.annotate("Group Size", xy=(gsx + (len(groupSizes)/2 - 1.5)*width, ymax), ha="center")
     for index, groupSize in enumerate(groupSizes):
         plt.annotate(groupSize, xy=(gsx + (index - 1.5) * width, ymax* 0.95), size=9)
+    ax2 = plt.twiny()
+    ax2.set_xlim(plt.axes().get_xlim())
+    ax2.set_xticks(np.arange(0, values, 1./len(groupSizes)))
+    ax2.set_xticklabels(groupSizes.tolist() * values)
     mplot.plotEnd()
 
 def plotBandwidth(gs):
@@ -266,9 +270,9 @@ snp17cosi = "snp17_cosi"
 hosts, groupSizes = read_csvs(snp17rhound)[0].get_limits('groupsize')
 
 # Call all plot-functions
-plotRandHerdSetup('Wall')
-plotRandHerdSetup('CPU')
-plotRandHerdRound()
+# plotRandHerdSetup('Wall')
+# plotRandHerdSetup('CPU')
+# plotRandHerdRound()
 plotRandHound('Wall')
 plotRandHound('CPU')
-plotBandwidth(groupSizes[-1])
+# plotBandwidth(groupSizes[-1])
