@@ -45,7 +45,7 @@ def plotData(data, name,
                           dict(label=label, linestyle='-', marker='o',
                                color=colors[index], alpha=alpha, zorder=5)))
 
-    # Make horizontal lines and add arrows for JVSS
+    # Make horizontal lines and add arrows for tss
     xmin, xmax, ymin, ymax = CSVStats.get_min_max(*ranges)
     if yminu != 0:
         ymin = yminu
@@ -80,24 +80,23 @@ def arrow(x, y, label, dx=1., dy=1., text_align='left'):
 
 
 def plotRandHerdSetup(timeStr):
-    plots = read_csvs(snp17rhound, snp17jvsscosi, snp17cosi)
     plot_show("randherd_setup_" + timeStr)
     mplot.plotPrepareLogLog(0, 10)
     width = 0.2
     values = len(hosts)
     x = np.arange(values)
     handles = []
-    labels = ['RandHound', 'JVSS-CoSi', 'CoSi']
+    labels = ['RandHound', 'TSS-CoSi', 'CoSi']
     for index, groupSize in enumerate(groupSizes):
         cosi = getWallCPUAvg(plots[2], 'round', timeStr)
         rhound = getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
-        jvsscosi = getWallCPUAvg(plots[1], 'setup', timeStr, 'groupsize', groupSize)
+        tsscosi = getWallCPUAvg(plots[1], 'setup', timeStr, 'groupsize', groupSize)
 
         h1 = plt.bar(x+(index-1.5)*width, cosi, width, color=colors[1], alpha=alphabar)
-        h2 = plt.bar(x+(index-1.5)*width, jvsscosi, width, color=colors[2], alpha=alphabar,
+        h2 = plt.bar(x+(index-1.5)*width, tsscosi, width, color=colors[2], alpha=alphabar,
                 bottom=cosi)
         h3 = plt.bar(x+(index-1.5)*width, rhound, width, color=colors[0], alpha=alphabar,
-                bottom=cosi+jvsscosi)
+                bottom=cosi+tsscosi)
 
         if index == 0:
             handles = [h3, h2, h1]
@@ -105,22 +104,17 @@ def plotRandHerdSetup(timeStr):
 
         if index == len(groupSizes) - 1:
             lastx = values - 1
-            ymax = cosi[lastx] + jvsscosi[lastx] + rhound[lastx]
+            ymax = cosi[lastx] + tsscosi[lastx] + rhound[lastx]
 
-    plt.xticks(x + width / 2, hosts)
     plt.legend(handles , labels, loc='upper left',
                prop={'size':10})
     plt.ylabel(timeStr + "-Time for Setting up RandHerd")
     plt.ylim(ymin / 5, ymax * 5)
-    plt.xlim(0.5, len(hosts) - 0.3)
-    gsx = values / 2
-    plt.annotate("Group Size", xy=(gsx + (len(groupSizes)/2 - 1.5)*width, ymax * 2), ha="center")
-    for index, groupSize in enumerate(groupSizes):
-        plt.annotate(groupSize, xy=(gsx + (index - 1.5) * width, ymax), size=9)
+    plotNodesGroupSizes(x, width)
     mplot.plotEnd()
 
 def plotRandHerdRound():
-    plot = read_csvs(snp17jvsscosi)[0]
+    plot = snp17tsscosi
     plot_show("randherd_round")
     mplot.plotPrepareLogLog(0, 10)
     gs = groupSizes.tolist()
@@ -136,7 +130,7 @@ def plotRandHerdRound():
     mplot.plotEnd()
 
 def plotRandHound(timeStr):
-    plot = read_csvs(snp17rhound)[0]
+    plot = snp17rhound
     plot_show("randhound_" + timeStr)
     mplot.plotPrepareLogLog(0, 0)
     width = 0.2
@@ -165,29 +159,38 @@ def plotRandHound(timeStr):
             lastx = values - 1
             ymax = server[lastx] + generation[lastx] + verification[lastx]
 
-    plt.xticks(x + width / 2, hosts)
     plt.legend(handles, labels, loc='upper left',
                prop={'size':10})
     plt.ylabel(timeStr + "-Time for Different Group Sizes")
     plt.ylim(ymin, ymax * 1.1)
-    plt.xlim(0.5, len(hosts) - 0.3)
-    gsx = values / 2
-    plt.annotate("Group Size", xy=(gsx + (len(groupSizes)/2 - 1.5)*width, ymax), ha="center")
-    for index, groupSize in enumerate(groupSizes):
-        plt.annotate(groupSize, xy=(gsx + (index - 1.5) * width, ymax* 0.95), size=9)
-    ax2 = plt.twiny()
-    ax2.set_xlim(plt.axes().get_xlim())
-    ax2.set_xticks(np.arange(0, values, 1./len(groupSizes)))
-    ax2.set_xticklabels(groupSizes.tolist() * values)
+    plotNodesGroupSizes(x, width)
     mplot.plotEnd()
 
+def plotNodesGroupSizes(x, width):
+    values = len(hosts)
+    ax1 = plt.axes()
+    ax1.set_xlim(-0.5, values - 0.3)
+    xticks = []
+    for i in range(len(groupSizes)):
+        xticks += (x + (i-1) * width).tolist()
+    xticks.sort()
+    ax1.set_xticks(xticks)
+    ax1.tick_params(axis='x', labelsize=10)
+    ax1.set_xticklabels(groupSizes.tolist() * values, rotation=90)
+    ax1.set_xlabel("Group Size")
+
+    ax2 = ax1.twiny()
+    ax2.set_xlim(-0.5, values - 0.3)
+    ax2.set_xticks(x + width / 2)
+    ax2.set_xticklabels(hosts)
+    ax2.set_xlabel("Number of Nodes")
+
 def plotBandwidth(gs):
-    plots = read_csvs(snp17rhound, snp17jvsscosi, snp17cosi)
     plot_show("bandwidth_%d" % gs)
     mplot.plotPrepareLogLog(0, 10)
 
     y = plots[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum / 1e6, color=colors[1], alpha=alpha, label="JVSS-CoSi", marker="o")
+    plt.plot(y.x[0], y.sum / 1e6, color=colors[1], alpha=alpha, label="tss-CoSi", marker="o")
 
     y = plots[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
     plt.plot(y.x[0], y.sum / 1e6, color=colors[0], alpha=alpha, label="RandHound", marker="o")
@@ -262,17 +265,16 @@ mplot.show_fig = False
 
 # if False:
 # snp17rhound = "snp17_randhound_small"
-# snp17jvsscosi = "snp17_jvsscosi_small"
+# snp17tsscosi = "snp17_tsscosi_small"
 # snp17cosi = "snp17_cosi_small"
-snp17rhound = "snp17_randhound"
-snp17jvsscosi = "snp17_jvsscosi"
-snp17cosi = "snp17_cosi"
-hosts, groupSizes = read_csvs(snp17rhound)[0].get_limits('groupsize')
+plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi")
+snp17rhound, snp17tsscosi, snp17cosi = plots
+hosts, groupSizes = snp17rhound.get_limits('groupsize')
 
 # Call all plot-functions
-# plotRandHerdSetup('Wall')
-# plotRandHerdSetup('CPU')
-# plotRandHerdRound()
+plotRandHerdSetup('Wall')
+plotRandHerdSetup('CPU')
+plotRandHerdRound()
 plotRandHound('Wall')
 plotRandHound('CPU')
-# plotBandwidth(groupSizes[-1])
+plotBandwidth(groupSizes[-1])
