@@ -1,7 +1,10 @@
 package PohligHellman//should be in CRYPTO
 
+
 import (
-"github.com/dedis/crypto/abstract"
+        "github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/nist"
+	"github.com/dedis/crypto/random"
 )
 
 type PH struct {
@@ -33,14 +36,11 @@ func   (c *PH) createKeys(){
 }
 
 func  (c *PH) PHDecrypt(cipher abstract.Point)(
-	message string) {
+	bytemessage []byte) {
 		
-	var bytemessage []byte
-	
 	S := c.suite.Point().Mul(cipher, c.decKey)
 	bytemessage, _ = S.Data() 
-	message=string(bytemessage)
-	   println("Decryption : " + message)
+	
 	return 
 	  
 }
@@ -48,14 +48,13 @@ func  (c *PH) PHDecrypt(cipher abstract.Point)(
 	
 func  (c *PH) PHEncrypt(message []byte )(
 	S  abstract.Point) {
-		
-		
+	
 	M, _ := c.suite.Point().Pick(message, random.Stream)
 	S = c.suite.Point().Mul(M, c.encKey) 
-	  return
+	return
 }
 	
-func  (c *PPSI) PartialPHDecrypt(cipher abstract.Point)(
+func  (c *PH) PartialPHDecrypt(cipher abstract.Point)(
 	S abstract.Point) {
 		
 	  S = c.suite.Point().Mul(cipher, c.decKey)
@@ -63,7 +62,7 @@ func  (c *PPSI) PartialPHDecrypt(cipher abstract.Point)(
 	  
 }
 	
-func  (c *PPSI) PartialPHEncrypt(M abstract.Point)(
+func  (c *PH) PartialPHEncrypt(M abstract.Point)(
 	S  abstract.Point) {
 	
 	  S = c.suite.Point().Mul(M, c.encKey) 
@@ -74,7 +73,7 @@ func main() {
 	
 	var c1 *PH
 	suite := nist.NewAES128SHA256P256()
-	c1=NewPPSI(suite)
+	c1=NewPH(suite)
 	message := []byte("Pohlig Hellman")
 	cipher := c1.PHEncrypt(message)
 	encmessage:=c1.PHDecrypt(cipher)
