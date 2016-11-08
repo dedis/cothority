@@ -172,11 +172,11 @@ func TestRouterMessaging(t *testing.T) {
 }
 
 func TestRouterLotsOfConnTCP(t *testing.T) {
-	testRouterLotsOfConn(t, NewTestRouterTCP)
+	testRouterLotsOfConn(t, NewTestRouterTCP, 5)
 }
 
 func TestRouterLotsOfConnLocal(t *testing.T) {
-	testRouterLotsOfConn(t, NewTestRouterLocal)
+	testRouterLotsOfConn(t, NewTestRouterLocal, 5)
 }
 
 // nSquareProc will send back all packet sent and stop when it has received
@@ -185,34 +185,45 @@ type nSquareProc struct {
 	t        *testing.T
 	r        *Router
 	expected int
-	actual   int
 	wg       *sync.WaitGroup
+	actual   map[Address]bool
+	sync.Mutex
 }
 
 func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nSquareProc {
-	return &nSquareProc{t, r, expect, 0, wg}
+	return &nSquareProc{t, r, expect, wg, make(map[Address]bool), sync.Mutex{}}
 }
 
 func (p *nSquareProc) Process(pack *Packet) {
-	p.actual++
-	if p.actual == p.expected {
+	p.Lock()
+	defer p.Unlock()
+	addr := p.r.ServerIdentity.Address
+	remote := pack.ServerIdentity.Address
+	ok := p.actual[remote]
+	if ok {
+		log.Print(addr, "Already received message from", remote)
+		p.t.Fatal("message received twice")
+	}
+
+	p.actual[remote] = true
+	log.Print(addr, "Received message from ", remote)
+	if len(p.actual) == p.expected {
 		// release
 		p.wg.Done()
+		log.Print(addr, "Done processing!")
 		return
-	} else if p.actual > p.expected {
-		p.t.Fatal("Too many response ??")
 	}
-	msg := pack.Msg.(SimpleMessage)
-	p.r.Send(pack.ServerIdentity, &msg)
 }
 
 // Makes a big mesh where every host send and receive to every other hosts
-func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
-	nbrRouter := 2
+func testRouterLotsOfConn(t *testing.T, fac routerFactory, nbrRouter int) {
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
 	var wg1 sync.WaitGroup
 	wg1.Add(nbrRouter)
+	var wg2 sync.WaitGroup
+	wg2.Add(nbrRouter)
+
 	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
 			r, err := fac(2000 + j)
@@ -224,19 +235,17 @@ func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
 				time.Sleep(20 * time.Millisecond)
 			}
 			routers[j] = r
+			// expect nbrRouter - 1 messages
+			proc := newNSquareProc(t, r, nbrRouter-1, &wg2)
+			r.RegisterProcessor(proc, SimpleMessageType)
 			wg1.Done()
 		}(i)
 	}
 	wg1.Wait()
 
-	var wg2 sync.WaitGroup
-	wg2.Add(nbrRouter)
 	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
 			r := routers[j]
-			// expect nbrRouter - 1 messages
-			proc := newNSquareProc(t, r, nbrRouter-1, &wg2)
-			r.RegisterProcessor(proc, SimpleMessageType)
 			for k := 0; k < nbrRouter; k++ {
 				if k == j {
 					// don't send to yourself
