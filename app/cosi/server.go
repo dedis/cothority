@@ -14,6 +14,8 @@ import (
 	_ "github.com/dedis/cothority/services/cosi"
 )
 
+// FIXME this is still the same code as in cothorityd!
+// Do we really want to export runServer?
 func runServer(ctx *cli.Context) {
 	// first check the options
 	config := ctx.String("config")
@@ -30,11 +32,8 @@ func runServer(ctx *cli.Context) {
 	conode.Start()
 }
 
-func stderr(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
-}
-
+// FIXME: user log:Fatal as in cothorityd instead?
 func stderrExit(format string, a ...interface{}) {
-	stderr(format, a...)
+	fmt.Fprintf(os.Stderr, fmt.Sprintf(format, a...)+"\n")
 	os.Exit(1)
 }
