@@ -295,11 +295,10 @@ func newConnQueue() *connQueue {
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
 	c.Lock()
+	defer c.Unlock()
 	if c.closed {
-		c.Unlock()
 		return
 	}
-	c.Unlock()
 	c.queue <- buff
 }
 
@@ -310,11 +309,10 @@ func (c *connQueue) push(buff []byte) {
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
 	c.Lock()
+	defer c.Unlock()
 	if c.closed {
-		c.Unlock()
 		return nil, ErrClosed
 	}
-	c.Unlock()
 	return <-c.queue, nil
 }
 
