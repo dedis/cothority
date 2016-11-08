@@ -14,70 +14,9 @@ sys.path.insert(1, '.')
 from mplot import MPlot
 from stats import CSVStats
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
 import csv
-
-
-def plotData(data, name,
-             xlabel="Number of witnesses", ylabel="Signing round latency in seconds",
-             xticks=[], loglog=[2, 2], xname="hosts",
-             legend_pos="lower right",
-             yminu=0, ymaxu=0,
-             xminu=0, xmaxu=0,
-             title="", read_plots=True,
-             csv_column="round_wall"):
-    mplot.plotPrepareLogLog(loglog[0], loglog[1])
-    if read_plots:
-        plots = read_csvs_xname(xname, *data[0])
-    else:
-        plots = data[0]
-
-    ranges = []
-    data_label = []
-    plot_show(name)
-
-    for index, label in enumerate(data[1]):
-        data_label.append([plots[index], label])
-        ranges.append(
-            mplot.plotMMA(plots[index], csv_column, colors[index], 4,
-                          dict(label=label, linestyle='-', marker='o',
-                               color=colors[index], alpha=alpha, zorder=5)))
-
-    # Make horizontal lines and add arrows for tss
-    xmin, xmax, ymin, ymax = CSVStats.get_min_max(*ranges)
-    if yminu != 0:
-        ymin = yminu
-    if ymaxu != 0:
-        ymax = ymaxu
-    if xminu != 0:
-        xmin = xminu
-    if xmaxu != 0:
-        xmax = xmaxu
-    plt.ylim(ymin, ymax)
-    plt.xlim(xmin, xmax)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-
-    plt.legend(loc=legend_pos)
-    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
-    if len(xticks) > 0:
-        ax = plt.axes()
-        ax.set_xticks(xticks)
-    if title != "":
-        plt.title(title)
-    mplot.plotEnd()
-    return data_label
-
-
-def arrow(x, y, label, dx=1., dy=1., text_align='left'):
-    plt.annotate(label, xy=(x + dx / 10, y + dy / 10),
-                 xytext=(x + dx / 2, y + dy / 2),
-                 horizontalalignment=text_align,
-                 arrowprops=dict(facecolor='black', headlength=5, width=0.1,
-                                 headwidth=8))
-
 
 def plotRandHerdSetup(timeStr):
     plot_show("randherd_setup_" + timeStr)
@@ -89,13 +28,19 @@ def plotRandHerdSetup(timeStr):
     labels = ['RandHound', 'TSS-CoSi', 'CoSi']
     for index, groupSize in enumerate(groupSizes):
         cosi = getWallCPUAvg(plots[2], 'round', timeStr)
-        rhound = getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
+        # rhound = getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
+        rhound = getWallCPUAvg(plots[0], 'randhound_server_i1', timeStr, 'groupsize', groupSize)
+        rhound += getWallCPUAvg(plots[0], 'randhound_server_i2', timeStr, 'groupsize', groupSize)
+        rhound *= hosts
+        rhound += getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
+        rhound += getWallCPUAvg(plots[0], 'tver-randhound', timeStr, 'groupsize', groupSize)
+
         tsscosi = getWallCPUAvg(plots[1], 'setup', timeStr, 'groupsize', groupSize)
 
-        h1 = plt.bar(x+(index-1.5)*width, cosi, width, color=colorsbar[1], alpha=alphabar)
-        h2 = plt.bar(x+(index-1.5)*width, tsscosi, width, color=colorsbar[2], alpha=alphabar,
+        h1 = plt.bar(x+(index-1.5)*width, cosi, width, color=colorsbar[0], alpha=alphabar)
+        h2 = plt.bar(x+(index-1.5)*width, tsscosi, width, color=colorsbar[1], alpha=alphabar,
                 bottom=cosi)
-        h3 = plt.bar(x+(index-1.5)*width, rhound, width, color=colorsbar[0], alpha=alphabar,
+        h3 = plt.bar(x+(index-1.5)*width, rhound, width, color=colorsbar[2], alpha=alphabar,
                 bottom=cosi+tsscosi)
 
         if index == 0:
@@ -106,8 +51,7 @@ def plotRandHerdSetup(timeStr):
             lastx = values - 1
             ymax = cosi[lastx] + tsscosi[lastx] + rhound[lastx]
 
-    plt.legend(handles , labels, loc='upper left',
-               prop={'size':10})
+    plt.legend(handles , labels, loc='upper left', prop={'size':legend_size})
     plt.ylabel(timeStr + "-Time for Setting up RandHerd (sec)")
     plt.ylim(ymin / 5, ymax * 5)
     plotNodesGroupSizes(x, width)
@@ -124,7 +68,7 @@ def plotRandHerdRound():
         plt.plot(y.x[0], y.avg + 2, color=colorsplot[index], alpha=alpha, marker="o",
                  label="%d" % groupSize)
     plt.axes().set_xticks(hosts)
-    plt.legend(loc="upper left", title="Group Size", ncol=2)
+    plt.legend(loc="upper left", title="Group Size", ncol=2, prop={'size':legend_size})
     plt.ylabel("Wall-clock Time for one RandHerd Round (sec)")
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
@@ -159,8 +103,7 @@ def plotRandHound(timeStr):
             lastx = values - 1
             ymax = server[lastx] + generation[lastx] + verification[lastx]
 
-    plt.legend(handles, labels, loc='upper left',
-               prop={'size':10})
+    plt.legend(handles, labels, loc='upper left', prop={'size':legend_size})
     plt.ylabel(timeStr + "-Time for Different Group Sizes (sec)")
     plt.ylim(ymin, ymax * 1.1)
     plotNodesGroupSizes(x, width)
@@ -199,7 +142,7 @@ def plotTraffic(gs):
     y = plots[0].get_values_filtered("bandwidth_tx", "groupsize", gs)
     plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[2], alpha=alpha, label="RandHound Total", marker="o")
 
-    plt.legend(loc="lower right")
+    plt.legend(loc="lower right", prop={'size':legend_size})
     plt.ylabel("Bandwidth in MB")
     plt.axes().set_xticks(y.x[0])
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
@@ -223,12 +166,13 @@ def getWallCPUAvg(stats, column, timeStr, filter_name=None, filter_value=None):
 
 # Colors for the Cothority
 # colors = [ '#4183D7','#26A65B', '#F89406', '#CF000F' ]
-colorsbar = ["#C5E1C5", "#fffaca", "#ffc2c2", "#c2c2ff"]
+colorsbar = ["#c2c2ff", "#C5E1C5", "#fffaca", "#ffc2c2"]
 colorsplot = [ '#4183D7','#26A65B', '#F89406', '#CF000F' ]
 
 alpha = 0.9
 alphabar = 1
 mplot = MPlot()
+legend_size = 12
 
 
 def plot_show(file):
@@ -275,6 +219,7 @@ mplot.show_fig = False
 # snp17tsscosi = "snp17_tsscosi_small"
 # snp17cosi = "snp17_cosi_small"
 plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi")
+# plots = read_csvs("snp17_randhound_16", "snp17_tsscosi_16", "snp17_cosi_16")
 for i in range(3):
     for j in [384, 640, 896]:
         plots[i].delete_index_value(j)

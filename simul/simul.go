@@ -215,7 +215,7 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	// in case of deterlab.
 	var config []string
 	for k, v := range rc.Map() {
-		config += fmt.Sprintf("%s:%s", k, v)
+		config = append(config, fmt.Sprintf("%s:%s", k, v))
 	}
 	sort.Strings(config)
 	log.Lvlf1("%s: using %s to simulate %s", time.Now(), platformDst,
