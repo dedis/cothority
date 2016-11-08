@@ -219,8 +219,12 @@ func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
 	nbrRouter := 2
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
+	// to wait for the creation of all hosts
 	var wg1 sync.WaitGroup
 	wg1.Add(nbrRouter)
+	// to wait for the message passing
+	var wg2 sync.WaitGroup
+	wg2.Add(nbrRouter)
 	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
 			r, err := fac(2000 + j)
@@ -232,19 +236,17 @@ func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
 				time.Sleep(20 * time.Millisecond)
 			}
 			routers[j] = r
+			// expect nbrRouter - 1 messages
+			proc := newNSquareProc(t, r, nbrRouter-1, &wg2)
+			r.RegisterProcessor(proc, SimpleMessageType)
 			wg1.Done()
 		}(i)
 	}
 	wg1.Wait()
 
-	var wg2 sync.WaitGroup
-	wg2.Add(nbrRouter)
 	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
 			r := routers[j]
-			// expect nbrRouter - 1 messages
-			proc := newNSquareProc(t, r, nbrRouter-1, &wg2)
-			r.RegisterProcessor(proc, SimpleMessageType)
 			for k := 0; k < nbrRouter; k++ {
 				if k == j {
 					// don't send to yourself
