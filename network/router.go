@@ -71,13 +71,13 @@ func (r *Router) Start() {
 			return
 		}
 		if err := r.registerConnection(dst, c); err != nil {
-			log.Lvl3(r.address, "Do not accept incoming connection to", c.Remote(), "because it's closed")
+			log.Lvl3(r.address, "does not accept incoming connection to", c.Remote(), "because it's closed")
 			return
 		}
 		// start handleConn in a go routine that waits for incoming messages and
 		// dispatches them.
 		if err := r.launchHandleRoutine(dst, c); err != nil {
-			log.Lvl3(r.address, "Do not accept incoming connection to", c.Remote(), "because it's closed")
+			log.Lvl3(r.address, "does not accept incoming connection to", c.Remote(), "because it's closed")
 			return
 		}
 	})
