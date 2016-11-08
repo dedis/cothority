@@ -204,7 +204,6 @@ func (p *nSquareProc) Process(pack *Packet) {
 	if ok {
 		// second round
 		if ok := p.secondRound[remote]; ok {
-			log.Print(addr, "Already received the second round from", remote)
 			p.t.Fatal("Already received second round")
 		}
 		p.secondRound[remote] = true
@@ -212,15 +211,12 @@ func (p *nSquareProc) Process(pack *Packet) {
 		if len(p.secondRound) == p.expected {
 			// release
 			p.wg.Done()
-			log.Print(addr, "Done processing!")
 		}
 		return
 	}
 
 	p.firstRound[remote] = true
-	log.Print(addr, "Received message from ", remote)
 	if err := p.r.Send(pack.ServerIdentity, &SimpleMessage{3}); err != nil {
-		log.Print(addr, "Could not send to ", remote)
 		p.t.Fatal("Could not send to first round dest.")
 	}
 
@@ -230,11 +226,11 @@ func (p *nSquareProc) Process(pack *Packet) {
 func testRouterLotsOfConn(t *testing.T, fac routerFactory, nbrRouter int) {
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
+	// to wait for the creation of all hosts
 	var wg1 sync.WaitGroup
 	wg1.Add(nbrRouter)
 	var wg2 sync.WaitGroup
 	wg2.Add(nbrRouter)
-
 	for i := 0; i < nbrRouter; i++ {
 		go func(j int) {
 			r, err := fac(2000 + j)
