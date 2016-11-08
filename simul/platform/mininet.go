@@ -19,8 +19,6 @@ import (
 
 	"strings"
 
-	"sort"
-
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/log"
@@ -248,9 +246,6 @@ func (m *MiniNet) Start(args ...string) error {
 		log.Fatal("ssh port forwarding exited in failure:", err)
 	}
 	go func() {
-		config := strings.Split(m.config, "\n")
-		sort.Strings(config)
-		log.Lvlf1("Starting simulation %s over mininet", strings.Join(config, " :: "))
 		err := SSHRunStdout(m.Login, m.External, "cd mininet_run; ./start.py list go")
 		if err != nil {
 			log.Lvl3(err)

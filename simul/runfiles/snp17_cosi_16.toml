@@ -1,5 +1,5 @@
 Simulation = "CoSimul"
-Servers = 32
+Servers = 16
 Depth = 4
 Rounds = 10
 CloseWait = 6000

@@ -1,5 +1,5 @@
 Simulation = "Randhoundco"
-Servers = 32
+Servers = 16
 Bf = 2
 Rounds = 1
 RunWait = 3600
