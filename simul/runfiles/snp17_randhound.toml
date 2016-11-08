@@ -1,7 +1,7 @@
 Simulation = "RandHound"
 Servers = 32
 Bf = 2
-Rounds = 10
+Rounds = 1
 RunWait = 3600
 CloseWait = 3600
 Delay = 100

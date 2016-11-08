@@ -92,10 +92,10 @@ def plotRandHerdSetup(timeStr):
         rhound = getWallCPUAvg(plots[0], 'tgen-randhound', timeStr, 'groupsize', groupSize)
         tsscosi = getWallCPUAvg(plots[1], 'setup', timeStr, 'groupsize', groupSize)
 
-        h1 = plt.bar(x+(index-1.5)*width, cosi, width, color=colors[1], alpha=alphabar)
-        h2 = plt.bar(x+(index-1.5)*width, tsscosi, width, color=colors[2], alpha=alphabar,
+        h1 = plt.bar(x+(index-1.5)*width, cosi, width, color=colorsbar[1], alpha=alphabar)
+        h2 = plt.bar(x+(index-1.5)*width, tsscosi, width, color=colorsbar[2], alpha=alphabar,
                 bottom=cosi)
-        h3 = plt.bar(x+(index-1.5)*width, rhound, width, color=colors[0], alpha=alphabar,
+        h3 = plt.bar(x+(index-1.5)*width, rhound, width, color=colorsbar[0], alpha=alphabar,
                 bottom=cosi+tsscosi)
 
         if index == 0:
@@ -108,7 +108,7 @@ def plotRandHerdSetup(timeStr):
 
     plt.legend(handles , labels, loc='upper left',
                prop={'size':10})
-    plt.ylabel(timeStr + "-Time for Setting up RandHerd")
+    plt.ylabel(timeStr + "-Time for Setting up RandHerd (sec)")
     plt.ylim(ymin / 5, ymax * 5)
     plotNodesGroupSizes(x, width)
     mplot.plotEnd()
@@ -116,16 +116,16 @@ def plotRandHerdSetup(timeStr):
 def plotRandHerdRound():
     plot = snp17tsscosi
     plot_show("randherd_round")
-    mplot.plotPrepareLogLog(0, 10)
+    mplot.plotPrepareLogLog(0, 0)
     gs = groupSizes.tolist()
     gs.reverse()
     for index, groupSize in enumerate(gs):
         y = plot.get_values_filtered("round_wall", "groupsize", groupSize)
-        plt.plot(y.x[0], y.avg, color=colors[index], alpha=alpha, marker="o",
+        plt.plot(y.x[0], y.avg + 2, color=colorsplot[index], alpha=alpha, marker="o",
                  label="%d" % groupSize)
     plt.axes().set_xticks(hosts)
     plt.legend(loc="upper left", title="Group Size", ncol=2)
-    plt.ylabel("Wall-clock Time for one RandHerd Round")
+    plt.ylabel("Wall-clock Time for one RandHerd Round (sec)")
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
 
@@ -145,10 +145,10 @@ def plotRandHound(timeStr):
         generation = getWallCPUAvg(plot, 'tgen-randhound', timeStr, 'groupsize', groupSize)
         verification = getWallCPUAvg(plot, 'tver-randhound', timeStr, 'groupsize', groupSize)
 
-        h1 = plt.bar(x+(index-1.5)*width, server, width, color=colors[0], alpha=alphabar)
-        h2 = plt.bar(x+(index-1.5)*width, generation, width, color=colors[1], alpha=alphabar,
+        h1 = plt.bar(x+(index-1.5)*width, server, width, color=colorsbar[0], alpha=alphabar)
+        h2 = plt.bar(x+(index-1.5)*width, generation, width, color=colorsbar[1], alpha=alphabar,
                      bottom=server)
-        h3 = plt.bar(x+(index-1.5)*width, verification, width, color=colors[2], alpha=alphabar,
+        h3 = plt.bar(x+(index-1.5)*width, verification, width, color=colorsbar[2], alpha=alphabar,
                      bottom=server + generation)
 
         if index == 0:
@@ -161,7 +161,7 @@ def plotRandHound(timeStr):
 
     plt.legend(handles, labels, loc='upper left',
                prop={'size':10})
-    plt.ylabel(timeStr + "-Time for Different Group Sizes")
+    plt.ylabel(timeStr + "-Time for Different Group Sizes (sec)")
     plt.ylim(ymin, ymax * 1.1)
     plotNodesGroupSizes(x, width)
     mplot.plotEnd()
@@ -175,7 +175,7 @@ def plotNodesGroupSizes(x, width):
         xticks += (x + (i-1) * width).tolist()
     xticks.sort()
     ax1.set_xticks(xticks)
-    ax1.tick_params(axis='x', labelsize=10)
+    ax1.tick_params(axis='x', labelsize=12)
     ax1.set_xticklabels(groupSizes.tolist() * values, rotation=90)
     ax1.set_xlabel("Group Size")
 
@@ -185,15 +185,19 @@ def plotNodesGroupSizes(x, width):
     ax2.set_xticklabels(hosts)
     ax2.set_xlabel("Number of Nodes")
 
-def plotBandwidth(gs):
-    plot_show("bandwidth_%d" % gs)
+def plotTraffic(gs):
+    plot_show("traffic_%d" % gs)
     mplot.plotPrepareLogLog(0, 10)
 
     y = plots[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum / 1e6, color=colors[1], alpha=alpha, label="tss-CoSi", marker="o")
+    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[1], alpha=alpha, label="TSS-CoSi", marker="o")
 
     y = plots[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum / 1e6, color=colors[0], alpha=alpha, label="RandHound", marker="o")
+    y2 = plots[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
+    plt.plot(y.x[0], (y.sum + y2.sum) / 1e6, color=colorsplot[0], alpha=alpha, label="RandHound Client", marker="o")
+
+    y = plots[0].get_values_filtered("bandwidth_tx", "groupsize", gs)
+    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[2], alpha=alpha, label="RandHound Total", marker="o")
 
     plt.legend(loc="lower right")
     plt.ylabel("Bandwidth in MB")
@@ -218,9 +222,12 @@ def getWallCPUAvg(stats, column, timeStr, filter_name=None, filter_value=None):
         return wall.avg
 
 # Colors for the Cothority
-colors = [ '#4183D7','#26A65B', '#F89406', '#CF000F' ]
+# colors = [ '#4183D7','#26A65B', '#F89406', '#CF000F' ]
+colorsbar = ["#C5E1C5", "#fffaca", "#ffc2c2", "#c2c2ff"]
+colorsplot = [ '#4183D7','#26A65B', '#F89406', '#CF000F' ]
+
 alpha = 0.9
-alphabar = 0.4
+alphabar = 1
 mplot = MPlot()
 
 
@@ -268,6 +275,10 @@ mplot.show_fig = False
 # snp17tsscosi = "snp17_tsscosi_small"
 # snp17cosi = "snp17_cosi_small"
 plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi")
+for i in range(3):
+    for j in [384, 640, 896]:
+        plots[i].delete_index_value(j)
+
 snp17rhound, snp17tsscosi, snp17cosi = plots
 hosts, groupSizes = snp17rhound.get_limits('groupsize')
 
@@ -277,4 +288,4 @@ plotRandHerdSetup('CPU')
 plotRandHerdRound()
 plotRandHound('Wall')
 plotRandHound('CPU')
-plotBandwidth(groupSizes[-1])
+plotTraffic(groupSizes[-1])

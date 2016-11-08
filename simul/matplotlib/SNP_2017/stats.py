@@ -38,12 +38,13 @@ class CSVStats:
 
         if type(x_id) == str:
             if x_id in self.columns.keys():
+                self.col = x_id
                 self.x = self.columns[x_id]
             else:
                 print "Didn't find key " + x_id + " in file " + self.file
         else:
-            col = sorted(self.columns.keys())[x_id]
-            self.x = self.columns[col]
+            self.col = sorted(self.columns.keys())[x_id]
+            self.x = self.columns[self.col]
 
     # Returns a Values-object with the requested column.
     # Updates the self.(x|y)(min|max)
@@ -101,7 +102,16 @@ class CSVStats:
     def delete_index(self, i):
         for c in self.columns.keys():
             if len(self.x) == len(self.columns[c]):
-                del self.columns[c][i]
+                self.columns[c] = np.delete(self.columns[c], i)
+        self.x = self.columns[self.col]
+
+    # Cut that index out of all columns
+    def delete_index_value(self, i):
+        filter = np.argwhere(self.x == i)
+        for c in self.columns.keys():
+            if len(self.x) == len(self.columns[c]):
+                self.columns[c] = np.delete(self.columns[c], filter)
+        self.x = self.columns[self.col]
 
     # Get the limits of the x and an additional other column
     def get_limits(self, other):
@@ -233,6 +243,12 @@ class TestFilter(unittest.TestCase):
         x1, x2 = self.stats.get_limits('BF')
         self.assertEqual(x1.tolist()[0:2], [16, 32], "Didn't get all values")
         self.assertEqual(x2.tolist()[0:2], [2, 4], "Didn't get all values")
+
+    def test_delete(self):
+        s = self.stats
+        s.delete_index_value(32)
+        self.assertEqual(s.x.tolist()[0:4], [16, 16, 64, 64], "Didn't delete")
+        # self.assertEqual(self.stats.x.tolist()[0:4], [16, 16, 32, 32], "Deleted original")
 
 # Run the tests if we're run directly
 if __name__ == '__main__':
