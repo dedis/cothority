@@ -257,10 +257,9 @@ func (lc *LocalConn) Remote() Address {
 // side.
 // If the connection is not open, it returns an error.
 func (lc *LocalConn) Close() error {
-	if lc.connQueue.isClosed() {
-		return ErrClosed
+	if err := lc.connQueue.close(); err != nil {
+		return err
 	}
-	lc.connQueue.close()
 	// close the remote conn also
 	lc.manager.close(lc)
 	return nil
@@ -277,8 +276,7 @@ func (lc *LocalConn) Type() ConnType {
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
 	queue  chan []byte
-	closed bool
-	sync.Mutex
+	closed chan bool
 }
 
 // LocalMaxBuffer is the size of packets that can be sent simultaneously to the
@@ -287,16 +285,15 @@ const LocalMaxBuffer = 200
 
 func newConnQueue() *connQueue {
 	return &connQueue{
-		queue: make(chan []byte, LocalMaxBuffer),
+		queue:  make(chan []byte, LocalMaxBuffer),
+		closed: make(chan bool),
 	}
 }
 
 // push inserts a packet in the queue.
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
-	c.Lock()
-	defer c.Unlock()
-	if c.closed {
+	if c.isClosed() {
 		return
 	}
 	c.queue <- buff
@@ -308,32 +305,37 @@ func (c *connQueue) push(buff []byte) {
 // pop returns with an error if the queue is closed or gets closed while waiting
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
-	c.Lock()
-	if c.closed {
-		c.Unlock()
+	select {
+	case <-c.closed:
 		return nil, ErrClosed
+	case buff := <-c.queue:
+		return buff, nil
 	}
-	c.Unlock()
-	return <-c.queue, nil
 }
 
 // close sets the closed-field to true and signals to all ongoing pop()
 // operations to return.
-func (c *connQueue) close() {
-	c.Lock()
-	defer c.Unlock()
-	if c.closed {
-		return
+func (c *connQueue) close() error {
+	select {
+	case _, opened := <-c.closed:
+		if !opened {
+			return ErrClosed
+		}
+		close(c.closed)
+	default:
+		close(c.closed)
 	}
-	c.closed = true
-	close(c.queue)
+	return nil
 }
 
 // isClosed returns whether this queue is closed or not.
 func (c *connQueue) isClosed() bool {
-	c.Lock()
-	defer c.Unlock()
-	return c.closed
+	select {
+	case _, opened := <-c.closed:
+		return !opened
+	default:
+		return false
+	}
 }
 
 // LocalListener implements Listener and uses LocalConn to communicate. It

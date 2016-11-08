@@ -199,7 +199,7 @@ func (p *nSquareProc) Process(pack *Packet) {
 	defer p.Unlock()
 	addr := p.r.ServerIdentity.Address
 	remote := pack.ServerIdentity.Address
-	log.Print(addr, "Received message from", remote, "=> ", len(p.actual), " messages so far")
+	//log.Print(addr, "Received message from", remote, "=> ", len(p.actual), " messages so far")
 	ok := p.actual[remote]
 	if ok {
 		p.t.Fatal(addr, "Already got message from ", remote, " FATAL")
@@ -211,7 +211,6 @@ func (p *nSquareProc) Process(pack *Packet) {
 	if len(p.actual) == p.expected {
 		// release
 		p.wg.Done()
-		log.Print(addr, "Done !")
 		return
 	}
 }
