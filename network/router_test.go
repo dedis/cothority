@@ -198,7 +198,6 @@ func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nS
 func (p *nSquareProc) Process(pack *Packet) {
 	p.Lock()
 	defer p.Unlock()
-	addr := p.r.ServerIdentity.Address
 	remote := pack.ServerIdentity.Address
 	ok := p.firstRound[remote]
 	if ok {
