@@ -33,7 +33,7 @@ type Router struct {
 	// can be opened at the same time on both endpoints, there can be more
 	// than one connection per ServerIdentityID.
 	connections map[ServerIdentityID][]Conn
-	mutex       sync.Mutex
+	sync.Mutex
 
 	// boolean flag indicating that the router is already clos{ing,ed}.
 	isClosed bool
@@ -95,7 +95,7 @@ func (r *Router) Stop() error {
 	//if r.host.Listening() {
 	err = r.host.Stop()
 	//}
-	r.mutex.Lock()
+	r.Lock()
 	// set the isClosed to true
 	r.isClosed = true
 
@@ -108,7 +108,7 @@ func (r *Router) Stop() error {
 			}
 		}
 	}
-	r.mutex.Unlock()
+	r.Unlock()
 
 	// wait for all handleConn to finish
 	r.wg.Wait()
@@ -223,8 +223,8 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 // connection returns the first connection associated with this ServerIdentity.
 // If no connection is found, it returns nil.
 func (r *Router) connection(sid ServerIdentityID) Conn {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	arr := r.connections[sid]
 	if len(arr) == 0 {
 		return nil
@@ -237,8 +237,8 @@ func (r *Router) connection(sid ServerIdentityID) Conn {
 // It uses the networkLock mutex.
 func (r *Router) registerConnection(remote *ServerIdentity, c Conn) error {
 	log.Lvl4(r.address, "Registers", remote.Address)
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	if r.isClosed {
 		return ErrClosed
 	}
@@ -251,8 +251,8 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) error {
 }
 
 func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	if r.isClosed {
 		return ErrClosed
 	}
@@ -264,16 +264,16 @@ func (r *Router) launchHandleRoutine(dst *ServerIdentity, c Conn) error {
 // Closed returns true if the router is closed (or is closing). For a router
 // to be closed means that a call to Stop() must have been made.
 func (r *Router) Closed() bool {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	return r.isClosed
 }
 
 // Tx implements monitor/CounterIO
 // It returns the Tx for all connections managed by this router
 func (r *Router) Tx() uint64 {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	var tx uint64
 	for _, arr := range r.connections {
 		for _, c := range arr {
@@ -286,8 +286,8 @@ func (r *Router) Tx() uint64 {
 // Rx implements monitor/CounterIO
 // It returns the Rx for all connections managed by this router
 func (r *Router) Rx() uint64 {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	var rx uint64
 	for _, arr := range r.connections {
 		for _, c := range arr {
