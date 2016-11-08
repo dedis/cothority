@@ -172,11 +172,11 @@ func TestRouterMessaging(t *testing.T) {
 }
 
 func TestRouterLotsOfConnTCP(t *testing.T) {
-	testRouterLotsOfConn(t, NewTestRouterTCP)
+	testRouterLotsOfConn(t, NewTestRouterTCP, 2)
 }
 
 func TestRouterLotsOfConnLocal(t *testing.T) {
-	testRouterLotsOfConn(t, NewTestRouterLocal)
+	testRouterLotsOfConn(t, NewTestRouterLocal, 5)
 }
 
 // nSquareProc will send back all packet sent and stop when it has received
@@ -185,38 +185,39 @@ type nSquareProc struct {
 	t        *testing.T
 	r        *Router
 	expected int
-	actual   int
+	actual   map[Address]bool
 	wg       *sync.WaitGroup
+	sync.Mutex
 }
 
 func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nSquareProc {
-	return &nSquareProc{t, r, expect, 0, wg}
+	return &nSquareProc{t, r, expect, make(map[Address]bool), wg, sync.Mutex{}}
 }
 
 func (p *nSquareProc) Process(pack *Packet) {
-	p.actual++
+	p.Lock()
+	defer p.Unlock()
 	addr := p.r.ServerIdentity.Address
 	remote := pack.ServerIdentity.Address
-	log.Print(addr, "Received message from", remote, "=> ", p.actual, " messages so far")
-	if p.actual == p.expected {
+	log.Print(addr, "Received message from", remote, "=> ", len(p.actual), " messages so far")
+	ok := p.actual[remote]
+	if ok {
+		p.t.Fatal(addr, "Already got message from ", remote, " FATAL")
+		return
+	}
+
+	p.actual[remote] = true
+
+	if len(p.actual) == p.expected {
 		// release
 		p.wg.Done()
 		log.Print(addr, "Done !")
 		return
-	} else if p.actual > p.expected {
-		log.Print(addr, "Got too many response!")
-		p.t.Fatal("Too many response ??")
 	}
-	msg := pack.Msg.(SimpleMessage)
-	if err := p.r.Send(pack.ServerIdentity, &msg); err != nil {
-		log.Print(addr, "Could not send to ", remote, ":", err)
-	}
-	log.Print(addr, "Sent back to ", remote)
 }
 
 // Makes a big mesh where every host send and receive to every other hosts
-func testRouterLotsOfConn(t *testing.T, fac routerFactory) {
-	nbrRouter := 2
+func testRouterLotsOfConn(t *testing.T, fac routerFactory, nbrRouter int) {
 	// create all the routers
 	routers := make([]*Router, nbrRouter)
 	// to wait for the creation of all hosts
