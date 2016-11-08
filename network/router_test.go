@@ -201,7 +201,7 @@ func (p *nSquareProc) Process(pack *Packet) {
 	if p.actual == p.expected {
 		// release
 		p.wg.Done()
-		log.Print(âddr, "Done !")
+		log.Print(addr, "Done !")
 		return
 	} else if p.actual > p.expected {
 		log.Print(addr, "Got too many response!")
