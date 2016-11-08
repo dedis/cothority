@@ -75,7 +75,6 @@ run the following commands:
 
 ```
 go get github.com/dedis/cothority/app/cothorityd
-go get github.com/dedis/cosi
 go get github.com/dedis/cothority/app/status
 ```
 
