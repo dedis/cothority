@@ -70,14 +70,6 @@ func (r *Router) Start() {
 			}
 			return
 		}
-		/*r.mutex.Lock()*/
-		//if r.isClosed {
-		//if err := c.Close(); err != nil {
-		//log.Error("Could not close orphan connection to", c.Remote())
-		//}
-		//r.mutex.Unlock()
-		//return
-		/*}*/
 		if err := r.registerConnection(dst, c); err != nil {
 			log.Lvl3(r.address, "Do not accept incoming connection to", c.Remote(), "because it's closed")
 			return
@@ -88,7 +80,6 @@ func (r *Router) Start() {
 			log.Lvl3(r.address, "Do not accept incoming connection to", c.Remote(), "because it's closed")
 			return
 		}
-		//r.mutex.Unlock()
 	})
 	if err != nil {
 		log.Error("Error listening:", err)
@@ -122,9 +113,6 @@ func (r *Router) Stop() error {
 	// wait for all handleConn to finish
 	r.wg.Wait()
 
-	/*r.connsMut.Lock()*/
-	//r.isClosed = false
-	/*r.connsMut.Unlock()*/
 	if err != nil {
 		return err
 	}
