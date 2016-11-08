@@ -409,7 +409,7 @@ func GetDefaultConfigFile(binaryName string) string {
 		return path.Join(u.HomeDir, "Library", binaryName, DefaultServerConfig)
 	default:
 		return path.Join(u.HomeDir, ".config", binaryName, DefaultServerConfig)
-		// TODO WIndows ? FreeBSD ?
+		// TODO Windows? FreeBSD?
 	}
 }
 

@@ -28,14 +28,7 @@ import (
 // signature from each.
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.String(optionGroup)
-	f, err := os.Open(tomlFileName)
-	printErrAndExit("Couldn't open group definition file: %v", err)
-	group, err := config.ReadGroupDescToml(f)
-	printErrAndExit("Error while reading group definition file: %v", err)
-	log.Print("Size of group desc toml:", len(group.Roster.List))
-	err = server.CheckServers(group)
-	log.Print("server CheckServers err:", err)
-	return err
+	return server.CheckConfig(tomlFileName)
 }
 
 // signFile will search for the file and sign it
