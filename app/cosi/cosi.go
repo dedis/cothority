@@ -24,9 +24,6 @@ const (
 	// definition
 	DefaultGroupFile = "group.toml"
 
-	// DefaultAddress where to be contacted by other servers
-	DefaultAddress = "127.0.0.1"
-
 	optionGroup      = "group"
 	optionGroupShort = "g"
 
