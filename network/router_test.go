@@ -182,16 +182,17 @@ func TestRouterLotsOfConnLocal(t *testing.T) {
 // nSquareProc will send back all packet sent and stop when it has received
 // enough, it releases the waitgroup.
 type nSquareProc struct {
-	t        *testing.T
-	r        *Router
-	expected int
-	wg       *sync.WaitGroup
-	actual   map[Address]bool
+	t           *testing.T
+	r           *Router
+	expected    int
+	wg          *sync.WaitGroup
+	firstRound  map[Address]bool
+	secondRound map[Address]bool
 	sync.Mutex
 }
 
 func newNSquareProc(t *testing.T, r *Router, expect int, wg *sync.WaitGroup) *nSquareProc {
-	return &nSquareProc{t, r, expect, wg, make(map[Address]bool), sync.Mutex{}}
+	return &nSquareProc{t, r, expect, wg, make(map[Address]bool), make(map[Address]bool), sync.Mutex{}}
 }
 
 func (p *nSquareProc) Process(pack *Packet) {
@@ -199,20 +200,30 @@ func (p *nSquareProc) Process(pack *Packet) {
 	defer p.Unlock()
 	addr := p.r.ServerIdentity.Address
 	remote := pack.ServerIdentity.Address
-	ok := p.actual[remote]
+	ok := p.firstRound[remote]
 	if ok {
-		log.Print(addr, "Already received message from", remote)
-		p.t.Fatal("message received twice")
-	}
+		// second round
+		if ok := p.secondRound[remote]; ok {
+			log.Print(addr, "Already received the second round from", remote)
+			p.t.Fatal("Already received second round")
+		}
+		p.secondRound[remote] = true
 
-	p.actual[remote] = true
-	log.Print(addr, "Received message from ", remote)
-	if len(p.actual) == p.expected {
-		// release
-		p.wg.Done()
-		log.Print(addr, "Done processing!")
+		if len(p.secondRound) == p.expected {
+			// release
+			p.wg.Done()
+			log.Print(addr, "Done processing!")
+		}
 		return
 	}
+
+	p.firstRound[remote] = true
+	log.Print(addr, "Received message from ", remote)
+	if err := p.r.Send(pack.ServerIdentity, &SimpleMessage{3}); err != nil {
+		log.Print(addr, "Could not send to ", remote)
+		p.t.Fatal("Could not send to first round dest.")
+	}
+
 }
 
 // Makes a big mesh where every host send and receive to every other hosts
