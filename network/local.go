@@ -309,10 +309,11 @@ func (c *connQueue) push(buff []byte) {
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
 	c.Lock()
-	defer c.Unlock()
 	if c.closed {
+		c.Unlock()
 		return nil, ErrClosed
 	}
+	c.Unlock()
 	return <-c.queue, nil
 }
 

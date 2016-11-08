@@ -24,6 +24,9 @@ func testClient(t *testing.T, fac routerFactory, cl clientFactory) {
 		t.Fatal(err)
 	}
 	go r.Start()
+	for !r.Listening() {
+		time.Sleep(20 * time.Millisecond)
+	}
 
 	proc := NewSendBackProc(t, r)
 	r.RegisterProcessor(proc, SimpleMessageType)
