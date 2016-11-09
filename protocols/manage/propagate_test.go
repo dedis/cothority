@@ -50,8 +50,6 @@ func TestPropagate(t *testing.T) {
 		children, err := propFuncs[0](el, msg, 1000)
 		log.ErrFatal(err)
 
-		iMut.Lock()
-		defer iMut.Unlock()
 		if i != nbrNodes {
 			t.Fatal("Didn't get data-request")
 		}
