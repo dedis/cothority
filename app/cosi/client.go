@@ -33,22 +33,22 @@ func checkConfig(c *cli.Context) error {
 // it always returns nil as an error
 func signFile(c *cli.Context) error {
 	if c.Args().First() == "" {
-		log.ErrFatal("Please give the file to sign", 1)
+		log.Fatal("Please give the file to sign", 1)
 	}
 	fileName := c.Args().First()
 	groupToml := c.String(optionGroup)
 	file, err := os.Open(fileName)
-	if err != nil {
-		log.ErrFatal("Couldn't read file to be signed: %v", err)
-	}
+	log.ErrFatal(err, "Couldn't read file to be signed:")
+
 	sig, err := sign(file, groupToml)
-	log.ErrFatal("Couldn't create signature: %v", err)
+	log.ErrFatal(err, "Couldn't create signature:")
+
 	log.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		log.ErrFatal("Couldn't create signature file: %v", err)
+		log.ErrFatal(err, "Couldn't create signature file:")
 	} else {
 		outFile = os.Stdout
 	}
@@ -61,7 +61,7 @@ func signFile(c *cli.Context) error {
 
 func verifyFile(c *cli.Context) error {
 	if len(c.Args().First()) == 0 {
-		log.ErrFatal("Please give the 'msgFile'", 1)
+		log.Fatal("Please give the 'msgFile'", 1)
 	}
 	sigOrEmpty := c.String("signature")
 	err := verify(c.Args().First(), sigOrEmpty, c.String(optionGroup))
@@ -71,25 +71,22 @@ func verifyFile(c *cli.Context) error {
 
 // verifyPrintResult prints out OK or what failed.
 func verifyPrintResult(err error) {
-	if err == nil {
-		log.Print("[+] OK: Signature is valid.")
-	} else {
-		log.ErrFatal("Invalid: Signature verification failed: %v", err)
-	}
+	log.ErrFatal(err, "Invalid: Signature verification failed:")
+
+	log.Print("[+] OK: Signature is valid.")
 }
 
 // writeSigAsJSON - writes the JSON out to a file
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
-	if err != nil {
-		log.ErrFatal("Couldn't encode signature: %v", err)
-	}
+	log.ErrFatal(err, "Couldn't encode signature:")
+
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
-	if _, err := out.WriteTo(outW); err != nil {
-		log.ErrFatal("Couldn't write signature: %v", err)
-	}
+	_, err = out.WriteTo(outW)
+	log.ErrFatal(err, "Couldn't write signature:")
+
 	outW.Write([]byte("\n"))
 }
 
