@@ -496,3 +496,17 @@ func tryConnect(ip, binding network.Address) error {
 	}
 	return nil
 }
+
+// RunServer starts a cothority server with the given config file name. It can
+// be used by different apps (like CoSi, for example)
+func RunServer(configFilename string) {
+	if _, err := os.Stat(configFilename); os.IsNotExist(err) {
+		log.Fatalf("[-] Configuration file does not exists. %s", configFilename)
+	}
+	// Let's read the config
+	_, conode, err := config.ParseCothorityd(configFilename)
+	if err != nil {
+		log.Fatal("Couldn't parse config:", err)
+	}
+	conode.Start()
+}

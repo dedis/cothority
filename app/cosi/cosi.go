@@ -119,10 +119,10 @@ func main() {
 					Usage:   "Setup the configuration for the server (interactive)",
 					Action: func(c *cli.Context) error {
 						if c.String(optionConfig) != "" {
-							stderrExit("[-] Configuration file option can't be used for the 'setup' command")
+							log.Fatal("[-] Configuration file option can't be used for the 'setup' command")
 						}
 						if c.GlobalIsSet("debug") {
-							stderrExit("[-] Debug option can't be used for the 'setup' command")
+							log.Fatal("[-] Debug option can't be used for the 'setup' command")
 						}
 						server.InteractiveConfig(BinaryName)
 						return nil

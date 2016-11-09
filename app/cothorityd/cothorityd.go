@@ -14,7 +14,6 @@ package main
 import (
 	"os"
 
-	c "github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/log"
 	"gopkg.in/codegangsta/cli.v1"
@@ -95,13 +94,5 @@ func runServer(ctx *cli.Context) {
 	log.SetDebugVisible(ctx.Int("debug"))
 	config := ctx.String("config")
 
-	if _, err := os.Stat(config); os.IsNotExist(err) {
-		log.Fatalf("[-] Configuration file does not exists. %s", config)
-	}
-	// Let's read the config
-	_, conode, err := c.ParseCothorityd(config)
-	if err != nil {
-		log.Fatal("Couldn't parse config:", err)
-	}
-	conode.Start()
+	server.RunServer(config)
 }
