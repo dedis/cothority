@@ -11,8 +11,8 @@ or *co-signed*, by a scalable group of independent parties or *witnesses*.
 The signatures that CoSi produces convey the same information
 as a list of conventional signatures from all participants,
 but CoSi signatures are far more compact and efficient for clients to verify.
-In practice, a CoSi collective signature is close to the same size as &mdash;
-and comparable in verification costs to &mdash;
+In practice, a CoSi collective signature is close to the same size as 
+-and comparable in verification costs to-
 a *single* individual signature.
 
 CoSi is intended to facilitate increased transparency and security-hardening
