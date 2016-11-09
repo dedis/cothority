@@ -321,9 +321,10 @@ func (c *connQueue) close() error {
 		if !opened {
 			return ErrClosed
 		}
+		close(c.closed)
 	default:
+		close(c.closed)
 	}
-	close(c.closed)
 	return nil
 }
 
