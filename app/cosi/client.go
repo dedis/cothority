@@ -35,22 +35,22 @@ func checkConfig(c *cli.Context) error {
 // it always returns nil as an error
 func signFile(c *cli.Context) error {
 	if c.Args().First() == "" {
-		printErrAndExit("Please give the file to sign", 1)
+		log.ErrFatal("Please give the file to sign", 1)
 	}
 	fileName := c.Args().First()
 	groupToml := c.String(optionGroup)
 	file, err := os.Open(fileName)
 	if err != nil {
-		printErrAndExit("Couldn't read file to be signed: %v", err)
+		log.ErrFatal("Couldn't read file to be signed: %v", err)
 	}
 	sig, err := sign(file, groupToml)
-	printErrAndExit("Couldn't create signature: %v", err)
+	log.ErrFatal("Couldn't create signature: %v", err)
 	log.Lvl3(sig)
 	var outFile *os.File
 	outFileName := c.String("out")
 	if outFileName != "" {
 		outFile, err = os.Create(outFileName)
-		printErrAndExit("Couldn't create signature file: %v", err)
+		log.ErrFatal("Couldn't create signature file: %v", err)
 	} else {
 		outFile = os.Stdout
 	}
@@ -63,9 +63,8 @@ func signFile(c *cli.Context) error {
 
 func verifyFile(c *cli.Context) error {
 	if len(c.Args().First()) == 0 {
-		printErrAndExit("Please give the 'msgFile'", 1)
+		log.ErrFatal("Please give the 'msgFile'", 1)
 	}
-	log.SetDebugVisible(c.GlobalInt("debug"))
 	sigOrEmpty := c.String("signature")
 	err := verify(c.Args().First(), sigOrEmpty, c.String(optionGroup))
 	verifyPrintResult(err)
@@ -77,7 +76,7 @@ func verifyPrintResult(err error) {
 	if err == nil {
 		fmt.Println("[+] OK: Signature is valid.")
 	} else {
-		printErrAndExit("Invalid: Signature verification failed: %v", err)
+		log.ErrFatal("Invalid: Signature verification failed: %v", err)
 	}
 }
 
@@ -85,22 +84,15 @@ func verifyPrintResult(err error) {
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
 	b, err := json.Marshal(res)
 	if err != nil {
-		printErrAndExit("Couldn't encode signature: %v", err)
+		log.ErrFatal("Couldn't encode signature: %v", err)
 	}
 	var out bytes.Buffer
 	json.Indent(&out, b, "", "\t")
 	outW.Write([]byte("\n"))
 	if _, err := out.WriteTo(outW); err != nil {
-		printErrAndExit("Couldn't write signature: %v", err)
+		log.ErrFatal("Couldn't write signature: %v", err)
 	}
 	outW.Write([]byte("\n"))
-}
-
-func printErrAndExit(format string, a ...interface{}) {
-	if len(a) > 0 && a[0] != nil {
-		fmt.Fprintln(os.Stderr, "[-] "+fmt.Sprintf(format, a...))
-		os.Exit(1)
-	}
 }
 
 // sign takes a stream and a toml file defining the servers

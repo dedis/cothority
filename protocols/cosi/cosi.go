@@ -2,7 +2,6 @@
 package protocol
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -225,7 +224,7 @@ func (c *CoSi) startChallenge() error {
 	out := &Challenge{
 		Chall: challenge,
 	}
-	log.Lvl3(c.Name(), "Starting Chal=", fmt.Sprintf("%+v", challenge), " (message =", string(c.Message))
+	log.Lvlf3("%s Starting Chal=%+v (message = %s)", c.Name(), challenge, string(c.Message))
 	return c.handleChallenge(out)
 
 }
@@ -233,7 +232,7 @@ func (c *CoSi) startChallenge() error {
 // handleChallenge dispatch the challenge to the round and then dispatch the
 // results down the tree.
 func (c *CoSi) handleChallenge(in *Challenge) error {
-	log.Lvl3(c.Name(), "chal=", fmt.Sprintf("%+v", in.Chall))
+	log.Lvlf3("%s chal=%+v", c.Name(), in.Chall)
 	c.cosi.Challenge(in.Chall)
 
 	if c.challengeHook != nil {

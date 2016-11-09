@@ -34,11 +34,6 @@ const (
 	RequestTimeOut = time.Second * 10
 )
 
-func init() {
-	log.SetDebugVisible(1)
-	log.SetUseColors(false)
-}
-
 func main() {
 	app := cli.NewApp()
 	app.Name = "CoSi app"
