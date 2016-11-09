@@ -53,7 +53,7 @@ build(){
     cd $DIR
     echo "Building in $DIR"
 
-    for appdir in $BUILDDIR/cothorityd $GOPATH/src/github.com/dedis/cosi; do
+    for appdir in $BUILDDIR/cothorityd $BUILDDIR/cosi; do
         app=$(basename $appdir)
         if [ ! -e $app -o "$BUILD" ]; then
             if ! go build -o $app $appdir/*.go; then

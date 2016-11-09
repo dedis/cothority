@@ -66,8 +66,7 @@ from time to time, as all dedis-dependencies change quite often.
 There are three apps available:
 
 * [cothorityd](https://github.com/dedis/cothority/app/cothorityd) - which is the server-part that you can run to add a node
-* [cosi](https://github.com/dedis/cosi) - the cosi-protocol, service, and app,
-in its own repository
+* [CoSi](https://github.com/dedis/cothority/app/cosi) - the CoSi-app
 * [status](https://github.com/dedis/cothority/app/status) - reads out the status of a cothority
 
 You will find a README.md in each of its directory. To build the apps, you can
@@ -75,14 +74,13 @@ run the following commands:
 
 ```
 go get github.com/dedis/cothority/app/cothorityd
-go get github.com/dedis/cosi
 go get github.com/dedis/cothority/app/status
 ```
 
 # Apps
 
 * [cothorityd](app/cothorityd) - the basic 
-* [cosi](https://github.com/dedis/cosi) - collective signatures
+* [cosi](app/cosi) - collective signatures
 * [status](app/status) - returns the status of the given group
 * [cisc](app/cisc) - handle your ssh-keys on a blockchain
 * [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/cisc) - hotpets16-branch

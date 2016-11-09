@@ -7,16 +7,6 @@ DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | 
 BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 echo "Using branch $BRANCH"
 
-pattern="refactor_*"
-if [[ $BRANCH =~ $pattern ]]; then 
-    echo "Using refactored branch $BRANCH - fetching cosi"
-    repo=github.com/dedis/cosi
-    go get -d $repo
-    cd $GOPATH/src/$repo
-    git checkout -f $BRANCH
-    echo $(git rev-parse --abbrev-ref HEAD)
-fi
-
 if [ "$TRAVIS_BUILD_DIR" ]; then
   cd $TRAVIS_BUILD_DIR
 fi
