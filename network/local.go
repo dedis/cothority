@@ -275,8 +275,7 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
-	queue  chan []byte
-	closed chan bool
+	queue chan []byte
 }
 
 // LocalMaxBuffer is the number of packets that can be sent simultaneously to the
@@ -285,8 +284,7 @@ const LocalMaxBuffer = 200
 
 func newConnQueue() *connQueue {
 	return &connQueue{
-		queue:  make(chan []byte, LocalMaxBuffer),
-		closed: make(chan bool),
+		queue: make(chan []byte, LocalMaxBuffer),
 	}
 }
 
@@ -306,9 +304,10 @@ func (c *connQueue) push(buff []byte) {
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
 	select {
-	case <-c.closed:
-		return nil, ErrClosed
-	case buff := <-c.queue:
+	case buff, opened := <-c.queue:
+		if !opened {
+			return nil, ErrClosed
+		}
 		return buff, nil
 	}
 }
@@ -317,13 +316,12 @@ func (c *connQueue) pop() ([]byte, error) {
 // operations to return.
 func (c *connQueue) close() error {
 	select {
-	case _, opened := <-c.closed:
+	case _, opened := <-c.queue:
 		if !opened {
 			return ErrClosed
 		}
-		close(c.closed)
 	default:
-		close(c.closed)
+		close(c.queue)
 	}
 	return nil
 }
@@ -331,7 +329,7 @@ func (c *connQueue) close() error {
 // isClosed returns whether this queue is closed or not.
 func (c *connQueue) isClosed() bool {
 	select {
-	case _, opened := <-c.closed:
+	case _, opened := <-c.queue:
 		return !opened
 	default:
 		return false
