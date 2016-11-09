@@ -120,9 +120,9 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	if err := h2.Stop(); err != nil {
 		t.Fatal("Should be able to stop h2")
 	}
-	h2.connsMut.Lock()
+	h2.Lock()
 	delete(h2.connections, h1.ServerIdentity.ID)
-	h2.connsMut.Unlock()
+	h2.Unlock()
 	err = h1.Send(h2.ServerIdentity, &SimpleMessage{12})
 	require.NotNil(t, err)
 }
