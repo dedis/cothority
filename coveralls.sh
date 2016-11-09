@@ -27,11 +27,7 @@ all_tests_passed=true
 echo "mode: atomic" > profile.cov
 for dir in ${DIR_SOURCE};
 do
-    if [[ $dir =~ "./services/" ]]; then
-        go test -v -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
-    else
-        go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
-    fi
+    go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
 
     if [ $? -ne 0 ]; then
         all_tests_passed=false
