@@ -279,7 +279,7 @@ type connQueue struct {
 	closed chan bool
 }
 
-// LocalMaxBuffer is the size of packets that can be sent simultaneously to the
+// LocalMaxBuffer is the number of packets that can be sent simultaneously to the
 // same address.
 const LocalMaxBuffer = 200
 
