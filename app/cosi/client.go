@@ -10,8 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"fmt"
-
 	"github.com/dedis/cothority/app/lib/config"
 	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/crypto"
@@ -74,7 +72,7 @@ func verifyFile(c *cli.Context) error {
 // verifyPrintResult prints out OK or what failed.
 func verifyPrintResult(err error) {
 	if err == nil {
-		fmt.Println("[+] OK: Signature is valid.")
+		log.Print("[+] OK: Signature is valid.")
 	} else {
 		log.ErrFatal("Invalid: Signature verification failed: %v", err)
 	}
@@ -170,7 +168,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	log.Lvl4("Reading signature")
 	var sigBytes []byte
 	if sigFileName == "" {
-		fmt.Println("[+] Reading signature from standard input ...")
+		log.Print("[+] Reading signature from standard input ...")
 		sigBytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		sigBytes, err = ioutil.ReadFile(sigFileName)
