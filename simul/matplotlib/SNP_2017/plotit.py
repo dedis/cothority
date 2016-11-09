@@ -61,7 +61,8 @@ def plotRandHerdSetup(timeStr):
 
     plt.legend(handles , labels, loc='upper left', prop={'size':legend_size})
     if timeStr.lower() == "cpu":
-        plt.ylabel(timeStr + "-Usage for RandHerd Setup (sec)")
+        #plt.ylabel(timeStr + "-Usage for RandHerd Setup (sec)")
+        plt.ylabel("CPU-Usage (sec)")
     else:
         plt.ylabel(timeStr + "-Time for RandHerd Setup (sec)")
     plt.ylim(ymin / 5, ymax * 5)
@@ -76,11 +77,12 @@ def plotRandHerdRound():
     gs.reverse()
     for index, groupSize in enumerate(gs):
         y = plot.get_values_filtered("round_wall", "groupsize", groupSize)
-        plt.plot(y.x[0], y.avg + 2, color=colorsplot[index], alpha=alpha, marker="o",
+        plt.errorbar(y.x[0], y.min + 2, yerr = y.dev, color=colorsplot[index], alpha=alpha, marker="o",
                  label="%d" % groupSize)
     plt.axes().set_xticks(hosts)
     plt.legend(loc="upper left", title="Group Size", ncol=2, prop={'size':legend_size})
-    plt.ylabel("Wall-clock Time for one RandHerd Round (sec)")
+    #plt.ylabel("Wall-clock Time for one RandHerd Round (sec)")
+    plt.ylabel("Wall-clock Time (sec)")
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
 
@@ -92,7 +94,7 @@ def plotRandHound(timeStr):
     values = len(hosts)
     x = np.arange(values)
     handles = []
-    labels = ['Verification', 'Generation (Client)', 'Generation (All Servers)']
+    labels = ['Verification (Client)', 'Generation (Client)', 'Generation (All Servers)']
     for index, groupSize in enumerate(groupSizes):
         server = getWallCPUAvg(plot, 'randhound_server_i1', timeStr, 'groupsize', groupSize)
         server += getWallCPUAvg(plot, 'randhound_server_i2', timeStr, 'groupsize', groupSize)
@@ -117,7 +119,8 @@ def plotRandHound(timeStr):
 
     plt.legend(handles, labels, loc='upper left', prop={'size':legend_size})
     if timeStr.lower() == "cpu":
-        plt.ylabel("CPU-Usage for the Complete System (sec)")
+        #plt.ylabel("CPU-Usage for the Complete System (sec)")
+        plt.ylabel("CPU-Usage (sec)")
     else:
         plt.ylabel("Wall-time (sec)")
     plt.ylim(ymin, ymax * 1.1)
@@ -147,15 +150,17 @@ def plotTraffic(gs):
     plot_show("traffic_%d" % gs)
     mplot.plotPrepareLogLog(0, 10)
 
+    y = plots_traffic[2].get_values("bandwidth_tx")
+    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[1], alpha=alpha, label="CoSi", marker="o")
+
     y = plots_traffic[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
     plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[1], alpha=alpha, label="TSS-CoSi", marker="o")
 
-    y = plots_traffic[0].get_values_filtered("bw-randhound_tx", "groupsize", gs)
-    y2 = plots_traffic[0].get_values_filtered("bw-randhound_rx", "groupsize", gs)
-    plt.plot(y.x[0], (y.sum + y2.sum) / 1e6, color=colorsplot[0], alpha=alpha, label="RandHound Client", marker="o")
+    y = plots_traffic[0].get_values_filtered("randhound_tx", "groupsize", gs)
+    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[0], alpha=alpha, label="RandHound", marker="o")
 
     plt.legend(loc="lower right", prop={'size':legend_size})
-    plt.ylabel("Traffic (MByte)")
+    plt.ylabel("Communication Cost (MByte)")
     plt.axes().set_xticks(y.x[0])
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
     mplot.plotEnd()
@@ -232,7 +237,8 @@ mplot.show_fig = False
 # snp17cosi = "snp17_cosi_small"
 plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi")
 # plots = read_csvs("snp17_randhound_16", "snp17_tsscosi_16", "snp17_cosi_16")
-plots_traffic = read_csvs("snp17_randhound_traffic", "snp17_tsscosi_traffic")
+plots_traffic = read_csvs("snp17_randhound_traffic", "snp17_tsscosi_traffic",
+                          "snp17_cosi_traffic")
 
 snp17rhound, snp17tsscosi, snp17cosi = plots
 hosts, groupSizes = snp17rhound.get_limits('groupsize')
