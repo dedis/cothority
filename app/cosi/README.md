@@ -80,26 +80,10 @@ You may install CoSi from either pre-built binaries
 or from [Go](https://golang.org/) source code,
 as described below.
 
-## Installing from Binaries
-
-For convenience we provide self-contained x86-64 binaries
-for Linux and Mac OS X.
-[Download the latest release](https://github.com/dedis/cosi/releases/latest),
-untar it, and move the appropriate binary for your platform
-into a directory that is in your `$PATH`.
-The 'cosi'-script choses the correct binary for you.
-If your `~/bin` is in the `$PATH`, you can do:
-
-```bash
-tar xf cosi-*tar.gz -C ~/bin
-```
-
-Now you can go on directly to *Command-line Interface*
-
 ## Installing from Source
 
 To build and run CoSi from source code you will need to install
-[Go](https://golang.org/) version 1.5.2 or later.
+[Go](https://golang.org/) version 1.7 or later.
 See
 [the Go documentation](https://golang.org/doc/install)
 on how to install and configure Go,
@@ -130,12 +114,6 @@ If you compiled from source, please change the directory like so:
 cd $GOPATH/src/github.com/dedis/cothority/app/cosi/
 ```
 
-If you used the binary distribution, please use
-
-```bash
-cd $( dirname $( which cosi ) )
-```
-
 ## Collectively Signing Messages with the CoSi Client
 
 In order to sign messages collectively, you first need to define the set of
@@ -149,7 +127,7 @@ which are `$HOME/.config/cosi/` for Linux systems and `$HOME/Library/cosi/` for
 mac systems. If CoSi did not find anything, the default mechanism is to search in the current
 directory.
 
-Once you have a valid group definition, you can sign a file using the `cosi sign’
+Once you have a valid group definition, you can sign a file using the `cosi sign`
 command.  Here is an example that uses our default public CoSi server group to
 sign the README.md file at the top of the cosi source directory:
 
