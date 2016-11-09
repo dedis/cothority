@@ -120,7 +120,7 @@ In order to sign messages collectively, you first need to define the set of
 cosigners that will participate.  To do this, you need to prepare a *group definition* 
 file which lists the cosigners to use with their public keys and Internet addresses.
 You may use [our default list of public CoSi
-servers](https://github.com/dedis/cosi/blob/master/dedis_group.toml) if you wish, or define your own.
+servers](https://github.com/dedis/cothority/blob/master/app/dedis-servers.toml) if you wish, or define your own.
 
 CoSi will by default search for a file "group.toml" in the default configuration folders
 which are `$HOME/.config/cosi/` for Linux systems and `$HOME/Library/cosi/` for
@@ -208,7 +208,7 @@ If you run several CoSi servers,
 you can concatenate their individual `group.toml` outputs
 to define your own cosigning group.
 You may optionally use any or all of our experimental
-[default CoSi servers](https://github.com/dedis/cosi/blob/master/dedis_group.toml)
+[default CoSi servers](https://github.com/dedis/cothority/blob/master/app/dedis-servers.toml)
 if you wish.
 Your resulting `group.toml' file should look something like this:
 

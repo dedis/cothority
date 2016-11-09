@@ -1,20 +1,19 @@
 [[servers]]
-  Addresses = ["78.46.227.60:2000"]
-  Public = "2juBRFikJLTgZLVp5UV4LBJ2GSQAm8PtBcNZ6ivYZnA="
-  Description = "Profeda CoSi server"
+  Address = "tcp://78.46.227.60:7770"
+  Public = "5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY="
+  Description = "Ineiti's Cothority-server"
 
 [[servers]]
- Addresses = ["5.135.161.91:2000"]
- Public = "jJq4W8KaIFbDu4snOm1TrtrtG79sZK0VCgshkUohycA="
- Description = "Nikkolasg's server"
+  Address = "tcp://192.33.210.8:7770"
+  Public = "A2vzFuHqbn6Z4LtxNBnRbAtnlL+dxELMTPNsP5Nek88="
+  Description = "EPFL Cothority-server"
 
 [[servers]]
-  Addresses = ["185.26.156.40:61117"]
-  Public = "XEe5N57Ar3gd6uzvZR9ol2XopBlAQl6rKCbPefnWYdI="
+  Address = "tcp://5.135.161.91:2000"
+  Public = "KZDPdzN5wlBsFmtmKoc21BTI+fBMbPfYJLf9P11Ur4s="
+  Description = "Nikkolasg's powering up CoSi"
+
+[[servers]]
+  Address = "tcp://185.26.156.40:61117"
+  Public = "m1T9+7OROPCkWgjhchq06yV+DyRsk6JyFU1lFFR1YpA="
   Description = "Ismail's server"
-
-[[servers]]
-  Addresses = ["95.143.172.241:62306"]
-  Public = "ag5YGeVtw3m7bIGF57X+n1X3qrHxOnpbaWBpEBT4COc="
-  Description = "Daeinar's server"
-
