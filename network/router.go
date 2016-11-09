@@ -3,6 +3,7 @@ package network
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -130,17 +131,19 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 		}
 	}
 
-	log.Lvlf4("%s sends to %s msg: %+v", r.address, e, msg)
+	log.Lvlf4("%s sends to %s %s", r.address, e, reflect.TypeOf(msg))
 	var err error
 	err = c.Send(msg)
 	if err != nil {
 		log.Lvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
+			log.Error(r.address, "Could not connect to", e.Address, err)
 			return err
 		}
 		err = c.Send(msg)
 		if err != nil {
+			log.Error(r.address, "Tried twice to send to", e, ": abort sending")
 			return err
 		}
 	}
@@ -154,7 +157,6 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 	log.Lvl3(r.address, "Connecting to", si.Address)
 	c, err := r.host.Connect(si)
 	if err != nil {
-		log.Lvl3("Could not connect to", si.Address, err)
 		return nil, err
 	}
 	log.Lvl3(r.address, "Connected to", si.Address)

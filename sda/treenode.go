@@ -404,6 +404,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Address)
 		err = n.dispatchHandler(msgs)
 	default:
+		log.Error("This message-type is not handled by this protocol")
 		return errors.New("This message-type is not handled by this protocol")
 	}
 	return err

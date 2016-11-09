@@ -14,9 +14,9 @@ func init() {
 // RHSimulation implements a RandHound simulation
 type RHSimulation struct {
 	sda.SimulationBFTree
-	Groups  int
-	Faulty  int
-	Purpose string
+	GroupSize int
+	Faulty    int
+	Purpose   string
 }
 
 // NewRHSimulation creates a new RandHound simulation
@@ -37,6 +37,10 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*sda.SimulationConfi
 	return sim, err
 }
 
+func (rhs *RHSimulation) Node(sc *sda.SimulationConfig) error {
+	return rhs.SimulationBFTree.Node(sc)
+}
+
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 	randM := monitor.NewTimeMeasure("tgen-randhound")
@@ -46,7 +50,7 @@ func (rhs *RHSimulation) Run(config *sda.SimulationConfig) error {
 		return err
 	}
 	rh, _ := client.(*RandHound)
-	err = rh.Setup(rhs.Hosts, rhs.Faulty, rhs.Groups, rhs.Purpose)
+	err = rh.Setup(rhs.Hosts, rhs.Faulty, rhs.GroupSize, rhs.Purpose)
 	if err != nil {
 		return err
 	}

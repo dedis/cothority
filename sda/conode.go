@@ -44,7 +44,7 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
 	for name, inst := range protocols.instantiators {
-		log.Lvl4("Registering global protocol", name)
+		log.Lvl4("Overwriting global protocol", name)
 		c.ProtocolRegister(name, inst)
 	}
 	return c
@@ -80,7 +80,6 @@ func (c *Conode) Close() error {
 	err := c.Router.Stop()
 	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
 	return err
-
 }
 
 // Address returns the address used by the Router.
@@ -96,7 +95,8 @@ func (c *Conode) GetService(name string) Service {
 // ProtocolRegister will sign up a new protocol to this Conode.
 // It returns the ID of the protocol.
 func (c *Conode) ProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
-	return c.protocols.Register(name, protocol)
+	p, e := c.protocols.Register(name, protocol)
+	return p, e
 }
 
 // ProtocolInstantiate instantiate a protocol from its ID

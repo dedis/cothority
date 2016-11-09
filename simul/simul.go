@@ -12,6 +12,9 @@ import (
 	"math"
 	"time"
 
+	"fmt"
+	"sort"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/simul/platform"
@@ -210,6 +213,13 @@ func RunTest(rc platform.RunConfig) (*monitor.Stats, error) {
 	}()
 	// Start monitor before so ssh tunnel can connect to the monitor
 	// in case of deterlab.
+	var config []string
+	for k, v := range rc.Map() {
+		config = append(config, fmt.Sprintf("%s:%s", k, v))
+	}
+	sort.Strings(config)
+	log.Lvlf1("%s: using %s to simulate %s", time.Now(), platformDst,
+		strings.Join(config, " :: "))
 	err := deployP.Start()
 	if err != nil {
 		log.Error(err)

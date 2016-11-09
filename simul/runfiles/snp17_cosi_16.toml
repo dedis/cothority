@@ -1,0 +1,13 @@
+Simulation = "CoSimul"
+Servers = 16
+Depth = 4
+Rounds = 10
+CloseWait = 6000
+Delay = 100
+
+Hosts
+128
+256
+512
+768
+1024

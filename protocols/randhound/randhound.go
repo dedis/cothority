@@ -14,6 +14,7 @@ import (
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/monitor"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -24,6 +25,7 @@ import (
 // - Import / export transcript in JSON
 // - Signatures of I-messages are currently not checked by the servers since
 //	 the latter are assumed to be stateless; should they know the public key of the client?
+// - Add another round trip that requests a collective signature from the servers on the client's commitment
 
 func init() {
 	sda.GlobalProtocolRegister("RandHound", NewRandHound)
@@ -49,17 +51,23 @@ func NewRandHound(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 
 // Setup configures a RandHound instance on client-side. Needs to be called
 // before Start.
-func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) error {
+func (rh *RandHound) Setup(nodes int, faulty int, groupSize int, purpose string) error {
 
 	rh.nodes = nodes
-	rh.groups = groups
+
+	if (nodes-1)%groupSize == 0 {
+		rh.groups = (nodes-1)/groupSize + 0
+	} else {
+		rh.groups = (nodes-1)/groupSize + 1
+	}
+
 	rh.faulty = faulty
 	rh.purpose = purpose
 
-	rh.server = make([][]*sda.TreeNode, groups)
-	rh.group = make([][]int, groups)
-	rh.threshold = make([]int, groups)
-	rh.key = make([][]abstract.Point, groups)
+	rh.server = make([][]*sda.TreeNode, rh.groups)
+	rh.group = make([][]int, rh.groups)
+	rh.threshold = make([]int, rh.groups)
+	rh.key = make([][]abstract.Point, rh.groups)
 	rh.ServerIdxToGroupNum = make([]int, nodes)
 	rh.ServerIdxToGroupIdx = make([]int, nodes)
 
@@ -99,7 +107,7 @@ func (rh *RandHound) Start() error {
 
 	// Set some group parameters
 	for i, group := range rh.server {
-		rh.threshold[i] = 2 * len(group) / 3
+		rh.threshold[i] = len(group)/3 + 1
 		rh.polyCommit[i] = make([]abstract.Point, len(group))
 		g := make([]int, len(group))
 		for j, server0 := range group {
@@ -474,6 +482,9 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 func (rh *RandHound) handleI1(i1 WI1) error {
 
+	serverTime := monitor.NewTimeMeasure("randhound_server_i1")
+	defer serverTime.Record()
+
 	msg := &i1.I1
 
 	// Compute hash of the client's message
@@ -619,6 +630,12 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	// Proceed, if there are enough good secrets
 	if len(goodSecret) == rh.groups {
 
+		// XXX: dummy operation that simulates aggregation of the server commits in the 3-round version of RandHound
+		V := rh.Suite().Point().Null()
+		for _, e := range rh.List() {
+			V = rh.Suite().Point().Add(V, e.ServerIdentity.Public)
+		}
+
 		// Reset secret for the next phase (see handleR2)
 		rh.secret = make(map[int][]int)
 
@@ -690,6 +707,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 }
 
 func (rh *RandHound) handleI2(i2 WI2) error {
+
+	serverTime := monitor.NewTimeMeasure("randhound_server_i2")
+	defer serverTime.Record()
 
 	msg := &i2.I2
 
@@ -844,6 +864,14 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	if proceed && !rh.SecretReady {
+
+		// XXX: dummy operation that simulates aggregation of the server responses in the 3-round version of RandHound
+		r := rh.Suite().Scalar().Zero()
+		for i := range rh.List() {
+			_ = i
+			r = rh.Suite().Scalar().Add(r, rh.Private())
+		}
+
 		rh.SecretReady = true
 		rh.Done <- true
 	}

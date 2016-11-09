@@ -48,7 +48,7 @@ func NewCoSimul(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 
 	cosimul := &CoSimul{c.(*protocol.CoSi)}
-	cosimul.RegisterResponseHook(cosimul.getResponse)
+	cosimul.RegisterResponseHook(cosimul.getResponse, false)
 
 	return cosimul, nil
 }

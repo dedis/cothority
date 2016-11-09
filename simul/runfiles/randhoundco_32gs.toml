@@ -1,0 +1,13 @@
+Simulation = "Randhoundco"
+Servers = 10
+Bf = 2
+Rounds = 3
+GroupSize = 32
+
+Hosts
+64
+96
+128
+256
+512
+1024

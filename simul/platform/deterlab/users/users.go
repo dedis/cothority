@@ -119,7 +119,6 @@ func main() {
 		log.Lvl2("Launching cothority on", phys)
 		wg.Add(1)
 		go func(phys, internal string) {
-			//log.Lvl4("running on", phys, cmd)
 			defer wg.Done()
 			monitorAddr := deter.MonitorAddress + ":" + strconv.Itoa(deter.MonitorPort)
 			log.Lvl4("Starting servers on physical machine ", internal, "with monitor = ",

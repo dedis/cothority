@@ -1,0 +1,19 @@
+Simulation = "RandHound"
+Servers = 4
+Bf = 2
+Rounds = 10
+RunWait = 3600
+CloseWait = 3600
+Delay = 100
+
+Hosts, GroupSize
+128, 16
+128, 48
+256, 16
+256, 48
+512, 16
+512, 48
+768, 16
+768, 48
+1024, 16
+1024, 48
