@@ -4,8 +4,7 @@
 
 # CoSi
 
-This repository [points](https://github.com/dedis/cothority/tree/master/app/cosi) 
-to an implementation of the CoSi protocol for 
+This package implements a standalone version of the CoSi protocol for 
 scalable collective signing.
 CoSi enables authorities to have their statements collectively signed,
 or *co-signed*, by a scalable group of independent parties or *witnesses*.
@@ -44,11 +43,13 @@ Use at your own risk!**
 
 # Versions
 
-For the moment we have two version: _v0_ (this repo) and _master_ 
-(whose development continues in the 
-[cothority repository](https://github.com/dedis/cothority/)).
+For the moment we have two version: _v0_ 
+(in the [cosi repo](https://github.com/dedis/cosi/)) and 
+_master_ in this repo.
 
 ## V0
+
+**Update**: Soon to be deprecated.
 
 This is a stable version that depends on the v0-versions of the other dedis-packages. 
 It will only receive bugfixes, but no changes that will make the code incompatible. 
@@ -72,9 +73,6 @@ go get -u -t ./...
 ```
 
 from time to time, as all dedis-dependencies change quite often.
-
-*Update:* CoSi development and its master branch is continued in in the
-[cothority repository](ttps://github.com/dedis/cothority/).
 
 # Installation
 
