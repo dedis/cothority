@@ -210,7 +210,6 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA *Server
 		done <- err
 		return
 	}
-
 	listener.Stop()
 	<-ok
 	done <- nil

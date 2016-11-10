@@ -141,18 +141,25 @@ func (lm *LocalManager) send(e endpoint, msg []byte) error {
 
 // close gets the connection denoted by this endpoint and closes it if
 // it is present.
-func (lm *LocalManager) close(conn *LocalConn) {
+func (lm *LocalManager) close(conn *LocalConn) error {
 	lm.Lock()
 	defer lm.Unlock()
+	queue, ok := lm.queues[conn.local]
+	if !ok {
+		// connection already closed
+		return ErrClosed
+	}
 	// delete this conn
 	delete(lm.queues, conn.local)
+	queue.close()
 	// and delete the remote one + close it
 	remote, ok := lm.queues[conn.remote]
 	if !ok {
-		return
+		return nil
 	}
 	delete(lm.queues, conn.remote)
 	remote.close()
+	return nil
 }
 
 // len returns how many local connections are open.
@@ -257,12 +264,7 @@ func (lc *LocalConn) Remote() Address {
 // side.
 // If the connection is not open, it returns an error.
 func (lc *LocalConn) Close() error {
-	if err := lc.connQueue.close(); err != nil {
-		return err
-	}
-	// close the remote conn also
-	lc.manager.close(lc)
-	return nil
+	return lc.manager.close(lc)
 }
 
 // Type implements the Conn interface
@@ -275,7 +277,10 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
-	queue chan []byte
+	incomingQueue chan []byte
+	outgoingQueue chan []byte
+	closeCh       chan bool
+	wg            sync.WaitGroup
 }
 
 // LocalMaxBuffer is the number of packets that can be sent simultaneously to the
@@ -283,18 +288,35 @@ type connQueue struct {
 const LocalMaxBuffer = 200
 
 func newConnQueue() *connQueue {
-	return &connQueue{
-		queue: make(chan []byte, LocalMaxBuffer),
+	cq := &connQueue{
+		incomingQueue: make(chan []byte, LocalMaxBuffer),
+		outgoingQueue: make(chan []byte, LocalMaxBuffer),
+		closeCh:       make(chan bool),
+	}
+	cq.wg.Add(1)
+	go cq.start()
+	return cq
+}
+
+func (c *connQueue) start() {
+	defer c.wg.Done()
+	for {
+		select {
+		case buff := <-c.incomingQueue:
+			c.outgoingQueue <- buff
+		case <-c.closeCh:
+			// to signal that the conn is closed
+			close(c.outgoingQueue)
+			close(c.incomingQueue)
+			return
+		}
 	}
 }
 
 // push inserts a packet in the queue.
 // push won't work if the connQueue is already closed and silently return.
 func (c *connQueue) push(buff []byte) {
-	if c.isClosed() {
-		return
-	}
-	c.queue <- buff
+	c.incomingQueue <- buff
 }
 
 // pop retrieves a packet out of the queue.
@@ -303,37 +325,20 @@ func (c *connQueue) push(buff []byte) {
 // pop returns with an error if the queue is closed or gets closed while waiting
 // for a packet.
 func (c *connQueue) pop() ([]byte, error) {
-	select {
-	case buff, opened := <-c.queue:
-		if !opened {
-			return nil, ErrClosed
-		}
-		return buff, nil
+	buff, opened := <-c.outgoingQueue
+	if !opened {
+		return nil, ErrClosed
 	}
+	return buff, nil
 }
 
 // close sets the closed-field to true and signals to all ongoing pop()
 // operations to return.
-func (c *connQueue) close() error {
-	select {
-	case _, opened := <-c.queue:
-		if !opened {
-			return ErrClosed
-		}
-	default:
-		close(c.queue)
-	}
-	return nil
-}
-
-// isClosed returns whether this queue is closed or not.
-func (c *connQueue) isClosed() bool {
-	select {
-	case _, opened := <-c.queue:
-		return !opened
-	default:
-		return false
-	}
+// It must be only called once: it is handled by LocalManager so it knows if it
+// has already been closed or not.
+func (c *connQueue) close() {
+	close(c.closeCh)
+	c.wg.Wait()
 }
 
 // LocalListener implements Listener and uses LocalConn to communicate. It
