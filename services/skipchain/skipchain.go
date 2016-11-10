@@ -25,7 +25,7 @@ import (
 )
 
 // ServiceName can be used to refer to the name of this service
-const ServiceName = "Skipchain"
+const ServiceName = "Skipchain2"
 const skipchainBFT = "SkipchainBFT"
 
 func init() {

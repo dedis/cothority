@@ -49,7 +49,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 func NewTestClient(l *sda.LocalTest) *Client {
 	c := NewClient()
-	c.Client = l.NewClient("Skipchain")
+	c.Client = l.NewClient(ServiceName)
 	return c
 }
 

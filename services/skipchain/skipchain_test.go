@@ -205,7 +205,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err = sbRoot.VerifySignatures(); err != nil {
+		if err = sbRoot.VerifySignatures(); err != nil { //???????????????????????????? How this command verifies the
+			//signature on the chil-link?
 			t.Fatal("Signature on child-link is not valid")
 		}
 	}
