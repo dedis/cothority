@@ -280,6 +280,7 @@ type connQueue struct {
 	incomingQueue chan []byte
 	outgoingQueue chan []byte
 	closeCh       chan bool
+	closeConfirm  chan bool
 	wg            sync.WaitGroup
 }
 
@@ -292,14 +293,13 @@ func newConnQueue() *connQueue {
 		incomingQueue: make(chan []byte, LocalMaxBuffer),
 		outgoingQueue: make(chan []byte, LocalMaxBuffer),
 		closeCh:       make(chan bool),
+		closeConfirm:  make(chan bool),
 	}
-	cq.wg.Add(1)
 	go cq.start()
 	return cq
 }
 
 func (c *connQueue) start() {
-	defer c.wg.Done()
 	for {
 		select {
 		case buff := <-c.incomingQueue:
@@ -308,6 +308,7 @@ func (c *connQueue) start() {
 			// to signal that the conn is closed
 			close(c.outgoingQueue)
 			close(c.incomingQueue)
+			c.closeConfirm <- true
 			return
 		}
 	}
@@ -339,7 +340,8 @@ func (c *connQueue) pop() ([]byte, error) {
 // has already been closed or not.
 func (c *connQueue) close() {
 	close(c.closeCh)
-	c.wg.Wait()
+	<-c.closeConfirm
+	close(c.closeConfirm)
 }
 
 // LocalListener implements Listener and uses LocalConn to communicate. It
