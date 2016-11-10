@@ -315,7 +315,7 @@ func (c *connQueue) start() {
 
 // push inserts a packet in the queue.
 // push should not be called if the connQueue is closed. Since it's the
-// LocalManager's reponsability, it is enforced.
+// LocalManager's reponsibility, it is enforced.
 func (c *connQueue) push(buff []byte) {
 	c.incomingQueue <- buff
 }
