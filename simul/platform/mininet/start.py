@@ -19,7 +19,7 @@ from mininet.net import Mininet
 from mininet.cli import CLI
 from mininet.log import lg, setLogLevel
 from mininet.node import Node, Host
-from mininet.util import netParse, ipAdd, irange
+from mininet.util import netParse, ipAdd, irange, ipStr, ipNum
 from mininet.nodelib import NAT
 from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
@@ -57,14 +57,26 @@ class BaseRouter(Node):
     def config( self, rootLog=None, **params ):
         super(BaseRouter, self).config(**params)
         dbg( 2, "Starting router %s at %s" %( self.IP(), rootLog) )
+        ournet = int(self.IP().split('.')[1])
         for (gw, n, i) in otherNets:
-            dbg( 3, "Adding route for", n, gw )
-            self.cmd( 'route add -net %s gw %s' % (n, gw) )
+            othernet = int(n.split('.')[1])
+            tunhost = ( ( ournet<<7 ) + othernet ) << 2
+            if ournet > othernet:
+                tunhost = ( ( ( othernet<<7 ) + ournet ) << 2 ) + 1
+
+            tunip = ipStr(ipNum(10,255,0,1) + tunhost)
+            tundev = "tun%d" % othernet
+            dbg(1, "Adding tunnel from %d to %d -> %s" % (ournet, othernet, tunip))
+
+            self.cmd("ip tunnel add %s mode gre remote %s" % (tundev, gw) )
+            self.cmd("ip link set %s up" % tundev)
+            self.cmd("ip addr add %s/30 dev %s" %(tunip, tundev))
+            self.cmd("ip route add %s dev %s" %(n, tundev))
+
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
 
         self.cmd( 'sysctl net.ipv4.ip_forward=1' )
-        self.cmd( 'iptables -t nat -I POSTROUTING -j MASQUERADE' )
         socat = "socat OPEN:%s,creat,append %s:%d,reuseaddr,fork" % (logfile, socatRcv, socatPort)
         self.cmd( '%s &' % socat )
         if rootLog:
@@ -107,16 +119,6 @@ class Cothority(Host):
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
 
-        self.cmd("sudo sysctl -w kern.maxfiles=%d" % 64000)
-        self.cmd("sudo sysctl -w kern.maxfilesperproc=%d" % 64000)
-	self.cmd("ulimit -n %d" % 64000)
-	self.cmd("sudo sysctl -w kern.ipc.somaxconn=2048")
-
-        # increase file limit
-        dbg(1,"Increasing limit file to 32000")
-        setrlimit(RLIMIT_NPROC,(32000,32000))
-        setrlimit(RLIMIT_NOFILE,(32000,32000))
-
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
         self.cmd('( %s ./cothority %s 2>&1 %s ) | %s &' %
                      (debugStr, args, ldone, socat ))
@@ -144,14 +146,6 @@ class InternetTopo(Topo):
                                   rootLog=rootLog)
             self.addLink(switch, hostgw)
 
-                        # with open("/etc/security/limits.conf","a+") as f:
-                # f.write(""""
-# *    soft nofile 64000
-# *    hard nofile 64000
-# root soft nofile 64000
-# root hard nofile 64000
-# """)
-            
             for i in range(1, int(n) + 1):
                 ipStr = ipAdd(i + 1, prefix, baseIp)
                 host = self.addHost('h%d' % i, cls=Cothority,

@@ -83,7 +83,7 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(c.Device[s])
+		b, err := network.MarshalRegisteredType(c.Device[s].Point)
 		if err != nil {
 			return nil, err
 		}
