@@ -43,6 +43,8 @@ socatSend = "udp-sendto"
 socatRcv = "udp4-listen"
 # Whether to redirect all socats to the main-gateway at 10.1.0.1
 socatDirect = True
+# If we only start the cli
+start_cli = False
 
 def dbg(lvl, *str):
     if lvl <= debugLvl:
@@ -157,13 +159,12 @@ class InternetTopo(Topo):
                 self.addLink(host, switch, bw=bandwidth, delay=delay)
 
 def RunNet():
-    """RunNet will start the mininet and add the routes to the other
-    mininet-services"""
+    """RunNet will start the mininet and launch the cothorityd-processes"""
     rootLog = None
     if myNet[1] > 0:
         i, p = netParse(otherNets[0][1])
         rootLog = ipAdd(1, p, i)
-    dbg( 2, "Creating network", myNet )
+    dbg( 2, "Creating network", myNet, rootLog )
     topo = InternetTopo(myNet=myNet, rootLog=rootLog)
     dbg( 3, "Starting on", myNet )
     net = Mininet(topo=topo, link=TCLink)
@@ -174,7 +175,9 @@ def RunNet():
 
     # Also set setLogLevel('info') if you want to use this, else
     # there is no correct reporting on commands.
-    # CLI(net)
+    if start_cli:
+        CLI(net)
+
     log = open(logfile, "r")
     while not os.path.exists(logdone):
         dbg( 4, "Waiting for cothority to finish at " + platform.node() )
@@ -254,12 +257,21 @@ def call_other(server, list_file):
 # The only argument given to the script is the server-list. Everything
 # else will be read from that and searched in the computer-configuration.
 if __name__ == '__main__':
-    # setLogLevel('info')
-    # With this loglevel CLI(net) does not report correctly.
-    lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         dbg(0, "please give list-name")
         sys.exit(-1)
+
+    start_remote = False
+    if len(sys.argv) > 2:
+        if sys.argv[2] == "go":
+            start_remote = True
+        elif sys.argv[2] == "cli":
+            start_cli = True
+
+    if start_cli:
+        setLogLevel('info')
+    else:
+        setLogLevel('critical')
 
     list_file = sys.argv[1]
     global_root, myNet, otherNets = GetNetworks(list_file)
@@ -275,7 +287,7 @@ if __name__ == '__main__':
         time.sleep(1)
 
     threads = []
-    if len(sys.argv) > 2:
+    if start_remote:
         dbg( 1, "Starting remotely on nets", otherNets)
         for (server, mn, nbr) in otherNets:
             dbg( 3, "Cleaning up", server )

@@ -44,7 +44,7 @@ func init() {
 func main() {
 	flag.Parse()
 	log.SetDebugVisible(debugVisible)
-	log.Lvl3("Flags are:", conodeAddress, simul, log.DebugVisible, monitorAddress)
+	log.LLvl3("Flags are:", conodeAddress, simul, log.DebugVisible, monitorAddress)
 
 	scs, err := sda.LoadSimulationConfig(".", conodeAddress)
 	measures := make([]*monitor.CounterIOMeasure, len(scs))
@@ -100,7 +100,7 @@ func main() {
 	}
 	if rootSim != nil {
 		// If this cothority has the root-conode, it will start the simulation
-		log.Lvl2("Starting protocol", simul, "on conode", rootSC.Conode.ServerIdentity.Address)
+		log.LLvl2("Starting protocol", simul, "on conode", rootSC.Conode.ServerIdentity.Address)
 		//log.Lvl5("Tree is", rootSC.Tree.Dump())
 
 		// First count the number of available children
@@ -162,7 +162,7 @@ func main() {
 		}
 	}
 
-	log.Lvl3(conodeAddress, scs[0].Conode.ServerIdentity, "is waiting for all conodes to close")
+	log.LLvl3(conodeAddress, scs[0].Conode.ServerIdentity, "is waiting for all conodes to close")
 	wg.Wait()
 	log.Lvl2(conodeAddress, "has all conodes closed")
 	monitor.EndAndCleanup()
