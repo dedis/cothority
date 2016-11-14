@@ -255,7 +255,7 @@ func checkList(list *sda.Roster, descs []string) error {
 	}
 	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	log.Info("Checking server(s) ", serverStr, ": ")
+	fmt.Printf("Checking server(s) %s: ", serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
 		log.Error(err)
