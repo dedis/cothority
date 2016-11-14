@@ -135,7 +135,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 	var err error
 	err = c.Send(msg)
 	if err != nil {
-		log.Lvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
+		log.LLvl2(r.address, "Couldn't send to", e, ":", err, "trying again")
 		c, err := r.connect(e)
 		if err != nil {
 			log.Error(r.address, "Could not connect to", e.Address, err)
@@ -146,6 +146,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 			log.Error(r.address, "Tried twice to send to", e, ": abort sending")
 			return err
 		}
+		log.LLvl2(r.address, "Sent successfully in the end.")
 	}
 	log.Lvl5("Message sent")
 	return nil

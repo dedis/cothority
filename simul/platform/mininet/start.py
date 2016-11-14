@@ -23,7 +23,6 @@ from mininet.util import netParse, ipAdd, irange, ipStr, ipNum
 from mininet.nodelib import NAT
 from mininet.link import TCLink
 from subprocess import Popen, PIPE, call
-from resource import setrlimit, RLIMIT_NPROC, RLIMIT_NOFILE
 
 # What debugging-level to use
 debugLvl = 1
@@ -43,8 +42,9 @@ socatSend = "udp-sendto"
 socatRcv = "udp4-listen"
 # Whether to redirect all socats to the main-gateway at 10.1.0.1
 socatDirect = True
-# If we only start the cli
-start_cli = False
+# if True, it will use direct routing. In case the servers are not in the
+# same subnet, set this to 'False', and ip tunnels will be set up.
+routing_direct = True
 
 def dbg(lvl, *str):
     if lvl <= debugLvl:
@@ -59,26 +59,11 @@ class BaseRouter(Node):
     def config( self, rootLog=None, **params ):
         super(BaseRouter, self).config(**params)
         dbg( 2, "Starting router %s at %s" %( self.IP(), rootLog) )
-        ournet = int(self.IP().split('.')[1])
-        for (gw, n, i) in otherNets:
-            othernet = int(n.split('.')[1])
-            tunhost = ( ( ournet<<7 ) + othernet ) << 2
-            if ournet > othernet:
-                tunhost = ( ( ( othernet<<7 ) + ournet ) << 2 ) + 1
-
-            tunip = ipStr(ipNum(10,255,0,1) + tunhost)
-            tundev = "tun%d" % othernet
-            dbg(1, "Adding tunnel from %d to %d -> %s" % (ournet, othernet, tunip))
-
-            self.cmd("ip tunnel add %s mode gre remote %s" % (tundev, gw) )
-            self.cmd("ip link set %s up" % tundev)
-            self.cmd("ip addr add %s/30 dev %s" %(tunip, tundev))
-            self.cmd("ip route add %s dev %s" %(n, tundev))
-
         if runSSHD:
             self.cmd('/usr/sbin/sshd -D &')
 
-        self.cmd( 'sysctl net.ipv4.ip_forward=1' )
+        self.routing_cleanup()
+        self.routing_setup()
         socat = "socat OPEN:%s,creat,append %s:%d,reuseaddr,fork" % (logfile, socatRcv, socatPort)
         self.cmd( '%s &' % socat )
         if rootLog:
@@ -90,10 +75,41 @@ class BaseRouter(Node):
             dbg( 3, "Deleting route for", n, gw )
             self.cmd( 'route del -net %s gw %s' % (n, gw) )
 
+        self.routing_cleanup()
+        super(BaseRouter, self).terminate()
+
+    def routing_setup(self):
+        self.cmd( 'sysctl net.ipv4.ip_forward=1' )
+
+        if routing_direct:
+            for (gw, n, i) in otherNets:
+                dbg( 3, "Adding route for", n, gw )
+                self.cmd( 'route add -net %s gw %s' % (n, gw) )
+            self.cmd( 'iptables -t nat -I POSTROUTING -j MASQUERADE' )
+        else:
+            ournet = int(self.IP().split('.')[1])
+            for (gw, n, i) in otherNets:
+                othernet = int(n.split('.')[1])
+                tunhost = ( ( ournet<<7 ) + othernet ) << 2
+                if ournet > othernet:
+                    tunhost = ( ( ( othernet<<7 ) + ournet ) << 2 ) + 1
+
+                tunip = ipStr(ipNum(10,255,0,1) + tunhost)
+                tundev = "tun%d" % othernet
+                dbg(1, "Adding tunnel from %d to %d -> %s" % (ournet, othernet, tunip))
+
+                self.cmd("ip tunnel add %s mode gre remote %s" % (tundev, gw) )
+                self.cmd("ip link set %s up" % tundev)
+                self.cmd("ip addr add %s/30 dev %s" %(tunip, tundev))
+                self.cmd("ip route add %s dev %s" %(n, tundev))
+
+    def routing_cleanup(self):
         self.cmd( 'sysctl net.ipv4.ip_forward=0' )
         self.cmd( 'killall socat' )
-        self.cmd( 'iptables -t nat -D POSTROUTING -j MASQUERADE' )
-        super(BaseRouter, self).terminate()
+        self.cmd( 'iptables -t nat -F POSTROUTING' )
+        for (gw, n, i) in otherNets:
+            self.cmd( 'route del -net %s gw %s' % (n, gw) )
+            self.cmd( 'ip tunnel del tun%d' % int(i))
 
 
 class Cothority(Host):
@@ -120,7 +136,6 @@ class Cothority(Host):
         # to go on. ".0.1" is the BaseRouter.
         if self.IP().endswith(".0.2"):
             ldone = "; date > " + logdone
-
         dbg( 3, "Starting cothority on node", self.IP(), ldone )
         self.cmd('( %s ./cothority %s 2>&1 %s ) | %s &' %
                      (debugStr, args, ldone, socat ))
@@ -159,12 +174,16 @@ class InternetTopo(Topo):
                 self.addLink(host, switch, bw=bandwidth, delay=delay)
 
 def RunNet():
-    """RunNet will start the mininet and launch the cothorityd-processes"""
+    """RunNet will start the mininet and add the routes to the other
+    mininet-services"""
     rootLog = None
     if myNet[1] > 0:
         i, p = netParse(otherNets[0][1])
         rootLog = ipAdd(1, p, i)
-    dbg( 2, "Creating network", myNet, rootLog )
+
+    mn = myNet[0]
+    dbg( 1, "Creating network %s on host %s for %s nodes." %
+         (mn[1], mn[0], mn[2]) )
     topo = InternetTopo(myNet=myNet, rootLog=rootLog)
     dbg( 3, "Starting on", myNet )
     net = Mininet(topo=topo, link=TCLink)
@@ -175,9 +194,7 @@ def RunNet():
 
     # Also set setLogLevel('info') if you want to use this, else
     # there is no correct reporting on commands.
-    if start_cli:
-        CLI(net)
-
+    # CLI(net)
     log = open(logfile, "r")
     while not os.path.exists(logdone):
         dbg( 4, "Waiting for cothority to finish at " + platform.node() )
@@ -257,21 +274,12 @@ def call_other(server, list_file):
 # The only argument given to the script is the server-list. Everything
 # else will be read from that and searched in the computer-configuration.
 if __name__ == '__main__':
+    # setLogLevel('info')
+    # With this loglevel CLI(net) does not report correctly.
+    lg.setLogLevel( 'critical')
     if len(sys.argv) < 2:
         dbg(0, "please give list-name")
         sys.exit(-1)
-
-    start_remote = False
-    if len(sys.argv) > 2:
-        if sys.argv[2] == "go":
-            start_remote = True
-        elif sys.argv[2] == "cli":
-            start_cli = True
-
-    if start_cli:
-        setLogLevel('info')
-    else:
-        setLogLevel('critical')
 
     list_file = sys.argv[1]
     global_root, myNet, otherNets = GetNetworks(list_file)
@@ -281,14 +289,19 @@ if __name__ == '__main__':
         # rm_file(logfile)
         rm_file(logdone)
         call("mn -c > /dev/null 2>&1", shell=True)
+        dbg( 2, "Increasing connection-limits" )
+        call("/sbin/sysctl net.ipv4.ip_local_port_range='2000 65535'", shell=True)
+        call("/sbin/sysctl net.core.somaxconn=63535", shell=True)
+        call("ulimit -n 63535", shell=True)
+        call("ifconfig p786p1 txqueuelen 5000", shell=True)
         dbg( 2, "Starting mininet for %s" % myNet )
         t1 = threading.Thread(target=RunNet)
         t1.start()
         time.sleep(1)
 
     threads = []
-    if start_remote:
-        dbg( 1, "Starting remotely on nets", otherNets)
+    if len(sys.argv) > 2:
+        dbg( 2, "Starting remotely on nets", otherNets)
         for (server, mn, nbr) in otherNets:
             dbg( 3, "Cleaning up", server )
             call("ssh -q %s 'mn -c; pkill -9 -f start.py' > /dev/null 2>&1" % server, shell=True)

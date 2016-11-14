@@ -7,6 +7,8 @@ CloseWait = 3600
 Delay = 100
 
 Hosts, GroupSize
+64, 32
+96, 32
 128, 16
 128, 24
 128, 32

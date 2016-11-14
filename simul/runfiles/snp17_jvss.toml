@@ -1,0 +1,17 @@
+Simulation = "JVSS"
+Servers = 32
+Bf = 2
+Rounds = 2
+RunWait = 3600
+Delay = 100
+
+Hosts
+16
+32
+48
+64
+80
+96
+128
+144
+160
