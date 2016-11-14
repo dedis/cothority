@@ -117,6 +117,9 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	assert.NotNil(t, h12)
 	require.NotNil(t, h21)
 	assert.Nil(t, h21.Close())
+	err = h1.Send(h2.ServerIdentity, &SimpleMessage{12})
+	require.Nil(t, err)
+
 	if err := h2.Stop(); err != nil {
 		t.Fatal("Should be able to stop h2")
 	}
@@ -125,6 +128,7 @@ func testRouterAutoConnection(t *testing.T, fac routerFactory) {
 	h2.Unlock()
 	err = h1.Send(h2.ServerIdentity, &SimpleMessage{12})
 	require.NotNil(t, err)
+
 }
 
 // Test connection of multiple Hosts and sending messages back and forth
