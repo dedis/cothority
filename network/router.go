@@ -92,9 +92,7 @@ func (r *Router) Start() {
 // Router.
 func (r *Router) Stop() error {
 	var err error
-	//if r.host.Listening() {
 	err = r.host.Stop()
-	//}
 	r.Lock()
 	// set the isClosed to true
 	r.isClosed = true
@@ -104,13 +102,12 @@ func (r *Router) Stop() error {
 		// take all connections to close
 		for _, c := range arr {
 			if err := c.Close(); err != nil {
-				log.Lvl5(err)
+				log.LLvl5(err)
 			}
 		}
 	}
-	r.Unlock()
-
 	// wait for all handleConn to finish
+	r.Unlock()
 	r.wg.Wait()
 
 	if err != nil {
@@ -202,7 +199,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
-				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.LLvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// Temporary error, continue.
