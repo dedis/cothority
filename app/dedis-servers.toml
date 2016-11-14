@@ -10,8 +10,8 @@
 
 [[servers]]
   Address = "tcp://5.135.161.91:2000"
-  Public = "KZDPdzN5wlBsFmtmKoc21BTI+fBMbPfYJLf9P11Ur4s="
-  Description = "Nikkolasg's powering up CoSi"
+  Public = "UsanfHVs5fO+80FABsRVVq63CEwPPkRn3ScQeSeRLFE="
+  Description = "Nikkolasg's server serving the cothority"
 
 [[servers]]
   Address = "tcp://185.26.156.40:61117"
