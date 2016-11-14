@@ -101,7 +101,6 @@ func TestLocalConnCloseReceive(t *testing.T) {
 	assert.Equal(t, ErrClosed, err)
 	assert.Equal(t, ErrClosed, outgoing.Close())
 	assert.Nil(t, listener.Stop())
-
 }
 
 // Test if we can run two parallel local network using two different contexts
