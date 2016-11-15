@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/protocols/bftcosi"
 	"github.com/dedis/cothority/sda"
 	"github.com/satori/go.uuid"
 )
@@ -26,6 +27,7 @@ func init() {
 		&SkipBlock{},
 		// Own service
 		&Service{},
+		&bftcosi.BFTSignature{},
 	}
 	for _, m := range msgs {
 		network.RegisterPacketType(m)
