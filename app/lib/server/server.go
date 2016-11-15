@@ -27,9 +27,9 @@ import (
 	"github.com/dedis/crypto/cosi"
 	// Empty imports to have the init-functions called which should
 	// register the protocol.
-	_ "github.com/dedis/cosi/protocol"
+	_ "github.com/dedis/cothority/protocols/cosi"
 	// For the moment, the server only serves CoSi requests
-	s "github.com/dedis/cosi/service"
+	s "github.com/dedis/cothority/services/cosi"
 	"github.com/dedis/crypto/abstract"
 	crypconf "github.com/dedis/crypto/config"
 )
@@ -152,7 +152,7 @@ func InteractiveConfig(binaryName string) {
 
 	var configDone bool
 	var configFolder string
-	var defaultFolder = path.Dir(getDefaultConfigFile(binaryName))
+	var defaultFolder = path.Dir(GetDefaultConfigFile(binaryName))
 	var configFile string
 	var groupFile string
 
@@ -389,10 +389,10 @@ func saveFiles(conf *config.CothoritydConfig, fileConf string, group *config.Gro
 
 }
 
-// getDefaultConfigFile returns the default path to the configuration-path, which
+// GetDefaultConfigFile returns the default path to the configuration-path, which
 // is ~/.config/binaryName for Unix and ~/Library/binaryName for MacOSX.
 // In case of an error it Fatals.
-func getDefaultConfigFile(binaryName string) string {
+func GetDefaultConfigFile(binaryName string) string {
 	u, err := user.Current()
 	// can't get the user dir, so fallback to current working dir
 	if err != nil {
@@ -409,7 +409,7 @@ func getDefaultConfigFile(binaryName string) string {
 		return path.Join(u.HomeDir, "Library", binaryName, DefaultServerConfig)
 	default:
 		return path.Join(u.HomeDir, ".config", binaryName, DefaultServerConfig)
-		// TODO WIndows ? FreeBSD ?
+		// TODO Windows? FreeBSD?
 	}
 }
 
@@ -495,4 +495,18 @@ func tryConnect(ip, binding network.Address) error {
 		return errors.New("Address unreachable")
 	}
 	return nil
+}
+
+// RunServer starts a cothority server with the given config file name. It can
+// be used by different apps (like CoSi, for example)
+func RunServer(configFilename string) {
+	if _, err := os.Stat(configFilename); os.IsNotExist(err) {
+		log.Fatalf("[-] Configuration file does not exists. %s", configFilename)
+	}
+	// Let's read the config
+	_, conode, err := config.ParseCothorityd(configFilename)
+	if err != nil {
+		log.Fatal("Couldn't parse config:", err)
+	}
+	conode.Start()
 }

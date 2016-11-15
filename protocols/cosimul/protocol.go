@@ -1,8 +1,8 @@
 package cosimul
 
 import (
-	"github.com/dedis/cosi/protocol"
 	"github.com/dedis/cothority/log"
+	p "github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
@@ -37,17 +37,17 @@ var VerifyResponse = RootCheck
 
 // CoSimul is a protocol suited for simulation
 type CoSimul struct {
-	*protocol.CoSi
+	*p.CoSi
 }
 
 // NewCoSimul returns a new CoSi-protocol suited for simulation
 func NewCoSimul(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	c, err := protocol.NewCoSi(node)
+	c, err := p.NewCoSi(node)
 	if err != nil {
 		return nil, err
 	}
 
-	cosimul := &CoSimul{c.(*protocol.CoSi)}
+	cosimul := &CoSimul{c.(*p.CoSi)}
 	cosimul.RegisterResponseHook(cosimul.getResponse)
 
 	return cosimul, nil
