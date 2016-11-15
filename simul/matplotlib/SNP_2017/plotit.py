@@ -25,7 +25,7 @@ def plotRandHerdSetup(timeStr):
     values = len(hosts)
     x = np.arange(values)
     handles = []
-    labels = ['RandHound', 'TSS-CoSi', 'CoSi']
+    labels = ['RandHound', 'TSS-Key-Setup', 'CoSi']
     for index, groupSize in enumerate(groupSizes):
         cosi = getWallCPUAvg(plots[2], 'round', timeStr)
 
@@ -159,7 +159,8 @@ def plotTraffic(gs):
     mplot.plotPrepareLogLog(0, 10)
 
     y = plots_traffic[1].get_values_filtered("bandwidth_tx", "groupsize", gs)
-    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[1], alpha=alpha, label="TSS-CoSi", marker="o")
+    plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[1], alpha=alpha,
+            label="Randherd", marker="o")
 
     y = plots_traffic[0].get_values_filtered("bandwidth_tx", "groupsize", gs)
     plt.plot(y.x[0], y.sum / 1e6, color=colorsplot[0], alpha=alpha, label="RandHound", marker="o")
@@ -171,6 +172,26 @@ def plotTraffic(gs):
     plt.ylabel("Communication Cost (MByte)")
     plt.axes().set_xticks(y.x)
     plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    mplot.plotEnd()
+
+def plotBaseline(gs):
+    plot_show("baseline_%d" % gs)
+    mplot.plotPrepareLogLog(10, 10)
+
+    y3 = jvss.get_values("round_wall")
+    plt.plot(y3.x, y3.avg, color=colorsplot[2], alpha=alpha, label="RandShare", marker="o")
+
+    y2 = snp17rhound.get_values_filtered("tgen-randhound_wall", "groupsize", gs)
+    plt.plot(y2.x[0], y2.avg, color=colorsplot[1], alpha=alpha, label="RandHound (GroupSize=%d)" % gs, marker="o")
+
+    y1 = snp17tsscosi.get_values_filtered("round_wall", "groupsize", gs)
+    plt.plot(y1.x[0], y1.avg, color=colorsplot[0], alpha=alpha, label="RandHerd (GroupSize=%d)" % gs, marker="o")
+
+    plt.legend(loc="upper left", prop={'size':legend_size})
+    plt.ylabel("Wall-clock time (sec)")
+    plt.axes().set_xticks([128, 256, 512, 768, 1024])
+    plt.axes().xaxis.grid(color='gray', linestyle='dashed', zorder=0)
+    plt.xlim(128/1.1, 1024*1.2)
     mplot.plotEnd()
 
 
@@ -234,21 +255,15 @@ def read_csv_pure(file, xname, yname):
 
 # Write to file
 write_file = True
-# file_extension = 'eps'
 # Show figure
 # mplot.show_fig = True
 mplot.show_fig = False
 
-# if False:
-# snp17rhound = "snp17_randhound_small"
-# snp17tsscosi = "snp17_tsscosi_small"
-# snp17cosi = "snp17_cosi_small"
-plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi")
-# plots = read_csvs("snp17_randhound_16", "snp17_tsscosi_16", "snp17_cosi_16")
+plots = read_csvs("snp17_randhound", "snp17_tsscosi", "snp17_cosi", "snp17_jvss")
 plots_traffic = read_csvs("snp17_randhound_traffic", "snp17_tsscosi_traffic",
                           "snp17_cosi_traffic")
 
-snp17rhound, snp17tsscosi, snp17cosi = plots
+snp17rhound, snp17tsscosi, snp17cosi, jvss = plots
 hosts, groupSizes = snp17rhound.get_limits('groupsize')
 
 # Call all plot-functions
@@ -258,5 +273,6 @@ plotRandHerdRound()
 plotRandHound('Wall')
 plotRandHound('CPU')
 plotTraffic(32)
+plotBaseline(32)
 
 # plotTraffic(groupSizes[-1])
