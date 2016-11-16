@@ -199,7 +199,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 
 			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
-				log.LLvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
 				return
 			}
 			// Temporary error, continue.
