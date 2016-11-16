@@ -165,7 +165,7 @@ func VerifySignature(suite abstract.Suite, publics []abstract.Point, msg, sig []
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (c *CoSi) handleAnnouncement(in *Announcement) error {
-	log.Lvl3("Message:", c.Message)
+	log.Lvlf3("Message: %x", c.Message)
 	// If we have a hook on announcement call the hook
 	if c.announcementHook != nil {
 		return c.announcementHook()

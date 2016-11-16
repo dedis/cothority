@@ -224,15 +224,16 @@ func CheckServers(g *config.Group) error {
 		// Then check pairs of servers
 		for i, first := range g.Roster.List {
 			for _, second := range g.Roster.List[i+1:] {
+				log.Lvl3("Testing connection between", first, second)
 				desc := []string{"none", "none"}
 				if d1 := g.GetDescription(first); d1 != "" {
 					desc = []string{d1, g.GetDescription(second)}
 				}
 				es := []*network.ServerIdentity{first, second}
-				success = success && checkList(sda.NewRoster(es), desc) == nil
+				success = checkList(sda.NewRoster(es), desc) == nil && success
 				es[0], es[1] = es[1], es[0]
 				desc[0], desc[1] = desc[1], desc[0]
-				success = success && checkList(sda.NewRoster(es), desc) == nil
+				success = checkList(sda.NewRoster(es), desc) == nil && success
 			}
 		}
 	}
@@ -266,7 +267,7 @@ func checkList(list *sda.Roster, descs []string) error {
 		log.Errorf("Invalid signature: %v", err)
 		return err
 	}
-	log.Info("Success")
+	fmt.Print("Success\n")
 	return nil
 }
 
