@@ -13,7 +13,7 @@ func TestPPSI(t *testing.T) {
 
 	suite := hosts[0].Suite()
 	publics := el.Publics()
-	ppsi := ppsi_crypto_utils.NewPPSI2(suite, publics, nodes-1)
+	ppsi := ppsi_crypto_utils.NewPPSINP(suite, publics, nodes-1)
 	EncPhones := ppsi.EncryptPhones(setsToEncrypt, nodes-1)
 
 	done := make(chan bool)
