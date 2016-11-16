@@ -36,7 +36,7 @@ func (c *Client) SignMsg(r *sda.Roster, msg []byte) (*SignatureResponse, error) 
 	}
 	sr, ok := reply.Msg.(SignatureResponse)
 	if !ok {
-		return nil, errors.New("This is odd: couldn't cast reply.")
+		return nil, errors.New("this is odd: couldn't cast reply")
 	}
 	return &sr, nil
 }

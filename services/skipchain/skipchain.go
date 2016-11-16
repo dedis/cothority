@@ -176,11 +176,11 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, errors.New("couldn't find skipblock")
 	}
 	child, ok := s.getSkipBlockByID(childID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, errors.New("couldn't find skipblock")
 	}
 	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()

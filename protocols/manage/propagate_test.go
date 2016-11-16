@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"sync"
 	"testing"
 
 	"bytes"
@@ -25,7 +26,8 @@ func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := sda.NewLocalTest()
 		conodes, el, _ := local.GenTree(nbrNodes, true)
-		i := 0
+		var i int
+		var iMut sync.Mutex
 		msg := &PropagateMsg{[]byte("propagate")}
 		propFuncs := make([]PropagationFunc, nbrNodes)
 		var err error
@@ -35,7 +37,9 @@ func TestPropagate(t *testing.T) {
 				"Propagate",
 				func(m network.Body) {
 					if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
+						iMut.Lock()
 						i++
+						iMut.Unlock()
 					} else {
 						t.Error("Didn't receive correct data")
 					}

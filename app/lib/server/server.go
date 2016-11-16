@@ -297,7 +297,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	case response, ok := <-pchan:
 		log.Lvl5("Response:", response)
 		if !ok || err != nil {
-			return nil, errors.New("Received an invalid repsonse.")
+			return nil, errors.New("received an invalid response")
 		}
 		err = cosi.VerifySignature(network.Suite, el.Publics(), msg, response.Signature)
 		if err != nil {

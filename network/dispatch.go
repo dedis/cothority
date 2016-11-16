@@ -111,7 +111,7 @@ func (d *RoutineDispatcher) Dispatch(packet *Packet) error {
 	defer d.Unlock()
 	var p = d.procs[packet.MsgType]
 	if p == nil {
-		return errors.New("No Processor attached to this message type.")
+		return errors.New("no Processor attached to this message type")
 	}
 	go p.Process(packet)
 	return nil

@@ -93,11 +93,11 @@ func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, erro
 	kp := config.NewKeyPair(network.Suite)
 	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
 	if err != nil {
-		return nil, "", fmt.Errorf("Could not parse private key. Abort.")
+		return nil, "", fmt.Errorf("could not parse private key")
 	}
 	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
 	if err != nil {
-		return nil, "", fmt.Errorf("Could not parse public key. Abort.")
+		return nil, "", fmt.Errorf("could not parse public key")
 	}
 	fmt.Println("\tPrivate:\t", privStr)
 	fmt.Println("\tPublic: \t", pubStr)

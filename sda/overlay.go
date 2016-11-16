@@ -364,7 +364,7 @@ func (o *Overlay) Roster(elid RosterID) *Roster {
 // TreeNodeFromToken returns the treeNode corresponding to a token
 func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	if t == nil {
-		return nil, errors.New("Didn't find tree-node: No token given.")
+		return nil, errors.New("didn't find tree-node: No token given")
 	}
 	// First, check the cache
 	if tn := o.cache.GetFromToken(t); tn != nil {
@@ -373,11 +373,11 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	// If cache has not, then search the tree
 	tree := o.Tree(t.TreeID)
 	if tree == nil {
-		return nil, errors.New("Didn't find tree")
+		return nil, errors.New("didn't find tree")
 	}
 	tn := tree.Search(t.TreeNodeID)
 	if tn == nil {
-		return nil, errors.New("Didn't find treenode")
+		return nil, errors.New("didn't find treenode")
 	}
 	// Since we found treeNode, cache it so later reuse
 	o.cache.Cache(tree, tn)
@@ -532,7 +532,7 @@ var ErrWrongTreeNodeInstance = errors.New("This TreeNodeInstance doesn't exist")
 
 // ErrProtocolRegistered is when the protocolinstance is already registered to
 // the overlay
-var ErrProtocolRegistered = errors.New("A ProtocolInstance already has been registered using this TreeNodeInstance!")
+var ErrProtocolRegistered = errors.New("a ProtocolInstance already has been registered using this TreeNodeInstance")
 
 // RegisterProtocolInstance takes a PI and stores it for dispatching the message
 // to it.

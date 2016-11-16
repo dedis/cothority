@@ -30,9 +30,8 @@ func NewLocalRouterWithManager(lm *LocalManager, sid *ServerIdentity) (*Router, 
 // It also keeps track of who is "listening", so it's possible to mimic
 // Conn & Listener.
 type LocalManager struct {
-	// queues maps a remote endpoint to its packet queue. It's the main
-	// structure used to communicate.
-	queues map[endpoint]*connQueue
+	// conns maps a remote endpoint to the remote connection.
+	conns map[endpoint]*LocalConn
 	sync.Mutex
 	// The listening-functions used when a new connection-request arrives.
 	listening map[Address]func(Conn)
@@ -45,7 +44,7 @@ type LocalManager struct {
 // LocalListener & LocalHost.
 func NewLocalManager() *LocalManager {
 	return &LocalManager{
-		queues:    make(map[endpoint]*connQueue),
+		conns:     make(map[endpoint]*LocalConn),
 		listening: make(map[Address]func(Conn)),
 	}
 }
@@ -115,10 +114,9 @@ func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 	outgoing := newLocalConn(lm, outEndpoint, incEndpoint)
 	incoming := newLocalConn(lm, incEndpoint, outEndpoint)
 
-	// outgoing knows how to store packets into the incoming's queue.
-	lm.queues[outEndpoint] = outgoing.connQueue
-	// incoming knows how to store packets into the outgoing's queue.
-	lm.queues[incEndpoint] = incoming.connQueue
+	// map the endpoint to the connection
+	lm.conns[outEndpoint] = outgoing
+	lm.conns[incEndpoint] = incoming
 
 	go fn(incoming)
 	return outgoing, nil
@@ -130,36 +128,43 @@ func (lm *LocalManager) connect(local, remote Address) (*LocalConn, error) {
 func (lm *LocalManager) send(e endpoint, msg []byte) error {
 	lm.Lock()
 	defer lm.Unlock()
-	q, ok := lm.queues[e]
+	q, ok := lm.conns[e]
 	if !ok {
 		return ErrClosed
 	}
 
-	q.push(msg)
+	q.incomingQueue <- msg
 	return nil
 }
 
 // close gets the connection denoted by this endpoint and closes it if
 // it is present.
-func (lm *LocalManager) close(conn *LocalConn) {
+func (lm *LocalManager) close(conn *LocalConn) error {
 	lm.Lock()
 	defer lm.Unlock()
-	// delete this conn
-	delete(lm.queues, conn.local)
-	// and delete the remote one + close it
-	remote, ok := lm.queues[conn.remote]
+	_, ok := lm.conns[conn.local]
 	if !ok {
-		return
+		// connection already closed
+		return ErrClosed
 	}
-	delete(lm.queues, conn.remote)
-	remote.close()
+	// delete this conn
+	delete(lm.conns, conn.local)
+	conn.closeChannels()
+	// and delete the remote one + close it
+	remote, ok := lm.conns[conn.remote]
+	if !ok {
+		return nil
+	}
+	delete(lm.conns, conn.remote)
+	remote.closeChannels()
+	return nil
 }
 
 // len returns how many local connections are open.
 func (lm *LocalManager) len() int {
 	lm.Lock()
 	defer lm.Unlock()
-	return len(lm.queues)
+	return len(lm.conns)
 }
 
 // LocalConn is a connection that sends and receives messages to other
@@ -168,10 +173,14 @@ type LocalConn struct {
 	local  endpoint
 	remote endpoint
 
-	// connQueue is accessible from the LocalManager (i.e. is
-	// shared). We can't directly share LocalConn because go test
-	// -race detects it as data race (while it's *protected*).
-	*connQueue
+	// the channel where incoming messages are dispatched
+	incomingQueue chan []byte
+	// the channel where messages stored can be retrieved with Receive()
+	outgoingQueue chan []byte
+	// the channel used to communicate the stopping of the operations
+	closeCh chan bool
+	// the confirmation channel for the go routine
+	closeConfirm chan bool
 
 	// counter to keep track of how many bytes read / written this connection
 	// has seen.
@@ -184,12 +193,17 @@ type LocalConn struct {
 // connect. It should not be used from the outside, most user want
 // to use NewLocalConn.
 func newLocalConn(lm *LocalManager, local, remote endpoint) *LocalConn {
-	return &LocalConn{
-		remote:    remote,
-		local:     local,
-		connQueue: newConnQueue(),
-		manager:   lm,
+	lc := &LocalConn{
+		remote:        remote,
+		local:         local,
+		manager:       lm,
+		incomingQueue: make(chan []byte, LocalMaxBuffer),
+		outgoingQueue: make(chan []byte, LocalMaxBuffer),
+		closeCh:       make(chan bool),
+		closeConfirm:  make(chan bool),
 	}
+	go lc.start()
+	return lc
 }
 
 // NewLocalConn returns a new channel connection from local to remote.
@@ -214,6 +228,21 @@ func NewLocalConnWithManager(lm *LocalManager, local, remote Address) (*LocalCon
 	return nil, errors.New("Could not connect")
 }
 
+func (lc *LocalConn) start() {
+	for {
+		select {
+		case buff := <-lc.incomingQueue:
+			lc.outgoingQueue <- buff
+		case <-lc.closeCh:
+			// to signal that the conn is closed
+			close(lc.outgoingQueue)
+			close(lc.incomingQueue)
+			lc.closeConfirm <- true
+			return
+		}
+	}
+}
+
 // Send takes a context (that is not used in any way) and a message that
 // will be sent to the remote endpoint.
 // If there is an error in the connection, it will be returned.
@@ -230,9 +259,9 @@ func (lc *LocalConn) Send(msg Body) error {
 // be ready. It returns the received packet.
 // In case of an error the packet is nil and the error is returned.
 func (lc *LocalConn) Receive() (Packet, error) {
-	buff, err := lc.pop()
-	if err != nil {
-		return EmptyApplicationPacket, err
+	buff, opened := <-lc.outgoingQueue
+	if !opened {
+		return EmptyApplicationPacket, ErrClosed
 	}
 	lc.updateRx(uint64(len(buff)))
 
@@ -257,14 +286,20 @@ func (lc *LocalConn) Remote() Address {
 // side.
 // If the connection is not open, it returns an error.
 func (lc *LocalConn) Close() error {
-	if lc.connQueue.isClosed() {
-		return ErrClosed
+	select {
+	case _, o := <-lc.closeCh:
+		if !o {
+			return ErrClosed
+		}
+	default:
 	}
+	return lc.manager.close(lc)
+}
 
-	lc.connQueue.close()
-	// close the remote conn also
-	lc.manager.close(lc)
-	return nil
+func (lc *LocalConn) closeChannels() {
+	close(lc.closeCh)
+	<-lc.closeConfirm
+	close(lc.closeConfirm)
 }
 
 // Type implements the Conn interface
@@ -277,66 +312,12 @@ func (lc *LocalConn) Type() ConnType {
 // All operations are thread-safe.
 // The messages are marshalled and stored in the queue as a slice of bytes.
 type connQueue struct {
-	*sync.Cond
-	queue  [][]byte
-	closed bool
+	wg sync.WaitGroup
 }
 
-func newConnQueue() *connQueue {
-	return &connQueue{
-		Cond: sync.NewCond(&sync.Mutex{}),
-	}
-}
-
-// push inserts a packet in the queue.
-// push won't work if the connQueue is already closed and silently return.
-func (c *connQueue) push(buff []byte) {
-	c.L.Lock()
-	defer c.L.Unlock()
-	if c.closed {
-		return
-	}
-	c.queue = append(c.queue, buff)
-	c.Signal()
-}
-
-// pop retrieves a packet out of the queue.
-// If there is no message, then it blocks UNTIL there is a call to push() or
-// close().
-// pop returns with an error if the queue is closed or gets closed while waiting
-// for a packet.
-func (c *connQueue) pop() ([]byte, error) {
-	c.L.Lock()
-	defer c.L.Unlock()
-	for len(c.queue) == 0 {
-		if c.closed {
-			return nil, ErrClosed
-		}
-		c.Wait()
-	}
-	if c.closed {
-		return nil, ErrClosed
-	}
-	nm := c.queue[0]
-	c.queue = c.queue[1:]
-	return nm, nil
-}
-
-// close sets the closed-field to true and signals to all ongoing pop()
-// operations to return.
-func (c *connQueue) close() {
-	c.L.Lock()
-	defer c.L.Unlock()
-	c.closed = true
-	c.Broadcast()
-}
-
-// isClosed returns whether this queue is closed or not.
-func (c *connQueue) isClosed() bool {
-	c.L.Lock()
-	defer c.L.Unlock()
-	return c.closed
-}
+// LocalMaxBuffer is the number of packets that can be sent simultaneously to the
+// same address.
+const LocalMaxBuffer = 200
 
 // LocalListener implements Listener and uses LocalConn to communicate. It
 // behaves as much as possible as a real golang net.Listener but using LocalConn
