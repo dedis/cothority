@@ -88,7 +88,7 @@ var ServiceFactory = serviceFactory{
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
 	if s.ServiceID(name) != NilServiceID {
-		return fmt.Errorf("Service %s already registered.", name)
+		return fmt.Errorf("service %s already registered", name)
 	}
 	id := ServiceID(uuid.NewV5(uuid.NamespaceURL, name))
 	s.mutex.Lock()
