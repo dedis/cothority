@@ -1,7 +1,6 @@
-package ppsi
+package main
 
 import (
-	"fmt"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ppsi_crypto_utils"
@@ -16,13 +15,13 @@ type PPSI struct {
 
 	dec bool
 
+	firstElg bool
+
 	first bool
 
 	hasPlain int
 
 	publics []abstract.Point
-
-	setreq chan chanSetsRequest
 
 	donreq chan chanDoneMessage
 
@@ -82,7 +81,7 @@ func NewPPSI(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	}
 
 	numnodes := len(node.List())
-	NumAuthorities := numnodes - 1
+	NumAuthorities := numnodes
 	c := &PPSI{
 		ppsi:             ppsi_crypto_utils.NewPPSI(node.Suite(), node.Private(), publics, NumAuthorities),
 		TreeNodeInstance: node,
@@ -94,20 +93,18 @@ func NewPPSI(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	c.MAX_SIZE = 6 //how do i receive it
 	c.dec = false
 	c.first = true
+	c.firstElg = true
 	c.numnodes = numnodes
 	c.NumAuthorities = NumAuthorities
 	c.next = c.treeIndex + 1
 	//c.next := c.id+1
-	if c.treeIndex == c.numnodes-2 {
-		c.next = 0
-	}
+	//if c.treeIndex == c.numnodes-2 {
+	//	c.next = 0
+	//}
 	if c.treeIndex == c.numnodes-1 {
 		c.next = 0
 	}
 
-	if err = node.RegisterChannel(&c.setreq); err != nil {
-		return nil, err
-	}
 	if err = node.RegisterChannel(&c.initreq); err != nil {
 		return nil, err
 	}
@@ -138,8 +135,6 @@ func (c *PPSI) Dispatch() error {
 	for {
 		var err error
 		select {
-		case packet := <-c.setreq:
-			err = c.handleSetsRequest(&packet.SetsRequest)
 		case packet := <-c.ElgEncrypted:
 			err = c.handleElgEncryptedMessage(&packet.ElgEncryptedMessage)
 		case packet := <-c.FullyPhEncrypted:
@@ -162,11 +157,12 @@ func (c *PPSI) Dispatch() error {
 }
 
 func (c *PPSI) Start() error {
+
 	if !c.IsRoot() {
 		return fmt.Errorf("Called Start() on non-root ProtocolInstance")
 	}
-	if len(c.Children()) < 3 {
-		return fmt.Errorf("At least 3 children needed ")
+	if len(c.Children()) < 2 {
+		return fmt.Errorf("At least 2 children needed ")
 	}
 	out := &Init{}
 	return c.handleInitiateRequest(out)
@@ -174,7 +170,8 @@ func (c *PPSI) Start() error {
 }
 
 func (c *PPSI) handleInitiateRequest(in *Init) error {
-	for i, _ := range c.TreeNodeInstance.List() {
+
+	for i := 0; i < c.NumAuthorities; i++ {
 
 		out := c.EncryptedSets[i]
 		users := make(map[int]int, c.NumAuthorities)
@@ -187,26 +184,20 @@ func (c *PPSI) handleInitiateRequest(in *Init) error {
 		//out :=c.EncryptedSets[i]
 
 		outMsg := &ElgEncryptedMessage{
-			Content:   out,
-			Users:     users,
-			NumPhones: len(out),
-			Sets:      in.Num,
-			ID:        i,
+			Content:        out,
+			Users:          users,
+			NumPhones:      len(out),
+			Sets:           len(c.EncryptedSets),
+			ID:             i,
+			NumAuthorities: c.NumAuthorities,
 		}
-		fmt.Printf("%v\n", outMsg.Sets)
 
-		if i != c.Index() {
-			if err := c.SendTo(c.List()[i], outMsg); err != nil {
-				return err
-			}
-			if i == c.Index() {
-				return c.handleElgEncryptedMessage(outMsg)
-			}
-			//	}
+		c.SendTo(c.List()[i], outMsg)
 
-		}
 	}
+
 	return nil
+
 }
 
 //Decrypt one layer of elgamal with the conode private key
@@ -214,26 +205,49 @@ func (c *PPSI) handleInitiateRequest(in *Init) error {
 //Send to next one
 func (c *PPSI) handleElgEncryptedMessage(in *ElgEncryptedMessage) error {
 
-	lim := c.NumAuthorities + 1
+	var phones []map[int]abstract.Point
 
-	phones := c.ConvertDim(in.Content, lim, in.numphones)
+	phones = make([]map[int]abstract.Point, 0)
+	lim := in.NumAuthorities + 1
 
+	for i := 0; i < in.NumPhones; i++ {
+
+		newarr := make(map[int]abstract.Point)
+		for j := i * lim; j < i*lim+lim; j++ {
+
+			for k := range in.Content[j] {
+
+				id := k
+				val := in.Content[j][k]
+				newarr[id] = val
+			}
+
+		}
+
+		phones = append(phones, newarr)
+	}
+
+	//fmt.Printf("%v\n", phones)
 	if !c.IsLastToDecElg(in.Users[c.Index()]) {
 
 		out := c.ppsi.DecryptElgEncrptPH(phones, c.Index())
+
 		in.Users[c.Index()] = in.Users[c.Index()] + 1
 
 		outMsg := &ElgEncryptedMessage{
-			Content: out,
-			Users:   in.Users,
-			Sets:    in.Sets,
-			ID:      in.ID,
+			Content:        out,
+			Users:          in.Users,
+			NumPhones:      in.NumPhones,
+			Sets:           in.Sets,
+			ID:             in.ID,
+			NumAuthorities: in.NumAuthorities,
 		}
 
 		return c.SendTo(c.List()[c.next], outMsg)
 	}
 
 	if c.IsLastToDecElg(in.Users[c.Index()]) {
+
 		encPH := c.ppsi.ExtractPHEncryptions(phones)
 		outMsg := &FullyPhEncryptedMessage{
 			Content: encPH,
@@ -425,28 +439,4 @@ func (c *PPSI) Contains(elems []abstract.Point, elem abstract.Point) bool {
 		}
 	}
 	return false
-}
-
-
-func (c *PPSI) ConvertDim(phones []map[int]abstract.Point,lim int, numphones int) (
-	phonesnew []map[int]abstract.Point){
-	
-	phonesnew:= make([]map[int]abstract.Point,0)
-
-	for i:=0; i<numphones ; i++ {
-		newarr:= make(map[int]abstract.Point)
-		for j:=i*lim; j<i*lim+lim. ; j++ {
-			for k := range phones[j] {
-				 id:=k
-				 val:=phones[j][k]
-				 newarr[id]=val
-			 }
-		}
-	
-	
-		phonesnew=append(phones,newarr)
-	}
-
-return
- 
 }
