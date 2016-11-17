@@ -14,6 +14,7 @@ type ElgEncryptedMessage struct {
 	NumPhones int
 	Sets      int
 	ID        int
+	NumAuthorities int
 }
 
 type FullyPhEncryptedMessage struct {
