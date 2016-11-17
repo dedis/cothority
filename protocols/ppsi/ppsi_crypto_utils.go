@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/random"
+	"math/rand"
 )
 
 type PPSI struct {
@@ -28,7 +29,7 @@ func NewPPSI(suite abstract.Suite, private abstract.Scalar, publics []abstract.P
 	return ppsi
 }
 
-func NewPPSINP(suite abstract.Suite, publics []abstract.Point, ids int) *PPSI {
+func NewPPSI2(suite abstract.Suite, publics []abstract.Point, ids int) *PPSI {
 	ppsi := &PPSI{
 		suite: suite,
 
@@ -39,11 +40,17 @@ func NewPPSINP(suite abstract.Suite, publics []abstract.Point, ids int) *PPSI {
 	return ppsi
 }
 
-//Given several sets of messags, elgamal encrypt each one multiple times-"ids" times, each time with the 
+func (c *PPSI) initPPSI(numPhones int, ids int) {
+	//		c.EncryptedPhoneSet =  make([]map[int]abstract.Point, numPhones)
+	c.ids = ids
+
+}
+
+//Given several sets of messags, elgamal encrypt each one multiple times-"ids" times, each time with the
 //public key of a diffrent user
 func (c *PPSI) EncryptPhones(setsToEncrypt [][]string, ids int) [][]map[int]abstract.Point {
 
-	c.EncryptedSets = make([][]map[int]abstract.Point, 3)
+	c.EncryptedSets = make([][]map[int]abstract.Point, ids)
 	for i := 0; i < len(setsToEncrypt); i++ {
 		out := c.EncryptionOneSetOfPhones(setsToEncrypt[i], ids)
 		c.EncryptedSets[i] = out
@@ -55,7 +62,7 @@ func (c *PPSI) EncryptPhones(setsToEncrypt [][]string, ids int) [][]map[int]abst
 
 func (c *PPSI) Shuffle(src []map[int]abstract.Point) []map[int]abstract.Point {
 
-	dst := make([]map[int]abstract.Point)
+	dst := make([]map[int]abstract.Point, len(src))
 	perm := rand.Perm(len(src))
 	for i, v := range perm {
 		dst[v] = src[i]
@@ -64,7 +71,7 @@ func (c *PPSI) Shuffle(src []map[int]abstract.Point) []map[int]abstract.Point {
 	return dst
 }
 
-//Given one messaege, elgamal encrypt it multiple times-"ids" times, each time with 
+//Given one messaege, elgamal encrypt it multiple times-"ids" times, each time with
 //the public key of a different user
 func (c *PPSI) MultipleElgEncryption(message string, ids int) (
 	cipher map[int]abstract.Point) {
@@ -88,7 +95,7 @@ func (c *PPSI) MultipleElgEncryption(message string, ids int) (
 
 }
 
-//Given one set of messages, elgamal encrypt each one multiple times-"ids" times, 
+//Given one set of messages, elgamal encrypt each one multiple times-"ids" times,
 //each time with the public key of a different user
 func (c *PPSI) EncryptionOneSetOfPhones(set []string, ids int) (
 	EncryptedPhoneSet []map[int]abstract.Point) {
@@ -115,6 +122,7 @@ func (c *PPSI) DecryptElgEncrptPH(set []map[int]abstract.Point, id int) (
 	for i := 0; i < len(set); i++ {
 		cipher := set[i]
 		K := cipher[id]
+
 		C := cipher[-1]
 
 		resElg, _ := ElGamal.PartialElGamalDecrypt(c.suite, c.private, K, C)
@@ -128,9 +136,9 @@ func (c *PPSI) DecryptElgEncrptPH(set []map[int]abstract.Point, id int) (
 			UpdatedSet[i][j] = res2PH
 		}
 
-		UpdatedSet = c.Shuffle(UpdatedSet)
-		return
 	}
+	UpdatedSet = c.Shuffle(UpdatedSet)
+	return
 }
 
 //Extracts the ciphers themselves from a map to a slice
@@ -212,7 +220,7 @@ func (c *PPSI) PHEncrypt(M abstract.Point) (
 	return
 }
 
-func Example_PPSI() {
+func test_utils() {
 	suite := nist.NewAES128SHA256P256()
 	var c1 *PPSI
 	var c2 *PPSI
@@ -231,7 +239,7 @@ func Example_PPSI() {
 	//		D := suite.Point().Mul(nil, d)
 
 	set11 := []string{"543323345", "543323045", "843323345"}
-	
+
 	publics := []abstract.Point{A, B, C}
 	private1 := a
 	private2 := b
@@ -254,6 +262,7 @@ func Example_PPSI() {
 	set2 := c2.DecryptElgEncrptPH(set1, 1)
 	set3 := c3.DecryptElgEncrptPH(set2, 2)
 	set4 = c3.ExtractPHEncryptions(set3)
+	//fmt.Printf("%v\n",   set4)
 
 	set5 = c3.DecryptPH(set4)
 	set6 = c1.DecryptPH(set5)
