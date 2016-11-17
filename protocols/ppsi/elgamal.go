@@ -1,7 +1,6 @@
 package ppsi
 
 import (
-	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/random"
