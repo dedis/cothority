@@ -177,7 +177,7 @@ func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg) error {
 	done := o.instancesInfo[sdaMsg.To.ID()]
 	o.instancesLock.Unlock()
 	if done {
-		log.Error("Message for TreeNodeInstance that is already finished")
+		log.Lvl2("Message for TreeNodeInstance that is already finished")
 		return nil
 	}
 	// if the TreeNodeInstance is not there, creates it

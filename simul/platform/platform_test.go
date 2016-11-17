@@ -8,6 +8,10 @@ import (
 	"github.com/dedis/cothority/simul/platform"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 var testfile = `Machines = 8
 App = "sign"
 

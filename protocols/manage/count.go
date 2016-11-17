@@ -148,7 +148,7 @@ func (p *ProtocolCount) FuncPC() {
 				log.Lvl3(p.Info(), "sending to", c.ServerIdentity.Address, c.ID, p.timeout)
 				err := p.SendTo(c, &PrepareCount{Timeout: p.timeout})
 				if err != nil {
-					log.Error(p.Info(), "couldn't send to child",
+					log.Lvl3(p.Info(), "couldn't send to child",
 						c.Name())
 				}
 			}(child)
