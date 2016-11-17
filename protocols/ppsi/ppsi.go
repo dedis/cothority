@@ -1,4 +1,4 @@
-package main
+package ppsi
 
 import (
 	"github.com/dedis/cothority/sda"
