@@ -417,8 +417,6 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 			if fl.Signature, err = s.BFTSignHash(fl.Hash, bc, newest); err != nil {
 				return nil, err
 			}
-			fmt.Println(fl.Signature)
-			//fl.Signature = []byte{1}
 			bc.ForwardLink = append(bc.ForwardLink, fl)
 			//fmt.Println("added a new forward link")
 		}
@@ -434,7 +432,7 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 }
 
 func (s *Service) BFTSignHash(hash SkipBlockID, sb *SkipBlock, newest *SkipBlock) ([]byte, error) {
-	fmt.Println("Forward link between blocks with hashes: ", sb.Hash, " ", newest.Hash)
+	//fmt.Println("Forward link between blocks with hashes: ", sb.Hash, " ", newest.Hash)
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte(hash)
@@ -475,17 +473,8 @@ func (s *Service) BFTSignHash(hash SkipBlockID, sb *SkipBlock, newest *SkipBlock
 	go node.Start()
 	select {
 	case <-done:
-		//fmt.Println("BFTSignature OK")
 		signature := root.Signature()
-		//fmt.Println("BFTSignature OK_2")
-		sig, _ = network.MarshalRegisteredType(signature)
-		publics := sb.Roster.Publics()
-		for _, key := range publics {
-			fmt.Println(key)
-		}
-		fmt.Println("hash: ", hash)
-		fmt.Println("hash: ", root.Msg)
-		fmt.Println("sig: ", sig)
+		sig = signature.Sig
 		if len(signature.Exceptions) != 0 {
 			fmt.Println("Not everybody signed off the new block")
 			return sig, errors.New("Not everybody signed off the new block")
@@ -497,7 +486,6 @@ func (s *Service) BFTSignHash(hash SkipBlockID, sb *SkipBlock, newest *SkipBlock
 	case <-time.After(time.Second * 60):
 		return nil, errors.New("Timed out while waiting for signature")
 	}
-	//fmt.Println("Returning from BFTSignHash")
 	return sig, nil
 }
 

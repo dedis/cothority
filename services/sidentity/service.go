@@ -24,6 +24,8 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/ca"
+	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 )
 
@@ -42,6 +44,7 @@ func init() {
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
+	ca *ca.CSRDispatcher
 	*StorageMap
 	identitiesMutex sync.Mutex
 	skipchain       *skipchain.Client
@@ -56,12 +59,13 @@ type StorageMap struct {
 // Storage stores one identity together with the skipblocks.
 type Storage struct {
 	sync.Mutex
-	Latest     *Config
-	Proposed   *Config
+	Latest     *common_structs.Config
+	Proposed   *common_structs.Config
 	Votes      map[string]*crypto.SchnorrSig
 	Root       *skipchain.SkipBlock
 	Data       *skipchain.SkipBlock
 	SkipBlocks map[string]*skipchain.SkipBlock
+	Certs      []*ca.Cert
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
@@ -119,6 +123,20 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
+
+	log.Printf("ID: %v", ids.Data.Hash)
+	hash, _ := ai.Config.Hash()
+	log.Printf("Hash: %v", hash)
+	certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
+	log.Printf("CERTS")
+	if certs == nil {
+		log.Printf("No certs returned")
+	}
+	for _, cert := range certs {
+		ids.Certs = append(ids.Certs, cert)
+		log.Printf("Cert with siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
+	}
+	log.Printf("CERTS2")
 	s.save()
 
 	return &CreateIdentityReply{
@@ -147,8 +165,8 @@ func (s *Storage) setSkipBlockByID(latest *skipchain.SkipBlock) bool {
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
-func (s *Storage) getSkipBlockByID(sbID ID) (*skipchain.SkipBlock, bool) {
-	b, ok := s.SkipBlocks[string(skipchain.SkipBlockID(sbID))]
+func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipBlock, bool) {
+	b, ok := s.SkipBlocks[string(sbID)]
 	//b, ok := s.SkipBlocks["georgia"]
 	return b, ok
 }
@@ -166,10 +184,10 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 	// at least the latest know and the next block:
 	blocks := []*skipchain.SkipBlock{block}
 	log.Lvl3("Starting to search chain")
-	fmt.Println(len(block.ForwardLink))
+	//fmt.Println(len(block.ForwardLink))
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[len(block.ForwardLink)-1]
-		hash := ID(link.Hash)
+		hash := link.Hash
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
 			return nil, errors.New("Missing block in forward-chain")
@@ -282,7 +300,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			return nil, err
 		}
 		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
-		log.Lvl3("SB signed is", msg.(*Config).Device)
+		log.Lvl3("SB signed is", msg.(*common_structs.Config).Device)
 		usb := &UpdateSkipBlock{
 			ID:       v.ID,
 			Latest:   reply.Latest,
@@ -313,8 +331,10 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.Body) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
-	id := ID(nil)
+	id := skipchain.SkipBlockID(nil)
 	switch msg.(type) {
+	/*case *ProposeCert:
+	id = msg.(*ProposeCert).Cert.ID*/
 	case *ProposeSend:
 		id = msg.(*ProposeSend).ID
 	case *ProposeVote:
@@ -323,7 +343,7 @@ func (s *Service) Propagate(msg network.Body) {
 		id = msg.(*UpdateSkipBlock).ID
 	case *PropagateIdentity:
 		pi := msg.(*PropagateIdentity)
-		id = ID(pi.Data.Hash)
+		id = pi.Data.Hash
 		if s.getIdentityStorage(id) != nil {
 			log.Error("Couldn't store new identity")
 			return
@@ -348,6 +368,9 @@ func (s *Service) Propagate(msg network.Body) {
 		sid.Lock()
 		defer sid.Unlock()
 		switch msg.(type) {
+		/*case *ProposeCert:
+		pc := msg.(*ProposeCert).Cert
+		sid.Certs = append(sid.Certs, pc)*/
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Config
@@ -364,7 +387,7 @@ func (s *Service) Propagate(msg network.Body) {
 				log.Error(err)
 				return
 			}
-			al, ok := msgLatest.(*Config)
+			al, ok := msgLatest.(*common_structs.Config)
 			if !ok {
 				log.Error(err)
 				return
@@ -380,9 +403,37 @@ func (s *Service) Propagate(msg network.Body) {
 	}
 }
 
+/*
+// ProposeCert stores internally a new cert
+func (s *Service) ProposeCert(si *network.ServerIdentity, cert *ProposeCert) (network.Body, error) {
+	sid := s.getIdentityStorage(cert.Cert.ID)
+	if sid == nil {
+		return nil, errors.New("Didn't find identity")
+	}
+
+	roster := sid.Root.Roster
+	replies, err := manage.PropagateStartAndWait(s.Context, roster,
+		cert, propagateTimeout, s.Propagate)
+	if err != nil {
+		return nil, err
+	}
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
+	}
+	return nil, nil
+}
+
+func (s *Service) UpdateCerts(si *network.ServerIdentity, upcerts *UpdateCerts) (network.Body, error) {
+	sid := s.getIdentityStorage(upcerts.ID)
+	if sid == nil {
+		return nil, errors.New("Didn't find identity")
+	}
+	return &UpdateCertsReply{Certs: sid.Certs}, nil
+}
+*/
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id ID) *Storage {
+func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	is, ok := s.Identities[string(id)]
@@ -393,7 +444,7 @@ func (s *Service) getIdentityStorage(id ID) *Storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id ID, is *Storage) {
+func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
@@ -440,6 +491,7 @@ func (s *Service) tryLoad() error {
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
+		ca:               ca.NewCSRDispatcher(),
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 		path:             path,
@@ -448,7 +500,9 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		log.Error(err)
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.GetUpdateChain} {
+		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.GetUpdateChain,
+		//s.ProposeCert, s.UpdateCerts} {
+	} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}

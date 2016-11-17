@@ -1,11 +1,14 @@
 package sidentity
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/crypto/abstract"
+	//"github.com/dedis/crypto/abstract"
+	//"time"
 	//"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/ca"
+	"github.com/dedis/cothority/services/common_structs"
 	//"github.com/dedis/crypto/config"
 	//"github.com/stretchr/testify/assert"
 	//"io/ioutil"
@@ -13,9 +16,9 @@ import (
 	"testing"
 )
 
-func NewTestIdentity(cothority *sda.Roster, majority int, owner string, local *sda.LocalTest) *Identity {
-	id := NewIdentity(cothority, majority, owner)
-	id.Client = local.NewClient(ServiceName)
+func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *PinState, cas []common_structs.CAInfo, local *sda.LocalTest) *Identity {
+	id := NewIdentity(cothority, majority, owner, pinstate, cas)
+	id.CothorityClient = local.NewClient(ServiceName)
 	return id
 }
 
@@ -70,7 +73,6 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 		is.identitiesMutex.Unlock()
 	}
 }
-
 
 func TestIdentity_ConfigUpdate(t *testing.T) {
 	l := sda.NewTCPTest()
@@ -131,7 +133,6 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 		id1.Unlock()
 	}
 }
-
 
 func TestIdentity_ProposeVote(t *testing.T) {
 	l := sda.NewTCPTest()
@@ -248,7 +249,6 @@ func TestIdentity_ProposeVoteExtended(t *testing.T) {
 		t.Fatal("Should have five owners by now")
 	}
 }
-*/
 
 func TestIdentity_ProposeVoteExtended_Del(t *testing.T) {
 	l := sda.NewTCPTest()
@@ -260,13 +260,15 @@ func TestIdentity_ProposeVoteExtended_Del(t *testing.T) {
 	}
 
 	thr := 1
-	c1 := NewTestIdentity(el, thr, "one", l)
+	pinstate := &PinState{Ctype: "device"}
+
+	c1 := NewTestIdentity(el, thr, "one", pinstate, l)
 	log.ErrFatal(c1.CreateIdentity())
 
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Adding second identity")
-	c2 := NewTestIdentity(el, thr, "two", l)
+	c2 := NewTestIdentity(el, thr, "two", pinstate, l)
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	c1.proposeUpVote()
 	c1.ConfigUpdate()
@@ -289,7 +291,7 @@ func TestIdentity_ProposeVoteExtended_Del(t *testing.T) {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println("Adding third identity")
-	c3 := NewTestIdentity(el, thr, "three", l)
+	c3 := NewTestIdentity(el, thr, "three", pinstate, l)
 	log.ErrFatal(c3.AttachToIdentity(c1.ID))
 	c1.proposeUpVote()
 	c2.proposeUpVote()
@@ -327,7 +329,6 @@ func TestIdentity_ProposeVoteExtended_Del(t *testing.T) {
 
 }
 
-/*
 func TestIdentity_SaveToStream(t *testing.T) {
 	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
@@ -356,7 +357,6 @@ func TestIdentity_SaveToStream(t *testing.T) {
 		t.Fatal("Owners are not the same", id.Config.Data, id2.Config.Data)
 	}
 }
-
 
 func TestCrashAfterRevocation(t *testing.T) {
 	l := sda.NewTCPTest()
@@ -397,6 +397,42 @@ func TestCrashAfterRevocation(t *testing.T) {
 	log.ErrFatal(c1.ProposeUpdate())
 }
 */
+func TestTemporary(t *testing.T) {
+	l := sda.NewTCPTest()
+	hosts, el, _ := l.GenTree(5, true)
+	services := l.GetServices(hosts, identityService)
+	for _, s := range services {
+		log.Lvl3(s.(*Service).Identities)
+	}
+
+	hosts, _, _ = l.GenTree(2, true)
+	services = l.GetServices(hosts, ca.CAService)
+	defer l.CloseAll()
+
+	cas := make([]common_structs.CAInfo, 0)
+	for index, h := range hosts {
+		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
+	}
+
+	thr := 1
+	log.Print("Creating new site identity constituted of one device")
+	pinstate := &PinState{Ctype: "device"}
+	c1 := NewTestIdentity(el, thr, "one", pinstate, cas, l)
+	log.ErrFatal(c1.CreateIdentity())
+
+	/*
+		fmt.Println()
+		fmt.Println()
+		fmt.Println("Adding client with pins")
+		//keypair := config.NewKeyPair(network.Suite)
+		//pin := keypair.Public
+		pin := c1.Public
+		pinstate = NewPinState("client_with_pins", 1, []abstract.Point{pin}, int64(MaxInt))
+		c2 := NewTestIdentity(el, thr, "client_with_pins_1", pinstate, l)
+		c2.AttachToIdentity(c1.ID)
+	*/
+}
+
 func (i *Identity) proposeUpVote() {
 	log.ErrFatal(i.ProposeUpdate())
 	log.ErrFatal(i.ProposeVote(true))
