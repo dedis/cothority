@@ -1,25 +1,31 @@
-package ppsi
+package main
 
 import (
 	"fmt"
+	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/ppsi_crypto_utils"
 	"testing"
 )
 
 func TestPPSI(t *testing.T) {
 
-	set1 := []string{"543323345", "543323345", "843323345"}
-	set2 := []string{"543323345", "543323045", "843323375"}
-	set3 := []string{"543323345", "543323045", "843323345"}
+	set1 := []string{"543323345", "543323045", "843323345", "213323045", "843323345"}
+	set2 := []string{"543323345", "543323045", "843343345", "213323045", "843323345"}
+	set3 := []string{"543323345", "543323045", "843323345", "213323045", "843323345"}
+	set4 := []string{"543323345", "543323045", "843333345", "548323032", "213323045"}
+	set5 := []string{"543323345", "543323045", "843323345", "543323245", "213323045"}
+	set6 := []string{"543323345", "543323045", "843333345", "543323032", "213323045"}
 
+	setsToEncrypt := [][]string{set1, set2, set3, set4, set5, set6}
+	local := sda.NewLocalTest()
+	hosts, el, tree := local.GenBigTree(6, 6, 5, true)
 	suite := hosts[0].Suite()
 	publics := el.Publics()
-	ppsi := ppsi_crypto_utils.NewPPSINP(suite, publics, nodes-1)
-	EncPhones := ppsi.EncryptPhones(setsToEncrypt, nodes-1)
+	ppsi := ppsi_crypto_utils.NewPPSI2(suite, publics, 6)
+	EncPhones := ppsi.EncryptPhones(setsToEncrypt, 6)
 
 	done := make(chan bool)
 	// IdsToInterset  := []int{0,1,2}
-	local := sda.NewLocalTest()
-	_, _, tree := local.GenBigTree(3, 3, 2, true)
 
 	defer local.CloseAll()
 
