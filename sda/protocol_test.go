@@ -13,7 +13,9 @@ import (
 
 var testProto = "test"
 
-var simpleProto = "simple"
+func init() {
+	network.RegisterPacketType(SimpleMessage{})
+}
 
 // ProtocolTest is the most simple protocol to be implemented, ignoring
 // everything it receives.
@@ -48,7 +50,8 @@ func (p *ProtocolTest) Start() error {
 
 type SimpleProtocol struct {
 	// chan to get back to testing
-	Chan chan bool
+	Chan  chan bool
+	Error error
 	*TreeNodeInstance
 }
 
@@ -63,10 +66,7 @@ func (p *SimpleProtocol) Start() error {
 }
 
 // Dispatch analyses the message and does nothing else
-func (p *SimpleProtocol) ReceiveMessage(msg struct {
-	*TreeNode
-	SimpleMessage
-}) error {
+func (p *SimpleProtocol) ReceiveMessage(msg MsgSimpleMessage) error {
 	if msg.I != 10 {
 		return errors.New("Not the value expected")
 	}
@@ -76,6 +76,11 @@ func (p *SimpleProtocol) ReceiveMessage(msg struct {
 
 type SimpleMessage struct {
 	I int
+}
+
+type MsgSimpleMessage struct {
+	*TreeNode
+	SimpleMessage
 }
 
 // Test simple protocol-implementation
@@ -102,6 +107,8 @@ func TestProtocolRegistration(t *testing.T) {
 // and start a protocol. H1 should receive that message and request the entitity
 // list and the treelist and then instantiate the protocol.
 func TestProtocolAutomaticInstantiation(t *testing.T) {
+	var simpleProto = "simpleAI"
+
 	// setup
 	chanH1 := make(chan bool)
 	chanH2 := make(chan bool)
@@ -113,12 +120,11 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 			TreeNodeInstance: n,
 			Chan:             chans[id],
 		}
-		ps.RegisterHandler(ps.ReceiveMessage)
+		log.ErrFatal(ps.RegisterHandler(ps.ReceiveMessage))
 		id++
 		return &ps, nil
 	}
 
-	network.RegisterPacketType(SimpleMessage{})
 	GlobalProtocolRegister(simpleProto, fn)
 	local := NewLocalTest()
 	defer local.CloseAll()
