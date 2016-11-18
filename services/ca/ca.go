@@ -76,11 +76,11 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	id := csr.ID
 	config := csr.Config
 	hash, _ := config.Hash()
-	log.Printf("SignCert(): 1")
+	//log.Printf("SignCert(): 1")
 	if config == nil {
 		log.Printf("Nil config")
 	}
-	log.Printf("ID: %v, Hash: %v", id, hash)
+	//log.Printf("ID: %v, Hash: %v", id, hash)
 	// Check that the Config part of the CSR was signed by a threshold of the containing devices
 	cnt := 0
 	for _, dev := range config.Device {
@@ -98,23 +98,23 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		log.Printf("Not enough valid signatures")
 		return nil, errors.New("Not enough valid signatures")
 	}
-	log.Printf("SignCert(): 2")
+	//log.Printf("SignCert(): 2")
 	// Sign the config's hash using CA's private key
 	var signature crypto.SchnorrSig
 	var err error
-	log.Printf("SignCert(): before signing: CApublic: %v", ca.Public)
+	//log.Printf("SignCert(): before signing: CApublic: %v", ca.Public)
 	signature, err = crypto.SignSchnorr(network.Suite, ca.Private, hash)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("SignCert(): 3")
+	//log.Printf("SignCert(): 3")
 	cert := &Cert{
 		ID:        id,
 		Hash:      hash,
 		Signature: &signature,
 		Public:    ca.Public,
 	}
-	log.Printf("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
+	//log.Printf("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
 	return &CSRReply{
 		Cert: cert,
 	}, nil

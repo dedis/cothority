@@ -141,6 +141,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() error {
+	log.Print("CreateIdentity(): Start")
 	hash, _ := i.Config.Hash()
 	log.Printf("Proposed config's hash: %v", hash)
 	sig, _ := crypto.SignSchnorr(network.Suite, i.Private, hash)
@@ -366,7 +367,7 @@ func (i *Identity) ProposeUpdate() error {
 
 // ProposeVote calls the 'accept'-vote on the current propose-configuration
 func (i *Identity) ProposeVote(accept bool) error {
-	fmt.Println("ProposeVote()")
+	log.Printf("ProposeVote(): device: %v", i.DeviceName)
 	if i.Proposed == nil {
 		return errors.New("No proposed config")
 	}
@@ -393,10 +394,10 @@ func (i *Identity) ProposeVote(accept bool) error {
 	}
 	reply, ok := msg.Msg.(ProposeVoteReply)
 	if !ok {
-		fmt.Println("Device with name: ", i.DeviceName, ": not yet accepted skipblock")
+		log.Printf("Device with name: %v : not yet accepted skipblock", i.DeviceName)
 	}
 	if ok {
-		fmt.Println("Device with name: ", i.DeviceName, ": accepted skipblock")
+		log.Printf("Device with name: %v : accepted skipblock", i.DeviceName)
 		_, data, _ := network.UnmarshalRegistered(reply.Data.Data)
 		ok, err = i.ValidateUpdateConfig(data.(*common_structs.Config))
 		if !ok {
@@ -434,7 +435,7 @@ func (i *Identity) ConfigUpdate() error {
 }
 
 func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, error) {
-	log.Printf("ConfigUpdate()")
+	log.Printf("ValidateUpdateConfig(): Start")
 	trustedconfig := i.Config
 	//fmt.Println("latest known block's hash: ", skipchain.SkipBlockID(i.latestID))
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.latestID, ID: i.ID})
@@ -446,30 +447,38 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 
 	ok := true
 	prev := blocks[0]
-	fmt.Println(len(blocks), "skipblocks returned, identity: ", i.DeviceName)
+	log.Printf("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
 	for index, b := range blocks {
-		fmt.Println(index, "block with hash: ", b.Hash)
+		log.Printf("%v block with hash: %v", index, b.Hash)
 	}
 
 	// Check that the hash of the first block of the returned list is the latest known
 	// to us so far
 	if !bytes.Equal(prev.Hash, i.latestID) {
+		log.Printf("Returned chain of skipblocks starts with wrong skipblock hash")
 		return false, errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
-	// Check that the returned valid config is the one included into the last skiblock
+	// Check that the returned valid config is the one included into the last skipblock
 	// of the returned list
-	//fmt.Println(d)
-	//fmt.Println(blocks[len(blocks)-1].Data)
-	/*_, latestconf, _ := network.UnmarshalRegistered(blocks[len(blocks)-1].Data)
-	err = newconf.Equal(latestconf.(*common_structs.Config))
-	if err != nil {
+	b1 := blocks[len(blocks)-1].Data
+	/*b2, _ := network.MarshalRegisteredType(newconf)
+	if !bytes.Equal(b1, b2) {
+		log.Printf("Configs don't match!")
 		return false, err
 	}
 	*/
-	b1 := blocks[len(blocks)-1].Data
-	b2, _ := network.MarshalRegisteredType(newconf)
-	if !bytes.Equal(b1, b2) {
+	_, data, _ := network.UnmarshalRegistered(b1)
+	c, _ := data.(*common_structs.Config)
+	h1, _ := c.Hash()
+	h2, _ := newconf.Hash()
+	log.Printf("h1: %v, h2: %v", h1, h2)
+	//if h1 != h2 {
+	//	log.Printf("Configs don't match!")
+	//	return false, err
+	//}
+	if err := c.Equal(newconf); err != nil {
+		log.Printf("Configs don't match!")
 		return false, err
 	}
 
@@ -478,37 +487,35 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 		// Verify that the cothority has signed the forward links
 		next := block
 		if index > 0 {
-			fmt.Println("Checking trust delegation ", index-1, "->", index)
+			log.Printf("DEVICE: %v, Checking trust delegation: %v -> %v", i.DeviceName, index-1, index)
 			cnt := 0
-			fmt.Println("cnt: ", cnt)
+			//fmt.Println("cnt: ", cnt)
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
 			if err2 != nil {
 				return false, errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
 			}
 			newconfig, ok := data.(*common_structs.Config)
 			if !ok {
-				return false, errors.New("Couldn't get type '*common_structs.Config'")
+				return false, errors.New("Couldn't get type '*Config'")
 			}
 
 			for key, newdevice := range newconfig.Device {
 				if _, exists := trustedconfig.Device[key]; exists {
-					//fmt.Println(newdevice.Point)
-					//fmt.Println(trustedconfig.Device[key].Point)
-
 					b1, _ := network.MarshalRegisteredType(newdevice.Point)
 					b2, _ := network.MarshalRegisteredType(trustedconfig.Device[key].Point)
 					if bytes.Equal(b1, b2) {
-
 						//fmt.Println("Check whether there is a non-nil signature")
 						if newdevice.Vote != nil {
 							var hash crypto.HashID
 							hash, err = newconfig.Hash()
 							if err != nil {
+								log.Printf("Couldn't get hash")
 								return false, errors.New("Couldn't get hash")
 							}
 							fmt.Println("Verify signature of device: ", key)
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
+								log.Printf("Wrong signature")
 								return false, errors.New("Wrong signature")
 							}
 							cnt++
@@ -518,16 +525,17 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 				}
 			}
 			if cnt < trustedconfig.Threshold {
-				fmt.Println("number of votes: ", cnt, "threshold: ", trustedconfig.Threshold)
+				log.Printf("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
 				return false, errors.New("No sufficient threshold of trusted devices' votes")
 			}
 
-			fmt.Println("Verify the cothority's signatures regarding the forward links")
+			log.Printf("Verify the cothority's signatures regarding the forward links")
 			// Verify the cothority's signatures regarding the forward links
 			link := prev.ForwardLink[len(prev.ForwardLink)-1]
 
 			//fmt.Println("Check whether cothority's signature upon wrong skipblock hash")
 			if !bytes.Equal(link.Hash, next.Hash) {
+				log.Printf("Cothority's signature upon wrong skipblock hash")
 				return false, errors.New("Cothority's signature upon wrong skipblock hash")
 			}
 			//fmt.Println("Check whether cothority's signature verify or not")
@@ -536,10 +544,11 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 			if prev.Roster != nil {
 				err := cosi.VerifySignature(network.Suite, publics, hash, link.Signature)
 				if err != nil {
+					log.Printf("Cothority's signature NOT ok")
 					return false, errors.New("Cothority's signature doesn't verify")
 				}
-				fmt.Println("Cothority's signature ok")
 			} else {
+				log.Printf("Found no roster")
 				return false, errors.New("Found no roster")
 			}
 
@@ -552,7 +561,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	i.latestID = blocks[len(blocks)-1].Hash
 	i.Latest = blocks[len(blocks)-1]
 	i.Config = newconf
-	fmt.Println("Num of device owners: ", len(i.Config.Device))
+	log.Printf("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
 	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
 	return ok, err
 }

@@ -124,19 +124,19 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
 
-	log.Printf("ID: %v", ids.Data.Hash)
-	hash, _ := ai.Config.Hash()
-	log.Printf("Hash: %v", hash)
-	certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
-	log.Printf("CERTS")
+	//log.Printf("ID: %v", ids.Data.Hash)
+	//hash, _ := ai.Config.Hash()
+	//log.Printf("Hash: %v", hash)
+	/*certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
 	if certs == nil {
 		log.Printf("No certs returned")
 	}
 	for _, cert := range certs {
 		ids.Certs = append(ids.Certs, cert)
-		log.Printf("Cert with siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
+		log.Printf("---------NEW CERT!--------")
+		log.Printf("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
 	}
-	log.Printf("CERTS2")
+	*/
 	s.save()
 
 	return &CreateIdentityReply{

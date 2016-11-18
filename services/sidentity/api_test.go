@@ -3,7 +3,7 @@ package sidentity
 import (
 	//"fmt"
 	"github.com/dedis/cothority/log"
-	//"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/abstract"
 	//"time"
 	//"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -397,7 +397,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	log.ErrFatal(c1.ProposeUpdate())
 }
 */
-func TestTemporary(t *testing.T) {
+func TestGetCert(t *testing.T) {
 	l := sda.NewTCPTest()
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
@@ -415,22 +415,69 @@ func TestTemporary(t *testing.T) {
 	}
 
 	thr := 1
-	log.Print("Creating new site identity constituted of one device")
+	log.Print("NEW SITE IDENITY")
 	pinstate := &PinState{Ctype: "device"}
 	c1 := NewTestIdentity(el, thr, "one", pinstate, cas, l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	/*
-		fmt.Println()
-		fmt.Println()
-		fmt.Println("Adding client with pins")
-		//keypair := config.NewKeyPair(network.Suite)
-		//pin := keypair.Public
-		pin := c1.Public
-		pinstate = NewPinState("client_with_pins", 1, []abstract.Point{pin}, int64(MaxInt))
-		c2 := NewTestIdentity(el, thr, "client_with_pins_1", pinstate, l)
-		c2.AttachToIdentity(c1.ID)
-	*/
+	log.Print("")
+	log.Print("Adding second device")
+	pinstate = &PinState{Ctype: "device"}
+	c2 := NewTestIdentity(el, thr, "two", pinstate, nil, l)
+	c2.AttachToIdentity(c1.ID)
+	c1.proposeUpVote()
+	c1.ConfigUpdate()
+	if len(c1.Config.Device) != 2 {
+		t.Fatal("Should have two owners by now")
+	}
+
+	thr = 2
+	log.Print("")
+	log.Printf("NEW THRESHOLD VALUE: %v", thr)
+	c1.UpdateIdentityThreshold(thr)
+	c1.proposeUpVote()
+	c1.ConfigUpdate()
+	if c1.Config.Threshold != thr {
+		t.Fatal("Wrong threshold")
+
+	}
+	log.Printf("New threshold: %v", c1.Config.Threshold)
+
+	log.Print("")
+	log.Print("ADDING THIRD DEVICE")
+	c3 := NewTestIdentity(el, thr, "three", pinstate, nil, l)
+	log.ErrFatal(c3.AttachToIdentity(c1.ID))
+	c1.proposeUpVote()
+	c2.proposeUpVote()
+	log.ErrFatal(c1.ConfigUpdate())
+	if len(c1.Config.Device) != 3 {
+
+		t.Fatal("Should have three owners by now but got only: ", len(c1.Config.Device))
+	}
+
+	log.Print("")
+	log.Print("REVOKING FIRST IDENTITY")
+	c3.ConfigUpdate()
+	add := make(map[string]abstract.Point)
+	revoke := make(map[string]abstract.Point)
+	n := "one"
+	if _, exists := c3.Config.Device[n]; exists {
+		revoke[n] = c3.Config.Device[n].Point
+		c3.ProposeConfig(add, revoke, thr)
+		c3.proposeUpVote()
+		c1.ProposeUpdate()
+		c1.ProposeVote(false)
+		c2.ProposeUpdate()
+		c2.ProposeVote(true)
+		log.ErrFatal(c2.ConfigUpdate())
+		if len(c2.Config.Device) != 2 {
+			t.Fatal("Should have two owners by now")
+		}
+		c3.ConfigUpdate()
+		if _, exists := c3.Config.Device[n]; exists {
+			t.Fatal("Device one should have been revoked by now")
+		}
+	}
 }
 
 func (i *Identity) proposeUpVote() {

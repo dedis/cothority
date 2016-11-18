@@ -1,14 +1,15 @@
 package common_structs
 
 import (
+	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
-	"sort"
-	"strings"
-
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"sort"
+	"strings"
 	//"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
@@ -18,6 +19,7 @@ func init() {
 	for _, s := range []interface{}{
 		// Structures
 		&CAInfo{},
+		&Config{},
 	} {
 		network.RegisterPacketType(s)
 	}
@@ -88,10 +90,24 @@ func (c *Config) Copy() *Config {
 	return &ilNew
 }
 
+func (c *Config) Equal(c2 *Config) error {
+	b1, _ := network.MarshalRegisteredType(c)
+	b2, _ := network.MarshalRegisteredType(c2)
+	h1, _ := c.Hash()
+	h2, _ := c2.Hash()
+	if !bytes.Equal(b1, b2) {
+		log.Printf("Configs don't match: b1: %v", b1)
+		log.Printf("b2: %v", b2)
+		log.Panicf("h1: %v, h2: %v", h1, h2)
+		return errors.New("Configs don't match")
+	}
+	return nil
+}
+
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID.
 func (c *Config) Hash() (crypto.HashID, error) {
-	log.Print("Computing config's hash")
+	//log.Print("Computing config's hash")
 	hash := network.Suite.Hash()
 	var data = []int64{
 		int64(c.Timestamp),
@@ -125,39 +141,20 @@ func (c *Config) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 	}
-
-	if c.CAs == nil {
-		log.Print("No CAs found")
-	}
-	for _, info := range c.CAs {
-		log.Printf("public: %v", info.Public)
-		b, err := network.MarshalRegisteredType(&info)
-		if err != nil {
-			return nil, err
+	/*
+		if c.CAs == nil {
+			log.Print("No CAs found")
 		}
-		_, err = hash.Write(b)
-		/*b, err := network.MarshalRegisteredType(info.Public)
-		if err != nil {
-			return nil, err
-		}
-		log.Print("2")
-		_, err = hash.Write(b)
-		if err != nil {
-			return nil, err
-		}
-		log.Print("3")
-		b, err = network.MarshalRegisteredType(info.ServerID)
-		if err != nil {
-			return nil, err
-		}
-		log.Print("4")
-		_, err = hash.Write(b)
-		if err != nil {
-			return nil, err
+		for _, info := range c.CAs {
+			log.Printf("public: %v", info.Public)
+			b, err := network.MarshalRegisteredType(&info)
+			if err != nil {
+				return nil, err
+			}
+			_, err = hash.Write(b)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		}*/
-	}
 	the_hash := hash.Sum(nil)
-	log.Printf("End of config's hash computation, hash: %v", the_hash)
+	//log.Printf("End of config's hash computation, hash: %v", the_hash)
 	return the_hash, nil
 }
 

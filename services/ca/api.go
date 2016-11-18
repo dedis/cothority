@@ -75,7 +75,7 @@ func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.Ski
 	// Dispatch the CSR to all the listed CAs
 	for _, ca := range d.CAs {
 		public := ca.Public
-		log.Printf("public: %v", public)
+		//log.Printf("public: %v", public)
 		//log.Print("CSRDispatcher(): 1")
 		//log.Print(ca.Public)
 		//log.Print(ca.ServerID)
@@ -85,19 +85,19 @@ func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.Ski
 		}
 		//log.Print("CSRDispatcher(): 2")
 		cert := msg.Msg.(CSRReply).Cert
-		log.Printf("cert with ID: %v, Hash: %v, Sig: %v, Public: %v", cert.ID, cert.Hash, *cert.Signature, cert.Public)
+		//log.Printf("cert with ID: %v, Hash: %v, Sig: %v, Public: %v", cert.ID, cert.Hash, *cert.Signature, cert.Public)
 		//log.Print("CSRDispatcher(): 3")
 		// Verify that the chosen CA (having public key 'public') has properly signed the cert
 		hash, _ := d.Proposed.Hash()
-		log.Printf("hash: %v", hash)
-		log.Printf("public: %v", public)
+		//log.Printf("hash: %v", hash)
+		//log.Printf("public: %v", public)
 		err = crypto.VerifySchnorr(network.Suite, public, hash, *cert.Signature)
 		if err != nil {
 			return nil, errors.New("CA's signature doesn't verify")
 		}
-		log.Print("CSRDispatcher(): 4")
+		//log.Print("CSRDispatcher(): 4")
 		d.Certs = append(d.Certs, cert)
-		log.Print("CSRDispatcher(): 5")
+		//log.Print("CSRDispatcher(): 5")
 	}
 
 	return d.Certs, nil
