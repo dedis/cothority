@@ -278,19 +278,23 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
+	var err error
 	if n.HasFlag(mt, AggregateMessages) {
 		msgs := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
 		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Address)
-		f.Call([]reflect.Value{msgs})
+		err = f.Call([]reflect.Value{msgs})[0].Interface().(error)
 	} else {
 		for _, msg := range msgSlice {
 			log.Lvl4("Dispatching to", n.ServerIdentity().Address)
 			m := n.reflectCreate(to, msg)
-			f.Call([]reflect.Value{m})
+			err = f.Call([]reflect.Value{m})[0].Interface().(error)
 		}
+	}
+	if err != nil {
+		log.Error(n.Name(), "Dispatching", mt, "yields error", err)
 	}
 	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
 	return nil

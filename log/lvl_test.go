@@ -15,16 +15,16 @@ func init() {
 
 func TestTime(t *testing.T) {
 	SetDebugVisible(1)
-	getStdOut()
+	GetStdOut()
 	Lvl1("No time")
-	str := getStdOut()
+	str := GetStdOut()
 	if !strings.Contains(str, "1 : (") {
 		t.Fatal("Didn't get correct string: ", str)
 	}
 	SetShowTime(true)
 	defer func() { SetShowTime(false) }()
 	Lvl1("With time")
-	str = getStdOut()
+	str = GetStdOut()
 	if strings.Contains(str, "1 : (") {
 		t.Fatal("Didn't get correct string: ", str)
 	}
@@ -98,8 +98,8 @@ func TestOutputFuncs(t *testing.T) {
 
 func checkOutput(f func(), wantsStd, wantsErr bool) error {
 	f()
-	stdStr := getStdOut()
-	errStr := getStdErr()
+	stdStr := GetStdOut()
+	errStr := GetStdErr()
 	if wantsStd {
 		if len(stdStr) == 0 {
 			return errors.New("Stdout was empty")
@@ -123,13 +123,13 @@ func checkOutput(f func(), wantsStd, wantsErr bool) error {
 
 func ExampleLvl2() {
 	SetDebugVisible(2)
-	stdToOs()
+	StdToOs()
 	Lvl1("Level1")
 	Lvl2("Level2")
 	Lvl3("Level3")
 	Lvl4("Level4")
 	Lvl5("Level5")
-	stdToBuf()
+	StdToBuf()
 	SetDebugVisible(1)
 
 	// Output:
@@ -138,21 +138,21 @@ func ExampleLvl2() {
 }
 
 func ExampleLvl1() {
-	stdToOs()
+	StdToOs()
 	Lvl1("Multiple", "parameters")
-	stdToBuf()
+	StdToBuf()
 
 	// Output:
 	// 1 : (                         log.ExampleLvl1:   0) - Multiple parameters
 }
 
 func ExampleLLvl1() {
-	stdToOs()
+	StdToOs()
 	Lvl1("Lvl output")
 	LLvl1("LLvl output")
 	Lvlf1("Lvlf output")
 	LLvlf1("LLvlf output")
-	stdToBuf()
+	StdToBuf()
 
 	// Output:
 	// 1 : (                        log.ExampleLLvl1:   0) - Lvl output
@@ -162,16 +162,16 @@ func ExampleLLvl1() {
 }
 
 func thisIsAVeryLongFunctionNameThatWillOverflow() {
-	stdToOs()
+	StdToOs()
 	Lvl1("Overflow")
 }
 
 func ExampleLvlf1() {
-	stdToOs()
+	StdToOs()
 	Lvl1("Before")
 	thisIsAVeryLongFunctionNameThatWillOverflow()
 	Lvl1("After")
-	stdToBuf()
+	StdToBuf()
 
 	// Output:
 	// 1 : (                        log.ExampleLvlf1:   0) - Before
@@ -181,11 +181,11 @@ func ExampleLvlf1() {
 
 func ExampleLvl3() {
 	NamePadding = -1
-	stdToOs()
+	StdToOs()
 	Lvl1("Before")
 	thisIsAVeryLongFunctionNameThatWillOverflow()
 	Lvl1("After")
-	stdToBuf()
+	StdToBuf()
 
 	// Output:
 	// 1 : (log.ExampleLvl3:   0) - Before
