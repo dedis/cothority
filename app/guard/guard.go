@@ -24,7 +24,7 @@ import (
 	"io/ioutil"
 
 	s "github.com/SSSaaS/sssa-golang"
-	"gopkg.in/codegangsta/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 
 	"bytes"
 
