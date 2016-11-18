@@ -140,7 +140,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 	return nil
 }
 
-// CreateIdentity asks the identityService to create a new Identity
+// CreateIdentity asks the sidentityService to create a new SIdentity
 func (i *Identity) CreateIdentity() error {
 	log.Print("CreateIdentity(): Start")
 	hash, _ := i.Config.Hash()
@@ -157,6 +157,50 @@ func (i *Identity) CreateIdentity() error {
 	err = i.ConfigUpdate()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *PinState, cas []common_structs.CAInfo) ([]*Identity, error) {
+	log.Print("NewIdentityMultDevs(): Start")
+	ids := make([]*Identity, len(owners))
+	for index, owner := range owners {
+		if index == 0 {
+			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas)
+		} else {
+			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas)
+			if _, exists := ids[0].Config.Device[owner]; exists {
+				return nil, errors.New("NewIdentityMultDevs(): Adding with an existing account-name")
+			}
+			ids[0].Config.Device[owner] = &common_structs.Device{Point: ids[index].Public, Vote: nil}
+		}
+	}
+	return ids, nil
+}
+
+// CreateIdentityMultDev asks the sidentityService to create a new SIdentity constituted of multiple
+// devices
+func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
+	log.Print("CreateIdentityMultDevs(): Start")
+	hash, _ := i.Config.Hash()
+	log.Printf("Proposed config's hash: %v", hash)
+	for _, id := range ids {
+		sig, _ := crypto.SignSchnorr(network.Suite, id.Private, hash)
+		i.Config.Device[id.DeviceName].Vote = &sig
+	}
+
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
+	if err != nil {
+		return err
+	}
+	air := msg.Msg.(CreateIdentityReply)
+	for _, id := range ids {
+		id.ID = air.Data.Hash
+		id.latestID = air.Data.Hash
+		err = id.ConfigUpdate()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -178,7 +222,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 	switch i.PinState.Ctype {
 	case "device":
 		if _, exists := i.Config.Device[i.DeviceName]; exists {
-			return errors.New("Adding with an existing account-name")
+			return errors.New("AttachToIdentity(): Adding with an existing account-name")
 		}
 		confPropose := i.Config.Copy()
 		for _, dev := range confPropose.Device {
