@@ -51,7 +51,8 @@ func (p *ProtocolTest) Start() error {
 
 type SimpleProtocol struct {
 	// chan to get back to testing
-	Chan chan bool
+	Chan  chan bool
+	Error error
 	*TreeNodeInstance
 }
 
@@ -77,13 +78,12 @@ func (p *SimpleProtocol) ReceiveMessage(msg MsgSimpleMessage) error {
 // Return an error
 func (p *SimpleProtocol) ReturnError(msg MsgSimpleMessage) error {
 	//p.Done()
-	if msg.I == 11 {
+	if msg.I == 10 {
 		p.SendToParent(&SimpleMessage{9})
 	} else {
 		p.Chan <- true
 	}
-	log.Error("Error")
-	return errors.New("Protocol error")
+	return p.Error
 }
 
 type SimpleMessage struct {
@@ -132,7 +132,7 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 			TreeNodeInstance: n,
 			Chan:             chans[id],
 		}
-		ps.RegisterHandler(ps.ReceiveMessage)
+		log.ErrFatal(ps.RegisterHandler(ps.ReceiveMessage))
 		id++
 		return &ps, nil
 	}
@@ -166,12 +166,14 @@ func TestProtocolError(t *testing.T) {
 	// When the root receives the message back, the second message
 	// is sent through the 'done'-channel. Like this we're sure that
 	// the children-message-handler had the time to return an error.
+	var protocolError error
 	fn := func(n *TreeNodeInstance) (ProtocolInstance, error) {
 		ps := SimpleProtocol{
 			TreeNodeInstance: n,
 			Chan:             done,
 		}
-		ps.RegisterHandler(ps.ReturnError)
+		ps.Error = protocolError
+		log.ErrFatal(ps.RegisterHandler(ps.ReturnError))
 		return &ps, nil
 	}
 
@@ -189,6 +191,20 @@ func TestProtocolError(t *testing.T) {
 	// Redirecting stderr, so we can catch the error
 	log.StdToBuf()
 
+	// start the protocol
+	go func() {
+		_, err := h1.StartProtocol(simpleProto, tree)
+		if err != nil {
+			t.Fatal(fmt.Sprintf("Could not start protocol %v", err))
+		}
+	}()
+	// Start is finished
+	<-done
+	// Return message is received
+	<-done
+	assert.Equal(t, "", log.GetStdErr(), "This should yield no error")
+
+	protocolError = errors.New("Protocol Error")
 	// start the protocol
 	go func() {
 		_, err := h1.StartProtocol(simpleProto, tree)
