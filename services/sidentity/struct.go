@@ -10,6 +10,7 @@ import (
 	//"github.com/dedis/cothority/log"
 	//"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
@@ -82,6 +83,7 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*skipchain.SkipBlock
+	Certs  []*ca.Cert
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It

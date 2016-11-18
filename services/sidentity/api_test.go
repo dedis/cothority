@@ -415,7 +415,7 @@ func TestGetCert(t *testing.T) {
 	}
 
 	thr := 1
-	log.Print("NEW SITE IDENITY")
+	log.Print("NEW SITE IDENTITY")
 	pinstate := &PinState{Ctype: "device"}
 	c1 := NewTestIdentity(el, thr, "one", pinstate, cas, l)
 	log.ErrFatal(c1.CreateIdentity())
@@ -477,6 +477,13 @@ func TestGetCert(t *testing.T) {
 		if _, exists := c3.Config.Device[n]; exists {
 			t.Fatal("Device one should have been revoked by now")
 		}
+	}
+
+	/*for index, cert := range c3.Certs {
+		log.Printf("cert: %v, siteID: %v, hash: %v, sig: %v, public: %v", index, cert.ID, cert.Hash, cert.Signature, cert.Public)
+	}*/
+	if len(c3.Certs) != len(cas) {
+		t.Fatalf("Should have %v certs by now", len(cas))
 	}
 }
 

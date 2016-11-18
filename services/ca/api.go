@@ -93,12 +93,13 @@ func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.Ski
 		//log.Printf("public: %v", public)
 		err = crypto.VerifySchnorr(network.Suite, public, hash, *cert.Signature)
 		if err != nil {
+			log.Printf("CA's signature doesn't verify")
 			return nil, errors.New("CA's signature doesn't verify")
 		}
 		//log.Print("CSRDispatcher(): 4")
 		d.Certs = append(d.Certs, cert)
 		//log.Print("CSRDispatcher(): 5")
 	}
-
+	log.Printf("CSRDispatcher(): End: Certs signed properly")
 	return d.Certs, nil
 }

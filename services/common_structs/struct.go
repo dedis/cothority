@@ -1,9 +1,9 @@
 package common_structs
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/binary"
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -90,20 +90,6 @@ func (c *Config) Copy() *Config {
 	return &ilNew
 }
 
-func (c *Config) Equal(c2 *Config) error {
-	b1, _ := network.MarshalRegisteredType(c)
-	b2, _ := network.MarshalRegisteredType(c2)
-	h1, _ := c.Hash()
-	h2, _ := c2.Hash()
-	if !bytes.Equal(b1, b2) {
-		log.Printf("Configs don't match: b1: %v", b1)
-		log.Printf("b2: %v", b2)
-		log.Panicf("h1: %v, h2: %v", h1, h2)
-		return errors.New("Configs don't match")
-	}
-	return nil
-}
-
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID.
 func (c *Config) Hash() (crypto.HashID, error) {
@@ -141,18 +127,18 @@ func (c *Config) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 	}
-	/*
-		if c.CAs == nil {
-			log.Print("No CAs found")
+
+	if c.CAs == nil {
+		log.Print("No CAs found")
+	}
+	for _, info := range c.CAs {
+		log.Printf("public: %v", info.Public)
+		b, err := network.MarshalRegisteredType(&info)
+		if err != nil {
+			return nil, err
 		}
-		for _, info := range c.CAs {
-			log.Printf("public: %v", info.Public)
-			b, err := network.MarshalRegisteredType(&info)
-			if err != nil {
-				return nil, err
-			}
-			_, err = hash.Write(b)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		}*/
+		_, err = hash.Write(b)
+	}
 	the_hash := hash.Sum(nil)
 	//log.Printf("End of config's hash computation, hash: %v", the_hash)
 	return the_hash, nil

@@ -114,6 +114,19 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	//ids.SkipBlocks["georgia"] = ids.Data
 	//fmt.Println("genesis hash: ", ids.Data.Hash)
 	roster := ids.Root.Roster
+
+	certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
+	if certs == nil {
+		log.Printf("No certs returned")
+	}
+
+	//ids.Certs = make([]*ca.Cert, 0)
+	for _, cert := range certs {
+		ids.Certs = append(ids.Certs, cert)
+		log.Printf("---------NEW CERT!--------")
+		log.Printf("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
+	}
+
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		&PropagateIdentity{ids}, propagateTimeout, s.Propagate)
 	if err != nil {
@@ -124,21 +137,8 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
 
-	//log.Printf("ID: %v", ids.Data.Hash)
-	//hash, _ := ai.Config.Hash()
-	//log.Printf("Hash: %v", hash)
-	/*certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
-	if certs == nil {
-		log.Printf("No certs returned")
-	}
-	for _, cert := range certs {
-		ids.Certs = append(ids.Certs, cert)
-		log.Printf("---------NEW CERT!--------")
-		log.Printf("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
-	}
-	*/
 	s.save()
-
+	log.Printf("CreateIdentity(): End having %v certs", len(ids.Certs))
 	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
@@ -173,18 +173,14 @@ func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipB
 
 func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
 	sid := s.getIdentityStorage(latestKnown.ID)
-	//fmt.Println("number of skipblocks:", len(sid.SkipBlocks))
+	log.Printf("GetUpdateChain(): Start having %v certs", len(sid.Certs))
 	block, ok := sid.getSkipBlockByID(latestKnown.LatestID)
-	//block, ok := sid.SkipBlocks["georgia"]
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock!!")
 	}
-	//fmt.Println("1st block's hash to return: ", skipchain.SkipBlockID(latestKnown.LatestID))
-	//fmt.Println(block.Hash)
-	// at least the latest know and the next block:
+
 	blocks := []*skipchain.SkipBlock{block}
 	log.Lvl3("Starting to search chain")
-	//fmt.Println(len(block.ForwardLink))
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[len(block.ForwardLink)-1]
 		hash := link.Hash
@@ -195,12 +191,13 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 		blocks = append(blocks, block)
 		//fmt.Println("another block found with hash: ", skipchain.SkipBlockID(hash))
 	}
-	log.Lvl3("Found", len(blocks), "blocks")
-	/*fmt.Println("Found", len(blocks), "blocks")
-	for _, block = range blocks {
-		fmt.Println(block.Hash)
-	}*/
-	reply := &GetUpdateChainReply{blocks}
+	log.Print("Found", len(blocks), "blocks")
+
+	log.Printf("GetUpdateChain(): End having %v certs", len(sid.Certs))
+	reply := &GetUpdateChainReply{
+		Update: blocks,
+		Certs:  sid.Certs,
+	}
 	return reply, nil
 }
 
@@ -353,8 +350,6 @@ func (s *Service) Propagate(msg network.Body) {
 
 		sid := s.getIdentityStorage(id)
 		sid.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-		//sid.SkipBlocks["georgia"] = pi.Data
-		//sid.SkipBlocks[string(pi.Data.Hash)] = pi.Data
 		sid.setSkipBlockByID(pi.Data)
 		return
 	}

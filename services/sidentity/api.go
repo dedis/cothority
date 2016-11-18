@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
@@ -94,7 +95,7 @@ type Data struct {
 	// might change in the case of a roster-update.
 	Cothority *sda.Roster
 	// The available certs
-	//Certs []*ca.Cert
+	Certs []*ca.Cert
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
@@ -459,7 +460,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 		return false, errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
-	// Check that the returned valid config is the one included into the last skipblock
+	// TODO: Check that the returned valid config is the one included into the last skipblock
 	// of the returned list
 	b1 := blocks[len(blocks)-1].Data
 	/*b2, _ := network.MarshalRegisteredType(newconf)
@@ -473,14 +474,6 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	h1, _ := c.Hash()
 	h2, _ := newconf.Hash()
 	log.Printf("h1: %v, h2: %v", h1, h2)
-	//if h1 != h2 {
-	//	log.Printf("Configs don't match!")
-	//	return false, err
-	//}
-	if err := c.Equal(newconf); err != nil {
-		log.Printf("Configs don't match!")
-		return false, err
-	}
 
 	// Check the validity of each skipblock hop
 	for index, block := range blocks {
@@ -561,6 +554,8 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	i.latestID = blocks[len(blocks)-1].Hash
 	i.Latest = blocks[len(blocks)-1]
 	i.Config = newconf
+	log.Printf("num of certs: %v", len(reply.Certs))
+	i.Certs = reply.Certs
 	log.Printf("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
 	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
 	return ok, err
