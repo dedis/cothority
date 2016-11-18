@@ -24,7 +24,6 @@ RUN echo 'export GOPATH=/home/dedis/go' >> ~/.profile; \
     echo 'export PATH=$PATH:/usr/lib/go-1.6/bin:~/bin:$GOPATH/bin' >> ~/.bashrc; \
 	. ~/.profile;  \
 	mkdir go; \
-	go get -v github.com/dedis/cosi; \
 	go get -v github.com/dedis/cothority
 
 EXPOSE 2000
