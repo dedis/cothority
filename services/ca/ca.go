@@ -38,9 +38,9 @@ type CA struct {
 	// Private key for that CA
 	Private abstract.Scalar
 	// Public key for that CA
-	Public          abstract.Point
-	identitiesMutex sync.Mutex
-	path            string
+	Public     abstract.Point
+	sitesMutex sync.Mutex
+	path       string
 }
 
 // SiteMap holds the map to the sites so it can be marshaled.
@@ -113,12 +113,21 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		return nil, err
 	}
 	//log.Printf("SignCert(): 3")
+
 	cert := &Cert{
 		ID:        id,
 		Hash:      hash,
 		Signature: &signature,
 		Public:    ca.Public,
 	}
+
+	site := &Site{
+		ID:     id,
+		Config: config,
+		Cert:   cert,
+	}
+
+	ca.setSiteStorage(id, site)
 	//log.Printf("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
 	return &CSRReply{
 		Cert: cert,
@@ -131,6 +140,23 @@ func (ca *CA) GetPublicKey(si *network.ServerIdentity, cu *GetPublicKey) (networ
 
 func (ca *CA) clearSites() {
 	ca.Sites = make(map[string]*Site)
+}
+
+func (ca *CA) getSiteStorage(id skipchain.SkipBlockID) *Site {
+	ca.sitesMutex.Lock()
+	defer ca.sitesMutex.Unlock()
+	is, ok := ca.Sites[string(id)]
+	if !ok {
+		return nil
+	}
+	return is
+}
+
+// setSiteStorage saves a SiteStorage
+func (ca *CA) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
+	ca.sitesMutex.Lock()
+	defer ca.sitesMutex.Unlock()
+	ca.Sites[string(id)] = is
 }
 
 // saves the actual identity
