@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/abstract"
-	//"time"
+	"time"
 	//"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/ca"
@@ -204,6 +204,10 @@ func TestGenesisWithMultipleDevices(t *testing.T) {
 	if len(c3.Certs) != len(cas) {
 		t.Fatalf("Should have %v certs by now", len(cas))
 	}
+
+	timestamp := c3.Config.Timestamp
+	diff := time.Since(time.Unix(timestamp, 0))
+	log.Printf("Time elapsed since latest skipblock's timestamp: %v", diff)
 
 }
 

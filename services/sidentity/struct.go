@@ -1,10 +1,11 @@
 package sidentity
 
 import (
-	//"encoding/binary"
+	"encoding/binary"
 	//"fmt"
 	//"sort"
 	//"strings"
+	"bytes"
 
 	"github.com/dedis/cothority/crypto"
 	//"github.com/dedis/cothority/log"
@@ -43,6 +44,20 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 		Pins:      pins,
 		Window:    window,
 	}
+}
+
+func timestampToBytes(t int64) []byte {
+	timeBuf := make([]byte, binary.MaxVarintLen64)
+	binary.PutVarint(timeBuf, t)
+	return timeBuf
+}
+
+func bytesToTimestamp(b []byte) (int64, error) {
+	t, err := binary.ReadVarint(bytes.NewReader(b))
+	if err != nil {
+		return t, err
+	}
+	return t, nil
 }
 
 // Messages between the Client-API and the Service

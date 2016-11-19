@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/network"
 	"sort"
 	"strings"
+	"time"
 	//"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
@@ -30,6 +31,10 @@ const MaxInt = int(MaxUint >> 1)
 
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
+
+// How many msec at most should be the time difference between a device/cothority node/CA and the
+// the time reflected on the proposed config for the former to sign off
+const maxdiff = 300000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
@@ -132,7 +137,7 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		log.Print("No CAs found")
 	}
 	for _, info := range c.CAs {
-		log.Printf("public: %v", info.Public)
+		//log.Printf("public: %v", info.Public)
 		b, err := network.MarshalRegisteredType(&info)
 		if err != nil {
 			return nil, err
@@ -156,6 +161,23 @@ func (c *Config) String() string {
 	}
 	return fmt.Sprintf("Threshold: %d\n%s\n%s", c.Threshold,
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
+}
+
+func (c *Config) SetNowTimestamp() error {
+	c.Timestamp = time.Now().Unix()
+	log.Printf("Setting proposed config's timestamp to: %v", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+	return nil
+}
+
+func (c *Config) CheckTimeDiff() error {
+	timestamp := c.Timestamp
+	diff := time.Since(time.Unix(timestamp, 0))
+	diff_int := diff.Nanoseconds() / 1000000
+	if diff_int > maxdiff {
+		return fmt.Errorf("refused to sign off due to bad timestamp: time difference: %v exceeds the %v interval", diff, maxdiff)
+	}
+	log.Printf("Checking Timestamp: time difference: %v OK", diff)
+	return nil
 }
 
 // GetSuffixColumn returns the unique values up to the next ":" of the keys.

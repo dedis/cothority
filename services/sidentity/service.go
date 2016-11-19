@@ -266,6 +266,13 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		if _, exists := sid.Votes[v.Signer]; exists {
 			return errors.New("Already voted for that block")
 		}
+
+		// Check whether our clock is relatively close or not to the proposed timestamp
+		err2 := sid.Proposed.CheckTimeDiff()
+		if err2 != nil {
+			log.Printf("Cothority %v", err2)
+			return err2
+		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
 			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)

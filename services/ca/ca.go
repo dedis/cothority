@@ -76,7 +76,6 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	id := csr.ID
 	config := csr.Config
 	hash, _ := config.Hash()
-	//log.Printf("SignCert(): 1")
 	if config == nil {
 		log.Printf("Nil config")
 	}
@@ -98,10 +97,16 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		log.Printf("Not enough valid signatures")
 		return nil, errors.New("Not enough valid signatures")
 	}
-	//log.Printf("SignCert(): 2")
+
+	// Check whether our clock is relatively close or not to the proposed timestamp
+	err := config.CheckTimeDiff()
+	if err != nil {
+		log.Printf("CA with public key: %v %v", ca.Public, err)
+		return nil, err
+	}
+
 	// Sign the config's hash using CA's private key
 	var signature crypto.SchnorrSig
-	var err error
 	//log.Printf("SignCert(): before signing: CApublic: %v", ca.Public)
 	signature, err = crypto.SignSchnorr(network.Suite, ca.Private, hash)
 	if err != nil {

@@ -3,11 +3,10 @@ package sidentity
 import (
 	"bytes"
 	"errors"
-	"io"
-	"strings"
-
 	"fmt"
+	"io"
 	"io/ioutil"
+	"strings"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -143,6 +142,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 // CreateIdentity asks the sidentityService to create a new SIdentity
 func (i *Identity) CreateIdentity() error {
 	log.Print("CreateIdentity(): Start")
+	_ = i.Config.SetNowTimestamp()
 	hash, _ := i.Config.Hash()
 	log.Printf("Proposed config's hash: %v", hash)
 	sig, _ := crypto.SignSchnorr(network.Suite, i.Private, hash)
@@ -182,6 +182,7 @@ func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, 
 // devices
 func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 	log.Print("CreateIdentityMultDevs(): Start")
+	_ = i.Config.SetNowTimestamp()
 	hash, _ := i.Config.Hash()
 	log.Printf("Proposed config's hash: %v", hash)
 	for _, id := range ids {
@@ -228,6 +229,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 		for _, dev := range confPropose.Device {
 			dev.Vote = nil
 		}
+
 		confPropose.Device[i.DeviceName] = &common_structs.Device{Point: i.Public}
 		err = i.ProposeSend(confPropose)
 		if err != nil {
@@ -358,7 +360,7 @@ func (i *Identity) UpdateIdentityThreshold(thr int) error {
 	return nil
 }
 
-// Proposecommon_structs.Config proposes a new skipblock with general modifications (add/revoke one or
+// ProposeConfig proposes a new skipblock with general modifications (add/revoke one or
 // more devices and/or change the threshold)
 // Devices to be revoked regarding the proposed config should NOT vote upon their revovation
 // (or, in the case of voting, a negative vote is the only one accepted)
@@ -372,6 +374,7 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int)
 	for _, dev := range confPropose.Device {
 		dev.Vote = nil
 	}
+
 	confPropose.Threshold = thr
 	for name, point := range add {
 		confPropose.Device[name] = &common_structs.Device{Point: point}
@@ -391,7 +394,8 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int)
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
 func (i *Identity) ProposeSend(il *common_structs.Config) error {
-	_, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
+	err := il.SetNowTimestamp()
+	_, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
 	i.Proposed = il
 	return err
 }
@@ -420,7 +424,17 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if !accept {
 		return nil
 	}
-	hash, err := i.Proposed.Hash()
+
+	// Check whether our clock is relatively close or not to the proposed timestamp
+	//now := time.Now().Unix()
+	err := i.Proposed.CheckTimeDiff()
+	if err != nil {
+		log.Printf("Device: %v %v", i.DeviceName, err)
+		return err
+	}
+
+	var hash crypto.HashID
+	hash, err = i.Proposed.Hash()
 	if err != nil {
 		return err
 	}
