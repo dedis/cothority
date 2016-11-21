@@ -34,7 +34,7 @@ const propagateTimeout = 10000
 
 // How many msec at most should be the time difference between a device/cothority node/CA and the
 // the time reflected on the proposed config for the former to sign off
-const maxdiff = 300000
+const maxdiff_sign = 300000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
@@ -65,6 +65,39 @@ type DevicePoint struct {
 type CAInfo struct {
 	Public   abstract.Point
 	ServerID *network.ServerIdentity
+}
+
+type WSInfo struct {
+	ServerID *network.ServerIdentity
+}
+
+type SiteInfo struct {
+	// Site's ID (hash of the genesis block)
+	ID skipchain.SkipBlockID
+	// Addresses of the site's web servers
+	WSs []WSInfo
+}
+
+type PinState struct {
+	// The type of our identity ("device", "ws", "user")
+	Ctype string
+	// Minimum number of 'Pins' keys signing the new skipblock
+	Threshold int
+	// The trusted pins for the time interval 'Window'
+	Pins []abstract.Point
+	// Trusted window in ms for the current 'Pins'
+	Window int64
+	// When we received the latest accepted skipblock
+	TimeSbRec int64
+}
+
+func NewPinState(ctype string, threshold int, pins []abstract.Point, window int64) *PinState {
+	return &PinState{
+		Ctype:     ctype,
+		Threshold: threshold,
+		Pins:      pins,
+		Window:    window,
+	}
 }
 
 // NewConfig returns a new List with the first owner initialised.
@@ -169,12 +202,12 @@ func (c *Config) SetNowTimestamp() error {
 	return nil
 }
 
-func (c *Config) CheckTimeDiff() error {
+func (c *Config) CheckTimeDiff(maxvalue int64) error {
 	timestamp := c.Timestamp
 	diff := time.Since(time.Unix(timestamp, 0))
 	diff_int := diff.Nanoseconds() / 1000000
-	if diff_int > maxdiff {
-		return fmt.Errorf("refused to sign off due to bad timestamp: time difference: %v exceeds the %v interval", diff, maxdiff)
+	if diff_int > maxvalue {
+		return fmt.Errorf("refused to sign off due to bad timestamp: time difference: %v exceeds the %v interval", diff, maxvalue)
 	}
 	log.Printf("Checking Timestamp: time difference: %v OK", diff)
 	return nil

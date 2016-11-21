@@ -65,7 +65,10 @@ type Storage struct {
 	Root       *skipchain.SkipBlock
 	Data       *skipchain.SkipBlock
 	SkipBlocks map[string]*skipchain.SkipBlock
-	Certs      []*ca.Cert
+	//Certs      []*ca.Cert
+	// Certs keeps the mapping between the config (the hash of the skipblock that contains it) and the cert
+	// that was issued for that particular config
+	Certs map[string]*ca.Cert
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
@@ -120,9 +123,10 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 		log.Printf("No certs returned")
 	}
 
-	//ids.Certs = make([]*ca.Cert, 0)
 	for _, cert := range certs {
-		ids.Certs = append(ids.Certs, cert)
+		//ids.Certs = append(ids.Certs, cert)
+		hash := ids.Data.Hash
+		ids.Certs[string(hash)] = cert
 		log.Printf("---------NEW CERT!--------")
 		log.Printf("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
 	}
@@ -268,7 +272,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		}
 
 		// Check whether our clock is relatively close or not to the proposed timestamp
-		err2 := sid.Proposed.CheckTimeDiff()
+		err2 := sid.Proposed.CheckTimeDiff(maxdiff_sign)
 		if err2 != nil {
 			log.Printf("Cothority %v", err2)
 			return err2
@@ -370,9 +374,6 @@ func (s *Service) Propagate(msg network.Body) {
 		sid.Lock()
 		defer sid.Unlock()
 		switch msg.(type) {
-		/*case *ProposeCert:
-		pc := msg.(*ProposeCert).Cert
-		sid.Certs = append(sid.Certs, pc)*/
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Config
@@ -405,34 +406,40 @@ func (s *Service) Propagate(msg network.Body) {
 	}
 }
 
-/*
-// ProposeCert stores internally a new cert
-func (s *Service) ProposeCert(si *network.ServerIdentity, cert *ProposeCert) (network.Body, error) {
-	sid := s.getIdentityStorage(cert.Cert.ID)
+func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) (network.Body, error) {
+	id := req.ID
+	latest := req.Latest
+	sid := s.getIdentityStorage(id)
 	if sid == nil {
 		return nil, errors.New("Didn't find identity")
 	}
+	// Follow the backward links until finding the skipblock whose config was certified by a CA
+	// All these skipblocks will be returned (from the newest to the oldest)
+	id_latest_cert_block := sid.Certs
+	sbs := make([]*skipchain.SkipBlock)
+	block := latest
+	hash := block.BackLinkIds[0]
+	var ok bool
+	for _, exists := sid.Certs[hash]; !exists {
+		block, ok = s.getSkipBlockByID(hash)
+		if !ok {
+			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
+		}
+		hash = block.BackLinkIds[0]
+		sbs = append(sbs, block)
+	}
 
-	roster := sid.Root.Roster
-	replies, err := manage.PropagateStartAndWait(s.Context, roster,
-		cert, propagateTimeout, s.Propagate)
-	if err != nil {
-		return nil, err
-	}
-	if replies != len(roster.List) {
-		log.Warn("Did only get", replies, "out of", len(roster.List))
-	}
-	return nil, nil
+	return &GetSkipblocksReply{Skipblocks: sbs}, nil
 }
 
-func (s *Service) UpdateCerts(si *network.ServerIdentity, upcerts *UpdateCerts) (network.Body, error) {
-	sid := s.getIdentityStorage(upcerts.ID)
-	if sid == nil {
-		return nil, errors.New("Didn't find identity")
-	}
-	return &UpdateCertsReply{Certs: sid.Certs}, nil
+// getSkipBlockByID returns the skip-block or false if it doesn't exist
+func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
+	s.gMutex.Lock()
+	b, ok := s.SkipBlocks[string(sbID)]
+	s.gMutex.Unlock()
+	return b, ok
 }
-*/
+
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
 func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
@@ -503,7 +510,6 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.GetUpdateChain,
-		//s.ProposeCert, s.UpdateCerts} {
 	} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)

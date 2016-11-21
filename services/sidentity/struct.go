@@ -26,26 +26,6 @@ const propagateTimeout = 10000
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
-type PinState struct {
-	// The type of our identity ("device", "ws", "client" or "client_with_pins")
-	Ctype string
-	// Minimum number of 'Pins' keys signing the new skipblock
-	Threshold int
-	// The trusted pins for the time interval 'Window'
-	Pins []abstract.Point
-	// Trusted window in seconds for the current 'Pins'
-	Window int64
-}
-
-func NewPinState(ctype string, threshold int, pins []abstract.Point, window int64) *PinState {
-	return &PinState{
-		Ctype:     ctype,
-		Threshold: threshold,
-		Pins:      pins,
-		Window:    window,
-	}
-}
-
 func timestampToBytes(t int64) []byte {
 	timeBuf := make([]byte, binary.MaxVarintLen64)
 	binary.PutVarint(timeBuf, t)
@@ -98,7 +78,7 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*skipchain.SkipBlock
-	Certs  []*ca.Cert
+	Certs  map[string]*ca.Cert
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It
@@ -144,4 +124,13 @@ type UpdateSkipBlock struct {
 	ID       skipchain.SkipBlockID
 	Latest   *skipchain.SkipBlock
 	Previous *skipchain.SkipBlock
+}
+
+type GetSkipblocks struct {
+	ID     skipchain.SkipBlockID
+	Latest *skipchain.SkipBlock
+}
+
+type GetSkipblocksReply struct {
+	Skipblocks []*skipchain.SkipBlock
 }

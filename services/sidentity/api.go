@@ -49,6 +49,8 @@ func init() {
 		&ProposeVote{},
 		&Data{},
 		&ProposeVoteReply{},
+		&GetSkipblocks{},
+		&GetSkipblocksReply{},
 		// Internal messages
 		&PropagateIdentity{},
 		&UpdateSkipBlock{},
@@ -83,7 +85,7 @@ type Data struct {
 	latestID skipchain.SkipBlockID
 	// Latest known skipblock
 	Latest *skipchain.SkipBlock
-	// common_structs.Config is the actual, valid configuration of the identity-skipchain.
+	// Config is the actual, valid configuration of the identity-skipchain.
 	Config *common_structs.Config
 	// Proposed is the new configuration that has not been validated by a
 	// threshold of devices.
@@ -94,7 +96,8 @@ type Data struct {
 	// might change in the case of a roster-update.
 	Cothority *sda.Roster
 	// The available certs
-	Certs []*ca.Cert
+	//Certs []*ca.Cert
+	Certs map[string]*ca.Cert
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
@@ -119,22 +122,15 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 			CothorityClient: sda.NewClient(ServiceName),
 			Data: Data{
 				PinState: pinstate,
+				// Cothority roster should be given before attempting to reach the service!
 			},
 		}
-	case "client":
+	case "user":
 		return &Identity{
 			CothorityClient: sda.NewClient(ServiceName),
 			Data: Data{
 				PinState: pinstate,
 			},
-		}
-	case "client_with_pins":
-		return &Identity{
-			CothorityClient: sda.NewClient(ServiceName),
-			Data: Data{
-				PinState: pinstate,
-			},
-		}
 	}
 	return nil
 }
@@ -427,7 +423,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
 	//now := time.Now().Unix()
-	err := i.Proposed.CheckTimeDiff()
+	err := i.Proposed.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
 		log.Printf("Device: %v %v", i.DeviceName, err)
 		return err
@@ -470,10 +466,12 @@ func (i *Identity) ProposeVote(accept bool) error {
 	return nil
 }
 
-// common_structs.ConfigUpdate asks if there is any new config available that has already
+// ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
-	log.Printf("ConfigUpdate(): We are device: %v", i.DeviceName)
+	if i.PinState.Ctype == "device" {
+		log.Printf("ConfigUpdate(): We are device: %v", i.DeviceName)
+	}
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
@@ -535,7 +533,6 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 
 	// Check the validity of each skipblock hop
 	for index, block := range blocks {
-		// Verify that the cothority has signed the forward links
 		next := block
 		if index > 0 {
 			log.Printf("DEVICE: %v, Checking trust delegation: %v -> %v", i.DeviceName, index-1, index)
@@ -617,6 +614,17 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	log.Printf("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
 	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
 	return ok, err
+}
+
+
+func (i *Identity) GetSkipblocks(id skipchain.SkipBlockID,	latest *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetSkipblocks{ID: i.ID, Latest: latest})
+	if err != nil {
+		return nil, err
+	}
+	reply, _ := msg.Msg.(GetSkipblocksReply)
+	sbs := reply.Skipblocks
+	return sbs, nil
 }
 
 // NewIdentityFromCothority searches for a given cothority

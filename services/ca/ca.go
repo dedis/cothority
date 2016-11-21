@@ -99,7 +99,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
-	err := config.CheckTimeDiff()
+	err := config.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
 		log.Printf("CA with public key: %v %v", ca.Public, err)
 		return nil, err
@@ -134,7 +134,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}, nil
 }
 
-func (ca *CA) GetPublicKey(si *network.ServerIdentity, cu *GetPublicKey) (network.Body, error) {
+func (ca *CA) GetPublicKey(si *network.ServerIdentity, req *GetPublicKey) (network.Body, error) {
 	return &GetPublicKeyReply{Public: ca.Public}, nil
 }
 
