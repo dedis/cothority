@@ -43,7 +43,6 @@
 package log
 
 import (
-	"bufio"
 	"bytes"
 	"io"
 	"os"
@@ -59,15 +58,11 @@ func init() {
 }
 
 var bufStdOut bytes.Buffer
-var wrStdOut *bufio.Writer
 var bufStdErr bytes.Buffer
-var wrStdErr *bufio.Writer
 
 func StdToBuf() {
-	wrStdOut = bufio.NewWriter(&bufStdOut)
-	stdOut = wrStdOut
-	wrStdErr = bufio.NewWriter(&bufStdErr)
-	stdErr = wrStdErr
+	stdOut = &bufStdOut
+	stdErr = &bufStdErr
 }
 
 func StdToOs() {
@@ -76,14 +71,12 @@ func StdToOs() {
 }
 
 func GetStdOut() string {
-	wrStdOut.Flush()
 	ret := bufStdOut.String()
 	bufStdOut.Reset()
 	return ret
 }
 
 func GetStdErr() string {
-	wrStdErr.Flush()
 	ret := bufStdErr.String()
 	bufStdErr.Reset()
 	return ret
