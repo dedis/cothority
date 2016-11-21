@@ -60,22 +60,28 @@ func init() {
 var bufStdOut bytes.Buffer
 var bufStdErr bytes.Buffer
 
-func StdToBuf() {
+// OutputToBuf is called for sending all the log.*-outputs to internal buffers
+// that can be used for checking what the logger would've written. This is
+// mostly used for tests.
+func OutputToBuf() {
 	stdOut = &bufStdOut
 	stdErr = &bufStdErr
 }
 
-func StdToOs() {
+// OutputToOs redirects the output of the log.*-outputs again to the os.
+func OutputToOs() {
 	stdOut = os.Stdout
 	stdErr = os.Stderr
 }
 
+// GetStdOut returns all log.*-outputs to StdOut since the last call.
 func GetStdOut() string {
 	ret := bufStdOut.String()
 	bufStdOut.Reset()
 	return ret
 }
 
+// GetStdErr returns all log.*-outputs to StdErr since the last call.
 func GetStdErr() string {
 	ret := bufStdErr.String()
 	bufStdErr.Reset()
