@@ -217,13 +217,13 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 		ci = ci.Elem()
 	}
 	if ci.Kind() != reflect.Struct {
-		return errors.New("Input is not channel of structure")
+		return errors.New("Input is not a structure")
 	}
 	if ci.NumField() != 2 {
-		return errors.New("Input is not channel of structure with 2 elements")
+		return errors.New("Input is not a structure with 2 elements")
 	}
 	if ci.Field(0).Type != reflect.TypeOf(&TreeNode{}) {
-		return errors.New("Input-channel doesn't have TreeNode as element")
+		return errors.New("Input-handler doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
 	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
