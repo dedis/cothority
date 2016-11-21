@@ -189,7 +189,7 @@ func TestProtocolError(t *testing.T) {
 		log.SetDebugVisible(1)
 	}
 	// Redirecting stderr, so we can catch the error
-	log.StdToBuf()
+	log.OutputToBuf()
 
 	// start the protocol
 	go func() {

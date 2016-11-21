@@ -7,7 +7,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	StdToBuf()
+	OutputToBuf()
 	MainTest(m)
 }
 

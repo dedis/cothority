@@ -123,13 +123,13 @@ func checkOutput(f func(), wantsStd, wantsErr bool) error {
 
 func ExampleLvl2() {
 	SetDebugVisible(2)
-	StdToOs()
+	OutputToOs()
 	Lvl1("Level1")
 	Lvl2("Level2")
 	Lvl3("Level3")
 	Lvl4("Level4")
 	Lvl5("Level5")
-	StdToBuf()
+	OutputToBuf()
 	SetDebugVisible(1)
 
 	// Output:
@@ -138,21 +138,21 @@ func ExampleLvl2() {
 }
 
 func ExampleLvl1() {
-	StdToOs()
+	OutputToOs()
 	Lvl1("Multiple", "parameters")
-	StdToBuf()
+	OutputToBuf()
 
 	// Output:
 	// 1 : (                         log.ExampleLvl1:   0) - Multiple parameters
 }
 
 func ExampleLLvl1() {
-	StdToOs()
+	OutputToOs()
 	Lvl1("Lvl output")
 	LLvl1("LLvl output")
 	Lvlf1("Lvlf output")
 	LLvlf1("LLvlf output")
-	StdToBuf()
+	OutputToBuf()
 
 	// Output:
 	// 1 : (                        log.ExampleLLvl1:   0) - Lvl output
@@ -162,16 +162,16 @@ func ExampleLLvl1() {
 }
 
 func thisIsAVeryLongFunctionNameThatWillOverflow() {
-	StdToOs()
+	OutputToOs()
 	Lvl1("Overflow")
 }
 
 func ExampleLvlf1() {
-	StdToOs()
+	OutputToOs()
 	Lvl1("Before")
 	thisIsAVeryLongFunctionNameThatWillOverflow()
 	Lvl1("After")
-	StdToBuf()
+	OutputToBuf()
 
 	// Output:
 	// 1 : (                        log.ExampleLvlf1:   0) - Before
@@ -181,11 +181,11 @@ func ExampleLvlf1() {
 
 func ExampleLvl3() {
 	NamePadding = -1
-	StdToOs()
+	OutputToOs()
 	Lvl1("Before")
 	thisIsAVeryLongFunctionNameThatWillOverflow()
 	Lvl1("After")
-	StdToBuf()
+	OutputToBuf()
 
 	// Output:
 	// 1 : (log.ExampleLvl3:   0) - Before
