@@ -299,11 +299,10 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 			errV = f.Call([]reflect.Value{m})[0]
 		}
 	}
-	if !errV.IsNil() {
-		err := errV.Interface().(error)
-		log.Error(n.Name(), "Dispatching", mt, "yields error", err)
-	}
 	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
+	if !errV.IsNil() {
+		return errV.Interface().(error)
+	}
 	return nil
 }
 
@@ -372,7 +371,8 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			n.msgDispatchQueueMutex.Unlock()
 			err := n.dispatchMsgToProtocol(msg)
 			if err != nil {
-				log.Error("Error while dispatching message:", err)
+				log.Errorf("%s: error while dispatching message %s: %s",
+					n.Name(), reflect.TypeOf(msg.Msg), err)
 			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()

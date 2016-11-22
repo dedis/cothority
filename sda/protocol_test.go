@@ -217,7 +217,9 @@ func TestProtocolError(t *testing.T) {
 	// Return message is received
 	<-done
 
-	assert.NotEqual(t, "", log.GetStdErr(), "No error output")
+	str := log.GetStdErr()
+	assert.NotEqual(t, "", str, "No error output")
+	log.OutputToOs()
 
 	log.SetDebugVisible(oldlvl)
 }
