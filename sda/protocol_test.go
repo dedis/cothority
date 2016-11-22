@@ -75,9 +75,9 @@ func (p *SimpleProtocol) ReceiveMessage(msg MsgSimpleMessage) error {
 	return nil
 }
 
-// Return an error
+// ReturnError sends a message to the parent, and if it's the parent
+// receiving the message, it triggers the channel
 func (p *SimpleProtocol) ReturnError(msg MsgSimpleMessage) error {
-	//p.Done()
 	if msg.I == 10 {
 		p.SendToParent(&SimpleMessage{9})
 	} else {
@@ -179,7 +179,6 @@ func TestProtocolError(t *testing.T) {
 
 	GlobalProtocolRegister(simpleProto, fn)
 	local := NewLocalTest()
-	defer local.CloseAll()
 	h, _, tree := local.GenTree(2, true)
 	h1 := h[0]
 
@@ -216,6 +215,7 @@ func TestProtocolError(t *testing.T) {
 	<-done
 	// Return message is received
 	<-done
+	local.CloseAll()
 
 	str := log.GetStdErr()
 	assert.NotEqual(t, "", str, "No error output")

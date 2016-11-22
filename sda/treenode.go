@@ -294,14 +294,16 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 		errV = f.Call([]reflect.Value{msgs})[0]
 	} else {
 		for _, msg := range msgSlice {
+			if errV.IsValid() && !errV.IsNil() {
+				// Before overwriting an error, print it out
+				log.Errorf("%s: error while dispatching message %s: %s",
+					n.Name(), reflect.TypeOf(msg.Msg),
+					errV.Interface().(error))
+			}
 			log.Lvl4("Dispatching", msg, "to", n.ServerIdentity().Address)
 			m := n.reflectCreate(to, msg)
 			errV = f.Call([]reflect.Value{m})[0]
 		}
-	}
-	if !errV.IsNil() {
-		err := errV.Interface().(error)
-		log.Error(n.Name(), "Dispatching", mt, "yields error", err)
 	}
 	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
 	if !errV.IsNil() {
