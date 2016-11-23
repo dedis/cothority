@@ -72,14 +72,14 @@ func (ca *CA) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sd
 
 // SignCert will use the CA's public key to sign a new cert
 func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, error) {
-	log.Printf("SignCert(): Start")
+	log.Lvlf2("SignCert(): Start")
 	id := csr.ID
 	config := csr.Config
 	hash, _ := config.Hash()
 	if config == nil {
-		log.Printf("Nil config")
+		log.Lvlf2("Nil config")
 	}
-	//log.Printf("ID: %v, Hash: %v", id, hash)
+	//log.Lvlf2("ID: %v, Hash: %v", id, hash)
 	// Check that the Config part of the CSR was signed by a threshold of the containing devices
 	cnt := 0
 	for _, dev := range config.Device {
@@ -94,25 +94,25 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		}
 	}
 	if cnt < config.Threshold {
-		log.Printf("Not enough valid signatures")
+		log.Lvlf2("Not enough valid signatures")
 		return nil, errors.New("Not enough valid signatures")
 	}
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
 	err := config.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
-		log.Printf("CA with public key: %v %v", ca.Public, err)
+		log.Lvlf2("CA with public key: %v %v", ca.Public, err)
 		return nil, err
 	}
 
 	// Sign the config's hash using CA's private key
 	var signature crypto.SchnorrSig
-	//log.Printf("SignCert(): before signing: CApublic: %v", ca.Public)
+	//log.Lvlf2("SignCert(): before signing: CApublic: %v", ca.Public)
 	signature, err = crypto.SignSchnorr(network.Suite, ca.Private, hash)
 	if err != nil {
 		return nil, err
 	}
-	//log.Printf("SignCert(): 3")
+	//log.Lvlf2("SignCert(): 3")
 
 	cert := &Cert{
 		ID:        id,
@@ -128,7 +128,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}
 
 	ca.setSiteStorage(id, site)
-	//log.Printf("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
+	//log.Lvlf2("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
 	return &CSRReply{
 		Cert: cert,
 	}, nil
@@ -166,7 +166,7 @@ func (ca *CA) save() {
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
-		err = ioutil.WriteFile(ca.path+"/common_structs.bin", b, 0660)
+		err = ioutil.WriteFile(ca.path+"/ca.bin", b, 0660)
 		if err != nil {
 			log.Error("Couldn't save file:", err)
 		}
@@ -176,7 +176,7 @@ func (ca *CA) save() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (ca *CA) tryLoad() error {
-	configFile := ca.path + "/common_structs.bin"
+	configFile := ca.path + "/ca.bin"
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)

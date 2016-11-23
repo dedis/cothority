@@ -30,10 +30,10 @@ func init() {
 	for _, s := range []interface{}{
 		// Structures
 		&common_structs.Device{},
-		&common_structs.DevicePoint{},
+		&common_structs.APoint{},
 		&Identity{},
 		&common_structs.Config{},
-		&PinState{},
+		&common_structs.PinState{},
 		&Storage{},
 		&Service{},
 		// API messages
@@ -51,6 +51,8 @@ func init() {
 		&ProposeVoteReply{},
 		&GetSkipblocks{},
 		&GetSkipblocksReply{},
+		&GetValidSbPath{},
+		&GetValidSbPathReply{},
 		// Internal messages
 		&PropagateIdentity{},
 		&UpdateSkipBlock{},
@@ -78,11 +80,11 @@ type Data struct {
 	// Public key for that device - will be stored in the identity-skipchain.
 	Public abstract.Point
 	// Pin-state
-	PinState *PinState
+	PinState *common_structs.PinState
 	// ID of the skipchain this device is tied to.
 	ID skipchain.SkipBlockID
 	// ID of the latest known skipblock
-	latestID skipchain.SkipBlockID
+	LatestID skipchain.SkipBlockID
 	// Latest known skipblock
 	Latest *skipchain.SkipBlock
 	// Config is the actual, valid configuration of the identity-skipchain.
@@ -96,13 +98,12 @@ type Data struct {
 	// might change in the case of a roster-update.
 	Cothority *sda.Roster
 	// The available certs
-	//Certs []*ca.Cert
-	Certs map[string]*ca.Cert
+	Certs []*ca.Cert
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *PinState, cas []common_structs.CAInfo) *Identity {
+func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point) *Identity {
 	switch pinstate.Ctype {
 	case "device":
 		kp := config.NewKeyPair(network.Suite)
@@ -112,7 +113,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 				Private:    kp.Secret,
 				Public:     kp.Public,
 				PinState:   pinstate,
-				Config:     common_structs.NewConfig(threshold, kp.Public, owner, cas),
+				Config:     common_structs.NewConfig(threshold, kp.Public, owner, cas, data),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},
@@ -125,12 +126,6 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *P
 				// Cothority roster should be given before attempting to reach the service!
 			},
 		}
-	case "user":
-		return &Identity{
-			CothorityClient: sda.NewClient(ServiceName),
-			Data: Data{
-				PinState: pinstate,
-			},
 	}
 	return nil
 }
@@ -140,7 +135,7 @@ func (i *Identity) CreateIdentity() error {
 	log.Print("CreateIdentity(): Start")
 	_ = i.Config.SetNowTimestamp()
 	hash, _ := i.Config.Hash()
-	log.Printf("Proposed config's hash: %v", hash)
+	log.Lvlf2("Proposed config's hash: %v", hash)
 	sig, _ := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	i.Config.Device[i.DeviceName].Vote = &sig
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
@@ -149,7 +144,7 @@ func (i *Identity) CreateIdentity() error {
 	}
 	air := msg.Msg.(CreateIdentityReply)
 	i.ID = air.Data.Hash
-	i.latestID = air.Data.Hash
+	i.LatestID = air.Data.Hash
 	err = i.ConfigUpdate()
 	if err != nil {
 		return err
@@ -157,14 +152,14 @@ func (i *Identity) CreateIdentity() error {
 	return nil
 }
 
-func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *PinState, cas []common_structs.CAInfo) ([]*Identity, error) {
+func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point) ([]*Identity, error) {
 	log.Print("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
 		if index == 0 {
-			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas)
+			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas, data)
 		} else {
-			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas)
+			ids[index] = NewIdentity(cothority, threshold, owner, pinstate, cas, data)
 			if _, exists := ids[0].Config.Device[owner]; exists {
 				return nil, errors.New("NewIdentityMultDevs(): Adding with an existing account-name")
 			}
@@ -180,7 +175,7 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 	log.Print("CreateIdentityMultDevs(): Start")
 	_ = i.Config.SetNowTimestamp()
 	hash, _ := i.Config.Hash()
-	log.Printf("Proposed config's hash: %v", hash)
+	log.Lvlf2("Proposed config's hash: %v", hash)
 	for _, id := range ids {
 		sig, _ := crypto.SignSchnorr(network.Suite, id.Private, hash)
 		i.Config.Device[id.DeviceName].Vote = &sig
@@ -193,7 +188,7 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 	air := msg.Msg.(CreateIdentityReply)
 	for _, id := range ids {
 		id.ID = air.Data.Hash
-		id.latestID = air.Data.Hash
+		id.LatestID = air.Data.Hash
 		err = id.ConfigUpdate()
 		if err != nil {
 			return err
@@ -209,7 +204,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 	var err error
 	if strings.Compare(i.PinState.Ctype, "client_with_pins") != 0 {
 		// Accept as valid the first served block
-		i.latestID = ID
+		i.LatestID = ID
 		err = i.InitPins()
 		if err != nil {
 			return err
@@ -231,74 +226,6 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 		if err != nil {
 			return err
 		}
-	case "ws":
-		/*msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &UpdateCerts{ID: i.ID})
-		if err != nil {
-			return err
-		}
-		uc := msg.Msg.(UpdateCertsReply)
-		i.Certs = uc.Certs*/
-	case "client_with_pins":
-		// Get as many valid cert as required by the threshold of your pins (signed by each of them). Then
-		// accept the contained skipblock as valid and refresh your pins
-
-		// Get chain of skipblocks starting from the genesis one
-
-		// TODO: Get a i.Cothority.RandomServerIdentity() from the web server, then pull
-		// the chain of blocks from the cothority
-		//msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.ID, ID: i.ID})
-		//if err != nil {
-		//	return err
-		//}
-		//reply := msg.Msg.(GetUpdateChainReply)
-		//blocks := reply.Update
-
-		//if i.PinState.Pins == nil || len(i.PinState.Pins) == 0 {
-		//	return errors.New("Didn't find any list of embedded pins")
-		//}
-		/*msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &UpdateCerts{ID: i.ID})
-		if err != nil {
-			return err
-		}
-		certs := msg.Msg.(UpdateCertsReply).Certs
-
-		sbmap := make(map[string]int)
-		parallel := make(map[string]*skipchain.SkipBlock)
-		for _, block := range blocks {
-			sbmap[string(block.Hash)] = 0
-			parallel[string(block.Hash)] = block
-		}
-		for _, cert := range certs {
-			for _, pin := range i.PinState.Pins {
-				if pin == cert.Public {
-					err = crypto.VerifySchnorr(network.Suite, cert.Public, cert.Hash, *cert.Signature)
-					if err != nil {
-						return errors.New("Wrong signature")
-					}
-					sbmap[string(cert.Hash)]++
-				}
-			}
-		}
-
-		ok := false
-		for hash, cnt := range sbmap {
-			if cnt >= i.PinState.Threshold {
-				// accept block pointed by a threshold of certs
-				ok = true
-				block := parallel[hash]
-				i.Latest = block
-				i.latestID = block.Hash
-				_, conf, _ := network.UnmarshalRegistered(block.Data)
-				i.common_structs.Config = conf.(*common_structs.Config)
-				// TODO: ensure that only one block is accepted (2 or more different blocks
-				// should not satisfy the threshold requirement)
-				break
-			}
-		}
-		if !ok {
-			return errors.New("Not enough certs from trusted pins pointing to the same skipblock")
-		}
-		*/
 	}
 	return nil
 }
@@ -314,23 +241,12 @@ func (i *Identity) InitPins() error {
 	cu := msg.Msg.(ConfigUpdateReply)
 	i.Config = cu.Config
 
-	// Set threshold & pins
-	if strings.Compare(i.PinState.Ctype, "client_with_pins") != 0 {
-		i.PinState.Threshold = i.Config.Threshold
-		i.PinState.Pins = make([]abstract.Point, len(i.Config.Device))
-		for _, dev := range i.Config.Device {
-			i.PinState.Pins = append(i.PinState.Pins, dev.Point)
-		}
-	}
-
 	// Set trust window
 	switch i.PinState.Ctype {
 	case "device":
 		i.PinState.Window = int64(MaxInt)
 	case "ws":
 		i.PinState.Window = int64(MaxInt)
-	case "client":
-		i.PinState.Window = int64(0)
 	}
 
 	return nil
@@ -412,7 +328,7 @@ func (i *Identity) ProposeUpdate() error {
 
 // ProposeVote calls the 'accept'-vote on the current propose-configuration
 func (i *Identity) ProposeVote(accept bool) error {
-	log.Printf("ProposeVote(): device: %v", i.DeviceName)
+	log.Lvlf2("ProposeVote(): device: %v", i.DeviceName)
 	if i.Proposed == nil {
 		return errors.New("No proposed config")
 	}
@@ -425,7 +341,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	//now := time.Now().Unix()
 	err := i.Proposed.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
-		log.Printf("Device: %v %v", i.DeviceName, err)
+		log.Lvlf2("Device: %v %v", i.DeviceName, err)
 		return err
 	}
 
@@ -434,7 +350,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Proposed config's hash: %v", hash)
+	log.Lvlf2("Proposed config's hash: %v", hash)
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {
 		return err
@@ -449,10 +365,10 @@ func (i *Identity) ProposeVote(accept bool) error {
 	}
 	reply, ok := msg.Msg.(ProposeVoteReply)
 	if !ok {
-		log.Printf("Device with name: %v : not yet accepted skipblock", i.DeviceName)
+		log.Lvlf2("Device with name: %v : not yet accepted skipblock", i.DeviceName)
 	}
 	if ok {
-		log.Printf("Device with name: %v : accepted skipblock", i.DeviceName)
+		log.Lvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
 		_, data, _ := network.UnmarshalRegistered(reply.Data.Data)
 		ok, err = i.ValidateUpdateConfig(data.(*common_structs.Config))
 		if !ok {
@@ -470,11 +386,12 @@ func (i *Identity) ProposeVote(accept bool) error {
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
 	if i.PinState.Ctype == "device" {
-		log.Printf("ConfigUpdate(): We are device: %v", i.DeviceName)
+		log.Lvlf2("ConfigUpdate(): We are device: %v", i.DeviceName)
 	}
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
+	//log.LLvlf2("ConfigUpdate(): ID: %v", i.ID)
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
 	if err != nil {
 		return err
@@ -492,10 +409,10 @@ func (i *Identity) ConfigUpdate() error {
 }
 
 func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, error) {
-	log.Printf("ValidateUpdateConfig(): Start")
+	log.LLvlf2("ValidateUpdateConfig(): Start")
 	trustedconfig := i.Config
-	//fmt.Println("latest known block's hash: ", skipchain.SkipBlockID(i.latestID))
-	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.latestID, ID: i.ID})
+	log.LLvlf2("%v", i.LatestID)
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
 	if err != nil {
 		return false, err
 	}
@@ -504,15 +421,15 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 
 	ok := true
 	prev := blocks[0]
-	log.Printf("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
+	log.Lvlf2("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
 	for index, b := range blocks {
-		log.Printf("%v block with hash: %v", index, b.Hash)
+		log.Lvlf2("%v block with hash: %v", index, b.Hash)
 	}
 
 	// Check that the hash of the first block of the returned list is the latest known
 	// to us so far
-	if !bytes.Equal(prev.Hash, i.latestID) {
-		log.Printf("Returned chain of skipblocks starts with wrong skipblock hash")
+	if !bytes.Equal(prev.Hash, i.LatestID) {
+		log.Lvlf2("Returned chain of skipblocks starts with wrong skipblock hash")
 		return false, errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
@@ -521,7 +438,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	b1 := blocks[len(blocks)-1].Data
 	/*b2, _ := network.MarshalRegisteredType(newconf)
 	if !bytes.Equal(b1, b2) {
-		log.Printf("Configs don't match!")
+		log.Lvlf2("Configs don't match!")
 		return false, err
 	}
 	*/
@@ -529,13 +446,18 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	c, _ := data.(*common_structs.Config)
 	h1, _ := c.Hash()
 	h2, _ := newconf.Hash()
-	log.Printf("h1: %v, h2: %v", h1, h2)
+	log.Lvlf2("h1: %v, h2: %v", h1, h2)
+
+	if !bytes.Equal(h1, h2) {
+		log.Lvlf2("Configs don't match!")
+		return false, err
+	}
 
 	// Check the validity of each skipblock hop
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
-			log.Printf("DEVICE: %v, Checking trust delegation: %v -> %v", i.DeviceName, index-1, index)
+			log.Lvlf2("DEVICE: %v, Checking trust delegation: %v -> %v", i.DeviceName, index-1, index)
 			cnt := 0
 			//fmt.Println("cnt: ", cnt)
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
@@ -557,13 +479,13 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 							var hash crypto.HashID
 							hash, err = newconfig.Hash()
 							if err != nil {
-								log.Printf("Couldn't get hash")
+								log.Lvlf2("Couldn't get hash")
 								return false, errors.New("Couldn't get hash")
 							}
 							fmt.Println("Verify signature of device: ", key)
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
-								log.Printf("Wrong signature")
+								log.Lvlf2("Wrong signature")
 								return false, errors.New("Wrong signature")
 							}
 							cnt++
@@ -573,17 +495,17 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 				}
 			}
 			if cnt < trustedconfig.Threshold {
-				log.Printf("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
+				log.Lvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
 				return false, errors.New("No sufficient threshold of trusted devices' votes")
 			}
 
-			log.Printf("Verify the cothority's signatures regarding the forward links")
+			log.Lvlf2("Verify the cothority's signatures regarding the forward links")
 			// Verify the cothority's signatures regarding the forward links
 			link := prev.ForwardLink[len(prev.ForwardLink)-1]
 
 			//fmt.Println("Check whether cothority's signature upon wrong skipblock hash")
 			if !bytes.Equal(link.Hash, next.Hash) {
-				log.Printf("Cothority's signature upon wrong skipblock hash")
+				log.Lvlf2("Cothority's signature upon wrong skipblock hash")
 				return false, errors.New("Cothority's signature upon wrong skipblock hash")
 			}
 			//fmt.Println("Check whether cothority's signature verify or not")
@@ -592,11 +514,11 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 			if prev.Roster != nil {
 				err := cosi.VerifySignature(network.Suite, publics, hash, link.Signature)
 				if err != nil {
-					log.Printf("Cothority's signature NOT ok")
+					log.Lvlf2("Cothority's signature NOT ok")
 					return false, errors.New("Cothority's signature doesn't verify")
 				}
 			} else {
-				log.Printf("Found no roster")
+				log.Lvlf2("Found no roster")
 				return false, errors.New("Found no roster")
 			}
 
@@ -606,23 +528,32 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 		trustedconfig = data.(*common_structs.Config)
 	}
 
-	i.latestID = blocks[len(blocks)-1].Hash
+	i.LatestID = blocks[len(blocks)-1].Hash
 	i.Latest = blocks[len(blocks)-1]
 	i.Config = newconf
-	log.Printf("num of certs: %v", len(reply.Certs))
+	log.Lvlf2("num of certs: %v", len(reply.Certs))
 	i.Certs = reply.Certs
-	log.Printf("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
+	log.Lvlf2("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v, NUM_CERTS: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold, len(i.Certs))
 	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
 	return ok, err
 }
 
-
-func (i *Identity) GetSkipblocks(id skipchain.SkipBlockID,	latest *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
+func (i *Identity) GetSkipblocks(id skipchain.SkipBlockID, latest *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetSkipblocks{ID: i.ID, Latest: latest})
 	if err != nil {
 		return nil, err
 	}
 	reply, _ := msg.Msg.(GetSkipblocksReply)
+	sbs := reply.Skipblocks
+	return sbs, nil
+}
+
+func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, sb1 *skipchain.SkipBlock, sb2 *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{ID: i.ID, Sb1: sb1, Sb2: sb2})
+	if err != nil {
+		return nil, err
+	}
+	reply, _ := msg.Msg.(GetValidSbPathReply)
 	sbs := reply.Skipblocks
 	return sbs, nil
 }
@@ -679,4 +610,9 @@ func (i *Identity) GetProposed() *common_structs.Config {
 		return i.Proposed
 	}
 	return i.Config.Copy()
+}
+
+func (i *Identity) ProposeUpVote() {
+	log.ErrFatal(i.ProposeUpdate())
+	log.ErrFatal(i.ProposeVote(true))
 }

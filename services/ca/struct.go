@@ -18,6 +18,10 @@ import (
 const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
+// How many msec at most should be the time difference between a CA and the
+// the time reflected on the proposed config for the former to sign off
+const maxdiff_sign = 300000
+
 type Cert struct {
 	// Site's ID
 	ID skipchain.SkipBlockID

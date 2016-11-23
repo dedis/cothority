@@ -46,7 +46,8 @@ type Config struct {
 	Timestamp int64
 	Threshold int
 	Device    map[string]*Device
-	Data      map[string]string
+	//Data      map[string]string
+	Data map[string]abstract.Point
 	// The public keys of the trusted CAs
 	CAs []CAInfo
 }
@@ -58,7 +59,7 @@ type Device struct {
 	Vote  *crypto.SchnorrSig
 }
 
-type DevicePoint struct {
+type APoint struct {
 	Point abstract.Point
 }
 
@@ -85,9 +86,9 @@ type PinState struct {
 	Threshold int
 	// The trusted pins for the time interval 'Window'
 	Pins []abstract.Point
-	// Trusted window in ms for the current 'Pins'
+	// Trusted window in sec for the current 'Pins'
 	Window int64
-	// When we received the latest accepted skipblock
+	// When we received the latest accepted skipblock (in sec)
 	TimeSbRec int64
 }
 
@@ -101,12 +102,13 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo) *Config {
+func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]abstract.Point) *Config {
 	return &Config{
 		Threshold: threshold,
 		Device:    map[string]*Device{owner: {Point: pub}},
-		Data:      make(map[string]string),
-		CAs:       cas,
+		//Data:      make(map[string]string),
+		Data: data,
+		CAs:  cas,
 	}
 }
 
@@ -123,7 +125,8 @@ func (c *Config) Copy() *Config {
 	}
 	ilNew := msg.(Config)
 	if len(ilNew.Data) == 0 {
-		ilNew.Data = make(map[string]string)
+		//ilNew.Data = make(map[string]string)
+		ilNew.Data = make(map[string]abstract.Point)
 	}
 	return &ilNew
 }
@@ -151,11 +154,30 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(c.Data[s]))
+		/*
+			_, err = hash.Write([]byte(c.Data[s]))
+			if err != nil {
+				return nil, err
+			}
+		*/
+		point := &APoint{Point: c.Device[s].Point}
+		b, err := network.MarshalRegisteredType(point)
 		if err != nil {
 			return nil, err
 		}
-		point := &DevicePoint{Point: c.Device[s].Point}
+		_, err = hash.Write(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var keys []string
+	for k := range c.Data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		point := &APoint{Point: c.Data[k]}
 		b, err := network.MarshalRegisteredType(point)
 		if err != nil {
 			return nil, err
@@ -236,14 +258,14 @@ func (c *Config) GetSuffixColumn(keys ...string) []string {
 // GetValue returns the value of the key. If more than one key is given,
 // the slice is joined using ":" and the value is returned. If the key
 // is not found, an empty string is returned.
-func (c *Config) GetValue(keys ...string) string {
+func (c *Config) GetValue(keys ...string) abstract.Point {
 	key := strings.Join(keys, ":")
 	for k, v := range c.Data {
 		if k == key {
 			return v
 		}
 	}
-	return ""
+	return nil
 }
 
 // GetIntermediateColumn returns the values of the column in the middle of

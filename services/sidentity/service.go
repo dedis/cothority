@@ -12,6 +12,7 @@ collective signatures and be assured that the blockchain is valid.
 package sidentity
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -32,11 +33,11 @@ import (
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "SIdentity"
 
-var identityService sda.ServiceID
+var IdentityService sda.ServiceID
 
 func init() {
 	sda.RegisterNewService(ServiceName, newIdentityService)
-	identityService = sda.ServiceFactory.ServiceID(ServiceName)
+	IdentityService = sda.ServiceFactory.ServiceID(ServiceName)
 	network.RegisterPacketType(&StorageMap{})
 	network.RegisterPacketType(&Storage{})
 }
@@ -66,9 +67,10 @@ type Storage struct {
 	Data       *skipchain.SkipBlock
 	SkipBlocks map[string]*skipchain.SkipBlock
 	//Certs      []*ca.Cert
-	// Certs keeps the mapping between the config (the hash of the skipblock that contains it) and the cert
-	// that was issued for that particular config
-	Certs map[string]*ca.Cert
+	// Certs2 keeps the mapping between the config (the hash of the skipblock that contains it) and the cert(s)
+	// that was(were) issued for that particular config
+	//Certs  []*ca.Cert
+	Certs map[string][]*ca.Cert
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
@@ -112,23 +114,25 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 
 	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-	//ids.SkipBlocks[string(ids.Data.Hash)] = ids.Data
 	ids.setSkipBlockByID(ids.Data)
-	//ids.SkipBlocks["georgia"] = ids.Data
-	//fmt.Println("genesis hash: ", ids.Data.Hash)
+
 	roster := ids.Root.Roster
 
 	certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
 	if certs == nil {
-		log.Printf("No certs returned")
+		log.Lvlf2("No certs returned")
 	}
 
+	ids.Certs = make(map[string][]*ca.Cert)
+	hash := ids.Data.Hash
 	for _, cert := range certs {
+		slice := ids.Certs[string(hash)]
+		slice = append(slice, cert)
+		ids.Certs[string(hash)] = slice
+
 		//ids.Certs = append(ids.Certs, cert)
-		hash := ids.Data.Hash
-		ids.Certs[string(hash)] = cert
-		log.Printf("---------NEW CERT!--------")
-		log.Printf("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
+		log.Lvlf2("---------NEW CERT!--------")
+		log.Lvlf2("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
 	}
 
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
@@ -142,7 +146,14 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
 
 	s.save()
-	log.Printf("CreateIdentity(): End having %v certs", len(ids.Certs))
+	//log.Lvlf2("CreateIdentity(): End having %v certs", len(ids.Certs))
+	cnt := 0
+	for _, certarray := range ids.Certs {
+		for _, _ = range certarray {
+			cnt++
+		}
+	}
+	log.Lvlf2("CreateIdentity(): End having %v certs", cnt)
 	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
@@ -177,7 +188,16 @@ func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipB
 
 func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
 	sid := s.getIdentityStorage(latestKnown.ID)
-	log.Printf("GetUpdateChain(): Start having %v certs", len(sid.Certs))
+	//log.Lvlf2("GetUpdateChain(): Start having %v certs", len(sid.Certs))
+	cnt := 0
+	certs := make([]*ca.Cert, 0)
+	for _, certarray := range sid.Certs {
+		for _, cert := range certarray {
+			cnt++
+			certs = append(certs, cert)
+		}
+	}
+	log.Lvlf2("GetUpdateChain(): Start having %v certs", cnt)
 	block, ok := sid.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock!!")
@@ -197,10 +217,18 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 	}
 	log.Print("Found", len(blocks), "blocks")
 
-	log.Printf("GetUpdateChain(): End having %v certs", len(sid.Certs))
+	cnt = 0
+	certs = make([]*ca.Cert, 0)
+	for _, certarray := range sid.Certs {
+		for _, cert := range certarray {
+			cnt++
+			certs = append(certs, cert)
+		}
+	}
+	log.Lvlf2("GetUpdateChain(): End having %v certs", cnt)
 	reply := &GetUpdateChainReply{
 		Update: blocks,
-		Certs:  sid.Certs,
+		Certs:  certs,
 	}
 	return reply, nil
 }
@@ -274,7 +302,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		// Check whether our clock is relatively close or not to the proposed timestamp
 		err2 := sid.Proposed.CheckTimeDiff(maxdiff_sign)
 		if err2 != nil {
-			log.Printf("Cothority %v", err2)
+			log.Lvlf2("Cothority %v", err2)
 			return err2
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
@@ -407,21 +435,88 @@ func (s *Service) Propagate(msg network.Body) {
 }
 
 func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) (network.Body, error) {
+	//log.LLvlf2("GetSkipblocks(): Start")
 	id := req.ID
 	latest := req.Latest
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
+		log.LLvlf2("Didn't find identity")
 		return nil, errors.New("Didn't find identity")
 	}
 	// Follow the backward links until finding the skipblock whose config was certified by a CA
-	// All these skipblocks will be returned (from the newest to the oldest)
-	id_latest_cert_block := sid.Certs
-	sbs := make([]*skipchain.SkipBlock)
+	// All these skipblocks will be returned (from the oldest to the newest)
+	sbs := make([]*skipchain.SkipBlock, 1)
+	sbs = append(sbs, latest)
 	block := latest
-	hash := block.BackLinkIds[0]
+	hash := block.Hash
 	var ok bool
-	for _, exists := sid.Certs[hash]; !exists {
-		block, ok = s.getSkipBlockByID(hash)
+	_, exists := sid.Certs[string(hash)]
+	//log.LLvlf2("hash: %v", hash)
+	for !exists {
+		//log.LLvlf2("hash: %v", hash)
+		block, ok = sid.getSkipBlockByID(hash)
+		if !ok {
+			log.LLvlf2("Skipblock with hash: %v not found", hash)
+			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
+		}
+		hash = block.BackLinkIds[0]
+		sbs = append(sbs, block)
+		_, exists = sid.Certs[string(hash)]
+	}
+
+	sbs_from_oldest := make([]*skipchain.SkipBlock, len(sbs))
+	for index, block := range sbs {
+		sbs_from_oldest[len(sbs)-1-index] = block
+	}
+	//log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs))
+	return &GetSkipblocksReply{Skipblocks: sbs_from_oldest}, nil
+}
+
+func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
+	id := req.ID
+	sb1 := req.Sb1
+	sb2 := req.Sb2
+	sid := s.getIdentityStorage(id)
+	if sid == nil {
+		return nil, errors.New("Didn't find identity")
+	}
+	_, ok := sid.getSkipBlockByID(sb1.Hash)
+	if !ok {
+		return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", sb1.Hash)
+	}
+
+	if sb2 != nil {
+		_, ok := sid.getSkipBlockByID(sb2.Hash)
+		if !ok {
+			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", sb2.Hash)
+		}
+	} else {
+		// in this case, fetch all the blocks starting from the latest known one (sb1)
+		// till the latest
+		sb2 = sid.Data
+	}
+
+	_, data, _ := network.UnmarshalRegistered(sb1.Data)
+	conf1, _ := data.(*common_structs.Config)
+
+	_, data, _ = network.UnmarshalRegistered(sb2.Data)
+	conf2, _ := data.(*common_structs.Config)
+
+	newest := sb1
+	oldest := sb2
+	if conf2.Timestamp > conf1.Timestamp {
+		newest = sb2
+		oldest = sb1
+	}
+
+	// Follow the backward links until finding the 'oldest' skipblock/config
+	// All these skipblocks will be returned (from the oldest to the newest)
+	sbs := make([]*skipchain.SkipBlock, 1)
+	sbs = append(sbs, newest)
+	block := newest
+	hash := block.BackLinkIds[0]
+	for !bytes.Equal(hash, oldest.Hash) {
+		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
 			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
 		}
@@ -429,15 +524,12 @@ func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) 
 		sbs = append(sbs, block)
 	}
 
-	return &GetSkipblocksReply{Skipblocks: sbs}, nil
-}
-
-// getSkipBlockByID returns the skip-block or false if it doesn't exist
-func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.gMutex.Lock()
-	b, ok := s.SkipBlocks[string(sbID)]
-	s.gMutex.Unlock()
-	return b, ok
+	sbs_from_oldest := make([]*skipchain.SkipBlock, len(sbs))
+	for index, block := range sbs {
+		sbs_from_oldest[len(sbs)-1-index] = block
+	}
+	log.LLvlf2("Num of returned blocks: %v", len(sbs_from_oldest))
+	return &GetValidSbPathReply{Skipblocks: sbs_from_oldest}, nil
 }
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
@@ -510,6 +602,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.GetUpdateChain,
+		s.GetSkipblocks, s.GetValidSbPath,
 	} {
 		if err := s.RegisterMessage(f); err != nil {
 			log.Fatal("Registration error:", err)

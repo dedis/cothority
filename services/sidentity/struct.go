@@ -14,7 +14,7 @@ import (
 	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
-	"github.com/dedis/crypto/abstract"
+	//"github.com/dedis/crypto/abstract"
 )
 
 const MaxUint = ^uint(0)
@@ -22,6 +22,10 @@ const MaxInt = int(MaxUint >> 1)
 
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
+
+// How many msec at most should be the time difference between a device/cothority node and the
+// the time reflected on the proposed config for the former to sign off
+const maxdiff_sign = 300000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
@@ -78,7 +82,7 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*skipchain.SkipBlock
-	Certs  map[string]*ca.Cert
+	Certs  []*ca.Cert
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It
@@ -132,5 +136,15 @@ type GetSkipblocks struct {
 }
 
 type GetSkipblocksReply struct {
+	Skipblocks []*skipchain.SkipBlock
+}
+
+type GetValidSbPath struct {
+	ID  skipchain.SkipBlockID
+	Sb1 *skipchain.SkipBlock
+	Sb2 *skipchain.SkipBlock
+}
+
+type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
 }
