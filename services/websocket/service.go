@@ -198,14 +198,25 @@ func (s *Service) signHandler(ws *websocket.Conn) {
 	log.Lvlf1("Received message: %v", reflect.TypeOf(msg))
 	req, ok := msg.(*SignRequest)
 	log.Lvlf1("Received request: buf(%x) req(%v) converted(%t)", buf, req, ok)
+	//req = &SignRequest{Hash: []byte("myhash")}
 	keypair := eddsa.NewEdDSA(nil)
 	agg, err := keypair.Public.MarshalBinary()
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req = &SignRequest{Hash: []byte("myhash")}
 	signature, err := keypair.Sign(req.Hash)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	//agg, _ := s.ServerIdentity().Public.MarshalBinary()
+	//ssignature, err := crypto.SignSchnorr(network.Suite, s.Private(), req.Hash)
+	//if err != nil {
+	//	log.Error(err)
+	//	return
+	//}
+	//signature, _ := ssignature.MarshalBinary()
 	signReply := &SignReply{
 		Signature: signature,
 		Aggregate: agg,

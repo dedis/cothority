@@ -92,7 +92,7 @@ func TestSign(t *testing.T) {
 	log.ErrFatal(err)
 	ws, err := websocket.Dial("ws://"+url+"/sign", "", "http://localhost/")
 	log.ErrFatal(err)
-	msg := []byte("blah")
+	msg := []byte("myhash")
 	hash, err := crypto.HashBytes(network.Suite.Hash(), msg)
 	log.ErrFatal(err)
 	req := &SignRequest{
@@ -119,7 +119,7 @@ func TestSign(t *testing.T) {
 	require.True(t, ok)
 	pub := network.Suite.Point()
 	log.ErrFatal(pub.UnmarshalBinary(signature.Aggregate))
-	log.ErrFatal(eddsa.Verify(pub, msg, signature.Signature))
+	log.ErrFatal(eddsa.Verify(pub, hash, signature.Signature))
 	log.Lvl1("Received correct status-reply:", signature)
 }
 

@@ -1,6 +1,9 @@
 package sda
 
-import "github.com/dedis/cothority/network"
+import (
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/crypto/abstract"
+)
 
 // Context represents the methods that are available to a service.
 type Context struct {
@@ -86,4 +89,9 @@ func (c *Context) Service(name string) Service {
 // String returns the host it's running on.
 func (c *Context) String() string {
 	return c.conode.ServerIdentity.String()
+}
+
+// Private returns the private key of this conode.
+func (c *Context) Private() abstract.Scalar {
+	return c.conode.private
 }
