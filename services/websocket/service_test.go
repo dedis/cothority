@@ -5,6 +5,7 @@ import (
 
 	"encoding/binary"
 
+	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -79,6 +80,42 @@ func TestDebug(t *testing.T) {
 	log.ErrFatal(err)
 	err = websocket.Message.Send(ws, "ping")
 	log.ErrFatal(err)
+}
+
+func TestSign(t *testing.T) {
+	local := sda.NewTCPTest()
+	_, el, _ := local.GenTree(2, true)
+	defer local.CloseAll()
+
+	url, err := getWebHost(el.List[0])
+	log.ErrFatal(err)
+	ws, err := websocket.Dial("ws://"+url+"/sign", "", "http://localhost/")
+	log.ErrFatal(err)
+	hash, err := crypto.HashArgsSuite(network.Suite, "blah")
+	log.ErrFatal(err)
+	req := &status.SignRequest{
+		Hash:     hash,
+		NodeList: []string{el.List[0].Address.Host() + ":" + el.List[0].Address.Port()},
+	}
+	log.Printf("Sending message Request: %x", uuid.UUID(network.TypeFromData(req)).Bytes())
+	buf, err := network.MarshalRegisteredType(req)
+	log.ErrFatal(err)
+	size := make([]byte, 2)
+	binary.LittleEndian.PutUint16(size, uint16(len(buf)))
+	err = websocket.Message.Send(ws, size)
+	log.ErrFatal(err)
+	err = websocket.Message.Send(ws, buf)
+	log.ErrFatal(err)
+
+	log.Lvl1("Waiting for reply")
+	var rcv []byte
+	err = websocket.Message.Receive(ws, &rcv)
+	log.ErrFatal(err)
+	log.Lvlf1("Received reply: %x", rcv)
+	_, stat, err := network.UnmarshalRegistered(rcv)
+	signature, ok := stat.(*status.SignReply)
+	require.True(t, ok)
+	log.Lvl1("Received correct status-reply:", signature)
 }
 
 func TestReal(t *testing.T) {
