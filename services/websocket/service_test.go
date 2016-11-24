@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/status"
 	_ "github.com/dedis/cothority/services/status"
+	"github.com/dedis/crypto/eddsa"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/websocket"
@@ -91,11 +92,12 @@ func TestSign(t *testing.T) {
 	log.ErrFatal(err)
 	ws, err := websocket.Dial("ws://"+url+"/sign", "", "http://localhost/")
 	log.ErrFatal(err)
-	hash, err := crypto.HashBytes(network.Suite.Hash(), []byte("blah"))
+	msg := []byte("blah")
+	hash, err := crypto.HashBytes(network.Suite.Hash(), msg)
 	log.ErrFatal(err)
 	req := &SignRequest{
 		Hash:     hash,
-		NodeList: []string{el.List[0].Address.Host() + ":" + el.List[0].Address.Port()},
+		NodeList: el.List[0].Address.Host() + ":" + el.List[0].Address.Port(),
 	}
 	log.Printf("Sending message Request: %x", uuid.UUID(network.TypeFromData(req)).Bytes())
 	buf, err := network.MarshalRegisteredType(req)
@@ -115,6 +117,9 @@ func TestSign(t *testing.T) {
 	_, stat, err := network.UnmarshalRegistered(rcv)
 	signature, ok := stat.(*SignReply)
 	require.True(t, ok)
+	pub := network.Suite.Point()
+	log.ErrFatal(pub.UnmarshalBinary(signature.Aggregate))
+	log.ErrFatal(eddsa.Verify(pub, msg, signature.Signature))
 	log.Lvl1("Received correct status-reply:", signature)
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/status"
+	"github.com/dedis/crypto/eddsa"
 	"golang.org/x/net/websocket"
 )
 
@@ -194,17 +195,18 @@ func (s *Service) signHandler(ws *websocket.Conn) {
 	_, msg, err := network.UnmarshalRegistered(buf)
 	req, ok := msg.(*SignRequest)
 	log.Lvlf1("Received request: %x %v %t", buf, req, ok)
-	//stat := s.GetService(status.ServiceName)
-	//reply, err := stat.(*status.Stat).Request(nil, req)
-	//if err != nil {
-	//	log.Error(err)
-	//	return
-	//}
-	signReply := &SignReply{
-		Signature: []byte{},
-		Aggregate: []byte{},
+	keypair := eddsa.NewEdDSA(nil)
+	agg, err := keypair.Public.MarshalBinary()
+	if err != nil {
+		log.Error(err)
+		return
 	}
-	log.Lvl1("Sending", signReply)
+	signature, err := keypair.Sign(req.Hash)
+	signReply := &SignReply{
+		Signature: signature,
+		Aggregate: agg,
+	}
+	log.Lvlf1("Sending %x", signReply)
 	buf, err = network.MarshalRegisteredType(signReply)
 	if err != nil {
 		log.Error(err)
