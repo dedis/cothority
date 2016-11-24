@@ -147,7 +147,7 @@ func InteractiveConfig(binaryName string) {
 	conf := &config.CothoritydConfig{
 		Public:  pubStr,
 		Private: privStr,
-		Address: serverBinding,
+		Address: publicAddress,
 	}
 
 	var configDone bool
@@ -218,7 +218,7 @@ func CheckServers(g *config.Group) error {
 			desc = []string{d, d}
 		}
 		el := sda.NewRoster([]*network.ServerIdentity{e})
-		success = success && checkList(el, desc) == nil
+		success = checkList(el, desc) == nil && success
 	}
 	if len(g.Roster.List) > 1 {
 		// Then check pairs of servers
