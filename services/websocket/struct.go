@@ -15,8 +15,9 @@ type Ping struct {
 // nodes in NodeList.
 type SignRequest struct {
 	Hash []byte
-	// slice of "host:port" for all nodes that need to sign
-	NodeList []string
+	// list of "host1:port1;host2:port2" for all nodes that need to sign.
+	// different hosts are separated by a ";"
+	NodeList string
 }
 
 // SignReply returns the collective signature, together with the aggregate
