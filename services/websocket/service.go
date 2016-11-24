@@ -205,6 +205,7 @@ func (s *Service) signHandler(ws *websocket.Conn) {
 		log.Error(err)
 		return
 	}
+	log.Printf("Hash is %x", req.Hash)
 	signature, err := keypair.Sign(req.Hash)
 	if err != nil {
 		log.Error(err)
