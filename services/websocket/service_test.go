@@ -80,3 +80,20 @@ func TestDebug(t *testing.T) {
 	err = websocket.Message.Send(ws, "ping")
 	log.ErrFatal(err)
 }
+
+func TestReal(t *testing.T) {
+	local := sda.NewTCPTest()
+	_, el, _ := local.GenTree(2, true)
+	defer local.CloseAll()
+
+	url, err := getWebHost(el.List[0])
+	log.ErrFatal(err)
+	ws, err := websocket.Dial("ws://"+url+"/websocket", "", "http://localhost/")
+	log.ErrFatal(err)
+	err = websocket.Message.Send(ws, Ping{"ping"})
+	log.ErrFatal(err)
+	var rcv []byte
+	err = websocket.Message.Receive(ws, &rcv)
+	log.ErrFatal(err)
+	log.Print(rcv)
+}

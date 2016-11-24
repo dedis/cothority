@@ -74,8 +74,9 @@ func (s *Service) Listening() {
 			Handler: hand,
 		}
 		hand.Handle("/debug", websocket.Handler(s.debugHandler))
-		hand.Handle("/ping", websocket.Handler(s.pingHandler))
+		hand.Handle("/ping", websocket.Handler(s.oldPingHandler))
 		hand.Handle("/status", websocket.Handler(s.statusHandler))
+		hand.Handle("/websocket", websocket.Handler(s.oldPingHandler))
 		log.ErrFatal(s.server.ListenAndServe())
 	}()
 }
@@ -92,7 +93,11 @@ func (s *Service) debugHandler(ws *websocket.Conn) {
 	}
 }
 
-func (s *Service) pingHandler(ws *websocket.Conn) {
+func (s *Service) newPingHandler(ws *websocket.Conn) {
+	log.Print()
+}
+
+func (s *Service) oldPingHandler(ws *websocket.Conn) {
 	log.Lvl1("Started ping")
 	buf := make([]byte, 4)
 	_, err := ws.Read(buf)
@@ -107,7 +112,6 @@ func (s *Service) pingHandler(ws *websocket.Conn) {
 		return
 	}
 	log.Lvl1("Sent pong")
-	s.pingHandler(ws)
 }
 
 func (s *Service) statusHandler(ws *websocket.Conn) {
@@ -164,6 +168,10 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	log.Lvl1("Sent message")
 }
 
+func (s *Service) PingHandler(si *network.ServerIdentity, p *Ping) (network.Body, error) {
+	return p, nil
+}
+
 type Stat struct {
 	Host map[string]string
 }
@@ -186,6 +194,7 @@ func newService(c *sda.Context, path string) sda.Service {
 	}
 
 	network.RegisterPacketType(Stat{})
+	s.RegisterMessage(s.PingHandler)
 	s.Listening()
 	return s
 }
