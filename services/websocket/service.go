@@ -76,7 +76,7 @@ func (s *Service) Listening() {
 		hand.Handle("/debug", websocket.Handler(s.debugHandler))
 		hand.Handle("/ping", websocket.Handler(s.oldPingHandler))
 		hand.Handle("/status", websocket.Handler(s.statusHandler))
-		hand.Handle("/websocket", websocket.Handler(s.oldPingHandler))
+		hand.Handle("/sign", websocket.Handler(s.signHandler))
 		log.ErrFatal(s.server.ListenAndServe())
 	}()
 }
@@ -156,6 +156,56 @@ func (s *Service) statusHandler(ws *websocket.Conn) {
 	}
 	log.Lvl1("Sending", msgStat)
 	buf, err = network.MarshalRegisteredType(msgStat)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	err = websocket.Message.Send(ws, buf)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Lvl1("Sent message")
+}
+
+func (s *Service) signHandler(ws *websocket.Conn) {
+	log.Lvl1("starting to handle")
+	sizeBuf := make([]byte, 2)
+	n, err := ws.Read(sizeBuf)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if n != 2 {
+		log.Error("Couldn't read 2 bytes")
+		return
+	}
+	size := binary.LittleEndian.Uint16(sizeBuf)
+	buf := make([]byte, size)
+	read, err := ws.Read(buf)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if read != int(size) {
+		log.Error("Read only", read, "instead of", size)
+		return
+	}
+	_, msg, err := network.UnmarshalRegistered(buf)
+	req, ok := msg.(*SignRequest)
+	log.Lvlf1("Received request: %x %v %t", buf, req, ok)
+	//stat := s.GetService(status.ServiceName)
+	//reply, err := stat.(*status.Stat).Request(nil, req)
+	//if err != nil {
+	//	log.Error(err)
+	//	return
+	//}
+	signReply := &SignReply{
+		Signature: []byte{},
+		Aggregate: []byte{},
+	}
+	log.Lvl1("Sending", signReply)
+	buf, err = network.MarshalRegisteredType(signReply)
 	if err != nil {
 		log.Error(err)
 		return
