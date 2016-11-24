@@ -102,7 +102,7 @@ func (r *Router) Stop() error {
 		// take all connections to close
 		for _, c := range arr {
 			if err := c.Close(); err != nil {
-				log.LLvl5(err)
+				log.Lvl5(err)
 			}
 		}
 	}
