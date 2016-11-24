@@ -12,6 +12,8 @@ import (
 
 	"encoding/binary"
 
+	"reflect"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -193,6 +195,7 @@ func (s *Service) signHandler(ws *websocket.Conn) {
 		return
 	}
 	_, msg, err := network.UnmarshalRegistered(buf)
+	log.Lvlf1("Received message: %v", reflect.TypeOf(msg))
 	req, ok := msg.(*SignRequest)
 	log.Lvlf1("Received request: buf(%x) req(%v) converted(%t)", buf, req, ok)
 	keypair := eddsa.NewEdDSA(nil)
@@ -201,7 +204,7 @@ func (s *Service) signHandler(ws *websocket.Conn) {
 		log.Error(err)
 		return
 	}
-	req.Hash = []byte("myhash")
+	req = &SignRequest{Hash: []byte("myhash")}
 	signature, err := keypair.Sign(req.Hash)
 	signReply := &SignReply{
 		Signature: signature,
