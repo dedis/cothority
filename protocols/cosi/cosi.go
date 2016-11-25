@@ -1,5 +1,5 @@
 // Package protocol implements a round of a Collective Signing protocol.
-package protocol
+package cosi
 
 import (
 	"sync"
