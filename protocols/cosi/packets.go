@@ -15,14 +15,21 @@ func init() {
 }
 
 const (
+	// AnnouncementPhase is the ID of the Announcement message
 	AnnouncementPhase uint32 = 1
-	CommitmentPhase          = 2
-	ChallengePhase           = 3
-	ResponsePhase            = 4
+	// CommitmentPhase  is the ID of the Commitment message
+	CommitmentPhase = 2
+	// ChallengePhase is the ID of the Challenge message
+	ChallengePhase = 3
+	// ResponsePhase is the ID of the Response message
+	ResponsePhase = 4
 )
 
+// ProtocolPacketID is the network.PacketTypeID of the CoSi ProtocolPacket
 var ProtocolPacketID = network.RegisterPacketType(ProtocolPacket{})
 
+// ProtocolPacket is the main message for the CoSi protocol which includes
+// every information that the CoSi protocol might need.
 type ProtocolPacket struct {
 	Phase uint32
 
@@ -34,8 +41,11 @@ type ProtocolPacket struct {
 	Resp *Response
 }
 
+// ProtocolIO implements the sda.ProtocolIO interface for the CoSi protocol.
 type ProtocolIO struct{}
 
+// Wrap implements the sda.ProtocolIO interface by wrapping up any of the
+// four-step messages into a ProtooclPacket.
 func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
 	var packet = new(ProtocolPacket)
 	packet.Info = info
@@ -58,6 +68,8 @@ func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{
 	return packet, nil
 }
 
+// Unwrap implements the sda.ProtocolIO interface by unwraping and returning the
+// specific message of one of the four steps.
 func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, error) {
 	var inner interface{}
 	packet, ok := msg.(ProtocolPacket)
@@ -82,6 +94,8 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 	return inner, packet.Info, nil
 }
 
+// PacketType implements the sda.ProtocolIO interface by returning the type of
+// the ProtocolPacket.
 func (p *ProtocolIO) PacketType() network.PacketTypeID {
 	return ProtocolPacketID
 }
