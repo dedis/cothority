@@ -46,6 +46,8 @@ type TreeNodeInstance struct {
 	msgDispatchQueueWait chan bool
 	// whether this node is closing
 	closing bool
+
+	protoIO ProtocolIO
 }
 
 // aggregateMessages (if set) tells to aggregate messages from all children
@@ -59,7 +61,7 @@ const (
 type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
-func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance {
+func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode, io ProtocolIO) *TreeNodeInstance {
 	n := &TreeNodeInstance{overlay: o,
 		token:                tok,
 		channels:             make(map[network.PacketTypeID]interface{}),
@@ -69,6 +71,7 @@ func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode) *TreeNodeInstance
 		treeNode:             tn,
 		msgDispatchQueue:     make([]*ProtocolMsg, 0, 1),
 		msgDispatchQueueWait: make(chan bool, 1),
+		protoIO:              io,
 	}
 	go n.dispatchMsgReader()
 	return n
@@ -115,7 +118,7 @@ func (n *TreeNodeInstance) SendTo(to *TreeNode, msg interface{}) error {
 	if to == nil {
 		return errors.New("Sent to a nil TreeNode")
 	}
-	return n.overlay.SendToTreeNode(n.token, to, msg)
+	return n.overlay.SendToTreeNode(n.token, to, msg, n.protoIO)
 }
 
 // Tree returns the tree of that node
@@ -373,19 +376,6 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 
 // dispatchMsgToProtocol will dispatch this sda.Data to the right instance
 func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
-	// Decode the inner message here. In older versions, it was decoded before,
-	// but first there is no use to do it before, and then every protocols had
-	// to manually registers their messages. Since it is done automatically by
-	// the Node, decoding should also be done by the node.
-	var err error
-	t, msg, err := network.UnmarshalRegisteredType(sdaMsg.MsgSlice, network.DefaultConstructors(n.Suite()))
-	if err != nil {
-		log.Error(n.ServerIdentity(), "Error while unmarshalling inner message of SDAData", sdaMsg.MsgType, ":", err)
-	}
-	// Put the msg into SDAData
-	sdaMsg.MsgType = t
-	sdaMsg.Msg = msg
-
 	// if message comes from parent, dispatch directly
 	// if messages come from children we must aggregate them
 	// if we still need to wait for additional messages, we return
@@ -396,6 +386,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 	}
 	log.Lvlf5("%s->%s: Message is: %+v", n.Name(), sdaMsg.Msg)
 
+	var err error
 	switch {
 	case n.channels[msgType] != nil:
 		log.Lvl4(n.Name(), "Dispatching to channel")
@@ -404,7 +395,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl4("Dispatching to handler", n.ServerIdentity().Address)
 		err = n.dispatchHandler(msgs)
 	default:
-		return errors.New("This message-type is not handled by this protocol")
+		return fmt.Errorf("message-type not handled the protocol: %s", reflect.TypeOf(sdaMsg.Msg))
 	}
 	return err
 }

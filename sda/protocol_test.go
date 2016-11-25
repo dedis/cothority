@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/alecthomas/assert"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
@@ -138,4 +139,132 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	// Then we are supposed to receive from h2 after he got the tree and the
 	// entity list from h1
 	<-chanH2
+}
+
+func TestProtocolIOFactory(t *testing.T) {
+	defer eraseAllProtocolIO()
+	RegisterProtocolIO(testProtoIOName, NewTestProtocolIOChan)
+	fn, present := protocolIOFactory.factories[testProtoIOName]
+	assert.NotNil(t, fn)
+	assert.True(t, present)
+	// register twice
+	RegisterProtocolIO("testIO", NewTestProtocolIOChan)
+	// TODO check log error output
+}
+
+func TestProtocolIOStore(t *testing.T) {
+	defer eraseAllProtocolIO()
+	local := NewLocalTest()
+	defer local.CloseAll()
+
+	RegisterProtocolIO(testProtoIOName, NewTestProtocolIO)
+	GlobalProtocolRegister(testProtoIOName, newTestProtocolInstance)
+	h, _, tree := local.GenTree(2, true)
+
+	go func() {
+		// first time to wrap
+		res := <-chanProtoIOFeedback
+		assert.Equal(t, "", res)
+		// second time to unwrap
+		res = <-chanProtoIOFeedback
+		assert.Equal(t, "", res)
+
+	}()
+	_, err := h[0].StartProtocol(testProtoIOName, tree)
+	require.Nil(t, err)
+
+	res := <-chanTestProtoInstance
+	assert.True(t, res)
+}
+
+// ProtocolIO part
+var chanProtoIOCreation = make(chan bool)
+var chanProtoIOFeedback = make(chan string)
+
+const testProtoIOName = "TestIO"
+
+type OuterPacket struct {
+	Info  *OverlayMessage
+	Inner *SimpleMessage
+}
+
+var OuterPacketType = network.RegisterPacketType(OuterPacket{})
+
+type TestProtocolIO struct{}
+
+func NewTestProtocolIOChan() ProtocolIO {
+	chanProtoIOCreation <- true
+	return &TestProtocolIO{}
+}
+
+func NewTestProtocolIO() ProtocolIO {
+	return &TestProtocolIO{}
+}
+
+func eraseAllProtocolIO() {
+	protocolIOFactory.factories = make(map[string]NewProtocolIO)
+}
+
+func (t *TestProtocolIO) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
+	outer := &OuterPacket{}
+	inner, ok := msg.(*SimpleMessage)
+	if !ok {
+		chanProtoIOFeedback <- "wrong message type in wrap"
+	}
+	outer.Inner = inner
+	outer.Info = info
+	chanProtoIOFeedback <- ""
+	return outer, nil
+}
+
+func (t *TestProtocolIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, error) {
+	if msg == nil {
+		chanProtoIOFeedback <- "message nil!"
+		return nil, nil, errors.New("message nil")
+	}
+
+	real, ok := msg.(OuterPacket)
+	if !ok {
+		chanProtoIOFeedback <- "wrong type of message in unwrap"
+		return nil, nil, errors.New("wrong message")
+	}
+	chanProtoIOFeedback <- ""
+	return real.Inner, real.Info, nil
+}
+
+func (t *TestProtocolIO) PacketType() network.PacketTypeID {
+	return OuterPacketType
+}
+
+var chanTestProtoInstance = make(chan bool)
+
+// ProtocolInstance part
+type TestProtocolInstance struct {
+	*TreeNodeInstance
+}
+
+func newTestProtocolInstance(n *TreeNodeInstance) (ProtocolInstance, error) {
+	pi := new(TestProtocolInstance)
+	pi.TreeNodeInstance = n
+	n.RegisterHandler(pi.handleSimpleMessage)
+	return pi, nil
+}
+
+func (t *TestProtocolInstance) Start() error {
+	t.SendTo(t.Root(), &SimpleMessage{12})
+	return nil
+}
+
+type SimpleMessageHandler struct {
+	*TreeNode
+	SimpleMessage
+}
+
+func (t TestProtocolInstance) handleSimpleMessage(h SimpleMessageHandler) error {
+	var ok = true
+	if h.SimpleMessage.I != 12 {
+		ok = false
+	}
+	chanTestProtoInstance <- ok
+	return nil
 }
