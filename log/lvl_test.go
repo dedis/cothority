@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"errors"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -17,14 +19,11 @@ func TestTime(t *testing.T) {
 	SetDebugVisible(1)
 	GetStdOut()
 	Lvl1("No time")
-	str := GetStdOut()
-	if !strings.Contains(str, "1 : (") {
-		t.Fatal("Didn't get correct string: ", str)
-	}
+	assert.True(t, ContainsStdOut("1 : ("))
 	SetShowTime(true)
 	defer func() { SetShowTime(false) }()
 	Lvl1("With time")
-	str = GetStdOut()
+	str := GetStdOut()
 	if strings.Contains(str, "1 : (") {
 		t.Fatal("Didn't get correct string: ", str)
 	}

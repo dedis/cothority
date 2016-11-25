@@ -60,14 +60,14 @@ func (b *Broadcast) Start() error {
 func (b *Broadcast) handleContactNodes(msg struct {
 	*sda.TreeNode
 	ContactNodes
-}) {
+}) error {
 	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
 	if msg.TreeNode.ID == b.Root().ID {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
 			log.Lvl3("Won't contact anybody - finishing")
 			b.SendTo(b.Root(), &Done{})
-			return
+			return nil
 		}
 		log.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
 		// Connect to all nodes that are later in the TreeNodeList, but only if
@@ -76,7 +76,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 			log.Lvl3("Connecting to", tn.String())
 			err := b.SendTo(tn, &ContactNodes{})
 			if err != nil {
-				return
+				return nil
 			}
 		}
 	} else {
@@ -84,6 +84,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 		log.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
 		b.SendTo(msg.TreeNode, &Done{})
 	}
+	return nil
 }
 
 // Every node being contacted sends back a Done to the root which has
@@ -91,7 +92,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 func (b *Broadcast) handleDone(msg struct {
 	*sda.TreeNode
 	Done
-}) {
+}) error {
 	b.repliesLeft--
 	log.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
 	if b.repliesLeft == 0 {
@@ -106,6 +107,7 @@ func (b *Broadcast) handleDone(msg struct {
 		}
 
 	}
+	return nil
 }
 
 // RegisterOnDone takes a function that will be called once all connections
