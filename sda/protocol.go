@@ -128,11 +128,11 @@ type ProtocolIO interface {
 // NewProtocolIO is a function typedef to instantiate a new ProtocolIO
 type NewProtocolIO func() ProtocolIO
 
-type protocolIOFactory_ struct {
+type protocolIOFactoryStruct struct {
 	factories map[string]NewProtocolIO
 }
 
-var protocolIOFactory = protocolIOFactory_{
+var protocolIOFactory = protocolIOFactoryStruct{
 	factories: make(map[string]NewProtocolIO),
 }
 
