@@ -1,4 +1,4 @@
-// Package protocol implements a round of a Collective Signing protocol.
+// Package cosi implements a round of a Collective Signing protocol.
 package cosi
 
 import (
