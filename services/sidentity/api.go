@@ -3,10 +3,10 @@ package sidentity
 import (
 	"bytes"
 	"errors"
-	"fmt"
+	//"fmt"
 	"io"
 	"io/ioutil"
-	"strings"
+	//"strings"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -200,29 +200,32 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 // AttachToIdentity proposes to attach it to an existing Identity
 func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 	i.ID = ID
+	i.LatestID = ID
+	i.ConfigUpdate()
 
 	var err error
-	if strings.Compare(i.PinState.Ctype, "client_with_pins") != 0 {
-		// Accept as valid the first served block
-		i.LatestID = ID
-		err = i.InitPins()
-		if err != nil {
-			return err
-		}
-	}
 
 	switch i.PinState.Ctype {
 	case "device":
+		log.LLvlf2("AttachToIdentity(): 1")
 		if _, exists := i.Config.Device[i.DeviceName]; exists {
+			log.LLvlf2("AttachToIdentity(): Adding with an existing account-name: %v", i.DeviceName)
 			return errors.New("AttachToIdentity(): Adding with an existing account-name")
 		}
+		log.LLvlf2("AttachToIdentity(): 2")
+		if i.Config == nil {
+			log.LLvlf2("AttachToIdentity(): Nil config")
+			return errors.New("AttachToIdentity(): Nil config")
+		}
+		log.LLvlf2("AttachToIdentity(): 3")
 		confPropose := i.Config.Copy()
 		for _, dev := range confPropose.Device {
 			dev.Vote = nil
 		}
-
+		log.LLvlf2("Before invoking ProposeSend()")
 		confPropose.Device[i.DeviceName] = &common_structs.Device{Point: i.Public}
 		err = i.ProposeSend(confPropose)
+		log.LLvlf2("AttachToIdentity(): 4")
 		if err != nil {
 			return err
 		}
@@ -304,8 +307,8 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int)
 }
 
 // ProposeSend sends the new proposition of this identity
-// ProposeVote
 func (i *Identity) ProposeSend(il *common_structs.Config) error {
+	log.LLvlf2("Device: %v proposes a config", i.DeviceName)
 	err := il.SetNowTimestamp()
 	_, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
 	i.Proposed = il
@@ -457,7 +460,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
-			log.Lvlf2("DEVICE: %v, Checking trust delegation: %v -> %v", i.DeviceName, index-1, index)
+			log.LLvlf2("Checking trust delegation: %v -> %v", index-1, index)
 			cnt := 0
 			//fmt.Println("cnt: ", cnt)
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
@@ -482,10 +485,10 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 								log.Lvlf2("Couldn't get hash")
 								return false, errors.New("Couldn't get hash")
 							}
-							fmt.Println("Verify signature of device: ", key)
+							//log.LLvlf2("Verify signature of device: %v", key)
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
-								log.Lvlf2("Wrong signature")
+								log.LLvlf2("Wrong signature")
 								return false, errors.New("Wrong signature")
 							}
 							cnt++
@@ -549,6 +552,7 @@ func (i *Identity) GetSkipblocks(id skipchain.SkipBlockID, latest *skipchain.Ski
 }
 
 func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, sb1 *skipchain.SkipBlock, sb2 *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
+	log.LLvlf2("GetValidSbPath(): Start")
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{ID: i.ID, Sb1: sb1, Sb2: sb2})
 	if err != nil {
 		return nil, err

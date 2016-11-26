@@ -32,7 +32,7 @@ const MaxInt = int(MaxUint >> 1)
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
 
-// How many msec at most should be the time difference between a device/cothority node/CA and the
+// How many ms at most should be the time difference between a device/cothority node/CA and the
 // the time reflected on the proposed config for the former to sign off
 const maxdiff_sign = 300000
 
@@ -42,7 +42,7 @@ type ID skipchain.SkipBlockID
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
 type Config struct {
-	// The time in seconds when the request was started
+	// The time in ms when the request was started
 	Timestamp int64
 	Threshold int
 	Device    map[string]*Device
@@ -86,10 +86,10 @@ type PinState struct {
 	Threshold int
 	// The trusted pins for the time interval 'Window'
 	Pins []abstract.Point
-	// Trusted window in sec for the current 'Pins'
+	// Trusted window for the current 'Pins'
 	Window int64
-	// When we received the latest accepted skipblock (in sec)
-	TimeSbRec int64
+	// Time when the latest pins were accepted
+	TimePinAccept int64
 }
 
 func NewPinState(ctype string, threshold int, pins []abstract.Point, window int64) *PinState {
@@ -219,20 +219,41 @@ func (c *Config) String() string {
 }
 
 func (c *Config) SetNowTimestamp() error {
-	c.Timestamp = time.Now().Unix()
+	// the number of ms elapsed since January 1, 1970 UTC
+	c.Timestamp = time.Now().Unix() * 1000
 	log.Printf("Setting proposed config's timestamp to: %v", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	return nil
 }
 
 func (c *Config) CheckTimeDiff(maxvalue int64) error {
 	timestamp := c.Timestamp
-	diff := time.Since(time.Unix(timestamp, 0))
+	diff := time.Since(time.Unix(0, timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
 	if diff_int > maxvalue {
 		return fmt.Errorf("refused to sign off due to bad timestamp: time difference: %v exceeds the %v interval", diff, maxvalue)
 	}
 	log.Printf("Checking Timestamp: time difference: %v OK", diff)
 	return nil
+}
+
+// returns true if c is older than c2
+func (c *Config) IsOlderConfig(c2 *Config) bool {
+	timestamp := c.Timestamp
+	diff1 := time.Since(time.Unix(0, timestamp*1000000))
+	//diff_int1 := diff.Nanoseconds() / 1000000
+	log.Printf("Conf1 hash time difference: %v OK", diff1)
+	//log.LLvlf2("%v", diff_int1)
+	timestamp = c2.Timestamp
+	diff2 := time.Since(time.Unix(0, timestamp*1000000))
+	//diff_int2 := diff.Nanoseconds() / 1000000
+	log.Printf("Conf2 hash time difference: %v OK", diff2)
+	//log.LLvlf2("%v", diff_int2)
+	log.LLvlf2("%v", diff1.Nanoseconds())
+	log.LLvlf2("%v", diff2.Nanoseconds())
+	if diff1.Nanoseconds() < diff2.Nanoseconds() {
+		return true
+	}
+	return false
 }
 
 // GetSuffixColumn returns the unique values up to the next ":" of the keys.

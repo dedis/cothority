@@ -122,8 +122,8 @@ func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 		ID:  siteInfo.ID,
 		WSs: siteInfo.WSs,
 		PinState: &common_structs.PinState{
-			Window: int64(86400), // 86400ms = 1 day * 24 hours/day * 3600 sec/hour
-			//Window: int64(0),
+			//Window: int64(86400), // 86400ms = 1 day * 24 hours/day * 3600 sec/hour
+			Window: int64(1),
 		},
 	}
 
@@ -200,7 +200,7 @@ func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 		pins = append(pins, dev.Point)
 	}
 	website.PinState.Pins = pins
-	website.PinState.TimeSbRec = time.Now().Unix()
+	website.PinState.TimePinAccept = time.Now().Unix() * 1000
 	u.WebSites[string(siteInfo.ID)] = &website
 	log.LLvlf2("%v has been attached to the site identity: %v", u.UserName, siteInfo.ID)
 	return nil
@@ -214,7 +214,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
-			log.Lvlf2("Checking trust delegation: %v -> %v", index-1, index)
+			log.LLvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prev.Hash, next.Hash)
 			cnt := 0
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
 			if err2 != nil {
@@ -238,7 +238,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 								log.Lvlf2("Couldn't get hash")
 								return false, errors.New("Couldn't get hash")
 							}
-							fmt.Println("Verify signature of device: ", key)
+							//log.LLvlf2("Verify signature of device: %v", key)
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
 								log.Lvlf2("Wrong signature")
@@ -251,7 +251,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 				}
 			}
 			if cnt < trustedconfig.Threshold {
-				log.Lvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
+				log.LLvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
 				return false, errors.New("No sufficient threshold of trusted devices' votes")
 			}
 		}
@@ -279,7 +279,7 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 	if expired := website.ExpiredPins(); expired {
 		// TODO: chech whether the certs are signed or not by keys that are known to belong
 		// to existing CAs
-		log.LLvlf2("Pins have expired")
+		log.LLvlf2("Pins have expired!!!")
 		wss := website.WSs
 		serverID := wss[rand.Int()%len(wss)].ServerID
 		msg, err := u.WSClient.Send(serverID, &Connect{ID: id})
@@ -317,45 +317,35 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 				}
 			*/
 			// Verify the hops between each pair of subsequent blocks from the first one returned to the latest
+			log.LLvlf2("Verify the hops")
 			_, err = VerifyHops(sbs)
 			if err != nil {
-				log.Lvlf2("%v", err)
+				log.LLvlf2("%v", err)
 				return err
 			}
 
 			// check whether we are still following the previously following site skipchain
+			log.LLvlf2("Latest trusted block has hash: %v, the current head has hash: %v", website.Latest.Hash, sbs[len(sbs)-1].Hash)
 			msg, _ = u.WSClient.Send(serverID, &GetValidSbPath{ID: id, Sb1: website.Latest, Sb2: sbs[len(sbs)-1]})
 			reply3, _ := msg.Msg.(GetValidSbPathReply)
 			sbs = reply3.Skipblocks
 
+			log.LLvlf2("Verify the hops2")
 			ok, _ := VerifyHops(sbs)
 			if !ok {
 				// start trusting from scratch
-				log.Lvlf2("Start trusting from scratch")
+				log.LLvlf2("Start trusting from scratch")
 				website.PinState.Window = int64(86400)
 			} else {
 				// as we keep following the previously following site skipchain,
 				// the trust window should be doubled
-				log.Lvlf2("Doubled trust window")
+				log.LLvlf2("Doubled trust window")
 				website.PinState.Window = website.PinState.Window * 2
 			}
+			website.PinState.TimePinAccept = time.Now().Unix() * 1000
+			u.WebSites[string(id)] = website
 
 			u.Follow(id, reply.Latest, reply.Certs)
-
-			/*
-				website.Latest = reply.Latest
-				website.Config = latestconf
-				website.Certs = reply.Certs
-
-				website.PinState.Threshold = latestconf.Threshold
-				pins := make([]abstract.Point, 0)
-				for _, dev := range latestconf.Device {
-					pins = append(pins, dev.Point)
-				}
-				website.PinState.Pins = pins
-				website.PinState.TimeSbRec = time.Now().Unix()
-				u.WebSites[string(id)] = website
-			*/
 		}
 
 	} else {
@@ -364,10 +354,10 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 		// follow the evolution of the site skipchain to get the latest valid tls keys
 		wss := website.WSs
 		serverID := wss[rand.Int()%len(wss)].ServerID
+		log.LLvlf2("Challenged web server has address: %v", serverID)
 		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{ID: id, Sb1: website.Latest, Sb2: nil})
 		reply, _ := msg.Msg.(GetValidSbPathReply)
 		sbs := reply.Skipblocks
-
 		ok, _ := VerifyHops(sbs)
 		if !ok {
 			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
@@ -382,7 +372,6 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 		ptls := website.Config.Data[key]
 		bytess, _ := GenerateRandomBytes(10)
 		challenge := crypto.HashID(bytess)
-		log.LLvlf2("Challenged web server has address: %v", serverID)
 		msg, err = u.WSClient.Send(serverID, &ChallengeReq{ID: id, Challenge: challenge})
 		if err != nil {
 			return err
@@ -391,8 +380,8 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 		sig := reply2.Signature
 		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
 		if err != nil {
-			log.LLvlf2("Tls public key should match to the webserver's private key but it does not!")
-			return errors.New("Tls public key should match to the webserver's private key but it does not!")
+			log.LLvlf2("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
+			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
 		}
 		log.LLvlf2("Tls private key matches")
 
@@ -401,9 +390,10 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 }
 
 func (website *WebSite) ExpiredPins() bool {
-	now := time.Now().Unix()
-	if now-website.PinState.TimeSbRec > website.PinState.Window {
-		log.LLvl2(now - website.PinState.TimeSbRec)
+	now := time.Now().Unix() * 1000
+	log.LLvlf2("Now: %v, TimePinAccept: %v, Window: %v", now, website.PinState.TimePinAccept, website.PinState.Window)
+	if now-website.PinState.TimePinAccept > website.PinState.Window {
+		log.LLvl2(now - website.PinState.TimePinAccept)
 		log.LLvl2(website.PinState.Window)
 		return true
 	}
@@ -450,7 +440,7 @@ func (u *User) Follow(id skipchain.SkipBlockID, block *skipchain.SkipBlock, cert
 		pins = append(pins, dev.Point)
 	}
 	website.PinState.Pins = pins
-	website.PinState.TimeSbRec = time.Now().Unix()
+	//website.PinState.TimePinAccept = time.Now().Unix() * 1000
 
 	if certs != nil {
 		website.Certs = certs

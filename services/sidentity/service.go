@@ -186,6 +186,7 @@ func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipB
 	return b, ok
 }
 
+// forward traversal of the skipchain
 func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
 	sid := s.getIdentityStorage(latestKnown.ID)
 	//log.Lvlf2("GetUpdateChain(): Start having %v certs", len(sid.Certs))
@@ -197,7 +198,8 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 			certs = append(certs, cert)
 		}
 	}
-	log.Lvlf2("GetUpdateChain(): Start having %v certs", cnt)
+	log.LLvlf2("GetUpdateChain(): Start having %v certs", cnt)
+	log.LLvlf2("GetUpdateChain(): Latest known block has hash: %v", latestKnown.LatestID)
 	block, ok := sid.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock!!")
@@ -206,7 +208,9 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 	blocks := []*skipchain.SkipBlock{block}
 	log.Lvl3("Starting to search chain")
 	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[len(block.ForwardLink)-1]
+		//link := block.ForwardLink[len(block.ForwardLink)-1]
+		// for linear forward traversal of the skipchain:
+		link := block.ForwardLink[0]
 		hash := link.Hash
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
@@ -215,7 +219,10 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 		blocks = append(blocks, block)
 		//fmt.Println("another block found with hash: ", skipchain.SkipBlockID(hash))
 	}
-	log.Print("Found", len(blocks), "blocks")
+	log.LLvlf2("Found %v blocks", len(blocks))
+	for index, block := range blocks {
+		log.LLvlf2("block: %v with hash: %v", index, block.Hash)
+	}
 
 	cnt = 0
 	certs = make([]*ca.Cert, 0)
@@ -236,9 +243,10 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
-	log.Lvl2(s, "Storing new proposal")
+	log.LLvlf2("Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
+		log.Lvlf2("Didn't find Identity")
 		return nil, errors.New("Didn't find Identity")
 	}
 	roster := sid.Root.Roster
@@ -434,8 +442,10 @@ func (s *Service) Propagate(msg network.Body) {
 	}
 }
 
+// backward traversal of the skipchain until finding a skipblock whose config has been certified
+// (a cert has been issued for it)
 func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) (network.Body, error) {
-	//log.LLvlf2("GetSkipblocks(): Start")
+	log.LLvlf2("GetSkipblocks(): Start")
 	id := req.ID
 	latest := req.Latest
 	sid := s.getIdentityStorage(id)
@@ -446,21 +456,23 @@ func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) 
 	// Follow the backward links until finding the skipblock whose config was certified by a CA
 	// All these skipblocks will be returned (from the oldest to the newest)
 	sbs := make([]*skipchain.SkipBlock, 1)
-	sbs = append(sbs, latest)
+	//sbs = append(sbs, latest)
 	block := latest
 	hash := block.Hash
 	var ok bool
 	_, exists := sid.Certs[string(hash)]
-	//log.LLvlf2("hash: %v", hash)
-	for !exists {
-		//log.LLvlf2("hash: %v", hash)
+	for {
 		block, ok = sid.getSkipBlockByID(hash)
+		//log.LLvlf2("hash: %v", block.Hash)
 		if !ok {
 			log.LLvlf2("Skipblock with hash: %v not found", hash)
 			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
 		}
-		hash = block.BackLinkIds[0]
 		sbs = append(sbs, block)
+		if exists {
+			break
+		}
+		hash = block.BackLinkIds[0]
 		_, exists = sid.Certs[string(hash)]
 	}
 
@@ -468,68 +480,86 @@ func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) 
 	for index, block := range sbs {
 		sbs_from_oldest[len(sbs)-1-index] = block
 	}
-	//log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs))
+	log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs))
+	log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs_from_oldest))
 	return &GetSkipblocksReply{Skipblocks: sbs_from_oldest}, nil
 }
 
+// Forward traversal of the skipchain from the oldest block as the latter is
+// specified in the request's 'Sb1' field until finding the newest block as it
+// is specified in the request's 'Sb2' field (if Sb2==nil, then set Sb2 as the current
+// skipchain head). Skipblocks will be returned from the oldest to the newest
 func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
+	log.LLvlf2("GetValidSbPath(): Start")
 	id := req.ID
 	sb1 := req.Sb1
 	sb2 := req.Sb2
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
+		log.LLvlf2("Didn't find identity")
 		return nil, errors.New("Didn't find identity")
 	}
 	_, ok := sid.getSkipBlockByID(sb1.Hash)
 	if !ok {
+		log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", sb1.Hash)
 		return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", sb1.Hash)
 	}
 
 	if sb2 != nil {
 		_, ok := sid.getSkipBlockByID(sb2.Hash)
 		if !ok {
+			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", sb2.Hash)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", sb2.Hash)
 		}
 	} else {
 		// in this case, fetch all the blocks starting from the latest known one (sb1)
-		// till the latest
+		// till the current head of the skipchain
 		sb2 = sid.Data
+		log.LLvlf2("Current head skipblock has hash: %v", sb2.Hash)
 	}
 
-	_, data, _ := network.UnmarshalRegistered(sb1.Data)
-	conf1, _ := data.(*common_structs.Config)
+	oldest := sb1
+	newest := sb2
+	/*
+		_, data, _ := network.UnmarshalRegistered(sb1.Data)
+		conf1, _ := data.(*common_structs.Config)
 
-	_, data, _ = network.UnmarshalRegistered(sb2.Data)
-	conf2, _ := data.(*common_structs.Config)
+		_, data, _ = network.UnmarshalRegistered(sb2.Data)
+		conf2, _ := data.(*common_structs.Config)
 
-	newest := sb1
-	oldest := sb2
-	if conf2.Timestamp > conf1.Timestamp {
-		newest = sb2
-		oldest = sb1
-	}
-
-	// Follow the backward links until finding the 'oldest' skipblock/config
-	// All these skipblocks will be returned (from the oldest to the newest)
-	sbs := make([]*skipchain.SkipBlock, 1)
-	sbs = append(sbs, newest)
-	block := newest
-	hash := block.BackLinkIds[0]
-	for !bytes.Equal(hash, oldest.Hash) {
+		newest := sb1
+		oldest := sb2
+		is_older := conf1.IsOlderConfig(conf2)
+		log.LLvl2(is_older)
+		if is_older {
+			log.LLvlf2("Swapping blocks")
+			newest = sb2
+			oldest = sb1
+		}
+	*/
+	log.LLvlf2("Oldest skipblock has hash: %v", oldest.Hash)
+	log.LLvlf2("Newest skipblock has hash: %v", newest.Hash)
+	sbs := make([]*skipchain.SkipBlock, 0)
+	sbs = append(sbs, oldest)
+	block := oldest
+	log.LLvlf2("Skipblock with hash: %v", block.Hash)
+	for len(block.ForwardLink) > 0 {
+		link := block.ForwardLink[0]
+		hash := link.Hash
+		log.LLvlf2("Appending skipblock with hash: %v", hash)
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
+			log.LLvlf2("Skipblock with hash: %v not found", hash)
 			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
 		}
-		hash = block.BackLinkIds[0]
 		sbs = append(sbs, block)
+		if bytes.Equal(hash, sid.Data.Hash) || bytes.Equal(hash, newest.Hash) {
+			break
+		}
 	}
 
-	sbs_from_oldest := make([]*skipchain.SkipBlock, len(sbs))
-	for index, block := range sbs {
-		sbs_from_oldest[len(sbs)-1-index] = block
-	}
-	log.LLvlf2("Num of returned blocks: %v", len(sbs_from_oldest))
-	return &GetValidSbPathReply{Skipblocks: sbs_from_oldest}, nil
+	log.LLvlf2("Num of returned blocks: %v", len(sbs))
+	return &GetValidSbPathReply{Skipblocks: sbs}, nil
 }
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil

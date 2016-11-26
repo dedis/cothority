@@ -23,7 +23,7 @@ const MaxInt = int(MaxUint >> 1)
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
 
-// How many msec at most should be the time difference between a device/cothority node and the
+// How many ms at most should be the time difference between a device/cothority node and the
 // the time reflected on the proposed config for the former to sign off
 const maxdiff_sign = 300000
 

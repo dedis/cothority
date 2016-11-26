@@ -107,6 +107,7 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 		log.LLvlf2("WSUpdate(): Update failed: web server not yet attached to the requested site (id: %v)", id)
 		return errors.New("Update failed: web server not yet attached to the requested site")
 	}
+	//log.LLvlf2("WSUpdate(): the web server's public key for site: %v is: %v", id, site.Public)
 	err := ws.si.ConfigUpdate()
 	if err != nil {
 		return err
@@ -133,6 +134,7 @@ func (ws *WS) WSGetSkipblocks(req *GetSkipblocks) ([]*skipchain.SkipBlock, error
 }
 
 func (ws *WS) WSGetValidSbPath(req *GetValidSbPath) ([]*skipchain.SkipBlock, error) {
+	log.LLvlf2("WSGetValidSbPath(): Start processing the challenge for site identity: %v", req.ID)
 	// Check whether the reached ws has been configured as a valid web server of the requested site
 	site := ws.getSiteStorage(req.ID)
 	if site == nil {
@@ -172,6 +174,7 @@ func (ws *WS) UserGetSkipblocks(wsi *network.ServerIdentity, req *GetSkipblocks)
 }
 
 func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
+	log.LLvlf2("UserGetValidSbPath(): Start processing the challenge for site identity: %v", req.ID)
 	sbs, err := ws.WSGetValidSbPath(req)
 	if err != nil {
 		return nil, err
@@ -189,6 +192,7 @@ func (ws *WS) UserChallenge(wsi *network.ServerIdentity, c *ChallengeReq) (netwo
 		log.LLvlf2("UserChallenge() failed: web server not yet attached to the requested site")
 		return nil, errors.New("UserChallenge() failed: web server not yet attached to the requested site")
 	}
+	log.LLvlf2("Web server's public key for this site is: %v", website.Public)
 	log.LLvlf2("UserChallenge(): Before signing: Private: %v, Public: %v", website.Private, website.Public)
 	sig, err := crypto.SignSchnorr(network.Suite, website.Private, c.Challenge)
 	if err != nil {
