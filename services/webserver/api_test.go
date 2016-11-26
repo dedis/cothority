@@ -1,7 +1,17 @@
 package webserver
 
 import (
+	/*
+		"bytes"
+		"crypto/aes"
+		"crypto/cipher"
+		"crypto/rand"
+		"encoding/base64"
+		"errors"
+		"io"
+	*/
 	"fmt"
+	//"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
@@ -9,7 +19,7 @@ import (
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/sidentity"
 	"github.com/dedis/cothority/services/skipchain"
-	"github.com/dedis/crypto/abstract"
+	//"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"time"
 	//"github.com/stretchr/testify/assert"
@@ -18,13 +28,24 @@ import (
 	"testing"
 )
 
-func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point, local *sda.LocalTest) *sidentity.Identity {
+/*
+
+func init() {
+	for _, s := range []interface{}{
+		// Structures
+		&common_structs.My_Scalar{},
+	} {
+		network.RegisterPacketType(s)
+	}
+}
+*/
+func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) *sidentity.Identity {
 	id := sidentity.NewIdentity(cothority, majority, owner, pinstate, cas, data)
 	id.CothorityClient = local.NewClient(sidentity.ServiceName)
 	return id
 }
 
-func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point, local *sda.LocalTest) []*sidentity.Identity {
+func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) []*sidentity.Identity {
 	ids, _ := sidentity.NewIdentityMultDevs(cothority, majority, owners, pinstate, cas, data)
 	for _, id := range ids {
 		id.CothorityClient = local.NewClient(sidentity.ServiceName)
@@ -38,19 +59,77 @@ func NewTestUser(username string, sitesToAttach []*common_structs.SiteInfo, loca
 	return u
 }
 
-func AttachWebServersToSite(id skipchain.SkipBlockID, hosts_ws []*sda.Conode, el_coth *sda.Roster, keypairs []*config.KeyPair, l *sda.LocalTest) {
+func GenerateAndConfigureWSs(num_ws int, shared_keys []common_structs.Key, l *sda.LocalTest) ([]*sda.Conode, []common_structs.WSInfo, map[string]*common_structs.WSconfig) {
+	hosts_ws, _, _ := l.GenTree(num_ws, true)
+	wss := make([]common_structs.WSInfo, 0)
+	data := make(map[string]*common_structs.WSconfig)
+	for index, ws := range hosts_ws {
+		wss = append(wss, common_structs.WSInfo{ServerID: ws.ServerIdentity})
+
+		tls_keypair := config.NewKeyPair(network.Suite)
+		tls_public := tls_keypair.Public
+		tls_private := tls_keypair.Secret
+
+		newstruct := common_structs.My_Scalar{Private: tls_private}
+
+		tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
+
+		//key := []byte("a very very very very secret key") // 32 bytes
+		enc_tls_private_buf, err := common_structs.Encrypt(shared_keys[index], tls_private_buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		key := fmt.Sprintf("tls:%v", ws.ServerIdentity)
+		data[key] = &common_structs.WSconfig{
+			Public:            tls_public,
+			Private_encrypted: enc_tls_private_buf,
+		}
+	}
+	return hosts_ws, wss, data
+}
+
+// configure all site's web servers with new tls keypairs
+func UpdateAllWSconfigs(hosts_ws []*sda.Conode, shared_keys []common_structs.Key) map[string]*common_structs.WSconfig {
+	data := make(map[string]*common_structs.WSconfig)
+	for index, ws := range hosts_ws {
+		tls_keypair := config.NewKeyPair(network.Suite)
+		tls_public := tls_keypair.Public
+		tls_private := tls_keypair.Secret
+
+		newstruct := common_structs.My_Scalar{Private: tls_private}
+
+		tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
+
+		//key := []byte("a very very very very secret key") // 32 bytes
+		enc_tls_private_buf, err := common_structs.Encrypt(shared_keys[index], tls_private_buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		key := fmt.Sprintf("tls:%v", ws.ServerIdentity)
+		data[key] = &common_structs.WSconfig{
+			Public:            tls_public,
+			Private_encrypted: enc_tls_private_buf,
+		}
+	}
+	return data
+}
+
+func AttachWebServersToSite(id skipchain.SkipBlockID, hosts_ws []*sda.Conode, el_coth *sda.Roster, shared_keys []common_structs.Key, l *sda.LocalTest) {
 	log.LLvlf2("")
 	log.LLvlf2("ATTACHING WEB SERVERS TO THE SITE IDENTITY: %v", id)
 	services := l.GetServices(hosts_ws, WSService)
 	for index, s := range services {
 		ws := s.(*WS)
-		log.ErrFatal(ws.WSAttach(el_coth, id, keypairs[index].Public, keypairs[index].Secret))
+		log.ErrFatal(ws.WSAttach(el_coth, id, shared_keys[index]))
 		site := ws.getSiteStorage(id)
 		log.LLvlf2("WS has private: %v, public: %v for site id: %v", site.Private, site.Public, id)
 	}
 	return
 }
 
+/*
 func GenerateWSPublicKeys(num_ws int, l *sda.LocalTest) ([]*sda.Conode, []common_structs.WSInfo, []*config.KeyPair, map[string]abstract.Point) {
 	hosts_ws, _, _ := l.GenTree(num_ws, true)
 	wss := make([]common_structs.WSInfo, 0)
@@ -66,7 +145,8 @@ func GenerateWSPublicKeys(num_ws int, l *sda.LocalTest) ([]*sda.Conode, []common
 	}
 	return hosts_ws, wss, keypairs, data
 }
-
+*/
+/*
 func Test1(t *testing.T) {
 	l := sda.NewTCPTest()
 	hosts_coth, el_coth, _ := l.GenTree(5, true)
@@ -655,7 +735,7 @@ func Test2MultDevs(t *testing.T) {
 		log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
 	}
 }
-
+*/
 func TestMultSites(t *testing.T) {
 	l := sda.NewTCPTest()
 	hosts_coth, el_coth, _ := l.GenTree(5, true)
@@ -676,7 +756,14 @@ func TestMultSites(t *testing.T) {
 	log.LLvlf2("NEW SITE IDENTITY FOR SITE1")
 	pinstate := &common_structs.PinState{Ctype: "device"}
 	// include into the config the tls public key of one web server
-	hosts_ws, wss, keypairs, data := GenerateWSPublicKeys(1, l)
+	//hosts_ws, wss, keypairs, data := GenerateWSPublicKeys(1, l)
+	num_ws1 := 3
+	shared_keys1 := make([]common_structs.Key, 0)
+	for i := 1; i <= num_ws1; i++ {
+		shared_key := fmt.Sprintf("site1:s%v very very very very key", i) //32 bytes
+		shared_keys1 = append(shared_keys1, common_structs.Key(shared_key))
+	}
+	hosts_ws, wss, data := GenerateAndConfigureWSs(num_ws1, shared_keys1, l)
 	c1 := NewTestIdentity(el_coth, thr, "one", pinstate, cas, data, l)
 	log.ErrFatal(c1.CreateIdentity())
 
@@ -684,11 +771,18 @@ func TestMultSites(t *testing.T) {
 	log.LLvlf2("NEW SITE IDENTITY FOR SITE2")
 	pinstate = &common_structs.PinState{Ctype: "device"}
 	// include into the config the tls public key of one web server
-	hosts_ws2, wss2, keypairs2, data2 := GenerateWSPublicKeys(1, l)
+	//hosts_ws2, wss2, keypairs2, data2 := GenerateWSPublicKeys(1, l)
+	num_ws2 := 2
+	shared_keys2 := make([]common_structs.Key, 0)
+	for i := 1; i <= num_ws2; i++ {
+		shared_key := fmt.Sprintf("site2:s%v very very very very key", i) //32 bytes
+		shared_keys2 = append(shared_keys2, common_structs.Key(shared_key))
+	}
+	hosts_ws2, wss2, data2 := GenerateAndConfigureWSs(num_ws2, shared_keys2, l)
 	d1 := NewTestIdentity(el_coth, thr, "site2_one", pinstate, cas, data2, l)
 	log.ErrFatal(d1.CreateIdentity())
 
-	AttachWebServersToSite(c1.ID, hosts_ws, el_coth, keypairs, l)
+	AttachWebServersToSite(c1.ID, hosts_ws, el_coth, shared_keys1, l)
 
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
@@ -702,7 +796,7 @@ func TestMultSites(t *testing.T) {
 		t.Fatal("Should have two owners by now")
 	}
 
-	AttachWebServersToSite(d1.ID, hosts_ws2, el_coth, keypairs2, l)
+	AttachWebServersToSite(d1.ID, hosts_ws2, el_coth, shared_keys2, l)
 
 	defer l.CloseAll()
 
@@ -830,3 +924,48 @@ func TestMultSites(t *testing.T) {
 	}
 
 }
+
+/*
+func TestDecryption(t *testing.T) {
+
+	tls_keypair := config.NewKeyPair(network.Suite)
+	//tls_public := tls_keypair.Public
+	tls_private := tls_keypair.Secret
+
+	newstruct := My_Scalar{Private: tls_private}
+
+	tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
+
+	_, data, _ := network.UnmarshalRegistered(tls_private_buf)
+	rec := data.(*My_Scalar)
+	tls := rec.Private
+	log.LLvlf2("reconstructed: %v", tls)
+
+	log.LLvlf2("tls_private: %v", tls_private)
+	log.LLvlf2("%v", tls_private_buf)
+
+	plaintext := tls_private_buf
+	key := []byte("a very very very very secret key") // 32 bytes
+	//plaintext := []byte("some really really really long plaintext")
+	fmt.Printf("%s\n", plaintext)
+	ciphertext, err := Encrypt(key, plaintext)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.LLvlf2("%v", ciphertext)
+	result, err := Decrypt(key, ciphertext)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.LLvlf2("%v", result)
+	if !bytes.Equal(plaintext, result) {
+		log.Fatal("Do not match!")
+	}
+
+	_, data, _ = network.UnmarshalRegistered(result)
+	rec = data.(*My_Scalar)
+	tls = rec.Private
+	log.LLvlf2("reconstructed after decryption: %v", tls)
+
+}
+*/

@@ -56,6 +56,10 @@ type Site struct {
 	Latest *skipchain.SkipBlock
 	//Certs  []*Cert
 	Certs []*ca.Cert
+	// Shared key between the site devices and the web server
+	// To be used for decryption of the encrypted private key
+	// that was assigned by the site's devices to the ws
+	SharedKey []byte
 	// Private key for that WS/site pair
 	Private abstract.Scalar
 	// Public key for that WS/site pair
@@ -64,13 +68,46 @@ type Site struct {
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
 func (ws *WS) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl3(ws.ServerIdentity(), "CA received New Protocol event", conf)
+	log.Lvl3(ws.ServerIdentity(), "WS received New Protocol event", conf)
 	tn.ProtocolName()
 
 	return nil, nil
 }
 
 // To be called after initialization of a web server
+func (ws *WS) WSAttach(cothority *sda.Roster, id skipchain.SkipBlockID, shared_key []byte) error {
+	ws.si.Cothority = cothority
+	ws.si.ID = id
+	ws.si.LatestID = id
+	err := ws.si.ConfigUpdate()
+	if err != nil {
+		return err
+	}
+
+	site := &Site{
+		ID:        id,
+		Latest:    ws.si.Latest,
+		Certs:     ws.si.Certs,
+		SharedKey: shared_key,
+	}
+	ws.setSiteStorage(id, site)
+
+	public, private, _ := ws.WSgetTLSconf(id, ws.si.Latest)
+
+	site.Public = public
+	site.Private = private
+
+	ws.setSiteStorage(id, site)
+	site = ws.getSiteStorage(id)
+	if site == nil {
+		log.LLvlf2("WSAttach(): it wasn't possible to attach the web server to the requested site")
+		return errors.New("WSAttach(): it wasn't possible to attach the web server to the requested site")
+	}
+	log.LLvlf2("WSAttach(): web server attached to the requested site (id: %v)", id)
+	return nil
+}
+
+/*
 func (ws *WS) WSAttach(cothority *sda.Roster, id skipchain.SkipBlockID, public abstract.Point, private abstract.Scalar) error {
 	ws.si.Cothority = cothority
 	ws.si.ID = id
@@ -97,7 +134,7 @@ func (ws *WS) WSAttach(cothority *sda.Roster, id skipchain.SkipBlockID, public a
 	log.LLvlf2("WSAttach(): web server attached to the requested site (id: %v)", id)
 	return nil
 }
-
+*/
 // Check for existence of new skipblocks/certs and update them
 func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	log.LLvlf2("WSUpdate(): Start")
@@ -107,17 +144,21 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 		log.LLvlf2("WSUpdate(): Update failed: web server not yet attached to the requested site (id: %v)", id)
 		return errors.New("Update failed: web server not yet attached to the requested site")
 	}
+
 	//log.LLvlf2("WSUpdate(): the web server's public key for site: %v is: %v", id, site.Public)
 	err := ws.si.ConfigUpdate()
 	if err != nil {
 		return err
 	}
 
-	site2 := site.Copy()
-	site2.Latest = ws.si.Latest
-	site2.Certs = ws.si.Certs
+	//site2 := site.Copy()
+	site.Latest = ws.si.Latest
+	site.Certs = ws.si.Certs
+	public, private, _ := ws.WSgetTLSconf(id, ws.si.Latest)
+	site.Public = public
+	site.Private = private
 
-	ws.setSiteStorage(id, site2)
+	ws.setSiteStorage(id, site)
 
 	return nil
 }
@@ -221,13 +262,43 @@ func (ws *WS) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
 	ws.Sites[string(id)] = is
 }
 
+// takes a site id and a skipblock and returns the public & (decrypted) private key that was assigned to
+// the specific web server
+func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBlock) (abstract.Point, abstract.Scalar, error) {
+	website := ws.getSiteStorage(id)
+	if website == nil {
+		log.LLvlf2("WSgetTLSconf() failed: web server not yet attached to the requested site")
+		return nil, nil, errors.New("WSgetTLSconf() failed: web server not yet attached to the requested site")
+	}
+
+	config, err := common_structs.GetConfFromSb(latest_sb)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	serverID := ws.ServerIdentity()
+	key := fmt.Sprintf("tls:%v", serverID)
+	our_data_entry := config.Data[key]
+	public := our_data_entry.Public
+
+	encrypted := our_data_entry.Private_encrypted
+	decrypted, err := common_structs.Decrypt(website.SharedKey, encrypted)
+	_, data, _ := network.UnmarshalRegistered(decrypted)
+	rec := data.(*common_structs.My_Scalar)
+	private := rec.Private
+	log.LLvlf2("reconstructed private key: %v", private)
+
+	return public, private, nil
+}
+
 func (site *Site) Copy() *Site {
 	site2 := &Site{
-		ID:      site.ID,
-		Latest:  site.Latest,
-		Certs:   site.Certs,
-		Public:  site.Public,
-		Private: site.Private,
+		ID:        site.ID,
+		Latest:    site.Latest,
+		Certs:     site.Certs,
+		SharedKey: site.SharedKey,
+		Public:    site.Public,
+		Private:   site.Private,
 	}
 	return site2
 }

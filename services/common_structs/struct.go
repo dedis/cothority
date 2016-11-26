@@ -2,9 +2,15 @@ package common_structs
 
 import (
 	//"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/binary"
-	//"errors"
+	"errors"
 	"fmt"
+	"io"
+	//"errors"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -39,6 +45,10 @@ const maxdiff_sign = 300000
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
+type My_Scalar struct {
+	Private abstract.Scalar
+}
+
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
 type Config struct {
@@ -47,7 +57,8 @@ type Config struct {
 	Threshold int
 	Device    map[string]*Device
 	//Data      map[string]string
-	Data map[string]abstract.Point
+	//Data map[string]abstract.Point
+	Data map[string]*WSconfig
 	// The public keys of the trusted CAs
 	CAs []CAInfo
 }
@@ -57,6 +68,12 @@ type Config struct {
 type Device struct {
 	Point abstract.Point
 	Vote  *crypto.SchnorrSig
+}
+
+type WSconfig struct {
+	//ServerID          *network.ServerIdentity
+	Public            abstract.Point
+	Private_encrypted []byte
 }
 
 type APoint struct {
@@ -92,6 +109,8 @@ type PinState struct {
 	TimePinAccept int64
 }
 
+type Key []byte
+
 func NewPinState(ctype string, threshold int, pins []abstract.Point, window int64) *PinState {
 	return &PinState{
 		Ctype:     ctype,
@@ -102,7 +121,7 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]abstract.Point) *Config {
+func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig) *Config {
 	return &Config{
 		Threshold: threshold,
 		Device:    map[string]*Device{owner: {Point: pub}},
@@ -126,7 +145,7 @@ func (c *Config) Copy() *Config {
 	ilNew := msg.(Config)
 	if len(ilNew.Data) == 0 {
 		//ilNew.Data = make(map[string]string)
-		ilNew.Data = make(map[string]abstract.Point)
+		ilNew.Data = make(map[string]*WSconfig)
 	}
 	return &ilNew
 }
@@ -154,12 +173,7 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		if err != nil {
 			return nil, err
 		}
-		/*
-			_, err = hash.Write([]byte(c.Data[s]))
-			if err != nil {
-				return nil, err
-			}
-		*/
+
 		point := &APoint{Point: c.Device[s].Point}
 		b, err := network.MarshalRegisteredType(point)
 		if err != nil {
@@ -177,8 +191,13 @@ func (c *Config) Hash() (crypto.HashID, error) {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		point := &APoint{Point: c.Data[k]}
-		b, err := network.MarshalRegisteredType(point)
+		// point := &APoint{Point: c.Data[k]}
+		wsconf := &WSconfig{
+			//ServerID: c.Data[k].ServerID,
+			Public:            c.Data[k].Public,
+			Private_encrypted: c.Data[k].Private_encrypted,
+		}
+		b, err := network.MarshalRegisteredType(wsconf)
 		if err != nil {
 			return nil, err
 		}
@@ -279,7 +298,7 @@ func (c *Config) GetSuffixColumn(keys ...string) []string {
 // GetValue returns the value of the key. If more than one key is given,
 // the slice is joined using ":" and the value is returned. If the key
 // is not found, an empty string is returned.
-func (c *Config) GetValue(keys ...string) abstract.Point {
+func (c *Config) GetValue(keys ...string) *WSconfig {
 	key := strings.Join(keys, ":")
 	for k, v := range c.Data {
 		if k == key {
@@ -324,4 +343,51 @@ func sortUniq(slice []string) []string {
 		}
 	}
 	return ret
+}
+
+func Encrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	b := base64.StdEncoding.EncodeToString(text)
+	ciphertext := make([]byte, aes.BlockSize+len(b))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	cfb := cipher.NewCFBEncrypter(block, iv)
+	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
+	return ciphertext, nil
+}
+
+func Decrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(text) < aes.BlockSize {
+		return nil, errors.New("ciphertext too short")
+	}
+	iv := text[:aes.BlockSize]
+	text = text[aes.BlockSize:]
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(text, text)
+	data, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func GetConfFromSb(sb *skipchain.SkipBlock) (*Config, error) {
+	_, data, err := network.UnmarshalRegistered(sb.Data)
+	if err != nil {
+		return nil, errors.New("Couldn't unmarshal")
+	}
+	config, ok := data.(*Config)
+	if !ok {
+		return nil, errors.New("Couldn't get type '*Config'")
+	}
+	return config, nil
 }

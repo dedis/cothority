@@ -36,6 +36,8 @@ func init() {
 		&common_structs.PinState{},
 		&Storage{},
 		&Service{},
+		&common_structs.My_Scalar{},
+		&common_structs.WSconfig{},
 		// API messages
 		&CreateIdentity{},
 		&CreateIdentityReply{},
@@ -103,7 +105,7 @@ type Data struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point) *Identity {
+func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) *Identity {
 	switch pinstate.Ctype {
 	case "device":
 		kp := config.NewKeyPair(network.Suite)
@@ -152,7 +154,7 @@ func (i *Identity) CreateIdentity() error {
 	return nil
 }
 
-func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]abstract.Point) ([]*Identity, error) {
+func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
 	log.Print("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
@@ -276,10 +278,10 @@ func (i *Identity) UpdateIdentityThreshold(thr int) error {
 }
 
 // ProposeConfig proposes a new skipblock with general modifications (add/revoke one or
-// more devices and/or change the threshold)
+// more devices and/or change the threshold and/or change tls keypairs of one or more web servers)
 // Devices to be revoked regarding the proposed config should NOT vote upon their revovation
 // (or, in the case of voting, a negative vote is the only one accepted)
-func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int) error {
+func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, wsconf map[string]*common_structs.WSconfig) error {
 	var err error
 	err = i.ConfigUpdate() //common_structs.ConfigUpdateNew() before
 	if err != nil {
@@ -290,7 +292,9 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int)
 		dev.Vote = nil
 	}
 
-	confPropose.Threshold = thr
+	if thr != 0 {
+		confPropose.Threshold = thr
+	}
 	for name, point := range add {
 		confPropose.Device[name] = &common_structs.Device{Point: point}
 	}
@@ -299,6 +303,7 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int)
 			delete(confPropose.Device, name)
 		}
 	}
+	confPropose.Data = wsconf
 	err = i.ProposeSend(confPropose)
 	if err != nil {
 		return err

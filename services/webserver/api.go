@@ -36,6 +36,8 @@ func init() {
 		&common_structs.PinState{},
 		&skipchain.SkipBlockFix{},
 		&skipchain.SkipBlock{},
+		&common_structs.My_Scalar{},
+		&common_structs.WSconfig{},
 		// API messages
 		&Connect{},
 		&ConnectReply{},
@@ -369,7 +371,7 @@ func (u *User) ReConnect(id skipchain.SkipBlockID) error {
 		// pins still valid, try to use the existent tls public key in order to communicate
 		// with the webserver
 		key := fmt.Sprintf("tls:%v", serverID)
-		ptls := website.Config.Data[key]
+		ptls := website.Config.Data[key].Public
 		bytess, _ := GenerateRandomBytes(10)
 		challenge := crypto.HashID(bytess)
 		msg, err = u.WSClient.Send(serverID, &ChallengeReq{ID: id, Challenge: challenge})
