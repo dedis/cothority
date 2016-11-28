@@ -124,6 +124,7 @@ func (r *Router) Send(e *ServerIdentity, msg Body) error {
 
 	c := r.connection(e.ID)
 	if c == nil {
+		fmt.Println("Connection already : sending to ", e.ID, "-> re createing connection")
 		var err error
 		c, err = r.connect(e)
 		if err != nil {

@@ -6,7 +6,7 @@ DBG_SRV=0
 # Debug-level for client
 DBG_CLIENT=0
 # For easier debugging
-#STATICDIR=test
+STATICDIR=test
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
