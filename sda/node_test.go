@@ -316,8 +316,10 @@ func NewProtocolHandlers(n *TreeNodeInstance) (ProtocolInstance, error) {
 	p := &ProtocolHandlers{
 		TreeNodeInstance: n,
 	}
-	p.RegisterHandler(p.HandleMessageOne)
-	p.RegisterHandler(p.HandleMessageAggregate)
+	if err := p.RegisterHandlers(p.HandleMessageOne,
+		p.HandleMessageAggregate); err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
@@ -334,16 +336,18 @@ func (p *ProtocolHandlers) Start() error {
 func (p *ProtocolHandlers) HandleMessageOne(msg struct {
 	*TreeNode
 	NodeTestMsg
-}) {
+}) error {
 	IncomingHandlers <- p.TreeNodeInstance
+	return nil
 }
 
 func (p *ProtocolHandlers) HandleMessageAggregate(msg []struct {
 	*TreeNode
 	NodeTestAggMsg
-}) {
+}) error {
 	log.Lvl3("Received message")
 	IncomingHandlers <- p.TreeNodeInstance
+	return nil
 }
 
 func (p *ProtocolHandlers) Dispatch() error {
@@ -422,7 +426,7 @@ func NewProtocolBlocking(node *TreeNodeInstance) (ProtocolInstance, error) {
 		stopBlockChan:    make(chan bool),
 	}
 
-	node.RegisterChannel(&bp.Incoming)
+	log.ErrFatal(node.RegisterChannel(&bp.Incoming))
 	return bp, nil
 }
 

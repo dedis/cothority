@@ -72,7 +72,7 @@ func (p *ProtocolCloseAll) Start() error {
 }
 
 // FuncPrepareClose sends a `PrepareClose`-message down the tree.
-func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
+func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) error {
 	log.Lvl3(pc.ServerIdentity.Address, "sent PrepClose to", p.ServerIdentity().Address)
 	if !p.IsLeaf() {
 		for _, c := range p.Children() {
@@ -82,12 +82,13 @@ func (p *ProtocolCloseAll) FuncPrepareClose(pc PrepareCloseMsg) {
 	} else {
 		p.FuncClose(nil)
 	}
+	return nil
 }
 
 // FuncClose is called from the leafs to the parents and up the tree. Everybody
 // receiving all `Close`-messages from all children will close down all
 // network communication.
-func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
+func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) error {
 	if !p.IsRoot() {
 		log.Lvl3("Sending closeall from", p.ServerIdentity().Address,
 			"to", p.Parent().ServerIdentity.Address)
@@ -107,4 +108,5 @@ func (p *ProtocolCloseAll) FuncClose(c []CloseMsg) {
 		p.Done <- true
 	}
 	p.TreeNodeInstance.Done()
+	return nil
 }
