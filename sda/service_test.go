@@ -671,7 +671,7 @@ func newServiceMessages(c *Context, path string) Service {
 		ServiceProcessor: NewServiceProcessor(c),
 		GotResponse:      make(chan bool),
 	}
-	s.RegisterProcessorFunc(SimpleResponseType, s.SimpleResponse)
+	c.RegisterProcessorFunc(SimpleResponseType, s.SimpleResponse)
 	return s
 }
 
