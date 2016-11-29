@@ -282,12 +282,13 @@ func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.
 	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
+// RegisterProcessorFunc adds a function that will be called if a message of type
+// msgType is received by the network.
 func (s *serviceManager) RegisterProcessorFunc(msgType network.PacketTypeID, fn func(*network.Packet)) {
 	// delegate message to host so the host will pass the message to ourself
 	s.conode.RegisterProcessor(s, msgType)
 	// handle the message ourselves (will be launched in a go routine)
 	s.Dispatcher.RegisterProcessorFunc(msgType, fn)
-
 }
 
 // AvailableServices returns a list of all services available to the serviceManager.
