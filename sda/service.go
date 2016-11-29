@@ -342,34 +342,6 @@ func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) 
 	}, nil
 }
 
-// InterServiceMessage is a generic struct that contains any data destined to a
-// Service that has been created .. by a Service. => Intra-Service
-// communications.
-type InterServiceMessage struct {
-	// Service is the ID of the Service it's destined
-	Service ServiceID
-	// Data is the data encoded using protobuf for the moment.
-	Data []byte
-}
-
-// ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
-
-// CreateServiceMessage takes a service name and some data and encodes the whole
-// as a ServiceMessage.
-func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, error) {
-	sid := ServiceFactory.ServiceID(service)
-	buff, err := network.MarshalRegisteredType(r)
-	if err != nil {
-		return nil, err
-	}
-	return &InterServiceMessage{
-		Service: sid,
-		Data:    buff,
-	}, nil
-
-}
-
 // Client is a struct used to communicate with a remote Service running on a
 // sda.Conode
 type Client struct {
