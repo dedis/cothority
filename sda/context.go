@@ -87,6 +87,12 @@ func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketT
 	c.manager.RegisterProcessor(p, msgType)
 }
 
+// RegisterProcessor overrides the RegisterProcessor methods of the Dispatcher.
+// It delegates the dispatching to the serviceManager.
+func (c *Context) RegisterProcessorFunc(p network.PacketTypeID, f func(*network.Packet)) {
+	c.manager.RegisterProcessorFunc(p, f)
+}
+
 // Service returns the corresponding service.
 func (c *Context) Service(name string) Service {
 	return c.manager.Service(name)
