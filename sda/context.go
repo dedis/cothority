@@ -87,6 +87,10 @@ func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketT
 	c.manager.RegisterProcessor(p, msgType)
 }
 
+func (c *Context) RegisterProcessorFunc(msgType network.PacketTypeID, fn func(*network.Packet)) {
+	c.manager.RegisterProcessorFunc(msgType, fn)
+}
+
 // Service returns the corresponding service.
 func (c *Context) Service(name string) Service {
 	return c.manager.Service(name)
