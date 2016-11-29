@@ -143,12 +143,10 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 func TestProtocolIOFactory(t *testing.T) {
 	defer eraseAllProtocolIO()
-	RegisterProtocolIO(testProtoIOName, NewTestProtocolIOChan)
-	fn, present := protocolIOFactory.factories[testProtoIOName]
-	assert.NotNil(t, fn)
-	assert.True(t, present)
+	RegisterProtocolIO(NewTestProtocolIOChan)
+	assert.True(t, len(protocolIOFactory.factories) == 1)
 	// register twice
-	RegisterProtocolIO("testIO", NewTestProtocolIOChan)
+	RegisterProtocolIO(NewTestProtocolIOChan)
 	// TODO check log error output
 }
 
@@ -157,7 +155,7 @@ func TestProtocolIOStore(t *testing.T) {
 	local := NewLocalTest()
 	defer local.CloseAll()
 
-	RegisterProtocolIO(testProtoIOName, NewTestProtocolIO)
+	RegisterProtocolIO(NewTestProtocolIO)
 	GlobalProtocolRegister(testProtoIOName, newTestProtocolInstance)
 	h, _, tree := local.GenTree(2, true)
 
@@ -202,7 +200,7 @@ func NewTestProtocolIO() ProtocolIO {
 }
 
 func eraseAllProtocolIO() {
-	protocolIOFactory.factories = make(map[string]NewProtocolIO)
+	protocolIOFactory.factories = nil
 }
 
 func (t *TestProtocolIO) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
@@ -234,6 +232,10 @@ func (t *TestProtocolIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 
 func (t *TestProtocolIO) PacketType() network.PacketTypeID {
 	return OuterPacketType
+}
+
+func (t *TestProtocolIO) Name() string {
+	return testProtoIOName
 }
 
 var chanTestProtoInstance = make(chan bool)

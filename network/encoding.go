@@ -44,6 +44,10 @@ func (mId PacketTypeID) String() string {
 	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
+func (pId PacketTypeID) Equal(t PacketTypeID) bool {
+	return bytes.Compare(uuid.UUID(pId).Bytes(), uuid.UUID(t).Bytes()) == 0
+}
+
 // NamespaceURL is the basic namespace used for uuid
 // XXX should move that to external of the library as not every
 // cothority/packages should be expected to use that.

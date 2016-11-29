@@ -128,74 +128,67 @@ type ProtocolIO interface {
 	// network. This is needed in order for the Overlay to receive those
 	// messages and dispatch them to the correct ProtocolIO.
 	PacketType() network.PacketTypeID
+
+	// Name returns the name associated with this ProtocolIO. When creating a
+	// protocol, if one use a name used by a ProtocolIO, this ProtocolIO will be
+	// used to Wrap and Unwrap messages.
+	Name() string
 }
 
 // NewProtocolIO is a function typedef to instantiate a new ProtocolIO.
 type NewProtocolIO func() ProtocolIO
 
 type protocolIOFactoryStruct struct {
-	factories map[string]NewProtocolIO
+	factories []NewProtocolIO
 }
 
-var protocolIOFactory = protocolIOFactoryStruct{
-	factories: make(map[string]NewProtocolIO),
-}
+var protocolIOFactory = protocolIOFactoryStruct{}
 
 // RegisterProtocolIO saves a new NewProtocolIO under its name.
 // When a Conode is instantiated, all ProtocolIOs will be generated and stored
 // for this Conode.
-func RegisterProtocolIO(name string, n NewProtocolIO) {
-	_, present := protocolIOFactory.factories[name]
-	if present {
-		log.Error("protocolIOStore already registered a ProtocolIO at this name", name)
-		return
-	}
-	protocolIOFactory.factories[name] = n
+func RegisterProtocolIO(n NewProtocolIO) {
+	protocolIOFactory.factories = append(protocolIOFactory.factories, n)
 }
 
 // protocolIOStore contains all created ProtocolIOs. It contains the default
 // ProtocolIO used by the Overlay for backwards-compatibility.
 type protocolIOStore struct {
 	sync.Mutex
-	protos []ProtocolIO
-	names  map[string]int
-	types  map[network.PacketTypeID]int
-	// the one that gets used in case no ProtocolIO is defined
+	protos    []ProtocolIO
 	defaultIO ProtocolIO
 }
 
 func (p *protocolIOStore) getByName(name string) ProtocolIO {
 	p.Lock()
 	defer p.Unlock()
-	idx, ok := p.names[name]
-	if !ok || idx >= len(p.protos) || p.protos[idx] == nil {
-		return p.defaultIO
+	for _, pio := range p.protos {
+		if pio.Name() == name {
+			return pio
+		}
 	}
-	return p.protos[idx]
+	return p.defaultIO
 }
 
 func (p *protocolIOStore) getByPacketType(t network.PacketTypeID) ProtocolIO {
 	p.Lock()
 	defer p.Unlock()
-	idx, ok := p.types[t]
-	if !ok || idx >= len(p.protos) || p.protos[idx] == nil {
-		return p.defaultIO
+	for _, pio := range p.protos {
+		if pio.PacketType().Equal(t) {
+			return pio
+		}
 	}
-	return p.protos[idx]
+	return p.defaultIO
 }
 
 func newProtocolIOStore(disp network.Dispatcher, proc network.Processor) *protocolIOStore {
 	pstore := &protocolIOStore{
-		names: make(map[string]int),
-		types: make(map[network.PacketTypeID]int),
 		// also add the default one
 		defaultIO: new(defaultProtoIO),
 	}
 	for name, newIO := range protocolIOFactory.factories {
 		io := newIO()
 		pstore.protos = append(pstore.protos, io)
-		pstore.names[name] = len(pstore.protos) - 1
-		pstore.types[io.PacketType()] = len(pstore.protos) - 1
 		disp.RegisterProcessor(proc, io.PacketType())
 		log.Lvl2("Instantiating ProtocolIO", name, "at position", len(pstore.protos))
 	}
