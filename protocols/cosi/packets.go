@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	sda.RegisterProtocolIO(Name, func() sda.ProtocolIO {
+	sda.RegisterProtocolIO(func() sda.ProtocolIO {
 		return new(ProtocolIO)
 	})
 }
@@ -98,6 +98,10 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 // the ProtocolPacket.
 func (p *ProtocolIO) PacketType() network.PacketTypeID {
 	return ProtocolPacketID
+}
+
+func (p *ProtocolIO) Name() string {
+	return Name
 }
 
 // Announcement is broadcasted message initiated and signed by proposer.
