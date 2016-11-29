@@ -490,6 +490,15 @@ func TestServiceManager_Service(t *testing.T) {
 	assert.NotNil(t, service, "Didn't find service testService")
 }
 
+func TestISM(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	conodes, _, _ := local.GenTree(2, true)
+
+	service := conodes[0].serviceManager.Service("testService")
+	assert.NotNil(t, service, "Didn't find service testService")
+}
+
 // BackForthProtocolForth & Back are messages that go down and up the tree.
 // => BackForthProtocol protocol / message
 type SimpleMessageForth struct {
