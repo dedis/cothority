@@ -584,7 +584,7 @@ type DummyMsg struct {
 
 var dummyMsgType network.PacketTypeID
 
-func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
+func newDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
 	return &DummyProtocol{tni, link, conf}
 }
 
@@ -629,7 +629,7 @@ func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *Clie
 		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root, "DummyService")
 	}
 
-	dp := NewDummyProtocol(ds.firstTni, ds.Config, ds.link)
+	dp := newDummyProtocol(ds.firstTni, ds.Config, ds.link)
 
 	if err := ds.c.RegisterProtocolInstance(dp); err != nil {
 		ds.link <- false
@@ -639,7 +639,7 @@ func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *Clie
 }
 
 func (ds *DummyService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
-	dp := NewDummyProtocol(tn, DummyConfig{}, ds.link)
+	dp := newDummyProtocol(tn, DummyConfig{}, ds.link)
 	return dp, nil
 }
 
