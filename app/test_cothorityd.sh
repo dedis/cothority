@@ -4,7 +4,7 @@ DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=0
 # For easier debugging
-STATICDIR=test
+#STATICDIR=test
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
