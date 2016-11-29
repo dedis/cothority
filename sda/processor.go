@@ -118,6 +118,19 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 	}
 }
 
+// ProcessInterServiceMessage takes an InterServiceMessage and processes it.
+func (p *ServiceProcessor) ProcessInterServiceMessage(si *network.ServerIdentity,
+	ism *InterServiceMessage) {
+	// unmarshal the inner message
+	mt, m, err := network.UnmarshalRegistered(ism.Data)
+	if err != nil {
+		log.Error("Err unmarshal client request:" + err.Error())
+		return
+	}
+	reply := p.GetReply(si, mt, reflect.ValueOf(m).Elem().Interface())
+	log.Lvlf3("Discarding %v", reply)
+}
+
 // SendISM takes the message and sends it to the corresponding service.
 func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body) error {
 	sName := ServiceFactory.Name(p.Context.ServiceID())

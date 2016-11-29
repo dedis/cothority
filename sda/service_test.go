@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServiceRegistration(t *testing.T) {
@@ -55,6 +56,7 @@ var dummyMsgType network.PacketTypeID
 
 func init() {
 	dummyMsgType = network.RegisterPacketType(DummyMsg{})
+	RegisterNewService("ISMService", newISMService)
 }
 
 func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
@@ -109,6 +111,9 @@ func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *Clie
 		return
 	}
 	dp.Start()
+}
+
+func (ds *DummyService) ProcessInterServiceMessage(si *network.ServerIdentity, ism *InterServiceMessage) {
 }
 
 func (ds *DummyService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
@@ -490,6 +495,18 @@ func TestServiceManager_Service(t *testing.T) {
 	assert.NotNil(t, service, "Didn't find service testService")
 }
 
+func TestISM(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	conodes, _, _ := local.GenTree(2, true)
+
+	service := conodes[0].serviceManager.Service("ISMService")
+	assert.NotNil(t, service, "Didn't find service ISMService")
+	ism := service.(*ISMService)
+	ism.SendISM(conodes[0].ServerIdentity, &SimpleResponse{})
+	require.True(t, <-ism.GotResponse, "Didn't get response")
+}
+
 // BackForthProtocolForth & Back are messages that go down and up the tree.
 // => BackForthProtocol protocol / message
 type SimpleMessageForth struct {
@@ -630,6 +647,9 @@ func (s *simpleService) ProcessClientRequest(si *network.ServerIdentity, r *Clie
 	go proto.Start()
 }
 
+func (ds *simpleService) ProcessInterServiceMessage(si *network.ServerIdentity, ism *InterServiceMessage) {
+}
+
 func (s *simpleService) NewProtocol(tni *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
 	pi, err := newBackForthProtocol(tni)
 	return pi, err
@@ -637,6 +657,29 @@ func (s *simpleService) NewProtocol(tni *TreeNodeInstance, conf *GenericConfig) 
 
 func (s *simpleService) Process(packet *network.Packet) {
 	return
+}
+
+type ISMService struct {
+	*ServiceProcessor
+	GotResponse chan bool
+}
+
+func (i *ISMService) SimpleResponse(si *network.ServerIdentity, sr *SimpleResponse) (network.Body, error) {
+	i.GotResponse <- true
+	return nil, nil
+}
+
+func (i *ISMService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newISMService(c *Context, path string) Service {
+	s := &ISMService{
+		ServiceProcessor: NewServiceProcessor(c),
+		GotResponse:      make(chan bool),
+	}
+	log.ErrFatal(s.RegisterMessage(s.SimpleResponse))
+	return s
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
