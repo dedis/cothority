@@ -30,6 +30,9 @@ type Service interface {
 	// receives a request, it looks whether it knows the Service it is for and
 	// then dispatch it through ProcessRequest.
 	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
+	// ProcessInterServiceMessage takes a message from another service and
+	// handles it accordingly.
+	ProcessInterServiceMessage(*network.ServerIdentity, *InterServiceMessage)
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -243,6 +246,7 @@ func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 
 	// registering messages that services are expecting
 	c.RegisterProcessor(s, ClientRequestID)
+	c.RegisterProcessor(s, InterServiceMessageID)
 	return s
 }
 
@@ -262,6 +266,17 @@ func (s *serviceManager) Process(data *network.Packet) {
 			return
 		}
 		go s.ProcessClientRequest(id, &r)
+	case InterServiceMessageID:
+		r := data.Msg.(InterServiceMessage)
+		// check if the target service is indeed existing
+		s, ok := s.serviceByID(r.Service)
+		if !ok {
+			log.Error("Received a request for an unknown service", r.Service)
+			// XXX TODO should reply with some generic response =>
+			// 404 Service Unknown
+			return
+		}
+		go s.ProcessInterServiceMessage(id, &r)
 	default:
 		// will launch a go routine for that message
 		s.Dispatch(data)
@@ -352,8 +367,8 @@ type InterServiceMessage struct {
 	Data []byte
 }
 
-// ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
+// InterServiceMessageID is the ID of the ServiceMessage struct.
+var InterServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
 
 // CreateServiceMessage takes a service name and some data and encodes the whole
 // as a ServiceMessage.

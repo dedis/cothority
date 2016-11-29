@@ -9,7 +9,15 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	dummyMsgType = network.RegisterPacketType(DummyMsg{})
+	network.RegisterPacketType(SimpleMessageForth{})
+	network.RegisterPacketType(SimpleMessageBack{})
+	RegisterNewService("ISMService", newISMService)
+}
 
 func TestServiceRegistration(t *testing.T) {
 	var name = "dummy"
@@ -34,99 +42,6 @@ func TestServiceRegistration(t *testing.T) {
 			t.Fatal("Dummy should not be found!")
 		}
 	}
-}
-
-type DummyProtocol struct {
-	*TreeNodeInstance
-	link   chan bool
-	config DummyConfig
-}
-
-type DummyConfig struct {
-	A    int
-	Send bool
-}
-
-type DummyMsg struct {
-	A int
-}
-
-var dummyMsgType network.PacketTypeID
-
-func init() {
-	dummyMsgType = network.RegisterPacketType(DummyMsg{})
-}
-
-func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
-	return &DummyProtocol{tni, link, conf}
-}
-
-func (dm *DummyProtocol) Start() error {
-	dm.link <- true
-	if dm.config.Send {
-		// also send to the children if any
-		if !dm.IsLeaf() {
-			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
-				log.Error(err)
-			}
-		}
-	}
-	return nil
-}
-
-func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
-	dm.link <- true
-}
-
-// legcy reasons
-func (dm *DummyProtocol) Dispatch() error {
-	return nil
-}
-
-type DummyService struct {
-	c        *Context
-	path     string
-	link     chan bool
-	fakeTree *Tree
-	firstTni *TreeNodeInstance
-	Config   DummyConfig
-}
-
-func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
-	msgT, _, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
-	if err != nil || msgT != dummyMsgType {
-		ds.link <- false
-		return
-	}
-	if ds.firstTni == nil {
-		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root, "DummyService")
-	}
-
-	dp := NewDummyProtocol(ds.firstTni, ds.Config, ds.link)
-
-	if err := ds.c.RegisterProtocolInstance(dp); err != nil {
-		ds.link <- false
-		return
-	}
-	dp.Start()
-}
-
-func (ds *DummyService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
-	dp := NewDummyProtocol(tn, DummyConfig{}, ds.link)
-	return dp, nil
-}
-
-func (ds *DummyService) Process(packet *network.Packet) {
-	if packet.MsgType != dummyMsgType {
-		ds.link <- false
-		return
-	}
-	dms := packet.Msg.(DummyMsg)
-	if dms.A != 10 {
-		ds.link <- false
-		return
-	}
-	ds.link <- true
 }
 
 func TestServiceNew(t *testing.T) {
@@ -338,24 +253,6 @@ func TestServiceProcessor(t *testing.T) {
 	log.ErrFatal(ServiceFactory.Unregister("DummyService"))
 }
 
-type clientProc struct {
-	t     *testing.T
-	relay chan SimpleResponse
-}
-
-func newClientProc(t *testing.T) *clientProc {
-	return &clientProc{
-		relay: make(chan SimpleResponse),
-	}
-}
-
-func (c *clientProc) Process(p *network.Packet) {
-	if p.MsgType != SimpleResponseType {
-		c.t.Fatal("Message type not SimpleResponseType")
-	}
-	c.relay <- p.Msg.(SimpleResponse)
-}
-
 func TestServiceBackForthProtocol(t *testing.T) {
 	local := NewLocalTest()
 	defer local.CloseAll()
@@ -495,8 +392,103 @@ func TestISM(t *testing.T) {
 	defer local.CloseAll()
 	conodes, _, _ := local.GenTree(2, true)
 
-	service := conodes[0].serviceManager.Service("testService")
-	assert.NotNil(t, service, "Didn't find service testService")
+	service := conodes[0].serviceManager.Service("ISMService")
+	assert.NotNil(t, service, "Didn't find service ISMService")
+	ism := service.(*ISMService)
+	ism.SendISM(conodes[0].ServerIdentity, &SimpleResponse{})
+	require.True(t, <-ism.GotResponse, "Didn't get response")
+}
+
+type DummyProtocol struct {
+	*TreeNodeInstance
+	link   chan bool
+	config DummyConfig
+}
+
+type DummyConfig struct {
+	A    int
+	Send bool
+}
+
+type DummyMsg struct {
+	A int
+}
+
+var dummyMsgType network.PacketTypeID
+
+func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
+	return &DummyProtocol{tni, link, conf}
+}
+
+func (dm *DummyProtocol) Start() error {
+	dm.link <- true
+	if dm.config.Send {
+		// also send to the children if any
+		if !dm.IsLeaf() {
+			if err := dm.SendToChildren(&DummyMsg{}); err != nil {
+				log.Error(err)
+			}
+		}
+	}
+	return nil
+}
+
+func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
+	dm.link <- true
+}
+
+// legcy reasons
+func (dm *DummyProtocol) Dispatch() error {
+	return nil
+}
+
+type DummyService struct {
+	c        *Context
+	path     string
+	link     chan bool
+	fakeTree *Tree
+	firstTni *TreeNodeInstance
+	Config   DummyConfig
+}
+
+func (ds *DummyService) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
+	msgT, _, err := network.UnmarshalRegisteredType(r.Data, network.DefaultConstructors(network.Suite))
+	if err != nil || msgT != dummyMsgType {
+		ds.link <- false
+		return
+	}
+	if ds.firstTni == nil {
+		ds.firstTni = ds.c.NewTreeNodeInstance(ds.fakeTree, ds.fakeTree.Root, "DummyService")
+	}
+
+	dp := NewDummyProtocol(ds.firstTni, ds.Config, ds.link)
+
+	if err := ds.c.RegisterProtocolInstance(dp); err != nil {
+		ds.link <- false
+		return
+	}
+	dp.Start()
+}
+
+func (ds *DummyService) ProcessInterServiceMessage(si *network.ServerIdentity, ism *InterServiceMessage) {
+}
+
+func (ds *DummyService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	dp := NewDummyProtocol(tn, DummyConfig{}, ds.link)
+	return dp, nil
+}
+
+func (ds *DummyService) Process(packet *network.Packet) {
+	if packet.MsgType != dummyMsgType {
+		ds.link <- false
+		return
+	}
+	dms := packet.Msg.(DummyMsg)
+	if dms.A != 10 {
+		ds.link <- false
+		return
+	}
+	ds.link <- true
 }
 
 // BackForthProtocolForth & Back are messages that go down and up the tree.
@@ -508,9 +500,6 @@ type SimpleMessageForth struct {
 type SimpleMessageBack struct {
 	Val int
 }
-
-var simpleMessageForthType = network.RegisterPacketType(SimpleMessageForth{})
-var simpleMessageBackType = network.RegisterPacketType(SimpleMessageBack{})
 
 type BackForthProtocol struct {
 	*TreeNodeInstance
@@ -639,6 +628,9 @@ func (s *simpleService) ProcessClientRequest(si *network.ServerIdentity, r *Clie
 	go proto.Start()
 }
 
+func (ds *simpleService) ProcessInterServiceMessage(si *network.ServerIdentity, ism *InterServiceMessage) {
+}
+
 func (s *simpleService) NewProtocol(tni *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
 	pi, err := newBackForthProtocol(tni)
 	return pi, err
@@ -646,6 +638,29 @@ func (s *simpleService) NewProtocol(tni *TreeNodeInstance, conf *GenericConfig) 
 
 func (s *simpleService) Process(packet *network.Packet) {
 	return
+}
+
+type ISMService struct {
+	*ServiceProcessor
+	GotResponse chan bool
+}
+
+func (i *ISMService) SimpleResponse(si *network.ServerIdentity, sr *SimpleResponse) (network.Body, error) {
+	i.GotResponse <- true
+	return nil, nil
+}
+
+func (i *ISMService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newISMService(c *Context, path string) Service {
+	s := &ISMService{
+		ServiceProcessor: NewServiceProcessor(c),
+		GotResponse:      make(chan bool),
+	}
+	log.ErrFatal(s.RegisterMessage(s.SimpleResponse))
+	return s
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
