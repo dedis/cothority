@@ -109,16 +109,14 @@ func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {
 	return &tOther
 }
 
-// TreeNodeInfo contains from whose node in which tree a message is coming from
-// and which node is the destination.
+// TreeNodeInfo holds the sender and the destination of the message.
 type TreeNodeInfo struct {
 	To   *Token
 	From *Token
 }
 
-// OverlayMessage contains *all* information needed by the Overlay to perform
-// its duties such as TreeNodeInfo and the message to request a Tree or a Roster
-// to other nodes.
+// OverlayMessage contains all routing-information about the tree and the
+// roster.
 type OverlayMessage struct {
 	TreeNodeInfo *TreeNodeInfo
 

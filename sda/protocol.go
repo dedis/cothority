@@ -103,21 +103,26 @@ func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, erro
 }
 
 // ProtocolIO is an interface that allows one protocol to completely define its
-// wire protocol format while still using the Overlay. Implementations must
-// provide methods to read a packet coming from the network and also to write a
-// packet going to the network. A default one is provided with
-// defaultProtocolIO so the regular wire-format protocol can still be used.
+// wire protocol format while still using the Overlay.
+// Cothority sends different messages dynamically as slices of bytes, whereas
+// Google proposes to use union-types:
+// https://developers.google.com/protocol-buffers/docs/techniques#union
+// This is a wrapper to enable union-types while still keeping compatibility with
+// the dynamic cothority-messages. Implementations must provide methods to
+// pass from the 'union-types' to 'cothority-dynamic-messages' with the Wrap
+// and Unwrap method.
+// A default one is provided with defaultProtocolIO so the regular wire-format
+// protocol can still be used.
 type ProtocolIO interface {
 	// Wrap takes a message and the overlay information and returns the message
-	// has to be sent directly to the network alongside with any error that
+	// that has to be sent directly to the network alongside with any error that
 	// happened.
-	// the bigger outer struct. Msg can be nil, that case it means the message
-	// is only an internal message of the Overlay.
+	// If msg is nil, it is only an internal message of the Overlay.
 	Wrap(msg interface{}, info *OverlayMessage) (interface{}, error)
-	// Unwrap takes the message coming from the network and must returns the
+	// Unwrap takes the message coming from the network and returns the
 	// inner message that is going to be dispatched to the ProtocolInstance, the
 	// OverlayMessage needed by the Overlay to function correctly and then any
-	// error that might have occured.
+	// error that might have occurred.
 	Unwrap(msg interface{}) (interface{}, *OverlayMessage, error)
 	// PacketType returns the packet type ID that this Protocol expects from the
 	// network. This is needed in order for the Overlay to receive those
@@ -125,7 +130,7 @@ type ProtocolIO interface {
 	PacketType() network.PacketTypeID
 }
 
-// NewProtocolIO is a function typedef to instantiate a new ProtocolIO
+// NewProtocolIO is a function typedef to instantiate a new ProtocolIO.
 type NewProtocolIO func() ProtocolIO
 
 type protocolIOFactoryStruct struct {
@@ -136,8 +141,8 @@ var protocolIOFactory = protocolIOFactoryStruct{
 	factories: make(map[string]NewProtocolIO),
 }
 
-// RegisterProtocolIO takes a name and and NewProtocolIO and save both fields.
-// When a Conode is instantiated, all ProtocolIO will be generated and stored
+// RegisterProtocolIO saves a new NewProtocolIO under its name.
+// When a Conode is instantiated, all ProtocolIOs will be generated and stored
 // for this Conode.
 func RegisterProtocolIO(name string, n NewProtocolIO) {
 	_, present := protocolIOFactory.factories[name]
@@ -148,9 +153,8 @@ func RegisterProtocolIO(name string, n NewProtocolIO) {
 	protocolIOFactory.factories[name] = n
 }
 
-// protocolIOStore contains all created ProtocolIO and is generally used by the
-// Overlay. It contains the default ProtocolIO used by the Overlay in order to
-// still function properly in case the old wire-format protocol is used.
+// protocolIOStore contains all created ProtocolIOs. It contains the default
+// ProtocolIO used by the Overlay for backwards-compatibility.
 type protocolIOStore struct {
 	sync.Mutex
 	protos []ProtocolIO
@@ -182,8 +186,9 @@ func (p *protocolIOStore) getByPacketType(t network.PacketTypeID) ProtocolIO {
 
 func newProtocolIOStore(disp network.Dispatcher, proc network.Processor) *protocolIOStore {
 	pstore := &protocolIOStore{
-		names:     make(map[string]int),
-		types:     make(map[network.PacketTypeID]int),
+		names: make(map[string]int),
+		types: make(map[network.PacketTypeID]int),
+		// also add the default one
 		defaultIO: new(defaultProtoIO),
 	}
 	for name, newIO := range protocolIOFactory.factories {
@@ -194,6 +199,5 @@ func newProtocolIOStore(disp network.Dispatcher, proc network.Processor) *protoc
 		disp.RegisterProcessor(proc, io.PacketType())
 		log.Lvl2("Instantiating ProtocolIO", name, "at position", len(pstore.protos))
 	}
-	// also add the default one
 	return pstore
 }
