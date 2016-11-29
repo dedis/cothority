@@ -44,8 +44,7 @@ type ProtocolPacket struct {
 // ProtocolIO implements the sda.ProtocolIO interface for the CoSi protocol.
 type ProtocolIO struct{}
 
-// Wrap implements the sda.ProtocolIO interface by wrapping up any of the
-// four-step messages into a ProtooclPacket.
+// Wrap takes a dynamic OverlayMessage and returns a ProtocolPacket.
 func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
 	var packet = new(ProtocolPacket)
 	packet.Info = info
@@ -68,8 +67,7 @@ func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{
 	return packet, nil
 }
 
-// Unwrap implements the sda.ProtocolIO interface by unwraping and returning the
-// specific message of one of the four steps.
+// Unwrap takes a ProtocolPacket and returns the corresponding dynamic OverlayMessage.
 func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, error) {
 	var inner interface{}
 	packet, ok := msg.(ProtocolPacket)
@@ -94,33 +92,31 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 	return inner, packet.Info, nil
 }
 
-// PacketType implements the sda.ProtocolIO interface by returning the type of
-// the ProtocolPacket.
+// PacketType returns the ProtocolPacket-type.
 func (p *ProtocolIO) PacketType() network.PacketTypeID {
 	return ProtocolPacketID
 }
 
-// Announcement is broadcasted message initiated and signed by proposer.
+// Announcement is sent down the tree to start the collective signature.
 type Announcement struct {
 }
 
-// Commitment of all nodes together with the data they want
-// to have signed
+// Commitment of all nodes, aggregated over all children.
 type Commitment struct {
 	Comm abstract.Point
 }
 
-// Challenge is the challenge computed by the root-node.
+// Challenge is the challenge against the aggregate commitment.
 type Challenge struct {
 	Chall abstract.Scalar
 }
 
-// Response with which every node replies with.
+// Response of all nodes, aggregated over all children.
 type Response struct {
 	Resp abstract.Scalar
 }
 
-//Theses are pairs of TreeNode + the actual message we want to listen on.
+// Overlay-structures to retrieve the sending TreeNode.
 type chanAnnouncement struct {
 	*sda.TreeNode
 	Announcement
