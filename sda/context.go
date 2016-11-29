@@ -87,6 +87,8 @@ func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketT
 	c.manager.RegisterProcessor(p, msgType)
 }
 
+// RegisterProcessorFunc takes a message-type and a function that will be called
+// if this message-type is received.
 func (c *Context) RegisterProcessorFunc(msgType network.PacketTypeID, fn func(*network.Packet)) {
 	c.manager.RegisterProcessorFunc(msgType, fn)
 }
