@@ -36,7 +36,7 @@ var ErrorType = PacketTypeID(uuid.Nil)
 
 // String returns the name of the structure if it is known, else it returns
 // the hexadecimal value of the Id.
-func (mId PacketTypeID) String() string {
+func (pId PacketTypeID) String() string {
 	t, ok := registry.get(mId)
 	if ok {
 		return t.String()
@@ -44,6 +44,7 @@ func (mId PacketTypeID) String() string {
 	return fmt.Sprintf("%x", uuid.UUID(mId))
 }
 
+// Equal returns true if pId is equal to t
 func (pId PacketTypeID) Equal(t PacketTypeID) bool {
 	return bytes.Compare(uuid.UUID(pId).Bytes(), uuid.UUID(t).Bytes()) == 0
 }
