@@ -145,9 +145,6 @@ func TestProtocolIOFactory(t *testing.T) {
 	defer eraseAllProtocolIO()
 	RegisterProtocolIO(NewTestProtocolIOChan)
 	assert.True(t, len(protocolIOFactory.factories) == 1)
-	// register twice
-	RegisterProtocolIO(NewTestProtocolIOChan)
-	// TODO check log error output
 }
 
 func TestProtocolIOStore(t *testing.T) {
@@ -165,7 +162,7 @@ func TestProtocolIOStore(t *testing.T) {
 		assert.Equal(t, "", res)
 		// second time to unwrap
 		res = <-chanProtoIOFeedback
-		assert.Equal(t, "", res)
+		require.Equal(t, "", res)
 
 	}()
 	_, err := h[0].StartProtocol(testProtoIOName, tree)
@@ -246,8 +243,7 @@ type TestProtocolInstance struct {
 }
 
 func newTestProtocolInstance(n *TreeNodeInstance) (ProtocolInstance, error) {
-	pi := new(TestProtocolInstance)
-	pi.TreeNodeInstance = n
+	pi := &TestProtocolInstance{n}
 	n.RegisterHandler(pi.handleSimpleMessage)
 	return pi, nil
 }
@@ -263,10 +259,6 @@ type SimpleMessageHandler struct {
 }
 
 func (t TestProtocolInstance) handleSimpleMessage(h SimpleMessageHandler) error {
-	var ok = true
-	if h.SimpleMessage.I != 12 {
-		ok = false
-	}
-	chanTestProtoInstance <- ok
+	chanTestProtoInstance <- h.SimpleMessage.I == 12
 	return nil
 }
