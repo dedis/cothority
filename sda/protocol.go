@@ -128,7 +128,6 @@ type ProtocolIO interface {
 	// network. This is needed in order for the Overlay to receive those
 	// messages and dispatch them to the correct ProtocolIO.
 	PacketType() network.PacketTypeID
-
 	// Name returns the name associated with this ProtocolIO. When creating a
 	// protocol, if one use a name used by a ProtocolIO, this ProtocolIO will be
 	// used to Wrap and Unwrap messages.
