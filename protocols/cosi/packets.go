@@ -33,7 +33,7 @@ var ProtocolPacketID = network.RegisterPacketType(ProtocolPacket{})
 type ProtocolPacket struct {
 	Phase uint32
 
-	Info *sda.OverlayMessage
+	OverlayMessage *sda.OverlayMessage
 
 	Ann  *Announcement
 	Comm *Commitment
@@ -48,7 +48,7 @@ type ProtocolIO struct{}
 // four-step messages into a ProtooclPacket.
 func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
 	var packet = new(ProtocolPacket)
-	packet.Info = info
+	packet.OverlayMessage = info
 
 	switch inner := msg.(type) {
 	case *Announcement:
@@ -77,7 +77,7 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 		return nil, nil, errors.New("cosi protocolio: unknown packet to unwrap")
 	}
 
-	if packet.Info == nil {
+	if packet.OverlayMessage == nil {
 		return nil, nil, errors.New("cosi protocolio: no overlay information given")
 	}
 
@@ -91,7 +91,7 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 	case ResponsePhase:
 		inner = packet.Resp
 	}
-	return inner, packet.Info, nil
+	return inner, packet.OverlayMessage, nil
 }
 
 // PacketType implements the sda.ProtocolIO interface by returning the type of
