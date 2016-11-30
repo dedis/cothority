@@ -42,7 +42,7 @@ type CoSimul struct {
 
 // NewCoSimul returns a new CoSi-protocol suited for simulation
 func NewCoSimul(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-	c, err := p.NewCoSi(node)
+	c, err := p.NewProtocol(node)
 	if err != nil {
 		return nil, err
 	}

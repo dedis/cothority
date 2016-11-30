@@ -14,7 +14,7 @@ import (
 var Name = "CoSi"
 
 func init() {
-	sda.GlobalProtocolRegister(Name, NewCoSi)
+	sda.GlobalProtocolRegister(Name, NewProtocol)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the
@@ -91,7 +91,7 @@ type SignatureHook func(sig []byte)
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewCoSi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	var err error
 	// XXX just need to take care to take the global list of cosigners once we
 	// do the exception stuff

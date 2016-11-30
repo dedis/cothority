@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	sda.RegisterProtocolIO(Name, func() sda.ProtocolIO {
+	sda.RegisterProtocolIO(func() sda.ProtocolIO {
 		return new(ProtocolIO)
 	})
 }
@@ -33,7 +33,7 @@ var ProtocolPacketID = network.RegisterPacketType(ProtocolPacket{})
 type ProtocolPacket struct {
 	Phase uint32
 
-	Info *sda.OverlayMessage
+	OverlayMessage *sda.OverlayMessage
 
 	Ann  *Announcement
 	Comm *Commitment
@@ -47,7 +47,7 @@ type ProtocolIO struct{}
 // Wrap takes a dynamic OverlayMessage and returns a ProtocolPacket.
 func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
 	var packet = new(ProtocolPacket)
-	packet.Info = info
+	packet.OverlayMessage = info
 
 	switch inner := msg.(type) {
 	case *Announcement:
@@ -75,7 +75,7 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 		return nil, nil, errors.New("cosi protocolio: unknown packet to unwrap")
 	}
 
-	if packet.Info == nil {
+	if packet.OverlayMessage == nil {
 		return nil, nil, errors.New("cosi protocolio: no overlay information given")
 	}
 
@@ -89,12 +89,16 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 	case ResponsePhase:
 		inner = packet.Resp
 	}
-	return inner, packet.Info, nil
+	return inner, packet.OverlayMessage, nil
 }
 
 // PacketType returns the ProtocolPacket-type.
 func (p *ProtocolIO) PacketType() network.PacketTypeID {
 	return ProtocolPacketID
+}
+
+func (p *ProtocolIO) Name() string {
+	return Name
 }
 
 // Announcement is sent down the tree to start the collective signature.

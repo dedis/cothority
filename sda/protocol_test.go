@@ -143,13 +143,8 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 
 func TestProtocolIOFactory(t *testing.T) {
 	defer eraseAllProtocolIO()
-	RegisterProtocolIO(testProtoIOName, NewTestProtocolIOChan)
-	fn, present := protocolIOFactory.factories[testProtoIOName]
-	assert.NotNil(t, fn)
-	assert.True(t, present)
-	// register twice
-	RegisterProtocolIO("testIO", NewTestProtocolIOChan)
-	// TODO check log error output
+	RegisterProtocolIO(NewTestProtocolIOChan)
+	assert.True(t, len(protocolIOFactory.factories) == 1)
 }
 
 func TestProtocolIOStore(t *testing.T) {
@@ -157,7 +152,7 @@ func TestProtocolIOStore(t *testing.T) {
 	local := NewLocalTest()
 	defer local.CloseAll()
 
-	RegisterProtocolIO(testProtoIOName, NewTestProtocolIO)
+	RegisterProtocolIO(NewTestProtocolIO)
 	GlobalProtocolRegister(testProtoIOName, newTestProtocolInstance)
 	h, _, tree := local.GenTree(2, true)
 
@@ -167,7 +162,7 @@ func TestProtocolIOStore(t *testing.T) {
 		assert.Equal(t, "", res)
 		// second time to unwrap
 		res = <-chanProtoIOFeedback
-		assert.Equal(t, "", res)
+		require.Equal(t, "", res)
 
 	}()
 	_, err := h[0].StartProtocol(testProtoIOName, tree)
@@ -202,7 +197,7 @@ func NewTestProtocolIO() ProtocolIO {
 }
 
 func eraseAllProtocolIO() {
-	protocolIOFactory.factories = make(map[string]NewProtocolIO)
+	protocolIOFactory.factories = nil
 }
 
 func (t *TestProtocolIO) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
@@ -236,6 +231,10 @@ func (t *TestProtocolIO) PacketType() network.PacketTypeID {
 	return OuterPacketType
 }
 
+func (t *TestProtocolIO) Name() string {
+	return testProtoIOName
+}
+
 var chanTestProtoInstance = make(chan bool)
 
 // ProtocolInstance part
@@ -244,8 +243,7 @@ type TestProtocolInstance struct {
 }
 
 func newTestProtocolInstance(n *TreeNodeInstance) (ProtocolInstance, error) {
-	pi := new(TestProtocolInstance)
-	pi.TreeNodeInstance = n
+	pi := &TestProtocolInstance{n}
 	n.RegisterHandler(pi.handleSimpleMessage)
 	return pi, nil
 }
@@ -261,10 +259,6 @@ type SimpleMessageHandler struct {
 }
 
 func (t TestProtocolInstance) handleSimpleMessage(h SimpleMessageHandler) error {
-	var ok = true
-	if h.SimpleMessage.I != 12 {
-		ok = false
-	}
-	chanTestProtoInstance <- ok
+	chanTestProtoInstance <- h.SimpleMessage.I == 12
 	return nil
 }

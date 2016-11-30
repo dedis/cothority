@@ -758,3 +758,8 @@ func (d *defaultProtoIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 func (d *defaultProtoIO) PacketType() network.PacketTypeID {
 	return network.PacketTypeID([16]byte{})
 }
+
+// Name implements the ProtocolIO interface. It returns the value "default".
+func (d *defaultProtoIO) Name() string {
+	return "default"
+}
