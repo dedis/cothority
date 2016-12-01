@@ -224,7 +224,7 @@ func (c *CoSi) startChallenge() error {
 	out := &Challenge{
 		Chall: challenge,
 	}
-	log.Lvlf3("%s Starting Chal=%+v (message = %s)", c.Name(), challenge, string(c.Message))
+	log.Lvlf3("%s Starting Chal=%+v (message = %x)", c.Name(), challenge, c.Message)
 	return c.handleChallenge(out)
 
 }

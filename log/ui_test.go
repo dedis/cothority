@@ -14,24 +14,21 @@ func TestMain(m *testing.M) {
 func TestInfo(t *testing.T) {
 	SetDebugVisible(FormatPython)
 	Info("Python")
-	assert.Equal(t, "[+] Python\n", GetStdOut())
+	assert.True(t, ContainsStdOut("[+] Python\n"))
 	SetDebugVisible(FormatNone)
 	Info("None")
-	assert.Equal(t, "None\n", GetStdOut())
+	assert.True(t, ContainsStdOut("None\n"))
 	Info("None", "Python")
-	assert.Equal(t, "None Python\n", GetStdOut())
+	assert.True(t, ContainsStdOut("None Python\n"))
 	SetDebugVisible(1)
 }
 
 func TestLvl(t *testing.T) {
 	SetDebugVisible(1)
 	Info("TestLvl")
-	assert.Equal(t, "I : (                             log.TestLvl:   0) - TestLvl\n",
-		GetStdOut())
+	assert.True(t, ContainsStdOut("I : (                             log.TestLvl:   0) - TestLvl\n"))
 	Print("TestLvl")
-	assert.Equal(t, "I : (                             log.TestLvl:   0) - TestLvl\n",
-		GetStdOut())
+	assert.True(t, ContainsStdOut("I : (                             log.TestLvl:   0) - TestLvl\n"))
 	Warn("TestLvl")
-	assert.Equal(t, "W : (                             log.TestLvl:   0) - TestLvl\n",
-		GetStdErr())
+	assert.True(t, ContainsStdErr("W : (                             log.TestLvl:   0) - TestLvl\n"))
 }

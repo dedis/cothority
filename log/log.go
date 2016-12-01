@@ -46,6 +46,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"strings"
 )
 
 // For testing we can change the output-writer
@@ -64,18 +65,24 @@ var bufStdErr bytes.Buffer
 // that can be used for checking what the logger would've written. This is
 // mostly used for tests.
 func OutputToBuf() {
+	debugMut.Lock()
+	defer debugMut.Unlock()
 	stdOut = &bufStdOut
 	stdErr = &bufStdErr
 }
 
 // OutputToOs redirects the output of the log.*-outputs again to the os.
 func OutputToOs() {
+	debugMut.Lock()
+	defer debugMut.Unlock()
 	stdOut = os.Stdout
 	stdErr = os.Stderr
 }
 
 // GetStdOut returns all log.*-outputs to StdOut since the last call.
 func GetStdOut() string {
+	debugMut.Lock()
+	defer debugMut.Unlock()
 	ret := bufStdOut.String()
 	bufStdOut.Reset()
 	return ret
@@ -83,7 +90,21 @@ func GetStdOut() string {
 
 // GetStdErr returns all log.*-outputs to StdErr since the last call.
 func GetStdErr() string {
+	debugMut.Lock()
+	defer debugMut.Unlock()
 	ret := bufStdErr.String()
 	bufStdErr.Reset()
 	return ret
+}
+
+// ContainsStdErr will look for str in StdErr and flush the output-buffer.
+// If you need to look at multiple strings, use GetStdErr.
+func ContainsStdErr(str string) bool {
+	return strings.Contains(GetStdErr(), str)
+}
+
+// ContainsStdOut will look for str in StdOut and flush the output-buffer.
+// If you need to look at multiple strings, use GetStdOut.
+func ContainsStdOut(str string) bool {
+	return strings.Contains(GetStdOut(), str)
 }
