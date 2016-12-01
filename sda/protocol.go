@@ -102,7 +102,7 @@ func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, erro
 	return protocols.Register(name, protocol)
 }
 
-// ProtocolIO is an interface that allows one protocol to completely define its
+// MessageProxy is an interface that allows one protocol to completely define its
 // wire protocol format while still using the Overlay.
 // Cothority sends different messages dynamically as slices of bytes, whereas
 // Google proposes to use union-types:
@@ -111,9 +111,9 @@ func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, erro
 // the dynamic cothority-messages. Implementations must provide methods to
 // pass from the 'union-types' to 'cothority-dynamic-messages' with the Wrap
 // and Unwrap method.
-// A default one is provided with defaultProtocolIO so the regular wire-format
+// A default one is provided with defaultMessageProxy so the regular wire-format
 // protocol can still be used.
-type ProtocolIO interface {
+type MessageProxy interface {
 	// Wrap takes a message and the overlay information and returns the message
 	// that has to be sent directly to the network alongside with any error that
 	// happened.
@@ -126,39 +126,39 @@ type ProtocolIO interface {
 	Unwrap(msg interface{}) (interface{}, *OverlayMessage, error)
 	// PacketType returns the packet type ID that this Protocol expects from the
 	// network. This is needed in order for the Overlay to receive those
-	// messages and dispatch them to the correct ProtocolIO.
+	// messages and dispatch them to the correct MessageProxy.
 	PacketType() network.PacketTypeID
-	// Name returns the name associated with this ProtocolIO. When creating a
-	// protocol, if one use a name used by a ProtocolIO, this ProtocolIO will be
+	// Name returns the name associated with this MessageProxy. When creating a
+	// protocol, if one use a name used by a MessageProxy, this MessageProxy will be
 	// used to Wrap and Unwrap messages.
 	Name() string
 }
 
-// NewProtocolIO is a function typedef to instantiate a new ProtocolIO.
-type NewProtocolIO func() ProtocolIO
+// NewMessageProxy is a function typedef to instantiate a new MessageProxy.
+type NewMessageProxy func() MessageProxy
 
-type protocolIOFactoryStruct struct {
-	factories []NewProtocolIO
+type messageProxyFactoryStruct struct {
+	factories []NewMessageProxy
 }
 
-var protocolIOFactory = protocolIOFactoryStruct{}
+var messageProxyFactory = messageProxyFactoryStruct{}
 
-// RegisterProtocolIO saves a new NewProtocolIO under its name.
-// When a Conode is instantiated, all ProtocolIOs will be generated and stored
+// RegisterMessageProxy saves a new NewMessageProxy under its name.
+// When a Conode is instantiated, all MessageProxys will be generated and stored
 // for this Conode.
-func RegisterProtocolIO(n NewProtocolIO) {
-	protocolIOFactory.factories = append(protocolIOFactory.factories, n)
+func RegisterMessageProxy(n NewMessageProxy) {
+	messageProxyFactory.factories = append(messageProxyFactory.factories, n)
 }
 
-// protocolIOStore contains all created ProtocolIOs. It contains the default
-// ProtocolIO used by the Overlay for backwards-compatibility.
-type protocolIOStore struct {
+// messageProxyStore contains all created MessageProxys. It contains the default
+// MessageProxy used by the Overlay for backwards-compatibility.
+type messageProxyStore struct {
 	sync.Mutex
-	protos    []ProtocolIO
-	defaultIO ProtocolIO
+	protos    []MessageProxy
+	defaultIO MessageProxy
 }
 
-func (p *protocolIOStore) getByName(name string) ProtocolIO {
+func (p *messageProxyStore) getByName(name string) MessageProxy {
 	p.Lock()
 	defer p.Unlock()
 	for _, pio := range p.protos {
@@ -169,7 +169,7 @@ func (p *protocolIOStore) getByName(name string) ProtocolIO {
 	return p.defaultIO
 }
 
-func (p *protocolIOStore) getByPacketType(t network.PacketTypeID) ProtocolIO {
+func (p *messageProxyStore) getByPacketType(t network.PacketTypeID) MessageProxy {
 	p.Lock()
 	defer p.Unlock()
 	for _, pio := range p.protos {
@@ -180,16 +180,16 @@ func (p *protocolIOStore) getByPacketType(t network.PacketTypeID) ProtocolIO {
 	return p.defaultIO
 }
 
-func newProtocolIOStore(disp network.Dispatcher, proc network.Processor) *protocolIOStore {
-	pstore := &protocolIOStore{
+func newMessageProxyStore(disp network.Dispatcher, proc network.Processor) *messageProxyStore {
+	pstore := &messageProxyStore{
 		// also add the default one
 		defaultIO: new(defaultProtoIO),
 	}
-	for name, newIO := range protocolIOFactory.factories {
+	for name, newIO := range messageProxyFactory.factories {
 		io := newIO()
 		pstore.protos = append(pstore.protos, io)
 		disp.RegisterProcessor(proc, io.PacketType())
-		log.Lvl2("Instantiating ProtocolIO", name, "at position", len(pstore.protos))
+		log.Lvl2("Instantiating MessageProxy", name, "at position", len(pstore.protos))
 	}
 	return pstore
 }
