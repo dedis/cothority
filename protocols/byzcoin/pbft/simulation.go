@@ -13,7 +13,7 @@ var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 func init() {
 	sda.SimulationRegister("ByzCoinPBFT", NewSimulation)
-	sda.GlobalProtocolRegister("ByzCoinPBFT", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) { return NewProtocol(n) })
+	sda.ProtocolRegisterName("ByzCoinPBFT", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) { return NewProtocol(n) })
 }
 
 // Simulation implements sda.Simulation interface

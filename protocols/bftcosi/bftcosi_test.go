@@ -49,14 +49,14 @@ var counters = &Counters{}
 var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 5)
+	log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSi"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
@@ -68,7 +68,7 @@ func TestThreshold(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiThr"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
@@ -85,7 +85,7 @@ func TestThreshold(t *testing.T) {
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
-		_, _, tree := local.GenBigTree(hosts, hosts, 2, true)
+		_, _, tree := local.GenBigTree(hosts, hosts, 2, true, true)
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
@@ -101,7 +101,7 @@ func TestCheckRefuse(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuse"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuse)
 	})
 
@@ -115,7 +115,7 @@ func TestCheckRefuseMore(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseMore"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseMore)
 	})
 
@@ -132,7 +132,7 @@ func TestCheckRefuseBit(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseBit"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseBit)
 	})
 
@@ -157,7 +157,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiRefuseParallel"
 
 	// Register test protocol using BFTCoSi
-	sda.GlobalProtocolRegister(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName(TestProtocolName, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewBFTCoSiProtocol(n, verifyRefuseBit)
 	})
 
@@ -192,7 +192,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := sda.NewLocalTest()
 	defer local.CloseAll()
-	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true)
+	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true, true)
 	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
@@ -221,7 +221,6 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 		done <- true
 	})
 	go node.Start()
-	log.Lvl1("Launched protocol")
 	// are we done yet?
 	wait := time.Second * 60
 	select {
@@ -238,6 +237,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 			return fmt.Errorf("%s Verification of the signature refused: %s - %+v", root.Name(), err.Error(), sig.Sig)
 		}
 		if !succeed && err == nil {
+			log.Print("Fail")
 			return fmt.Errorf("%s: Shouldn't have succeeded for %d hosts, but signed for count: %d",
 				root.Name(), nbrHosts, refuseCount)
 		}

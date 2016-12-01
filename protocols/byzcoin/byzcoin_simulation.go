@@ -16,7 +16,7 @@ import (
 
 func init() {
 	sda.SimulationRegister("ByzCoin", NewSimulation)
-	sda.GlobalProtocolRegister("ByzCoin", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+	sda.ProtocolRegisterName("ByzCoin", func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 		return NewByzCoinProtocol(n)
 	})
 }
@@ -90,7 +90,6 @@ func (m *monitorMut) Record() {
 func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
-
 	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
 	if err != nil {
 		return err
@@ -131,12 +130,12 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !
 		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
-			rComplete.Record()
 			if err := verifyBlockSignature(tni.Suite(), tni.Roster().Aggregate, sig); err != nil {
 				log.Error("Round", round, "failed:", err)
 			} else {
 				log.Lvl2("Round", round, "success")
 			}
+
 		})
 
 		// Register when the protocol is finished (all the nodes have finished)
@@ -164,6 +163,7 @@ func (e *Simulation) Run(sdaConf *sda.SimulationConfig) error {
 		// wait for the end
 		<-done
 		log.Lvl3("Round", round, "finished")
+		rComplete.Record()
 
 	}
 	return nil
