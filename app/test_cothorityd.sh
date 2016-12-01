@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_SHOW=2
 # Debug-level for server
 DBG_SRV=0
 # For easier debugging
