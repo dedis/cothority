@@ -159,7 +159,7 @@ func TestProtocolIOStore(t *testing.T) {
 	go func() {
 		// first time to wrap
 		res := <-chanProtoIOFeedback
-		assert.Equal(t, "", res)
+		require.Equal(t, "", res)
 		// second time to unwrap
 		res = <-chanProtoIOFeedback
 		require.Equal(t, "", res)
