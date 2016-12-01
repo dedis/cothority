@@ -3,6 +3,7 @@ package bftcosi
 import (
 	"crypto/sha512"
 	"errors"
+	"github.com/dedis/cothority/network"
 
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
@@ -27,6 +28,20 @@ type BFTSignature struct {
 	Msg []byte
 	// List of peers that did not want to sign.
 	Exceptions []Exception
+}
+
+func init() {
+	for _, i := range []interface{}{
+		Announce{},
+		Exception{},
+		Commitment{},
+		ChallengeCommit{},
+		ChallengePrepare{},
+		Response{},
+	} {
+		network.RegisterPacketType(i)
+	}
+
 }
 
 // Verify returns whether the verification of the signature succeeds or not.
