@@ -9,8 +9,8 @@ import (
 )
 
 func init() {
-	sda.RegisterProtocolIO(func() sda.ProtocolIO {
-		return new(ProtocolIO)
+	sda.RegisterMessageProxy(func() sda.MessageProxy {
+		return new(MessageProxy)
 	})
 }
 
@@ -41,12 +41,12 @@ type ProtocolPacket struct {
 	Resp *Response
 }
 
-// ProtocolIO implements the sda.ProtocolIO interface for the CoSi protocol.
-type ProtocolIO struct{}
+// MessageProxy implements the sda.MessageProxy interface for the CoSi protocol.
+type MessageProxy struct{}
 
-// Wrap implements the sda.ProtocolIO interface by wrapping up any of the
+// Wrap implements the sda.MessageProxy interface by wrapping up any of the
 // four-step messages into a ProtooclPacket.
-func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
+func (p *MessageProxy) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{}, error) {
 	var packet = new(ProtocolPacket)
 	packet.OverlayMessage = info
 
@@ -68,9 +68,9 @@ func (p *ProtocolIO) Wrap(msg interface{}, info *sda.OverlayMessage) (interface{
 	return packet, nil
 }
 
-// Unwrap implements the sda.ProtocolIO interface by unwraping and returning the
+// Unwrap implements the sda.MessageProxy interface by unwraping and returning the
 // specific message of one of the four steps.
-func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, error) {
+func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, error) {
 	var inner interface{}
 	packet, ok := msg.(ProtocolPacket)
 	if !ok {
@@ -94,13 +94,15 @@ func (p *ProtocolIO) Unwrap(msg interface{}) (interface{}, *sda.OverlayMessage, 
 	return inner, packet.OverlayMessage, nil
 }
 
-// PacketType implements the sda.ProtocolIO interface by returning the type of
+// PacketType implements the sda.MessageProxy interface by returning the type of
 // the ProtocolPacket.
-func (p *ProtocolIO) PacketType() network.PacketTypeID {
+func (p *MessageProxy) PacketType() network.PacketTypeID {
 	return ProtocolPacketID
 }
 
-func (p *ProtocolIO) Name() string {
+// Name implements the sda.MessageProxy interface by returning the name under
+// which cosi.MessageProxy is registered.
+func (p *MessageProxy) Name() string {
 	return Name
 }
 
