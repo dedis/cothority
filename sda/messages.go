@@ -45,8 +45,7 @@ type ProtocolMsg struct {
 // RoundID uniquely identifies a round of a protocol run
 type RoundID uuid.UUID
 
-// String returns the canonical representation of the rounds ID (wrapper around
-// uuid.UUID.String())
+// String returns the canonical representation of the rounds ID (wrapper around // uuid.UUID.String())
 func (rId RoundID) String() string {
 	return uuid.UUID(rId).String()
 }
@@ -108,6 +107,23 @@ func (t *Token) ChangeTreeNodeID(newid TreeNodeID) *Token {
 	tOther.TreeNodeID = newid
 	tOther.cacheID = TokenID(uuid.Nil)
 	return &tOther
+}
+
+// TreeNodeInfo holds the sender and the destination of the message.
+type TreeNodeInfo struct {
+	To   *Token
+	From *Token
+}
+
+// OverlayMessage contains all routing-information about the tree and the
+// roster.
+type OverlayMessage struct {
+	TreeNodeInfo *TreeNodeInfo
+
+	RequestTree   *RequestTree
+	TreeMarshal   *TreeMarshal
+	RequestRoster *RequestRoster
+	Roster        *Roster
 }
 
 // RequestTree is used to ask the parent for a given Tree
