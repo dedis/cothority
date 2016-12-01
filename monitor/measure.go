@@ -42,8 +42,8 @@ type Measure interface {
 	Record()
 }
 
-// SingleMeasure is a pair name - value we want to send
-type SingleMeasure struct {
+// SingleMeasure is a pair name - value we want to send to the monitor.
+type singleMeasure struct {
 	Name  string
 	Value float64
 }
@@ -51,9 +51,9 @@ type SingleMeasure struct {
 // TimeMeasure represents a measure regarding time: It includes the wallclock
 // time, the cpu time + the user time.
 type TimeMeasure struct {
-	Wall *SingleMeasure
-	CPU  *SingleMeasure
-	User *SingleMeasure
+	Wall *singleMeasure
+	CPU  *singleMeasure
+	User *singleMeasure
 	// non exported fields
 	// name of the time measure (basename)
 	name string
@@ -80,20 +80,23 @@ func ConnectSink(addr string) error {
 	return nil
 }
 
-// NewSingleMeasure returns a new measure freshly generated
-func NewSingleMeasure(name string, value float64) *SingleMeasure {
-	return &SingleMeasure{
+// RecordSingleMeasure sends the pair name - value to the monitor directly.
+func RecordSingleMeasure(name string, value float64) {
+	sm := newSingleMeasure(name, value)
+	sm.Record()
+}
+
+func newSingleMeasure(name string, value float64) *singleMeasure {
+	return &singleMeasure{
 		Name:  name,
 		Value: value,
 	}
 }
 
-// Record sends the value to the monitor. Reset the value to 0.
-func (sm *SingleMeasure) Record() {
-	if err := send(sm); err != nil {
-		log.Error("Error sending SingleMeasure", sm.Name, " to monitor:", err)
+func (s *singleMeasure) Record() {
+	if err := send(s); err != nil {
+		log.Error("Error sending SingleMeasure", s.Name, " to monitor:", err)
 	}
-	sm.Value = 0
 }
 
 // NewTimeMeasure return *TimeMeasure
@@ -112,7 +115,7 @@ func NewTimeMeasure(name string) *TimeMeasure {
 // - user time: *name*_user
 func (tm *TimeMeasure) Record() {
 	// Wall time measurement
-	tm.Wall = NewSingleMeasure(tm.name+"_wall", float64(time.Since(tm.lastWallTime))/1.0e9)
+	tm.Wall = newSingleMeasure(tm.name+"_wall", float64(time.Since(tm.lastWallTime))/1.0e9)
 	// CPU time measurement
 	tm.CPU.Value, tm.User.Value = getDiffRTime(tm.CPU.Value, tm.User.Value)
 	// send data
@@ -127,8 +130,8 @@ func (tm *TimeMeasure) Record() {
 // reset reset the time fields of this time measure
 func (tm *TimeMeasure) reset() {
 	cpuTimeSys, cpuTimeUser := getRTime()
-	tm.CPU = NewSingleMeasure(tm.name+"_system", cpuTimeSys)
-	tm.User = NewSingleMeasure(tm.name+"_user", cpuTimeUser)
+	tm.CPU = newSingleMeasure(tm.name+"_system", cpuTimeSys)
+	tm.User = newSingleMeasure(tm.name+"_user", cpuTimeUser)
 	tm.lastWallTime = time.Now()
 }
 
@@ -171,10 +174,10 @@ func (cm *CounterIOMeasure) Record() {
 	bRx := cm.counter.Rx()
 	// TODO Later on, we might want to do a check on the conversion between
 	// uint64 -> float64, as the MAX values are not the same.
-	read := NewSingleMeasure(cm.name+"_rx", float64(bRx-cm.baseRx))
+	read := newSingleMeasure(cm.name+"_rx", float64(bRx-cm.baseRx))
 	// creates the  written measure
 	bTx := cm.counter.Tx()
-	written := NewSingleMeasure(cm.name+"_tx", float64(bTx-cm.baseTx))
+	written := newSingleMeasure(cm.name+"_tx", float64(bTx-cm.baseTx))
 
 	// send them both
 	read.Record()
@@ -215,7 +218,7 @@ func send(v interface{}) error {
 
 // EndAndCleanup sends a message to end the logging and closes the connection
 func EndAndCleanup() {
-	if err := send(NewSingleMeasure("end", 0)); err != nil {
+	if err := send(newSingleMeasure("end", 0)); err != nil {
 		log.Error("Error while sending 'end' message:", err)
 	}
 	if err := connection.Close(); err != nil {

@@ -53,7 +53,7 @@ type Monitor struct {
 	mutexStats sync.Mutex
 
 	// channel to give new measures
-	measures chan *SingleMeasure
+	measures chan *singleMeasure
 
 	// channel to notify the end of a connection
 	// send the name of the connection when finishd
@@ -69,7 +69,7 @@ func NewMonitor(stats *Stats) *Monitor {
 		stats:        stats,
 		mutexStats:   sync.Mutex{},
 		SinkPort:     DefaultSinkPort,
-		measures:     make(chan *SingleMeasure),
+		measures:     make(chan *singleMeasure),
 		done:         make(chan string),
 		listenerLock: new(sync.Mutex),
 	}
@@ -166,7 +166,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 	dec := json.NewDecoder(conn)
 	nerr := 0
 	for {
-		measure := &SingleMeasure{}
+		measure := &singleMeasure{}
 		if err := dec.Decode(measure); err != nil {
 			// if end of connection
 			if err == io.EOF || strings.Contains(err.Error(), "closed") {
@@ -195,7 +195,7 @@ func (m *Monitor) handleConnection(conn net.Conn) {
 
 // updateMeasures will add that specific measure to the global stats
 // in a concurrently safe manner
-func (m *Monitor) update(meas *SingleMeasure) {
+func (m *Monitor) update(meas *singleMeasure) {
 	m.mutexStats.Lock()
 	// updating
 	m.stats.Update(meas)
