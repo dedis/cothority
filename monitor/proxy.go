@@ -97,7 +97,7 @@ func Proxy(redirection string) error {
 				nconn--
 				if nconn == 0 {
 					// everything is finished
-					if err := serverEnc.Encode(NewSingleMeasure("end", 0)); err != nil {
+					if err := serverEnc.Encode(newSingleMeasure("end", 0)); err != nil {
 						log.Error("Couldn't send 'end' message:", err)
 					}
 					if err := serverConn.Close(); err != nil {
@@ -133,7 +133,7 @@ func proxyConnection(conn net.Conn, done chan bool) {
 	dec := json.NewDecoder(conn)
 	nerr := 0
 	for {
-		m := SingleMeasure{}
+		m := singleMeasure{}
 		// Receive data
 		if err := dec.Decode(&m); err != nil {
 			if err == io.EOF {
