@@ -51,7 +51,7 @@ const DefaultAddress = "127.0.0.1"
 const whatsMyIP = "http://www.whatsmyip.org/"
 
 // RequestTimeOut is how long we're willing to wait for a signature.
-var RequestTimeOut = time.Second * 1
+var RequestTimeOut = time.Second * 10
 
 // InteractiveConfig uses stdin to get the [address:]PORT of the server.
 // If no address is given, whatsMyIP is used to find the public IP. In case
@@ -261,15 +261,15 @@ func checkList(list *sda.Roster, descs []string) error {
 	fmt.Printf("Checking server(s) %s: ", serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		log.Error(err)
+		fmt.Println(err)
 		return err
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		log.Errorf("Invalid signature: %v", err)
+		fmt.Println("Invalid signature: ", err)
 		return err
 	}
-	fmt.Print("Success\n")
+	fmt.Println("Success")
 	return nil
 }
 
