@@ -75,6 +75,8 @@ type ServerIdentity struct {
 	ID ServerIdentityID
 	// A slice of addresses of where that Id might be found
 	Address Address
+	// Description of the server
+	Description string
 }
 
 // ServerIdentityID uniquely identifies an ServerIdentity struct
