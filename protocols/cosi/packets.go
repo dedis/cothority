@@ -106,27 +106,26 @@ func (p *MessageProxy) Name() string {
 	return Name
 }
 
-// Announcement is broadcasted message initiated and signed by proposer.
+// Announcement is sent down the tree to start the collective signature.
 type Announcement struct {
 }
 
-// Commitment of all nodes together with the data they want
-// to have signed
+// Commitment of all nodes, aggregated over all children.
 type Commitment struct {
 	Comm abstract.Point
 }
 
-// Challenge is the challenge computed by the root-node.
+// Challenge is the challenge against the aggregate commitment.
 type Challenge struct {
 	Chall abstract.Scalar
 }
 
-// Response with which every node replies with.
+// Response of all nodes, aggregated over all children.
 type Response struct {
 	Resp abstract.Scalar
 }
 
-//Theses are pairs of TreeNode + the actual message we want to listen on.
+// Overlay-structures to retrieve the sending TreeNode.
 type chanAnnouncement struct {
 	*sda.TreeNode
 	Announcement
