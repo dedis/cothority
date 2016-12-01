@@ -17,7 +17,7 @@ import (
 // protocol for JavaScript-compatibility.
 type WebService struct {
 	ServerIdentity *network.ServerIdentity
-	services       []Service
+	services       map[string]Service
 	server         *http.Server
 	mux            *http.ServeMux
 }
@@ -49,6 +49,7 @@ func (w *WebService) Listening() {
 
 // RegisterService saves the service as being able to handle messages.
 func (w *WebService) RegisterService(service string, s Service) error {
+	w.services[service] = s
 	return nil
 }
 
