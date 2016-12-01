@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority/services/status"
-	"gopkg.in/codegangsta/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func main() {

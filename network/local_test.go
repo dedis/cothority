@@ -80,6 +80,7 @@ func TestLocalConnCloseReceive(t *testing.T) {
 		listener.Listen(func(c Conn) {
 			ready <- true
 			assert.Nil(t, c.Close())
+			ready <- true
 		})
 	}()
 	<-ready
@@ -95,12 +96,11 @@ func TestLocalConnCloseReceive(t *testing.T) {
 		t.Error("Wrong local addr for Conn!?")
 	}
 	<-ready
-
+	<-ready
 	_, err = outgoing.Receive()
 	assert.Equal(t, ErrClosed, err)
 	assert.Equal(t, ErrClosed, outgoing.Close())
 	assert.Nil(t, listener.Stop())
-
 }
 
 // Test if we can run two parallel local network using two different contexts
@@ -209,7 +209,6 @@ func testConnListener(ctx *LocalManager, done chan error, listenA, connA *Server
 		done <- err
 		return
 	}
-
 	listener.Stop()
 	<-ok
 	done <- nil
@@ -251,6 +250,8 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 			assert.Equal(t, 2, listener.manager.len())
 			// close connection
 			assert.Nil(t, c.Close())
+			incomingConn <- true
+
 		})
 		ready <- true
 	}()
@@ -273,13 +274,13 @@ func testLocalConn(t *testing.T, a1, a2 Address) {
 	assert.Equal(t, 3, nm.Msg.(SimpleMessage).I)
 	outgoingConn <- true
 
+	<-incomingConn
 	// close the incoming conn, so Receive here should return an error
 	nm, err = outgoing.Receive()
 	if err != ErrClosed {
 		t.Error("Receive should have returned an error")
 	}
 	assert.Equal(t, ErrClosed, outgoing.Close())
-
 	// close the listener
 	assert.Nil(t, listener.Stop())
 	<-ready

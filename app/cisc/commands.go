@@ -1,6 +1,6 @@
 package main
 
-import "gopkg.in/codegangsta/cli.v1"
+import "gopkg.in/urfave/cli.v1"
 
 /*
 This holds the cli-commands so the main-file is less cluttered.

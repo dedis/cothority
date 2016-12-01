@@ -7,7 +7,7 @@ import (
 )
 
 func lvlUI(l int, args ...interface{}) {
-	if debugVisible > 0 {
+	if DebugVisible() > 0 {
 		lvl(l, 3, args...)
 	} else {
 		print(l, args...)
@@ -95,6 +95,8 @@ func ErrFatalf(err error, f string, args ...interface{}) {
 }
 
 func print(lvl int, args ...interface{}) {
+	debugMut.Lock()
+	defer debugMut.Unlock()
 	switch debugVisible {
 	case FormatPython:
 		prefix := []string{"[-]", "[!]", "[X]", "[Q]", "[+]", ""}

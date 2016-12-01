@@ -43,9 +43,12 @@ func init() {
 type Service struct {
 	*sda.ServiceProcessor
 	*StorageMap
-	identitiesMutex sync.Mutex
-	skipchain       *skipchain.Client
-	path            string
+	propagateIdentity  manage.PropagationFunc
+	propagateSkipBlock manage.PropagationFunc
+	propagateConfig    manage.PropagationFunc
+	identitiesMutex    sync.Mutex
+	skipchain          *skipchain.Client
+	path               string
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -63,18 +66,8 @@ type Storage struct {
 	Data     *skipchain.SkipBlock
 }
 
-// NewProtocol is called by the Overlay when a new protocol request comes in.
+// NewProtocol is not used here.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl3(s.ServerIdentity(), "Identity received New Protocol event", conf)
-	switch tn.ProtocolName() {
-	case "Propagate":
-		pi, err := manage.NewPropagateProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
-		return pi, err
-	}
 	return nil, nil
 }
 
@@ -104,8 +97,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 
 	roster := ids.Root.Roster
-	replies, err := manage.PropagateStartAndWait(s.Context, roster,
-		&PropagateIdentity{ids}, propagateTimeout, s.Propagate)
+	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +136,7 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 		return nil, errors.New("Didn't find Identity")
 	}
 	roster := sid.Root.Roster
-	replies, err := manage.PropagateStartAndWait(s.Context, roster,
-		p, propagateTimeout, s.Propagate)
+	replies, err := s.propagateConfig(roster, p, propagateTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +205,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	}
 
 	// Propagate the vote
-	_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster, v, propagateTimeout, s.Propagate)
+	_, err = s.propagateConfig(sid.Root.Roster, v, propagateTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +227,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster,
-			usb, propagateTimeout, s.Propagate)
+		_, err = s.propagateSkipBlock(sid.Root.Roster, usb, propagateTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -251,8 +241,8 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
  * Internal messages
  */
 
-// Propagate handles propagation of all data in the identity-service
-func (s *Service) Propagate(msg network.Body) {
+// propagateConfig handles propagation of all configuration-proposals in the identity-service.
+func (s *Service) propagateConfigHandler(msg network.Body) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := ID(nil)
 	switch msg.(type) {
@@ -260,17 +250,8 @@ func (s *Service) Propagate(msg network.Body) {
 		id = msg.(*ProposeSend).ID
 	case *ProposeVote:
 		id = msg.(*ProposeVote).ID
-	case *UpdateSkipBlock:
-		id = msg.(*UpdateSkipBlock).ID
-	case *PropagateIdentity:
-		pi := msg.(*PropagateIdentity)
-		id = ID(pi.Data.Hash)
-		if s.getIdentityStorage(id) != nil {
-			log.Error("Couldn't store new identity")
-			return
-		}
-		log.Lvl3("Storing identity in", s)
-		s.setIdentityStorage(id, pi.Storage)
+	default:
+		log.Errorf("Got an unidentified propagation-request: %v", msg)
 		return
 	}
 
@@ -290,23 +271,57 @@ func (s *Service) Propagate(msg network.Body) {
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			sid.Votes[v.Signer] = v.Signature
-		case *UpdateSkipBlock:
-			skipblock := msg.(*UpdateSkipBlock).Latest
-			_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
-			if err != nil {
-				log.Error(err)
-				return
-			}
-			al, ok := msgLatest.(*Config)
-			if !ok {
-				log.Error(err)
-				return
-			}
-			sid.Data = skipblock
-			sid.Latest = al
-			sid.Proposed = nil
 		}
 	}
+}
+
+// propagateSkipBlock saves a new skipblock to the identity
+func (s *Service) propagateSkipBlockHandler(msg network.Body) {
+	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	usb, ok := msg.(*UpdateSkipBlock)
+	if !ok {
+		log.Error("Wrong message-type")
+		return
+	}
+	sid := s.getIdentityStorage(usb.ID)
+	if sid == nil {
+		log.Error("Didn't find entity in", s)
+		return
+	}
+	sid.Lock()
+	defer sid.Unlock()
+	skipblock := msg.(*UpdateSkipBlock).Latest
+	_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	al, ok := msgLatest.(*Config)
+	if !ok {
+		log.Error(err)
+		return
+	}
+	sid.Data = skipblock
+	sid.Latest = al
+	sid.Proposed = nil
+}
+
+// propagateIdentity stores a new identity in all nodes.
+func (s *Service) propagateIdentityHandler(msg network.Body) {
+	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	pi, ok := msg.(*PropagateIdentity)
+	if !ok {
+		log.Error("Got a wrong message for propagation")
+		return
+	}
+	id := ID(pi.Data.Hash)
+	if s.getIdentityStorage(id) != nil {
+		log.Error("Couldn't store new identity")
+		return
+	}
+	log.Lvl3("Storing identity in", s)
+	s.setIdentityStorage(id, pi.Storage)
+	return
 }
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
@@ -372,6 +387,22 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 		path:             path,
+	}
+	var err error
+	s.propagateIdentity, err =
+		manage.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
+	if err != nil {
+		return nil
+	}
+	s.propagateSkipBlock, err =
+		manage.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
+	if err != nil {
+		return nil
+	}
+	s.propagateConfig, err =
+		manage.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateConfigHandler)
+	if err != nil {
+		return nil
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

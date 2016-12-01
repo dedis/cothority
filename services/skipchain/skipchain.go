@@ -31,9 +31,6 @@ const skipchainBFT = "SkipchainBFT"
 func init() {
 	sda.RegisterNewService(ServiceName, newSkipchainService)
 	skipchainSID = sda.ServiceFactory.ServiceID(ServiceName)
-	sda.GlobalProtocolRegister(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, nil)
-	})
 	network.RegisterPacketType(&SkipBlockMap{})
 }
 
@@ -47,6 +44,7 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	*SkipBlockMap
+	Propagate manage.PropagationFunc
 	gMutex    sync.Mutex
 	path      string
 	verifiers map[VerifierID]SkipBlockVerifier
@@ -178,11 +176,11 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, errors.New("couldn't find skipblock")
 	}
 	child, ok := s.getSkipBlockByID(childID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, errors.New("couldn't find skipblock")
 	}
 	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()
@@ -204,19 +202,7 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	var pi sda.ProtocolInstance
-	var err error
-	switch tn.ProtocolName() {
-	case "Propagate":
-		pi, err = manage.NewPropagateProtocol(tn)
-		if err != nil {
-			return nil, err
-		}
-		pi.(*manage.Propagate).RegisterOnData(s.PropagateSkipBlock)
-	case skipchainBFT:
-		pi, err = bftcosi.NewBFTCoSiProtocol(tn, s.bftVerify)
-	}
-	return pi, err
+	return nil, nil
 }
 
 // PropagateSkipBlock will save a new SkipBlock
@@ -340,7 +326,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 
-	node, err := s.CreateProtocolService(skipchainBFT, tree)
+	node, err := s.CreateProtocolSDA(skipchainBFT, tree)
 	if err != nil {
 		return errors.New("Couldn't create new node: " + err.Error())
 	}
@@ -433,8 +419,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			}
 			roster = sb.Roster
 		}
-		replies, err := manage.PropagateStartAndWait(s.Context, roster,
-			block, propagateTimeout, s.PropagateSkipBlock)
+		replies, err := s.Propagate(roster, block, propagateTimeout)
 		if err != nil {
 			return err
 		}
@@ -531,15 +516,17 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 	}
+	var err error
+	s.Propagate, err = manage.NewPropagationFunc(c, "SkipchainPropagate", s.PropagateSkipBlock)
+	log.ErrFatal(err)
+	c.ProtocolRegister(skipchainBFT, func(n *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
+	})
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	for _, msg := range []interface{}{s.ProposeSkipBlock, s.SetChildrenSkipBlock,
-		s.GetUpdateChain} {
-		if err := s.RegisterMessage(msg); err != nil {
-			log.Fatal("Registration error for msg", msg, err)
-		}
-	}
+	log.ErrFatal(s.RegisterMessages(s.ProposeSkipBlock, s.SetChildrenSkipBlock,
+		s.GetUpdateChain))
 	if err := s.RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
 		log.Panic(err)
 	}

@@ -187,7 +187,7 @@ func MarshalRegisteredType(data Body) ([]byte, error) {
 	defer marshalLock.Unlock()
 	var msgType PacketTypeID
 	if msgType = TypeFromData(data); msgType == ErrorType {
-		return nil, fmt.Errorf("Type of message %s not registered to the network library.", reflect.TypeOf(data))
+		return nil, fmt.Errorf("type of message %s not registered to the network library", reflect.TypeOf(data))
 	}
 	b := new(bytes.Buffer)
 	if err := binary.Write(b, globalOrder, msgType); err != nil {
@@ -217,7 +217,7 @@ func UnmarshalRegisteredType(buf []byte, constructors protobuf.Constructors) (Pa
 	}
 	typ, ok := registry.get(tID)
 	if !ok {
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
+		return ErrorType, nil, fmt.Errorf("type %s not registered",
 			typ.Name())
 	}
 	ptrVal := reflect.New(typ)
@@ -238,7 +238,7 @@ func UnmarshalRegistered(buf []byte) (PacketTypeID, Body, error) {
 	}
 	typ, ok := registry.get(tID)
 	if !ok {
-		return ErrorType, nil, fmt.Errorf("Type %s not registered.",
+		return ErrorType, nil, fmt.Errorf("type %s not registered",
 			tID)
 	}
 	ptrVal := reflect.New(typ)
@@ -270,7 +270,7 @@ func (am *Packet) UnmarshalBinary(buf []byte) error {
 func NewNetworkPacket(obj Body) (*Packet, error) {
 	val := reflect.ValueOf(obj)
 	if val.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("Send takes a pointer to the message, not a copy...")
+		return nil, fmt.Errorf("Expected a pointer to the message")
 	}
 	ty := TypeFromData(obj)
 	if ty == ErrorType {

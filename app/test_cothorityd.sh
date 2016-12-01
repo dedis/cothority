@@ -3,8 +3,6 @@
 DBG_SHOW=1
 # Debug-level for server
 DBG_SRV=0
-# Debug-level for client
-DBG_CLIENT=0
 # For easier debugging
 #STATICDIR=test
 
@@ -28,18 +26,13 @@ testCothorityd(){
     sleep 1
     cp co1/group.toml .
     tail -n 4 co2/group.toml >> group.toml
-    testOK runCosi check -g group.toml
+    testOK runCo 1 check -g group.toml
     tail -n 4 co3/group.toml >> group.toml
-    testFail runCosi check -g group.toml
+    testFail runCo 1 check -g group.toml
 }
 
 testBuild(){
     testOK dbgRun ./cothorityd --help
-    testOK dbgRun ./cosi --help
-}
-
-runCosi(){
-    dbgRun ./cosi -d $DBG_CLIENT $@
 }
 
 build(){
@@ -53,7 +46,7 @@ build(){
     cd $DIR
     echo "Building in $DIR"
 
-    for appdir in $BUILDDIR/cothorityd $GOPATH/src/github.com/dedis/cosi; do
+    for appdir in $BUILDDIR/cothorityd; do
         app=$(basename $appdir)
         if [ ! -e $app -o "$BUILD" ]; then
             if ! go build -o $app $appdir/*.go; then
@@ -66,15 +59,11 @@ build(){
         co=co$n
         rm -f $co/*
         mkdir -p $co
-
-        cosi=cosi$n
-        rm -f $cosi/*
-        mkdir -p $cosi
     done
 }
 
 if [ "$1" -a "$STATICDIR" ]; then
-    rm -f $STATICDIR/{cothorityd,cosi}
+    rm -f $STATICDIR/cothorityd
 fi
 
 main

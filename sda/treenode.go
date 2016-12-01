@@ -205,24 +205,30 @@ func (n *TreeNodeInstance) RegisterHandler(c interface{}) error {
 	if cr.Kind() != reflect.Func {
 		return errors.New("Input is not function")
 	}
-	cr = cr.In(0)
-	if cr.Kind() == reflect.Slice {
+	if cr.NumOut() != 1 {
+		return errors.New("Need exactly one return argument of type error")
+	}
+	if cr.Out(0) != reflect.TypeOf((*error)(nil)).Elem() {
+		return errors.New("return-type of message-handler needs to be error")
+	}
+	ci := cr.In(0)
+	if ci.Kind() == reflect.Slice {
 		flags += AggregateMessages
-		cr = cr.Elem()
+		ci = ci.Elem()
 	}
-	if cr.Kind() != reflect.Struct {
-		return errors.New("Input is not channel of structure")
+	if ci.Kind() != reflect.Struct {
+		return errors.New("Input is not a structure")
 	}
-	if cr.NumField() != 2 {
-		return errors.New("Input is not channel of structure with 2 elements")
+	if ci.NumField() != 2 {
+		return errors.New("Input is not a structure with 2 elements")
 	}
-	if cr.Field(0).Type != reflect.TypeOf(&TreeNode{}) {
-		return errors.New("Input-channel doesn't have TreeNode as element")
+	if ci.Field(0).Type != reflect.TypeOf(&TreeNode{}) {
+		return errors.New("Input-handler doesn't have TreeNode as element")
 	}
 	// Automatic registration of the message to the network library.
 	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
-		cr.Field(1).Type),
-		cr.Field(1).Type)
+		ci.Field(1).Type),
+		ci.Field(1).Type)
 	//typ := network.RTypeToUUID(cr.Elem().Field(1).Type)
 	n.handlers[typ] = c
 	n.messageTypeFlags[typ] = flags
@@ -278,21 +284,31 @@ func (n *TreeNodeInstance) dispatchHandler(msgSlice []*ProtocolMsg) error {
 	mt := msgSlice[0].MsgType
 	to := reflect.TypeOf(n.handlers[mt]).In(0)
 	f := reflect.ValueOf(n.handlers[mt])
+	var errV reflect.Value
 	if n.HasFlag(mt, AggregateMessages) {
 		msgs := reflect.MakeSlice(to, len(msgSlice), len(msgSlice))
 		for i, msg := range msgSlice {
 			msgs.Index(i).Set(n.reflectCreate(to.Elem(), msg))
 		}
 		log.Lvl4("Dispatching aggregation to", n.ServerIdentity().Address)
-		f.Call([]reflect.Value{msgs})
+		errV = f.Call([]reflect.Value{msgs})[0]
 	} else {
 		for _, msg := range msgSlice {
-			log.Lvl4("Dispatching to", n.ServerIdentity().Address)
+			if errV.IsValid() && !errV.IsNil() {
+				// Before overwriting an error, print it out
+				log.Errorf("%s: error while dispatching message %s: %s",
+					n.Name(), reflect.TypeOf(msg.Msg),
+					errV.Interface().(error))
+			}
+			log.Lvl4("Dispatching", msg, "to", n.ServerIdentity().Address)
 			m := n.reflectCreate(to, msg)
-			f.Call([]reflect.Value{m})
+			errV = f.Call([]reflect.Value{m})[0]
 		}
 	}
 	log.Lvlf4("%s Done with handler for %s", n.Name(), f.Type())
+	if !errV.IsNil() {
+		return errV.Interface().(error)
+	}
 	return nil
 }
 
@@ -361,7 +377,8 @@ func (n *TreeNodeInstance) dispatchMsgReader() {
 			n.msgDispatchQueueMutex.Unlock()
 			err := n.dispatchMsgToProtocol(msg)
 			if err != nil {
-				log.Error("Error while dispatching message:", err)
+				log.Errorf("%s: error while dispatching message %s: %s",
+					n.Name(), reflect.TypeOf(msg.Msg), err)
 			}
 		} else {
 			n.msgDispatchQueueMutex.Unlock()

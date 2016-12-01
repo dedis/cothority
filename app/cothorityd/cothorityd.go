@@ -12,35 +12,27 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/user"
-	"path"
-	"runtime"
 
-	c "github.com/dedis/cothority/app/lib/config"
+	"github.com/dedis/cothority/app/lib/server"
 	"github.com/dedis/cothority/log"
-	"gopkg.in/codegangsta/cli.v1"
+	"gopkg.in/urfave/cli.v1"
+
 	// Empty imports to have the init-functions called which should
 	// register the protocol
 
-	"github.com/dedis/cothority/app/lib/server"
 	_ "github.com/dedis/cothority/protocols"
 	_ "github.com/dedis/cothority/services"
 )
 
-// DefaultName is the name of the binary we produce and is used to create a directory
-// folder with this name
-const DefaultName = "cothorityd"
+const (
+	// DefaultName is the name of the binary we produce and is used to create a directory
+	// folder with this name
+	DefaultName = "cothorityd"
 
-// DefaultServerConfig is the default name of a server configuration file
-const DefaultServerConfig = "config.toml"
-
-// DefaultGroupFile is the default name of a group definition file
-const DefaultGroupFile = "group.toml"
-
-// Version of this binary
-const Version = "1.1"
+	// Version of this binary
+	Version = "1.1"
+)
 
 func main() {
 
@@ -51,7 +43,7 @@ func main() {
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: getDefaultConfigFile(),
+			Value: server.GetDefaultConfigFile(DefaultName),
 			Usage: "Configuration file of the server",
 		},
 		cli.IntFlag{
@@ -85,6 +77,18 @@ func main() {
 			},
 			Flags: serverFlags,
 		},
+		{
+			Name:    "check",
+			Aliases: []string{"c"},
+			Usage:   "Check if the servers in the group definition are up and running",
+			Action:  checkConfig,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "g",
+					Usage: "Cothority group definition file",
+				},
+			},
+		},
 	}
 	cliApp.Flags = serverFlags
 	// default action
@@ -93,8 +97,8 @@ func main() {
 		return nil
 	}
 
-	cliApp.Run(os.Args)
-
+	err := cliApp.Run(os.Args)
+	log.ErrFatal(err)
 }
 
 func runServer(ctx *cli.Context) {
@@ -102,34 +106,12 @@ func runServer(ctx *cli.Context) {
 	log.SetDebugVisible(ctx.Int("debug"))
 	config := ctx.String("config")
 
-	if _, err := os.Stat(config); os.IsNotExist(err) {
-		log.Fatalf("[-] Configuration file does not exists. %s", config)
-	}
-	// Let's read the config
-	_, conode, err := c.ParseCothorityd(config)
-	if err != nil {
-		log.Fatal("Couldn't parse config:", err)
-	}
-	conode.Start()
+	server.RunServer(config)
 }
 
-func getDefaultConfigFile() string {
-	u, err := user.Current()
-	// can't get the user dir, so fallback to current working dir
-	if err != nil {
-		fmt.Print("[-] Could not get your home's directory. Switching back to current dir.")
-		if curr, err := os.Getwd(); err != nil {
-			log.Fatalf("Impossible to get the current directory. %v", err)
-		} else {
-			return path.Join(curr, DefaultServerConfig)
-		}
-	}
-	// let's try to stick to usual OS folders
-	switch runtime.GOOS {
-	case "darwin":
-		return path.Join(u.HomeDir, "Library", DefaultName, DefaultServerConfig)
-	default:
-		return path.Join(u.HomeDir, ".config", DefaultName, DefaultServerConfig)
-		// TODO WIndows ? FreeBSD ?
-	}
+// checkConfig contacts all servers and verifies if it receives a valid
+// signature from each.
+func checkConfig(c *cli.Context) error {
+	tomlFileName := c.String("g")
+	return server.CheckConfig(tomlFileName)
 }

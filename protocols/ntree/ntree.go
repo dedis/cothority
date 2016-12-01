@@ -88,7 +88,7 @@ func (p *Protocol) HandleSignRequest(msg structMessage) error {
 // HandleSignBundle is a handler responsible for adding the node's signature
 // and verifying the children's signatures (verification level can be controlled
 // by the VerifySignature flag).
-func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
+func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	log.Lvl3("Appending our signature to the collected ones and send to parent")
 	var sig SignatureBundle
 	sig.ChildSig = p.signature
@@ -128,6 +128,7 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) {
 		log.Lvl3("Leader got", len(reply), "signatures. Children:", len(p.Children()))
 		p.Done()
 	}
+	return nil
 }
 
 func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
