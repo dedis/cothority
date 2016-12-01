@@ -77,6 +77,18 @@ func main() {
 			},
 			Flags: serverFlags,
 		},
+		{
+			Name:    "check",
+			Aliases: []string{"c"},
+			Usage:   "Check if the servers in the group definition are up and running",
+			Action:  checkConfig,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "g",
+					Usage: "Cothority group definition file",
+				},
+			},
+		},
 	}
 	cliApp.Flags = serverFlags
 	// default action
@@ -85,8 +97,8 @@ func main() {
 		return nil
 	}
 
-	cliApp.Run(os.Args)
-
+	err := cliApp.Run(os.Args)
+	log.ErrFatal(err)
 }
 
 func runServer(ctx *cli.Context) {
@@ -95,4 +107,11 @@ func runServer(ctx *cli.Context) {
 	config := ctx.String("config")
 
 	server.RunServer(config)
+}
+
+// checkConfig contacts all servers and verifies if it receives a valid
+// signature from each.
+func checkConfig(c *cli.Context) error {
+	tomlFileName := c.String("g")
+	return server.CheckConfig(tomlFileName)
 }

@@ -9,7 +9,7 @@
   Description = "EPFL Cothority-server"
 
 [[servers]]
-  Address = "tcp://5.135.161.91:2000"
+  Address = "tcp://5.135.161.91:7770"
   Public = "UsanfHVs5fO+80FABsRVVq63CEwPPkRn3ScQeSeRLFE="
   Description = "Nikkolasg's server serving the cothority"
 
