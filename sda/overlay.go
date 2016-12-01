@@ -46,7 +46,7 @@ type Overlay struct {
 
 	transmitMux sync.Mutex
 
-	protoIO *protocolIOStore
+	protoIO *messageProxyStore
 }
 
 // pendingMsg is used to store messages destined for ProtocolInstances but when
@@ -55,7 +55,7 @@ type Overlay struct {
 // processed.
 type pendingMsg struct {
 	*ProtocolMsg
-	ProtocolIO
+	MessageProxy
 }
 
 // NewOverlay creates a new overlay-structure
@@ -70,7 +70,7 @@ func NewOverlay(c *Conode) *Overlay {
 		protocolInstances:  make(map[TokenID]ProtocolInstance),
 		pendingTreeMarshal: make(map[RosterID][]*TreeMarshal),
 	}
-	o.protoIO = newProtocolIOStore(c, o)
+	o.protoIO = newMessageProxyStore(c, o)
 	// messages going to protocol instances
 	c.RegisterProcessor(o,
 		SDADataMessageID,       // protocol instance's messages
@@ -84,7 +84,7 @@ func NewOverlay(c *Conode) *Overlay {
 // Process implements the Processor interface so it process the messages that it
 // wants.
 func (o *Overlay) Process(data *network.Packet) {
-	// get protocolIO or default one
+	// get messageProxy or default one
 	io := o.protoIO.getByPacketType(data.MsgType)
 	inner, info, err := io.Unwrap(data.Msg)
 	if err != nil {
@@ -118,9 +118,9 @@ func (o *Overlay) Process(data *network.Packet) {
 // - ask for the Tree
 // - create a new protocolInstance
 // - pass it to a given protocolInstance
-// io is the protocolIO to use if a specific wireformat protocol is used.
+// io is the messageProxy to use if a specific wireformat protocol is used.
 // It can be nil: in that case it fall backs to default wire protocol.
-func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg, io ProtocolIO) error {
+func (o *Overlay) TransmitMsg(sdaMsg *ProtocolMsg, io MessageProxy) error {
 	tree := o.Tree(sdaMsg.To.TreeID)
 	if tree == nil {
 		return o.requestTree(sdaMsg.ServerIdentity, sdaMsg, io)
@@ -210,7 +210,7 @@ func (o *Overlay) checkPendingMessages(t *Tree) {
 		for _, pending := range o.pendingMsg {
 			if t.ID.Equals(pending.ProtocolMsg.To.TreeID) {
 				// if this message references t, instantiate it and go
-				err := o.TransmitMsg(pending.ProtocolMsg, pending.ProtocolIO)
+				err := o.TransmitMsg(pending.ProtocolMsg, pending.MessageProxy)
 				if err != nil {
 					log.Error("TransmitMsg failed:", err)
 					continue
@@ -246,11 +246,11 @@ func (o *Overlay) checkPendingTreeMarshal(el *Roster) {
 	o.pendingTreeLock.Unlock()
 }
 
-func (o *Overlay) savePendingMsg(sdaMsg *ProtocolMsg, io ProtocolIO) {
+func (o *Overlay) savePendingMsg(sdaMsg *ProtocolMsg, io MessageProxy) {
 	o.pendingMsgLock.Lock()
 	o.pendingMsg = append(o.pendingMsg, pendingMsg{
-		ProtocolMsg: sdaMsg,
-		ProtocolIO:  io,
+		ProtocolMsg:  sdaMsg,
+		MessageProxy: io,
 	})
 	o.pendingMsgLock.Unlock()
 
@@ -260,7 +260,7 @@ func (o *Overlay) savePendingMsg(sdaMsg *ProtocolMsg, io ProtocolIO) {
 // it will put the message inside the pending list of sda message waiting to
 // have their trees.
 // io is the wrapper to use to send the message, it can be nil.
-func (o *Overlay) requestTree(si *network.ServerIdentity, sdaMsg *ProtocolMsg, io ProtocolIO) error {
+func (o *Overlay) requestTree(si *network.ServerIdentity, sdaMsg *ProtocolMsg, io MessageProxy) error {
 	o.savePendingMsg(sdaMsg, io)
 
 	var msg interface{}
@@ -340,7 +340,7 @@ func (o *Overlay) TreeNodeFromToken(t *Token) (*TreeNode, error) {
 	return tn, nil
 }
 
-func (o *Overlay) handleRequestTree(si *network.ServerIdentity, req *RequestTree, io ProtocolIO) {
+func (o *Overlay) handleRequestTree(si *network.ServerIdentity, req *RequestTree, io MessageProxy) {
 	tid := req.TreeID
 	tree := o.Tree(tid)
 	var err error
@@ -369,7 +369,7 @@ func (o *Overlay) handleRequestTree(si *network.ServerIdentity, req *RequestTree
 	}
 }
 
-func (o *Overlay) handleSendTree(si *network.ServerIdentity, tm *TreeMarshal, io ProtocolIO) {
+func (o *Overlay) handleSendTree(si *network.ServerIdentity, tm *TreeMarshal, io MessageProxy) {
 	if tm.TreeID == TreeID(uuid.Nil) {
 		log.Error("Received an empty Tree")
 		return
@@ -401,7 +401,7 @@ func (o *Overlay) handleSendTree(si *network.ServerIdentity, tm *TreeMarshal, io
 	o.RegisterTree(tree)
 }
 
-func (o *Overlay) handleRequestRoster(si *network.ServerIdentity, req *RequestRoster, io ProtocolIO) {
+func (o *Overlay) handleRequestRoster(si *network.ServerIdentity, req *RequestRoster, io MessageProxy) {
 	id := req.RosterID
 	roster := o.Roster(id)
 	var err error
@@ -442,7 +442,7 @@ func (o *Overlay) handleSendRoster(si *network.ServerIdentity, roster *Roster) {
 }
 
 // SendToTreeNode sends a message to a treeNode
-func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body, io ProtocolIO) error {
+func (o *Overlay) SendToTreeNode(from *Token, to *TreeNode, msg network.Body, io MessageProxy) error {
 	var final interface{}
 	info := &OverlayMessage{
 		TreeNodeInfo: &TreeNodeInfo{
@@ -544,7 +544,7 @@ func (o *Overlay) NewTreeNodeInstanceFromProtoName(t *Tree, name string) *TreeNo
 
 // NewTreeNodeInstanceFromProtocol takes a tree and a treenode (normally the
 // root) and and protocolID and returns a fresh TreeNodeInstance.
-func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID ProtocolID, io ProtocolIO) *TreeNodeInstance {
+func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID ProtocolID, io MessageProxy) *TreeNodeInstance {
 	tok := &Token{
 		TreeNodeID: tn.ID,
 		TreeID:     t.ID,
@@ -560,7 +560,7 @@ func (o *Overlay) NewTreeNodeInstanceFromProtocol(t *Tree, tn *TreeNode, protoID
 
 // NewTreeNodeInstanceFromService takes a tree, a TreeNode and a service ID and
 // returns a TNI.
-func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID ProtocolID, servID ServiceID, io ProtocolIO) *TreeNodeInstance {
+func (o *Overlay) NewTreeNodeInstanceFromService(t *Tree, tn *TreeNode, protoID ProtocolID, servID ServiceID, io MessageProxy) *TreeNodeInstance {
 	tok := &Token{
 		TreeNodeID: tn.ID,
 		TreeID:     t.ID,
@@ -583,7 +583,7 @@ func (o *Overlay) ServerIdentity() *network.ServerIdentity {
 // newTreeNodeInstanceFromToken is to be called by the Overlay when it receives
 // a message it does not have a treenodeinstance registered yet. The protocol is
 // already running so we should *not* generate a new RoundID.
-func (o *Overlay) newTreeNodeInstanceFromToken(tn *TreeNode, tok *Token, io ProtocolIO) *TreeNodeInstance {
+func (o *Overlay) newTreeNodeInstanceFromToken(tn *TreeNode, tok *Token, io MessageProxy) *TreeNodeInstance {
 	tni := newTreeNodeInstance(o, tok, tn, io)
 	o.instancesLock.Lock()
 	defer o.instancesLock.Unlock()
@@ -688,7 +688,7 @@ func (tnc *TreeNodeCache) GetFromToken(tok *Token) *TreeNode {
 // wire format protocol,i.e. it wraps a message into a ProtocolMessage
 type defaultProtoIO struct{}
 
-// Wrap implements the ProtocolIO interface for the Overlay.
+// Wrap implements the MessageProxy interface for the Overlay.
 func (d *defaultProtoIO) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
 	if msg != nil {
 		buff, err := network.MarshalRegisteredType(msg)
@@ -720,7 +720,7 @@ func (d *defaultProtoIO) Wrap(msg interface{}, info *OverlayMessage) (interface{
 	return returnMsg, nil
 }
 
-// Unwrap implements the ProtocolIO interface for the Overlay.
+// Unwrap implements the MessageProxy interface for the Overlay.
 func (d *defaultProtoIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, error) {
 	var returnMsg interface{}
 	var returnOverlay = new(OverlayMessage)
@@ -754,12 +754,12 @@ func (d *defaultProtoIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 	return returnMsg, returnOverlay, err
 }
 
-// Unwrap implements the ProtocolIO interface for the Overlay.
+// Unwrap implements the MessageProxy interface for the Overlay.
 func (d *defaultProtoIO) PacketType() network.PacketTypeID {
 	return network.PacketTypeID([16]byte{})
 }
 
-// Name implements the ProtocolIO interface. It returns the value "default".
+// Name implements the MessageProxy interface. It returns the value "default".
 func (d *defaultProtoIO) Name() string {
 	return "default"
 }

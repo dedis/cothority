@@ -47,7 +47,7 @@ type TreeNodeInstance struct {
 	// whether this node is closing
 	closing bool
 
-	protoIO ProtocolIO
+	protoIO MessageProxy
 }
 
 // aggregateMessages (if set) tells to aggregate messages from all children
@@ -61,7 +61,7 @@ const (
 type MsgHandler func([]*interface{})
 
 // NewNode creates a new node
-func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode, io ProtocolIO) *TreeNodeInstance {
+func newTreeNodeInstance(o *Overlay, tok *Token, tn *TreeNode, io MessageProxy) *TreeNodeInstance {
 	n := &TreeNodeInstance{overlay: o,
 		token:                tok,
 		channels:             make(map[network.PacketTypeID]interface{}),

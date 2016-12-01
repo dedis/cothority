@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/satori/go.uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -141,25 +141,25 @@ func TestProtocolAutomaticInstantiation(t *testing.T) {
 	<-chanH2
 }
 
-func TestProtocolIOFactory(t *testing.T) {
-	defer eraseAllProtocolIO()
-	RegisterProtocolIO(NewTestProtocolIOChan)
-	assert.True(t, len(protocolIOFactory.factories) == 1)
+func TestMessageProxyFactory(t *testing.T) {
+	defer eraseAllMessageProxy()
+	RegisterMessageProxy(NewTestMessageProxyChan)
+	assert.True(t, len(messageProxyFactory.factories) == 1)
 }
 
-func TestProtocolIOStore(t *testing.T) {
-	defer eraseAllProtocolIO()
+func TestMessageProxyStore(t *testing.T) {
+	defer eraseAllMessageProxy()
 	local := NewLocalTest()
 	defer local.CloseAll()
 
-	RegisterProtocolIO(NewTestProtocolIO)
+	RegisterMessageProxy(NewTestMessageProxy)
 	GlobalProtocolRegister(testProtoIOName, newTestProtocolInstance)
 	h, _, tree := local.GenTree(2, true)
 
 	go func() {
 		// first time to wrap
 		res := <-chanProtoIOFeedback
-		assert.Equal(t, "", res)
+		require.Equal(t, "", res)
 		// second time to unwrap
 		res = <-chanProtoIOFeedback
 		require.Equal(t, "", res)
@@ -172,7 +172,7 @@ func TestProtocolIOStore(t *testing.T) {
 	assert.True(t, res)
 }
 
-// ProtocolIO part
+// MessageProxy part
 var chanProtoIOCreation = make(chan bool)
 var chanProtoIOFeedback = make(chan string)
 
@@ -185,22 +185,22 @@ type OuterPacket struct {
 
 var OuterPacketType = network.RegisterPacketType(OuterPacket{})
 
-type TestProtocolIO struct{}
+type TestMessageProxy struct{}
 
-func NewTestProtocolIOChan() ProtocolIO {
+func NewTestMessageProxyChan() MessageProxy {
 	chanProtoIOCreation <- true
-	return &TestProtocolIO{}
+	return &TestMessageProxy{}
 }
 
-func NewTestProtocolIO() ProtocolIO {
-	return &TestProtocolIO{}
+func NewTestMessageProxy() MessageProxy {
+	return &TestMessageProxy{}
 }
 
-func eraseAllProtocolIO() {
-	protocolIOFactory.factories = nil
+func eraseAllMessageProxy() {
+	messageProxyFactory.factories = nil
 }
 
-func (t *TestProtocolIO) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
+func (t *TestMessageProxy) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
 	outer := &OuterPacket{}
 	inner, ok := msg.(*SimpleMessage)
 	if !ok {
@@ -212,7 +212,7 @@ func (t *TestProtocolIO) Wrap(msg interface{}, info *OverlayMessage) (interface{
 	return outer, nil
 }
 
-func (t *TestProtocolIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, error) {
+func (t *TestMessageProxy) Unwrap(msg interface{}) (interface{}, *OverlayMessage, error) {
 	if msg == nil {
 		chanProtoIOFeedback <- "message nil!"
 		return nil, nil, errors.New("message nil")
@@ -227,11 +227,11 @@ func (t *TestProtocolIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 	return real.Inner, real.Info, nil
 }
 
-func (t *TestProtocolIO) PacketType() network.PacketTypeID {
+func (t *TestMessageProxy) PacketType() network.PacketTypeID {
 	return OuterPacketType
 }
 
-func (t *TestProtocolIO) Name() string {
+func (t *TestMessageProxy) Name() string {
 	return testProtoIOName
 }
 
