@@ -81,7 +81,7 @@ type ResponseHook func(in []abstract.Scalar)
 // SignatureHook allows registering a handler when the signature is done
 type SignatureHook func(sig []byte)
 
-// NewCoSi returns a ProtocolCosi with the node set with the right channels.
+// NewProtocol returns a ProtocolCosi with the node set with the right channels.
 // Use this function like this:
 // ```
 // round := NewRound****()
