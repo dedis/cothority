@@ -55,7 +55,7 @@ type Site struct {
 	ID skipchain.SkipBlockID
 	// The Config corresponding to the Cert
 	Config *common_structs.Config
-	Cert   *Cert
+	Cert   *common_structs.Cert
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
@@ -114,7 +114,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}
 	//log.Lvlf2("SignCert(): 3")
 
-	cert := &Cert{
+	cert := &common_structs.Cert{
 		ID:        id,
 		Hash:      hash,
 		Signature: &signature,

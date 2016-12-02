@@ -20,6 +20,7 @@ import (
 	//"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/random"
 )
 
 func init() {
@@ -71,9 +72,13 @@ type Device struct {
 }
 
 type WSconfig struct {
-	//ServerID          *network.ServerIdentity
-	Public            abstract.Point
-	Private_encrypted []byte
+	ServerID *network.ServerIdentity
+	// TLS public key of the web server
+	TLSPublic abstract.Point
+	K1        abstract.Point
+	C1        abstract.Point
+	K2        abstract.Point
+	C2        abstract.Point
 }
 
 type APoint struct {
@@ -91,7 +96,8 @@ type WSInfo struct {
 
 type SiteInfo struct {
 	// Site's ID (hash of the genesis block)
-	ID skipchain.SkipBlockID
+	//ID skipchain.SkipBlockID
+	FQDN string
 	// Addresses of the site's web servers
 	WSs []WSInfo
 }
@@ -107,6 +113,24 @@ type PinState struct {
 	Window int64
 	// Time when the latest pins were accepted
 	TimePinAccept int64
+}
+
+type Cert struct {
+	// Site's ID
+	ID skipchain.SkipBlockID
+	// The pointed config's hash
+	Hash crypto.HashID
+	// The signature of the certification authority upon the 'Hash'
+	Signature *crypto.SchnorrSig
+	// The public key of the certification authority
+	Public abstract.Point
+}
+
+type CertInfo struct {
+	// Hash of the skiblock the config of which has been certified by the latest cert
+	// which is the only one that is currently valid
+	SbHash skipchain.SkipBlockID
+	Cert   *Cert
 }
 
 type Key []byte
@@ -194,8 +218,11 @@ func (c *Config) Hash() (crypto.HashID, error) {
 		// point := &APoint{Point: c.Data[k]}
 		wsconf := &WSconfig{
 			//ServerID: c.Data[k].ServerID,
-			Public:            c.Data[k].Public,
-			Private_encrypted: c.Data[k].Private_encrypted,
+			TLSPublic: c.Data[k].TLSPublic,
+			K1:        c.Data[k].K1,
+			C1:        c.Data[k].C1,
+			K2:        c.Data[k].K2,
+			C2:        c.Data[k].C2,
 		}
 		b, err := network.MarshalRegisteredType(wsconf)
 		if err != nil {
@@ -390,4 +417,32 @@ func GetConfFromSb(sb *skipchain.SkipBlock) (*Config, error) {
 		return nil, errors.New("Couldn't get type '*Config'")
 	}
 	return config, nil
+}
+
+func ElGamalEncrypt(suite abstract.Suite, pubkey abstract.Point, message []byte) (
+	K, C abstract.Point, remainder []byte) {
+	// Embed the message (or as much of it as will fit) into a curve point.
+	M, remainder := suite.Point().Pick(message, random.Stream)
+
+	if len(remainder) != 0 {
+		log.LLvlf2("message's len: %v", len(message))
+		log.LLvlf2("remainder's len: %v", len(remainder))
+	}
+
+	// ElGamal-encrypt the point to produce ciphertext (K,C).
+	k := suite.Scalar().Pick(random.Stream) // ephemeral private key
+	K = suite.Point().Mul(nil, k)           // ephemeral DH public key
+	S := suite.Point().Mul(pubkey, k)       // ephemeral DH shared secret
+	C = S.Add(S, M)                         // message blinded with secret
+	return
+}
+
+func ElGamalDecrypt(suite abstract.Suite, prikey abstract.Scalar, K, C abstract.Point) (
+	message []byte, err error) {
+
+	// ElGamal-decrypt the ciphertext (K,C) to reproduce the message.
+	S := suite.Point().Mul(K, prikey) // regenerate shared secret
+	M := suite.Point().Sub(C, S)      // use to un-blind the message
+	message, err = M.Data()           // extract the embedded data
+	return
 }

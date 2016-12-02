@@ -13,14 +13,20 @@ import (
 	"fmt"
 	//"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
-	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/sidentity"
-	"github.com/dedis/cothority/services/skipchain"
-	//"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	/*
+		"github.com/dedis/cothority/services/skipchain"
+		"github.com/dedis/crypto/config"
+		"github.com/dedis/crypto/nist"
+		"github.com/dedis/crypto/random"
+	*/
+	"github.com/dedis/cothority/network"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/ed25519"
+	"github.com/dedis/crypto/random"
 	"time"
 	//"github.com/stretchr/testify/assert"
 	//"io/ioutil"
@@ -28,25 +34,16 @@ import (
 	"testing"
 )
 
-/*
-
-func init() {
-	for _, s := range []interface{}{
-		// Structures
-		&common_structs.My_Scalar{},
-	} {
-		network.RegisterPacketType(s)
-	}
-}
-*/
-func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) *sidentity.Identity {
-	id := sidentity.NewIdentity(cothority, majority, owner, pinstate, cas, data)
+//func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) *sidentity.Identity {
+func NewTestIdentity(cothority *sda.Roster, majority int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) *sidentity.Identity {
+	id := sidentity.NewIdentity(cothority, majority, owner, ctype, cas, data)
 	id.CothorityClient = local.NewClient(sidentity.ServiceName)
 	return id
 }
 
-func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) []*sidentity.Identity {
-	ids, _ := sidentity.NewIdentityMultDevs(cothority, majority, owners, pinstate, cas, data)
+//func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) []*sidentity.Identity {
+func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) []*sidentity.Identity {
+	ids, _ := sidentity.NewIdentityMultDevs(cothority, majority, owners, ctype, cas, data)
 	for _, id := range ids {
 		id.CothorityClient = local.NewClient(sidentity.ServiceName)
 	}
@@ -59,6 +56,33 @@ func NewTestUser(username string, sitesToAttach []*common_structs.SiteInfo, loca
 	return u
 }
 
+// (Using Asymmetric crypto for encryption/decryption of the private tls keys of each of the web servers)
+// Upon return of this function, the 'data' field contains only the ServerIdentities of the web servers
+func GetWSPublicsPlusServerIDs(num_ws int, el_coth *sda.Roster, l *sda.LocalTest) ([]*sda.Conode, []*WS, []common_structs.WSInfo, map[string]*common_structs.WSconfig) {
+	hosts_ws, _, _ := l.GenTree(num_ws, true)
+	services := l.GetServices(hosts_ws, WSService)
+	wss := make([]common_structs.WSInfo, 0)
+	data := make(map[string]*common_structs.WSconfig)
+	webservers := make([]*WS, 0)
+	for index, ws := range hosts_ws {
+		wss = append(wss, common_structs.WSInfo{ServerID: ws.ServerIdentity})
+
+		// push each web server's public key to the cothority (which is going to be used for encryption of
+		// its tls private key)
+		ws := services[index].(*WS)
+		webservers = append(webservers, ws)
+		log.ErrFatal(ws.WSPushPublicKey(el_coth))
+
+		key := fmt.Sprintf("tls:%v", ws.ServerIdentity())
+		data[key] = &common_structs.WSconfig{
+			ServerID: ws.ServerIdentity(),
+		}
+	}
+	return hosts_ws, webservers, wss, data
+}
+
+/*
+// using symmetric crypto for encryption/decryption of the private tls keys of each of the web servers
 func GenerateAndConfigureWSs(num_ws int, shared_keys []common_structs.Key, l *sda.LocalTest) ([]*sda.Conode, []common_structs.WSInfo, map[string]*common_structs.WSconfig) {
 	hosts_ws, _, _ := l.GenTree(num_ws, true)
 	wss := make([]common_structs.WSInfo, 0)
@@ -128,31 +152,15 @@ func AttachWebServersToSite(id skipchain.SkipBlockID, hosts_ws []*sda.Conode, el
 	}
 	return
 }
-
-/*
-func GenerateWSPublicKeys(num_ws int, l *sda.LocalTest) ([]*sda.Conode, []common_structs.WSInfo, []*config.KeyPair, map[string]abstract.Point) {
-	hosts_ws, _, _ := l.GenTree(num_ws, true)
-	wss := make([]common_structs.WSInfo, 0)
-	data := make(map[string]abstract.Point)
-	keypairs := make([]*config.KeyPair, 0)
-	for _, h := range hosts_ws {
-		wss = append(wss, common_structs.WSInfo{ServerID: h.ServerIdentity})
-		keypair := config.NewKeyPair(network.Suite)
-		keypairs = append(keypairs, keypair)
-		key := fmt.Sprintf("tls:%v", h.ServerIdentity)
-		log.LLvlf2("%v", key)
-		data[key] = keypair.Public
-	}
-	return hosts_ws, wss, keypairs, data
-}
 */
-/*
-func Test1(t *testing.T) {
+
+func TestNormalCase(t *testing.T) {
 	l := sda.NewTCPTest()
-	hosts_coth, el_coth, _ := l.GenTree(5, true)
+	hosts_coth, el_coth, _ := l.GenTree(3, true)
 	services := l.GetServices(hosts_coth, sidentity.IdentityService)
 	for _, s := range services {
 		log.Lvl3(s.(*sidentity.Service).Identities)
+		//log.LLvlf2("%v", s.(*sidentity.Service).ServerIdentity())
 	}
 
 	hosts_ca, _, _ := l.GenTree(2, true)
@@ -162,633 +170,53 @@ func Test1(t *testing.T) {
 		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
 	}
 
-	thr := 1
-	log.Print("NEW SITE IDENTITY")
-	pinstate := &common_structs.PinState{Ctype: "device"}
-	// include into the config the tls public key of one web server
-	hosts_ws, _, _ := l.GenTree(1, true)
-	wss := make([]common_structs.WSInfo, 0)
-	data := make(map[string]abstract.Point)
-	keypairs := make([]*config.KeyPair, 0)
-	for _, h := range hosts_ws {
-		wss = append(wss, common_structs.WSInfo{ServerID: h.ServerIdentity})
-		keypair := config.NewKeyPair(network.Suite)
-		keypairs = append(keypairs, keypair)
-		key := fmt.Sprintf("tls:%v", h.ServerIdentity)
-		log.LLvlf2("%v", key)
-		data[key] = keypair.Public
-	}
-
-	c1 := NewTestIdentity(el_coth, thr, "one", pinstate, cas, data, l)
-	log.ErrFatal(c1.CreateIdentity())
-
-	log.Print("")
-	log.Print("ADDING SECOND DEVICE")
-	pinstate = &common_structs.PinState{Ctype: "device"}
-	c2 := NewTestIdentity(el_coth, thr, "two", pinstate, nil, nil, l)
-	c2.AttachToIdentity(c1.ID)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if len(c1.Config.Device) != 2 {
-		t.Fatal("Should have two owners by now")
-	}
-
-	log.LLvlf2("ATTACHING ONE WEB SERVER TO THE SITE IDENTITY: %v", c1.ID)
-	services = l.GetServices(hosts_ws, WSService)
-	for _, s := range services {
-		ws := s.(*WS)
-		log.ErrFatal(ws.WSAttach(el_coth, c1.ID, keypairs[0].Public, keypairs[0].Secret))
-		site := ws.getSiteStorage(c1.ID)
-		log.LLvlf2("WS has private: %v, public: %v for site id: %v", site.Private, site.Public, c1.ID)
-	}
-
-	defer l.CloseAll()
-
-	log.LLvlf2("ATTACHING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo := &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach := make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u1 := NewTestUser("user1", sitestoattach, l)
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-	log.LLvlf2("%v", c1.Public)
-	log.LLvlf2("%v", c2.Public)
-
-	thr = 2
-	log.Print("")
-	log.Lvlf2("NEW THRESHOLD VALUE: %v", thr)
-	c1.UpdateIdentityThreshold(thr)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if c1.Config.Threshold != thr {
-		t.Fatal("Wrong threshold")
-
-	}
-	log.Lvlf2("New threshold: %v", c1.Config.Threshold)
-
-	log.Print("")
-	log.Print("ADDING THIRD DEVICE")
-	c3 := NewTestIdentity(el_coth, thr, "three", pinstate, nil, nil, l)
-	log.ErrFatal(c3.AttachToIdentity(c1.ID))
-	c1.ProposeUpVote()
-	c2.ProposeUpVote()
-	log.ErrFatal(c1.ConfigUpdate())
-	if len(c1.Config.Device) != 3 {
-
-		t.Fatal("Should have three owners by now but got only: ", len(c1.Config.Device))
-	}
-
-	log.Print("")
-	log.Print("REVOKING FIRST IDENTITY")
-	c3.ConfigUpdate()
-	add := make(map[string]abstract.Point)
-	revoke := make(map[string]abstract.Point)
-	n := "one"
-	if _, exists := c3.Config.Device[n]; exists {
-		revoke[n] = c3.Config.Device[n].Point
-		c3.ProposeConfig(add, revoke, thr)
-		c3.ProposeUpVote()
-		c1.ProposeUpdate()
-		c1.ProposeVote(false)
-		c2.ProposeUpdate()
-		c2.ProposeVote(true)
-		log.ErrFatal(c2.ConfigUpdate())
-		if len(c2.Config.Device) != 2 {
-			t.Fatal("Should have two owners by now")
-		}
-		c3.ConfigUpdate()
-		if _, exists := c3.Config.Device[n]; exists {
-			t.Fatal("Device one should have been revoked by now")
-		}
-	}
-
-	if len(c3.Certs) != len(cas) {
-		t.Fatalf("Should have %v certs by now", len(cas))
-	}
-
-	log.LLvlf2("ATTACHING USER2 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo = &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach = make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u2 := NewTestUser("user2", sitestoattach, l)
-	log.LLvlf2("user2's pins")
-	for _, site := range u2.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	u1.ReConnect(c1.ID)
-	log.LLvlf2("user1's pins")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("c1's public key: %v", c1.Public)
-	log.LLvlf2("c2's public key: %v", c2.Public)
-	log.LLvlf2("c3's public key: %v", c3.Public)
-
-}
-
-func Test2(t *testing.T) {
-	l := sda.NewTCPTest()
-	hosts_coth, el_coth, _ := l.GenTree(5, true)
-	services := l.GetServices(hosts_coth, sidentity.IdentityService)
-	for _, s := range services {
-		log.Lvl3(s.(*sidentity.Service).Identities)
-	}
-
-	hosts_ca, _, _ := l.GenTree(2, true)
-	services = l.GetServices(hosts_ca, ca.CAService)
-	cas := make([]common_structs.CAInfo, 0)
-	for index, h := range hosts_ca {
-		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
-	}
-
-	thr := 1
-	log.Print("NEW SITE IDENTITY")
-	pinstate := &common_structs.PinState{Ctype: "device"}
-	// include into the config the tls public key of one web server
-	hosts_ws, _, _ := l.GenTree(5, true)
-	wss := make([]common_structs.WSInfo, 0)
-	data := make(map[string]abstract.Point)
-	keypairs := make([]*config.KeyPair, 0)
-	for _, h := range hosts_ws {
-		wss = append(wss, common_structs.WSInfo{ServerID: h.ServerIdentity})
-		keypair := config.NewKeyPair(network.Suite)
-		keypairs = append(keypairs, keypair)
-		key := fmt.Sprintf("tls:%v", h.ServerIdentity)
-		log.LLvlf2("%v", key)
-		data[key] = keypair.Public
-	}
-
-	c1 := NewTestIdentity(el_coth, thr, "one", pinstate, cas, data, l)
-	log.ErrFatal(c1.CreateIdentity())
-
-	time.Sleep(1000 * time.Millisecond)
-	log.Print("")
-	log.Print("ADDING SECOND DEVICE")
-	pinstate = &common_structs.PinState{Ctype: "device"}
-	c2 := NewTestIdentity(el_coth, thr, "two", pinstate, nil, nil, l)
-	c2.AttachToIdentity(c1.ID)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if len(c1.Config.Device) != 2 {
-		t.Fatal("Should have two owners by now")
-	}
-
-	log.LLvlf2("ATTACHING WEB SERVERS TO THE SITE IDENTITY: %v", c1.ID)
-	services = l.GetServices(hosts_ws, WSService)
-	for index, s := range services {
-		ws := s.(*WS)
-		log.ErrFatal(ws.WSAttach(el_coth, c1.ID, keypairs[index].Public, keypairs[index].Secret))
-		site := ws.getSiteStorage(c1.ID)
-		log.LLvlf2("WS has private: %v, public: %v for site id: %v", site.Private, site.Public, c1.ID)
-	}
-
-	defer l.CloseAll()
-
-	log.LLvlf2("ATTACHING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo := &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach := make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u1 := NewTestUser("user1", sitestoattach, l)
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-	log.LLvlf2("%v", c1.Public)
-	log.LLvlf2("%v", c2.Public)
-
-	thr = 2
-	log.Print("")
-	log.LLvlf2("NEW THRESHOLD VALUE: %v", thr)
-	c1.UpdateIdentityThreshold(thr)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if c1.Config.Threshold != thr {
-		t.Fatal("Wrong threshold")
-
-	}
-	log.Lvlf2("New threshold: %v", c1.Config.Threshold)
-
-	time.Sleep(1000 * time.Millisecond)
-	log.Print("")
-	log.LLvlf2("ADDING THIRD DEVICE")
-	c3 := NewTestIdentity(el_coth, thr, "three", pinstate, nil, nil, l)
-	log.ErrFatal(c3.AttachToIdentity(c1.ID))
-	c1.ProposeUpVote()
-	c2.ProposeUpVote()
-	log.ErrFatal(c1.ConfigUpdate())
-	if len(c1.Config.Device) != 3 {
-
-		t.Fatal("Should have three owners by now but got only: ", len(c1.Config.Device))
-	}
-
-	time.Sleep(1000 * time.Millisecond)
-	log.Print("")
-	log.Print("REVOKING FIRST IDENTITY")
-	c3.ConfigUpdate()
-	add := make(map[string]abstract.Point)
-	revoke := make(map[string]abstract.Point)
-	n := "one"
-	if _, exists := c3.Config.Device[n]; exists {
-		revoke[n] = c3.Config.Device[n].Point
-		c3.ProposeConfig(add, revoke, thr)
-		c3.ProposeUpVote()
-		c1.ProposeUpdate()
-		c1.ProposeVote(false)
-		c2.ProposeUpdate()
-		c2.ProposeVote(true)
-		log.ErrFatal(c2.ConfigUpdate())
-		if len(c2.Config.Device) != 2 {
-			t.Fatal("Should have two owners by now")
-		}
-		c3.ConfigUpdate()
-		if _, exists := c3.Config.Device[n]; exists {
-			t.Fatal("Device one should have been revoked by now")
-		}
-	}
-
-	if len(c3.Certs) != len(cas) {
-		t.Fatalf("Should have %v certs by now", len(cas))
-	}
-
-	time.Sleep(1000 * time.Millisecond)
-	log.LLvlf2("ATTACHING USER2 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo = &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach = make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u2 := NewTestUser("user2", sitestoattach, l)
-	log.LLvlf2("user2's pins")
-	for _, site := range u2.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.Printf("")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
-	log.LLvlf2("user1's pins")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("c1's public key: %v", c1.Public)
-	log.LLvlf2("c2's public key: %v", c2.Public)
-	log.LLvlf2("c3's public key: %v", c3.Public)
-
-	time.Sleep(1000 * time.Millisecond)
-	log.LLvlf2("ADDING FOURTH DEVICE")
-	c4 := NewTestIdentity(el_coth, thr, "four", pinstate, nil, nil, l)
-	log.ErrFatal(c4.AttachToIdentity(c2.ID))
-	c2.ProposeUpVote()
-	c3.ProposeUpVote()
-	log.ErrFatal(c4.ConfigUpdate())
-	if len(c4.Config.Device) != 3 {
-
-		t.Fatal("Should have three owners by now but got only: ", len(c4.Config.Device))
-	}
-
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
-	log.LLvlf2("user1's pins")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("c1's public key: %v", c1.Public)
-	log.LLvlf2("c2's public key: %v", c2.Public)
-	log.LLvlf2("c3's public key: %v", c3.Public)
-	log.LLvlf2("c4's public key: %v", c4.Public)
-
-	log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-
-	log.LLvlf2("RECONNECTING USER2 TO THE SITE IDENTITY: %v", c2.ID)
-	log.ErrFatal(u2.ReConnect(c2.ID))
-	log.LLvlf2("user2's pins")
-	for _, site := range u2.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-	log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-
-	for i := 0; i < 10; i++ {
-		time.Sleep(1000 * time.Millisecond)
-		log.LLvlf2("RECONNECTING USER2 TO THE SITE IDENTITY: %v", c2.ID)
-		log.ErrFatal(u2.ReConnect(c2.ID))
-		log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-	}
-}
-
-func Test2MultDevs(t *testing.T) {
-	l := sda.NewTCPTest()
-	hosts_coth, el_coth, _ := l.GenTree(5, true)
-	services := l.GetServices(hosts_coth, sidentity.IdentityService)
-	for _, s := range services {
-		log.Lvl3(s.(*sidentity.Service).Identities)
-	}
-
-	hosts_ca, _, _ := l.GenTree(2, true)
-	services = l.GetServices(hosts_ca, ca.CAService)
-	cas := make([]common_structs.CAInfo, 0)
-	for index, h := range hosts_ca {
-		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
-	}
-
-	thr := 1
-	log.Print("NEW SITE IDENTITY")
-	pinstate := &common_structs.PinState{Ctype: "device"}
-	// include into the config the tls public key of one web server
-	hosts_ws, _, _ := l.GenTree(5, true)
-	wss := make([]common_structs.WSInfo, 0)
-	data := make(map[string]abstract.Point)
-	keypairs := make([]*config.KeyPair, 0)
-	for _, h := range hosts_ws {
-		wss = append(wss, common_structs.WSInfo{ServerID: h.ServerIdentity})
-		keypair := config.NewKeyPair(network.Suite)
-		keypairs = append(keypairs, keypair)
-		key := fmt.Sprintf("tls:%v", h.ServerIdentity)
-		log.LLvlf2("%v", key)
-		data[key] = keypair.Public
-	}
-
-	c := NewTestIdentityMultDevs(el_coth, thr, []string{"one", "two"}, pinstate, cas, data, l)
-	c1 := c[0]
-	c2 := c[1]
-	log.ErrFatal(c1.CreateIdentityMultDevs(c))
-
-	log.ErrFatal(c1.ConfigUpdate())
-	for name, _ := range c1.Config.Device {
-		log.LLvlf2("device: %v", name)
-	}
-
-	time.Sleep(1000 * time.Millisecond)
-	log.Print("")
-	log.LLvlf2("ADDING THIRD DEVICE")
-	pinstate = &common_structs.PinState{Ctype: "device"}
-	c3 := NewTestIdentity(el_coth, thr, "threeEEEEE", pinstate, nil, nil, l)
-	log.ErrFatal(c1.ConfigUpdate())
-	for name, _ := range c1.Config.Device {
-		log.LLvlf2("device: %v", name)
-	}
-
-	log.LLvlf2("Before proposing")
-	c3.AttachToIdentity(c1.ID)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if len(c1.Config.Device) != 3 {
-		t.Fatal("Should have three owners by now")
-	}
-
-	log.LLvlf2("ATTACHING WEB SERVERS TO THE SITE IDENTITY: %v", c1.ID)
-	services = l.GetServices(hosts_ws, WSService)
-	for index, s := range services {
-		ws := s.(*WS)
-		log.ErrFatal(ws.WSAttach(el_coth, c1.ID, keypairs[index].Public, keypairs[index].Secret))
-		site := ws.getSiteStorage(c1.ID)
-		log.LLvlf2("WS has private: %v, public: %v for site id: %v", site.Private, site.Public, c1.ID)
-	}
-
-	defer l.CloseAll()
-
-	log.LLvlf2("ATTACHING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo := &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach := make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u1 := NewTestUser("user1", sitestoattach, l)
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-	log.LLvlf2("%v", c1.Public)
-	log.LLvlf2("%v", c2.Public)
-
-	thr = 2
-	log.Print("")
-	log.LLvlf2("NEW THRESHOLD VALUE: %v", thr)
-	c1.UpdateIdentityThreshold(thr)
-	c1.ProposeUpVote()
-	c1.ConfigUpdate()
-	if c1.Config.Threshold != thr {
-		t.Fatal("Wrong threshold")
-
-	}
-	log.Lvlf2("New threshold: %v", c1.Config.Threshold)
-
-	time.Sleep(1000 * time.Millisecond)
-	log.Print("")
-	log.Print("REVOKING FIRST IDENTITY")
-	c3.ConfigUpdate()
-	add := make(map[string]abstract.Point)
-	revoke := make(map[string]abstract.Point)
-	n := "one"
-	if _, exists := c3.Config.Device[n]; exists {
-		revoke[n] = c3.Config.Device[n].Point
-		c3.ProposeConfig(add, revoke, thr)
-		c3.ProposeUpVote()
-		c1.ProposeUpdate()
-		c1.ProposeVote(false)
-		c2.ProposeUpdate()
-		c2.ProposeVote(true)
-		log.ErrFatal(c2.ConfigUpdate())
-		if len(c2.Config.Device) != 2 {
-			t.Fatal("Should have two owners by now")
-		}
-		c3.ConfigUpdate()
-		if _, exists := c3.Config.Device[n]; exists {
-			t.Fatal("Device one should have been revoked by now")
-		}
-	}
-
-	if len(c3.Certs) != len(cas) {
-		t.Fatalf("Should have %v certs by now", len(cas))
-	}
-
-	time.Sleep(1000 * time.Millisecond)
-	log.LLvlf2("ATTACHING USER2 TO THE SITE IDENTITY: %v", c1.ID)
-	siteInfo = &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
-	}
-	sitestoattach = make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u2 := NewTestUser("user2", sitestoattach, l)
-	log.LLvlf2("user2's pins")
-	for _, site := range u2.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.Printf("")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
-	log.LLvlf2("user1's pins")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("c1's public key: %v", c1.Public)
-	log.LLvlf2("c2's public key: %v", c2.Public)
-	log.LLvlf2("c3's public key: %v", c3.Public)
-
-	time.Sleep(1000 * time.Millisecond)
-	log.LLvlf2("ADDING FOURTH DEVICE")
-	c4 := NewTestIdentity(el_coth, thr, "four", pinstate, nil, nil, l)
-	log.ErrFatal(c4.AttachToIdentity(c2.ID))
-	c2.ProposeUpVote()
-	c3.ProposeUpVote()
-	log.ErrFatal(c4.ConfigUpdate())
-	if len(c4.Config.Device) != 3 {
-
-		t.Fatal("Should have three owners by now but got only: ", len(c4.Config.Device))
-	}
-
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
-	log.LLvlf2("user1's pins")
-	for _, site := range u1.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-
-	log.LLvlf2("c1's public key: %v", c1.Public)
-	log.LLvlf2("c2's public key: %v", c2.Public)
-	log.LLvlf2("c3's public key: %v", c3.Public)
-	log.LLvlf2("c4's public key: %v", c4.Public)
-
-	log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-
-	log.LLvlf2("RECONNECTING USER2 TO THE SITE IDENTITY: %v", c2.ID)
-	log.ErrFatal(u2.ReConnect(c2.ID))
-	log.LLvlf2("user2's pins")
-	for _, site := range u2.WebSites {
-		pins := site.PinState.Pins
-		for index, pin := range pins {
-			log.LLvlf2("Pin: %v is %v", index, pin)
-		}
-	}
-	log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-
-	for i := 0; i < 10; i++ {
-		time.Sleep(1000 * time.Millisecond)
-		log.LLvlf2("RECONNECTING USER2 TO THE SITE IDENTITY: %v", c2.ID)
-		log.ErrFatal(u2.ReConnect(c2.ID))
-		log.LLvlf2("User2's window regarding site: %v is: %v", c2.ID, u2.WebSites[string(c2.ID)].PinState.Window)
-	}
-}
-*/
-func TestMultSites(t *testing.T) {
-	l := sda.NewTCPTest()
-	hosts_coth, el_coth, _ := l.GenTree(5, true)
-	services := l.GetServices(hosts_coth, sidentity.IdentityService)
-	for _, s := range services {
-		log.Lvl3(s.(*sidentity.Service).Identities)
-	}
-
-	hosts_ca, _, _ := l.GenTree(2, true)
-	services = l.GetServices(hosts_ca, ca.CAService)
-	cas := make([]common_structs.CAInfo, 0)
-	for index, h := range hosts_ca {
-		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
-	}
-
-	thr := 1
+	// site1
 	log.LLvlf2("")
 	log.LLvlf2("NEW SITE IDENTITY FOR SITE1")
-	pinstate := &common_structs.PinState{Ctype: "device"}
-	// include into the config the tls public key of one web server
-	//hosts_ws, wss, keypairs, data := GenerateWSPublicKeys(1, l)
-	num_ws1 := 3
-	shared_keys1 := make([]common_structs.Key, 0)
-	for i := 1; i <= num_ws1; i++ {
-		shared_key := fmt.Sprintf("site1:s%v very very very very key", i) //32 bytes
-		shared_keys1 = append(shared_keys1, common_structs.Key(shared_key))
-	}
-	hosts_ws, wss, data := GenerateAndConfigureWSs(num_ws1, shared_keys1, l)
-	c1 := NewTestIdentity(el_coth, thr, "one", pinstate, cas, data, l)
+	//pinstate := &common_structs.PinState{Ctype: "device"}
+	site1 := "site1"
+	thr := 1
+	num_ws1 := 2
+	_, webservers1, wss1, data1 := GetWSPublicsPlusServerIDs(num_ws1, el_coth, l)
+	c1 := NewTestIdentity(el_coth, thr, "one", "device", cas[0:1], data1, l)
 	log.ErrFatal(c1.CreateIdentity())
+	for _, ws := range webservers1 {
+		ws.WSAttach(site1, c1.ID, el_coth)
+	}
 
+	//site2
 	log.LLvlf2("")
 	log.LLvlf2("NEW SITE IDENTITY FOR SITE2")
-	pinstate = &common_structs.PinState{Ctype: "device"}
-	// include into the config the tls public key of one web server
-	//hosts_ws2, wss2, keypairs2, data2 := GenerateWSPublicKeys(1, l)
-	num_ws2 := 2
-	shared_keys2 := make([]common_structs.Key, 0)
-	for i := 1; i <= num_ws2; i++ {
-		shared_key := fmt.Sprintf("site2:s%v very very very very key", i) //32 bytes
-		shared_keys2 = append(shared_keys2, common_structs.Key(shared_key))
-	}
-	hosts_ws2, wss2, data2 := GenerateAndConfigureWSs(num_ws2, shared_keys2, l)
-	d1 := NewTestIdentity(el_coth, thr, "site2_one", pinstate, cas, data2, l)
+	site2 := "site2"
+	thr = 1
+	num_ws2 := 1
+	_, webservers2, wss2, data2 := GetWSPublicsPlusServerIDs(num_ws2, el_coth, l)
+	d1 := NewTestIdentity(el_coth, thr, "site2_one", "device", cas[0:1], data2, l)
 	log.ErrFatal(d1.CreateIdentity())
+	for _, ws := range webservers2 {
+		ws.WSAttach(site2, d1.ID, el_coth)
+	}
 
-	AttachWebServersToSite(c1.ID, hosts_ws, el_coth, shared_keys1, l)
+	//site3
+	log.LLvlf2("")
+	log.LLvlf2("NEW SITE IDENTITY FOR SITE3")
+	site3 := "site3"
+	thr = 2
+	num_ws3 := 3
+	_, webservers3, wss3, data3 := GetWSPublicsPlusServerIDs(num_ws3, el_coth, l)
+	e := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, l)
+	e1 := e[0]
+	e2 := e[1]
+	log.ErrFatal(e1.CreateIdentityMultDevs(e))
+	for _, ws := range webservers3 {
+		ws.WSAttach(site3, e1.ID, el_coth)
+	}
 
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", c1.ID)
-	pinstate = &common_structs.PinState{Ctype: "device"}
-	c2 := NewTestIdentity(el_coth, thr, "two", pinstate, nil, nil, l)
+	//pinstate = &common_structs.PinState{Ctype: "device"}
+	c2 := NewTestIdentity(el_coth, thr, "two", "device", nil, nil, l)
 	c2.AttachToIdentity(c1.ID)
 	c1.ProposeUpVote()
 	c1.ConfigUpdate()
@@ -796,15 +224,13 @@ func TestMultSites(t *testing.T) {
 		t.Fatal("Should have two owners by now")
 	}
 
-	AttachWebServersToSite(d1.ID, hosts_ws2, el_coth, shared_keys2, l)
-
 	defer l.CloseAll()
 
 	log.LLvlf2("")
-	log.LLvlf2("ATTACHING USER1 TO THE SITE IDENTITY: %v", c1.ID)
+	log.LLvlf2("ATTACHING USER1 TO SITE: %v (SITE IDENTITY: %v)", site1, c1.ID)
 	siteInfo := &common_structs.SiteInfo{
-		ID:  c1.ID,
-		WSs: wss,
+		FQDN: site1,
+		WSs:  wss1,
 	}
 	sitestoattach := make([]*common_structs.SiteInfo, 0)
 	sitestoattach = append(sitestoattach, siteInfo)
@@ -821,21 +247,22 @@ func TestMultSites(t *testing.T) {
 	thr = 2
 	log.LLvlf2("")
 	log.LLvlf2("NEW THRESHOLD VALUE: %v OF THE SITE IDENTITY: %v", thr, c1.ID)
-	c1.UpdateIdentityThreshold(thr)
+	c1.ProposeConfig(nil, nil, thr, nil)
 	c1.ProposeUpVote()
 	c1.ConfigUpdate()
 	if c1.Config.Threshold != thr {
 		t.Fatal("Wrong threshold")
 
 	}
-	log.Lvlf2("New threshold: %v", c1.Config.Threshold)
+	log.LLvlf2("New threshold: %v", c1.Config.Threshold)
 
+	// site2
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
-	log.LLvlf2("ATTACHING USER2 TO THE SITE IDENTITY: %v", d1.ID)
+	log.LLvlf2("ATTACHING USER2 TO SITE: %v (SITE IDENTITY: %v)", site2, d1.ID)
 	siteInfo = &common_structs.SiteInfo{
-		ID:  d1.ID,
-		WSs: wss2,
+		FQDN: site2,
+		WSs:  wss2,
 	}
 	sitestoattach = make([]*common_structs.SiteInfo, 0)
 	sitestoattach = append(sitestoattach, siteInfo)
@@ -847,6 +274,35 @@ func TestMultSites(t *testing.T) {
 			log.LLvlf2("Pin: %v is %v", index, pin)
 		}
 	}
+	log.LLvlf2("trust_window: %v", u2.WebSites[site2].PinState.Window)
+
+	log.Printf("")
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ATTACHING USER2 TO SITE: %v (SITE IDENTITY: %v)", site3, e1.ID)
+	siteInfo = &common_structs.SiteInfo{
+		FQDN: site3,
+		WSs:  wss3,
+	}
+	sitestoattach = make([]*common_structs.SiteInfo, 0)
+	sitestoattach = append(sitestoattach, siteInfo)
+	u2.NewAttachments(sitestoattach)
+	log.LLvlf2("user2's pins:")
+	for _, site := range u2.WebSites {
+		log.LLvlf2("Regarding site with FQDN: %v", site.FQDN)
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+	log.LLvlf2("trust_window: %v", u2.WebSites[site3].PinState.Window)
 
 	log.Printf("")
 	for _, site := range u1.WebSites {
@@ -858,8 +314,8 @@ func TestMultSites(t *testing.T) {
 
 	log.LLvlf2("")
 	time.Sleep(1000 * time.Millisecond)
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
 	log.LLvlf2("user1's pins")
 	for _, site := range u1.WebSites {
 		pins := site.PinState.Pins
@@ -874,7 +330,7 @@ func TestMultSites(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE IDENTITY: %v", c1.ID)
-	c3 := NewTestIdentity(el_coth, thr, "three", pinstate, nil, nil, l)
+	c3 := NewTestIdentity(el_coth, thr, "three", "device", nil, nil, l)
 	log.ErrFatal(c3.AttachToIdentity(c2.ID))
 	c1.ProposeUpVote()
 	c2.ProposeUpVote()
@@ -884,9 +340,20 @@ func TestMultSites(t *testing.T) {
 		t.Fatal("Should have three owners by now but got only: ", len(c3.Config.Device))
 	}
 
+	for i := 0; i < 3; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER1 TO THE SITE: %v", i, site1)
+		window := u1.WebSites[site1].PinState.Window
+		time_last_pin_acc := u1.WebSites[site1].PinState.TimePinAccept
+		log.LLvlf2("User1's window regarding site: %v is: %v", site1, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u1.ReConnect(site1))
+	}
+
 	log.LLvlf2("")
-	log.LLvlf2("RECONNECTING USER1 TO THE SITE IDENTITY: %v", c1.ID)
-	log.ErrFatal(u1.ReConnect(c1.ID))
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
 	log.LLvlf2("user1's pins")
 	for _, site := range u1.WebSites {
 		pins := site.PinState.Pins
@@ -898,12 +365,14 @@ func TestMultSites(t *testing.T) {
 	log.LLvlf2("c1's public key: %v", c1.Public)
 	log.LLvlf2("c2's public key: %v", c2.Public)
 
-	log.LLvlf2("User2's window regarding site: %v is: %v", d1.ID, u2.WebSites[string(d1.ID)].PinState.Window)
+	// site2
+	log.LLvlf2("%v", d1.ID)
+	log.LLvlf2("User2's window regarding site: %v is: %v", site2, u2.WebSites[site2].PinState.Window)
 
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", d1.ID)
-	d2 := NewTestIdentity(el_coth, thr, "site2_two", pinstate, nil, nil, l)
+	d2 := NewTestIdentity(el_coth, thr, "site2_two", "device", nil, nil, l)
 	log.ErrFatal(d2.AttachToIdentity(d1.ID))
 	d1.ProposeUpVote()
 	log.ErrFatal(d2.ConfigUpdate())
@@ -915,12 +384,421 @@ func TestMultSites(t *testing.T) {
 	for i := 0; i < 15; i++ {
 		time.Sleep(1000 * time.Millisecond)
 		log.LLvlf2("")
-		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, d1.ID)
-		window := u2.WebSites[string(d1.ID)].PinState.Window
-		time_last_pin_acc := u2.WebSites[string(d1.ID)].PinState.TimePinAccept
-		log.LLvlf2("User2's window regarding site: %v is: %v", d1.ID, window)
+		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE: %v", i, site2)
+		window := u2.WebSites[site2].PinState.Window
+		time_last_pin_acc := u2.WebSites[site2].PinState.TimePinAccept
+		log.LLvlf2("User2's window regarding site: %v is: %v", site2, window)
 		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
-		log.ErrFatal(u2.ReConnect(d1.ID))
+		log.ErrFatal(u2.ReConnect(site2))
+	}
+
+	log.LLvlf2("")
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+
+	serverID := wss1[0].ServerID
+	key := fmt.Sprintf("tls:%v", serverID)
+	log.LLvlf2("Web server with serverID: %v has tls public key: %v", serverID, u1.WebSites[site1].Config.Data[key].TLSPublic)
+	log.LLvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v", c2.DeviceName, site1, serverID)
+	serverIDs := make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, serverID)
+	thr = 1
+	c2.ProposeConfig(nil, nil, thr, serverIDs)
+	c2.ProposeUpVote()
+	c3.ProposeUpVote()
+	log.ErrFatal(c3.ConfigUpdate())
+	if c3.Config.Threshold != thr {
+		t.Fatal("Wrong threshold")
+
+	}
+
+	log.LLvlf2("")
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+
+	key = fmt.Sprintf("tls:%v", serverID)
+	log.LLvlf2("Web server with serverID: %v has tls public key: %v", serverID, u1.WebSites[site1].Config.Data[key].TLSPublic)
+
+	log.LLvlf2("")
+	log.LLvlf2("REVOKING FIRST IDENTITY")
+	c3.ConfigUpdate()
+	revokelist := make(map[string]abstract.Point)
+	n := "one"
+	if _, exists := c3.Config.Device[n]; exists {
+		revokelist[n] = c3.Config.Device[n].Point
+		c3.ProposeConfig(nil, revokelist, thr, nil)
+		c3.ProposeUpVote()
+		log.ErrFatal(c2.ConfigUpdate())
+		if len(c2.Config.Device) != 2 {
+			t.Fatal("Should have two owners by now")
+		}
+		c3.ConfigUpdate()
+		if _, exists := c3.Config.Device[n]; exists {
+			t.Fatal("Device one should have been revoked by now")
+		}
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE: %v", site3)
+	e3 := NewTestIdentity(el_coth, thr, "site3_three", "device", nil, nil, l)
+	log.ErrFatal(e3.AttachToIdentity(e1.ID))
+	e1.ProposeUpVote()
+	e2.ProposeUpVote()
+	log.ErrFatal(e1.ConfigUpdate())
+	if len(e1.Config.Device) != 3 {
+
+		t.Fatal("Should have three owners by now but got only: ", len(e1.Config.Device))
+	}
+
+	for i := 0; i < 3; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
+		window := u2.WebSites[site3].PinState.Window
+		time_last_pin_acc := u2.WebSites[site3].PinState.TimePinAccept
+		log.LLvlf2("User1's window regarding site: %v is: %v", site3, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u2.ReConnect(site3))
+	}
+
+}
+
+func TestSkipchainSwitch(t *testing.T) {
+	l := sda.NewTCPTest()
+	hosts_coth, el_coth, _ := l.GenTree(3, true)
+	services := l.GetServices(hosts_coth, sidentity.IdentityService)
+	for _, s := range services {
+		log.Lvl3(s.(*sidentity.Service).Identities)
+		//log.LLvlf2("%v", s.(*sidentity.Service).ServerIdentity())
+	}
+
+	hosts_ca, _, _ := l.GenTree(2, true)
+	services = l.GetServices(hosts_ca, ca.CAService)
+	cas := make([]common_structs.CAInfo, 0)
+	for index, h := range hosts_ca {
+		cas = append(cas, common_structs.CAInfo{Public: services[index].(*ca.CA).Public, ServerID: h.ServerIdentity})
+	}
+
+	// site1
+	log.LLvlf2("")
+	log.LLvlf2("NEW SITE IDENTITY FOR SITE1")
+	//pinstate := &common_structs.PinState{Ctype: "device"}
+	site1 := "site1"
+	thr := 1
+	num_ws1 := 2
+	_, webservers1, wss1, data1 := GetWSPublicsPlusServerIDs(num_ws1, el_coth, l)
+	c1 := NewTestIdentity(el_coth, thr, "one", "device", cas[0:1], data1, l)
+	log.ErrFatal(c1.CreateIdentity())
+	for _, ws := range webservers1 {
+		ws.WSAttach(site1, c1.ID, el_coth)
+	}
+
+	//site2
+	log.LLvlf2("")
+	log.LLvlf2("NEW SITE IDENTITY FOR SITE2")
+	site2 := "site2"
+	thr = 1
+	num_ws2 := 1
+	_, webservers2, wss2, data2 := GetWSPublicsPlusServerIDs(num_ws2, el_coth, l)
+	d1 := NewTestIdentity(el_coth, thr, "site2_one", "device", cas[0:1], data2, l)
+	log.ErrFatal(d1.CreateIdentity())
+	for _, ws := range webservers2 {
+		ws.WSAttach(site2, d1.ID, el_coth)
+	}
+
+	//site3
+	log.LLvlf2("")
+	log.LLvlf2("NEW SITE IDENTITY FOR SITE3")
+	site3 := "site3"
+	thr = 2
+	num_ws3 := 3
+	_, webservers3, wss3, data3 := GetWSPublicsPlusServerIDs(num_ws3, el_coth, l)
+	e := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, l)
+	e1 := e[0]
+	e2 := e[1]
+	log.ErrFatal(e1.CreateIdentityMultDevs(e))
+	for _, ws := range webservers3 {
+		ws.WSAttach(site3, e1.ID, el_coth)
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", c1.ID)
+	//pinstate = &common_structs.PinState{Ctype: "device"}
+	c2 := NewTestIdentity(el_coth, thr, "two", "device", nil, nil, l)
+	c2.AttachToIdentity(c1.ID)
+	c1.ProposeUpVote()
+	c1.ConfigUpdate()
+	if len(c1.Config.Device) != 2 {
+		t.Fatal("Should have two owners by now")
+	}
+
+	defer l.CloseAll()
+
+	log.LLvlf2("")
+	log.LLvlf2("ATTACHING USER1 TO SITE: %v (SITE IDENTITY: %v)", site1, c1.ID)
+	siteInfo := &common_structs.SiteInfo{
+		FQDN: site1,
+		WSs:  wss1,
+	}
+	sitestoattach := make([]*common_structs.SiteInfo, 0)
+	sitestoattach = append(sitestoattach, siteInfo)
+	u1 := NewTestUser("user1", sitestoattach, l)
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+	log.LLvlf2("%v", c1.Public)
+	log.LLvlf2("%v", c2.Public)
+
+	thr = 2
+	log.LLvlf2("")
+	log.LLvlf2("NEW THRESHOLD VALUE: %v OF THE SITE IDENTITY: %v", thr, c1.ID)
+	c1.ProposeConfig(nil, nil, thr, nil)
+	c1.ProposeUpVote()
+	c1.ConfigUpdate()
+	if c1.Config.Threshold != thr {
+		t.Fatal("Wrong threshold")
+
+	}
+	log.LLvlf2("New threshold: %v", c1.Config.Threshold)
+
+	// site2
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ATTACHING USER2 TO SITE: %v (SITE IDENTITY: %v)", site2, d1.ID)
+	siteInfo = &common_structs.SiteInfo{
+		FQDN: site2,
+		WSs:  wss2,
+	}
+	sitestoattach = make([]*common_structs.SiteInfo, 0)
+	sitestoattach = append(sitestoattach, siteInfo)
+	u2 := NewTestUser("user2", sitestoattach, l)
+	log.LLvlf2("user2's pins")
+	for _, site := range u2.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+	log.LLvlf2("trust_window: %v", u2.WebSites[site2].PinState.Window)
+
+	log.Printf("")
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ATTACHING USER2 TO SITE: %v (SITE IDENTITY: %v)", site3, e1.ID)
+	siteInfo = &common_structs.SiteInfo{
+		FQDN: site3,
+		WSs:  wss3,
+	}
+	sitestoattach = make([]*common_structs.SiteInfo, 0)
+	sitestoattach = append(sitestoattach, siteInfo)
+	u2.NewAttachments(sitestoattach)
+	log.LLvlf2("user2's pins:")
+	for _, site := range u2.WebSites {
+		log.LLvlf2("Regarding site with FQDN: %v", site.FQDN)
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+	log.LLvlf2("trust_window: %v", u2.WebSites[site3].PinState.Window)
+
+	log.Printf("")
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+
+	log.LLvlf2("")
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+
+	log.LLvlf2("c1's public key: %v", c1.Public)
+	log.LLvlf2("c2's public key: %v", c2.Public)
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE IDENTITY: %v", c1.ID)
+	c3 := NewTestIdentity(el_coth, thr, "three", "device", nil, nil, l)
+	log.ErrFatal(c3.AttachToIdentity(c2.ID))
+	c1.ProposeUpVote()
+	c2.ProposeUpVote()
+	log.ErrFatal(c3.ConfigUpdate())
+	if len(c3.Config.Device) != 3 {
+
+		t.Fatal("Should have three owners by now but got only: ", len(c3.Config.Device))
+	}
+
+	for i := 0; i < 3; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER1 TO THE SITE: %v", i, site1)
+		window := u1.WebSites[site1].PinState.Window
+		time_last_pin_acc := u1.WebSites[site1].PinState.TimePinAccept
+		log.LLvlf2("User1's window regarding site: %v is: %v", site1, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u1.ReConnect(site1))
+	}
+
+	log.LLvlf2("")
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+	for _, site := range u1.WebSites {
+		pins := site.PinState.Pins
+		for index, pin := range pins {
+			log.LLvlf2("Pin: %v is %v", index, pin)
+		}
+	}
+
+	log.LLvlf2("c1's public key: %v", c1.Public)
+	log.LLvlf2("c2's public key: %v", c2.Public)
+
+	// site2
+	log.LLvlf2("%v", d1.ID)
+	log.LLvlf2("User2's window regarding site: %v is: %v", site2, u2.WebSites[site2].PinState.Window)
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", d1.ID)
+	d2 := NewTestIdentity(el_coth, thr, "site2_two", "device", nil, nil, l)
+	log.ErrFatal(d2.AttachToIdentity(d1.ID))
+	d1.ProposeUpVote()
+	log.ErrFatal(d2.ConfigUpdate())
+	if len(d2.Config.Device) != 2 {
+
+		t.Fatal("Should have two owners by now but got only: ", len(d2.Config.Device))
+	}
+
+	for i := 0; i < 15; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE: %v", i, site2)
+		window := u2.WebSites[site2].PinState.Window
+		time_last_pin_acc := u2.WebSites[site2].PinState.TimePinAccept
+		log.LLvlf2("User2's window regarding site: %v is: %v", site2, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u2.ReConnect(site2))
+	}
+
+	log.LLvlf2("")
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+
+	serverID := wss1[0].ServerID
+	key := fmt.Sprintf("tls:%v", serverID)
+	log.LLvlf2("Web server with serverID: %v has tls public key: %v", serverID, u1.WebSites[site1].Config.Data[key].TLSPublic)
+	log.LLvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v", c2.DeviceName, site1, serverID)
+	serverIDs := make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, serverID)
+	thr = 1
+	c2.ProposeConfig(nil, nil, thr, serverIDs)
+	c2.ProposeUpVote()
+	c3.ProposeUpVote()
+	log.ErrFatal(c3.ConfigUpdate())
+	if c3.Config.Threshold != thr {
+		t.Fatal("Wrong threshold")
+
+	}
+
+	log.LLvlf2("")
+	log.LLvlf2("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+	log.LLvlf2("user1's pins")
+
+	key = fmt.Sprintf("tls:%v", serverID)
+	log.LLvlf2("Web server with serverID: %v has tls public key: %v", serverID, u1.WebSites[site1].Config.Data[key].TLSPublic)
+
+	log.LLvlf2("")
+	log.LLvlf2("REVOKING FIRST IDENTITY")
+	c3.ConfigUpdate()
+	revokelist := make(map[string]abstract.Point)
+	n := "one"
+	if _, exists := c3.Config.Device[n]; exists {
+		revokelist[n] = c3.Config.Device[n].Point
+		c3.ProposeConfig(nil, revokelist, thr, nil)
+		c3.ProposeUpVote()
+		log.ErrFatal(c2.ConfigUpdate())
+		if len(c2.Config.Device) != 2 {
+			t.Fatal("Should have two owners by now")
+		}
+		c3.ConfigUpdate()
+		if _, exists := c3.Config.Device[n]; exists {
+			t.Fatal("Device one should have been revoked by now")
+		}
+	}
+
+	time.Sleep(1000 * time.Millisecond)
+	log.LLvlf2("")
+	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE: %v", site3)
+	e3 := NewTestIdentity(el_coth, thr, "site3_three", "device", nil, nil, l)
+	log.ErrFatal(e3.AttachToIdentity(e1.ID))
+	e1.ProposeUpVote()
+	e2.ProposeUpVote()
+	log.ErrFatal(e1.ConfigUpdate())
+	if len(e1.Config.Device) != 3 {
+
+		t.Fatal("Should have three owners by now but got only: ", len(e1.Config.Device))
+	}
+
+	for i := 0; i < 3; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
+		window := u2.WebSites[site3].PinState.Window
+		time_last_pin_acc := u2.WebSites[site3].PinState.TimePinAccept
+		log.LLvlf2("User1's window regarding site: %v is: %v", site3, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u2.ReConnect(site3))
+	}
+
+	//compromise of site3's web servers
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.LLvlf2("ATTACKER GAINS CONTROL OVER THE WSs OF SITE: %v", site3)
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	thr = 1
+	e_fake := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_fake_one"}, "device", cas[1:2], data3, l)
+	e1_fake := e_fake[0]
+	log.ErrFatal(e1_fake.CreateIdentityMultDevs(e_fake))
+	for _, ws := range webservers3 {
+		ws.WSAttach(site3, e1_fake.ID, el_coth)
+	}
+
+	for i := 0; i < 10; i++ {
+		time.Sleep(1000 * time.Millisecond)
+		log.LLvlf2("")
+		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
+		window := u2.WebSites[site3].PinState.Window
+		time_last_pin_acc := u2.WebSites[site3].PinState.TimePinAccept
+		log.LLvlf2("User1's window regarding site: %v is: %v", site3, window)
+		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+		log.ErrFatal(u2.ReConnect(site3))
 	}
 
 }
@@ -969,3 +847,33 @@ func TestDecryption(t *testing.T) {
 
 }
 */
+
+func TestDecryption(t *testing.T) {
+
+	suite := ed25519.NewAES128SHA256Ed25519(false)
+	// Create a public/private keypair
+	a := suite.Scalar().Pick(random.Stream) // Alice's private key
+	A := suite.Point().Mul(nil, a)          // Alice's public key
+
+	// ElGamal-encrypt a message using the public key.
+	//m := []byte("The quick brown fox")
+	m := []byte("The quick brown foxThe quick brown fox123456789123")
+	log.LLvlf2("%va", string(m[0:29]))
+	log.LLvlf2("%va", string(m[29:len(m)]))
+	K1, C1, _ := common_structs.ElGamalEncrypt(suite, A, m[0:29])
+	K2, C2, _ := common_structs.ElGamalEncrypt(suite, A, m[29:len(m)])
+
+	// Decrypt it using the corresponding private key.
+	mm1, err1 := common_structs.ElGamalDecrypt(suite, a, K1, C1)
+	mm2, err2 := common_structs.ElGamalDecrypt(suite, a, K2, C2)
+
+	// Make sure it worked!
+	if err1 != nil || err2 != nil {
+		panic("decryption failed: " + err1.Error() + err2.Error())
+	}
+	if string(mm1) != string(m[0:29]) || string(mm2) != string(m[29:len(m)]) {
+		panic("decryption produced wrong output: " + string(m[0:29]) + string(m[29:len(m)]))
+	}
+	println("Decryption succeeded: " + string(m[0:29]) + string(m[29:len(m)]))
+
+}

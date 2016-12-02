@@ -12,19 +12,12 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	//"github.com/dedis/crypto/config"
 	//"github.com/dedis/crypto/cosi"
 )
-
-/*
-This is the external API to access the identity-service. It shows the methods
-used to create a new identity-skipchain, propose new configurations and how
-to vote on these configurations.
-*/
 
 func init() {
 	for _, s := range []interface{}{
@@ -38,6 +31,12 @@ func init() {
 		&skipchain.SkipBlock{},
 		&common_structs.My_Scalar{},
 		&common_structs.WSconfig{},
+
+		&common_structs.CAInfo{},
+		&common_structs.WSInfo{},
+		&common_structs.SiteInfo{},
+		&common_structs.Key{},
+
 		// API messages
 		&Connect{},
 		&ConnectReply{},
@@ -69,20 +68,23 @@ type Data struct {
 
 // WebSiteMap holds the map to the sites so it can be marshaled.
 type WebSiteMap struct {
-	WebSites map[string]*WebSite
+	WebSites map[string]*WebSite // site's FQDN is the key of the map
 }
 
 type WebSite struct {
 	sync.Mutex
+	// Site's FQDN
+	FQDN string
 	// Site's ID (hash of the genesis block)
-	ID skipchain.SkipBlockID
+	//ID skipchain.SkipBlockID
 	// Config is the latest, valid configuration of the site.
 	Config *common_structs.Config
 	// Latest known skipblock
 	Latest *skipchain.SkipBlock
 	// Pin-state
 	PinState *common_structs.PinState
-	Certs    []*ca.Cert
+	// only one not expired cert per site at a given point of time
+	Cert *common_structs.Cert
 	// Addresses of the site's web servers
 	WSs []common_structs.WSInfo
 }
@@ -103,15 +105,16 @@ func NewUser(username string, sitesToAttach []*common_structs.SiteInfo) *User {
 
 func (u *User) NewAttachments(sitesInfo []*common_structs.SiteInfo) {
 	for _, siteInfo := range sitesInfo {
-		log.LLvlf2("NewAttachments(): Trying to attach to site: %v", siteInfo.ID)
-		err := u.UserAttachTo(siteInfo)
+		log.LLvlf2("NewAttachments(): Trying to attach to site: %v", siteInfo.FQDN)
+		err := u.Connect(siteInfo)
 		if err != nil {
-			log.Lvlf2("%v", err)
+			log.LLvlf2("%v", err)
 		}
 	}
 	return
 }
 
+/*
 func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 	log.LLvlf2("UserAttachTo(): Start")
 	// Check whether we are trying or not to re-attach the user to a site identity
@@ -153,6 +156,7 @@ func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 	var cert_hash crypto.HashID
 	cert_hash, err = CertPointers(certs)
 	if err != nil {
+		log.LLvlf2("%v", err)
 		return err
 	}
 
@@ -170,15 +174,15 @@ func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 		log.LLvlf2("num of returned blocks: %v", len(sbs))
 
 		// Check that the certs do indeed point to the first returned block's config
-		/*_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
-		conf, _ := data.(*common_structs.Config)
-		hash, _ = conf.Hash()
-		log.LLvlf2("h1=%v, h2=%v", cert_hash, hash)
-		if !bytes.Equal(cert_hash, hash) {
-			log.LLvlf2("Certs do not point to the first returned skipblock's config")
-			return fmt.Errorf("Certs do not point to the first returned skipblock's config")
-		}
-		*/
+		//_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
+		//conf, _ := data.(*common_structs.Config)
+		//hash, _ = conf.Hash()
+		//log.LLvlf2("h1=%v, h2=%v", cert_hash, hash)
+		//if !bytes.Equal(cert_hash, hash) {
+		//	log.LLvlf2("Certs do not point to the first returned skipblock's config")
+		//	return fmt.Errorf("Certs do not point to the first returned skipblock's config")
+		//}
+
 
 		// TODO: check that (a) valid CA(s) has/have signed the cert(s)
 
@@ -205,6 +209,358 @@ func (u *User) UserAttachTo(siteInfo *common_structs.SiteInfo) error {
 	website.PinState.TimePinAccept = time.Now().Unix() * 1000
 	u.WebSites[string(siteInfo.ID)] = &website
 	log.LLvlf2("%v has been attached to the site identity: %v", u.UserName, siteInfo.ID)
+	return nil
+}
+*/
+
+func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
+	log.LLvlf2("Connect(): Start")
+	//id := siteInfo.ID
+	name := siteInfo.FQDN
+	// Check whether we are trying or not to re-attach the user to a site identity
+	//if _, exists := u.WebSites[string(id)]; exists {
+	if _, exists := u.WebSites[name]; exists {
+		log.LLvlf2("Trying to re-attach the user to site: %v", name)
+		return fmt.Errorf("Trying to re-attach the user to site: %v", name)
+	}
+
+	website := WebSite{
+		//ID:  id,
+		FQDN: name,
+		WSs:  siteInfo.WSs,
+		PinState: &common_structs.PinState{
+			//Window: int64(86400), // 86400ms = 1 day * 24 hours/day * 3600 sec/hour
+			Window: int64(1),
+		},
+	}
+
+	wss := website.WSs
+	serverID := wss[rand.Int()%len(wss)].ServerID
+
+	log.LLvlf2("Connect(): Before fetching skipblocks: serverID=%v, FQDN=%v", serverID, name)
+	msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}})
+	reply, _ := msg.Msg.(GetValidSbPathReply)
+	sbs := reply.Skipblocks
+	latest := sbs[len(sbs)-1]
+	cert := reply.Cert
+	log.LLvlf2("Connect(): Skipblocks fetched")
+
+	// Check whether the 'latest' skipblock is stale or not
+	_, data, _ := network.UnmarshalRegistered(latest.Data)
+	latestconf, _ := data.(*common_structs.Config)
+	err := latestconf.CheckTimeDiff(maxdiff)
+	if err != nil {
+		log.LLvlf2("Stale skipblock can not be accepted")
+		return fmt.Errorf("Stale skipblock can not be accepted")
+	}
+
+	// TODO: verify that the CA is indeed a CA (maybe by checking its public key's membership
+	// into a trusted pull of CAs' public keys?)
+
+	// Validate the signature of the CA
+	cert_hash := cert.Hash // the certified config's hash
+	err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
+	if err != nil {
+		log.LLvlf2("CA's signature doesn't verify")
+		return errors.New("CA's signature doesn't verify")
+	}
+
+	// Find the chain of blocks ('sbs_cert') starting from the one for which the cert was issued
+	var start_sb *skipchain.SkipBlock
+	start_sb = nil
+	var start_index int
+	for index, sb := range sbs {
+		_, data, _ := network.UnmarshalRegistered(sb.Data)
+		conf, _ := data.(*common_structs.Config)
+		conf_hash, _ := conf.Hash()
+
+		if bytes.Equal(cert_hash, conf_hash) {
+			start_sb = sb
+			start_index = index
+			break
+		}
+	}
+	if start_sb == nil {
+		return fmt.Errorf("Didn't find skipblock that matches the cert")
+	}
+
+	// Verify the hops starting from the skipblock for which the cert was issued
+	sbs_cert := sbs[start_index:len(sbs)]
+	ok, _ := VerifyHops(sbs_cert)
+	if !ok {
+		log.LLvlf2("Not valid hops")
+		return fmt.Errorf("Not valid hops")
+	} else {
+		website.PinState.Window = int64(1)
+		//website.PinState.Window = int64(86400)
+		log.LLvlf2("Start following the site by setting trust_window=%v", website.PinState.Window)
+		website.PinState.TimePinAccept = time.Now().Unix() * 1000
+		u.WebSites[name] = &website
+		u.Follow(name, latest, cert)
+	}
+	log.LLvlf2("Connect(): End")
+	return nil
+}
+
+// Attempt to RE-visit site "name"
+func (u *User) ReConnect(name string) error {
+	log.LLvlf2("Reconnecting user: %v to site: %v", u.UserName, name)
+	// Check whether we are trying or not to (re)visit a not yet attached site
+	if _, exists := u.WebSites[name]; !exists {
+		log.LLvlf2("Trying to (re)visit a not yet attached site (site's FQDN: %v)", name)
+		return fmt.Errorf("Trying to (re)visit a not yet attached site (site's FQDN: %v)", name)
+	}
+
+	website := u.WebSites[name]
+
+	// if now > rec + window then the pins have already expired ->  start from scratch (get
+	// new pins, certs etc) and check whether we are still following the previously following
+	// site skipchain
+	if expired := website.ExpiredPins(); expired {
+
+		same_skipchain := false
+
+		log.LLvlf2("Pins have expired!!!")
+		wss := website.WSs
+		serverID := wss[rand.Int()%len(wss)].ServerID
+
+		//msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}})
+		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}})
+		reply, _ := msg.Msg.(GetValidSbPathReply)
+		sbs := reply.Skipblocks
+		first := sbs[0]
+		latest := sbs[len(sbs)-1]
+		cert := reply.Cert
+
+		// check whether there exists an overlap or not (between the new skipblock path and the latest followed one)
+		first_not_known_index := 0 // sbs[0] is the first_not_known skipblock?
+		for index, sb := range sbs {
+			if bytes.Equal(website.Latest.Hash, sb.Hash) {
+				first_not_known_index = index + 1
+				break
+			}
+		}
+
+		if first_not_known_index >= len(sbs) {
+			// Have received not a single skipblock that is not already known & verified
+			same_skipchain = true
+		}
+
+		if !same_skipchain {
+			// If we are executing this 'then' part of the if-then-else, there exists at least one skipblock
+			// that was not previously known
+
+			// Check whether there is a valid skipblock path from the latest trusted skipblock
+			// until the 'first_not_known' returned
+			if first_not_known_index-1 >= 0 {
+				sbs_path_to_be_checked := sbs[first_not_known_index-1:]
+				ok2, _ := VerifyHops(sbs_path_to_be_checked)
+				if ok2 {
+					same_skipchain = true
+				}
+			}
+
+			if !same_skipchain {
+				// With high probability, it was the first hop that didn't verify -> skipchain-switch
+				log.LLvlf2("--------------------SKIPCHAIN-SWITCH!!!--------------------")
+				log.LLvlf2("The first hop is not valid -> Start trusting from scratch once the signature of the CA is verified")
+
+				// Check whether the 'latest' skipblock is stale or not
+				_, data, _ := network.UnmarshalRegistered(latest.Data)
+				latestconf, _ := data.(*common_structs.Config)
+				err := latestconf.CheckTimeDiff(maxdiff)
+				if err != nil {
+					log.LLvlf2("Stale skipblock can not be accepted")
+					return fmt.Errorf("Stale skipblock can not be accepted")
+				}
+
+				// TODO: verify that the "CA" is indeed a CA (maybe by checking its public key's membership
+				// into a trusted pull of CAs' public keys?)
+
+				// Verify that the cert is certifying the config of the 'first' skipblock
+				_, data, _ = network.UnmarshalRegistered(first.Data)
+				firstconf, _ := data.(*common_structs.Config)
+				firstconf_hash, _ := firstconf.Hash()
+				cert_hash := cert.Hash // should contain the certified config's hash
+				if !bytes.Equal(cert_hash, firstconf_hash) {
+					log.LLvlf2("Received cert does not point to the first returned skipblock's config!")
+					return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
+				}
+
+				// Validate the signature of the CA
+				err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
+				if err != nil {
+					log.LLvlf2("CA's signature doesn't verify")
+					return errors.New("CA's signature doesn't verify")
+				}
+
+				// Verify the hops starting from the skipblock for which the cert was issued
+				ok, _ := VerifyHops(sbs)
+				if !ok {
+					return errors.New("Got an invalid skipchain -> ABORT without following it")
+				}
+
+				website.PinState.Window = int64(1)
+				//website.PinState.Window = int64(86400)
+				log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
+				website.PinState.TimePinAccept = time.Now().Unix() * 1000
+				u.WebSites[name] = website
+				u.Follow(name, latest, cert)
+
+				/*
+						// Find the chain of blocks ('sbs_cert') starting from the one for which the cert was issued
+						var start_sb *skipchain.SkipBlock
+						start_sb = nil
+						var start_index int
+						for index, sb := range sbs {
+							_, data, _ := network.UnmarshalRegistered(sb.Data)
+							conf, _ := data.(*common_structs.Config)
+							conf_hash, _ := conf.Hash()
+
+							if bytes.Equal(cert_hash, conf_hash) {
+								start_sb = sb
+								start_index = index
+								break
+							}
+						}
+						if start_sb == nil {
+							return fmt.Errorf("Didn't find skipblock that matches the cert")
+						}
+
+					// Verify the hops starting from the skipblock for which the cert was issued
+					sbs_cert := sbs[start_index:len(sbs)]
+					ok, _ := VerifyHops(sbs_cert)
+					if !ok {
+						log.LLvlf2("Not valid hops")
+						return fmt.Errorf("Not valid hops")
+					} else {
+						website.PinState.Window = int64(1)
+						//website.PinState.Window = int64(86400)
+						log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
+						website.PinState.TimePinAccept = time.Now().Unix() * 1000
+						u.WebSites[name] = website
+						u.Follow(name, latest, cert)
+					}
+				*/
+			}
+		}
+
+		if same_skipchain {
+			// As we keep following the previously following site skipchain,
+			// the trust window should be doubled (we don't have to check the validity of the cert)
+			log.LLvlf2("Got the SAME SKIPCHAIN -> double trust window")
+			website.PinState.Window = website.PinState.Window * 2
+			website.PinState.TimePinAccept = time.Now().Unix() * 1000
+			u.WebSites[name] = website
+			u.Follow(name, latest, cert)
+		}
+
+		/*
+			msg, err := u.WSClient.Send(serverID, &Connect{ID: id})
+			if err != nil {
+				return err
+			}
+			reply, _ := msg.Msg.(ConnectReply)
+
+			latest := reply.Latest
+			certs := reply.Certs
+
+			_, data, _ := network.UnmarshalRegistered(latest.Data)
+			latestconf, _ := data.(*common_structs.Config)
+
+
+			// Check whether the certs are pointing to the same config or not
+			_, err = CertPointers(certs)
+			if err != nil {
+				return err
+			}
+
+			hash, _ := latestconf.Hash()
+			if !bytes.Equal(certs[0].Hash, hash) {
+				log.Lvlf2("Received certs are not pointing to the received skipblock, try to fetch the whole skipblock chain")
+				msg, _ = u.WSClient.Send(serverID, &GetSkipblocks{ID: id, Latest: latest})
+				reply2, _ := msg.Msg.(GetSkipblocksReply)
+				sbs := reply2.Skipblocks
+
+				// Check that the certs do indeed point to the first returned block's config
+				//	_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
+				//	conf, _ := data.(*common_structs.Config)
+				//	hash, _ = conf.Hash()
+				//	if !bytes.Equal(certs[0].Hash, hash) {
+				//		log.Lvlf2("Certs do not point to the first returned skipblock's config")
+				//		return fmt.Errorf("Certs do not point to the first returned skipblock's config")
+				//	}
+
+				// Verify the hops between each pair of subsequent blocks from the first one returned to the latest
+				log.LLvlf2("Verify the hops")
+				_, err = VerifyHops(sbs)
+				if err != nil {
+					log.LLvlf2("%v", err)
+					return err
+				}
+
+				// check whether we are still following the previously following site skipchain
+				log.LLvlf2("Latest trusted block has hash: %v, the current head has hash: %v", website.Latest.Hash, sbs[len(sbs)-1].Hash)
+				msg, _ = u.WSClient.Send(serverID, &GetValidSbPath{ID: id, Hash1: website.Latest.Hash, Hash2: sbs[len(sbs)-1].Hash})
+				reply3, _ := msg.Msg.(GetValidSbPathReply)
+				sbs = reply3.Skipblocks
+
+				log.LLvlf2("Verify the hops2")
+				ok, _ := VerifyHops(sbs)
+				if !ok {
+					// start trusting from scratch
+					log.LLvlf2("Start trusting from scratch")
+					website.PinState.Window = int64(86400)
+				} else {
+					// as we keep following the previously following site skipchain,
+					// the trust window should be doubled
+					log.LLvlf2("Doubled trust window")
+					website.PinState.Window = website.PinState.Window * 2
+				}
+				website.PinState.TimePinAccept = time.Now().Unix() * 1000
+				u.WebSites[string(id)] = website
+
+				u.Follow(id, reply.Latest, reply.Certs)
+			}
+		*/
+
+	} else {
+		var err error
+		log.LLvlf2("Pins are still valid")
+		// follow the evolution of the site skipchain to get the latest valid tls keys
+		wss := website.WSs
+		serverID := wss[rand.Int()%len(wss)].ServerID
+		log.LLvlf2("Challenged web server has address: %v", serverID)
+		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}})
+		reply, _ := msg.Msg.(GetValidSbPathReply)
+		sbs := reply.Skipblocks
+		ok, _ := VerifyHops(sbs)
+		if !ok {
+			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
+			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
+		}
+		u.Follow(name, sbs[len(sbs)-1], nil)
+
+		// Pins still valid, try to use the existent tls public key in order to communicate
+		// with the webserver
+		key := fmt.Sprintf("tls:%v", serverID)
+		ptls := website.Config.Data[key].TLSPublic
+		bytess, _ := GenerateRandomBytes(10)
+		challenge := crypto.HashID(bytess)
+		msg, err = u.WSClient.Send(serverID, &ChallengeReq{FQDN: name, Challenge: challenge})
+		if err != nil {
+			return err
+		}
+		reply2, _ := msg.Msg.(ChallengeReply)
+		sig := reply2.Signature
+		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
+		if err != nil {
+			log.LLvlf2("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
+			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
+		}
+		log.LLvlf2("Tls private key matches")
+
+	}
 	return nil
 }
 
@@ -263,134 +619,6 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 	}
 	return true, nil
 }
-
-// Attempt to RE-visit a site with site identity 'ID' (hash of the genesis skipblock)
-func (u *User) ReConnect(id skipchain.SkipBlockID) error {
-	log.LLvlf2("Reconnecting user: %v to the site id: %v", u.UserName, id)
-	// Check whether we are trying or not to (re)visit a not yet attached site
-	if _, exists := u.WebSites[string(id)]; !exists {
-		log.LLvlf2("Trying to (re)visit a not yet attached site (site identity: %v)", id)
-		return fmt.Errorf("Trying to (re)visit a not yet attached site (site identity: %v)", id)
-	}
-
-	website := u.WebSites[string(id)]
-
-	// if now > rec + window then the pins have already expired ->  start from scratch (get
-	// new pins, certs etc) and check whether we are still following the previously following
-	// site skipchain
-	if expired := website.ExpiredPins(); expired {
-		// TODO: chech whether the certs are signed or not by keys that are known to belong
-		// to existing CAs
-		log.LLvlf2("Pins have expired!!!")
-		wss := website.WSs
-		serverID := wss[rand.Int()%len(wss)].ServerID
-		msg, err := u.WSClient.Send(serverID, &Connect{ID: id})
-		if err != nil {
-			return err
-		}
-		reply, _ := msg.Msg.(ConnectReply)
-
-		latest := reply.Latest
-		certs := reply.Certs
-
-		_, data, _ := network.UnmarshalRegistered(latest.Data)
-		latestconf, _ := data.(*common_structs.Config)
-
-		// Check whether the certs are pointing to the same config or not
-		_, err = CertPointers(certs)
-		if err != nil {
-			return err
-		}
-
-		hash, _ := latestconf.Hash()
-		if !bytes.Equal(certs[0].Hash, hash) {
-			log.Lvlf2("Received certs are not pointing to the received skipblock, try to fetch the whole skipblock chain")
-			msg, _ = u.WSClient.Send(serverID, &GetSkipblocks{ID: id, Latest: latest})
-			reply2, _ := msg.Msg.(GetSkipblocksReply)
-			sbs := reply2.Skipblocks
-
-			// Check that the certs do indeed point to the first returned block's config
-			/*	_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
-				conf, _ := data.(*common_structs.Config)
-				hash, _ = conf.Hash()
-				if !bytes.Equal(certs[0].Hash, hash) {
-					log.Lvlf2("Certs do not point to the first returned skipblock's config")
-					return fmt.Errorf("Certs do not point to the first returned skipblock's config")
-				}
-			*/
-			// Verify the hops between each pair of subsequent blocks from the first one returned to the latest
-			log.LLvlf2("Verify the hops")
-			_, err = VerifyHops(sbs)
-			if err != nil {
-				log.LLvlf2("%v", err)
-				return err
-			}
-
-			// check whether we are still following the previously following site skipchain
-			log.LLvlf2("Latest trusted block has hash: %v, the current head has hash: %v", website.Latest.Hash, sbs[len(sbs)-1].Hash)
-			msg, _ = u.WSClient.Send(serverID, &GetValidSbPath{ID: id, Sb1: website.Latest, Sb2: sbs[len(sbs)-1]})
-			reply3, _ := msg.Msg.(GetValidSbPathReply)
-			sbs = reply3.Skipblocks
-
-			log.LLvlf2("Verify the hops2")
-			ok, _ := VerifyHops(sbs)
-			if !ok {
-				// start trusting from scratch
-				log.LLvlf2("Start trusting from scratch")
-				website.PinState.Window = int64(86400)
-			} else {
-				// as we keep following the previously following site skipchain,
-				// the trust window should be doubled
-				log.LLvlf2("Doubled trust window")
-				website.PinState.Window = website.PinState.Window * 2
-			}
-			website.PinState.TimePinAccept = time.Now().Unix() * 1000
-			u.WebSites[string(id)] = website
-
-			u.Follow(id, reply.Latest, reply.Certs)
-		}
-
-	} else {
-		var err error
-		log.LLvlf2("Pins still valid")
-		// follow the evolution of the site skipchain to get the latest valid tls keys
-		wss := website.WSs
-		serverID := wss[rand.Int()%len(wss)].ServerID
-		log.LLvlf2("Challenged web server has address: %v", serverID)
-		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{ID: id, Sb1: website.Latest, Sb2: nil})
-		reply, _ := msg.Msg.(GetValidSbPathReply)
-		sbs := reply.Skipblocks
-		ok, _ := VerifyHops(sbs)
-		if !ok {
-			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
-			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
-		}
-
-		u.Follow(id, sbs[len(sbs)-1], nil)
-
-		// pins still valid, try to use the existent tls public key in order to communicate
-		// with the webserver
-		key := fmt.Sprintf("tls:%v", serverID)
-		ptls := website.Config.Data[key].Public
-		bytess, _ := GenerateRandomBytes(10)
-		challenge := crypto.HashID(bytess)
-		msg, err = u.WSClient.Send(serverID, &ChallengeReq{ID: id, Challenge: challenge})
-		if err != nil {
-			return err
-		}
-		reply2, _ := msg.Msg.(ChallengeReply)
-		sig := reply2.Signature
-		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
-		if err != nil {
-			log.LLvlf2("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
-			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
-		}
-		log.LLvlf2("Tls private key matches")
-
-	}
-	return nil
-}
-
 func (website *WebSite) ExpiredPins() bool {
 	now := time.Now().Unix() * 1000
 	log.LLvlf2("Now: %v, TimePinAccept: %v, Window: %v", now, website.PinState.TimePinAccept, website.PinState.Window)
@@ -402,36 +630,11 @@ func (website *WebSite) ExpiredPins() bool {
 	return false
 }
 
-func CertPointers(certs []*ca.Cert) (crypto.HashID, error) {
-	//log.LLvlf2("CertPointers(): Start")
-	// TODO: what happens when returned certs are pointing to different configs?????
-	// Check that the certs are pointing to the same config
-	ok := true
-	prev := certs[0]
-	for index, cert := range certs {
-		curr := cert
-		if index > 0 {
-			if !bytes.Equal(prev.Hash, curr.Hash) {
-				log.Lvlf2("Certs are not pointing to the same config")
-				ok = false
-				break
-			}
-		}
-		prev = curr
-	}
-	if !ok {
-		return nil, fmt.Errorf("Certs are not pointing to the same config")
-	}
-	hash := prev.Hash
-	//log.LLvlf2("CertPointers(): End")
-	return hash, nil
-}
-
-func (u *User) Follow(id skipchain.SkipBlockID, block *skipchain.SkipBlock, certs []*ca.Cert) {
+func (u *User) Follow(name string, block *skipchain.SkipBlock, cert *common_structs.Cert) {
 	_, data, _ := network.UnmarshalRegistered(block.Data)
 	conf, _ := data.(*common_structs.Config)
 
-	website := u.WebSites[string(id)]
+	website := u.WebSites[name]
 	website.Config = conf
 	website.Latest = block
 
@@ -444,15 +647,15 @@ func (u *User) Follow(id skipchain.SkipBlockID, block *skipchain.SkipBlock, cert
 	website.PinState.Pins = pins
 	//website.PinState.TimePinAccept = time.Now().Unix() * 1000
 
-	if certs != nil {
-		website.Certs = certs
+	if cert != nil {
+		website.Cert = cert
 	}
 
 	// TODO: what happens with webserver insertions/deletions
 	// & what happens with fresh certs? (the associated fields should
 	// be updated)
 
-	u.WebSites[string(id)] = website
+	u.WebSites[name] = website
 	return
 }
 
@@ -466,3 +669,32 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 
 	return b, nil
 }
+
+/*
+func CertPointers(certs []*ca.Cert) (crypto.HashID, error) {
+	//log.LLvlf2("CertPointers(): Start")
+	// TODO: what happens when returned certs are pointing to different configs?????
+	// Check that the certs are pointing to the same config
+	ok := true
+	prev := certs[0]
+	for index, cert := range certs {
+		log.LLvlf2("index: %v", index)
+		curr := cert
+		if index > 0 {
+			if !bytes.Equal(prev.Hash, curr.Hash) {
+				log.LLvlf2("Certs are not pointing to the same config")
+				log.LLvlf2("hash%v: %v, hash%v: %v", index-1, prev.Hash, index, curr.Hash)
+				ok = false
+				break
+			}
+		}
+		prev = curr
+	}
+	if !ok {
+		return nil, fmt.Errorf("Certs are not pointing to the same config")
+	}
+	hash := prev.Hash
+	//log.LLvlf2("CertPointers(): End")
+	return hash, nil
+}
+*/

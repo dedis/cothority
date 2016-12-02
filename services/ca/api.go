@@ -56,7 +56,7 @@ type Data struct {
 	Proposed *common_structs.Config
 	CAs      []common_structs.CAInfo
 	// The available certs
-	Certs []*Cert
+	Certs []*common_structs.Cert
 }
 
 func NewCSRDispatcher() *CSRDispatcher {
@@ -65,13 +65,13 @@ func NewCSRDispatcher() *CSRDispatcher {
 	}
 }
 
-func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.SkipBlockID) ([]*Cert, error) {
+func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.SkipBlockID) ([]*common_structs.Cert, error) {
 	log.Print("CSRDispatcher(): Start")
-
+	d.Certs = make([]*common_structs.Cert, 0)
 	d.Data.ID = id
 	d.Data.Proposed = config
 	d.Data.CAs = config.CAs
-
+	log.LLvlf2("SignCert(): Start with %v certs", len(d.Certs))
 	// Dispatch the CSR to all the listed CAs
 	for _, ca := range d.CAs {
 		public := ca.Public
@@ -100,6 +100,6 @@ func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.Ski
 		d.Certs = append(d.Certs, cert)
 		//log.Print("CSRDispatcher(): 5")
 	}
-	log.Lvlf2("CSRDispatcher(): End: Certs signed properly")
+	log.LLvlf2("CSRDispatcher(): End: %v certs signed properly", len(d.Certs))
 	return d.Certs, nil
 }

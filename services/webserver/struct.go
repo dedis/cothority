@@ -11,8 +11,7 @@ import (
 	//"github.com/dedis/cothority/log"
 	//"github.com/dedis/cothority/network"
 	//"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/ca"
-	//"github.com/dedis/cothority/services/common_structs"
+	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	//"github.com/dedis/crypto/abstract"
 )
@@ -51,7 +50,7 @@ type Connect struct {
 
 type ConnectReply struct {
 	Latest *skipchain.SkipBlock
-	Certs  []*ca.Cert
+	Certs  []*common_structs.Cert
 }
 
 type Update struct {
@@ -60,7 +59,7 @@ type Update struct {
 
 type UpdateReply struct {
 	Latest *skipchain.SkipBlock
-	Certs  []*ca.Cert
+	Certs  []*common_structs.Cert
 }
 
 type GetSkipblocks struct {
@@ -73,17 +72,18 @@ type GetSkipblocksReply struct {
 }
 
 type GetValidSbPath struct {
-	ID  skipchain.SkipBlockID
-	Sb1 *skipchain.SkipBlock
-	Sb2 *skipchain.SkipBlock
+	FQDN  string
+	Hash1 skipchain.SkipBlockID
+	Hash2 skipchain.SkipBlockID
 }
 
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
+	Cert       *common_structs.Cert
 }
 
 type ChallengeReq struct {
-	ID skipchain.SkipBlockID
+	FQDN string
 	// The latest known tls key for the web server we try to visit
 	Challenge crypto.HashID
 }

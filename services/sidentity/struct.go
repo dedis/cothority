@@ -9,12 +9,11 @@ import (
 
 	"github.com/dedis/cothority/crypto"
 	//"github.com/dedis/cothority/log"
-	//"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
-	//"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/abstract"
 )
 
 const MaxUint = ^uint(0)
@@ -82,7 +81,7 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*skipchain.SkipBlock
-	Certs  []*ca.Cert
+	Cert   *common_structs.Cert
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It
@@ -140,11 +139,38 @@ type GetSkipblocksReply struct {
 }
 
 type GetValidSbPath struct {
-	ID  skipchain.SkipBlockID
-	Sb1 *skipchain.SkipBlock
-	Sb2 *skipchain.SkipBlock
+	ID    skipchain.SkipBlockID
+	Hash1 skipchain.SkipBlockID
+	Hash2 skipchain.SkipBlockID
 }
-
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
+}
+
+type PushPublicKey struct {
+	//ID       skipchain.SkipBlockID
+	Roster   *sda.Roster
+	Public   abstract.Point
+	ServerID *network.ServerIdentity
+}
+
+type PushPublicKeyReply struct {
+}
+
+type PullPublicKey struct {
+	//ID       skipchain.SkipBlockID
+	ServerID *network.ServerIdentity
+}
+
+type PullPublicKeyReply struct {
+	Public abstract.Point
+}
+
+type GetCert struct {
+	ID skipchain.SkipBlockID
+}
+
+type GetCertReply struct {
+	SbHash skipchain.SkipBlockID
+	Cert   *common_structs.Cert
 }
