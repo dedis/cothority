@@ -41,7 +41,7 @@ func (pId PacketTypeID) String() string {
 	if ok {
 		return t.String()
 	}
-	return fmt.Sprintf("%x", uuid.UUID(pId))
+	return uuid.UUID(pId).String()
 }
 
 // Equal returns true if pId is equal to t
@@ -77,7 +77,6 @@ func RegisterPacketUUID(mt PacketTypeID, rt reflect.Type) PacketTypeID {
 		return mt
 	}
 	registry.put(mt, rt)
-
 	return mt
 }
 
@@ -186,7 +185,7 @@ var marshalLock sync.Mutex
 
 // MarshalRegisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
-// UnmarshalRegisteredType.
+// UnmarshalRegisteredType. data MUST BE a pointer to the message.
 func MarshalRegisteredType(data Body) ([]byte, error) {
 	marshalLock.Lock()
 	defer marshalLock.Unlock()
