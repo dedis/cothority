@@ -37,7 +37,7 @@ type Conode struct {
 	// instance of it
 	protocols *protocolStorage
 	// webservice
-	webservice *WebService
+	websocket *WebSocket
 	// when this node has been started
 	started time.Time
 }
@@ -50,7 +50,7 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 		Router:               r,
 		protocols:            newProtocolStorage(),
 		started:              time.Now(),
-		webservice:           NewWebService(r.ServerIdentity),
+		websocket:            NewWebSocket(r.ServerIdentity),
 	}
 	c.overlay = NewOverlay(c)
 	c.serviceManager = newServiceManager(c, c.overlay)

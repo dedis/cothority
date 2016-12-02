@@ -13,19 +13,19 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// A webservice handles incoming client-requests using the WebService
+// WebSocket handles incoming client-requests using the WebService
 // protocol for JavaScript-compatibility.
-type WebService struct {
+type WebSocket struct {
 	ServerIdentity *network.ServerIdentity
 	services       map[string]Service
 	server         *http.Server
 	mux            *http.ServeMux
 }
 
-// NewWebService opens a webservice-listener one port above the given
+// NewWebSocket opens a webservice-listener one port above the given
 // ServerIdentity.
-func NewWebService(si *network.ServerIdentity) (*WebService, error) {
-	w := &WebService{
+func NewWebSocket(si *network.ServerIdentity) (*WebSocket, error) {
+	w := &WebSocket{
 		ServerIdentity: si,
 	}
 	w.Listening()
@@ -33,7 +33,7 @@ func NewWebService(si *network.ServerIdentity) (*WebService, error) {
 }
 
 // Listening starts to listen on the appropriate port.
-func (w *WebService) Listening() {
+func (w *WebSocket) Listening() {
 	go func() {
 		webHost, err := getWebHost(w.ServerIdentity)
 		log.ErrFatal(err)
@@ -48,13 +48,13 @@ func (w *WebService) Listening() {
 }
 
 // RegisterService saves the service as being able to handle messages.
-func (w *WebService) RegisterService(service string, s Service) error {
+func (w *WebSocket) RegisterService(service string, s Service) error {
 	w.services[service] = s
 	return nil
 }
 
 // Register a message-handler for a service.
-func (w *WebService) RegisterMessageHandler(service, handler string, t reflect.Type) error {
+func (w *WebSocket) RegisterMessageHandler(service, handler string, t reflect.Type) error {
 	h := func(ws *websocket.Conn) {
 		for {
 			msg := reflect.New(t)
