@@ -50,9 +50,9 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 		Router:               r,
 		protocols:            newProtocolStorage(),
 		started:              time.Now(),
-		websocket:            NewWebSocket(r.ServerIdentity),
 	}
 	c.overlay = NewOverlay(c)
+	c.websocket = NewWebSocket(r.ServerIdentity)
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
 	for name, inst := range protocols.instantiators {

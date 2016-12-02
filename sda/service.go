@@ -230,14 +230,15 @@ func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(c, o, id, s)
-		s, err := ServiceFactory.start(name, c, configName)
+		cont := newContext(c, o, id, s)
+		s, err := ServiceFactory.start(name, cont, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
 		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
+		c.websocket.RegisterService(name, s)
 	}
 	log.Lvl3(c.Address(), "instantiated all services")
 
@@ -328,6 +329,8 @@ type ClientRequest struct {
 	Service ServiceID
 	// Data containing all the information in the request
 	Data []byte
+	// Msg
+	Msg interface{}
 }
 
 // ClientRequestID is the type that registered by the network library

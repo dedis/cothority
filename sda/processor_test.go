@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/crypto/config"
 )
 
 var testServiceID ServiceID
@@ -59,33 +58,33 @@ func TestProcessor_RegisterMessages(t *testing.T) {
 	}
 }
 
-func TestProcessor_GetReply(t *testing.T) {
-	h1 := NewLocalConode(2000)
-	defer h1.Close()
-	p := NewServiceProcessor(&Context{conode: h1})
-	log.ErrFatal(p.RegisterMessage(procMsg))
-
-	pair := config.NewKeyPair(network.Suite)
-	e := network.NewServerIdentity(pair.Public, "")
-
-	rep := p.GetReply(e, testMsgID, testMsg{11})
-	val, ok := rep.(*testMsg)
-	if !ok {
-		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
-	}
-	if val.I != 11 {
-		t.Fatal("Value got lost - should be 11")
-	}
-
-	rep = p.GetReply(e, testMsgID, testMsg{42})
-	errMsg, ok := rep.(*network.StatusRet)
-	if !ok {
-		t.Fatal("42 should return an error")
-	}
-	if errMsg.Status == "" {
-		t.Fatal("The error should be non-empty")
-	}
-}
+//func TestProcessor_GetReply(t *testing.T) {
+//	h1 := NewLocalConode(2000)
+//	defer h1.Close()
+//	p := NewServiceProcessor(&Context{conode: h1})
+//	log.ErrFatal(p.RegisterMessage(procMsg))
+//
+//	pair := config.NewKeyPair(network.Suite)
+//	e := network.NewServerIdentity(pair.Public, "")
+//
+//	rep := p.GetReply(e, testMsgID, testMsg{11})
+//	val, ok := rep.(*testMsg)
+//	if !ok {
+//		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
+//	}
+//	if val.I != 11 {
+//		t.Fatal("Value got lost - should be 11")
+//	}
+//
+//	rep = p.GetReply(e, testMsgID, testMsg{42})
+//	errMsg, ok := rep.(*network.StatusRet)
+//	if !ok {
+//		t.Fatal("42 should return an error")
+//	}
+//	if errMsg.Status == "" {
+//		t.Fatal("The error should be non-empty")
+//	}
+//}
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
 	local := NewLocalTest()
