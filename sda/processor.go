@@ -101,9 +101,8 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
-	cr *ClientRequest) {
-	mt := network.TypeToPacketTypeID(cr.Msg)
+func (p *ServiceProcessor) ProcessClientRequest(msg interface{}) interface{} {
+	mt := network.TypeToPacketTypeID(msg)
 	fu, ok := p.functions[mt]
 	var reply interface{}
 	if !ok {
@@ -116,8 +115,8 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 		f := reflect.ValueOf(fu)
 
 		arg := reflect.New(to.Elem())
-		log.Print(reflect.TypeOf(cr.Msg), arg)
-		arg.Elem().Set(reflect.ValueOf(cr.Msg))
+		log.Print(reflect.TypeOf(msg), arg)
+		arg.Elem().Set(reflect.ValueOf(msg))
 		ret := f.Call([]reflect.Value{arg, arg})
 
 		errI := ret[1].Interface()
@@ -133,7 +132,5 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 			}
 		}
 	}
-	//if err := p.SendRaw(si, reply); err != nil {
-	//	log.Error(err)
-	//}
+	return reply
 }

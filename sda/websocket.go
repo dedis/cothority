@@ -66,14 +66,18 @@ func (w *WebSocket) RegisterMessageHandler(service, handler string, t reflect.Ty
 			log.Errorf("Couldn't decode msg %s: %x", t, buf, err)
 		} else {
 			log.Print("Introducing client request to", w.services[service])
-			cr := &ClientRequest{Msg: msg.Elem()}
-			w.services[service].ProcessClientRequest(nil, cr)
-			_, err = ws.Write([]byte("pong"))
+			reply := w.services[service].ProcessClientRequest(msg)
+			buf, err = protobuf.Encode(reply)
+			if err != nil {
+				log.Error(buf)
+				return
+			}
+			_, err = ws.Write(buf)
 			if err != nil {
 				log.Error(err)
 				return
 			}
-			log.Lvl1("Sent pong")
+			log.Lvl1("Sent reply:", reply)
 		}
 	}
 	w.mux.Handle(fmt.Sprintf("/%s/%s", service, handler), websocket.Handler(h))

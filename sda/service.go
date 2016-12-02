@@ -24,12 +24,10 @@ import (
 //   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
-	// ProcessRequest is the function that will be called when a external client
-	// using the CLI will contact this service with a request packet.
-	// Each request has a field ServiceID, so each time the Host (dispatcher)
-	// receives a request, it looks whether it knows the Service it is for and
-	// then dispatch it through ProcessRequest.
-	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
+	// ProcessRequest is called when a external client will connect through
+	// the websocket-port to this service. It returns a message that will be
+	// sent back to the client.
+	ProcessClientRequest(interface{}) interface{}
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -197,7 +195,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	conode *Conode
-	// the dispather can take registration of Processors
+	// the dispatcher can take registration of Processors
 	network.Dispatcher
 }
 
@@ -250,23 +248,8 @@ func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 // Process implements the Processor interface: service manager will relay
 // messages to the right Service.
 func (s *serviceManager) Process(data *network.Packet) {
-	id := data.ServerIdentity
-	switch data.MsgType {
-	case ClientRequestID:
-		r := data.Msg.(ClientRequest)
-		// check if the target service is indeed existing
-		s, ok := s.serviceByID(r.Service)
-		if !ok {
-			log.Error("Received a request for an unknown service", r.Service)
-			// XXX TODO should reply with some generic response =>
-			// 404 Service Unknown
-			return
-		}
-		go s.ProcessClientRequest(id, &r)
-	default:
-		// will launch a go routine for that message
-		s.Dispatch(data)
-	}
+	// will launch a go routine for that message
+	s.Dispatch(data)
 }
 
 // RegisterProcessor the processor to the service manager and tells the host to dispatch
