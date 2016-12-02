@@ -2,6 +2,7 @@ package sda
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -99,4 +100,96 @@ func ProtocolNameToID(name string) ProtocolID {
 // protocol is tied to a service, use `Conode.ProtocolRegisterName`
 func GlobalProtocolRegister(name string, protocol NewProtocol) (ProtocolID, error) {
 	return protocols.Register(name, protocol)
+}
+
+// MessageProxy is an interface that allows one protocol to completely define its
+// wire protocol format while still using the Overlay.
+// Cothority sends different messages dynamically as slices of bytes, whereas
+// Google proposes to use union-types:
+// https://developers.google.com/protocol-buffers/docs/techniques#union
+// This is a wrapper to enable union-types while still keeping compatibility with
+// the dynamic cothority-messages. Implementations must provide methods to
+// pass from the 'union-types' to 'cothority-dynamic-messages' with the Wrap
+// and Unwrap method.
+// A default one is provided with defaultMessageProxy so the regular wire-format
+// protocol can still be used.
+type MessageProxy interface {
+	// Wrap takes a message and the overlay information and returns the message
+	// that has to be sent directly to the network alongside with any error that
+	// happened.
+	// If msg is nil, it is only an internal message of the Overlay.
+	Wrap(msg interface{}, info *OverlayMessage) (interface{}, error)
+	// Unwrap takes the message coming from the network and returns the
+	// inner message that is going to be dispatched to the ProtocolInstance, the
+	// OverlayMessage needed by the Overlay to function correctly and then any
+	// error that might have occurred.
+	Unwrap(msg interface{}) (interface{}, *OverlayMessage, error)
+	// PacketType returns the packet type ID that this Protocol expects from the
+	// network. This is needed in order for the Overlay to receive those
+	// messages and dispatch them to the correct MessageProxy.
+	PacketType() network.PacketTypeID
+	// Name returns the name associated with this MessageProxy. When creating a
+	// protocol, if one use a name used by a MessageProxy, this MessageProxy will be
+	// used to Wrap and Unwrap messages.
+	Name() string
+}
+
+// NewMessageProxy is a function typedef to instantiate a new MessageProxy.
+type NewMessageProxy func() MessageProxy
+
+type messageProxyFactoryStruct struct {
+	factories []NewMessageProxy
+}
+
+var messageProxyFactory = messageProxyFactoryStruct{}
+
+// RegisterMessageProxy saves a new NewMessageProxy under its name.
+// When a Conode is instantiated, all MessageProxys will be generated and stored
+// for this Conode.
+func RegisterMessageProxy(n NewMessageProxy) {
+	messageProxyFactory.factories = append(messageProxyFactory.factories, n)
+}
+
+// messageProxyStore contains all created MessageProxys. It contains the default
+// MessageProxy used by the Overlay for backwards-compatibility.
+type messageProxyStore struct {
+	sync.Mutex
+	protos    []MessageProxy
+	defaultIO MessageProxy
+}
+
+func (p *messageProxyStore) getByName(name string) MessageProxy {
+	p.Lock()
+	defer p.Unlock()
+	for _, pio := range p.protos {
+		if pio.Name() == name {
+			return pio
+		}
+	}
+	return p.defaultIO
+}
+
+func (p *messageProxyStore) getByPacketType(t network.PacketTypeID) MessageProxy {
+	p.Lock()
+	defer p.Unlock()
+	for _, pio := range p.protos {
+		if pio.PacketType().Equal(t) {
+			return pio
+		}
+	}
+	return p.defaultIO
+}
+
+func newMessageProxyStore(disp network.Dispatcher, proc network.Processor) *messageProxyStore {
+	pstore := &messageProxyStore{
+		// also add the default one
+		defaultIO: new(defaultProtoIO),
+	}
+	for name, newIO := range messageProxyFactory.factories {
+		io := newIO()
+		pstore.protos = append(pstore.protos, io)
+		disp.RegisterProcessor(proc, io.PacketType())
+		log.Lvl2("Instantiating MessageProxy", name, "at position", len(pstore.protos))
+	}
+	return pstore
 }

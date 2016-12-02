@@ -223,3 +223,125 @@ func TestProtocolError(t *testing.T) {
 
 	log.SetDebugVisible(oldlvl)
 }
+
+func TestMessageProxyFactory(t *testing.T) {
+	defer eraseAllMessageProxy()
+	RegisterMessageProxy(NewTestMessageProxyChan)
+	assert.True(t, len(messageProxyFactory.factories) == 1)
+}
+
+func TestMessageProxyStore(t *testing.T) {
+	defer eraseAllMessageProxy()
+	local := NewLocalTest()
+	defer local.CloseAll()
+
+	RegisterMessageProxy(NewTestMessageProxy)
+	GlobalProtocolRegister(testProtoIOName, newTestProtocolInstance)
+	h, _, tree := local.GenTree(2, true)
+
+	go func() {
+		// first time to wrap
+		res := <-chanProtoIOFeedback
+		require.Equal(t, "", res)
+		// second time to unwrap
+		res = <-chanProtoIOFeedback
+		require.Equal(t, "", res)
+
+	}()
+	_, err := h[0].StartProtocol(testProtoIOName, tree)
+	require.Nil(t, err)
+
+	res := <-chanTestProtoInstance
+	assert.True(t, res)
+}
+
+// MessageProxy part
+var chanProtoIOCreation = make(chan bool)
+var chanProtoIOFeedback = make(chan string)
+
+const testProtoIOName = "TestIO"
+
+type OuterPacket struct {
+	Info  *OverlayMessage
+	Inner *SimpleMessage
+}
+
+var OuterPacketType = network.RegisterPacketType(OuterPacket{})
+
+type TestMessageProxy struct{}
+
+func NewTestMessageProxyChan() MessageProxy {
+	chanProtoIOCreation <- true
+	return &TestMessageProxy{}
+}
+
+func NewTestMessageProxy() MessageProxy {
+	return &TestMessageProxy{}
+}
+
+func eraseAllMessageProxy() {
+	messageProxyFactory.factories = nil
+}
+
+func (t *TestMessageProxy) Wrap(msg interface{}, info *OverlayMessage) (interface{}, error) {
+	outer := &OuterPacket{}
+	inner, ok := msg.(*SimpleMessage)
+	if !ok {
+		chanProtoIOFeedback <- "wrong message type in wrap"
+	}
+	outer.Inner = inner
+	outer.Info = info
+	chanProtoIOFeedback <- ""
+	return outer, nil
+}
+
+func (t *TestMessageProxy) Unwrap(msg interface{}) (interface{}, *OverlayMessage, error) {
+	if msg == nil {
+		chanProtoIOFeedback <- "message nil!"
+		return nil, nil, errors.New("message nil")
+	}
+
+	real, ok := msg.(OuterPacket)
+	if !ok {
+		chanProtoIOFeedback <- "wrong type of message in unwrap"
+		return nil, nil, errors.New("wrong message")
+	}
+	chanProtoIOFeedback <- ""
+	return real.Inner, real.Info, nil
+}
+
+func (t *TestMessageProxy) PacketType() network.PacketTypeID {
+	return OuterPacketType
+}
+
+func (t *TestMessageProxy) Name() string {
+	return testProtoIOName
+}
+
+var chanTestProtoInstance = make(chan bool)
+
+// ProtocolInstance part
+type TestProtocolInstance struct {
+	*TreeNodeInstance
+}
+
+func newTestProtocolInstance(n *TreeNodeInstance) (ProtocolInstance, error) {
+	pi := &TestProtocolInstance{n}
+	n.RegisterHandler(pi.handleSimpleMessage)
+	return pi, nil
+}
+
+func (t *TestProtocolInstance) Start() error {
+	t.SendTo(t.Root(), &SimpleMessage{12})
+	return nil
+}
+
+type SimpleMessageHandler struct {
+	*TreeNode
+	SimpleMessage
+}
+
+func (t TestProtocolInstance) handleSimpleMessage(h SimpleMessageHandler) error {
+	chanTestProtoInstance <- h.SimpleMessage.I == 12
+	return nil
+}

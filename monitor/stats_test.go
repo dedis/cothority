@@ -47,8 +47,8 @@ func TestStatsUpdate(t *testing.T) {
 	rc["hosts"] = "2"
 	stats := NewStats(rc)
 
-	m1 := NewSingleMeasure("round_wall", 10)
-	m2 := NewSingleMeasure("round_wall", 30)
+	m1 := newSingleMeasure("round_wall", 10)
+	m2 := newSingleMeasure("round_wall", 30)
 	stats.Update(m1)
 	stats.Update(m2)
 	stats.Collect()
@@ -64,8 +64,8 @@ func TestStatsOrder(t *testing.T) {
 	m["bf"] = "2"
 	// create stats
 	stat := NewStats(m)
-	m1 := NewSingleMeasure("round", 10)
-	m2 := NewSingleMeasure("setup", 5)
+	m1 := newSingleMeasure("round", 10)
+	m2 := newSingleMeasure("setup", 5)
 	stat.Update(m1)
 	stat.Update(m2)
 	str := new(bytes.Buffer)
@@ -104,8 +104,8 @@ func TestStatsAverage(t *testing.T) {
 	// create stats
 	stat1 := NewStats(m)
 	stat2 := NewStats(m)
-	m1 := NewSingleMeasure("round", 10)
-	m2 := NewSingleMeasure("setup", 5)
+	m1 := newSingleMeasure("round", 10)
+	m2 := newSingleMeasure("setup", 5)
 	stat1.Update(m1)
 	stat2.Update(m2)
 
@@ -139,9 +139,9 @@ func TestStatsAverageFiltered(t *testing.T) {
 	// create stats
 	stat1 := NewStats(m)
 	stat2 := NewStats(m)
-	m1 := NewSingleMeasure("round", 10)
-	m2 := NewSingleMeasure("round", 20)
-	m3 := NewSingleMeasure("round", 150)
+	m1 := newSingleMeasure("round", 10)
+	m2 := newSingleMeasure("round", 20)
+	m3 := newSingleMeasure("round", 150)
 	stat1.Update(m1)
 	stat1.Update(m2)
 	stat1.Update(m3)

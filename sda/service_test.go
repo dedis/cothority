@@ -545,28 +545,6 @@ func (s *simpleService) Process(packet *network.Packet) {
 	return
 }
 
-type ServiceMessages struct {
-	*ServiceProcessor
-	GotResponse chan bool
-}
-
-func (i *ServiceMessages) SimpleResponse(msg *network.Packet) {
-	i.GotResponse <- true
-}
-
-func (i *ServiceMessages) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
-	return nil, nil
-}
-
-func newServiceMessages(c *Context, path string) Service {
-	s := &ServiceMessages{
-		ServiceProcessor: NewServiceProcessor(c),
-		GotResponse:      make(chan bool),
-	}
-	c.RegisterProcessorFunc(SimpleResponseType, s.SimpleResponse)
-	return s
-}
-
 type DummyProtocol struct {
 	*TreeNodeInstance
 	link   chan bool
@@ -654,6 +632,28 @@ func (ds *DummyService) Process(packet *network.Packet) {
 		return
 	}
 	ds.link <- true
+}
+
+type ServiceMessages struct {
+	*ServiceProcessor
+	GotResponse chan bool
+}
+
+func (i *ServiceMessages) SimpleResponse(msg *network.Packet) {
+	i.GotResponse <- true
+}
+
+func (i *ServiceMessages) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newServiceMessages(c *Context, path string) Service {
+	s := &ServiceMessages{
+		ServiceProcessor: NewServiceProcessor(c),
+		GotResponse:      make(chan bool),
+	}
+	c.RegisterProcessorFunc(SimpleResponseType, s.SimpleResponse)
+	return s
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
