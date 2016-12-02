@@ -282,6 +282,14 @@ func (s *serviceManager) RegisterProcessor(p network.Processor, msgType network.
 	s.Dispatcher.RegisterProcessor(p, msgType)
 }
 
+func (s *serviceManager) RegisterProcessorFunc(msgType network.PacketTypeID, fn func(*network.Packet)) {
+	// delegate message to host so the host will pass the message to ourself
+	s.conode.RegisterProcessor(s, msgType)
+	// handle the message ourselves (will be launched in a go routine)
+	s.Dispatcher.RegisterProcessorFunc(msgType, fn)
+
+}
+
 // AvailableServices returns a list of all services available to the serviceManager.
 // If no services are instantiated, it returns an empty list.
 func (s *serviceManager) AvailableServices() (ret []string) {
@@ -340,34 +348,6 @@ func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) 
 		Service: sid,
 		Data:    buff,
 	}, nil
-}
-
-// InterServiceMessage is a generic struct that contains any data destined to a
-// Service that has been created .. by a Service. => Intra-Service
-// communications.
-type InterServiceMessage struct {
-	// Service is the ID of the Service it's destined
-	Service ServiceID
-	// Data is the data encoded using protobuf for the moment.
-	Data []byte
-}
-
-// ServiceMessageID is the ID of the ServiceMessage struct.
-var ServiceMessageID = network.RegisterPacketType(InterServiceMessage{})
-
-// CreateServiceMessage takes a service name and some data and encodes the whole
-// as a ServiceMessage.
-func CreateServiceMessage(service string, r interface{}) (*InterServiceMessage, error) {
-	sid := ServiceFactory.ServiceID(service)
-	buff, err := network.MarshalRegisteredType(r)
-	if err != nil {
-		return nil, err
-	}
-	return &InterServiceMessage{
-		Service: sid,
-		Data:    buff,
-	}, nil
-
 }
 
 // Client is a struct used to communicate with a remote Service running on a

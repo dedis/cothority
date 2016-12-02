@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServiceRegistration(t *testing.T) {
@@ -55,6 +56,7 @@ var dummyMsgType network.PacketTypeID
 
 func init() {
 	dummyMsgType = network.RegisterPacketType(DummyMsg{})
+	RegisterNewService("ISMService", newServiceMessages)
 }
 
 func NewDummyProtocol(tni *TreeNodeInstance, conf DummyConfig, link chan bool) *DummyProtocol {
@@ -490,6 +492,18 @@ func TestServiceManager_Service(t *testing.T) {
 	assert.NotNil(t, service, "Didn't find service testService")
 }
 
+func TestServiceMessages(t *testing.T) {
+	local := NewLocalTest()
+	defer local.CloseAll()
+	conodes, _, _ := local.GenTree(2, true)
+
+	service := conodes[0].serviceManager.Service("ISMService")
+	assert.NotNil(t, service, "Didn't find service ISMService")
+	ism := service.(*ServiceMessages)
+	ism.SendRaw(conodes[0].ServerIdentity, &SimpleResponse{})
+	require.True(t, <-ism.GotResponse, "Didn't get response")
+}
+
 // BackForthProtocolForth & Back are messages that go down and up the tree.
 // => BackForthProtocol protocol / message
 type SimpleMessageForth struct {
@@ -637,6 +651,28 @@ func (s *simpleService) NewProtocol(tni *TreeNodeInstance, conf *GenericConfig) 
 
 func (s *simpleService) Process(packet *network.Packet) {
 	return
+}
+
+type ServiceMessages struct {
+	*ServiceProcessor
+	GotResponse chan bool
+}
+
+func (i *ServiceMessages) SimpleResponse(msg *network.Packet) {
+	i.GotResponse <- true
+}
+
+func (i *ServiceMessages) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	return nil, nil
+}
+
+func newServiceMessages(c *Context, path string) Service {
+	s := &ServiceMessages{
+		ServiceProcessor: NewServiceProcessor(c),
+		GotResponse:      make(chan bool),
+	}
+	c.RegisterProcessorFunc(SimpleResponseType, s.SimpleResponse)
+	return s
 }
 
 func waitOrFatalValue(ch chan bool, v bool, t *testing.T) {
