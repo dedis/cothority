@@ -160,7 +160,6 @@ func (c *TCPConn) sendRaw(b []byte) error {
 	// Then send everything through the connection
 	// Send chunk by chunk
 	log.Lvl5("Sending from", c.conn.LocalAddr(), "to", c.conn.RemoteAddr())
-	log.Print("BUFFER: ", hex.EncodeToString(b))
 	var sent Size
 	for sent < packetSize {
 		n, err := c.conn.Write(b[sent:])
