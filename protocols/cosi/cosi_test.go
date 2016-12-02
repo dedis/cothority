@@ -1,4 +1,4 @@
-package protocol
+package cosi
 
 import (
 	"testing"

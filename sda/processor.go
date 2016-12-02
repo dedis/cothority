@@ -4,8 +4,6 @@ import (
 	"errors"
 	"reflect"
 
-	"strings"
-
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 )
@@ -95,10 +93,9 @@ func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
 	return nil
 }
 
-// Process implements the Processor interface and dispatches ClientRequest message
-// and InterServiceMessage.
+// Process implements the Processor interface and dispatches ClientRequest messages.
 func (p *ServiceProcessor) Process(packet *network.Packet) {
-	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)
+	log.Panic("Cannot handle message.")
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply
@@ -116,36 +113,6 @@ func (p *ServiceProcessor) ProcessClientRequest(si *network.ServerIdentity,
 	if err := p.SendRaw(si, reply); err != nil {
 		log.Error(err)
 	}
-}
-
-// SendISM takes the message and sends it to the corresponding service.
-func (p *ServiceProcessor) SendISM(si *network.ServerIdentity, msg network.Body) error {
-	sName := ServiceFactory.Name(p.Context.ServiceID())
-	sm, err := CreateServiceMessage(sName, msg)
-	if err != nil {
-		return err
-	}
-	log.Lvl4("Raw-sending to", si)
-	return p.SendRaw(si, sm)
-}
-
-// SendISMOthers sends an InterServiceMessage to all other services.
-func (p *ServiceProcessor) SendISMOthers(el *Roster, msg network.Body) error {
-	var errStrs []string
-	for _, e := range el.List {
-		if !e.ID.Equal(p.Context.ServerIdentity().ID) {
-			log.Lvl3("Sending to", e)
-			err := p.SendISM(e, msg)
-			if err != nil {
-				errStrs = append(errStrs, err.Error())
-			}
-		}
-	}
-	var err error
-	if len(errStrs) > 0 {
-		err = errors.New(strings.Join(errStrs, "\n"))
-	}
-	return err
 }
 
 // GetReply takes msgType and a message. It dispatches the msg to the right

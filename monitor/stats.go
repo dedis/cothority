@@ -54,7 +54,7 @@ func (s *Stats) init() *Stats {
 }
 
 // Update will update the Stats with this given measure
-func (s *Stats) Update(m *SingleMeasure) {
+func (s *Stats) Update(m *singleMeasure) {
 	var value *Value
 	var ok bool
 	s.valuesMutex.Lock()

@@ -26,7 +26,8 @@ func newContext(c *Conode, o *Overlay, servID ServiceID, manager *serviceManager
 // NewTreeNodeInstance creates a TreeNodeInstance that is bound to a
 // service instead of the Overlay.
 func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
-	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID)
+	io := c.overlay.protoIO.getByName(protoName)
+	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID, io)
 }
 
 // SendRaw sends a message to the ServerIdentity.
@@ -85,6 +86,12 @@ func (c *Context) RegisterStatusReporter(name string, s StatusReporter) {
 // It delegates the dispatching to the serviceManager.
 func (c *Context) RegisterProcessor(p network.Processor, msgType network.PacketTypeID) {
 	c.manager.RegisterProcessor(p, msgType)
+}
+
+// RegisterProcessorFunc takes a message-type and a function that will be called
+// if this message-type is received.
+func (c *Context) RegisterProcessorFunc(msgType network.PacketTypeID, fn func(*network.Packet)) {
+	c.manager.RegisterProcessorFunc(msgType, fn)
 }
 
 // Service returns the corresponding service.
