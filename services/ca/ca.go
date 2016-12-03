@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	//"reflect"
-	//"bytes"
+	"bytes"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -72,37 +72,71 @@ func (ca *CA) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sd
 
 // SignCert will use the CA's public key to sign a new cert
 func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, error) {
-	log.Lvlf2("SignCert(): Start")
+	log.LLvlf2("SignCert(): Start")
 	id := csr.ID
 	config := csr.Config
-	hash, _ := config.Hash()
+	prevconfig := csr.PrevConfig
+	var hash crypto.HashID
+	var err error
+	//hash, _ := config.Hash()
 	if config == nil {
-		log.Lvlf2("Nil config")
+		log.LLvlf2("Nil config")
+		return nil, errors.New("Nil config")
 	}
-	//log.Lvlf2("ID: %v, Hash: %v", id, hash)
-	// Check that the Config part of the CSR was signed by a threshold of the containing devices
+
+	var trustedconf *common_structs.Config
+	if prevconfig == nil {
+		trustedconf = config
+	} else {
+		trustedconf = prevconfig
+	}
+	thr := trustedconf.Threshold
+
+	// Verify that a threshold 'thr' of the 'trustedconf' devices have voted for the
+	// 'config' for which the cert was asked
 	cnt := 0
-	for _, dev := range config.Device {
-		public := dev.Point
-		sig := dev.Vote
-		if sig != nil {
-			err := crypto.VerifySchnorr(network.Suite, public, hash, *sig)
-			if err != nil {
-				return nil, errors.New("Wrong signature")
+	for key, device := range config.Device {
+		if _, exists := trustedconf.Device[key]; exists {
+			b1, _ := network.MarshalRegisteredType(device.Point)
+			b2, _ := network.MarshalRegisteredType(trustedconf.Device[key].Point)
+			if bytes.Equal(b1, b2) {
+
+				// Check whether there is a non-nil signature
+				if device.Vote != nil {
+					hash, err = config.Hash()
+					if err != nil {
+						log.LLvlf2("Couldn't get hash")
+						return false, errors.New("Couldn't get hash")
+					}
+
+					// Verify signature
+					err = crypto.VerifySchnorr(network.Suite, device.Point, hash, *device.Vote)
+					if err != nil {
+						log.LLvlf2("Wrong signature")
+						return false, errors.New("Wrong signature")
+					}
+					cnt++
+				}
 			}
-			cnt++
 		}
 	}
-	if cnt < config.Threshold {
-		log.Lvlf2("Not enough valid signatures")
+
+	if cnt < thr {
+		log.LLvlf2("Not enough valid signatures (votes: %v, threshold: %v)", cnt, config.Threshold)
 		return nil, errors.New("Not enough valid signatures")
 	}
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
-	err := config.CheckTimeDiff(maxdiff_sign)
+	err = config.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
-		log.Lvlf2("CA with public key: %v %v", ca.Public, err)
+		log.LLvlf2("CA with public key: %v %v refused to sign because of bad config timestamp", ca.Public, err)
 		return nil, err
+	}
+
+	// Check that the validity period does not exceed an upper bound
+	if config.MaxDuration > bound {
+		log.LLvlf2("CA with public key: %v %v refused to sign because config's validity period exceeds an upper bound", ca.Public, err)
+		return nil, fmt.Errorf("CA with public key: %v %v refused to sign because config's validity period exceeds an upper bound", ca.Public, err)
 	}
 
 	// Sign the config's hash using CA's private key

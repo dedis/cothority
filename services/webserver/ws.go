@@ -133,7 +133,7 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Ros
 		SkipBlocks: make(map[string]*skipchain.SkipBlock),
 		//Certs:      make(map[string][]*common_structs.Cert),
 	}
-	site.si = sidentity.NewIdentity(nil, 0, "", "ws", nil, nil)
+	site.si = sidentity.NewIdentity(nil, 0, "", "ws", nil, nil, 0)
 	site.si.Cothority = cothority
 	site.si.ID = id
 	site.si.LatestID = id
@@ -207,8 +207,8 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 	if !bytes.Equal(h1, []byte{0}) {
 		sb1, ok = site.getSkipBlockByID(h1)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
-			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.LLvlf2("Skipblock with hash: %v not found", h1)
+			return nil, nil
 		}
 	} else {
 		// fetch all the blocks starting from the one for the config of
@@ -500,7 +500,7 @@ func (ws *WS) tryLoad() error {
 func newWSService(c *sda.Context, path string) sda.Service {
 	ws := &WS{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		si:               sidentity.NewIdentity(nil, 0, "", "ws", nil, nil),
+		si:               sidentity.NewIdentity(nil, 0, "", "ws", nil, nil, 0),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
 		path:             path,
 		NameToID:         make(map[string]skipchain.SkipBlockID),

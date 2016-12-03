@@ -19,6 +19,7 @@ import (
 	"os"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -121,8 +122,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	ids.setSkipBlockByID(ids.Data)
 
 	roster := ids.Root.Roster
-
-	cert, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
+	cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert[0],
 		SbHash: ids.Data.Hash,
@@ -152,11 +152,12 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	if err != nil {
 		return nil, err
 	}
+	log.LLvlf2("CreateIdentity(): 2")
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	//log.LLvlf2("New chain is\n%x", []byte(ids.Data.Hash))
-
+	log.LLvlf2("CreateIdentity(): 3")
 	s.save()
 	//log.Lvlf2("CreateIdentity(): End having %v certs", len(ids.Certs))
 	/*
@@ -168,6 +169,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 		}
 		log.LLvlf2("CreateIdentity(): End having %v certs", cnt)
 	*/
+
 	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
@@ -250,6 +252,12 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 		}
 		log.Lvlf2("GetUpdateChain(): End having %v certs", cnt)
 	*/
+
+	_, err := s.CheckRefreshCert(latestKnown.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	reply := &GetUpdateChainReply{
 		Update: blocks,
 		Cert:   sid.CertInfo.Cert,
@@ -330,6 +338,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			log.Lvlf2("Cothority %v", err2)
 			return err2
 		}
+
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
 			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
@@ -420,6 +429,13 @@ func (s *Service) Propagate(msg network.Body) {
 		sid := s.getIdentityStorage(id)
 		sid.SkipBlocks = make(map[string]*skipchain.SkipBlock)
 		sid.setSkipBlockByID(pi.Data)
+		return
+	case *PropagateCert:
+		pc := msg.(*PropagateCert)
+		cert := pc.CertInfo.Cert
+		id = cert.ID
+		s.setIdentityStorage(id, pc.Storage)
+		log.LLvlf2("Fresh cert is now stored")
 		return
 	}
 
@@ -536,6 +552,12 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 	} else {
 		// fetch all the blocks starting from the one for the config of
 		// which the latest cert is acquired
+
+		_, err := s.CheckRefreshCert(id)
+		if err != nil {
+			return nil, err
+		}
+
 		h1 = sid.CertInfo.SbHash
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
@@ -616,9 +638,80 @@ func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Bod
 			certs = append(certs, cert)
 		}
 	}*/
+
+	_, err := s.CheckRefreshCert(req.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	cert := sid.CertInfo.Cert
 	hash := sid.CertInfo.SbHash
 	return &GetCertReply{Cert: cert, SbHash: hash}, nil
+}
+
+// Checks whether the current valid cert for a given site is going to expire soon/it has already expired
+// in which case a fresh cert by a CA should be acquired
+func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
+	sid := s.getIdentityStorage(id)
+	if sid == nil {
+		log.LLvlf2("Didn't find identity")
+		return false, errors.New("Didn't find identity")
+	}
+
+	cert_sb_ID := sid.CertInfo.SbHash // hash of the skipblock whose config is the latest certified one
+	cert_sb, _ := sid.getSkipBlockByID(cert_sb_ID)
+	_, data, _ := network.UnmarshalRegistered(cert_sb.Data)
+	cert_conf, _ := data.(*common_structs.Config)
+	diff := time.Since(time.Unix(0, cert_conf.Timestamp*1000000))
+	diff_int := diff.Nanoseconds() / 1000000
+
+	if cert_conf.MaxDuration-diff_int >= refresh_bound {
+		log.LLvlf2("We will not get a fresh cert today because the old one is still \"very\" valid")
+		return false, nil
+	}
+
+	// Get a fresh cert for the 'latestconf' which is included into the site skipchain's current head block
+	_, data, _ = network.UnmarshalRegistered(sid.Data.Data)
+	latestconf, _ := data.(*common_structs.Config)
+
+	var prevconf *common_structs.Config
+	if !bytes.Equal(id, sid.Data.Hash) { // if site's skipchain is constituted of more than one (the genesis) skiblocks
+		// Find 'prevconf' which is included into the second latest head skipblock of the skipchain
+		prevhash := sid.Data.BackLinkIds[0]
+		prevblock, ok := sid.getSkipBlockByID(prevhash)
+		if !ok {
+			log.LLvlf2("Skipblock with hash: %v not found", prevhash)
+			return false, fmt.Errorf("Skipblock with hash: %v not found", prevhash)
+		}
+		_, data, _ = network.UnmarshalRegistered(prevblock.Data)
+		prevconf, _ = data.(*common_structs.Config)
+	} else {
+		prevconf = nil
+	}
+
+	// Ask for a cert for the 'latestconf'
+	cert, _ := s.ca.SignCert(latestconf, prevconf, id)
+	certinfo := &common_structs.CertInfo{
+		Cert:   cert[0],
+		SbHash: sid.Data.Hash,
+	}
+	sid.CertInfo = certinfo
+	//s.setIdentityStorage(id, sid)
+
+	roster := sid.Root.Roster
+	replies, err := manage.PropagateStartAndWait(s.Context, roster,
+		&PropagateCert{sid}, propagateTimeout, s.Propagate)
+	if err != nil {
+		return false, err
+	}
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
+	}
+
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.LLvlf2("CERT REFRESHED!")
+	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	return true, nil
 }
 
 func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) (network.Body, error) {

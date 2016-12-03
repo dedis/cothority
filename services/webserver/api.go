@@ -332,117 +332,131 @@ func (u *User) ReConnect(name string) error {
 		latest := sbs[len(sbs)-1]
 		cert := reply.Cert
 
-		// check whether there exists an overlap or not (between the new skipblock path and the latest followed one)
-		first_not_known_index := 0 // sbs[0] is the first_not_known skipblock?
+		first_not_known_index := 0 // Is sbs[0] the first_not_known skipblock?
 		for index, sb := range sbs {
 			if bytes.Equal(website.Latest.Hash, sb.Hash) {
 				first_not_known_index = index + 1
 				break
 			}
 		}
+		log.LLvlf2("first_not_known_index: %v", first_not_known_index)
+		log.LLvlf2("len(sbs): %v", len(sbs))
 
-		if first_not_known_index >= len(sbs) {
-			// Have received not a single skipblock that is not already known & verified
+		if first_not_known_index == 1 && len(sbs) == 1 {
+			// Not a single one returned skipblock that is not already known & trusted
 			same_skipchain = true
 		}
 
-		if !same_skipchain {
-			// If we are executing this 'then' part of the if-then-else, there exists at least one skipblock
-			// that was not previously known
-
-			// Check whether there is a valid skipblock path from the latest trusted skipblock
-			// until the 'first_not_known' returned
-			if first_not_known_index-1 >= 0 {
-				sbs_path_to_be_checked := sbs[first_not_known_index-1:]
+		if first_not_known_index >= 1 {
+			// At this point, at least one of the returned skipblocks is already trusted
+			// and at least another one is not
+			sbs_path_to_be_checked := sbs[first_not_known_index-1:]
+			ok2, _ := VerifyHops(sbs_path_to_be_checked)
+			if ok2 {
+				same_skipchain = true
+			}
+		} else {
+			// Not a single one returned skipblock is already known & trusted
+			// -> Ask for a valid path between the latest trusted skipblock till the 'first' returned (==sbs[0])
+			log.LLvlf2("Latest known skipblock has hash: %v", website.Latest.Hash)
+			msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: first.Hash})
+			reply, _ := msg.Msg.(GetValidSbPathReply)
+			sbs2 := reply.Skipblocks
+			if sbs2 != nil {
+				sbs_path_to_be_checked := append(sbs2, sbs[1:]...)
 				ok2, _ := VerifyHops(sbs_path_to_be_checked)
 				if ok2 {
 					same_skipchain = true
 				}
 			}
+		}
 
-			if !same_skipchain {
-				// With high probability, it was the first hop that didn't verify -> skipchain-switch
-				log.LLvlf2("--------------------SKIPCHAIN-SWITCH!!!--------------------")
-				log.LLvlf2("The first hop is not valid -> Start trusting from scratch once the signature of the CA is verified")
+		if !same_skipchain {
 
-				// Check whether the 'latest' skipblock is stale or not
-				_, data, _ := network.UnmarshalRegistered(latest.Data)
-				latestconf, _ := data.(*common_structs.Config)
-				err := latestconf.CheckTimeDiff(maxdiff)
-				if err != nil {
-					log.LLvlf2("Stale skipblock can not be accepted")
-					return fmt.Errorf("Stale skipblock can not be accepted")
-				}
+			// With high probability, it was the first hop that didn't verify -> skipchain-switch
+			log.LLvlf2("--------------------------------------------------------------------------------")
+			log.LLvlf2("-----------------------------SKIPCHAIN-SWITCH!!!--------------------")
+			log.LLvlf2("--------------------------------------------------------------------------------")
+			log.LLvlf2("The first hop is not valid -> Start trusting from scratch once the signature of the CA is verified")
 
-				// TODO: verify that the "CA" is indeed a CA (maybe by checking its public key's membership
-				// into a trusted pull of CAs' public keys?)
+			// Check whether the 'latest' skipblock is stale or not
+			_, data, _ := network.UnmarshalRegistered(latest.Data)
+			latestconf, _ := data.(*common_structs.Config)
+			err := latestconf.CheckTimeDiff(maxdiff)
+			if err != nil {
+				log.LLvlf2("Stale skipblock can not be accepted")
+				return fmt.Errorf("Stale skipblock can not be accepted")
+			}
 
-				// Verify that the cert is certifying the config of the 'first' skipblock
-				_, data, _ = network.UnmarshalRegistered(first.Data)
-				firstconf, _ := data.(*common_structs.Config)
-				firstconf_hash, _ := firstconf.Hash()
-				cert_hash := cert.Hash // should contain the certified config's hash
-				if !bytes.Equal(cert_hash, firstconf_hash) {
-					log.LLvlf2("Received cert does not point to the first returned skipblock's config!")
-					return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
-				}
+			// TODO: verify that the "CA" is indeed a CA (maybe by checking its public key's membership
+			// into a trusted pull of CAs' public keys?)
 
-				// Validate the signature of the CA
-				err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
-				if err != nil {
-					log.LLvlf2("CA's signature doesn't verify")
-					return errors.New("CA's signature doesn't verify")
-				}
+			// Verify that the cert is certifying the config of the 'first' skipblock
+			_, data, _ = network.UnmarshalRegistered(first.Data)
+			firstconf, _ := data.(*common_structs.Config)
+			firstconf_hash, _ := firstconf.Hash()
+			cert_hash := cert.Hash // should contain the certified config's hash
+			if !bytes.Equal(cert_hash, firstconf_hash) {
+				log.LLvlf2("Received cert does not point to the first returned skipblock's config!")
+				return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
+			}
+
+			// Validate the signature of the CA
+			err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
+			if err != nil {
+				log.LLvlf2("CA's signature doesn't verify")
+				return errors.New("CA's signature doesn't verify")
+			}
+
+			// Verify the hops starting from the skipblock for which the cert was issued
+			ok, _ := VerifyHops(sbs)
+			if !ok {
+				return errors.New("Got an invalid skipchain -> ABORT without following it")
+			}
+
+			website.PinState.Window = int64(1)
+			//website.PinState.Window = int64(86400)
+			log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
+			website.PinState.TimePinAccept = time.Now().Unix() * 1000
+			u.WebSites[name] = website
+			u.Follow(name, latest, cert)
+
+			/*
+					// Find the chain of blocks ('sbs_cert') starting from the one for which the cert was issued
+					var start_sb *skipchain.SkipBlock
+					start_sb = nil
+					var start_index int
+					for index, sb := range sbs {
+						_, data, _ := network.UnmarshalRegistered(sb.Data)
+						conf, _ := data.(*common_structs.Config)
+						conf_hash, _ := conf.Hash()
+
+						if bytes.Equal(cert_hash, conf_hash) {
+							start_sb = sb
+							start_index = index
+							break
+						}
+					}
+					if start_sb == nil {
+						return fmt.Errorf("Didn't find skipblock that matches the cert")
+					}
 
 				// Verify the hops starting from the skipblock for which the cert was issued
-				ok, _ := VerifyHops(sbs)
+				sbs_cert := sbs[start_index:len(sbs)]
+				ok, _ := VerifyHops(sbs_cert)
 				if !ok {
-					return errors.New("Got an invalid skipchain -> ABORT without following it")
+					log.LLvlf2("Not valid hops")
+					return fmt.Errorf("Not valid hops")
+				} else {
+					website.PinState.Window = int64(1)
+					//website.PinState.Window = int64(86400)
+					log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
+					website.PinState.TimePinAccept = time.Now().Unix() * 1000
+					u.WebSites[name] = website
+					u.Follow(name, latest, cert)
 				}
+			*/
 
-				website.PinState.Window = int64(1)
-				//website.PinState.Window = int64(86400)
-				log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
-				website.PinState.TimePinAccept = time.Now().Unix() * 1000
-				u.WebSites[name] = website
-				u.Follow(name, latest, cert)
-
-				/*
-						// Find the chain of blocks ('sbs_cert') starting from the one for which the cert was issued
-						var start_sb *skipchain.SkipBlock
-						start_sb = nil
-						var start_index int
-						for index, sb := range sbs {
-							_, data, _ := network.UnmarshalRegistered(sb.Data)
-							conf, _ := data.(*common_structs.Config)
-							conf_hash, _ := conf.Hash()
-
-							if bytes.Equal(cert_hash, conf_hash) {
-								start_sb = sb
-								start_index = index
-								break
-							}
-						}
-						if start_sb == nil {
-							return fmt.Errorf("Didn't find skipblock that matches the cert")
-						}
-
-					// Verify the hops starting from the skipblock for which the cert was issued
-					sbs_cert := sbs[start_index:len(sbs)]
-					ok, _ := VerifyHops(sbs_cert)
-					if !ok {
-						log.LLvlf2("Not valid hops")
-						return fmt.Errorf("Not valid hops")
-					} else {
-						website.PinState.Window = int64(1)
-						//website.PinState.Window = int64(86400)
-						log.LLvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
-						website.PinState.TimePinAccept = time.Now().Unix() * 1000
-						u.WebSites[name] = website
-						u.Follow(name, latest, cert)
-					}
-				*/
-			}
 		}
 
 		if same_skipchain {
@@ -593,13 +607,13 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 							var hash crypto.HashID
 							hash, err := newconfig.Hash()
 							if err != nil {
-								log.Lvlf2("Couldn't get hash")
+								log.LLvlf2("Couldn't get hash")
 								return false, errors.New("Couldn't get hash")
 							}
 							//log.LLvlf2("Verify signature of device: %v", key)
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
-								log.Lvlf2("Wrong signature")
+								log.LLvlf2("Wrong signature")
 								return false, errors.New("Wrong signature")
 							}
 							cnt++

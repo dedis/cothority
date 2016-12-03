@@ -62,6 +62,9 @@ type Config struct {
 	Data map[string]*WSconfig
 	// The public keys of the trusted CAs
 	CAs []CAInfo
+	// If a cert is going to be acquired for this config, MaxDuration indicates the maximum
+	// time period for which the cert is going to be valid (countdown starting from the 'Timestamp')
+	MaxDuration int64
 }
 
 // Device is represented by a public key and possibly the signature of the
@@ -145,13 +148,13 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig) *Config {
+func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
 	return &Config{
-		Threshold: threshold,
-		Device:    map[string]*Device{owner: {Point: pub}},
-		//Data:      make(map[string]string),
-		Data: data,
-		CAs:  cas,
+		Threshold:   threshold,
+		Device:      map[string]*Device{owner: {Point: pub}},
+		Data:        data,
+		CAs:         cas,
+		MaxDuration: duration,
 	}
 }
 
@@ -233,18 +236,19 @@ func (c *Config) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 	}
-
-	if c.CAs == nil {
-		log.Print("No CAs found")
-	}
-	for _, info := range c.CAs {
-		//log.Printf("public: %v", info.Public)
-		b, err := network.MarshalRegisteredType(&info)
-		if err != nil {
-			return nil, err
+	/*
+		if c.CAs == nil {
+			log.Print("No CAs found")
 		}
-		_, err = hash.Write(b)
-	}
+		for _, info := range c.CAs {
+			//log.Printf("public: %v", info.Public)
+			b, err := network.MarshalRegisteredType(&info)
+			if err != nil {
+				return nil, err
+			}
+			_, err = hash.Write(b)
+		}
+	*/
 	the_hash := hash.Sum(nil)
 	//log.Printf("End of config's hash computation, hash: %v", the_hash)
 	return the_hash, nil

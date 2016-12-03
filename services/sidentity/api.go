@@ -63,6 +63,7 @@ func init() {
 		&GetValidSbPath{},
 		&GetValidSbPathReply{},
 		&PropagateIdentity{},
+		&PropagateCert{},
 		&UpdateSkipBlock{},
 		&PushPublicKey{},
 		&PushPublicKeyReply{},
@@ -125,7 +126,7 @@ type Data struct {
 // not taken into account in the code)
 //func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) *Identity {
 //	switch pinstate.Ctype {
-func NewIdentity(cothority *sda.Roster, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) *Identity {
+func NewIdentity(cothority *sda.Roster, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) *Identity {
 	switch ctype {
 	case "device":
 		kp := config.NewKeyPair(network.Suite)
@@ -136,7 +137,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, ctype strin
 				Public:  kp.Public,
 				//PinState:   pinstate,
 				Ctype:      ctype,
-				Config:     common_structs.NewConfig(threshold, kp.Public, owner, cas, data),
+				Config:     common_structs.NewConfig(threshold, kp.Public, owner, cas, data, duration),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},
@@ -193,14 +194,14 @@ func (i *Identity) CreateIdentity() error {
 }
 
 //func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
-func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
+func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) ([]*Identity, error) {
 	log.LLvlf2("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
 		if index == 0 {
-			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data)
+			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data, duration)
 		} else {
-			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data)
+			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data, duration)
 			if _, exists := ids[0].Config.Device[owner]; exists {
 				return nil, errors.New("NewIdentityMultDevs(): Adding with an existing account-name")
 			}
@@ -290,7 +291,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 // specified by their ServerIdentities as they are given in the argument 'serverIDs')
 // Devices to be revoked regarding the proposed config should NOT vote upon their revovation
 // (or, in the case of voting, a negative vote is the only one accepted)
-func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, serverIDs []*network.ServerIdentity) error {
+func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, duration int64, serverIDs []*network.ServerIdentity) error {
 	var err error
 	err = i.ConfigUpdate() //common_structs.ConfigUpdateNew() before
 	if err != nil {
@@ -301,9 +302,6 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int,
 		dev.Vote = nil
 	}
 
-	if thr != 0 {
-		confPropose.Threshold = thr
-	}
 	for name, point := range add {
 		confPropose.Device[name] = &common_structs.Device{Point: point}
 	}
@@ -311,6 +309,14 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int,
 		if _, exists := confPropose.Device[name]; exists {
 			delete(confPropose.Device, name)
 		}
+	}
+
+	if thr != 0 {
+		confPropose.Threshold = thr
+	}
+
+	if duration != 0 {
+		confPropose.MaxDuration = duration
 	}
 
 	if serverIDs != nil {

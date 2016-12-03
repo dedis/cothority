@@ -26,6 +26,11 @@ const propagateTimeout = 10000
 // the time reflected on the proposed config for the former to sign off
 const maxdiff_sign = 300000
 
+// It specifies the minimum amount of remaining ms (before the expiration of the current valid cert
+// for a website) before asking for a fresh cert
+//const refresh_bound = 172800000 // 2 days * 24 hours/day * 3600 sec/hour * 1000 ms/sec (REALISTIC)
+const refresh_bound = 3000
+
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
@@ -119,6 +124,10 @@ type ProposeVoteReply struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
+	*Storage
+}
+
+type PropagateCert struct {
 	*Storage
 }
 

@@ -65,10 +65,10 @@ func NewCSRDispatcher() *CSRDispatcher {
 	}
 }
 
-func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.SkipBlockID) ([]*common_structs.Cert, error) {
-	log.Print("CSRDispatcher(): Start")
+func (d *CSRDispatcher) SignCert(config, prevconfig *common_structs.Config, id skipchain.SkipBlockID) ([]*common_structs.Cert, error) {
+	log.LLvlf2("CSRDispatcher(): Start")
 	d.Certs = make([]*common_structs.Cert, 0)
-	d.Data.ID = id
+	d.Data.ID = id // id of the site (hash of the genesis block)
 	d.Data.Proposed = config
 	d.Data.CAs = config.CAs
 	log.LLvlf2("SignCert(): Start with %v certs", len(d.Certs))
@@ -79,11 +79,12 @@ func (d *CSRDispatcher) SignCert(config *common_structs.Config, id skipchain.Ski
 		//log.Print("CSRDispatcher(): 1")
 		//log.Print(ca.Public)
 		//log.Print(ca.ServerID)
-		msg, err := d.CAClient.Send(ca.ServerID, &CSR{ID: d.ID, Config: d.Proposed})
+
+		msg, err := d.CAClient.Send(ca.ServerID, &CSR{ID: d.ID, Config: d.Proposed, PrevConfig: prevconfig})
 		if err != nil {
 			return nil, err
 		}
-		//log.Print("CSRDispatcher(): 2")
+
 		cert := msg.Msg.(CSRReply).Cert
 		//log.Lvlf2("cert with ID: %v, Hash: %v, Sig: %v, Public: %v", cert.ID, cert.Hash, *cert.Signature, cert.Public)
 		//log.Print("CSRDispatcher(): 3")
