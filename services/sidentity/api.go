@@ -126,7 +126,7 @@ type Data struct {
 // not taken into account in the code)
 //func NewIdentity(cothority *sda.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) *Identity {
 //	switch pinstate.Ctype {
-func NewIdentity(cothority *sda.Roster, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) *Identity {
+func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) *Identity {
 	switch ctype {
 	case "device":
 		kp := config.NewKeyPair(network.Suite)
@@ -137,7 +137,7 @@ func NewIdentity(cothority *sda.Roster, threshold int, owner string, ctype strin
 				Public:  kp.Public,
 				//PinState:   pinstate,
 				Ctype:      ctype,
-				Config:     common_structs.NewConfig(threshold, kp.Public, owner, cas, data, duration),
+				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, owner, cas, data, duration),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},
@@ -194,14 +194,14 @@ func (i *Identity) CreateIdentity() error {
 }
 
 //func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
-func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) ([]*Identity, error) {
+func NewIdentityMultDevs(cothority *sda.Roster, fqdn string, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) ([]*Identity, error) {
 	log.LLvlf2("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
 		if index == 0 {
-			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data, duration)
+			ids[index] = NewIdentity(cothority, fqdn, threshold, owner, ctype, cas, data, duration)
 		} else {
-			ids[index] = NewIdentity(cothority, threshold, owner, ctype, cas, data, duration)
+			ids[index] = NewIdentity(cothority, fqdn, threshold, owner, ctype, cas, data, duration)
 			if _, exists := ids[0].Config.Device[owner]; exists {
 				return nil, errors.New("NewIdentityMultDevs(): Adding with an existing account-name")
 			}

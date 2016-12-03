@@ -53,18 +53,18 @@ type My_Scalar struct {
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
 type Config struct {
+	FQDN string
 	// The time in ms when the request was started
 	Timestamp int64
-	Threshold int
-	Device    map[string]*Device
-	//Data      map[string]string
-	//Data map[string]abstract.Point
-	Data map[string]*WSconfig
-	// The public keys of the trusted CAs
-	CAs []CAInfo
 	// If a cert is going to be acquired for this config, MaxDuration indicates the maximum
 	// time period for which the cert is going to be valid (countdown starting from the 'Timestamp')
 	MaxDuration int64
+
+	Threshold int
+	Device    map[string]*Device
+	Data      map[string]*WSconfig
+	// The public keys of the trusted CAs
+	CAs []CAInfo
 }
 
 // Device is represented by a public key and possibly the signature of the
@@ -148,8 +148,9 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
+func NewConfig(fqdn string, threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
 	return &Config{
+		FQDN:        fqdn,
 		Threshold:   threshold,
 		Device:      map[string]*Device{owner: {Point: pub}},
 		Data:        data,
@@ -182,11 +183,18 @@ func (c *Config) Copy() *Config {
 func (c *Config) Hash() (crypto.HashID, error) {
 	//log.Print("Computing config's hash")
 	hash := network.Suite.Hash()
+
+	_, err := hash.Write([]byte(c.FQDN))
+	if err != nil {
+		return nil, err
+	}
+
 	var data = []int64{
 		int64(c.Timestamp),
 		int64(c.Threshold),
+		int64(c.MaxDuration),
 	}
-	err := binary.Write(hash, binary.LittleEndian, data)
+	err = binary.Write(hash, binary.LittleEndian, data)
 	if err != nil {
 		return nil, err
 	}
@@ -236,19 +244,19 @@ func (c *Config) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 	}
-	/*
-		if c.CAs == nil {
-			log.Print("No CAs found")
+
+	if c.CAs == nil {
+		log.Print("No CAs found")
+	}
+	for _, info := range c.CAs {
+		//log.Printf("public: %v", info.Public)
+		b, err := network.MarshalRegisteredType(&info)
+		if err != nil {
+			return nil, err
 		}
-		for _, info := range c.CAs {
-			//log.Printf("public: %v", info.Public)
-			b, err := network.MarshalRegisteredType(&info)
-			if err != nil {
-				return nil, err
-			}
-			_, err = hash.Write(b)
-		}
-	*/
+		_, err = hash.Write(b)
+	}
+
 	the_hash := hash.Sum(nil)
 	//log.Printf("End of config's hash computation, hash: %v", the_hash)
 	return the_hash, nil
@@ -284,6 +292,17 @@ func (c *Config) CheckTimeDiff(maxvalue int64) error {
 	}
 	log.Printf("Checking Timestamp: time difference: %v OK", diff)
 	return nil
+}
+
+func (c *Config) ExpiredCertConfig() bool {
+	diff := time.Since(time.Unix(0, c.Timestamp*1000000))
+	diff_int := diff.Nanoseconds() / 1000000
+
+	if c.MaxDuration < diff_int {
+		log.LLvlf2("Expired cert!!")
+		return true
+	}
+	return false
 }
 
 // returns true if c is older than c2

@@ -35,15 +35,15 @@ import (
 )
 
 //func NewTestIdentity(cothority *sda.Roster, majority int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) *sidentity.Identity {
-func NewTestIdentity(cothority *sda.Roster, majority int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64, local *sda.LocalTest) *sidentity.Identity {
-	id := sidentity.NewIdentity(cothority, majority, owner, ctype, cas, data, duration)
+func NewTestIdentity(cothority *sda.Roster, fqdn string, majority int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64, local *sda.LocalTest) *sidentity.Identity {
+	id := sidentity.NewIdentity(cothority, fqdn, majority, owner, ctype, cas, data, duration)
 	id.CothorityClient = local.NewClient(sidentity.ServiceName)
 	return id
 }
 
 //func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, local *sda.LocalTest) []*sidentity.Identity {
-func NewTestIdentityMultDevs(cothority *sda.Roster, majority int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64, local *sda.LocalTest) []*sidentity.Identity {
-	ids, _ := sidentity.NewIdentityMultDevs(cothority, majority, owners, ctype, cas, data, duration)
+func NewTestIdentityMultDevs(cothority *sda.Roster, fqdn string, majority int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64, local *sda.LocalTest) []*sidentity.Identity {
+	ids, _ := sidentity.NewIdentityMultDevs(cothority, fqdn, majority, owners, ctype, cas, data, duration)
 	for _, id := range ids {
 		id.CothorityClient = local.NewClient(sidentity.ServiceName)
 	}
@@ -180,7 +180,7 @@ func TestNormalCase(t *testing.T) {
 	//duration := int64(15552000000) // == 6 months * 30 days/month * 24 hours/day * 3600 sec/hour * 1000 ms/sec (REALISTIC)
 	duration := int64(10000)
 	_, webservers1, wss1, data1 := GetWSPublicsPlusServerIDs(num_ws1, el_coth, l)
-	c1 := NewTestIdentity(el_coth, thr, "one", "device", cas[0:1], data1, duration, l)
+	c1 := NewTestIdentity(el_coth, site1, thr, "one", "device", cas[0:1], data1, duration, l)
 	log.ErrFatal(c1.CreateIdentity())
 	for _, ws := range webservers1 {
 		ws.WSAttach(site1, c1.ID, el_coth)
@@ -193,7 +193,7 @@ func TestNormalCase(t *testing.T) {
 	thr = 1
 	num_ws2 := 1
 	_, webservers2, wss2, data2 := GetWSPublicsPlusServerIDs(num_ws2, el_coth, l)
-	d1 := NewTestIdentity(el_coth, thr, "site2_one", "device", cas[0:1], data2, duration, l)
+	d1 := NewTestIdentity(el_coth, site2, thr, "site2_one", "device", cas[0:1], data2, duration, l)
 	log.ErrFatal(d1.CreateIdentity())
 	for _, ws := range webservers2 {
 		ws.WSAttach(site2, d1.ID, el_coth)
@@ -206,7 +206,7 @@ func TestNormalCase(t *testing.T) {
 	thr = 2
 	num_ws3 := 3
 	_, webservers3, wss3, data3 := GetWSPublicsPlusServerIDs(num_ws3, el_coth, l)
-	e := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, duration, l)
+	e := NewTestIdentityMultDevs(el_coth, site3, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, duration, l)
 	e1 := e[0]
 	e2 := e[1]
 	log.ErrFatal(e1.CreateIdentityMultDevs(e))
@@ -218,7 +218,7 @@ func TestNormalCase(t *testing.T) {
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", c1.ID)
 	//pinstate = &common_structs.PinState{Ctype: "device"}
-	c2 := NewTestIdentity(el_coth, thr, "two", "device", nil, nil, 0, l)
+	c2 := NewTestIdentity(el_coth, "", 0, "two", "device", nil, nil, 0, l)
 	c2.AttachToIdentity(c1.ID)
 	c1.ProposeUpVote()
 	c1.ConfigUpdate()
@@ -332,7 +332,7 @@ func TestNormalCase(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE IDENTITY: %v", c1.ID)
-	c3 := NewTestIdentity(el_coth, thr, "three", "device", nil, nil, 0, l)
+	c3 := NewTestIdentity(el_coth, "", 0, "three", "device", nil, nil, 0, l)
 	log.ErrFatal(c3.AttachToIdentity(c2.ID))
 	c1.ProposeUpVote()
 	c2.ProposeUpVote()
@@ -374,7 +374,7 @@ func TestNormalCase(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", d1.ID)
-	d2 := NewTestIdentity(el_coth, thr, "site2_two", "device", nil, nil, 0, l)
+	d2 := NewTestIdentity(el_coth, "", 0, "site2_two", "device", nil, nil, 0, l)
 	log.ErrFatal(d2.AttachToIdentity(d1.ID))
 	d1.ProposeUpVote()
 	log.ErrFatal(d2.ConfigUpdate())
@@ -445,7 +445,7 @@ func TestNormalCase(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE: %v", site3)
-	e3 := NewTestIdentity(el_coth, thr, "site3_three", "device", nil, nil, 0, l)
+	e3 := NewTestIdentity(el_coth, "", 0, "site3_three", "device", nil, nil, 0, l)
 	log.ErrFatal(e3.AttachToIdentity(e1.ID))
 	e1.ProposeUpVote()
 	e2.ProposeUpVote()
@@ -494,7 +494,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	//duration := int64(15552000000) // == 6 months * 30 days/month * 24 hours/day * 3600 sec/hour * 1000 ms/sec (REALISTIC)
 	duration := int64(10000)
 	_, webservers1, wss1, data1 := GetWSPublicsPlusServerIDs(num_ws1, el_coth, l)
-	c1 := NewTestIdentity(el_coth, thr, "one", "device", cas[0:1], data1, duration, l)
+	c1 := NewTestIdentity(el_coth, site1, thr, "one", "device", cas[0:1], data1, duration, l)
 	log.ErrFatal(c1.CreateIdentity())
 	for _, ws := range webservers1 {
 		ws.WSAttach(site1, c1.ID, el_coth)
@@ -507,7 +507,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	thr = 1
 	num_ws2 := 1
 	_, webservers2, wss2, data2 := GetWSPublicsPlusServerIDs(num_ws2, el_coth, l)
-	d1 := NewTestIdentity(el_coth, thr, "site2_one", "device", cas[0:1], data2, duration, l)
+	d1 := NewTestIdentity(el_coth, site2, thr, "site2_one", "device", cas[0:1], data2, duration, l)
 	log.ErrFatal(d1.CreateIdentity())
 	for _, ws := range webservers2 {
 		ws.WSAttach(site2, d1.ID, el_coth)
@@ -520,7 +520,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	thr = 2
 	num_ws3 := 3
 	_, webservers3, wss3, data3 := GetWSPublicsPlusServerIDs(num_ws3, el_coth, l)
-	e := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, duration, l)
+	e := NewTestIdentityMultDevs(el_coth, site3, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, duration, l)
 	e1 := e[0]
 	e2 := e[1]
 	log.ErrFatal(e1.CreateIdentityMultDevs(e))
@@ -532,7 +532,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", c1.ID)
 	//pinstate = &common_structs.PinState{Ctype: "device"}
-	c2 := NewTestIdentity(el_coth, thr, "two", "device", nil, nil, 0, l)
+	c2 := NewTestIdentity(el_coth, "", 0, "two", "device", nil, nil, 0, l)
 	c2.AttachToIdentity(c1.ID)
 	c1.ProposeUpVote()
 	c1.ConfigUpdate()
@@ -646,7 +646,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE IDENTITY: %v", c1.ID)
-	c3 := NewTestIdentity(el_coth, thr, "three", "device", nil, nil, 0, l)
+	c3 := NewTestIdentity(el_coth, "", 0, "three", "device", nil, nil, 0, l)
 	log.ErrFatal(c3.AttachToIdentity(c2.ID))
 	c1.ProposeUpVote()
 	c2.ProposeUpVote()
@@ -688,7 +688,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING SECOND DEVICE TO THE SITE IDENTITY: %v", d1.ID)
-	d2 := NewTestIdentity(el_coth, thr, "site2_two", "device", nil, nil, 0, l)
+	d2 := NewTestIdentity(el_coth, "", 0, "site2_two", "device", nil, nil, 0, l)
 	log.ErrFatal(d2.AttachToIdentity(d1.ID))
 	d1.ProposeUpVote()
 	log.ErrFatal(d2.ConfigUpdate())
@@ -759,7 +759,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 	log.LLvlf2("")
 	log.LLvlf2("ADDING THIRD DEVICE TO THE SITE: %v", site3)
-	e3 := NewTestIdentity(el_coth, thr, "site3_three", "device", nil, nil, 0, l)
+	e3 := NewTestIdentity(el_coth, "", 0, "site3_three", "device", nil, nil, 0, l)
 	log.ErrFatal(e3.AttachToIdentity(e1.ID))
 	e1.ProposeUpVote()
 	e2.ProposeUpVote()
@@ -787,7 +787,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
 	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
 	thr = 1
-	e_fake := NewTestIdentityMultDevs(el_coth, thr, []string{"site3_fake_one"}, "device", cas[1:2], data3, duration, l)
+	e_fake := NewTestIdentityMultDevs(el_coth, site3, thr, []string{"site3_fake_one"}, "device", cas[1:2], data3, duration, l)
 	e1_fake := e_fake[0]
 	log.ErrFatal(e1_fake.CreateIdentityMultDevs(e_fake))
 	for _, ws := range webservers3 {

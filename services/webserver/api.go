@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -265,35 +266,36 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 		return errors.New("CA's signature doesn't verify")
 	}
 
-	// Find the chain of blocks ('sbs_cert') starting from the one for which the cert was issued
-	var start_sb *skipchain.SkipBlock
-	start_sb = nil
-	var start_index int
-	for index, sb := range sbs {
-		_, data, _ := network.UnmarshalRegistered(sb.Data)
-		conf, _ := data.(*common_structs.Config)
-		conf_hash, _ := conf.Hash()
+	// Verify that the config of the first returned skipblock has been certified
+	_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
+	firstconf, _ := data.(*common_structs.Config)
+	conf_hash, _ := firstconf.Hash()
 
-		if bytes.Equal(cert_hash, conf_hash) {
-			start_sb = sb
-			start_index = index
-			break
-		}
-	}
-	if start_sb == nil {
-		return fmt.Errorf("Didn't find skipblock that matches the cert")
+	if !bytes.Equal(cert_hash, conf_hash) {
+		return fmt.Errorf("Cert not upon the config of the first returned skipblock")
 	}
 
-	// Verify the hops starting from the skipblock for which the cert was issued
-	sbs_cert := sbs[start_index:len(sbs)]
-	ok, _ := VerifyHops(sbs_cert)
+	// Check that the returned cert is pointing to the requested FQDN
+	fqdn := firstconf.FQDN
+	if res := strings.Compare(fqdn, name); res != 0 {
+		return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
+	}
+
+	// Check that the returned cert has not yet expired
+	expired := firstconf.ExpiredCertConfig()
+	if expired {
+		return fmt.Errorf("Expired cert -> Cannot connect to the site: %v", name)
+	}
+
+	// Verify the hops starting from the skipblock (sbs[0]) for which the cert was issued
+	ok, _ := VerifyHops(sbs)
 	if !ok {
 		log.LLvlf2("Not valid hops")
 		return fmt.Errorf("Not valid hops")
 	} else {
+		//website.PinState.Window = int64(86400) // (REALISTIC)
 		website.PinState.Window = int64(1)
-		//website.PinState.Window = int64(86400)
-		log.LLvlf2("Start following the site by setting trust_window=%v", website.PinState.Window)
+		log.LLvlf2("Start following the site by setting trust_window: %v", website.PinState.Window)
 		website.PinState.TimePinAccept = time.Now().Unix() * 1000
 		u.WebSites[name] = &website
 		u.Follow(name, latest, cert)
@@ -399,6 +401,18 @@ func (u *User) ReConnect(name string) error {
 			if !bytes.Equal(cert_hash, firstconf_hash) {
 				log.LLvlf2("Received cert does not point to the first returned skipblock's config!")
 				return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
+			}
+
+			// Check that the returned cert is pointing to the requested FQDN
+			fqdn := firstconf.FQDN
+			if res := strings.Compare(fqdn, name); res != 0 {
+				return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
+			}
+
+			// Check that the returned cert has not yet expired
+			expired := firstconf.ExpiredCertConfig()
+			if expired {
+				return fmt.Errorf("Expired cert -> Cannot reconnect to the site: %v", name)
 			}
 
 			// Validate the signature of the CA

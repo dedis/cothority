@@ -133,7 +133,7 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Ros
 		SkipBlocks: make(map[string]*skipchain.SkipBlock),
 		//Certs:      make(map[string][]*common_structs.Cert),
 	}
-	site.si = sidentity.NewIdentity(nil, 0, "", "ws", nil, nil, 0)
+	site.si = sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0)
 	site.si.Cothority = cothority
 	site.si.ID = id
 	site.si.LatestID = id
@@ -500,7 +500,7 @@ func (ws *WS) tryLoad() error {
 func newWSService(c *sda.Context, path string) sda.Service {
 	ws := &WS{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		si:               sidentity.NewIdentity(nil, 0, "", "ws", nil, nil, 0),
+		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
 		path:             path,
 		NameToID:         make(map[string]skipchain.SkipBlockID),
