@@ -730,7 +730,7 @@ func (d *defaultProtoIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 	case ProtocolMsg:
 		sdaMsg := inner
 		var err error
-		_, unmar, err := network.UnmarshalRegistered(sdaMsg.MsgSlice)
+		_, protoMsg, err := network.UnmarshalRegistered(sdaMsg.MsgSlice)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -739,7 +739,7 @@ func (d *defaultProtoIO) Unwrap(msg interface{}) (interface{}, *OverlayMessage, 
 			To:   sdaMsg.To,
 			From: sdaMsg.From,
 		}
-		returnMsg = unmar
+		returnMsg = protoMsg
 	case RequestTree:
 		returnOverlay.RequestTree = &inner
 	case RequestRoster:
