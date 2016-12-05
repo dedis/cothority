@@ -6,11 +6,25 @@ import (
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/byzcoin"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain/blkparser"
 	"github.com/dedis/cothority/sda"
 )
+
+func init() {
+	for _, i := range []interface{}{
+		BlockAnnounce{},
+		NaiveBlockSignature{},
+		Exception{},
+		RoundSignatureRequest{},
+		RoundSignatureResponse{},
+		NtreeSignature{},
+	} {
+		network.RegisterPacketType(i)
+	}
+}
 
 // Ntree is a basic implementation of a byzcoin consensus protocol using a tree
 // and each verifiers will have independent signatures. The messages are then
