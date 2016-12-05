@@ -4,9 +4,23 @@ import (
 	"crypto/sha512"
 	"errors"
 
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
 )
+
+func init() {
+	for _, i := range []interface{}{
+		BFTSignature{},
+		Announce{},
+		Commitment{},
+		ChallengePrepare{},
+		ChallengeCommit{},
+		Response{},
+	} {
+		network.RegisterPacketType(i)
+	}
+}
 
 // RoundType is a type to know if we are in the "prepare" round or the "commit"
 // round
