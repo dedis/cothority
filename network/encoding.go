@@ -185,7 +185,7 @@ var marshalLock sync.Mutex
 
 // MarshalRegisteredType will marshal a struct with its respective type into a
 // slice of bytes. That slice of bytes can be then decoded in
-// UnmarshalRegisteredType. data MUST BE a pointer to the message.
+// UnmarshalRegisteredType. data must be a pointer to the message.
 func MarshalRegisteredType(data Body) ([]byte, error) {
 	marshalLock.Lock()
 	defer marshalLock.Unlock()
