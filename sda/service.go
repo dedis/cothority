@@ -10,9 +10,13 @@ import (
 
 	"sync"
 
+	"reflect"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
+	"golang.org/x/net/websocket"
 )
 
 // Service is a generic interface to define any type of services.
@@ -27,7 +31,7 @@ type Service interface {
 	// ProcessRequest is called when a external client will connect through
 	// the websocket-port to this service. It returns a message that will be
 	// sent back to the client.
-	ProcessClientRequest(interface{}) interface{}
+	ProcessClientRequest(handler string, msg []byte) (reply []byte, errCode int)
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -239,9 +243,6 @@ func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 		c.websocket.RegisterService(name, s)
 	}
 	log.Lvl3(c.Address(), "instantiated all services")
-
-	// registering messages that services are expecting
-	c.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
@@ -302,86 +303,69 @@ func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
 	return serv, true
 }
 
-// ClientRequest is a generic packet to represent any kind of request a Service is
-// ready to process. It is simply a JSON packet containing two fields:
-// * Service: a string representing the name of the service for whom the packet
-// is intended for.
-// * Data: contains all the information of the request
-type ClientRequest struct {
-	// Name of the service to direct this request to
-	Service ServiceID
-	// Data containing all the information in the request
-	Data []byte
-	// Msg
-	Msg interface{}
-}
-
-// ClientRequestID is the type that registered by the network library
-var ClientRequestID = network.RegisterPacketType(ClientRequest{})
-
-// CreateClientRequest creates a Request message out of any message that is
-// destined to a Service. XXX For the moment it uses protobuf, as it is already
-// handling abstract.Scalar/Public stuff that json can't do. Later we may want
-// to think on how to change that.
-func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
-	sid := ServiceFactory.ServiceID(service)
-	log.Lvl1("Name", service, " <-> ServiceID", sid.String())
-	buff, err := network.MarshalRegisteredType(r)
-	if err != nil {
-		return nil, err
-	}
-	return &ClientRequest{
-		Service: sid,
-		Data:    buff,
-	}, nil
-}
-
 // Client is a struct used to communicate with a remote Service running on a
 // sda.Conode
 type Client struct {
-	ServiceID ServiceID
-	net       *network.Client
+	service string
 }
 
 // NewClient returns a client using the service s. It uses TCP communication by
 // default
 func NewClient(s string) *Client {
 	return &Client{
-		ServiceID: ServiceFactory.ServiceID(s),
-		net:       network.NewTCPClient(),
+		service: s,
 	}
 }
 
 // Send will marshal the message into a ClientRequest message and send it.
-func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
-
-	m, err := network.NewNetworkPacket(msg)
+func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]byte, error) {
+	// Open connection to service.
+	url, err := getWebHost(dst)
 	if err != nil {
 		return nil, err
 	}
-
-	b, err := m.MarshalBinary()
+	log.Lvlf4("Sending %x to %s/%s/%s", buf, url, c.service, path)
+	ws, err := websocket.Dial(fmt.Sprintf("ws://%s/%s/%s", url, c.service, path),
+		"", "http://localhost/")
 	if err != nil {
 		return nil, err
 	}
-
-	serviceReq := &ClientRequest{
-		Service: c.ServiceID,
-		Data:    b,
+	if err = websocket.Message.Send(ws, buf); err != nil {
+		return nil, err
 	}
-	// send the request
-	log.Lvlf4("Sending request %x", serviceReq.Service)
-	return c.net.Send(dst, serviceReq)
+	var rcv []byte
+	if err = websocket.Message.Receive(ws, &rcv); err != nil {
+		return nil, err
+	}
+	log.Lvlf4("Received %x", rcv)
+	return rcv, nil
+}
+
+// SendReflect wraps protobuf.(En|De)code to the Client.Send-function.
+func (c *Client) SendProtobuf(dst *network.ServerIdentity, msg interface{}, ret interface{}) error {
+	buf, err := protobuf.Encode(msg)
+	if err != nil {
+		return err
+	}
+	path := strings.Split(reflect.TypeOf(msg).String(), ".")[1]
+	buf, err = c.Send(dst, path, buf)
+	if err != nil {
+		return err
+	}
+	if ret != nil {
+		return protobuf.Decode(buf, ret)
+	}
+	return nil
 }
 
 // SendToAll sends a message to all ServerIdentities of the Roster and returns
 // all errors encountered concatenated together as a string.
-func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
-	msgs := make([]*network.Packet, len(dst.List))
+func (c *Client) SendToAll(dst *Roster, path string, buf []byte) ([][]byte, error) {
+	msgs := make([][]byte, len(dst.List))
 	var errstrs []string
 	for i, e := range dst.List {
 		var err error
-		msgs[i], err = c.Send(e, msg)
+		msgs[i], err = c.Send(e, path, buf)
 		if err != nil {
 			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
 		}

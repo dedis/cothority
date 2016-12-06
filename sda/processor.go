@@ -8,6 +8,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/protobuf"
 )
 
 // ServiceProcessor allows for an easy integration of external messages
@@ -19,17 +20,28 @@ import (
 // the function 'ReceiveMsg' should return an error and any 'replyMsg' it
 // wants to send.
 type ServiceProcessor struct {
-	functions map[network.PacketTypeID]interface{}
+	handlers map[string]serviceHandler
 	*Context
+}
+
+type serviceHandler struct {
+	handler interface{}
+	msgType reflect.Type
 }
 
 // NewServiceProcessor initializes your ServiceProcessor.
 func NewServiceProcessor(c *Context) *ServiceProcessor {
 	return &ServiceProcessor{
-		functions: make(map[network.PacketTypeID]interface{}),
-		Context:   c,
+		handlers: make(map[string]serviceHandler),
+		Context:  c,
 	}
 }
+
+const (
+	WebSocketErrorPathNotFound   = 4000
+	WebSocketErrorProtobufDecode = 4001
+	WebSocketErrorProtobufEncode = 4002
+)
 
 // RegisterMessage will store the given handler that will be used by the service.
 // f must be a function of the following form:
@@ -64,22 +76,19 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Second argument must be a pointer to *struct*")
 	}
 	if ft.NumOut() != 2 {
-		return errors.New("Need 2 return values: network.Body and error")
+		return errors.New("Need 2 return values: network.Body and int")
 	}
 	if ft.Out(0) != reflect.TypeOf((*network.Body)(nil)).Elem() {
-		return errors.New("Need 2 return values: *network.Body* and error")
+		return errors.New("Need 2 return values: _network.Body_ and int")
 	}
-	if ft.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
-		return errors.New("Need 2 return values: network.Body and *error*")
+	if ft.Out(1) != reflect.TypeOf(1) {
+		return errors.New("Need 2 return values: network.Body and _int_")
 	}
 	// Automatic registration of the message to the network library.
 	log.Lvl4("Registering handler", cr.String())
-	typ := network.RegisterPacketUUID(network.RTypeToPacketTypeID(
-		cr.Elem()),
-		cr.Elem())
-	p.functions[typ] = f
 	pm := strings.Split(cr.Elem().String(), ".")[1]
-	p.conode.websocket.RegisterMessageHandler(ServiceFactory.Name(p.servID), pm, cr.Elem())
+	p.handlers[pm] = serviceHandler{f, cr.Elem()}
+	p.conode.websocket.RegisterMessageHandler(ServiceFactory.Name(p.servID), pm)
 	return nil
 }
 
@@ -99,38 +108,47 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 	log.Panic("Cannot handle message.")
 }
 
+func (i *ServiceProcessor) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+	return nil, nil
+}
+
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(msg interface{}) interface{} {
-	mt := network.TypeToPacketTypeID(msg)
-	fu, ok := p.functions[mt]
-	var reply interface{}
-	if !ok {
-		reply = &network.StatusRet{
-			Status: "Didn't register message-handler: " + mt.String(),
-		}
-	} else {
-
-		to := reflect.TypeOf(fu).In(0)
-		f := reflect.ValueOf(fu)
-
-		arg := reflect.New(to.Elem())
-		log.Print(reflect.TypeOf(msg), arg)
-		arg.Elem().Set(reflect.ValueOf(msg))
-		ret := f.Call([]reflect.Value{arg, arg})
-
-		errI := ret[1].Interface()
-
-		if errI != nil {
-			reply = &network.StatusRet{
-				Status: errI.(error).Error(),
-			}
+func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte, int) {
+	mh, ok := p.handlers[path]
+	reply, errCode := func() (interface{}, int) {
+		if !ok {
+			return nil, WebSocketErrorPathNotFound
 		} else {
-			reply = ret[0].Interface()
-			if reply == nil {
-				reply = network.StatusOK
+			msg := reflect.New(mh.msgType).Interface()
+			err := protobuf.Decode(buf, msg)
+			if err != nil {
+				return nil, WebSocketErrorProtobufDecode
+			}
+
+			to := reflect.TypeOf(mh.handler).In(0)
+			f := reflect.ValueOf(mh.handler)
+
+			arg := reflect.New(to.Elem())
+			arg.Elem().Set(reflect.ValueOf(msg).Elem())
+			ret := f.Call([]reflect.Value{arg})
+
+			errI := ret[1].Interface()
+
+			if errI != 0 {
+				return nil, errI.(int)
+			} else {
+				return ret[0].Interface(), 0
 			}
 		}
+	}()
+	if errCode != 0 {
+		return nil, errCode
 	}
-	return reply
+	buf, err := protobuf.Encode(reply)
+	if err != nil {
+		log.Error(buf)
+		return nil, WebSocketErrorProtobufEncode
+	}
+	return buf, 0
 }

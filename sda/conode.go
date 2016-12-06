@@ -98,6 +98,7 @@ func (c *Conode) GetStatus() Status {
 
 // Close closes the overlay and the Router
 func (c *Conode) Close() error {
+	c.websocket.Stop()
 	c.overlay.Close()
 	err := c.Router.Stop()
 	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
