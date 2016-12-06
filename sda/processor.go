@@ -37,12 +37,6 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 	}
 }
 
-const (
-	WebSocketErrorPathNotFound   = 4000
-	WebSocketErrorProtobufDecode = 4001
-	WebSocketErrorProtobufEncode = 4002
-)
-
 // RegisterMessage will store the given handler that will be used by the service.
 // f must be a function of the following form:
 // func(sId *network.ServerIdentity, structPtr *MyMessageStruct)(network.Body, error)

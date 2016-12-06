@@ -13,8 +13,6 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 )
 
-const readSize = 1024
-
 // WebSocket handles incoming client-requests using the WebService
 // protocol for JavaScript-compatibility.
 type WebSocket struct {
@@ -23,6 +21,13 @@ type WebSocket struct {
 	server         *graceful.Server
 	mux            *http.ServeMux
 }
+
+const readSize = 1024
+const (
+	WebSocketErrorPathNotFound   = 4000
+	WebSocketErrorProtobufDecode = 4001
+	WebSocketErrorProtobufEncode = 4002
+)
 
 // NewWebSocket opens a webservice-listener one port above the given
 // ServerIdentity.
@@ -72,6 +77,11 @@ func (w *WebSocket) RegisterMessageHandler(service, path string) error {
 		reply, errCode := w.services[service].ProcessClientRequest(path, buf)
 		if errCode == 0 {
 			_, err := ws.Write(reply)
+			header := make([]byte, 128)
+			if ws.HeaderReader() != nil {
+				n, errH := ws.HeaderReader().Read(header)
+				log.Printf("%d::%d %x", n, errH, header)
+			}
 			if err != nil {
 				log.Error(err)
 				return
