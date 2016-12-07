@@ -14,6 +14,10 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
+// a connection will return an io.EOF after readTimeout if nothing have been
+// sent.
+var readTimeout = 5 * time.Second
+
 // NewTCPRouter returns a new Router using TCPHost as the underlying Host.
 func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
 	h, err := NewTCPHost(sid.Address)
@@ -100,11 +104,14 @@ func (c *TCPConn) Receive() (nm Packet, e error) {
 func (c *TCPConn) receiveRaw() ([]byte, error) {
 	c.receiveMutex.Lock()
 	defer c.receiveMutex.Unlock()
+	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	// First read the size
 	var total Size
 	if err := binary.Read(c.conn, globalOrder, &total); err != nil {
 		return nil, handleError(err)
 	}
+
+	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer

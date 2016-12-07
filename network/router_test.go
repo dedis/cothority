@@ -63,6 +63,30 @@ func testRouter(t *testing.T, fac routerFactory) {
 	}
 }
 
+func testRouterRemoveConnection(t *testing.T) {
+	r1, err := NewTestRouterTCP(2008)
+	require.Nil(t, err)
+	r2, err := NewTestRouterTCP(2009)
+	require.Nil(t, err)
+
+	defer r1.Stop()
+
+	go r1.Start()
+	go r2.Start()
+
+	require.NotNil(t, r1.Send(r2.ServerIdentity, nil))
+
+	r1.Lock()
+	require.Equal(t, 1, len(r1.connections[r2.ServerIdentity.ID]))
+	r1.Unlock()
+
+	require.Nil(t, r2.Stop())
+
+	r1.Lock()
+	require.Equal(t, 0, len(r1.connections[r2.ServerIdentity.ID]))
+	r1.Unlock()
+}
+
 // Test the automatic connection upon request
 func TestRouterAutoConnectionTCP(t *testing.T) {
 	testRouterAutoConnection(t, NewTestRouterTCP)
