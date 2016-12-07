@@ -16,7 +16,7 @@ import (
 
 // a connection will return an io.EOF after readTimeout if nothing have been
 // sent.
-var readTimeout = 5 * time.Second
+var readTimeout = 1 * time.Minute
 
 // NewTCPRouter returns a new Router using TCPHost as the underlying Host.
 func NewTCPRouter(sid *ServerIdentity) (*Router, error) {
@@ -77,7 +77,7 @@ func NewTCPConn(addr Address) (conn *TCPConn, err error) {
 func (c *TCPConn) Receive() (nm Packet, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("Error Received message: %v", err)
+			e = fmt.Errorf("Error Received message: %v\n%s", err, log.Stack())
 			nm = EmptyApplicationPacket
 		}
 	}()
