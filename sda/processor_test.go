@@ -62,8 +62,8 @@ func TestServiceProcessor_ProcessClientRequest(t *testing.T) {
 
 	buf, err := protobuf.Encode(&testMsg{11})
 	log.ErrFatal(err)
-	rep, errCode := p.ProcessClientRequest("testMsg", buf)
-	require.Equal(t, 0, errCode)
+	rep, cerr := p.ProcessClientRequest("testMsg", buf)
+	require.Equal(t, nil, cerr)
 	val := &testMsg{}
 	log.ErrFatal(protobuf.Decode(rep, val))
 	if val.I != 11 {
@@ -72,8 +72,8 @@ func TestServiceProcessor_ProcessClientRequest(t *testing.T) {
 
 	buf, err = protobuf.Encode(&testMsg{42})
 	log.ErrFatal(err)
-	rep, errCode = p.ProcessClientRequest("testMsg", buf)
-	require.Equal(t, 4142, errCode)
+	rep, cerr = p.ProcessClientRequest("testMsg", buf)
+	require.Equal(t, 4142, cerr.ErrorCode())
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
@@ -85,7 +85,8 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 	client := local.NewClient(testServiceName)
 	msg := &testMsg{}
-	log.ErrFatal(client.SendProtobuf(h.ServerIdentity, &testMsg{12}, msg))
+	cerr := client.SendProtobuf(h.ServerIdentity, &testMsg{12}, msg)
+	log.ErrFatal(cerr)
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
 	}
@@ -104,35 +105,35 @@ type testMsg3 testMsg
 type testMsg4 testMsg
 type testMsg5 testMsg
 
-func procMsg(msg *testMsg) (network.Body, int) {
+func procMsg(msg *testMsg) (network.Body, ClientError) {
 	// Return an error for testing
 	if msg.I == 42 {
-		return nil, 4142
+		return nil, NewClientErrorCode(4142, "")
 	}
-	return msg, 0
+	return msg, nil
 }
 
-func procMsg2(msg *testMsg2) (network.Body, int) {
-	return nil, 0
+func procMsg2(msg *testMsg2) (network.Body, ClientError) {
+	return nil, nil
 }
-func procMsg3(msg *testMsg3) (network.Body, int) {
-	return nil, 0
-}
-
-func procMsgWrong1() (network.Body, int) {
-	return nil, 0
+func procMsg3(msg *testMsg3) (network.Body, ClientError) {
+	return nil, nil
 }
 
-func procMsgWrong2(msg testMsg2) (network.Body, int) {
-	return msg, 0
+func procMsgWrong1() (network.Body, ClientError) {
+	return nil, nil
 }
 
-func procMsgWrong3(msg *testMsg3) int {
-	return 0
+func procMsgWrong2(msg testMsg2) (network.Body, ClientError) {
+	return msg, nil
 }
 
-func procMsgWrong4(msg *testMsg4) (int, network.Body) {
-	return 0, msg
+func procMsgWrong3(msg *testMsg3) ClientError {
+	return nil
+}
+
+func procMsgWrong4(msg *testMsg4) (ClientError, network.Body) {
+	return nil, msg
 }
 
 type testService struct {
@@ -152,7 +153,7 @@ func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (P
 	return nil, nil
 }
 
-func (ts *testService) ProcessMsg(msg *testMsg) (network.Body, int) {
+func (ts *testService) ProcessMsg(msg *testMsg) (network.Body, ClientError) {
 	ts.Msg = msg
-	return msg, 0
+	return msg, nil
 }

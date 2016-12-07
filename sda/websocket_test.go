@@ -5,6 +5,11 @@ import (
 
 	"fmt"
 
+	"errors"
+
+	"sync"
+	"time"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/protobuf"
@@ -43,14 +48,95 @@ func TestNewWebSocket(t *testing.T) {
 	assert.Equal(t, 1, rcvMsg.Val)
 }
 
+func TestClient_Send(t *testing.T) {
+	local := NewTCPTest()
+	defer local.CloseAll()
+
+	// register service
+	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
+		c.conode.websocket.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	defer ServiceFactory.Unregister(backForthServiceName)
+
+	// create conodes
+	conodes, el, _ := local.GenTree(4, false)
+	client := local.NewClient(backForthServiceName)
+
+	r := &SimpleRequest{
+		ServerIdentities: el,
+		Val:              10,
+	}
+	sr := &SimpleResponse{}
+	log.ErrFatal(client.SendProtobuf(conodes[0].ServerIdentity, r, sr))
+	assert.Equal(t, sr.Val, 10)
+}
+
+func TestClient_Parallel(t *testing.T) {
+	nbrNodes := 4
+	nbrParallel := 20
+	local := NewTCPTest()
+	defer local.CloseAll()
+
+	// register service
+	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
+		c.conode.websocket.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
+		return &simpleService{
+			ctx: c,
+		}
+	})
+	defer ServiceFactory.Unregister(backForthServiceName)
+
+	// create conodes
+	conodes, el, _ := local.GenTree(nbrNodes, true)
+
+	wg := sync.WaitGroup{}
+	wg.Add(nbrParallel)
+	for i := 0; i < nbrParallel; i++ {
+		go func(i int) {
+			log.Lvl1("Starting message", i)
+			r := &SimpleRequest{
+				ServerIdentities: el,
+				Val:              10 * i,
+			}
+			client := local.NewClient(backForthServiceName)
+			sr := &SimpleResponse{}
+			log.ErrFatal(client.SendProtobuf(conodes[0].ServerIdentity, r, sr))
+			assert.Equal(t, 10*i, sr.Val)
+			log.Lvl1("Done with message", i)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	time.Sleep(time.Second)
+}
+
+func TestNewClientError(t *testing.T) {
+	ce := NewClientError(errors.New("websocket:close 1100: hello"))
+	assert.Equal(t, 0, ce.ErrorCode())
+	ce = NewClientError(errors.New("websocket: close 1100:"))
+	assert.Equal(t, 1100, ce.ErrorCode())
+	assert.Equal(t, "", ce.ErrorMsg())
+	str := "websocket: close 1100: hello"
+	ce = NewClientError(errors.New(str))
+	assert.Equal(t, 1100, ce.ErrorCode())
+	assert.Equal(t, "hello", ce.ErrorMsg())
+	assert.Equal(t, str, ce.Error())
+
+	assert.True(t, NewClientError(nil) == nil)
+	assert.True(t, NewClientError((error)(nil)) == nil)
+}
+
 const serviceWebSocket = "WebSocket"
 
 type ServiceWebSocket struct {
 	*ServiceProcessor
 }
 
-func (i *ServiceWebSocket) SimpleResponse(msg *SimpleResponse) (network.Body, int) {
-	return &SimpleResponse{msg.Val + 1}, 0
+func (i *ServiceWebSocket) SimpleResponse(msg *SimpleResponse) (network.Body, ClientError) {
+	return &SimpleResponse{msg.Val + 1}, nil
 }
 
 func newServiceWebSocket(c *Context, path string) Service {

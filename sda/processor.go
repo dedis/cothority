@@ -70,13 +70,15 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("Second argument must be a pointer to *struct*")
 	}
 	if ft.NumOut() != 2 {
-		return errors.New("Need 2 return values: network.Body and int")
+		return errors.New("Need 2 return values: network.Body and ClientError")
 	}
 	if ft.Out(0) != reflect.TypeOf((*network.Body)(nil)).Elem() {
-		return errors.New("Need 2 return values: _network.Body_ and int")
+		return errors.New("1st return value has to be: network.Body, but is: " +
+			ft.Out(0).String())
 	}
-	if ft.Out(1) != reflect.TypeOf(1) {
-		return errors.New("Need 2 return values: network.Body and _int_")
+	if ft.Out(1) != reflect.TypeOf((*ClientError)(nil)).Elem() {
+		return errors.New("2nd return value has to be: ClientError, but is: " +
+			ft.Out(1).String())
 	}
 	// Automatic registration of the message to the network library.
 	log.Lvl4("Registering handler", cr.String())
@@ -102,22 +104,24 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 	log.Panic("Cannot handle message.")
 }
 
+// NewProtocol is a stub for services that don't want to intervene in the
+// protocol-handling.
 func (i *ServiceProcessor) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
 	return nil, nil
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply
 // and sends it back.
-func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte, int) {
+func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte, ClientError) {
 	mh, ok := p.handlers[path]
-	reply, errCode := func() (interface{}, int) {
+	reply, cerr := func() (interface{}, ClientError) {
 		if !ok {
-			return nil, WebSocketErrorPathNotFound
+			return nil, NewClientErrorCode(WebSocketErrorPathNotFound, "")
 		} else {
 			msg := reflect.New(mh.msgType).Interface()
 			err := protobuf.Decode(buf, msg)
 			if err != nil {
-				return nil, WebSocketErrorProtobufDecode
+				return nil, NewClientErrorCode(WebSocketErrorProtobufDecode, "")
 			}
 
 			to := reflect.TypeOf(mh.handler).In(0)
@@ -127,22 +131,22 @@ func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte
 			arg.Elem().Set(reflect.ValueOf(msg).Elem())
 			ret := f.Call([]reflect.Value{arg})
 
-			errI := ret[1].Interface()
+			cerr := ret[1].Interface()
 
-			if errI != 0 {
-				return nil, errI.(int)
+			if cerr != nil {
+				return nil, cerr.(ClientError)
 			} else {
-				return ret[0].Interface(), 0
+				return ret[0].Interface(), nil
 			}
 		}
 	}()
-	if errCode != 0 {
-		return nil, errCode
+	if cerr != nil {
+		return nil, cerr
 	}
 	buf, err := protobuf.Encode(reply)
 	if err != nil {
 		log.Error(buf)
-		return nil, WebSocketErrorProtobufEncode
+		return nil, NewClientErrorCode(WebSocketErrorProtobufEncode, "")
 	}
-	return buf, 0
+	return buf, nil
 }
