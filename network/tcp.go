@@ -14,7 +14,7 @@ import (
 	"github.com/dedis/cothority/log"
 )
 
-// a connection will return an io.EOF after readTimeout if nothing have been
+// a connection will return an io.EOF after readTimeout if nothing has been
 // sent.
 var readTimeout = 1 * time.Minute
 

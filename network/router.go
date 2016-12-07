@@ -218,11 +218,14 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		}
 
 		if err != nil {
-			log.Lvlf4("%+v got error (%+s) while receiving message", r.ServerIdentity.String(), err)
+			if err == ErrTimeout {
+				log.Lvlf5("%s drops %s connection: timeout", r.ServerIdentity.Address, remote.Address)
+				return
+			}
 
-			if err == ErrClosed || err == ErrEOF || err == ErrTimeout {
+			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
-				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvlf5("%s drops %s connection: closed", r.ServerIdentity.Address, remote.Address)
 				return
 			}
 			// Temporary error, continue.
