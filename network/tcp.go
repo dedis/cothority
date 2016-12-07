@@ -111,12 +111,12 @@ func (c *TCPConn) receiveRaw() ([]byte, error) {
 		return nil, handleError(err)
 	}
 
-	c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 	b := make([]byte, total)
 	var read Size
 	var buffer bytes.Buffer
 	for read < total {
 		// Read the size of the next packet.
+		c.conn.SetReadDeadline(time.Now().Add(readTimeout))
 		n, err := c.conn.Read(b)
 		// Quit if there is an error.
 		if err != nil {
