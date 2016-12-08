@@ -26,7 +26,7 @@ func (c *Client) SignMsg(root *network.ServerIdentity, msg []byte) (*SignatureRe
 	serviceReq := &SignatureRequest{
 		Message: msg,
 	}
-	log.Lvl4("Sending message [", string(msg), "] to", root)
+	log.LLvl2("-----Sending message [", string(msg), "] to", root)
 	reply, err := c.Send(root, serviceReq)
 	if e := network.ErrMsg(reply, err); e != nil {
 		return nil, e
@@ -50,7 +50,7 @@ func (c *Client) SetupStamper(roster *sda.Roster, epochDuration time.Duration,
 		MaxIterations: maxIterations,
 	}
 	root := roster.List[0]
-	log.Lvl4("Sending message to:", root)
+	log.LLvlf2("-------Sending message to: %v", root)
 	reply, err := c.Send(root, serviceReq)
 	if e := network.ErrMsg(reply, err); e != nil {
 		return nil, e
@@ -59,6 +59,6 @@ func (c *Client) SetupStamper(roster *sda.Roster, epochDuration time.Duration,
 	if !ok {
 		return nil, errors.New("This is odd: couldn't cast reply.")
 	}
-	log.Lvl4("Initialized timestamp with roster id:", sr.ID)
+	log.LLvlf2("-------Initialized timestamp with roster id: %v", sr.ID)
 	return &sr, nil
 }

@@ -67,7 +67,7 @@ type Service struct {
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	log.Lvl2("Timestamp Service received New Protocol event")
+	log.LLvlf2("Timestamp Service received New Protocol event")
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
 	return pi, err
 }
@@ -115,6 +115,7 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	// on every request:
 	// 1) If has the length of hashed nonce, add it to the local buffer of
 	//    of the service:
+	log.LLvlf2("Msg received--------------")
 	respC := make(chan *SignatureResponse)
 	s.requests.Add(req.Message, respC)
 	// 2) At epoch time: create the merkle tree
@@ -125,7 +126,7 @@ func (s *Service) SignatureRequest(si *network.ServerIdentity, req *SignatureReq
 	// see runLoop
 
 	// wait on my signature:
-	log.Lvl2("Waiting on epoch end.")
+	log.LLvlf2("!!!!!!!!!!!!!!!!!!!!Waiting on epoch end.")
 	resp := <-respC
 	return resp, nil
 }
@@ -137,6 +138,10 @@ func (s *Service) SetupCoSiRoster(si *network.ServerIdentity, setup *SetupRoster
 		s.roster = setup.Roster
 		s.EpochDuration = setup.EpochDuration
 		s.maxIterations = setup.MaxIterations
+
+		for _, server := range setup.Roster.List {
+			log.LLvlf2("****** %v", server)
+		}
 		go s.runLoop()
 		log.Lvl1("Started main loop with epoch duration:", s.EpochDuration)
 	} else {
@@ -150,8 +155,9 @@ func (s *Service) SetupCoSiRoster(si *network.ServerIdentity, setup *SetupRoster
 
 func (s *Service) cosiSign(msg []byte) []byte {
 	sdaTree := s.roster.GenerateBinaryTree()
-
+	log.LLvlf2("cosiSign(): 1 %v", sdaTree)
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
+	log.LLvlf2("cosiSign(): 2 %v", tni)
 	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
 	if err != nil {
 		panic("Couldn't make new protocol: " + err.Error())
@@ -168,7 +174,7 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	go pi.Dispatch()
 	go pi.Start()
 	res := <-response
-	log.Lvl2("Recieved cosi response")
+	log.LLvl2("Received cosi response")
 	return res
 
 }
@@ -195,9 +201,9 @@ func (s *Service) runLoop() {
 			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, data)
 			msg := RecreateSignedMsg(root, now.Unix())
-
+			log.LLvlf2("nothing")
 			signature := s.signMsg(msg)
-			log.Lvlf2("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+			log.LLvlf2("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 			// Give (individual) response to anyone waiting:
 			for i, respC := range channels {
 				respC <- &SignatureResponse{
@@ -230,7 +236,7 @@ func bytesToTimestamp(b []byte) (int64, error) {
 }
 
 func newTimestampService(c *sda.Context, path string) sda.Service {
-	log.Lvl4("New Service created!")
+	log.LLvlf2("New Service created!")
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,

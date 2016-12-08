@@ -23,7 +23,8 @@ const MaxInt = int(MaxUint >> 1)
 const propagateTimeout = 10000
 
 // How many msec since a skipblock is thought to be stale
-const maxdiff = 2592000000 // (2592000000ms = 30 days * 24 hours/day * 3600 sec/hour * 1000 ms/sec)
+//const maxdiff = 2592000000 // (2592000000 ms = 30 days * 24 hours/day * 3600 sec/hour * 1000 ms/sec)
+const maxdiff = 300000 // 300000 ms = 5 minutes * 60 sec/min * 1000 ms/sec
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID

@@ -684,6 +684,7 @@ func (u *User) Follow(name string, block *skipchain.SkipBlock, cert *common_stru
 	// be updated)
 
 	u.WebSites[name] = website
+	log.LLvlf2("Follow(): End")
 	return
 }
 

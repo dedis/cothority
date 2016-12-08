@@ -14,13 +14,13 @@ import (
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"sort"
-	"strings"
-	"time"
-	//"github.com/dedis/cothority/sda"
+	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"sort"
+	"strings"
+	"time"
 )
 
 func init() {
@@ -63,8 +63,13 @@ type Config struct {
 	Threshold int
 	Device    map[string]*Device
 	Data      map[string]*WSconfig
+
 	// The public keys of the trusted CAs
 	CAs []CAInfo
+
+	// Aggregate public key of the proxy cothority (to be trusted for Proofs-of-Freshness)
+	//ProxyAggr abstract.Point
+	ProxyRoster *sda.Roster
 }
 
 // Device is represented by a public key and possibly the signature of the
@@ -148,7 +153,7 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(fqdn string, threshold int, pub abstract.Point, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
+func NewConfig(fqdn string, threshold int, pub abstract.Point, proxyroster *sda.Roster, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
 	return &Config{
 		FQDN:        fqdn,
 		Threshold:   threshold,
@@ -156,6 +161,8 @@ func NewConfig(fqdn string, threshold int, pub abstract.Point, owner string, cas
 		Data:        data,
 		CAs:         cas,
 		MaxDuration: duration,
+		//ProxyAggr:   proxyaggr,
+		ProxyRoster: proxyroster,
 	}
 }
 
@@ -255,6 +262,16 @@ func (c *Config) Hash() (crypto.HashID, error) {
 			return nil, err
 		}
 		_, err = hash.Write(b)
+	}
+	// Include the aggregate public key into the hash (cothority is trusted for issuing proofs of freshness)
+	point := &APoint{Point: c.ProxyRoster.Aggregate}
+	b, err2 := network.MarshalRegisteredType(point)
+	if err2 != nil {
+		return nil, err2
+	}
+	_, err = hash.Write(b)
+	if err != nil {
+		return nil, err
 	}
 
 	the_hash := hash.Sum(nil)

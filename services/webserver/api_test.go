@@ -11,6 +11,7 @@ import (
 		"io"
 	*/
 	"fmt"
+	"math/rand"
 	//"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
@@ -472,10 +473,19 @@ func TestSkipchainSwitch(t *testing.T) {
 	l := sda.NewTCPTest()
 	hosts_coth, el_coth, _ := l.GenTree(3, true)
 	services := l.GetServices(hosts_coth, sidentity.IdentityService)
+
+	proxies := make([]*sidentity.Service, 0)
 	for _, s := range services {
 		log.Lvl3(s.(*sidentity.Service).Identities)
+		proxy := s.(*sidentity.Service)
+		proxy.ClearIdentities()
+		proxies = append(proxies, proxy)
 		//log.LLvlf2("%v", s.(*sidentity.Service).ServerIdentity())
 	}
+
+	randomID := rand.Int() % len(services)
+	proxies[randomID].TheRoster = el_coth
+	go proxies[randomID].RunLoop(el_coth)
 
 	hosts_ca, _, _ := l.GenTree(2, true)
 	services = l.GetServices(hosts_ca, ca.CAService)
@@ -804,6 +814,7 @@ func TestSkipchainSwitch(t *testing.T) {
 		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
 		log.ErrFatal(u2.ReConnect(site3))
 	}
+	log.LLvlf2("THE END")
 
 }
 

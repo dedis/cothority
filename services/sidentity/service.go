@@ -13,6 +13,7 @@ package sidentity
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -25,10 +26,12 @@ import (
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/manage"
+	"github.com/dedis/cothority/protocols/swupdate"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
+	//"github.com/dedis/cothority/services/timestamp"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -36,6 +39,15 @@ import (
 const ServiceName = "SIdentity"
 
 var IdentityService sda.ServiceID
+
+var dummyVerfier = func(rootAndTimestamp []byte) bool {
+	l := len(rootAndTimestamp)
+	_, err := bytesToTimestamp(rootAndTimestamp[l-10 : l])
+	if err != nil {
+		log.Error("Got some invalid timestamp.")
+	}
+	return true
+}
 
 func init() {
 	sda.RegisterNewService(ServiceName, newIdentityService)
@@ -47,14 +59,19 @@ func init() {
 // Service handles identities
 type Service struct {
 	*sda.ServiceProcessor
-	ca *ca.CSRDispatcher
+	skipchain *skipchain.Client
+	ca        *ca.CSRDispatcher
+	//stamper   *timestamp.Client
 	*StorageMap
 	identitiesMutex sync.Mutex
-	skipchain       *skipchain.Client
 	path            string
 	// 'Publics' holds the map between the ServerIdentity of each web server and its public key (to be
 	// used by the devices for encryption of the web server's private tls key)
-	Publics map[string]abstract.Point
+	Publics       map[string]abstract.Point
+	EpochDuration time.Duration
+	TheRoster     *sda.Roster
+	//signMsg       func(roster *sda.Roster, m []byte) []byte
+	signMsg func(m []byte) []byte
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -76,6 +93,9 @@ type Storage struct {
 	// that was(were) issued for that particular config
 	//Certs map[string][]*ca.Cert
 	CertInfo *common_structs.CertInfo
+
+	// Latest PoF (on the Latest config)
+	PoF *SignatureResponse
 }
 
 // NewProtocol is called by the Overlay when a new protocol request comes in.
@@ -90,6 +110,12 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
 		return pi, err
 	}
+	log.LLvlf2("Timestamp Service received New Protocol event")
+	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
+	if err != nil {
+		log.LLvlf2("%v", err)
+	}
+	return pi, err
 	return nil, nil
 }
 
@@ -100,6 +126,7 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
 func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
+	log.LLvlf2("haaa %v", len(s.Identities))
 	//log.LLvlf2("%s Creating new site identity with config %+v", s, ai.Config)
 	ids := &Storage{
 		Latest: ai.Config,
@@ -152,12 +179,18 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	if err != nil {
 		return nil, err
 	}
-	log.LLvlf2("CreateIdentity(): 2")
+
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	//log.LLvlf2("New chain is\n%x", []byte(ids.Data.Hash))
-	log.LLvlf2("CreateIdentity(): 3")
+	/*
+		// Init stamper and start it
+		_, err = s.stamper.SetupStamper(ai.Roster, time.Millisecond*200000, 1)
+
+		go s.SendConfigsToStamper()
+	*/
+
 	s.save()
 	//log.Lvlf2("CreateIdentity(): End having %v certs", len(ids.Certs))
 	/*
@@ -176,6 +209,52 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}, nil
 }
 
+/*
+func (s *Service) SendConfigsToStamper() {
+	//c := time.Tick(time.Millisecond * 250000)
+	c := time.Tick(time.Millisecond * 1000)
+	for _ = range c {
+		var res []chan *timestamp.SignatureResponse
+		for index := range res {
+			res[index] = make(chan *timestamp.SignatureResponse)
+		}
+		index := 0
+		for _, sid := range s.Identities {
+			latestconf := sid.Latest
+			for _, server := range latestconf.ProxyRoster.List {
+				log.LLvlf2("%v %v", index, server)
+			}
+			rootIdentity := latestconf.ProxyRoster.Get(0)
+			hash, _ := latestconf.Hash()
+			//go func() {
+			log.LLvlf2("%v %v %v", index, rootIdentity, hash)
+			result, err := s.stamper.SignMsg(rootIdentity, hash)
+			log.ErrFatal(err, "Couldn't send")
+			res[index] <- result
+			//}()
+			index++
+		}
+
+		log.Lvl1("Waiting on responses ...")
+		index = 0
+		for _, sid := range s.Identities {
+			sid.PoF = <-res[index]
+			log.LLvlf2("1")
+			roster := sid.Latest.ProxyRoster
+			replies, err := manage.PropagateStartAndWait(s.Context, roster,
+				&PropagatePoF{sid}, propagateTimeout, s.Propagate)
+			if err != nil {
+				log.ErrFatal(err, "Couldn't send")
+			}
+
+			if replies != len(roster.List) {
+				log.Warn("Did only get", replies, "out of", len(roster.List))
+			}
+			index++
+		}
+	}
+}
+*/
 // ConfigUpdate returns a new configuration update
 func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
 	sid := s.getIdentityStorage(cu.ID)
@@ -437,6 +516,14 @@ func (s *Service) Propagate(msg network.Body) {
 		s.setIdentityStorage(id, pc.Storage)
 		log.LLvlf2("Fresh cert is now stored")
 		return
+	case *PropagatePoF:
+		pof := msg.(*PropagatePoF)
+		id = pof.CertInfo.Cert.ID
+		s.setIdentityStorage(id, pof.Storage)
+		log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _")
+		log.LLvlf2("PoF is now stored")
+		log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _")
+		return
 	}
 
 	if id != nil {
@@ -524,6 +611,7 @@ func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) 
 	return &GetSkipblocksReply{Skipblocks: sbs_from_oldest}, nil
 }
 */
+
 // Forward traversal of the skipchain from the oldest block as the latter is
 // specified by its hash in the request's 'Hash1' field (if Hash1==[]byte{0}, then start
 // fetching from the skipblock for the config of which the latest cert is acquired) until
@@ -769,15 +857,18 @@ func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
 	if !ok {
 		return nil
 	}
+	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 	return is
 }
 
 // setIdentityStorage saves an IdentityStorage
 func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
+	//log.LLvlf2("******* --------- setIdentityStorage(): BEFORE len: %v", len(s.Identities))
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Identities[string(id)] = is
+	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 }
 
 // saves the actual identity
@@ -794,7 +885,7 @@ func (s *Service) save() {
 	}
 }
 
-func (s *Service) clearIdentities() {
+func (s *Service) ClearIdentities() {
 	s.Identities = make(map[string]*Storage)
 }
 
@@ -817,15 +908,122 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
+func (s *Service) RunLoop(roster *sda.Roster) {
+	c := time.Tick(s.EpochDuration)
+	log.LLvlf2("__________________________________________________________________")
+	log.LLvlf2("__________________________________________________________________")
+	log.LLvlf2("------------------------TIMESTAMPER BEGINS------------------------")
+	log.LLvlf2("__________________________________________________________________")
+	log.LLvlf2("__________________________________________________________________")
+
+	for now := range c {
+		data := make([]crypto.HashID, 0)
+		for _, sid := range s.Identities {
+			latestconf := sid.Latest
+			hash, _ := latestconf.Hash()
+			data = append(data, hash)
+		}
+		num := len(s.Identities)
+		if num > 0 {
+			log.LLvl2("-------Signing tree root with timestamp:", now, "got", num, "requests")
+
+			// create merkle tree and message to be signed:
+			root, proofs := crypto.ProofTree(sha256.New, data)
+			msg := RecreateSignedMsg(root, now.Unix())
+			log.LLvlf2("-----Before signing")
+			for _, server := range roster.List {
+				log.LLvlf2("%v", server)
+			}
+			//signature := s.signMsg(roster, msg)
+			signature := s.signMsg(msg)
+			log.LLvlf2("---------%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+
+			i := 0
+			for _, sid := range s.Identities {
+				sid.PoF = &SignatureResponse{
+					Timestamp: now.Unix(),
+					Proof:     proofs[i],
+					Root:      root,
+					// Collective signature on Timestamp||hash(treeroot)
+					Signature: signature,
+				}
+
+				replies, err := manage.PropagateStartAndWait(s.Context, roster,
+					&PropagatePoF{sid}, propagateTimeout, s.Propagate)
+				if err != nil {
+					log.ErrFatal(err, "Couldn't send")
+				}
+
+				if replies != len(roster.List) {
+					log.Warn("Did only get", replies, "out of", len(roster.List))
+				}
+				i++
+			}
+		} else {
+			log.Lvl3("No requests at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+		}
+	}
+
+}
+
+//func (s *Service) cosiSign(roster *sda.Roster, msg []byte) []byte {
+func (s *Service) cosiSign(msg []byte) []byte {
+	log.LLvlf2("cosiSign(): Start")
+	sdaTree := s.TheRoster.GenerateBinaryTree()
+	log.LLvlf2("cosiSign(): 1 %v", sdaTree)
+	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
+	log.LLvlf2("cosiSign(): 2 %v", tni)
+	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
+	if err != nil {
+		log.LLvl2("Couldn't make new protocol: " + err.Error())
+		panic("Couldn't make new protocol: " + err.Error())
+	}
+	log.LLvlf2("cosiSign(): 3")
+	s.RegisterProtocolInstance(pi)
+	log.LLvlf2("cosiSign(): 4")
+	pi.SigningMessage(msg)
+	// Take the raw message (already expecting a hash for the timestamp
+	// service)
+	response := make(chan []byte)
+	log.LLvlf2("cosiSign(): 5 %v", msg)
+	pi.RegisterSignatureHook(func(sig []byte) {
+		response <- sig
+	})
+	log.LLvlf2("cosiSign(): 6")
+	go pi.Dispatch()
+	log.LLvlf2("cosiSign(): 7")
+	go pi.Start()
+	log.LLvlf2("cosiSign(): 8")
+	res := <-response
+	log.LLvlf2("cosiSign(): 9 Received cosi response")
+	return res
+
+}
+
+// RecreateSignedMsg is a helper that can be used by the client to recreate the
+// message signed by the timestamp service (which is treeroot||timestamp)
+func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
+	timeB := timestampToBytes(timestamp)
+	m := make([]byte, len(treeroot)+len(timeB))
+	m = append(m, treeroot...)
+	m = append(m, timeB...)
+	return m
+}
+
 func newIdentityService(c *sda.Context, path string) sda.Service {
 	s := &Service{
 		ServiceProcessor: sda.NewServiceProcessor(c),
-		ca:               ca.NewCSRDispatcher(),
-		StorageMap:       &StorageMap{make(map[string]*Storage)},
-		skipchain:        skipchain.NewClient(),
 		path:             path,
-		Publics:          make(map[string]abstract.Point),
+		skipchain:        skipchain.NewClient(),
+		ca:               ca.NewCSRDispatcher(),
+		//stamper:          timestamp.NewClient(),
+		StorageMap: &StorageMap{make(map[string]*Storage)},
+		Publics:    make(map[string]abstract.Point),
+		//EpochDuration:    time.Millisecond * 250000,
+		EpochDuration: time.Millisecond * 1000,
 	}
+	s.signMsg = s.cosiSign
+	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}

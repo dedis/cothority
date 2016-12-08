@@ -64,6 +64,7 @@ func init() {
 		&GetValidSbPathReply{},
 		&PropagateIdentity{},
 		&PropagateCert{},
+		&PropagatePoF{},
 		&UpdateSkipBlock{},
 		&PushPublicKey{},
 		&PushPublicKeyReply{},
@@ -129,6 +130,10 @@ type Data struct {
 func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) *Identity {
 	switch ctype {
 	case "device":
+		for _, server := range cothority.List {
+			log.LLvlf2("---------------%v", server)
+		}
+
 		kp := config.NewKeyPair(network.Suite)
 		return &Identity{
 			CothorityClient: sda.NewClient(ServiceName),
@@ -137,7 +142,7 @@ func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string
 				Public:  kp.Public,
 				//PinState:   pinstate,
 				Ctype:      ctype,
-				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, owner, cas, data, duration),
+				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, cothority, owner, cas, data, duration),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},
