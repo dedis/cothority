@@ -108,6 +108,7 @@ func (w *WebSocket) Stop() {
 	<-w.startstop
 	w.server.Stop(100 * time.Millisecond)
 	<-w.startstop
+	w.started = false
 }
 
 // Client is a struct used to communicate with a remote Service running on a
