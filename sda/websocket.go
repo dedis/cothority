@@ -157,7 +157,7 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 		log.Lvlf4("Sending %x to %s/%s/%s", buf, url, c.service, path)
 		d := &websocket.Dialer{}
 		// Re-try to connect in case the websocket is just about to start
-		for a := 0; a < 10; a += 1 {
+		for a := 0; a < 10; a++ {
 			c.conn, _, err = d.Dial(fmt.Sprintf("ws://%s/%s/%s", url, c.service, path),
 				http.Header{})
 			if err == nil {
