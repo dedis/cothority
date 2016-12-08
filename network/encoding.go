@@ -39,7 +39,7 @@ var ErrorType = PacketTypeID(uuid.Nil)
 func (pId PacketTypeID) String() string {
 	t, ok := registry.get(pId)
 	if ok {
-		return t.String()
+		return fmt.Sprintf("PTID(%s:%x)", t.String(), uuid.UUID(pId).Bytes())
 	}
 	return uuid.UUID(pId).String()
 }

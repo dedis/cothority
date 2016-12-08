@@ -44,7 +44,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Guard) Request(e *network.ServerIdentity, req *Request) (network.Body, error) {
+func (st *Guard) Request(req *Request) (network.Body, sda.ClientError) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
 	blankpoint := network.Suite.Point()
 	zbytes := network.Suite.Scalar()
@@ -74,9 +74,4 @@ func newGuardService(c *sda.Context, path string) sda.Service {
 	s.Z = lel
 
 	return s
-}
-
-// NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary.
-func (st *Guard) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	return nil, nil
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 DBG_SHOW=1
+DBG_SRV=0
+DBG_APP=0
 #STATICDIR=test
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -34,7 +36,7 @@ testBuild(){
 runCl(){
     D=cl$1/group.toml
     shift
-    dbgRun ./guard -d 0 $@
+    dbgRun ./guard -d $DBG_APP $@
 }
 
 build(){

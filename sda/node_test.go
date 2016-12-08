@@ -8,10 +8,16 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const (
+	ProtocolChannelsName = "ProtocolChannels"
+	ProtocolHandlersName = "ProtocolHandlers"
+	ProtocolBlockingName = "ProtocolBlocking"
+)
+
 func init() {
-	GlobalProtocolRegister("ProtocolHandlers", NewProtocolHandlers)
+	GlobalProtocolRegister(ProtocolHandlersName, NewProtocolHandlers)
 	GlobalProtocolRegister("ProtocolBlocking", NewProtocolBlocking)
-	GlobalProtocolRegister("ProtocolChannels", NewProtocolChannels)
+	GlobalProtocolRegister(ProtocolChannelsName, NewProtocolChannels)
 	GlobalProtocolRegister(testProto, NewProtocolTest)
 	Incoming = make(chan struct {
 		*TreeNode
@@ -24,7 +30,7 @@ func TestNodeChannelCreateSlice(t *testing.T) {
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(ProtocolChannelsName, tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -45,7 +51,7 @@ func TestNodeChannelCreate(t *testing.T) {
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(ProtocolChannelsName, tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -80,7 +86,7 @@ func TestNodeChannel(t *testing.T) {
 	_, _, tree := local.GenTree(2, true)
 	defer local.CloseAll()
 
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(ProtocolChannelsName, tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -139,7 +145,7 @@ func TestTreeNodeProtocolHandlers(t *testing.T) {
 	defer local.CloseAll()
 	log.Lvl2("Sending to children")
 	IncomingHandlers = make(chan *TreeNodeInstance, 2)
-	p, err := local.CreateProtocol("ProtocolHandlers", tree)
+	p, err := local.CreateProtocol(ProtocolHandlersName, tree)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +177,7 @@ func TestTreeNodeMsgAggregation(t *testing.T) {
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
-	root, err := local.StartProtocol("ProtocolChannels", tree)
+	root, err := local.StartProtocol(ProtocolChannelsName, tree)
 	if err != nil {
 		t.Fatal("Couldn't create new node:", err)
 	}
@@ -183,14 +189,14 @@ func TestTreeNodeMsgAggregation(t *testing.T) {
 	child1 := local.GetNodes(tree.Root.Children[0])[0]
 	child2 := local.GetNodes(tree.Root.Children[1])[0]
 
-	err = local.SendTreeNode("ProtocolChannels", child1, proto.TreeNodeInstance, &NodeTestAggMsg{3})
+	err = local.SendTreeNode(ProtocolChannelsName, child1, proto.TreeNodeInstance, &NodeTestAggMsg{3})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(proto.IncomingAgg) > 0 {
 		t.Fatal("Messages should NOT be there")
 	}
-	err = local.SendTreeNode("ProtocolChannels", child2, proto.TreeNodeInstance, &NodeTestAggMsg{4})
+	err = local.SendTreeNode(ProtocolChannelsName, child2, proto.TreeNodeInstance, &NodeTestAggMsg{4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +216,7 @@ func TestTreeNodeFlags(t *testing.T) {
 	local := NewLocalTest()
 	_, _, tree := local.GenTree(3, true)
 	defer local.CloseAll()
-	p, err := local.CreateProtocol("ProtocolChannels", tree)
+	p, err := local.CreateProtocol(ProtocolChannelsName, tree)
 	if err != nil {
 		t.Fatal("Couldn't create node.")
 	}
@@ -281,9 +287,9 @@ type ServiceChannels struct {
 }
 
 // implement services interface
-func (c *ServiceChannels) ProcessClientRequest(si *network.ServerIdentity, r *ClientRequest) {
+func (c *ServiceChannels) ProcessClientRequest(si *network.ServerIdentity, r interface{}) {
 
-	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, "ProtocolChannels")
+	tni := c.ctx.NewTreeNodeInstance(&c.tree, c.tree.Root, ProtocolChannelsName)
 	pi, err := NewProtocolChannels(tni)
 	if err != nil {
 		return
