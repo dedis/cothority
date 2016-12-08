@@ -62,7 +62,7 @@ func NewWebSocket(si *network.ServerIdentity) *WebSocket {
 
 // Start listening on the port.
 func (w *WebSocket) Start() {
-	log.Lvl1("Starting to listen on", w.server.Server.Addr)
+	log.Lvl2("Starting to listen on", w.server.Server.Addr)
 	w.server.ListenAndServe()
 }
 
