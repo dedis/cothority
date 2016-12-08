@@ -5,8 +5,6 @@ import (
 
 	"fmt"
 
-	"errors"
-
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -175,19 +173,19 @@ func (sb *SkipBlock) String() string {
 // GetResponsible searches for the block that is responsible for us - for
 // - Data - it's his parent
 // - else - it's himself
-func (sb *SkipBlock) GetResponsible(s *Service) (*sda.Roster, error) {
+func (sb *SkipBlock) GetResponsible(s *Service) (*sda.Roster, sda.ClientError) {
 	el := sb.Roster
 	if el == nil {
 		// We're a data-block, so use the parent's Roster
 		if sb.ParentBlockID.IsNull() {
-			return nil, errors.New("Didn't find an Roster")
+			return nil, sda.NewClientErrorCode(4100, "Didn't find an Roster")
 		}
 		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
 		if !ok {
-			return nil, errors.New("No Roster and no parent")
+			return nil, sda.NewClientErrorCode(4100, "No Roster and no parent")
 		}
 		if parent.Roster == nil {
-			return nil, errors.New("Parent doesn't have Roster")
+			return nil, sda.NewClientErrorCode(4100, "Parent doesn't have Roster")
 		}
 		el = parent.Roster
 	}

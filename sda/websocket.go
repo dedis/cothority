@@ -11,6 +11,8 @@ import (
 	"reflect"
 	"strings"
 
+	"sync"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/protobuf"
@@ -95,6 +97,9 @@ type Client struct {
 	service string
 	si      *network.ServerIdentity
 	conn    *websocket.Conn
+	// whether to keep the connection
+	keep bool
+	sync.Mutex
 }
 
 // NewClient returns a client using the service s. On the first Send, the
@@ -105,12 +110,23 @@ func NewClient(s string) *Client {
 	}
 }
 
+// NewClientKeep returns a Client that doesn't close the connection between
+// two messages if it's the same conode.
+func NewClientKeep(s string) *Client {
+	return &Client{
+		service: s,
+		keep:    true,
+	}
+}
+
 // Send will marshal the message into a ClientRequest message and send it.
 func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]byte, ClientError) {
-	if c.si != nil && !c.si.ID.Equal(dst.ID) {
+	c.Lock()
+	defer c.Unlock()
+	if c.keep &&
+		(c.si != nil && !c.si.ID.Equal(dst.ID)) {
 		// We already have a connection, but to another ServerIdentity
-		c.conn.Close()
-		c.si = nil
+		c.Close()
 	}
 	if c.si == nil {
 		// Open connection to service.
@@ -126,6 +142,11 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 			return nil, NewClientError(err)
 		}
 	}
+	defer func() {
+		if !c.keep {
+			c.Close()
+		}
+	}()
 	if err := c.conn.WriteMessage(websocket.BinaryMessage, buf); err != nil {
 		return nil, NewClientError(err)
 	}
@@ -155,7 +176,8 @@ func (c *Client) SendProtobuf(dst *network.ServerIdentity, msg interface{}, ret 
 		return NewClientError(cerr)
 	}
 	if ret != nil {
-		err := protobuf.Decode(reply, ret)
+		err := protobuf.DecodeWithConstructors(reply, ret,
+			network.DefaultConstructors(network.Suite))
 		return NewClientError(err)
 	}
 	return nil

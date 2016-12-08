@@ -11,7 +11,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 2)
 }
 
 func TestService_CreateIdentity2(t *testing.T) {
@@ -22,8 +22,8 @@ func TestService_CreateIdentity2(t *testing.T) {
 
 	keypair := config.NewKeyPair(network.Suite)
 	il := NewConfig(50, keypair.Public, "one")
-	msg, err := service.CreateIdentity(nil, &CreateIdentity{il, el})
-	log.ErrFatal(err)
+	msg, cerr := service.CreateIdentity(&CreateIdentity{il, el})
+	log.ErrFatal(cerr)
 	air := msg.(*CreateIdentityReply)
 
 	data := air.Data
