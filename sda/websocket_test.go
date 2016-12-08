@@ -8,7 +8,6 @@ import (
 	"errors"
 
 	"sync"
-	"time"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -54,7 +53,7 @@ func TestClient_Send(t *testing.T) {
 
 	// register service
 	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
-		c.conode.websocket.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
+		c.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
 		return &simpleService{
 			ctx: c,
 		}
@@ -82,7 +81,7 @@ func TestClient_Parallel(t *testing.T) {
 
 	// register service
 	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
-		c.conode.websocket.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
+		c.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
 		return &simpleService{
 			ctx: c,
 		}
@@ -110,13 +109,13 @@ func TestClient_Parallel(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	time.Sleep(time.Second)
 }
 
 func TestNewClientError(t *testing.T) {
 	ce := NewClientError(errors.New("websocket:close 1100: hello"))
 	assert.Equal(t, 0, ce.ErrorCode())
-	ce = NewClientError(errors.New("websocket: close 1100:"))
+	needsColumn := "websocket: close 1100:"
+	ce = NewClientError(errors.New(needsColumn))
 	assert.Equal(t, 1100, ce.ErrorCode())
 	assert.Equal(t, "", ce.ErrorMsg())
 	str := "websocket: close 1100: hello"

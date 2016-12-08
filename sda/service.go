@@ -13,18 +13,23 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+func init() {
+	network.RegisterPacketType(GenericConfig{})
+}
+
 // Service is a generic interface to define any type of services.
 // A Service has multiple roles:
-// * Processing sda-external client requests with ProcessClientRequests
-// * Handling sda-external information to ProtocolInstances created with
+// * Processing websocket client requests with ProcessClientRequests
+// * Handling sda information to ProtocolInstances created with
 //  	NewProtocol
 // * Handling any kind of messages between Services between different hosts with
 //   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
-	// ProcessRequest is called when a external client will connect through
-	// the websocket-port to this service. It returns a message that will be
-	// sent back to the client.
+	// ProcessClientRequest is called when a message from an external client is received by
+	// the websocket for this service. It returns a message that will be
+	// sent back to the client. The returned ClientError is either nil
+	// or any errorCode between 4100 and 4999.
 	ProcessClientRequest(handler string, msg []byte) (reply []byte, err ClientError)
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
@@ -58,10 +63,6 @@ type GenericConfig struct {
 	Type uuid.UUID
 }
 
-// GenericConfigID is the ID used by the network library for sending / receiving
-// GenericCOnfig
-var GenericConfigID = network.RegisterPacketType(GenericConfig{})
-
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
 	constructors []serviceEntry
@@ -80,7 +81,7 @@ var ServiceFactory = serviceFactory{
 	constructors: []serviceEntry{},
 }
 
-// RegisterByName takes a name, creates a ServiceID out of it and stores the
+// Register takes a name and a function, then creates a ServiceID out of it and stores the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
 	if s.ServiceID(name) != NilServiceID {
@@ -125,7 +126,7 @@ func UnregisterService(name string) error {
 	return ServiceFactory.Unregister(name)
 }
 
-// RegisteredServices returns all the services registered
+// registeredServiceIDs returns all the services registered
 func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -136,7 +137,7 @@ func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	return ids
 }
 
-// RegisteredServicesByName returns all the names of the services registered
+// RegisteredServiceNames returns all the names of the services registered
 func (s *serviceFactory) RegisteredServiceNames() []string {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

@@ -12,18 +12,15 @@ import (
 )
 
 // ServiceProcessor allows for an easy integration of external messages
-// into the Services. You have to embed it into your Service-struct,
-// then it will offer a 'RegisterMessage'-method that takes a message of type
-// 	func ReceiveMsg(si *network.ServerIdentity, msg *anyMessageType)(error, *replyMsg)
-// where 'ReceiveMsg' is any name and 'anyMessageType' will be registered
-// with the network. Once 'anyMessageType' is received by the service,
-// the function 'ReceiveMsg' should return an error and any 'replyMsg' it
-// wants to send.
+// into the Services. You have to embed it into your Service-struct as
+// a pointer. It will process client requests that have been registered
+// with RegisterMessage.
 type ServiceProcessor struct {
 	handlers map[string]serviceHandler
 	*Context
 }
 
+// serviceHandler stores the handler and the message-type.
 type serviceHandler struct {
 	handler interface{}
 	msgType reflect.Type
@@ -38,36 +35,29 @@ func NewServiceProcessor(c *Context) *ServiceProcessor {
 }
 
 // RegisterMessage will store the given handler that will be used by the service.
-// f must be a function of the following form:
-// func(sId *network.ServerIdentity, structPtr *MyMessageStruct)(network.Body, error)
+// WebSocket will then forward requests to "ws://service_name/struct_name"
+// to the given function f, which must be of the following form:
+// func(msg interface{})(ret interface{}, err ClientError)
 //
-// In other words:
-// f must be a function that takes two arguments:
-//  * network.ServerIdentity: from whom the message is coming from.
-//  * Pointer to a struct: message that the service is ready to handle.
-// f must have two return values:
-//  * Pointer to a struct: message that the service has generated as a reply and
-//  that will be sent to the requester (the sender).
-//  * Error in any case there is an error.
-// f can be used to treat internal service messages as well as external requests
-// from clients.
-//
-// XXX Name should be changed but need to change also in dedis/cosi
+//  * msg is a pointer to a structure to the message sent.
+//  * ret is a pointer to a struct of the return-message.
+//  * err is a Client-error and can return nil or a ClientError that holds
+//	an error-id and an error-msg.
 func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	ft := reflect.TypeOf(f)
 	// Check that we have the correct channel-type.
 	if ft.Kind() != reflect.Func {
-		return errors.New("Input is not function")
+		return errors.New("Input is not a function")
 	}
 	if ft.NumIn() != 1 {
 		return errors.New("Need one argument: *struct")
 	}
 	cr := ft.In(0)
 	if cr.Kind() != reflect.Ptr {
-		return errors.New("Second argument must be a *pointer* to struct")
+		return errors.New("Argument must be a *pointer* to a struct")
 	}
 	if cr.Elem().Kind() != reflect.Struct {
-		return errors.New("Second argument must be a pointer to *struct*")
+		return errors.New("Argument must be a pointer to *struct*")
 	}
 	if ft.NumOut() != 2 {
 		return errors.New("Need 2 return values: network.Body and ClientError")
@@ -80,11 +70,12 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 		return errors.New("2nd return value has to be: ClientError, but is: " +
 			ft.Out(1).String())
 	}
-	// Automatic registration of the message to the network library.
+
 	log.Lvl4("Registering handler", cr.String())
 	pm := strings.Split(cr.Elem().String(), ".")[1]
 	p.handlers[pm] = serviceHandler{f, cr.Elem()}
-	p.conode.websocket.RegisterMessageHandler(ServiceFactory.Name(p.servID), pm)
+	// Registering the handler to the websocket
+	p.RegisterMessageHandler(ServiceFactory.Name(p.servID), pm)
 	return nil
 }
 
@@ -106,39 +97,39 @@ func (p *ServiceProcessor) Process(packet *network.Packet) {
 
 // NewProtocol is a stub for services that don't want to intervene in the
 // protocol-handling.
-func (i *ServiceProcessor) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
+func (p *ServiceProcessor) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
 	return nil, nil
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply
-// and sends it back.
+// and sends it back. It uses the path to find the appropriate handler-
+// function.
 func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte, ClientError) {
 	mh, ok := p.handlers[path]
 	reply, cerr := func() (interface{}, ClientError) {
 		if !ok {
 			return nil, NewClientErrorCode(WebSocketErrorPathNotFound, "")
-		} else {
-			msg := reflect.New(mh.msgType).Interface()
-			err := protobuf.Decode(buf, msg)
-			if err != nil {
-				return nil, NewClientErrorCode(WebSocketErrorProtobufDecode, "")
-			}
-
-			to := reflect.TypeOf(mh.handler).In(0)
-			f := reflect.ValueOf(mh.handler)
-
-			arg := reflect.New(to.Elem())
-			arg.Elem().Set(reflect.ValueOf(msg).Elem())
-			ret := f.Call([]reflect.Value{arg})
-
-			cerr := ret[1].Interface()
-
-			if cerr != nil {
-				return nil, cerr.(ClientError)
-			} else {
-				return ret[0].Interface(), nil
-			}
 		}
+		msg := reflect.New(mh.msgType).Interface()
+		err := protobuf.DecodeWithConstructors(buf, msg,
+			network.DefaultConstructors(network.Suite))
+		if err != nil {
+			return nil, NewClientErrorCode(WebSocketErrorProtobufDecode, "")
+		}
+
+		to := reflect.TypeOf(mh.handler).In(0)
+		f := reflect.ValueOf(mh.handler)
+
+		arg := reflect.New(to.Elem())
+		arg.Elem().Set(reflect.ValueOf(msg).Elem())
+		ret := f.Call([]reflect.Value{arg})
+
+		cerr := ret[1].Interface()
+
+		if cerr != nil {
+			return nil, cerr.(ClientError)
+		}
+		return ret[0].Interface(), nil
 	}()
 	if cerr != nil {
 		return nil, cerr
