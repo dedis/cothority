@@ -3,7 +3,9 @@ message Request{
 }
 
 message Response {
+    map<string, Status> system = 1;
+
     message Status {
-        map<string, string> = 1;
+        map<string, string> field = 1;
     }
 }

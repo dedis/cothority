@@ -88,7 +88,7 @@ func (c *Conode) GetStatus() Status {
 	m["Uptime"] = time.Now().Sub(c.started).String()
 	uname, _ := exec.Command("uname", "-a").Output()
 	m["System"] = strings.TrimRight(string(uname), "\n\r")
-	m["Version"] = "0.9.0"
+	m["Version"] = "0.9.1"
 	m["Host"] = c.ServerIdentity.Address.Host()
 	m["Port"] = c.ServerIdentity.Address.Port()
 	m["Description"] = c.ServerIdentity.Description
