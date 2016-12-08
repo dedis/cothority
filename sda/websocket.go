@@ -24,9 +24,11 @@ import (
 // protocol for JavaScript-compatibility. When making a new WebSocket,
 // it will listen one port above the ServerIdentity-port-#.
 type WebSocket struct {
-	services map[string]Service
-	server   *graceful.Server
-	mux      *http.ServeMux
+	services  map[string]Service
+	server    *graceful.Server
+	mux       *http.ServeMux
+	startstop chan bool
+	started   bool
 	sync.Mutex
 }
 
@@ -46,7 +48,8 @@ const (
 // ServerIdentity.
 func NewWebSocket(si *network.ServerIdentity) *WebSocket {
 	w := &WebSocket{
-		services: make(map[string]Service),
+		services:  make(map[string]Service),
+		startstop: make(chan bool),
 	}
 	webHost, err := getWebHost(si)
 	log.ErrFatal(err)
@@ -63,8 +66,15 @@ func NewWebSocket(si *network.ServerIdentity) *WebSocket {
 
 // Start listening on the port.
 func (w *WebSocket) Start() {
-	log.Lvl2("Starting to listen on", w.server.Server.Addr)
-	w.server.ListenAndServe()
+	w.Lock()
+	w.started = true
+	w.Unlock()
+	log.Lvl3("Starting to listen on", w.server.Server.Addr)
+	go func() {
+		w.server.ListenAndServe()
+		w.startstop <- false
+	}()
+	w.startstop <- true
 }
 
 // RegisterService saves the service as being able to handle messages.
@@ -91,11 +101,13 @@ func (w *WebSocket) RegisterMessageHandler(service, path string) error {
 func (w *WebSocket) Stop() {
 	w.Lock()
 	defer w.Unlock()
-	if w.server == nil {
+	if !w.started {
 		return
 	}
+	log.Lvl3("Stopping", w.server.Server.Addr)
+	<-w.startstop
 	w.server.Stop(100 * time.Millisecond)
-	w.server = nil
+	<-w.startstop
 }
 
 // Client is a struct used to communicate with a remote Service running on a
