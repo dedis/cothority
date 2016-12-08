@@ -1,8 +1,6 @@
 package service
 
 import (
-	"errors"
-
 	"fmt"
 	"time"
 
@@ -46,19 +44,19 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(si *network.ServerIdentity, req *SignatureRequest) (network.Body, error) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.ClientError) {
 	tree := req.Roster.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
-		return nil, errors.New("Couldn't make new protocol: " + err.Error())
+		return nil, sda.NewClientErrorCode(4100, "Couldn't make new protocol: "+err.Error())
 	}
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.CoSi)
 	pcosi.SigningMessage(req.Message)
 	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
 	if err != nil {
-		return nil, errors.New("Couldn't hash message: " + err.Error())
+		return nil, sda.NewClientErrorCode(4101, "Couldn't hash message: "+err.Error())
 	}
 	response := make(chan []byte)
 	pcosi.RegisterSignatureHook(func(sig []byte) {

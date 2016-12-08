@@ -475,7 +475,7 @@ func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
 	dm.link <- true
 }
 
-// legcy reasons
+// legacy reasons
 func (dm *DummyProtocol) Dispatch() error {
 	return nil
 }

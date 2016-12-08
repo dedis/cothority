@@ -145,7 +145,7 @@ func newTestService(c *Context, path string) Service {
 	ts := &testService{
 		ServiceProcessor: NewServiceProcessor(c),
 	}
-	ts.RegisterMessage(ts.ProcessMsg)
+	log.ErrFatal(ts.RegisterMessage(ts.ProcessMsg))
 	return ts
 }
 

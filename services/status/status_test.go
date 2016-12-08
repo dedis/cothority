@@ -17,7 +17,7 @@ func NewTestClient(l *sda.LocalTest) *Client {
 }
 
 func TestServiceStatus(t *testing.T) {
-	local := sda.NewLocalTest()
+	local := sda.NewTCPTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	_, el, tr := local.GenTree(5, false)
@@ -26,9 +26,9 @@ func TestServiceStatus(t *testing.T) {
 	// Send a request to the service
 	client := NewTestClient(local)
 	log.Lvl1("Sending request to service...")
-	stat, err := client.GetStatus(el.List[0])
+	stat, cerr := client.GetStatus(el.List[0])
 	log.Lvl1(el.List[0])
-	log.ErrFatal(err)
+	log.ErrFatal(cerr)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Msg["Status"]["Available_Services"])
 	pi, err := local.CreateProtocol("ExampleChannels", tr)
@@ -37,8 +37,8 @@ func TestServiceStatus(t *testing.T) {
 	}
 	go pi.Start()
 	<-pi.(*channels.ProtocolExampleChannels).ChildCount
-	stat, err = client.GetStatus(el.List[0])
-	log.ErrFatal(err)
+	stat, cerr = client.GetStatus(el.List[0])
+	log.ErrFatal(cerr)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Msg["Status"]["Available_Services"])
 }

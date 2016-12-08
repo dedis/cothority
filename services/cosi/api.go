@@ -30,13 +30,10 @@ func (c *Client) SignMsg(r *sda.Roster, msg []byte) (*SignatureResponse, error) 
 	}
 	dst := r.List[0]
 	log.Lvl4("Sending message to", dst)
-	reply, err := c.Send(dst, serviceReq)
-	if err != nil {
-		return nil, err
+	reply := &SignatureResponse{}
+	cerr := c.SendProtobuf(dst, serviceReq, reply)
+	if cerr != nil {
+		return nil, cerr
 	}
-	sr, ok := reply.Msg.(SignatureResponse)
-	if !ok {
-		return nil, errors.New("this is odd: couldn't cast reply")
-	}
-	return &sr, nil
+	return reply, nil
 }
