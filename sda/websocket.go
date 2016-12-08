@@ -27,6 +27,7 @@ type WebSocket struct {
 	services map[string]Service
 	server   *graceful.Server
 	mux      *http.ServeMux
+	sync.Mutex
 }
 
 const (
@@ -88,7 +89,13 @@ func (w *WebSocket) RegisterMessageHandler(service, path string) error {
 
 // Stop the websocket and free the port.
 func (w *WebSocket) Stop() {
+	w.Lock()
+	defer w.Unlock()
+	if w.server == nil {
+		return
+	}
 	w.server.Stop(100 * time.Millisecond)
+	w.server = nil
 }
 
 // Client is a struct used to communicate with a remote Service running on a
