@@ -36,9 +36,21 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 )
+
+func init() {
+	for _, r := range []interface{}{
+		Announcement{},
+		Commitment{},
+		Challenge{},
+		Response{},
+	} {
+		network.RegisterPacketType(r)
+	}
+}
 
 // Cosi is the struct that implements the basic cosi.
 type Cosi struct {

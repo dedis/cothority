@@ -4,9 +4,21 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/poly"
 )
+
+func init() {
+	for _, i := range []interface{}{
+		SecInitMsg{},
+		SecConfMsg{},
+		SigReqMsg{},
+		SigRespMsg{},
+	} {
+		network.RegisterPacketType(i)
+	}
+}
 
 // SecInitMsg are used to initialise new shared secrets both long- and
 // short-term.

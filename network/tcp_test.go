@@ -12,6 +12,7 @@ import (
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/crypto/config"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -241,6 +242,56 @@ func TestTCPConn(t *testing.T) {
 	done <- true
 	// wait until it is closed
 	<-done
+}
+
+func TestTCPConnTimeout(t *testing.T) {
+	tmp := readTimeout
+	readTimeout = 100 * time.Millisecond
+	defer func() { readTimeout = tmp }()
+
+	addr := NewTCPAddress("127.0.0.1:5678")
+	ln, err := NewTCPListener(addr)
+	if err != nil {
+		t.Fatal("error setup listener", err)
+	}
+	ready := make(chan bool)
+	connStat := make(chan error)
+
+	connFn := func(c Conn) {
+		// receive first a good packet
+		_, err := c.Receive()
+		connStat <- err
+		// then this receive should throw out the error
+		_, err = c.Receive()
+		connStat <- err
+	}
+	go func() {
+		ready <- true
+		err := ln.Listen(connFn)
+		require.Nil(t, err, "Listener stop incorrectly")
+	}()
+
+	<-ready
+	c, err := NewTCPConn(addr)
+	require.Nil(t, err, "Could not open connection")
+	// Test bandwitdth measurements also
+	require.Nil(t, c.Send(&SimpleMessage{3}))
+	select {
+	case received := <-connStat:
+		assert.Nil(t, received)
+	case <-time.After(readTimeout + 100*time.Millisecond):
+		t.Error("Did not received message after timeout...")
+	}
+
+	select {
+	case received := <-connStat:
+		assert.NotNil(t, received)
+	case <-time.After(readTimeout + 100*time.Millisecond):
+		t.Error("Did not received message after timeout...")
+	}
+
+	assert.Nil(t, c.Close())
+	assert.Nil(t, ln.Stop())
 }
 
 func TestTCPConnWithListener(t *testing.T) {

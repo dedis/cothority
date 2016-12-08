@@ -17,3 +17,8 @@
   Address = "tcp://185.26.156.40:61117"
   Public = "m1T9+7OROPCkWgjhchq06yV+DyRsk6JyFU1lFFR1YpA="
   Description = "Ismail's server"
+
+[[servers]]
+  Address = "tcp://95.143.172.241:62306"
+  Public = "WIrdwfvZxAOGjg0KwgA+fHU40KkVT72zz3coIvDryCc="
+  Description = "Philipp's Cothority Server"

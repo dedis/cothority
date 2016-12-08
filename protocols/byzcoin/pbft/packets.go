@@ -1,9 +1,21 @@
 package pbft
 
 import (
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/byzcoin/blockchain"
 	"github.com/dedis/cothority/sda"
 )
+
+func init() {
+	for _, i := range []interface{}{
+		PrePrepare{},
+		Prepare{},
+		Commit{},
+		Finish{},
+	} {
+		network.RegisterPacketType(i)
+	}
+}
 
 // Messages which will be sent around by the most naive PBFT simulation in
 // "byzcoin"

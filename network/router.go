@@ -174,6 +174,28 @@ func (r *Router) connect(si *ServerIdentity) (Conn, error) {
 
 }
 
+func (r *Router) removeConnection(si *ServerIdentity, c Conn) {
+	r.Lock()
+	defer r.Unlock()
+
+	var toDelete = -1
+	arr := r.connections[si.ID]
+	for i, cc := range arr {
+		if c == cc {
+			toDelete = i
+		}
+	}
+
+	if toDelete == -1 {
+		log.Error("Remove a connection which is not registered !?")
+		return
+	}
+
+	arr[toDelete] = arr[len(arr)-1]
+	arr[len(arr)-1] = nil
+	r.connections[si.ID] = arr[:len(arr)-1]
+}
+
 // handleConn waits for incoming messages and calls the dispatcher for
 // each new message. It only quits if the connection is closed or another
 // unrecoverable error in the connection appears.
@@ -184,6 +206,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			log.Lvl5(r.address, "having error closing conn to", remote.Address, ":", err)
 		}
 		r.wg.Done()
+		r.removeConnection(remote, c)
 	}()
 	address := c.Remote()
 	log.Lvl3(r.address, "Handling new connection to", remote.Address)
@@ -195,11 +218,14 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 		}
 
 		if err != nil {
-			log.Lvlf4("%+v got error (%+s) while receiving message", r.ServerIdentity.String(), err)
+			if err == ErrTimeout {
+				log.Lvlf5("%s drops %s connection: timeout", r.ServerIdentity.Address, remote.Address)
+				return
+			}
 
 			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
-				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				log.Lvlf5("%s drops %s connection: closed", r.ServerIdentity.Address, remote.Address)
 				return
 			}
 			// Temporary error, continue.
