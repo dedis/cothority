@@ -103,3 +103,10 @@ func (c *Context) Service(name string) Service {
 func (c *Context) String() string {
 	return c.conode.ServerIdentity.String()
 }
+
+// RegisterMessageHandler signs up the "ws://service/path" to the
+// websocket, so requests to that path will be forwarded to the
+// ProcessClientRequest.
+func (c *Context) RegisterMessageHandler(service, path string) error {
+	return c.conode.websocket.RegisterMessageHandler(service, path)
+}

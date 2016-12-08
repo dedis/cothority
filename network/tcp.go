@@ -399,15 +399,6 @@ func (t *TCPHost) Connect(si *ServerIdentity) (Conn, error) {
 	return nil, fmt.Errorf("TCPHost %s can't handle this type of connection: %s", addr, addr.ConnType())
 }
 
-// NewTCPClient returns a new client using the TCP network communication
-// layer.
-func NewTCPClient() *Client {
-	fn := func(own, remote *ServerIdentity) (Conn, error) {
-		return NewTCPConn(remote.Address)
-	}
-	return newClient(fn)
-}
-
 // NewTCPAddress returns a new Address that has type PlainTCP with the given
 // address addr.
 func NewTCPAddress(addr string) Address {

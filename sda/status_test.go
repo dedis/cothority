@@ -20,9 +20,9 @@ func TestSRStruct(t *testing.T) {
 }
 
 func TestStatusHost(t *testing.T) {
-	h := NewTCPConode(2000)
-	defer h.Stop()
-	stats := h.GetStatus()
+	c := NewTCPConode(2000)
+	defer c.Close()
+	stats := c.GetStatus()
 	a := ServiceFactory.RegisteredServiceNames()
 	services := strings.Split(stats["Available_Services"], ",")
 	assert.Equal(t, len(services), len(a))
