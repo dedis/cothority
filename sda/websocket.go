@@ -63,7 +63,7 @@ func NewWebSocket(si *network.ServerIdentity) *WebSocket {
 // Start listening on the port.
 func (w *WebSocket) Start() {
 	log.Lvl1("Starting to listen on", w.server.Server.Addr)
-	go w.server.ListenAndServe()
+	w.server.ListenAndServe()
 }
 
 // RegisterService saves the service as being able to handle messages.
