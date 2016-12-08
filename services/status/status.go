@@ -34,6 +34,21 @@ type Response struct {
 	Msg map[string]sda.Status
 }
 
+// SignRequest is interpreted as a request to sign the Hash using the
+// nodes in NodeList.
+type SignRequest struct {
+	Hash []byte
+	// slice of "host:port" for all nodes that need to sign
+	NodeList []string
+}
+
+// SignReply returns the collective signature, together with the aggregate
+// key.
+type SignReply struct {
+	Signature []byte
+	Aggregate []byte
+}
+
 // Request treats external request to this service.
 func (st *Stat) Request(req *Request) (network.Body, sda.ClientError) {
 	return &Response{st.Context.ReportStatus()}, nil

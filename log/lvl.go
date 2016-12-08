@@ -16,6 +16,19 @@ import (
 	"github.com/daviddengcn/go-colortext"
 )
 
+<<<<<<< HEAD
+// For debugging purposes we can change the output-writer
+var stdOut io.Writer
+var stdErr io.Writer
+
+func init() {
+	stdOut = os.Stdout
+	stdErr = os.Stderr
+	ParseEnv()
+}
+
+=======
+>>>>>>> master
 const (
 	lvlWarning = iota - 20
 	lvlError
