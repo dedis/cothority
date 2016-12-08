@@ -1,0 +1,9 @@
+message Request{
+
+}
+
+message Response {
+    message Status {
+        map<string, string> = 1;
+    }
+}
