@@ -35,7 +35,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Stat) Request(si *network.ServerIdentity, req *Request) (network.Body, error) {
+func (st *Stat) Request(req *Request) (network.Body, sda.ClientError) {
 	return &Response{st.Context.ReportStatus()}, nil
 }
 
@@ -51,9 +51,4 @@ func newStatService(c *sda.Context, path string) sda.Service {
 	}
 
 	return s
-}
-
-// NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary.
-func (st *Stat) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	return nil, nil
 }
