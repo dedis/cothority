@@ -1,0 +1,11 @@
+import "../../crypto.proto";
+
+message Sign {
+    required Roster r = 1;
+    required bytes msg = 2;
+}
+
+message SignatureResponse {
+    required bytes sum = 1;
+    required bytes sig = 2;
+}
