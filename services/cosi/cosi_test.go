@@ -16,7 +16,7 @@ func NewTestClient(l *sda.LocalTest) *Client {
 func TestServiceCosi(t *testing.T) {
 	defer log.AfterTest(t)
 	log.TestOutput(testing.Verbose(), 4)
-	local := sda.NewLocalTest()
+	local := sda.NewTCPTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, el, _ := local.GenTree(5, false)
