@@ -40,6 +40,6 @@ test_verbose:
 test_go:
 	./coveralls.sh
 
-test: test_fmt test_lint test_go
+test: test_fmt test_lint test_playground
 
-all: install test_playground
+all: install test
