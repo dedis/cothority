@@ -4,10 +4,13 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/log"
+	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
 
 func init() {
+	network.RegisterPacketType(ContactNodes{})
+	network.RegisterPacketType(Done{})
 	sda.GlobalProtocolRegister("Broadcast", NewBroadcastProtocol)
 }
 

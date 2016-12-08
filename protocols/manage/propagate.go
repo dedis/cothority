@@ -12,6 +12,11 @@ import (
 	"github.com/dedis/cothority/sda"
 )
 
+func init() {
+	network.RegisterPacketType(PropagateSendData{})
+	network.RegisterPacketType(PropagateReply{})
+}
+
 // Propagate is a protocol that sends some data to all attached nodes
 // and waits for confirmation before returning.
 type Propagate struct {

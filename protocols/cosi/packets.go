@@ -12,6 +12,14 @@ func init() {
 	sda.RegisterMessageProxy(func() sda.MessageProxy {
 		return new(MessageProxy)
 	})
+	for _, r := range []interface{}{
+		Announcement{},
+		Commitment{},
+		Challenge{},
+		Response{},
+	} {
+		network.RegisterPacketType(r)
+	}
 }
 
 const (
