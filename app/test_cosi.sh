@@ -2,9 +2,9 @@
 
 DBG_SHOW=1
 # Debug-level for app
-DBG_APP=1
+DBG_APP=0
 # Uncomment to build in local dir
-# STATICDIR=test
+#STATICDIR=test
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh

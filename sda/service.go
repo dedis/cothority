@@ -63,10 +63,6 @@ type GenericConfig struct {
 	Type uuid.UUID
 }
 
-// GenericConfigID is the ID used by the network library for sending / receiving
-// GenericCOnfig
-var GenericConfigID = network.RegisterPacketType(GenericConfig{})
-
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
 	constructors []serviceEntry
@@ -85,7 +81,7 @@ var ServiceFactory = serviceFactory{
 	constructors: []serviceEntry{},
 }
 
-// RegisterByName takes a name, creates a ServiceID out of it and stores the
+// Register takes a name and a function, then creates a ServiceID out of it and stores the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
 	if s.ServiceID(name) != NilServiceID {
@@ -130,7 +126,7 @@ func UnregisterService(name string) error {
 	return ServiceFactory.Unregister(name)
 }
 
-// RegisteredServices returns all the services registered
+// registeredServiceIDs returns all the services registered
 func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -141,7 +137,7 @@ func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	return ids
 }
 
-// RegisteredServicesByName returns all the names of the services registered
+// RegisteredServiceNames returns all the names of the services registered
 func (s *serviceFactory) RegisteredServiceNames() []string {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -198,7 +194,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	conode *Conode
-	// the dispather can take registration of Processors
+	// the dispatcher can take registration of Processors
 	network.Dispatcher
 }
 
