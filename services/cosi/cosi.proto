@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import "../crypto.proto";
+=======
+import "../network.proto";
+>>>>>>> websocket_services
 
 message SignatureRequest {
     required Roster roster = 1;
