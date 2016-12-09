@@ -84,8 +84,8 @@ func (w *WebSocket) Start() {
 func (w *WebSocket) RegisterService(service string, s Service) error {
 	w.services[service] = s
 	h := &wsHandler{
-		ws:      w,
-		service: service,
+		service:     s,
+		serviceName: service,
 	}
 	w.mux.Handle(fmt.Sprintf("/%s/", service), h)
 	return nil
@@ -151,13 +151,13 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 		log.Lvlf4("Sending %x to %s/%s/%s", buf, url, c.service, path)
 		d := &websocket.Dialer{}
 		// Re-try to connect in case the websocket is just about to start
-		for a := 0; a < 10; a++ {
+		for a := 0; a < network.MaxRetryConnect; a++ {
 			c.conn, _, err = d.Dial(fmt.Sprintf("ws://%s/%s/%s", url, c.service, path),
 				http.Header{})
 			if err == nil {
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(network.WaitRetry)
 		}
 		if err != nil {
 			return nil, NewClientError(err)
@@ -234,8 +234,8 @@ func (c *Client) Close() error {
 
 // Pass the request to the websocket.
 type wsHandler struct {
-	ws      *WebSocket
-	service string
+	serviceName string
+	service     Service
 }
 
 // Wrapper-function so that http.Requests get 'upgraded' to websockets
@@ -249,7 +249,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		},
 		EnableCompression: true,
 	}
-	ws, err := u.Upgrade(w, r, http.Header{"Set-Cookie": {"sessionID=1234"}})
+	ws, err := u.Upgrade(w, r, http.Header{})
 	if err != nil {
 		log.Error(err)
 		return
@@ -263,9 +263,9 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 			return
 		}
-		s := t.ws.services[t.service]
+		s := t.service
 		var reply []byte
-		path := strings.TrimPrefix(r.URL.Path, "/"+t.service+"/")
+		path := strings.TrimPrefix(r.URL.Path, "/"+t.serviceName+"/")
 		reply, ce = s.ProcessClientRequest(path, buf)
 		if ce == nil {
 			err := ws.WriteMessage(mt, reply)
