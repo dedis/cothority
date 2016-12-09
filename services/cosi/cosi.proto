@@ -1,4 +1,4 @@
-import "../crypto.proto";
+import "../network.proto";
 
 message SignatureRequest {
     required Roster roster = 1;
