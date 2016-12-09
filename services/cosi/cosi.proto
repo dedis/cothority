@@ -1,4 +1,4 @@
-import "../../crypto.proto";
+import "../crypto.proto";
 
 message Sign {
     required Roster r = 1;

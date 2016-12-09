@@ -1,3 +1,10 @@
+message ServerIdentity{
+    required string public = 1;
+    required string id = 2;
+    required string address = 3;
+    required string description = 4;
+}
+
 message Roster {
     required bytes id = 1;
     repeated ServerIdentity list = 2;
