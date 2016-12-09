@@ -148,8 +148,6 @@ func InteractiveConfig(binaryName string) {
 		Public:  pubStr,
 		Private: privStr,
 		Address: publicAddress,
-		Description: config.Input("New cothority",
-			"Give a description of the cothority"),
 	}
 
 	var configDone bool
@@ -182,7 +180,7 @@ func InteractiveConfig(binaryName string) {
 		log.Fatal("Impossible to parse public key:", err)
 	}
 
-	server := config.NewServerToml(network.Suite, public, publicAddress, conf.Description)
+	server := config.NewServerToml(network.Suite, public, publicAddress)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)

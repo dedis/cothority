@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
 )
 
 var in *bufio.Reader
@@ -29,10 +30,9 @@ func init() {
 
 // CothoritydConfig is the configuration structure of the cothority daemon.
 type CothoritydConfig struct {
-	Public      string
-	Private     string
-	Address     network.Address
-	Description string
+	Public  string
+	Private string
+	Address network.Address
 }
 
 // Save will save this CothoritydConfig to the given file name. It
@@ -68,10 +68,50 @@ func ParseCothorityd(file string) (*CothoritydConfig, *sda.Conode, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	si := network.NewServerIdentity(point, hc.Address)
-	si.Description = hc.Description
-	conode := sda.NewConodeTCP(si, secret)
+	conode := sda.NewConodeTCP(network.NewServerIdentity(point, hc.Address), secret)
 	return hc, conode, nil
+}
+
+// CreateCothoritydConfig uses stdin to get the address. Then it creates
+// a private/public key pair.
+// It takes the default config file as argument, and returns the
+// CothoritydConfig created, the config file name, and any error if occured.
+func CreateCothoritydConfig(defaultFile string) (*CothoritydConfig, string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	var err error
+	var str string
+	// IP:PORT
+	fmt.Println("[+] Type the IP:PORT (ipv4) address of this host (accessible from Internet):")
+	str, err = reader.ReadString('\n')
+	str = strings.TrimSpace(str)
+	address := network.NewTCPAddress(str)
+	if !address.Valid() {
+		return nil, "", fmt.Errorf("Invalid address: %s", address)
+	}
+
+	fmt.Println("[+] Creation of the private and public keys...")
+	kp := config.NewKeyPair(network.Suite)
+	privStr, err := crypto.ScalarHex(network.Suite, kp.Secret)
+	if err != nil {
+		return nil, "", fmt.Errorf("could not parse private key")
+	}
+	pubStr, err := crypto.PubHex(network.Suite, kp.Public)
+	if err != nil {
+		return nil, "", fmt.Errorf("could not parse public key")
+	}
+	fmt.Println("\tPrivate:\t", privStr)
+	fmt.Println("\tPublic: \t", pubStr)
+
+	fmt.Println("[+] Name of the config file [", defaultFile, "]:")
+	fname, err := reader.ReadString('\n')
+	fname = strings.TrimSpace(fname)
+
+	config := &CothoritydConfig{
+		Public:  pubStr,
+		Private: privStr,
+		Address: address,
+	}
+	return config, fname, err
 }
 
 // GroupToml holds the data of the group.toml file.
@@ -189,17 +229,15 @@ func (s *ServerToml) toServerIdentity(suite abstract.Suite) (*network.ServerIden
 // the corresponding ServerToml.
 // If an error occurs, it will be printed to StdErr and nil
 // is returned.
-func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address,
-	desc string) *ServerToml {
+func NewServerToml(suite abstract.Suite, public abstract.Point, addr network.Address) *ServerToml {
 	var buff bytes.Buffer
 	if err := crypto.WritePub64(suite, &buff, public); err != nil {
 		log.Error("Error writing public key")
 		return nil
 	}
 	return &ServerToml{
-		Address:     addr,
-		Public:      buff.String(),
-		Description: desc,
+		Address: addr,
+		Public:  buff.String(),
 	}
 }
 
