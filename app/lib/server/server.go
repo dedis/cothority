@@ -148,6 +148,8 @@ func InteractiveConfig(binaryName string) {
 		Public:  pubStr,
 		Private: privStr,
 		Address: publicAddress,
+		Description: config.Input("New cothority",
+			"Give a description of the cothority"),
 	}
 
 	var configDone bool
@@ -180,7 +182,7 @@ func InteractiveConfig(binaryName string) {
 		log.Fatal("Impossible to parse public key:", err)
 	}
 
-	server := config.NewServerToml(network.Suite, public, publicAddress)
+	server := config.NewServerToml(network.Suite, public, publicAddress, conf.Description)
 	group := config.NewGroupToml(server)
 
 	saveFiles(conf, configFile, group, groupFile)
@@ -259,15 +261,15 @@ func checkList(list *sda.Roster, descs []string) error {
 	fmt.Printf("Checking server(s) %s: ", serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return err
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		fmt.Println("Invalid signature: ", err)
+		log.Errorf("Invalid signature: %v", err)
 		return err
 	}
-	fmt.Println("Success")
+	fmt.Print("Success\n")
 	return nil
 }
 

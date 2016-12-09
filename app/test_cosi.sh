@@ -96,7 +96,7 @@ runCl(){
 }
 
 runSrvCfg(){
-    echo -e "127.0.0.1:200$1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
+    echo -e "127.0.0.1:200$1\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
 }
 
 runSrv(){
