@@ -177,8 +177,8 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 		// Xi, here called sendy.
 		blankscalar.Add(pwbytes, blindbytes).Bytes()
 		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
-		rep, err := cl.SendToGuard(si, uid, epoch, sendy)
-		log.ErrFatal(err)
+		rep, cerr := cl.SendToGuard(si, uid, epoch, sendy)
+		log.ErrFatal(cerr)
 		reply := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes))
 		responses[i], err = reply.MarshalBinary()
 		log.ErrFatal(err)
@@ -275,8 +275,8 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 		blankscalar.Add(pwbytes, blindbytes).MarshalBinary()
 		_, err := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes)).MarshalBinary()
 		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
-		rep, err := cl.SendToGuard(si, uid, epoch, sendy)
-		log.ErrFatal(err)
+		rep, cerr := cl.SendToGuard(si, uid, epoch, sendy)
+		log.ErrFatal(cerr)
 		// This section of the program removes the blinding factor from
 		// the Zi for storage.
 		reply, err := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes)).MarshalBinary()

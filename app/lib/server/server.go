@@ -261,15 +261,15 @@ func checkList(list *sda.Roster, descs []string) error {
 	fmt.Printf("Checking server(s) %s: ", serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		log.Error(err)
+		fmt.Println(err)
 		return err
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		log.Errorf("Invalid signature: %v", err)
+		fmt.Println("Invalid signature: %v", err)
 		return err
 	}
-	fmt.Print("Success\n")
+	fmt.Println("Success")
 	return nil
 }
 
