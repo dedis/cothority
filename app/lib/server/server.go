@@ -266,7 +266,7 @@ func checkList(list *sda.Roster, descs []string) error {
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		fmt.Println("Invalid signature: %v", err)
+		fmt.Printf("Invalid signature: %s\n", err.Error())
 		return err
 	}
 	fmt.Println("Success")
