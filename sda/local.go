@@ -328,8 +328,16 @@ func (l *LocalTest) NewClient(serviceName string) *Client {
 	case TCP:
 		return NewClient(serviceName)
 	default:
-		log.Fatal("Can't make local client")
-		return nil
+		return l.NewLocalClient(serviceName)
+	}
+}
+
+// NewLocalClient returns a new *Client using Local connections within the
+// context of this LocalTest.
+func (l *LocalTest) NewLocalClient(serviceName string) *Client {
+	return &Client{
+		ServiceID: ServiceFactory.ServiceID(serviceName),
+		net:       network.NewLocalClientWithManager(l.ctx),
 	}
 }
 

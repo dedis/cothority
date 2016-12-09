@@ -458,6 +458,21 @@ func (lh *LocalHost) Connect(si *ServerIdentity) (Conn, error) {
 
 }
 
+// NewLocalClient returns a new Client that uses the global localManager.
+func NewLocalClient() *Client {
+	return NewLocalClientWithManager(defaultLocalManager)
+}
+
+// NewLocalClientWithManager is similar to NewLocalClient but takes a specific
+// LocalManager to communicate.
+func NewLocalClientWithManager(lm *LocalManager) *Client {
+	fn := func(own, remote *ServerIdentity) (Conn, error) {
+		return NewLocalConnWithManager(lm, own.Address, remote.Address)
+	}
+	return newClient(fn)
+
+}
+
 // NewLocalAddress returns an Address of type Local with the given raw addr.
 func NewLocalAddress(addr string) Address {
 	return NewAddress(Local, addr)

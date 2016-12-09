@@ -1,23 +1,24 @@
 package sda
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"reflect"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	"github.com/dedis/protobuf"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/dedis/crypto/config"
 )
 
-const testServiceName = "testService"
+var testServiceID ServiceID
+var testMsgID network.PacketTypeID
 
 func init() {
-	RegisterNewService(testServiceName, newTestService)
-	ServiceFactory.ServiceID(testServiceName)
-	network.RegisterPacketType(&testMsg{})
+	RegisterNewService("testService", newTestService)
+	testServiceID = ServiceFactory.ServiceID("testService")
+	testMsgID = network.RegisterPacketType(&testMsg{})
 }
 
 func TestProcessor_AddMessage(t *testing.T) {
@@ -25,7 +26,7 @@ func TestProcessor_AddMessage(t *testing.T) {
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{conode: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
-	if len(p.handlers) != 1 {
+	if len(p.functions) != 1 {
 		t.Fatal("Should have registered one function")
 	}
 	mt := network.TypeFromData(&testMsg{})
@@ -37,60 +38,79 @@ func TestProcessor_AddMessage(t *testing.T) {
 		procMsgWrong2,
 		procMsgWrong3,
 		procMsgWrong4,
+		procMsgWrong5,
+		procMsgWrong6,
 	}
 	for _, f := range wrongFunctions {
-		fsig := reflect.TypeOf(f).String()
-		log.Lvl2("Checking function", fsig)
-		assert.Error(t, p.RegisterMessage(f),
-			"Could register wrong function: "+fsig)
+		log.Lvl2("Checking function", reflect.TypeOf(f).String())
+		err := p.RegisterMessage(f)
+		if err == nil {
+			t.Fatalf("Shouldn't accept function %+s", reflect.TypeOf(f).String())
+		}
 	}
 }
 
 func TestProcessor_RegisterMessages(t *testing.T) {
-	h1 := NewLocalConode(2000)
-	defer h1.Close()
-	p := NewServiceProcessor(&Context{conode: h1})
+	p := NewServiceProcessor(&Context{})
 	log.ErrFatal(p.RegisterMessages(procMsg, procMsg2))
-	assert.Error(t, p.RegisterMessages(procMsg3, procMsgWrong4))
+	err := p.RegisterMessages(procMsg, procMsgWrong1)
+	if err == nil {
+		t.Fatal("Registered wrong message and didn't get an error")
+	}
 }
 
-func TestServiceProcessor_ProcessClientRequest(t *testing.T) {
+func TestProcessor_GetReply(t *testing.T) {
 	h1 := NewLocalConode(2000)
 	defer h1.Close()
 	p := NewServiceProcessor(&Context{conode: h1})
 	log.ErrFatal(p.RegisterMessage(procMsg))
 
-	buf, err := protobuf.Encode(&testMsg{11})
-	log.ErrFatal(err)
-	rep, cerr := p.ProcessClientRequest("testMsg", buf)
-	require.Equal(t, nil, cerr)
-	val := &testMsg{}
-	log.ErrFatal(protobuf.Decode(rep, val))
+	pair := config.NewKeyPair(network.Suite)
+	e := network.NewServerIdentity(pair.Public, "")
+
+	rep := p.GetReply(e, testMsgID, testMsg{11})
+	val, ok := rep.(*testMsg)
+	if !ok {
+		t.Fatalf("Couldn't cast reply to testMsg: %+v", rep)
+	}
 	if val.I != 11 {
 		t.Fatal("Value got lost - should be 11")
 	}
 
-	buf, err = protobuf.Encode(&testMsg{42})
-	log.ErrFatal(err)
-	rep, cerr = p.ProcessClientRequest("testMsg", buf)
-	require.Equal(t, 4142, cerr.ErrorCode())
+	rep = p.GetReply(e, testMsgID, testMsg{42})
+	errMsg, ok := rep.(*network.StatusRet)
+	if !ok {
+		t.Fatal("42 should return an error")
+	}
+	if errMsg.Status == "" {
+		t.Fatal("The error should be non-empty")
+	}
 }
 
 func TestProcessor_ProcessClientRequest(t *testing.T) {
-	local := NewTCPTest()
+	local := NewLocalTest()
 
 	// generate 5 hosts,
 	h := local.GenConodes(1)[0]
 	defer local.CloseAll()
 
-	client := local.NewClient(testServiceName)
-	msg := &testMsg{}
-	cerr := client.SendProtobuf(h.ServerIdentity, &testMsg{12}, msg)
-	log.ErrFatal(cerr)
+	s := local.Services[h.ServerIdentity.ID]
+	ts := s[testServiceID]
+	client := local.NewClient("testService")
+
+	resp, err := client.Send(h.ServerIdentity, &testMsg{12})
+	if err != nil {
+		t.Fatal("error sending /receiving with client")
+	}
+	msg := ts.(*testService).Msg
 	if msg == nil {
 		t.Fatal("Msg should not be nil")
 	}
-	if msg.I != 12 {
+	tm, ok := resp.Msg.(testMsg)
+	if !ok {
+		t.Fatalf("Couldn't cast to *testMsg - %+v", tm)
+	}
+	if tm.I != 12 {
 		t.Fatal("Didn't send 12")
 	}
 
@@ -100,40 +120,44 @@ type testMsg struct {
 	I int
 }
 
-type testMsg2 testMsg
-type testMsg3 testMsg
-type testMsg4 testMsg
-type testMsg5 testMsg
-
-func procMsg(msg *testMsg) (network.Body, ClientError) {
+func procMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	// Return an error for testing
 	if msg.I == 42 {
-		return nil, NewClientErrorCode(4142, "")
+		return nil, fmt.Errorf("ServiceProcessor received %d (actual) vs 42 (expected)", msg.I)
 	}
 	return msg, nil
 }
 
-func procMsg2(msg *testMsg2) (network.Body, ClientError) {
-	return nil, nil
-}
-func procMsg3(msg *testMsg3) (network.Body, ClientError) {
-	return nil, nil
-}
-
-func procMsgWrong1() (network.Body, ClientError) {
-	return nil, nil
-}
-
-func procMsgWrong2(msg testMsg2) (network.Body, ClientError) {
+func procMsg2(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
+	// Return an error for testing
+	if msg.I != 42 {
+		return nil, errors.New("Please give meaning of life.")
+	}
 	return msg, nil
 }
 
-func procMsgWrong3(msg *testMsg3) ClientError {
+func procMsgWrong1(msg *testMsg) (network.Body, error) {
+	return msg, nil
+}
+
+func procMsgWrong2(si *network.ServerIdentity) (network.Body, error) {
+	return nil, nil
+}
+
+func procMsgWrong3(si *network.ServerIdentity, msg testMsg) (network.Body, error) {
+	return msg, nil
+}
+
+func procMsgWrong4(si *network.ServerIdentity, msg *testMsg) error {
 	return nil
 }
 
-func procMsgWrong4(msg *testMsg4) (ClientError, network.Body) {
+func procMsgWrong5(si *network.ServerIdentity, msg *testMsg) (error, network.Body) {
 	return nil, msg
+}
+
+func procMsgWrong6(si *network.ServerIdentity, msg *int) (network.Body, error) {
+	return msg, nil
 }
 
 type testService struct {
@@ -153,7 +177,7 @@ func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (P
 	return nil, nil
 }
 
-func (ts *testService) ProcessMsg(msg *testMsg) (network.Body, ClientError) {
+func (ts *testService) ProcessMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	ts.Msg = msg
 	return msg, nil
 }

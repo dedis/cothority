@@ -218,7 +218,6 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	}
 	localhosts := false
 	listeners := make([]net.Listener, hosts)
-	services := make([]net.Listener, hosts)
 	if /*strings.Contains(addresses[0], "localhost") || */ strings.Contains(addresses[0], "127.0.0.") {
 		localhosts = true
 	}
@@ -234,22 +233,13 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 		var add network.Address
 		if localhosts {
 			// If we have localhosts, we have to search for an empty port
-			port := 0
-			for port == 0 {
-
-				var err error
-				listeners[c], err = net.Listen("tcp", ":0")
-				if err != nil {
-					log.Fatal("Couldn't search for empty port:", err)
-				}
-				_, p, _ := net.SplitHostPort(listeners[c].Addr().String())
-				port, _ = strconv.Atoi(p)
-				services[c], err = net.Listen("tcp", ":"+strconv.Itoa(port+1))
-				if err != nil {
-					port = 0
-				}
+			var err error
+			listeners[c], err = net.Listen("tcp", ":0")
+			if err != nil {
+				log.Fatal("Couldn't search for empty port:", err)
 			}
-			address += strconv.Itoa(port)
+			_, p, _ := net.SplitHostPort(listeners[c].Addr().String())
+			address += p
 			add = network.NewTCPAddress(address)
 			log.Lvl4("Found free port", address)
 		} else {
@@ -270,12 +260,6 @@ func (s *SimulationBFTree) CreateRoster(sc *SimulationConfig, addresses []string
 	// And close all our listeners
 	if localhosts {
 		for _, l := range listeners {
-			err := l.Close()
-			if err != nil {
-				log.Fatal("Couldn't close port:", l, err)
-			}
-		}
-		for _, l := range services {
 			err := l.Close()
 			if err != nil {
 				log.Fatal("Couldn't close port:", l, err)
