@@ -286,7 +286,9 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		time.Now().Add(time.Second))
 }
 
-// ClientError allows for returning error-codes and error-messages.
+// ClientError allows for returning error-codes and error-messages. It is
+// implemented by cerror, that can be instantiated using NewClientError and
+// NewClientErrorCode.
 type ClientError interface {
 	Error() string
 	ErrorCode() int
