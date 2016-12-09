@@ -20,9 +20,11 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 )
 
-// WebSocket handles incoming client-requests using the WebSocket
-// protocol for JavaScript-compatibility. When making a new WebSocket,
-// it will listen one port above the ServerIdentity-port-#.
+// WebSocket handles incoming client-requests using the websocket
+// protocol. When making a new WebSocket, it will listen one port above the
+// ServerIdentity-port-#.
+// The websocket protocol has been chosen as smallest common denominator
+// for languages including JavaScript.
 type WebSocket struct {
 	services  map[string]Service
 	server    *graceful.Server
@@ -77,23 +79,15 @@ func (w *WebSocket) Start() {
 	w.startstop <- true
 }
 
-// RegisterService saves the service as being able to handle messages.
+// RegisterService stores a service to the given path. All requests to that
+// path and it's sub-endpoints will be forwarded to ProcessClientRequest.
 func (w *WebSocket) RegisterService(service string, s Service) error {
 	w.services[service] = s
-	return nil
-}
-
-// RegisterMessageHandler for a service. Requests from a client to
-// "ws://service/path" will be forwarded to the corresponding
-// ProcessClientRequest of the 'service'.
-func (w *WebSocket) RegisterMessageHandler(service, path string) error {
-	log.Lvlf3("Registering websocket for ws://hostname/%s/%s", service, path)
 	h := &wsHandler{
 		ws:      w,
 		service: service,
-		path:    path,
 	}
-	w.mux.Handle(fmt.Sprintf("/%s/%s", service, path), h)
+	w.mux.Handle(fmt.Sprintf("/%s/", service), h)
 	return nil
 }
 
@@ -242,7 +236,6 @@ func (c *Client) Close() error {
 type wsHandler struct {
 	ws      *WebSocket
 	service string
-	path    string
 }
 
 // Wrapper-function so that http.Requests get 'upgraded' to websockets
@@ -272,7 +265,8 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		s := t.ws.services[t.service]
 		var reply []byte
-		reply, ce = s.ProcessClientRequest(t.path, buf)
+		path := strings.TrimPrefix(r.URL.Path, "/"+t.service+"/")
+		reply, ce = s.ProcessClientRequest(path, buf)
 		if ce == nil {
 			err := ws.WriteMessage(mt, reply)
 			if err != nil {

@@ -78,7 +78,6 @@ func TestServiceProcessRequest(t *testing.T) {
 			c:    c,
 			path: path,
 		}
-		c.RegisterMessageHandler(dummyServiceName, "nil")
 		return ds
 	}))
 	defer UnregisterService(dummyServiceName)
@@ -110,7 +109,6 @@ func TestServiceRequestNewProtocol(t *testing.T) {
 	RegisterNewService(dummyServiceName, func(c *Context, path string) Service {
 		ds.c = c
 		ds.path = path
-		c.RegisterMessageHandler(dummyServiceName, "DummyMsg")
 		return ds
 	})
 
@@ -154,7 +152,6 @@ func TestServiceNewProtocol(t *testing.T) {
 	var count int
 	countMutex := sync.Mutex{}
 	RegisterNewService(dummyServiceName, func(c *Context, path string) Service {
-		c.RegisterMessageHandler(dummyServiceName, "DummyMsg")
 		countMutex.Lock()
 		defer countMutex.Unlock()
 		log.Lvl2("Creating service", count)
@@ -243,7 +240,6 @@ func TestServiceBackForthProtocol(t *testing.T) {
 
 	// register service
 	log.ErrFatal(RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
-		c.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
 		return &simpleService{
 			ctx: c,
 		}

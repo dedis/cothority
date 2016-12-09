@@ -93,7 +93,6 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 	if msg.I != 12 {
 		t.Fatal("Didn't send 12")
 	}
-
 }
 
 type testMsg struct {

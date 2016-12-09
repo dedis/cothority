@@ -53,7 +53,6 @@ func TestClient_Send(t *testing.T) {
 
 	// register service
 	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
-		c.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
 		return &simpleService{
 			ctx: c,
 		}
@@ -81,7 +80,6 @@ func TestClient_Parallel(t *testing.T) {
 
 	// register service
 	RegisterNewService(backForthServiceName, func(c *Context, path string) Service {
-		c.RegisterMessageHandler(backForthServiceName, "SimpleRequest")
 		return &simpleService{
 			ctx: c,
 		}

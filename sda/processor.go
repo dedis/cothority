@@ -74,8 +74,6 @@ func (p *ServiceProcessor) RegisterMessage(f interface{}) error {
 	log.Lvl4("Registering handler", cr.String())
 	pm := strings.Split(cr.Elem().String(), ".")[1]
 	p.handlers[pm] = serviceHandler{f, cr.Elem()}
-	// Registering the handler to the websocket
-	p.RegisterMessageHandler(ServiceFactory.Name(p.servID), pm)
 	return nil
 }
 
@@ -108,7 +106,7 @@ func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte
 	mh, ok := p.handlers[path]
 	reply, cerr := func() (interface{}, ClientError) {
 		if !ok {
-			return nil, NewClientErrorCode(WebSocketErrorPathNotFound, "")
+			return nil, NewClientErrorCode(WebSocketErrorPathNotFound, "Path not found")
 		}
 		msg := reflect.New(mh.msgType).Interface()
 		err := protobuf.DecodeWithConstructors(buf, msg,
