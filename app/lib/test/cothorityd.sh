@@ -3,7 +3,7 @@
 DBG_SRV=${DBG_SRV:-0}
 
 runCoCfg(){
-    echo -e "127.0.0.1:200$1\nNew Cothority $1\nco$1\n" | dbgRun runCo $1 setup
+    echo -e "127.0.0.1:200$(( 2 * $1 ))\nNew Cothority $1\nco$1\n" | dbgRun runCo $1 setup
 }
 
 runCoBG(){

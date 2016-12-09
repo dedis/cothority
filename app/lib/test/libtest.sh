@@ -166,9 +166,9 @@ backg(){
 }
 
 cleanup(){
-    pkill cothorityd 2> /dev/null
-    pkill cosi 2> /dev/null
-    pkill ssh-ks 2> /dev/null
+    pkill -9 cothorityd 2> /dev/null
+    pkill -9 cosi 2> /dev/null
+    pkill -9 ssh-ks 2> /dev/null
     sleep .5
     rm -f srv*/*bin
     rm -f cl*/*bin
