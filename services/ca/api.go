@@ -94,7 +94,7 @@ func (d *CSRDispatcher) SignCert(config, prevconfig *common_structs.Config, id s
 		//log.Lvlf2("public: %v", public)
 		err = crypto.VerifySchnorr(network.Suite, public, hash, *cert.Signature)
 		if err != nil {
-			log.Lvlf2("CA's signature doesn't verify")
+			log.LLvlf2("CA's signature doesn't verify (CA's public key: %v", public)
 			return nil, errors.New("CA's signature doesn't verify")
 		}
 		//log.Print("CSRDispatcher(): 4")

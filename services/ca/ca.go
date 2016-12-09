@@ -72,7 +72,7 @@ func (ca *CA) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sd
 
 // SignCert will use the CA's public key to sign a new cert
 func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, error) {
-	log.LLvlf2("SignCert(): Start")
+	log.LLvlf2("SignCert(): Start (CA's public key: %v)", ca.Public)
 	id := csr.ID
 	config := csr.Config
 	prevconfig := csr.PrevConfig
@@ -83,7 +83,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		log.LLvlf2("Nil config")
 		return nil, errors.New("Nil config")
 	}
-
+	log.LLvlf2("SignCert(): 1")
 	var trustedconf *common_structs.Config
 	if prevconfig == nil {
 		trustedconf = config
@@ -91,7 +91,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 		trustedconf = prevconfig
 	}
 	thr := trustedconf.Threshold
-
+	log.LLvlf2("SignCert(): 2")
 	// Verify that a threshold 'thr' of the 'trustedconf' devices have voted for the
 	// 'config' for which the cert was asked
 	cnt := 0
@@ -120,19 +120,19 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 			}
 		}
 	}
-
+	log.LLvlf2("SignCert(): 3")
 	if cnt < thr {
 		log.LLvlf2("Not enough valid signatures (votes: %v, threshold: %v)", cnt, config.Threshold)
 		return nil, errors.New("Not enough valid signatures")
 	}
-
+	log.LLvlf2("SignCert(): 4")
 	// Check whether our clock is relatively close or not to the proposed timestamp
 	err = config.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
 		log.LLvlf2("CA with public key: %v %v refused to sign because of bad config timestamp", ca.Public, err)
 		return nil, err
 	}
-
+	log.LLvlf2("SignCert(): 5")
 	// Check that the validity period does not exceed an upper bound
 	if config.MaxDuration > bound {
 		log.LLvlf2("CA with public key: %v %v refused to sign because config's validity period exceeds an upper bound", ca.Public, err)
@@ -142,12 +142,14 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	// Sign the config's hash using CA's private key
 	var signature crypto.SchnorrSig
 	//log.Lvlf2("SignCert(): before signing: CApublic: %v", ca.Public)
+	log.LLvlf2("SignCert(): 6")
 	signature, err = crypto.SignSchnorr(network.Suite, ca.Private, hash)
 	if err != nil {
+		log.LLvlf2("error: %v", err)
 		return nil, err
 	}
 	//log.Lvlf2("SignCert(): 3")
-
+	log.LLvlf2("SignCert(): 7")
 	cert := &common_structs.Cert{
 		ID:        id,
 		Hash:      hash,
@@ -162,6 +164,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}
 
 	ca.setSiteStorage(id, site)
+	log.LLvlf2("SignCert(): End %v", cert)
 	//log.Lvlf2("SignCert(): End with ID: %v, Hash: %v, Sig: %v, Public: %v", id, hash, signature, ca.Public)
 	return &CSRReply{
 		Cert: cert,

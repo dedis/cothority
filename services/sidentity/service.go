@@ -149,13 +149,14 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	ids.setSkipBlockByID(ids.Data)
 
 	roster := ids.Root.Roster
+	ids.ID = ids.Data.Hash
+	log.LLvlf2("Asking for a cert for site: %v", ids.ID)
 	cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert[0],
 		SbHash: ids.Data.Hash,
 	}
 	ids.CertInfo = certinfo
-	ids.ID = ids.Data.Hash
 
 	/*
 		certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
@@ -645,11 +646,12 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		return nil, errors.New("Didn't find identity")
 	}
 
-	_, err := s.CheckRefreshCert(id)
-	if err != nil {
-		return nil, err
-	}
-
+	/*
+		_, err := s.CheckRefreshCert(id)
+		if err != nil {
+			return nil, err
+		}
+	*/
 	var ok bool
 	var sb1 *skipchain.SkipBlock
 	if !bytes.Equal(h1, []byte{0}) {
@@ -661,12 +663,12 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 	} else {
 		// fetch all the blocks starting from the one for the config of
 		// which the latest cert is acquired
-
-		_, err = s.CheckRefreshCert(id)
-		if err != nil {
-			return nil, err
-		}
-
+		/*
+			_, err = s.CheckRefreshCert(id)
+			if err != nil {
+				return nil, err
+			}
+		*/
 		h1 = sid.CertInfo.SbHash
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
@@ -747,12 +749,12 @@ func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Bod
 			certs = append(certs, cert)
 		}
 	}*/
-
-	_, err := s.CheckRefreshCert(req.ID)
-	if err != nil {
-		return nil, err
-	}
-
+	/*
+		_, err := s.CheckRefreshCert(req.ID)
+		if err != nil {
+			return nil, err
+		}
+	*/
 	cert := sid.CertInfo.Cert
 	hash := sid.CertInfo.SbHash
 	return &GetCertReply{Cert: cert, SbHash: hash}, nil
@@ -811,7 +813,9 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	}
 
 	// Ask for a cert for the 'latestconf'
+	log.LLvlf2("Asking for a cert for site: %v", sid.ID)
 	cert, _ := s.ca.SignCert(latestconf, prevconf, id)
+	log.LLvlf2("[site: %v] num of certs: %v", sid.ID, len(cert))
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert[0],
 		SbHash: sid.Data.Hash,
@@ -1016,7 +1020,8 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 				}
 				// verify inclusion proof
 				origmsg := data2[i]
-				log.LLvlf2("site: %v, proof: %v", sid.Latest.FQDN, proofs[i])
+				log.LLvlf2("site: %v", sid.Latest.FQDN)
+				//log.LLvlf2("site: %v, proof: %v", sid.Latest.FQDN, proofs[i])
 				log.LLvlf2("%v", []byte(origmsg))
 				validproof := pof.Proof.Check(sha256.New, root, []byte(origmsg))
 				if !validproof {

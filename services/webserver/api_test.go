@@ -11,6 +11,7 @@ import (
 		"io"
 	*/
 	"fmt"
+	"sync"
 	//"math/rand"
 	//"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -805,18 +806,79 @@ func TestSkipchainSwitch(t *testing.T) {
 		ws.WSAttach(site3, e1_fake.ID, el_coth)
 	}
 
-	for i := 0; i < 10; i++ {
-		time.Sleep(1000 * time.Millisecond)
-		log.LLvlf2("")
-		log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
-		window := u2.WebSites[site3].PinState.Window
-		time_last_pin_acc := u2.WebSites[site3].PinState.TimePinAccept
-		log.LLvlf2("User1's window regarding site: %v is: %v", site3, window)
-		log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
-		log.ErrFatal(u2.ReConnect(site3))
-	}
-	log.LLvlf2("THE END")
+	var wg sync.WaitGroup
 
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			time.Sleep(1000 * time.Millisecond)
+			log.LLvlf2("")
+			log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
+			window := u2.WebSites[site3].PinState.Window
+			time_last_pin_acc := u2.WebSites[site3].PinState.TimePinAccept
+			log.LLvlf2("User1's window regarding site: %v is: %v", site3, window)
+			log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+			log.ErrFatal(u2.ReConnect(site3))
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 10; i++ {
+			time.Sleep(1000 * time.Millisecond)
+			log.LLvlf2("")
+			log.LLvlf2("%v: RECONNECTING USER1 TO THE SITE: %v", i, site1)
+			window := u1.WebSites[site1].PinState.Window
+			time_last_pin_acc := u1.WebSites[site1].PinState.TimePinAccept
+			log.LLvlf2("User1's window regarding site: %v is: %v", site1, window)
+			log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+			log.ErrFatal(u1.ReConnect(site1))
+		}
+	}()
+
+	serverID = wss1[0].ServerID
+	key = fmt.Sprintf("tls:%v", serverID)
+	log.LLvlf2("Web server with serverID: %v has tls public key: %v", serverID, u1.WebSites[site1].Config.Data[key].TLSPublic)
+	log.LLvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v", c2.DeviceName, site1, serverID)
+	serverIDs = make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, serverID)
+	thr = 1
+	c2.ProposeConfig(nil, nil, thr, 0, serverIDs)
+	c2.ProposeUpVote()
+	log.ErrFatal(c3.ConfigUpdate())
+	if c3.Config.Threshold != thr {
+		t.Fatal("Wrong threshold")
+
+	}
+
+	log.LLvlf2("ADDING FOURTH DEVICE TO THE SITE IDENTITY: %v", c2.ID)
+	c4 := NewTestIdentity(el_coth, "", 0, "four", "device", nil, nil, 0, l)
+	log.ErrFatal(c4.AttachToIdentity(c2.ID))
+	c2.ProposeUpVote()
+	log.ErrFatal(c3.ConfigUpdate())
+	if len(c3.Config.Device) != 3 {
+
+		t.Fatal("Should have three owners by now but got only: ", len(c3.Config.Device))
+	}
+
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 15; i++ {
+			time.Sleep(1000 * time.Millisecond)
+			log.LLvlf2("")
+			log.LLvlf2("%v: RECONNECTING USER2 TO THE SITE: %v", i, site2)
+			window := u2.WebSites[site2].PinState.Window
+			time_last_pin_acc := u2.WebSites[site2].PinState.TimePinAccept
+			log.LLvlf2("User2's window regarding site: %v is: %v", site2, window)
+			log.LLvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
+			log.ErrFatal(u2.ReConnect(site2))
+		}
+	}()
+
+	wg.Wait()
+
+	log.LLvlf2("THE END")
 }
 
 /*

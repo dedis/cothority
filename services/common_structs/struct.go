@@ -398,7 +398,7 @@ func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff in
 	log.LLvlf2("root hash: %v", []byte(pof.Root))
 	log.LLvlf2("timestamp: %v", pof.Timestamp)
 	log.LLvlf2("signature: %v", pof.Signature)
-	log.LLvlf2("proof: %v", pof.Proof)
+	//log.LLvlf2("proof: %v", pof.Proof)
 	validproof := pof.Proof.Check(sha256.New, pof.Root, []byte(origmsg))
 	if !validproof {
 		log.LLvlf2("Invalid inclusion proof!")

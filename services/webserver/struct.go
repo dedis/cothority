@@ -24,7 +24,7 @@ const propagateTimeout = 10000
 
 // How many msec since a skipblock is thought to be stale (according to its PoF)
 //const maxdiff = 300000 // 300000 ms = 5 minutes * 60 sec/min * 1000 ms/sec // (REALISTIC)
-const maxdiff = 5000
+const maxdiff = 3000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
