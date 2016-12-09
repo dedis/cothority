@@ -70,6 +70,8 @@ type Site struct {
 	Latest *skipchain.SkipBlock
 	// Hash of the 'Latest' known block
 	LatestHash skipchain.SkipBlockID
+	// PoF for the latest known skipblock
+	PoF *common_structs.SignatureResponse
 	//Certs []*ca.Cert
 	// Certs keeps the mapping between the config (the hash of the skipblock that contains it) and the cert(s)
 	// that was(were) issued for that particular config
@@ -147,8 +149,9 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Ros
 	return nil
 }
 
-// asks the cothority for new skipblocks, fetches all of them starting with the latest known
+// Asks the cothority for new skipblocks, fetches all of them starting with the latest known
 // till the current head one and (possibly) updates the tls keypair of the ws
+// Also updates the cert and the PoF
 func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	log.LLvlf2("WSUpdate(): Start")
 	// Check whether the reached ws has been configured as a valid web server of the requested site
@@ -178,13 +181,18 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	site.TLSPrivate = tlsprivate
 
 	// check for new cert
-	// TODO: verify them
+	// TODO: verify it
 	cert, hash, _ := site.si.GetCert(id)
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert,
 		SbHash: hash,
 	}
 	site.CertInfo = certinfo
+
+	// check for new pof
+	// TODO: verify that it points to the latest skipblock + is sufficiently "fresh"
+	pof, hash, _ := site.si.GetPoF(id)
+	site.PoF = pof
 
 	ws.setSiteStorage(id, site)
 	log.LLvlf2("WSUpdate(): End")
@@ -285,6 +293,18 @@ func (ws *WS) FetchCert(id skipchain.SkipBlockID) (*common_structs.Cert, error) 
 	return site.CertInfo.Cert, nil
 }
 
+// fetch the latest PoF
+func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureResponse, error) {
+	_ = ws.WSUpdate(id)
+
+	site := ws.getSiteStorage(id)
+	if site == nil {
+		return nil, errors.New("FetchPoF() failed: web server not yet attached to the requested site")
+	}
+
+	return site.PoF, nil
+}
+
 /*
 func (ws *WS) WSGetSkipblocks(req *GetSkipblocks) ([]*skipchain.SkipBlock, error) {
 	_ = ws.WSUpdate(req.ID)
@@ -342,12 +362,15 @@ func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPat
 	}
 	log.LLvlf2("UserGetValidSbPath(): Skipblocks fetched")
 
+	pof, _ := ws.FetchPoF(id)
+
 	if bytes.Equal(req.Hash2, []byte{0}) {
 		cert, _ := ws.FetchCert(id)
 		log.LLvlf2("UserGetValidSbPath(): Cert fetched")
 		return &GetValidSbPathReply{
 			Skipblocks: sbs,
 			Cert:       cert,
+			PoF:        pof,
 		}, nil
 
 	}
@@ -355,6 +378,7 @@ func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPat
 	return &GetValidSbPathReply{
 		Skipblocks: sbs,
 		Cert:       nil,
+		PoF:        pof,
 	}, nil
 }
 

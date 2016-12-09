@@ -1,14 +1,16 @@
 package common_structs
 
 import (
-	//"bytes"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/dedis/cothority/protocols/swupdate"
 	"io"
 	//"errors"
 	"github.com/dedis/cothority/crypto"
@@ -139,6 +141,21 @@ type CertInfo struct {
 	// which is the only one that is currently valid
 	SbHash skipchain.SkipBlockID
 	Cert   *Cert
+}
+
+type SignatureResponse struct {
+	// id of the site's genesis skipblock
+	ID skipchain.SkipBlockID
+	// The time in seconds when the request was started:
+	Timestamp int64
+	// The tree root that was signed:
+	Root crypto.HashID
+	// Proof is an Inclusion proof for the data the client requested:
+	Proof crypto.Proof
+	// Collective signature on Timestamp||hash(treeroot):
+	Signature []byte
+
+	// TODO should we return the roster used to sign this message?
 }
 
 type Key []byte
@@ -305,10 +322,24 @@ func (c *Config) CheckTimeDiff(maxvalue int64) error {
 	diff := time.Since(time.Unix(0, timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
 	if diff_int > maxvalue {
-		return fmt.Errorf("refused to sign off due to bad timestamp: time difference: %v exceeds the %v interval", diff, maxvalue)
+		log.LLvlf2("time difference: %v exceeds the %v interval", diff, maxvalue)
+		return fmt.Errorf("time difference: %v exceeds the %v interval", diff, maxvalue)
 	}
-	log.Printf("Checking Timestamp: time difference: %v OK", diff)
+	log.LLvlf2("Checking Timestamp: time difference: %v OK", diff)
 	return nil
+}
+
+// returns 'true' in case the PoF is indeed fresh
+func (sr *SignatureResponse) CheckFreshness(maxvalue int64) bool {
+	timestamp := sr.Timestamp
+	diff := time.Since(time.Unix(0, timestamp*1000000))
+	diff_int := diff.Nanoseconds() / 1000000
+	if diff_int > maxvalue {
+		log.LLvlf2("Time difference: %v exceeds the %v interval", diff, maxvalue)
+		return false
+	}
+	log.LLvlf2("Time difference: %v is within the \"fresh\" %v interval", diff, maxvalue)
+	return true
 }
 
 func (c *Config) ExpiredCertConfig() bool {
@@ -340,6 +371,64 @@ func (c *Config) IsOlderConfig(c2 *Config) bool {
 		return true
 	}
 	return false
+}
+
+func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff int64) error {
+	// Check whether the 'latest' skipblock is stale or not (by checking the freshness of the PoF)
+	isfresh := pof.CheckFreshness(maxdiff)
+	if !isfresh {
+		return fmt.Errorf("Stale skipblock can not be accepted")
+	}
+
+	signedmsg := RecreateSignedMsg(pof.Root, pof.Timestamp)
+	_, data, _ := network.UnmarshalRegistered(latestsb.Data)
+	latestconf, _ := data.(*Config)
+	publics := make([]abstract.Point, 0)
+	for _, proxy := range latestconf.ProxyRoster.List {
+		publics = append(publics, proxy.Public)
+	}
+	err := swupdate.VerifySignature(network.Suite, publics, signedmsg, pof.Signature)
+	if err != nil {
+		log.LLvlf2("Warm Key Holders' signature doesn't verify")
+		return errors.New("Warm Key Holders' signature doesn't verify")
+	}
+	// verify inclusion proof
+	origmsg, _ := latestconf.Hash()
+	log.LLvlf2("for site: %v, %v", latestconf.FQDN, []byte(origmsg))
+	log.LLvlf2("root hash: %v", []byte(pof.Root))
+	log.LLvlf2("timestamp: %v", pof.Timestamp)
+	log.LLvlf2("signature: %v", pof.Signature)
+	log.LLvlf2("proof: %v", pof.Proof)
+	validproof := pof.Proof.Check(sha256.New, pof.Root, []byte(origmsg))
+	if !validproof {
+		log.LLvlf2("Invalid inclusion proof!")
+		return errors.New("Invalid inclusion proof!")
+	}
+	return nil
+}
+
+// RecreateSignedMsg is a helper that can be used by the client to recreate the
+// message signed by the timestamp service (which is treeroot||timestamp)
+func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
+	timeB := timestampToBytes(timestamp)
+	m := make([]byte, len(treeroot)+len(timeB))
+	m = append(m, treeroot...)
+	m = append(m, timeB...)
+	return m
+}
+
+func timestampToBytes(t int64) []byte {
+	timeBuf := make([]byte, binary.MaxVarintLen64)
+	binary.PutVarint(timeBuf, t)
+	return timeBuf
+}
+
+func bytesToTimestamp(b []byte) (int64, error) {
+	t, err := binary.ReadVarint(bytes.NewReader(b))
+	if err != nil {
+		return t, err
+	}
+	return t, nil
 }
 
 // GetSuffixColumn returns the unique values up to the next ":" of the keys.

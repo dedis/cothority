@@ -1,11 +1,11 @@
 package webserver
 
 import (
-	"encoding/binary"
+	//"encoding/binary"
 	//"fmt"
 	//"sort"
 	//"strings"
-	"bytes"
+	//"bytes"
 
 	"github.com/dedis/cothority/crypto"
 	//"github.com/dedis/cothority/log"
@@ -22,26 +22,12 @@ const MaxInt = int(MaxUint >> 1)
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
 
-// How many msec since a skipblock is thought to be stale
-//const maxdiff = 2592000000 // (2592000000 ms = 30 days * 24 hours/day * 3600 sec/hour * 1000 ms/sec)
-const maxdiff = 300000 // 300000 ms = 5 minutes * 60 sec/min * 1000 ms/sec
+// How many msec since a skipblock is thought to be stale (according to its PoF)
+//const maxdiff = 300000 // 300000 ms = 5 minutes * 60 sec/min * 1000 ms/sec // (REALISTIC)
+const maxdiff = 5000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
-
-func timestampToBytes(t int64) []byte {
-	timeBuf := make([]byte, binary.MaxVarintLen64)
-	binary.PutVarint(timeBuf, t)
-	return timeBuf
-}
-
-func bytesToTimestamp(b []byte) (int64, error) {
-	t, err := binary.ReadVarint(bytes.NewReader(b))
-	if err != nil {
-		return t, err
-	}
-	return t, nil
-}
 
 // Messages between the Client-API and the Service
 
@@ -81,6 +67,7 @@ type GetValidSbPath struct {
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
 	Cert       *common_structs.Cert
+	PoF        *common_structs.SignatureResponse
 }
 
 type ChallengeReq struct {

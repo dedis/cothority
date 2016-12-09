@@ -132,7 +132,7 @@ type PropagateCert struct {
 }
 
 type PropagatePoF struct {
-	*Storage
+	Storages []*Storage
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
@@ -158,6 +158,7 @@ type GetValidSbPath struct {
 }
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
+	Cert       *common_structs.Cert
 }
 
 type PushPublicKey struct {
@@ -188,15 +189,11 @@ type GetCertReply struct {
 	Cert   *common_structs.Cert
 }
 
-type SignatureResponse struct {
-	// The time in seconds when the request was started:
-	Timestamp int64
-	// The tree root that was signed:
-	Root crypto.HashID
-	// Proof is an Inclusion proof for the data the client requested:
-	Proof crypto.Proof
-	// Collective signature on Timestamp||hash(treeroot):
-	Signature []byte
+type GetPoF struct {
+	ID skipchain.SkipBlockID
+}
 
-	// TODO should we return the roster used to sign this message?
+type GetPoFReply struct {
+	SbHash skipchain.SkipBlockID
+	PoF    *common_structs.SignatureResponse
 }

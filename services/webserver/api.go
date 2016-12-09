@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
+	//"github.com/dedis/crypto/cosi"
 	//"github.com/dedis/crypto/config"
 	//"github.com/dedis/crypto/cosi"
 )
@@ -244,15 +245,20 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	sbs := reply.Skipblocks
 	latest := sbs[len(sbs)-1]
 	cert := reply.Cert
+	pof := reply.PoF
 	log.LLvlf2("Connect(): Skipblocks fetched")
 
-	// Check whether the 'latest' skipblock is stale or not
+	// Check whether the latest config was recently signed by the Cold Key Holders
+	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
 	_, data, _ := network.UnmarshalRegistered(latest.Data)
 	latestconf, _ := data.(*common_structs.Config)
-	err := latestconf.CheckTimeDiff(maxdiff)
+	err := latestconf.CheckTimeDiff(maxdiff * 2)
 	if err != nil {
-		log.LLvlf2("Stale skipblock can not be accepted")
-		return fmt.Errorf("Stale skipblock can not be accepted")
+		err = pof.Validate(latest, maxdiff)
+		if err != nil {
+			log.LLvlf2("%v", err)
+			return err
+		}
 	}
 
 	// TODO: verify that the CA is indeed a CA (maybe by checking its public key's membership
@@ -333,6 +339,20 @@ func (u *User) ReConnect(name string) error {
 		first := sbs[0]
 		latest := sbs[len(sbs)-1]
 		cert := reply.Cert
+		pof := reply.PoF
+
+		// Check whether the latest config was recently signed by the Cold Key Holders
+		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
+		_, data, _ := network.UnmarshalRegistered(latest.Data)
+		latestconf, _ := data.(*common_structs.Config)
+		err := latestconf.CheckTimeDiff(maxdiff * 2)
+		if err != nil {
+			err = pof.Validate(latest, maxdiff)
+			if err != nil {
+				log.LLvlf2("%v", err)
+				return err
+			}
+		}
 
 		first_not_known_index := 0 // Is sbs[0] the first_not_known skipblock?
 		for index, sb := range sbs {
@@ -562,12 +582,28 @@ func (u *User) ReConnect(name string) error {
 		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}})
 		reply, _ := msg.Msg.(GetValidSbPathReply)
 		sbs := reply.Skipblocks
+		pof := reply.PoF
+		latest := sbs[len(sbs)-1]
 		ok, _ := VerifyHops(sbs)
 		if !ok {
 			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
 			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
 		}
-		u.Follow(name, sbs[len(sbs)-1], nil)
+
+		// Check whether the latest config was recently signed by the Cold Key Holders
+		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
+		_, data, _ := network.UnmarshalRegistered(latest.Data)
+		latestconf, _ := data.(*common_structs.Config)
+		err = latestconf.CheckTimeDiff(maxdiff * 2)
+		if err != nil {
+			err = pof.Validate(latest, maxdiff)
+			if err != nil {
+				log.LLvlf2("%v", err)
+				return err
+			}
+		}
+
+		u.Follow(name, latest, nil)
 
 		// Pins still valid, try to use the existent tls public key in order to communicate
 		// with the webserver

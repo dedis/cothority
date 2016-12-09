@@ -11,7 +11,7 @@ import (
 		"io"
 	*/
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	//"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/sda"
@@ -483,9 +483,10 @@ func TestSkipchainSwitch(t *testing.T) {
 		//log.LLvlf2("%v", s.(*sidentity.Service).ServerIdentity())
 	}
 
-	randomID := rand.Int() % len(services)
+	//randomID := rand.Int() % len(services)
+	randomID := 0
 	proxies[randomID].TheRoster = el_coth
-	go proxies[randomID].RunLoop(el_coth)
+	go proxies[randomID].RunLoop(el_coth, services)
 
 	hosts_ca, _, _ := l.GenTree(2, true)
 	services = l.GetServices(hosts_ca, ca.CAService)

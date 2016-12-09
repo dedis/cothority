@@ -165,7 +165,7 @@ func VerifySignature(suite abstract.Suite, publics []abstract.Point, msg, sig []
 // handleAnnouncement will pass the message to the round and send back the
 // output. If in == nil, we are root and we start the round.
 func (c *CoSiUpdate) handleAnnouncement(in *Announcement) error {
-	log.Lvl3("Message:", c.Message)
+	//log.LLvl3("Message:", in.Data)
 	if c.verificationHook != nil {
 		// write to the channel when the verification function is done
 		go func() {
@@ -292,7 +292,7 @@ func (c *CoSiUpdate) handleResponse(in *Response) error {
 			return nil
 		}
 	}
-	log.Lvl3(c.Name(), "aggregated all responses")
+	log.LLvl3(c.Name(), "aggregated all responses")
 
 	defer func() {
 		// protocol is finished

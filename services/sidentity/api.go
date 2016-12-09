@@ -72,6 +72,8 @@ func init() {
 		&PullPublicKeyReply{},
 		&GetCert{},
 		&GetCertReply{},
+		&GetPoF{},
+		&GetPoFReply{},
 	} {
 		network.RegisterPacketType(s)
 	}
@@ -395,17 +397,52 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	reply, ok := msg.Msg.(ProposeVoteReply)
+	_, ok := msg.Msg.(ProposeVoteReply)
 	if !ok {
 		log.LLvlf2("Device with name: %v : not yet accepted skipblock", i.DeviceName)
 	}
 	if ok {
+		/*
+			log.LLvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
+			_, data, _ := network.UnmarshalRegistered(reply.Data.Data)
+			ok, err = i.ValidateUpdateConfig(data.(*common_structs.Config))
+			if !ok {
+				return err
+			}
+			log.LLvl2("Threshold reached and signed")
+			i.Proposed = nil
+		*/
 		log.LLvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
-		_, data, _ := network.UnmarshalRegistered(reply.Data.Data)
-		ok, err = i.ValidateUpdateConfig(data.(*common_structs.Config))
-		if !ok {
+		/*msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
+		if err != nil {
 			return err
 		}
+		reply2 := msg.Msg.(GetUpdateChainReply)
+		*/
+		msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{
+			ID:    i.ID,
+			Hash1: i.LatestID,
+			Hash2: []byte{0},
+		})
+		if err != nil {
+			return err
+		}
+		reply2 := msg.Msg.(GetValidSbPathReply)
+		blocks := reply2.Skipblocks
+		cert := reply2.Cert
+		log.Lvlf2("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
+
+		_, data, _ := network.UnmarshalRegistered(blocks[len(blocks)-1].Data)
+		newconf := data.(*common_structs.Config)
+		err = i.ValidateConfigChain(newconf, blocks)
+		if err != nil {
+			return err
+		}
+
+		i.LatestID = blocks[len(blocks)-1].Hash
+		i.Latest = blocks[len(blocks)-1]
+		i.Config = newconf
+		i.Cert = cert
 		log.LLvl2("Threshold reached and signed")
 		i.Proposed = nil
 	} else {
@@ -472,6 +509,8 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 
 	if !bytes.Equal(h1, h2) {
 		log.LLvlf2("Configs don't match!")
+		log.LLvlf2("h1: %v", h1)
+		log.LLvlf2("h2: %v", h2)
 		return errors.New("Configs don't match!")
 	}
 
@@ -559,12 +598,25 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	log.LLvlf2("ValidateUpdateConfig(): Start")
 	//trustedconfig := i.Config
 	log.LLvlf2("%v", i.LatestID)
-	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
+	/*msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
 	if err != nil {
 		return false, err
 	}
 	reply := msg.Msg.(GetUpdateChainReply)
 	blocks := reply.Update
+	cert := reply.Cert
+	*/
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{
+		ID:    i.ID,
+		Hash1: i.LatestID,
+		Hash2: []byte{0},
+	})
+	if err != nil {
+		return false, err
+	}
+	reply2 := msg.Msg.(GetValidSbPathReply)
+	blocks := reply2.Skipblocks
+	cert := reply2.Cert
 	log.Lvlf2("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
 
 	err = i.ValidateConfigChain(newconf, blocks)
@@ -575,7 +627,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	i.LatestID = blocks[len(blocks)-1].Hash
 	i.Latest = blocks[len(blocks)-1]
 	i.Config = newconf
-	i.Cert = reply.Cert
+	i.Cert = cert
 	log.Lvlf2("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
 	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
 	return true, nil
@@ -608,7 +660,7 @@ func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, h1 skipchain.SkipBlo
 	return sbs, nil
 }
 
-// fetch the current valid certs for the site (not yet expired)
+// fetch the current valid cert for the site (not yet expired)
 func (i *Identity) GetCert(id skipchain.SkipBlockID) (*common_structs.Cert, skipchain.SkipBlockID, error) {
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetCert{ID: i.ID})
 	if err != nil {
@@ -618,6 +670,18 @@ func (i *Identity) GetCert(id skipchain.SkipBlockID) (*common_structs.Cert, skip
 	cert := reply.Cert
 	hash := reply.SbHash
 	return cert, hash, nil
+}
+
+// fetch the latest PoF for the (latest) skipblock of the site
+func (i *Identity) GetPoF(id skipchain.SkipBlockID) (*common_structs.SignatureResponse, skipchain.SkipBlockID, error) {
+	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetPoF{ID: i.ID})
+	if err != nil {
+		return nil, nil, err
+	}
+	reply, _ := msg.Msg.(GetPoFReply)
+	pof := reply.PoF
+	hash := reply.SbHash
+	return pof, hash, nil
 }
 
 // for web servers (public key to be pushed to the cothority servers)
