@@ -29,13 +29,13 @@ testReconnect(){
         echo "My Test Message File" > foo.txt
         testOK runCl 1 sign foo.txt
         testOut "Killing server $s"
-        pkill -f "c srv$s/config"
+        pkill -9 -f "c srv$s/config"
         testFail runCl 1 sign foo.txt
         testOut "Starting server $s again"
         runSrv $s
         sleep 1
         testOK runCl 1 sign foo.txt
-        pkill -f ./cosi
+        pkill -9 -f ./cosi
     done
 }
 
@@ -63,7 +63,7 @@ testSignFile(){
 
 testServerCfg(){
     runSrvCfg 1
-    pkill cosi
+    pkill -9 cosi
     testFile srv1/config.toml
 }
 
