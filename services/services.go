@@ -7,5 +7,4 @@ import (
 	_ "github.com/dedis/cothority/services/identity"
 	_ "github.com/dedis/cothority/services/skipchain"
 	_ "github.com/dedis/cothority/services/status"
-	_ "github.com/dedis/cothority/services/websocket"
 )
