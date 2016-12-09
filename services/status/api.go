@@ -17,7 +17,7 @@ func NewClient() *Client {
 }
 
 // GetStatus Sends requests to all other members of network and creates client
-func (c *Client) GetStatus(dst *network.ServerIdentity) (*Response, sda.ClientError) {
+func (c *Client) Request(dst *network.ServerIdentity) (*Response, sda.ClientError) {
 	request := &Request{}
 	//send request to all entities in the network
 	log.Lvl4("Sending Request to ", dst)

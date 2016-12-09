@@ -287,7 +287,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	var err error
 	go func() {
 		log.Lvl3("Waiting for the response on SignRequest")
-		response, e := client.SignMsg(el, msg)
+		response, e := client.SignatureRequest(el, msg)
 		if e != nil {
 			err = e
 			close(pchan)

@@ -26,7 +26,7 @@ func TestServiceStatus(t *testing.T) {
 	// Send a request to the service
 	client := NewTestClient(local)
 	log.Lvl1("Sending request to service...")
-	stat, cerr := client.GetStatus(el.List[0])
+	stat, cerr := client.Request(el.List[0])
 	log.Lvl1(el.List[0])
 	log.ErrFatal(cerr)
 	log.Lvl1(stat)
@@ -37,7 +37,7 @@ func TestServiceStatus(t *testing.T) {
 	}
 	go pi.Start()
 	<-pi.(*channels.ProtocolExampleChannels).ChildCount
-	stat, cerr = client.GetStatus(el.List[0])
+	stat, cerr = client.Request(el.List[0])
 	log.ErrFatal(cerr)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Msg["Status"]["Available_Services"])

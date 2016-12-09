@@ -26,7 +26,7 @@ func TestServiceCosi(t *testing.T) {
 	client := NewTestClient(local)
 	msg := []byte("hello cosi service")
 	log.Lvl1("Sending request to service...")
-	res, err := client.SignMsg(el, msg)
+	res, err := client.SignatureRequest(el, msg)
 	log.ErrFatal(err, "Couldn't send")
 
 	// verify the response still
