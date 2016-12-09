@@ -20,9 +20,11 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 )
 
-// WebSocket handles incoming client-requests using the WebSocket
-// protocol for JavaScript-compatibility. When making a new WebSocket,
-// it will listen one port above the ServerIdentity-port-#.
+// WebSocket handles incoming client-requests using the websocket
+// protocol. When making a new WebSocket, it will listen one port above the
+// ServerIdentity-port-#.
+// The websocket protocol has been chosen as smallest common denominator
+// for languages including JavaScript.
 type WebSocket struct {
 	services  map[string]Service
 	server    *graceful.Server
@@ -77,23 +79,15 @@ func (w *WebSocket) Start() {
 	w.startstop <- true
 }
 
-// RegisterService saves the service as being able to handle messages.
+// RegisterService stores a service to the given path. All requests to that
+// path and it's sub-endpoints will be forwarded to ProcessClientRequest.
 func (w *WebSocket) RegisterService(service string, s Service) error {
 	w.services[service] = s
-	return nil
-}
-
-// RegisterMessageHandler for a service. Requests from a client to
-// "ws://service/path" will be forwarded to the corresponding
-// ProcessClientRequest of the 'service'.
-func (w *WebSocket) RegisterMessageHandler(service, path string) error {
-	log.Lvlf3("Registering websocket for ws://hostname/%s/%s", service, path)
 	h := &wsHandler{
-		ws:      w,
-		service: service,
-		path:    path,
+		service:     s,
+		serviceName: service,
 	}
-	w.mux.Handle(fmt.Sprintf("/%s/%s", service, path), h)
+	w.mux.Handle(fmt.Sprintf("/%s/", service), h)
 	return nil
 }
 
@@ -112,7 +106,7 @@ func (w *WebSocket) Stop() {
 }
 
 // Client is a struct used to communicate with a remote Service running on a
-// sda.Conode
+// sda.Conode. Using Send it can connect to multiple remote Conodes.
 type Client struct {
 	service string
 	si      *network.ServerIdentity
@@ -157,13 +151,13 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 		log.Lvlf4("Sending %x to %s/%s/%s", buf, url, c.service, path)
 		d := &websocket.Dialer{}
 		// Re-try to connect in case the websocket is just about to start
-		for a := 0; a < 10; a++ {
+		for a := 0; a < network.MaxRetryConnect; a++ {
 			c.conn, _, err = d.Dial(fmt.Sprintf("ws://%s/%s/%s", url, c.service, path),
 				http.Header{})
 			if err == nil {
 				break
 			}
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(network.WaitRetry)
 		}
 		if err != nil {
 			return nil, NewClientError(err)
@@ -240,9 +234,8 @@ func (c *Client) Close() error {
 
 // Pass the request to the websocket.
 type wsHandler struct {
-	ws      *WebSocket
-	service string
-	path    string
+	serviceName string
+	service     Service
 }
 
 // Wrapper-function so that http.Requests get 'upgraded' to websockets
@@ -256,7 +249,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		},
 		EnableCompression: true,
 	}
-	ws, err := u.Upgrade(w, r, http.Header{"Set-Cookie": {"sessionID=1234"}})
+	ws, err := u.Upgrade(w, r, http.Header{})
 	if err != nil {
 		log.Error(err)
 		return
@@ -270,9 +263,10 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 			return
 		}
-		s := t.ws.services[t.service]
+		s := t.service
 		var reply []byte
-		reply, ce = s.ProcessClientRequest(t.path, buf)
+		path := strings.TrimPrefix(r.URL.Path, "/"+t.serviceName+"/")
+		reply, ce = s.ProcessClientRequest(path, buf)
 		if ce == nil {
 			err := ws.WriteMessage(mt, reply)
 			if err != nil {
@@ -292,7 +286,9 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		time.Now().Add(time.Second))
 }
 
-// ClientError allows for returning error-codes and error-messages.
+// ClientError allows for returning error-codes and error-messages. It is
+// implemented by cerror, that can be instantiated using NewClientError and
+// NewClientErrorCode.
 type ClientError interface {
 	Error() string
 	ErrorCode() int
