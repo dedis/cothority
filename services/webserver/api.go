@@ -292,13 +292,17 @@ func (u *User) ReConnect(name string) error {
 			log.Lvlf2("--------------------------------------------------------------------------------")
 			log.Lvlf3("The first hop is not valid -> Start trusting from scratch once the signature of the CA is verified")
 
-			// Check whether the 'latest' skipblock is stale or not
+			// Check whether the latest config was recently signed by the Cold Key Holders
+			// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
 			_, data, _ := network.UnmarshalRegistered(latest.Data)
 			latestconf, _ := data.(*common_structs.Config)
-			err := latestconf.CheckTimeDiff(maxdiff)
+			err := latestconf.CheckTimeDiff(maxdiff * 2)
 			if err != nil {
-				log.Lvlf2("Stale skipblock can not be accepted")
-				return fmt.Errorf("Stale skipblock can not be accepted")
+				err = pof.Validate(latest, maxdiff)
+				if err != nil {
+					log.Lvlf2("%v", err)
+					return err
+				}
 			}
 
 			// TODO: verify that the "CA" is indeed a CA (maybe by checking its public key's membership
@@ -359,23 +363,30 @@ func (u *User) ReConnect(name string) error {
 		}
 
 	} else {
+
 		var err error
 		log.Lvlf2("Pins are still valid")
 		// follow the evolution of the site skipchain to get the latest valid tls keys
 		wss := website.WSs
 		serverID := wss[rand.Int()%len(wss)].ServerID
+
+		bytess, _ := GenerateRandomBytes(10)
+		challenge := crypto.HashID(bytess)
 		log.Lvlf3("Challenged web server has address: %v", serverID)
-		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}})
+
+		msg, _ := u.WSClient.Send(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}, Challenge: challenge})
 		reply, _ := msg.Msg.(GetValidSbPathReply)
 		sbs := reply.Skipblocks
 		pof := reply.PoF
 		latest := sbs[len(sbs)-1]
+		sig := reply.Signature
+
 		ok, _ := VerifyHops(sbs)
 		if !ok {
 			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
 			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
 		}
-
+		log.Lvlf2("user %v, Latest returned block has hash: %v", u.UserName, latest.Hash)
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
 		_, data, _ := network.UnmarshalRegistered(latest.Data)
@@ -389,26 +400,19 @@ func (u *User) ReConnect(name string) error {
 			}
 		}
 
-		u.Follow(name, latest, nil)
+		_, tempdata, _ := network.UnmarshalRegistered(latest.Data)
+		tempconf, _ := tempdata.(*common_structs.Config)
 
-		// Pins still valid, try to use the existent tls public key in order to communicate
-		// with the webserver
 		key := fmt.Sprintf("tls:%v", serverID)
-		ptls := website.Config.Data[key].TLSPublic
-		bytess, _ := GenerateRandomBytes(10)
-		challenge := crypto.HashID(bytess)
-		msg, err = u.WSClient.Send(serverID, &ChallengeReq{FQDN: name, Challenge: challenge})
-		if err != nil {
-			return err
-		}
-		reply2, _ := msg.Msg.(ChallengeReply)
-		sig := reply2.Signature
+		ptls := tempconf.Data[key].TLSPublic
 		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
 		if err != nil {
-			log.Lvlf2("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
+			log.Lvlf2("user %v, Tls public key (%v) should match to the webserver's %v private key but it does not! (latest returned block has hash: %v)", u.UserName, ptls, serverID, latest.Hash)
 			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
 		}
 		log.Lvlf2("Tls private key matches")
+
+		u.Follow(name, latest, nil)
 
 	}
 	return nil
@@ -422,7 +426,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
-			log.Lvlf3("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prev.Hash, next.Hash)
+			log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prev.Hash, next.Hash)
 			cnt := 0
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
 			if err2 != nil {

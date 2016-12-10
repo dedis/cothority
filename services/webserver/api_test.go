@@ -82,7 +82,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	//randomID := rand.Int() % len(services)
 	randomID := 0
 	proxies[randomID].TheRoster = el_coth
-	go proxies[randomID].RunLoop(el_coth, services)
+	go proxies[randomID].RunLoop(el_coth)
 
 	hosts_ca, _, _ := l.GenTree(2, true)
 	services = l.GetServices(hosts_ca, ca.CAService)
@@ -123,7 +123,7 @@ func TestSkipchainSwitch(t *testing.T) {
 	log.Lvlf2("NEW SITE IDENTITY FOR SITE3")
 	site3 := "site3"
 	thr = 2
-	num_ws3 := 3
+	num_ws3 := 1
 	_, webservers3, wss3, data3 := GetWSPublicsPlusServerIDs(num_ws3, el_coth, l)
 	e := NewTestIdentityMultDevs(el_coth, site3, thr, []string{"site3_one", "site3_two"}, "device", cas[1:2], data3, duration, l)
 	e1 := e[0]
@@ -475,6 +475,12 @@ func TestSkipchainSwitch(t *testing.T) {
 	u := make(map[string]*User)
 	sites := []string{site1, site2, site3}
 	wsss := [][]common_structs.WSInfo{wss1, wss2, wss3}
+	webservers := [][]*WS{webservers1, webservers2, webservers3}
+	devices1 := []*sidentity.Identity{c2, c3, c4}
+	devices2 := []*sidentity.Identity{d1, d2}
+	devices3_fake := []*sidentity.Identity{e1_fake}
+	devices := [][]*sidentity.Identity{devices1, devices2, devices3_fake}
+
 	usernames := make([]string, 0)
 	for index, site := range sites {
 		for userid := 0; userid < 10; userid++ {
@@ -485,7 +491,7 @@ func TestSkipchainSwitch(t *testing.T) {
 			}
 			sitestoattach = make([]*common_structs.SiteInfo, 0)
 			sitestoattach = append(sitestoattach, siteInfo)
-			username := fmt.Sprintf("user%v", userid)
+			username := fmt.Sprintf("u%v", userid)
 			usernames = append(usernames, username)
 			if index == 0 {
 				u[username] = NewTestUser(username, sitestoattach, l)
@@ -494,36 +500,55 @@ func TestSkipchainSwitch(t *testing.T) {
 			}
 		}
 	}
-	/*
-		wg.Add(2)
-		go func() {
-			username := "user1"
-			user := u[username]
-			defer wg.Done()
-			for i := 0; i < 10; i++ {
-				site := sites[rand.Int()%len(sites)]
-				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
-				log.ErrFatal(user.ReConnect(site))
-			}
-		}()
-		go func() {
-			username := "user2"
-			user := u[username]
-			defer wg.Done()
-			for i := 0; i < 10; i++ {
-				site := sites[rand.Int()%len(sites)]
-				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
-				log.ErrFatal(user.ReConnect(site))
-			}
-		}()
-		wg.Wait()
-	*/
-	wg.Add(len(u))
+	num_updates := 2
+	wg.Add(len(u) + num_updates)
+
+	go func() {
+		defer wg.Done()
+		site_index := 0
+		sitename := sites[site_index]
+		wss := wsss[site_index]
+		server_index := rand.Int() % len(wss)
+		//webserver := webservers[site_index][server_index]
+		serverID := wss[server_index].ServerID
+		device_index := rand.Int() % len(devices[site_index])
+		device := devices[site_index][device_index]
+		log.Lvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v", device.DeviceName, sitename, serverID)
+		serverIDs := make([]*network.ServerIdentity, 0)
+		serverIDs = append(serverIDs, serverID)
+		device.ProposeConfig(nil, nil, 0, 0, serverIDs)
+		device.ProposeUpVote()
+		log.Lvlf2("______________%v: Web server's %v TLS keypair has changed______________", sitename, serverID)
+		log.Lvlf2("___________________________________")
+		log.Lvl2("--------------latest skipblock has hash: %v ---------------------", device.LatestID)
+
+	}()
+
+	go func() {
+		defer wg.Done()
+		site_index := 1
+		sitename := sites[site_index]
+		wss := wsss[site_index]
+		server_index := rand.Int() % len(wss)
+		//webserver := webservers[site_index][server_index]
+		serverID := wss[server_index].ServerID
+		device_index := rand.Int() % len(devices[site_index])
+		device := devices[site_index][device_index]
+		log.Lvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v", device.DeviceName, sitename, serverID)
+		serverIDs := make([]*network.ServerIdentity, 0)
+		serverIDs = append(serverIDs, serverID)
+		device.ProposeConfig(nil, nil, 0, 0, serverIDs)
+		device.ProposeUpVote()
+		log.Lvlf2("______________%v: Web server's %v TLS keypair has changed______________", sitename, serverID)
+		log.Lvlf2("___________________________________")
+		log.Lvl2("--------------latest skipblock has hash: %v ---------------------", device.LatestID)
+	}()
+
 	for index := 0; index < len(u); index++ {
 		go func() {
+			defer wg.Done()
 			username := usernames[rand.Int()%len(usernames)]
 			user := u[username]
-			defer wg.Done()
 			for i := 0; i < 10; i++ {
 				site := sites[rand.Int()%len(sites)]
 				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
@@ -532,6 +557,32 @@ func TestSkipchainSwitch(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+
+	site_index := 2
+	sitename := sites[site_index]
+	wss := wsss[site_index]
+	server_index := rand.Int() % len(wss)
+	serverID = wss[server_index].ServerID
+	webserver := webservers[site_index][server_index]
+	prev := webserver.Public
+	device_index := rand.Int() % len(devices[site_index])
+	device := devices[site_index][device_index]
+	log.Lvlf2("DEVICE: %v PROPOSES A MODIFICATION OF THE TLS KEYPAIR OF THE SITE'S: %v WEB SERVER WITH SERVERID %v (public: %v)", device.DeviceName, sitename, serverID, prev)
+	serverIDs = make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, serverID)
+	device.ProposeConfig(nil, nil, 0, 0, serverIDs)
+	device.ProposeUpVote()
+	log.Lvlf2("______________%v: Web server's %v TLS keypair has changed______________", sitename, serverID)
+	log.Lvlf2("___________________________________")
+	log.Lvl2("--------------latest skipblock has hash: %v ---------------------", device.LatestID)
+
+	username := usernames[rand.Int()%len(usernames)]
+	user := u[username]
+
+	log.Lvlf2("RECONNECTING %v TO THE SITE: %v", username, sitename)
+	log.ErrFatal(user.ReConnect(sitename))
+	log.Lvlf2("RECONNECTING %v TO THE SITE: %v", username, sitename)
+	log.ErrFatal(user.ReConnect(sitename))
 
 	/*
 		for username, user := range u {

@@ -16,7 +16,7 @@ const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
 // How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
+const propagateTimeout = 10000 * 3
 
 // How many ms at most should be the time difference between a device/cothority node and the
 // the time reflected on the proposed config for the former to sign off
@@ -116,11 +116,9 @@ type PropagatePoF struct {
 	Storages []*Storage
 }
 
-// UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
-	ID       skipchain.SkipBlockID
-	Latest   *skipchain.SkipBlock
-	Previous *skipchain.SkipBlock
+	ID      skipchain.SkipBlockID
+	Storage *Storage
 }
 
 type GetValidSbPath struct {
@@ -168,4 +166,7 @@ type GetPoF struct {
 type GetPoFReply struct {
 	SbHash skipchain.SkipBlockID
 	PoF    *common_structs.SignatureResponse
+}
+
+type LockIdentities struct {
 }

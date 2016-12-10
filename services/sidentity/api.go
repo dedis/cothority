@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"sync"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -68,6 +69,7 @@ func init() {
 		&GetCertReply{},
 		&GetPoF{},
 		&GetPoFReply{},
+		&LockIdentities{},
 	} {
 		network.RegisterPacketType(s)
 	}
@@ -87,6 +89,7 @@ type Identity struct {
 // Data contains the data that will be stored / loaded from / to a file
 // that enables a client to use the Identity service.
 type Data struct {
+	sync.Mutex
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
@@ -331,7 +334,6 @@ func (i *Identity) ProposeSend(il *common_structs.Config) error {
 	log.Lvlf2("Device: %v proposes a config", i.DeviceName)
 	err := il.SetNowTimestamp()
 	_, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
-	i.Proposed = il
 	return err
 }
 
@@ -377,6 +379,17 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
+
+	i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
+		ID:        i.ID,
+		Signer:    i.DeviceName,
+		Signature: &sig,
+	})
+
+	return nil
+}
+
+/*
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
@@ -385,13 +398,17 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
+
 	_, ok := msg.Msg.(ProposeVoteReply)
 	if !ok {
 		log.Lvlf2("Device with name: %v : not yet accepted skipblock", i.DeviceName)
 	}
 	if ok {
-		log.Lvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
-
+		log.Lvlf2("Device with name: %v : accepted skipblock  by the devices (according to the proxy cothority)", i.DeviceName)
+		log.Lvlf2("Verifying the validity of the skipblock path before accepting the latest skipblock as valid..")
+		log.Lvlf2("Latest known block has hash: %v", i.LatestID)
+		i.Lock()
+		defer i.Unlock()
 		msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{
 			ID:    i.ID,
 			Hash1: i.LatestID,
@@ -403,7 +420,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 		reply2 := msg.Msg.(GetValidSbPathReply)
 		blocks := reply2.Skipblocks
 		cert := reply2.Cert
-		log.Lvlf2("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
+		log.Lvlf2("%v: skipblocks returned: %v, identity: %v", i.DeviceName, len(blocks), i.DeviceName)
 
 		_, data, _ := network.UnmarshalRegistered(blocks[len(blocks)-1].Data)
 		newconf := data.(*common_structs.Config)
@@ -423,7 +440,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	}
 	return nil
 }
-
+*/
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
@@ -459,7 +476,7 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 	// Check that the hash of the first block of the returned list is the latest known
 	// to us so far
 	if !bytes.Equal(prev.Hash, i.LatestID) {
-		log.Lvlf2("Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", prev.Hash, i.LatestID)
+		log.Lvlf2("%v %v: Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", i.Ctype, i.DeviceName, prev.Hash, i.LatestID)
 		return errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
@@ -729,9 +746,9 @@ func (i *Identity) UpdateTLSKeypairs(proposedConf *common_structs.Config, server
 		tls_keypair := config.NewKeyPair(network.Suite)
 		tls_public := tls_keypair.Public
 		tls_private := tls_keypair.Secret
-		log.Lvlf3("serverID: %v", serverID)
-		log.Lvlf3("tls_public: %v", tls_public)
-		log.Lvlf3("tls_private: %v", tls_private)
+		log.Lvlf2("serverID: %v", serverID)
+		log.Lvlf2("tls_public: %v", tls_public)
+		log.Lvlf2("tls_private: %v", tls_private)
 		newstruct := common_structs.My_Scalar{Private: tls_private}
 		tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
 

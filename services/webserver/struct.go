@@ -43,17 +43,20 @@ type GetValidSbPath struct {
 	FQDN  string
 	Hash1 skipchain.SkipBlockID
 	Hash2 skipchain.SkipBlockID
+	// To be signed with the web servers (current) tls private key
+	Challenge crypto.HashID
 }
 
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
 	Cert       *common_structs.Cert
 	PoF        *common_structs.SignatureResponse
+	// The signature (using the private tls key) of the chosen webserver upon the challenge
+	Signature *crypto.SchnorrSig
 }
 
 type ChallengeReq struct {
-	FQDN string
-	// The latest known tls key for the web server we try to visit
+	FQDN      string
 	Challenge crypto.HashID
 }
 

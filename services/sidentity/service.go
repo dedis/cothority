@@ -137,7 +137,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 
 	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-	ids.setSkipBlockByID(ids.Data)
+	ids.setSkipBlock(ids.Data)
 
 	roster := ids.Root.Roster
 	ids.ID = ids.Data.Hash
@@ -148,6 +148,9 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 		SbHash: ids.Data.Hash,
 	}
 	ids.CertInfo = certinfo
+	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
+	ids.setSkipBlock(ids.Data)
+	ids.Votes = make(map[string]*crypto.SchnorrSig)
 
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		&PropagateIdentity{ids}, propagateTimeout, s.Propagate)
@@ -182,7 +185,7 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 	}, nil
 }
 
-func (s *Storage) setSkipBlockByID(latest *skipchain.SkipBlock) bool {
+func (s *Storage) setSkipBlock(latest *skipchain.SkipBlock) bool {
 	//s.Lock()
 	//defer s.Unlock()
 	s.SkipBlocks[string(latest.Hash)] = latest
@@ -206,6 +209,7 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 		log.Lvlf2("Didn't find Identity")
 		return nil, errors.New("Didn't find Identity")
 	}
+
 	roster := sid.Root.Roster
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		p, propagateTimeout, s.Propagate)
@@ -248,19 +252,23 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	err := func() error {
 		sid.Lock()
 		defer sid.Unlock()
-		log.Lvl3("Voting on", sid.Proposed.Device)
+		log.Lvl2("Voting on", sid.Proposed.Device)
 		owner, ok := sid.Latest.Device[v.Signer]
 		if !ok {
+			log.Lvlf2("Didn't find signer: %v", v.Signer)
 			return errors.New("Didn't find signer")
 		}
 		if sid.Proposed == nil {
+			log.Lvlf2("No proposed block")
 			return errors.New("No proposed block")
 		}
 		hash, err := sid.Proposed.Hash()
 		if err != nil {
+			log.Lvlf2("Couldn't get hash")
 			return errors.New("Couldn't get hash")
 		}
 		if _, exists := sid.Votes[v.Signer]; exists {
+			log.Lvlf2("Already voted for that block")
 			return errors.New("Already voted for that block")
 		}
 
@@ -275,6 +283,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		if v.Signature != nil {
 			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
 			if err != nil {
+				log.Lvlf2("%v", err)
 				return errors.New("Wrong signature: " + err.Error())
 			}
 		}
@@ -301,20 +310,47 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		if err != nil {
 			return nil, err
 		}
-		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
-		log.Lvl3("SB signed is", msg.(*common_structs.Config).Device)
-		usb := &UpdateSkipBlock{
-			ID:       v.ID,
-			Latest:   reply.Latest,
-			Previous: reply.Previous,
+
+		skipblock_previous := reply.Previous
+		skipblock_latest := reply.Latest
+		_, msgLatest, err := network.UnmarshalRegistered(skipblock_latest.Data)
+		if err != nil {
+			log.Error(err)
+			return nil, err
 		}
-		sid.setSkipBlockByID(usb.Latest)
-		sid.setSkipBlockByID(usb.Previous)
-		_, err = manage.PropagateStartAndWait(s.Context, sid.Root.Roster,
+		al, ok := msgLatest.(*common_structs.Config)
+		if !ok {
+			log.Error(err)
+			return nil, err
+		}
+		sid.Data = skipblock_latest
+		sid.Latest = al
+		sid.Proposed = nil
+		sid.setSkipBlock(skipblock_latest)
+		sid.setSkipBlock(skipblock_previous)
+		sid.Votes = make(map[string]*crypto.SchnorrSig)
+
+		usb := &UpdateSkipBlock{
+			ID:      v.ID,
+			Storage: sid,
+		}
+
+		roster := sid.Root.Roster
+		replies, err2 := manage.PropagateStartAndWait(s.Context, roster,
+			&LockIdentities{}, propagateTimeout, s.Propagate)
+		if err2 != nil {
+			return false, err2
+		}
+		if replies != len(roster.List) {
+			log.Warn("Did only get", replies, "out of", len(roster.List))
+		}
+
+		_, err = manage.PropagateStartAndWait(s.Context, roster,
 			usb, propagateTimeout, s.Propagate)
 		if err != nil {
 			return nil, err
 		}
+
 		s.save()
 		return &ProposeVoteReply{sid.Data}, nil
 	}
@@ -329,7 +365,11 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 func (s *Service) Propagate(msg network.Body) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := skipchain.SkipBlockID(nil)
+	var sid *Storage
 	switch msg.(type) {
+	case *LockIdentities:
+		s.identitiesMutex.Lock()
+		return
 	case *PushPublicKey:
 		p := msg.(*PushPublicKey)
 		public := p.Public
@@ -343,78 +383,70 @@ func (s *Service) Propagate(msg network.Body) {
 		id = msg.(*ProposeVote).ID
 	case *UpdateSkipBlock:
 		id = msg.(*UpdateSkipBlock).ID
+		sid := msg.(*UpdateSkipBlock).Storage
+		sid.Votes = make(map[string]*crypto.SchnorrSig)
+		//s.setIdentityStorage(id, sid)
+		s.Identities[string(id)] = sid
+		s.identitiesMutex.Unlock()
+		log.Lvlf2("Skipblock with hash: %v has been stored at server: %v", sid.Data.Hash, s.ServerIdentity())
+		return
 	case *PropagateIdentity:
+		log.Lvlf2("Storing new site identity..")
 		pi := msg.(*PropagateIdentity)
 		id = pi.Data.Hash
 		if s.getIdentityStorage(id) != nil {
 			log.Error("Couldn't store new identity")
 			return
 		}
-		log.Lvl3("Storing identity in", s)
-		s.setIdentityStorage(id, pi.Storage)
-
-		sid := s.getIdentityStorage(id)
-		sid.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-		sid.setSkipBlockByID(pi.Data)
+		sid = pi.Storage
+		sid.Votes = make(map[string]*crypto.SchnorrSig)
+		s.setIdentityStorage(id, sid)
 		return
 	case *PropagateCert:
 		pc := msg.(*PropagateCert)
 		cert := pc.CertInfo.Cert
 		id = cert.ID
-		s.setIdentityStorage(id, pc.Storage)
-		log.Lvlf2("Fresh cert is now stored")
+		sid = pc.Storage
+		s.setIdentityStorage(id, sid)
+		log.Lvlf3("Fresh cert is now stored")
 		return
 	case *PropagatePoF:
 		log.Lvlf3("Trying to store PoFs at: %v", s.String())
 		sids := msg.(*PropagatePoF).Storages
-		for _, sid := range sids {
-			id = sid.ID
-			s.Identities[string(id)] = sid
+		for _, storage := range sids {
+			id = storage.ID
+			sid = s.getIdentityStorage(id)
+			sid.Lock()
+			defer sid.Unlock()
+			sid.PoF = storage.PoF
 		}
 		log.Lvlf3("PoFs are now stored at: %v", s.String())
 		return
 	}
 
 	if id != nil {
-		sid := s.getIdentityStorage(id)
+		sid = s.getIdentityStorage(id)
 		if sid == nil {
 			log.Error("Didn't find entity in", s)
 			return
 		}
-		sid.Lock()
-		defer sid.Unlock()
 		switch msg.(type) {
 		case *ProposeSend:
+			log.Lvlf2("Storing proposal..")
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Config
-			sid.Votes = make(map[string]*crypto.SchnorrSig)
+			log.Lvlf3("num of votes: %v", len(sid.Votes))
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
+			log.Lvlf2("Storing vote of signer: %v on proposal..", v.Signer)
+			log.Lvlf2("num of votes (without counting our vote): %v", len(sid.Votes))
 			if len(sid.Votes) == 0 {
 				sid.Votes = make(map[string]*crypto.SchnorrSig)
 			}
 			sid.Votes[v.Signer] = v.Signature
 			sid.Proposed.Device[v.Signer].Vote = v.Signature
-		case *UpdateSkipBlock:
-			skipblock_previous := msg.(*UpdateSkipBlock).Previous
-			skipblock_latest := msg.(*UpdateSkipBlock).Latest
-			_, msgLatest, err := network.UnmarshalRegistered(skipblock_latest.Data)
-			if err != nil {
-				log.Error(err)
-				return
-			}
-			al, ok := msgLatest.(*common_structs.Config)
-			if !ok {
-				log.Error(err)
-				return
-			}
-			sid.Data = skipblock_latest
-			sid.Latest = al
-			sid.Proposed = nil
-			sid.Votes = make(map[string]*crypto.SchnorrSig)
-			sid.setSkipBlockByID(skipblock_latest)
-			sid.setSkipBlockByID(skipblock_previous)
 		}
+		s.setIdentityStorage(id, sid)
 	}
 }
 
@@ -425,7 +457,6 @@ func (s *Service) Propagate(msg network.Body) {
 // (if Hash2==[]byte{0}, then fetch all skipblocks until the current skipchain head one).
 // Skipblocks will be returned from the oldest to the newest
 func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
-	log.Lvlf3("GetValidSbPath(): Start")
 	id := req.ID
 	h1 := req.Hash1
 	h2 := req.Hash2
@@ -434,13 +465,17 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		log.Lvlf2("Didn't find identity: %v", id)
 		return nil, errors.New("Didn't find identity")
 	}
+	log.Lvlf2("server: %v, site: %v - GetValidSbPath(): Start", s.String(), sid.ID)
+
+	sid.Lock()
+	defer sid.Unlock()
 
 	var ok bool
 	var sb1 *skipchain.SkipBlock
 	if !bytes.Equal(h1, []byte{0}) {
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
-			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.Lvlf2("server: %v, site: %v - NO VALID PATH: Skipblock with hash: %v not found", s.String(), sid.ID, h1)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
 		}
 	} else {
@@ -483,7 +518,7 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 	sbs := make([]*skipchain.SkipBlock, 0)
 	sbs = append(sbs, oldest)
 	block := oldest
-	log.Lvlf3("Skipblock with hash: %v", block.Hash)
+	log.Lvlf3("Appending skipblock with hash: %v", block.Hash)
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[0]
 		hash := link.Hash
@@ -688,17 +723,13 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
-func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
+func (s *Service) RunLoop(roster *sda.Roster) {
 	c := time.Tick(s.EpochDuration)
 	log.Lvlf2("_______________________________________________________")
 	log.Lvlf2("------------------TIMESTAMPER BEGINS-------------------")
 	log.Lvlf2("_______________________________________________________")
 
 	for now := range c {
-		for _, s := range services {
-			service := s.(*Service)
-			service.identitiesMutex.Lock()
-		}
 		log.Lvlf2("_______________________________________________________")
 		log.Lvlf2("START OF A TIMESTAMPER ROUND")
 		log.Lvlf2("_______________________________________________________")
@@ -719,7 +750,6 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 
 			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, data2)
-			//msg := RecreateSignedMsg(root, now.Unix())
 			timestamp := time.Now().Unix() * 1000
 			msg := RecreateSignedMsg(root, timestamp)
 			log.Lvlf3("------ Before signing")
@@ -788,10 +818,6 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 		log.Lvlf2("_______________________________________________________")
 		log.Lvlf2("END OF A TIMESTAMPER ROUND")
 		log.Lvlf2("_______________________________________________________")
-		for _, s := range services {
-			service := s.(*Service)
-			service.identitiesMutex.Unlock()
-		}
 	}
 }
 
