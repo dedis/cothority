@@ -20,12 +20,12 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: sda.NewClient("Skipchain")}
+	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
 // NewLocalClient takes a LocalTest in order
 func NewLocalClient(local *sda.LocalTest) *Client {
-	return &Client{Client: local.NewClient("Skipchain")}
+	return &Client{Client: local.NewClient(ServiceName)}
 }
 
 // CreateRootControl creates two Skipchains: a root SkipChain with

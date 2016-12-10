@@ -249,6 +249,7 @@ func UnmarshalRegistered(buf []byte) (PacketTypeID, Body, error) {
 	ptr := ptrVal.Interface()
 	constructors := DefaultConstructors(Suite)
 	if err := protobuf.DecodeWithConstructors(b.Bytes(), ptr, constructors); err != nil {
+		log.LLvlf2("%v", err)
 		return ErrorType, nil, err
 	}
 	return tID, ptrVal.Interface(), nil

@@ -390,6 +390,7 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 		if !ok {
 			return nil, errors.New("Found unknwon backlink in block")
 		}
+		//fmt.Println("BEFORE adding flink: ", len(b.ForwardLink))
 		bc := b.Copy()
 		log.Lvl4("Checking", b.Index, b, len(bc.ForwardLink))
 		if len(bc.ForwardLink) >= h+1 {
@@ -398,12 +399,80 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 		for len(bc.ForwardLink) < h+1 {
 			fl := NewBlockLink()
 			fl.Hash = newest.Hash
+			var err error
+			if fl.Signature, err = s.BFTSignHash(fl.Hash, bc, newest); err != nil {
+				return nil, err
+			}
 			bc.ForwardLink = append(bc.ForwardLink, fl)
+			//fmt.Println("added a new forward link")
 		}
 		log.Lvl4("Block has now height of", len(bc.ForwardLink))
 		blocks[h+1] = bc
+		b = bc.Copy()
+		//fmt.Println("hash of the block to which the forward link was just added ", b.Hash)
+		//fmt.Println("flink pointing to block with hash: ", b.ForwardLink[0].Hash)
+		//fmt.Println("AFTER adding flink: ", len(b.ForwardLink))
 	}
+	//fmt.Println("Returning from addForwardLinks")
 	return blocks, nil
+}
+
+func (s *Service) BFTSignHash(hash SkipBlockID, sb *SkipBlock, newest *SkipBlock) ([]byte, error) {
+	//fmt.Println("Forward link between blocks with hashes: ", sb.Hash, " ", newest.Hash)
+	done := make(chan bool)
+	// create the message we want to sign for this round
+	msg := []byte(hash)
+	el := sb.Roster
+	switch len(el.List) {
+	case 0:
+		return nil, errors.New("Found empty Roster")
+	case 1:
+		return nil, errors.New("Need more than 1 entry for Roster")
+	}
+
+	// Start the protocol
+	//fmt.Println("Start BFT protocol")
+	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+
+	node, err := s.CreateProtocolService(skipchainBFT, tree)
+	if err != nil {
+		return nil, errors.New("Couldn't create new node: " + err.Error())
+	}
+
+	// Register the function generating the protocol instance
+	root := node.(*bftcosi.ProtocolBFTCoSi)
+	root.Msg = msg
+	data, err := network.MarshalRegisteredType(newest)
+	if err != nil {
+		return nil, errors.New("Couldn't marshal block: " + err.Error())
+	}
+	root.Data = data
+
+	// in testing-mode with more than one host and service per cothority-instance
+	// we might have the wrong verification-function, so set it again here.
+	root.VerificationFunction = s.bftVerify
+	// function that will be called when protocol is finished by the root
+	root.RegisterOnDone(func() {
+		done <- true
+	})
+	var sig []byte
+	go node.Start()
+	select {
+	case <-done:
+		signature := root.Signature()
+		sig = signature.Sig
+		if len(signature.Exceptions) != 0 {
+			fmt.Println("Not everybody signed off the new block")
+			return sig, errors.New("Not everybody signed off the new block")
+		}
+		if err := signature.Verify(network.Suite, el.Publics()); err != nil {
+			fmt.Println("Couldn't verify signature")
+			return nil, errors.New("Couldn't verify signature")
+		}
+	case <-time.After(time.Second * 60):
+		return nil, errors.New("Timed out while waiting for signature")
+	}
+	return sig, nil
 }
 
 // notify other services about new/updated skipblock
