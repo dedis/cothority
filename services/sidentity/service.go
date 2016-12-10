@@ -31,7 +31,6 @@ import (
 	"github.com/dedis/cothority/services/ca"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
-	//"github.com/dedis/cothority/services/timestamp"
 	"github.com/dedis/crypto/abstract"
 )
 
@@ -61,7 +60,6 @@ type Service struct {
 	*sda.ServiceProcessor
 	skipchain *skipchain.Client
 	ca        *ca.CSRDispatcher
-	//stamper   *timestamp.Client
 	*StorageMap
 	identitiesMutex sync.Mutex
 	path            string
@@ -70,8 +68,7 @@ type Service struct {
 	Publics       map[string]abstract.Point
 	EpochDuration time.Duration
 	TheRoster     *sda.Roster
-	//signMsg       func(roster *sda.Roster, m []byte) []byte
-	signMsg func(m []byte) []byte
+	signMsg       func(m []byte) []byte
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -89,11 +86,7 @@ type Storage struct {
 	Root       *skipchain.SkipBlock
 	Data       *skipchain.SkipBlock
 	SkipBlocks map[string]*skipchain.SkipBlock
-	//Certs      []*ca.Cert
-	// Certs keeps the mapping between the config (the hash of the skipblock that contains it) and the cert(s)
-	// that was(were) issued for that particular config
-	//Certs map[string][]*ca.Cert
-	CertInfo *common_structs.CertInfo
+	CertInfo   *common_structs.CertInfo
 
 	// Latest PoF (on the Latest config)
 	PoF *common_structs.SignatureResponse
@@ -111,10 +104,10 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 		pi.(*manage.Propagate).RegisterOnData(s.Propagate)
 		return pi, err
 	}
-	log.LLvlf2("%v: Timestamp Service received New Protocol event", s.String())
+	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
 	if err != nil {
-		log.LLvlf2("%v", err)
+		log.Lvlf2("%v", err)
 	}
 	return pi, err
 }
@@ -126,8 +119,6 @@ func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig)
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
 func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
-	//log.LLvlf2("haaa %v", len(s.Identities))
-	//log.LLvlf2("%s Creating new site identity with config %+v", s, ai.Config)
 	ids := &Storage{
 		Latest: ai.Config,
 	}
@@ -150,7 +141,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 
 	roster := ids.Root.Roster
 	ids.ID = ids.Data.Hash
-	log.LLvlf2("Asking for a cert for site: %v", ids.ID)
+	log.Lvlf3("Asking for a cert for site: %v", ids.ID)
 	cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert[0],
@@ -158,24 +149,6 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	}
 	ids.CertInfo = certinfo
 
-	/*
-		certs, _ := s.ca.SignCert(ai.Config, ids.Data.Hash)
-		if certs == nil {
-			log.LLvlf2("No certs returned")
-		}
-
-		ids.Certs = make(map[string][]*ca.Cert)
-		hash := ids.Data.Hash
-		for _, cert := range certs {
-			slice := ids.Certs[string(hash)]
-			slice = append(slice, cert)
-			ids.Certs[string(hash)] = slice
-
-			//ids.Certs = append(ids.Certs, cert)
-			//log.LLvlf2("---------NEW CERT!--------")
-			//log.LLvlf2("siteID: %v, hash: %v, sig: %v, public: %v", cert.ID, cert.Hash, cert.Signature, cert.Public)
-		}
-	*/
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		&PropagateIdentity{ids}, propagateTimeout, s.Propagate)
 	if err != nil {
@@ -185,78 +158,16 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
-	//log.LLvlf2("New chain is\n%x", []byte(ids.Data.Hash))
-	/*
-		// Init stamper and start it
-		_, err = s.stamper.SetupStamper(ai.Roster, time.Millisecond*200000, 1)
-
-		go s.SendConfigsToStamper()
-	*/
 
 	s.save()
-	//log.Lvlf2("CreateIdentity(): End having %v certs", len(ids.Certs))
-	/*
-		cnt := 0
-		for _, certarray := range ids.Certs {
-			for _, _ = range certarray {
-				cnt++
-			}
-		}
-		log.LLvlf2("CreateIdentity(): End having %v certs", cnt)
-	*/
-	log.LLvlf2("------CreateIdentity(): Successfully created a new identity-------")
+
+	log.Lvlf3("------CreateIdentity(): Successfully created a new identity-------")
 	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
 	}, nil
 }
 
-/*
-func (s *Service) SendConfigsToStamper() {
-	//c := time.Tick(time.Millisecond * 250000)
-	c := time.Tick(time.Millisecond * 1000)
-	for _ = range c {
-		var res []chan *timestamp.SignatureResponse
-		for index := range res {
-			res[index] = make(chan *timestamp.SignatureResponse)
-		}
-		index := 0
-		for _, sid := range s.Identities {
-			latestconf := sid.Latest
-			for _, server := range latestconf.ProxyRoster.List {
-				log.LLvlf2("%v %v", index, server)
-			}
-			rootIdentity := latestconf.ProxyRoster.Get(0)
-			hash, _ := latestconf.Hash()
-			//go func() {
-			log.LLvlf2("%v %v %v", index, rootIdentity, hash)
-			result, err := s.stamper.SignMsg(rootIdentity, hash)
-			log.ErrFatal(err, "Couldn't send")
-			res[index] <- result
-			//}()
-			index++
-		}
-
-		log.Lvl1("Waiting on responses ...")
-		index = 0
-		for _, sid := range s.Identities {
-			sid.PoF = <-res[index]
-			log.LLvlf2("1")
-			roster := sid.Latest.ProxyRoster
-			replies, err := manage.PropagateStartAndWait(s.Context, roster,
-				&PropagatePoF{sid}, propagateTimeout, s.Propagate)
-			if err != nil {
-				log.ErrFatal(err, "Couldn't send")
-			}
-
-			if replies != len(roster.List) {
-				log.Warn("Did only get", replies, "out of", len(roster.List))
-			}
-			index++
-		}
-	}
-}
-*/
 // ConfigUpdate returns a new configuration update
 func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
 	sid := s.getIdentityStorage(cu.ID)
@@ -272,85 +183,24 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 }
 
 func (s *Storage) setSkipBlockByID(latest *skipchain.SkipBlock) bool {
+	//s.Lock()
+	//defer s.Unlock()
 	s.SkipBlocks[string(latest.Hash)] = latest
 	return true
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
 func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipBlock, bool) {
+	//s.Lock()
+	//defer s.Unlock()
 	b, ok := s.SkipBlocks[string(sbID)]
-	//b, ok := s.SkipBlocks["georgia"]
 	return b, ok
 }
 
-/*
-// forward traversal of the skipchain
-func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
-	sid := s.getIdentityStorage(latestKnown.ID)
-	//log.Lvlf2("GetUpdateChain(): Start having %v certs", len(sid.Certs))
-
-	//	cnt := 0
-	//	certs := make([]*ca.Cert, 0)
-	//	for _, certarray := range sid.Certs {
-	//		for _, cert := range certarray {
-	//			cnt++
-	//			certs = append(certs, cert)
-	//		}
-	//	}
-	//	log.LLvlf2("GetUpdateChain(): Start having %v certs", cnt)
-
-	log.LLvlf2("GetUpdateChain(): Latest known block has hash: %v", latestKnown.LatestID)
-	block, ok := sid.getSkipBlockByID(latestKnown.LatestID)
-	if !ok {
-		return nil, errors.New("Couldn't find latest skipblock!!")
-	}
-
-	blocks := []*skipchain.SkipBlock{block}
-	log.Lvl3("Starting to search chain")
-	for len(block.ForwardLink) > 0 {
-		//link := block.ForwardLink[len(block.ForwardLink)-1]
-		// for linear forward traversal of the skipchain:
-		link := block.ForwardLink[0]
-		hash := link.Hash
-		block, ok = sid.getSkipBlockByID(hash)
-		if !ok {
-			return nil, errors.New("Missing block in forward-chain")
-		}
-		blocks = append(blocks, block)
-		//fmt.Println("another block found with hash: ", skipchain.SkipBlockID(hash))
-	}
-	log.LLvlf2("Found %v blocks", len(blocks))
-	for index, block := range blocks {
-		log.LLvlf2("block: %v with hash: %v", index, block.Hash)
-	}
-
-	//	cnt = 0
-	//	certs = make([]*ca.Cert, 0)
-	//	for _, certarray := range sid.Certs {
-	//		for _, cert := range certarray {
-	//			cnt++
-	//			certs = append(certs, cert)
-	//		}
-	//	}
-	//	log.Lvlf2("GetUpdateChain(): End having %v certs", cnt)
-
-
-	_, err := s.CheckRefreshCert(latestKnown.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	reply := &GetUpdateChainReply{
-		Update: blocks,
-		Cert:   sid.CertInfo.Cert,
-	}
-	return reply, nil
-}
-*/
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
-	log.LLvlf2("Storing new proposal")
+	log.Lvlf2("Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find Identity")
@@ -370,7 +220,7 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 
 // ProposeUpdate returns an eventual config-proposition
 func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
-	log.Lvl3(s, "Sending proposal-update to client")
+	log.Lvl2(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
@@ -466,11 +316,6 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 			return nil, err
 		}
 		s.save()
-		//fmt.Println("latest block's hash: ", sid.Data.Hash, "number of flinks: ", len(sid.Data.ForwardLink))
-		//fmt.Println(sid.Data.BackLinkIds[0])
-		//block1, _ := sid.getSkipBlockByID(ID(sid.Data.BackLinkIds[0]))
-		//fmt.Println(len(block1.ForwardLink))
-		//fmt.Println("latest block's hash: ", usb.Latest.Hash)
 		return &ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
@@ -517,27 +362,16 @@ func (s *Service) Propagate(msg network.Body) {
 		cert := pc.CertInfo.Cert
 		id = cert.ID
 		s.setIdentityStorage(id, pc.Storage)
-		log.LLvlf2("Fresh cert is now stored")
+		log.Lvlf2("Fresh cert is now stored")
 		return
-	/*
-		case *PropagatePoF:
-			log.LLvlf2("Trying to store PoF at: %v", s.String())
-			pof := msg.(*PropagatePoF)
-			id = pof.CertInfo.Cert.ID
-			s.setIdentityStorage(id, pof.Storage)
-			log.LLvlf2("PoF is now stored at: %v", s.String())
-			return
-	*/
 	case *PropagatePoF:
-		log.LLvlf2("Trying to store PoFs at: %v", s.String())
-		//s.identitiesMutex.Lock()
+		log.Lvlf3("Trying to store PoFs at: %v", s.String())
 		sids := msg.(*PropagatePoF).Storages
 		for _, sid := range sids {
 			id = sid.ID
 			s.Identities[string(id)] = sid
 		}
-		//s.identitiesMutex.Unlock()
-		log.LLvlf2("PoFs are now stored at: %v", s.String())
+		log.Lvlf3("PoFs are now stored at: %v", s.String())
 		return
 	}
 
@@ -584,51 +418,6 @@ func (s *Service) Propagate(msg network.Body) {
 	}
 }
 
-/*
-// backward traversal of the skipchain until finding a skipblock whose config has been certified
-// (a cert has been issued for it)
-func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) (network.Body, error) {
-	log.LLvlf2("GetSkipblocks(): Start")
-	id := req.ID
-	latest := req.Latest
-	sid := s.getIdentityStorage(id)
-	if sid == nil {
-		log.LLvlf2("Didn't find identity")
-		return nil, errors.New("Didn't find identity")
-	}
-	// Follow the backward links until finding the skipblock whose config was certified by a CA
-	// All these skipblocks will be returned (from the oldest to the newest)
-	sbs := make([]*skipchain.SkipBlock, 1)
-	//sbs = append(sbs, latest)
-	block := latest
-	hash := block.Hash
-	var ok bool
-	_, exists := sid.Certs[string(hash)]
-	for {
-		block, ok = sid.getSkipBlockByID(hash)
-		//log.LLvlf2("hash: %v", block.Hash)
-		if !ok {
-			log.LLvlf2("Skipblock with hash: %v not found", hash)
-			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
-		}
-		sbs = append(sbs, block)
-		if exists {
-			break
-		}
-		hash = block.BackLinkIds[0]
-		_, exists = sid.Certs[string(hash)]
-	}
-
-	sbs_from_oldest := make([]*skipchain.SkipBlock, len(sbs))
-	for index, block := range sbs {
-		sbs_from_oldest[len(sbs)-1-index] = block
-	}
-	log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs))
-	log.LLvlf2("GetSkipblocks(): End with %v blocks to return", len(sbs_from_oldest))
-	return &GetSkipblocksReply{Skipblocks: sbs_from_oldest}, nil
-}
-*/
-
 // Forward traversal of the skipchain from the oldest block as the latter is
 // specified by its hash in the request's 'Hash1' field (if Hash1==[]byte{0}, then start
 // fetching from the skipblock for the config of which the latest cert is acquired) until
@@ -636,28 +425,22 @@ func (s *Service) GetSkipblocks(si *network.ServerIdentity, req *GetSkipblocks) 
 // (if Hash2==[]byte{0}, then fetch all skipblocks until the current skipchain head one).
 // Skipblocks will be returned from the oldest to the newest
 func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
-	log.LLvlf2("GetValidSbPath(): Start")
+	log.Lvlf3("GetValidSbPath(): Start")
 	id := req.ID
 	h1 := req.Hash1
 	h2 := req.Hash2
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
-		log.LLvlf2("Didn't find identity: %v", id)
+		log.Lvlf2("Didn't find identity: %v", id)
 		return nil, errors.New("Didn't find identity")
 	}
 
-	/*
-		_, err := s.CheckRefreshCert(id)
-		if err != nil {
-			return nil, err
-		}
-	*/
 	var ok bool
 	var sb1 *skipchain.SkipBlock
 	if !bytes.Equal(h1, []byte{0}) {
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
 		}
 	} else {
@@ -672,58 +455,42 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		h1 = sid.CertInfo.SbHash
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
 		}
-		log.LLvlf2("Last certified skipblock has hash: %v", h1)
+		log.Lvlf3("Last certified skipblock has hash: %v", h1)
 	}
 
 	var sb2 *skipchain.SkipBlock
 	if !bytes.Equal(h2, []byte{0}) {
 		sb2, ok = sid.getSkipBlockByID(h2)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h2)
 		}
 	} else {
 		// fetch skipblocks until finding the current head of the skipchain
 		h2 = sid.Data.Hash
 		sb2 = sid.Data
-		log.LLvlf2("Current head skipblock has hash: %v", h2)
+		log.Lvlf3("Current head skipblock has hash: %v", h2)
 	}
 
 	oldest := sb1
 	newest := sb2
-	/*
-		_, data, _ := network.UnmarshalRegistered(sb1.Data)
-		conf1, _ := data.(*common_structs.Config)
 
-		_, data, _ = network.UnmarshalRegistered(sb2.Data)
-		conf2, _ := data.(*common_structs.Config)
-
-		newest := sb1
-		oldest := sb2
-		is_older := conf1.IsOlderConfig(conf2)
-		log.LLvl2(is_older)
-		if is_older {
-			log.LLvlf2("Swapping blocks")
-			newest = sb2
-			oldest = sb1
-		}
-	*/
-	log.LLvlf2("Oldest skipblock has hash: %v", oldest.Hash)
-	log.LLvlf2("Newest skipblock has hash: %v", newest.Hash)
+	log.Lvlf3("Oldest skipblock has hash: %v", oldest.Hash)
+	log.Lvlf3("Newest skipblock has hash: %v", newest.Hash)
 	sbs := make([]*skipchain.SkipBlock, 0)
 	sbs = append(sbs, oldest)
 	block := oldest
-	log.LLvlf2("Skipblock with hash: %v", block.Hash)
+	log.Lvlf3("Skipblock with hash: %v", block.Hash)
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[0]
 		hash := link.Hash
-		log.LLvlf2("Appending skipblock with hash: %v", hash)
+		log.Lvlf3("Appending skipblock with hash: %v", hash)
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
-			log.LLvlf2("Skipblock with hash: %v not found", hash)
+			log.Lvlf2("Skipblock with hash: %v not found", hash)
 			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
 		}
 		sbs = append(sbs, block)
@@ -732,23 +499,17 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		}
 	}
 
-	log.LLvlf2("Num of returned blocks: %v", len(sbs))
+	log.Lvlf3("Num of returned blocks: %v", len(sbs))
 	return &GetValidSbPathReply{Skipblocks: sbs, Cert: sid.CertInfo.Cert}, nil
 }
 
 func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Body, error) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
-		log.LLvlf2("Didn't find identity")
+		log.Lvlf2("Didn't find identity")
 		return nil, errors.New("Didn't find identity")
 	}
 
-	/*certs := make([]*ca.Cert, 0)
-	for _, certarray := range sid.Certs {
-		for _, cert := range certarray {
-			certs = append(certs, cert)
-		}
-	}*/
 	/*
 		_, err := s.CheckRefreshCert(req.ID)
 		if err != nil {
@@ -763,7 +524,7 @@ func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Bod
 func (s *Service) GetPoF(si *network.ServerIdentity, req *GetPoF) (network.Body, error) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
-		log.LLvlf2("Didn't find identity")
+		log.Lvlf2("Didn't find identity")
 		return nil, errors.New("Didn't find identity")
 	}
 
@@ -777,7 +538,7 @@ func (s *Service) GetPoF(si *network.ServerIdentity, req *GetPoF) (network.Body,
 func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
-		log.LLvlf2("Didn't find identity")
+		log.Lvlf2("Didn't find identity")
 		return false, errors.New("Didn't find identity")
 	}
 
@@ -789,7 +550,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	diff_int := diff.Nanoseconds() / 1000000
 
 	if cert_conf.MaxDuration-diff_int >= refresh_bound {
-		log.LLvlf2("We will not get a fresh cert today because the old one is still \"very\" valid")
+		log.Lvlf2("We will not get a fresh cert today because the old one is still \"very\" valid")
 		return false, nil
 	}
 
@@ -803,7 +564,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 		prevhash := sid.Data.BackLinkIds[0]
 		prevblock, ok := sid.getSkipBlockByID(prevhash)
 		if !ok {
-			log.LLvlf2("Skipblock with hash: %v not found", prevhash)
+			log.Lvlf2("Skipblock with hash: %v not found", prevhash)
 			return false, fmt.Errorf("Skipblock with hash: %v not found", prevhash)
 		}
 		_, data, _ = network.UnmarshalRegistered(prevblock.Data)
@@ -813,15 +574,14 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	}
 
 	// Ask for a cert for the 'latestconf'
-	log.LLvlf2("Asking for a cert for site: %v", sid.ID)
+	log.Lvlf2("Asking for a cert for site: %v", sid.ID)
 	cert, _ := s.ca.SignCert(latestconf, prevconf, id)
-	log.LLvlf2("[site: %v] num of certs: %v", sid.ID, len(cert))
+	log.Lvlf3("[site: %v] num of certs: %v", sid.ID, len(cert))
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert[0],
 		SbHash: sid.Data.Hash,
 	}
 	sid.CertInfo = certinfo
-	//s.setIdentityStorage(id, sid)
 
 	roster := sid.Root.Roster
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
@@ -833,30 +593,21 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 
-	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
-	log.LLvlf2("CERT REFRESHED!")
-	log.LLvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.Lvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
+	log.Lvlf2("CERT REFRESHED!")
+	log.Lvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
 	return true, nil
 }
 
 func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) (network.Body, error) {
-	log.LLvlf2("sidentity.Service's PushPublicKey(): Start")
-	//id := req.ID
+	log.Lvlf3("sidentity.Service's PushPublicKey(): Start")
 	roster := req.Roster
 	public := req.Public
 	serverID := req.ServerID
-	/*sid := s.getIdentityStorage(id)
-	if sid == nil {
-		log.LLvlf2("Didn't find identity")
-		return nil, errors.New("Didn't find identity")
-	}
-	*/
-	key := fmt.Sprintf("tls:%v", serverID)
-	//sid.Publics[key] = public
-	s.Publics[key] = public
-	//s.setIdentityStorage(id, sid)
 
-	//roster := sid.Root.Roster
+	key := fmt.Sprintf("tls:%v", serverID)
+	s.Publics[key] = public
+
 	replies, err := manage.PropagateStartAndWait(s.Context, roster,
 		req, propagateTimeout, s.Propagate)
 	if err != nil {
@@ -870,15 +621,10 @@ func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) 
 }
 
 func (s *Service) PullPublicKey(si *network.ServerIdentity, req *PullPublicKey) (network.Body, error) {
-	log.LLvlf2("PullPublicKey(): Start")
-	//id := req.ID
+	log.Lvlf3("PullPublicKey(): Start")
+
 	serverID := req.ServerID
-	/*sid := s.getIdentityStorage(id)
-	if sid == nil {
-		log.LLvlf2("Didn't find identity")
-		return nil, errors.New("Didn't find identity")
-	}
-	*/
+
 	key := fmt.Sprintf("tls:%v", serverID)
 	public := s.Publics[key]
 
@@ -894,18 +640,15 @@ func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
 	if !ok {
 		return nil
 	}
-	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 	return is
 }
 
 // setIdentityStorage saves an IdentityStorage
 func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
-	//log.LLvlf2("******* --------- setIdentityStorage(): BEFORE len: %v", len(s.Identities))
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Identities[string(id)] = is
-	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 }
 
 // saves the actual identity
@@ -947,18 +690,18 @@ func (s *Service) tryLoad() error {
 
 func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 	c := time.Tick(s.EpochDuration)
-	log.LLvlf2("_______________________________________________________")
-	log.LLvlf2("------------------TIMESTAMPER BEGINS-------------------")
-	log.LLvlf2("_______________________________________________________")
+	log.Lvlf2("_______________________________________________________")
+	log.Lvlf2("------------------TIMESTAMPER BEGINS-------------------")
+	log.Lvlf2("_______________________________________________________")
 
 	for now := range c {
 		for _, s := range services {
 			service := s.(*Service)
 			service.identitiesMutex.Lock()
 		}
-		log.LLvlf2("_______________________________________________________")
-		log.LLvlf2("START OF A TIMESTAMPER ROUND")
-		log.LLvlf2("_______________________________________________________")
+		log.Lvlf2("_______________________________________________________")
+		log.Lvlf2("START OF A TIMESTAMPER ROUND")
+		log.Lvlf2("_______________________________________________________")
 		data := make([][]byte, 0)
 		data2 := make([]crypto.HashID, 0)
 		ids := make([]skipchain.SkipBlockID, 0)
@@ -967,39 +710,36 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 			hash, _ := latestconf.Hash()
 			data = append(data, []byte(hash))
 			data2 = append(data2, hash)
-			log.LLvlf2("site: %v, %v", latestconf.FQDN, []byte(hash))
+			log.Lvlf3("site: %v, %v", latestconf.FQDN, []byte(hash))
 			ids = append(ids, sid.ID)
 		}
 		num := len(s.Identities)
 		if num > 0 {
-			log.LLvl2("------- Signing tree root with timestamp:", now, "got", num, "requests")
+			log.Lvl2("------- Signing tree root with timestamp:", now, "got", num, "requests")
 
 			// create merkle tree and message to be signed:
 			root, proofs := crypto.ProofTree(sha256.New, data2)
 			//msg := RecreateSignedMsg(root, now.Unix())
 			timestamp := time.Now().Unix() * 1000
 			msg := RecreateSignedMsg(root, timestamp)
-			log.LLvlf2("------ Before signing")
+			log.Lvlf3("------ Before signing")
 			for _, server := range roster.List {
-				log.LLvlf2("%v", server)
+				log.Lvlf3("%v", server)
 			}
 
 			signature := s.signMsg(msg)
-			//signature := []byte{0}
-			//log.LLvlf2("%v", msg)
-			log.LLvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+
+			log.Lvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
 			i := 0
-			log.LLvlf2("sites: %v proofs: %v", len(s.Identities), len(proofs))
-			log.LLvlf2("root hash: %v", []byte(root))
-			log.LLvlf2("timestamp: %v", timestamp)
-			log.LLvlf2("signature: %v", signature)
+			log.Lvlf3("sites: %v proofs: %v", len(s.Identities), len(proofs))
+			log.Lvlf3("root hash: %v", []byte(root))
+			log.Lvlf3("timestamp: %v", timestamp)
+			log.Lvlf3("signature: %v", signature)
 			sids := make([]*Storage, 0)
 			for _, id := range ids {
 				sid := s.Identities[string(id)]
 				pof := &common_structs.SignatureResponse{
-					//Timestamp: now.Unix(),
-					// the number of ms elapsed since January 1, 1970 UTC
 					ID:        id,
 					Timestamp: timestamp,
 					Proof:     proofs[i],
@@ -1016,22 +756,21 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 				}
 				err := swupdate.VerifySignature(network.Suite, publics, signedmsg, signature)
 				if err != nil {
-					log.LLvlf2("Warm Key Holders' signature doesn't verify")
+					log.Lvlf2("Warm Key Holders' signature doesn't verify")
 				}
 				// verify inclusion proof
 				origmsg := data2[i]
-				log.LLvlf2("site: %v", sid.Latest.FQDN)
-				//log.LLvlf2("site: %v, proof: %v", sid.Latest.FQDN, proofs[i])
-				log.LLvlf2("%v", []byte(origmsg))
+				log.Lvlf3("site: %v", sid.Latest.FQDN)
+				log.Lvlf3("%v", []byte(origmsg))
 				validproof := pof.Proof.Check(sha256.New, root, []byte(origmsg))
 				if !validproof {
-					log.LLvlf2("Invalid inclusion proof!")
+					log.Lvlf2("Invalid inclusion proof!")
 				}
 				sid.PoF = pof
 				sids = append(sids, sid)
 				i++
 			}
-			log.LLvlf2("Everything OK with the proofs")
+			log.Lvlf3("Everything OK with the proofs")
 			replies, err := manage.PropagateStartAndWait(s.Context, roster,
 				&PropagatePoF{Storages: sids}, propagateTimeout, s.Propagate)
 
@@ -1046,9 +785,9 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 		} else {
 			log.Lvl3("No follow-sites at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
-		log.LLvlf2("_______________________________________________________")
-		log.LLvlf2("END OF A TIMESTAMPER ROUND")
-		log.LLvlf2("_______________________________________________________")
+		log.Lvlf2("_______________________________________________________")
+		log.Lvlf2("END OF A TIMESTAMPER ROUND")
+		log.Lvlf2("_______________________________________________________")
 		for _, s := range services {
 			service := s.(*Service)
 			service.identitiesMutex.Unlock()
@@ -1058,24 +797,20 @@ func (s *Service) RunLoop(roster *sda.Roster, services []sda.Service) {
 
 //func (s *Service) cosiSign(roster *sda.Roster, msg []byte) []byte {
 func (s *Service) cosiSign(msg []byte) []byte {
-	log.LLvlf2("server: %s", s.String())
+	log.Lvlf2("server: %s", s.String())
 	sdaTree := s.TheRoster.GenerateBinaryTree()
-	//log.LLvlf2("cosiSign(): 1 %v", sdaTree.Dump())
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
-	//log.LLvlf2("cosiSign(): 2 %v", tni)
 	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
 	if err != nil {
-		log.LLvl2("Couldn't make new protocol: " + err.Error())
+		log.Lvl2("Couldn't make new protocol: " + err.Error())
 		panic("Couldn't make new protocol: " + err.Error())
 	}
-	//log.LLvlf2("cosiSign(): 3")
 	s.RegisterProtocolInstance(pi)
 
 	pi.SigningMessage(msg)
 	// Take the raw message (already expecting a hash for the timestamp
 	// service)
 	response := make(chan []byte)
-	//log.LLvlf2("cosiSign(): 5 %v", msg)
 	pi.RegisterSignatureHook(func(sig []byte) {
 		response <- sig
 	})
@@ -1085,7 +820,7 @@ func (s *Service) cosiSign(msg []byte) []byte {
 	go pi.Start()
 
 	res := <-response
-	log.LLvlf2("cosiSign(): Received cosi response")
+	log.Lvlf2("cosiSign(): Received cosi response")
 	return res
 
 }
@@ -1106,20 +841,17 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 		path:             path,
 		skipchain:        skipchain.NewClient(),
 		ca:               ca.NewCSRDispatcher(),
-		//stamper:          timestamp.NewClient(),
-		StorageMap: &StorageMap{make(map[string]*Storage)},
-		Publics:    make(map[string]abstract.Point),
+		StorageMap:       &StorageMap{make(map[string]*Storage)},
+		Publics:          make(map[string]abstract.Point),
 		//EpochDuration:    time.Millisecond * 250000,
 		EpochDuration: time.Millisecond * 1000,
 	}
 	s.signMsg = s.cosiSign
-	//log.LLvlf2("******* --------- len: %v", len(s.Identities))
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate,
-		//s.GetUpdateChain,
 		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF,
 	} {
 		if err := s.RegisterMessage(f); err != nil {

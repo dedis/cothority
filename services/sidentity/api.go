@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	//"strings"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
@@ -17,7 +16,6 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/cosi"
-	//"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/ed25519"
 )
 
@@ -50,16 +48,12 @@ func init() {
 		&CreateIdentityReply{},
 		&ConfigUpdate{},
 		&ConfigUpdateReply{},
-		&GetUpdateChain{},
-		&GetUpdateChainReply{},
 		&ProposeSend{},
 		&ProposeUpdate{},
 		&ProposeUpdateReply{},
 		&ProposeVote{},
 		&Data{},
 		&ProposeVoteReply{},
-		&GetSkipblocks{},
-		&GetSkipblocksReply{},
 		&GetValidSbPath{},
 		&GetValidSbPathReply{},
 		&PropagateIdentity{},
@@ -97,8 +91,6 @@ type Data struct {
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
 	Public abstract.Point
-	// Pin-state
-	//PinState *common_structs.PinState
 	// Client type {"device" or "ws"}
 	Ctype string
 	// ID of the skipchain this device is tied to.
@@ -133,16 +125,15 @@ func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string
 	switch ctype {
 	case "device":
 		for _, server := range cothority.List {
-			log.LLvlf2("---------------%v", server)
+			log.Lvlf3("---------------%v", server)
 		}
 
 		kp := config.NewKeyPair(network.Suite)
 		return &Identity{
 			CothorityClient: sda.NewClient(ServiceName),
 			Data: Data{
-				Private: kp.Secret,
-				Public:  kp.Public,
-				//PinState:   pinstate,
+				Private:    kp.Secret,
+				Public:     kp.Public,
 				Ctype:      ctype,
 				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, cothority, owner, cas, data, duration),
 				DeviceName: owner,
@@ -153,7 +144,6 @@ func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string
 		return &Identity{
 			CothorityClient: sda.NewClient(ServiceName),
 			Data: Data{
-				//PinState: pinstate,
 				Ctype: ctype,
 				// Cothority roster should be given before attempting to reach the service!
 			},
@@ -164,7 +154,7 @@ func NewIdentity(cothority *sda.Roster, fqdn string, threshold int, owner string
 
 // CreateIdentity asks the sidentityService to create a new SIdentity
 func (i *Identity) CreateIdentity() error {
-	log.LLvlf2("CreateIdentity(): Start")
+	log.Lvlf2("CreateIdentity(): Start")
 	_ = i.Config.SetNowTimestamp()
 
 	// configure the tls keypairs of the web servers (pull their public
@@ -179,17 +169,16 @@ func (i *Identity) CreateIdentity() error {
 	i.Config = proposedConf.Copy()
 
 	hash, _ := i.Config.Hash()
-	log.LLvlf2("Proposed config's hash: %v", hash)
-	//log.LLvlf2("CreateIdentity(): 1")
+	log.Lvlf3("Proposed config's hash: %v", hash)
+
 	sig, _ := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	i.Config.Device[i.DeviceName].Vote = &sig
 
-	//log.LLvlf2("CreateIdentity(): 2")
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority})
 	if err != nil {
 		return err
 	}
-	//log.LLvlf2("CreateIdentity(): 3")
+
 	air := msg.Msg.(CreateIdentityReply)
 	i.ID = air.Data.Hash
 	i.LatestID = air.Data.Hash
@@ -202,7 +191,7 @@ func (i *Identity) CreateIdentity() error {
 
 //func NewIdentityMultDevs(cothority *sda.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
 func NewIdentityMultDevs(cothority *sda.Roster, fqdn string, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) ([]*Identity, error) {
-	log.LLvlf2("NewIdentityMultDevs(): Start")
+	log.Lvlf2("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
 		if index == 0 {
@@ -221,7 +210,7 @@ func NewIdentityMultDevs(cothority *sda.Roster, fqdn string, threshold int, owne
 // CreateIdentityMultDev asks the sidentityService to create a new SIdentity constituted of multiple
 // devices
 func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
-	log.LLvlf2("CreateIdentityMultDevs(): Start")
+	log.Lvlf2("CreateIdentityMultDevs(): Start")
 	_ = i.Config.SetNowTimestamp()
 
 	// configure the tls keypairs of the web servers (pull their public
@@ -236,7 +225,7 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 	i.Config = proposedConf.Copy()
 
 	hash, _ := i.Config.Hash()
-	//log.LLvlf2("Proposed config's hash: %v", hash)
+
 	for _, id := range ids {
 		sig, _ := crypto.SignSchnorr(network.Suite, id.Private, hash)
 		i.Config.Device[id.DeviceName].Vote = &sig
@@ -269,12 +258,12 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 	switch i.Ctype {
 	case "device":
 		if _, exists := i.Config.Device[i.DeviceName]; exists {
-			log.LLvlf2("AttachToIdentity(): Adding with an existing account-name: %v", i.DeviceName)
+			log.Lvlf2("AttachToIdentity(): Adding with an existing account-name: %v", i.DeviceName)
 			return errors.New("AttachToIdentity(): Adding with an existing account-name")
 		}
 
 		if i.Config == nil {
-			log.LLvlf2("AttachToIdentity(): Nil config")
+			log.Lvlf2("AttachToIdentity(): Nil config")
 			return errors.New("AttachToIdentity(): Nil config")
 		}
 
@@ -300,7 +289,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 // (or, in the case of voting, a negative vote is the only one accepted)
 func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, duration int64, serverIDs []*network.ServerIdentity) error {
 	var err error
-	err = i.ConfigUpdate() //common_structs.ConfigUpdateNew() before
+	err = i.ConfigUpdate()
 	if err != nil {
 		return err
 	}
@@ -339,7 +328,7 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int,
 
 // ProposeSend sends the new proposition of this identity
 func (i *Identity) ProposeSend(il *common_structs.Config) error {
-	log.LLvlf2("Device: %v proposes a config", i.DeviceName)
+	log.Lvlf2("Device: %v proposes a config", i.DeviceName)
 	err := il.SetNowTimestamp()
 	_, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il})
 	i.Proposed = il
@@ -362,20 +351,19 @@ func (i *Identity) ProposeUpdate() error {
 
 // ProposeVote calls the 'accept'-vote on the current propose-configuration
 func (i *Identity) ProposeVote(accept bool) error {
-	log.LLvlf2("ProposeVote(): device: %v", i.DeviceName)
+	log.Lvlf2("ProposeVote(): device: %v", i.DeviceName)
 	if i.Proposed == nil {
 		return errors.New("No proposed config")
 	}
-	//log.LLvlf2("Voting %t on %s", accept, i.Proposed.Device)
+
 	if !accept {
 		return nil
 	}
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
-	//now := time.Now().Unix()
 	err := i.Proposed.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
-		log.LLvlf2("Device: %v %v", i.DeviceName, err)
+		log.Lvlf2("Device: %v %v", i.DeviceName, err)
 		return err
 	}
 
@@ -384,7 +372,7 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-	//log.LLvlf2("Proposed config's hash: %v", hash)
+
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {
 		return err
@@ -399,26 +387,11 @@ func (i *Identity) ProposeVote(accept bool) error {
 	}
 	_, ok := msg.Msg.(ProposeVoteReply)
 	if !ok {
-		log.LLvlf2("Device with name: %v : not yet accepted skipblock", i.DeviceName)
+		log.Lvlf2("Device with name: %v : not yet accepted skipblock", i.DeviceName)
 	}
 	if ok {
-		/*
-			log.LLvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
-			_, data, _ := network.UnmarshalRegistered(reply.Data.Data)
-			ok, err = i.ValidateUpdateConfig(data.(*common_structs.Config))
-			if !ok {
-				return err
-			}
-			log.LLvl2("Threshold reached and signed")
-			i.Proposed = nil
-		*/
-		log.LLvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
-		/*msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
-		if err != nil {
-			return err
-		}
-		reply2 := msg.Msg.(GetUpdateChainReply)
-		*/
+		log.Lvlf2("Device with name: %v : accepted skipblock", i.DeviceName)
+
 		msg, err = i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{
 			ID:    i.ID,
 			Hash1: i.LatestID,
@@ -443,10 +416,10 @@ func (i *Identity) ProposeVote(accept bool) error {
 		i.Latest = blocks[len(blocks)-1]
 		i.Config = newconf
 		i.Cert = cert
-		log.LLvl2("Threshold reached and signed")
+		log.Lvl2("Threshold reached and signed")
 		i.Proposed = nil
 	} else {
-		log.LLvl2("Threshold not reached")
+		log.Lvl2("Threshold not reached")
 	}
 	return nil
 }
@@ -455,12 +428,12 @@ func (i *Identity) ProposeVote(accept bool) error {
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() error {
 	if i.Ctype == "device" {
-		log.Lvlf2("ConfigUpdate(): We are device: %v", i.DeviceName)
+		log.Lvlf3("ConfigUpdate(): We are device: %v", i.DeviceName)
 	}
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return errors.New("Didn't find any list in the cothority")
 	}
-	//log.LLvlf2("ConfigUpdate(): ID: %v", i.ID)
+
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &ConfigUpdate{ID: i.ID})
 	if err != nil {
 		return err
@@ -468,13 +441,11 @@ func (i *Identity) ConfigUpdate() error {
 	cu := msg.Msg.(ConfigUpdateReply)
 
 	// Validate config
-	//log.LLvlf2("Before invoking ValidateUpdateConfig()")
 	var ok bool
 	ok, err = i.ValidateUpdateConfig(cu.Config)
 	if !ok {
 		return err
 	}
-	//log.LLvlf2("ValidateUpdateConfig(): End")
 	return nil
 }
 
@@ -488,29 +459,23 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 	// Check that the hash of the first block of the returned list is the latest known
 	// to us so far
 	if !bytes.Equal(prev.Hash, i.LatestID) {
-		log.LLvlf2("Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", prev.Hash, i.LatestID)
+		log.Lvlf2("Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", prev.Hash, i.LatestID)
 		return errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
 	// TODO: Check that the returned valid config is the one included into the last skipblock
 	// of the returned list
 	b1 := blocks[len(blocks)-1].Data
-	/*b2, _ := network.MarshalRegisteredType(newconf)
-	if !bytes.Equal(b1, b2) {
-		log.Lvlf2("Configs don't match!")
-		return false, err
-	}
-	*/
 	_, data, _ := network.UnmarshalRegistered(b1)
 	c, _ := data.(*common_structs.Config)
 	h1, _ := c.Hash()
 	h2, _ := newconf.Hash()
-	log.Lvlf2("h1: %v, h2: %v", h1, h2)
+	log.Lvlf3("h1: %v, h2: %v", h1, h2)
 
 	if !bytes.Equal(h1, h2) {
-		log.LLvlf2("Configs don't match!")
-		log.LLvlf2("h1: %v", h1)
-		log.LLvlf2("h2: %v", h2)
+		log.Lvlf2("Configs don't match!")
+		log.Lvlf2("h1: %v", h1)
+		log.Lvlf2("h2: %v", h2)
 		return errors.New("Configs don't match!")
 	}
 
@@ -520,9 +485,9 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
-			log.LLvlf2("Checking trust delegation: %v -> %v", index-1, index)
+			log.Lvlf2("Checking trust delegation: %v -> %v", index-1, index)
 			cnt := 0
-			//fmt.Println("cnt: ", cnt)
+
 			_, data, err2 := network.UnmarshalRegistered(next.Data)
 			if err2 != nil {
 				return errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
@@ -537,7 +502,6 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 					b1, _ := network.MarshalRegisteredType(newdevice.Point)
 					b2, _ := network.MarshalRegisteredType(trustedconfig.Device[key].Point)
 					if bytes.Equal(b1, b2) {
-						//fmt.Println("Check whether there is a non-nil signature")
 						if newdevice.Vote != nil {
 							var hash crypto.HashID
 							hash, err = newconfig.Hash()
@@ -545,33 +509,30 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 								log.Lvlf2("Couldn't get hash")
 								return errors.New("Couldn't get hash")
 							}
-							//log.LLvlf2("Verify signature of device: %v", key)
+
 							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
 							if err != nil {
-								log.LLvlf2("Wrong signature")
+								log.Lvlf2("Wrong signature")
 								return errors.New("Wrong signature")
 							}
 							cnt++
-							//fmt.Println(cnt)
 						}
 					}
 				}
 			}
 			if cnt < trustedconfig.Threshold {
-				log.LLvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
+				log.Lvlf1("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
 				return errors.New("No sufficient threshold of trusted devices' votes")
 			}
 
-			//log.Lvlf2("Verify the cothority's signatures regarding the forward links")
 			// Verify the cothority's signatures regarding the forward links
 			link := prev.ForwardLink[len(prev.ForwardLink)-1]
 
-			//fmt.Println("Check whether cothority's signature upon wrong skipblock hash")
 			if !bytes.Equal(link.Hash, next.Hash) {
-				log.LLvlf2("Cothority's signature upon wrong skipblock hash")
+				log.Lvlf2("Cothority's signature upon wrong skipblock hash")
 				return errors.New("Cothority's signature upon wrong skipblock hash")
 			}
-			//fmt.Println("Check whether cothority's signature verify or not")
+			// Check whether cothority's signature verify or not
 			hash := []byte(link.Hash)
 			publics := prev.Roster.Publics()
 			if prev.Roster != nil {
@@ -581,7 +542,7 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 					return errors.New("Cothority's signature doesn't verify")
 				}
 			} else {
-				log.LLvlf2("Found no roster")
+				log.Lvlf2("Found no roster")
 				return errors.New("Found no roster")
 			}
 
@@ -590,22 +551,14 @@ func (i *Identity) ValidateConfigChain(newconf *common_structs.Config, blocks []
 		_, data, _ := network.UnmarshalRegistered(prev.Data)
 		trustedconfig = data.(*common_structs.Config)
 	}
-	log.LLvlf2("ValidateConfigChain(): End")
+	log.Lvlf3("ValidateConfigChain(): End")
 	return nil
 }
 
 func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, error) {
-	log.LLvlf2("ValidateUpdateConfig(): Start")
-	//trustedconfig := i.Config
-	log.LLvlf2("%v", i.LatestID)
-	/*msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetUpdateChain{LatestID: i.LatestID, ID: i.ID})
-	if err != nil {
-		return false, err
-	}
-	reply := msg.Msg.(GetUpdateChainReply)
-	blocks := reply.Update
-	cert := reply.Cert
-	*/
+	log.Lvlf3("ValidateUpdateConfig(): Start")
+	log.Lvlf3("%v", i.LatestID)
+
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{
 		ID:    i.ID,
 		Hash1: i.LatestID,
@@ -617,7 +570,7 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	reply2 := msg.Msg.(GetValidSbPathReply)
 	blocks := reply2.Skipblocks
 	cert := reply2.Cert
-	log.Lvlf2("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
+	log.Lvlf3("skipblocks returned: %v, identity: %v", len(blocks), i.DeviceName)
 
 	err = i.ValidateConfigChain(newconf, blocks)
 	if err != nil {
@@ -628,14 +581,14 @@ func (i *Identity) ValidateUpdateConfig(newconf *common_structs.Config) (bool, e
 	i.Latest = blocks[len(blocks)-1]
 	i.Config = newconf
 	i.Cert = cert
-	log.Lvlf2("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
-	//fmt.Println("Returning from ValidateUpdatecommon_structs.Config")
+	log.Lvlf3("ValidateUpdateConfig(): DEVICE: %v, End with NUM_DEVICES: %v, THR: %v", i.DeviceName, len(i.Config.Device), i.Config.Threshold)
+
 	return true, nil
 }
 
 // if h2==0, fetch all the skipblocks until the current head one
 func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, h1 skipchain.SkipBlockID, h2 skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	log.LLvlf2("GetValidSbPath(): Start")
+	log.Lvlf3("GetValidSbPath(): Start")
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetValidSbPath{ID: id, Hash1: h1, Hash2: h2})
 	if err != nil {
 		return nil, err
@@ -656,7 +609,7 @@ func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, h1 skipchain.SkipBlo
 	if err != nil {
 		return nil, err
 	}
-	log.LLvlf2("GetValidSbPath(): End")
+	log.Lvlf3("GetValidSbPath(): End")
 	return sbs, nil
 }
 
@@ -686,14 +639,12 @@ func (i *Identity) GetPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRe
 
 // for web servers (public key to be pushed to the cothority servers)
 func (i *Identity) PushPublicKey(public abstract.Point, serverID *network.ServerIdentity) error {
-	//log.LLvlf2("sidentity.API's PushPublicKey(): Start")
 	roster := i.Cothority
 	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &PushPublicKey{Roster: roster, Public: public, ServerID: serverID})
 	if err != nil {
 		return err
 	}
 	_, _ = msg.Msg.(PushPublicKeyReply)
-	//log.LLvlf2("sidentity.API's PushPublicKey(): End")
 	return nil
 }
 
@@ -707,33 +658,6 @@ func (i *Identity) PullPublicKey(serverID *network.ServerIdentity) (abstract.Poi
 	public := reply.Public
 	return public, nil
 }
-
-/*
-func (i *Identity) GetSkipblocks(id skipchain.SkipBlockID, latest *skipchain.SkipBlock) ([]*skipchain.SkipBlock, error) {
-	msg, err := i.CothorityClient.Send(i.Cothority.RandomServerIdentity(), &GetSkipblocks{ID: i.ID, Latest: latest})
-	if err != nil {
-		return nil, err
-	}
-	reply, _ := msg.Msg.(GetSkipblocksReply)
-	sbs := reply.Skipblocks
-
-	// check the trust delegation between each pair of subsequent skipblocks/configs
-	_, data, err2 := network.UnmarshalRegistered(sbs[len(sbs)-1].Data)
-	if err2 != nil {
-		return nil, errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
-	}
-	newconf, ok := data.(*common_structs.Config)
-	if !ok {
-		return nil, errors.New("Couldn't get type '*Config'")
-	}
-	err = i.ValidateConfigChain(newconf, sbs)
-	if err != nil {
-		return nil, err
-	}
-
-	return sbs, nil
-}
-*/
 
 // NewIdentityFromCothority searches for a given cothority
 func NewIdentityFromCothority(el *sda.Roster, id skipchain.SkipBlockID) (*Identity, error) {
@@ -805,12 +729,11 @@ func (i *Identity) UpdateTLSKeypairs(proposedConf *common_structs.Config, server
 		tls_keypair := config.NewKeyPair(network.Suite)
 		tls_public := tls_keypair.Public
 		tls_private := tls_keypair.Secret
-		log.LLvlf2("serverID: %v", serverID)
-		log.LLvlf2("tls_public: %v", tls_public)
-		log.LLvlf2("tls_private: %v", tls_private)
+		log.Lvlf3("serverID: %v", serverID)
+		log.Lvlf3("tls_public: %v", tls_public)
+		log.Lvlf3("tls_private: %v", tls_private)
 		newstruct := common_structs.My_Scalar{Private: tls_private}
 		tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
-		//log.LLvlf2("tls_private_buf: %v", tls_private_buf)
 
 		tls_private_buf1 := tls_private_buf[0:25]
 		tls_private_buf2 := tls_private_buf[25:len(tls_private_buf)]
@@ -820,15 +743,7 @@ func (i *Identity) UpdateTLSKeypairs(proposedConf *common_structs.Config, server
 		// ElGamal-encrypt a message (tls private key) using the public key of the web server.
 		K1, C1, _ := common_structs.ElGamalEncrypt(suite, public, tls_private_buf1)
 		K2, C2, _ := common_structs.ElGamalEncrypt(suite, public, tls_private_buf2)
-		//log.LLvlf2("K1: %v, C1: %v", K1, C1)
-		//log.LLvlf2("K1: %v, C1: %v", K2, C2)
-		/*
-			_, data, _ := network.UnmarshalRegistered(tls_private_buf)
-			log.LLvlf2("data: %v", data)
-			rec := data.(*common_structs.My_Scalar)
-			tlsprivate_ := rec.Private
-			log.LLvlf2("%v", tlsprivate_)
-		*/
+
 		key := fmt.Sprintf("tls:%v", serverID)
 		proposedConf.Data[key].TLSPublic = tls_public
 		proposedConf.Data[key].K1 = K1

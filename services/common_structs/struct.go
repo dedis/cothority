@@ -10,16 +10,15 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/protocols/swupdate"
-	"io"
-	//"errors"
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
+	"github.com/dedis/cothority/protocols/swupdate"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
+	"io"
 	"sort"
 	"strings"
 	"time"
@@ -69,8 +68,6 @@ type Config struct {
 	// The public keys of the trusted CAs
 	CAs []CAInfo
 
-	// Aggregate public key of the proxy cothority (to be trusted for Proofs-of-Freshness)
-	//ProxyAggr abstract.Point
 	ProxyRoster *sda.Roster
 }
 
@@ -105,8 +102,6 @@ type WSInfo struct {
 }
 
 type SiteInfo struct {
-	// Site's ID (hash of the genesis block)
-	//ID skipchain.SkipBlockID
 	FQDN string
 	// Addresses of the site's web servers
 	WSs []WSInfo
@@ -146,7 +141,7 @@ type CertInfo struct {
 type SignatureResponse struct {
 	// id of the site's genesis skipblock
 	ID skipchain.SkipBlockID
-	// The time in seconds when the request was started:
+	// the number of ms elapsed since January 1, 1970 UTC
 	Timestamp int64
 	// The tree root that was signed:
 	Root crypto.HashID
@@ -196,7 +191,6 @@ func (c *Config) Copy() *Config {
 	}
 	ilNew := msg.(Config)
 	if len(ilNew.Data) == 0 {
-		//ilNew.Data = make(map[string]string)
 		ilNew.Data = make(map[string]*WSconfig)
 	}
 	return &ilNew
@@ -205,7 +199,6 @@ func (c *Config) Copy() *Config {
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID.
 func (c *Config) Hash() (crypto.HashID, error) {
-	//log.Print("Computing config's hash")
 	hash := network.Suite.Hash()
 
 	_, err := hash.Write([]byte(c.FQDN))
@@ -313,7 +306,7 @@ func (c *Config) String() string {
 func (c *Config) SetNowTimestamp() error {
 	// the number of ms elapsed since January 1, 1970 UTC
 	c.Timestamp = time.Now().Unix() * 1000
-	log.Printf("Setting proposed config's timestamp to: %v", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+	log.Lvl3("Setting proposed config's timestamp to: %v", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	return nil
 }
 
@@ -322,10 +315,10 @@ func (c *Config) CheckTimeDiff(maxvalue int64) error {
 	diff := time.Since(time.Unix(0, timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
 	if diff_int > maxvalue {
-		log.LLvlf2("time difference: %v exceeds the %v interval", diff, maxvalue)
+		log.Lvlf3("time difference: %v exceeds the %v interval", diff, maxvalue)
 		return fmt.Errorf("time difference: %v exceeds the %v interval", diff, maxvalue)
 	}
-	log.LLvlf2("Checking Timestamp: time difference: %v OK", diff)
+	log.Lvlf3("Checking Timestamp: time difference: %v OK", diff)
 	return nil
 }
 
@@ -335,10 +328,10 @@ func (sr *SignatureResponse) CheckFreshness(maxvalue int64) bool {
 	diff := time.Since(time.Unix(0, timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
 	if diff_int > maxvalue {
-		log.LLvlf2("Time difference: %v exceeds the %v interval", diff, maxvalue)
+		log.Lvlf3("Time difference: %v exceeds the %v interval", diff, maxvalue)
 		return false
 	}
-	log.LLvlf2("Time difference: %v is within the \"fresh\" %v interval", diff, maxvalue)
+	log.Lvlf3("Time difference: %v is within the \"fresh\" %v interval", diff, maxvalue)
 	return true
 }
 
@@ -347,7 +340,7 @@ func (c *Config) ExpiredCertConfig() bool {
 	diff_int := diff.Nanoseconds() / 1000000
 
 	if c.MaxDuration < diff_int {
-		log.LLvlf2("Expired cert!!")
+		log.Lvlf3("Expired cert!!")
 		return true
 	}
 	return false
@@ -358,15 +351,15 @@ func (c *Config) IsOlderConfig(c2 *Config) bool {
 	timestamp := c.Timestamp
 	diff1 := time.Since(time.Unix(0, timestamp*1000000))
 	//diff_int1 := diff.Nanoseconds() / 1000000
-	log.Printf("Conf1 hash time difference: %v OK", diff1)
-	//log.LLvlf2("%v", diff_int1)
+	log.Lvl3("Conf1 hash time difference: %v OK", diff1)
+	//log.Lvlf2("%v", diff_int1)
 	timestamp = c2.Timestamp
 	diff2 := time.Since(time.Unix(0, timestamp*1000000))
 	//diff_int2 := diff.Nanoseconds() / 1000000
-	log.Printf("Conf2 hash time difference: %v OK", diff2)
-	//log.LLvlf2("%v", diff_int2)
-	log.LLvlf2("%v", diff1.Nanoseconds())
-	log.LLvlf2("%v", diff2.Nanoseconds())
+	log.Lvl3("Conf2 hash time difference: %v OK", diff2)
+	//log.Lvlf2("%v", diff_int2)
+	log.Lvl3("%v", diff1.Nanoseconds())
+	log.Lvl3("%v", diff2.Nanoseconds())
 	if diff1.Nanoseconds() < diff2.Nanoseconds() {
 		return true
 	}
@@ -389,19 +382,19 @@ func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff in
 	}
 	err := swupdate.VerifySignature(network.Suite, publics, signedmsg, pof.Signature)
 	if err != nil {
-		log.LLvlf2("Warm Key Holders' signature doesn't verify")
+		log.Lvlf2("Warm Key Holders' signature doesn't verify")
 		return errors.New("Warm Key Holders' signature doesn't verify")
 	}
 	// verify inclusion proof
 	origmsg, _ := latestconf.Hash()
-	log.LLvlf2("for site: %v, %v", latestconf.FQDN, []byte(origmsg))
-	log.LLvlf2("root hash: %v", []byte(pof.Root))
-	log.LLvlf2("timestamp: %v", pof.Timestamp)
-	log.LLvlf2("signature: %v", pof.Signature)
-	//log.LLvlf2("proof: %v", pof.Proof)
+	log.Lvlf3("for site: %v, %v", latestconf.FQDN, []byte(origmsg))
+	log.Lvlf3("root hash: %v", []byte(pof.Root))
+	log.Lvlf3("timestamp: %v", pof.Timestamp)
+	log.Lvlf3("signature: %v", pof.Signature)
+	//log.Lvlf2("proof: %v", pof.Proof)
 	validproof := pof.Proof.Check(sha256.New, pof.Root, []byte(origmsg))
 	if !validproof {
-		log.LLvlf2("Invalid inclusion proof!")
+		log.Lvlf2("Invalid inclusion proof!")
 		return errors.New("Invalid inclusion proof!")
 	}
 	return nil
@@ -554,8 +547,8 @@ func ElGamalEncrypt(suite abstract.Suite, pubkey abstract.Point, message []byte)
 	M, remainder := suite.Point().Pick(message, random.Stream)
 
 	if len(remainder) != 0 {
-		log.LLvlf2("message's len: %v", len(message))
-		log.LLvlf2("remainder's len: %v", len(remainder))
+		log.Lvlf2("message's len: %v", len(message))
+		log.Lvlf2("remainder's len: %v", len(remainder))
 	}
 
 	// ElGamal-encrypt the point to produce ciphertext (K,C).

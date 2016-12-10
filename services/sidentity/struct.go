@@ -1,14 +1,10 @@
 package sidentity
 
 import (
-	"encoding/binary"
-	//"fmt"
-	//"sort"
-	//"strings"
 	"bytes"
+	"encoding/binary"
 
 	"github.com/dedis/cothority/crypto"
-	//"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/common_structs"
@@ -74,21 +70,6 @@ type ConfigUpdateReply struct {
 	Config *common_structs.Config
 }
 
-// GetUpdateChain - the client sends the hash of the last known
-// Skipblock and will get back a list of all necessary SkipBlocks
-// to get to the latest.
-type GetUpdateChain struct {
-	LatestID skipchain.SkipBlockID
-	ID       skipchain.SkipBlockID
-}
-
-// GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
-// starting from the SkipBlock the client sent
-type GetUpdateChainReply struct {
-	Update []*skipchain.SkipBlock
-	Cert   *common_structs.Cert
-}
-
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
@@ -140,15 +121,6 @@ type UpdateSkipBlock struct {
 	ID       skipchain.SkipBlockID
 	Latest   *skipchain.SkipBlock
 	Previous *skipchain.SkipBlock
-}
-
-type GetSkipblocks struct {
-	ID     skipchain.SkipBlockID
-	Latest *skipchain.SkipBlock
-}
-
-type GetSkipblocksReply struct {
-	Skipblocks []*skipchain.SkipBlock
 }
 
 type GetValidSbPath struct {

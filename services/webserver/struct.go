@@ -1,19 +1,9 @@
 package webserver
 
 import (
-	//"encoding/binary"
-	//"fmt"
-	//"sort"
-	//"strings"
-	//"bytes"
-
 	"github.com/dedis/cothority/crypto"
-	//"github.com/dedis/cothority/log"
-	//"github.com/dedis/cothority/network"
-	//"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
-	//"github.com/dedis/crypto/abstract"
 )
 
 const MaxUint = ^uint(0)
@@ -47,15 +37,6 @@ type Update struct {
 type UpdateReply struct {
 	Latest *skipchain.SkipBlock
 	Certs  []*common_structs.Cert
-}
-
-type GetSkipblocks struct {
-	ID     skipchain.SkipBlockID
-	Latest *skipchain.SkipBlock
-}
-
-type GetSkipblocksReply struct {
-	Skipblocks []*skipchain.SkipBlock
 }
 
 type GetValidSbPath struct {

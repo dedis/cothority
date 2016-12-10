@@ -6,22 +6,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	//"reflect"
 	"sync"
 
 	"github.com/dedis/cothority/crypto"
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
-	//"github.com/dedis/cothority/protocols/manage"
 	"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/sidentity"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
-	//"github.com/dedis/crypto/nist"
 	"github.com/dedis/crypto/ed25519"
 	"github.com/dedis/crypto/random"
-	//"github.com/dedis/crypto/config"
 )
 
 // ServiceWSName can be used to refer to the name of this service
@@ -34,7 +30,6 @@ func init() {
 	WSService = sda.ServiceFactory.ServiceID(ServiceWSName)
 	network.RegisterPacketType(&SiteMap{})
 	network.RegisterPacketType(&Site{})
-	//network.RegisterPacketType(&common_structs.My_Scalar{})
 }
 
 // WS handles site identities (usually only one)
@@ -71,11 +66,7 @@ type Site struct {
 	// Hash of the 'Latest' known block
 	LatestHash skipchain.SkipBlockID
 	// PoF for the latest known skipblock
-	PoF *common_structs.SignatureResponse
-	//Certs []*ca.Cert
-	// Certs keeps the mapping between the config (the hash of the skipblock that contains it) and the cert(s)
-	// that was(were) issued for that particular config
-	//Certs map[string][]*ca.Cert // only 1 cert is non expired at a given point of time, so only this one is stored here
+	PoF      *common_structs.SignatureResponse
 	CertInfo *common_structs.CertInfo
 	// TLS private key for that WS/site pair
 	TLSPrivate abstract.Scalar
@@ -95,8 +86,6 @@ func (ws *WS) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sd
 // for encryption of its future tls private keys for all the sites to which the web server is going to be
 // attached) to be passed to the cothority (from which the devices are going to pull it).
 func (ws *WS) WSPushPublicKey(cothority *sda.Roster) error {
-	//log.LLvlf2("WSPushPublicKey(): Start")
-	//suite := nist.NewAES128SHA256P256()
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 
 	// Create a public/private keypair
@@ -104,8 +93,6 @@ func (ws *WS) WSPushPublicKey(cothority *sda.Roster) error {
 	public := suite.Point().Mul(nil, private)     // web server's public key
 
 	ws.si.Cothority = cothority
-	//ws.si.ID = id
-	//ws.si.LatestID = id
 
 	// pass the public key to the cothority (from which the devices are going to pull it)
 	err := ws.si.PushPublicKey(public, ws.ServerIdentity())
@@ -114,26 +101,17 @@ func (ws *WS) WSPushPublicKey(cothority *sda.Roster) error {
 	}
 	ws.Private = private
 	ws.Public = public
-	/*
-		site := &Site{
-			//ID:      id,
-			Private: private,
-			Public:  public,
-		}
-		ws.setSiteStorage(id, site)
-	*/
-	//log.LLvlf2("WSPushPublicKey(): End")
+
 	return nil
 }
 
 func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Roster) error {
-	log.LLvlf2("WSAttach(): attaching to site: %v", name)
+	log.Lvlf3("WSAttach(): attaching to site: %v", name)
 
 	site := &Site{
 		ID:         id,
 		LatestHash: id,
 		SkipBlocks: make(map[string]*skipchain.SkipBlock),
-		//Certs:      make(map[string][]*common_structs.Cert),
 	}
 	site.si = sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0)
 	site.si.Cothority = cothority
@@ -145,7 +123,7 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Ros
 
 	_ = ws.WSUpdate(id)
 
-	log.LLvlf2("Web server with ServerIdentity: %v is now attached to site with ID: %v", ws.ServerIdentity(), id)
+	log.Lvlf2("Web server with ServerIdentity: %v is now attached to site with ID: %v", ws.ServerIdentity(), id)
 	return nil
 }
 
@@ -153,15 +131,14 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *sda.Ros
 // till the current head one and (possibly) updates the tls keypair of the ws
 // Also updates the cert and the PoF
 func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
-	log.LLvlf2("WSUpdate(): Start")
+	log.Lvlf3("WSUpdate(): Start")
 	// Check whether the reached ws has been configured as a valid web server of the requested site
 	site := ws.getSiteStorage(id)
 	if site == nil {
-		log.LLvlf2("WSUpdate failed: web server not yet attached to the requested site")
+		log.Lvlf2("WSUpdate failed: web server not yet attached to the requested site")
 		return errors.New("WSUpdate failed: web server not yet attached to the requested site")
 	}
 
-	//sbs, err := ws.si.GetValidSbPath(id, site.Latest.Hash, []byte{0})
 	sbs, err := site.si.GetValidSbPath(id, site.LatestHash, []byte{0})
 
 	// Store the not previously known skipblocks (the latest known is stored again because the
@@ -195,13 +172,13 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	site.PoF = pof
 
 	ws.setSiteStorage(id, site)
-	log.LLvlf2("WSUpdate(): End")
+	log.Lvlf3("WSUpdate(): End")
 	return err
 }
 
 // if h2==0, fetch all the skipblocks from the latest known till the current head one
 func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	log.LLvlf2("FetchSkipblocks(): Start")
+	log.Lvlf3("FetchSkipblocks(): Start")
 	_ = ws.WSUpdate(id)
 
 	// Check whether the reached ws has been configured as a valid web server of the requested site
@@ -215,7 +192,7 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 	if !bytes.Equal(h1, []byte{0}) {
 		sb1, ok = site.getSkipBlockByID(h1)
 		if !ok {
-			log.LLvlf2("Skipblock with hash: %v not found", h1)
+			log.Lvlf2("Skipblock with hash: %v not found", h1)
 			return nil, nil
 		}
 	} else {
@@ -224,42 +201,41 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 		h1 = site.CertInfo.SbHash
 		sb1, ok = site.getSkipBlockByID(h1)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
 		}
-		log.LLvlf2("Last certified skipblock has hash: %v", h1)
+		log.Lvlf3("Last certified skipblock has hash: %v", h1)
 	}
 
 	var sb2 *skipchain.SkipBlock
 	if !bytes.Equal(h2, []byte{0}) {
 		sb2, ok = site.getSkipBlockByID(h2)
 		if !ok {
-			log.LLvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h2)
 		}
 	} else {
 		// fetch skipblocks until finding the current head of the skipchain
 		h2 = site.Latest.Hash
 		sb2 = site.Latest
-		log.LLvlf2("Current head skipblock has hash: %v", h2)
+		log.Lvlf3("Current head skipblock has hash: %v", h2)
 	}
 
 	oldest := sb1
 	newest := sb2
 
-	log.LLvlf2("Oldest skipblock has hash: %v", oldest.Hash)
-	log.LLvlf2("Newest skipblock has hash: %v", newest.Hash)
+	log.Lvlf3("Oldest skipblock has hash: %v", oldest.Hash)
+	log.Lvlf3("Newest skipblock has hash: %v", newest.Hash)
 	sbs := make([]*skipchain.SkipBlock, 0)
 	sbs = append(sbs, oldest)
 	block := oldest
-	log.LLvlf2("Skipblock with hash: %v", block.Hash)
+	log.Lvlf3("Skipblock with hash: %v", block.Hash)
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[0]
 		hash := link.Hash
-		//log.LLvlf2("Appending skipblock with hash: %v", hash)
 		block, ok = site.getSkipBlockByID(hash)
 		if !ok {
-			log.LLvlf2("Skipblock with hash: %v not found", hash)
+			log.Lvlf2("Skipblock with hash: %v not found", hash)
 			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
 		}
 		sbs = append(sbs, block)
@@ -268,7 +244,7 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 		}
 	}
 
-	log.LLvlf2("FetchSkipblocks(): End")
+	log.Lvlf3("FetchSkipblocks(): End")
 	return sbs, nil
 }
 
@@ -280,16 +256,7 @@ func (ws *WS) FetchCert(id skipchain.SkipBlockID) (*common_structs.Cert, error) 
 	if site == nil {
 		return nil, errors.New("FetchCerts() failed: web server not yet attached to the requested site")
 	}
-	/*
-		certs := make([]*ca.Cert, 0)
-		for _, certarray := range site.Certs {
-			for _, cert := range certarray {
-				certs = append(certs, cert)
-			}
-		}
 
-		return certs[0], nil
-	*/
 	return site.CertInfo.Cert, nil
 }
 
@@ -306,53 +273,11 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
 }
 
 /*
-func (ws *WS) WSGetSkipblocks(req *GetSkipblocks) ([]*skipchain.SkipBlock, error) {
-	_ = ws.WSUpdate(req.ID)
-
-	// Check whether the reached ws has been configured as a valid web server of the requested site
-	site := ws.getSiteStorage(req.ID)
-	if site == nil {
-		return nil, errors.New("GetChain failed: web server not yet attached to the requested site")
-	}
-
-	sbs, err := ws.si.GetSkipblocks(req.ID, req.Latest)
-
-	return sbs, err
-}
-*/
-/*
  * API messages
  */
-/*
-func (ws *WS) UserAttachTo(wsi *network.ServerIdentity, con *Connect) (network.Body, error) {
-	log.LLvlf2("UserAttachTo(): Start")
-	err := ws.WSGetTLSPrivateKey(con.ID)
-	if err != nil {
-		log.LLvlf2("PROBLEM")
-		return nil, err
-	}
-	site := ws.getSiteStorage(con.ID)
-	return &ConnectReply{
-		Latest: site.Latest,
-		Certs:  site.Certs,
-	}, nil
-}
-*/
-/*
-func (ws *WS) UserGetSkipblocks(wsi *network.ServerIdentity, req *GetSkipblocks) (network.Body, error) {
-	sbs, err := ws.WSGetSkipblocks(req)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &GetSkipblocksReply{
-		Skipblocks: sbs,
-	}, nil
-}
-*/
 func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
-	log.LLvlf2("UserGetValidSbPath(): Start")
+	log.Lvlf3("UserGetValidSbPath(): Start")
 
 	id := ws.NameToID[req.FQDN]
 
@@ -360,13 +285,13 @@ func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPat
 	if err != nil {
 		return nil, err
 	}
-	log.LLvlf2("UserGetValidSbPath(): Skipblocks fetched")
+	log.Lvlf3("UserGetValidSbPath(): Skipblocks fetched")
 
 	pof, _ := ws.FetchPoF(id)
 
 	if bytes.Equal(req.Hash2, []byte{0}) {
 		cert, _ := ws.FetchCert(id)
-		log.LLvlf2("UserGetValidSbPath(): Cert fetched")
+		log.Lvlf3("UserGetValidSbPath(): Cert fetched")
 		return &GetValidSbPathReply{
 			Skipblocks: sbs,
 			Cert:       cert,
@@ -384,19 +309,18 @@ func (ws *WS) UserGetValidSbPath(wsi *network.ServerIdentity, req *GetValidSbPat
 
 func (ws *WS) UserChallenge(wsi *network.ServerIdentity, c *ChallengeReq) (network.Body, error) {
 	id := ws.NameToID[c.FQDN]
-	log.LLvlf2("UserChallenge(): Start processing the challenge for site: %v", c.FQDN)
+	log.Lvlf3("UserChallenge(): Start processing the challenge for site: %v", c.FQDN)
 	website := ws.getSiteStorage(id)
 	if website == nil {
-		log.LLvlf2("UserChallenge() failed: web server not yet attached to the requested site")
+		log.Lvlf2("UserChallenge() failed: web server not yet attached to the requested site")
 		return nil, errors.New("UserChallenge() failed: web server not yet attached to the requested site")
 	}
-	//log.LLvlf2("Web server's public key for this site is: %v", website.TLSPublic)
-	//log.LLvlf2("UserChallenge(): Before signing: Private: %v, Public: %v", website.TLSPrivate, website.TLSPublic)
+
 	sig, err := crypto.SignSchnorr(network.Suite, website.TLSPrivate, c.Challenge)
 	if err != nil {
 		return nil, err
 	}
-	log.LLvlf2("UserChallenge(): End")
+	log.Lvlf3("UserChallenge(): End")
 	return &ChallengeReply{
 		Signature: &sig,
 	}, nil
@@ -422,10 +346,9 @@ func (ws *WS) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
 // takes a site id and a skipblock and returns the public & (decrypted) private key that was assigned to
 // the specific web server (asymmetric crypto is used for the encryption/decryption of the tls private key)
 func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBlock) (abstract.Point, abstract.Scalar, error) {
-	//log.LLvlf2("WSgetTLSconf(): Start")
 	website := ws.getSiteStorage(id)
 	if website == nil {
-		log.LLvlf2("WSgetTLSconf() failed: web server not yet attached to the requested site")
+		log.Lvlf2("WSgetTLSconf() failed: web server not yet attached to the requested site")
 		return nil, nil, errors.New("WSgetTLSconf() failed: web server not yet attached to the requested site")
 	}
 
@@ -433,7 +356,7 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 	if err != nil {
 		return nil, nil, err
 	}
-	//log.LLvlf2("WSgetTLSconf(): 1")
+
 	serverID := ws.ServerIdentity()
 	key := fmt.Sprintf("tls:%v", serverID)
 	our_data_entry := config.Data[key]
@@ -443,16 +366,11 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 	C1 := our_data_entry.C1
 	K2 := our_data_entry.K2
 	C2 := our_data_entry.C2
-	//log.LLvlf2("K1: %v, C1: %v", K1, C1)
-	//log.LLvlf2("K2: %v, C2: %v", K2, C2)
-	//log.LLvlf2("WSgetTLSconf(): 2")
+
 	// Decrypt it using the corresponding private key.
-	//suite := nist.NewAES128SHA256P256()
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	decrypted1, err := common_structs.ElGamalDecrypt(suite, ws.Private, K1, C1)
 	decrypted2, err := common_structs.ElGamalDecrypt(suite, ws.Private, K2, C2)
-	//log.LLvlf2("WSgetTLSconf(): 3: decrypted1 bytes: %v", decrypted1)
-	//log.LLvlf2("WSgetTLSconf(): 3: decrypted2 bytes: %v", decrypted2)
 
 	decrypted := make([]byte, 0)
 	for _, b := range decrypted1 {
@@ -463,18 +381,17 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 	}
 	_, data, err2 := network.UnmarshalRegistered(decrypted)
 	if err2 != nil {
-		log.LLvlf2("%v", err2)
+		log.Lvlf2("%v", err2)
 	}
-	//log.LLvlf2("WSgetTLSconf(): 4: data: %v", data)
+
 	rec := data.(*common_structs.My_Scalar)
 	tlsprivate := rec.Private
-	log.LLvlf2("reconstructed private key: %v", tlsprivate)
-	//log.LLvlf2("WSgetTLSconf(): End")
+	log.Lvlf3("reconstructed private key: %v", tlsprivate)
+
 	return tlspublic, tlsprivate, nil
 }
 
 func (s *Site) setSkipBlock(latest *skipchain.SkipBlock) bool {
-	//log.LLvlf2("Storing skipblock with id: %v", latest.Hash)
 	s.SkipBlocks[string(latest.Hash)] = latest
 	return true
 }

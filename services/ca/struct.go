@@ -1,15 +1,6 @@
 package ca
 
 import (
-	//"encoding/binary"
-	//"fmt"
-	//"sort"
-	//"strings"
-
-	//"github.com/dedis/cothority/crypto"
-	//"github.com/dedis/cothority/log"
-	//"github.com/dedis/cothority/network"
-	//"github.com/dedis/cothority/sda"
 	"github.com/dedis/cothority/services/common_structs"
 	"github.com/dedis/cothority/services/skipchain"
 	"github.com/dedis/crypto/abstract"
