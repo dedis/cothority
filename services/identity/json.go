@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -316,8 +315,6 @@ func (jid *jsonID) guc(w http.ResponseWriter, r *http.Request) {
 			verifierId := base64.StdEncoding.EncodeToString(k)
 			parentBlockId := base64.StdEncoding.EncodeToString(update.ParentBlockID)
 
-			fmt.Println(update.Aggregate)
-
 			aggregate, _ := crypto.Pub64(network.Suite, update.Aggregate)
 			aggregateResp, _ := crypto.Pub64(network.Suite, update.AggregateResp)
 			data := base64.StdEncoding.EncodeToString(update.Data)
@@ -334,7 +331,6 @@ func (jid *jsonID) guc(w http.ResponseWriter, r *http.Request) {
 				AggregateResp: aggregateResp,
 				Data:          data,
 			}
-			log.Print(sbf)
 
 			skipBlockFix := sbf
 			hash := base64.StdEncoding.EncodeToString(update.Hash)
@@ -347,12 +343,10 @@ func (jid *jsonID) guc(w http.ResponseWriter, r *http.Request) {
 				Sig:          sig,
 				Msg:          msg,
 			}
-			log.Print(sb)
 
 			blocks[i] = sb
 		}
 		jgucr := jsonGetUpdateChainReply{Update: blocks}
-		log.Print(jgucr)
 		rep, _ := json.Marshal(jgucr)
 		w.Write(rep)
 	} else {
