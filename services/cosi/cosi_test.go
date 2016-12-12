@@ -19,7 +19,7 @@ func TestServiceCosi(t *testing.T) {
 	local := sda.NewTCPTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	hosts, el, _ := local.GenTree(5, false)
+	hosts, el, _ := local.GenTree(1, false)
 	defer local.CloseAll()
 
 	// Send a request to the service
