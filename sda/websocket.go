@@ -277,8 +277,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ce = NewClientErrorCode(0, "")
 		}
 	}
-	if ce.ErrorCode() > 0 &&
-		(ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000) {
+	if ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000 {
 		log.Print(ce.ErrorCode(), ce.ErrorMsg())
 		ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, "")
 	}
