@@ -50,10 +50,8 @@ type SignatureResponse struct {
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.ClientError) {
 	roster := req.Roster
 	if roster.Aggregate == nil {
-		log.LLvl3("Will complete roster-ID and aggregate key")
+		log.Lvl3("Will complete roster-ID and aggregate key")
 		roster = sda.NewRoster(roster.List)
-		log.Printf("First si: %s - aggregate: %s", roster.List[0].Public,
-			roster.Aggregate)
 	}
 	tree := roster.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
@@ -79,7 +77,6 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.Clien
 	if log.DebugVisible() > 1 {
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
-	log.Print(roster.Aggregate)
 	return &SignatureResponse{
 		Sum:       h,
 		Signature: sig,
