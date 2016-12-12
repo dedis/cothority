@@ -36,14 +36,14 @@ type WebSocket struct {
 
 const (
 	// WebSocketErrorPathNotFound indicates the path has not been registered
-	WebSocketErrorPathNotFound = 4000
+	WebSocketErrorPathNotFound = 4000 + iota
 	// WebSocketErrorProtobufDecode indicates an error in decoding the protobuf-packet
-	WebSocketErrorProtobufDecode = 4001
+	WebSocketErrorProtobufDecode
 	// WebSocketErrorProtobufEncode indicates an error in encoding the return packet
-	WebSocketErrorProtobufEncode = 4002
+	WebSocketErrorProtobufEncode
 	// WebSocketErrorInvalidErrorCode indicates the service returned
 	// an invalid error-code
-	WebSocketErrorInvalidErrorCode = 4003
+	WebSocketErrorInvalidErrorCode
 )
 
 // NewWebSocket opens a webservice-listener one port above the given

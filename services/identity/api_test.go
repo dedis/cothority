@@ -42,7 +42,6 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	pub2, ok := al.Data["two"]
 	assert.True(t, ok)
 	assert.Equal(t, "public2", pub2)
-	l.CloseAll()
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {

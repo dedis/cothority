@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/crypto/abstract"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to

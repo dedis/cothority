@@ -73,7 +73,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.Cl
 		var ok bool
 		prev, ok = s.getSkipBlockByID(psbd.LatestID)
 		if !ok {
-			return nil, sda.NewClientErrorCode(4100, "Didn't find latest block")
+			return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Didn't find latest block")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
@@ -96,7 +96,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.Cl
 				var ok bool
 				pointer, ok = s.getSkipBlockByID(pointer.BackLinkIds[0])
 				if !ok {
-					return nil, sda.NewClientErrorCode(4100, "Didn't find convenient SkipBlock for height "+
+					return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Didn't find convenient SkipBlock for height "+
 						strconv.Itoa(h))
 				}
 			}
@@ -107,10 +107,10 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.Cl
 		// are correctly set up
 		prop.Index = 0
 		if prop.MaximumHeight == 0 {
-			return nil, sda.NewClientErrorCode(4100, "Set a maximumHeight > 0")
+			return nil, sda.NewClientErrorCode(ErrorParameterWrong, "Set a maximumHeight > 0")
 		}
 		if prop.BaseHeight == 0 {
-			return nil, sda.NewClientErrorCode(4100, "Set a baseHeight > 0")
+			return nil, sda.NewClientErrorCode(ErrorParameterWrong, "Set a baseHeight > 0")
 		}
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
@@ -133,7 +133,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.Cl
 	var err error
 	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
-		return nil, sda.NewClientErrorCode(4100, "Verification error: "+err.Error())
+		return nil, sda.NewClientErrorCode(ErrorVerification, "Verification error: "+err.Error())
 	}
 	s.save()
 
@@ -151,7 +151,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.Cl
 func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, sda.ClientError) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
-		return nil, sda.NewClientErrorCode(4100, "Couldn't find latest skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
@@ -160,7 +160,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, sda
 		link := block.ForwardLink[len(block.ForwardLink)-1]
 		block, ok = s.getSkipBlockByID(link.Hash)
 		if !ok {
-			return nil, sda.NewClientErrorCode(4100, "Missing block in forward-chain")
+			return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Missing block in forward-chain")
 		}
 		blocks = append(blocks, block)
 	}
@@ -177,11 +177,11 @@ func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
-		return nil, sda.NewClientErrorCode(4100, "couldn't find skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
 	}
 	child, ok := s.getSkipBlockByID(childID)
 	if !ok {
-		return nil, sda.NewClientErrorCode(4100, "couldn't find skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
 	}
 	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()
@@ -257,17 +257,17 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	if newest != nil && newest.Roster == nil {
 		log.Lvl3("Got a data-block")
 		if newest.ParentBlockID.IsNull() {
-			return nil, nil, sda.NewClientErrorCode(4100, "Data skipblock without parent")
+			return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Data skipblock without parent")
 		}
 		parent, ok := s.getSkipBlockByID(newest.ParentBlockID)
 		if !ok {
-			return nil, nil, sda.NewClientErrorCode(4100, "Didn't find parent block")
+			return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Didn't find parent block")
 		}
 		newest.Roster = parent.Roster
 	}
 	// Now verify if it's a valid block
 	if err := s.verifyNewSkipBlock(latest, newest); err != nil {
-		return nil, nil, sda.NewClientErrorCode(4100, "Verification of newest SkipBlock failed: "+err.Error())
+		return nil, nil, sda.NewClientErrorCode(ErrorVerification, "Verification of newest SkipBlock failed: "+err.Error())
 	}
 
 	// Sign it
@@ -322,7 +322,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 
 	node, e := s.CreateProtocolSDA(skipchainBFT, tree)
 	if e != nil {
-		return sda.NewClientErrorCode(4100, "Couldn't create new node: "+e.Error())
+		return sda.NewClientErrorCode(ErrorSDA, "Couldn't create new node: "+e.Error())
 	}
 
 	// Register the function generating the protocol instance
@@ -409,13 +409,13 @@ func (s *Service) startPropagation(blocks []*SkipBlock) sda.ClientError {
 			// Suppose it's a dataSkipBlock
 			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
 			if !ok {
-				return sda.NewClientErrorCode(4100, "Didn't find Roster nor parent")
+				return sda.NewClientErrorCode(ErrorBlockNoParent, "Didn't find Roster nor parent")
 			}
 			roster = sb.Roster
 		}
 		replies, e := s.Propagate(roster, block, propagateTimeout)
 		if e != nil {
-			return sda.NewClientErrorCode(4100, e.Error())
+			return sda.NewClientErrorCode(ErrorSDA, e.Error())
 		}
 		if replies != len(roster.List) {
 			log.Warn("Did only get", replies, "out of", len(roster.List))

@@ -131,6 +131,7 @@ func TestClient_ProposeData(t *testing.T) {
 	if !dataLast.Update[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
+	c.Close()
 }
 
 func TestClient_ProposeRoster(t *testing.T) {
@@ -144,7 +145,7 @@ func TestClient_ProposeRoster(t *testing.T) {
 	_, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
 	log.ErrFatal(cerr)
 	el2 := sda.NewRoster(el.List[:nbrHosts-1])
-	log.Lvl1("Proposing roster")
+	log.Lvl1("Proposing roster", el2)
 	var sb1 *ProposedSkipBlockReply
 	sb1, cerr = c.ProposeRoster(inter, el2)
 	log.ErrFatal(cerr)
@@ -166,11 +167,12 @@ func TestClient_ProposeRoster(t *testing.T) {
 
 	updates, cerr := c.GetUpdateChain(inter, inter.Hash)
 	if len(updates.Update) != 3 {
-		t.Fatal("Should now have three Blocks to go from Genesis to current")
+		t.Fatal("Should now have three Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
 	}
 	if !updates.Update[2].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
+	c.Close()
 }
 
 type testData struct {

@@ -134,6 +134,9 @@ func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) 
 // Start makes the router and the websocket listen on their respective
 // ports.
 func (c *Conode) Start() {
-	go c.websocket.Start()
-	c.Router.Start()
+	go c.Router.Start()
+	//for strings.HasSuffix(c.ServerIdentity.Address.String(), ":0") {
+	//	time.Sleep(network.WaitRetry)
+	//}
+	c.websocket.Start()
 }

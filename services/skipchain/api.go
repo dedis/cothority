@@ -11,6 +11,15 @@ import (
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
 //	the exception-field - has to wait for new cosi-library in crypto
 
+const (
+	ErrorBlockNotFound = 4100 + iota
+	ErrorBlockNoParent
+	ErrorBlockContent
+	ErrorParameterWrong
+	ErrorVerification
+	ErrorSDA
+)
+
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -32,12 +41,12 @@ func NewLocalClient(local *sda.LocalTest) *Client {
 // maximumHeight of maxHControl. It connects both chains for later
 // reference.
 func (c *Client) CreateRootControl(elRoot, elControl *sda.Roster, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, cerr sda.ClientError) {
-	log.Lvl2("Creating root roster")
+	log.Lvl2("Creating root roster", elRoot)
 	root, cerr = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if cerr != nil {
 		return
 	}
-	log.Lvl2("Creating control roster")
+	log.Lvl2("Creating control roster", elControl)
 	control, cerr = c.CreateRoster(elControl, baseHeight, maxHControl, ver, root.Hash)
 	if cerr != nil {
 		return
@@ -99,7 +108,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 		return nil, nil, sda.NewClientError(err)
 	}
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
-		return nil, nil, sda.NewClientErrorCode(4100, "Child doesn't point to that parent")
+		return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Child doesn't point to that parent")
 	}
 	host := parent.Roster.RandomServerIdentity()
 	reply := &SetChildrenSkipBlockReply{}

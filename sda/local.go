@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"os"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -43,6 +45,10 @@ const (
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
+	if s, err := os.Stat("config"); err == nil && s.IsDir() {
+		log.LLvl4("Removing config-dir")
+		os.RemoveAll("config")
+	}
 	return &LocalTest{
 		Conodes:  make(map[network.ServerIdentityID]*Conode),
 		Overlays: make(map[network.ServerIdentityID]*Overlay),
