@@ -12,11 +12,20 @@ import (
 //	the exception-field - has to wait for new cosi-library in crypto
 
 const (
+	// ErrorBlockNotFound indicates that for any number of operations the
+	// corresponding block has not been found.
 	ErrorBlockNotFound = 4100 + iota
+	// ErrorBlockNoParent indicates that a parent should be there but hasn't
+	// been found.
 	ErrorBlockNoParent
+	// ErrorBlockContent indicates that part of a block is in an invalid state.
 	ErrorBlockContent
+	// ErrorParameterWrong indicates that a given parameter is out of bounds.
 	ErrorParameterWrong
+	// ErrorVerification indicates that a given block could not be verified
+	// and a signature is invalid.
 	ErrorVerification
+	// ErrorSDA indicates an error from the SDA-framework.
 	ErrorSDA
 )
 

@@ -46,7 +46,7 @@ const (
 // locally
 func NewLocalTest() *LocalTest {
 	if s, err := os.Stat("config"); err == nil && s.IsDir() {
-		log.LLvl4("Removing config-dir")
+		log.Lvl4("Removing config-dir")
 		os.RemoveAll("config")
 	}
 	return &LocalTest{
