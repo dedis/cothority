@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/cothority/sda"
+	"github.com/dedis/crypto/abstract"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -34,18 +35,25 @@ type CoSi struct {
 // SignatureRequest is what the Cosi service is expected to receive from clients.
 type SignatureRequest struct {
 	Message []byte
-	Roster  *sda.Roster
+	//Roster  []byte
+	Roster *sda.Roster
 }
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
 	Sum       []byte
 	Signature []byte
+	Aggregate abstract.Point
 }
 
 // SignatureRequest treats external request to this service.
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.ClientError) {
-	tree := req.Roster.GenerateBinaryTree()
+	roster := req.Roster
+	if roster.Aggregate == nil {
+		log.LLvl3("Will complete roster-ID and aggregate key")
+		roster = sda.NewRoster(roster.List)
+	}
+	tree := roster.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
@@ -72,6 +80,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.Clien
 	return &SignatureResponse{
 		Sum:       h,
 		Signature: sig,
+		Aggregate: roster.Aggregate,
 	}, nil
 }
 

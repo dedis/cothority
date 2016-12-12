@@ -266,6 +266,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s := t.service
 		var reply []byte
 		path := strings.TrimPrefix(r.URL.Path, "/"+t.serviceName+"/")
+		log.Lvl3("Got request for", t.serviceName, path)
 		reply, ce = s.ProcessClientRequest(path, buf)
 		if ce == nil {
 			err := ws.WriteMessage(mt, reply)
@@ -276,7 +277,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ce = NewClientErrorCode(0, "")
 		}
 		if ce.ErrorCode() > 0 &&
-			(ce.ErrorCode() < 4100 || ce.ErrorCode() >= 5000) {
+			(ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000) {
 			ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, "")
 			break
 		}

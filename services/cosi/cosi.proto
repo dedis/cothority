@@ -1,8 +1,8 @@
 import "../network.proto";
 
 message SignatureRequest {
-    required Roster roster = 1;
-    required bytes message = 2;
+    required bytes message = 1;
+    required Roster roster = 2;
 }
 
 message SignatureResponse {

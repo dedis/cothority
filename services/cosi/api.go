@@ -22,8 +22,8 @@ func NewClient() *Client {
 // Roster
 func (c *Client) SignatureRequest(r *sda.Roster, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{
-		Roster:  r,
-		Message: msg,
+	//Roster:  r,
+	//Message: msg,
 	}
 	if len(r.List) == 0 {
 		return nil, errors.New("Got an empty roster-list")
