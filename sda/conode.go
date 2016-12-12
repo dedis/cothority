@@ -135,8 +135,5 @@ func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) 
 // ports.
 func (c *Conode) Start() {
 	go c.Router.Start()
-	//for strings.HasSuffix(c.ServerIdentity.Address.String(), ":0") {
-	//	time.Sleep(network.WaitRetry)
-	//}
 	c.websocket.Start()
 }
