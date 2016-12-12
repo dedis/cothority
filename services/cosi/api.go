@@ -18,7 +18,7 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// SignMsg sends a CoSi sign request to the Cothority defined by the given
+// SignatureRequest sends a CoSi sign request to the Cothority defined by the given
 // Roster
 func (c *Client) SignatureRequest(r *sda.Roster, msg []byte) (*SignatureResponse, error) {
 	serviceReq := &SignatureRequest{

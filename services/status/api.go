@@ -1,7 +1,6 @@
 package status
 
 import (
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
@@ -16,16 +15,12 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// GetStatus Sends requests to all other members of network and creates client
+// Request sends requests to all other members of network and creates client.
 func (c *Client) Request(dst *network.ServerIdentity) (*Response, sda.ClientError) {
-	request := &Request{}
-	//send request to all entities in the network
-	log.Lvl4("Sending Request to ", dst)
-	reply := &Response{}
-	cerr := c.SendProtobuf(dst, request, reply)
+	resp := &Response{}
+	cerr := c.SendProtobuf(dst, &Request{}, resp)
 	if cerr != nil {
 		return nil, cerr
 	}
-	return reply, nil
-
+	return resp, nil
 }
