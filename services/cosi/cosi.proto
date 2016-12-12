@@ -8,5 +8,4 @@ message SignatureRequest {
 message SignatureResponse {
     required bytes hash = 1;
     required bytes signature = 2;
-    required bytes aggregate = 3;
 }

@@ -8,6 +8,5 @@ message ServerIdentity{
 message Roster {
     optional bytes id = 1;
     repeated ServerIdentity list = 2;
-    optional bytes aggregate = 3;
+    required bytes aggregate = 3;
 }
-
