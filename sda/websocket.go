@@ -279,7 +279,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if ce.ErrorCode() > 0 &&
 		(ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000) {
-		log.Error(ce.ErrorCode(), ce.ErrorMsg())
+		log.Print(ce.ErrorCode(), ce.ErrorMsg())
 		ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, "")
 	}
 	ws.WriteControl(websocket.CloseMessage,
