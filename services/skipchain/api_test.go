@@ -135,6 +135,7 @@ func TestClient_ProposeData(t *testing.T) {
 }
 
 func TestClient_ProposeRoster(t *testing.T) {
+	t.Skip("See https://github.com/dedis/cothority/issues/733")
 	nbrHosts := 5
 	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(nbrHosts, true)
