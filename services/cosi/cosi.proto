@@ -6,6 +6,7 @@ message SignatureRequest {
 }
 
 message SignatureResponse {
-    required bytes aggregate = 1;
+    required bytes hash = 1;
     required bytes signature = 2;
+    required bytes aggregate = 3;
 }

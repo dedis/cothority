@@ -35,13 +35,12 @@ type CoSi struct {
 // SignatureRequest is what the Cosi service is expected to receive from clients.
 type SignatureRequest struct {
 	Message []byte
-	//Roster  []byte
-	Roster *sda.Roster
+	Roster  *sda.Roster
 }
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
-	Sum       []byte
+	Hash      []byte
 	Signature []byte
 	Aggregate abstract.Point
 }
@@ -78,7 +77,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.Clien
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
 	return &SignatureResponse{
-		Sum:       h,
+		Hash:      h,
 		Signature: sig,
 		Aggregate: roster.Aggregate,
 	}, nil

@@ -198,7 +198,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) err
 	publics := entityListToPublics(el)
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
 	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
-	if !bytes.Equal(hashHash, sig.Sum) {
+	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
