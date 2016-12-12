@@ -52,7 +52,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.Clien
 	if roster.Aggregate == nil {
 		log.LLvl3("Will complete roster-ID and aggregate key")
 		roster = sda.NewRoster(roster.List)
-		log.Printf("First si: %x - aggregate: %x", roster.List[0].Public,
+		log.Printf("First si: %s - aggregate: %s", roster.List[0].Public,
 			roster.Aggregate)
 	}
 	tree := roster.GenerateBinaryTree()
