@@ -53,7 +53,7 @@ func network(c *cli.Context) error {
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
 		log.Lvl3(el.List[i])
-		sr, _ := cl.GetStatus(el.List[i])
+		sr, _ := cl.Request(el.List[i])
 		printConn(sr)
 		log.Lvl3(cl)
 	}
