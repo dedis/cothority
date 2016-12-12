@@ -79,6 +79,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.Clien
 	if log.DebugVisible() > 1 {
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
+	log.Print(roster.Aggregate)
 	return &SignatureResponse{
 		Sum:       h,
 		Signature: sig,
