@@ -24,25 +24,32 @@ func TestGenLocalHost(t *testing.T) {
 	}
 }
 
+// This tests the client-connection in the case of a non-garbage-collected
+// client that stays in the service.
 func TestNewTCPTest(t *testing.T) {
 	l := NewTCPTest()
 	_, el, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
 	c1 := NewClient(clientServiceName)
-	_, cerr := c1.Send(el.List[0], "SimpleMessage", nil)
-	log.ErrFatal(cerr)
-	_, cerr = c1.Send(el.List[1], "SimpleMessage", nil)
-	log.ErrFatal(cerr)
-	_, cerr = c1.Send(el.List[2], "SimpleMessage", nil)
+	cerr := c1.SendProtobuf(el.List[0], &SimpleMessage{}, nil)
 	log.ErrFatal(cerr)
 }
 
 type clientService struct {
 	*ServiceProcessor
+	cl *Client
 }
 
+type SimpleMessage2 struct{}
+
 func (c *clientService) SimpleMessage(msg *SimpleMessage) (network.Body, ClientError) {
+	log.Lvl3("Got request", msg)
+	c.cl.SendProtobuf(c.ServerIdentity(), &SimpleMessage2{}, nil)
+	return nil, nil
+}
+
+func (c *clientService) SimpleMessage2(msg *SimpleMessage2) (network.Body, ClientError) {
 	log.Lvl3("Got request", msg)
 	return nil, nil
 }
@@ -50,7 +57,9 @@ func (c *clientService) SimpleMessage(msg *SimpleMessage) (network.Body, ClientE
 func newClientService(c *Context, path string) Service {
 	s := &clientService{
 		ServiceProcessor: NewServiceProcessor(c),
+		cl:               NewClient(clientServiceName),
 	}
 	log.ErrFatal(s.RegisterMessage(s.SimpleMessage))
+	log.ErrFatal(s.RegisterMessage(s.SimpleMessage2))
 	return s
 }

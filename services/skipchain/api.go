@@ -113,6 +113,7 @@ func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, 
 // child block and inversely. The child-block is supposed to already have
 // the parentBlockID set and be accepted.
 func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *SkipBlock, sda.ClientError) {
+	log.Lvl3(parent, child)
 	if err := child.VerifySignatures(); err != nil {
 		return nil, nil, sda.NewClientError(err)
 	}
@@ -132,6 +133,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, cerr sda.ClientError) {
+	log.Lvl3(parent, latest)
 	h := parent.Roster.RandomServerIdentity()
 	reply = &GetUpdateChainReply{}
 	cerr = c.SendProtobuf(h, &GetUpdateChain{latest}, reply)
@@ -147,6 +149,7 @@ func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *G
 // - dataSkipBlock if data is non-nil. Furthermore 'el' will hold the activeRoster
 // to send the request to.
 func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.Roster, d network.Body) (reply *ProposedSkipBlockReply, cerr sda.ClientError) {
+	log.Lvl3(latest)
 	activeRoster := latest.Roster
 	hash := latest.Hash
 	propose := latest

@@ -183,6 +183,7 @@ func (i *Identity) AttachToIdentity(ID ID) sda.ClientError {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() sda.ClientError {
+	log.Lvl3("Creating identity", i)
 	air := &CreateIdentityReply{}
 	err := i.SendProtobuf(i.Cothority.RandomServerIdentity(),
 		&CreateIdentity{i.Config, i.Cothority},
@@ -259,6 +260,7 @@ func (i *Identity) ProposeVote(accept bool) sda.ClientError {
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() sda.ClientError {
+	log.Lvl3("ConfigUpdate", i)
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
 		return sda.NewClientErrorCode(ErrorListMissing, "Didn't find any list in the cothority")
 	}

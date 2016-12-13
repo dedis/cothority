@@ -101,7 +101,7 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
 	l := sda.NewTCPTest()
-	hosts, el, _ := l.GenTree(3, true)
+	hosts, el, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
