@@ -164,6 +164,7 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 		if err != nil {
 			return nil, NewClientError(err)
 		}
+		c.si = dst
 	}
 	defer func() {
 		if !c.keep {
@@ -229,6 +230,8 @@ func (c *Client) SendToAll(dst *Roster, path string, buf []byte) ([][]byte, Clie
 func (c *Client) Close() error {
 	if c.si != nil && c.conn != nil {
 		c.si = nil
+		c.conn.WriteMessage(websocket.CloseMessage,
+			nil)
 		return c.conn.Close()
 	}
 	return nil
@@ -256,14 +259,16 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		return
 	}
-	defer ws.Close()
+	defer func() {
+		ws.Close()
+	}()
 	var ce ClientError
 	// Loop as long as we don't return an error.
 	for ce == nil {
 		mt, buf, err := ws.ReadMessage()
 		if err != nil {
 			ce = NewClientErrorCode(WebSocketErrorRead, err.Error())
-			break
+			return
 		}
 		s := t.service
 		var reply []byte
@@ -283,7 +288,7 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	ws.WriteControl(websocket.CloseMessage,
 		websocket.FormatCloseMessage(ce.ErrorCode(), ce.ErrorMsg()),
-		time.Now().Add(time.Second))
+		time.Now().Add(time.Millisecond*500))
 }
 
 // ClientError allows for returning error-codes and error-messages. It is
