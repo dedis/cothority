@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/cothority/sda"
-	"github.com/dedis/crypto/abstract"
 	"github.com/satori/go.uuid"
 )
 
@@ -43,7 +42,6 @@ type SignatureRequest struct {
 type SignatureResponse struct {
 	Hash      []byte
 	Signature []byte
-	Aggregate abstract.Point
 }
 
 // SignatureRequest treats external request to this service.
