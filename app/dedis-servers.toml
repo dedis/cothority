@@ -28,3 +28,7 @@
   Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
   Description = "Kirill's server"
 
+[[servers]]
+ Address = "tcp://83.212.82.23:6789"
+ Public = "guhk0GIw2qLpChrCTsc4vNnlRYZ3518eZKm1FKcR1jA="
+ Description = "Lefteris"
