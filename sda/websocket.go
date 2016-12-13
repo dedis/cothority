@@ -44,6 +44,8 @@ const (
 	// WebSocketErrorInvalidErrorCode indicates the service returned
 	// an invalid error-code
 	WebSocketErrorInvalidErrorCode
+	// WebSocketErrorRead indicates that there has been a problem on reception
+	WebSocketErrorRead
 )
 
 // NewWebSocket opens a webservice-listener one port above the given
@@ -260,8 +262,8 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for ce == nil {
 		mt, buf, err := ws.ReadMessage()
 		if err != nil {
-			log.Error(err)
-			return
+			ce = NewClientErrorCode(WebSocketErrorRead, err.Error())
+			break
 		}
 		s := t.service
 		var reply []byte
@@ -274,12 +276,10 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Error(err)
 				return
 			}
-			ce = NewClientErrorCode(0, "")
 		}
 	}
 	if ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000 {
-		log.Print(ce.ErrorCode(), ce.ErrorMsg())
-		ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, "")
+		ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, ce.Error())
 	}
 	ws.WriteControl(websocket.CloseMessage,
 		websocket.FormatCloseMessage(ce.ErrorCode(), ce.ErrorMsg()),
