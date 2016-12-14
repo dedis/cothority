@@ -42,7 +42,6 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	pub2, ok := al.Data["two"]
 	assert.True(t, ok)
 	assert.Equal(t, "public2", pub2)
-	l.CloseAll()
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
@@ -102,7 +101,7 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
 	l := sda.NewTCPTest()
-	hosts, el, _ := l.GenTree(3, true)
+	hosts, el, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
@@ -195,6 +194,9 @@ func TestCrashAfterRevocation(t *testing.T) {
 	c1 := NewIdentity(el, 2, "one")
 	c2 := NewIdentity(el, 2, "two")
 	c3 := NewIdentity(el, 2, "three")
+	defer c1.Close()
+	defer c2.Close()
+	defer c3.Close()
 	log.ErrFatal(c1.CreateIdentity())
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	proposeUpVote(c1)

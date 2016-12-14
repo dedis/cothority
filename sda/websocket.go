@@ -36,14 +36,16 @@ type WebSocket struct {
 
 const (
 	// WebSocketErrorPathNotFound indicates the path has not been registered
-	WebSocketErrorPathNotFound = 4000
+	WebSocketErrorPathNotFound = 4000 + iota
 	// WebSocketErrorProtobufDecode indicates an error in decoding the protobuf-packet
-	WebSocketErrorProtobufDecode = 4001
+	WebSocketErrorProtobufDecode
 	// WebSocketErrorProtobufEncode indicates an error in encoding the return packet
-	WebSocketErrorProtobufEncode = 4002
+	WebSocketErrorProtobufEncode
 	// WebSocketErrorInvalidErrorCode indicates the service returned
 	// an invalid error-code
-	WebSocketErrorInvalidErrorCode = 4003
+	WebSocketErrorInvalidErrorCode
+	// WebSocketErrorRead indicates that there has been a problem on reception
+	WebSocketErrorRead
 )
 
 // NewWebSocket opens a webservice-listener one port above the given
@@ -162,6 +164,7 @@ func (c *Client) Send(dst *network.ServerIdentity, path string, buf []byte) ([]b
 		if err != nil {
 			return nil, NewClientError(err)
 		}
+		c.si = dst
 	}
 	defer func() {
 		if !c.keep {
@@ -227,6 +230,8 @@ func (c *Client) SendToAll(dst *Roster, path string, buf []byte) ([][]byte, Clie
 func (c *Client) Close() error {
 	if c.si != nil && c.conn != nil {
 		c.si = nil
+		c.conn.WriteMessage(websocket.CloseMessage,
+			nil)
 		return c.conn.Close()
 	}
 	return nil
@@ -252,13 +257,15 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		return
 	}
-	defer ws.Close()
+	defer func() {
+		ws.Close()
+	}()
 	var ce ClientError
 	// Loop as long as we don't return an error.
 	for ce == nil {
 		mt, buf, err := ws.ReadMessage()
 		if err != nil {
-			log.Error(err)
+			ce = NewClientErrorCode(WebSocketErrorRead, err.Error())
 			return
 		}
 		s := t.service
@@ -272,17 +279,14 @@ func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Error(err)
 				return
 			}
-			ce = NewClientErrorCode(0, "")
 		}
-		if ce.ErrorCode() > 0 &&
-			(ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000) {
-			ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, "")
-			break
-		}
+	}
+	if ce.ErrorCode() < 4000 || ce.ErrorCode() >= 5000 {
+		ce = NewClientErrorCode(WebSocketErrorInvalidErrorCode, ce.Error())
 	}
 	ws.WriteControl(websocket.CloseMessage,
 		websocket.FormatCloseMessage(ce.ErrorCode(), ce.ErrorMsg()),
-		time.Now().Add(time.Second))
+		time.Now().Add(time.Millisecond*500))
 }
 
 // ClientError allows for returning error-codes and error-messages. It is

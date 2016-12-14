@@ -46,7 +46,7 @@ type SignatureResponse struct {
 
 // SignatureRequest treats external request to this service.
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.ClientError) {
-	if req.Roster.ID == nil {
+	if req.Roster.ID == sda.RosterID(uuid.Nil) {
 		req.Roster.ID = sda.RosterID(uuid.NewV4())
 	}
 	tree := req.Roster.GenerateBinaryTree()

@@ -46,6 +46,19 @@ func init() {
 	}
 }
 
+// The errors are above the skipchain-errors so that they don't mix and the
+// skipchain-errors can be passed through unchanged.
+const (
+	ErrorConfigMissing = 4200 + iota
+	ErrorBlockMissing
+	ErrorAccountDouble
+	ErrorAccountMissing
+	ErrorVoteDouble
+	ErrorVoteSignature
+	ErrorListMissing
+	ErrorSDA
+)
+
 // Identity structure holds the data necessary for a client/device to use the
 // identity-service. Each identity-skipchain is tied to a roster that is defined
 // in 'Cothority'
@@ -157,7 +170,7 @@ func (i *Identity) AttachToIdentity(ID ID) sda.ClientError {
 		return cerr
 	}
 	if _, exists := i.Config.Device[i.DeviceName]; exists {
-		return sda.NewClientErrorCode(4100, "Adding with an existing account-name")
+		return sda.NewClientErrorCode(ErrorAccountDouble, "Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
 	confPropose.Device[i.DeviceName] = &Device{i.Public}
@@ -170,6 +183,7 @@ func (i *Identity) AttachToIdentity(ID ID) sda.ClientError {
 
 // CreateIdentity asks the identityService to create a new Identity
 func (i *Identity) CreateIdentity() sda.ClientError {
+	log.Lvl3("Creating identity", i)
 	air := &CreateIdentityReply{}
 	err := i.SendProtobuf(i.Cothority.RandomServerIdentity(),
 		&CreateIdentity{i.Config, i.Cothority},
@@ -210,7 +224,7 @@ func (i *Identity) ProposeUpdate() sda.ClientError {
 func (i *Identity) ProposeVote(accept bool) sda.ClientError {
 	log.Lvl3("Voting proposal")
 	if i.Proposed == nil {
-		return sda.NewClientErrorCode(4100, "No proposed config")
+		return sda.NewClientErrorCode(ErrorConfigMissing, "No proposed config")
 	}
 	log.Lvlf3("Voting %t on %s", accept, i.Proposed.Device)
 	if !accept {
@@ -218,11 +232,11 @@ func (i *Identity) ProposeVote(accept bool) sda.ClientError {
 	}
 	hash, err := i.Proposed.Hash()
 	if err != nil {
-		return sda.NewClientErrorCode(4100, err.Error())
+		return sda.NewClientErrorCode(ErrorSDA, err.Error())
 	}
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {
-		return sda.NewClientErrorCode(4100, err.Error())
+		return sda.NewClientErrorCode(ErrorSDA, err.Error())
 	}
 	pvr := &ProposeVoteReply{}
 	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
@@ -246,8 +260,9 @@ func (i *Identity) ProposeVote(accept bool) sda.ClientError {
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() sda.ClientError {
+	log.Lvl3("ConfigUpdate", i)
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
-		return sda.NewClientErrorCode(4100, "Didn't find any list in the cothority")
+		return sda.NewClientErrorCode(ErrorListMissing, "Didn't find any list in the cothority")
 	}
 	cur := &ConfigUpdateReply{}
 	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),

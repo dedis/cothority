@@ -11,6 +11,24 @@ import (
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
 //	the exception-field - has to wait for new cosi-library in crypto
 
+const (
+	// ErrorBlockNotFound indicates that for any number of operations the
+	// corresponding block has not been found.
+	ErrorBlockNotFound = 4100 + iota
+	// ErrorBlockNoParent indicates that a parent should be there but hasn't
+	// been found.
+	ErrorBlockNoParent
+	// ErrorBlockContent indicates that part of a block is in an invalid state.
+	ErrorBlockContent
+	// ErrorParameterWrong indicates that a given parameter is out of bounds.
+	ErrorParameterWrong
+	// ErrorVerification indicates that a given block could not be verified
+	// and a signature is invalid.
+	ErrorVerification
+	// ErrorSDA indicates an error from the SDA-framework.
+	ErrorSDA
+)
+
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -32,12 +50,12 @@ func NewLocalClient(local *sda.LocalTest) *Client {
 // maximumHeight of maxHControl. It connects both chains for later
 // reference.
 func (c *Client) CreateRootControl(elRoot, elControl *sda.Roster, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, cerr sda.ClientError) {
-	log.Lvl2("Creating root roster")
+	log.Lvl2("Creating root roster", elRoot)
 	root, cerr = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
 	if cerr != nil {
 		return
 	}
-	log.Lvl2("Creating control roster")
+	log.Lvl2("Creating control roster", elControl)
 	control, cerr = c.CreateRoster(elControl, baseHeight, maxHControl, ver, root.Hash)
 	if cerr != nil {
 		return
@@ -95,11 +113,12 @@ func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, 
 // child block and inversely. The child-block is supposed to already have
 // the parentBlockID set and be accepted.
 func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *SkipBlock, sda.ClientError) {
+	log.Lvl3(parent, child)
 	if err := child.VerifySignatures(); err != nil {
 		return nil, nil, sda.NewClientError(err)
 	}
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
-		return nil, nil, sda.NewClientErrorCode(4100, "Child doesn't point to that parent")
+		return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Child doesn't point to that parent")
 	}
 	host := parent.Roster.RandomServerIdentity()
 	reply := &SetChildrenSkipBlockReply{}
@@ -114,6 +133,7 @@ func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *Sk
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain.
 func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *GetUpdateChainReply, cerr sda.ClientError) {
+	log.Lvl3(parent, latest)
 	h := parent.Roster.RandomServerIdentity()
 	reply = &GetUpdateChainReply{}
 	cerr = c.SendProtobuf(h, &GetUpdateChain{latest}, reply)
@@ -129,6 +149,7 @@ func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *G
 // - dataSkipBlock if data is non-nil. Furthermore 'el' will hold the activeRoster
 // to send the request to.
 func (c *Client) proposeSkipBlock(latest *SkipBlock, el *sda.Roster, d network.Body) (reply *ProposedSkipBlockReply, cerr sda.ClientError) {
+	log.Lvl3(latest)
 	activeRoster := latest.Roster
 	hash := latest.Hash
 	propose := latest

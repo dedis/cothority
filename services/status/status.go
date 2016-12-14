@@ -29,7 +29,7 @@ type Stat struct {
 // Request is what the Status service is expected to receive from clients.
 type Request struct{}
 
-// Status is needed for a correct protobuf-handling.
+// Status holds all fields for one status.
 type Status struct {
 	Field map[string]string
 }

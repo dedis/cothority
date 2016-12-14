@@ -178,14 +178,14 @@ func (sb *SkipBlock) GetResponsible(s *Service) (*sda.Roster, sda.ClientError) {
 	if el == nil {
 		// We're a data-block, so use the parent's Roster
 		if sb.ParentBlockID.IsNull() {
-			return nil, sda.NewClientErrorCode(4100, "Didn't find an Roster")
+			return nil, sda.NewClientErrorCode(ErrorBlockContent, "Didn't find a Roster")
 		}
 		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
 		if !ok {
-			return nil, sda.NewClientErrorCode(4100, "No Roster and no parent")
+			return nil, sda.NewClientErrorCode(ErrorBlockNoParent, "No Roster and no parent")
 		}
 		if parent.Roster == nil {
-			return nil, sda.NewClientErrorCode(4100, "Parent doesn't have Roster")
+			return nil, sda.NewClientErrorCode(ErrorBlockContent, "Parent doesn't have Roster")
 		}
 		el = parent.Roster
 	}

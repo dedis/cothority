@@ -535,10 +535,6 @@ func (i *ServiceMessages) SimpleResponse(msg *network.Packet) {
 	i.GotResponse <- true
 }
 
-func (i *ServiceMessages) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
-	return nil, nil
-}
-
 func newServiceMessages(c *Context, path string) Service {
 	s := &ServiceMessages{
 		ServiceProcessor: NewServiceProcessor(c),
