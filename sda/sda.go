@@ -17,3 +17,6 @@ If you want to create your own protocol, you have to learn how to use the
 ProtocolInstance.
 */
 package sda
+
+// Version of the sda.
+const Version = "0.9.2"

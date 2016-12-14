@@ -89,7 +89,7 @@ func (c *Conode) GetStatus() Status {
 	m["Uptime"] = time.Now().Sub(c.started).String()
 	m["System"] = fmt.Sprintf("%s/%s/%s", runtime.GOOS, runtime.GOARCH,
 		runtime.Version())
-	m["Version"] = "0.9.1"
+	m["Version"] = Version
 	m["Host"] = c.ServerIdentity.Address.Host()
 	m["Port"] = c.ServerIdentity.Address.Port()
 	m["Description"] = c.ServerIdentity.Description
@@ -99,7 +99,7 @@ func (c *Conode) GetStatus() Status {
 
 // Close closes the overlay and the Router
 func (c *Conode) Close() error {
-	c.websocket.Stop()
+	c.websocket.stop()
 	c.overlay.Close()
 	err := c.Router.Stop()
 	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
@@ -136,5 +136,5 @@ func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) 
 // ports.
 func (c *Conode) Start() {
 	go c.Router.Start()
-	c.websocket.Start()
+	c.websocket.start()
 }
