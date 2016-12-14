@@ -1,8 +1,6 @@
 package service
 
 import (
-	"errors"
-
 	"fmt"
 	"time"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/protocols/cosi"
 	"github.com/dedis/cothority/sda"
+	"github.com/satori/go.uuid"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -41,24 +40,27 @@ type SignatureRequest struct {
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
-	Sum       []byte
+	Hash      []byte
 	Signature []byte
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(si *network.ServerIdentity, req *SignatureRequest) (network.Body, error) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, sda.ClientError) {
+	if req.Roster.ID == sda.RosterID(uuid.Nil) {
+		req.Roster.ID = sda.RosterID(uuid.NewV4())
+	}
 	tree := req.Roster.GenerateBinaryTree()
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
-		return nil, errors.New("Couldn't make new protocol: " + err.Error())
+		return nil, sda.NewClientErrorCode(4100, "Couldn't make new protocol: "+err.Error())
 	}
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.CoSi)
 	pcosi.SigningMessage(req.Message)
 	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
 	if err != nil {
-		return nil, errors.New("Couldn't hash message: " + err.Error())
+		return nil, sda.NewClientErrorCode(4101, "Couldn't hash message: "+err.Error())
 	}
 	response := make(chan []byte)
 	pcosi.RegisterSignatureHook(func(sig []byte) {
@@ -72,7 +74,7 @@ func (cs *CoSi) SignatureRequest(si *network.ServerIdentity, req *SignatureReque
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
 	return &SignatureResponse{
-		Sum:       h,
+		Hash:      h,
 		Signature: sig,
 	}, nil
 }
@@ -92,7 +94,7 @@ func newCoSiService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-	err := s.RegisterMessage(s.SignatureRequest)
+	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}

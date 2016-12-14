@@ -2,9 +2,9 @@
 
 DBG_SHOW=1
 # Debug-level for app
-DBG_APP=1
+DBG_APP=0
 # Uncomment to build in local dir
-# STATICDIR=test
+#STATICDIR=test
 
 . lib/test/libtest.sh
 . lib/test/cothorityd.sh
@@ -29,13 +29,13 @@ testReconnect(){
         echo "My Test Message File" > foo.txt
         testOK runCl 1 sign foo.txt
         testOut "Killing server $s"
-        pkill -f "c srv$s/config"
+        pkill -9 -f "c srv$s/config"
         testFail runCl 1 sign foo.txt
         testOut "Starting server $s again"
         runSrv $s
         sleep 1
         testOK runCl 1 sign foo.txt
-        pkill -f ./cosi
+        pkill -9 -f ./cosi
     done
 }
 
@@ -63,7 +63,7 @@ testSignFile(){
 
 testServerCfg(){
     runSrvCfg 1
-    pkill cosi
+    pkill -9 cosi
     testFile srv1/config.toml
 }
 
@@ -96,7 +96,7 @@ runCl(){
 }
 
 runSrvCfg(){
-    echo -e "127.0.0.1:200$1\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
+    echo -e "127.0.0.1:200$(( 2 * $1 ))\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
 }
 
 runSrv(){

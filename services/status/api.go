@@ -1,9 +1,6 @@
 package status
 
 import (
-	"errors"
-
-	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/cothority/sda"
 )
@@ -18,19 +15,12 @@ func NewClient() *Client {
 	return &Client{Client: sda.NewClient(ServiceName)}
 }
 
-// GetStatus Sends requests to all other members of network and creates client
-func (c *Client) GetStatus(dst *network.ServerIdentity) (*Response, error) {
-	ServiceReq := &Request{}
-	//send request to all entities in the network
-	log.Lvl4("Sending Request to ", dst)
-	reply, err := c.Send(dst, ServiceReq)
-	if e := network.ErrMsg(reply, err); e != nil {
-		return nil, e
+// Request sends requests to all other members of network and creates client.
+func (c *Client) Request(dst *network.ServerIdentity) (*Response, sda.ClientError) {
+	resp := &Response{}
+	cerr := c.SendProtobuf(dst, &Request{}, resp)
+	if cerr != nil {
+		return nil, cerr
 	}
-	sr, ok := reply.Msg.(Response)
-	if !ok {
-		return nil, errors.New("Wrong return type")
-	}
-	return &sr, nil
-
+	return resp, nil
 }

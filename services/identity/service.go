@@ -12,7 +12,6 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -66,40 +65,35 @@ type Storage struct {
 	Data     *skipchain.SkipBlock
 }
 
-// NewProtocol is not used here.
-func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	return nil, nil
-}
-
 /*
  * API messages
  */
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, sda.ClientError) {
 	log.Lvlf3("%s Creating new identity with config %+v", s, ai.Config)
 	ids := &Storage{
 		Latest: ai.Config,
 	}
 	log.Lvl3("Creating Root-skipchain")
-	var err error
-	ids.Root, err = s.skipchain.CreateRoster(ai.Roster, 2, 10,
+	var cerr sda.ClientError
+	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
 		skipchain.VerifyNone, nil)
-	if err != nil {
-		return nil, err
+	if cerr != nil {
+		return nil, cerr
 	}
 	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
+	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
 		skipchain.VerifyNone, ai.Config)
-	if err != nil {
-		return nil, err
+	if cerr != nil {
+		return nil, cerr
 	}
 
 	roster := ids.Root.Roster
 	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, sda.NewClientErrorCode(ErrorSDA, err.Error())
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -114,10 +108,10 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
+func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Body, sda.ClientError) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find Identity")
+		return nil, sda.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -129,16 +123,16 @@ func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (ne
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+func (s *Service) ProposeSend(p *ProposeSend) (network.Body, sda.ClientError) {
 	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find Identity")
+		return nil, sda.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
 	roster := sid.Root.Roster
 	replies, err := s.propagateConfig(roster, p, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, sda.NewClientErrorCode(ErrorSDA, err.Error())
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -147,11 +141,11 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, sda.ClientError) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find Identity")
+		return nil, sda.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -163,51 +157,51 @@ func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) 
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+func (s *Service) ProposeVote(v *ProposeVote) (network.Body, sda.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find identity")
+		return nil, sda.NewClientErrorCode(ErrorBlockMissing, "Didn't find identity")
 	}
 
 	// Putting this in a function because of the lock which needs to be held
 	// over all calls that might return an error.
-	err := func() error {
+	cerr := func() sda.ClientError {
 		sid.Lock()
 		defer sid.Unlock()
 		log.Lvl3("Voting on", sid.Proposed.Device)
 		owner, ok := sid.Latest.Device[v.Signer]
 		if !ok {
-			return errors.New("Didn't find signer")
+			return sda.NewClientErrorCode(ErrorAccountMissing, "Didn't find signer")
 		}
 		if sid.Proposed == nil {
-			return errors.New("No proposed block")
+			return sda.NewClientErrorCode(ErrorConfigMissing, "No proposed block")
 		}
 		hash, err := sid.Proposed.Hash()
 		if err != nil {
-			return errors.New("Couldn't get hash")
+			return sda.NewClientErrorCode(ErrorSDA, "Couldn't get hash")
 		}
 		if _, exists := sid.Votes[v.Signer]; exists {
-			return errors.New("Already voted for that block")
+			return sda.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
 			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
 			if err != nil {
-				return errors.New("Wrong signature: " + err.Error())
+				return sda.NewClientErrorCode(ErrorVoteSignature, "Wrong signature: "+err.Error())
 			}
 		}
 		return nil
 	}()
-	if err != nil {
-		return nil, err
+	if cerr != nil {
+		return nil, cerr
 	}
 
 	// Propagate the vote
-	_, err = s.propagateConfig(sid.Root.Roster, v, propagateTimeout)
+	_, err := s.propagateConfig(sid.Root.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, sda.NewClientErrorCode(ErrorSDA, cerr.Error())
 	}
 	if len(sid.Votes) >= sid.Latest.Threshold ||
 		len(sid.Votes) == len(sid.Latest.Device) {
@@ -217,9 +211,9 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, err := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
-		if err != nil {
-			return nil, err
+		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		if cerr != nil {
+			return nil, cerr
 		}
 		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
 		log.Lvl3("SB signed is", msg.(*Config).Device)
@@ -229,7 +223,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		}
 		_, err = s.propagateSkipBlock(sid.Root.Roster, usb, propagateTimeout)
 		if err != nil {
-			return nil, err
+			return nil, sda.NewClientErrorCode(ErrorSDA, cerr.Error())
 		}
 		s.save()
 		return &ProposeVoteReply{sid.Data}, nil
@@ -409,7 +403,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate} {
-		if err := s.RegisterMessage(f); err != nil {
+		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
 	}

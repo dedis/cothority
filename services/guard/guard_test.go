@@ -18,7 +18,7 @@ func NewLocalTestClient(l *sda.LocalTest) *Client {
 }
 
 func TestServiceGuard(t *testing.T) {
-	local := sda.NewLocalTest()
+	local := sda.NewTCPTest()
 	_, el, _ := local.GenTree(5, true)
 	defer local.CloseAll()
 

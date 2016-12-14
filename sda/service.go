@@ -6,8 +6,6 @@ import (
 	"os"
 	"path"
 
-	"strings"
-
 	"sync"
 
 	"github.com/dedis/cothority/log"
@@ -15,21 +13,24 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+func init() {
+	network.RegisterPacketType(GenericConfig{})
+}
+
 // Service is a generic interface to define any type of services.
 // A Service has multiple roles:
-// * Processing sda-external client requests with ProcessClientRequests
-// * Handling sda-external information to ProtocolInstances created with
+// * Processing websocket client requests with ProcessClientRequests
+// * Handling sda information to ProtocolInstances created with
 //  	NewProtocol
 // * Handling any kind of messages between Services between different hosts with
 //   	the Processor interface
 type Service interface {
 	NewProtocol(*TreeNodeInstance, *GenericConfig) (ProtocolInstance, error)
-	// ProcessRequest is the function that will be called when a external client
-	// using the CLI will contact this service with a request packet.
-	// Each request has a field ServiceID, so each time the Host (dispatcher)
-	// receives a request, it looks whether it knows the Service it is for and
-	// then dispatch it through ProcessRequest.
-	ProcessClientRequest(*network.ServerIdentity, *ClientRequest)
+	// ProcessClientRequest is called when a message from an external client is received by
+	// the websocket for this service. It returns a message that will be
+	// sent back to the client. The returned ClientError is either nil
+	// or any errorCode between 4100 and 4999.
+	ProcessClientRequest(handler string, msg []byte) (reply []byte, err ClientError)
 	// Processor makes a Service being able to handle any kind of packets
 	// directly from the network. It is used for inter service communications,
 	// which are mostly single packets with no or little interactions needed. If
@@ -62,10 +63,6 @@ type GenericConfig struct {
 	Type uuid.UUID
 }
 
-// GenericConfigID is the ID used by the network library for sending / receiving
-// GenericCOnfig
-var GenericConfigID = network.RegisterPacketType(GenericConfig{})
-
 // A serviceFactory is used to register a NewServiceFunc
 type serviceFactory struct {
 	constructors []serviceEntry
@@ -84,7 +81,7 @@ var ServiceFactory = serviceFactory{
 	constructors: []serviceEntry{},
 }
 
-// RegisterByName takes a name, creates a ServiceID out of it and stores the
+// Register takes a name and a function, then creates a ServiceID out of it and stores the
 // mapping and the creation function.
 func (s *serviceFactory) Register(name string, fn NewServiceFunc) error {
 	if s.ServiceID(name) != NilServiceID {
@@ -129,7 +126,7 @@ func UnregisterService(name string) error {
 	return ServiceFactory.Unregister(name)
 }
 
-// RegisteredServices returns all the services registered
+// registeredServiceIDs returns all the services registered
 func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -140,7 +137,7 @@ func (s *serviceFactory) registeredServiceIDs() []ServiceID {
 	return ids
 }
 
-// RegisteredServicesByName returns all the names of the services registered
+// RegisteredServiceNames returns all the names of the services registered
 func (s *serviceFactory) RegisteredServiceNames() []string {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -197,7 +194,7 @@ type serviceManager struct {
 	paths map[ServiceID]string
 	// the sda host
 	conode *Conode
-	// the dispather can take registration of Processors
+	// the dispatcher can take registration of Processors
 	network.Dispatcher
 }
 
@@ -230,42 +227,25 @@ func newServiceManager(c *Conode, o *Overlay) *serviceManager {
 		if err := os.MkdirAll(configName, 0770); err != nil {
 			log.Error("Service", name, "Might not work properly: error setting up its config directory(", configName, "):", err)
 		}
-		c := newContext(c, o, id, s)
-		s, err := ServiceFactory.start(name, c, configName)
+		cont := newContext(c, o, id, s)
+		s, err := ServiceFactory.start(name, cont, configName)
 		if err != nil {
 			log.Error("Trying to instantiate service:", err)
 		}
 		log.Lvl3("Started Service", name, " (config in", configName, ")")
 		services[id] = s
 		configs[id] = configName
+		c.websocket.registerService(name, s)
 	}
 	log.Lvl3(c.Address(), "instantiated all services")
-
-	// registering messages that services are expecting
-	c.RegisterProcessor(s, ClientRequestID)
 	return s
 }
 
 // Process implements the Processor interface: service manager will relay
 // messages to the right Service.
 func (s *serviceManager) Process(data *network.Packet) {
-	id := data.ServerIdentity
-	switch data.MsgType {
-	case ClientRequestID:
-		r := data.Msg.(ClientRequest)
-		// check if the target service is indeed existing
-		s, ok := s.serviceByID(r.Service)
-		if !ok {
-			log.Error("Received a request for an unknown service", r.Service)
-			// XXX TODO should reply with some generic response =>
-			// 404 Service Unknown
-			return
-		}
-		go s.ProcessClientRequest(id, &r)
-	default:
-		// will launch a go routine for that message
-		s.Dispatch(data)
-	}
+	// will launch a go routine for that message
+	s.Dispatch(data)
 }
 
 // RegisterProcessor the processor to the service manager and tells the host to dispatch
@@ -316,93 +296,4 @@ func (s *serviceManager) serviceByID(id ServiceID) (Service, bool) {
 		return nil, false
 	}
 	return serv, true
-}
-
-// ClientRequest is a generic packet to represent any kind of request a Service is
-// ready to process. It is simply a JSON packet containing two fields:
-// * Service: a string representing the name of the service for whom the packet
-// is intended for.
-// * Data: contains all the information of the request
-type ClientRequest struct {
-	// Name of the service to direct this request to
-	Service ServiceID
-	// Data containing all the information in the request
-	Data []byte
-}
-
-// ClientRequestID is the type that registered by the network library
-var ClientRequestID = network.RegisterPacketType(ClientRequest{})
-
-// CreateClientRequest creates a Request message out of any message that is
-// destined to a Service. XXX For the moment it uses protobuf, as it is already
-// handling abstract.Scalar/Public stuff that json can't do. Later we may want
-// to think on how to change that.
-func CreateClientRequest(service string, r interface{}) (*ClientRequest, error) {
-	sid := ServiceFactory.ServiceID(service)
-	log.Lvl1("Name", service, " <-> ServiceID", sid.String())
-	buff, err := network.MarshalRegisteredType(r)
-	if err != nil {
-		return nil, err
-	}
-	return &ClientRequest{
-		Service: sid,
-		Data:    buff,
-	}, nil
-}
-
-// Client is a struct used to communicate with a remote Service running on a
-// sda.Conode
-type Client struct {
-	ServiceID ServiceID
-	net       *network.Client
-}
-
-// NewClient returns a client using the service s. It uses TCP communication by
-// default
-func NewClient(s string) *Client {
-	return &Client{
-		ServiceID: ServiceFactory.ServiceID(s),
-		net:       network.NewTCPClient(),
-	}
-}
-
-// Send will marshal the message into a ClientRequest message and send it.
-func (c *Client) Send(dst *network.ServerIdentity, msg network.Body) (*network.Packet, error) {
-
-	m, err := network.NewNetworkPacket(msg)
-	if err != nil {
-		return nil, err
-	}
-
-	b, err := m.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	serviceReq := &ClientRequest{
-		Service: c.ServiceID,
-		Data:    b,
-	}
-	// send the request
-	log.Lvlf4("Sending request %x", serviceReq.Service)
-	return c.net.Send(dst, serviceReq)
-}
-
-// SendToAll sends a message to all ServerIdentities of the Roster and returns
-// all errors encountered concatenated together as a string.
-func (c *Client) SendToAll(dst *Roster, msg network.Body) ([]*network.Packet, error) {
-	msgs := make([]*network.Packet, len(dst.List))
-	var errstrs []string
-	for i, e := range dst.List {
-		var err error
-		msgs[i], err = c.Send(e, msg)
-		if err != nil {
-			errstrs = append(errstrs, fmt.Sprint(e.String(), err.Error()))
-		}
-	}
-	var err error
-	if len(errstrs) > 0 {
-		err = errors.New(strings.Join(errstrs, "\n"))
-	}
-	return msgs, err
 }

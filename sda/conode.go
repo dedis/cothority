@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"runtime"
 	"sync"
 
 	"strings"
@@ -8,6 +9,12 @@ import (
 	"sort"
 
 	"errors"
+
+	"strconv"
+
+	"time"
+
+	"fmt"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -30,6 +37,10 @@ type Conode struct {
 	// protocols holds a map of all available protocols and how to create an
 	// instance of it
 	protocols *protocolStorage
+	// webservice
+	websocket *WebSocket
+	// when this node has been started
+	started time.Time
 }
 
 // NewConode returns a fresh Host with a given Router.
@@ -39,8 +50,10 @@ func NewConode(r *network.Router, pkey abstract.Scalar) *Conode {
 		statusReporterStruct: newStatusReporterStruct(),
 		Router:               r,
 		protocols:            newProtocolStorage(),
+		started:              time.Now(),
 	}
 	c.overlay = NewOverlay(c)
+	c.websocket = NewWebSocket(r.ServerIdentity)
 	c.serviceManager = newServiceManager(c, c.overlay)
 	c.statusReporterStruct.RegisterStatusReporter("Status", c)
 	for name, inst := range protocols.instantiators {
@@ -71,11 +84,22 @@ func (c *Conode) GetStatus() Status {
 	a := ServiceFactory.RegisteredServiceNames()
 	sort.Strings(a)
 	m["Available_Services"] = strings.Join(a, ",")
+	m["TX_bytes"] = strconv.FormatUint(c.Router.Tx(), 10)
+	m["RX_bytes"] = strconv.FormatUint(c.Router.Rx(), 10)
+	m["Uptime"] = time.Now().Sub(c.started).String()
+	m["System"] = fmt.Sprintf("%s/%s/%s", runtime.GOOS, runtime.GOARCH,
+		runtime.Version())
+	m["Version"] = Version
+	m["Host"] = c.ServerIdentity.Address.Host()
+	m["Port"] = c.ServerIdentity.Address.Port()
+	m["Description"] = c.ServerIdentity.Description
+	m["ConnType"] = string(c.ServerIdentity.Address.ConnType())
 	return m
 }
 
 // Close closes the overlay and the Router
 func (c *Conode) Close() error {
+	c.websocket.stop()
 	c.overlay.Close()
 	err := c.Router.Stop()
 	log.Lvl3("Host Close ", c.ServerIdentity.Address, "listening?", c.Router.Listening())
@@ -106,4 +130,11 @@ func (c *Conode) ProtocolInstantiate(protoID ProtocolID, tni *TreeNodeInstance) 
 		return nil, errors.New("No protocol constructor with this ID")
 	}
 	return fn(tni)
+}
+
+// Start makes the router and the websocket listen on their respective
+// ports.
+func (c *Conode) Start() {
+	go c.Router.Start()
+	c.websocket.start()
 }

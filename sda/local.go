@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"os"
+
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
 	"github.com/dedis/crypto/abstract"
@@ -43,6 +45,10 @@ const (
 // NewLocalTest creates a new Local handler that can be used to test protocols
 // locally
 func NewLocalTest() *LocalTest {
+	if s, err := os.Stat("config"); err == nil && s.IsDir() {
+		log.Lvl4("Removing config-dir")
+		os.RemoveAll("config")
+	}
 	return &LocalTest{
 		Conodes:  make(map[network.ServerIdentityID]*Conode),
 		Overlays: make(map[network.ServerIdentityID]*Overlay),
@@ -328,16 +334,8 @@ func (l *LocalTest) NewClient(serviceName string) *Client {
 	case TCP:
 		return NewClient(serviceName)
 	default:
-		return l.NewLocalClient(serviceName)
-	}
-}
-
-// NewLocalClient returns a new *Client using Local connections within the
-// context of this LocalTest.
-func (l *LocalTest) NewLocalClient(serviceName string) *Client {
-	return &Client{
-		ServiceID: ServiceFactory.ServiceID(serviceName),
-		net:       network.NewLocalClientWithManager(l.ctx),
+		log.Fatal("Can't make local client")
+		return nil
 	}
 }
 
