@@ -80,9 +80,9 @@ go get github.com/dedis/cothority/app/status
 # Apps
 
 * [cothorityd](app/cothorityd) - the basic 
-* [cosi](app/cosi) - collective signatures
-* [status](app/status) - returns the status of the given group
-* [cisc](app/cisc) - handle your ssh-keys on a blockchain
+* [cosi](cosi) - collective signatures
+* [status](status) - returns the status of the given group
+* [cisc](cisc) - handle your ssh-keys on a blockchain
 * [hotpets](https://github.com/dedis/cothority/tree/hpets16/app/cisc) - hotpets16-branch
 
 # Protocols
