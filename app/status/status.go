@@ -53,7 +53,7 @@ func network(c *cli.Context) error {
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
 		log.Lvl3(el.List[i])
-		sr, _ := cl.GetStatus(el.List[i])
+		sr, _ := cl.Request(el.List[i])
 		printConn(sr)
 		log.Lvl3(cl)
 	}
@@ -82,7 +82,7 @@ func readGroup(tomlFileName string) (*sda.Roster, error) {
 // printConn prints the status response that is returned from the server
 func printConn(e *status.Response) {
 	var a []string
-	for key, value := range e.Msg["Status"] {
+	for key, value := range e.Msg["Status"].Field {
 		a = append(a, (key + ": " + value + "\n"))
 	}
 	sort.Strings(a)

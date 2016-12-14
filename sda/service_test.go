@@ -471,7 +471,7 @@ func (dm *DummyProtocol) ProcessProtocolMsg(msg *ProtocolMsg) {
 	dm.link <- true
 }
 
-// legcy reasons
+// legacy reasons
 func (dm *DummyProtocol) Dispatch() error {
 	return nil
 }
@@ -533,10 +533,6 @@ type ServiceMessages struct {
 
 func (i *ServiceMessages) SimpleResponse(msg *network.Packet) {
 	i.GotResponse <- true
-}
-
-func (i *ServiceMessages) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (ProtocolInstance, error) {
-	return nil, nil
 }
 
 func newServiceMessages(c *Context, path string) Service {

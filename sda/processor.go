@@ -116,7 +116,7 @@ func (p *ServiceProcessor) ProcessClientRequest(path string, buf []byte) ([]byte
 		err := protobuf.DecodeWithConstructors(buf, msg,
 			network.DefaultConstructors(network.Suite))
 		if err != nil {
-			return nil, NewClientErrorCode(WebSocketErrorProtobufDecode, "")
+			return nil, NewClientErrorCode(WebSocketErrorProtobufDecode, err.Error())
 		}
 
 		to := reflect.TypeOf(mh.handler).In(0)

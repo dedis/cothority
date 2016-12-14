@@ -24,7 +24,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Long run not good for Travis")
 	}
-	l := sda.NewLocalTest()
+	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -32,15 +32,15 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := range [8]byte{} {
 		clients[i] = NewTestClient(l)
 	}
-	_, inter, err := clients[0].CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	log.ErrFatal(err)
+	_, inter, cerr := clients[0].CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(cerr)
 
 	wg := sync.WaitGroup{}
-	for i := range [1024]byte{} {
+	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, err := clients[i%8].GetUpdateChain(inter, inter.Hash)
-			log.ErrFatal(err)
+			_, cerr := clients[i%8].GetUpdateChain(inter, inter.Hash)
+			log.ErrFatal(cerr)
 			wg.Done()
 		}(i)
 	}
@@ -54,20 +54,20 @@ func NewTestClient(l *sda.LocalTest) *Client {
 }
 
 func TestClient_CreateRootInter(t *testing.T) {
-	l := sda.NewLocalTest()
+	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
 	c := NewTestClient(l)
-	root, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	log.ErrFatal(err)
+	root, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(cerr)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
-	if err = root.VerifySignatures(); err != nil {
+	if err := root.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
-	if err = inter.VerifySignatures(); err != nil {
+	if err := inter.VerifySignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
 	if !bytes.Equal(root.ChildSL.Hash, inter.Hash) {
@@ -79,17 +79,17 @@ func TestClient_CreateRootInter(t *testing.T) {
 }
 
 func TestClient_CreateData(t *testing.T) {
-	l := sda.NewLocalTest()
+	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(2, true)
 	defer l.CloseAll()
 
 	c := NewTestClient(l)
-	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	log.ErrFatal(err)
+	_, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(cerr)
 	td := &testData{1, "data-sc"}
-	inter, data, err := c.CreateData(inter, 1, 1, VerifyNone, td)
-	log.ErrFatal(err)
-	if err = data.VerifySignatures(); err != nil {
+	inter, data, cerr := c.CreateData(inter, 1, 1, VerifyNone, td)
+	log.ErrFatal(cerr)
+	if err := data.VerifySignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
 	if !bytes.Equal(data.ParentBlockID, inter.Hash) {
@@ -106,54 +106,58 @@ func TestClient_CreateData(t *testing.T) {
 }
 
 func TestClient_ProposeData(t *testing.T) {
-	l := sda.NewLocalTest()
+	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
 	c := NewTestClient(l)
 	log.Lvl1("Creating root and control chain")
-	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	log.ErrFatal(err)
+	_, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(cerr)
 	td := &testData{1, "data-sc"}
 	log.Lvl1("Creating data chain")
-	inter, data1, err := c.CreateData(inter, 1, 1, VerifyNone, td)
-	log.ErrFatal(err)
+	var data1 *SkipBlock
+	inter, data1, cerr = c.CreateData(inter, 1, 1, VerifyNone, td)
+	log.ErrFatal(cerr)
 	td.A++
 	log.Lvl1("Proposing data on intermediate chain")
-	data2, err := c.ProposeData(inter, data1, td)
-	log.ErrFatal(err)
-	dataLast, err := c.GetUpdateChain(inter, data1.Hash)
-	log.ErrFatal(err)
+	data2, cerr := c.ProposeData(inter, data1, td)
+	log.ErrFatal(cerr)
+	dataLast, cerr := c.GetUpdateChain(inter, data1.Hash)
+	log.ErrFatal(cerr)
 	if len(dataLast.Update) != 2 {
 		t.Fatal("Should have two SkipBlocks for update-chain", len(dataLast.Update))
 	}
 	if !dataLast.Update[1].Equal(data2.Latest) {
 		t.Fatal("Newest SkipBlock should be stored")
 	}
+	c.Close()
 }
 
 func TestClient_ProposeRoster(t *testing.T) {
+	t.Skip("See https://github.com/dedis/cothority/issues/733")
 	nbrHosts := 5
-	l := sda.NewLocalTest()
+	l := sda.NewTCPTest()
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
 	c := NewTestClient(l)
 	log.Lvl1("Creating root and control chain")
-	_, inter, err := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
-	log.ErrFatal(err)
+	_, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1, VerifyNone)
+	log.ErrFatal(cerr)
 	el2 := sda.NewRoster(el.List[:nbrHosts-1])
-	log.Lvl1("Proposing roster")
-	sb1, err := c.ProposeRoster(inter, el2)
-	log.ErrFatal(err)
+	log.Lvl1("Proposing roster", el2)
+	var sb1 *ProposedSkipBlockReply
+	sb1, cerr = c.ProposeRoster(inter, el2)
+	log.ErrFatal(cerr)
 	log.Lvl1("Proposing same roster again")
-	_, err = c.ProposeRoster(inter, el2)
-	if err == nil {
+	_, cerr = c.ProposeRoster(inter, el2)
+	if cerr == nil {
 		t.Fatal("Appending two Blocks to the same last block should fail")
 	}
 	log.Lvl1("Proposing following roster")
-	sb2, err := c.ProposeRoster(sb1.Latest, el2)
-	log.ErrFatal(err)
+	sb2, cerr := c.ProposeRoster(sb1.Latest, el2)
+	log.ErrFatal(cerr)
 	if !sb2.Previous.Equal(sb1.Latest) {
 		t.Fatal("New previous should be previous latest")
 	}
@@ -162,13 +166,14 @@ func TestClient_ProposeRoster(t *testing.T) {
 		t.Fatal("second should point to third SkipBlock")
 	}
 
-	updates, err := c.GetUpdateChain(inter, inter.Hash)
+	updates, cerr := c.GetUpdateChain(inter, inter.Hash)
 	if len(updates.Update) != 3 {
-		t.Fatal("Should now have three Blocks to go from Genesis to current")
+		t.Fatal("Should now have three Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
 	}
 	if !updates.Update[2].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
+	c.Close()
 }
 
 type testData struct {

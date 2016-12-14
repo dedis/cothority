@@ -72,7 +72,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	genesis.ParentBlockID = sbRoot.Hash
 	genesis.Roster = sbRoot.Roster
 	blockCount := 0
-	psbrMsg, err := service.ProposeSkipBlock(nil, &ProposeSkipBlock{nil, genesis})
+	psbrMsg, err := service.ProposeSkipBlock(&ProposeSkipBlock{nil, genesis})
 	assert.Nil(t, err)
 	psbr := psbrMsg.(*ProposedSkipBlockReply)
 	latest := psbr.Latest
@@ -90,7 +90,7 @@ func TestService_ProposeSkipBlock(t *testing.T) {
 	next.ParentBlockID = sbRoot.Hash
 	next.Roster = sbRoot.Roster
 	id := psbr.Latest.Hash
-	psbrMsg, err = service.ProposeSkipBlock(nil, &ProposeSkipBlock{id, next})
+	psbrMsg, err = service.ProposeSkipBlock(&ProposeSkipBlock{id, next})
 	assert.Nil(t, err)
 	psbr2 := psbrMsg.(*ProposedSkipBlockReply)
 	log.Lvl2(psbr2)
@@ -128,15 +128,14 @@ func TestService_GetUpdateChain(t *testing.T) {
 		log.Lvl2("Doing skipblock", i)
 		newSB := NewSkipBlock()
 		newSB.Roster = el
-		psbrMsg, err := s.ProposeSkipBlock(nil,
-			&ProposeSkipBlock{sbs[i-1].Hash, newSB})
+		psbrMsg, err := s.ProposeSkipBlock(&ProposeSkipBlock{sbs[i-1].Hash, newSB})
 		assert.Nil(t, err)
 		reply := psbrMsg.(*ProposedSkipBlockReply)
 		sbs[i] = reply.Latest
 	}
 
 	for i := 0; i < sbLength; i++ {
-		m, err := s.GetUpdateChain(nil, &GetUpdateChain{sbs[i].Hash})
+		m, err := s.GetUpdateChain(&GetUpdateChain{sbs[i].Hash})
 		sbc := m.(*GetUpdateChainReply)
 		log.ErrFatal(err)
 		if !sbc.Update[0].Equal(sbs[i]) {
@@ -185,13 +184,13 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	sbInter, err := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerifyNone, 1, 1)
 	log.ErrFatal(err)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
-	service.SetChildrenSkipBlock(nil, scsb)
+	service.SetChildrenSkipBlock(scsb)
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
 		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		m, err := s.GetUpdateChain(h.ServerIdentity, &GetUpdateChain{sbRoot.Hash})
+		m, err := s.GetUpdateChain(&GetUpdateChain{sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		log.Lvl2(s.Context)
@@ -205,7 +204,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err = sbRoot.VerifySignatures(); err != nil {
+		if cerr := sbRoot.VerifySignatures(); cerr != nil {
 			t.Fatal("Signature on child-link is not valid")
 		}
 	}
@@ -214,17 +213,17 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 
-		m, err := s.GetUpdateChain(h.ServerIdentity, &GetUpdateChain{sbInter.Hash})
+		m, cerr := s.GetUpdateChain(&GetUpdateChain{sbInter.Hash})
 		sb := m.(*GetUpdateChainReply)
 
-		log.ErrFatal(err)
+		log.ErrFatal(cerr)
 		if len(sb.Update) != 1 {
 			t.Fatal("There should be only 1 SkipBlock in the update")
 		}
 		if !bytes.Equal(sb.Update[0].ParentBlockID, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
-		if err = sb.Update[0].VerifySignatures(); err != nil {
+		if err := sb.Update[0].VerifySignatures(); err != nil {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
@@ -249,8 +248,7 @@ func TestService_MultiLevel(t *testing.T) {
 			for sbi := 1; sbi < 10; sbi++ {
 				sb := NewSkipBlock()
 				sb.Roster = el
-				psbr, err := service.ProposeSkipBlock(nil,
-					&ProposeSkipBlock{latest.Hash, sb})
+				psbr, err := service.ProposeSkipBlock(&ProposeSkipBlock{latest.Hash, sb})
 				log.ErrFatal(err)
 				latest = psbr.(*ProposedSkipBlockReply).Latest
 			}
@@ -275,7 +273,7 @@ func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int)
 }
 
 func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) error {
-	chain, err := service.GetUpdateChain(nil, &GetUpdateChain{root.Hash})
+	chain, err := service.GetUpdateChain(&GetUpdateChain{root.Hash})
 	if err != nil {
 		return err
 	}
@@ -320,8 +318,7 @@ func TestService_Verification(t *testing.T) {
 	sb.BaseHeight = 1
 	sb.ParentBlockID = sbRoot.Hash
 	sb.VerifierID = VerifyShard
-	_, err = service.ProposeSkipBlock(nil,
-		&ProposeSkipBlock{nil, sb})
+	_, err = service.ProposeSkipBlock(&ProposeSkipBlock{nil, sb})
 	require.NotNil(t, err, "Shouldn't accept a non-confoirming skipblock")
 
 	log.Lvl1("Creating skipblock with same Roster as root")
@@ -332,7 +329,7 @@ func TestService_Verification(t *testing.T) {
 	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, VerifyShard, 1, 1)
 	log.ErrFatal(err)
 	scsb := &SetChildrenSkipBlock{sbRoot.Hash, sbInter.Hash}
-	service.SetChildrenSkipBlock(nil, scsb)
+	service.SetChildrenSkipBlock(scsb)
 }
 
 func TestCopy(t *testing.T) {
@@ -372,8 +369,7 @@ func TestService_SignBlock(t *testing.T) {
 	el2 := sda.NewRoster(el.List[0:2])
 	sb := NewSkipBlock()
 	sb.Roster = el2
-	psbr, err := service.ProposeSkipBlock(nil,
-		&ProposeSkipBlock{sbRoot.Hash, sb})
+	psbr, err := service.ProposeSkipBlock(&ProposeSkipBlock{sbRoot.Hash, sb})
 	log.ErrFatal(err)
 	reply := psbr.(*ProposedSkipBlockReply)
 	sbRoot = reply.Previous
@@ -406,8 +402,7 @@ func launchVerification(t *testing.T, services []*Service, n int, prev *SkipBloc
 	for _, s := range services {
 		s.testVerify = false
 	}
-	sb, err := services[n].ProposeSkipBlock(nil,
-		&ProposeSkipBlock{prev.Hash, next})
+	sb, err := services[n].ProposeSkipBlock(&ProposeSkipBlock{prev.Hash, next})
 	log.ErrFatal(err)
 	for _, s := range services {
 		if !s.testVerify {
@@ -478,8 +473,7 @@ func makeGenesisRosterArgs(s *Service, el *sda.Roster, parent SkipBlockID,
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierID = vid
-	psbrMsg, err := s.ProposeSkipBlock(nil,
-		&ProposeSkipBlock{nil, sb})
+	psbrMsg, err := s.ProposeSkipBlock(&ProposeSkipBlock{nil, sb})
 	if err != nil {
 		return nil, err
 	}

@@ -29,14 +29,31 @@ type Stat struct {
 // Request is what the Status service is expected to receive from clients.
 type Request struct{}
 
+// Status holds all fields for one status.
+type Status struct {
+	Field map[string]string
+}
+
 // Response is what the Status service will reply to clients.
 type Response struct {
-	Msg map[string]sda.Status
+	Msg            map[string]*Status
+	ServerIdentity *network.ServerIdentity
 }
 
 // Request treats external request to this service.
-func (st *Stat) Request(si *network.ServerIdentity, req *Request) (network.Body, error) {
-	return &Response{st.Context.ReportStatus()}, nil
+func (st *Stat) Request(req *Request) (network.Body, sda.ClientError) {
+	log.Lvl3("Returning", st.Context.ReportStatus())
+	ret := &Response{
+		Msg:            make(map[string]*Status),
+		ServerIdentity: st.ServerIdentity(),
+	}
+	for k, v := range st.Context.ReportStatus() {
+		ret.Msg[k] = &Status{Field: make(map[string]string)}
+		for fk, fv := range v {
+			ret.Msg[k].Field[fk] = fv
+		}
+	}
+	return ret, nil
 }
 
 // newStatService creates a new service that is built for Status
@@ -51,9 +68,4 @@ func newStatService(c *sda.Context, path string) sda.Service {
 	}
 
 	return s
-}
-
-// NewProtocol creates a protocol for stat, as you can see it is simultanously absolutely useless and regrettably necessary.
-func (st *Stat) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	return nil, nil
 }

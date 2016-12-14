@@ -64,7 +64,7 @@ type SkipBlockMap struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkipBlock) (network.Body, error) {
+func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, sda.ClientError) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -73,7 +73,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 		var ok bool
 		prev, ok = s.getSkipBlockByID(psbd.LatestID)
 		if !ok {
-			return nil, errors.New("Didn't find latest block")
+			return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Didn't find latest block")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
@@ -96,7 +96,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 				var ok bool
 				pointer, ok = s.getSkipBlockByID(pointer.BackLinkIds[0])
 				if !ok {
-					return nil, errors.New("Didn't find convenient SkipBlock for height " +
+					return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Didn't find convenient SkipBlock for height "+
 						strconv.Itoa(h))
 				}
 			}
@@ -107,10 +107,10 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 		// are correctly set up
 		prop.Index = 0
 		if prop.MaximumHeight == 0 {
-			return nil, errors.New("Set a maximumHeight > 0")
+			return nil, sda.NewClientErrorCode(ErrorParameterWrong, "Set a maximumHeight > 0")
 		}
 		if prop.BaseHeight == 0 {
-			return nil, errors.New("Set a baseHeight > 0")
+			return nil, sda.NewClientErrorCode(ErrorParameterWrong, "Set a baseHeight > 0")
 		}
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
@@ -122,17 +122,18 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 	if prop.Roster != nil {
 		prop.Aggregate = prop.Roster.Aggregate
 	}
-	el, err := prop.GetResponsible(s)
-	if err != nil {
-		return nil, err
+	el, cerr := prop.GetResponsible(s)
+	if cerr != nil {
+		return nil, cerr
 	}
 	prop.AggregateResp = el.Aggregate
 
 	prop.updateHash()
 
+	var err error
 	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
-		return nil, errors.New("Verification error: " + err.Error())
+		return nil, sda.NewClientErrorCode(ErrorVerification, "Verification error: "+err.Error())
 	}
 	s.save()
 
@@ -147,10 +148,10 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
+func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, sda.ClientError) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
-		return nil, errors.New("Couldn't find latest skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
@@ -159,7 +160,7 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 		link := block.ForwardLink[len(block.ForwardLink)-1]
 		block, ok = s.getSkipBlockByID(link.Hash)
 		if !ok {
-			return nil, errors.New("Missing block in forward-chain")
+			return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "Missing block in forward-chain")
 		}
 		blocks = append(blocks, block)
 	}
@@ -171,24 +172,24 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChildrenSkipBlock) (network.Body, error) {
+func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body, sda.ClientError) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
-		return nil, errors.New("couldn't find skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
 	}
 	child, ok := s.getSkipBlockByID(childID)
 	if !ok {
-		return nil, errors.New("couldn't find skipblock")
+		return nil, sda.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
 	}
 	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()
 	parent.ChildSL.Hash = childID
 
-	err := s.startPropagation([]*SkipBlock{child, parent})
-	if err != nil {
-		return nil, err
+	cerr := s.startPropagation([]*SkipBlock{child, parent})
+	if cerr != nil {
+		return nil, cerr
 	}
 	// Parent-block is always of type roster, but child-block can be
 	// data or roster.
@@ -196,13 +197,6 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 	s.save()
 
 	return reply, nil
-}
-
-// NewProtocol is called on all nodes of a Tree (except the root, since it is
-// the one starting the protocol) so it's the Service that will be called to
-// generate the PI on all others node.
-func (s *Service) NewProtocol(tn *sda.TreeNodeInstance, conf *sda.GenericConfig) (sda.ProtocolInstance, error) {
-	return nil, nil
 }
 
 // PropagateSkipBlock will save a new SkipBlock
@@ -263,17 +257,17 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	if newest != nil && newest.Roster == nil {
 		log.Lvl3("Got a data-block")
 		if newest.ParentBlockID.IsNull() {
-			return nil, nil, errors.New("Data skipblock without parent")
+			return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Data skipblock without parent")
 		}
 		parent, ok := s.getSkipBlockByID(newest.ParentBlockID)
 		if !ok {
-			return nil, nil, errors.New("Didn't find parent block")
+			return nil, nil, sda.NewClientErrorCode(ErrorBlockNoParent, "Didn't find parent block")
 		}
 		newest.Roster = parent.Roster
 	}
 	// Now verify if it's a valid block
 	if err := s.verifyNewSkipBlock(latest, newest); err != nil {
-		return nil, nil, errors.New("Verification of newest SkipBlock failed: " + err.Error())
+		return nil, nil, sda.NewClientErrorCode(ErrorVerification, "Verification of newest SkipBlock failed: "+err.Error())
 	}
 
 	// Sign it
@@ -312,9 +306,9 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	done := make(chan bool)
 	// create the message we want to sign for this round
 	msg := []byte(block.Hash)
-	el, err := block.GetResponsible(s)
-	if err != nil {
-		return err
+	el, cerr := block.GetResponsible(s)
+	if cerr != nil {
+		return cerr
 	}
 	switch len(el.List) {
 	case 0:
@@ -326,17 +320,17 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 
-	node, err := s.CreateProtocolSDA(skipchainBFT, tree)
-	if err != nil {
-		return errors.New("Couldn't create new node: " + err.Error())
+	node, e := s.CreateProtocolSDA(skipchainBFT, tree)
+	if e != nil {
+		return sda.NewClientErrorCode(ErrorSDA, "Couldn't create new node: "+e.Error())
 	}
 
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
-	data, err := network.MarshalRegisteredType(block)
-	if err != nil {
-		return errors.New("Couldn't marshal block: " + err.Error())
+	data, e := network.MarshalRegisteredType(block)
+	if e != nil {
+		return errors.New("Couldn't marshal block: " + cerr.Error())
 	}
 	root.Data = data
 
@@ -354,7 +348,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 		if len(block.BlockSig.Exceptions) != 0 {
 			return errors.New("Not everybody signed off the new block")
 		}
-		if err := block.BlockSig.Verify(network.Suite, el.Publics()); err != nil {
+		if e := block.BlockSig.Verify(network.Suite, el.Publics()); e != nil {
 			return errors.New("Couldn't verify signature")
 		}
 	case <-time.After(time.Second * 60):
@@ -407,7 +401,7 @@ func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
 }
 
 // notify other services about new/updated skipblock
-func (s *Service) startPropagation(blocks []*SkipBlock) error {
+func (s *Service) startPropagation(blocks []*SkipBlock) sda.ClientError {
 	log.Lvlf3("Starting to propagate for service %x", s.Context.ServerIdentity().ID[0:8])
 	for _, block := range blocks {
 		roster := block.Roster
@@ -415,13 +409,13 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 			// Suppose it's a dataSkipBlock
 			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
 			if !ok {
-				return errors.New("Didn't find Roster nor parent")
+				return sda.NewClientErrorCode(ErrorBlockNoParent, "Didn't find Roster nor parent")
 			}
 			roster = sb.Roster
 		}
-		replies, err := s.Propagate(roster, block, propagateTimeout)
-		if err != nil {
-			return err
+		replies, e := s.Propagate(roster, block, propagateTimeout)
+		if e != nil {
+			return sda.NewClientErrorCode(ErrorSDA, e.Error())
 		}
 		if replies != len(roster.List) {
 			log.Warn("Did only get", replies, "out of", len(roster.List))

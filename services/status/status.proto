@@ -1,0 +1,12 @@
+message Request{
+
+}
+
+message Response {
+    map<string, Status> system = 1;
+    optional ServerIdentity server = 2;
+
+    message Status {
+        map<string, string> field = 1;
+    }
+}

@@ -401,7 +401,7 @@ func (n *TreeNodeInstance) dispatchMsgToProtocol(sdaMsg *ProtocolMsg) error {
 		log.Lvl3(n.Name(), "Not done aggregating children msgs")
 		return nil
 	}
-	log.Lvlf5("%s->%s: Message is: %+v", n.Name(), sdaMsg.Msg)
+	log.Lvlf5("%s->%s: Message is: %+v", sdaMsg.From, n.Name(), sdaMsg.Msg)
 
 	var err error
 	switch {

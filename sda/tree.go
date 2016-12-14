@@ -474,6 +474,10 @@ func (el *Roster) GenerateBigNaryTree(N, nodes int) *Tree {
 // The root is given as an ServerIdentity.
 func (el *Roster) GenerateNaryTreeWithRoot(N int, rootServerIdentity *network.ServerIdentity) *Tree {
 	rootIndex, _ := el.Search(rootServerIdentity.ID)
+	if rootIndex < 0 {
+		log.Fatal(rootServerIdentity, el.List, log.Stack())
+		return nil
+	}
 	cList := el.List
 	onlyRoot := []*network.ServerIdentity{cList[rootIndex]}
 	uptoRoot := cList[:rootIndex]

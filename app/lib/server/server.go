@@ -261,15 +261,15 @@ func checkList(list *sda.Roster, descs []string) error {
 	fmt.Printf("Checking server(s) %s: ", serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
-		log.Error(err)
+		fmt.Println(err)
 		return err
 	}
 	err = verifySignatureHash([]byte(msg), sig, list)
 	if err != nil {
-		log.Errorf("Invalid signature: %v", err)
+		fmt.Printf("Invalid signature: %s\n", err.Error())
 		return err
 	}
-	fmt.Print("Success\n")
+	fmt.Println("Success")
 	return nil
 }
 
@@ -287,7 +287,7 @@ func signStatement(read io.Reader, el *sda.Roster) (*s.SignatureResponse,
 	var err error
 	go func() {
 		log.Lvl3("Waiting for the response on SignRequest")
-		response, e := client.SignMsg(el, msg)
+		response, e := client.SignatureRequest(el, msg)
 		if e != nil {
 			err = e
 			close(pchan)
@@ -321,7 +321,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *sda.Roster) err
 	//publics := entityListToPublics(el)
 	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
 	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
-	if !bytes.Equal(hashHash, sig.Sum) {
+	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
