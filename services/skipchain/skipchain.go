@@ -519,7 +519,7 @@ func newSkipchainService(c *sda.Context, path string) sda.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	log.ErrFatal(s.RegisterMessages(s.ProposeSkipBlock, s.SetChildrenSkipBlock,
+	log.ErrFatal(s.RegisterHandlers(s.ProposeSkipBlock, s.SetChildrenSkipBlock,
 		s.GetUpdateChain))
 	if err := s.RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
 		log.Panic(err)

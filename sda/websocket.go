@@ -247,8 +247,6 @@ type wsHandler struct {
 // and handled correctly.
 func (t wsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	u := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
