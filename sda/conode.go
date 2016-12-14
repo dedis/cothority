@@ -1,6 +1,7 @@
 package sda
 
 import (
+	"runtime"
 	"sync"
 
 	"strings"
@@ -13,7 +14,7 @@ import (
 
 	"time"
 
-	"os/exec"
+	"fmt"
 
 	"github.com/dedis/cothority/log"
 	"github.com/dedis/cothority/network"
@@ -86,8 +87,8 @@ func (c *Conode) GetStatus() Status {
 	m["TX_bytes"] = strconv.FormatUint(c.Router.Tx(), 10)
 	m["RX_bytes"] = strconv.FormatUint(c.Router.Rx(), 10)
 	m["Uptime"] = time.Now().Sub(c.started).String()
-	uname, _ := exec.Command("uname", "-a").Output()
-	m["System"] = strings.TrimRight(string(uname), "\n\r")
+	m["System"] = fmt.Sprintf("%s/%s/%s", runtime.GOOS, runtime.GOARCH,
+		runtime.Version())
 	m["Version"] = "0.9.1"
 	m["Host"] = c.ServerIdentity.Address.Host()
 	m["Port"] = c.ServerIdentity.Address.Port()
