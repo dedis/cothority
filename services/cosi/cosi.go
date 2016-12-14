@@ -92,7 +92,7 @@ func newCoSiService(c *sda.Context, path string) sda.Service {
 		ServiceProcessor: sda.NewServiceProcessor(c),
 		path:             path,
 	}
-	err := s.RegisterMessage(s.SignatureRequest)
+	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {
 		log.ErrFatal(err, "Couldn't register message:")
 	}

@@ -409,7 +409,7 @@ func newIdentityService(c *sda.Context, path string) sda.Service {
 	}
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate} {
-		if err := s.RegisterMessage(f); err != nil {
+		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
 	}
