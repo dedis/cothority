@@ -14,7 +14,7 @@
   Description = "Nikkolasg's server serving the cothority"
 
 [[servers]]
-  Address = "tcp://185.26.156.40:61117"
+  Address = "tcp://185.26.156.40:61116"
   Public = "m1T9+7OROPCkWgjhchq06yV+DyRsk6JyFU1lFFR1YpA="
   Description = "Ismail's server"
 
