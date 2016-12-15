@@ -16,6 +16,10 @@ import (
 	"github.com/dedis/onet/network"
 
 	// CoSi-protocol is not part of the cothority.
+	"math/rand"
+
+	"math"
+
 	"github.com/dedis/cothority/cosi/service"
 	"github.com/dedis/crypto/cosi"
 )
@@ -63,13 +67,18 @@ func Servers(g *config.Group, detail bool) error {
 			totalSuccess = false
 		}
 	}
-	if len(working) > 1 {
-		// Check one big roster
-		descriptions := make([]string, len(working))
-		for i, si := range working {
-			descriptions[i] = g.GetDescription(si)
+	wn := len(working)
+	if wn > 1 {
+		// Check one big roster sqrt(len(working)) times.
+		descriptions := make([]string, wn)
+		rand.Seed(int64(time.Now().Nanosecond()))
+		for j := 0; j <= int(math.Sqrt(float64(wn))); j++ {
+			permutation := rand.Perm(wn)
+			for i, si := range working {
+				descriptions[permutation[i]] = g.GetDescription(si)
+			}
+			totalSuccess = checkList(onet.NewRoster(working), descriptions, detail) == nil && totalSuccess
 		}
-		totalSuccess = checkList(onet.NewRoster(working), descriptions, detail) == nil && totalSuccess
 
 		// Then check pairs of servers if we want to have detail
 		if detail {
