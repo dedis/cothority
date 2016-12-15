@@ -98,6 +98,10 @@ func main() {
 		},
 	}
 	cliApp.Flags = serverFlags
+	cliApp.Before = func(c *cli.Context) error {
+		log.SetDebugVisible(c.Int("debug"))
+		return nil
+	}
 	// default action
 	cliApp.Action = func(c *cli.Context) error {
 		runServer(c)
@@ -110,7 +114,6 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// first check the options
-	log.SetDebugVisible(ctx.Int("debug"))
 	config := ctx.String("config")
 
 	server.RunServer(config)
