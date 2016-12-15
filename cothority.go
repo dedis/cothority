@@ -80,14 +80,19 @@ func main() {
 			Flags: serverFlags,
 		},
 		{
-			Name:    "check",
-			Aliases: []string{"c"},
-			Usage:   "Check if the servers in the group definition are up and running",
-			Action:  checkConfig,
+			Name:      "check",
+			Aliases:   []string{"c"},
+			Usage:     "Check if the servers in the group definition are up and running",
+			ArgsUsage: "Cothority group definition file",
+			Action:    checkConfig,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "g",
 					Usage: "Cothority group definition file",
+				},
+				cli.BoolFlag{
+					Name:  "detail,l",
+					Usage: "Show detail in signing",
 				},
 			},
 		},
@@ -115,5 +120,8 @@ func runServer(ctx *cli.Context) {
 // signature from each.
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.String("g")
-	return check.Config(tomlFileName)
+	if c.NArg() > 0 {
+		tomlFileName = c.Args().First()
+	}
+	return check.Config(tomlFileName, c.Bool("detail"))
 }
