@@ -49,7 +49,7 @@ type ProtocolBFTCoSi struct {
 	// our index in the Roster list
 	index int
 
-	// SDA-channels used to communicate the protocol
+	// onet-channels used to communicate the protocol
 	// channel for announcement
 	announceChan chan announceChan
 	// channel for commitment

@@ -44,7 +44,7 @@ const randomLength = 32
 // JVSS is the main protocol struct and implements the onet.ProtocolInstance
 // interface.
 type JVSS struct {
-	*onet.TreeNodeInstance                  // The SDA TreeNode
+	*onet.TreeNodeInstance                  // The onet TreeNode
 	keyPair                *config.KeyPair  // KeyPair of the host
 	nodeList               []*onet.TreeNode // List of TreeNodes in the JVSS group
 	pubKeys                []abstract.Point // List of public keys of the above TreeNodes

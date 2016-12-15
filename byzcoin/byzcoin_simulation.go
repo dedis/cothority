@@ -23,7 +23,7 @@ func init() {
 
 // Simulation implements da.Simulation interface
 type Simulation struct {
-	// sda fields:
+	// onet fields:
 	onet.SimulationBFTree
 	// your simulation specific fields:
 	SimulationConfig
@@ -87,11 +87,11 @@ func (m *monitorMut) Record() {
 }
 
 // Run implements onet.Simulation interface
-func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
+func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
+	pi, err := onetConf.Overlay.CreateProtocolOnet("Broadcast", onetConf.Tree)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
 
 		log.Lvl1("Starting round", round)
 		// create an empty node
-		tni := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "ByzCoin")
+		tni := onetConf.Overlay.NewTreeNodeInstanceFromProtoName(onetConf.Tree, "ByzCoin")
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
-		sdaConf.Overlay.RegisterProtocolInstance(pi)
+		onetConf.Overlay.RegisterProtocolInstance(pi)
 
 		bz := pi.(*ByzCoin)
 		// Register callback for the generation of the signature !

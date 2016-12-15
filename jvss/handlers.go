@@ -49,25 +49,25 @@ type SigRespMsg struct {
 	Sig *poly.SchnorrPartialSig
 }
 
-// WSecInitMsg is a SDA-wrapper around SecInitMsg.
+// WSecInitMsg is a onet-wrapper around SecInitMsg.
 type WSecInitMsg struct {
 	*onet.TreeNode
 	SecInitMsg
 }
 
-// WSecConfMsg is a SDA-wrapper around SecConfMsg.
+// WSecConfMsg is a onet-wrapper around SecConfMsg.
 type WSecConfMsg struct {
 	*onet.TreeNode
 	SecConfMsg
 }
 
-// WSigReqMsg is a SDA-wrapper around SigReqMsg.
+// WSigReqMsg is a onet-wrapper around SigReqMsg.
 type WSigReqMsg struct {
 	*onet.TreeNode
 	SigReqMsg
 }
 
-// WSigRespMsg is a SDA-wrapper around SigRespMsg.
+// WSigRespMsg is a onet-wrapper around SigRespMsg.
 type WSigRespMsg struct {
 	*onet.TreeNode
 	SigRespMsg

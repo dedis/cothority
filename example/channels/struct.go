@@ -8,7 +8,7 @@ type Announce struct {
 }
 
 // StructAnnounce contains Announce and the data necessary to identify the
-// message in the sda framework.
+// message in the onet framework.
 type StructAnnounce struct {
 	*onet.TreeNode
 	Announce
@@ -20,7 +20,7 @@ type Reply struct {
 }
 
 // StructReply contains Reply and the data necessary to identify the
-// message in the sda framework.
+// message in the onet framework.
 type StructReply struct {
 	*onet.TreeNode
 	Reply

@@ -93,7 +93,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientE
 	roster := ids.Root.Roster
 	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorSDA, err.Error())
+		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -132,7 +132,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
 	roster := sid.Root.Roster
 	replies, err := s.propagateConfig(roster, p, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorSDA, err.Error())
+		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -180,7 +180,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 		}
 		hash, err := sid.Proposed.Hash()
 		if err != nil {
-			return onet.NewClientErrorCode(ErrorSDA, "Couldn't get hash")
+			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
 		}
 		if _, exists := sid.Votes[v.Signer]; exists {
 			return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
@@ -201,7 +201,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 	// Propagate the vote
 	_, err := s.propagateConfig(sid.Root.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorSDA, cerr.Error())
+		return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 	}
 	if len(sid.Votes) >= sid.Latest.Threshold ||
 		len(sid.Votes) == len(sid.Latest.Device) {
@@ -223,7 +223,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 		}
 		_, err = s.propagateSkipBlock(sid.Root.Roster, usb, propagateTimeout)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorSDA, cerr.Error())
+			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 		}
 		s.save()
 		return &ProposeVoteReply{sid.Data}, nil

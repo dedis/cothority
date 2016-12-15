@@ -112,25 +112,25 @@ type R2 struct {
 	DecShare []Share           // Decrypted shares
 }
 
-// WI1 is a SDA-wrapper around I1.
+// WI1 is a onet-wrapper around I1.
 type WI1 struct {
 	*onet.TreeNode
 	I1
 }
 
-// WR1 is a SDA-wrapper around R1.
+// WR1 is a onet-wrapper around R1.
 type WR1 struct {
 	*onet.TreeNode
 	R1
 }
 
-// WI2 is a SDA-wrapper around I2.
+// WI2 is a onet-wrapper around I2.
 type WI2 struct {
 	*onet.TreeNode
 	I2
 }
 
-// WR2 is a SDA-wrapper around R2.
+// WR2 is a onet-wrapper around R2.
 type WR2 struct {
 	*onet.TreeNode
 	R2

@@ -25,8 +25,8 @@ const (
 	// ErrorVerification indicates that a given block could not be verified
 	// and a signature is invalid.
 	ErrorVerification
-	// ErrorSDA indicates an error from the SDA-framework.
-	ErrorSDA
+	// ErrorOnet indicates an error from the onet framework
+	ErrorOnet
 )
 
 // Client is a structure to communicate with the Skipchain
