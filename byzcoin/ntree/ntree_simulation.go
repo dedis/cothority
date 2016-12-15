@@ -16,7 +16,7 @@ func init() {
 
 // Simulation implements da.Simulation interface
 type Simulation struct {
-	// sda fields:
+	// onet fields:
 	onet.SimulationBFTree
 	// your simulation specific fields:
 	byzcoin.SimulationConfig
@@ -49,7 +49,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, 
 }
 
 // Run implements onet.Simulation interface
-func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
+func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
 	server := NewNtreeServer(e.Blocksize)
 	for round := 0; round < e.Rounds; round++ {
@@ -61,14 +61,14 @@ func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
 
 		log.Lvl1("Starting round", round)
 		// create an empty node
-		node := sdaConf.Overlay.NewTreeNodeInstanceFromProtoName(sdaConf.Tree, "ByzCoinNtree")
+		node := onetConf.Overlay.NewTreeNodeInstanceFromProtoName(onetConf.Tree, "ByzCoinNtree")
 		// instantiate a byzcoin protocol
 		rComplete := monitor.NewTimeMeasure("round")
 		pi, err := server.Instantiate(node)
 		if err != nil {
 			return err
 		}
-		sdaConf.Overlay.RegisterProtocolInstance(pi)
+		onetConf.Overlay.RegisterProtocolInstance(pi)
 
 		nt := pi.(*Ntree)
 		// Register when the protocol is finished (all the nodes have finished)

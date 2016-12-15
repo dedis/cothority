@@ -320,9 +320,9 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Start the protocol
 	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 
-	node, e := s.CreateProtocolSDA(skipchainBFT, tree)
+	node, e := s.CreateProtocolOnet(skipchainBFT, tree)
 	if e != nil {
-		return onet.NewClientErrorCode(ErrorSDA, "Couldn't create new node: "+e.Error())
+		return onet.NewClientErrorCode(ErrorOnet, "Couldn't create new node: "+e.Error())
 	}
 
 	// Register the function generating the protocol instance
@@ -415,7 +415,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) onet.ClientError {
 		}
 		replies, e := s.Propagate(roster, block, propagateTimeout)
 		if e != nil {
-			return onet.NewClientErrorCode(ErrorSDA, e.Error())
+			return onet.NewClientErrorCode(ErrorOnet, e.Error())
 		}
 		if replies != len(roster.List) {
 			log.Warn("Did only get", replies, "out of", len(roster.List))

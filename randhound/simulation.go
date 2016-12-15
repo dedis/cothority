@@ -41,7 +41,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*onet.SimulationConf
 func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 	randM := monitor.NewTimeMeasure("tgen-randhound")
 	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Conode)
-	client, err := config.Overlay.CreateProtocolSDA("RandHound", config.Tree)
+	client, err := config.Overlay.CreateProtocolOnet("RandHound", config.Tree)
 	if err != nil {
 		return err
 	}

@@ -144,14 +144,14 @@ go build
 For more realistic, large scale simulations you can use DeterLab. 
 Find more information on how to use [DeterLab here](Deterlab.md).
 
-# SDA framework
+# onet framework
 
 Core of this repository is a framework for implementing secure, 
 distributed systems. 
 It does so by offering an API for implementing and running different 
 kind of protocols which may rely on other, pre-defined protocols.
  
-Using the SDA-cothority framework, you can:
+Using the onet framework, you can:
 
 * simulate up to 32000 nodes using Deterlab (which is based on 
 [PlanetLab](https://www.planet-lab.org/))
@@ -165,7 +165,6 @@ messages are passed between the hosts.
   
 ## Directory-structure
 
-* [`sda/`](sda/): basic definition of our framework
 * `crypto/`, `log/`, `monitor/`, `network/`: additional libraries for the framework
 * [`simul/`](simul/): simulation-related code
 * [`app/`](app/): all apps in user-space

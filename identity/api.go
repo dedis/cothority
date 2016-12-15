@@ -56,7 +56,7 @@ const (
 	ErrorVoteDouble
 	ErrorVoteSignature
 	ErrorListMissing
-	ErrorSDA
+	ErrorOnet
 )
 
 // Identity structure holds the data necessary for a client/device to use the
@@ -232,11 +232,11 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	}
 	hash, err := i.Proposed.Hash()
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorSDA, err.Error())
+		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorSDA, err.Error())
+		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	pvr := &ProposeVoteReply{}
 	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{

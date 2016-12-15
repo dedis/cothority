@@ -18,7 +18,7 @@ func init() {
 
 // Simulation implements onet.Simulation interface
 type Simulation struct {
-	// sda fields:
+	// onet fields:
 	onet.SimulationBFTree
 	// pbft simulation specific fields:
 	// Blocksize is the number of transactions in one block:
@@ -52,7 +52,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, 
 }
 
 // Run runs the simulation
-func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
+func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {
 		doneChan <- true
@@ -76,7 +76,7 @@ func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	pi, err := sdaConf.Overlay.CreateProtocolSDA("Broadcast", sdaConf.Tree)
+	pi, err := onetConf.Overlay.CreateProtocolOnet("Broadcast", onetConf.Tree)
 	if err != nil {
 		log.Error(err)
 	}
@@ -95,7 +95,7 @@ func (e *Simulation) Run(sdaConf *onet.SimulationConfig) error {
 	log.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		p, err := sdaConf.Overlay.CreateProtocolSDA("ByzCoinPBFT", sdaConf.Tree)
+		p, err := onetConf.Overlay.CreateProtocolOnet("ByzCoinPBFT", onetConf.Tree)
 		if err != nil {
 			return err
 		}

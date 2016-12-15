@@ -1,6 +1,7 @@
 // Cothorityd is the main binary for running a Cothority server.
 // A Cothority server can participate in various distributed protocols using the
-// *cothority/sda* library with the underlying *dedis/crypto* library.
+// *onet* library as a network and overlay library and the *dedis/crypto*
+// library for all cryptographic primitives.
 // Basically, you first need to setup a config file for the server by using:
 //
 // 		./cothorityd setup
