@@ -1,9 +1,0 @@
-Servers = 5
-Simulation = "NaiveTree"
-Message = "Hello Naive Simulation"
-Rounds = 2
-
-Depth, BF
-1, 5
-1, 10
-1, 16

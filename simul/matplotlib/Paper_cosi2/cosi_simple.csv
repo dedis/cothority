@@ -1,2 +1,0 @@
-hosts, servers, bf, closewait, hosts, machines, ppm, rounds, ChildrenWait_wall_min, ChildrenWait_wall_max, ChildrenWait_wall_avg, ChildrenWait_wall_dev, ChildrenWait_user_min, ChildrenWait_user_max, ChildrenWait_user_avg, ChildrenWait_user_dev, ChildrenWait_system_min, ChildrenWait_system_max, ChildrenWait_system_avg, ChildrenWait_system_dev
-100, 32, 8, 6000, 100, 1, 0, 10, 0.548198, 0.548198, 0.548198, NaN, 0.020710, 0.020710, 0.020710, NaN, 0.008645, 0.008645, 0.008645, NaN
