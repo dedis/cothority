@@ -92,7 +92,7 @@ func main() {
 				},
 				cli.BoolFlag{
 					Name:  "detail,l",
-					Usage: "Show detail in signing",
+					Usage: "do pairwise signing and show full addresses",
 				},
 			},
 		},
