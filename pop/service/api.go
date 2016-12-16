@@ -1,51 +1,239 @@
 package service
 
-/*
-The api.go defines the methods that can be called from the outside. Most
-of the methods will take a roster so that the service knows which nodes
-it should work with.
-
-This part of the service runs on the client or the app.
-*/
-
 import (
-	"time"
+	"bytes"
 
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/base64"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/satori/go.uuid"
 )
 
-// Client is a structure to communicate with the CoSi
-// service
+const (
+	// ErrorWrongPIN indicates a wrong PIN
+	ErrorWrongPIN = iota + 4100
+	// ErrorInternal indicates something internally went wrong - see the
+	// error message
+	ErrorInternal
+	ErrorOtherConfigs
+)
+
+func init() {
+	network.RegisterPacketType(&FinalStatement{})
+	network.RegisterPacketType(&PopDesc{})
+}
+
+type FinalStatement struct {
+	Desc      *PopDesc
+	Attendees []abstract.Point
+	Signature []byte
+}
+
+type FinalStatementToml struct {
+	Desc      *PopDescToml
+	Attendees []string
+	Signature string
+}
+
+// Creates a final statement from a string
+func NewFinalStatementFromString(s string) *FinalStatement {
+	fsToml := &FinalStatementToml{}
+	_, err := toml.Decode(s, fsToml)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	sis := []*network.ServerIdentity{}
+	for _, s := range fsToml.Desc.Roster {
+		uid, err := uuid.FromString(s[2])
+		if err != nil {
+			log.Error(err)
+			return nil
+		}
+		sis = append(sis, &network.ServerIdentity{
+			Address:     network.Address(s[0]),
+			Description: s[1],
+			ID:          network.ServerIdentityID(uid),
+			Public:      B64ToPoint(s[3]),
+		})
+	}
+	rostr := onet.NewRoster(sis)
+	desc := &PopDesc{
+		Name:   fsToml.Desc.Name,
+		Date:   fsToml.Desc.Date,
+		Roster: rostr,
+	}
+	atts := []abstract.Point{}
+	for _, p := range fsToml.Attendees {
+		atts = append(atts, B64ToPoint(p))
+	}
+	sig := make([]byte, 64)
+	sig, err = base64.StdEncoding.DecodeString(fsToml.Signature)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	return &FinalStatement{
+		Desc:      desc,
+		Attendees: atts,
+		Signature: sig,
+	}
+}
+
+func PointToB64(p abstract.Point) string {
+	pub, err := p.MarshalBinary()
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(pub)
+}
+
+func B64ToPoint(str string) abstract.Point {
+	public := network.Suite.Point()
+	buf, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	err = public.UnmarshalBinary(buf)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	return public
+}
+
+func ScalarToB64(s abstract.Scalar) string {
+	sec, err := s.MarshalBinary()
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(sec)
+}
+
+func B64ToScalar(str string) abstract.Scalar {
+	scalar := network.Suite.Scalar()
+	buf, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	err = scalar.UnmarshalBinary(buf)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	return scalar
+}
+
+// Returns a toml-string.
+func (fs *FinalStatement) ToToml() string {
+	rostr := [][]string{}
+	for _, si := range fs.Desc.Roster.List {
+		sistr := []string{si.Address.String(), si.Description,
+			uuid.UUID(si.ID).String(), PointToB64(si.Public)}
+		rostr = append(rostr, sistr)
+	}
+	descToml := &PopDescToml{
+		Name:   fs.Desc.Name,
+		Date:   fs.Desc.Date,
+		Roster: rostr,
+	}
+	atts := []string{}
+	for _, p := range fs.Attendees {
+		atts = append(atts, PointToB64(p))
+	}
+	fsToml := &FinalStatementToml{
+		Desc:      descToml,
+		Attendees: atts,
+		Signature: base64.StdEncoding.EncodeToString(fs.Signature),
+	}
+	var buf bytes.Buffer
+	err := toml.NewEncoder(&buf).Encode(fsToml)
+	if err != nil {
+		return ""
+	}
+	return string(buf.Bytes())
+}
+
+// PoPDesc holds the name, date and a roster of all involved conodes.
+type PopDesc struct {
+	Name   string
+	Date   string
+	Roster *onet.Roster
+}
+
+type PopDescToml struct {
+	Name   string
+	Date   string
+	Roster [][]string
+}
+
+// Hash calculates the hash of this structure
+func (p *PopDesc) Hash() []byte {
+	if p == nil {
+		return nil
+	}
+	hash := network.Suite.Hash()
+	hash.Write([]byte(p.Name))
+	hash.Write([]byte(p.Date))
+	buf, err := p.Roster.Aggregate.MarshalBinary()
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	hash.Write([]byte(buf))
+	return hash.Sum(nil)
+}
+
+// Client is a structure to communicate with any app that wants to use our
+// service.
 type Client struct {
 	*onet.Client
 }
 
-// NewClient instantiates a new cosi.Client
+// NewClient instantiates a new Client
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(Name)}
 }
 
-// Clock will return the time in seconds it took to run the protocol.
-func (c *Client) Clock(r *onet.Roster) (*ClockResponse, onet.ClientError) {
-	dst := r.RandomServerIdentity()
-	log.Lvl4("Sending message to", dst)
-	reply := &CountResponse{}
-	err := c.SendProtobuf(dst, &ClockRequest{r}, reply)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	return reply, nil
+// Link takes a destination-address, a PIN and a public key as an argument.
+// If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
+// If the PIN is given and is correct, the public key will be stored in the
+// service.
+func (c *Client) Pin(dst network.Address, pin string, pub abstract.Point) onet.ClientError {
+	si := &network.ServerIdentity{Address: dst}
+	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
-// Count will return the number of times `Clock` has been called on this
-// service-node.
-func (c *Client) Count(si *network.ServerIdentity) (int, error) {
-	reply := &CountResponse{}
-	err := c.SendProtobuf(si, &CountRequest{}, reply)
+// StoreConfig sends the configuration to the conode for later usage.
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc) onet.ClientError {
+	si := &network.ServerIdentity{Address: dst}
+	err := c.SendProtobuf(si, &StoreConfig{p}, nil)
 	if err != nil {
-		return -1, err
+		return err
 	}
-	return reply.Count, nil
+	return nil
+}
+
+// Finalize takes the address of the conode-server, a pop-description and a
+// list of attendees public keys. It contacts the other conodes and checks
+// if they are available and already have a description. If so, all attendees
+// not in all the conodes will be stripped, and that new pop-description
+// collectively signed. The new pop-description and the final statement
+// will be returned.
+func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point) (
+	*FinalStatement, onet.ClientError) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &FinalizeResponse{}
+	err := c.SendProtobuf(si, &FinalizeRequest{p.Hash(), attendees}, res)
+	if err != nil {
+		return nil, err
+	}
+	return res.Final, nil
 }

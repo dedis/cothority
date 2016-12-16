@@ -47,9 +47,9 @@ This command will contact the conode at address. Two inputs on the keyboard are 
 verification of public key: the public key is requested from the address and displayed, then a “Y/n”-prompt appears
 PIN-entry: the conode will display a PIN on the server-side, that has to be entered here for authentification
 
-### popmgr config set pop_desc.toml group.toml
-Sends pop_config.toml or final_statement, type_msg is 0 for configuration file, 1 for final statement
-Returns the hash of the file or an error
+### popmgr config pop_desc.toml group.toml
+Stores the pop_desc-configuration and the group locally and sends it to the 
+conode.
 
 ### popmgr public key64
 Stores in a list the base-64 encoded public key key64 for sending with the ‘popmgr final’-command.
@@ -64,18 +64,10 @@ finalizes the PoParty:
 	* group.toml
 	* public keys
 	* collective signature
-Collectively signs files, receives the msg and the type_msg 0 for confi-gile or 1 for final-statement
-Returns the hash of the signed message, the signature or an error
-
-### popmgr verify message context tag signature
-* message and context are strings
-* tag and signature are base64-encoded
-* verifies the signature against the message and the context
-* outputs OK/failure
 
 ## APP2 commands
 
-### popclient config final_statement.toml private
+### popclient join final_statement.toml private
 * Saves final_statement.toml and private (base64 encoded private Ed25519 key) locally for later usage.
 * Keyboard-input: prints the aggregate public key and asks for confirmation
 * Verifies the collective signature
@@ -83,6 +75,12 @@ Returns the hash of the signed message, the signature or an error
 
 ### popclient sign message context
 * signs the message+context (both strings) and outputs the signature and the tag base64 encoded
+
+### popclient verify message context tag signature
+* message and context are strings
+* tag and signature are base64-encoded
+* verifies the signature against the message and the context
+* outputs OK/failure
 
 ## Service-API
 ### Define the API

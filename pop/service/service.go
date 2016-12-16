@@ -6,9 +6,12 @@ runs on the node.
 */
 
 import (
-	"time"
+	"fmt"
+	"math/rand"
 
-	"github.com/dedis/cothority_template/protocol"
+	"bytes"
+
+	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -16,10 +19,15 @@ import (
 
 // Name is the name to refer to the Template service from another
 // package.
-const Name = "Template"
+const Name = "PoPServer"
+
+var checkConfigID network.PacketTypeID
+var checkConfigReplyID network.PacketTypeID
 
 func init() {
 	onet.RegisterNewService(Name, newService)
+	checkConfigID = network.RegisterPacketType(CheckConfig{})
+	checkConfigReplyID = network.RegisterPacketType(CheckConfigReply{})
 }
 
 // Service is our template-service
@@ -28,54 +36,152 @@ type Service struct {
 	// are correctly handled.
 	*onet.ServiceProcessor
 	path string
-	// Count holds the number of calls to 'ClockRequest'
-	Count int
+	// Pin holds the randomly chosen pin
+	pin string
+	// Public key of linked pop
+	public abstract.Point
+	// The final statement
+	final *FinalStatement
+	// channel to return the configreply
+	ccChannel chan *CheckConfigReply
 }
 
-// ClockRequest starts a template-protocol and returns the run-time.
-func (s *Service) ClockRequest(req *ClockRequest) (network.Body, onet.ClientError) {
-	s.Count++
-	tree := req.Roster.GenerateBinaryTree()
-	pi, err := s.CreateProtocolOnet(template.Name, tree)
-	if err != nil {
-		return nil, onet.NewClientError(err)
+// PinRequest prints out a pin if none is given, else it verifies it has the
+// correct pin, and if so, it stores the public key as reference.
+func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
+	if req.Pin == "" {
+		s.pin = fmt.Sprintf("%06d", rand.Intn(100000))
+		log.Info("PIN:", s.pin)
+		return nil, nil
 	}
-	start := time.Now()
-	pi.Start()
-	resp := &ClockResponse{
-		Children: <-pi.(*template.ProtocolTemplate).ChildCount,
+	if req.Pin != s.pin {
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
 	}
-	resp.Time = time.Now().Sub(start).Seconds()
-	return resp, nil
-}
-
-// CountRequest returns the number of instantiations of the protocol.
-func (s *Service) CountRequest(req *CountRequest) (network.Body, onet.ClientError) {
-	return &CountResponse{s.Count}, nil
-}
-
-// NewProtocol is called on all nodes of a Tree (except the root, since it is
-// the one starting the protocol) so it's the Service that will be called to
-// generate the PI on all others node.
-// If you use CreateProtocolOnet, this will not be called, as the Onet will
-// instantiate the protocol on its own. If you need more control at the
-// instantiation of the protocol, use CreateProtocolService, and you can
-// give some extra-configuration to your protocol in here.
-func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	log.Lvl3("Not templated yet")
+	s.public = req.Public
 	return nil, nil
 }
 
-// newTemplate receives the context and a path where it can write its
-// configuration, if desired. As we don't know when the service will exit,
-// we need to save the configuration on our own from time to time.
+// StoreConfig saves the pop-config locally
+func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError) {
+	log.Lvlf3("%s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
+	if req.Desc.Roster == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
+	}
+	s.final = &FinalStatement{Desc: req.Desc}
+	return &StoreConfigReply{req.Desc.Hash()}, nil
+}
+
+// FinalizeResponse returns the FinalStatement if all conodes already received
+// a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
+// pruned attendees-public-key-list and the collective signature.
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.ClientError) {
+	if s.final == nil || s.final.Desc == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "no config yet")
+	}
+	// Contact all other nodes and ask them if they already have a config.
+	s.final.Attendees = make([]abstract.Point, len(req.Attendees))
+	copy(s.final.Attendees, req.Attendees)
+	cc := &CheckConfig{s.final.Desc.Hash(), req.Attendees}
+	for _, c := range s.final.Desc.Roster.List {
+		if !c.ID.Equal(s.ServerIdentity().ID) {
+			log.Lvl3("Contacting", c)
+			err := s.SendRaw(c, cc)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+			}
+			rep := <-s.ccChannel
+			if rep == nil {
+				return nil, onet.NewClientErrorCode(ErrorOtherConfigs, "")
+			}
+		}
+	}
+	s.final.Signature = []byte("signed")
+	return &FinalizeResponse{s.final}, nil
+}
+
+// CheckConfig receives a hash for a config and a list of attendees. It returns
+// a CheckConfigReply filled according to this structure's description. If
+// the config has been found, it strips its own attendees from the one missing
+// in the other configuration.
+func (s *Service) CheckConfig(req *network.Packet) {
+	cc, ok := req.Msg.(CheckConfig)
+	if !ok {
+		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
+		return
+	}
+
+	ccr := &CheckConfigReply{0, cc.PopHash, cc.Attendees}
+	if s.final != nil {
+		if !bytes.Equal(s.final.Desc.Hash(), cc.PopHash) {
+			ccr.PopStatus = 1
+		} else {
+			s.intersectAttendees(cc.Attendees)
+			if len(s.final.Attendees) == 0 {
+				ccr.PopStatus = 2
+			} else {
+				ccr.PopStatus = 3
+			}
+		}
+	}
+	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
+	err := s.SendRaw(req.ServerIdentity, ccr)
+	if err != nil {
+		log.Errorf("Couldn't send reply:", err)
+	}
+}
+
+// CheckConfigReply strips the attendees missing in the reply, if the
+// PopStatus == 3.
+func (s *Service) CheckConfigReply(req *network.Packet) {
+	ccrVal, ok := req.Msg.(CheckConfigReply)
+	var ccr *CheckConfigReply
+	ccr = func() *CheckConfigReply {
+		if !ok {
+			log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
+			return nil
+		}
+		if !bytes.Equal(ccrVal.PopHash, s.final.Desc.Hash()) {
+			log.Error("Not correct hash")
+			return nil
+		}
+		if ccrVal.PopStatus < 3 {
+			log.Warn("Wrong pop-status:", ccrVal.PopStatus)
+			return nil
+		}
+		s.intersectAttendees(ccrVal.Attendees)
+		return &ccrVal
+	}()
+	if len(s.ccChannel) == 0 {
+		s.ccChannel <- ccr
+	}
+}
+
+// Get intersection of attendees
+func (s *Service) intersectAttendees(atts []abstract.Point) {
+	na := []abstract.Point{}
+	for i, p := range s.final.Attendees {
+		for _, d := range atts {
+			if p.Equal(d) {
+				na = append(na, p)
+				continue
+			}
+		}
+		s.final.Attendees[i] = nil
+	}
+	s.final.Attendees = na
+}
+
+// newService registers the request-methods.
 func newService(c *onet.Context, path string) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		path:             path,
+		ccChannel:        make(chan *CheckConfigReply, 1),
 	}
-	if err := s.RegisterHandlers(s.ClockRequest, s.CountRequest); err != nil {
+	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
+	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
+	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	return s
 }

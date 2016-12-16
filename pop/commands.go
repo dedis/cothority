@@ -10,7 +10,7 @@ var commandMgr, commandClient cli.Command
 
 func init() {
 	commandMgr = cli.Command{
-		Name:  "mgr,m",
+		Name:  "mgr",
 		Usage: "Managing a PoParty",
 		Subcommands: []cli.Command{
 			{
@@ -18,14 +18,7 @@ func init() {
 				Aliases:   []string{"l"},
 				Usage:     "link to a cothority",
 				ArgsUsage: "IP-address:port",
-				Flags: []cli.Flag{
-					cli.IntFlag{
-						Name:  "thr,threshold",
-						Usage: "the threshold necessary to add a block",
-						Value: 2,
-					},
-				},
-				Action: mgrLink,
+				Action:    mgrLink,
 			},
 			{
 				Name:      "config",
@@ -46,17 +39,10 @@ func init() {
 				Usage:   "finalizes the party",
 				Action:  mgrFinal,
 			},
-			{
-				Name:      "verify",
-				Aliases:   []string{"v"},
-				Usage:     "verifies a tag and a signature",
-				ArgsUsage: "message context tag signature",
-				Action:    mgrVerify,
-			},
 		},
 	}
 	commandClient = cli.Command{
-		Name:  "client,c",
+		Name:  "client",
 		Usage: "client for a pop-party",
 		Subcommands: []cli.Command{
 			{
@@ -77,6 +63,13 @@ func init() {
 				Usage:     "sign a message and its context",
 				ArgsUsage: "message context",
 				Action:    clientSign,
+			},
+			{
+				Name:      "verify",
+				Aliases:   []string{"v"},
+				Usage:     "verifies a tag and a signature",
+				ArgsUsage: "message context tag signature",
+				Action:    clientVerify,
 			},
 		},
 	}
