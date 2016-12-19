@@ -11,6 +11,11 @@ import (
 
 	"bytes"
 
+	"io/ioutil"
+	"os"
+
+	"path"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -20,12 +25,14 @@ import (
 // Name is the name to refer to the Template service from another
 // package.
 const Name = "PoPServer"
+const cfgName = "pop.bin"
 
 var checkConfigID network.PacketTypeID
 var checkConfigReplyID network.PacketTypeID
 
 func init() {
 	onet.RegisterNewService(Name, newService)
+	network.RegisterPacketType(CheckConfig{})
 	checkConfigID = network.RegisterPacketType(CheckConfig{})
 	checkConfigReplyID = network.RegisterPacketType(CheckConfigReply{})
 }
@@ -36,28 +43,32 @@ type Service struct {
 	// are correctly handled.
 	*onet.ServiceProcessor
 	path string
+	data *saveData
+	// channel to return the configreply
+	ccChannel chan *CheckConfigReply
+}
+
+type saveData struct {
 	// Pin holds the randomly chosen pin
 	pin string
 	// Public key of linked pop
 	public abstract.Point
 	// The final statement
 	final *FinalStatement
-	// channel to return the configreply
-	ccChannel chan *CheckConfigReply
 }
 
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	if req.Pin == "" {
-		s.pin = fmt.Sprintf("%06d", rand.Intn(100000))
-		log.Info("PIN:", s.pin)
+		s.data.pin = fmt.Sprintf("%06d", rand.Intn(100000))
+		log.Info("PIN:", s.data.pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
 	}
-	if req.Pin != s.pin {
+	if req.Pin != s.data.pin {
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
 	}
-	s.public = req.Public
+	s.data.public = req.Public
 	return nil, nil
 }
 
@@ -67,7 +78,7 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 	if req.Desc.Roster == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
 	}
-	s.final = &FinalStatement{Desc: req.Desc}
+	s.data.final = &FinalStatement{Desc: req.Desc}
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
 
@@ -75,14 +86,14 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
 func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.ClientError) {
-	if s.final == nil || s.final.Desc == nil {
+	if s.data.final == nil || s.data.final.Desc == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "no config yet")
 	}
 	// Contact all other nodes and ask them if they already have a config.
-	s.final.Attendees = make([]abstract.Point, len(req.Attendees))
-	copy(s.final.Attendees, req.Attendees)
-	cc := &CheckConfig{s.final.Desc.Hash(), req.Attendees}
-	for _, c := range s.final.Desc.Roster.List {
+	s.data.final.Attendees = make([]abstract.Point, len(req.Attendees))
+	copy(s.data.final.Attendees, req.Attendees)
+	cc := &CheckConfig{s.data.final.Desc.Hash(), req.Attendees}
+	for _, c := range s.data.final.Desc.Roster.List {
 		if !c.ID.Equal(s.ServerIdentity().ID) {
 			log.LLvl3("Contacting", c, cc.Attendees)
 			err := s.SendRaw(c, cc)
@@ -96,8 +107,8 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 			}
 		}
 	}
-	s.final.Signature = []byte("signed")
-	return &FinalizeResponse{s.final}, nil
+	s.data.final.Signature = []byte("signed")
+	return &FinalizeResponse{s.data.final}, nil
 }
 
 // CheckConfig receives a hash for a config and a list of attendees. It returns
@@ -112,19 +123,19 @@ func (s *Service) CheckConfig(req *network.Packet) {
 	}
 
 	ccr := &CheckConfigReply{0, cc.PopHash, nil}
-	if s.final != nil {
-		if !bytes.Equal(s.final.Desc.Hash(), cc.PopHash) {
+	if s.data.final != nil {
+		if !bytes.Equal(s.data.final.Desc.Hash(), cc.PopHash) {
 			ccr.PopStatus = 1
 		} else {
 			s.intersectAttendees(cc.Attendees)
-			if len(s.final.Attendees) == 0 {
+			if len(s.data.final.Attendees) == 0 {
 				ccr.PopStatus = 2
 			} else {
 				ccr.PopStatus = 3
 			}
 		}
 	}
-	ccr.Attendees = s.final.Attendees
+	ccr.Attendees = s.data.final.Attendees
 	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
 	err := s.SendRaw(req.ServerIdentity, ccr)
 	if err != nil {
@@ -142,7 +153,7 @@ func (s *Service) CheckConfigReply(req *network.Packet) {
 			log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
 			return nil
 		}
-		if !bytes.Equal(ccrVal.PopHash, s.final.Desc.Hash()) {
+		if !bytes.Equal(ccrVal.PopHash, s.data.final.Desc.Hash()) {
 			log.Error("Not correct hash")
 			return nil
 		}
@@ -161,16 +172,49 @@ func (s *Service) CheckConfigReply(req *network.Packet) {
 // Get intersection of attendees
 func (s *Service) intersectAttendees(atts []abstract.Point) {
 	na := []abstract.Point{}
-	for i, p := range s.final.Attendees {
+	for i, p := range s.data.final.Attendees {
 		for _, d := range atts {
 			if p.Equal(d) {
 				na = append(na, p)
 				continue
 			}
 		}
-		s.final.Attendees[i] = nil
+		s.data.final.Attendees[i] = nil
 	}
-	s.final.Attendees = na
+	s.data.final.Attendees = na
+}
+
+// saves the actual identity
+func (s *Service) save() {
+	log.Lvl3("Saving service")
+	b, err := network.MarshalRegisteredType(s.data)
+	if err != nil {
+		log.Error("Couldn't marshal service:", err)
+	} else {
+		err = ioutil.WriteFile(path.Join(s.path, cfgName), b, 0660)
+		if err != nil {
+			log.Error("Couldn't save file:", err)
+		}
+	}
+}
+
+// Tries to load the configuration and updates if a configuration
+// is found, else it returns an error.
+func (s *Service) tryLoad() error {
+	configFile := path.Join(s.path, cfgName)
+	b, err := ioutil.ReadFile(configFile)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	}
+	if len(b) > 0 {
+		_, msg, err := network.UnmarshalRegistered(b)
+		if err != nil {
+			return fmt.Errorf("Couldn't unmarshal: %s", err)
+		}
+		log.Lvl3("Successfully loaded")
+		s.data = msg.(*saveData)
+	}
+	return nil
 }
 
 // newService registers the request-methods.
@@ -182,6 +226,9 @@ func newService(c *onet.Context, path string) onet.Service {
 	}
 	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
+	}
+	if err := s.tryLoad(); err != nil {
+		log.Error(err)
 	}
 	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
