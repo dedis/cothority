@@ -93,7 +93,6 @@ func mgrLink(c *cli.Context) error {
 	newConfig()
 	addr := network.NewAddress(network.PlainTCP, c.Args().First())
 	if err := client.Pin(addr, c.Args().Get(1), mainConfig.Public); err != nil {
-		log.Error(err)
 		return err
 	}
 	mainConfig.Address = addr
@@ -292,11 +291,12 @@ func newConfig() {
 }
 
 func readConfig() {
-	if _, err := os.Stat(fileConfig); err != nil {
+	file := config.TildeToHome(fileConfig)
+	if _, err := os.Stat(file); err != nil {
 		newConfig()
 		return
 	}
-	buf, err := ioutil.ReadFile(fileConfig)
+	buf, err := ioutil.ReadFile(file)
 	if err == nil {
 		_, msg, err := network.UnmarshalRegistered(buf)
 		if err == nil {
@@ -308,11 +308,13 @@ func readConfig() {
 			}
 		}
 	}
-	log.Fatal("Couldn't read", fileConfig, "- please remove it.")
+	log.Fatal("Couldn't read", file, "- please remove it.")
 }
 
 func writeConfig() {
 	buf, err := network.MarshalRegisteredType(mainConfig)
 	log.ErrFatal(err)
-	ioutil.WriteFile(fileConfig, buf, 0660)
+	file := config.TildeToHome(fileConfig)
+	os.MkdirAll(path.Dir(file), 0770)
+	log.ErrFatal(ioutil.WriteFile(file, buf, 0660))
 }
