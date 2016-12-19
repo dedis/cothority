@@ -51,25 +51,25 @@ type Service struct {
 
 type saveData struct {
 	// Pin holds the randomly chosen pin
-	pin string
+	Pin string
 	// Public key of linked pop
-	public abstract.Point
+	Public abstract.Point
 	// The final statement
-	final *FinalStatement
+	Final *FinalStatement
 }
 
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	if req.Pin == "" {
-		s.data.pin = fmt.Sprintf("%06d", rand.Intn(100000))
-		log.Info("PIN:", s.data.pin)
+		s.data.Pin = fmt.Sprintf("%06d", rand.Intn(100000))
+		log.Info("PIN:", s.data.Pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
 	}
-	if req.Pin != s.data.pin {
+	if req.Pin != s.data.Pin {
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
 	}
-	s.data.public = req.Public
+	s.data.Public = req.Public
 	s.save()
 	return nil, nil
 }
@@ -80,7 +80,10 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 	if req.Desc.Roster == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
 	}
-	s.data.final = &FinalStatement{Desc: req.Desc}
+	if s.data.Public == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+	}
+	s.data.Final = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
 	s.save()
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
@@ -89,16 +92,16 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
 func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.ClientError) {
-	if s.data.final == nil || s.data.final.Desc == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "no config yet")
+	if s.data.Final == nil || s.data.Final.Desc == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked or no config yet")
 	}
 	// Contact all other nodes and ask them if they already have a config.
-	s.data.final.Attendees = make([]abstract.Point, len(req.Attendees))
-	copy(s.data.final.Attendees, req.Attendees)
-	cc := &CheckConfig{s.data.final.Desc.Hash(), req.Attendees}
-	for _, c := range s.data.final.Desc.Roster.List {
+	s.data.Final.Attendees = make([]abstract.Point, len(req.Attendees))
+	copy(s.data.Final.Attendees, req.Attendees)
+	cc := &CheckConfig{s.data.Final.Desc.Hash(), req.Attendees}
+	for _, c := range s.data.Final.Desc.Roster.List {
 		if !c.ID.Equal(s.ServerIdentity().ID) {
-			log.LLvl3("Contacting", c, cc.Attendees)
+			log.Lvl3("Contacting", c, cc.Attendees)
 			err := s.SendRaw(c, cc)
 			if err != nil {
 				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
@@ -110,9 +113,9 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 			}
 		}
 	}
-	s.data.final.Signature = []byte("signed")
+	s.data.Final.Signature = []byte("signed")
 	s.save()
-	return &FinalizeResponse{s.data.final}, nil
+	return &FinalizeResponse{s.data.Final}, nil
 }
 
 // CheckConfig receives a hash for a config and a list of attendees. It returns
@@ -127,16 +130,16 @@ func (s *Service) CheckConfig(req *network.Packet) {
 	}
 
 	ccr := &CheckConfigReply{0, cc.PopHash, nil}
-	if s.data.final != nil {
-		if !bytes.Equal(s.data.final.Desc.Hash(), cc.PopHash) {
+	if s.data.Final != nil {
+		if !bytes.Equal(s.data.Final.Desc.Hash(), cc.PopHash) {
 			ccr.PopStatus = 1
 		} else {
 			s.intersectAttendees(cc.Attendees)
-			if len(s.data.final.Attendees) == 0 {
+			if len(s.data.Final.Attendees) == 0 {
 				ccr.PopStatus = 2
 			} else {
 				ccr.PopStatus = 3
-				ccr.Attendees = s.data.final.Attendees
+				ccr.Attendees = s.data.Final.Attendees
 			}
 		}
 	}
@@ -157,7 +160,7 @@ func (s *Service) CheckConfigReply(req *network.Packet) {
 			log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
 			return nil
 		}
-		if !bytes.Equal(ccrVal.PopHash, s.data.final.Desc.Hash()) {
+		if !bytes.Equal(ccrVal.PopHash, s.data.Final.Desc.Hash()) {
 			log.Error("Not correct hash")
 			return nil
 		}
@@ -176,16 +179,16 @@ func (s *Service) CheckConfigReply(req *network.Packet) {
 // Get intersection of attendees
 func (s *Service) intersectAttendees(atts []abstract.Point) {
 	na := []abstract.Point{}
-	for i, p := range s.data.final.Attendees {
+	for i, p := range s.data.Final.Attendees {
 		for _, d := range atts {
 			if p.Equal(d) {
 				na = append(na, p)
 				continue
 			}
 		}
-		s.data.final.Attendees[i] = nil
+		s.data.Final.Attendees[i] = nil
 	}
-	s.data.final.Attendees = na
+	s.data.Final.Attendees = na
 }
 
 // saves the actual identity
@@ -217,7 +220,6 @@ func (s *Service) tryLoad() error {
 		}
 		log.Lvl3("Successfully loaded")
 		s.data = msg.(*saveData)
-		log.Printf("%#v", s.data)
 	}
 	return nil
 }

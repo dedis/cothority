@@ -18,11 +18,12 @@ main(){
 #    test Build
 #    test Cothority
 #    test MgrLink
+	test Save
 #    test MgrConfig
 #	test ClCreate
 #	test MgrPublic
 #	test MgrFinal
-	test MgrFinal2
+#	test MgrFinal2
 #	test ClJoin
 #	test ClSign
 #	test ClVerify
@@ -176,6 +177,18 @@ mkPopConfig(){
 Name = "testpop"
 Date = "2016-12-16 09:00"
 EOF
+}
+
+testSave(){
+	runCoBG 1
+	runCoBG 2
+	testFail runCl 1 mgr config pop_desc.toml group.toml
+	pkill -9 -f cothority
+	mkLink
+	pkill -9 -f cothority
+	runCoBG 1
+	runCoBG 2
+	testOK runCl 1 mgr config pop_desc.toml group.toml
 }
 
 mkLink(){
