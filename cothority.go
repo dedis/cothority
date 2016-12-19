@@ -15,26 +15,20 @@ package main
 import (
 	"os"
 
-	"github.com/dedis/onet/app/server"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 
-	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/service"
 	_ "github.com/dedis/cothority/guard/service"
 	_ "github.com/dedis/cothority/identity"
+	"github.com/dedis/cothority/libcothority"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
+	"github.com/dedis/onet/app/server"
 )
 
-const (
-	// DefaultName is the name of the binary we produce and is used to create a directory
-	// folder with this name
-	DefaultName = "cothorityd"
-
-	// Version of this binary
-	Version = "1.1"
-)
+// Version of this binary
+const Version = "1.1"
 
 func main() {
 
@@ -45,86 +39,25 @@ func main() {
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: server.GetDefaultConfigFile(DefaultName),
+			Value: server.GetDefaultConfigFile(libcothority.DefaultConfig),
 			Usage: "Configuration file of the server",
 		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 0,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
+		libcothority.FlagDebug,
 	}
 
 	cliApp.Commands = []cli.Command{
-		{
-			Name:    "setup",
-			Aliases: []string{"s"},
-			Usage:   "Setup the configuration for the server (interactive)",
-			Action: func(c *cli.Context) error {
-				if c.String("config") != "" {
-					log.Fatal("Configuration file option can't be used for the 'setup' command")
-				}
-				if c.String("debug") != "" {
-					log.Fatal("[-] Debug option can't be used for the 'setup' command")
-				}
-				server.InteractiveConfig("cothorityd")
-				return nil
-			},
-		},
-		{
-			Name:  "server",
-			Usage: "Run the cothority server",
-			Action: func(c *cli.Context) {
-				runServer(c)
-			},
-			Flags: serverFlags,
-		},
-		{
-			Name:      "check",
-			Aliases:   []string{"c"},
-			Usage:     "Check if the servers in the group definition are up and running",
-			ArgsUsage: "Cothority group definition file",
-			Action:    checkConfig,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "g",
-					Usage: "Cothority group definition file",
-				},
-				cli.BoolFlag{
-					Name:  "detail,l",
-					Usage: "do pairwise signing and show full addresses",
-				},
-			},
-		},
+		libcothority.CmdSetup,
+		libcothority.CmdServer,
+		libcothority.CmdCheck,
 	}
 	cliApp.Flags = serverFlags
-	cliApp.Before = func(c *cli.Context) error {
-		log.SetDebugVisible(c.Int("debug"))
-		return nil
-	}
+
 	// default action
 	cliApp.Action = func(c *cli.Context) error {
-		runServer(c)
+		libcothority.RunServer(c)
 		return nil
 	}
 
 	err := cliApp.Run(os.Args)
 	log.ErrFatal(err)
-}
-
-func runServer(ctx *cli.Context) {
-	// first check the options
-	config := ctx.String("config")
-
-	server.RunServer(config)
-}
-
-// checkConfig contacts all servers and verifies if it receives a valid
-// signature from each.
-func checkConfig(c *cli.Context) error {
-	tomlFileName := c.String("g")
-	if c.NArg() > 0 {
-		tomlFileName = c.Args().First()
-	}
-	return check.Config(tomlFileName, c.Bool("detail"))
 }
