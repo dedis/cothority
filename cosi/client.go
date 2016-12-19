@@ -26,7 +26,7 @@ import (
 // signature from each.
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.String(optionGroup)
-	return check.Config(tomlFileName)
+	return check.Config(tomlFileName, c.Bool("detail"))
 }
 
 // signFile will search for the file and sign it

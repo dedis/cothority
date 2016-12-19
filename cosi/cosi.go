@@ -94,7 +94,11 @@ func main() {
 			Aliases: []string{"c"},
 			Usage:   "Check if the servers in the group definition are up and running",
 			Action:  checkConfig,
-			Flags:   clientFlags,
+			Flags: append(clientFlags,
+				cli.BoolFlag{
+					Name:  "detail,l",
+					Usage: "show detail of all servers",
+				}),
 		},
 
 		// CLIENT END ----------

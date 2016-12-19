@@ -16,6 +16,10 @@ import (
 	"github.com/dedis/onet/network"
 
 	// CoSi-protocol is not part of the cothority.
+	"math/rand"
+
+	"math"
+
 	"github.com/dedis/cothority/cosi/service"
 	"github.com/dedis/crypto/cosi"
 )
@@ -27,7 +31,7 @@ var RequestTimeOut = time.Second * 10
 // signature from each.
 // If the roster is empty it will return an error.
 // If a server doesn't reply in time, it will return an error.
-func Config(tomlFileName string) error {
+func Config(tomlFileName string, detail bool) error {
 	f, err := os.Open(tomlFileName)
 	log.ErrFatal(err, "Couldn't open group definition file")
 	group, err := config.ReadGroupDescToml(f)
@@ -37,7 +41,7 @@ func Config(tomlFileName string) error {
 			tomlFileName)
 	}
 	log.Info("Checking the availability and responsiveness of the servers in the group...")
-	return Servers(group)
+	return Servers(group, detail)
 }
 
 // Servers contacts all servers in the entity-list and then makes checks
@@ -45,36 +49,56 @@ func Config(tomlFileName string) error {
 // along with the IP-address of the server.
 // In case a server doesn't reply in time or there is an error in the
 // signature, an error is returned.
-func Servers(g *config.Group) error {
-	success := true
-	// First check all servers individually
+func Servers(g *config.Group, detail bool) error {
+	totalSuccess := true
+	// First check all servers individually and write the working servers
+	// in a list
+	working := []*network.ServerIdentity{}
 	for _, e := range g.Roster.List {
 		desc := []string{"none", "none"}
 		if d := g.GetDescription(e); d != "" {
 			desc = []string{d, d}
 		}
 		el := onet.NewRoster([]*network.ServerIdentity{e})
-		success = checkList(el, desc) == nil && success
+		err := checkList(el, desc, true)
+		if err == nil {
+			working = append(working, e)
+		} else {
+			totalSuccess = false
+		}
 	}
-	if len(g.Roster.List) > 1 {
-		// Then check pairs of servers
-		for i, first := range g.Roster.List {
-			for _, second := range g.Roster.List[i+1:] {
-				log.Lvl3("Testing connection between", first, second)
-				desc := []string{"none", "none"}
-				if d1 := g.GetDescription(first); d1 != "" {
-					desc = []string{d1, g.GetDescription(second)}
+	wn := len(working)
+	if wn > 1 {
+		// Check one big roster sqrt(len(working)) times.
+		descriptions := make([]string, wn)
+		rand.Seed(int64(time.Now().Nanosecond()))
+		for j := 0; j <= int(math.Sqrt(float64(wn))); j++ {
+			permutation := rand.Perm(wn)
+			for i, si := range working {
+				descriptions[permutation[i]] = g.GetDescription(si)
+			}
+			totalSuccess = checkList(onet.NewRoster(working), descriptions, detail) == nil && totalSuccess
+		}
+
+		// Then check pairs of servers if we want to have detail
+		if detail {
+			for i, first := range working {
+				for _, second := range working[i+1:] {
+					log.Lvl3("Testing connection between", first, second)
+					desc := []string{"none", "none"}
+					if d1 := g.GetDescription(first); d1 != "" {
+						desc = []string{d1, g.GetDescription(second)}
+					}
+					es := []*network.ServerIdentity{first, second}
+					totalSuccess = checkList(onet.NewRoster(es), desc, detail) == nil && totalSuccess
+					es[0], es[1] = es[1], es[0]
+					desc[0], desc[1] = desc[1], desc[0]
+					totalSuccess = checkList(onet.NewRoster(es), desc, detail) == nil && totalSuccess
 				}
-				es := []*network.ServerIdentity{first, second}
-				success = checkList(onet.NewRoster(es), desc) == nil && success
-				es[0], es[1] = es[1], es[0]
-				desc[0], desc[1] = desc[1], desc[0]
-				success = checkList(onet.NewRoster(es), desc) == nil && success
 			}
 		}
 	}
-
-	if !success {
+	if !totalSuccess {
 		return errors.New("At least one of the tests failed")
 	}
 	return nil
@@ -84,15 +108,18 @@ func Servers(g *config.Group) error {
 // waits for the reply.
 // If the reply doesn't arrive in time, it will return an
 // error.
-func checkList(list *onet.Roster, descs []string) error {
+func checkList(list *onet.Roster, descs []string, detail bool) error {
 	serverStr := ""
 	for i, s := range list.List {
 		name := strings.Split(descs[i], " ")[0]
-		serverStr += fmt.Sprintf("%s_%s ", s.Address, name)
+		if detail {
+			serverStr += s.Address.NetworkAddress() + "_"
+		}
+		serverStr += name + " "
 	}
 	log.Lvl3("Sending message to: " + serverStr)
 	msg := "verification"
-	fmt.Printf("Checking server(s) %s: ", serverStr)
+	fmt.Printf("Checking %d server(s) %s: ", len(list.List), serverStr)
 	sig, err := signStatement(strings.NewReader(msg), list)
 	if err != nil {
 		fmt.Println(err)

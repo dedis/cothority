@@ -80,19 +80,28 @@ func main() {
 			Flags: serverFlags,
 		},
 		{
-			Name:    "check",
-			Aliases: []string{"c"},
-			Usage:   "Check if the servers in the group definition are up and running",
-			Action:  checkConfig,
+			Name:      "check",
+			Aliases:   []string{"c"},
+			Usage:     "Check if the servers in the group definition are up and running",
+			ArgsUsage: "Cothority group definition file",
+			Action:    checkConfig,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "g",
 					Usage: "Cothority group definition file",
 				},
+				cli.BoolFlag{
+					Name:  "detail,l",
+					Usage: "do pairwise signing and show full addresses",
+				},
 			},
 		},
 	}
 	cliApp.Flags = serverFlags
+	cliApp.Before = func(c *cli.Context) error {
+		log.SetDebugVisible(c.Int("debug"))
+		return nil
+	}
 	// default action
 	cliApp.Action = func(c *cli.Context) error {
 		runServer(c)
@@ -105,7 +114,6 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// first check the options
-	log.SetDebugVisible(ctx.Int("debug"))
 	config := ctx.String("config")
 
 	server.RunServer(config)
@@ -115,5 +123,8 @@ func runServer(ctx *cli.Context) {
 // signature from each.
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.String("g")
-	return check.Config(tomlFileName)
+	if c.NArg() > 0 {
+		tomlFileName = c.Args().First()
+	}
+	return check.Config(tomlFileName, c.Bool("detail"))
 }
