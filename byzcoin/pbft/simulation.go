@@ -76,7 +76,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	trblock := blockchain.NewTrBlock(trlist, header)
 
 	// Here we first setup the N^2 connections with a broadcast protocol
-	pi, err := onetConf.Overlay.CreateProtocolOnet("Broadcast", onetConf.Tree)
+	pi, err := onetConf.Overlay.CreateProtocol("Broadcast", onetConf.Tree, onet.NilServiceID)
 	if err != nil {
 		log.Error(err)
 	}
@@ -95,7 +95,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl3("Simulation can start!")
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
-		p, err := onetConf.Overlay.CreateProtocolOnet("ByzCoinPBFT", onetConf.Tree)
+		p, err := onetConf.Overlay.CreateProtocol("ByzCoinPBFT", onetConf.Tree, onet.NilServiceID)
 		if err != nil {
 			return err
 		}

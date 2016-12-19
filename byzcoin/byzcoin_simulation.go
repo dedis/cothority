@@ -91,7 +91,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
 	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
-	pi, err := onetConf.Overlay.CreateProtocolOnet("Broadcast", onetConf.Tree)
+	pi, err := onetConf.Overlay.CreateProtocol("Broadcast", onetConf.Tree, onet.NilServiceID)
 	if err != nil {
 		return err
 	}

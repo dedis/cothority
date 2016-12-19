@@ -55,7 +55,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	for round := 0; round < e.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		round := monitor.NewTimeMeasure("round")
-		p, err := config.Overlay.CreateProtocolOnet("ExampleHandlers", config.Tree)
+		p, err := config.Overlay.CreateProtocol("ExampleHandlers", config.Tree, onet.NilServiceID)
 		if err != nil {
 			return err
 		}

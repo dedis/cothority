@@ -73,6 +73,6 @@ func (pc *PC) ServerIdentity() *network.ServerIdentity {
 	return pc.C.ServerIdentity
 
 }
-func (pc *PC) CreateProtocolOnet(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
-	return pc.O.CreateProtocolOnet(name, t)
+func (pc *PC) CreateProtocol(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
+	return pc.O.CreateProtocol(name, t, onet.NilServiceID)
 }

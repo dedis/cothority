@@ -58,7 +58,7 @@ func (cs *Simulation) Run(config *onet.SimulationConfig) error {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 		// create the node with the protocol, but do NOT start it yet.
-		node, err := config.Overlay.CreateProtocolOnet(Name, config.Tree)
+		node, err := config.Overlay.CreateProtocol(Name, config.Tree, onet.NilServiceID)
 		if err != nil {
 			return err
 		}
