@@ -122,9 +122,9 @@ func TestService_StoreConfig(t *testing.T) {
 	defer local.CloseAll()
 	service := local.GetServices(nodes, serviceId)[0].(*Service)
 	desc := &PopDesc{
-		Name:   "test",
-		Date:   "tomorrow",
-		Roster: onet.NewRoster(r.List),
+		Name:     "test",
+		DateTime: "tomorrow",
+		Roster:   onet.NewRoster(r.List),
 	}
 	msg, cerr := service.StoreConfig(&StoreConfig{desc})
 	log.ErrFatal(cerr)
@@ -136,9 +136,9 @@ func TestService_StoreConfig(t *testing.T) {
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int) (*PopDesc, []abstract.Point, []*Service) {
 	desc := &PopDesc{
-		Name:   "test",
-		Date:   "tomorrow",
-		Roster: onet.NewRoster(el.List),
+		Name:     "test",
+		DateTime: "tomorrow",
+		Roster:   onet.NewRoster(el.List),
 	}
 	atts := make([]abstract.Point, nbr)
 	for i := range atts {

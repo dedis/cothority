@@ -17,9 +17,9 @@ func TestFinalStatement_ToToml(t *testing.T) {
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{
 		Desc: &PopDesc{
-			Name:   "test",
-			Date:   "yesterday",
-			Roster: roster,
+			Name:     "test",
+			DateTime: "yesterday",
+			Roster:   roster,
 		},
 		Attendees: []abstract.Point{pk.Public},
 	}
@@ -27,7 +27,7 @@ func TestFinalStatement_ToToml(t *testing.T) {
 	fsStr := fs.ToToml()
 	log.LLvl2(fsStr)
 	fs2 := NewFinalStatementFromString(fsStr)
-	require.Equal(t, fs.Desc.Date, fs2.Desc.Date)
+	require.Equal(t, fs.Desc.DateTime, fs2.Desc.DateTime)
 	require.True(t, fs.Desc.Roster.Aggregate.Equal(fs2.Desc.Roster.Aggregate))
 	require.True(t, fs.Attendees[0].Equal(fs2.Attendees[0]))
 }
