@@ -48,6 +48,10 @@ var CmdCheck = cli.Command{
 			Name:  "g",
 			Usage: "Cothority group definition file",
 		},
+		cli.BoolFlag{
+			Name:  "detail, d",
+			Usage: "give more detail in searching for errors",
+		},
 	},
 }
 
@@ -69,5 +73,5 @@ func RunServer(ctx *cli.Context) {
 // signature from each.
 func CheckConfig(c *cli.Context) error {
 	tomlFileName := c.String("g")
-	return check.Config(tomlFileName)
+	return check.Config(tomlFileName, c.Bool("d"))
 }

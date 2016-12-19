@@ -2,9 +2,9 @@
 
 DBG_SHOW=2
 # Debug-level for server
-DBG_SRV=2
+DBG_SRV=0
 # For easier debugging
-STATICDIR=test
+#STATICDIR=test
 
 . $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 . ./libcothority/cothority.sh
