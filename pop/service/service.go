@@ -222,6 +222,7 @@ func newService(c *onet.Context, path string) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		path:             path,
+		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
 	}
 	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest); err != nil {
