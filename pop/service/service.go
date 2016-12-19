@@ -136,10 +136,10 @@ func (s *Service) CheckConfig(req *network.Packet) {
 				ccr.PopStatus = 2
 			} else {
 				ccr.PopStatus = 3
+				ccr.Attendees = s.data.final.Attendees
 			}
 		}
 	}
-	ccr.Attendees = s.data.final.Attendees
 	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
 	err := s.SendRaw(req.ServerIdentity, ccr)
 	if err != nil {
