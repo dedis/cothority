@@ -217,6 +217,7 @@ func (s *Service) tryLoad() error {
 		}
 		log.Lvl3("Successfully loaded")
 		s.data = msg.(*saveData)
+		log.Printf("%#v", s.data)
 	}
 	return nil
 }
