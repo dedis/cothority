@@ -16,6 +16,8 @@ import (
 
 	"path"
 
+	"time"
+
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -62,6 +64,7 @@ type saveData struct {
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	if req.Pin == "" {
+		rand.Seed(int64(time.Now().Nanosecond()))
 		s.data.Pin = fmt.Sprintf("%06d", rand.Intn(100000))
 		log.Info("PIN:", s.data.Pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
