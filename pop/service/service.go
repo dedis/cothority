@@ -33,6 +33,7 @@ var checkConfigReplyID network.PacketTypeID
 func init() {
 	onet.RegisterNewService(Name, newService)
 	network.RegisterPacketType(CheckConfig{})
+	network.RegisterPacketType(saveData{})
 	checkConfigID = network.RegisterPacketType(CheckConfig{})
 	checkConfigReplyID = network.RegisterPacketType(CheckConfigReply{})
 }
