@@ -52,7 +52,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	if req.Pin == "" {
 		s.pin = fmt.Sprintf("%06d", rand.Intn(100000))
 		log.Info("PIN:", s.pin)
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PING in server-log")
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
 	}
 	if req.Pin != s.pin {
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")

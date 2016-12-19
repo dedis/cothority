@@ -17,6 +17,10 @@ import (
 
 	"bytes"
 
+	"net"
+
+	"fmt"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/cosi/check"
 	"github.com/dedis/cothority/pop/service"
@@ -91,7 +95,15 @@ func mgrLink(c *cli.Context) error {
 		log.Fatal("Please give an IP and optionally a pin")
 	}
 	newConfig()
-	addr := network.NewAddress(network.PlainTCP, c.Args().First())
+	host, port, err := net.SplitHostPort(c.Args().First())
+	if err != nil {
+		return err
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return err
+	}
+	addr := network.NewAddress(network.PlainTCP, fmt.Sprintf("%s:%s", addrs[0], port))
 	if err := client.Pin(addr, c.Args().Get(1), mainConfig.Public); err != nil {
 		return err
 	}
