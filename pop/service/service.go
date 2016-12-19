@@ -69,6 +69,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
 	}
 	s.data.public = req.Public
+	s.save()
 	return nil, nil
 }
 
@@ -79,6 +80,7 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
 	}
 	s.data.final = &FinalStatement{Desc: req.Desc}
+	s.save()
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
 
@@ -108,6 +110,7 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 		}
 	}
 	s.data.final.Signature = []byte("signed")
+	s.save()
 	return &FinalizeResponse{s.data.final}, nil
 }
 
