@@ -18,7 +18,9 @@ const (
 	// ErrorInternal indicates something internally went wrong - see the
 	// error message
 	ErrorInternal
-	ErrorOtherConfigs
+	// ErrorOtherFinals indicates that one or more of the other conodes
+	// are still missing the finalization-step
+	ErrorOtherFinals
 )
 
 func init() {
@@ -26,21 +28,23 @@ func init() {
 	network.RegisterPacketType(&PopDesc{})
 }
 
+// FinalStatement is the final configuration holding all data necessary
+// for a verifier.
 type FinalStatement struct {
 	Desc      *PopDesc
 	Attendees []abstract.Point
 	Signature []byte
 }
 
-type FinalStatementToml struct {
-	Desc      *PopDescToml
+type finalStatementToml struct {
+	Desc      *popDescToml
 	Attendees []string
 	Signature string
 }
 
-// Creates a final statement from a string
+// NewFinalStatementFromString creates a final statement from a string
 func NewFinalStatementFromString(s string) *FinalStatement {
-	fsToml := &FinalStatementToml{}
+	fsToml := &finalStatementToml{}
 	_, err := toml.Decode(s, fsToml)
 	if err != nil {
 		log.Error(err)
@@ -83,6 +87,7 @@ func NewFinalStatementFromString(s string) *FinalStatement {
 	}
 }
 
+// PointToB64 converts an abstract.Point to a base64-point.
 func PointToB64(p abstract.Point) string {
 	pub, err := p.MarshalBinary()
 	if err != nil {
@@ -92,6 +97,7 @@ func PointToB64(p abstract.Point) string {
 	return base64.StdEncoding.EncodeToString(pub)
 }
 
+// B64ToPoint converts a base64-string to an abstract.Point.
 func B64ToPoint(str string) abstract.Point {
 	public := network.Suite.Point()
 	buf, err := base64.StdEncoding.DecodeString(str)
@@ -107,6 +113,7 @@ func B64ToPoint(str string) abstract.Point {
 	return public
 }
 
+// ScalarToB64 converts an abstract.Scalar to a base64-string.
 func ScalarToB64(s abstract.Scalar) string {
 	sec, err := s.MarshalBinary()
 	if err != nil {
@@ -116,6 +123,7 @@ func ScalarToB64(s abstract.Scalar) string {
 	return base64.StdEncoding.EncodeToString(sec)
 }
 
+// B64ToScalar converts a base64-string to an abstract.Scalar.
 func B64ToScalar(str string) abstract.Scalar {
 	scalar := network.Suite.Scalar()
 	buf, err := base64.StdEncoding.DecodeString(str)
@@ -131,7 +139,7 @@ func B64ToScalar(str string) abstract.Scalar {
 	return scalar
 }
 
-// Returns a toml-string.
+// ToToml returns a toml-string.
 func (fs *FinalStatement) ToToml() string {
 	rostr := [][]string{}
 	for _, si := range fs.Desc.Roster.List {
@@ -139,7 +147,7 @@ func (fs *FinalStatement) ToToml() string {
 			uuid.UUID(si.ID).String(), PointToB64(si.Public)}
 		rostr = append(rostr, sistr)
 	}
-	descToml := &PopDescToml{
+	descToml := &popDescToml{
 		Name:   fs.Desc.Name,
 		Date:   fs.Desc.Date,
 		Roster: rostr,
@@ -148,7 +156,7 @@ func (fs *FinalStatement) ToToml() string {
 	for _, p := range fs.Attendees {
 		atts = append(atts, PointToB64(p))
 	}
-	fsToml := &FinalStatementToml{
+	fsToml := &finalStatementToml{
 		Desc:      descToml,
 		Attendees: atts,
 		Signature: base64.StdEncoding.EncodeToString(fs.Signature),
@@ -161,14 +169,15 @@ func (fs *FinalStatement) ToToml() string {
 	return string(buf.Bytes())
 }
 
-// PoPDesc holds the name, date and a roster of all involved conodes.
+// PopDesc holds the name, date and a roster of all involved conodes.
 type PopDesc struct {
 	Name   string
 	Date   string
 	Roster *onet.Roster
 }
 
-type PopDescToml struct {
+// represents a PopDesc in string-version for toml.
+type popDescToml struct {
 	Name   string
 	Date   string
 	Roster [][]string
@@ -202,7 +211,7 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(Name)}
 }
 
-// Link takes a destination-address, a PIN and a public key as an argument.
+// Pin takes a destination-address, a PIN and a public key as an argument.
 // If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
 // If the PIN is given and is correct, the public key will be stored in the
 // service.

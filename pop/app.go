@@ -39,6 +39,7 @@ func init() {
 
 var client *service.Client
 
+// Config represents either a manager or an attendee configuration.
 type Config struct {
 	Private abstract.Scalar
 	Public  abstract.Point

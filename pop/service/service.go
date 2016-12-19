@@ -91,7 +91,8 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 			}
 			rep := <-s.ccChannel
 			if rep == nil {
-				return nil, onet.NewClientErrorCode(ErrorOtherConfigs, "")
+				return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+					"Not all other conodes finalized yet")
 			}
 		}
 	}
@@ -127,7 +128,7 @@ func (s *Service) CheckConfig(req *network.Packet) {
 	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
 	err := s.SendRaw(req.ServerIdentity, ccr)
 	if err != nil {
-		log.Errorf("Couldn't send reply:", err)
+		log.Error("Couldn't send reply:", err)
 	}
 }
 

@@ -46,13 +46,14 @@ type StoreConfig struct {
 	Desc *PopDesc
 }
 
+// StoreConfigReply gives back the hash.
 // TODO: StoreConfigReply will give in a later version a handler that can be used to
 // identify that config.
 type StoreConfigReply struct {
 	ID []byte
 }
 
-// PingRequest will print a random pin on stdout if the pin is empty. If
+// PinRequest will print a random pin on stdout if the pin is empty. If
 // the pin is given and is equal to the random pin chosen before, the
 // public-key is stored as a reference to the allowed client.
 type PinRequest struct {
