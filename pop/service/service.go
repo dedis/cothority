@@ -74,6 +74,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	}
 	s.data.Public = req.Public
 	s.save()
+	log.Lvl1("Successfully registered PIN/Public", s.data.Pin, req.Public)
 	return nil, nil
 }
 
