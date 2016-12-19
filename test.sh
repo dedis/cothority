@@ -6,7 +6,6 @@ DBG_SRV=0
 # For easier debugging
 #STATICDIR=test
 
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 . ./libcothority/cothority.sh
 
 main(){

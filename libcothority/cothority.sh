@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [ ! "$LIBTEST" ]; then
+  . $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+fi
+
 DBG_SRV=${DBG_SRV:-0}
 NBR_SERVERS=${NBR_SERVERS:-3}
 NBR_SERVERS_GROUP=${NBR_SERVERS_GROUP:-2}
