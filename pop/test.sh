@@ -17,15 +17,15 @@ main(){
     buildApp
 #    test Build
 #    test Cothority
-    test MgrLink
-    test MgrConfig
-	test ClCreate
-	test MgrPublic
-	test MgrFinal
+#    test MgrLink
+#    test MgrConfig
+#	test ClCreate
+#	test MgrPublic
+#	test MgrFinal
 	test MgrFinal2
-	test ClJoin
-	test ClSign
-	test ClVerify
+#	test ClJoin
+#	test ClSign
+#	test ClVerify
     stopTest
 }
 
@@ -33,8 +33,9 @@ testClVerify(){
 	mkClSign
 	testFail runCl 1 client verify msg1 ctx1 $tag1 $sig1
 	testOK runCl 1 client verify msg1 ctx1 $sig1 $tag1
-	testOK runCl 1 client verify msg1 ctx1 $sig2 $tag2
 	testFail runCl 1 client verify msg1 ctx1 $sig1 $tag2
+	testOK runCl 1 client verify msg1 ctx1 $sig2 $tag2
+	testFail runCl 1 client verify msg1 ctx1 $sig2 $tag1
 }
 
 mkClSign(){
@@ -91,8 +92,8 @@ testMgrFinal2(){
 	testOK runCl 1 mgr final
 	runCl 1 mgr final > final1.toml
 	runCl 2 mgr final > final2.toml
-#	testNGrep , echo $( runCl 1 mgr final | grep Attend )
-#	testNGrep , echo $( runCl 2 mgr final | grep Attend )
+	testNGrep , echo $( runCl 1 mgr final | grep Attend )
+	testNGrep , echo $( runCl 2 mgr final | grep Attend )
 	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
 }
 

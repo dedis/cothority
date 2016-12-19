@@ -71,7 +71,7 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
 
-// FinalizeResponse returns the FinalStatement if all conodes already received
+// FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
 func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.ClientError) {
@@ -84,7 +84,7 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 	cc := &CheckConfig{s.final.Desc.Hash(), req.Attendees}
 	for _, c := range s.final.Desc.Roster.List {
 		if !c.ID.Equal(s.ServerIdentity().ID) {
-			log.Lvl3("Contacting", c)
+			log.LLvl3("Contacting", c, cc.Attendees)
 			err := s.SendRaw(c, cc)
 			if err != nil {
 				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
@@ -110,7 +110,7 @@ func (s *Service) CheckConfig(req *network.Packet) {
 		return
 	}
 
-	ccr := &CheckConfigReply{0, cc.PopHash, cc.Attendees}
+	ccr := &CheckConfigReply{0, cc.PopHash, nil}
 	if s.final != nil {
 		if !bytes.Equal(s.final.Desc.Hash(), cc.PopHash) {
 			ccr.PopStatus = 1
@@ -123,6 +123,7 @@ func (s *Service) CheckConfig(req *network.Packet) {
 			}
 		}
 	}
+	ccr.Attendees = s.final.Attendees
 	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
 	err := s.SendRaw(req.ServerIdentity, ccr)
 	if err != nil {

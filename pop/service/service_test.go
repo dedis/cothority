@@ -92,7 +92,7 @@ func TestService_CheckConfigReply(t *testing.T) {
 	s0.final.Attendees = make([]abstract.Point, len(atts))
 	copy(s0.final.Attendees, atts)
 
-	ccr := &CheckConfigReply{0, desc.Hash(), atts}
+	ccr := CheckConfigReply{0, desc.Hash(), atts}
 	req := &network.Packet{
 		Msg:  ccr,
 		From: nodes[1].ServerIdentity.Address,
@@ -103,11 +103,13 @@ func TestService_CheckConfigReply(t *testing.T) {
 	require.Equal(t, 2, len(s0.final.Attendees))
 
 	ccr.Attendees = atts[:1]
+	req.Msg = ccr
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
 	require.Equal(t, 2, len(s0.final.Attendees))
 
 	ccr.PopStatus = 3
+	req.Msg = ccr
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
 	require.Equal(t, 1, len(s0.final.Attendees))
