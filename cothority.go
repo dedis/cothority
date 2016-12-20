@@ -25,6 +25,7 @@ import (
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/onet/app/server"
+	// TEST_LINE - DON'T REMOVE
 )
 
 // Version of this binary
