@@ -16,9 +16,9 @@ https://github.com/dedis/cothority/wiki
 
 So you want to use one of our services and you are interested in one of our projects:
 
-* [[Cothority]] - The main server being able to handle all service-requests
-* [[CoSi]] - Collective Signing, where you can submit a hash of a document and get a collective signature on it
-* [[Cisc]] - Cisc Identity Skipchain, a distributed key/value storage handled by a permissioned, personal blockchain with an SSH-plugin
+* [Cothority](https://github.com/dedis/cothority/wiki/Cothority) - The main server being able to handle all service-requests
+* [CoSi] - Collective Signing, where you can submit a hash of a document and get a collective signature on it
+* [Cisc] - Cisc Identity Skipchain, a distributed key/value storage handled by a permissioned, personal blockchain with an SSH-plugin
 
 ## Services
 
