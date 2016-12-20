@@ -17,18 +17,26 @@ https://github.com/dedis/cothority/wiki
 So you want to use one of our services and you are interested in one of our projects:
 
 * [Cothority](https://github.com/dedis/cothority/wiki/Cothority) - The main server being able to handle all service-requests
-* [CoSi] - Collective Signing, where you can submit a hash of a document and get a collective signature on it
-* [Cisc] - Cisc Identity Skipchain, a distributed key/value storage handled by a permissioned, personal blockchain with an SSH-plugin
+* [CoSi](https://github.com/dedis/cothority/wiki/CoSi) - Collective Signing, where you can submit a hash of a document and get a collective signature on it
+* [Cisc](https://github.com/dedis/cothority/wiki/Cisc) - Cisc Identity Skipchain, a distributed key/value storage handled by a permissioned, personal blockchain with an SSH-plugin
 
 ## Services
 
-Some of the services don't have yet an application, but can be interesting anyway:
+All apps communicate with services that are in a cothority. Here is a list of
+available services, some don't have a corresponding app:
 
-* [[ServiceTimestamper]]
+* [ServiceTimestamper](https://github.com/dedis/cothority/wiki/ServiceTimestamper)
 
 ## Protocols
 
-This is a short overview of the available protocols in the cothority-repository:
+This is a short overview of the available protocols in the cothority-repository,
+for some of them we don't have a service yet.
+
+* [](https://github.com/dedis/cothority/wiki/)
+* [](https://github.com/dedis/cothority/wiki/)
+* [](https://github.com/dedis/cothority/wiki/)
+* [](https://github.com/dedis/cothority/wiki/)
+* [](https://github.com/dedis/cothority/wiki/)
 
 ### Byzcoin 
 
