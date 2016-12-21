@@ -67,7 +67,8 @@ func NewFinalStatementFromString(s string) *FinalStatement {
 	rostr := onet.NewRoster(sis)
 	desc := &PopDesc{
 		Name:     fsToml.Desc.Name,
-		DateTime: fsToml.Desc.Date,
+		DateTime: fsToml.Desc.DateTime,
+		Location: fsToml.Desc.Location,
 		Roster:   rostr,
 	}
 	atts := []abstract.Point{}
@@ -148,9 +149,10 @@ func (fs *FinalStatement) ToToml() string {
 		rostr = append(rostr, sistr)
 	}
 	descToml := &popDescToml{
-		Name:   fs.Desc.Name,
-		Date:   fs.Desc.DateTime,
-		Roster: rostr,
+		Name:     fs.Desc.Name,
+		DateTime: fs.Desc.DateTime,
+		Location: fs.Desc.Location,
+		Roster:   rostr,
 	}
 	atts := []string{}
 	for _, p := range fs.Attendees {
@@ -179,9 +181,10 @@ type PopDesc struct {
 
 // represents a PopDesc in string-version for toml.
 type popDescToml struct {
-	Name   string
-	Date   string
-	Roster [][]string
+	Name     string
+	DateTime string
+	Location string
+	Roster   [][]string
 }
 
 // Hash calculates the hash of this structure
@@ -192,6 +195,7 @@ func (p *PopDesc) Hash() []byte {
 	hash := network.Suite.Hash()
 	hash.Write([]byte(p.Name))
 	hash.Write([]byte(p.DateTime))
+	hash.Write([]byte(p.Location))
 	buf, err := p.Roster.Aggregate.MarshalBinary()
 	if err != nil {
 		log.Error(err)

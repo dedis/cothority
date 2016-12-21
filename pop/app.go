@@ -21,6 +21,8 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/cosi/check"
 	"github.com/dedis/cothority/pop/service"
@@ -131,8 +133,9 @@ func mgrConfig(c *cli.Context) error {
 	_, err = toml.Decode(string(buf), desc)
 	log.ErrFatal(err, "While decoding", pdFile)
 	group := readGroup(c.Args().Get(1))
-	log.ErrFatal(check.Servers(group), "Couldn't check servers")
 	desc.Roster = group.Roster
+	log.Info("Hash of config is:", base64.StdEncoding.EncodeToString(desc.Hash()))
+	log.ErrFatal(check.Servers(group), "Couldn't check servers")
 	log.ErrFatal(client.StoreConfig(mainConfig.Address, desc))
 	mainConfig.Final.Desc = desc
 	writeConfig()
@@ -141,20 +144,32 @@ func mgrConfig(c *cli.Context) error {
 
 // adds a public key to the list
 func mgrPublic(c *cli.Context) error {
-	log.Info("Mgr: Adding public key", c.Args().First())
+	log.Info("Mgr: Adding public keys", c.Args().First())
 	if c.NArg() < 1 {
 		log.Fatal("Please give a public key")
 	}
-	pub := service.B64ToPoint(c.Args().First())
-	if pub == nil {
-		log.Fatal("Couldn't parse public key")
+	str := c.Args().First()
+	if !strings.HasPrefix(str, "[") {
+		str = "[" + str + "]"
 	}
-	for _, p := range mainConfig.Final.Attendees {
-		if p.Equal(pub) {
-			log.Fatal("This key already exists")
+	str = strings.Replace(str, "\"", "", -1)
+	str = strings.Replace(str, "[", "", -1)
+	str = strings.Replace(str, "]", "", -1)
+	str = strings.Replace(str, "\\", "", -1)
+	log.Print(str)
+	keys := strings.Split(str, ",")
+	for _, k := range keys {
+		pub := service.B64ToPoint(k)
+		if pub == nil {
+			log.Fatal("Couldn't parse public key:", k)
 		}
+		for _, p := range mainConfig.Final.Attendees {
+			if p.Equal(pub) {
+				log.Fatal("This key already exists")
+			}
+		}
+		mainConfig.Final.Attendees = append(mainConfig.Final.Attendees, pub)
 	}
-	mainConfig.Final.Attendees = append(mainConfig.Final.Attendees, pub)
 	writeConfig()
 	return nil
 }
@@ -182,10 +197,9 @@ func mgrFinal(c *cli.Context) error {
 
 // creates a new private/public pair
 func clientCreate(c *cli.Context) error {
-	log.Info("Client: create")
 	priv := network.Suite.NewKey(random.Stream)
 	pub := network.Suite.Point().Mul(nil, priv)
-	log.Infof("Keypair private-public:\n%s\n%s",
+	log.Infof("Private: %s\nPublic: %s",
 		service.ScalarToB64(priv),
 		service.PointToB64(pub))
 	return nil
@@ -239,10 +253,10 @@ func clientSign(c *cli.Context) error {
 	ctx := []byte(c.Args().Get(1))
 
 	Set := anon.Set(mainConfig.Final.Attendees)
-	sig := anon.Sign(network.Suite, random.Stream, msg,
+	sigtag := anon.Sign(network.Suite, random.Stream, msg,
 		Set, ctx, mainConfig.Index, mainConfig.Private)
-	tag, err := anon.Verify(network.Suite, msg, Set, ctx, sig)
-	log.ErrFatal(err)
+	sig := sigtag[:len(sigtag)-32]
+	tag := sigtag[len(sigtag)-32:]
 	log.Infof("\nSignature: %s\nTag: %s", base64.StdEncoding.EncodeToString(sig),
 		base64.StdEncoding.EncodeToString(tag))
 	return nil
@@ -263,8 +277,9 @@ func clientVerify(c *cli.Context) error {
 	log.ErrFatal(err)
 	tag, err := base64.StdEncoding.DecodeString(c.Args().Get(3))
 	log.ErrFatal(err)
+	sigtag := append(sig, tag...)
 	ctag, err := anon.Verify(network.Suite, msg,
-		anon.Set(mainConfig.Final.Attendees), ctx, sig)
+		anon.Set(mainConfig.Final.Attendees), ctx, sigtag)
 	log.ErrFatal(err)
 	if !bytes.Equal(tag, ctag) {
 		log.Fatalf("Tag and calculated tag are not equal:\n%x - %x", tag, ctag)

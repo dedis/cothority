@@ -9,8 +9,7 @@ STATICDIR=test
 NBR_CLIENTS=3
 NBR_SERVERS=3
 
-. $GOPATH/src/github.com/dedis/onet/app/tesht/libtest.sh
-. $GOPATH/src/github.com/dedis/onet/app/tesht/cothority.sh
+. ../libcothority/cothority.sh
 
 main(){
     startTest
@@ -18,15 +17,15 @@ main(){
 #    test Build
 #    test Cothority
 #    test MgrLink
-	test Save
+#	test Save
 #    test MgrConfig
 #	test ClCreate
 #	test MgrPublic
 #	test MgrFinal
 #	test MgrFinal2
 #	test ClJoin
-#	test ClSign
-#	test ClVerify
+	test ClSign
+	test ClVerify
     stopTest
 }
 
@@ -135,8 +134,7 @@ testMgrFinal(){
 	runCl 2 mgr config pop_desc.toml group.toml
 	runCl 1 mgr public $pub1
 	runCl 1 mgr public $pub2
-	runCl 2 mgr public $pub1
-	runCl 2 mgr public $pub2
+	runCl 2 mgr public "\[\"$pub1\",\"$pub2\"\]"
 	testFail runCl 1 mgr final
 	testOK runCl 2 mgr final
 }
@@ -158,10 +156,10 @@ testClCreate(){
 mkKeypair(){
 	runCl 1 client create > keypair.1
 	runCl 1 client create > keypair.2
-	priv1=$( tail -n 3 keypair.1 | head -n 1 )
-	priv2=$( tail -n 3 keypair.2 | head -n 1 )
-	pub1=$( tail -n 2 keypair.1 )
-	pub2=$( tail -n 2 keypair.2 )
+	priv1=$( grep Private keypair.1 | sed -e "s/.* //" )
+	priv2=$( grep Private keypair.2 | sed -e "s/.* //" )
+	pub1=$( grep Public keypair.1 | sed -e "s/.* //" )
+	pub2=$( grep Public keypair.2 | sed -e "s/.* //" )
 }
 
 testMgrConfig(){
@@ -174,8 +172,9 @@ testMgrConfig(){
 
 mkPopConfig(){
 	cat << EOF > pop_desc.toml
-Name = "testpop"
-Date = "2016-12-16 09:00"
+Name = "33c3 Proof-of-Personhood Party"
+DateTime = "2016-12-29 15:00 UTC"
+Location = "Earth, Germany, Hannover, Hall A1"
 EOF
 }
 
@@ -228,7 +227,9 @@ runCl(){
 }
 
 buildApp(){
-	makeTestDir
+    startTest
+	appBuild
+	cothorityBuild
     echo "Creating directories"
     for n in $(seq $NBR_CLIENTS); do
         cl=cl$n
