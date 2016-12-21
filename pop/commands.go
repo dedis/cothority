@@ -10,8 +10,8 @@ var commandMgr, commandClient cli.Command
 
 func init() {
 	commandMgr = cli.Command{
-		Name:  "mgr",
-		Usage: "Managing a PoParty",
+		Name:  "org",
+		Usage: "Organising a PoParty",
 		Subcommands: []cli.Command{
 			{
 				Name:      "link",

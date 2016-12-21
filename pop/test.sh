@@ -15,7 +15,6 @@ main(){
     startTest
     buildApp
 #    test Build
-#    test Cothority
 #    test MgrLink
 #	test Save
 #    test MgrConfig
@@ -25,7 +24,7 @@ main(){
 #	test MgrFinal2
 #	test ClJoin
 	test ClSign
-	test ClVerify
+#	test ClVerify
     stopTest
 }
 
@@ -51,6 +50,7 @@ mkClSign(){
 testClSign(){
 	mkClJoin
 	testFail runCl 1 client sign
+	testOK runCl 1 client sign msg1 ctx1
 	testOK runCl 1 client sign msg1 ctx1
 }
 
