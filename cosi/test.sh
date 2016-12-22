@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_TEST=1
 # Debug-level for app
 DBG_APP=0
-# Uncomment to build in local dir
-#STATICDIR=test
 
-. ../app/lib/test/libtest.sh
-. ../app/lib/test/cothorityd.sh
+. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 tails=8
 
 main(){
     startTest
-    build
+    for n in $(seq $NBR); do
+        srv=srv$n
+        rm -rf $srv
+        mkdir $srv
+        cl=cl$n
+        rm -rf $cl
+        mkdir $cl
+    done
     test Build
     test ServerCfg
     test SignFile
@@ -102,35 +106,5 @@ runSrvCfg(){
 runSrv(){
     ( ./cosi -d $DBG_SRV server -c srv$1/config.toml & )
 }
-
-build(){
-    BUILDDIR=$(pwd)
-    if [ "$STATICDIR" ]; then
-        DIR=$STATICDIR
-    else
-        DIR=$(mktemp -d)
-    fi
-    mkdir -p $DIR
-    cd $DIR
-    echo "Building in $DIR"
-    if [ ! -x cosi ]; then
-        go build -o cosi $BUILDDIR/cosi/*go
-    fi
-    for n in $(seq $NBR); do
-        srv=srv$n
-        rm -rf $srv
-        mkdir $srv
-        cl=cl$n
-        rm -rf $cl
-        mkdir $cl
-    done
-}
-
-if [ "$1" == "-q" ]; then
-  DBG_RUN=
-  STATICDIR=
-elif [ "$1" ]; then
-  rm -f $STATICDIR/cosi
-fi
 
 main
