@@ -1,0 +1,35 @@
+{
+  "name": "qcode-decoder",
+  "version": "0.1.0",
+  "description": "Decodes QRCode in the Browser and Node",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cirocosta/qcode-decoder.git"
+  },
+  "author": "Ciro S. Costa <ciro9758@gmail.com> (http://cirocosta.github.io/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cirocosta/qcode-decoder/issues"
+  },
+  "homepage": "https://github.com/cirocosta/qcode-decoder",
+  "scripts": {
+    "test": "zuul -- tests/test-qcode-decoder.js",
+    "test-local": "zuul --local 8080 --ui mocha-bdd -- tests/test-qcode-decoder.js"
+  },
+  "devDependencies": {
+    "bower": "^1.3.3",
+    "gulp": "^3.6.2",
+    "gulp-concat": "^2.2.0",
+    "gulp-footer": "^1.0.5",
+    "gulp-header": "^1.0.5",
+    "gulp-jshint": "^1.6.1",
+    "gulp-sourcemaps": "^1.1.5",
+    "gulp-uglify": "^0.3.0",
+    "zuul": "^1.10.2"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "qcode-decoder",
+  "main": "build/main.min.js",
+  "description": "Decodes QRCode in the browser and node",
+  "version": "0.1.0",
+  "homepage": "https://github.com/cirocosta/qcode-decoder",
+  "authors": [
+    "Ciro S. Costa <ciro.costa@usp.br>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "examples",
+    "vendor",
+    "tests"
+  ],
+  "keywords": [
+    "qrcode-decoder",
+    "qrcode",
+    "qrcode-browser",
+    "nodejs",
+    "html5"
+  ],
+  "_release": "0.1.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.1.0",
+    "commit": "a5eecf73006b90112be4e080b699ce1902d7911c"
+  },
+  "_source": "https://github.com/cirocosta/qcode-decoder.git",
+  "_target": "^0.1.0",
+  "_originalSource": "qcode-decoder",
+  "_direct": true
+}
