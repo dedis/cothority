@@ -32,7 +32,6 @@ import (
 const Version = "1.1"
 
 func main() {
-
 	cliApp := cli.NewApp()
 	cliApp.Name = "Cothorityd server"
 	cliApp.Usage = "Serve a cothority"
