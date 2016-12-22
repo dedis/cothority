@@ -239,11 +239,11 @@ func (r *Router) registerConnection(remote *ServerIdentity, c Conn) error {
 	if r.isClosed {
 		return ErrClosed
 	}
-	_, okc := r.connections[remote.ID]
-	if okc {
-		log.Lvl5("Connection already registered. Appending new connection to same identity.")
-	}
-	r.connections[remote.ID] = append(r.connections[remote.ID], c)
+	//_, okc := r.connections[remote.ID]
+	//if okc {
+	//	log.Lvl5("Connection already registered. Appending new connection to same identity.")
+	//}
+	r.connections[remote.ID] = append([]Conn{c}, r.connections[remote.ID]...)
 	return nil
 }
 
