@@ -65,7 +65,7 @@ type saveData struct {
 func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 	if req.Pin == "" {
 		rand.Seed(int64(time.Now().Nanosecond()))
-		s.data.Pin = fmt.Sprintf("%06d", rand.Intn(100000))
+		s.data.Pin = fmt.Sprintf("%06d", rand.Intn(1000000))
 		log.Info("PIN:", s.data.Pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
 	}
