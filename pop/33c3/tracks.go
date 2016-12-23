@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 )
 
 type JSON struct {
@@ -28,6 +29,7 @@ type Day struct {
 type Track struct {
 	Id       int
 	Duration string
+	Date     string
 	Room     string
 	Title    string
 }
@@ -42,6 +44,7 @@ type database_ struct {
 type Entry_ struct {
 	Name     string
 	Duration string
+	Date     string
 	Room     string
 	// map of tag => vote status
 	Votes map[string]bool
@@ -50,6 +53,7 @@ type EntryJSON struct {
 	Id       int
 	Name     string
 	Room     string
+	Date     string
 	Duration string
 	Up       int
 	Down     int
@@ -104,6 +108,7 @@ func (d *database_) JSON(tag string, update bool) ([]byte, error) {
 		if !update {
 			eJson.Name = entry.Name
 			eJson.Duration = entry.Duration
+			eJson.Date = entry.Date
 			eJson.Room = entry.Room
 		}
 		entriesJSON = append(entriesJSON, eJson)
@@ -146,8 +151,18 @@ func (d *database_) load(fileName string) {
 		for _, dayTracks := range day.Rooms {
 			for _, t := range dayTracks {
 				count++
+				date, err := time.Parse(time.RFC3339, t.Date)
+				if err != nil {
+					fmt.Printf("[-] Could not parse date %d: %s\n", t.Date, t.Title)
+					continue
+				}
+				formattedDate := fmt.Sprintf("%02d/%02d %02d:%02d", date.Day(),
+					date.Month(),
+					date.Hour(),
+					date.Minute())
 				d.db[t.Id] = Entry_{
 					Name:     t.Title,
+					Date:     formattedDate,
 					Duration: t.Duration,
 					Room:     t.Room,
 					Votes:    make(map[string]bool),

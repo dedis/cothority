@@ -119,9 +119,10 @@ function fillEntryTable(data) {
         }
         // empty the div
         var $tr = $('<tr>').append(
-                $('<td>').text(item.Id),
+                //$('<td>').text(item.Id),
                 $('<td>').text(item.Name),
                 $('<td>').text(item.Room),
+                $('<td>').text(item.Date),
                 $('<td>').text(item.Duration),
                 $('<td>',{id:"entry-up-"+item.Id}).text(item.Up),
                 $('<td>',{id:"entry-down-"+item.Id}).text(item.Down),
