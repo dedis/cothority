@@ -95,7 +95,7 @@ func (p *ServiceProcessor) RegisterMessages(procs ...interface{}) error {
 
 // Process implements the Processor interface and dispatches ClientRequest messages.
 func (p *ServiceProcessor) Process(packet *network.Packet) {
-	p.GetReply(packet.ServerIdentity, packet.MsgType, packet.Msg)
+	log.Panic("Cannot handle message.")
 }
 
 // ProcessClientRequest takes a request from a client, calculates the reply

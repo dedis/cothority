@@ -26,7 +26,8 @@ func newContext(c *Conode, o *Overlay, servID ServiceID, manager *serviceManager
 // NewTreeNodeInstance creates a TreeNodeInstance that is bound to a
 // service instead of the Overlay.
 func (c *Context) NewTreeNodeInstance(t *Tree, tn *TreeNode, protoName string) *TreeNodeInstance {
-	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID)
+	io := c.overlay.protoIO.getByName(protoName)
+	return c.overlay.NewTreeNodeInstanceFromService(t, tn, ProtocolNameToID(protoName), c.servID, io)
 }
 
 // SendRaw sends a message to the ServerIdentity.

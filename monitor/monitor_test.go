@@ -31,10 +31,10 @@ func TestReadyNormal(t *testing.T) {
 		return
 	}
 
-	meas := NewSingleMeasure("round", 10)
+	meas := newSingleMeasure("round", 10)
 	meas.Record()
 	time.Sleep(200 * time.Millisecond)
-	NewSingleMeasure("round", 20)
+	newSingleMeasure("round", 20)
 	EndAndCleanup()
 	time.Sleep(100 * time.Millisecond)
 	updated := mon.Stats().String()
@@ -50,8 +50,8 @@ func TestKeyOrder(t *testing.T) {
 	m["bf"] = "2"
 	// create stats
 	stat := NewStats(m)
-	m1 := NewSingleMeasure("round", 10)
-	m2 := NewSingleMeasure("setup", 5)
+	m1 := newSingleMeasure("round", 10)
+	m2 := newSingleMeasure("setup", 5)
 	stat.Update(m1)
 	stat.Update(m2)
 	str := new(bytes.Buffer)

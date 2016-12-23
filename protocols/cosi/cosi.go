@@ -1,5 +1,5 @@
-// Package protocol implements a round of a Collective Signing protocol.
-package protocol
+// Package cosi implements a round of a Collective Signing protocol.
+package cosi
 
 import (
 	"sync"
@@ -14,7 +14,7 @@ import (
 var Name = "CoSi"
 
 func init() {
-	sda.GlobalProtocolRegister(Name, NewCoSi)
+	sda.GlobalProtocolRegister(Name, NewProtocol)
 }
 
 // This Cosi protocol is the simplest version, the "vanilla" version with the
@@ -81,7 +81,7 @@ type ResponseHook func(in []abstract.Scalar)
 // SignatureHook allows registering a handler when the signature is done
 type SignatureHook func(sig []byte)
 
-// NewCoSi returns a ProtocolCosi with the node set with the right channels.
+// NewProtocol returns a ProtocolCosi with the node set with the right channels.
 // Use this function like this:
 // ```
 // round := NewRound****()
@@ -91,7 +91,7 @@ type SignatureHook func(sig []byte)
 // }
 // sda.RegisterNewProtocolName("cothority",fn)
 // ```
-func NewCoSi(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
+func NewProtocol(node *sda.TreeNodeInstance) (sda.ProtocolInstance, error) {
 	var err error
 	// XXX just need to take care to take the global list of cosigners once we
 	// do the exception stuff

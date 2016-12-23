@@ -208,7 +208,8 @@ func (l *LocalTest) NewTreeNodeInstance(tn *TreeNode, protName string) (*TreeNod
 		TreeNodeID: tn.ID,
 		RoundID:    RoundID(uuid.NewV4()),
 	}
-	node := newTreeNodeInstance(o, tok, tn)
+	io := o.protoIO.getByName(protName)
+	node := newTreeNodeInstance(o, tok, tn, io)
 	l.Nodes = append(l.Nodes, node)
 	return node, nil
 }
@@ -228,17 +229,14 @@ func (l *LocalTest) SendTreeNode(proto string, from, to *TreeNodeInstance, msg n
 	if from.Tree().ID != to.Tree().ID {
 		return errors.New("Can't send from one tree to another")
 	}
-	b, err := network.MarshalRegisteredType(msg)
-	if err != nil {
-		return err
-	}
 	sdaMsg := &ProtocolMsg{
-		MsgSlice: b,
-		MsgType:  network.TypeToPacketTypeID(msg),
-		From:     from.token,
-		To:       to.token,
+		Msg:     msg,
+		MsgType: network.TypeToPacketTypeID(msg),
+		From:    from.token,
+		To:      to.token,
 	}
-	return to.overlay.TransmitMsg(sdaMsg)
+	io := l.Overlays[to.ServerIdentity().ID].protoIO.getByName(proto)
+	return to.overlay.TransmitMsg(sdaMsg, io)
 }
 
 // AddPendingTreeMarshal takes a treeMarshal and adds it to the list of the

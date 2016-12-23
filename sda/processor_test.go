@@ -116,12 +116,6 @@ func TestProcessor_ProcessClientRequest(t *testing.T) {
 
 }
 
-func mkClientRequest(msg network.Body) []byte {
-	b, err := network.MarshalRegisteredType(msg)
-	log.ErrFatal(err)
-	return b
-}
-
 type testMsg struct {
 	I int
 }
@@ -185,9 +179,5 @@ func (ts *testService) NewProtocol(tn *TreeNodeInstance, conf *GenericConfig) (P
 
 func (ts *testService) ProcessMsg(si *network.ServerIdentity, msg *testMsg) (network.Body, error) {
 	ts.Msg = msg
-	return msg, nil
-}
-
-func returnMsg(si *network.ServerIdentity, msg network.Body) (network.Body, error) {
 	return msg, nil
 }

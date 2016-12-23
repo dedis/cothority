@@ -75,6 +75,10 @@ var debugMut sync.RWMutex
 
 var regexpPaths, _ = regexp.Compile(".*/")
 
+func init() {
+	ParseEnv()
+}
+
 func lvl(lvl, skip int, args ...interface{}) {
 	debugMut.Lock()
 	defer debugMut.Unlock()
