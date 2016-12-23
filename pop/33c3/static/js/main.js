@@ -21,22 +21,21 @@ $(document).ready(function(){
         refreshEntryTable();
     },3000);
     }).catch(function(err) {
-        alert("Something went wrong. Sorry. " + JSON.stringify(err));
+        alert("Something went wrong. Sorry. " + (err.toString ? err.toString() : JSON.stringify(err)));
     });
 
 });
-
-
 function scanPhase() {
 
     return new Promise(function(bigResolv,bigReject) {
     $(".video").show(); 
+    var el=  $(".instruction")
     var qr = new QCodeDecoder();
     if (!(qr.isCanvasSupported() && qr.hasGetUserMedia())) {
       alert('Your browser doesn\'t match the required specs.');
       throw new Error('Canvas and getUserMedia are required');
     }   
-    alert("Please first scan the PoP-Party QR Code (front cover)");
+    el.text("Please first scan the PoP-Party QR Code (front cover)");
     decodeQR(qr).then(function(resultConfig) {
         if (resultConfig.indexOf("sha256:") == -1) {
             return new Promise(function(resolve,reject) {
@@ -44,7 +43,7 @@ function scanPhase() {
             });
         }
         config = resultConfig.slice("hash:".length);;
-        alert("QR Code decoded correctly. Now the private key (inside)");
+        el.text("QR Code decoded correctly. Now the private key (inside)");
         qr.stop()
         qr = new QCodeDecoder();
         return decodeQR(qr);
@@ -55,7 +54,7 @@ function scanPhase() {
             });
         }
         privateKey = resultPrivate.slice("ed25519priv:".length);
-        log("Private key decoded correctly.\nProceeding to signing message and get cookie from server...");
+        el.text("Private key decoded correctly.\nProceeding to signing message and get cookie from server...");
         qr.stop()
         // hide the video
         $(".video").hide();
@@ -133,7 +132,7 @@ function fillEntryTable(data) {
                     alert("You can not vote: " + JSON.stringify(err))
                 },
                 success: function(data) {
-                    updateVotes(upButton,downButton);
+                    updateVotes(upVote,downVote);
                 }
             });
         });
@@ -144,7 +143,7 @@ function fillEntryTable(data) {
                     alert("You can not vote: " + JSON.stringify(err))
                 },
                 success: function(data) {
-                    updateVotes(downButton,upButton);
+                    updateVotes(downVote,upVote);
                 }
             });
         })

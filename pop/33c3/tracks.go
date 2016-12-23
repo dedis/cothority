@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -43,7 +44,7 @@ type Person struct {
 
 // custom database yay
 type database_ struct {
-	DB map[int]Entry_
+	DB map[int]*Entry_
 	sync.Mutex
 }
 
@@ -92,7 +93,7 @@ func (ej *EntriesJSON) Swap(i, j int) {
 }
 
 func newDatabase() *database_ {
-	return &database_{DB: map[int]Entry_{}}
+	return &database_{DB: map[int]*Entry_{}}
 }
 
 // Returns the JSON representation with information including whether this tag
@@ -154,6 +155,7 @@ func (d *database_) VoteOrError(id int, tag []byte, vote bool) error {
 		}
 	}
 	e.Votes = append(e.Votes, Vote_{tag, vote})
+	fmt.Println("Voted for ", e.Name, " from ", hex.EncodeToString(tag))
 	return nil
 }
 
@@ -189,7 +191,7 @@ func (d *database_) load(fileName string) {
 					date.Month(),
 					date.Hour(),
 					date.Minute())
-				d.DB[t.Id] = Entry_{
+				d.DB[t.Id] = &Entry_{
 					Name:     t.Title,
 					Date:     formattedDate,
 					Persons:  strings.Join(personStr, ","),

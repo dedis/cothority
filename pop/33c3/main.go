@@ -70,8 +70,8 @@ func main() {
 	router.Methods("POST").Path("/login").HandlerFunc(Login)
 	router.Methods("POST").Path("/vote").HandlerFunc(Vote)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	//log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
-	log.Fatal(http.ListenAndServe(":8000", loggedRouter))
+	log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
+	//log.Fatal(http.ListenAndServe(":8000", loggedRouter))
 }
 
 func Entries(w http.ResponseWriter, r *http.Request) {
