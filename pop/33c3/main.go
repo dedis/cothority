@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"encoding/json"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/crypto/anon"
@@ -21,6 +23,11 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+)
+
+const (
+	dbName    = "session.db"
+	storeName = "store.db"
 )
 
 // linkable ring signature informations
@@ -40,14 +47,12 @@ var cookieName = "33c3-Cookie"
 // Cookies contains the tag provided when the user made the linkable ring
 // signature
 type sessionStore_ struct {
-	sessions map[string]bool
-	nonces   map[string]bool
+	Sessions map[string]bool
+	Nonces   map[string]bool
 	sync.Mutex
 }
 
-var sessionStore = sessionStore_{
-	sessions: map[string]bool{},
-	nonces:   map[string]bool{}}
+var sessionStore = newSessionStore()
 
 var expireLimit = time.Hour * 3
 
@@ -65,7 +70,9 @@ func main() {
 		statement = service.NewFinalStatementFromString(string(b))
 	}
 
-	database.load(os.Args[2])
+	//database.load(os.Args[2])
+	database.VotesLoad(os.Args[2], dbName)
+	sessionStore.Load(storeName)
 
 	router := mux.NewRouter().StrictSlash(true)
 	loadStaticRoutes(router, staticDir)
@@ -171,6 +178,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		http.SetCookie(w, cookie)
 	}
+	sessionStore.Save(storeName)
 	w.WriteHeader(200)
 	w.Write(ctag)
 }
@@ -215,37 +223,72 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	database.VotesSave(dbName)
 	w.WriteHeader(200)
+}
+
+func newSessionStore() *sessionStore_ {
+	return &sessionStore_{
+		Sessions: map[string]bool{},
+		Nonces:   map[string]bool{},
+	}
 }
 
 func (st *sessionStore_) Store(tag string) {
 	st.Lock()
 	defer st.Unlock()
-	st.sessions[tag] = true
+	st.Sessions[tag] = true
 }
 
 func (st *sessionStore_) Exists(tag string) bool {
 	st.Lock()
 	defer st.Unlock()
-	return st.sessions[tag]
+	return st.Sessions[tag]
 }
 
 func (st *sessionStore_) NonceStore(nonce string) {
 	st.Lock()
 	defer st.Unlock()
-	st.nonces[nonce] = true
+	st.Nonces[nonce] = true
 }
 
 // return error if nonce was not present
 func (st *sessionStore_) NonceDelete(nonce string) error {
 	st.Lock()
 	defer st.Unlock()
-	if _, present := st.nonces[nonce]; !present {
+	if _, present := st.Nonces[nonce]; !present {
 		return errors.New("nonce non present")
 	}
-	delete(st.nonces, nonce)
+	delete(st.Nonces, nonce)
 	return nil
 }
+
+// Save stores the sessionStore into the file 'name'.
+func (st *sessionStore_) Save(name string) error {
+	file, err := os.OpenFile(name, os.O_RDWR+os.O_CREATE, 0660)
+	if err != nil {
+		return err
+	}
+	if err = json.NewEncoder(file).Encode(st); err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+// Load tries to load the content of the file 'name' into the sessionstore.
+func (st *sessionStore_) Load(name string) error {
+	_, err := os.Stat(name)
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return json.NewDecoder(file).Decode(st)
+}
+
 func Secure32() []byte {
 	var n [32]byte
 	rand.Read(n[:])
