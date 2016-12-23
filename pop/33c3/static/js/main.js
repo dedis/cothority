@@ -26,16 +26,21 @@ $(document).ready(function(){
 
 });
 function scanPhase() {
+    var setText = function(text) {
+        //$(".intructions p").text(text);
+        alert(text);
+    }
 
     return new Promise(function(bigResolv,bigReject) {
-    $(".video").show(); 
+    $("#login-modal").modal("show");
+    //$(".video").show(); 
     var el=  $(".instruction")
     var qr = new QCodeDecoder();
     if (!(qr.isCanvasSupported() && qr.hasGetUserMedia())) {
       alert('Your browser doesn\'t match the required specs.');
       throw new Error('Canvas and getUserMedia are required');
     }   
-    el.text("Please first scan the PoP-Party QR Code (front cover)");
+    setText("Please first scan the PoP-Party QR Code (front cover)");
     decodeQR(qr).then(function(resultConfig) {
         if (resultConfig.indexOf("sha256:") == -1) {
             return new Promise(function(resolve,reject) {
@@ -43,7 +48,7 @@ function scanPhase() {
             });
         }
         config = resultConfig.slice("hash:".length);;
-        el.text("QR Code decoded correctly. Now the private key (inside)");
+        setText("QR Code decoded correctly. Now the private key (inside)");
         qr.stop()
         qr = new QCodeDecoder();
         return decodeQR(qr);
@@ -54,7 +59,7 @@ function scanPhase() {
             });
         }
         privateKey = resultPrivate.slice("ed25519priv:".length);
-        el.text("Private key decoded correctly.\nProceeding to signing message and get cookie from server...");
+        setText("Private key decoded correctly.\nProceeding to signing message and get cookie from server...");
         qr.stop()
         // hide the video
         $(".video").hide();
@@ -62,9 +67,11 @@ function scanPhase() {
     }).then(function(info) {
         return login(info,privateKey);
     }).then(function(tag) {
-        alert("Well done, you are now logged in!");
+        setText("Well done, you are now logged in!");
+        $("#login-modal").modal("toggle");
         bigResolv()
     }).catch(function(err){
+        $("#login-modal").modal("toggle");
         bigReject(err);
     });
     });

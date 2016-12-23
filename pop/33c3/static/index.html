@@ -13,25 +13,27 @@
 <title>PoP-Party Demo - 33c3</title>
 </head>
 <body>
-<!--<div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="griSystemModallabel"> -->
-    <!--<div class="modal-dialog" role="document">-->
-        <!--<div class="modal-content" >-->
-            <!--<div class="modal-header">-->
-                <!--<h2> 33c3 - QR Code Login</h2>-->
-            <!--</div>-->
-            <!--<div class="modal-body">-->
-                <!--<div class="instructions lead">-->
-                <!--</div>-->
-                <!--<div hidden class="dialog-video container center-block">-->
-                    <!--<video width=320 height=320 autoplay></video>-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
-	<!--</div>-->
-<!--</div>-->
-    <div hidden class="video container center-block">
-        <video width=320 height=320 autoplay></video>
+    <div class="modal" id="login-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" >
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h2 class="modal-title"> 33c3 - QR Code Login</h2>
+            </div>
+            <div class="modal-body">
+                <div class="container instructions">
+                    <p class="lead"> </p>
+                </div>
+                <div hidden class="dialog-video container center-block embed-responsive embed-responsive-4by3">
+                    <video width=320 height=320 autoplay></video>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+    <!--<div hidden class="video container center-block">-->
+        <!--<video width=320 height=320 autoplay></video>-->
+    <!--</div>-->
   <div hidden class="main container text-center">
     <h1>
         Entries at 33c3
