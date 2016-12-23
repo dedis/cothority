@@ -4,7 +4,7 @@ IMG_PUB=1000020100000190000001900EE32AC40F291B4D.png
 IMG_PRIV=1000020100000190000001908A01F6F07EE83777.png
 OUT=$(pwd)
 
-for i in $( seq 4 ); do
+for i in $( seq -f "%02g" 50 ); do
 	OFILE=$OUT/key$i.odg
 	rm -f $OFILE
 	KP=$( mktemp )
