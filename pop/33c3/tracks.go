@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -54,8 +55,14 @@ type Entry_ struct {
 	Date     string
 	Room     string
 	// map of tag => vote status
-	Votes map[string]bool
+	Votes []Vote_
 }
+
+type Vote_ struct {
+	Tag  []byte
+	Vote bool
+}
+
 type EntryJSON struct {
 	Id       int
 	Name     string
@@ -90,18 +97,21 @@ func newDatabase() *database_ {
 
 // Returns the JSON representation with information including whether this tag
 // has voted or not
-func (d *database_) JSON(tag string, update bool) ([]byte, error) {
+func (d *database_) JSON(tag []byte, update bool) ([]byte, error) {
 	d.Lock()
 	defer d.Unlock()
 
 	var entriesJSON []EntryJSON
 	// list of entries
 	for id, entry := range d.DB {
-		_, voted := entry.Votes[tag]
+		var voted bool
 		var up, down = 0, 0
 		// count the votes
 		for _, v := range entry.Votes {
-			if v {
+			if bytes.Equal(tag, v.Tag) {
+				voted = v.Vote
+			}
+			if v.Vote {
 				up++
 			} else {
 				down++
@@ -127,17 +137,23 @@ func (d *database_) JSON(tag string, update bool) ([]byte, error) {
 	return json.Marshal(ej.Entries)
 }
 
-func (d *database_) VoteOrError(id int, tag string, vote bool) error {
+func (d *database_) VoteOrError(id int, tag []byte, vote bool) error {
 	d.Lock()
 	defer d.Unlock()
 	e, ok := d.DB[id]
 	if !ok {
 		return errors.New("invalid entry id")
 	}
-	if v, ok := e.Votes[tag]; ok && v == vote {
-		return errors.New("users already voted")
+	for i, t := range e.Votes {
+		if bytes.Equal(tag, t.Tag) {
+			if vote == t.Vote {
+				return errors.New("users already voted")
+			}
+			e.Votes[i].Vote = vote
+			return nil
+		}
 	}
-	e.Votes[tag] = vote
+	e.Votes = append(e.Votes, Vote_{tag, vote})
 	return nil
 }
 
@@ -179,7 +195,7 @@ func (d *database_) load(fileName string) {
 					Persons:  strings.Join(personStr, ","),
 					Duration: t.Duration,
 					Room:     t.Room,
-					Votes:    make(map[string]bool),
+					Votes:    []Vote_{},
 				}
 			}
 		}

@@ -76,13 +76,13 @@ func main() {
 
 func Entries(w http.ResponseWriter, r *http.Request) {
 	// check if user is registered or not
-	var tag string
+	var tag []byte
 	var cookie *http.Cookie
 	var err error
 	if cookie, err = r.Cookie(cookieName); err == nil {
 		value := make(map[string]string)
 		if err = sessionStore.SecureCookie.Decode(cookieName, cookie.Value, &value); err == nil {
-			tag = value["tag"]
+			tag = []byte(value["tag"])
 		}
 	}
 	if err := r.ParseForm(); err != nil {
@@ -186,7 +186,7 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag := value["tag"]
+	tag := []byte(value["tag"])
 	// parse form
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
