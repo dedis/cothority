@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -29,9 +30,14 @@ type Day struct {
 type Track struct {
 	Id       int
 	Duration string
+	Persons  []Person
 	Date     string
 	Room     string
 	Title    string
+}
+
+type Person struct {
+	Public string `json:"public_name"`
 }
 
 // custom database yay
@@ -44,6 +50,7 @@ type database_ struct {
 type Entry_ struct {
 	Name     string
 	Duration string
+	Persons  string
 	Date     string
 	Room     string
 	// map of tag => vote status
@@ -52,6 +59,7 @@ type Entry_ struct {
 type EntryJSON struct {
 	Id       int
 	Name     string
+	Persons  string
 	Room     string
 	Date     string
 	Duration string
@@ -107,6 +115,7 @@ func (d *database_) JSON(tag string, update bool) ([]byte, error) {
 		}
 		if !update {
 			eJson.Name = entry.Name
+			eJson.Persons = entry.Persons
 			eJson.Duration = entry.Duration
 			eJson.Date = entry.Date
 			eJson.Room = entry.Room
@@ -151,6 +160,10 @@ func (d *database_) load(fileName string) {
 		for _, dayTracks := range day.Rooms {
 			for _, t := range dayTracks {
 				count++
+				var personStr []string
+				for _, p := range t.Persons {
+					personStr = append(personStr, p.Public)
+				}
 				date, err := time.Parse(time.RFC3339, t.Date)
 				if err != nil {
 					fmt.Printf("[-] Could not parse date %d: %s\n", t.Date, t.Title)
@@ -163,6 +176,7 @@ func (d *database_) load(fileName string) {
 				d.db[t.Id] = Entry_{
 					Name:     t.Title,
 					Date:     formattedDate,
+					Persons:  strings.Join(personStr, ","),
 					Duration: t.Duration,
 					Room:     t.Room,
 					Votes:    make(map[string]bool),

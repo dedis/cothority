@@ -1,30 +1,37 @@
 //var log = console.log
 var log = alert;
-
 $(document).ready(function(){
     setupMediaDevices();
-    
+    $(".video").hide();
+    $(".main").hide();
     var config = "";
     var privateKey = "";
    
-    refreshEntryTable();
-   
-    if (getCookie("33c3-Cookie") == "") {
-        scanPhase();
-    } else {
-        log("cookie: " + getCookie("33c3-Cookie"));
-    }
+    var step = new Promise(function(resolve,reject) {
+        resolve();
+    });
 
-    setInterval(function() {    
+    if (getCookie("33c3-Cookie") == "") {
+        step = scanPhase();
+    } 
+
+    step.then(function() {
+        $(".main").show();
+        setInterval(function() {    
         refreshEntryTable();
     },3000);
+    }).catch(function(err) {
+        alert("Something went wrong. Sorry. " + JSON.stringify(err));
+    });
 
 });
 
 
 function scanPhase() {
-    var qr = new QCodeDecoder();
 
+    return new Promise(function(bigResolv,bigReject) {
+    $(".video").show(); 
+    var qr = new QCodeDecoder();
     if (!(qr.isCanvasSupported() && qr.hasGetUserMedia())) {
       alert('Your browser doesn\'t match the required specs.');
       throw new Error('Canvas and getUserMedia are required');
@@ -48,34 +55,20 @@ function scanPhase() {
             });
         }
         privateKey = resultPrivate.slice("ed25519priv:".length);
-        log("Private key decoded correctly.\nProceed to signing message and get cookie from server");
+        log("Private key decoded correctly.\nProceeding to signing message and get cookie from server...");
         qr.stop()
         // hide the video
-        $("video").hide();
+        $(".video").hide();
         return get("siginfo");
     }).then(function(info) {
         return login(info,privateKey);
     }).then(function(tag) {
         alert("Well done, you are now logged in!");
+        bigResolv()
     }).catch(function(err){
-        log("Error: " + JSON.stringify(err));
+        bigReject(err);
     });
-    /*    var info = "";*/
-    //var config = "";
-    //var privateKey = "ZHxWRZO1h391k0Uqv/PyjUfO3sx5lMLGhXk5iRaAdQM=";
-    //get("siginfo").then(function(getInfo) {
-        //info = getInfo;
-        //log("siginfo returned correctly");
-        //return login(info,privateKey);
-    //}).then(function(tag) {
-        //log("tag = " + ascii_to_hexa(tag));
-    //}).catch(function(err){
-        //log("catch error: " + JSON.stringify(err));
-    //});
-    //get("entries").then(function(data) {
-        //fillEntryTable(data);
-    /*});*/
-
+    });
 }
 
 function refreshEntryTable() {
@@ -118,16 +111,17 @@ function fillEntryTable(data) {
            voted = "yes"; 
         }
         // empty the div
+        bt1 = '<button type="submit" id="vote-up-' + item.Id + '"><span class="glyphicon glyphicon-thumbs-up"></span></button>';
+        bt2 = '<button type="submit" id="vote-down-' + item.Id + '"><span class="glyphicon glyphicon-thumbs-down"></span></button>';
         var $tr = $('<tr>').append(
                 //$('<td>').text(item.Id),
-                $('<td>').text(item.Name),
+                $('<td>').html(item.Name + '<small class="text-muted"> ' + item.Persons + '</small>'),
                 $('<td>').text(item.Room),
                 $('<td>').text(item.Date),
                 $('<td>').text(item.Duration),
                 $('<td>',{id:"entry-up-"+item.Id}).text(item.Up),
                 $('<td>',{id:"entry-down-"+item.Id}).text(item.Down),
-                $('<td>').html('<button type="submit" id="vote-up-' + item.Id + '">Up</button>'),
-                $('<td>').html('<button type="submit" id="vote-down-' + item.Id + '">Down</button>')).appendTo('tbody#entry-body');
+                $('<td>').html(bt1 + bt2)).appendTo('tbody#entry-body');
 
         var upButton = $('#vote-up-'+item.Id);
         var upVote = $('#entry-up-'+item.Id);
@@ -217,8 +211,11 @@ function login(loginInfo,privateKey) {
         ret = sig.Sign(privateKey,loginInfo);
         sigLogin = ret[0];
         err = ret[1];
-        if (err != "") 
+        if (err != "")  {
             log("error signature:" + JSON.stringify(err));
+            reject(err);
+            return;
+        }
 
         $.ajax("login",  { data: sigLogin, type: "POST",
             error: function(err) {
