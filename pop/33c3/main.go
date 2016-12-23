@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -35,7 +34,7 @@ var suite = ed25519.NewAES128SHA256Ed25519(false)
 // 64 byte for auth with hmac and 32 bytes encr. for AES 256
 var cookieHandler = securecookie.New(securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
-var cookieName = "Session"
+var cookieName = "33c3-Cookie"
 
 // session store / cookie related
 // Cookies contains the tag provided when the user made the linkable ring
@@ -52,37 +51,13 @@ var sessionStore = sessionStore_{
 
 var expireLimit = time.Hour * 3
 
-// custom database yay
-type database_ struct {
-	db map[int]Entry_
-	sync.Mutex
-}
-
-// Entry_ represents any conferences at 33c3
-type Entry_ struct {
-	Name        string
-	Description string
-	Location    string
-	// map of tag => vote status
-	Votes map[string]bool
-}
-type EntryJSON struct {
-	Index       int
-	Name        string
-	Description string
-	Location    string
-	Up          int
-	Down        int
-	Voted       bool
-}
-
 var database = newDatabase()
 
 var staticDir = "static/"
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("statement file as argument required.")
+	if len(os.Args) != 3 {
+		log.Fatal("go run main.go statement.txt schedule.json")
 	}
 	if b, err := ioutil.ReadFile(os.Args[1]); err != nil {
 		log.Fatal(err)
@@ -90,7 +65,7 @@ func main() {
 		statement = service.NewFinalStatementFromString(string(b))
 	}
 
-	database.load()
+	database.load(os.Args[2])
 
 	router := mux.NewRouter().StrictSlash(true)
 	loadStaticRoutes(router, staticDir)
@@ -99,11 +74,10 @@ func main() {
 	router.Methods("POST").Path("/login").HandlerFunc(Login)
 	router.Methods("POST").Path("/vote").HandlerFunc(Vote)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	log.Fatal(http.ListenAndServeTLS(":8080", "server.crt", "server.key", loggedRouter))
+	log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
 }
 
 func Entries(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("yo")
 	// check if user is registered or not
 	var tag string
 	var cookie *http.Cookie
@@ -114,12 +88,21 @@ func Entries(w http.ResponseWriter, r *http.Request) {
 			tag = value["tag"]
 		}
 	}
-	entriesJSON, err := database.JSON(tag)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "could not parse form", http.StatusInternalServerError)
+		return
+	}
+
+	var update bool
+	if r.Form.Get("update") != "" {
+		update = true
+	}
+	entries, err := database.JSON(tag, update)
 	if err != nil {
 		http.Error(w, "invalid json representation", http.StatusInternalServerError)
 		return
 	}
-	w.Write(entriesJSON)
+	w.Write(entries)
 }
 
 func SigningInfo(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +167,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		cookie := &http.Cookie{
 			Name:    cookieName,
 			Value:   encoded,
-			Path:    "/",
 			Expires: time.Now().Add(expireLimit),
 		}
 		http.SetCookie(w, cookie)
@@ -264,76 +246,6 @@ func (st *sessionStore_) NonceDelete(nonce string) error {
 	delete(st.nonces, nonce)
 	return nil
 }
-func newDatabase() *database_ {
-	return &database_{db: map[int]Entry_{}}
-}
-
-// Returns the JSON representation with information including whether this tag
-// has voted or not
-func (d *database_) JSON(tag string) ([]byte, error) {
-	d.Lock()
-	defer d.Unlock()
-
-	var entriesJSON []EntryJSON
-	// list of entries
-	for idx, entry := range d.db {
-		_, voted := entry.Votes[tag]
-		var up, down = 0, 0
-		// count the votes
-		for _, v := range entry.Votes {
-			if v {
-				up++
-			} else {
-				down++
-			}
-		}
-		entriesJSON = append(entriesJSON, EntryJSON{
-			Index:       idx,
-			Name:        entry.Name,
-			Description: entry.Description,
-			Location:    entry.Location,
-			Up:          up,
-			Down:        down,
-			Voted:       voted,
-		})
-	}
-	return json.Marshal(entriesJSON)
-}
-
-func (d *database_) VoteOrError(entry int, tag string, vote bool) error {
-	d.Lock()
-	defer d.Unlock()
-	e, ok := d.db[entry]
-	if !ok {
-		return errors.New("invalid entry id")
-	}
-	if v, ok := e.Votes[tag]; ok && v == vote {
-		return errors.New("users already voted")
-	}
-	e.Votes[tag] = vote
-	return nil
-}
-
-func (d *database_) load() {
-	d.Lock()
-	defer d.Unlock()
-	for i, e := range []struct {
-		Name        string
-		Description string
-		Location    string
-	}{
-		{"TLS 1.3", "The good, the bad and the ugly", "Saal 2"},
-		{"The DROWN Attack", "Breaking TLS using SSLv2 (en)", "Saal 2"},
-	} {
-		d.db[i] = Entry_{
-			Name:        e.Name,
-			Description: e.Description,
-			Location:    e.Location,
-			Votes:       make(map[string]bool),
-		}
-	}
-}
-
 func Secure32() []byte {
 	var n [32]byte
 	rand.Read(n[:])

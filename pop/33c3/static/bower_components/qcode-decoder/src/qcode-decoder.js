@@ -128,39 +128,54 @@ QCodeDecoder.prototype._captureToCanvas = function (videoElem, cb, once) {
 QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
   var scope = (this.stop(), this);
 
-  if (!this.hasGetUserMedia())
-    cb(new Error('Couldn\'t get video from camera'));
+  /*if (!this.hasGetUserMedia())*/
+    //cb(new Error('Couldn\'t get video from camera'));
 
   var options =  true;
   if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
       alert("enumerateDevices() not supported.");
       return;
   }
-  navigator.mediaDevices.enumerateDevices().then(function(devices) {
-	devices.forEach(function(device) {
-		if (device.kind === 'videoinput') {
-			if(device.label.toLowerCase().search("back") != -1) { 
-				options={video: { 'deviceId': {'exact': device.deviceId } , facingMode:'environment'}, audio: false };
-                // when it's right, launch the user media
-  navigator.mediaDevices.getUserMedia(options).then(function (stream) {
-    videoElem.src = window.URL.createObjectURL(stream);
-    scope.videoElem = videoElem;
-    scope.stream = stream;
-    scope.videoDimensions = false;
 
-    setTimeout(function () {
-      scope._captureToCanvas.call(scope, videoElem, cb, once);
+    // first request user access to video
+    options = { audio: false, video: { facingMode: { exact: "environment" } } }
+    navigator.mediaDevices.getUserMedia(options).then(function (stream) {
+
+        return navigator.mediaDevices.enumerateDevices();
+    }).then(function(devices) {
+            var found = false;
+            devices.forEach(function(device) { 
+                if (device.kind === 'videoinput') { 
+                        if(device.label.toLowerCase().search("back") != -1) {
+                            options={video: { 'deviceId': {'exact': device.deviceId } 
+                                            , facingMode:'environment'},
+                                     audio: false }; 
+                            found = true;
+            } } }); 
+        // when it's right, launch the user media
+        if (found) {
+            return navigator.mediaDevices.getUserMedia(options)
+        } else {
+            return new Promise(function(resolve,reject) {
+                reject("Did not found any environement camera");
+            });
+        }
+    }).then(function (stream) {
+        videoElem.src = window.URL.createObjectURL(stream);
+        scope.videoElem = videoElem;
+        scope.stream = stream;
+        scope.videoDimensions = false;
+
+        setTimeout(function () {
+          scope._captureToCanvas.call(scope, videoElem, cb, once);
     }, 500);
   }).catch(function(err) {
       alert("error getusermedia:" + err);
       cb(err);
   });
-            }
-    }
-    });
-  }).catch(function(err) {
-      alert("error enumerate:" + err);
- });
+ /* }).catch(function(err) {*/
+      //alert("error enumerate:" + err);
+ /*});*/
   return this;
 };
 
