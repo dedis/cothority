@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -20,13 +19,14 @@ import (
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/crypto/anon"
 	"github.com/dedis/crypto/ed25519"
+	"github.com/dedis/onet/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 )
 
 const (
-	dbName    = "session.db"
+	dbName    = "votes.db"
 	storeName = "store.db"
 )
 
@@ -39,18 +39,7 @@ var suite = ed25519.NewAES128SHA256Ed25519(false)
 
 // custom made insecure session management
 // 64 byte for auth with hmac and 32 bytes encr. for AES 256
-var cookieHandler = securecookie.New(securecookie.GenerateRandomKey(64),
-	securecookie.GenerateRandomKey(32))
 var cookieName = "33c3-Cookie"
-
-// session store / cookie related
-// Cookies contains the tag provided when the user made the linkable ring
-// signature
-type sessionStore_ struct {
-	Sessions map[string]bool
-	Nonces   map[string]bool
-	sync.Mutex
-}
 
 var sessionStore = newSessionStore()
 
@@ -81,7 +70,8 @@ func main() {
 	router.Methods("POST").Path("/login").HandlerFunc(Login)
 	router.Methods("POST").Path("/vote").HandlerFunc(Vote)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
+	//log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
+	log.Fatal(http.ListenAndServe(":8000", loggedRouter))
 }
 
 func Entries(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +81,7 @@ func Entries(w http.ResponseWriter, r *http.Request) {
 	var err error
 	if cookie, err = r.Cookie(cookieName); err == nil {
 		value := make(map[string]string)
-		if err = cookieHandler.Decode(cookieName, cookie.Value, &value); err == nil {
+		if err = sessionStore.SecureCookie.Decode(cookieName, cookie.Value, &value); err == nil {
 			tag = value["tag"]
 		}
 	}
@@ -125,8 +115,9 @@ func SigningInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		container.Attendees = append(container.Attendees, b)
 	}
-	container.Nonce = string(Secure32())
-	sessionStore.NonceStore(container.Nonce)
+	nonce := Secure32()
+	container.Nonce = string(nonce)
+	sessionStore.NonceStore(nonce)
 	container.Context = string(context)
 	toml.NewEncoder(w).Encode(container)
 	var b bytes.Buffer
@@ -159,18 +150,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if sessionStore.Exists(string(ctag)) {
-		http.Error(w, "already registered user", http.StatusTooManyRequests)
-		return
+	if !sessionStore.Exists(ctag) {
+		// Signature is fine so let's give the user a cookie ;)
+		sessionStore.Store(ctag)
 	}
 
-	// Signature is fine so let's give the user a cookie ;)
-	sessionStore.Store(string(ctag))
 	value := map[string]string{
 		"tag": string(ctag),
 	}
 
-	if encoded, err := cookieHandler.Encode(cookieName, value); err == nil {
+	if encoded, err := sessionStore.SecureCookie.Encode(cookieName, value); err == nil {
 		cookie := &http.Cookie{
 			Name:    cookieName,
 			Value:   encoded,
@@ -192,7 +181,7 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	value := make(map[string]string)
-	if err := cookieHandler.Decode(cookieName, cookie.Value, &value); err != nil {
+	if err := sessionStore.SecureCookie.Decode(cookieName, cookie.Value, &value); err != nil {
 		http.Error(w, "invalid cookie given", http.StatusInternalServerError)
 		return
 	}
@@ -223,44 +212,70 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database.VotesSave(dbName)
+	if err := database.VotesSave(dbName); err != nil {
+		log.Error(err)
+	}
 	w.WriteHeader(200)
 }
 
+// session store / cookie related
+// Cookies contains the tag provided when the user made the linkable ring
+// signature
+type sessionStore_ struct {
+	Sessions     [][]byte
+	Nonces       [][]byte
+	HashKey      []byte
+	BlockKey     []byte
+	SecureCookie *securecookie.SecureCookie
+	sync.Mutex
+}
+
 func newSessionStore() *sessionStore_ {
-	return &sessionStore_{
-		Sessions: map[string]bool{},
-		Nonces:   map[string]bool{},
+	st := &sessionStore_{
+		Sessions: [][]byte{},
+		Nonces:   [][]byte{},
+		HashKey:  securecookie.GenerateRandomKey(64),
+		BlockKey: securecookie.GenerateRandomKey(32),
 	}
+	st.SecureCookie = securecookie.New(st.HashKey, st.BlockKey)
+	return st
 }
 
-func (st *sessionStore_) Store(tag string) {
+func (st *sessionStore_) Store(tag []byte) {
 	st.Lock()
 	defer st.Unlock()
-	st.Sessions[tag] = true
+	log.Printf("Storing %x", tag)
+	st.Sessions = append(st.Sessions, tag)
 }
 
-func (st *sessionStore_) Exists(tag string) bool {
+func (st *sessionStore_) Exists(tag []byte) bool {
 	st.Lock()
 	defer st.Unlock()
-	return st.Sessions[tag]
+	for _, t := range st.Sessions {
+		if bytes.Equal(t, tag) {
+			return true
+		}
+	}
+	return false
 }
 
-func (st *sessionStore_) NonceStore(nonce string) {
+func (st *sessionStore_) NonceStore(nonce []byte) {
 	st.Lock()
 	defer st.Unlock()
-	st.Nonces[nonce] = true
+	st.Nonces = append(st.Nonces, nonce)
 }
 
 // return error if nonce was not present
-func (st *sessionStore_) NonceDelete(nonce string) error {
+func (st *sessionStore_) NonceDelete(nonce []byte) error {
 	st.Lock()
 	defer st.Unlock()
-	if _, present := st.Nonces[nonce]; !present {
-		return errors.New("nonce non present")
+	for i, n := range st.Nonces {
+		if bytes.Equal(n, nonce) {
+			st.Nonces = append(st.Nonces[:i], st.Nonces[i+1:]...)
+			return nil
+		}
 	}
-	delete(st.Nonces, nonce)
-	return nil
+	return errors.New("nonce non present")
 }
 
 // Save stores the sessionStore into the file 'name'.
@@ -286,7 +301,12 @@ func (st *sessionStore_) Load(name string) error {
 		return err
 	}
 	defer file.Close()
-	return json.NewDecoder(file).Decode(st)
+	err = json.NewDecoder(file).Decode(st)
+	if err != nil {
+		return err
+	}
+	st.SecureCookie = securecookie.New(st.HashKey, st.BlockKey)
+	return nil
 }
 
 func Secure32() []byte {
