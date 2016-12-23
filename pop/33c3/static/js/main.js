@@ -48,6 +48,7 @@ function scanPhase() {
         }
         privateKey = resultPrivate.slice("ed25519priv:".length);
         log("private decoded: " + privateKey);
+        qr.stop();
         return get("siginfo");
     }).then(function(info) {
         log("infos retrieved !");
@@ -55,7 +56,7 @@ function scanPhase() {
     }).then(function(tag) {
         log("LOGIN DONE tag : " + tag);
     }).catch(function(err){
-        log(JSON.stringify(err));
+        log(err);
     });
     /*    var info = "";*/
     //var config = "";
