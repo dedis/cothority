@@ -178,6 +178,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 		http.SetCookie(w, cookie)
 	}
+	sessionStore.Save(storeName)
 	w.WriteHeader(200)
 	w.Write(ctag)
 }
@@ -222,6 +223,7 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	database.VotesSave(dbName)
 	w.WriteHeader(200)
 }
 
