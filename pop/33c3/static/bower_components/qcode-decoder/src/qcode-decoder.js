@@ -146,11 +146,11 @@ QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
             var found = false;
             devices.forEach(function(device) { 
                 if (device.kind === 'videoinput') { 
+                        found = true;
                         if(device.label.toLowerCase().search("back") != -1) {
                             options={video: { 'deviceId': {'exact': device.deviceId } 
                                             , facingMode:'environment'},
                                      audio: false }; 
-                            found = true;
             } } }); 
         // when it's right, launch the user media
         if (found) {
@@ -165,6 +165,7 @@ QCodeDecoder.prototype.decodeFromCamera = function (videoElem, cb, once) {
         scope.videoElem = videoElem;
         scope.stream = stream;
         scope.videoDimensions = false;
+        scope.tracks = stream.getTracks()[0];
 
         setTimeout(function () {
           scope._captureToCanvas.call(scope, videoElem, cb, once);
@@ -209,9 +210,14 @@ QCodeDecoder.prototype.decodeFromImage = function (img, cb) {
  * captured by prepareToVideo
  */
 QCodeDecoder.prototype.stop = function() {
-  if (this.stream) {
-    this.stream.stop();
-    this.stream = undefined;
+  /*if (this.stream) {*/
+    //this.stream.stop();
+    //this.stream = undefined;
+  /*}*/
+
+  if (this.tracks) {
+      this.tracks.stop();
+      this.tracks = undefined;
   }
 
   if (this.timerCapture) {

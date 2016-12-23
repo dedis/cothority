@@ -29,7 +29,7 @@ function scanPhase() {
       alert('Your browser doesn\'t match the required specs.');
       throw new Error('Canvas and getUserMedia are required');
     }   
-
+    alert("Please first scan the PoP-Party QR Code (front cover)");
     decodeQR(qr).then(function(resultConfig) {
         if (resultConfig.indexOf("sha256:") == -1) {
             return new Promise(function(resolve,reject) {
@@ -37,7 +37,8 @@ function scanPhase() {
             });
         }
         config = resultConfig.slice("hash:".length);;
-        log("configuration decoded: " + config);    
+        alert("QR Code decoded correctly. Now the private key (inside)");
+        qr.stop()
         qr = new QCodeDecoder();
         return decodeQR(qr);
     }).then(function(resultPrivate) {
@@ -47,16 +48,17 @@ function scanPhase() {
             });
         }
         privateKey = resultPrivate.slice("ed25519priv:".length);
-        log("private decoded: " + privateKey);
-        qr.stop();
+        log("Private key decoded correctly.\nProceed to signing message and get cookie from server");
+        qr.stop()
+        // hide the video
+        $("video").hide();
         return get("siginfo");
     }).then(function(info) {
-        log("infos retrieved !");
         return login(info,privateKey);
     }).then(function(tag) {
-        log("LOGIN DONE tag : " + tag);
+        alert("Well done, you are now logged in!");
     }).catch(function(err){
-        log(err);
+        log("Error: " + JSON.stringify(err));
     });
     /*    var info = "";*/
     //var config = "";
@@ -211,14 +213,11 @@ function decodeQR(qr) {
 
 function login(loginInfo,privateKey) {
     return new Promise(function(resolve,reject) {
-        log("BEFORE golang call " + ascii_to_hexa(loginInfo))
         ret = sig.Sign(privateKey,loginInfo);
         sigLogin = ret[0];
         err = ret[1];
         if (err != "") 
             log("error signature:" + JSON.stringify(err));
-
-        log("AFTER golang call" + ascii_to_hexa(sigLogin));
 
         $.ajax("login",  { data: sigLogin, type: "POST",
             error: function(err) {
