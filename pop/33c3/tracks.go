@@ -36,7 +36,7 @@ type Track struct {
 
 // custom database yay
 type database_ struct {
-	db map[int]Entry_
+	DB map[int]Entry_
 	sync.Mutex
 }
 
@@ -77,7 +77,7 @@ func (ej *EntriesJSON) Swap(i, j int) {
 }
 
 func newDatabase() *database_ {
-	return &database_{db: map[int]Entry_{}}
+	return &database_{DB: map[int]Entry_{}}
 }
 
 // Returns the JSON representation with information including whether this tag
@@ -88,7 +88,7 @@ func (d *database_) JSON(tag string, update bool) ([]byte, error) {
 
 	var entriesJSON []EntryJSON
 	// list of entries
-	for id, entry := range d.db {
+	for id, entry := range d.DB {
 		_, voted := entry.Votes[tag]
 		var up, down = 0, 0
 		// count the votes
@@ -121,7 +121,7 @@ func (d *database_) JSON(tag string, update bool) ([]byte, error) {
 func (d *database_) VoteOrError(id int, tag string, vote bool) error {
 	d.Lock()
 	defer d.Unlock()
-	e, ok := d.db[id]
+	e, ok := d.DB[id]
 	if !ok {
 		return errors.New("invalid entry id")
 	}
@@ -160,7 +160,7 @@ func (d *database_) load(fileName string) {
 					date.Month(),
 					date.Hour(),
 					date.Minute())
-				d.db[t.Id] = Entry_{
+				d.DB[t.Id] = Entry_{
 					Name:     t.Title,
 					Date:     formattedDate,
 					Duration: t.Duration,
@@ -171,6 +171,36 @@ func (d *database_) load(fileName string) {
 		}
 	}
 	fmt.Println("[+] Loaded ", count, " tracks")
+}
+
+// VotesSave stores the votes for later usage
+func (d *database_) VotesSave(fullName string) error {
+	file, err := os.OpenFile(fullName, os.O_RDWR+os.O_CREATE, 0660)
+	if err != nil {
+		return err
+	}
+	if err = json.NewEncoder(file).Encode(d); err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+// VotesLoad either loads the full database, including votes, or
+// loads the database without votes. scheduleName is the plain
+// json-database from the CCC-website, fullName is the database
+// including the votes.
+func (d *database_) VotesLoad(scheduleName, fullName string) error {
+	d.load(scheduleName)
+	_, err := os.Stat(fullName)
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(fullName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return json.NewDecoder(file).Decode(d)
 }
 
 func (t *Track) String() string {
