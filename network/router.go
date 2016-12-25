@@ -40,6 +40,9 @@ type Router struct {
 
 	// wg waits for all handleConn routines to be done.
 	wg sync.WaitGroup
+
+	//if not nil, called when the host detects a network error
+	networkErrorHandler func(error)
 }
 
 // NewRouter returns a new Router attached to a ServerIdentity and the host we want to
@@ -56,8 +59,17 @@ func NewRouter(own *ServerIdentity, h Host) *Router {
 }
 
 // Start the listening routine of the underlying Host. This is a
+// blocking call until r.Stop() is called. Adds an network error listener, called when
+// network error happens
+func (r *Router) StartWithErrorListener(netHandler func(error)) {
+	r.networkErrorHandler = netHandler
+	r.Start()
+}
+
+// Start the listening routine of the underlying Host. This is a
 // blocking call until r.Stop() is called.
 func (r *Router) Start() {
+
 	// Any incoming connection waits for the remote server identity
 	// and will create a new handling routine.
 	err := r.host.Listen(func(c Conn) {
@@ -200,6 +212,7 @@ func (r *Router) handleConn(remote *ServerIdentity, c Conn) {
 			if err == ErrClosed || err == ErrEOF {
 				// Connection got closed.
 				log.Lvl3(r.address, "handleConn with closed connection: stop (dst=", remote.Address, ")")
+				go r.networkErrorHandler(errors.New("handleConn with closed connection: stop (dst=" + remote.Address.String() + ")"))
 				return
 			}
 			// Temporary error, continue.
