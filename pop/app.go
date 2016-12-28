@@ -135,7 +135,7 @@ func mgrConfig(c *cli.Context) error {
 	group := readGroup(c.Args().Get(1))
 	desc.Roster = group.Roster
 	log.Info("Hash of config is:", base64.StdEncoding.EncodeToString(desc.Hash()))
-	log.ErrFatal(check.Servers(group), "Couldn't check servers")
+	//log.ErrFatal(check.Servers(group), "Couldn't check servers")
 	log.ErrFatal(client.StoreConfig(mainConfig.Address, desc))
 	mainConfig.Final.Desc = desc
 	writeConfig()
