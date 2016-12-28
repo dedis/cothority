@@ -190,7 +190,7 @@ type popDescToml struct {
 // Hash calculates the hash of this structure
 func (p *PopDesc) Hash() []byte {
 	if p == nil {
-		return nil
+		return []byte{}
 	}
 	hash := network.Suite.Hash()
 	hash.Write([]byte(p.Name))
@@ -199,7 +199,7 @@ func (p *PopDesc) Hash() []byte {
 	buf, err := p.Roster.Aggregate.MarshalBinary()
 	if err != nil {
 		log.Error(err)
-		return nil
+		return []byte{}
 	}
 	hash.Write([]byte(buf))
 	return hash.Sum(nil)
