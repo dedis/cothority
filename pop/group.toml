@@ -1,0 +1,15 @@
+[[servers]]
+  Address = "tcp://192.33.210.8:7772"
+  Public = "ItfbJ3u11GbrbRmNYwJJZhZSeWMYsyPNemXF944CAL0="
+  Description = "PopCot-epfl"
+
+[[servers]]
+  Address = "tcp://78.46.227.60:7772"
+  Public = "QBFcZvt7dHhruxS13QVXAbF190abrJUmZBro3M7Krxo="
+  Description = "PopCothority-profeda"
+
+[[servers]]
+  Address = "tcp://78.46.227.60:7770"
+  Public = "5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY="
+  Description = "Ineiti's Cothority-server"
+
