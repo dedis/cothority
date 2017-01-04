@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dedis/onet/app/server"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -35,10 +35,10 @@ const (
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "CoSi app"
-	app.Usage = "Collectively sign a file or verify its signature."
-	app.Version = Version
+	cliApp := cli.NewApp()
+	cliApp.Name = "CoSi app"
+	cliApp.Usage = "Collectively sign a file or verify its signature."
+	cliApp.Version = Version
 	binaryFlags := []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -58,11 +58,11 @@ func main() {
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  optionConfig + ", " + optionConfigShort,
-			Value: server.GetDefaultConfigFile(BinaryName),
+			Value: app.GetDefaultConfigFile(BinaryName),
 			Usage: "Configuration file of the server",
 		},
 	}
-	app.Commands = []cli.Command{
+	cliApp.Commands = []cli.Command{
 		// BEGIN CLIENT ----------
 		{
 			Name:    "sign",
@@ -123,7 +123,7 @@ func main() {
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option can't be used for the 'setup' command")
 						}
-						server.InteractiveConfig(BinaryName)
+						app.InteractiveConfig(BinaryName)
 						return nil
 					},
 				},
@@ -132,11 +132,11 @@ func main() {
 		// SERVER END ----------
 	}
 
-	app.Flags = binaryFlags
-	app.Before = func(c *cli.Context) error {
+	cliApp.Flags = binaryFlags
+	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
-	err := app.Run(os.Args)
+	err := cliApp.Run(os.Args)
 	log.ErrFatal(err)
 }

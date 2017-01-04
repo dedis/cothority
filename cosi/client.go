@@ -15,7 +15,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -97,7 +97,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := config.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 	log.Lvl4("Reading group definition")
-	el, err := config.ReadGroupToml(fGroup)
+	el, err := app.ReadGroupToml(fGroup)
 	if err != nil {
 		return err
 	}
