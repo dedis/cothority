@@ -15,7 +15,7 @@ import (
 
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -163,18 +163,18 @@ func (cfg *ciscConfig) showKeys() {
 
 // Returns the config-file from the configuration
 func getConfig(c *cli.Context) string {
-	configDir := config.TildeToHome(c.GlobalString("config"))
+	configDir := app.TildeToHome(c.GlobalString("config"))
 	log.ErrFatal(mkdir(configDir, 0770))
 	return configDir + "/config.bin"
 }
 
 // Reads the group-file and returns it
-func getGroup(c *cli.Context) *config.Group {
+func getGroup(c *cli.Context) *app.Group {
 	gfile := c.Args().Get(0)
 	gr, err := os.Open(gfile)
 	log.ErrFatal(err)
 	defer gr.Close()
-	groups, err := config.ReadGroupDescToml(gr)
+	groups, err := app.ReadGroupDescToml(gr)
 	log.ErrFatal(err)
 	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
 		log.Fatal("No servers found in roster from", gfile)
@@ -184,7 +184,7 @@ func getGroup(c *cli.Context) *config.Group {
 
 // retrieves ssh-directory and ssh-config-name.
 func sshDirConfig(c *cli.Context) (sshDir string, sshConfig string) {
-	sshDir = config.TildeToHome(c.GlobalString("cs"))
+	sshDir = app.TildeToHome(c.GlobalString("cs"))
 	log.ErrFatal(mkdir(sshDir, 0700))
 	sshConfig = sshDir + "/config"
 	return

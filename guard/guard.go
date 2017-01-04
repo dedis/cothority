@@ -17,7 +17,7 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 
 	"io/ioutil"
@@ -60,11 +60,11 @@ var db *Database
 func main() {
 	network.RegisterPacketType(&Database{})
 
-	app := cli.NewApp()
-	app.Name = "Guard"
-	app.Usage = "Get and print status of all servers of a file."
+	cliApp := cli.NewApp()
+	cliApp.Name = "Guard"
+	cliApp.Usage = "Get and print status of all servers of a file."
 
-	app.Flags = []cli.Flag{
+	cliApp.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "group, gd",
 			Value: "group.toml",
@@ -76,7 +76,7 @@ func main() {
 			Usage: "debug-level: `integer`: 1 for terse, 5 for maximal",
 		},
 	}
-	app.Commands = []cli.Command{
+	cliApp.Commands = []cli.Command{
 		{
 			Name:    "setpass",
 			Aliases: []string{"s"},
@@ -97,7 +97,7 @@ func main() {
 			Action:  get,
 		},
 	}
-	app.Before = func(c *cli.Context) error {
+	cliApp.Before = func(c *cli.Context) error {
 		b, err := ioutil.ReadFile("config.bin")
 		if os.IsNotExist(err) {
 			return nil
@@ -112,7 +112,7 @@ func main() {
 		}
 		return nil
 	}
-	app.Run(os.Args)
+	cliApp.Run(os.Args)
 }
 
 // readGroup takes a toml file name and reads the file, returning the entities within.
@@ -122,7 +122,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := config.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
