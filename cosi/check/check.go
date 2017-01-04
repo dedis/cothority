@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -34,7 +34,7 @@ var RequestTimeOut = time.Second * 10
 func Config(tomlFileName string, detail bool) error {
 	f, err := os.Open(tomlFileName)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := config.ReadGroupDescToml(f)
+	group, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
@@ -49,7 +49,7 @@ func Config(tomlFileName string, detail bool) error {
 // along with the IP-address of the server.
 // In case a server doesn't reply in time or there is an error in the
 // signature, an error is returned.
-func Servers(g *config.Group, detail bool) error {
+func Servers(g *app.Group, detail bool) error {
 	totalSuccess := true
 	// First check all servers individually and write the working servers
 	// in a list

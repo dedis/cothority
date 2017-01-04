@@ -9,7 +9,7 @@ import (
 
 	"github.com/dedis/cothority/status/service"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 
 	"sort"
@@ -67,7 +67,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := config.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
