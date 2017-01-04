@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/dedis/cothority/manage"
+	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/crypto"
@@ -42,9 +42,9 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	*StorageMap
-	propagateIdentity  manage.PropagationFunc
-	propagateSkipBlock manage.PropagationFunc
-	propagateConfig    manage.PropagationFunc
+	propagateIdentity  messaging.PropagationFunc
+	propagateSkipBlock messaging.PropagationFunc
+	propagateConfig    messaging.PropagationFunc
 	identitiesMutex    sync.Mutex
 	skipchain          *skipchain.Client
 	path               string
@@ -384,17 +384,17 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 	}
 	var err error
 	s.propagateIdentity, err =
-		manage.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
 	if err != nil {
 		return nil
 	}
 	s.propagateSkipBlock, err =
-		manage.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
 	if err != nil {
 		return nil
 	}
 	s.propagateConfig, err =
-		manage.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateConfigHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateConfigHandler)
 	if err != nil {
 		return nil
 	}

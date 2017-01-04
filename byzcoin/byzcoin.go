@@ -197,7 +197,7 @@ func NewByzCoinRootProtocol(n *onet.TreeNodeInstance, transactions []blkparser.T
 // "commit" round will wait the end of the "prepare" round during its challenge
 // phase.
 func (bz *ByzCoin) Start() error {
-	if err := bz.startAnnouncementPrepare(); err != nil {
+	if err := bz.StartAnnouncementPrepare(); err != nil {
 		return err
 	}
 	return bz.startAnnouncementCommit()
@@ -265,7 +265,7 @@ func (bz *ByzCoin) listen() {
 
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
-func (bz *ByzCoin) startAnnouncementPrepare() error {
+func (bz *ByzCoin) StartAnnouncementPrepare() error {
 	if bz.onAnnouncementPrepare != nil {
 		go bz.onAnnouncementPrepare()
 	}
