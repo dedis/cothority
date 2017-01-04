@@ -1,4 +1,4 @@
-package manage_test
+package messaging_test
 
 import (
 	"testing"

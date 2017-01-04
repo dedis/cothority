@@ -1,4 +1,4 @@
-package manage
+package messaging
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/simul/manage"
 	"github.com/dedis/onet/simul/monitor"
 )
 
@@ -59,7 +60,7 @@ func (e *simulation) Run(config *onet.SimulationConfig) error {
 			return err
 		}
 		go p.Start()
-		children := <-p.(*ProtocolCount).Count
+		children := <-p.(*manage.ProtocolCount).Count
 		round.Record()
 		if children != size {
 			return errors.New("Didn't get " + strconv.Itoa(size) +

@@ -1,0 +1,7 @@
+Servers = 2
+Simulation = "PBFT"
+Rounds = 5
+BF = 5
+
+Hosts, Blocksize
+70, 5000

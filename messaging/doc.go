@@ -1,5 +1,5 @@
 /*
-Package manage implements protocols used when setting up and testing
+package messaging implements protocols used when setting up and testing
 a tree.
 
 The count-protocol returns the number of nodes in the tree that are reachable.
@@ -12,4 +12,4 @@ waits for all connections to be set up.
 The close_all-protocol sends a 'terminate'-message to all nodes which will
 close down everything.
 */
-package manage
+package messaging

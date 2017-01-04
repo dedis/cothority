@@ -1,13 +1,14 @@
-package byzcoin
+package main
 
 import (
 	"errors"
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/cothority/byzcoin/cosi"
-	"github.com/dedis/cothority/manage"
+	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -15,22 +16,22 @@ import (
 )
 
 func init() {
-	onet.SimulationRegister("ByzCoin", NewSimulation)
+	onet.SimulationRegister("ByzCoin", NewByzCoinSimulation)
 	onet.GlobalProtocolRegister("ByzCoin", func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewByzCoinProtocol(n)
+		return byzcoin.NewByzCoinProtocol(n)
 	})
 }
 
-// Simulation implements da.Simulation interface
-type Simulation struct {
+// ByzCoinSimulation implements da.Simulation interface
+type ByzCoinSimulation struct {
 	// onet fields:
 	onet.SimulationBFTree
 	// your simulation specific fields:
-	SimulationConfig
+	ByzCoinSimulationConfig
 }
 
-// SimulationConfig is the config used by the simulation for byzcoin
-type SimulationConfig struct {
+// ByzCoinSimulationConfig is the config used by the simulation for byzcoin
+type ByzCoinSimulationConfig struct {
 	// Blocksize is the number of transactions in one block:
 	Blocksize int
 	// timeout the leader after TimeoutMs milliseconds
@@ -42,9 +43,9 @@ type SimulationConfig struct {
 	Fail uint
 }
 
-// NewSimulation returns a fresh byzcoin simulation out of the toml config
-func NewSimulation(config string) (onet.Simulation, error) {
-	es := &Simulation{}
+// NewByzCoinSimulation returns a fresh byzcoin simulation out of the toml config
+func NewByzCoinSimulation(config string) (onet.Simulation, error) {
+	es := &ByzCoinSimulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func NewSimulation(config string) (onet.Simulation, error) {
 // Setup implements onet.Simulation interface. It checks on the availability
 // of the block-file and downloads it if missing. Then the block-file will be
 // copied to the simulation-directory
-func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
+func (e *ByzCoinSimulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		log.Fatal("Couldn't get block:", err)
@@ -87,15 +88,15 @@ func (m *monitorMut) Record() {
 }
 
 // Run implements onet.Simulation interface
-func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
+func (e *ByzCoinSimulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl2("Simulation starting with: Rounds=", e.Rounds)
-	server := NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
+	server := byzcoin.NewByzCoinServer(e.Blocksize, e.TimeoutMs, e.Fail)
 
 	pi, err := onetConf.Overlay.CreateProtocolOnet("Broadcast", onetConf.Tree)
 	if err != nil {
 		return err
 	}
-	proto, _ := pi.(*manage.Broadcast)
+	proto, _ := pi.(*messaging.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
@@ -107,7 +108,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	<-broadDone
 
 	for round := 0; round < e.Rounds; round++ {
-		client := NewClient(server)
+		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
 		if err != nil {
 			log.Error("Error in ClientSimulation:", err)
@@ -128,9 +129,9 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 		}
 		onetConf.Overlay.RegisterProtocolInstance(pi)
 
-		bz := pi.(*ByzCoin)
+		bz := pi.(*byzcoin.ByzCoin)
 		// Register callback for the generation of the signature !
-		bz.RegisterOnSignatureDone(func(sig *BlockSignature) {
+		bz.RegisterOnSignatureDone(func(sig *byzcoin.BlockSignature) {
 			rComplete.Record()
 			if err := verifyBlockSignature(tni.Suite(), tni.Roster().Aggregate, sig); err != nil {
 				log.Error("Round", round, "failed:", err)
@@ -146,7 +147,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 		})
 		if e.Fail > 0 {
 			go func() {
-				err := bz.startAnnouncementPrepare()
+				err := bz.StartAnnouncementPrepare()
 				if err != nil {
 					log.Error("Error while starting "+
 						"announcment prepare:", err)
@@ -169,7 +170,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	return nil
 }
 
-func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *BlockSignature) error {
+func verifyBlockSignature(suite abstract.Suite, aggregate abstract.Point, sig *byzcoin.BlockSignature) error {
 	if sig == nil || sig.Sig == nil || sig.Block == nil {
 		return errors.New("Empty block signature")
 	}

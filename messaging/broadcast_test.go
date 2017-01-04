@@ -1,10 +1,10 @@
-package manage_test
+package messaging_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/manage"
+	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -20,7 +20,7 @@ func TestBroadcast(t *testing.T) {
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
-		protocol := pi.(*manage.Broadcast)
+		protocol := pi.(*messaging.Broadcast)
 		done := make(chan bool)
 		protocol.RegisterOnDone(func() {
 			done <- true

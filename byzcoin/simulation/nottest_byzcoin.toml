@@ -1,0 +1,10 @@
+Servers = 36
+Simulation = "ByzCoin"
+# NumClientTxs = 100000
+Rounds = 5
+BF = 5
+CloseWait = 300
+
+Hosts, Blocksize, TimeoutMs, Fail
+36, 102, 6000, 0
+72, 220, 120000, 0

@@ -1,4 +1,4 @@
-package manage
+package messaging
 
 import (
 	"errors"

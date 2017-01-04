@@ -1,9 +1,10 @@
-package pbft
+package main
 
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/cothority/manage"
+	"github.com/dedis/cothority/byzcoin/pbft"
+	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
@@ -12,12 +13,14 @@ import (
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}
 
 func init() {
-	onet.SimulationRegister("ByzCoinPBFT", NewSimulation)
-	onet.GlobalProtocolRegister("ByzCoinPBFT", func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) { return NewProtocol(n) })
+	onet.SimulationRegister("ByzCoinPBFT", NewPBFTSimulation)
+	onet.GlobalProtocolRegister("ByzCoinPBFT", func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return pbft.NewProtocol(n)
+	})
 }
 
-// Simulation implements onet.Simulation interface
-type Simulation struct {
+// PBFTSimulation implements onet.Simulation interface
+type PBFTSimulation struct {
 	// onet fields:
 	onet.SimulationBFTree
 	// pbft simulation specific fields:
@@ -25,9 +28,9 @@ type Simulation struct {
 	Blocksize int
 }
 
-// NewSimulation returns a pbft simulation
-func NewSimulation(config string) (onet.Simulation, error) {
-	sim := &Simulation{}
+// NewPBFTSimulation returns a pbft simulation
+func NewPBFTSimulation(config string) (onet.Simulation, error) {
+	sim := &PBFTSimulation{}
 	_, err := toml.Decode(config, sim)
 	if err != nil {
 		return nil, err
@@ -36,7 +39,7 @@ func NewSimulation(config string) (onet.Simulation, error) {
 }
 
 // Setup implements onet.Simulation interface
-func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
+func (e *PBFTSimulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		log.Fatal("Couldn't get block:", err)
@@ -52,7 +55,7 @@ func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, 
 }
 
 // Run runs the simulation
-func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
+func (e *PBFTSimulation) Run(onetConf *onet.SimulationConfig) error {
 	doneChan := make(chan bool)
 	doneCB := func() {
 		doneChan <- true
@@ -80,7 +83,7 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 	if err != nil {
 		log.Error(err)
 	}
-	proto := pi.(*manage.Broadcast)
+	proto := pi.(*messaging.Broadcast)
 	// channel to notify we are done
 	broadDone := make(chan bool)
 	proto.RegisterOnDone(func() {
@@ -99,10 +102,10 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
-		proto := p.(*Protocol)
+		proto := p.(*pbft.Protocol)
 
-		proto.trBlock = trblock
-		proto.onDoneCB = doneCB
+		proto.TrBlock = trblock
+		proto.OnDoneCB = doneCB
 
 		r := monitor.NewTimeMeasure("round_pbft")
 		err = proto.Start()

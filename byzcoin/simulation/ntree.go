@@ -1,30 +1,33 @@
-package byzcoinNtree
+package main
 
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/blockchain"
+	"github.com/dedis/cothority/byzcoin/ntree"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
 )
 
 func init() {
-	onet.SimulationRegister("ByzCoinNtree", NewSimulation)
-	onet.GlobalProtocolRegister("ByzCoinNtree", func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) { return NewNtreeProtocol(n) })
+	onet.SimulationRegister("ByzCoinNtree", NewNTreeSimulation)
+	onet.GlobalProtocolRegister("ByzCoinNtree", func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return byzcoinNtree.NewNtreeProtocol(n)
+	})
 }
 
-// Simulation implements da.Simulation interface
-type Simulation struct {
+// NTreeSimulation implements da.Simulation interface
+type NTreeSimulation struct {
 	// onet fields:
 	onet.SimulationBFTree
 	// your simulation specific fields:
-	byzcoin.SimulationConfig
+	ByzCoinSimulationConfig
 }
 
-// NewSimulation returns a new Ntree simulation
-func NewSimulation(config string) (onet.Simulation, error) {
-	es := &Simulation{}
+// NewNTreeSimulation returns a new Ntree simulation
+func NewNTreeSimulation(config string) (onet.Simulation, error) {
+	es := &NTreeSimulation{}
 	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
@@ -33,7 +36,7 @@ func NewSimulation(config string) (onet.Simulation, error) {
 }
 
 // Setup implements onet.Simulation interface
-func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
+func (e *NTreeSimulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
 	err := blockchain.EnsureBlockIsAvailable(dir)
 	if err != nil {
 		log.Fatal("Couldn't get block:", err)
@@ -49,9 +52,9 @@ func (e *Simulation) Setup(dir string, hosts []string) (*onet.SimulationConfig, 
 }
 
 // Run implements onet.Simulation interface
-func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
+func (e *NTreeSimulation) Run(onetConf *onet.SimulationConfig) error {
 	log.Lvl2("Naive Tree Simulation starting with: Rounds=", e.Rounds)
-	server := NewNtreeServer(e.Blocksize)
+	server := byzcoinNtree.NewNtreeServer(e.Blocksize)
 	for round := 0; round < e.Rounds; round++ {
 		client := byzcoin.NewClient(server)
 		err := client.StartClientSimulation(blockchain.GetBlockDir(), e.Blocksize)
@@ -70,10 +73,10 @@ func (e *Simulation) Run(onetConf *onet.SimulationConfig) error {
 		}
 		onetConf.Overlay.RegisterProtocolInstance(pi)
 
-		nt := pi.(*Ntree)
+		nt := pi.(*byzcoinNtree.Ntree)
 		// Register when the protocol is finished (all the nodes have finished)
 		done := make(chan bool)
-		nt.RegisterOnDone(func(sig *NtreeSignature) {
+		nt.RegisterOnDone(func(sig *byzcoinNtree.NtreeSignature) {
 			rComplete.Record()
 			log.Lvl3("Done")
 			done <- true
