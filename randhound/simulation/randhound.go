@@ -1,9 +1,11 @@
-package randhound
+package main
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/randhound"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/simul"
 	"github.com/dedis/onet/simul/monitor"
 )
 
@@ -14,9 +16,10 @@ func init() {
 // RHSimulation implements a RandHound simulation
 type RHSimulation struct {
 	onet.SimulationBFTree
-	Groups  int
-	Faulty  int
-	Purpose string
+	Groups    int
+	GroupSize int
+	Faulty    int
+	Purpose   string
 }
 
 // NewRHSimulation creates a new RandHound simulation
@@ -45,7 +48,13 @@ func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	rh, _ := client.(*RandHound)
+	rh, _ := client.(*randhound.RandHound)
+	if rhs.Groups == 0 {
+		if rhs.GroupSize == 0 {
+			log.Fatal("Need either Groups or GroupSize")
+		}
+		rhs.Groups = rhs.Hosts / rhs.GroupSize
+	}
 	err = rh.Setup(rhs.Hosts, rhs.Faulty, rhs.Groups, rhs.Purpose)
 	if err != nil {
 		return err
@@ -79,4 +88,8 @@ func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 
 	return nil
 
+}
+
+func main() {
+	simul.Start()
 }
