@@ -127,24 +127,42 @@ func NewProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // Dispatch will listen on the four channels we use (i.e. four steps)
 func (c *CoSi) Dispatch() error {
-	for {
-		var err error
-		select {
-		case packet := <-c.announce:
-			err = c.handleAnnouncement(&packet.Announcement)
-		case packet := <-c.commit:
-			err = c.handleCommitment(&packet.Commitment)
-		case packet := <-c.challenge:
-			err = c.handleChallenge(&packet.Challenge)
-		case packet := <-c.response:
-			err = c.handleResponse(&packet.Response)
-		case <-c.done:
-			return nil
-		}
+	nbrChild := len(c.Children())
+	if !c.IsRoot() {
+		log.Lvl3(c.Name(), "Waiting for announcement")
+		ann := (<-c.announce).Announcement
+		err := c.handleAnnouncement(&ann)
 		if err != nil {
-			log.Error("ProtocolCosi -> err treating incoming:", err)
+			return err
 		}
 	}
+	for n := 0; n < nbrChild; n++ {
+		log.Lvlf3("%s Waiting for commitment of child %d/%d",
+			c.Name(), n+1, nbrChild)
+		commit := (<-c.commit).Commitment
+		err := c.handleCommitment(&commit)
+		if err != nil {
+			return err
+		}
+	}
+	if !c.IsRoot() {
+		log.Lvl3(c.Name(), "Waiting for Challenge")
+		challenge := (<-c.challenge).Challenge
+		err := c.handleChallenge(&challenge)
+		if err != nil {
+			return err
+		}
+	}
+	for n := 0; n < nbrChild; n++ {
+		log.Lvlf3("%s Waiting for response of child %d/%d", c.Name(), n+1, nbrChild)
+		response := (<-c.response).Response
+		err := c.handleResponse(&response)
+		if err != nil {
+			return err
+		}
+	}
+	<-c.done
+	return nil
 }
 
 // Start will call the announcement function of its inner Round structure. It
