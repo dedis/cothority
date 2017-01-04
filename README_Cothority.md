@@ -1,4 +1,4 @@
-# Cothorityd
+# Cothority
 
 This is the cothority-server for creating a node that can be
 used in any cothority. It loads automatically all protocols
@@ -6,16 +6,16 @@ and services and can be used through the apps here.
 
 ## Installation
 
-To install cothorityd, make sure that
+To install cothority, make sure that
 [Go is installed](https://golang.org/doc/install)
 and that
 [`$GOPATH` is set](https://golang.org/doc/code.html#GOPATH).
 
 ```bash
-go get -u github.com/dedis/cothority/app/cothorityd
+go get -u github.com/dedis/cothority
 ```
 
-The `cothorityd`-binary will be installed in
+The `cothority`-binary will be installed in
 the directory indicated by `$GOPATH/bin`.
 
 ## Running your own cothority-node
@@ -26,7 +26,7 @@ You can create a default server configuration with a fresh
 public/private key pair as follows:
 
 ```bash
-cothorityd setup
+cothority setup
 ```
 
 Follow the instructions on the screen. At the end, you should have two files:
@@ -36,17 +36,17 @@ Follow the instructions on the screen. At the end, you should have two files:
 
 To run the server, simply type:
 ```bash
-cothorityd
+cothority
 ```
 
 The server will try to read the default configuration file; if you have put the
 file in a custom location, provide the path using:
 ```base
-cothorityd -config path/file.toml
+cothority -config path/file.toml
 ``` 
 
 ### Creating a cothority
-By running several `cothorityd` instances (and copying the appropriate lines 
+By running several `cothority` instances (and copying the appropriate lines 
 of their output) you can create a `servers.toml` that looks like 
 this:
 
