@@ -1,7 +1,8 @@
-package jvss
+package main
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/jvss"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
@@ -47,7 +48,7 @@ func (jvs *Simulation) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	proto := p.(*JVSS)
+	proto := p.(*jvss.JVSS)
 
 	log.Lvl1("Starting setup")
 	proto.Start()
