@@ -1,7 +1,8 @@
-package ntree
+package main
 
 import (
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/ntree"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
@@ -57,9 +58,9 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 			log.Error("Quitting the simulation....", err)
 			return err
 		}
-		pi := p.(*Protocol)
+		pi := p.(*ntree.Protocol)
 		pi.Message = msg
-		pi.verifySignature = e.Checking
+		pi.VerifySignature = e.Checking
 
 		done := make(chan bool)
 		pi.TreeNodeInstance.OnDoneCallback(func() bool {
