@@ -2,7 +2,7 @@
 # Source: https://github.com/h12w/gosweep/blob/master/gosweep.sh
 
 DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | xargs -I {} dirname {} | sort | uniq)"
-
+DIR_EXCLUDE="./cosi ./cisc"
 
 BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 echo "Using branch $BRANCH"
@@ -15,23 +15,22 @@ fi
 all_tests_passed=true
 
 echo "mode: atomic" > profile.cov
-for dir in ${DIR_SOURCE};
-do
-    go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
+for dir in ${DIR_SOURCE}; do
+	if ! echo $DIR_EXCLUDE | grep -q $dir; then
+	    go test -short -race -covermode=atomic -coverprofile=$dir/profile.tmp $dir
 
-    if [ $? -ne 0 ]; then
-        all_tests_passed=false
-    fi
-    if [ -f $dir/profile.tmp ]
-    then
-        cat $dir/profile.tmp | tail -n +2 >> profile.cov
-        rm $dir/profile.tmp
+    	if [ $? -ne 0 ]; then
+        	all_tests_passed=false
+    	fi
+    	if [ -f $dir/profile.tmp ]; then
+        	cat $dir/profile.tmp | tail -n +2 >> profile.cov
+        	rm $dir/profile.tmp
+    	fi
     fi
 done
 
-if [[ $all_tests_passed = true ]];
-then
-    exit 0;
+if [[ $all_tests_passed = true ]]; then
+    exit 0
 else
-    exit 1;
+    exit 1
 fi
