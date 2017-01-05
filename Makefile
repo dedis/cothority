@@ -43,3 +43,4 @@ test_go:
 	./coveralls.sh ./cosi ./cisc ./byzcoin/*
 
 test: test_fmt test_lint test_go
+
