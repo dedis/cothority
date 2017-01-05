@@ -1,7 +1,7 @@
 Servers = 8
 Simulation = "CoSimul"
 Rounds = 5
-Depth = 3
+Depth = 2
 BF = 4
 
 Checking
