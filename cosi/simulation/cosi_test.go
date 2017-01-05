@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCoSimul(t *testing.T) {
-	for VerifyResponse = 0; VerifyResponse < 3; VerifyResponse++ {
+	for v := 0; v < 3; v++ {
 		for _, nbrHosts := range []int{1, 3, 13} {
 			log.Lvl2("Running cosi with", nbrHosts, "hosts")
 			local := onet.NewLocalTest()
@@ -47,6 +47,7 @@ func TestCoSimul(t *testing.T) {
 			}
 			root = p.(*CoSimul)
 			root.Message = msg
+			root.VerifyResponse = VRType(v)
 			root.RegisterSignatureHook(doneFunc)
 			go root.StartProtocol()
 			select {

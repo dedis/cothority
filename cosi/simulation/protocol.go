@@ -32,12 +32,11 @@ const (
 	AllCheck = VRType(2)
 )
 
-// VerifyResponse sets how the checks are done,
-var VerifyResponse = RootCheck
-
 // CoSimul is a protocol suited for simulation
 type CoSimul struct {
 	*p.CoSi
+	// VerifyResponse sets how the checks are done,
+	VerifyResponse VRType
 }
 
 // NewCoSimul returns a new CoSi-protocol suited for simulation
@@ -47,7 +46,7 @@ func NewCoSimul(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return nil, err
 	}
 
-	cosimul := &CoSimul{c.(*p.CoSi)}
+	cosimul := &CoSimul{c.(*p.CoSi), RootCheck}
 	cosimul.RegisterResponseHook(cosimul.getResponse)
 
 	return cosimul, nil
@@ -70,7 +69,7 @@ func (c *CoSimul) getResponse(in []abstract.Scalar) {
 	}
 
 	verify := false
-	switch VerifyResponse {
+	switch c.VerifyResponse {
 	case NoCheck:
 		log.Lvl3("Not checking at all")
 	case RootCheck:
