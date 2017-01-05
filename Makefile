@@ -1,3 +1,5 @@
+all: test
+
 test_fmt:
 	@echo Checking correct formatting of files
 	@{ \
@@ -38,8 +40,6 @@ test_verbose:
 
 # use test_verbose instead if you want to use this Makefile locally
 test_go:
-	./coveralls.sh
+	./coveralls.sh ./cosi ./cisc ./byzcoin/*
 
 test: test_fmt test_lint test_go
-
-all: install test
