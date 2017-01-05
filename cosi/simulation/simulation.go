@@ -45,7 +45,6 @@ func (cs *Simulation) Node(sc *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	VerifyResponse = cs.Checking
 	return nil
 }
 
@@ -66,6 +65,7 @@ func (cs *Simulation) Run(config *onet.SimulationConfig) error {
 		proto := node.(*CoSimul)
 		// give the message to sign
 		proto.SigningMessage(msg)
+		proto.VerifyResponse = cs.Checking
 		// tell us when it is done
 		done := make(chan bool)
 		fn := func(sig []byte) {
