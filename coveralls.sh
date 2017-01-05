@@ -2,7 +2,8 @@
 # Source: https://github.com/h12w/gosweep/blob/master/gosweep.sh
 
 DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | xargs -I {} dirname {} | sort | uniq)"
-DIR_EXCLUDE="./cosi ./cisc"
+DIR_EXCLUDE="./cosi ./cisc ./byzcoin/*"
+echo $DIR_EXCLUDE
 
 BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
 echo "Using branch $BRANCH"
