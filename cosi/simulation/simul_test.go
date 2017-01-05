@@ -7,5 +7,5 @@ import (
 )
 
 func TestSimulation(t *testing.T) {
-	simul.Start("cosimul.toml")
+	simul.Start("cosi.toml", "cosi_verification.toml")
 }
