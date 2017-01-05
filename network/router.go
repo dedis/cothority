@@ -246,7 +246,8 @@ func (r *Router) connection(sid ServerIdentityID) Conn {
 // real physical address of the connection and the connection itself.
 // It uses the networkLock mutex.
 func (r *Router) registerConnection(remote *ServerIdentity, c Conn) error {
-	log.Lvl4(r.address, "Registers", remote.Address)
+	log.Lvl4(r.address, "Registers", remote.Address, "id", remote.ID)
+	log.Lvlf4("%+v", remote)
 	r.Lock()
 	defer r.Unlock()
 	if r.isClosed {
