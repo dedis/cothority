@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/bftcosi"
-	"github.com/dedis/cothority/manage"
+	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -44,7 +44,7 @@ type Service struct {
 	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
 	// key-type for maps, so we need to cast it to string
 	*SkipBlockMap
-	Propagate manage.PropagationFunc
+	Propagate messaging.PropagationFunc
 	gMutex    sync.Mutex
 	path      string
 	verifiers map[VerifierID]SkipBlockVerifier
@@ -511,7 +511,7 @@ func newSkipchainService(c *onet.Context, path string) onet.Service {
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 	}
 	var err error
-	s.Propagate, err = manage.NewPropagationFunc(c, "SkipchainPropagate", s.PropagateSkipBlock)
+	s.Propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.PropagateSkipBlock)
 	log.ErrFatal(err)
 	c.ProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)

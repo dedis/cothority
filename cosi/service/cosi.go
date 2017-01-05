@@ -85,7 +85,6 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, onet.Clie
 func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocol(tn)
-	go pi.Dispatch()
 	return pi, err
 }
 

@@ -15,7 +15,6 @@ package main
 import (
 	"os"
 
-	"github.com/dedis/onet/app/server"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 
@@ -25,6 +24,7 @@ import (
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
+	"github.com/dedis/onet/app"
 )
 
 const (
@@ -45,7 +45,7 @@ func main() {
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: server.GetDefaultConfigFile(DefaultName),
+			Value: app.GetDefaultConfigFile(DefaultName),
 			Usage: "Configuration file of the server",
 		},
 		cli.IntFlag{
@@ -67,7 +67,7 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
-				server.InteractiveConfig("cothorityd")
+				app.InteractiveConfig("cothorityd")
 				return nil
 			},
 		},
@@ -116,7 +116,7 @@ func runServer(ctx *cli.Context) {
 	// first check the options
 	config := ctx.String("config")
 
-	server.RunServer(config)
+	app.RunServer(config)
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid
