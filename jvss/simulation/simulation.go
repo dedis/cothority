@@ -44,7 +44,7 @@ func (jvs *Simulation) Run(config *onet.SimulationConfig) error {
 
 	log.Lvl1("Size:", size, "rounds:", jvs.Rounds)
 
-	p, err := config.Overlay.CreateProtocolOnet("JVSS", config.Tree)
+	p, err := config.Overlay.CreateProtocol("JVSS", config.Tree, onet.NilServiceID)
 	if err != nil {
 		return err
 	}

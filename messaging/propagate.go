@@ -65,7 +65,7 @@ type PropagationStore func(network.Body)
 type propagationContext interface {
 	ProtocolRegister(name string, protocol onet.NewProtocol) (onet.ProtocolID, error)
 	ServerIdentity() *network.ServerIdentity
-	CreateProtocolOnet(name string, t *onet.Tree) (onet.ProtocolInstance, error)
+	CreateProtocol(name string, t *onet.Tree) (onet.ProtocolInstance, error)
 }
 
 // NewPropagationFunc registers a new protocol name with the context c and will
@@ -91,7 +91,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 	return func(el *onet.Roster, msg network.Body, msec int) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
 		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
-		pi, err := c.CreateProtocolOnet(name, tree)
+		pi, err := c.CreateProtocol(name, tree)
 		if err != nil {
 			return -1, err
 		}
