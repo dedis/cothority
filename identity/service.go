@@ -32,8 +32,7 @@ const ServiceName = "Identity"
 var identityService onet.ServiceID
 
 func init() {
-	onet.RegisterNewService(ServiceName, newIdentityService)
-	identityService = onet.ServiceFactory.ServiceID(ServiceName)
+	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
 	network.RegisterPacketType(&StorageMap{})
 	network.RegisterPacketType(&Storage{})
 }

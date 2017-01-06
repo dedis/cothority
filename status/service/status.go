@@ -29,31 +29,19 @@ type Stat struct {
 // Request is what the Status service is expected to receive from clients.
 type Request struct{}
 
-// Status holds all fields for one status.
-type Status struct {
-	Field map[string]string
-}
-
 // Response is what the Status service will reply to clients.
 type Response struct {
-	Msg            map[string]*Status
+	Msg            map[string]*onet.Status
 	ServerIdentity *network.ServerIdentity
 }
 
 // Request treats external request to this service.
 func (st *Stat) Request(req *Request) (network.Body, onet.ClientError) {
 	log.Lvl3("Returning", st.Context.ReportStatus())
-	ret := &Response{
-		Msg:            make(map[string]*Status),
+	return &Response{
+		Msg:            st.Context.ReportStatus(),
 		ServerIdentity: st.ServerIdentity(),
-	}
-	for k, v := range st.Context.ReportStatus() {
-		ret.Msg[k] = &Status{Field: make(map[string]string)}
-		for fk, fv := range v {
-			ret.Msg[k].Field[fk] = fv
-		}
-	}
-	return ret, nil
+	}, nil
 }
 
 // newStatService creates a new service that is built for Status
