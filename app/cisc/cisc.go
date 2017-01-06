@@ -161,10 +161,6 @@ func idQrCode(c *cli.Context) error {
 
 		qr, _ := qrgo.NewQR(string(enc))
 		qr.OutputTerminal()
-
-		log.Print(id64)
-		log.Print(host)
-		log.Print(port)
 	}
 	return nil
 }
