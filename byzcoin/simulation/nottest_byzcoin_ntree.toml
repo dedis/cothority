@@ -1,0 +1,7 @@
+Servers = 5
+Simulation = "ByzCoinNtree"
+Rounds = 2
+BF = 2
+
+Hosts, Blocksize, TimeoutMs, Fail
+30, 128, 3000, 0

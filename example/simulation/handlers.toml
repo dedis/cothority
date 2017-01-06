@@ -1,0 +1,12 @@
+Servers = 16
+Simulation = "ExampleHandlers"
+BF = 2
+Rounds = 10
+#SingleHost = true
+
+Hosts
+3
+7
+15
+31
+63
