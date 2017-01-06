@@ -28,7 +28,7 @@ type AppSkipBlock interface {
 }
 
 // SkipBlockID represents the Hash of the SkipBlock
-type SkipBlockID crypto.HashID
+type SkipBlockID []byte
 
 // IsNull returns true if the ID is undefined
 func (sbid SkipBlockID) IsNull() bool {

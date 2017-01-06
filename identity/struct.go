@@ -63,7 +63,7 @@ func (c *Config) Copy() *Config {
 
 // Hash makes a cryptographic hash of the configuration-file - this
 // can be used as an ID.
-func (c *Config) Hash() (crypto.HashID, error) {
+func (c *Config) Hash() ([]byte, error) {
 	hash := network.Suite.Hash()
 	err := binary.Write(hash, binary.LittleEndian, int32(c.Threshold))
 	if err != nil {
