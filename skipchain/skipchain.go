@@ -29,8 +29,7 @@ const ServiceName = "Skipchain"
 const skipchainBFT = "SkipchainBFT"
 
 func init() {
-	onet.RegisterNewService(ServiceName, newSkipchainService)
-	skipchainSID = onet.ServiceFactory.ServiceID(ServiceName)
+	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
 	network.RegisterPacketType(&SkipBlockMap{})
 }
 
