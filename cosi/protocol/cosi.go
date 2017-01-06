@@ -38,11 +38,11 @@ type CoSi struct {
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
 	// the channel waiting for Commitment message
-	commit chan chanCommitment
+	commit chan []chanCommitment
 	// the channel waiting for Challenge message
 	challenge chan chanChallenge
 	// the channel waiting for Response message
-	response chan chanResponse
+	response chan []chanResponse
 	// the channel that indicates if we are finished or not
 	done chan bool
 	// temporary buffer of commitment messages
@@ -136,13 +136,14 @@ func (c *CoSi) Dispatch() error {
 			return err
 		}
 	}
-	for n := 0; n < nbrChild; n++ {
-		log.Lvlf3("%s Waiting for commitment of child %d/%d",
-			c.Name(), n+1, nbrChild)
-		commit := (<-c.commit).Commitment
-		err := c.handleCommitment(&commit)
-		if err != nil {
-			return err
+	if !c.IsLeaf() {
+		for n, commit := range <-c.commit {
+			log.Lvlf3("%s Handling commitment %d/%d",
+				c.Name(), n+1, nbrChild)
+			err := c.handleCommitment(&commit.Commitment)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if !c.IsRoot() {
@@ -153,12 +154,13 @@ func (c *CoSi) Dispatch() error {
 			return err
 		}
 	}
-	for n := 0; n < nbrChild; n++ {
-		log.Lvlf3("%s Waiting for response of child %d/%d", c.Name(), n+1, nbrChild)
-		response := (<-c.response).Response
-		err := c.handleResponse(&response)
-		if err != nil {
-			return err
+	if !c.IsLeaf() {
+		for n, response := range <-c.response {
+			log.Lvlf3("%s Handling response of child %d/%d", c.Name(), n+1, nbrChild)
+			err := c.handleResponse(&response.Response)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	<-c.done
