@@ -41,7 +41,7 @@ var ProtocolPacketID = network.RegisterPacketType(ProtocolPacket{})
 type ProtocolPacket struct {
 	Phase uint32
 
-	OverlayMessage *onet.OverlayMessage
+	OverlayMessage *onet.OverlayMsg
 
 	Ann  *Announcement
 	Comm *Commitment
@@ -54,7 +54,7 @@ type MessageProxy struct{}
 
 // Wrap implements the onet.MessageProxy interface by wrapping up any of the
 // four-step messages into a ProtooclPacket.
-func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMessage) (interface{}, error) {
+func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMsg) (interface{}, error) {
 	var packet = new(ProtocolPacket)
 	packet.OverlayMessage = info
 
@@ -78,7 +78,7 @@ func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMessage) (interfa
 
 // Unwrap implements the onet.MessageProxy interface by unwraping and returning the
 // specific message of one of the four steps.
-func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *onet.OverlayMessage, error) {
+func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *onet.OverlayMsg, error) {
 	var inner interface{}
 	packet, ok := msg.(ProtocolPacket)
 	if !ok {
