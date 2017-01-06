@@ -1,75 +1,138 @@
-[![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority)
-[![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg)](https://coveralls.io/github/dedis/cothority)
+[![Build Status](https://travis-ci.org/cothority/conode.svg?branch=master)](https://travis-ci.org/cothority/conode)
+[![Coverage Status](https://coveralls.io/repos/github/cothority/conode/badge.svg)](https://coveralls.io/github/cothority/conode)
 
-# Cothority-ONet
+# Conode
 
-* **Cothority** - Collective Authority
-* **ONet** - Overlay network
+A conode is a node of a collective authority (cothority) and participates
+in protocols that do collective signing, blockchains, password hashing and
+many more things. 
 
-The ONet project offers a framework for research, simulation and deployment 
-of crypto-related protocols with an emphasis of decentralized, distributed protocols.
-The cothority-repository holds protocols, services and apps for you to use.
-You can find more information at
-https://github.com/dedis/cothority/wiki
+You can run your own conode, and/or use the applications provided in this
+repository. Either way, be sure to contact us and tell us about your
+experience.
 
-## Apps
+## Applications
 
-So you want to use one of our services and you are interested in one of our projects:
+A list of all applications can be found in the wiki at
+[Applications](https://github.com/cothority/conode/wiki/Apps). Here we present
+our main application:
 
-* [Cothority](https://github.com/dedis/cothority/wiki/Cothority) - The main server being able to handle all service-requests
-* [CoSi](https://github.com/dedis/cothority/wiki/CoSi) - Collective Signing, where you can submit a hash of a document and get a collective signature on it
-* [Cisc](https://github.com/dedis/cothority/wiki/Cisc) - Cisc Identity Skipchain, a distributed key/value storage handled by a permissioned, personal blockchain with an SSH-plugin
+### Collective Signing
 
-## Services
+This application collectively signs a document by a group of conodes that is
+called a cothority. To use it, first build the application:
+```bash
+go get -u github.com/cothority/conode/cosi
+```
 
-All apps communicate with services that are in a cothority. Here is a list of
-available services, some don't have a corresponding app:
+Now you can sign a document by a cothority. A group of active conodes can be
+found in the `dedis-cothority.toml`-file. For shorter examples, we suppose you
+define the following variable first:
 
-* [ServiceTimestamper](https://github.com/dedis/cothority/wiki/ServiceTimestamper)
+```bash
+COTHORITY=$GOPATH/src/github.com/cothority/conode/dedis-cothority.toml 
+```
 
-## Protocols
+To sign your document using that cothority, use the following command:
 
-This is a short overview of the available protocols in the cothority-repository,
-for some of them we don't have a service yet.
+```bash
+cosi sign -g $COTHORITY -o your_file.sig your_file
+```
 
-* [](https://github.com/dedis/cothority/wiki/)
-* [](https://github.com/dedis/cothority/wiki/)
-* [](https://github.com/dedis/cothority/wiki/)
-* [](https://github.com/dedis/cothority/wiki/)
-* [](https://github.com/dedis/cothority/wiki/)
+Replace `your_file` with a file you want to have signed. Now `your_file.sig`
+contains a collective signature of all the conodes from the DEDIS-lab. To
+verify the signature, type:
 
-### Byzcoin 
+```bash
+cosi verify -g $COTHORITY -s your_file.sig your_file
+```
 
-XXX Need references.
-ByzCoin implements the ByzCoin protocols which consists of two CoSi Protocols:
-* One Prepare phase where the block is dispatched and signed amongst the tree.
-* One Commit phase where the previous signature is seen by all the participants
-  and they make a final one out of it.
-This implicitly implements a Byzantine Fault Tolerant protocol.
+## Installation
 
-### PBFT
+If you run a conode on your server and make it available to
+others, they will be able to sign using your server and thus increase the
+security of their signature.
 
-PBFT is the Practical Fault Tolerant algorithm described
-in http://pmg.csail.mit.edu/papers/osdi99.pdf .
-It's a very simple implementation just to compare the performance relative to
-ByzCoin.
+To install conode, make sure that
+[Go is installed](https://golang.org/doc/install)
+and that
+[`$GOPATH` is set](https://golang.org/doc/code.html#GOPATH).
 
-### Ntree
+The `conode`-binary will be installed in the directory indicated by `$GOPATH/bin`
+with the following command:
+```bash
+go get -u github.com/cothority/conode
+```
 
-Ntree is like ByzCoin but with independant signatures. There is no Collective
-Signature (CoSi) done. It has been made to compare the perform relative to
-ByzCoin.
+### Running your own conode
 
-## More documentation
+First you need to create a configuration file for the server including a 
+public/private key pair for the server. 
+You can create a default server configuration with a fresh 
+public/private key pair as follows:
 
-Our documentation is split in three parts: 
+```bash
+conode setup
+```
 
-* **Users**, when all you want is to use one of our services - read further down. [Cothority](https://github.com/dedis/cothority/wiki)
-* **PhD**, for those of you who have an idea and want to implement it using Onet, you can go to 
-[Cothority_Template](https://github.com/dedis/cothority_template/wiki)
-* **Developer**, hard-core hackers that want to make our code even better and faster. You can go to [Onet](https://github.com/dedis/onet/wiki)
+Follow the instructions on the screen. At the end, you should have two files:
+* One local server configuration file which is used by your conode,
+* One group definition file that you will share with other cothority members and
+  clients that want to contact you.
 
-## Development
+To run the server, simply type:
+```bash
+conode
+```
 
-If you want to help with development, you can start picking one of the
-entry-level issues at https://github.com/dedis/cothority/issues/524
+The server reads the default configuration file; if you have put the
+file in a custom location, you have to provide the path using:
+```bash
+conode -config path/file.toml
+```
+
+### Using your conode
+
+There are different apps available to integrate your conode in an existing
+cothority. The list is at:
+[Applications](https://github.com/cothority/conode/wiki/Apps)
+
+# Documentation
+
+Each directory of the conode-repo is a protocol, a service or an app containing
+and using other services. You can find more information about the different
+protocols, services and apps on our wiki:
+[Conode-Wiki](https://github.com/cothority/conode/wiki)
+
+## Linked documentation
+
+Be sure also to check out the following documentation of the other parts of
+the project:
+
+- To run and use a conode, have a look at 
+	[Cothority Node](https://github.com/cothority/conode/wiki)
+	with examples of protocols, services and apps
+- To start a new project by developing and integrating a new protocol, have a look at
+	the [Cothority Template](https://github.com/cothority/template/wiki)
+- To participate as a core-developer, go to 
+	[Cothority Network Library](https://github.com/cothority/conet/wiki)
+
+# License
+
+All repositories in https://github.com/cothority are double-licensed under a 
+GNU/AGPL 3.0 and a commercial license. If you want to have more information, 
+contact us at bryan.ford@epfl.ch or linus.gassser@epfl.ch.
+
+## Contributing
+
+If you want to contribute to Cothority-ONet, please have a look at 
+[CONTRIBUTION](https://github.com/cothority/conode/blobl/master/CONTRIBUTION) for
+licensing details. Once you are OK with those, you can have a look at our
+coding-guidelines in
+[Coding](https://github.com/dedis/Coding). In short, we use the github-issues
+to communicate and pull-requests to do code-review. Travis makes sure that
+everything goes smoothly. And we'd like to have good code-coverage.
+
+# Contact
+
+You can contact us at https://groups.google.com/forum/#!forum/cothority
