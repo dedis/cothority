@@ -29,7 +29,6 @@ func init() {
 // CoSi is the service that handles collective signing operations
 type CoSi struct {
 	*onet.ServiceProcessor
-	path string
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -88,10 +87,9 @@ func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig)
 	return pi, err
 }
 
-func newCoSiService(c *onet.Context, path string) onet.Service {
+func newCoSiService(c *onet.Context) onet.Service {
 	s := &CoSi{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {
