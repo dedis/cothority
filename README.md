@@ -1,6 +1,86 @@
 [![Build Status](https://travis-ci.org/cothority/conode.svg?branch=master)](https://travis-ci.org/cothority/conode)
 [![Coverage Status](https://coveralls.io/repos/github/cothority/conode/badge.svg)](https://coveralls.io/github/cothority/conode)
 
+
+# Collective Authority (Cothority)
+
+The cothority project provides a framework for development and deployment of decentralized, distributed (cryptographic) protocols. This repository holds code for running your own cothority server (conode) as well as code for accessing the services provided by a cothority. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
+
+## License
+
+The software in this repository is made available under a dual-license scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE]() file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
+
+## Disclaimer 
+
+The software in this repository is highly experimental and under heavy development. Do not use it yet anything security-critical yet.
+
+**All usage is at your own risk**!
+
+
+## Installation and Usage
+
+### Dependencies
+
+To use the code of this repository make sure that you have a working [installation of Golang](https://golang.org/doc/install) and that the
+[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system.
+
+The main dependencies of the cothority project include the following libraries, all of which are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions further below.
+
+- Network: [dedis/onet](https://github.com/dedis/onet)
+- Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
+- Protobuf: [dedis/protobuf](https://github.com/dedis/protobuf)
+
+### Running a Cothority Server
+
+To install and configure a conode on your own server you need to open **two consecutive ports** (e.g., xxx and yyy) on your machine and then execute the following sequence of commands:
+
+```
+$ go get -u github.com/dedis/cothority
+$ cd $GOPATH/src/github.com/dedis/cothority
+$ go build
+$ ./cothority setup
+### follow the instructions of the dialog ###
+```
+
+After the setup you have **two** configuration files that contain the details of your conode. Check with:
+
+```
+$ cat ~/.config/cothorityd/config.toml
+$ cat ~/.config/cothorityd/group.toml
+```
+
+**Never share** `config.toml` with anybody since it contains the private key of your conode.
+
+The public information of your conode is contained in `group.toml`. Adapt the `description` variable of your server in the file to your liking and send `group.toml` to other cothority operators to request access to the cothority. 
+
+The [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) provides an example of how such a file with multiple conodes of a running cothority could look like.
+
+Finally, you can start your conode by simply executing:
+
+```
+$ ./cothorityd -d 3
+```
+
+Note: The `-d 3` flag increases the verbosity level and can also be omitted. The above command uses by default the configuration file `~/.config/cothorityd/config.toml`. For more information on the cothority binary type:
+
+```
+$ ./cothorityd help
+```
+
+
+### Accessing Cothority Services
+
+TODO
+
+
+## Documentation
+
+TODO
+
+
+---
+#OLD STUFF BELOW HERE
+---
 # Conode
 
 A conode is a node of a collective authority (cothority) and participates
