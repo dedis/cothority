@@ -8,7 +8,7 @@ The cothority project provides a framework for development, analysis, and deploy
 
 ## License
 
-The software in this repository is made available under a dual-license scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE]() file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
+The software in this repository is put under a dual-license scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE]() file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
 
 ## Disclaimer 
 
@@ -30,40 +30,54 @@ To use the code of this repository make sure that you have a working [installati
 
 All of the above projects are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions below.
 
-### Setting up a Cothority Server
+### Compiling the Conode Binary
 
-To install and configure a conode on your own server you need to open **two consecutive ports** (e.g., xxx and yyy) on your machine and then execute the following sequence of commands:
+To build the conode binary execute the following sequence of commands:
 
 ```
 $ go get -u github.com/dedis/cothority
 $ cd $GOPATH/src/github.com/dedis/cothority
 $ go build
-$ ./cothorityd setup
-### follow the instructions of the dialog ###
 ```
 
-After a successful setup there should be two configuration files:
+To get an overview on the functionality of the conode binary, type:
+
+
+```
+$ ./cothorityd help
+```
+
+**Note:** If you **do not** want to run your own cothority server but instead use the binary to tap into the functionality of existing cothorities, you can skip the next two sections and go directly to **accessing cothority services**.
+
+### Configuring a Conode
+
+To configure your conode you need to open **two consecutive ports** (e.g., xxx and yyy) on your machine and then execute
+
+```
+$ ./cothorityd setup
+```
+
+and follow the instruction of the dialog. After a successful setup there should be two configuration files:
 
 - `~/.config/cothorityd/group.toml`: The public information of your cothority server. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
 - `~/.config/cothorityd/config.toml`: The private information of your cothoriy server. **Warning:** Never (!!!) share this file with anybody, as it contains the private key of your conode.
 
 **Note:** The [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) provides an example of how such a public configuration file with multiple conodes could look like.
 
-### Running a Cothority Server
+### Running a Conode
 
-To start your conode using the default configuration file located at `~/.config/cothorityd/config.toml`, execute:
+To start your conode with the default configuration file located at `~/.config/cothorityd/config.toml`, execute:
+
+```
+$ ./cothorityd
+```
+
+To increase the verbosity of the output you can start the conode via:
 
 ```
 $ ./cothorityd -d 3
 ```
 
-**Note:** The `-d 3` flag increases the verbosity level and can also be omitted.
-
-For more information on the functionality of the cothority binary, type:
-
-```
-$ ./cothorityd help
-```
 
 ### Accessing Cothority Services
 
