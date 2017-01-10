@@ -4,7 +4,7 @@
 
 # Collective Authority (Cothority)
 
-The cothority project provides a framework for development and deployment of decentralized, distributed (cryptographic) protocols. The code in this repository allows you to run your own cothority server (conode) as well as access cothority services. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
+The cothority project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. The code in this repository allows you to run your own cothority server (conode) as well as access cothority services. The cothority project is developed and maintained by the [DEDIS lab](http://dedis.epfl.ch) at [EPFL](https://epfl.ch). 
 
 ## License
 
@@ -22,15 +22,15 @@ The software in this repository is highly experimental and under heavy developme
 ### Dependencies
 
 To use the code of this repository make sure that you have a working [installation of Golang](https://golang.org/doc/install) and that the
-[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system.
-
-The main dependencies of the cothority project include the following libraries, all of which are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions further below.
+[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. The main dependencies of the cothority project include the following libraries: 
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
 - Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
 - Protobuf: [dedis/protobuf](https://github.com/dedis/protobuf)
 
-### Running a Cothority Server
+All of the above projects are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions below.
+
+### Setting up a Cothority Server
 
 To install and configure a conode on your own server you need to open **two consecutive ports** (e.g., xxx and yyy) on your machine and then execute the following sequence of commands:
 
@@ -38,35 +38,32 @@ To install and configure a conode on your own server you need to open **two cons
 $ go get -u github.com/dedis/cothority
 $ cd $GOPATH/src/github.com/dedis/cothority
 $ go build
-$ ./cothority setup
+$ ./cothorityd setup
 ### follow the instructions of the dialog ###
 ```
 
-After the setup you have **two** configuration files that contain the details of your conode. Check with:
+After a successful setup there should be two configuration files:
 
-```
-$ cat ~/.config/cothorityd/config.toml
-$ cat ~/.config/cothorityd/group.toml
-```
+- `~/.config/cothorityd/group.toml`: The public information of your cothority server. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- `~/.config/cothorityd/config.toml`: The private information of your cothoriy server. **Warning:** Never (!!!) share this file with anybody, as it contains the private key of your conode.
 
-**Never share** `config.toml` with anybody since it contains the private key of your conode.
+**Note:** The [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) provides an example of how such a public configuration file with multiple conodes could look like.
 
-The public information of your conode is contained in `group.toml`. Adapt the `description` variable of your server in the file to your liking and send `group.toml` to other cothority operators to request access to the cothority. 
+### Running a Cothority Server
 
-The [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) provides an example of how such a file with multiple conodes of a running cothority could look like.
-
-Finally, you can start your conode by simply executing:
+To start your conode using the default configuration file located at `~/.config/cothorityd/config.toml`, execute:
 
 ```
 $ ./cothorityd -d 3
 ```
 
-Note: The `-d 3` flag increases the verbosity level and can also be omitted. The above command uses by default the configuration file `~/.config/cothorityd/config.toml`. For more information on the cothority binary type:
+**Note:** The `-d 3` flag increases the verbosity level and can also be omitted.
+
+For more information on the functionality of the cothority binary, type:
 
 ```
 $ ./cothorityd help
 ```
-
 
 ### Accessing Cothority Services
 
