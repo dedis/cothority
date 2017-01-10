@@ -12,8 +12,8 @@ import (
 
 func init() {
 	// register network messages and protocol
-	network.RegisterPacketType(Message{})
-	network.RegisterPacketType(SignatureReply{})
+	network.RegisterMessage(Message{})
+	network.RegisterMessage(SignatureReply{})
 	onet.GlobalProtocolRegister("NaiveTree", NewProtocol)
 }
 

@@ -16,7 +16,7 @@ func init() {
 		ChallengeCommit{},
 		Response{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 

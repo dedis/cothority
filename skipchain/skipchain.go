@@ -30,7 +30,7 @@ const skipchainBFT = "SkipchainBFT"
 
 func init() {
 	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
-	network.RegisterPacketType(&SkipBlockMap{})
+	network.RegisterMessage(&SkipBlockMap{})
 }
 
 // XXX Why skipchainSID is private ? Should we not be able to access it from
@@ -63,7 +63,7 @@ type SkipBlockMap struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.ClientError) {
+func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Message, onet.ClientError) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -147,7 +147,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.C
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, onet.ClientError) {
+func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
@@ -171,7 +171,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, one
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body, onet.ClientError) {
+func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Message, onet.ClientError) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
@@ -199,7 +199,7 @@ func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body
 }
 
 // PropagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(msg network.Body) {
+func (s *Service) PropagateSkipBlock(msg network.Message) {
 	sb, ok := msg.(*SkipBlock)
 	if !ok {
 		log.Error("Couldn't convert to SkipBlock")
@@ -327,7 +327,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
-	data, e := network.MarshalRegisteredType(block)
+	data, e := network.Marshal(block)
 	if e != nil {
 		return errors.New("Couldn't marshal block: " + cerr.Error())
 	}
@@ -427,7 +427,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) onet.ClientError {
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	s.testVerify = true
-	_, sbN, err := network.UnmarshalRegistered(data)
+	_, sbN, err := network.Unmarshal(data)
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
@@ -472,7 +472,7 @@ func (s *Service) lenSkipBlocks() int {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.SkipBlockMap)
+	b, err := network.Marshal(s.SkipBlockMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -492,7 +492,7 @@ func (s *Service) tryLoad() error {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
 	}
 	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		if err != nil {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
