@@ -40,18 +40,18 @@ $ cd $GOPATH/src/github.com/dedis/cothority
 $ go build
 ```
 
-To get an overview on the functionality of the conode binary, type:
+To get an overview on the functionality of a conode, type:
 
 
 ```
 $ ./cothorityd help
 ```
 
-**Note:** If you **do not** want to run your own cothority server but instead use the binary to tap into the functionality of existing cothorities, you can skip the next two sections and go directly to **accessing cothority services**.
+**Note:** If you **do not** want to run your own cothority server but instead use the binary to tap into the functionality of existing cothorities, skip the next two sections and go directly to **accessing cothority services**.
 
 ### Configuring a Conode
 
-To configure your conode you need to open **two consecutive ports** (e.g., xxx and yyy) on your machine and then execute
+To configure your conode you need to **open two consecutive ports** (e.g., xxx and yyy) on your machine and then execute
 
 ```
 $ ./cothorityd setup
@@ -66,18 +66,23 @@ and follow the instruction of the dialog. After a successful setup there should 
 
 ### Running a Conode
 
-To start your conode with the default configuration file located at `~/.config/cothorityd/config.toml`, execute:
+To start your conode with the default configuration file, located at `~/.config/cothorityd/config.toml`, execute:
 
 ```
 $ ./cothorityd
 ```
 
-To increase the verbosity of the output you can start the conode via:
+To increase the verbosity of your conode, start it with:
 
 ```
 $ ./cothorityd -d 3
 ```
 
+To use a configuration file in a custom location, use:
+
+```
+$ ./cothorityd -config path/to/config.toml
+```
 
 ### Accessing Cothority Services
 
