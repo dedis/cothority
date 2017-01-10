@@ -114,7 +114,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // messagingd identities.
-func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity) (network.Body, error) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientError) {
 	log.Lvlf2("Request for a new site identity received at server: %v", s.ServerIdentity())
 	ids := &Storage{
 		Latest: ai.Config,
@@ -124,13 +124,13 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 	ids.Root, err = s.skipchain.CreateRoster(ai.Roster, 2, 10,
 		skipchain.VerifyNone, nil)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	log.Lvl2("Creating Data-skipchain")
 	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
 		skipchain.VerifyNone, ai.Config)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
@@ -151,7 +151,7 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 
 	replies, err := s.PropagateFunc(roster, &PropagateIdentity{ids}, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	if replies != len(roster.List) {
@@ -168,10 +168,10 @@ func (s *Service) CreateIdentity(si *network.ServerIdentity, ai *CreateIdentity)
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(si *network.ServerIdentity, cu *ConfigUpdate) (network.Body, error) {
+func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Body, onet.ClientError) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
-		return nil, fmt.Errorf("Didn't find Identity: %v", cu.ID)
+		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -198,18 +198,18 @@ func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipB
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (network.Body, error) {
+func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
 	log.Lvlf2("Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find Identity")
-		return nil, errors.New("Didn't find Identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
 	}
 
 	roster := sid.Root.Roster
 	replies, err := s.PropagateFunc(roster, p, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -218,11 +218,11 @@ func (s *Service) ProposeSend(si *network.ServerIdentity, p *ProposeSend) (netwo
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) (network.Body, error) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, onet.ClientError) {
 	log.Lvl2(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find Identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -234,12 +234,12 @@ func (s *Service) ProposeUpdate(si *network.ServerIdentity, cnc *ProposeUpdate) 
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (network.Body, error) {
+func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
-		return nil, errors.New("Didn't find identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find identity")
 	}
 
 	// Putting this in a function because of the lock which needs to be held
@@ -285,13 +285,13 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 		return nil
 	}()
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	// Propagate the vote
 	_, err = s.PropagateFunc(sid.Root.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	storage := sid.Copy()
@@ -308,7 +308,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	log.Lvl3("Sending data-block with", storage.Proposed.Device)
 	reply, err := s.skipchain.ProposeData(storage.Root, storage.Data, storage.Proposed)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	skipblock_previous := reply.Previous
@@ -316,12 +316,12 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	_, msgLatest, err := network.UnmarshalRegistered(skipblock_latest.Data)
 	if err != nil {
 		log.Error(err)
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	al, ok := msgLatest.(*common_structs.Config)
 	if !ok {
 		log.Error(err)
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	storage.Data = skipblock_latest
 	storage.Latest = al
@@ -349,7 +349,7 @@ func (s *Service) ProposeVote(si *network.ServerIdentity, v *ProposeVote) (netwo
 	*/
 	_, err = s.PropagateFunc(roster, usb, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	s.save()
@@ -467,14 +467,14 @@ func (s *Service) Propagate(msg network.Body) {
 // finding the newest block as it is specified by its hash in the request's 'Hash2' field
 // (if Hash2==[]byte{0}, then fetch all skipblocks until the current skipchain head one).
 // Skipblocks will be returned from the oldest to the newest
-func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath) (network.Body, error) {
+func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Body, onet.ClientError) {
 	id := req.ID
 	h1 := req.Hash1
 	h2 := req.Hash2
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
 		log.Lvlf2("Didn't find identity: %v", id)
-		return nil, errors.New("Didn't find identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find identity")
 	}
 	log.Lvlf2("server: %v, site: %v - GetValidSbPath(): Start", s.String(), sid.ID)
 
@@ -487,7 +487,7 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
 			log.Lvlf2("server: %v, site: %v - NO VALID PATH: Skipblock with hash: %v not found", s.String(), sid.ID, h1)
-			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 	} else {
 		// fetch all the blocks starting from the one for the config of
@@ -502,7 +502,7 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
 			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
-			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 		log.Lvlf3("Last certified skipblock has hash: %v", h1)
 	}
@@ -512,7 +512,7 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		sb2, ok = sid.getSkipBlockByID(h2)
 		if !ok {
 			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
-			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 	} else {
 		// fetch skipblocks until finding the current head of the skipchain
@@ -537,7 +537,7 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
 			log.Lvlf3("Skipblock with hash: %v not found", hash)
-			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
+			return nil, onet.NewClientErrorCode(4100, "Skipblock not found")
 		}
 		sbs = append(sbs, block)
 		if bytes.Equal(hash, sid.Data.Hash) || bytes.Equal(hash, newest.Hash) {
@@ -553,11 +553,11 @@ func (s *Service) GetValidSbPath(si *network.ServerIdentity, req *GetValidSbPath
 	}, nil
 }
 
-func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Body, error) {
+func (s *Service) GetCert(req *GetCert) (network.Body, onet.ClientError) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find identity")
-		return nil, errors.New("Didn't find identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -572,11 +572,11 @@ func (s *Service) GetCert(si *network.ServerIdentity, req *GetCert) (network.Bod
 	return &GetCertReply{Cert: cert, SbHash: hash}, nil
 }
 
-func (s *Service) GetPoF(si *network.ServerIdentity, req *GetPoF) (network.Body, error) {
+func (s *Service) GetPoF(req *GetPoF) (network.Body, onet.ClientError) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find identity")
-		return nil, errors.New("Didn't find identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find identity")
 	}
 
 	sid.Lock()
@@ -652,7 +652,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) (network.Body, error) {
+func (s *Service) PushPublicKey(req *PushPublicKey) (network.Body, onet.ClientError) {
 	log.Lvlf2("Public key of a ws received at server: %v", s.ServerIdentity())
 	roster := req.Roster
 	//public := req.Public
@@ -663,7 +663,7 @@ func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) 
 
 	replies, err := s.PropagateFunc(roster, req, propagateTimeout)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -672,7 +672,7 @@ func (s *Service) PushPublicKey(si *network.ServerIdentity, req *PushPublicKey) 
 	return &PushPublicKeyReply{}, nil
 }
 
-func (s *Service) PullPublicKey(si *network.ServerIdentity, req *PullPublicKey) (network.Body, error) {
+func (s *Service) PullPublicKey(req *PullPublicKey) (network.Body, onet.ClientError) {
 	log.Lvlf3("PullPublicKey(): Start")
 
 	serverID := req.ServerID

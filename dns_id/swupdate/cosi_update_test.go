@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/onet/log"
-	"github.com/dedis/cothority/network"
-	"github.com/dedis/onet"
 	"github.com/dedis/crypto/cosi"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 var name = "TestCoSiUpdate"
@@ -28,7 +28,7 @@ func TestCosi(t *testing.T) {
 		registerProtocol(protocolName, nbrHosts, int(failingHosts))
 
 		local := onet.NewLocalTest()
-		hosts, el, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true, true)
+		hosts, el, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
 		aggPublic := network.Suite.Point().Null()
 		for _, e := range el.List {
 			aggPublic = aggPublic.Add(aggPublic, e.Public)
@@ -54,7 +54,7 @@ func TestCosi(t *testing.T) {
 		}
 
 		// Start the protocol
-		p, err := local.CreateProtocol(tree, protocolName)
+		p, err := local.CreateProtocol(protocolName, tree)
 		if err != nil {
 			t.Fatal("Couldn't create new node:", err)
 		}
@@ -88,7 +88,7 @@ func registerProtocol(protoName string, nbrHosts, failing int) {
 	var failFn = func(data []byte) bool {
 		return false
 	}
-	onet.ProtocolRegisterName(protoName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	onet.GlobalProtocolRegister(protoName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		var fn VerificationHook
 		if n.Index() != 0 && sort.SearchInts(failedIdx, n.Index()) == n.Index() {
 			fn = failFn

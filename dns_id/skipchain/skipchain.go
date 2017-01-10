@@ -29,11 +29,14 @@ const ServiceName = "Skipchain"
 const skipchainBFT = "SkipchainBFT"
 
 func init() {
-	onet.RegisterNewService(ServiceName, newSkipchainService)
-	skipchainSID = onet.ServiceFactory.ServiceID(ServiceName)
-	onet.GlobalProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, nil)
-	})
+	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
+	/*
+		onet.RegisterNewService(ServiceName, newSkipchainService)
+		skipchainSID = onet.ServiceFactory.ServiceID(ServiceName)
+		onet.GlobalProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+			return bftcosi.NewBFTCoSiProtocol(n, nil)
+		})
+	*/
 	network.RegisterPacketType(&SkipBlockMap{})
 }
 
@@ -68,7 +71,7 @@ type SkipBlockMap struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkipBlock) (network.Body, error) {
+func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.ClientError) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -77,7 +80,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 		var ok bool
 		prev, ok = s.getSkipBlockByID(psbd.LatestID)
 		if !ok {
-			return nil, errors.New("Didn't find latest block")
+			return nil, onet.NewClientErrorCode(4100, "Didn't find latest block")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
@@ -100,7 +103,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 				var ok bool
 				pointer, ok = s.getSkipBlockByID(pointer.BackLinkIds[0])
 				if !ok {
-					return nil, errors.New("Didn't find convenient SkipBlock for height " +
+					return nil, onet.NewClientErrorCode(4100, "Didn't find convenient SkipBlock for height "+
 						strconv.Itoa(h))
 				}
 			}
@@ -111,10 +114,10 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 		// are correctly set up
 		prop.Index = 0
 		if prop.MaximumHeight == 0 {
-			return nil, errors.New("Set a maximumHeight > 0")
+			return nil, onet.NewClientErrorCode(4100, "Set a maximumHeight > 0")
 		}
 		if prop.BaseHeight == 0 {
-			return nil, errors.New("Set a baseHeight > 0")
+			return nil, onet.NewClientErrorCode(4100, "Set a baseHeight > 0")
 		}
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
@@ -128,7 +131,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 	}
 	el, err := prop.GetResponsible(s)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	prop.AggregateResp = el.Aggregate
 
@@ -136,7 +139,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 
 	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
-		return nil, errors.New("Verification error: " + err.Error())
+		return nil, onet.NewClientErrorCode(4100, "Verification error: "+err.Error())
 	}
 	s.save()
 
@@ -151,7 +154,7 @@ func (s *Service) ProposeSkipBlock(si *network.ServerIdentity, psbd *ProposeSkip
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpdateChain) (network.Body, error) {
+func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, error) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
@@ -175,16 +178,16 @@ func (s *Service) GetUpdateChain(si *network.ServerIdentity, latestKnown *GetUpd
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChildrenSkipBlock) (network.Body, error) {
+func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body, onet.ClientError) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, onet.NewClientErrorCode(4100, "Couldn't find skipblock!")
 	}
 	child, ok := s.getSkipBlockByID(childID)
 	if !ok {
-		return nil, errors.New("Couldn't find skipblock!")
+		return nil, onet.NewClientErrorCode(4100, "Couldn't find skipblock!")
 	}
 	child.ParentBlockID = parentID
 	parent.ChildSL = NewBlockLink()
@@ -192,7 +195,7 @@ func (s *Service) SetChildrenSkipBlock(si *network.ServerIdentity, scsb *SetChil
 
 	err := s.startPropagation([]*SkipBlock{child, parent})
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 	// Parent-block is always of type roster, but child-block can be
 	// data or roster.
@@ -585,6 +588,9 @@ func newSkipchainService(c *onet.Context, path string) onet.Service {
 	var err error
 	s.Propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.PropagateSkipBlock)
 	log.ErrFatal(err)
+	c.ProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
+	})
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}

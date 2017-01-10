@@ -131,7 +131,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	wss := website.WSs
 	serverID := wss[rand.Int()%len(wss)].ServerID
 
-	log.Lvlf3("Connect(): Before fetching skipblocks: serverID=%v, FQDN=%v", serverID, name)
+	log.Lvlf1("Connect(): Before fetching skipblocks: serverID=%v, FQDN=%v", serverID, name)
 	reply := &GetValidSbPathReply{}
 	u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}}, reply)
 

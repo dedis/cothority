@@ -2,7 +2,6 @@ package ca
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
@@ -70,7 +69,7 @@ func (ca *CA) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (
  */
 
 // SignCert will use the CA's public key to sign a new cert
-func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, error) {
+func (ca *CA) SignCert(csr *CSR) (network.Body, onet.ClientError) {
 	log.Lvlf2("SignCert(): Start (CA's public key: %v)", ca.Public)
 	id := csr.ID
 	config := csr.Config
@@ -80,7 +79,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 
 	if config == nil {
 		log.Lvlf2("Nil config")
-		return nil, errors.New("Nil config")
+		return nil, onet.NewClientErrorCode(4100, "Nil config")
 	}
 
 	var trustedconf *common_structs.Config
@@ -105,14 +104,14 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 					hash, err = config.Hash()
 					if err != nil {
 						log.Lvlf2("Couldn't get hash")
-						return false, errors.New("Couldn't get hash")
+						return false, onet.NewClientErrorCode(4100, "Couldn't get hash")
 					}
 
 					// Verify signature
 					err = crypto.VerifySchnorr(network.Suite, device.Point, hash, *device.Vote)
 					if err != nil {
 						log.Lvlf2("Wrong signature")
-						return false, errors.New("Wrong signature")
+						return false, onet.NewClientErrorCode(4100, "Wrong signature")
 					}
 					cnt++
 				}
@@ -122,20 +121,20 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 
 	if cnt < thr {
 		log.Lvlf2("Not enough valid signatures (votes: %v, threshold: %v)", cnt, config.Threshold)
-		return nil, errors.New("Not enough valid signatures")
+		return nil, onet.NewClientErrorCode(4100, "Not enough valid signatures")
 	}
 
 	// Check whether our clock is relatively close or not to the proposed timestamp
 	err = config.CheckTimeDiff(maxdiff_sign)
 	if err != nil {
 		log.Lvlf2("CA with public key: %v %v refused to sign because of bad config timestamp", ca.Public, err)
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	// Check that the validity period does not exceed an upper bound
 	if config.MaxDuration > bound {
 		log.Lvlf2("CA with public key: %v %v refused to sign because config's validity period exceeds an upper bound", ca.Public, err)
-		return nil, fmt.Errorf("CA with public key: %v %v refused to sign because config's validity period exceeds an upper bound", ca.Public, err)
+		return nil, onet.NewClientErrorCode(4100, "CA refused to sign because config's validity period exceeds an upper bound")
 	}
 
 	// Sign the config's hash using CA's private key
@@ -144,7 +143,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	signature, err = crypto.SignSchnorr(network.Suite, ca.Private, hash)
 	if err != nil {
 		log.Lvlf2("error: %v", err)
-		return nil, err
+		return nil, onet.NewClientError(err)
 	}
 
 	cert := &common_structs.Cert{
@@ -168,7 +167,7 @@ func (ca *CA) SignCert(si *network.ServerIdentity, csr *CSR) (network.Body, erro
 	}, nil
 }
 
-func (ca *CA) GetPublicKey(si *network.ServerIdentity, req *GetPublicKey) (network.Body, error) {
+func (ca *CA) GetPublicKey(req *GetPublicKey) (network.Body, onet.ClientError) {
 	return &GetPublicKeyReply{Public: ca.Public}, nil
 }
 
@@ -238,6 +237,7 @@ func newCAService(c *onet.Context, path string) onet.Service {
 	if err := ca.tryLoad(); err != nil {
 		log.Error(err)
 	}
+
 	for _, f := range []interface{}{ca.SignCert, ca.GetPublicKey} {
 		if err := ca.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
