@@ -21,7 +21,7 @@ The software in this repository is highly experimental and under heavy developme
 
 ### Dependencies
 
-To use the code of this repository make sure that you have a working [installation of Golang](https://golang.org/doc/install) and that the
+To use the code of this repository make sure that you have a working [Golang installation](https://golang.org/doc/install) and that the
 [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. The main dependencies of the cothority project include the following libraries: 
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
@@ -42,16 +42,15 @@ $ go build
 
 To get an overview on the functionality of a conode, type:
 
-
 ```
 $ ./cothorityd help
 ```
 
-**Note:** If you **do not** want to run your own cothority server but instead use the binary to tap into the functionality of existing cothorities, skip the next two sections and go directly to **accessing cothority services**.
+**Note:** If you *do not* want to run your own cothority server but instead use the binary to tap into the functionality of existing cothorities, skip the next two sections and go directly to *accessing cothority services*.
 
 ### Configuring a Conode
 
-To configure your conode you need to **open two consecutive ports** (e.g., xxx and yyy) on your machine and then execute
+To configure your conode you need to *open two consecutive ports* (e.g., xxx and yyy) on your machine, execute
 
 ```
 $ ./cothorityd setup
@@ -59,8 +58,10 @@ $ ./cothorityd setup
 
 and follow the instruction of the dialog. After a successful setup there should be two configuration files:
 
-- `~/.config/cothorityd/group.toml`: The public information of your cothority server. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
-- `~/.config/cothorityd/config.toml`: The private information of your cothoriy server. **Warning:** Never (!!!) share this file with anybody, as it contains the private key of your conode.
+- The *public configuration file* of your cothority server is located at `~/.config/cothorityd/group.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- The *private configuration file* of your cothoriy server is located at `~/.config/cothorityd/config.toml`.
+
+**Warning:** Never (!!!) share the `config.toml` file with anybody, as it contains the private key of your conode.
 
 **Note:** The [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) provides an example of how such a public configuration file with multiple conodes could look like.
 
