@@ -4,7 +4,7 @@
 
 # Collective Authority (Cothority)
 
-The cothority project provides a framework for development and deployment of decentralized, distributed (cryptographic) protocols. This repository holds code for running your own cothority server (conode) as well as code for accessing the services provided by a cothority. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
+The cothority project provides a framework for development and deployment of decentralized, distributed (cryptographic) protocols. The code in this repository allows you to run your own cothority server (conode) as well as access cothority services. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
 
 ## License
 
@@ -12,7 +12,7 @@ The software in this repository is made available under a dual-license scheme: I
 
 ## Disclaimer 
 
-The software in this repository is highly experimental and under heavy development. Do not use it yet anything security-critical yet.
+The software in this repository is highly experimental and under heavy development. Do not use it for anything security-critical yet.
 
 **All usage is at your own risk**!
 
