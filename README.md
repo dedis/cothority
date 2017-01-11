@@ -145,9 +145,9 @@ If you are interested in contributing to the cothority project, please check our
 
 ## License
 
-The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](contact@dedis.epfl.ch) to get a commercial license.
+The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](mailto:contact@dedis.epfl.ch) to get a commercial license.
 
 ## Contact
 
-We are always happy to hear about your experiences with the cothority project. Feel free to contact us on our [mailing list](https://groups.google.com/forum/#!forum/cothority) or by [email](contact@dedis.epfl.ch).
+We are always happy to hear about your experiences with the cothority project. Feel free to contact us on our [mailing list](https://groups.google.com/forum/#!forum/cothority) or by [email](mailto:contact@dedis.epfl.ch).
 
