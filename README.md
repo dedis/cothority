@@ -2,9 +2,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg)](https://coveralls.io/github/dedis/cothority)
 
 
-# Collective Authority (Cothority)
+# Cothority
 
-The cothority project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers that runs these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority as well as to run your own conode.
+The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers that runs these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority as well as to run your own conode.
 
 The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). The research behind the project has been published in several academic papers:
 
@@ -19,34 +19,43 @@ The software in this repository is highly experimental and under heavy developme
 
 **All usage is at your own risk**!
 
-## Dependencies
+## Usage
 
 To use the code of this repository make sure that you have a working [Golang installation](https://golang.org/doc/install) and that the
-[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. The main dependencies of the cothority project include the following libraries: 
+[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. As a first step, checkout the code:
+
+```
+$ go get -u github.com/dedis/cothority
+```
+
+Afterwards you have two options:
+
+1. [Accessing cothority services through a client](https://github.com/dedis/cothority#accessing-cothority-services-through-a-client)
+2. [Setting up and running a cothority server](https://github.com/dedis/cothority#setting-up-and-running-a-cothority-server)
+
+**Note:** The above command also checks out all the required dependenencies. The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
 - Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
 - Protobuf: [dedis/protobuf](https://github.com/dedis/protobuf)
 
-All of the above projects are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions below.
 
-## Accessing Cothority Services Through a Client
+### Accessing Cothority Services Through a Client
 
 A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how to use a cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
 
-### Compiling the CoSi Client
+#### Compiling the CoSi Client
 
 To build the CoSi client execute the following sequence of commands:
 
 ```
-$ go get -u github.com/dedis/cothority/cosi
 $ cd $GOPATH/src/github.com/dedis/cothority/cosi
 $ go build
 ```
 
-### Using the CoSi Client
+#### Using the CoSi Client
 
-To tell the CoSi client which cothority it should use for signing requests, you need to configure it with a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
+To tell the CoSi client which cothority it should use for signing requests, you need to specify a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
 $ export COTHORITY=$GOPATH/src/github.com/cothority/conode/dedis-cothority.toml 
@@ -66,14 +75,13 @@ $ ./cosi verify -g $COTHORITY -s file.sig file
 
 **Note:** Although signature verification is done locally, you need to provide a cothority configuration file to tell the CoSi client which public key to use.
 
-## Setting up and Running a Cothority Server
+### Setting up and Running a Cothority Server
 
-### Compiling the Cothority Server
+#### Compiling the Cothority Server
 
 To build the conode binary execute the following sequence of commands:
 
 ```
-$ go get -u github.com/dedis/cothority
 $ cd $GOPATH/src/github.com/dedis/cothority
 $ go build
 ```
@@ -84,7 +92,7 @@ To get an overview on the functionality of a conode, type:
 $ ./cothorityd help
 ```
 
-### Configuring the Cothority Server
+#### Configuring the Cothority Server
 
 To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
 
@@ -101,7 +109,7 @@ and follow the instructions of the dialog. After a successful setup there should
 
 **Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 
-### Running the Cothority Server
+#### Running the Cothority Server
 
 To start your conode with the default (private) configuration file, located at `~/.config/cothorityd/config.toml`, execute:
 
@@ -127,7 +135,7 @@ Each of the parts of the cothority project has a corresponding wiki which are wo
 
 - The [cothority wiki](https://github.com/dedis/cothority/wiki) provides an overview on supported protocols, services, and applications.
 - The [cothority template wiki](https://github.com/dedis/cothority_template/wiki) shows how you can develop your own protocols, services, and applications such that they can be integrated into the cothority project.
-- The [cothority network library wiki]() presents details on the inner workings of the cothority framework.
+- The [cothority network library wiki](https://github.com/dedis/onet/wiki) presents details on the inner workings of the cothority framework.
 
 If you are writing code for the project, make sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
 
@@ -137,9 +145,9 @@ If you are interested in contributing to the cothority project, please check our
 
 ## License
 
-The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
+The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](contact@dedis.epfl.ch) to get a commercial license.
 
 ## Contact
 
-We are always happy to hear about your experiences with the cothority project. Feel free to contact us on our [mailing list](https://groups.google.com/forum/#!forum/cothority) or by [email]().
+We are always happy to hear about your experiences with the cothority project. Feel free to contact us on our [mailing list](https://groups.google.com/forum/#!forum/cothority) or by [email](contact@dedis.epfl.ch).
 
