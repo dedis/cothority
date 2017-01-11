@@ -129,7 +129,7 @@ Each of the parts of the cothority project has a corresponding wiki which are wo
 - The [cothority template wiki](https://github.com/dedis/cothority_template/wiki) shows how you can develop your own protocols, services, and applications such that they can be integrated into the cothority project.
 - The [cothority network library wiki]() presents details on the inner workings of the cothority framework.
 
-If you are writing code for the project, makse sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
+If you are writing code for the project, make sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
 
 ## Contributing
 
@@ -137,7 +137,7 @@ If you are interested in contributing to the cothority project, please check our
 
 ## License
 
-The software in this repository is put under a dual-license scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
+The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us]() to get a commercial license.
 
 ## Contact
 
