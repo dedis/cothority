@@ -4,7 +4,7 @@
 
 # Collective Authority (Cothority)
 
-The cothority project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers that runs these protocols is referred to as a *collective authority* or *cothority*. Individual servers are also denoted as *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority as well as to run your own conode.
+The cothority project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers that runs these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority as well as to run your own conode.
 
 The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). The research behind the project has been published in several academic papers:
 
