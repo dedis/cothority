@@ -33,7 +33,7 @@ Afterwards you have two options:
 1. [Accessing cothority services through a client](https://github.com/dedis/cothority#accessing-cothority-services-through-a-client)
 2. [Setting up and running a cothority server](https://github.com/dedis/cothority#setting-up-and-running-a-cothority-server)
 
-**Note:** The above command also checks out all the required dependenencies. The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
+**Note:** The above command also checks out all the required dependencies. The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
 - Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
