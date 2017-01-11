@@ -262,17 +262,17 @@ func (c *Config) Hash() ([]byte, error) {
 		}
 	}
 
-	if c.CAs == nil {
-		log.Print("No CAs found")
-	}
-	for _, info := range c.CAs {
-		//log.Printf("public: %v", info.Public)
-		b, err := network.MarshalRegisteredType(&info)
-		if err != nil {
-			return nil, err
+	/*
+		for _, info := range c.CAs {
+			//log.Printf("public: %v", info.Public)
+			b, err := network.MarshalRegisteredType(&info)
+			if err != nil {
+				return nil, err
+			}
+			_, err = hash.Write(b)
 		}
-		_, err = hash.Write(b)
-	}
+
+	*/
 	// Include the aggregate public key into the hash (cothority is trusted for issuing proofs of freshness)
 	point := &APoint{Point: c.ProxyRoster.Aggregate}
 	b, err2 := network.MarshalRegisteredType(point)
@@ -569,4 +569,19 @@ func ElGamalDecrypt(suite abstract.Suite, prikey abstract.Scalar, K, C abstract.
 	M := suite.Point().Sub(C, S)      // use to un-blind the message
 	message, err = M.Data()           // extract the embedded data
 	return
+}
+
+type IdentityReady struct {
+	ID            skipchain.SkipBlockID
+	Cothority     *onet.Roster
+	FirstIdentity *network.ServerIdentity
+}
+
+type PushedPublic struct {
+}
+
+type StartWebserver struct {
+	Roster    *onet.Roster
+	Roster_WK *onet.Roster
+	Index_CK  int
 }

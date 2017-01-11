@@ -64,6 +64,62 @@ func GetWSPublicsPlusServerIDs(num_ws int, el_coth *onet.Roster, l *onet.LocalTe
 	return hosts_ws, webservers, wss, data
 }
 
+func TestSimul(t *testing.T) {
+	log.SetDebugVisible(1)
+
+	num_proxies := 10
+	timestamper_on := true
+
+	l := onet.NewTCPTest()
+	hosts_coth, el_coth, _ := l.GenTree(num_proxies, true)
+	services := l.GetServices(hosts_coth, sidentity.IdentityService)
+
+	proxies := make([]*sidentity.Service, 0)
+	for _, s := range services {
+		log.Lvl3(s.(*sidentity.Service).Identities)
+		proxy := s.(*sidentity.Service)
+		log.Lvlf2("%v", proxy.ServerIdentity())
+		//proxy.ClearIdentities()
+		proxies = append(proxies, proxy)
+	}
+
+	if timestamper_on {
+		randomID := 0
+		proxies[randomID].TheRoster = el_coth
+		log.Lvlf1("STAMPER INITIALIZER HAS ADDRESS: %v", proxies[randomID].ServerIdentity())
+		go proxies[randomID].RunLoop(el_coth)
+	}
+
+	// site1
+	log.Lvlf2("")
+	log.Lvlf1("NEW SITE IDENTITY FOR SITE1")
+	site1 := "site1"
+	thr := 1
+	num_ws1 := 1
+	duration := int64(0) // == 6 months * 30 days/month * 24 hours/day * 3600 sec/hour * 1000 ms/sec (REALISTIC)
+	_, webservers1, wss1, data1 := GetWSPublicsPlusServerIDs(num_ws1, el_coth, l)
+	c1 := NewTestIdentity(el_coth, site1, thr, "one", "device", nil, data1, duration, l)
+	log.ErrFatal(c1.CreateIdentity())
+	for _, ws := range webservers1 {
+		ws.WSAttach(site1, c1.ID, el_coth)
+	}
+
+	log.Lvlf2("")
+	log.Lvlf1("ATTACHING USER1 TO SITE: %v (SITE IDENTITY: %v)", site1, c1.ID)
+	siteInfo := &common_structs.SiteInfo{
+		FQDN: site1,
+		WSs:  wss1,
+	}
+	sitestoattach := make([]*common_structs.SiteInfo, 0)
+	sitestoattach = append(sitestoattach, siteInfo)
+	u1 := NewTestUser("user1", sitestoattach, l)
+
+	log.Lvlf2("")
+	time.Sleep(1000 * time.Millisecond)
+	log.Lvlf1("RECONNECTING USER1 TO THE SITE: %v", site1)
+	log.ErrFatal(u1.ReConnect(site1))
+}
+
 func TestNoConc(t *testing.T) {
 	log.SetDebugVisible(1)
 
@@ -81,7 +137,7 @@ func TestNoConc(t *testing.T) {
 		log.Lvl3(s.(*sidentity.Service).Identities)
 		proxy := s.(*sidentity.Service)
 		log.Lvlf2("%v", proxy.ServerIdentity())
-		proxy.ClearIdentities()
+		//proxy.ClearIdentities()
 		proxies = append(proxies, proxy)
 	}
 

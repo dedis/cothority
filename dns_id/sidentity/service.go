@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"reflect"
 	"runtime/debug"
@@ -71,6 +72,13 @@ type Service struct {
 	TheRoster     *onet.Roster
 	signMsg       func(m []byte) []byte
 	PropagateFunc messaging.PropagationFunc
+	SimulFunc     messaging.PropagationFunc
+	expected      int
+	cnt           int
+	cntMut        sync.Mutex
+	setupDone     chan bool
+	siteInfoList  []*common_structs.SiteInfo
+	publicDone    chan bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -916,10 +924,12 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 		path:             path,
 		skipchain:        skipchain.NewClient(),
 		ca:               ca.NewCSRDispatcher(),
-		StorageMap:       &StorageMap{make(map[string]*Storage)},
+		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
 		Publics:          make(map[string]abstract.Point),
 		//EpochDuration:    time.Millisecond * 250000,
 		EpochDuration: time.Millisecond * 1000,
+		setupDone:     make(chan bool),
+		publicDone:    make(chan bool),
 	}
 	s.signMsg = s.cosiSign
 	if err := s.tryLoad(); err != nil {
@@ -927,15 +937,126 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 	}
 	var err error
 	s.PropagateFunc, err = messaging.NewPropagationFunc(c, "SIdentityPropagate", s.Propagate)
+	s.SimulFunc, err = messaging.NewPropagationFunc(c, "Sync", s.StartSimul)
 	log.ErrFatal(err)
-
+	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate,
-		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF,
+		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
 	}
 	return s
+}
+
+//
+type SyncStart struct {
+	Roster     *onet.Roster
+	Clients    int
+	Webservers int
+	Cothority  int
+}
+
+func (s *Service) StartSimul(msg network.Body) {
+	m := msg.(*SyncStart)
+
+	// [ clients, webservers, cold key holders, cothority]
+	index_client := 0
+	index_ws := index_client + m.Clients - 1
+	index_CK := index_ws + m.Webservers - 1
+	index_WK := index_CK + m.Webservers - 1
+
+	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
+	roster_WK := onet.NewRoster(m.Roster.List[index_WK:])
+	switch {
+	case index < index_ws:
+
+	case index < index_CK:
+		startWs(m.Roster, roster_WK, index_CK+(index-index_ws), index)
+	case index < index_WK:
+		<-s.publicDone
+		randWkh := rand.Int() % (len(m.Roster.List) - index_WK)
+		s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK))
+	default:
+		if index == index_WK {
+			s.RunLoop(roster_WK)
+		}
+	}
+
+}
+
+func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws int) {
+	firstIdentity := roster.List[0]
+	wsIdentity := roster.List[index_ws]
+	data := make(map[string]*common_structs.WSconfig)
+	key := fmt.Sprintf("tls:%v", wsIdentity)
+	data[key] = &common_structs.WSconfig{
+		ServerID: wsIdentity,
+	}
+	id := NewIdentity(roster_WK, "site", 1, "CKH_one", "device", nil, data, int64(0))
+	err := id.CreateIdentity()
+	log.Fatal(err)
+
+	serverIDs := make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, wsIdentity)
+
+	c := time.Tick(time.Millisecond * 60 * 1000)
+	go func() {
+		for _ = range c {
+			id.ProposeConfig(nil, nil, 0, 0, serverIDs)
+			id.ProposeUpVote()
+			id.ConfigUpdate()
+		}
+	}()
+
+	client := onet.NewClient("WebServer")
+	log.Fatal(client.SendProtobuf(wsIdentity, &common_structs.IdentityReady{
+		ID:            id.ID,
+		Cothority:     roster_WK,
+		FirstIdentity: firstIdentity,
+	}, nil))
+}
+
+func (s *Service) startWkh(roster *onet.Roster, index_WK int) {
+
+}
+
+func startWs(roster, roster_WK *onet.Roster, index_CK, index_ws int) {
+	wsIdentity := roster.List[index_ws]
+	client := onet.NewClient("WebServer")
+	log.Fatal(client.SendProtobuf(wsIdentity, &common_structs.StartWebserver{
+		Roster:    roster,
+		Roster_WK: roster_WK,
+		Index_CK:  index_CK,
+	}, nil))
+}
+
+func (s *Service) WaitSetup(num int) []*common_structs.SiteInfo {
+	s.cntMut.Lock()
+	s.expected = num
+	s.cntMut.Unlock()
+	<-s.setupDone
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	return s.siteInfoList
+}
+
+func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.ClientError) {
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.cnt++
+	s.siteInfoList = append(s.siteInfoList, req)
+	if s.cnt == s.expected {
+		s.setupDone <- true
+	}
+	return nil, nil
+}
+
+func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, onet.ClientError) {
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.publicDone <- true
+	return nil, nil
 }

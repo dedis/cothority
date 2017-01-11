@@ -41,6 +41,9 @@ func init() {
 		&ConnectReply{},
 		&GetValidSbPath{},
 		&GetValidSbPathReply{},
+		&common_structs.IdentityReady{},
+		&common_structs.PushedPublic{},
+		&common_structs.StartWebserver{},
 	} {
 		network.RegisterPacketType(s)
 	}

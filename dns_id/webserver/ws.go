@@ -463,10 +463,44 @@ func newWSService(c *onet.Context, path string) onet.Service {
 	if err := ws.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	for _, f := range []interface{}{ws.UserGetValidSbPath} {
+	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
 	}
 	return ws
+}
+
+func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Body, onet.ClientError) {
+	name := fmt.Sprintf("%v", ws.ServerIdentity())
+
+	wss := make([]common_structs.WSInfo, 0)
+	wss = append(wss, common_structs.WSInfo{ServerID: ws.ServerIdentity()})
+
+	siteInfo := &common_structs.SiteInfo{
+		FQDN: name,
+		WSs:  wss,
+	}
+
+	err := ws.WSAttach("aSite", req.ID, req.Cothority)
+	log.Fatal(err)
+
+	client := onet.NewClient(sidentity.ServiceName)
+	log.Fatal(client.SendProtobuf(req.FirstIdentity, siteInfo, nil))
+	return nil, nil
+}
+
+func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Body, onet.ClientError) {
+	roster := req.Roster
+	roster_WK := req.Roster_WK
+	index_CK := req.Index_CK
+
+	ckIdentity := roster.List[index_CK]
+
+	ws.WSPushPublicKey(roster_WK)
+
+	client := onet.NewClient(sidentity.ServiceName)
+	log.Fatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
+
+	return nil, nil
 }

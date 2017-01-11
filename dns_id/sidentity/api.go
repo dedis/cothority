@@ -70,6 +70,8 @@ func init() {
 		&GetPoF{},
 		&GetPoFReply{},
 		&LockIdentities{},
+
+		&common_structs.PushedPublic{},
 	} {
 		network.RegisterPacketType(s)
 	}
