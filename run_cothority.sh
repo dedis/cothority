@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
+if [ "$1" = "" ]; then
+	echo "Syntax is $0: (local|full|)"
+	exit 1
+fi
+
 NBR=3
 killall -9 cothorityd || true
 go build .

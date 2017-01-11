@@ -1,14 +1,14 @@
-// Cothorityd is the main binary for running a Cothority server.
-// A Cothority server can participate in various distributed protocols using the
+// Conode is the main binary for running a Cothority server.
+// A conode can participate in various distributed protocols using the
 // *onet* library as a network and overlay library and the *dedis/crypto*
 // library for all cryptographic primitives.
 // Basically, you first need to setup a config file for the server by using:
 //
-// 		./cothorityd setup
+//  ./conode setup
 //
 // Then you can launch the daemon with:
 //
-//  	./cothorityd
+//  ./conode
 //
 package main
 
@@ -30,7 +30,7 @@ import (
 const (
 	// DefaultName is the name of the binary we produce and is used to create a directory
 	// folder with this name
-	DefaultName = "cothorityd"
+	DefaultName = "conode"
 
 	// Version of this binary
 	Version = "1.1"
