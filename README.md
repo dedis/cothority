@@ -30,9 +30,9 @@ To use the code of this repository make sure that you have a working [Golang ins
 
 All of the above projects are developed and maintained by DEDIS and are installed automatically on your system if you follow the instructions below.
 
-## Accessing Cothority Services
+## Accessing Cothority Services Through a Client
 
-A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example we show to use a cothority to generate a collective signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
+A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how to use a cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
 
 ### Compiling the CoSi Client
 
@@ -46,7 +46,7 @@ $ go build
 
 ### Using the CoSi Client
 
-To tell the CoSi client which cothority it should use for signing requests, you need to configure it with a cothority configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
+To tell the CoSi client which cothority it should use for signing requests, you need to configure it with a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
 $ export COTHORITY=$GOPATH/src/github.com/cothority/conode/dedis-cothority.toml 
@@ -86,7 +86,7 @@ $ ./cothorityd help
 
 ### Configuring the Cothority Server
 
-To configure your conode you need to *open two consecutive ports* (e.g., xxx and yyy) on your machine, then execute
+To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
 
 ```
 $ ./cothorityd setup
