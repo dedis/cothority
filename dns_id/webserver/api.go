@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
+	//"strings"
 	"sync"
 	"time"
 
@@ -133,8 +133,10 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	log.Lvlf1("Connect(): Before fetching skipblocks: serverID=%v, FQDN=%v", serverID, name)
 	reply := &GetValidSbPathReply{}
-	u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}}, reply)
-
+	cerr := u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
+	if cerr != nil {
+		log.Fatal(cerr)
+	}
 	sbs := reply.Skipblocks
 	latest := sbs[len(sbs)-1]
 	cert := reply.Cert
@@ -156,35 +158,37 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	// TODO: verify that the CA is indeed a CA (maybe by checking its public key's membership
 	// into a trusted pull of CAs' public keys?)
+	/*
+		// UNCOMMENT IF CAs ARE TO BE USED
+		// Validate the signature of the CA
+		cert_hash := cert.Hash // the certified config's hash
+		err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
+		if err != nil {
+			log.Lvlf2("CA's signature doesn't verify")
+			return errors.New("CA's signature doesn't verify")
+		}
 
-	// Validate the signature of the CA
-	cert_hash := cert.Hash // the certified config's hash
-	err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
-	if err != nil {
-		log.Lvlf2("CA's signature doesn't verify")
-		return errors.New("CA's signature doesn't verify")
-	}
+		// Verify that the config of the first returned skipblock has been certified
+		_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
+		firstconf, _ := data.(*common_structs.Config)
+		conf_hash, _ := firstconf.Hash()
 
-	// Verify that the config of the first returned skipblock has been certified
-	_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
-	firstconf, _ := data.(*common_structs.Config)
-	conf_hash, _ := firstconf.Hash()
+		if !bytes.Equal(cert_hash, conf_hash) {
+			return fmt.Errorf("Cert not upon the config of the first returned skipblock")
+		}
 
-	if !bytes.Equal(cert_hash, conf_hash) {
-		return fmt.Errorf("Cert not upon the config of the first returned skipblock")
-	}
+		// Check that the returned cert is pointing to the requested FQDN
+		fqdn := firstconf.FQDN
+		if res := strings.Compare(fqdn, name); res != 0 {
+			return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
+		}
 
-	// Check that the returned cert is pointing to the requested FQDN
-	fqdn := firstconf.FQDN
-	if res := strings.Compare(fqdn, name); res != 0 {
-		return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
-	}
-
-	// Check that the returned cert has not yet expired
-	expired := firstconf.ExpiredCertConfig()
-	if expired {
-		return fmt.Errorf("Expired cert -> Cannot connect to the site: %v", name)
-	}
+		// Check that the returned cert has not yet expired
+		expired := firstconf.ExpiredCertConfig()
+		if expired {
+			return fmt.Errorf("Expired cert -> Cannot connect to the site: %v", name)
+		}
+	*/
 
 	// Verify the hops starting from the skipblock (sbs[0]) for which the cert was issued
 	ok, _ := VerifyHops(sbs)
@@ -226,7 +230,7 @@ func (u *User) ReConnect(name string) error {
 		serverID := wss[rand.Int()%len(wss)].ServerID
 
 		reply := &GetValidSbPathReply{}
-		u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}}, reply)
+		u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
 
 		sbs := reply.Skipblocks
 		first := sbs[0]
@@ -276,7 +280,7 @@ func (u *User) ReConnect(name string) error {
 			log.Lvlf3("Latest known skipblock has hash: %v", website.Latest.Hash)
 
 			reply := &GetValidSbPathReply{}
-			u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: first.Hash}, reply)
+			u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: first.Hash, Challenge: []byte{}}, reply)
 
 			sbs2 := reply.Skipblocks
 			if sbs2 != nil {
@@ -311,35 +315,37 @@ func (u *User) ReConnect(name string) error {
 
 			// TODO: verify that the "CA" is indeed a CA (maybe by checking its public key's membership
 			// into a trusted pull of CAs' public keys?)
+			/*
+				// UNCOMMENT IF CAs ARE TO BE USED
+				// Verify that the cert is certifying the config of the 'first' skipblock
+				_, data, _ = network.UnmarshalRegistered(first.Data)
+				firstconf, _ := data.(*common_structs.Config)
+				firstconf_hash, _ := firstconf.Hash()
+				cert_hash := cert.Hash // should contain the certified config's hash
+				if !bytes.Equal(cert_hash, firstconf_hash) {
+					log.Lvlf2("Received cert does not point to the first returned skipblock's config!")
+					return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
+				}
 
-			// Verify that the cert is certifying the config of the 'first' skipblock
-			_, data, _ = network.UnmarshalRegistered(first.Data)
-			firstconf, _ := data.(*common_structs.Config)
-			firstconf_hash, _ := firstconf.Hash()
-			cert_hash := cert.Hash // should contain the certified config's hash
-			if !bytes.Equal(cert_hash, firstconf_hash) {
-				log.Lvlf2("Received cert does not point to the first returned skipblock's config!")
-				return fmt.Errorf("Received cert does not point to the first returned skipblock's config!")
-			}
+				// Check that the returned cert is pointing to the requested FQDN
+				fqdn := firstconf.FQDN
+				if res := strings.Compare(fqdn, name); res != 0 {
+					return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
+				}
 
-			// Check that the returned cert is pointing to the requested FQDN
-			fqdn := firstconf.FQDN
-			if res := strings.Compare(fqdn, name); res != 0 {
-				return fmt.Errorf("Returned cert validates another mapping (wrong FQDN) -> Cannot reconnect to the site: %v", name)
-			}
+				// Check that the returned cert has not yet expired
+				expired := firstconf.ExpiredCertConfig()
+				if expired {
+					return fmt.Errorf("Expired cert -> Cannot reconnect to the site: %v", name)
+				}
 
-			// Check that the returned cert has not yet expired
-			expired := firstconf.ExpiredCertConfig()
-			if expired {
-				return fmt.Errorf("Expired cert -> Cannot reconnect to the site: %v", name)
-			}
-
-			// Validate the signature of the CA
-			err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
-			if err != nil {
-				log.Lvlf2("CA's signature doesn't verify")
-				return errors.New("CA's signature doesn't verify")
-			}
+				// Validate the signature of the CA
+				err = crypto.VerifySchnorr(network.Suite, cert.Public, cert_hash, *cert.Signature)
+				if err != nil {
+					log.Lvlf2("CA's signature doesn't verify")
+					return errors.New("CA's signature doesn't verify")
+				}
+			*/
 
 			// Verify the hops starting from the skipblock for which the cert was issued
 			ok, _ := VerifyHops(sbs)

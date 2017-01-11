@@ -636,7 +636,7 @@ func TestConc(t *testing.T) {
 
 	num_users := 10
 	num_proxies := 20
-	num_sites := 10
+	num_sites := 2
 	timestamper_on := true
 
 	l := onet.NewTCPTest()

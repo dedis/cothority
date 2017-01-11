@@ -138,13 +138,30 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientE
 
 	roster := ids.Root.Roster
 	ids.ID = ids.Data.Hash
-	log.Lvlf2("Asking for a cert for site: %v", ids.ID)
-	cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
+	/*
+		// UNCOMMENT IF CAs ARE TO BE USED
+		log.Lvlf2("Asking for a cert for site: %v", ids.ID)
+		cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
+		certinfo := &common_structs.CertInfo{
+			Cert:   cert[0],
+			SbHash: ids.Data.Hash,
+		}
+	*/
+
+	// COMMENT IF CAs ARE TO BE USED
+	cert := &common_structs.Cert{
+		ID:        ids.ID,
+		Hash:      []byte{},
+		Signature: nil,
+		Public:    nil,
+	}
 	certinfo := &common_structs.CertInfo{
-		Cert:   cert[0],
+		Cert:   cert,
 		SbHash: ids.Data.Hash,
 	}
+
 	ids.CertInfo = certinfo
+
 	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
 	ids.setSkipBlock(ids.Data)
 	ids.Votes = make(map[string]*crypto.SchnorrSig)
