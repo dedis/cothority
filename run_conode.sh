@@ -2,6 +2,7 @@
 set -e
 
 VERSION=1.0-pre1
+MAILCMD=mail
 
 main(){
 	if [ ! "$1" ]; then
@@ -102,7 +103,7 @@ runPublic(){
 	LOG=$( mktemp )
 	if ! conode -d $DEBUG $@ | tee > $LOG; then
 		if [ "$MAIL" ]; then
-			mail conode-bugs@dedis.ch < $LOG
+			$MAILCMD conode-bugs@dedis.ch < $LOG
 		fi
 	fi
 }
@@ -158,12 +159,14 @@ test(){
 #	if [ "$1" != "-update_rec" ]; then
 #		testUpdate
 #	fi
-	testMigrate
+#	testMigrate
+	testPublic
 }
 
-testUpdate(){
-	update test
+testPublic(){
+	runPublic -config $TMP/private.toml &
 }
+
 testMigrate(){
 	testOK date
 	PATH_CO=$( mktemp -d )
@@ -179,6 +182,10 @@ testMigrate(){
 
 		rm -rf $P/*
 	done
+}
+
+testUpdate(){
+	update test
 }
 
 main $@
