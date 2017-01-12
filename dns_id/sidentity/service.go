@@ -79,6 +79,7 @@ type Service struct {
 	setupDone     chan bool
 	siteInfoList  []*common_structs.SiteInfo
 	publicDone    chan bool
+	ok            bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -398,6 +399,7 @@ func (s *Service) Propagate(msg network.Body) {
 		s.identitiesMutex.Lock()
 		return
 	case *PushPublicKey:
+		//log.Print("public key to be stored at server", s.ServerIdentity())
 		p := msg.(*PushPublicKey)
 		public := p.Public
 		serverID := p.ServerID
@@ -680,7 +682,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 }
 
 func (s *Service) PushPublicKey(req *PushPublicKey) (network.Body, onet.ClientError) {
-	log.Lvlf2("Public key of a ws received at server: %v", s.ServerIdentity())
+	log.LLvlf2("Public key of a ws received at server: %v", s.ServerIdentity())
 	roster := req.Roster
 	//public := req.Public
 	//serverID := req.ServerID
@@ -986,11 +988,17 @@ func (s *Service) StartSimul(msg network.Body) {
 		return
 	case index < index_CK:
 		// webserver case
-		startWs(m.Roster, roster_WK, index_CK+(index-index_ws), index)
+		go startWs(m.Roster, roster_WK, index_CK+(index-index_ws), index)
+		return
 	case index < index_WK:
 		// cold key case
 		go func () {
 			<-s.publicDone
+			/*for ;; {
+				if s.ok==true {
+					break
+				}
+			}*/
 			log.Print(s.Context,"ColdKeyHolder is now ready to pursue")
 			randWkh := index_WK + rand.Int() % (len(m.Roster.List) - index_WK)
 			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol)
@@ -1031,7 +1039,8 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 		}
 	}()
 	*/
-	for idx:=0; idx<evol; idx++ {
+
+	for idx := 0; idx < evol; idx++ {
 		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
 		id.ProposeUpVote()
 		id.ConfigUpdate()
@@ -1077,8 +1086,8 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 }
 
 func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.ClientError) {
-	s.cntMut.Lock()
-	defer s.cntMut.Unlock()
+	//s.cntMut.Lock()
+	//defer s.cntMut.Unlock()
 	s.cnt++
 	s.siteInfoList = append(s.siteInfoList, req)
 	if s.cnt == s.expected {
@@ -1088,11 +1097,12 @@ func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.Cl
 }
 
 func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, onet.ClientError) {
-	log.Print("PushedPublic by the webserver")
-	s.cntMut.Lock()
-	defer s.cntMut.Unlock()
-	log.Print("oo")
+	log.Print("PushedPublic by the webserver, received by server: ", s.ServerIdentity())
+	//s.cntMut.Lock()
+	//defer s.cntMut.Unlock()
+	log.Print("before channel receipt")
 	s.publicDone <- true
+	//s.ok = true
 	log.Print("PushedPublic before returning")
 	return nil, nil
 }
