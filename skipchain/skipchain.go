@@ -479,6 +479,9 @@ func (s *Service) tryLoad() error {
 	if err != nil {
 		return err
 	}
+	if msg == nil {
+		return nil
+	}
 	var ok bool
 	s.SkipBlockMap, ok = msg.(*SkipBlockMap)
 	if !ok {
