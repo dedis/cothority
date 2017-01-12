@@ -486,8 +486,8 @@ func makeGenesisRoster(s *Service, el *onet.Roster) (*SkipBlock, error) {
 }
 
 // Makes a Host, an Roster, and a service
-func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Conode, *onet.Roster, *Service) {
-	hosts := local.GenConodes(nbr)
+func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Server, *onet.Roster, *Service) {
+	hosts := local.GenServers(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }
