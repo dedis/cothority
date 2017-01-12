@@ -23,7 +23,6 @@ func init() {
 // Stat is the service that returns the status reports of all services running on a server.
 type Stat struct {
 	*onet.ServiceProcessor
-	path string
 }
 
 // Request is what the Status service is expected to receive from clients.
@@ -45,10 +44,9 @@ func (st *Stat) Request(req *Request) (network.Message, onet.ClientError) {
 }
 
 // newStatService creates a new service that is built for Status
-func newStatService(c *onet.Context, path string) onet.Service {
+func newStatService(c *onet.Context) onet.Service {
 	s := &Stat{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {
