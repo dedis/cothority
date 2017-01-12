@@ -28,9 +28,11 @@ func init() {
 	network.RegisterMessage(&SkipBlockMap{})
 }
 
-// XXX Why skipchainSID is private ? Should we not be able to access it from
-// outside ?
+// Only used in tests
 var skipchainSID onet.ServiceID
+
+// Name used to store skipblocks
+const skipblocksID = "skipblocks"
 
 // Service handles adding new SkipBlocks
 type Service struct {
@@ -466,7 +468,7 @@ func (s *Service) lenSkipBlocks() int {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	err := s.Save("skipblocks", s.SkipBlockMap)
+	err := s.Save(skipblocksID, s.SkipBlockMap)
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -475,12 +477,12 @@ func (s *Service) save() {
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	msg, err := s.Load("skipblocks")
+	if !s.DataAvailable(skipblocksID) {
+		return nil
+	}
+	msg, err := s.Load(skipblocksID)
 	if err != nil {
 		return err
-	}
-	if msg == nil {
-		return nil
 	}
 	var ok bool
 	s.SkipBlockMap, ok = msg.(*SkipBlockMap)

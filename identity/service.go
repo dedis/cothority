@@ -351,6 +351,9 @@ func (s *Service) clearIdentities() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
+	if !s.DataAvailable("storage") {
+		return nil
+	}
 	msg, err := s.Load("storage")
 	if err != nil {
 		return err
