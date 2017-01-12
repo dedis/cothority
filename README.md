@@ -112,13 +112,13 @@ conode
 To increase the verbosity of your conode, start it with:
 
 ```
-cothority -d 3
+conode -d 3
 ```
 
 To use a (private) configuration file at a custom location, start your conode via:
 
 ```
-cothority -config path/to/private.toml
+conode -config path/to/private.toml
 ```
 
 ## Documentation
