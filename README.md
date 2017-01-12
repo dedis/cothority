@@ -27,12 +27,11 @@ To use the code of this repository make sure that you have a working [Golang ins
 1. [Accessing cothority services through a client](https://github.com/dedis/cothority#accessing-cothority-services-through-a-client)
 2. [Setting up and running a cothority server](https://github.com/dedis/cothority#setting-up-and-running-a-cothority-server)
 
-**Note:** The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
+**Note:** The main dependencies, which are installed automatically, include the following libraries:
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
 - Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
 - Protobuf: [dedis/protobuf](https://github.com/dedis/protobuf)
-
 
 ### Accessing Cothority Services Through a Client
 
