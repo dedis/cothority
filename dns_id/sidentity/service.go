@@ -55,6 +55,7 @@ func init() {
 	IdentityService = onet.ServiceFactory.ServiceID(ServiceName)
 	network.RegisterPacketType(&StorageMap{})
 	network.RegisterPacketType(&Storage{})
+	network.RegisterPacketType(&SyncStart{})
 }
 
 // Service handles identities
@@ -70,7 +71,6 @@ type Service struct {
 	Publics       map[string]abstract.Point
 	EpochDuration time.Duration
 	TheRoster     *onet.Roster
-	signMsg       func(m []byte) []byte
 	PropagateFunc messaging.PropagationFunc
 	SimulFunc     messaging.PropagationFunc
 	expected      int
@@ -107,6 +107,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	log.Lvl2(s.ServerIdentity(), "Identity received New Protocol event", conf)
 	if tn.ProtocolName() == "SIdentityPropagate" {
 		return s.ServiceProcessor.NewProtocol(tn, conf)
+	} else if tn.ProtocolName() == "Sync" {
+		return nil,nil
 	}
 	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
@@ -811,7 +813,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 				log.Lvlf3("%v", server)
 			}
 
-			signature := s.signMsg(msg)
+			signature := s.cosiSign(roster,msg)
 
 			log.Lvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
@@ -879,9 +881,9 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 }
 
 //func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
-func (s *Service) cosiSign(msg []byte) []byte {
+func (s *Service) cosiSign(roster *onet.Roster,msg []byte) []byte {
 	log.Lvlf2("server: %s", s.String())
-	sdaTree := s.TheRoster.GenerateBinaryTree()
+	sdaTree := roster.GenerateBinaryTree()
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
 	pi, err := swupdate.NewCoSiUpdate(tni, dummyVerfier)
 	if err != nil {
@@ -919,6 +921,7 @@ func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
 }
 
 func newIdentityService(c *onet.Context, path string) onet.Service {
+	log.Print(c)
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		path:             path,
@@ -930,13 +933,14 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 		EpochDuration: time.Millisecond * 1000,
 		setupDone:     make(chan bool),
 		publicDone:    make(chan bool),
+
 	}
-	s.signMsg = s.cosiSign
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
 	var err error
 	s.PropagateFunc, err = messaging.NewPropagationFunc(c, "SIdentityPropagate", s.Propagate)
+	log.ErrFatal(err)
 	s.SimulFunc, err = messaging.NewPropagationFunc(c, "Sync", s.StartSimul)
 	log.ErrFatal(err)
 	//ws = c.Service("webserver")
@@ -957,37 +961,50 @@ type SyncStart struct {
 	Clients    int
 	Webservers int
 	Cothority  int
+	Evol int
 }
 
 func (s *Service) StartSimul(msg network.Body) {
+	log.Print("StartSimul",s.Context.String())
 	m := msg.(*SyncStart)
 
 	// [ clients, webservers, cold key holders, cothority]
 	index_client := 0
-	index_ws := index_client + m.Clients - 1
-	index_CK := index_ws + m.Webservers - 1
-	index_WK := index_CK + m.Webservers - 1
+	index_ws := index_client + m.Clients
+	index_CK := index_ws + m.Webservers
+	index_WK := index_CK + m.Webservers
+
 
 	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
+
 	roster_WK := onet.NewRoster(m.Roster.List[index_WK:])
+	log.Print(s.Context," INDEX ",index, " VS",index_ws, " ", index_CK," ", index_WK )
+
 	switch {
 	case index < index_ws:
-
+		// client case
+		return
 	case index < index_CK:
+		// webserver case
 		startWs(m.Roster, roster_WK, index_CK+(index-index_ws), index)
 	case index < index_WK:
-		<-s.publicDone
-		randWkh := rand.Int() % (len(m.Roster.List) - index_WK)
-		s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK))
+		// cold key case
+		go func () {
+			<-s.publicDone
+			log.Print(s.Context,"ColdKeyHolder is now ready to pursue")
+			randWkh := index_WK + rand.Int() % (len(m.Roster.List) - index_WK)
+			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol)
+		}()
 	default:
+		// cothority warm key case
 		if index == index_WK {
-			s.RunLoop(roster_WK)
+			go s.RunLoop(roster_WK)
 		}
 	}
 
 }
 
-func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws int) {
+func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, evol int) {
 	firstIdentity := roster.List[0]
 	wsIdentity := roster.List[index_ws]
 	data := make(map[string]*common_structs.WSconfig)
@@ -995,13 +1012,16 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws in
 	data[key] = &common_structs.WSconfig{
 		ServerID: wsIdentity,
 	}
-	id := NewIdentity(roster_WK, "site", 1, "CKH_one", "device", nil, data, int64(0))
+	log.Print("roster is: %s", roster_WK)
+	fqdn := fmt.Sprintf("site%d",index_ws)
+	id := NewIdentity(roster_WK, fqdn, 1, "CKH_one", "device", nil, data, int64(0))
 	err := id.CreateIdentity()
-	log.Fatal(err)
+	log.ErrFatal(err)
 
 	serverIDs := make([]*network.ServerIdentity, 0)
 	serverIDs = append(serverIDs, wsIdentity)
 
+	/*
 	c := time.Tick(time.Millisecond * 60 * 1000)
 	go func() {
 		for _ = range c {
@@ -1010,34 +1030,47 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws in
 			id.ConfigUpdate()
 		}
 	}()
+	*/
+	for idx:=0; idx<evol; idx++ {
+		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
+		id.ProposeUpVote()
+		id.ConfigUpdate()
+	}
 
 	client := onet.NewClient("WebServer")
-	log.Fatal(client.SendProtobuf(wsIdentity, &common_structs.IdentityReady{
+	log.ErrFatal(client.SendProtobuf(wsIdentity, &common_structs.IdentityReady{
 		ID:            id.ID,
 		Cothority:     roster_WK,
 		FirstIdentity: firstIdentity,
 	}, nil))
-}
-
-func (s *Service) startWkh(roster *onet.Roster, index_WK int) {
-
+	log.Print("Cold key holder sent back Identity ready")
 }
 
 func startWs(roster, roster_WK *onet.Roster, index_CK, index_ws int) {
+	log.Print("startWs")
 	wsIdentity := roster.List[index_ws]
 	client := onet.NewClient("WebServer")
-	log.Fatal(client.SendProtobuf(wsIdentity, &common_structs.StartWebserver{
+	log.ErrFatal(client.SendProtobuf(wsIdentity, &common_structs.StartWebserver{
 		Roster:    roster,
 		Roster_WK: roster_WK,
 		Index_CK:  index_CK,
 	}, nil))
 }
 
-func (s *Service) WaitSetup(num int) []*common_structs.SiteInfo {
+func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority, evol int) []*common_structs.SiteInfo {
 	s.cntMut.Lock()
-	s.expected = num
+	s.expected = webservers
 	s.cntMut.Unlock()
+	msg := &SyncStart{
+		Roster:roster,
+		Clients: clients,
+		Webservers: webservers,
+		Cothority: cothority,
+		Evol: evol,
+	}
+	s.SimulFunc(roster, msg, 20000)
 	<-s.setupDone
+	log.Print(s.Context,"Setup DONE")
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
 	return s.siteInfoList
@@ -1055,8 +1088,12 @@ func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.Cl
 }
 
 func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, onet.ClientError) {
+	log.Print("PushedPublic by the webserver")
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
+	log.Print("oo")
 	s.publicDone <- true
+	log.Print("PushedPublic before returning")
 	return nil, nil
 }
+

@@ -67,7 +67,8 @@ func GetWSPublicsPlusServerIDs(num_ws int, el_coth *onet.Roster, l *onet.LocalTe
 func TestSimul(t *testing.T) {
 	log.SetDebugVisible(1)
 
-	num_proxies := 10
+	num_users := 1
+	num_proxies := 2
 	timestamper_on := true
 
 	l := onet.NewTCPTest()
@@ -104,20 +105,75 @@ func TestSimul(t *testing.T) {
 		ws.WSAttach(site1, c1.ID, el_coth)
 	}
 
-	log.Lvlf2("")
-	log.Lvlf1("ATTACHING USER1 TO SITE: %v (SITE IDENTITY: %v)", site1, c1.ID)
-	siteInfo := &common_structs.SiteInfo{
-		FQDN: site1,
-		WSs:  wss1,
-	}
-	sitestoattach := make([]*common_structs.SiteInfo, 0)
-	sitestoattach = append(sitestoattach, siteInfo)
-	u1 := NewTestUser("user1", sitestoattach, l)
+	sites := []string{site1}
+	wsss := [][]common_structs.WSInfo{wss1}
 
-	log.Lvlf2("")
-	time.Sleep(1000 * time.Millisecond)
-	log.Lvlf1("RECONNECTING USER1 TO THE SITE: %v", site1)
-	log.ErrFatal(u1.ReConnect(site1))
+	u := make(map[string]*User)
+	usernames := make([]string, 0)
+	for index, site := range sites {
+		for userid := 0; userid < num_users; userid++ {
+			log.Lvlf1("ATTACHING user%v TO SITE: %v", userid, site)
+			siteInfo := &common_structs.SiteInfo{
+				FQDN: site,
+				WSs:  wsss[index],
+			}
+			sitestoattach := make([]*common_structs.SiteInfo, 0)
+			sitestoattach = append(sitestoattach, siteInfo)
+			username := fmt.Sprintf("u%v", userid)
+			usernames = append(usernames, username)
+			if index == 0 {
+				u[username] = NewTestUser(username, sitestoattach, l)
+			} else {
+				u[username].NewAttachments(sitestoattach)
+			}
+		}
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(num_users)
+	for index := range usernames {
+		go func(j int) {
+			defer wg.Done()
+			username := usernames[index]
+			user := u[username]
+			for i := 0; i < 2; i++ {
+				time.Sleep(1000 * time.Millisecond)
+				site := sites[0]
+				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
+				log.ErrFatal(user.ReConnect(site))
+			}
+		}(index)
+	}
+	wg.Wait()
+
+	wss := wsss[0]
+	server_index := rand.Int() % len(wss)
+	serverID := wss[server_index].ServerID
+	serverIDs := make([]*network.ServerIdentity, 0)
+	serverIDs = append(serverIDs, serverID)
+
+	for i := 0; i < 50; i++ {
+		c1.ProposeConfig(nil, nil, 0, 0, serverIDs)
+		c1.ProposeUpVote()
+		c1.ConfigUpdate()
+	}
+
+	wg.Add(num_users)
+	for index := range usernames {
+		go func(j int) {
+			defer wg.Done()
+			username := usernames[index]
+			user := u[username]
+			for i := 0; i < 2; i++ {
+				time.Sleep(1000 * time.Millisecond)
+				site := sites[0]
+				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
+				log.ErrFatal(user.ReConnect(site))
+			}
+		}(index)
+	}
+	wg.Wait()
+
 }
 
 func TestNoConc(t *testing.T) {
@@ -691,7 +747,7 @@ func TestConc(t *testing.T) {
 	log.SetDebugVisible(2)
 
 	num_users := 10
-	num_proxies := 20
+	num_proxies := 40
 	num_sites := 2
 	timestamper_on := true
 
@@ -1056,10 +1112,11 @@ func TestConc(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 10; i++ {
+	wg.Add(35)
+
+	for i := 0; i < 10; i++ {
+		go func(j int) {
+			defer wg.Done()
 			time.Sleep(1000 * time.Millisecond)
 			log.Lvlf2("")
 			log.Lvlf2("%v: RECONNECTING USER2 TO THE SITE IDENTITY: %v", i, site3)
@@ -1068,12 +1125,13 @@ func TestConc(t *testing.T) {
 			log.Lvlf2("User1's window regarding site: %v is: %v", site3, window)
 			log.Lvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
 			log.ErrFatal(u2.ReConnect(site3))
-		}
-	}()
+		}(i)
+	}
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 10; i++ {
+	for i := 0; i < 10; i++ {
+		go func(j int) {
+			defer wg.Done()
+
 			time.Sleep(1000 * time.Millisecond)
 			log.Lvlf2("")
 			log.Lvlf2("%v: RECONNECTING USER1 TO THE SITE: %v", i, site1)
@@ -1082,8 +1140,8 @@ func TestConc(t *testing.T) {
 			log.Lvlf2("User1's window regarding site: %v is: %v", site1, window)
 			log.Lvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
 			log.ErrFatal(u1.ReConnect(site1))
-		}
-	}()
+		}(i)
+	}
 
 	serverID = wss1[0].ServerID
 	key = fmt.Sprintf("tls:%v", serverID)
@@ -1110,9 +1168,10 @@ func TestConc(t *testing.T) {
 		t.Fatal("Should have three owners by now but got only: ", len(c3.Config.Device))
 	}
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 15; i++ {
+	for i := 0; i < 15; i++ {
+		go func(j int) {
+			defer wg.Done()
+
 			time.Sleep(1000 * time.Millisecond)
 			log.Lvlf2("")
 			log.Lvlf2("%v: RECONNECTING USER2 TO THE SITE: %v", i, site2)
@@ -1121,8 +1180,8 @@ func TestConc(t *testing.T) {
 			log.Lvlf2("User2's window regarding site: %v is: %v", site2, window)
 			log.Lvlf2("Time elapsed until latest pin acceptance: %v", time.Now().Unix()*1000-time_last_pin_acc)
 			log.ErrFatal(u2.ReConnect(site2))
-		}
-	}()
+		}(i)
+	}
 
 	wg.Wait()
 
@@ -1207,7 +1266,7 @@ func TestConc(t *testing.T) {
 	log.Lvl2("--------------latest skipblock has hash: %v ---------------------", device.LatestID)
 
 	for index := 0; index < len(u); index++ {
-		go func() {
+		go func(j int) {
 			defer wg.Done()
 			username := usernames[rand.Int()%len(usernames)]
 			user := u[username]
@@ -1217,7 +1276,7 @@ func TestConc(t *testing.T) {
 				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
 				log.ErrFatal(user.ReConnect(site))
 			}
-		}()
+		}(index)
 	}
 	wg.Wait()
 
@@ -1240,7 +1299,7 @@ func TestConc(t *testing.T) {
 
 	wg.Add(len(u))
 	for index := 0; index < len(u); index++ {
-		go func() {
+		go func(j int) {
 			defer wg.Done()
 			username := usernames[rand.Int()%len(usernames)]
 			user := u[username]
@@ -1250,7 +1309,7 @@ func TestConc(t *testing.T) {
 				log.Lvlf2("%v: RECONNECTING %v TO THE SITE: %v", i, username, site)
 				log.ErrFatal(user.ReConnect(site))
 			}
-		}()
+		}(index)
 	}
 	wg.Wait()
 

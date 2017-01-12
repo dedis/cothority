@@ -138,7 +138,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	reply := &GetValidSbPathReply{}
 	cerr := u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
 	if cerr != nil {
-		log.Fatal(cerr)
+		log.ErrFatal(cerr)
 	}
 	sbs := reply.Skipblocks
 	latest := sbs[len(sbs)-1]
@@ -388,8 +388,9 @@ func (u *User) ReConnect(name string) error {
 		log.Lvlf3("Challenged web server has address: %v", serverID)
 
 		reply := &GetValidSbPathReply{}
-		u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}, Challenge: challenge}, reply)
-
+		err = u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}, Challenge: challenge}, reply)
+		log.ErrFatal(err)
+		log.Print("CLIENT After sendprotobuf")
 		sbs := reply.Skipblocks
 		pof := reply.PoF
 		latest := sbs[len(sbs)-1]
@@ -397,10 +398,10 @@ func (u *User) ReConnect(name string) error {
 
 		ok, _ := VerifyHops(sbs)
 		if !ok {
-			log.Lvlf2("Updating the site config was not possible due to corrupted skipblock chain")
+			log.LLvlf2("Updating the site config was not possible due to corrupted skipblock chain")
 			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
 		}
-		log.Lvlf2("user %v, Latest returned block has hash: %v", u.UserName, latest.Hash)
+		log.LLvlf2("user %v, Latest returned block has hash: %v", u.UserName, latest.Hash)
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
 		_, data, _ := network.UnmarshalRegistered(latest.Data)
@@ -409,7 +410,7 @@ func (u *User) ReConnect(name string) error {
 		if err != nil {
 			err = pof.Validate(latest, maxdiff)
 			if err != nil {
-				log.Lvlf2("%v", err)
+				log.LLvlf2("%v", err)
 				return err
 			}
 		}
@@ -421,14 +422,14 @@ func (u *User) ReConnect(name string) error {
 		ptls := tempconf.Data[key].TLSPublic
 		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
 		if err != nil {
-			log.Lvlf2("user %v, Tls public key (%v) should match to the webserver's %v private key but it does not! (latest returned block has hash: %v)", u.UserName, ptls, serverID, latest.Hash)
+			log.LLvlf2("user %v, Tls public key (%v) should match to the webserver's %v private key but it does not! (latest returned block has hash: %v)", u.UserName, ptls, serverID, latest.Hash)
 			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
 		}
-		log.Lvlf2("Tls private key matches")
+		log.LLvlf2("Tls private key matches")
 		u.Follow(name, latest, nil)
 
 	}
-	log.Lvlf2("RE-CONNECTED: user: %v, site: %v", u.UserName, name)
+	log.LLvlf2("RE-CONNECTED: user: %v, site: %v", u.UserName, name)
 	return nil
 }
 

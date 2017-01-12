@@ -124,7 +124,7 @@ func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Body, msec int,
 
 // Start will contact everyone and make the connections
 func (p *Propagate) Start() error {
-	log.Lvl4("going to contact", p.Root().ServerIdentity)
+	log.Lvl4("going to contact", p.Root().ServerIdentity,"", p.sd.Msec)
 	p.SendTo(p.Root(), p.sd)
 	return nil
 }
@@ -168,7 +168,7 @@ func (p *Propagate) Dispatch() error {
 			}
 		case <-time.After(timeout):
 			_, a, err := network.UnmarshalRegistered(p.sd.Data)
-			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+			log.Fatalf("%s Timeout of %s reached. %v %s", p.ServerIdentity(),timeout, a, err)
 			process = false
 		}
 	}

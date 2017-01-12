@@ -139,7 +139,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.C
 
 	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(4100, "Verification error: "+err.Error())
+		return nil, onet.NewClientErrorCode(4100, "Verification error: "+ err.Error())
 	}
 	s.save()
 
@@ -301,7 +301,7 @@ func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *Skip
 	}
 
 	// Store and propagate the new SkipBlocks
-	log.Lvl4("Finished signing new block", newest)
+	log.LLvl4("Finished signing new block", newest)
 	if err = s.startPropagation(newblocks); err != nil {
 		return nil, nil, err
 	}

@@ -47,6 +47,7 @@ type WS struct {
 	Public abstract.Point
 	// holds the mapping between FDQNs and genesis skipblocks' IDs
 	NameToID map[string]skipchain.SkipBlockID
+	fqdn string
 }
 
 // SiteMap holds the map to the sites so it can be marshaled.
@@ -110,7 +111,7 @@ func (ws *WS) WSPushPublicKey(cothority *onet.Roster) error {
 
 func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *onet.Roster) error {
 
-	log.Lvlf3("WSAttach(): attaching to site: %v", name)
+	log.LLvlf3("WSAttach(): attaching to site: %v", name)
 
 	site := &Site{
 		ID:         id,
@@ -295,9 +296,10 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
  */
 
 func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Body, onet.ClientError) {
-	log.Lvlf1("UserGetValidSbPath(): Start")
 	ws.sitesMutex.Lock()
 	defer ws.sitesMutex.Unlock()
+
+	log.Lvlf1("UserGetValidSbPath(): received connection req for %s",req.FQDN)
 
 	id := ws.NameToID[req.FQDN]
 	site := ws.getSiteStorage(id)
@@ -313,17 +315,16 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Body, onet.Client
 	log.Lvlf3("UserGetValidSbPath(): Skipblocks fetched")
 
 	pof, _ := ws.FetchPoF(id)
-
 	// process challenge
 	sig, err := crypto.SignSchnorr(network.Suite, site.TLSPrivate, req.Challenge)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
-	log.Lvlf3("public key of server: %v is %v (latest known block: %v)", ws.ServerIdentity(), site.TLSPublic, site.LatestHash)
+	log.LLvlf3("public key of server: %v is %v (latest known block: %v)", ws.ServerIdentity(), site.TLSPublic, site.LatestHash)
 
 	if bytes.Equal(req.Hash2, []byte{0}) {
 		cert, _ := ws.FetchCert(id)
-		log.Lvlf3("UserGetValidSbPath(): Cert fetched")
+		log.LLvlf3("UserGetValidSbPath(): Cert fetched")
 		return &GetValidSbPathReply{
 			Skipblocks: sbs,
 			Cert:       cert,
@@ -332,7 +333,7 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Body, onet.Client
 		}, nil
 
 	}
-
+	log.Print(ws.Context,"Sending back GetValidSbPathReply ")
 	return &GetValidSbPathReply{
 		Skipblocks: sbs,
 		Cert:       nil,
@@ -459,6 +460,7 @@ func newWSService(c *onet.Context, path string) onet.Service {
 		SiteMap:          &SiteMap{make(map[string]*Site)},
 		path:             path,
 		NameToID:         make(map[string]skipchain.SkipBlockID),
+
 	}
 	if err := ws.tryLoad(); err != nil {
 		log.Error(err)
@@ -472,21 +474,20 @@ func newWSService(c *onet.Context, path string) onet.Service {
 }
 
 func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Body, onet.ClientError) {
-	name := fmt.Sprintf("%v", ws.ServerIdentity())
 
 	wss := make([]common_structs.WSInfo, 0)
 	wss = append(wss, common_structs.WSInfo{ServerID: ws.ServerIdentity()})
 
 	siteInfo := &common_structs.SiteInfo{
-		FQDN: name,
+		FQDN: ws.fqdn,
 		WSs:  wss,
 	}
 
-	err := ws.WSAttach("aSite", req.ID, req.Cothority)
-	log.Fatal(err)
+	err := ws.WSAttach(ws.fqdn, req.ID, req.Cothority)
+	log.ErrFatal(err)
 
 	client := onet.NewClient(sidentity.ServiceName)
-	log.Fatal(client.SendProtobuf(req.FirstIdentity, siteInfo, nil))
+	log.ErrFatal(client.SendProtobuf(req.FirstIdentity, siteInfo, nil))
 	return nil, nil
 }
 
@@ -494,13 +495,14 @@ func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Body, 
 	roster := req.Roster
 	roster_WK := req.Roster_WK
 	index_CK := req.Index_CK
-
+	index_ws,_ := roster.Search(ws.ServerIdentity().ID)
+	ws.fqdn = fmt.Sprintf("site%d",index_ws)
 	ckIdentity := roster.List[index_CK]
-
-	ws.WSPushPublicKey(roster_WK)
+	log.Print(ws.Context,"StartWebServer WSPublishPublicKey")
+	log.ErrFatal(ws.WSPushPublicKey(roster_WK))
 
 	client := onet.NewClient(sidentity.ServiceName)
-	log.Fatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
-
+	log.Print(ws.Context,"StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
+	log.ErrFatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
 	return nil, nil
 }
