@@ -18,8 +18,8 @@ const ServiceName = "Guard"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newGuardService)
-	network.RegisterPacketType(&Request{})
-	network.RegisterPacketType(&Response{})
+	network.RegisterMessage(&Request{})
+	network.RegisterMessage(&Response{})
 }
 
 //This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
@@ -44,7 +44,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Guard) Request(req *Request) (network.Body, onet.ClientError) {
+func (st *Guard) Request(req *Request) (network.Message, onet.ClientError) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
 	blankpoint := network.Suite.Point()
 	zbytes := network.Suite.Scalar()

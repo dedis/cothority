@@ -42,7 +42,7 @@ func init() {
 		&PropagateIdentity{},
 		&UpdateSkipBlock{},
 	} {
-		network.RegisterPacketType(s)
+		network.RegisterMessage(s)
 	}
 }
 
@@ -131,7 +131,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, i, err := network.UnmarshalRegistered(data)
+	_, i, err := network.Unmarshal(data)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.MarshalRegisteredType(&i.Data)
+	data, err := network.Marshal(&i.Data)
 	if err != nil {
 		return err
 	}

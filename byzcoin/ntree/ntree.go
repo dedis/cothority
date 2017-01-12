@@ -22,7 +22,7 @@ func init() {
 		RoundSignatureResponse{},
 		NtreeSignature{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 
