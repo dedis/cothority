@@ -31,11 +31,11 @@ This repository has the following main components:
 
 Name | Description
 -----| ------------
-[`conode`](conode/) | The cothority server
-[`cosi`](cosi/) | Request and verify collective signatures
-[`cisc`](cisc/) | Manage identity skipchains
-[`status`](status/) | Query status of a cothority server
-[`guard`](guard/) | Protect passwords with threshold cryptography (experimental)
+[`conode`](https://github.com/dedis/cothority/tree/master/conode) | The cothority server
+[`cosi`](https://github.com/dedis/cothority/tree/master/cosi) | Request and verify collective signatures
+[`cisc`](https://github.com/dedis/cothority/tree/master/cisc) | Manage identity skipchains
+[`status`](https://github.com/dedis/cothority/tree/master/status) | Query status of a cothority server
+[`guard`](https://github.com/dedis/cothority/tree/master/guard) | Protect passwords with threshold cryptography (experimental)
 
 ## Getting Started
 
@@ -111,7 +111,7 @@ and follow the instructions of the dialog. After a successful setup there should
 
 **Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
-**Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
+**Note:** The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 
 #### Usage
 
@@ -139,11 +139,11 @@ The research behind the cothority project has been published in several academic
 
 ## Contributing
 
-If you are interested in contributing to the cothority project, please check our guidlines found at [CONTRIBUTION](https://github.com/dedis/cothority/blob/master/CONTRIBUTION), [CLAC](https://github.com/dedis/cothority/blob/master/CLAC), and [CLAI](https://github.com/dedis/cothority/blob/master/CLAI). Make also sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
+If you are interested in contributing to the cothority project, please check our guidlines found at [CONTRIBUTION](CONTRIBUTION), [CLAC](CLAC), and [CLAI](CLAI). Make also sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
 
 ## License
 
-The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](mailto:contact.dedis@epfl.ch) to get a commercial license.
+The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](mailto:contact.dedis@epfl.ch) to get a commercial license.
 
 
 ## Contact
