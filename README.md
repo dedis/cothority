@@ -22,18 +22,12 @@ The software in this repository is highly experimental and under heavy developme
 ## Usage
 
 To use the code of this repository make sure that you have a working [Golang installation](https://golang.org/doc/install) and that the
-[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. As a first step, checkout the code:
-
-```
-$ go get -u github.com/dedis/cothority
-```
-
-Afterwards you have two options:
+[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. You have two options to use the cothority code:
 
 1. [Accessing cothority services through a client](https://github.com/dedis/cothority#accessing-cothority-services-through-a-client)
 2. [Setting up and running a cothority server](https://github.com/dedis/cothority#setting-up-and-running-a-cothority-server)
 
-**Note:** The above command also checks out all the required dependencies. The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
+**Note:** The main dependencies include the following libraries, all of which are developed and maintained by DEDIS:
 
 - Network: [dedis/onet](https://github.com/dedis/onet)
 - Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
@@ -42,15 +36,14 @@ Afterwards you have two options:
 
 ### Accessing Cothority Services Through a Client
 
-A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how to use a cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
+A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how a client can use a cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
 
 #### Compiling the CoSi Client
 
-To build the CoSi client execute the following sequence of commands:
+To build and install the CoSi client, execute:
 
 ```
-$ cd $GOPATH/src/github.com/dedis/cothority/cosi
-$ go build
+go get -u github.com/dedis/cothority/cosi
 ```
 
 #### Using the CoSi Client
@@ -58,19 +51,19 @@ $ go build
 To tell the CoSi client which cothority it should use for signing requests, you need to specify a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
-$ export COTHORITY=$GOPATH/src/github.com/cothority/conode/dedis-cothority.toml 
+export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
 ```
 
 To request a collective (Schnorr) signature `file.sig` on a `file` from the DEDIS cothority, use:
 
 ```
-$ ./cosi sign -g $COTHORITY -o file.sig file
+cosi sign -g $COTHORITY -o file.sig file
 ```
 
 To verify a collective (Schnorr) signature `file.sig` of the `file`, use:
 
 ```
-$ ./cosi verify -g $COTHORITY -s file.sig file
+cosi verify -g $COTHORITY -s file.sig file
 ```
 
 **Note:** Although signature verification is done locally, you need to provide a cothority configuration file to tell the CoSi client which public key to use.
@@ -79,17 +72,16 @@ $ ./cosi verify -g $COTHORITY -s file.sig file
 
 #### Compiling the Cothority Server
 
-To build the conode binary execute the following sequence of commands:
+To build and install the conode binary execute the following sequence of commands:
 
 ```
-$ cd $GOPATH/src/github.com/dedis/cothority
-$ go build
+go get -u github.com/dedis/cothority/conode
 ```
 
 To get an overview on the functionality of a conode, type:
 
 ```
-$ ./cothorityd help
+conode help
 ```
 
 #### Configuring the Cothority Server
@@ -97,36 +89,36 @@ $ ./cothorityd help
 To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
 
 ```
-$ ./cothorityd setup
+conode setup
 ```
 
 and follow the instructions of the dialog. After a successful setup there should be two configuration files:
 
-- The *public configuration file* of your cothority server is located at `~/.config/cothorityd/group.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
-- The *private configuration file* of your cothoriy server is located at `~/.config/cothorityd/config.toml`.
+- The *public configuration file* of your cothority server is located at `~/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- The *private configuration file* of your cothoriy server is located at `~/.config/conode/private.toml`.
 
-**Warning:** Never (!!!) share the file `config.toml` with anybody, as it contains the private key of your conode.
+**Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
 **Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 
 #### Running the Cothority Server
 
-To start your conode with the default (private) configuration file, located at `~/.config/cothorityd/config.toml`, execute:
+To start your conode with the default (private) configuration file, located at `~/.config/conode/private.toml`, execute:
 
 ```
-$ ./cothorityd
+conode
 ```
 
 To increase the verbosity of your conode, start it with:
 
 ```
-$ ./cothorityd -d 3
+cothority -d 3
 ```
 
 To use a (private) configuration file at a custom location, start your conode via:
 
 ```
-$ ./cothorityd -config path/to/config.toml
+cothority -config path/to/private.toml
 ```
 
 ## Documentation
