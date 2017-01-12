@@ -4,14 +4,20 @@
 
 # Cothority
 
-The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers that runs these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode.
+The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
 
-The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). The research behind the project has been published in several academic papers:
+## Table of Contents
 
-- **Keeping Authorities “Honest or Bust” with Decentralized Witness Cosigning** ([pdf](http://arxiv.org/pdf/1503.08768.pdf)); *Ewa Syta, Iulia Tamas, Dylan Visher, David Isaac Wolinsky, Philipp Jovanovic, Linus Gasser, Nicolas Gailly, Ismail Khoffi, Bryan Ford*; IEEE Symposium on Security and Privacy, 2016. 
-- **Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing** ([pdf](https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf)); *Eleftherios Kokoris-Kogias, Philipp Jovanovic, Nicolas Gailly, Ismail Khoffi, Linus Gasser, Bryan Ford*; USENIX Security, 2016.
-- **Scalable Bias-Resistant Distributed Randomness** ([pdf](https://eprint.iacr.org/2016/1067.pdf)); *Ewa Syta, Philipp Jovanovic, Eleftherios Kokoris Kogias, Nicolas Gailly, Linus Gasser, Ismail Khoffi, Michael J. Fischer, Bryan Ford*; IACR Cryptology ePrint Archive, Report 2016/1067.
-
+- [Disclaimer](https://github.com/dedis/cothority#disclaimer)
+- [Overview](https://github.com/dedis/cothority#overview)
+- [Getting Started](https://github.com/dedis/cothority#getting-started)
+	- [Cothority Client - CoSi](https://github.com/dedis/cothority#cothority-client---cosi)
+	- [Cothority Server](https://github.com/dedis/cothority#cothority-server) 
+- [Documentation](https://github.com/dedis/cothority#documentation)
+- [Research](https://github.com/dedis/cothority#research)
+- [Contributing](https://github.com/dedis/cothority#contributing)
+- [License](https://github.com/dedis/cothority#license)
+- [Contact](https://github.com/dedis/cothority#contact)
 
 ## Disclaimer 
 
@@ -19,25 +25,30 @@ The software in this repository is highly experimental and under heavy developme
 
 **All usage is at your own risk**!
 
-## Usage
+## Overview
 
-To use the code of this repository make sure that you have a working [Golang installation](https://golang.org/doc/install) and that the
-[`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable is set on your system. You have two options how to use the cothority software:
+This repository has the following main components:
 
-1. [Accessing cothority services through a client](https://github.com/dedis/cothority#accessing-cothority-services-through-a-client)
-2. [Setting up and running a cothority server](https://github.com/dedis/cothority#setting-up-and-running-a-cothority-server)
+Name | Description
+-----| ------------
+[`conode`](https://github.com/dedis/cothority/tree/master/conode) | The cothority server
+[`cosi`](https://github.com/dedis/cothority/tree/master/cosi) | Request and verify collective signatures
+[`cisc`](https://github.com/dedis/cothority/tree/master/cisc) | Manage identity skipchains
+[`status`](https://github.com/dedis/cothority/tree/master/status) | Query status of a cothority server
+[`guard`](https://github.com/dedis/cothority/tree/master/guard) | Protect passwords with threshold cryptography (experimental)
 
-**Note:** The main dependencies, which are installed automatically, include the following libraries:
+## Getting Started
 
-- Network: [dedis/onet](https://github.com/dedis/onet)
-- Cryptography: [dedis/crypto](https://github.com/dedis/crypto)
-- Protobuf: [dedis/protobuf](https://github.com/dedis/protobuf)
+To use the code of this repository make sure that you have:
 
-### Accessing Cothority Services Through a Client
+-  Installed [Golang](https://golang.org/doc/install)
+-  Configured your system's [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable
 
-A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how a client can use a cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
+### Cothority Client - CoSi
 
-#### Installing the CoSi Client
+A cothority provides several [services](https://github.com/dedis/cothority/wiki/Apps) to its clients. As an example, we illustrate how a client can use an existing cothority to generate a collective (Schnorr) signature on a file using the CoSi protocol. For more details on CoSi, refer to the [research paper](https://arxiv.org/pdf/1503.08768.pdf).
+
+#### Installation
 
 To build and install the CoSi client, execute:
 
@@ -45,13 +56,15 @@ To build and install the CoSi client, execute:
 go get -u github.com/dedis/cothority/cosi
 ```
 
-#### Using the CoSi Client
+#### Configuration
 
-To tell the CoSi client which cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
+To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
 export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
 ```
+
+#### Usage
 
 To request a collective (Schnorr) signature `file.sig` on a `file` from the DEDIS cothority, use:
 
@@ -65,9 +78,11 @@ To verify a collective (Schnorr) signature `file.sig` of the `file`, use:
 cosi verify -g $COTHORITY -s file.sig file
 ```
 
-### Setting up and Running a Cothority Server
+### Cothority Server
 
-#### Installing the Cothority Server
+Conodes are linked together to form cothorities, run decentralized protocols, and offer services to clients.
+
+#### Installation
 
 To build and install the conode binary, execute:
 
@@ -81,7 +96,7 @@ To get an overview on the functionality of a conode, type:
 conode help
 ```
 
-#### Configuring the Cothority Server
+#### Configuration
 
 To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
 
@@ -98,24 +113,12 @@ and follow the instructions of the dialog. After a successful setup there should
 
 **Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 
-#### Running the Cothority Server
+#### Usage
 
 To start your conode with the default (private) configuration file, located at `~/.config/conode/private.toml`, execute:
 
 ```
 conode
-```
-
-To increase the verbosity of your conode, start it with:
-
-```
-conode -d 3
-```
-
-To use a configuration file at a custom location, start your conode via:
-
-```
-conode -config path/to/private.toml
 ```
 
 ## Documentation
@@ -126,15 +129,22 @@ Each of the parts of the cothority project has a corresponding wiki which are wo
 - The [cothority template wiki](https://github.com/dedis/cothority_template/wiki) shows how you can develop your own protocols, services, and applications such that they can be integrated into the cothority project.
 - The [cothority network library wiki](https://github.com/dedis/onet/wiki) presents details on the inner workings of the cothority framework.
 
-If you are writing code for the project, make sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
+## Research
+
+The research behind the cothority project has been published in several academic papers:
+
+- **Keeping Authorities “Honest or Bust” with Decentralized Witness Cosigning** ([pdf](http://arxiv.org/pdf/1503.08768.pdf)); *Ewa Syta, Iulia Tamas, Dylan Visher, David Isaac Wolinsky, Philipp Jovanovic, Linus Gasser, Nicolas Gailly, Ismail Khoffi, Bryan Ford*; IEEE Symposium on Security and Privacy, 2016. 
+- **Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing** ([pdf](https://www.usenix.org/system/files/conference/usenixsecurity16/sec16_paper_kokoris-kogias.pdf)); *Eleftherios Kokoris-Kogias, Philipp Jovanovic, Nicolas Gailly, Ismail Khoffi, Linus Gasser, Bryan Ford*; USENIX Security, 2016.
+- **Scalable Bias-Resistant Distributed Randomness** ([pdf](https://eprint.iacr.org/2016/1067.pdf)); *Ewa Syta, Philipp Jovanovic, Eleftherios Kokoris Kogias, Nicolas Gailly, Linus Gasser, Ismail Khoffi, Michael J. Fischer, Bryan Ford*; IACR Cryptology ePrint Archive, Report 2016/1067.
 
 ## Contributing
 
-If you are interested in contributing to the cothority project, please check our guidlines found at [CONTRIBUTION](https://github.com/dedis/cothority/blob/master/CONTRIBUTION), [CLAC](https://github.com/dedis/cothority/blob/master/CLAC), and [CLAI](https://github.com/dedis/cothority/blob/master/CLAI).
+If you are interested in contributing to the cothority project, please check our guidlines found at [CONTRIBUTION](https://github.com/dedis/cothority/blob/master/CONTRIBUTION), [CLAC](https://github.com/dedis/cothority/blob/master/CLAC), and [CLAI](https://github.com/dedis/cothority/blob/master/CLAI). Before contributing code, please make sure to have a look at our [coding guidelines](https://github.com/dedis/Coding).
 
 ## License
 
 The software in this repository is put under a dual-licensing scheme: In general all of the provided code is open source via [GNU/AGPL 3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), please see the [LICENSE](https://github.com/dedis/cothority/blob/master/LICENSE.AGPL) file for more details. If you intend to use the cothority code for commercial purposes, please [contact us](mailto:contact@dedis.epfl.ch) to get a commercial license.
+
 
 ## Contact
 
