@@ -31,11 +31,11 @@ This repository has the following main components:
 
 Name | Description
 -----| ------------
-[`conode`](https://github.com/dedis/cothority/tree/master/conode) | The cothority server
-[`cosi`](https://github.com/dedis/cothority/tree/master/cosi) | Request and verify collective signatures
-[`cisc`](https://github.com/dedis/cothority/tree/master/cisc) | Manage identity skipchains
-[`status`](https://github.com/dedis/cothority/tree/master/status) | Query status of a cothority server
-[`guard`](https://github.com/dedis/cothority/tree/master/guard) | Protect passwords with threshold cryptography (experimental)
+[`conode`](conode) | The cothority server
+[`cosi`](cosi) | Request and verify collective signatures
+[`cisc`](cisc) | Manage identity skipchains
+[`status`](status) | Query status of a cothority server
+[`guard`](guard) | Protect passwords with threshold cryptography (experimental)
 
 ## Getting Started
 
@@ -58,7 +58,7 @@ go get -u github.com/dedis/cothority/cosi
 
 #### Configuration
 
-To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
+To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
 export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
