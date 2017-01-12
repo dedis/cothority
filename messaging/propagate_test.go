@@ -18,7 +18,7 @@ type PropagateMsg struct {
 }
 
 func init() {
-	network.RegisterPacketType(PropagateMsg{})
+	network.RegisterMessage(PropagateMsg{})
 }
 
 // Tests an n-node system
@@ -35,7 +35,7 @@ func TestPropagate(t *testing.T) {
 			pc := &PC{conode, local.Overlays[conode.ServerIdentity.ID]}
 			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
-				func(m network.Body) {
+				func(m network.Message) {
 					if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
 						iMut.Lock()
 						i++

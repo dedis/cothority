@@ -58,7 +58,7 @@ const EPOCH = "EPOCH"
 var db *Database
 
 func main() {
-	network.RegisterPacketType(&Database{})
+	network.RegisterMessage(&Database{})
 
 	cliApp := cli.NewApp()
 	cliApp.Name = "Guard"
@@ -103,7 +103,7 @@ func main() {
 			return nil
 		}
 		log.ErrFatal(err, "The config.bin file threw an error")
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		log.ErrFatal(err, "UnmarshalRegistered messeed up")
 		var ok bool
 		db, ok = msg.(*Database)
@@ -218,7 +218,7 @@ func setup(c *cli.Context) error {
 		Cothority: t,
 	}
 	log.ErrFatal(err)
-	b, err := network.MarshalRegisteredType(db)
+	b, err := network.Marshal(db)
 	log.ErrFatal(err)
 	err = ioutil.WriteFile("config.bin", b, 0660)
 	log.ErrFatal(err)
@@ -305,7 +305,7 @@ func setpass(c *cli.Context) error {
 	Pass := c.Args().Get(1)
 	usrdata := []byte(c.Args().Get(2))
 	set(c, uid, []byte(EPOCH), string(Pass), usrdata)
-	b, err := network.MarshalRegisteredType(db)
+	b, err := network.Marshal(db)
 	log.ErrFatal(err)
 	err = ioutil.WriteFile("config.bin", b, 0660)
 	return nil

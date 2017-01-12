@@ -13,7 +13,7 @@ func init() {
 		Commit{},
 		Finish{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 

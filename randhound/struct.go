@@ -13,7 +13,7 @@ import (
 func init() {
 	for _, p := range []interface{}{I1{}, R1{}, I2{}, R2{},
 		WI1{}, WR1{}, WI2{}, WR2{}} {
-		network.RegisterPacketType(p)
+		network.RegisterMessage(p)
 	}
 }
 

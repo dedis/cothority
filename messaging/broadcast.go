@@ -9,8 +9,8 @@ import (
 )
 
 func init() {
-	network.RegisterPacketType(ContactNodes{})
-	network.RegisterPacketType(Done{})
+	network.RegisterMessage(ContactNodes{})
+	network.RegisterMessage(Done{})
 	onet.GlobalProtocolRegister("Broadcast", NewBroadcastProtocol)
 }
 

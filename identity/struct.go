@@ -45,20 +45,20 @@ func NewConfig(threshold int, pub abstract.Point, owner string) *Config {
 
 // Copy returns a deep copy of the AccountList.
 func (c *Config) Copy() *Config {
-	b, err := network.MarshalRegisteredType(c)
+	b, err := network.Marshal(c)
 	if err != nil {
 		log.Error("Couldn't marshal AccountList:", err)
 		return nil
 	}
-	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	_, msg, err := network.Unmarshal(b)
 	if err != nil {
 		log.Error("Couldn't unmarshal AccountList:", err)
 	}
-	ilNew := msg.(Config)
+	ilNew := msg.(*Config)
 	if len(ilNew.Data) == 0 {
 		ilNew.Data = make(map[string]string)
 	}
-	return &ilNew
+	return ilNew
 }
 
 // Hash makes a cryptographic hash of the configuration-file - this
@@ -83,7 +83,7 @@ func (c *Config) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.MarshalRegisteredType(c.Device[s])
+		b, err := network.Marshal(c.Device[s])
 		if err != nil {
 			return nil, err
 		}

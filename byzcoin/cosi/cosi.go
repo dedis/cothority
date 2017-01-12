@@ -48,7 +48,7 @@ func init() {
 		Challenge{},
 		Response{},
 	} {
-		network.RegisterPacketType(r)
+		network.RegisterMessage(r)
 	}
 }
 
