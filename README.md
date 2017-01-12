@@ -31,11 +31,11 @@ This repository has the following main components:
 
 Name | Description
 -----| ------------
-[`conode`](conode) | The cothority server
-[`cosi`](cosi) | Request and verify collective signatures
-[`cisc`](cisc) | Manage identity skipchains
-[`status`](status) | Query status of a cothority server
-[`guard`](guard) | Protect passwords with threshold cryptography (experimental)
+[`conode`](conode/) | The cothority server
+[`cosi`](cosi/) | Request and verify collective signatures
+[`cisc`](cisc/) | Manage identity skipchains
+[`status`](status/) | Query status of a cothority server
+[`guard`](guard/) | Protect passwords with threshold cryptography (experimental)
 
 ## Getting Started
 
