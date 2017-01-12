@@ -79,7 +79,7 @@ type SkipBlockFix struct {
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
-	b, err := network.MarshalRegisteredType(sbf)
+	b, err := network.Marshal(sbf)
 	if err != nil {
 		log.Panic("Couldn't marshal SkipBlockFix:", err)
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	network.RegisterPacketType(&testData{})
+	network.RegisterMessage(&testData{})
 }
 
 func TestClient_ProposeSkipBlock(t *testing.T) {
@@ -98,10 +98,11 @@ func TestClient_CreateData(t *testing.T) {
 	if !bytes.Equal(inter.ChildSL.Hash, data.Hash) {
 		t.Fatal("Intermediate chain doesn't point to data-chain")
 	}
-	_, td1, err := network.UnmarshalRegisteredType(data.Data, network.DefaultConstructors(network.Suite))
+	_, td1, err := network.Unmarshal(data.Data)
 	log.ErrFatal(err)
-	if *td != td1.(testData) {
-		t.Fatal("Stored data is not the same as initial data")
+	reconstructed := td1.(*testData)
+	if *td != *reconstructed {
+		t.Fatalf("Stored data is not the same as initial data %+v vs %+v", td, td1.(*testData))
 	}
 }
 

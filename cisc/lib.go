@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	network.RegisterPacketType(ciscConfig{})
+	network.RegisterMessage(ciscConfig{})
 }
 
 type ciscConfig struct {
@@ -46,7 +46,7 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 		}
 		log.ErrFatal(err)
 	}
-	_, msg, err := network.UnmarshalRegistered(buf)
+	_, msg, err := network.Unmarshal(buf)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
 	cfg.Identity.Client = onet.NewClient(identity.ServiceName)
@@ -78,7 +78,7 @@ func (cfg *ciscConfig) saveConfig(c *cli.Context) error {
 	if cfg == nil {
 		return errors.New("Cannot save empty clientApp")
 	}
-	buf, err := network.MarshalRegisteredType(cfg)
+	buf, err := network.Marshal(cfg)
 	if err != nil {
 		log.Error(err)
 		return err

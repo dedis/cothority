@@ -15,8 +15,8 @@ const ServiceName = "Status"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newStatService)
-	network.RegisterPacketType(&Request{})
-	network.RegisterPacketType(&Response{})
+	network.RegisterMessage(&Request{})
+	network.RegisterMessage(&Response{})
 
 }
 
@@ -35,7 +35,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Stat) Request(req *Request) (network.Body, onet.ClientError) {
+func (st *Stat) Request(req *Request) (network.Message, onet.ClientError) {
 	log.Lvl3("Returning", st.Context.ReportStatus())
 	return &Response{
 		Msg:            st.Context.ReportStatus(),

@@ -16,7 +16,7 @@ func init() {
 		SigReqMsg{},
 		SigRespMsg{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 
