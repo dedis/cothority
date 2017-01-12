@@ -47,7 +47,7 @@ go get -u github.com/dedis/cothority/cosi
 
 #### Using the CoSi Client
 
-To tell the CoSi client which cothority it should use for signing requests, you need to specify a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) which is included in this repository. To have a shortcut for later on, set:
+To tell the CoSi client which cothority it should use for signing requests, you need to specify a configuration file. One option is to use the [DEDIS cothority configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
 export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
@@ -98,7 +98,7 @@ and follow the instructions of the dialog. After a successful setup there should
 
 **Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
-**Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-servers.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
+**Note:** The [public configuration file](https://github.com/dedis/cothority/blob/master/dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
 
 #### Running the Cothority Server
 
