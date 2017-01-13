@@ -85,7 +85,7 @@ You can run it with all extras like so:
 
 `./run_conode.sh -mail -update`
 
-And it will send an email to DEDIS with the last 200 lines of log-output every time conode restarts.
+It will send an email to DEDIS with the last 200 lines of log-output every time conode restarts.
 You can change the MAILADDR-variable at the top of the script to change the address 
 
 ## Further Information
