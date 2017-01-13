@@ -3,6 +3,7 @@ set -e
 
 VERSION=1.0-pre1
 MAILCMD=mail
+MAILADDR=linus.gasser@epfl.ch
 CONODE_BIN=cothority
 DEDIS_PATH=github.com/dedis
 CONODE_PATH=$DEDIS_PATH/cothority
@@ -108,7 +109,7 @@ runPublic(){
 	LOG=$( mktemp )
 	if ! $CONODE_BIN -d $DEBUG $@ | tee > $LOG; then
 		if [ "$MAIL" ]; then
-			$MAILCMD conode-bugs@dedis.ch < $LOG
+			$MAILCMD $MAILADDR < $LOG
 		fi
 	fi
 }
@@ -160,11 +161,11 @@ EOF
 test(){
 	. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
-#	if [ "$1" != "-update_rec" ]; then
-#		testUpdate
-#	fi
-#	testMigrate
-#	testLocal
+	if [ "$1" != "-update_rec" ]; then
+		testUpdate
+	fi
+	testMigrate
+	testLocal
 	testPublic
 }
 
