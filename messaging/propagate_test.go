@@ -25,14 +25,14 @@ func init() {
 func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := onet.NewLocalTest()
-		conodes, el, _ := local.GenTree(nbrNodes, true)
+		servers, el, _ := local.GenTree(nbrNodes, true)
 		var i int
 		var iMut sync.Mutex
 		msg := &PropagateMsg{[]byte("propagate")}
 		propFuncs := make([]PropagationFunc, nbrNodes)
 		var err error
-		for n, conode := range conodes {
-			pc := &PC{conode, local.Overlays[conode.ServerIdentity.ID]}
+		for n, server := range servers {
+			pc := &PC{server, local.Overlays[server.ServerIdentity.ID]}
 			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
 				func(m network.Message) {
@@ -62,7 +62,7 @@ func TestPropagate(t *testing.T) {
 }
 
 type PC struct {
-	C *onet.Conode
+	C *onet.Server
 	O *onet.Overlay
 }
 
