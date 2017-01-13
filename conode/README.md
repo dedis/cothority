@@ -7,7 +7,8 @@ This package implements the cothority server. Conodes are linked together to for
 To use the code of this package you need to:
 
 -  Install [Golang](https://golang.org/doc/install)
--  Configure your system's [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable
+-  Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your Go workspace directory 
+-  Add `$GOPATH/bin` to the `$PATH` 
 
 To build and install the cothority server, execute:
 
