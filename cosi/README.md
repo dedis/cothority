@@ -4,7 +4,7 @@
 
 # CoSi
 
-This package provides functionality to request and verify collective signatures as well as run a standalone server for collective signing.
+This package provides functionality to request and verify collective signatures as well as run a standalone server for handling collective signing requests.
 
 ## Getting Started
 
