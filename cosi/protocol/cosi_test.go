@@ -56,7 +56,7 @@ func TestCosi(t *testing.T) {
 		}
 		root.RegisterResponseHook(responseFunc)
 		root.RegisterSignatureHook(doneFunc)
-		go root.StartProtocol()
+		go root.Start()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 2):

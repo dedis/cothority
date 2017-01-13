@@ -39,14 +39,14 @@ const (
 func main() {
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "Conode server"
-	cliApp.Usage = "Participate in a cothority"
+	cliApp.Name = "conode"
+	cliApp.Usage = "run a cothority server"
 	cliApp.Version = Version
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  "config, c",
 			Value: app.GetDefaultConfigFile(DefaultName),
-			Usage: "Configuration file of the server",
+			Usage: "configuration file of the server",
 		},
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -59,13 +59,13 @@ func main() {
 		{
 			Name:    "setup",
 			Aliases: []string{"s"},
-			Usage:   "Setup the configuration for the server (interactive)",
+			Usage:   "Setup server configuration (interactive)",
 			Action: func(c *cli.Context) error {
 				if c.String("config") != "" {
-					log.Fatal("Configuration file option can't be used for the 'setup' command")
+					log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
 				}
 				if c.String("debug") != "" {
-					log.Fatal("[-] Debug option can't be used for the 'setup' command")
+					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 				}
 				app.InteractiveConfig("conode")
 				return nil
@@ -73,7 +73,7 @@ func main() {
 		},
 		{
 			Name:  "server",
-			Usage: "Start the conode",
+			Usage: "Start cothority server",
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
@@ -91,8 +91,8 @@ func main() {
 					Usage: "Cothority group definition file",
 				},
 				cli.BoolFlag{
-					Name:  "detail,l",
-					Usage: "do pairwise signing and show full addresses",
+					Name:  "detail, l",
+					Usage: "Do pairwise signing and show full addresses",
 				},
 			},
 		},
