@@ -10,8 +10,9 @@ This package provides functionality to request and verify collective signatures 
 
 To use the code of this package you need to:
 
--  Install [Golang](https://golang.org/doc/install)
--  Configure your system's [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) variable
+- Install [Golang](https://golang.org/doc/install)
+- Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
+- Add `$GOPATH/bin` to the `$PATH`
 
 To build and install the CoSi application, execute:
 
