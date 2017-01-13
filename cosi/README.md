@@ -60,22 +60,10 @@ export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml
 To request a collective (Schnorr) signature `file.sig` on a `file` from the DEDIS cothority, use:
 
 ```
-cosi sign -g $COTHORITY file >> file.sig
-```
-
-Alternatively, do:
-
-```
 cosi sign -g $COTHORITY -o file.sig file
 ```
 
 To verify a collective (Schnorr) signature `file.sig` of the `file`, use:
-
-```
-cat file.sig | cosi verify -g $COTHORITY file
-```
-
-Alternatively, do:
 
 ```
 cosi verify -g $COTHORITY -s file.sig file
@@ -91,4 +79,4 @@ This will first contact each server individually and then check a few random col
 
 ## Further Information
 
-To see how you can run your own CoSi server or cothority, see the [wiki](https://github.com/dedis/cothority/wiki/CoSi).
+For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](https://github.com/dedis/cothority/wiki/CoSi).
