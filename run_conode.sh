@@ -3,6 +3,9 @@ set -e
 
 VERSION=1.0-pre1
 MAILCMD=mail
+CONODE_BIN=cothority
+DEDIS_PATH=github.com/dedis
+CONODE_PATH=$DEDIS_PATH/cothority
 
 main(){
 	if [ ! "$1" ]; then
@@ -49,8 +52,8 @@ runLocal(){
 		exit 1
 	fi
 	NBR=$1
-	killall -9 conode || true
-	go install github.com/dedis/cothority/conode
+	killall -9 $CONODE_BIN || true
+	go install $CONODE_PATH
 
 	for n in $( seq $NBR ); do
 		co=co$n
@@ -60,9 +63,9 @@ runLocal(){
 		fi
 
 		if [ ! -d $co ]; then
-			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode $n\n$co" | conode setup
+			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode $n\n$co" | $CONODE_BIN setup
 		fi
-		conode -c $co/config.toml -d 3 &
+		$CONODE_BIN -c $co/config.toml -d 3 &
 	done
 
 	grep -vh Description co*/group.toml > group.toml
@@ -99,9 +102,11 @@ runPublic(){
 	migrate
 	if [ "$UPDATE" ]; then
 		update
+	else
+		go install $CONODE_PATH
 	fi
 	LOG=$( mktemp )
-	if ! conode -d $DEBUG $@ | tee > $LOG; then
+	if ! $CONODE_BIN -d $DEBUG $@ | tee > $LOG; then
 		if [ "$MAIL" ]; then
 			$MAILCMD conode-bugs@dedis.ch < $LOG
 		fi
@@ -144,8 +149,7 @@ update(){
 	TEST=$1
 	cat - > $TMP << EOF
 if [ ! "$TEST" ]; then
-  go get -u github.com/dedis/cothority
-  go get -u github.com/dedis/cothority/conode
+  go get -u $CONODE_PATH
 fi
 exec $GOPATH/src/github.com/dedis/cothority/run_conode.sh $ACTION -update_rec $TMP
 EOF
@@ -160,11 +164,27 @@ test(){
 #		testUpdate
 #	fi
 #	testMigrate
+#	testLocal
 	testPublic
 }
 
 testPublic(){
-	runPublic -config $TMP/private.toml &
+	runPublic &
+	sleep 5
+	testGrep $CONODE_BIN pgrep -lf $CONODE_BIN
+}
+
+testLocal(){
+	runLocal 3 &
+	while pgrep go; do
+		sleep 1
+	done
+	sleep 2
+	local found=$( pgrep $CONODE_BIN | wc -l | sed -e "s/ *//g" )
+	if [ "$found" != 3 ]; then
+		fail "Didn't find 3 servers, but $found"
+	fi
+	pkill -9 $CONODE_BIN
 }
 
 testMigrate(){
