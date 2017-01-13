@@ -12,11 +12,10 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"sync"
+
+	"errors"
 
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
@@ -46,7 +45,6 @@ type Service struct {
 	propagateConfig    messaging.PropagationFunc
 	identitiesMutex    sync.Mutex
 	skipchain          *skipchain.Client
-	path               string
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -340,14 +338,9 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.Marshal(s.StorageMap)
+	err := s.Save("storage", s.StorageMap)
 	if err != nil {
-		log.Error("Couldn't marshal service:", err)
-	} else {
-		err = ioutil.WriteFile(s.path+"/identity.bin", b, 0660)
-		if err != nil {
-			log.Error("Couldn't save file:", err)
-		}
+		log.Error("Couldn't save file:", err)
 	}
 }
 
@@ -358,28 +351,27 @@ func (s *Service) clearIdentities() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	configFile := s.path + "/identity.bin"
-	b, err := ioutil.ReadFile(configFile)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	if !s.DataAvailable("storage") {
+		return nil
 	}
-	if len(b) > 0 {
-		_, msg, err := network.Unmarshal(b)
-		if err != nil {
-			return fmt.Errorf("Couldn't unmarshal: %s", err)
-		}
-		log.Lvl3("Successfully loaded")
-		s.StorageMap = msg.(*StorageMap)
+	msg, err := s.Load("storage")
+	if err != nil {
+		return err
 	}
+	var ok bool
+	s.StorageMap, ok = msg.(*StorageMap)
+	if !ok {
+		return errors.New("Data of wrong type")
+	}
+	log.Lvl3("Successfully loaded")
 	return nil
 }
 
-func newIdentityService(c *onet.Context, path string) onet.Service {
+func newIdentityService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
-		path:             path,
 	}
 	var err error
 	s.propagateIdentity, err =
