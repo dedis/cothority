@@ -5,13 +5,14 @@ set -e
 # run_conode.sh public # Launch a public conode - supposes it's already configured
 # run_conode.sh local 3 # Launches 3 conodes locally.
 
-VERSION=1.0-pre1
-MAILCMD=mail
 MAILADDR=linus.gasser@epfl.ch
+MAILCMD=mail
 CONODE_BIN=conode
-DEDIS_PATH=github.com/dedis
+DEDIS_PATH=$GOPATH/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/cothority
+ONET_PATH=$DEDIS_PATH/onet
 CONODE_PATH=$COTHORITY_PATH/conode
+VERSION=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\"/\1/g" )
 RUN_CONODE=$0
 ALL_ARGS="$*"
 
