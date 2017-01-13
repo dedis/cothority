@@ -20,6 +20,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	_, el, s := local.MakeHELS(5, identityService)
 	service := s.(*Service)
 
+	// Make new keypair
 	keypair := config.NewKeyPair(network.Suite)
 	il := NewConfig(50, keypair.Public, "one")
 	msg, cerr := service.CreateIdentity(&CreateIdentity{il, el})
