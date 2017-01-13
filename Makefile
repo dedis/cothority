@@ -30,7 +30,8 @@ test_lint:
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd services/skipchain; \
+	( cd ../onet; git checkout debugging_cothority764 ); \
+	cd identity; \
 	for a in $$( seq 10 ); do \
 	  go test -v -race -short || exit 1 ; \
 	done;
@@ -42,5 +43,5 @@ test_verbose:
 test_go:
 	./coveralls.sh ./cosi ./cisc ./byzcoin/*
 
-test: test_fmt test_lint test_go
+test: test_fmt test_lint test_playground
 
