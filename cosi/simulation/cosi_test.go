@@ -49,7 +49,7 @@ func TestCoSimul(t *testing.T) {
 			root.Message = msg
 			root.VerifyResponse = VRType(v)
 			root.RegisterSignatureHook(doneFunc)
-			go root.StartProtocol()
+			go root.Start()
 			select {
 			case <-done:
 			case <-time.After(time.Second * 2):

@@ -59,7 +59,7 @@ func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	if err := rh.StartProtocol(); err != nil {
+	if err := rh.Start(); err != nil {
 		log.Error("Error while starting protcol:", err)
 	}
 
