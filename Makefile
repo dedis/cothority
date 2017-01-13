@@ -32,7 +32,7 @@ test_lint:
 test_playground:
 	cd identity; \
 	for a in $$( seq 10 ); do \
-	  go test -v -race -short || exit 1 ; \
+	  go test -v -race -short -run TestIdentity_ConfigUpdate || exit 1 ; \
 	done;
 
 test_verbose:
