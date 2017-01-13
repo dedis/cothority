@@ -36,8 +36,8 @@ const (
 
 func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "CoSi App"
-	cliApp.Usage = "Collectively sign or verify a file; run a server for collective signing"
+	cliApp.Name = "cosi"
+	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
 	cliApp.Version = Version
 	binaryFlags := []cli.Flag{
 		cli.IntFlag{
@@ -51,7 +51,7 @@ func main() {
 		cli.StringFlag{
 			Name:  optionGroup + ", " + optionGroupShort,
 			Value: DefaultGroupFile,
-			Usage: "CoSi group definition file",
+			Usage: "Cosi group definition file",
 		},
 	}
 
@@ -67,7 +67,7 @@ func main() {
 		{
 			Name:      "sign",
 			Aliases:   []string{"s"},
-			Usage:     "Requests a collectively signature for a 'file'; signature is written to STDOUT by default",
+			Usage:     "Request a collectively signature for a 'file'; signature is written to STDOUT by default",
 			ArgsUsage: "file",
 			Action:    signFile,
 			Flags: append(clientFlags, []cli.Flag{
@@ -80,7 +80,7 @@ func main() {
 		{
 			Name:      "verify",
 			Aliases:   []string{"v"},
-			Usage:     "Verifies a collective signature of a 'file'; signature is read from STDIN by default",
+			Usage:     "Verify a collective signature of a 'file'; signature is read from STDIN by default",
 			ArgsUsage: "file",
 			Action:    verifyFile,
 			Flags: append(clientFlags, []cli.Flag{
@@ -93,7 +93,7 @@ func main() {
 		{
 			Name:    "check",
 			Aliases: []string{"c"},
-			Usage:   "Checks if the servers in the group definition are up and running",
+			Usage:   "Check if the servers in the group definition are up and running",
 			Action:  checkConfig,
 			Flags: append(clientFlags,
 				cli.BoolFlag{
@@ -106,7 +106,7 @@ func main() {
 		// BEGIN SERVER --------
 		{
 			Name:  "server",
-			Usage: "Starts a CoSi server",
+			Usage: "Start cosi server",
 			Action: func(c *cli.Context) error {
 				runServer(c)
 				return nil
