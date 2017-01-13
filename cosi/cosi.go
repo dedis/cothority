@@ -17,7 +17,7 @@ const (
 	BinaryName = "cosi"
 
 	// Version of the binary
-	Version = "0.10"
+	Version = "1.00"
 
 	// DefaultGroupFile is the name of the default file to lookup for group
 	// definition
