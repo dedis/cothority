@@ -1,6 +1,6 @@
 # Conode
 
-This package implements the cothority server, which are linked together to form cothorities, run decentralized protocols, and offer services to clients.
+This package implements the cothority server. Conodes are linked together to form cothorities, run decentralized protocols, and offer services to clients.
 
 ## Getting Started
 
