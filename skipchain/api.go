@@ -3,9 +3,9 @@ package skipchain
 import (
 	"bytes"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing

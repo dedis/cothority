@@ -9,8 +9,8 @@ import (
 
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 const (

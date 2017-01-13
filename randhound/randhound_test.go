@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/randhound"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestRandHound(t *testing.T) {

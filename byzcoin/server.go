@@ -4,8 +4,8 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // BlockServer is a struct where Client can connect and that instantiate ByzCoin

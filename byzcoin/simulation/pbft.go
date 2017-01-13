@@ -5,9 +5,9 @@ import (
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/cothority/byzcoin/pbft"
 	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/simul/monitor"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}

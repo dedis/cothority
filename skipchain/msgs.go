@@ -3,9 +3,9 @@ package skipchain
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {

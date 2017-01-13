@@ -14,9 +14,9 @@ import (
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service

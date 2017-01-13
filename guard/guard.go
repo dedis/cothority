@@ -16,9 +16,9 @@ import (
 	"crypto/rand"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/log"
 
 	"io/ioutil"
 
@@ -28,7 +28,7 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/guard/service"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // User is a representation of the Users data in the code, and is used to store

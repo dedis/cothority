@@ -6,8 +6,8 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // Name can be used to reference the registered protocol.

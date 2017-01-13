@@ -2,8 +2,8 @@ package byzcoinNtree
 
 import (
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // NtreeServer is similar to byzcoin.Server

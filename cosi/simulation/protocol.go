@@ -3,8 +3,8 @@ package main
 import (
 	p "github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 /*

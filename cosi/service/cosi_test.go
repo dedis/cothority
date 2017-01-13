@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func NewTestClient(l *onet.LocalTest) *Client {

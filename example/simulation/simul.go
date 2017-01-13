@@ -1,6 +1,6 @@
 package main
 
-import "github.com/dedis/onet/simul"
+import "gopkg.in/dedis/onet.v1/simul"
 
 func main() {
 	simul.Start()

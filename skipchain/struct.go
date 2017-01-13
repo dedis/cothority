@@ -8,10 +8,10 @@ import (
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // How many msec to wait before a timeout is generated in the propagation.

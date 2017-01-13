@@ -3,9 +3,9 @@ package jvss
 import (
 	"testing"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestMain(m *testing.M) {
