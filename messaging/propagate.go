@@ -13,8 +13,8 @@ import (
 )
 
 func init() {
-	network.RegisterPacketType(PropagateSendData{})
-	network.RegisterPacketType(PropagateReply{})
+	network.RegisterMessage(PropagateSendData{})
+	network.RegisterMessage(PropagateReply{})
 }
 
 // Propagate is a protocol that sends some data to all attached nodes
@@ -56,10 +56,10 @@ type PropagateReply struct {
 // all children stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-type PropagationFunc func(el *onet.Roster, msg network.Body, msec int) (int, error)
+type PropagationFunc func(el *onet.Roster, msg network.Message, msec int) (int, error)
 
 // PropagationStore is the function that will store the new data.
-type PropagationStore func(network.Body)
+type PropagationStore func(network.Message)
 
 // propagationContext is used for testing.
 type propagationContext interface {
@@ -88,7 +88,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 	})
 	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
 		name, pid)
-	return func(el *onet.Roster, msg network.Body, msec int) (int, error) {
+	return func(el *onet.Roster, msg network.Message, msec int) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
 		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
 		pi, err := c.CreateProtocol(name, tree)
@@ -100,8 +100,8 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 }
 
 // Separate function for testing
-func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Body, msec int, f PropagationStore) (int, error) {
-	d, err := network.MarshalRegisteredType(msg)
+func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, msec int, f PropagationStore) (int, error) {
+	d, err := network.Marshal(msg)
 	if err != nil {
 		return -1, err
 	}
@@ -142,7 +142,7 @@ func (p *Propagate) Dispatch() error {
 			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Msec)
 			p.sd.Msec = msg.Msec
 			if p.onData != nil {
-				_, netMsg, err := network.UnmarshalRegistered(msg.Data)
+				_, netMsg, err := network.Unmarshal(msg.Data)
 				if err == nil {
 					p.onData(netMsg)
 				}
@@ -167,7 +167,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(timeout):
-			_, a, err := network.UnmarshalRegistered(p.sd.Data)
+			_, a, err := network.Unmarshal(p.sd.Data)
 			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
 			process = false
 		}

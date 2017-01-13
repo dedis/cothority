@@ -28,7 +28,7 @@ func init() {
 		&Service{},
 	}
 	for _, m := range msgs {
-		network.RegisterPacketType(m)
+		network.RegisterMessage(m)
 	}
 }
 

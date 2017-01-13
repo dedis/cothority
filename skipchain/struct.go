@@ -28,7 +28,7 @@ type AppSkipBlock interface {
 }
 
 // SkipBlockID represents the Hash of the SkipBlock
-type SkipBlockID crypto.HashID
+type SkipBlockID []byte
 
 // IsNull returns true if the ID is undefined
 func (sbid SkipBlockID) IsNull() bool {
@@ -79,7 +79,7 @@ type SkipBlockFix struct {
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
-	b, err := network.MarshalRegisteredType(sbf)
+	b, err := network.Marshal(sbf)
 	if err != nil {
 		log.Panic("Couldn't marshal SkipBlockFix:", err)
 	}

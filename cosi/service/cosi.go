@@ -22,14 +22,13 @@ const ServiceName = "CoSi"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newCoSiService)
-	network.RegisterPacketType(&SignatureRequest{})
-	network.RegisterPacketType(&SignatureResponse{})
+	network.RegisterMessage(&SignatureRequest{})
+	network.RegisterMessage(&SignatureResponse{})
 }
 
 // CoSi is the service that handles collective signing operations
 type CoSi struct {
 	*onet.ServiceProcessor
-	path string
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -45,7 +44,7 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, onet.ClientError) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
 	if req.Roster.ID == onet.RosterID(uuid.Nil) {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
@@ -88,10 +87,9 @@ func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig)
 	return pi, err
 }
 
-func newCoSiService(c *onet.Context, path string) onet.Service {
+func newCoSiService(c *onet.Context) onet.Service {
 	s := &CoSi{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {
