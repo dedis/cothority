@@ -39,8 +39,8 @@ const (
 func main() {
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "Cothorityd server"
-	cliApp.Usage = "Serve a cothority"
+	cliApp.Name = "Conode server"
+	cliApp.Usage = "Participate in a cothority"
 	cliApp.Version = Version
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
@@ -67,13 +67,13 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
-				app.InteractiveConfig("cothorityd")
+				app.InteractiveConfig("conode")
 				return nil
 			},
 		},
 		{
 			Name:  "server",
-			Usage: "Run the cothority server",
+			Usage: "Start the conode",
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
