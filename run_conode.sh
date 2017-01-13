@@ -150,7 +150,7 @@ update(){
 	TEST=$1
 	cat - > $TMP << EOF
 if [ ! "$TEST" ]; then
-  go get -u $CONODE_PATH
+  go get -u $CONODE_PATH/...
 fi
 exec $GOPATH/src/github.com/dedis/cothority/run_conode.sh $ACTION -update_rec $TMP
 EOF
