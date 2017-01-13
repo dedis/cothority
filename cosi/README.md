@@ -4,6 +4,11 @@
 
 # CoSi
 
+This package implements the collective signing (CoSi) protocol. It provides functionality for clients to request and verify collective signatures as well as running a standalone CoSi server.
+
+
+
+
 This package implements a standalone version of the CoSi protocol for 
 scalable collective signing.
 CoSi enables authorities to have their statements collectively signed,
