@@ -62,7 +62,7 @@ func TestPropagate(t *testing.T) {
 }
 
 type PC struct {
-	C *onet.Conode
+	C *onet.Server
 	O *onet.Overlay
 }
 
