@@ -106,16 +106,19 @@ conode setup
 
 and follow the instructions of the dialog. After a successful setup there should be two configuration files:
 
-- The *public configuration file* of your cothority server is located at `~/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
-- The *private configuration file* of your cothoriy server is located at `~/.config/conode/private.toml`.
+- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- The *private configuration file* of your cothoriy server is located at `$HOME/.config/conode/private.toml`.
 
 **Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
-**Note:** The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
+**Note:** 
+
+- The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
+- On macOS the configuration files are located at `$HOME/Library/cosi/{public,private}.toml`.
 
 #### Usage
 
-To start your conode with the default (private) configuration file, located at `~/.config/conode/private.toml`, execute:
+To start your conode with the default (private) configuration file, located at `$HOME/.config/conode/private.toml`, execute:
 
 ```
 conode
