@@ -1,14 +1,14 @@
-// Cothorityd is the main binary for running a Cothority server.
-// A Cothority server can participate in various distributed protocols using the
+// Conode is the main binary for running a server in the Cothority project.
+// A conode can participate in various distributed protocols using the
 // *onet* library as a network and overlay library and the *dedis/crypto*
 // library for all cryptographic primitives.
 // Basically, you first need to setup a config file for the server by using:
 //
-// 		./cothorityd setup
+// 	./conode setup
 //
 // Then you can launch the daemon with:
 //
-//  	./cothorityd
+//  	./conode
 //
 package main
 
@@ -30,7 +30,7 @@ import (
 const (
 	// DefaultName is the name of the binary we produce and is used to create a directory
 	// folder with this name
-	DefaultName = "cothorityd"
+	DefaultName = "conode"
 
 	// Version of this binary
 	Version = "1.1"
@@ -39,8 +39,8 @@ const (
 func main() {
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "Cothorityd server"
-	cliApp.Usage = "Serve a cothority"
+	cliApp.Name = "Conode server"
+	cliApp.Usage = "Participate in a cothority"
 	cliApp.Version = Version
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
@@ -67,13 +67,13 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option can't be used for the 'setup' command")
 				}
-				app.InteractiveConfig("cothorityd")
+				app.InteractiveConfig("conode")
 				return nil
 			},
 		},
 		{
 			Name:  "server",
-			Usage: "Run the cothority server",
+			Usage: "Start the conode",
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
