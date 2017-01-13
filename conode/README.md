@@ -8,7 +8,7 @@ To use the code of this package you need to:
 
 -  Install [Golang](https://golang.org/doc/install)
 -  Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your Go workspace directory 
--  Add `$GOPATH/bin` to the `$PATH` 
+-  Add `$GOPATH/bin` to `$PATH` 
 
 To build and install the cothority server, execute:
 
