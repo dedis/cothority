@@ -4,9 +4,12 @@ set -e
 VERSION=1.0-pre1
 MAILCMD=mail
 MAILADDR=linus.gasser@epfl.ch
-CONODE_BIN=cothority
+CONODE_BIN=conode
 DEDIS_PATH=github.com/dedis
-CONODE_PATH=$DEDIS_PATH/cothority
+COTHORITY_PATH=$DEDIS_PATH/cothority
+CONODE_PATH=$COTHORITY_PATH/conode
+RUN_CONODE=$0
+ALL_ARGS="$*"
 
 main(){
 	if [ ! "$1" ]; then
@@ -78,19 +81,19 @@ runPublic(){
 	DEBUG=0
 	while [ "$1" ]; do
 		case $1 in
-		"-update")
+		-update)
 			UPDATE=yes
 			;;
-		"-update_rec")
+		-update_rec)
 			rm $2
 			shift
 			UPDATE_REC=yes
 			;;
-		"-debug")
+		-debug|-d)
 			DEBUG=$2
 			shift
 			;;
-		"-mail")
+		-mail)
 			MAIL=yes
 			DEBUG=3
 			;;
@@ -107,11 +110,16 @@ runPublic(){
 		go install $CONODE_PATH
 	fi
 	LOG=$( mktemp )
-	if ! $CONODE_BIN -d $DEBUG $@ | tee > $LOG; then
-		if [ "$MAIL" ]; then
-			$MAILCMD $MAILADDR < $LOG
-		fi
+	echo "Running conode with args: $ARGS and debug: $DEBUG"
+	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
+	if [ "$MAIL" ]; then
+		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
+		echo "Waiting one minute before launching conode again"
+		sleep 60
 	fi
+	rm $LOG
+	echo "Conode exited at $(date) - restarting"
+	exec $RUN_CONODE "$ALL_ARGS"
 }
 
 migrate(){
@@ -146,13 +154,14 @@ migrate(){
 
 update(){
 	# As this script might also be updated, run the update in the /tmp-directory
+	echo Updating to latest version
 	TMP=$( mktemp )
 	TEST=$1
 	cat - > $TMP << EOF
 if [ ! "$TEST" ]; then
-  go get -u $CONODE_PATH/...
+  go get -u $COTHORITY_PATH/...
 fi
-exec $GOPATH/src/github.com/dedis/cothority/run_conode.sh $ACTION -update_rec $TMP
+exec $RUN_CONODE $ACTION -update_rec $TMP
 EOF
 	chmod a+x $TMP
 	exec $TMP
