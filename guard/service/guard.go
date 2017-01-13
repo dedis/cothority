@@ -27,8 +27,7 @@ func init() {
 // Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests.
 type Guard struct {
 	*onet.ServiceProcessor
-	path string
-	Z    []byte
+	Z []byte
 }
 
 // Request is what the Guard service is expected to receive from clients.
@@ -56,10 +55,9 @@ func (st *Guard) Request(req *Request) (network.Message, onet.ClientError) {
 }
 
 // newGuardService creates a new service that is built for Guard.
-func newGuardService(c *onet.Context, path string) onet.Service {
+func newGuardService(c *onet.Context) onet.Service {
 	s := &Guard{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {

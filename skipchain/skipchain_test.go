@@ -458,7 +458,7 @@ func (sv *ServiceVerify) NewProtocol(tn *onet.TreeNodeInstance, c *onet.GenericC
 	return nil, nil
 }
 
-func newServiceVerify(c *onet.Context, path string) onet.Service {
+func newServiceVerify(c *onet.Context) onet.Service {
 	sv := &ServiceVerify{}
 	log.ErrFatal(RegisterVerification(c, ServiceVerifier, sv.Verify))
 	return sv

@@ -12,11 +12,6 @@ import (
 
 	"time"
 
-	"io/ioutil"
-	"os"
-
-	"fmt"
-
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/onet"
@@ -33,9 +28,11 @@ func init() {
 	network.RegisterMessage(&SkipBlockMap{})
 }
 
-// XXX Why skipchainSID is private ? Should we not be able to access it from
-// outside ?
+// Only used in tests
 var skipchainSID onet.ServiceID
+
+// Name used to store skipblocks
+const skipblocksID = "skipblocks"
 
 // Service handles adding new SkipBlocks
 type Service struct {
@@ -45,7 +42,6 @@ type Service struct {
 	*SkipBlockMap
 	Propagate messaging.PropagationFunc
 	gMutex    sync.Mutex
-	path      string
 	verifiers map[VerifierID]SkipBlockVerifier
 
 	// testVerify is set to true if a verification happened - only for testing
@@ -472,40 +468,33 @@ func (s *Service) lenSkipBlocks() int {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.Marshal(s.SkipBlockMap)
+	err := s.Save(skipblocksID, s.SkipBlockMap)
 	if err != nil {
-		log.Error("Couldn't marshal service:", err)
-	} else {
-		err = ioutil.WriteFile(s.path+"/skipchain.bin", b, 0660)
-		if err != nil {
-			log.Error("Couldn't save file:", err)
-		}
+		log.Error("Couldn't save file:", err)
 	}
 }
 
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	configFile := s.path + "/skipchain.bin"
-	b, err := ioutil.ReadFile(configFile)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	if !s.DataAvailable(skipblocksID) {
+		return nil
 	}
-	if len(b) > 0 {
-		_, msg, err := network.Unmarshal(b)
-		if err != nil {
-			return fmt.Errorf("Couldn't unmarshal: %s", err)
-		}
-		log.Lvl3("Successfully loaded")
-		s.SkipBlockMap = msg.(*SkipBlockMap)
+	msg, err := s.Load(skipblocksID)
+	if err != nil {
+		return err
+	}
+	var ok bool
+	s.SkipBlockMap, ok = msg.(*SkipBlockMap)
+	if !ok {
+		return errors.New("Data of wrong type")
 	}
 	return nil
 }
 
-func newSkipchainService(c *onet.Context, path string) onet.Service {
+func newSkipchainService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 	}
