@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+# run_conode.sh wraps the conode-binary to some common usecases:
+# run_conode.sh public # Launch a public conode - supposes it's already configured
+# run_conode.sh local 3 # Launches 3 conodes locally.
+
 VERSION=1.0-pre1
 MAILCMD=mail
 MAILADDR=linus.gasser@epfl.ch
@@ -13,7 +17,18 @@ ALL_ARGS="$*"
 
 main(){
 	if [ ! "$1" ]; then
-		echo "Syntax is $0: (public|local)"
+		cat - <<EOF
+Syntax is $0: (public|local)
+
+public			  	# runs a public conode - supposes it's already configured
+	-update			# will automatically update the repositories
+	-mail			# every time the cothority restarts, the last 200 lines get sent
+					# to $MAILADDR
+	-debug 3 		# Set the debug-level for the conode-run
+
+local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
+			      	# argument: 1-sparse..5-flood.
+EOF
 		exit 1
 	fi
 	if [ ! "$GOPATH" ]; then
@@ -56,23 +71,35 @@ runLocal(){
 		exit 1
 	fi
 	NBR=$1
+	DEBUG=${2:-1}
 	killall -9 $CONODE_BIN || true
 	go install $CONODE_PATH
 
+	rm public.toml
 	for n in $( seq $NBR ); do
 		co=co$n
-		if ! grep -q Description $co/config.toml; then
-			echo "Detected old files - deleting"
-			rm -rf $co
+		if [ -f $co/public.toml ]; then
+			if ! grep -q Description $co/public.toml; then
+				echo "Detected old files - deleting"
+				rm -rf $co
+			fi
 		fi
 
 		if [ ! -d $co ]; then
-			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode $n\n$co" | $CONODE_BIN setup
+			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | $CONODE_BIN setup
 		fi
-		$CONODE_BIN -c $co/config.toml -d 3 &
+		$CONODE_BIN -c $co/private.toml -d $DEBUG &
+		cat $co/public.toml >> public.toml
 	done
+	sleep 1
 
-	grep -vh Description co*/group.toml > group.toml
+	cat - <<EOF
+
+*********
+
+Now you can use public.toml as the group-toml file to interact with your
+local cothority.
+EOF
 }
 
 runPublic(){
@@ -104,6 +131,11 @@ runPublic(){
 		shift
 	done
 	migrate
+	if [ ! -f $PATH_CONODE/private.toml ]; then
+		echo "Didn't fine private.toml in $PATH_CONODE, please set up conode first"
+		echo "Using 'conode setup'"
+		exit 1
+	fi
 	if [ "$UPDATE" ]; then
 		update
 	else
