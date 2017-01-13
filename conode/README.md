@@ -72,6 +72,22 @@ To start your conode with the default (private) configuration file, located at `
 conode
 ```
 
+## run_conode.sh
+
+If you want to run a conode on a long-term basis, you can use `run_conode.sh`. This brings you:
+
+* migration of data if we change it
+* loop around conode if it quits
+* automatic updates (-update)
+* sending of log-files (-mail)
+
+You can run it with all extras like so:
+
+`./run_conode.sh -mail -update`
+
+It will send an email to DEDIS with the last 200 lines of log-output every time conode restarts.
+You can change the MAILADDR-variable at the top of the script to change the address 
+
 ## Further Information
 
 For further details on the cothority server, please refer to the [wiki](https://github.com/dedis/cothority/wiki/Conode).

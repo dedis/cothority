@@ -1,14 +1,14 @@
-// Conode is the main binary for running a server in the Cothority project.
+// Conode is the main binary for running a Cothority server.
 // A conode can participate in various distributed protocols using the
 // *onet* library as a network and overlay library and the *dedis/crypto*
 // library for all cryptographic primitives.
 // Basically, you first need to setup a config file for the server by using:
 //
-// 	./conode setup
+//  ./conode setup
 //
 // Then you can launch the daemon with:
 //
-//  	./conode
+//  ./conode
 //
 package main
 
