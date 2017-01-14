@@ -435,6 +435,7 @@ func (u *User) ReConnect(name string) error {
 
 func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 	// Check the validity of each skipblock hop
+	log.Print("Fetched blocks", len(blocks))
 	prev := blocks[0]
 	_, data, _ := network.UnmarshalRegistered(prev.Data)
 	trustedconfig := data.(*common_structs.Config)

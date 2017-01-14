@@ -1093,7 +1093,7 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 		Evol1: evol1,
 		Evol2: evol2,
 	}
-	s.SimulFunc(roster, msg, 20000)
+	s.SimulFunc(roster, msg, 25000)
 	<-s.setupDone
 	log.Print(s.Context,"Setup DONE")
 	s.cntMut.Lock()

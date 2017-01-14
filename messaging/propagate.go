@@ -135,7 +135,7 @@ func (p *Propagate) Dispatch() error {
 	log.Lvl4(p.ServerIdentity())
 	for process {
 		p.Lock()
-		p.sd.Msec = 20000
+		p.sd.Msec = 200000
 		timeout := time.Millisecond * time.Duration(p.sd.Msec)
 		p.Unlock()
 		select {
