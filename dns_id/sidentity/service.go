@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
-	"runtime/debug"
+	//"runtime/debug"
 	"sync"
 	"time"
 
@@ -56,6 +56,9 @@ func init() {
 	network.RegisterPacketType(&StorageMap{})
 	network.RegisterPacketType(&Storage{})
 	network.RegisterPacketType(&SyncStart{})
+	network.RegisterPacketType(&common_structs.SiteInfo{})
+	network.RegisterPacketType(&common_structs.PushedPublic{})
+	network.RegisterPacketType(common_structs.MinusOne{})
 }
 
 // Service handles identities
@@ -80,6 +83,7 @@ type Service struct {
 	siteInfoList  []*common_structs.SiteInfo
 	publicDone    chan bool
 	ok            bool
+	attachedDone chan bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -878,7 +882,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 		log.Lvlf3("_______________________________________________________")
 		log.Lvlf3("END OF A TIMESTAMPER ROUND")
 		log.Lvlf3("_______________________________________________________")
-		debug.FreeOSMemory()
+		//debug.FreeOSMemory()
 	}
 }
 
@@ -932,9 +936,10 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
 		Publics:          make(map[string]abstract.Point),
 		//EpochDuration:    time.Millisecond * 250000,
-		EpochDuration: time.Millisecond * 1000,
+		EpochDuration: time.Millisecond * 1000 * 10,
 		setupDone:     make(chan bool),
 		publicDone:    make(chan bool),
+		attachedDone:  make(chan bool),
 
 	}
 	if err := s.tryLoad(); err != nil {
@@ -948,7 +953,7 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate,
-		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.PushedPublic,
+		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsEvolve, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
@@ -963,7 +968,8 @@ type SyncStart struct {
 	Clients    int
 	Webservers int
 	Cothority  int
-	Evol int
+	Evol1      int
+	Evol2      int
 }
 
 func (s *Service) StartSimul(msg network.Body) {
@@ -1001,7 +1007,7 @@ func (s *Service) StartSimul(msg network.Body) {
 			}*/
 			log.Print(s.Context,"ColdKeyHolder is now ready to pursue")
 			randWkh := index_WK + rand.Int() % (len(m.Roster.List) - index_WK)
-			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol)
+			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol1, m.Evol2)
 		}()
 	default:
 		// cothority warm key case
@@ -1012,7 +1018,7 @@ func (s *Service) StartSimul(msg network.Body) {
 
 }
 
-func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, evol int) {
+func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, evol1, evol2 int) {
 	firstIdentity := roster.List[0]
 	wsIdentity := roster.List[index_ws]
 	data := make(map[string]*common_structs.WSconfig)
@@ -1025,22 +1031,14 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 	id := NewIdentity(roster_WK, fqdn, 1, "CKH_one", "device", nil, data, int64(0))
 	err := id.CreateIdentity()
 	log.ErrFatal(err)
+	log.Print("Site Identity has been created")
 
 	serverIDs := make([]*network.ServerIdentity, 0)
 	serverIDs = append(serverIDs, wsIdentity)
+	log.Print("Evolution time 1")
 
-	/*
-	c := time.Tick(time.Millisecond * 60 * 1000)
-	go func() {
-		for _ = range c {
-			id.ProposeConfig(nil, nil, 0, 0, serverIDs)
-			id.ProposeUpVote()
-			id.ConfigUpdate()
-		}
-	}()
-	*/
-
-	for idx := 0; idx < evol; idx++ {
+	for idx := 0; idx < evol1; idx++ {
+		log.Print("evol block: ", idx+1)
 		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
 		id.ProposeUpVote()
 		id.ConfigUpdate()
@@ -1051,8 +1049,25 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 		ID:            id.ID,
 		Cothority:     roster_WK,
 		FirstIdentity: firstIdentity,
+		CkhIdentity:   s.ServerIdentity(),
 	}, nil))
 	log.Print("Cold key holder sent back Identity ready")
+
+	go func() {
+		<-s.attachedDone
+
+		log.Print("Evolution time 2 - webservers will have to fetch these blocks from the cothority")
+
+		for idx := 0; idx < evol2; idx++ {
+			log.Print("evol block: ", idx+1)
+			id.ProposeConfig(nil, nil, 0, 0, serverIDs)
+			id.ProposeUpVote()
+			id.ConfigUpdate()
+		}
+
+		client2 := onet.NewClient(ServiceName)
+		log.ErrFatal(client2.SendProtobuf(firstIdentity, &common_structs.MinusOne{s.siteInfoList[0]}, nil))
+	}()
 }
 
 func startWs(roster, roster_WK *onet.Roster, index_CK, index_ws int) {
@@ -1066,7 +1081,7 @@ func startWs(roster, roster_WK *onet.Roster, index_CK, index_ws int) {
 	}, nil))
 }
 
-func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority, evol int) []*common_structs.SiteInfo {
+func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority, evol1, evol2 int) []*common_structs.SiteInfo {
 	s.cntMut.Lock()
 	s.expected = webservers
 	s.cntMut.Unlock()
@@ -1075,7 +1090,8 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 		Clients: clients,
 		Webservers: webservers,
 		Cothority: cothority,
-		Evol: evol,
+		Evol1: evol1,
+		Evol2: evol2,
 	}
 	s.SimulFunc(roster, msg, 20000)
 	<-s.setupDone
@@ -1085,11 +1101,12 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 	return s.siteInfoList
 }
 
-func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.ClientError) {
-	//s.cntMut.Lock()
-	//defer s.cntMut.Unlock()
+func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Body, onet.ClientError) {
+	log.Print("FirstIdentity received a MinusOne message")
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
 	s.cnt++
-	s.siteInfoList = append(s.siteInfoList, req)
+	s.siteInfoList = append(s.siteInfoList, req.Sites)
 	if s.cnt == s.expected {
 		s.setupDone <- true
 	}
@@ -1098,8 +1115,8 @@ func (s *Service) LetsStart(req *common_structs.SiteInfo) (network.Body, onet.Cl
 
 func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, onet.ClientError) {
 	log.Print("PushedPublic by the webserver, received by server: ", s.ServerIdentity())
-	//s.cntMut.Lock()
-	//defer s.cntMut.Unlock()
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
 	log.Print("before channel receipt")
 	s.publicDone <- true
 	//s.ok = true
@@ -1107,3 +1124,13 @@ func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, 
 	return nil, nil
 }
 
+func (s *Service) LetsEvolve(req *common_structs.SiteInfo) (network.Body, onet.ClientError) {
+	log.Print("Received a Webserver attached message")
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.siteInfoList = append(s.siteInfoList, req)
+	go func() {
+		s.attachedDone <- true
+	}()
+	return nil, nil
+}

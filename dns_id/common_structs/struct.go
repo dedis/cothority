@@ -575,6 +575,7 @@ type IdentityReady struct {
 	ID            skipchain.SkipBlockID
 	Cothority     *onet.Roster
 	FirstIdentity *network.ServerIdentity
+	CkhIdentity   *network.ServerIdentity
 }
 
 type PushedPublic struct {
@@ -586,3 +587,6 @@ type StartWebserver struct {
 	Index_CK  int
 }
 
+type MinusOne struct {
+	Sites *SiteInfo
+}

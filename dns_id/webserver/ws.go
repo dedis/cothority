@@ -31,6 +31,11 @@ func init() {
 	WSService = onet.ServiceFactory.ServiceID(ServiceWSName)
 	network.RegisterPacketType(&SiteMap{})
 	network.RegisterPacketType(&Site{})
+	network.RegisterPacketType(&common_structs.IdentityReady{})
+	network.RegisterPacketType(&common_structs.PushedPublic{})
+	network.RegisterPacketType(&common_structs.StartWebserver{})
+	network.RegisterPacketType(&common_structs.SiteInfo{})
+	network.RegisterPacketType(&GetValidSbPath{})
 }
 
 // WS handles site identities (usually only one)
@@ -485,9 +490,10 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Body, 
 
 	err := ws.WSAttach(ws.fqdn, req.ID, req.Cothority)
 	log.ErrFatal(err)
-
+	log.Print("Webserver is now attached, Sending back to CKH: ", req.CkhIdentity)
 	client := onet.NewClient(sidentity.ServiceName)
-	log.ErrFatal(client.SendProtobuf(req.FirstIdentity, siteInfo, nil))
+	log.ErrFatal(client.SendProtobuf(req.CkhIdentity, siteInfo, nil))
+	log.Print("Webserver dispatched the attached message")
 	return nil, nil
 }
 

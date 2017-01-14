@@ -525,7 +525,7 @@ func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, h1 skipchain.SkipBlo
 	if cerr != nil {
 		return nil, nil, nil, nil, cerr
 	}
-
+	log.Lvlf3("GetValidSbPath(): Received reply from cothority")
 	sbs := reply.Skipblocks
 	cert := reply.Cert
 	hash := reply.Hash
