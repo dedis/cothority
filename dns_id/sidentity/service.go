@@ -911,7 +911,7 @@ func (s *Service) cosiSign(roster *onet.Roster,msg []byte) []byte {
 	go pi.Start()
 
 	res := <-response
-	log.Lvlf2("cosiSign(): Received cosi response")
+	log.Print("cosiSign(): Received cosi response")
 	return res
 
 }
@@ -942,6 +942,7 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 		attachedDone:  make(chan bool),
 
 	}
+	s.ClearIdentities()
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
