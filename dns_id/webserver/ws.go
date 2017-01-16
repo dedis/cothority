@@ -193,6 +193,9 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	}
 	site.CertInfo = certinfo
 
+	if pof == nil {
+		log.Print("null pof  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	}
 	site.PoF = pof
 
 	ws.setSiteStorage(id, site)
@@ -292,7 +295,10 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
 	if site == nil {
 		return nil, errors.New("FetchPoF() failed: web server not yet attached to the requested site")
 	}
-
+	if site.PoF==nil {
+		log.Print("FetchPoF(): NULL POF!!!!!!!!!!")
+		return nil, errors.New("FetchPoF(): NULL POF!!!!!!!!!!")
+	}
 	return site.PoF, nil
 }
 
@@ -309,12 +315,14 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	id := ws.NameToID[req.FQDN]
 	site := ws.getSiteStorage(id)
 	if site == nil {
+		log.Print("error")
 		return nil, onet.NewClientErrorCode(4100, "UserGetValidSbPath() failed: web server not yet attached to the requested site")
 	}
 
 	_ = ws.WSUpdate(id)
 	sbs, err := ws.FetchSkipblocks(id, req.Hash1, req.Hash2)
 	if err != nil {
+		log.Print("error")
 		return nil, onet.NewClientError(err)
 	}
 	log.Lvlf3("UserGetValidSbPath(): Skipblocks fetched")
@@ -323,9 +331,10 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	// process challenge
 	sig, err := crypto.SignSchnorr(network.Suite, site.TLSPrivate, req.Challenge)
 	if err != nil {
+		log.Print("error")
 		return nil, onet.NewClientError(err)
 	}
-	log.LLvlf3("public key of server: %v is %v (latest known block: %v)", ws.ServerIdentity(), site.TLSPublic, site.LatestHash)
+	log.Lvlf4("public key of server: %v is %v (latest known block: %v)", ws.ServerIdentity(), site.TLSPublic, site.LatestHash)
 
 	if bytes.Equal(req.Hash2, []byte{0}) {
 		cert, _ := ws.FetchCert(id)

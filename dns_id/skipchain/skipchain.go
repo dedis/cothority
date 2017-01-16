@@ -259,7 +259,7 @@ func (s *Service) RegisterVerification(v VerifierID, f SkipBlockVerifier) error 
 // As a simple solution it verifies the validity of the block,
 // simulates a signature and propagates the latest and newest block.
 func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *SkipBlock, error) {
-	log.Lvl4("Signing new block", newest, "on block", latest)
+	log.LLvl4("Signing new block", newest, "on block", latest)
 	if newest != nil && newest.Roster == nil {
 		log.Lvl3("Got a data-block")
 		if newest.ParentBlockID.IsNull() {

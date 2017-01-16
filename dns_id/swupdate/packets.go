@@ -3,9 +3,16 @@ package swupdate
 import (
 	"github.com/dedis/crypto/abstract"
 	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // The main messages used by CoSi
+
+func init(){
+	for _, m := range []interface{}{Announcement{}, Commitment{}, Challenge{}, Response{}}{
+		network.RegisterMessage(m)
+	}
+}
 
 // Announcement is broadcasted message initiated and signed by proposer.
 type Announcement struct {

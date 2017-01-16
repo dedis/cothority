@@ -369,7 +369,7 @@ func (c *Config) IsOlderConfig(c2 *Config) bool {
 }
 
 func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff int64) error {
-	log.Lvlf2("CHECKING POF (identifier: %v", pof.Identifier)
+	log.Lvlf2("CHECKING POF (identifier: %v)", pof.Identifier)
 	// Check whether the 'latest' skipblock is stale or not (by checking the freshness of the PoF)
 	isfresh := pof.CheckFreshness(maxdiff)
 	if !isfresh {

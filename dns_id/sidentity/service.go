@@ -127,8 +127,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
  * API messages
  */
 
-// CreateIdentity will register a new SkipChain and add it to our list of
-// messagingd identities.
+// CreateIdentity will register a new SkipChain and add it to our list of identities.
 func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
 	log.Lvlf2("Request for a new site identity received at server: %v", s.ServerIdentity())
 	ids := &Storage{
@@ -192,11 +191,12 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 
 	s.save()
 
-	log.Lvlf3("------CreateIdentity(): Successfully created a new identity-------")
+	log.LLvlf3("------CreateIdentity(): Successfully created a new identity-------")
 	return &CreateIdentityReply{
 		Root: ids.Root,
 		Data: ids.Data,
 	}, nil
+
 }
 
 // ConfigUpdate returns a new configuration update
@@ -519,7 +519,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	if !bytes.Equal(h1, []byte{0}) {
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
-			log.Lvlf2("server: %v, site: %v - NO VALID PATH: Skipblock with hash: %v not found", s.String(), sid.ID, h1)
+			log.Print("server: %v, site: %v - NO VALID PATH: Skipblock with hash: %v not found", s.String(), sid.ID, h1)
 			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 	} else {
@@ -534,7 +534,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		h1 = sid.CertInfo.SbHash
 		sb1, ok = sid.getSkipBlockByID(h1)
 		if !ok {
-			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
+			log.Print("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 		log.Lvlf3("Last certified skipblock has hash: %v", h1)
@@ -544,7 +544,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	if !bytes.Equal(h2, []byte{0}) {
 		sb2, ok = sid.getSkipBlockByID(h2)
 		if !ok {
-			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			log.Print("NO VALID PATH: Skipblock with hash: %v not found", h2)
 			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
 		}
 	} else {
@@ -569,7 +569,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		log.Lvlf3("Appending skipblock with hash: %v", hash)
 		block, ok = sid.getSkipBlockByID(hash)
 		if !ok {
-			log.Lvlf3("Skipblock with hash: %v not found", hash)
+			log.Print("Skipblock with hash: %v not found", hash)
 			return nil, onet.NewClientErrorCode(4100, "Skipblock not found")
 		}
 		sbs = append(sbs, block)
@@ -578,7 +578,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		}
 	}
 
-	log.Lvlf3("GetValidSbPath(): End with num of returned blocks: %v", len(sbs))
+	log.LLvlf3("GetValidSbPath(): End with num of returned blocks: %v, POF: %s", len(sbs), sid.PoF)
 	return &GetValidSbPathReply{Skipblocks: sbs,
 		Cert: sid.CertInfo.Cert,
 		Hash: sid.CertInfo.SbHash,
@@ -780,16 +780,16 @@ func (s *Service) tryLoad() error {
 
 func (s *Service) RunLoop(roster *onet.Roster) {
 	c := time.Tick(s.EpochDuration)
-	log.Lvlf2("_______________________________________________________")
-	log.Lvlf2("------------------TIMESTAMPER BEGINS-------------------")
-	log.Lvlf2("_______________________________________________________")
+	log.Print("_______________________________________________________")
+	log.Print("------------------TIMESTAMPER BEGINS-------------------")
+	log.Print("_______________________________________________________")
 	cnt := 0
 
 	for now := range c {
 		cnt++
-		log.Lvlf3("_______________________________________________________")
-		log.Lvlf3("START OF A TIMESTAMPER ROUND")
-		log.Lvlf3("_______________________________________________________")
+		log.LLvlf3("_______________________________________________________")
+		log.LLvlf3("START OF A TIMESTAMPER ROUND")
+		log.LLvlf3("_______________________________________________________")
 		data := make([][]byte, 0)
 		data2 := make([]common_structs.HashID, 0)
 		ids := make([]skipchain.SkipBlockID, 0)
@@ -807,9 +807,8 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 			ids = append(ids, sid.ID)
 		}
 		num := len(identities)
-
 		if num > 0 {
-			log.Lvl2("------- Signing tree root with timestamp:", now, "got", num, "requests")
+			log.LLvl2("------- Signing tree root with timestamp:", now, "got", num, "requests")
 
 			// create merkle tree and message to be signed:
 			root, proofs := common_structs.ProofTree(sha256.New, data2)
@@ -868,10 +867,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 
 			log.Lvlf3("Everything OK with the proofs")
 			replies, err := s.PropagateFunc(roster, &PropagatePoF{Storages: sids}, propagateTimeout)
-
-			if err != nil {
-				log.ErrFatal(err, "Couldn't send")
-			}
+			log.ErrFatal(err, "Couldn't send")
 
 			if replies != len(roster.List) {
 				log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -880,9 +876,9 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 		} else {
 			log.Lvl3("No follow-sites at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
-		log.Lvlf3("_______________________________________________________")
-		log.Lvlf3("END OF A TIMESTAMPER ROUND")
-		log.Lvlf3("_______________________________________________________")
+		log.Print("_______________________________________________________")
+		log.Print("END OF A TIMESTAMPER ROUND")
+		log.Print("_______________________________________________________")
 		//debug.FreeOSMemory()
 	}
 }
@@ -936,7 +932,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
 		Publics:          make(map[string]abstract.Point),
 		//EpochDuration:    time.Millisecond * 250000,
-		EpochDuration: time.Millisecond * 1000 * 10,
+		EpochDuration: time.Millisecond * 1000 * 1,
 		setupDone:     make(chan bool),
 		publicDone:    make(chan bool),
 		attachedDone:  make(chan bool),

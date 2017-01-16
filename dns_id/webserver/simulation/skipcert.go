@@ -84,6 +84,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	var roster = config.Roster
 	siteInfoList := s.WaitSetup(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2)
 	log.Print("after waitSetup")
+	time.Sleep(time.Duration(50) * time.Millisecond)
 
 	var ctr int
 	users := make([]*UserInfo, e.Clients)
@@ -106,6 +107,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 
 		for i := range users {
 			go func(j int) {
+				log.Print("Connecting user ", i)
 				var idx int
 				if len(siteInfoList) == 1 {
 					idx = 0

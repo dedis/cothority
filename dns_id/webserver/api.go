@@ -144,6 +144,9 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	latest := sbs[len(sbs)-1]
 	cert := reply.Cert
 	pof := reply.PoF
+	if pof == nil {
+		log.Print("!!!!!! Null pof!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+	}
 	log.Lvlf3("Connect(): Skipblocks fetched")
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
@@ -152,6 +155,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	latestconf, _ := data.(*common_structs.Config)
 	err := latestconf.CheckTimeDiff(maxdiff * 2)
 	if err != nil {
+		log.Print("Stale block, check the pof")
 		err = pof.Validate(latest, maxdiff)
 		if err != nil {
 			log.Lvlf2("%v", err)
@@ -204,7 +208,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 		u.WebSites[name] = &website
 		u.Follow(name, latest, cert)
 	}
-	log.Lvlf2("CONNECTED: user: %v, site: %v", u.UserName, name)
+	log.Print("CONNECTED: user: %v, site: %v", u.UserName, name)
 	return nil
 }
 
