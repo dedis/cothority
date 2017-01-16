@@ -3,8 +3,8 @@ package byzcoin
 import (
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/cothority/byzcoin/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -16,7 +16,7 @@ func init() {
 		ChallengeCommit{},
 		Response{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 

@@ -1,6 +1,6 @@
 package channels
 
-import "github.com/dedis/onet"
+import "gopkg.in/dedis/onet.v1"
 
 // Announce is used to pass a message to all children
 type Announce struct {

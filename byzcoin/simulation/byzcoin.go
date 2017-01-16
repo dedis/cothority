@@ -10,9 +10,9 @@ import (
 	"github.com/dedis/cothority/byzcoin/cosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/simul/monitor"
 )
 
 func init() {

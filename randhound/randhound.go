@@ -14,10 +14,10 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // TODO:
@@ -478,7 +478,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	i1b, err := network.MarshalRegisteredType(msg)
+	i1b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -695,7 +695,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	i2b, err := network.MarshalRegisteredType(msg)
+	i2b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -918,7 +918,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -946,7 +946,7 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m)
 	if err != nil {
 		return err
 	}
@@ -968,7 +968,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal ...
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m)
 	if err != nil {
 		return err
 	}

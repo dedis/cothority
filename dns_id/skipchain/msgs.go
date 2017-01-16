@@ -3,10 +3,10 @@ package skipchain
 import (
 	"errors"
 
-	"github.com/dedis/onet/network"
 	"github.com/dedis/cothority/bftcosi"
-	"github.com/dedis/onet"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func init() {
 		&bftcosi.BFTSignature{},
 	}
 	for _, m := range msgs {
-		network.RegisterPacketType(m)
+		network.RegisterMessage(m)
 	}
 }
 

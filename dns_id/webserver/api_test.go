@@ -2,13 +2,14 @@ package webserver
 
 import (
 	"fmt"
+
 	"github.com/dedis/cothority/dns_id/ca"
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/sidentity"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 	//"github.com/dedis/crypto/ed25519"
 	//"github.com/dedis/crypto/random"
 	"math/rand"

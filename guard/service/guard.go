@@ -4,9 +4,9 @@ import (
 	"crypto/rand"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // This file contains all the code to run a Guard service. The Guard receives takes a
@@ -18,8 +18,8 @@ const ServiceName = "Guard"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newGuardService)
-	network.RegisterPacketType(&Request{})
-	network.RegisterPacketType(&Response{})
+	network.RegisterMessage(&Request{})
+	network.RegisterMessage(&Response{})
 }
 
 //This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
@@ -27,8 +27,7 @@ func init() {
 // Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests.
 type Guard struct {
 	*onet.ServiceProcessor
-	path string
-	Z    []byte
+	Z []byte
 }
 
 // Request is what the Guard service is expected to receive from clients.
@@ -44,7 +43,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Guard) Request(req *Request) (network.Body, onet.ClientError) {
+func (st *Guard) Request(req *Request) (network.Message, onet.ClientError) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
 	blankpoint := network.Suite.Point()
 	zbytes := network.Suite.Scalar()
@@ -56,10 +55,9 @@ func (st *Guard) Request(req *Request) (network.Body, onet.ClientError) {
 }
 
 // newGuardService creates a new service that is built for Guard.
-func newGuardService(c *onet.Context, path string) onet.Service {
+func newGuardService(c *onet.Context) onet.Service {
 	s := &Guard{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {

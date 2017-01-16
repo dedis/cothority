@@ -15,10 +15,10 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceWSName can be used to refer to the name of this service
@@ -29,13 +29,13 @@ var WSService onet.ServiceID
 func init() {
 	onet.RegisterNewService(ServiceWSName, newWSService)
 	WSService = onet.ServiceFactory.ServiceID(ServiceWSName)
-	network.RegisterPacketType(&SiteMap{})
-	network.RegisterPacketType(&Site{})
-	network.RegisterPacketType(&common_structs.IdentityReady{})
-	network.RegisterPacketType(&common_structs.PushedPublic{})
-	network.RegisterPacketType(&common_structs.StartWebserver{})
-	network.RegisterPacketType(&common_structs.SiteInfo{})
-	network.RegisterPacketType(&GetValidSbPath{})
+	network.RegisterMessage(&SiteMap{})
+	network.RegisterMessage(&Site{})
+	network.RegisterMessage(&common_structs.IdentityReady{})
+	network.RegisterMessage(&common_structs.PushedPublic{})
+	network.RegisterMessage(&common_structs.StartWebserver{})
+	network.RegisterMessage(&common_structs.SiteInfo{})
+	network.RegisterMessage(&GetValidSbPath{})
 }
 
 // WS handles site identities (usually only one)
@@ -52,7 +52,7 @@ type WS struct {
 	Public abstract.Point
 	// holds the mapping between FDQNs and genesis skipblocks' IDs
 	NameToID map[string]skipchain.SkipBlockID
-	fqdn string
+	fqdn     string
 }
 
 // SiteMap holds the map to the sites so it can be marshaled.
@@ -300,11 +300,11 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
  * API messages
  */
 
-func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Body, onet.ClientError) {
+func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.ClientError) {
 	ws.sitesMutex.Lock()
 	defer ws.sitesMutex.Unlock()
 
-	log.Lvlf1("UserGetValidSbPath(): received connection req for %s",req.FQDN)
+	log.Lvlf1("UserGetValidSbPath(): received connection req for %s", req.FQDN)
 
 	id := ws.NameToID[req.FQDN]
 	site := ws.getSiteStorage(id)
@@ -338,7 +338,7 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Body, onet.Client
 		}, nil
 
 	}
-	log.Print(ws.Context,"Sending back GetValidSbPathReply ")
+	log.Print(ws.Context, "Sending back GetValidSbPathReply ")
 	return &GetValidSbPathReply{
 		Skipblocks: sbs,
 		Cert:       nil,
@@ -399,7 +399,7 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 	for _, b := range decrypted2 {
 		decrypted = append(decrypted, b)
 	}
-	_, data, err2 := network.UnmarshalRegistered(decrypted)
+	_, data, err2 := network.Unmarshal(decrypted)
 	if err2 != nil {
 		log.Lvlf2("%v", err2)
 	}
@@ -424,7 +424,7 @@ func (s *Site) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipBloc
 
 func (ws *WS) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(ws.SiteMap)
+	b, err := network.Marshal(ws.SiteMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -448,7 +448,7 @@ func (ws *WS) tryLoad() error {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
 	}
 	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		if err != nil {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
@@ -458,18 +458,16 @@ func (ws *WS) tryLoad() error {
 	return nil
 }
 
-func newWSService(c *onet.Context, path string) onet.Service {
+func newWSService(c *onet.Context) onet.Service {
 	ws := &WS{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
-		path:             path,
 		NameToID:         make(map[string]skipchain.SkipBlockID),
-
 	}
-	if err := ws.tryLoad(); err != nil {
-		log.Error(err)
-	}
+	//if err := ws.tryLoad(); err != nil {
+	//	log.Error(err)
+	//}
 	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
@@ -478,7 +476,7 @@ func newWSService(c *onet.Context, path string) onet.Service {
 	return ws
 }
 
-func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Body, onet.ClientError) {
+func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Message, onet.ClientError) {
 
 	wss := make([]common_structs.WSInfo, 0)
 	wss = append(wss, common_structs.WSInfo{ServerID: ws.ServerIdentity()})
@@ -497,18 +495,18 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Body, 
 	return nil, nil
 }
 
-func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Body, onet.ClientError) {
+func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Message, onet.ClientError) {
 	roster := req.Roster
 	roster_WK := req.Roster_WK
 	index_CK := req.Index_CK
-	index_ws,_ := roster.Search(ws.ServerIdentity().ID)
-	ws.fqdn = fmt.Sprintf("site%d",index_ws)
+	index_ws, _ := roster.Search(ws.ServerIdentity().ID)
+	ws.fqdn = fmt.Sprintf("site%d", index_ws)
 	ckIdentity := roster.List[index_CK]
-	log.Print(ws.Context,"StartWebServer WSPublishPublicKey")
+	log.Print(ws.Context, "StartWebServer WSPublishPublicKey")
 	log.ErrFatal(ws.WSPushPublicKey(roster_WK))
 
 	client := onet.NewClient(sidentity.ServiceName)
-	log.Print(ws.Context,"StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
+	log.Print(ws.Context, "StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
 	log.ErrFatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
 	return nil, nil
 }

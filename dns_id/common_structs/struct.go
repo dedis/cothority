@@ -10,18 +10,19 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/dedis/cothority/dns_id/skipchain"
-	"github.com/dedis/cothority/dns_id/swupdate"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"io"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/dedis/cothority/dns_id/skipchain"
+	"github.com/dedis/cothority/dns_id/swupdate"
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/random"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func init() {
 		&CAInfo{},
 		&Config{},
 	} {
-		network.RegisterPacketType(s)
+		network.RegisterMessage(s)
 	}
 }
 
@@ -180,20 +181,20 @@ func NewConfig(fqdn string, threshold int, pub abstract.Point, proxyroster *onet
 
 // Copy returns a deep copy of the AccountList.
 func (c *Config) Copy() *Config {
-	b, err := network.MarshalRegisteredType(c)
+	b, err := network.Marshal(c)
 	if err != nil {
 		log.Error("Couldn't marshal AccountList:", err)
 		return nil
 	}
-	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	_, msg, err := network.Unmarshal(b)
 	if err != nil {
 		log.Error("Couldn't unmarshal AccountList:", err)
 	}
-	ilNew := msg.(Config)
+	ilNew := msg.(*Config)
 	if len(ilNew.Data) == 0 {
 		ilNew.Data = make(map[string]*WSconfig)
 	}
-	return &ilNew
+	return ilNew
 }
 
 // Hash makes a cryptographic hash of the configuration-file - this
@@ -227,7 +228,7 @@ func (c *Config) Hash() ([]byte, error) {
 		}
 
 		point := &APoint{Point: c.Device[s].Point}
-		b, err := network.MarshalRegisteredType(point)
+		b, err := network.Marshal(point)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +253,7 @@ func (c *Config) Hash() ([]byte, error) {
 			K2:        c.Data[k].K2,
 			C2:        c.Data[k].C2,
 		}
-		b, err := network.MarshalRegisteredType(wsconf)
+		b, err := network.Marshal(wsconf)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +266,7 @@ func (c *Config) Hash() ([]byte, error) {
 	/*
 		for _, info := range c.CAs {
 			//log.Printf("public: %v", info.Public)
-			b, err := network.MarshalRegisteredType(&info)
+			b, err := network.Marshal(&info)
 			if err != nil {
 				return nil, err
 			}
@@ -275,7 +276,7 @@ func (c *Config) Hash() ([]byte, error) {
 	*/
 	// Include the aggregate public key into the hash (cothority is trusted for issuing proofs of freshness)
 	point := &APoint{Point: c.ProxyRoster.Aggregate}
-	b, err2 := network.MarshalRegisteredType(point)
+	b, err2 := network.Marshal(point)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -376,7 +377,7 @@ func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff in
 	}
 
 	signedmsg := RecreateSignedMsg(pof.Root, pof.Timestamp)
-	_, data, _ := network.UnmarshalRegistered(latestsb.Data)
+	_, data, _ := network.Unmarshal(latestsb.Data)
 	latestconf, _ := data.(*Config)
 	publics := make([]abstract.Point, 0)
 	for _, proxy := range latestconf.ProxyRoster.List {
@@ -532,7 +533,7 @@ func Decrypt(key, text []byte) ([]byte, error) {
 }
 
 func GetConfFromSb(sb *skipchain.SkipBlock) (*Config, error) {
-	_, data, err := network.UnmarshalRegistered(sb.Data)
+	_, data, err := network.Unmarshal(sb.Data)
 	if err != nil {
 		return nil, errors.New("Couldn't unmarshal")
 	}

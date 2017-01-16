@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-	"github.com/dedis/onet"
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
 	"github.com/dedis/crypto/abstract"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 const MaxUint = ^uint(0)
@@ -35,23 +35,23 @@ type ID skipchain.SkipBlockID
 func (sid *Storage) Copy() *Storage {
 	sid.Lock()
 	defer sid.Unlock()
-	b, err := network.MarshalRegisteredType(sid)
+	b, err := network.Marshal(sid)
 	if err != nil {
 		log.Error("Couldn't marshal Storage:", err)
 		return nil
 	}
-	_, msg, err := network.UnmarshalRegisteredType(b, network.DefaultConstructors(network.Suite))
+	_, msg, err := network.Unmarshal(b)
 	if err != nil {
 		log.Error("Couldn't unmarshal Storage:", err)
 	}
-	sidNew := msg.(Storage)
+	sidNew := msg.(*Storage)
 	if len(sidNew.Votes) == 0 {
 		sidNew.Votes = make(map[string]*crypto.SchnorrSig)
 	}
 	if len(sidNew.SkipBlocks) == 0 {
 		sidNew.SkipBlocks = make(map[string]*skipchain.SkipBlock)
 	}
-	return &sidNew
+	return sidNew
 }
 
 func timestampToBytes(t int64) []byte {

@@ -14,10 +14,10 @@ import (
 	"github.com/dedis/crypto/config"
 	"github.com/dedis/crypto/cosi"
 	"github.com/dedis/crypto/ed25519"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 /*
@@ -73,7 +73,7 @@ func init() {
 
 		&common_structs.PushedPublic{},
 	} {
-		network.RegisterPacketType(s)
+		network.RegisterMessage(s)
 	}
 }
 
@@ -415,7 +415,7 @@ func (i *Identity) ConfigUpdate() error {
 
 	i.Latest = blocks[len(blocks)-1]
 	i.LatestID = i.Latest.Hash
-	_, data, err2 := network.UnmarshalRegistered(i.Latest.Data)
+	_, data, err2 := network.Unmarshal(i.Latest.Data)
 	if err2 != nil {
 		return errors.New("Couldn't unmarshal skipblock's config")
 	}
@@ -450,7 +450,7 @@ func (i *Identity) ValidateConfigChain(blocks []*skipchain.SkipBlock) error {
 			log.Lvlf2("Checking trust delegation: %v -> %v", index-1, index)
 			cnt := 0
 
-			_, data, err2 := network.UnmarshalRegistered(next.Data)
+			_, data, err2 := network.Unmarshal(next.Data)
 			if err2 != nil {
 				return errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
 			}
@@ -461,8 +461,8 @@ func (i *Identity) ValidateConfigChain(blocks []*skipchain.SkipBlock) error {
 
 			for key, newdevice := range newconfig.Device {
 				if _, exists := trustedconfig.Device[key]; exists {
-					b1, _ := network.MarshalRegisteredType(newdevice.Point)
-					b2, _ := network.MarshalRegisteredType(trustedconfig.Device[key].Point)
+					b1, _ := network.Marshal(newdevice.Point)
+					b2, _ := network.Marshal(trustedconfig.Device[key].Point)
 					if bytes.Equal(b1, b2) {
 						if newdevice.Vote != nil {
 							var hash []byte
@@ -510,7 +510,7 @@ func (i *Identity) ValidateConfigChain(blocks []*skipchain.SkipBlock) error {
 
 		}
 		prev = next
-		_, data, _ := network.UnmarshalRegistered(prev.Data)
+		_, data, _ := network.Unmarshal(prev.Data)
 		trustedconfig = data.(*common_structs.Config)
 	}
 	log.Lvlf3("ValidateConfigChain(): End")
@@ -611,7 +611,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, i, err := network.UnmarshalRegistered(data)
+	_, i, err := network.Unmarshal(data)
 	if err != nil {
 		return nil, err
 	}
@@ -625,7 +625,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.MarshalRegisteredType(&i.Data)
+	data, err := network.Marshal(&i.Data)
 	if err != nil {
 		return err
 	}
@@ -662,7 +662,7 @@ func (i *Identity) UpdateTLSKeypairs(proposedConf *common_structs.Config, server
 		log.Lvlf2("tls_public: %v", tls_public)
 		log.Lvlf2("tls_private: %v", tls_private)
 		newstruct := common_structs.My_Scalar{Private: tls_private}
-		tls_private_buf, _ := network.MarshalRegisteredType(&newstruct)
+		tls_private_buf, _ := network.Marshal(&newstruct)
 
 		tls_private_buf1 := tls_private_buf[0:25]
 		tls_private_buf2 := tls_private_buf[25:len(tls_private_buf)]

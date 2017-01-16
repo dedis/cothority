@@ -30,10 +30,10 @@ import (
 	"github.com/dedis/cothority/dns_id/swupdate"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -53,12 +53,12 @@ var dummyVerfier = func(rootAndTimestamp []byte) bool {
 func init() {
 	onet.RegisterNewService(ServiceName, newIdentityService)
 	IdentityService = onet.ServiceFactory.ServiceID(ServiceName)
-	network.RegisterPacketType(&StorageMap{})
-	network.RegisterPacketType(&Storage{})
-	network.RegisterPacketType(&SyncStart{})
-	network.RegisterPacketType(&common_structs.SiteInfo{})
-	network.RegisterPacketType(&common_structs.PushedPublic{})
-	network.RegisterPacketType(common_structs.MinusOne{})
+	network.RegisterMessage(&StorageMap{})
+	network.RegisterMessage(&Storage{})
+	network.RegisterMessage(&SyncStart{})
+	network.RegisterMessage(&common_structs.SiteInfo{})
+	network.RegisterMessage(&common_structs.PushedPublic{})
+	network.RegisterMessage(common_structs.MinusOne{})
 }
 
 // Service handles identities
@@ -83,7 +83,7 @@ type Service struct {
 	siteInfoList  []*common_structs.SiteInfo
 	publicDone    chan bool
 	ok            bool
-	attachedDone chan bool
+	attachedDone  chan bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -113,7 +113,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	if tn.ProtocolName() == "SIdentityPropagate" {
 		return s.ServiceProcessor.NewProtocol(tn, conf)
 	} else if tn.ProtocolName() == "Sync" {
-		return nil,nil
+		return nil, nil
 	}
 	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
@@ -129,7 +129,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // messagingd identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientError) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
 	log.Lvlf2("Request for a new site identity received at server: %v", s.ServerIdentity())
 	ids := &Storage{
 		Latest: ai.Config,
@@ -200,7 +200,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientE
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Body, onet.ClientError) {
+func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
@@ -230,7 +230,7 @@ func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipB
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
+func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError) {
 	log.Lvlf2("Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
@@ -250,7 +250,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, onet.ClientError) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.ClientError) {
 	log.Lvl2(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
@@ -266,7 +266,7 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, onet.ClientEr
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
+func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
@@ -345,7 +345,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 
 	skipblock_previous := reply.Previous
 	skipblock_latest := reply.Latest
-	_, msgLatest, err := network.UnmarshalRegistered(skipblock_latest.Data)
+	_, msgLatest, err := network.Unmarshal(skipblock_latest.Data)
 	if err != nil {
 		log.Error(err)
 		return nil, onet.NewClientError(err)
@@ -394,7 +394,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
  */
 
 // Propagate handles propagation of all data in the identity-service
-func (s *Service) Propagate(msg network.Body) {
+func (s *Service) Propagate(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := skipchain.SkipBlockID(nil)
 	var sid *Storage
@@ -500,7 +500,7 @@ func (s *Service) Propagate(msg network.Body) {
 // finding the newest block as it is specified by its hash in the request's 'Hash2' field
 // (if Hash2==[]byte{0}, then fetch all skipblocks until the current skipchain head one).
 // Skipblocks will be returned from the oldest to the newest
-func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Body, onet.ClientError) {
+func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.ClientError) {
 	id := req.ID
 	h1 := req.Hash1
 	h2 := req.Hash2
@@ -586,7 +586,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Body, onet.Client
 	}, nil
 }
 
-func (s *Service) GetCert(req *GetCert) (network.Body, onet.ClientError) {
+func (s *Service) GetCert(req *GetCert) (network.Message, onet.ClientError) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find identity")
@@ -605,7 +605,7 @@ func (s *Service) GetCert(req *GetCert) (network.Body, onet.ClientError) {
 	return &GetCertReply{Cert: cert, SbHash: hash}, nil
 }
 
-func (s *Service) GetPoF(req *GetPoF) (network.Body, onet.ClientError) {
+func (s *Service) GetPoF(req *GetPoF) (network.Message, onet.ClientError) {
 	sid := s.getIdentityStorage(req.ID)
 	if sid == nil {
 		log.Lvlf2("Didn't find identity")
@@ -631,7 +631,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 
 	cert_sb_ID := sid.CertInfo.SbHash // hash of the skipblock whose config is the latest certified one
 	cert_sb, _ := sid.getSkipBlockByID(cert_sb_ID)
-	_, data, _ := network.UnmarshalRegistered(cert_sb.Data)
+	_, data, _ := network.Unmarshal(cert_sb.Data)
 	cert_conf, _ := data.(*common_structs.Config)
 	diff := time.Since(time.Unix(0, cert_conf.Timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
@@ -642,7 +642,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	}
 
 	// Get a fresh cert for the 'latestconf' which is included into the site skipchain's current head block
-	_, data, _ = network.UnmarshalRegistered(sid.Data.Data)
+	_, data, _ = network.Unmarshal(sid.Data.Data)
 	latestconf, _ := data.(*common_structs.Config)
 
 	var prevconf *common_structs.Config
@@ -654,7 +654,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 			log.Lvlf2("Skipblock with hash: %v not found", prevhash)
 			return false, fmt.Errorf("Skipblock with hash: %v not found", prevhash)
 		}
-		_, data, _ = network.UnmarshalRegistered(prevblock.Data)
+		_, data, _ = network.Unmarshal(prevblock.Data)
 		prevconf, _ = data.(*common_structs.Config)
 	} else {
 		prevconf = nil
@@ -685,7 +685,7 @@ func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) PushPublicKey(req *PushPublicKey) (network.Body, onet.ClientError) {
+func (s *Service) PushPublicKey(req *PushPublicKey) (network.Message, onet.ClientError) {
 	log.LLvlf2("Public key of a ws received at server: %v", s.ServerIdentity())
 	roster := req.Roster
 	//public := req.Public
@@ -705,7 +705,7 @@ func (s *Service) PushPublicKey(req *PushPublicKey) (network.Body, onet.ClientEr
 	return &PushPublicKeyReply{}, nil
 }
 
-func (s *Service) PullPublicKey(req *PullPublicKey) (network.Body, onet.ClientError) {
+func (s *Service) PullPublicKey(req *PullPublicKey) (network.Message, onet.ClientError) {
 	log.Lvlf3("PullPublicKey(): Start")
 
 	serverID := req.ServerID
@@ -741,7 +741,8 @@ func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.StorageMap)
+	return
+	b, err := network.Marshal(s.StorageMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -767,7 +768,7 @@ func (s *Service) tryLoad() error {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
 	}
 	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		if err != nil {
 			return fmt.Errorf("!!! Couldn't unmarshal: %s", err)
 		}
@@ -819,7 +820,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 				log.Lvlf3("%v", server)
 			}
 
-			signature := s.cosiSign(roster,msg)
+			signature := s.cosiSign(roster, msg)
 
 			log.Lvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
@@ -887,7 +888,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 }
 
 //func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
-func (s *Service) cosiSign(roster *onet.Roster,msg []byte) []byte {
+func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
 	log.Lvlf2("server: %s", s.String())
 	sdaTree := roster.GenerateBinaryTree()
 	tni := s.NewTreeNodeInstance(sdaTree, sdaTree.Root, swupdate.ProtocolName)
@@ -926,11 +927,10 @@ func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
 	return m
 }
 
-func newIdentityService(c *onet.Context, path string) onet.Service {
+func newIdentityService(c *onet.Context) onet.Service {
 	log.Print(c)
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 		skipchain:        skipchain.NewClient(),
 		ca:               ca.NewCSRDispatcher(),
 		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
@@ -940,12 +940,11 @@ func newIdentityService(c *onet.Context, path string) onet.Service {
 		setupDone:     make(chan bool),
 		publicDone:    make(chan bool),
 		attachedDone:  make(chan bool),
-
 	}
 	s.ClearIdentities()
-	if err := s.tryLoad(); err != nil {
-		log.Error(err)
-	}
+	//if err := s.tryLoad(); err != nil {
+	//	log.Error(err)
+	//}
 	var err error
 	s.PropagateFunc, err = messaging.NewPropagationFunc(c, "SIdentityPropagate", s.Propagate)
 	log.ErrFatal(err)
@@ -973,8 +972,8 @@ type SyncStart struct {
 	Evol2      int
 }
 
-func (s *Service) StartSimul(msg network.Body) {
-	log.Print("StartSimul",s.Context.String())
+func (s *Service) StartSimul(msg network.Message) {
+	log.Print("StartSimul", s.Context.String())
 	m := msg.(*SyncStart)
 
 	// [ clients, webservers, cold key holders, cothority]
@@ -983,11 +982,10 @@ func (s *Service) StartSimul(msg network.Body) {
 	index_CK := index_ws + m.Webservers
 	index_WK := index_CK + m.Webservers
 
-
 	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
 
 	roster_WK := onet.NewRoster(m.Roster.List[index_WK:])
-	log.Print(s.Context," INDEX ",index, " VS",index_ws, " ", index_CK," ", index_WK )
+	log.Print(s.Context, " INDEX ", index, " VS", index_ws, " ", index_CK, " ", index_WK)
 
 	switch {
 	case index < index_ws:
@@ -999,15 +997,15 @@ func (s *Service) StartSimul(msg network.Body) {
 		return
 	case index < index_WK:
 		// cold key case
-		go func () {
+		go func() {
 			<-s.publicDone
 			/*for ;; {
 				if s.ok==true {
 					break
 				}
 			}*/
-			log.Print(s.Context,"ColdKeyHolder is now ready to pursue")
-			randWkh := index_WK + rand.Int() % (len(m.Roster.List) - index_WK)
+			log.Print(s.Context, "ColdKeyHolder is now ready to pursue")
+			randWkh := index_WK + rand.Int()%(len(m.Roster.List)-index_WK)
 			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol1, m.Evol2)
 		}()
 	default:
@@ -1028,7 +1026,7 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 		ServerID: wsIdentity,
 	}
 	log.Print("roster is: %s", roster_WK)
-	fqdn := fmt.Sprintf("site%d",index_ws)
+	fqdn := fmt.Sprintf("site%d", index_ws)
 	id := NewIdentity(roster_WK, fqdn, 1, "CKH_one", "device", nil, data, int64(0))
 	err := id.CreateIdentity()
 	log.ErrFatal(err)
@@ -1087,22 +1085,22 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 	s.expected = webservers
 	s.cntMut.Unlock()
 	msg := &SyncStart{
-		Roster:roster,
-		Clients: clients,
+		Roster:     roster,
+		Clients:    clients,
 		Webservers: webservers,
-		Cothority: cothority,
-		Evol1: evol1,
-		Evol2: evol2,
+		Cothority:  cothority,
+		Evol1:      evol1,
+		Evol2:      evol2,
 	}
 	s.SimulFunc(roster, msg, 25000)
 	<-s.setupDone
-	log.Print(s.Context,"Setup DONE")
+	log.Print(s.Context, "Setup DONE")
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
 	return s.siteInfoList
 }
 
-func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Body, onet.ClientError) {
+func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Message, onet.ClientError) {
 	log.Print("FirstIdentity received a MinusOne message")
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
@@ -1114,7 +1112,7 @@ func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Body, onet.Cl
 	return nil, nil
 }
 
-func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, onet.ClientError) {
+func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Message, onet.ClientError) {
 	log.Print("PushedPublic by the webserver, received by server: ", s.ServerIdentity())
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
@@ -1125,7 +1123,7 @@ func (s *Service) PushedPublic(req *common_structs.PushedPublic) (network.Body, 
 	return nil, nil
 }
 
-func (s *Service) LetsEvolve(req *common_structs.SiteInfo) (network.Body, onet.ClientError) {
+func (s *Service) LetsEvolve(req *common_structs.SiteInfo) (network.Message, onet.ClientError) {
 	log.Print("Received a Webserver attached message")
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()

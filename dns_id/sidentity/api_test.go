@@ -2,13 +2,14 @@ package sidentity
 
 import (
 	//"fmt"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/crypto/abstract"
 	"time"
-	//"github.com/dedis/onet/network"
-	"github.com/dedis/onet"
+
+	"github.com/dedis/crypto/abstract"
+	"gopkg.in/dedis/onet.v1/log"
+	//"gopkg.in/dedis/onet.v1/network"
 	"github.com/dedis/cothority/dns_id/ca"
 	"github.com/dedis/cothority/dns_id/common_structs"
+	"gopkg.in/dedis/onet.v1"
 	//"github.com/dedis/crypto/config"
 	//"github.com/stretchr/testify/assert"
 	//"io/ioutil"

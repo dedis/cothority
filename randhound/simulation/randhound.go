@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/randhound"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul"
-	"github.com/dedis/onet/simul/monitor"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/simul"
+	"gopkg.in/dedis/onet.v1/simul/monitor"
 )
 
 func init() {
@@ -43,7 +43,7 @@ func (rhs *RHSimulation) Setup(dir string, hosts []string) (*onet.SimulationConf
 // Run initiates a RandHound simulation
 func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 	randM := monitor.NewTimeMeasure("tgen-randhound")
-	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Conode)
+	bandW := monitor.NewCounterIOMeasure("bw-randhound", config.Server)
 	client, err := config.Overlay.CreateProtocol("RandHound", config.Tree, onet.NilServiceID)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (rhs *RHSimulation) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	if err := rh.StartProtocol(); err != nil {
+	if err := rh.Start(); err != nil {
 		log.Error("Error while starting protcol:", err)
 	}
 

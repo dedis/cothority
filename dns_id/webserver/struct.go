@@ -3,7 +3,7 @@ package webserver
 import (
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
-	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/onet.v1/crypto"
 )
 
 const MaxUint = ^uint(0)

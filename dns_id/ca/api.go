@@ -5,10 +5,10 @@ import (
 
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 /*
@@ -28,7 +28,7 @@ func init() {
 		&GetPublicKey{},
 		&GetPublicKeyReply{},
 	} {
-		network.RegisterPacketType(s)
+		network.RegisterMessage(s)
 	}
 }
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // ProtocolName defines the name of this protocol.

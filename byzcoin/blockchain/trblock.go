@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 type Block struct {

@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/dedis/crypto/poly"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -16,7 +16,7 @@ func init() {
 		SigReqMsg{},
 		SigRespMsg{},
 	} {
-		network.RegisterPacketType(i)
+		network.RegisterMessage(i)
 	}
 }
 

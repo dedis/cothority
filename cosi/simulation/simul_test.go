@@ -3,7 +3,7 @@ package main_test
 import (
 	"testing"
 
-	"github.com/dedis/onet/simul"
+	"gopkg.in/dedis/onet.v1/simul"
 )
 
 func TestSimulation(t *testing.T) {

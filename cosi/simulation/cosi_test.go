@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestMain(m *testing.M) {
@@ -49,7 +49,7 @@ func TestCoSimul(t *testing.T) {
 			root.Message = msg
 			root.VerifyResponse = VRType(v)
 			root.RegisterSignatureHook(doneFunc)
-			go root.StartProtocol()
+			go root.Start()
 			select {
 			case <-done:
 			case <-time.After(time.Second * 2):

@@ -12,18 +12,17 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"sync"
 
+	"errors"
+
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -33,8 +32,8 @@ var identityService onet.ServiceID
 
 func init() {
 	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
-	network.RegisterPacketType(&StorageMap{})
-	network.RegisterPacketType(&Storage{})
+	network.RegisterMessage(&StorageMap{})
+	network.RegisterMessage(&Storage{})
 }
 
 // Service handles identities
@@ -46,7 +45,6 @@ type Service struct {
 	propagateConfig    messaging.PropagationFunc
 	identitiesMutex    sync.Mutex
 	skipchain          *skipchain.Client
-	path               string
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -70,7 +68,7 @@ type Storage struct {
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientError) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
 	log.Lvlf3("%s Creating new identity with config %+v", s, ai.Config)
 	ids := &Storage{
 		Latest: ai.Config,
@@ -107,7 +105,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Body, onet.ClientE
 }
 
 // ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Body, onet.ClientError) {
+func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
@@ -122,7 +120,7 @@ func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Body, onet.ClientError
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
+func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError) {
 	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
@@ -140,7 +138,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Body, onet.ClientError) {
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, onet.ClientError) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.ClientError) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
@@ -156,7 +154,7 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Body, onet.ClientEr
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
+func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
@@ -214,7 +212,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
 		if cerr != nil {
 			return nil, cerr
 		}
-		_, msg, _ := network.UnmarshalRegistered(reply.Latest.Data)
+		_, msg, _ := network.Unmarshal(reply.Latest.Data)
 		log.Lvl3("SB signed is", msg.(*Config).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
@@ -235,7 +233,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Body, onet.ClientError) {
  */
 
 // propagateConfig handles propagation of all configuration-proposals in the identity-service.
-func (s *Service) propagateConfigHandler(msg network.Body) {
+func (s *Service) propagateConfigHandler(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := ID(nil)
 	switch msg.(type) {
@@ -269,7 +267,7 @@ func (s *Service) propagateConfigHandler(msg network.Body) {
 }
 
 // propagateSkipBlock saves a new skipblock to the identity
-func (s *Service) propagateSkipBlockHandler(msg network.Body) {
+func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	usb, ok := msg.(*UpdateSkipBlock)
 	if !ok {
@@ -284,7 +282,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Body) {
 	sid.Lock()
 	defer sid.Unlock()
 	skipblock := msg.(*UpdateSkipBlock).Latest
-	_, msgLatest, err := network.UnmarshalRegistered(skipblock.Data)
+	_, msgLatest, err := network.Unmarshal(skipblock.Data)
 	if err != nil {
 		log.Error(err)
 		return
@@ -300,7 +298,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Body) {
 }
 
 // propagateIdentity stores a new identity in all nodes.
-func (s *Service) propagateIdentityHandler(msg network.Body) {
+func (s *Service) propagateIdentityHandler(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	pi, ok := msg.(*PropagateIdentity)
 	if !ok {
@@ -340,14 +338,9 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.StorageMap)
+	err := s.Save("storage", s.StorageMap)
 	if err != nil {
-		log.Error("Couldn't marshal service:", err)
-	} else {
-		err = ioutil.WriteFile(s.path+"/identity.bin", b, 0660)
-		if err != nil {
-			log.Error("Couldn't save file:", err)
-		}
+		log.Error("Couldn't save file:", err)
 	}
 }
 
@@ -358,28 +351,27 @@ func (s *Service) clearIdentities() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	configFile := s.path + "/identity.bin"
-	b, err := ioutil.ReadFile(configFile)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	if !s.DataAvailable("storage") {
+		return nil
 	}
-	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
-		if err != nil {
-			return fmt.Errorf("Couldn't unmarshal: %s", err)
-		}
-		log.Lvl3("Successfully loaded")
-		s.StorageMap = msg.(*StorageMap)
+	msg, err := s.Load("storage")
+	if err != nil {
+		return err
 	}
+	var ok bool
+	s.StorageMap, ok = msg.(*StorageMap)
+	if !ok {
+		return errors.New("Data of wrong type")
+	}
+	log.Lvl3("Successfully loaded")
 	return nil
 }
 
-func newIdentityService(c *onet.Context, path string) onet.Service {
+func newIdentityService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
-		path:             path,
 	}
 	var err error
 	s.propagateIdentity, err =

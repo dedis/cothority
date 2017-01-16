@@ -12,10 +12,10 @@ import (
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -45,7 +45,7 @@ func init() {
 		&common_structs.PushedPublic{},
 		&common_structs.StartWebserver{},
 	} {
-		network.RegisterPacketType(s)
+		network.RegisterMessage(s)
 	}
 }
 
@@ -148,7 +148,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
 	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-	_, data, _ := network.UnmarshalRegistered(latest.Data)
+	_, data, _ := network.Unmarshal(latest.Data)
 	latestconf, _ := data.(*common_structs.Config)
 	err := latestconf.CheckTimeDiff(maxdiff * 2)
 	if err != nil {
@@ -172,7 +172,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 		}
 
 		// Verify that the config of the first returned skipblock has been certified
-		_, data, _ = network.UnmarshalRegistered(sbs[0].Data)
+		_, data, _ = network.Unmarshal(sbs[0].Data)
 		firstconf, _ := data.(*common_structs.Config)
 		conf_hash, _ := firstconf.Hash()
 
@@ -243,7 +243,7 @@ func (u *User) ReConnect(name string) error {
 
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		_, data, _ := network.UnmarshalRegistered(latest.Data)
+		_, data, _ := network.Unmarshal(latest.Data)
 		latestconf, _ := data.(*common_structs.Config)
 		err := latestconf.CheckTimeDiff(maxdiff * 2)
 		if err != nil {
@@ -305,7 +305,7 @@ func (u *User) ReConnect(name string) error {
 
 			// Check whether the latest config was recently signed by the Cold Key Holders
 			// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-			_, data, _ := network.UnmarshalRegistered(latest.Data)
+			_, data, _ := network.Unmarshal(latest.Data)
 			latestconf, _ := data.(*common_structs.Config)
 			err := latestconf.CheckTimeDiff(maxdiff * 2)
 			if err != nil {
@@ -321,7 +321,7 @@ func (u *User) ReConnect(name string) error {
 			/*
 				// UNCOMMENT IF CAs ARE TO BE USED
 				// Verify that the cert is certifying the config of the 'first' skipblock
-				_, data, _ = network.UnmarshalRegistered(first.Data)
+				_, data, _ = network.Unmarshal(first.Data)
 				firstconf, _ := data.(*common_structs.Config)
 				firstconf_hash, _ := firstconf.Hash()
 				cert_hash := cert.Hash // should contain the certified config's hash
@@ -404,7 +404,7 @@ func (u *User) ReConnect(name string) error {
 		log.LLvlf2("user %v, Latest returned block has hash: %v", u.UserName, latest.Hash)
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		_, data, _ := network.UnmarshalRegistered(latest.Data)
+		_, data, _ := network.Unmarshal(latest.Data)
 		latestconf, _ := data.(*common_structs.Config)
 		err = latestconf.CheckTimeDiff(maxdiff * 2)
 		if err != nil {
@@ -415,7 +415,7 @@ func (u *User) ReConnect(name string) error {
 			}
 		}
 
-		_, tempdata, _ := network.UnmarshalRegistered(latest.Data)
+		_, tempdata, _ := network.Unmarshal(latest.Data)
 		tempconf, _ := tempdata.(*common_structs.Config)
 
 		key := fmt.Sprintf("tls:%v", serverID)
@@ -437,14 +437,14 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 	// Check the validity of each skipblock hop
 	log.Print("Fetched blocks", len(blocks))
 	prev := blocks[0]
-	_, data, _ := network.UnmarshalRegistered(prev.Data)
+	_, data, _ := network.Unmarshal(prev.Data)
 	trustedconfig := data.(*common_structs.Config)
 	for index, block := range blocks {
 		next := block
 		if index > 0 {
 			log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prev.Hash, next.Hash)
 			cnt := 0
-			_, data, err2 := network.UnmarshalRegistered(next.Data)
+			_, data, err2 := network.Unmarshal(next.Data)
 			if err2 != nil {
 				return false, errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
 			}
@@ -455,8 +455,8 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 
 			for key, newdevice := range newconfig.Device {
 				if _, exists := trustedconfig.Device[key]; exists {
-					b1, _ := network.MarshalRegisteredType(newdevice.Point)
-					b2, _ := network.MarshalRegisteredType(trustedconfig.Device[key].Point)
+					b1, _ := network.Marshal(newdevice.Point)
+					b2, _ := network.Marshal(trustedconfig.Device[key].Point)
 					if bytes.Equal(b1, b2) {
 						if newdevice.Vote != nil {
 							var hash []byte
@@ -481,7 +481,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 			}
 		}
 		prev = next
-		_, data, _ := network.UnmarshalRegistered(prev.Data)
+		_, data, _ := network.Unmarshal(prev.Data)
 		trustedconfig = data.(*common_structs.Config)
 	}
 	return true, nil
@@ -498,7 +498,7 @@ func (website *WebSite) ExpiredPins() bool {
 }
 
 func (u *User) Follow(name string, block *skipchain.SkipBlock, cert *common_structs.Cert) {
-	_, data, _ := network.UnmarshalRegistered(block.Data)
+	_, data, _ := network.Unmarshal(block.Data)
 	conf, _ := data.(*common_structs.Config)
 
 	website := u.WebSites[name]

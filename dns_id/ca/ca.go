@@ -3,18 +3,19 @@ package ca
 import (
 	"bytes"
 	"fmt"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"io/ioutil"
 	"os"
 	"sync"
 
+	"github.com/dedis/crypto/abstract"
+	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
+
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
-	"github.com/dedis/onet"
+	"gopkg.in/dedis/onet.v1"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -25,8 +26,8 @@ var CAService onet.ServiceID
 func init() {
 	onet.RegisterNewService(ServiceCAName, newCAService)
 	CAService = onet.ServiceFactory.ServiceID(ServiceCAName)
-	network.RegisterPacketType(&SiteMap{})
-	network.RegisterPacketType(&Site{})
+	network.RegisterMessage(&SiteMap{})
+	network.RegisterMessage(&Site{})
 }
 
 // CA handles per site certificates
@@ -69,7 +70,7 @@ func (ca *CA) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (
  */
 
 // SignCert will use the CA's public key to sign a new cert
-func (ca *CA) SignCert(csr *CSR) (network.Body, onet.ClientError) {
+func (ca *CA) SignCert(csr *CSR) (network.Message, onet.ClientError) {
 	log.Lvlf2("SignCert(): Start (CA's public key: %v)", ca.Public)
 	id := csr.ID
 	config := csr.Config
@@ -95,8 +96,8 @@ func (ca *CA) SignCert(csr *CSR) (network.Body, onet.ClientError) {
 	cnt := 0
 	for key, device := range config.Device {
 		if _, exists := trustedconf.Device[key]; exists {
-			b1, _ := network.MarshalRegisteredType(device.Point)
-			b2, _ := network.MarshalRegisteredType(trustedconf.Device[key].Point)
+			b1, _ := network.Marshal(device.Point)
+			b2, _ := network.Marshal(trustedconf.Device[key].Point)
 			if bytes.Equal(b1, b2) {
 
 				// Check whether there is a non-nil signature
@@ -167,7 +168,7 @@ func (ca *CA) SignCert(csr *CSR) (network.Body, onet.ClientError) {
 	}, nil
 }
 
-func (ca *CA) GetPublicKey(req *GetPublicKey) (network.Body, onet.ClientError) {
+func (ca *CA) GetPublicKey(req *GetPublicKey) (network.Message, onet.ClientError) {
 	return &GetPublicKeyReply{Public: ca.Public}, nil
 }
 
@@ -195,7 +196,7 @@ func (ca *CA) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
 // saves the actual identity
 func (ca *CA) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(ca.SiteMap)
+	b, err := network.Marshal(ca.SiteMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -215,7 +216,7 @@ func (ca *CA) tryLoad() error {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
 	}
 	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		if err != nil {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
@@ -225,18 +226,17 @@ func (ca *CA) tryLoad() error {
 	return nil
 }
 
-func newCAService(c *onet.Context, path string) onet.Service {
+func newCAService(c *onet.Context) onet.Service {
 	keypair := config.NewKeyPair(network.Suite)
 	ca := &CA{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
-		path:             path,
 		Public:           keypair.Public,
 		Private:          keypair.Secret,
 	}
-	if err := ca.tryLoad(); err != nil {
-		log.Error(err)
-	}
+	//if err := ca.tryLoad(); err != nil {
+	//	log.Error(err)
+	//}
 
 	for _, f := range []interface{}{ca.SignCert, ca.GetPublicKey} {
 		if err := ca.RegisterHandler(f); err != nil {

@@ -5,15 +5,15 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
 	for _, p := range []interface{}{I1{}, R1{}, I2{}, R2{},
 		WI1{}, WR1{}, WI2{}, WR2{}} {
-		network.RegisterPacketType(p)
+		network.RegisterMessage(p)
 	}
 }
 

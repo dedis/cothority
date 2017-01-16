@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 var magicNum = [4]byte{0xF9, 0xBE, 0xB4, 0xD9}

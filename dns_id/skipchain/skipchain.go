@@ -19,9 +19,9 @@ import (
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -37,7 +37,7 @@ func init() {
 			return bftcosi.NewBFTCoSiProtocol(n, nil)
 		})
 	*/
-	network.RegisterPacketType(&SkipBlockMap{})
+	network.RegisterMessage(&SkipBlockMap{})
 }
 
 // XXX Why skipchainSID is private ? Should we not be able to access it from
@@ -71,7 +71,7 @@ type SkipBlockMap struct {
 // If the the latest block given is nil it verify if we are actually creating
 // the first (genesis) block and creates it. If it is called with nil although
 // there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.ClientError) {
+func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Message, onet.ClientError) {
 	prop := psbd.Proposed
 	var prev *SkipBlock
 
@@ -139,7 +139,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.C
 
 	prev, prop, err = s.signNewSkipBlock(prev, prop)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(4100, "Verification error: "+ err.Error())
+		return nil, onet.NewClientErrorCode(4100, "Verification error: "+err.Error())
 	}
 	s.save()
 
@@ -154,7 +154,7 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Body, onet.C
 // skipchain from the latest block the caller knows of to the actual latest
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, error) {
+func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, error) {
 	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
 	if !ok {
 		return nil, errors.New("Couldn't find latest skipblock")
@@ -178,7 +178,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Body, err
 
 // SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
 // yet.
-func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body, onet.ClientError) {
+func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Message, onet.ClientError) {
 	parentID := scsb.ParentID
 	childID := scsb.ChildID
 	parent, ok := s.getSkipBlockByID(parentID)
@@ -206,7 +206,7 @@ func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Body
 }
 
 // PropagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(msg network.Body) {
+func (s *Service) PropagateSkipBlock(msg network.Message) {
 	sb, ok := msg.(*SkipBlock)
 	if !ok {
 		log.Error("Couldn't convert to SkipBlock")
@@ -334,7 +334,7 @@ func (s *Service) startBFTSignature(block *SkipBlock) error {
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
-	data, err := network.MarshalRegisteredType(block)
+	data, err := network.Marshal(block)
 	if err != nil {
 		return errors.New("Couldn't marshal block: " + err.Error())
 	}
@@ -442,7 +442,7 @@ func (s *Service) BFTSignHash(hash SkipBlockID, sb *SkipBlock, newest *SkipBlock
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
-	data, err := network.MarshalRegisteredType(newest)
+	data, err := network.Marshal(newest)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal block: " + err.Error())
 	}
@@ -503,7 +503,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 func (s *Service) bftVerify(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	s.testVerify = true
-	_, sbN, err := network.UnmarshalRegistered(data)
+	_, sbN, err := network.Unmarshal(data)
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
@@ -548,7 +548,8 @@ func (s *Service) lenSkipBlocks() int {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.SkipBlockMap)
+	return
+	b, err := network.Marshal(s.SkipBlockMap)
 	if err != nil {
 		log.Error("Couldn't marshal service:", err)
 	} else {
@@ -568,7 +569,7 @@ func (s *Service) tryLoad() error {
 		return fmt.Errorf("Error while reading %s: %s", configFile, err)
 	}
 	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
+		_, msg, err := network.Unmarshal(b)
 		if err != nil {
 			return fmt.Errorf("Couldn't unmarshal: %s", err)
 		}
@@ -578,10 +579,9 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
-func newSkipchainService(c *onet.Context, path string) onet.Service {
+func newSkipchainService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 	}
@@ -591,9 +591,9 @@ func newSkipchainService(c *onet.Context, path string) onet.Service {
 	c.ProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
 	})
-	if err := s.tryLoad(); err != nil {
-		log.Error(err)
-	}
+	//if err := s.tryLoad(); err != nil {
+	//	log.Error(err)
+	//}
 	log.ErrFatal(s.RegisterHandlers(s.ProposeSkipBlock, s.SetChildrenSkipBlock))
 	if err := s.RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
 		log.Panic(err)

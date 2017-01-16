@@ -20,14 +20,15 @@ In the Node-method you can read the files that have been created by the
 */
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/dns_id/sidentity"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
 	"github.com/dedis/cothority/dns_id/webserver"
-	"time"
-	"math/rand"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/simul/monitor"
 )
 
 func init() {
@@ -37,11 +38,11 @@ func init() {
 // Simulation implements onet.Simulation.
 type Simulation struct {
 	onet.SimulationBFTree
-	CK      int
-	WK      int
-	Clients int
-	Evol1   int
-	Evol2   int
+	CK           int
+	WK           int
+	Clients      int
+	Evol1        int
+	Evol2        int
 	MaxWaitInSec int
 }
 
@@ -79,26 +80,25 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
 	log.LLvlf1("Roster is: %s", config.Roster)
 
-
 	s := config.GetService(sidentity.ServiceName).(*sidentity.Service)
-	var roster= config.Roster
+	var roster = config.Roster
 	siteInfoList := s.WaitSetup(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2)
 	log.Print("after waitSetup")
 
 	var ctr int
 	users := make([]*UserInfo, e.Clients)
 	/*
-	for i := range users {
-		var idx int
-		if len(siteInfoList) == 1 {
-			idx = 0
-		} else {
-			idx = ctr
-			ctr++
+		for i := range users {
+			var idx int
+			if len(siteInfoList) == 1 {
+				idx = 0
+			} else {
+				idx = ctr
+				ctr++
+			}
+			s := siteInfoList[idx : idx+1]
+			users[i] = &UserInfo{webserver.NewUser("", s), s[0].FQDN}
 		}
-		s := siteInfoList[idx : idx+1]
-		users[i] = &UserInfo{webserver.NewUser("", s), s[0].FQDN}
-	}
 	*/
 	doneCh := make(chan bool)
 	for round := 0; round < e.Rounds; round++ {
@@ -113,9 +113,9 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 					idx = ctr
 					ctr++
 				}
-				s := siteInfoList[idx: idx + 1]
-				if e.MaxWaitInSec>0 {
-					time.Sleep(time.Duration(rand.Intn(e.MaxWaitInSec * 1000)) * time.Millisecond)
+				s := siteInfoList[idx : idx+1]
+				if e.MaxWaitInSec > 0 {
+					time.Sleep(time.Duration(rand.Intn(e.MaxWaitInSec*1000)) * time.Millisecond)
 				}
 				round := monitor.NewTimeMeasure("client_time")
 				//bw := monitor.NewCounterIOMeasure("client_bw",users[i].User.WSClient)
@@ -137,7 +137,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 					doneCh <- true
 				}(i)
 			}
-			*/
+		*/
 	}
 	cnt := 0
 	for _ = range doneCh {

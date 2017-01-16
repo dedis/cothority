@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/edwards"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestProof(t *testing.T) {
