@@ -10,7 +10,7 @@ MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
 DEDIS_PATH=$GOPATH/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/cothority
-ONET_PATH=$DEDIS_PATH/onet
+ONET_PATH=$GOPATH/src/gopkg.in/dedis/onet.v1
 CONODE_PATH=$COTHORITY_PATH/conode
 CONODE_GO=github.com/dedis/cothority/conode
 VERSION_SUB="1"
@@ -203,8 +203,11 @@ migrate(){
 			echo No migration necessary
 			;;
         *)
-            echo Found wrong version $PATH_VERSION - please fix
-            echo rm $PATH_VERSION
+            echo Found wrong version $PATH_VERSION - trying to fix
+            if [ -d $PATH_CO/conode ]; then
+            	echo 1.0 > $PATH_CO/conode/version
+            fi
+            echo "Check $PATH_CO to verify configuration is OK and re-run $0"
             exit 1
             ;;
         esac
