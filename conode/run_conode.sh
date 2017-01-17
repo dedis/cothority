@@ -6,7 +6,7 @@ set -e
 # run_conode.sh local 3 # Launches 3 conodes locally.
 
 MAILADDR=linus.gasser@epfl.ch
-MAILCMD=mail
+MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
 DEDIS_PATH=$GOPATH/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/cothority
