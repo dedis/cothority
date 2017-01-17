@@ -591,3 +591,10 @@ type StartWebserver struct {
 type MinusOne struct {
 	Sites *SiteInfo
 }
+
+type ConnectClient struct {
+	Info []*SiteInfo
+}
+
+type MinusOneClient struct {
+}

@@ -56,9 +56,11 @@ func init() {
 	network.RegisterMessage(&StorageMap{})
 	network.RegisterMessage(&Storage{})
 	network.RegisterMessage(&SyncStart{})
+	network.RegisterMessage(&ClientStart{})
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&common_structs.PushedPublic{})
 	network.RegisterMessage(common_structs.MinusOne{})
+	network.RegisterMessage(common_structs.MinusOneClient{})
 }
 
 // Service handles identities
@@ -76,14 +78,18 @@ type Service struct {
 	TheRoster     *onet.Roster
 	PropagateFunc messaging.PropagationFunc
 	SimulFunc     messaging.PropagationFunc
+	ClientFunc     messaging.PropagationFunc
 	expected      int
+	expected2      int
 	cnt           int
+	cnt2          int
 	cntMut        sync.Mutex
 	setupDone     chan bool
 	siteInfoList  []*common_structs.SiteInfo
 	publicDone    chan bool
 	ok            bool
 	attachedDone  chan bool
+	clientsDone   chan bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -113,6 +119,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	if tn.ProtocolName() == "SIdentityPropagate" {
 		return s.ServiceProcessor.NewProtocol(tn, conf)
 	} else if tn.ProtocolName() == "Sync" {
+		return nil, nil
+	} else if tn.ProtocolName() == "StartClients" {
 		return nil, nil
 	}
 	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
@@ -506,7 +514,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	h2 := req.Hash2
 	sid := s.getIdentityStorage(id)
 	if sid == nil {
-		log.Lvlf2("Didn't find identity: %v", id)
+		log.LLvlf2("Didn't find identity: %v", id)
 		return nil, onet.NewClientErrorCode(4100, "Didn't find identity")
 	}
 	log.Lvlf2("server: %v, site: %v - GetValidSbPath(): Start", s.String(), sid.ID)
@@ -578,7 +586,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		}
 	}
 
-	log.LLvlf3("GetValidSbPath(): End with num of returned blocks: %v, POF: %s", len(sbs), sid.PoF)
+	log.Lvlf2("GetValidSbPath(): End with num of returned blocks: %v, POF: %s", len(sbs), sid.PoF)
 	return &GetValidSbPathReply{Skipblocks: sbs,
 		Cert: sid.CertInfo.Cert,
 		Hash: sid.CertInfo.SbHash,
@@ -787,9 +795,9 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 
 	for now := range c {
 		cnt++
-		log.LLvlf3("_______________________________________________________")
-		log.LLvlf3("START OF A TIMESTAMPER ROUND")
-		log.LLvlf3("_______________________________________________________")
+		log.Lvlf2("_______________________________________________________")
+		log.Lvlf2("START OF A TIMESTAMPER ROUND")
+		log.Lvlf2("_______________________________________________________")
 		data := make([][]byte, 0)
 		data2 := make([]common_structs.HashID, 0)
 		ids := make([]skipchain.SkipBlockID, 0)
@@ -876,9 +884,9 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 		} else {
 			log.Lvl3("No follow-sites at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
-		log.Print("_______________________________________________________")
-		log.Print("END OF A TIMESTAMPER ROUND")
-		log.Print("_______________________________________________________")
+		log.Lvlf2("_______________________________________________________")
+		log.Lvlf2("END OF A TIMESTAMPER ROUND")
+		log.Lvlf2("_______________________________________________________")
 		//debug.FreeOSMemory()
 	}
 }
@@ -936,6 +944,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 		setupDone:     make(chan bool),
 		publicDone:    make(chan bool),
 		attachedDone:  make(chan bool),
+		clientsDone:  make(chan bool),
 	}
 	s.ClearIdentities()
 	//if err := s.tryLoad(); err != nil {
@@ -946,10 +955,12 @@ func newIdentityService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	s.SimulFunc, err = messaging.NewPropagationFunc(c, "Sync", s.StartSimul)
 	log.ErrFatal(err)
+	s.ClientFunc, err = messaging.NewPropagationFunc(c, "StartClients", s.GoClients)
+	log.ErrFatal(err)
 	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate,
-		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsEvolve, s.PushedPublic,
+		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsFinish, s.LetsEvolve, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
@@ -966,6 +977,47 @@ type SyncStart struct {
 	Cothority  int
 	Evol1      int
 	Evol2      int
+}
+
+type ClientStart struct {
+	Roster     *onet.Roster
+	Clients    int
+	Webservers int
+	Cothority  int
+	Evol1      int
+	Evol2      int
+	SiteInfoList []*common_structs.SiteInfo
+}
+
+
+func (s *Service) GoClients(msg network.Message) {
+	m := msg.(*ClientStart)
+	// [ clients, webservers, cold key holders, cothority]
+	index_client := 0
+	index_ws := index_client + m.Clients
+
+	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
+	firstIdentity := m.Roster.List[0]
+
+	switch {
+	case index < index_ws:
+		// client case
+		go func() {
+			var idx int
+
+			if len(m.SiteInfoList) == 1 {
+				idx = 0
+			} else {
+				idx = index
+			}
+			s.StartClient(m.Roster, index, m.SiteInfoList[idx : idx+1])
+			client := onet.NewClient(ServiceName)
+			log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneClient{}, nil))
+		}()
+		return
+	default:
+		return
+	}
 }
 
 func (s *Service) StartSimul(msg network.Message) {
@@ -1036,7 +1088,7 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 		log.Print("evol block: ", idx+1)
 		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
 		id.ProposeUpVote()
-		id.ConfigUpdate()
+		//id.ConfigUpdate()
 	}
 
 	client := onet.NewClient("WebServer")
@@ -1076,6 +1128,13 @@ func startWs(roster, roster_WK *onet.Roster, index_CK, index_ws int) {
 	}, nil))
 }
 
+func (s *Service) StartClient(roster *onet.Roster, index_client int, info []*common_structs.SiteInfo) {
+	log.Print("startClient")
+	clientIdentity := roster.List[index_client]
+	client := onet.NewClient("WebServer")
+	log.ErrFatal(client.SendProtobuf(clientIdentity, &common_structs.ConnectClient{info}, nil))
+}
+
 func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority, evol1, evol2 int) []*common_structs.SiteInfo {
 	s.cntMut.Lock()
 	s.expected = webservers
@@ -1096,6 +1155,30 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 	return s.siteInfoList
 }
 
+func (s *Service) WaitClients(roster *onet.Roster, clients, webservers, cothority, evol1, evol2 int, siteinfolist []*common_structs.SiteInfo) {
+	s.cntMut.Lock()
+	s.expected2 = clients
+	s.cntMut.Unlock()
+
+
+	msg := &ClientStart{
+		Roster:     roster,
+		Clients:    clients,
+		Webservers: webservers,
+		Cothority:  cothority,
+		Evol1:      evol1,
+		Evol2:      evol2,
+		SiteInfoList: siteinfolist,
+	}
+
+	s.ClientFunc(roster, msg, 25000)
+	go func() {
+		<-s.clientsDone
+		log.Print(s.Context, "Clients DONE")
+		return
+	}()
+}
+
 func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Message, onet.ClientError) {
 	log.Print("FirstIdentity received a MinusOne message")
 	s.cntMut.Lock()
@@ -1104,6 +1187,18 @@ func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Message, onet
 	s.siteInfoList = append(s.siteInfoList, req.Sites)
 	if s.cnt == s.expected {
 		s.setupDone <- true
+	}
+	return nil, nil
+}
+
+func (s *Service) LetsFinish(req *common_structs.MinusOneClient) (network.Message, onet.ClientError) {
+	log.Print("FirstIdentity received a MinusOneClient message")
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.cnt2++
+	log.Printf("%v",s.cnt2)
+	if s.cnt2 == s.expected2 {
+		s.clientsDone <- true
 	}
 	return nil, nil
 }

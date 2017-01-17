@@ -1,15 +1,8 @@
-Servers = 15
+Servers = 22
 Simulation = "SkipCert"
 BF = 2
 Rounds = 1
-RunWait = 6000
+RunWait = 20000
 
-Hosts,CK,WK,Clients,Evol1,Evol2,MaxWaitInSec
-202,1,100,100,0,0
-202,1,100,100,1,0
-202,1,100,100,3,0
-202,1,100,100,5,0
-202,1,100,100,7,0
-202,1,100,100,9,0
-202,1,100,100,11,0
-202,1,100,100,13,0
+Hosts,CK,WK,Clients,Evol1,Evol2
+50,10,20,10,0,0

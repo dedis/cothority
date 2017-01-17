@@ -19,6 +19,7 @@ import (
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/onet.v1/simul/monitor"
 )
 
 // ServiceWSName can be used to refer to the name of this service
@@ -36,6 +37,7 @@ func init() {
 	network.RegisterMessage(&common_structs.StartWebserver{})
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&GetValidSbPath{})
+	network.RegisterMessage(&common_structs.ConnectClient{})
 }
 
 // WS handles site identities (usually only one)
@@ -53,6 +55,7 @@ type WS struct {
 	// holds the mapping between FDQNs and genesis skipblocks' IDs
 	NameToID map[string]skipchain.SkipBlockID
 	fqdn     string
+	UpdateDuration time.Duration
 }
 
 // SiteMap holds the map to the sites so it can be marshaled.
@@ -156,8 +159,9 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 		log.Lvlf2("WSUpdate failed: web server not yet attached to the requested site")
 		return errors.New("WSUpdate failed: web server not yet attached to the requested site")
 	}
-	//site.Lock()
-	//defer site.Unlock()
+	site.Lock() //have been commented before
+	defer site.Unlock() //have been commented before
+
 	log.Lvlf2("Web server %v has latest block with hash: %v", ws.ServerIdentity(), site.LatestHash)
 	sbs, cert, hash, pof, err := site.si.GetValidSbPath(id, site.LatestHash, []byte{0})
 	times := 0
@@ -307,8 +311,8 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
  */
 
 func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.ClientError) {
-	ws.sitesMutex.Lock()
-	defer ws.sitesMutex.Unlock()
+	//ws.sitesMutex.Lock()
+	//defer ws.sitesMutex.Unlock()
 
 	log.Lvlf1("UserGetValidSbPath(): received connection req for %s", req.FQDN)
 
@@ -319,7 +323,10 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		return nil, onet.NewClientErrorCode(4100, "UserGetValidSbPath() failed: web server not yet attached to the requested site")
 	}
 
-	_ = ws.WSUpdate(id)
+	site.Lock() //have not existed before
+	defer site.Unlock()  //have not existed before
+
+	//_ = ws.WSUpdate(id)
 	sbs, err := ws.FetchSkipblocks(id, req.Hash1, req.Hash2)
 	if err != nil {
 		log.Print("error")
@@ -473,11 +480,12 @@ func newWSService(c *onet.Context) onet.Service {
 		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
 		NameToID:         make(map[string]skipchain.SkipBlockID),
+		UpdateDuration: time.Millisecond * 1000 * 1,
 	}
 	//if err := ws.tryLoad(); err != nil {
 	//	log.Error(err)
 	//}
-	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver} {
+	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
@@ -497,10 +505,28 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Messag
 
 	err := ws.WSAttach(ws.fqdn, req.ID, req.Cothority)
 	log.ErrFatal(err)
+
+	site := ws.getSiteStorage(req.ID)
+	if site == nil {
+		log.Lvlf2("WSUpdate failed: web server not yet attached to the requested site")
+		return nil,  onet.NewClientErrorCode(4100,"WSUpdate failed: web server not yet attached to the requested site")
+	}
+
+	go func(){
+		c := time.Tick(ws.UpdateDuration)
+
+		for _ = range c {
+			log.Lvlf2("Webserver update starts")
+			ws.WSUpdate(req.ID)
+			log.Lvlf2("Webserver update ends")
+		}
+	}()
+
+
 	log.Print("Webserver is now attached, Sending back to CKH: ", req.CkhIdentity)
 	client := onet.NewClient(sidentity.ServiceName)
 	log.ErrFatal(client.SendProtobuf(req.CkhIdentity, siteInfo, nil))
-	log.Print("Webserver dispatched the attached message")
+	log.Lvlf2("Webserver dispatched the attached message")
 	return nil, nil
 }
 
@@ -517,5 +543,14 @@ func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Messag
 	client := onet.NewClient(sidentity.ServiceName)
 	log.Print(ws.Context, "StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
 	log.ErrFatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
+	return nil, nil
+}
+
+
+func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message, onet.ClientError) {
+	s := req.Info
+	round := monitor.NewTimeMeasure("client_time")
+	NewUser("", s)
+	round.Record()
 	return nil, nil
 }
