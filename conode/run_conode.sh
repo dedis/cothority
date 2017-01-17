@@ -6,30 +6,22 @@ set -e
 # run_conode.sh local 3 # Launches 3 conodes locally.
 
 MAILADDR=linus.gasser@epfl.ch
-MAILCMD=mail
+MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
 DEDIS_PATH=$GOPATH/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/cothority
-ONET_PATH=$DEDIS_PATH/onet
+ONET_PATH=$GOPATH/src/gopkg.in/dedis/onet.v1
 CONODE_PATH=$COTHORITY_PATH/conode
-VERSION=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\"/\1/g" )
+CONODE_GO=github.com/dedis/cothority/conode
+VERSION_SUB="1"
+VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\"/\1/g" )
+VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
 ALL_ARGS="$*"
 
 main(){
 	if [ ! "$1" ]; then
-		cat - <<EOF
-Syntax is $0: (public|local)
-
-public			  	# runs a public conode - supposes it's already configured
-	-update			# will automatically update the repositories
-	-mail			# every time the cothority restarts, the last 200 lines get sent
-					# to $MAILADDR
-	-debug 3 		# Set the debug-level for the conode-run
-
-local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
-			      	# argument: 1-sparse..5-flood.
-EOF
+		showHelp
 		exit 1
 	fi
 	if [ ! "$GOPATH" ]; then
@@ -62,9 +54,26 @@ EOF
 	test)
 		test $@
 		;;
+	*)
+		showHelp
+		;;
 	esac
 }
 
+showHelp(){
+		cat - <<EOF
+Syntax is $0: (public|local)
+
+public			  	# runs a public conode - supposes it's already configured
+	-update			# will automatically update the repositories
+	-mail			# every time the cothority restarts, the last 200 lines get sent
+					# to $MAILADDR
+	-debug 3 		# Set the debug-level for the conode-run
+
+local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
+			      	# argument: 1-sparse..5-flood.
+EOF
+}
 
 runLocal(){
 	if [ ! "$1" ]; then
@@ -74,7 +83,7 @@ runLocal(){
 	NBR=$1
 	DEBUG=${2:-1}
 	killall -9 $CONODE_BIN || true
-	go install $CONODE_PATH
+	go install $CONODE_GO
 
 	rm public.toml
 	for n in $( seq $NBR ); do
@@ -122,8 +131,13 @@ runPublic(){
 			shift
 			;;
 		-mail)
-			MAIL=yes
-			DEBUG=3
+			if [ -x $MAILCMD ]; then
+				MAIL=yes
+				DEBUG=3
+			else
+				echo "$MAILCMD not found - install using"
+				echo "sudo apt-get install bsd-mailx"
+			fi
 			;;
 		*)
 			ARGS="$ARGS $1"
@@ -140,7 +154,7 @@ runPublic(){
 	if [ "$UPDATE" ]; then
 		update
 	else
-		go install $CONODE_PATH
+		go install $CONODE_GO
 	fi
 	LOG=$( mktemp )
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
@@ -179,9 +193,24 @@ migrate(){
 			echo 1.0 > $PATH_VERSION
 			;;
 		1.0)
-			echo $VERSION > $PATH_VERSION
+			if ! grep -q Description $PATH_CONODE/private.toml; then
+				echo "Adding description"
+				grep Description $PATH_CONODE/public.toml >> $PATH_CONODE/private.toml
+			fi
+			echo 1.0-1 > $PATH_VERSION
 			;;
-		esac
+		1.0-1)
+			echo No migration necessary
+			;;
+        *)
+            echo Found wrong version $PATH_VERSION - trying to fix
+            if [ -d $PATH_CO/conode ]; then
+            	echo 1.0 > $PATH_CO/conode/version
+            fi
+            echo "Check $PATH_CO to verify configuration is OK and re-run $0"
+            exit 1
+            ;;
+        esac
 	done
 }
 
@@ -245,6 +274,7 @@ testMigrate(){
 
 		rm -rf $P/*
 	done
+	testFileGrep Description $PATH_CO/conode/private.toml
 }
 
 testUpdate(){
