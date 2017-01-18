@@ -598,3 +598,10 @@ type ConnectClient struct {
 
 type MinusOneClient struct {
 }
+
+type StartUptWebserver struct {
+}
+
+type MinusOneWebserver struct {
+
+}

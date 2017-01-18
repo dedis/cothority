@@ -38,6 +38,7 @@ func init() {
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&GetValidSbPath{})
 	network.RegisterMessage(&common_structs.ConnectClient{})
+	network.RegisterMessage(&common_structs.StartUptWebserver{})
 }
 
 // WS handles site identities (usually only one)
@@ -140,9 +141,9 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *onet.Ro
 		log.Lvlf2("WSAttach failed: web server not yet attached to the requested site")
 		return errors.New("WSAttach failed: web server not yet attached to the requested site")
 	}
-
-	_ = ws.WSUpdate(id)
 	ws.sitesMutex.Unlock()
+	_ = ws.WSUpdate(id)
+
 	log.Lvlf2("Web server with ServerIdentity: %v is now attached to site with ID: %v", ws.ServerIdentity(), id)
 	return nil
 }
@@ -485,7 +486,7 @@ func newWSService(c *onet.Context) onet.Service {
 	//if err := ws.tryLoad(); err != nil {
 	//	log.Error(err)
 	//}
-	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient} {
+	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient, ws.StartUptWebserver} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
@@ -511,18 +512,20 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Messag
 		log.Lvlf2("WSUpdate failed: web server not yet attached to the requested site")
 		return nil,  onet.NewClientErrorCode(4100,"WSUpdate failed: web server not yet attached to the requested site")
 	}
-
+/*
 	go func(){
 		c := time.Tick(ws.UpdateDuration)
 
 		for _ = range c {
 			log.Lvlf2("Webserver update starts")
+			round := monitor.NewTimeMeasure("ws_time")
 			ws.WSUpdate(req.ID)
+			round.Record()
 			log.Lvlf2("Webserver update ends")
 		}
 	}()
 
-
+*/
 	log.Print("Webserver is now attached, Sending back to CKH: ", req.CkhIdentity)
 	client := onet.NewClient(sidentity.ServiceName)
 	log.ErrFatal(client.SendProtobuf(req.CkhIdentity, siteInfo, nil))
@@ -552,5 +555,27 @@ func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message,
 	round := monitor.NewTimeMeasure("client_time")
 	NewUser("", s)
 	round.Record()
+	return nil, nil
+}
+
+func (ws *WS) StartUptWebserver (req *common_structs.StartUptWebserver) (network.Message, onet.ClientError) {
+	var id skipchain.SkipBlockID
+	ws.sitesMutex.Lock()
+	for _, site := range ws.Sites {
+		id = site.ID
+		break //expected for the webserver to be attached to only one website identity
+	}
+	ws.sitesMutex.Unlock()
+	go func(){
+		c := time.Tick(ws.UpdateDuration)
+
+		for _ = range c {
+			log.LLvlf2("Webserver update starts")
+			round := monitor.NewTimeMeasure("ws_time")
+			ws.WSUpdate(id)
+			round.Record()
+			log.LLvlf2("Webserver update ends")
+		}
+	}()
 	return nil, nil
 }

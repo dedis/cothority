@@ -57,10 +57,12 @@ func init() {
 	network.RegisterMessage(&Storage{})
 	network.RegisterMessage(&SyncStart{})
 	network.RegisterMessage(&ClientStart{})
+	network.RegisterMessage(&WebserverStart{})
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&common_structs.PushedPublic{})
 	network.RegisterMessage(common_structs.MinusOne{})
 	network.RegisterMessage(common_structs.MinusOneClient{})
+	network.RegisterMessage(common_structs.MinusOneWebserver{})
 }
 
 // Service handles identities
@@ -78,11 +80,14 @@ type Service struct {
 	TheRoster     *onet.Roster
 	PropagateFunc messaging.PropagationFunc
 	SimulFunc     messaging.PropagationFunc
-	ClientFunc     messaging.PropagationFunc
+	ClientFunc    messaging.PropagationFunc
+	WebserverFunc messaging.PropagationFunc
 	expected      int
-	expected2      int
+	expected2     int
+	expected3     int
 	cnt           int
 	cnt2          int
+	cnt3          int
 	cntMut        sync.Mutex
 	setupDone     chan bool
 	siteInfoList  []*common_structs.SiteInfo
@@ -90,6 +95,7 @@ type Service struct {
 	ok            bool
 	attachedDone  chan bool
 	clientsDone   chan bool
+	webserversDone   chan bool
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -122,6 +128,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		return nil, nil
 	} else if tn.ProtocolName() == "StartClients" {
 		return nil, nil
+	} else if tn.ProtocolName() == "StartWebserverUpt" {
+		return nil,nil
 	}
 	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
@@ -945,6 +953,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 		publicDone:    make(chan bool),
 		attachedDone:  make(chan bool),
 		clientsDone:  make(chan bool),
+		webserversDone:  make(chan bool),
 	}
 	s.ClearIdentities()
 	//if err := s.tryLoad(); err != nil {
@@ -957,9 +966,11 @@ func newIdentityService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	s.ClientFunc, err = messaging.NewPropagationFunc(c, "StartClients", s.GoClients)
 	log.ErrFatal(err)
+	s.WebserverFunc, err = messaging.NewPropagationFunc(c, "StartWebserverUpt", s.GoWebservers)
+	log.ErrFatal(err)
 	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate,
+		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.MinusOneWebserver,
 		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsFinish, s.LetsEvolve, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
@@ -989,6 +1000,38 @@ type ClientStart struct {
 	SiteInfoList []*common_structs.SiteInfo
 }
 
+type WebserverStart struct {
+	Roster     *onet.Roster
+	Clients    int
+	Webservers int
+}
+
+func (s *Service) GoWebservers(msg network.Message) {
+	m := msg.(*WebserverStart)
+	// [ clients, webservers, cold key holders, cothority]
+	index_client := 0
+	index_ws := index_client + m.Clients
+	index_CK := index_ws + m.Webservers
+
+	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
+	firstIdentity := m.Roster.List[0]
+
+	switch {
+	case index < index_ws:
+		//client case
+		return
+	case index < index_CK:
+		// webserver case
+		go func() {
+			s.StartWebserverUpt(m.Roster, index)
+			client := onet.NewClient(ServiceName)
+			log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWebserver{}, nil))
+		}()
+		return
+	default:
+		return
+	}
+}
 
 func (s *Service) GoClients(msg network.Message) {
 	m := msg.(*ClientStart)
@@ -1135,6 +1178,13 @@ func (s *Service) StartClient(roster *onet.Roster, index_client int, info []*com
 	log.ErrFatal(client.SendProtobuf(clientIdentity, &common_structs.ConnectClient{info}, nil))
 }
 
+func (s *Service) StartWebserverUpt(roster *onet.Roster, index_ws int) {
+	log.Print("startWebserverUpdates")
+	wsIdentity := roster.List[index_ws]
+	client := onet.NewClient("WebServer")
+	log.ErrFatal(client.SendProtobuf(wsIdentity, &common_structs.StartUptWebserver{}, nil))
+}
+
 func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority, evol1, evol2 int) []*common_structs.SiteInfo {
 	s.cntMut.Lock()
 	s.expected = webservers
@@ -1160,7 +1210,6 @@ func (s *Service) WaitClients(roster *onet.Roster, clients, webservers, cothorit
 	s.expected2 = clients
 	s.cntMut.Unlock()
 
-
 	msg := &ClientStart{
 		Roster:     roster,
 		Clients:    clients,
@@ -1175,6 +1224,26 @@ func (s *Service) WaitClients(roster *onet.Roster, clients, webservers, cothorit
 	go func() {
 		<-s.clientsDone
 		log.Print(s.Context, "Clients DONE")
+		return
+	}()
+}
+
+
+func (s *Service) WaitWebservers(roster *onet.Roster, clients, webservers int) {
+	s.cntMut.Lock()
+	s.expected3 = webservers
+	s.cntMut.Unlock()
+
+	msg := &WebserverStart{
+		Roster:     roster,
+		Clients:    clients,
+		Webservers: webservers,
+	}
+
+	s.WebserverFunc(roster, msg, 25000)
+	go func() {
+		<-s.webserversDone
+		log.Print(s.Context, "Webservers DONE")
 		return
 	}()
 }
@@ -1222,5 +1291,17 @@ func (s *Service) LetsEvolve(req *common_structs.SiteInfo) (network.Message, one
 	go func() {
 		s.attachedDone <- true
 	}()
+	return nil, nil
+}
+
+func (s *Service) MinusOneWebserver(req *common_structs.MinusOneWebserver) (network.Message, onet.ClientError) {
+	log.Print("FirstIdentity received a MinusOneWebserver message")
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.cnt3++
+	log.Printf("%v",s.cnt3)
+	if s.cnt3 == s.expected3 {
+		s.webserversDone <- true
+	}
 	return nil, nil
 }
