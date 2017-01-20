@@ -11,7 +11,6 @@ import (
 
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/sidentity"
-	"github.com/dedis/cothority/dns_id/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/ed25519"
 	"github.com/dedis/crypto/random"
@@ -36,7 +35,6 @@ func init() {
 	network.RegisterMessage(&common_structs.PushedPublic{})
 	network.RegisterMessage(&common_structs.StartWebserver{})
 	network.RegisterMessage(&common_structs.SiteInfo{})
-	network.RegisterMessage(&GetValidSbPath{})
 	network.RegisterMessage(&common_structs.ConnectClient{})
 	network.RegisterMessage(&common_structs.StartUptWebserver{})
 }
@@ -54,7 +52,7 @@ type WS struct {
 	// Public key for that WS/site pair
 	Public abstract.Point
 	// holds the mapping between FDQNs and genesis skipblocks' IDs
-	NameToID map[string]skipchain.SkipBlockID
+	NameToID map[string][]byte
 	fqdn     string
 	UpdateDuration time.Duration
 }
@@ -69,13 +67,13 @@ type Site struct {
 	sync.Mutex
 	si *sidentity.Identity
 	// Site's ID (hash of the genesis block)
-	ID skipchain.SkipBlockID
+	ID []byte
 	// the whole site's skipchain (starting with the genesis block)
-	SkipBlocks map[string]*skipchain.SkipBlock
-	// Latest known skipblock
-	Latest *skipchain.SkipBlock
-	// Hash of the 'Latest' known block
-	LatestHash skipchain.SkipBlockID
+	ConfigBlocks map[string]*common_structs.ConfigPlusNextHash
+	// Latest known config-block
+	Latest *common_structs.Config
+	// Hash of the 'Latest' known config-block
+	LatestHash []byte
 	// PoF for the latest known skipblock
 	PoF      *common_structs.SignatureResponse
 	CertInfo *common_structs.CertInfo
@@ -118,14 +116,14 @@ func (ws *WS) WSPushPublicKey(cothority *onet.Roster) error {
 	return nil
 }
 
-func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *onet.Roster) error {
+func (ws *WS) WSAttach(name string, id []byte, cothority *onet.Roster) error {
 
 	log.LLvlf3("WSAttach(): attaching to site: %v", name)
 
 	site := &Site{
 		ID:         id,
 		LatestHash: id,
-		SkipBlocks: make(map[string]*skipchain.SkipBlock),
+		ConfigBlocks: make(map[string]*common_structs.ConfigPlusNextHash),
 	}
 	site.si = sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0)
 	site.si.Cothority = cothority
@@ -148,10 +146,10 @@ func (ws *WS) WSAttach(name string, id skipchain.SkipBlockID, cothority *onet.Ro
 	return nil
 }
 
-// Asks the cothority for new skipblocks, fetches all of them starting with the latest known
+// Asks the cothority for new configblocks, fetches all of them starting with the latest known
 // till the current head one and (possibly) updates the tls keypair of the ws
 // Also updates the cert and the PoF
-func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
+func (ws *WS) WSUpdate(id []byte) error {
 
 	log.Lvlf3("WSUpdate(): Start")
 	// Check whether the reached ws has been configured as a valid web server of the requested site
@@ -164,26 +162,26 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 	defer site.Unlock() //have been commented before
 
 	log.Lvlf2("Web server %v has latest block with hash: %v", ws.ServerIdentity(), site.LatestHash)
-	sbs, cert, hash, pof, err := site.si.GetValidSbPath(id, site.LatestHash, []byte{0})
+	sbs, cert, hash, pof, err := site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
 	times := 0
 	for len(sbs) == 0 && times < 10 {
 		times++
 		log.Lvlf2("%v: ws %v resends message", times, ws.ServerIdentity())
 		// retry after 1 sec
 		time.Sleep(1000 * time.Millisecond)
-		sbs, cert, hash, pof, err = site.si.GetValidSbPath(id, site.LatestHash, []byte{0})
+		sbs, cert, hash, pof, err = site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
 	}
 
 	// Store the not previously known skipblocks (the latest known is stored again because the
 	// the genesis block of the site's skipchain must be stored the first time WSUpdate() is invoked)
 	// (Trust delegation between each pair of subsequent skipblocks already verified by 'GetValidSbPath')
 	for _, sb := range sbs {
-		_ = site.setSkipBlock(sb)
+		_ = site.setConfigBlock(sb)
 	}
 
 	site.Latest = sbs[len(sbs)-1]
-	site.LatestHash = site.Latest.Hash
-	site.si.LatestID = site.Latest.Hash
+	site.LatestHash,_ = site.Latest.Hash()
+	site.si.LatestID = site.LatestHash
 
 	// update web server's tls keypair
 	tlspublic, tlsprivate, _ := ws.WSgetTLSconf(id, sbs[len(sbs)-1])
@@ -209,8 +207,8 @@ func (ws *WS) WSUpdate(id skipchain.SkipBlockID) error {
 }
 
 // if h2==0, fetch all the skipblocks from the latest known till the current head one
-func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	log.Lvlf3("FetchSkipblocks(): Start")
+func (ws *WS) FetchSkipblocks(id []byte, h1, h2 []byte) ([]*common_structs.Config, error) {
+	log.Lvlf3("FetchSkipblocks(): Start, h1 ", []byte(h1), "h2", []byte(h2))
 	//_ = ws.WSUpdate(id)
 
 	// Check whether the reached ws has been configured as a valid web server of the requested site
@@ -220,9 +218,10 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 	}
 
 	var ok bool
-	var sb1 *skipchain.SkipBlock
+	var sb1 *common_structs.Config
+	var nexthash []byte
 	if !bytes.Equal(h1, []byte{0}) {
-		sb1, ok = site.getSkipBlockByID(h1)
+		sb1, _, ok = site.getConfigBlockByID(h1)
 		if !ok {
 			log.Lvlf2("Skipblock with hash: %v not found", h1)
 			return nil, nil
@@ -231,7 +230,7 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 		// fetch all the blocks starting from the one for the config of
 		// which the latest cert is acquired
 		h1 = site.CertInfo.SbHash
-		sb1, ok = site.getSkipBlockByID(h1)
+		sb1, _, ok = site.getConfigBlockByID(h1)
 		if !ok {
 			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h1)
@@ -239,39 +238,40 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 		log.Lvlf3("Last certified skipblock has hash: %v", h1)
 	}
 
-	var sb2 *skipchain.SkipBlock
+	//var sb2 *common_structs.Config
+	//sb2 = nil
 	if !bytes.Equal(h2, []byte{0}) {
-		sb2, ok = site.getSkipBlockByID(h2)
+		//sb2, _, ok = site.getConfigBlockByID(h2)
+		_, _, ok = site.getConfigBlockByID(h2)
 		if !ok {
 			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
-			return nil, fmt.Errorf("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			return nil, onet.NewClientErrorCode(4100,"NO VALID PATH")
 		}
 	} else {
 		// fetch skipblocks until finding the current head of the skipchain
-		h2 = site.Latest.Hash
-		sb2 = site.Latest
+		h2,_ = site.Latest.Hash()
+		//sb2 = sid.Latest
 		log.Lvlf3("Current head skipblock has hash: %v", h2)
 	}
 
 	oldest := sb1
-	newest := sb2
+	//newest := sb2
 
-	log.Lvlf3("Oldest skipblock has hash: %v", oldest.Hash)
-	log.Lvlf3("Newest skipblock has hash: %v", newest.Hash)
-	sbs := make([]*skipchain.SkipBlock, 0)
-	sbs = append(sbs, oldest)
+	log.Lvlf3("Oldest skipblock has hash: %v", h1)
+	log.Lvlf3("Newest skipblock has hash: %v", h2)
+	sbs := make([]*common_structs.Config, 0)
 	block := oldest
-	log.Lvlf3("Skipblock with hash: %v", block.Hash)
-	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[0]
-		hash := link.Hash
-		block, ok = site.getSkipBlockByID(hash)
+	nexthash, _ =block.Hash()
+	for !bytes.Equal(nexthash, []byte{0}) {
+		temphash := nexthash
+		block, nexthash, ok = site.getConfigBlockByID(temphash)
 		if !ok {
-			log.Lvlf2("Skipblock with hash: %v not found", hash)
-			return nil, fmt.Errorf("Skipblock with hash: %v not found", hash)
+			log.Lvlf2("Skipblock with hash: %v not found", temphash)
+			return nil, onet.NewClientErrorCode(4100,"Skipblock not found")
 		}
 		sbs = append(sbs, block)
-		if bytes.Equal(hash, site.Latest.Hash) || bytes.Equal(hash, newest.Hash) {
+		log.Lvlf3("Added skipblock with hash: %v, h2: %v, nexthash: %v", temphash, h2, nexthash)
+		if bytes.Equal(temphash, h2){
 			break
 		}
 	}
@@ -281,7 +281,7 @@ func (ws *WS) FetchSkipblocks(id skipchain.SkipBlockID, h1, h2 skipchain.SkipBlo
 }
 
 // fetch the latest cert (should exist only one not-yet-expired cert at every given point of time)
-func (ws *WS) FetchCert(id skipchain.SkipBlockID) (*common_structs.Cert, error) {
+func (ws *WS) FetchCert(id []byte) (*common_structs.Cert, error) {
 	//_ = ws.WSUpdate(id)
 
 	site := ws.getSiteStorage(id)
@@ -293,7 +293,7 @@ func (ws *WS) FetchCert(id skipchain.SkipBlockID) (*common_structs.Cert, error) 
 }
 
 // fetch the latest PoF
-func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureResponse, error) {
+func (ws *WS) FetchPoF(id []byte) (*common_structs.SignatureResponse, error) {
 	//_ = ws.WSUpdate(id)
 
 	site := ws.getSiteStorage(id)
@@ -311,7 +311,7 @@ func (ws *WS) FetchPoF(id skipchain.SkipBlockID) (*common_structs.SignatureRespo
  * API messages
  */
 
-func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.ClientError) {
+func (ws *WS) UserGetValidSbPathLight(req *GetValidSbPathLight) (network.Message, onet.ClientError) {
 	//ws.sitesMutex.Lock()
 	//defer ws.sitesMutex.Unlock()
 
@@ -344,27 +344,28 @@ func (ws *WS) UserGetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	}
 	log.Lvlf4("public key of server: %v is %v (latest known block: %v)", ws.ServerIdentity(), site.TLSPublic, site.LatestHash)
 
+	log.Lvlf2("Webserver returns %v blocks", len(sbs))
 	if bytes.Equal(req.Hash2, []byte{0}) {
 		cert, _ := ws.FetchCert(id)
-		log.LLvlf3("UserGetValidSbPath(): Cert fetched")
-		return &GetValidSbPathReply{
-			Skipblocks: sbs,
+		log.Lvlf3("UserGetValidSbPathLight(): Cert fetched")
+		return &GetValidSbPathLightReply{
+			Configblocks: sbs,
 			Cert:       cert,
 			PoF:        pof,
 			Signature:  &sig,
 		}, nil
 
 	}
-	log.Print(ws.Context, "Sending back GetValidSbPathReply ")
-	return &GetValidSbPathReply{
-		Skipblocks: sbs,
+
+	return &GetValidSbPathLightReply{
+		Configblocks: sbs,
 		Cert:       nil,
 		PoF:        pof,
 		Signature:  &sig,
 	}, nil
 }
 
-func (ws *WS) getSiteStorage(id skipchain.SkipBlockID) *Site {
+func (ws *WS) getSiteStorage(id []byte) *Site {
 	//ws.sitesMutex.Lock()
 	//defer ws.sitesMutex.Unlock()
 	is, ok := ws.Sites[string(id)]
@@ -374,7 +375,7 @@ func (ws *WS) getSiteStorage(id skipchain.SkipBlockID) *Site {
 	return is
 }
 
-func (ws *WS) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
+func (ws *WS) setSiteStorage(id []byte, is *Site) {
 	//ws.sitesMutex.Lock()
 	//defer ws.sitesMutex.Unlock()
 	ws.Sites[string(id)] = is
@@ -382,17 +383,14 @@ func (ws *WS) setSiteStorage(id skipchain.SkipBlockID, is *Site) {
 
 // takes a site id and a skipblock and returns the public & (decrypted) private key that was assigned to
 // the specific web server (asymmetric crypto is used for the encryption/decryption of the tls private key)
-func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBlock) (abstract.Point, abstract.Scalar, error) {
+func (ws *WS) WSgetTLSconf(id []byte, latest_sb *common_structs.Config) (abstract.Point, abstract.Scalar, error) {
 	website := ws.getSiteStorage(id)
 	if website == nil {
 		log.Lvlf2("WSgetTLSconf() failed: web server not yet attached to the requested site")
 		return nil, nil, errors.New("WSgetTLSconf() failed: web server not yet attached to the requested site")
 	}
 
-	config, err := common_structs.GetConfFromSb(latest_sb)
-	if err != nil {
-		return nil, nil, err
-	}
+	config := latest_sb
 
 	serverID := ws.ServerIdentity()
 	key := fmt.Sprintf("tls:%v", serverID)
@@ -406,8 +404,8 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 
 	// Decrypt it using the corresponding private key.
 	suite := ed25519.NewAES128SHA256Ed25519(false)
-	decrypted1, err := common_structs.ElGamalDecrypt(suite, ws.Private, K1, C1)
-	decrypted2, err := common_structs.ElGamalDecrypt(suite, ws.Private, K2, C2)
+	decrypted1, _ := common_structs.ElGamalDecrypt(suite, ws.Private, K1, C1)
+	decrypted2, _ := common_structs.ElGamalDecrypt(suite, ws.Private, K2, C2)
 
 	decrypted := make([]byte, 0)
 	for _, b := range decrypted1 {
@@ -428,16 +426,33 @@ func (ws *WS) WSgetTLSconf(id skipchain.SkipBlockID, latest_sb *skipchain.SkipBl
 	return tlspublic, tlsprivate, nil
 }
 
-func (s *Site) setSkipBlock(latest *skipchain.SkipBlock) bool {
-	s.SkipBlocks[string(latest.Hash)] = latest
+func (s *Site) setConfigBlock(latestconf *common_structs.Config) bool {
+	latestconfHash, _ := latestconf.Hash()
+	if s.ConfigBlocks == nil {
+		s.ConfigBlocks = make(map[string]*common_structs.ConfigPlusNextHash)
+	}
+	s.ConfigBlocks[string(latestconfHash)] = &common_structs.ConfigPlusNextHash{
+		Config: latestconf,
+		NextHash: []byte{0},
+	}
+
+	if !bytes.Equal(latestconf.BLink, []byte{0}) {
+		log.Print(latestconf.BLink)
+		s.ConfigBlocks[string(latestconf.BLink)].NextHash = latestconfHash
+	}
 	return true
 }
 
-// getSkipBlockByID returns the skip-block or false if it doesn't exist
-func (s *Site) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipBlock, bool) {
-	b, ok := s.SkipBlocks[string(sbID)]
-	return b, ok
+// getConfigBlockByID returns the config-block or false if it doesn't exist
+func (s *Site) getConfigBlockByID(sbID []byte) (*common_structs.Config, []byte, bool) {
+	//s.Lock()
+	//defer s.Unlock()
+	value, ok := s.ConfigBlocks[string(sbID)]
+	b := value.Config
+	hash := value.NextHash
+	return b, hash, ok
 }
+
 
 func (ws *WS) save() {
 	log.Lvl3("Saving service")
@@ -480,13 +495,13 @@ func newWSService(c *onet.Context) onet.Service {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
-		NameToID:         make(map[string]skipchain.SkipBlockID),
+		NameToID:         make(map[string][]byte),
 		UpdateDuration: time.Millisecond * 1000 * 1,
 	}
 	//if err := ws.tryLoad(); err != nil {
 	//	log.Error(err)
 	//}
-	for _, f := range []interface{}{ws.UserGetValidSbPath, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient, ws.StartUptWebserver} {
+	for _, f := range []interface{}{ws.UserGetValidSbPathLight, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient, ws.StartUptWebserver} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
@@ -559,7 +574,7 @@ func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message,
 }
 
 func (ws *WS) StartUptWebserver (req *common_structs.StartUptWebserver) (network.Message, onet.ClientError) {
-	var id skipchain.SkipBlockID
+	var id []byte
 	ws.sitesMutex.Lock()
 	for _, site := range ws.Sites {
 		id = site.ID

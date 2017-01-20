@@ -39,8 +39,8 @@ func init() {
 		// API messages
 		&Connect{},
 		&ConnectReply{},
-		&GetValidSbPath{},
-		&GetValidSbPathReply{},
+		&GetValidSbPathLight{},
+		&GetValidSbPathLightReply{},
 		&common_structs.IdentityReady{},
 		&common_structs.PushedPublic{},
 		&common_structs.StartWebserver{},
@@ -135,13 +135,13 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	serverID := wss[rand.Int()%len(wss)].ServerID
 
 	log.Lvlf1("Connect(): Before fetching skipblocks: serverID=%v, FQDN=%v", serverID, name)
-	reply := &GetValidSbPathReply{}
-	cerr := u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
+	reply := &GetValidSbPathLightReply{}
+	cerr := u.WSClient.SendProtobuf(serverID, &GetValidSbPathLight{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
 	if cerr != nil {
 		log.ErrFatal(cerr)
 	}
-	sbs := reply.Skipblocks
-	latest := sbs[len(sbs)-1]
+	sbs := reply.Configblocks
+	latestconf := sbs[len(sbs)-1]
 	cert := reply.Cert
 	pof := reply.PoF
 	if pof == nil {
@@ -151,12 +151,10 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
 	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-	_, data, _ := network.Unmarshal(latest.Data)
-	latestconf, _ := data.(*common_structs.Config)
 	err := latestconf.CheckTimeDiff(maxdiff * 2)
 	if err != nil {
 		log.Print("Stale block, check the pof")
-		err = pof.Validate(latest, maxdiff)
+		err = pof.Validate(latestconf, maxdiff)
 		if err != nil {
 			log.Lvlf2("%v", err)
 			return err
@@ -198,7 +196,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	*/
 
 	// Verify the hops starting from the skipblock (sbs[0]) for which the cert was issued
-	ok, _ := VerifyHops(sbs)
+	ok, _ := VerifyHopsLight(sbs)
 	if !ok {
 		log.Lvlf2("Not valid hops")
 		return fmt.Errorf("Not valid hops")
@@ -206,7 +204,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 		log.Lvlf2("User: %v - Start following the site by setting trust_window: %v", username, website.PinState.Window)
 		website.PinState.TimePinAccept = time.Now().Unix() * 1000
 		u.WebSites[name] = &website
-		u.Follow(name, latest, cert)
+		u.Follow(name, latestconf, cert)
 	}
 	log.Print("CONNECTED: user: %v, site: %v", u.UserName, name)
 	return nil
@@ -236,22 +234,20 @@ func (u *User) ReConnect(name string) error {
 		wss := website.WSs
 		serverID := wss[rand.Int()%len(wss)].ServerID
 
-		reply := &GetValidSbPathReply{}
-		u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
+		reply := &GetValidSbPathLightReply{}
+		u.WSClient.SendProtobuf(serverID, &GetValidSbPathLight{FQDN: name, Hash1: []byte{0}, Hash2: []byte{0}, Challenge: []byte{}}, reply)
 
-		sbs := reply.Skipblocks
-		first := sbs[0]
-		latest := sbs[len(sbs)-1]
+		sbs := reply.Configblocks
+		firstconf := sbs[0]
+		latestconf := sbs[len(sbs)-1]
 		cert := reply.Cert
 		pof := reply.PoF
 
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		_, data, _ := network.Unmarshal(latest.Data)
-		latestconf, _ := data.(*common_structs.Config)
 		err := latestconf.CheckTimeDiff(maxdiff * 2)
 		if err != nil {
-			err = pof.Validate(latest, maxdiff)
+			err = pof.Validate(latestconf, maxdiff)
 			if err != nil {
 				log.Lvlf2("%v", err)
 				return err
@@ -259,8 +255,11 @@ func (u *User) ReConnect(name string) error {
 		}
 
 		first_not_known_index := 0 // Is sbs[0] the first_not_known skipblock?
+		latestconfHash, _ := latestconf.Hash()
+		firstconfHash, _ := firstconf.Hash()
 		for index, sb := range sbs {
-			if bytes.Equal(website.Latest.Hash, sb.Hash) {
+			hash, _ := sb.Hash()
+			if bytes.Equal(latestconfHash, hash) {
 				first_not_known_index = index + 1
 				break
 			}
@@ -277,7 +276,7 @@ func (u *User) ReConnect(name string) error {
 			// At this point, at least one of the returned skipblocks is already trusted
 			// and at least another one is not
 			sbs_path_to_be_checked := sbs[first_not_known_index-1:]
-			ok2, _ := VerifyHops(sbs_path_to_be_checked)
+			ok2, _ := VerifyHopsLight(sbs_path_to_be_checked)
 			if ok2 {
 				same_skipchain = true
 			}
@@ -286,13 +285,13 @@ func (u *User) ReConnect(name string) error {
 			// -> Ask for a valid path between the latest trusted skipblock till the 'first' returned (==sbs[0])
 			log.Lvlf3("Latest known skipblock has hash: %v", website.Latest.Hash)
 
-			reply := &GetValidSbPathReply{}
-			u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: first.Hash, Challenge: []byte{}}, reply)
+			reply := &GetValidSbPathLightReply{}
+			u.WSClient.SendProtobuf(serverID, &GetValidSbPathLight{FQDN: name, Hash1: latestconfHash, Hash2: firstconfHash, Challenge: []byte{}}, reply)
 
-			sbs2 := reply.Skipblocks
+			sbs2 := reply.Configblocks
 			if sbs2 != nil {
 				sbs_path_to_be_checked := append(sbs2, sbs[1:]...)
-				ok2, _ := VerifyHops(sbs_path_to_be_checked)
+				ok2, _ := VerifyHopsLight(sbs_path_to_be_checked)
 				if ok2 {
 					same_skipchain = true
 				}
@@ -309,11 +308,9 @@ func (u *User) ReConnect(name string) error {
 
 			// Check whether the latest config was recently signed by the Cold Key Holders
 			// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-			_, data, _ := network.Unmarshal(latest.Data)
-			latestconf, _ := data.(*common_structs.Config)
 			err := latestconf.CheckTimeDiff(maxdiff * 2)
 			if err != nil {
-				err = pof.Validate(latest, maxdiff)
+				err = pof.Validate(latestconf, maxdiff)
 				if err != nil {
 					log.Lvlf2("%v", err)
 					return err
@@ -355,7 +352,7 @@ func (u *User) ReConnect(name string) error {
 			*/
 
 			// Verify the hops starting from the skipblock for which the cert was issued
-			ok, _ := VerifyHops(sbs)
+			ok, _ := VerifyHopsLight(sbs)
 			if !ok {
 				return errors.New("Got an invalid skipchain -> ABORT without following it")
 			}
@@ -365,7 +362,7 @@ func (u *User) ReConnect(name string) error {
 			log.Lvlf2("Start trusting the site by setting trust_window: %v", website.PinState.Window)
 			website.PinState.TimePinAccept = time.Now().Unix() * 1000
 			u.WebSites[name] = website
-			u.Follow(name, latest, cert)
+			u.Follow(name, latestconf, cert)
 
 		}
 
@@ -376,7 +373,7 @@ func (u *User) ReConnect(name string) error {
 			website.PinState.Window = website.PinState.Window * 2
 			website.PinState.TimePinAccept = time.Now().Unix() * 1000
 			u.WebSites[name] = website
-			u.Follow(name, latest, cert)
+			u.Follow(name, latestconf, cert)
 		}
 
 	} else {
@@ -391,71 +388,60 @@ func (u *User) ReConnect(name string) error {
 		challenge := []byte(bytess)
 		log.Lvlf3("Challenged web server has address: %v", serverID)
 
-		reply := &GetValidSbPathReply{}
-		err = u.WSClient.SendProtobuf(serverID, &GetValidSbPath{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}, Challenge: challenge}, reply)
+		reply := &GetValidSbPathLightReply{}
+		err = u.WSClient.SendProtobuf(serverID, &GetValidSbPathLight{FQDN: name, Hash1: website.Latest.Hash, Hash2: []byte{0}, Challenge: challenge}, reply)
 		log.ErrFatal(err)
 		log.Print("CLIENT After sendprotobuf")
-		sbs := reply.Skipblocks
+		sbs := reply.Configblocks
 		pof := reply.PoF
-		latest := sbs[len(sbs)-1]
+		latestconf := sbs[len(sbs)-1]
 		sig := reply.Signature
 
-		ok, _ := VerifyHops(sbs)
+		ok, _ := VerifyHopsLight(sbs)
 		if !ok {
 			log.LLvlf2("Updating the site config was not possible due to corrupted skipblock chain")
 			return errors.New("Updating the site config was not possible due to corrupted skipblock chain")
 		}
-		log.LLvlf2("user %v, Latest returned block has hash: %v", u.UserName, latest.Hash)
+		latestconfHash, _ := latestconf.Hash()
+		log.Lvlf2("user %v, Latest returned block has hash: %v", u.UserName, latestconfHash)
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		_, data, _ := network.Unmarshal(latest.Data)
-		latestconf, _ := data.(*common_structs.Config)
 		err = latestconf.CheckTimeDiff(maxdiff * 2)
 		if err != nil {
-			err = pof.Validate(latest, maxdiff)
+			err = pof.Validate(latestconf, maxdiff)
 			if err != nil {
 				log.LLvlf2("%v", err)
 				return err
 			}
 		}
 
-		_, tempdata, _ := network.Unmarshal(latest.Data)
-		tempconf, _ := tempdata.(*common_structs.Config)
 
 		key := fmt.Sprintf("tls:%v", serverID)
-		ptls := tempconf.Data[key].TLSPublic
+		ptls := latestconf.Data[key].TLSPublic
 		err = crypto.VerifySchnorr(network.Suite, ptls, challenge, *sig)
 		if err != nil {
-			log.LLvlf2("user %v, Tls public key (%v) should match to the webserver's %v private key but it does not! (latest returned block has hash: %v)", u.UserName, ptls, serverID, latest.Hash)
+			log.LLvlf2("user %v, Tls public key (%v) should match to the webserver's %v private key but it does not! (latest returned block has hash: %v)", u.UserName, ptls, serverID, latestconfHash)
 			return fmt.Errorf("Tls public key (%v) should match to the webserver's private key but it does not!", ptls)
 		}
 		log.LLvlf2("Tls private key matches")
-		u.Follow(name, latest, nil)
+		u.Follow(name, latestconf, nil)
 
 	}
 	log.LLvlf2("RE-CONNECTED: user: %v, site: %v", u.UserName, name)
 	return nil
 }
 
-func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
+func VerifyHopsLight(blocks []*common_structs.Config) (bool, error) {
 	// Check the validity of each skipblock hop
 	log.Print("Fetched blocks", len(blocks))
-	prev := blocks[0]
-	_, data, _ := network.Unmarshal(prev.Data)
-	trustedconfig := data.(*common_structs.Config)
+	trustedconfig := blocks[0]
 	for index, block := range blocks {
-		next := block
+		newconfig := block
 		if index > 0 {
-			log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prev.Hash, next.Hash)
+			prevHash, _ := trustedconfig.Hash()
+			nextHash, _ := newconfig.Hash()
+			log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prevHash, nextHash)
 			cnt := 0
-			_, data, err2 := network.Unmarshal(next.Data)
-			if err2 != nil {
-				return false, errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
-			}
-			newconfig, ok := data.(*common_structs.Config)
-			if !ok {
-				return false, errors.New("Couldn't get type '*Config'")
-			}
 
 			for key, newdevice := range newconfig.Device {
 				if _, exists := trustedconfig.Device[key]; exists {
@@ -463,13 +449,7 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 					b2, _ := network.Marshal(trustedconfig.Device[key].Point)
 					if bytes.Equal(b1, b2) {
 						if newdevice.Vote != nil {
-							var hash []byte
-							hash, err := newconfig.Hash()
-							if err != nil {
-								log.Lvlf2("Couldn't get hash")
-								return false, errors.New("Couldn't get hash")
-							}
-							err = crypto.VerifySchnorr(network.Suite, newdevice.Point, hash, *newdevice.Vote)
+							err := crypto.VerifySchnorr(network.Suite, newdevice.Point, nextHash, *newdevice.Vote)
 							if err != nil {
 								log.Lvlf2("Wrong signature")
 								return false, errors.New("Wrong signature")
@@ -484,12 +464,12 @@ func VerifyHops(blocks []*skipchain.SkipBlock) (bool, error) {
 				return false, errors.New("No sufficient threshold of trusted devices' votes")
 			}
 		}
-		prev = next
-		_, data, _ := network.Unmarshal(prev.Data)
-		trustedconfig = data.(*common_structs.Config)
+		trustedconfig = newconfig.Copy()
 	}
 	return true, nil
 }
+
+
 func (website *WebSite) ExpiredPins() bool {
 	now := time.Now().Unix() * 1000
 	log.Lvlf3("Now: %v, TimePinAccept: %v, Window: %v", now, website.PinState.TimePinAccept, website.PinState.Window)
@@ -501,13 +481,10 @@ func (website *WebSite) ExpiredPins() bool {
 	return false
 }
 
-func (u *User) Follow(name string, block *skipchain.SkipBlock, cert *common_structs.Cert) {
-	_, data, _ := network.Unmarshal(block.Data)
-	conf, _ := data.(*common_structs.Config)
+func (u *User) Follow(name string, conf *common_structs.Config, cert *common_structs.Cert) {
 
 	website := u.WebSites[name]
 	website.Config = conf
-	website.Latest = block
 
 	// updating PinState
 	website.PinState.Threshold = conf.Threshold

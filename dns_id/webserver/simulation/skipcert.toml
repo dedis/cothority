@@ -5,7 +5,6 @@ Rounds = 1
 RunWait = 20000
 
 Hosts,CK,WK,Clients,Evol1,Evol2
-112,1,10,100,0,0
-5110,50,10,5000,0,0
+62,10,2,20,0,0
 
 

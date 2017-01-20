@@ -106,13 +106,13 @@ type StorageMap struct {
 // Storage stores one identity together with the skipblocks.
 type Storage struct {
 	sync.Mutex
-	ID         skipchain.SkipBlockID
+	ID         []byte
 	Latest     *common_structs.Config
 	Proposed   *common_structs.Config
 	Votes      map[string]*crypto.SchnorrSig
 	Root       *skipchain.SkipBlock
 	Data       *skipchain.SkipBlock
-	SkipBlocks map[string]*skipchain.SkipBlock
+	ConfigBlocks map[string]*common_structs.ConfigPlusNextHash
 	CertInfo   *common_structs.CertInfo
 
 	// Latest PoF (on the Latest config)
@@ -143,38 +143,24 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
  * API messages
  */
 
-// CreateIdentity will register a new SkipChain and add it to our list of identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
+
+func (s *Service) CreateIdentityLight(ai *CreateIdentityLight) (network.Message, onet.ClientError) {
 	log.Lvlf2("Request for a new site identity received at server: %v", s.ServerIdentity())
 	ids := &Storage{
 		Latest: ai.Config,
 	}
-	log.Lvl2("Creating Root-skipchain")
-	var err error
-	ids.Root, err = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
-	log.Lvl2("Creating Data-skipchain")
-	ids.Root, ids.Data, err = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Config)
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
 
-	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-	ids.setSkipBlock(ids.Data)
+	ids.ConfigBlocks = make(map[string]*common_structs.ConfigPlusNextHash)
+	ids.ID,_ = ids.Latest.Hash()
+	roster := ai.Roster
 
-	roster := ids.Root.Roster
-	ids.ID = ids.Data.Hash
 	/*
 		// UNCOMMENT IF CAs ARE TO BE USED
 		log.Lvlf2("Asking for a cert for site: %v", ids.ID)
 		cert, _ := s.ca.SignCert(ai.Config, nil, ids.Data.Hash)
 		certinfo := &common_structs.CertInfo{
 			Cert:   cert[0],
-			SbHash: ids.Data.Hash,
+			SbHash: ids.ID,
 		}
 	*/
 
@@ -187,16 +173,15 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	certinfo := &common_structs.CertInfo{
 		Cert:   cert,
-		SbHash: ids.Data.Hash,
+		SbHash: ids.ID,
 	}
 
 	ids.CertInfo = certinfo
-
-	ids.SkipBlocks = make(map[string]*skipchain.SkipBlock)
-	ids.setSkipBlock(ids.Data)
 	ids.Votes = make(map[string]*crypto.SchnorrSig)
 
-	replies, err := s.PropagateFunc(roster, &PropagateIdentity{ids}, propagateTimeout)
+
+	log.Lvlf2("Propagating Identity")
+	replies, err := s.PropagateFunc(roster, &PropagateIdentityLight{ids}, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
@@ -205,43 +190,38 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 
-	s.save()
 
-	log.LLvlf3("------CreateIdentity(): Successfully created a new identity-------")
-	return &CreateIdentityReply{
-		Root: ids.Root,
-		Data: ids.Data,
+	log.Lvlf2("------CreateIdentity(): Successfully created a new identity-------")
+	return &CreateIdentityLightReply{
 	}, nil
 
 }
 
-// ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
-	sid := s.getIdentityStorage(cu.ID)
-	if sid == nil {
-		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
+
+func (s *Storage) setConfigBlock(latestconf *common_structs.Config) bool {
+	latestconfHash, _ := latestconf.Hash()
+	if s.ConfigBlocks == nil {
+		s.ConfigBlocks = make(map[string]*common_structs.ConfigPlusNextHash)
 	}
-	sid.Lock()
-	defer sid.Unlock()
-	log.Lvl3(s, "Sending config-update")
-	return &ConfigUpdateReply{
-		Config: sid.Latest,
-	}, nil
-}
+	s.ConfigBlocks[string(latestconfHash)] = &common_structs.ConfigPlusNextHash{
+		Config: latestconf,
+		NextHash: []byte{0},
+	}
 
-func (s *Storage) setSkipBlock(latest *skipchain.SkipBlock) bool {
-	//s.Lock()
-	//defer s.Unlock()
-	s.SkipBlocks[string(latest.Hash)] = latest
+	if !bytes.Equal(latestconf.BLink, []byte{0}) {
+		s.ConfigBlocks[string(latestconf.BLink)].NextHash = latestconfHash
+	}
 	return true
 }
 
 // getSkipBlockByID returns the skip-block or false if it doesn't exist
-func (s *Storage) getSkipBlockByID(sbID skipchain.SkipBlockID) (*skipchain.SkipBlock, bool) {
+func (s *Storage) getConfigBlockByID(sbID []byte) (*common_structs.Config, []byte, bool) {
 	//s.Lock()
 	//defer s.Unlock()
-	b, ok := s.SkipBlocks[string(sbID)]
-	return b, ok
+	value, ok := s.ConfigBlocks[string(sbID)]
+	b := value.Config
+	hash := value.NextHash
+	return b, hash, ok
 }
 
 // ProposeSend only stores the proposed configuration internally. Signatures
@@ -250,11 +230,21 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 	log.Lvlf2("Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
-		log.Lvlf2("Didn't find Identity")
+		log.LLvlf2("Didn't find Identity")
 		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
 	}
 
-	roster := sid.Root.Roster
+	// Check whether the block points to the current head block, i.e. its BLink is the hash
+	// of the latest block
+	latestHash, _ := sid.Latest.Hash()
+	if !bytes.Equal(p.Config.BLink, latestHash) {
+		log.Print("No proper backward link")
+		log.Print(p.Config.BLink)
+		log.Print(latestHash)
+		return nil, onet.NewClientErrorCode(4100, "No proper backward link")
+	}
+
+	roster := s.TheRoster
 	replies, err := s.PropagateFunc(roster, p, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientError(err)
@@ -279,11 +269,11 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.Clien
 	}, nil
 }
 
-// ProposeVote takes int account a vote for the proposed config. It also verifies
-// that the voter is in the latest config.
-// An empty signature signifies that the vote has been rejected.
+// ProposeVote propagates the incoming vote to the rest timestampers upon verification
+// of at least one signer as a valid one (to avoid flooding the timestampers, thus mitigating
+// DoS attacks)
 func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError) {
-	log.Lvl2(s, "Voting on proposal")
+	log.Lvl2(s, "ProposeVote(): Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
@@ -330,79 +320,93 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 				return errors.New("Wrong signature: " + err.Error())
 			}
 		}
+
 		return nil
 	}()
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
-
+	log.Lvl2("Before vote propagation")
 	// Propagate the vote
-	_, err = s.PropagateFunc(sid.Root.Roster, v, propagateTimeout)
+	_, err = s.PropagateFunc(s.TheRoster, v, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
+	log.Lvl2("After vote propagation")
+	return nil, nil
 
-	storage := sid.Copy()
+}
 
-	if len(storage.Votes) < storage.Latest.Threshold && len(storage.Votes) != len(storage.Latest.Device) {
-		return nil, nil
-	}
+// CheckVoteUpdateId takes in account a vote for the proposed config and evolves
+// the site identity by updating the latest valid config for the site upon having
+// a threshold of signatures
+func (s *Service) CheckVoteUpdateId(sid *Storage, v *ProposeVote) (onet.ClientError) {
+	log.Lvl2(s, "CheckVoteUpdateId")
 
-	// If we have enough signatures, make a new data-skipblock and
-	// propagate it
-	log.Lvl3("Having majority or all votes")
+	// First verify if the signature is legitimate
 
-	// Making a new data-skipblock
-	log.Lvl3("Sending data-block with", storage.Proposed.Device)
-	reply, err := s.skipchain.ProposeData(storage.Root, storage.Data, storage.Proposed)
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
 
-	skipblock_previous := reply.Previous
-	skipblock_latest := reply.Latest
-	_, msgLatest, err := network.Unmarshal(skipblock_latest.Data)
-	if err != nil {
-		log.Error(err)
-		return nil, onet.NewClientError(err)
-	}
-	al, ok := msgLatest.(*common_structs.Config)
+	log.Lvl2("Voting on", sid.Proposed.Device)
+	owner, ok := sid.Latest.Device[v.Signer]
 	if !ok {
-		log.Error(err)
-		return nil, onet.NewClientError(err)
+		log.Lvlf2("Didn't find signer: %v", v.Signer)
+		return onet.NewClientErrorCode(4100,"Didn't find signer")
 	}
-	storage.Data = skipblock_latest
-	storage.Latest = al
-	storage.Proposed = nil
-	storage.setSkipBlock(skipblock_latest)
-	storage.setSkipBlock(skipblock_previous)
-	storage.Votes = make(map[string]*crypto.SchnorrSig)
-
-	usb := &UpdateSkipBlock{
-		ID:         v.ID,
-		Storage:    storage,
-		SbPrevious: skipblock_previous,
+	if sid.Proposed == nil {
+		log.Lvlf2("No proposed block")
+		return onet.NewClientErrorCode(4100,"No proposed block")
 	}
-
-	roster := storage.Root.Roster
-	/*
-		replies, err2 := messaging.PropagateStartAndWaitf(s.Context, roster,
-			&LockIdentities{}, propagateTimeout, s.Propagate)
-		if err2 != nil {
-			return false, err2
-		}
-		if replies != len(roster.List) {
-			log.Warn("Did only get", replies, "out of", len(roster.List))
-		}
-	*/
-	_, err = s.PropagateFunc(roster, usb, propagateTimeout)
+	hash, err := sid.Proposed.Hash()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		log.Lvlf2("Couldn't get hash")
+		return onet.NewClientErrorCode(4100,"Couldn't get hash")
+	}
+	if _, exists := sid.Votes[v.Signer]; exists {
+		log.Lvlf2("Already voted for that block")
+		return onet.NewClientErrorCode(4100,"Already voted for that block")
 	}
 
-	s.save()
-	return &ProposeVoteReply{storage.Data}, nil
+	// Check whether our clock is relatively close or not to the proposed timestamp
+	err2 := sid.Proposed.CheckTimeDiff(maxdiff_sign)
+	if err2 != nil {
+		log.Lvlf2("Cothority %v", err2)
+		return onet.NewClientError(err2)
+	}
 
+	log.Lvl3(v.Signer, "voted", v.Signature)
+	if v.Signature != nil {
+		err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+		if err != nil {
+			log.Lvlf2("%v", err)
+			return onet.NewClientErrorCode(4100,"Wrong signature: " + err.Error())
+		}
+	}
+
+
+	//Store the vote
+	log.Lvlf2("Storing vote..")
+	log.Lvlf2("Storing vote of signer: %v on proposal..", v.Signer)
+	log.Lvlf2("num of votes (without counting our vote): %v", len(sid.Votes))
+	if len(sid.Votes) == 0 {
+		sid.Votes = make(map[string]*crypto.SchnorrSig)
+	}
+	sid.Votes[v.Signer] = v.Signature
+	sid.Proposed.Device[v.Signer].Vote = v.Signature
+
+	if len(sid.Votes) < sid.Latest.Threshold && len(sid.Votes) != len(sid.Latest.Device) {
+		return nil
+	}
+
+
+	// If we have enough signatures, update the site identity
+	log.Lvl2("Having at least threshold votes")
+	sid.Latest=sid.Proposed
+	sid.Proposed=nil
+	sid.Votes = make(map[string]*crypto.SchnorrSig)
+	sid.setConfigBlock(sid.Latest)
+	log.Lvl2("identity constituted of", len(sid.ConfigBlocks), "blocks")
+	log.Lvl2("hash of latest block: ",hash)
+	return nil
 }
 
 /*
@@ -412,14 +416,13 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
-	id := skipchain.SkipBlockID(nil)
+	id := []byte(nil)
 	var sid *Storage
 	switch msg.(type) {
 	case *LockIdentities:
 		s.identitiesMutex.Lock()
 		return
 	case *PushPublicKey:
-		//log.Print("public key to be stored at server", s.ServerIdentity())
 		p := msg.(*PushPublicKey)
 		public := p.Public
 		serverID := p.ServerID
@@ -432,31 +435,17 @@ func (s *Service) Propagate(msg network.Message) {
 		id = msg.(*ProposeSend).ID
 	case *ProposeVote:
 		id = msg.(*ProposeVote).ID
-	case *UpdateSkipBlock:
-		id = msg.(*UpdateSkipBlock).ID
-		storage := msg.(*UpdateSkipBlock).Storage
-		sbprevious := msg.(*UpdateSkipBlock).SbPrevious
-		sid = s.getIdentityStorage(id)
-		sid.Lock()
-		defer sid.Unlock()
-		sid.Data = storage.Data
-		sid.Latest = storage.Latest
-		sid.Proposed = nil
-		sid.setSkipBlock(sid.Data)
-		sid.setSkipBlock(sbprevious)
-		sid.Votes = make(map[string]*crypto.SchnorrSig)
-		log.Lvlf2("Skipblock with hash: %v has been stored at server: %v", sid.Data.Hash, s.ServerIdentity())
-		return
-	case *PropagateIdentity:
+	case *PropagateIdentityLight:
 		log.Lvlf2("Storing new site identity..")
-		pi := msg.(*PropagateIdentity)
-		id = pi.Data.Hash
+		pi := msg.(*PropagateIdentityLight)
+		id,_ = pi.Latest.Hash()
 		if s.getIdentityStorage(id) != nil {
 			log.Error("Couldn't store new identity")
 			return
 		}
 		sid = pi.Storage
 		sid.Votes = make(map[string]*crypto.SchnorrSig)
+		sid.setConfigBlock(pi.Latest)
 		s.setIdentityStorage(id, sid)
 		return
 	case *PropagateCert:
@@ -492,19 +481,20 @@ func (s *Service) Propagate(msg network.Message) {
 		sid.Lock()
 		switch msg.(type) {
 		case *ProposeSend:
-			log.Lvlf2("Storing proposal..")
+
 			p := msg.(*ProposeSend)
-			sid.Proposed = p.Config
-			log.Lvlf3("num of votes: %v", len(sid.Votes))
+
+			// Check whether the block points to the current head block, i.e. its BLink is the hash
+			// of the latest block
+			latestHash, _ := sid.Latest.Hash()
+			if bytes.Equal(p.Config.BLink, latestHash) {
+				log.Lvlf2("Storing proposal..")
+				sid.Proposed = p.Config
+			}
+
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
-			log.Lvlf2("Storing vote of signer: %v on proposal..", v.Signer)
-			log.Lvlf2("num of votes (without counting our vote): %v", len(sid.Votes))
-			if len(sid.Votes) == 0 {
-				sid.Votes = make(map[string]*crypto.SchnorrSig)
-			}
-			sid.Votes[v.Signer] = v.Signature
-			sid.Proposed.Device[v.Signer].Vote = v.Signature
+			s.CheckVoteUpdateId(sid, v)
 		}
 		sid.Unlock()
 	}
@@ -512,11 +502,12 @@ func (s *Service) Propagate(msg network.Message) {
 
 // Forward traversal of the skipchain from the oldest block as the latter is
 // specified by its hash in the request's 'Hash1' field (if Hash1==[]byte{0}, then start
-// fetching from the skipblock for the config of which the latest cert is acquired) until
+// fetching from the configblock for the config of which the latest cert is acquired) until
 // finding the newest block as it is specified by its hash in the request's 'Hash2' field
-// (if Hash2==[]byte{0}, then fetch all skipblocks until the current skipchain head one).
-// Skipblocks will be returned from the oldest to the newest
-func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.ClientError) {
+// (if Hash2==[]byte{0}, then fetch all configblocks until the current skipchain head one).
+// Configblock will be returned from the oldest to the newest
+func (s *Service) GetValidSbPathLight(req *GetValidSbPathLight) (network.Message, onet.ClientError) {
+	log.Lvl3("Timestamper server received a GetValidSbPathLight message")
 	id := req.ID
 	h1 := req.Hash1
 	h2 := req.Hash2
@@ -531,9 +522,11 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 	defer sid.Unlock()
 
 	var ok bool
-	var sb1 *skipchain.SkipBlock
+	var sb1 *common_structs.Config
+	var nexthash []byte
+
 	if !bytes.Equal(h1, []byte{0}) {
-		sb1, ok = sid.getSkipBlockByID(h1)
+		sb1, _, ok = sid.getConfigBlockByID(h1)
 		if !ok {
 			log.Print("server: %v, site: %v - NO VALID PATH: Skipblock with hash: %v not found", s.String(), sid.ID, h1)
 			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
@@ -548,7 +541,7 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 			}
 		*/
 		h1 = sid.CertInfo.SbHash
-		sb1, ok = sid.getSkipBlockByID(h1)
+		sb1, _, ok = sid.getConfigBlockByID(h1)
 		if !ok {
 			log.Print("NO VALID PATH: Skipblock with hash: %v not found", h1)
 			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
@@ -556,46 +549,48 @@ func (s *Service) GetValidSbPath(req *GetValidSbPath) (network.Message, onet.Cli
 		log.Lvlf3("Last certified skipblock has hash: %v", h1)
 	}
 
-	var sb2 *skipchain.SkipBlock
+
+	//var sb2 *common_structs.Config
+	//sb2 = nil
 	if !bytes.Equal(h2, []byte{0}) {
-		sb2, ok = sid.getSkipBlockByID(h2)
+		//sb2, _, ok = site.getConfigBlockByID(h2)
+		_, _, ok = sid.getConfigBlockByID(h2)
 		if !ok {
-			log.Print("NO VALID PATH: Skipblock with hash: %v not found", h2)
-			return nil, onet.NewClientErrorCode(4100, "NO VALID PATH")
+			log.Lvlf2("NO VALID PATH: Skipblock with hash: %v not found", h2)
+			return nil, onet.NewClientErrorCode(4100,"NO VALID PATH")
 		}
 	} else {
 		// fetch skipblocks until finding the current head of the skipchain
-		h2 = sid.Data.Hash
-		sb2 = sid.Data
-		log.Lvlf2("Current head skipblock has hash: %v", h2)
+		h2,_ = sid.Latest.Hash()
+		//sb2 = sid.Latest
+		log.Lvlf3("Current head skipblock has hash: %v", h2)
 	}
 
 	oldest := sb1
-	newest := sb2
+	//newest := sb2
 
-	log.Lvlf3("Oldest skipblock has hash: %v", oldest.Hash)
-	log.Lvlf3("Newest skipblock has hash: %v", newest.Hash)
-	sbs := make([]*skipchain.SkipBlock, 0)
-	sbs = append(sbs, oldest)
+	log.Lvlf3("Oldest skipblock has hash: %v", h1)
+	log.Lvlf3("Newest skipblock has hash: %v", h2)
+	sbs := make([]*common_structs.Config, 0)
 	block := oldest
-	log.Lvlf3("Appending skipblock with hash: %v", block.Hash)
-	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[0]
-		hash := link.Hash
-		log.Lvlf3("Appending skipblock with hash: %v", hash)
-		block, ok = sid.getSkipBlockByID(hash)
+	nexthash, _ =block.Hash()
+	for !bytes.Equal(nexthash, []byte{0}) {
+		temphash := nexthash
+		block, nexthash, ok = sid.getConfigBlockByID(temphash)
 		if !ok {
-			log.Print("Skipblock with hash: %v not found", hash)
-			return nil, onet.NewClientErrorCode(4100, "Skipblock not found")
+			log.Lvlf2("Skipblock with hash: %v not found", temphash)
+			return nil, onet.NewClientErrorCode(4100,"Skipblock not found")
 		}
 		sbs = append(sbs, block)
-		if bytes.Equal(hash, sid.Data.Hash) || bytes.Equal(hash, newest.Hash) {
+		log.Lvlf3("Added skipblock with hash: %v, h2: %v, nexthash: %v", temphash, h2, nexthash)
+		if bytes.Equal(temphash, h2){
 			break
 		}
 	}
 
-	log.Lvlf2("GetValidSbPath(): End with num of returned blocks: %v, POF: %s", len(sbs), sid.PoF)
-	return &GetValidSbPathReply{Skipblocks: sbs,
+
+	log.Lvlf2("Timestamper server returns %v blocks, POF: %s", len(sbs), sid.PoF)
+	return &GetValidSbPathLightReply{Configblocks: sbs,
 		Cert: sid.CertInfo.Cert,
 		Hash: sid.CertInfo.SbHash,
 		PoF:  sid.PoF,
@@ -632,74 +627,10 @@ func (s *Service) GetPoF(req *GetPoF) (network.Message, onet.ClientError) {
 	defer sid.Unlock()
 
 	pof := sid.PoF
-	hash := sid.Data.Hash
+	hash,_ := sid.Latest.Hash()
 	return &GetPoFReply{PoF: pof, SbHash: hash}, nil
 }
 
-// Checks whether the current valid cert for a given site is going to expire soon/it has already expired
-// in which case a fresh cert by a CA should be acquired
-func (s *Service) CheckRefreshCert(id skipchain.SkipBlockID) (bool, error) {
-	sid := s.getIdentityStorage(id)
-	if sid == nil {
-		log.Lvlf2("Didn't find identity")
-		return false, errors.New("Didn't find identity")
-	}
-
-	cert_sb_ID := sid.CertInfo.SbHash // hash of the skipblock whose config is the latest certified one
-	cert_sb, _ := sid.getSkipBlockByID(cert_sb_ID)
-	_, data, _ := network.Unmarshal(cert_sb.Data)
-	cert_conf, _ := data.(*common_structs.Config)
-	diff := time.Since(time.Unix(0, cert_conf.Timestamp*1000000))
-	diff_int := diff.Nanoseconds() / 1000000
-
-	if cert_conf.MaxDuration-diff_int >= refresh_bound {
-		log.Lvlf2("We will not get a fresh cert today because the old one is still \"very\" valid")
-		return false, nil
-	}
-
-	// Get a fresh cert for the 'latestconf' which is included into the site skipchain's current head block
-	_, data, _ = network.Unmarshal(sid.Data.Data)
-	latestconf, _ := data.(*common_structs.Config)
-
-	var prevconf *common_structs.Config
-	if !bytes.Equal(id, sid.Data.Hash) { // if site's skipchain is constituted of more than one (the genesis) skiblocks
-		// Find 'prevconf' which is included into the second latest head skipblock of the skipchain
-		prevhash := sid.Data.BackLinkIds[0]
-		prevblock, ok := sid.getSkipBlockByID(prevhash)
-		if !ok {
-			log.Lvlf2("Skipblock with hash: %v not found", prevhash)
-			return false, fmt.Errorf("Skipblock with hash: %v not found", prevhash)
-		}
-		_, data, _ = network.Unmarshal(prevblock.Data)
-		prevconf, _ = data.(*common_structs.Config)
-	} else {
-		prevconf = nil
-	}
-
-	// Ask for a cert for the 'latestconf'
-	log.Lvlf2("Asking for a cert for site: %v", sid.ID)
-	cert, _ := s.ca.SignCert(latestconf, prevconf, id)
-	log.Lvlf3("[site: %v] num of certs: %v", sid.ID, len(cert))
-	certinfo := &common_structs.CertInfo{
-		Cert:   cert[0],
-		SbHash: sid.Data.Hash,
-	}
-	sid.CertInfo = certinfo
-
-	roster := sid.Root.Roster
-	replies, err := s.PropagateFunc(roster, &PropagateCert{sid}, propagateTimeout)
-	if err != nil {
-		return false, err
-	}
-	if replies != len(roster.List) {
-		log.Warn("Did only get", replies, "out of", len(roster.List))
-	}
-
-	log.Lvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
-	log.Lvlf2("CERT REFRESHED!")
-	log.Lvlf2("_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ")
-	return true, nil
-}
 
 func (s *Service) PushPublicKey(req *PushPublicKey) (network.Message, onet.ClientError) {
 	log.LLvlf2("Public key of a ws received at server: %v", s.ServerIdentity())
@@ -736,7 +667,7 @@ func (s *Service) PullPublicKey(req *PullPublicKey) (network.Message, onet.Clien
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
+func (s *Service) getIdentityStorage(id []byte) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	is, ok := s.Identities[string(id)]
@@ -747,7 +678,7 @@ func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
+func (s *Service) setIdentityStorage(id []byte, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
@@ -808,7 +739,7 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 		log.Lvlf2("_______________________________________________________")
 		data := make([][]byte, 0)
 		data2 := make([]common_structs.HashID, 0)
-		ids := make([]skipchain.SkipBlockID, 0)
+		ids := make([][]byte, 0)
 
 		s.identitiesMutex.Lock()
 		identities := s.Identities
@@ -970,8 +901,9 @@ func newIdentityService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate, s.MinusOneWebserver,
-		s.GetValidSbPath, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsFinish, s.LetsEvolve, s.PushedPublic,
+		s.CreateIdentityLight, s.ProposeUpdate, s.MinusOneWebserver,
+		s.GetValidSbPathLight, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart,
+		s.LetsFinish, s.LetsEvolve, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
@@ -1090,17 +1022,15 @@ func (s *Service) StartSimul(msg network.Message) {
 		// cold key case
 		go func() {
 			<-s.publicDone
-			/*for ;; {
-				if s.ok==true {
-					break
-				}
-			}*/
 			log.Print(s.Context, "ColdKeyHolder is now ready to pursue")
 			randWkh := index_WK + rand.Int()%(len(m.Roster.List)-index_WK)
 			s.startCkh(m.Roster, roster_WK, randWkh, index_ws+(index-index_CK), m.Evol1, m.Evol2)
 		}()
 	default:
 		// cothority warm key case
+		s.identitiesMutex.Lock()
+		s.TheRoster=roster_WK
+		s.identitiesMutex.Unlock()
 		if index == index_WK {
 			go s.RunLoop(roster_WK)
 		}
@@ -1119,7 +1049,7 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 	log.Print("roster is: %s", roster_WK)
 	fqdn := fmt.Sprintf("site%d", index_ws)
 	id := NewIdentity(roster_WK, fqdn, 1, "CKH_one", "device", nil, data, int64(0))
-	err := id.CreateIdentity()
+	err := id.CreateIdentityLight()
 	log.ErrFatal(err)
 	log.Print("Site Identity has been created")
 
@@ -1152,7 +1082,6 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 			log.Print("evol block: ", idx+1)
 			id.ProposeConfig(nil, nil, 0, 0, serverIDs)
 			id.ProposeUpVote()
-			id.ConfigUpdate()
 		}
 
 		client2 := onet.NewClient(ServiceName)
@@ -1265,7 +1194,7 @@ func (s *Service) LetsFinish(req *common_structs.MinusOneClient) (network.Messag
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
 	s.cnt2++
-	log.Printf("%v",s.cnt2)
+	log.Printf("clients already finished visiting website: %v",s.cnt2)
 	if s.cnt2 == s.expected2 {
 		s.clientsDone <- true
 	}

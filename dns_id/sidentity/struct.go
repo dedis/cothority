@@ -29,7 +29,7 @@ const maxdiff_sign = 300000
 const refresh_bound = 3000
 
 // ID represents one skipblock and corresponds to its Hash.
-type ID skipchain.SkipBlockID
+type ID []byte
 
 // Copy returns a deep copy of the Storage
 func (sid *Storage) Copy() *Storage {
@@ -48,8 +48,8 @@ func (sid *Storage) Copy() *Storage {
 	if len(sidNew.Votes) == 0 {
 		sidNew.Votes = make(map[string]*crypto.SchnorrSig)
 	}
-	if len(sidNew.SkipBlocks) == 0 {
-		sidNew.SkipBlocks = make(map[string]*skipchain.SkipBlock)
+	if len(sidNew.ConfigBlocks) == 0 {
+		sidNew.ConfigBlocks = make(map[string]*common_structs.ConfigPlusNextHash)
 	}
 	return sidNew
 }
@@ -77,6 +77,7 @@ type CreateIdentity struct {
 	Roster *onet.Roster
 }
 
+
 // CreateIdentityReply is the reply when a new Identity has been added. It
 // returns the Root and Data-skipchain.
 type CreateIdentityReply struct {
@@ -84,9 +85,17 @@ type CreateIdentityReply struct {
 	Data *skipchain.SkipBlock
 }
 
+type CreateIdentityLight struct {
+	Config *common_structs.Config
+	Roster *onet.Roster
+}
+
+type CreateIdentityLightReply struct {
+}
+
 // ConfigUpdate verifies if a new update is available.
 type ConfigUpdate struct {
-	ID skipchain.SkipBlockID // the Hash of the genesis skipblock
+	ID []byte // the Hash of the genesis skipblock
 }
 
 // ConfigUpdateReply returns the updated configuration.
@@ -97,13 +106,13 @@ type ConfigUpdateReply struct {
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
-	ID skipchain.SkipBlockID
+	ID []byte
 	*common_structs.Config
 }
 
 // ProposeUpdate verifies if a new config is available.
 type ProposeUpdate struct {
-	ID skipchain.SkipBlockID
+	ID []byte
 }
 
 // ProposeUpdateReply returns the updated propose-configuration.
@@ -111,24 +120,25 @@ type ProposeUpdateReply struct {
 	Propose *common_structs.Config
 }
 
+
 // ProposeVote sends the signature for a specific IdentityList. It replies nil
 // if the threshold hasn't been reached, or the new SkipBlock
 type ProposeVote struct {
-	ID        skipchain.SkipBlockID
+	ID        []byte
 	Signer    string
 	Signature *crypto.SchnorrSig
 }
 
-// ProposeVoteReply returns the signed new skipblock if the threshold of
-// votes have arrived.
-type ProposeVoteReply struct {
-	Data *skipchain.SkipBlock
-}
+
 
 // Messages to be sent from one identity to another
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
+	*Storage
+}
+
+type PropagateIdentityLight struct {
 	*Storage
 }
 
@@ -141,26 +151,40 @@ type PropagatePoF struct {
 }
 
 type UpdateSkipBlock struct {
-	ID         skipchain.SkipBlockID
+	ID         []byte
 	Storage    *Storage
 	SbPrevious *skipchain.SkipBlock
 }
 
 type GetValidSbPath struct {
-	ID    skipchain.SkipBlockID
-	Hash1 skipchain.SkipBlockID
-	Hash2 skipchain.SkipBlockID
+	ID    []byte
+	Hash1 []byte
+	Hash2 []byte
 }
 type GetValidSbPathReply struct {
 	Skipblocks []*skipchain.SkipBlock
 	Cert       *common_structs.Cert
 	// Hash of the skiblock the config of which has been certified by the (latest) 'Cert'
-	Hash skipchain.SkipBlockID
+	Hash []byte
+	PoF  *common_structs.SignatureResponse
+}
+
+
+type GetValidSbPathLight struct {
+	ID    []byte
+	Hash1 []byte
+	Hash2 []byte
+}
+type GetValidSbPathLightReply struct {
+	Configblocks []*common_structs.Config
+	Cert       *common_structs.Cert
+	// Hash of the skiblock the config of which has been certified by the (latest) 'Cert'
+	Hash []byte
 	PoF  *common_structs.SignatureResponse
 }
 
 type PushPublicKey struct {
-	//ID       skipchain.SkipBlockID
+	//ID       []byte
 	Roster   *onet.Roster
 	Public   abstract.Point
 	ServerID *network.ServerIdentity
@@ -170,7 +194,7 @@ type PushPublicKeyReply struct {
 }
 
 type PullPublicKey struct {
-	//ID       skipchain.SkipBlockID
+	//ID       []byte
 	ServerID *network.ServerIdentity
 }
 
@@ -179,20 +203,20 @@ type PullPublicKeyReply struct {
 }
 
 type GetCert struct {
-	ID skipchain.SkipBlockID
+	ID []byte
 }
 
 type GetCertReply struct {
-	SbHash skipchain.SkipBlockID
+	SbHash []byte
 	Cert   *common_structs.Cert
 }
 
 type GetPoF struct {
-	ID skipchain.SkipBlockID
+	ID []byte
 }
 
 type GetPoFReply struct {
-	SbHash skipchain.SkipBlockID
+	SbHash []byte
 	PoF    *common_structs.SignatureResponse
 }
 

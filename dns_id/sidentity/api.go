@@ -4,15 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"sync"
 
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/cosi"
 	"github.com/dedis/crypto/ed25519"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
@@ -47,6 +44,8 @@ func init() {
 		// API messages
 		&CreateIdentity{},
 		&CreateIdentityReply{},
+		&CreateIdentityLight{},
+		&CreateIdentityLightReply{},
 		&ConfigUpdate{},
 		&ConfigUpdateReply{},
 		&ProposeSend{},
@@ -54,10 +53,12 @@ func init() {
 		&ProposeUpdateReply{},
 		&ProposeVote{},
 		&Data{},
-		&ProposeVoteReply{},
 		&GetValidSbPath{},
 		&GetValidSbPathReply{},
+		&GetValidSbPathLight{},
+		&GetValidSbPathLightReply{},
 		&PropagateIdentity{},
+		&PropagateIdentityLight{},
 		&PropagateCert{},
 		&PropagatePoF{},
 		&UpdateSkipBlock{},
@@ -99,9 +100,9 @@ type Data struct {
 	// Client type {"device" or "ws"}
 	Ctype string
 	// ID of the skipchain this device is tied to.
-	ID skipchain.SkipBlockID
+	ID []byte
 	// ID of the latest known skipblock
-	LatestID skipchain.SkipBlockID
+	LatestID []byte
 	// Latest known skipblock
 	Latest *skipchain.SkipBlock
 	// Config is the actual, valid configuration of the identity-skipchain.
@@ -157,10 +158,11 @@ func NewIdentity(cothority *onet.Roster, fqdn string, threshold int, owner strin
 	return nil
 }
 
-// CreateIdentity asks the sidentityService to create a new SIdentity
-func (i *Identity) CreateIdentity() error {
-	log.Lvlf2("CreateIdentity(): Start")
+
+func (i *Identity) CreateIdentityLight() error {
+	log.Lvlf2("CreateIdentityLight(): Start")
 	_ = i.Config.SetNowTimestamp()
+	i.Config.BLink =[]byte{0}
 
 	// configure the tls keypairs of the web servers (pull their public
 	// keys which will be used for the ecnryption of the tls private
@@ -174,20 +176,20 @@ func (i *Identity) CreateIdentity() error {
 	i.Config = proposedConf.Copy()
 
 	hash, _ := i.Config.Hash()
-	log.Lvlf3("Proposed config's hash: %v", hash)
+	log.Lvlf3("Proposed (genesis) config's hash: %v", hash)
 
 	sig, _ := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	i.Config.Device[i.DeviceName].Vote = &sig
 
-	air := &CreateIdentityReply{}
-	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority}, air)
+	air := &CreateIdentityLightReply{}
+	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &CreateIdentityLight{i.Config, i.Cothority}, air)
 	if cerr != nil {
 		return cerr
 	}
 
-	i.ID = air.Data.Hash
-	i.LatestID = air.Data.Hash
-	err := i.ConfigUpdate()
+	i.ID = hash
+	i.LatestID = hash
+	err := i.ConfigUpdateLight()
 	if err != nil {
 		return err
 	}
@@ -244,7 +246,7 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 	for _, id := range ids {
 		id.ID = air.Data.Hash
 		id.LatestID = air.Data.Hash
-		err := id.ConfigUpdate()
+		err := id.ConfigUpdateLight()
 		if err != nil {
 			return err
 		}
@@ -253,10 +255,10 @@ func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
 }
 
 // AttachToIdentity proposes to attach a device to an existing Identity
-func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
+func (i *Identity) AttachToIdentity(ID []byte) error {
 	i.ID = ID
 	i.LatestID = ID
-	i.ConfigUpdate()
+	i.ConfigUpdateLight()
 
 	var err error
 
@@ -290,15 +292,18 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) error {
 // ProposeConfig proposes a new skipblock with general modifications (add/revoke one or
 // more devices and/or change the threshold and/or change tls keypairs of one or more web servers
 // specified by their ServerIdentities as they are given in the argument 'serverIDs')
-// Devices to be revoked regarding the proposed config should NOT vote upon their revovation
+// Devices to be revoked regarding the proposed config should NOT vote upon their revocation
 // (or, in the case of voting, a negative vote is the only one accepted)
 func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, duration int64, serverIDs []*network.ServerIdentity) error {
+	log.Lvlf2("ProposeConfig")
 	var err error
-	err = i.ConfigUpdate()
+	err = i.ConfigUpdateLight()
 	if err != nil {
 		return err
 	}
 	confPropose := i.Config.Copy()
+	confPropose.BLink, _ = i.Config.Hash()
+
 	for _, dev := range confPropose.Device {
 		dev.Vote = nil
 	}
@@ -344,6 +349,7 @@ func (i *Identity) ProposeSend(il *common_structs.Config) error {
 // ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ProposeUpdate() error {
+	log.Lvl2("ProposeUpdate")
 	reply := &ProposeUpdateReply{}
 	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
 		ID: i.ID,
@@ -352,8 +358,10 @@ func (i *Identity) ProposeUpdate() error {
 		return cerr
 	}
 	i.Proposed = reply.Propose
+	log.Lvlf2("Proposal received: %v", i.Proposed)
 	return nil
 }
+
 
 // ProposeVote calls the 'accept'-vote on the current propose-configuration
 func (i *Identity) ProposeVote(accept bool) error {
@@ -383,19 +391,22 @@ func (i *Identity) ProposeVote(accept bool) error {
 	if err != nil {
 		return err
 	}
-
+	log.Lvl2("ProposeVote(): before sending vote to one of the timestampers")
 	i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	}, nil)
 
+	log.Lvl2("ProposeVote() ends")
 	return nil
 }
 
-// ConfigUpdate asks if there is any new config available that has already
-// been approved by others and updates the local configuration
-func (i *Identity) ConfigUpdate() error {
+
+
+
+func (i *Identity) ConfigUpdateLight() error {
+	log.Lvlf2("ConfigUpdateLight")
 	if i.Ctype == "device" {
 		log.Lvlf3("ConfigUpdate(): We are device: %v", i.DeviceName)
 	}
@@ -403,62 +414,46 @@ func (i *Identity) ConfigUpdate() error {
 		return errors.New("Didn't find any list in the cothority")
 	}
 	log.Lvlf2("device %v, latest block's hash: %v", i.DeviceName, i.LatestID)
-	blocks, cert, _, _, err := i.GetValidSbPath(i.ID, i.LatestID, []byte{0})
+	blocks, cert, _, _, err := i.GetValidSbPathLight(i.ID, i.LatestID, []byte{0})
 	if err != nil {
 		return err
 	}
 
-	err = i.ValidateConfigChain(blocks)
+	err = i.ValidateConfigChainLight(blocks)
 	if err != nil {
 		return err
 	}
 
-	i.Latest = blocks[len(blocks)-1]
-	i.LatestID = i.Latest.Hash
-	_, data, err2 := network.Unmarshal(i.Latest.Data)
-	if err2 != nil {
-		return errors.New("Couldn't unmarshal skipblock's config")
-	}
-	newconf, ok := data.(*common_structs.Config)
-	if !ok {
-		return errors.New("Couldn't get type '*Config'")
-	}
-	i.Config = newconf
+	i.Config = blocks[len(blocks)-1].Copy()
+	i.LatestID,_ = i.Config.Hash()
 	i.Cert = cert
 	return nil
 }
 
-func (i *Identity) ValidateConfigChain(blocks []*skipchain.SkipBlock) error {
+
+
+func (i *Identity) ValidateConfigChainLight(blocks []*common_structs.Config) error {
+	log.Lvl2("ValidateConfigChainLight starts")
 	var err error
 	for index, b := range blocks {
 		log.Lvlf3("%v block with hash: %v", index, b.Hash)
 	}
 
-	// Check that the hash of the first block of the returned list is the latest known
+	// Check that the hash of the first block/config of the returned list is the latest known
 	// to us so far
-	prev := blocks[0]
-	if !bytes.Equal(prev.Hash, i.LatestID) {
-		log.Lvlf2("%v %v: Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", i.Ctype, i.DeviceName, prev.Hash, i.LatestID)
+	trustedconfig := blocks[0].Copy()
+	hash,_ := trustedconfig.Hash()
+	if !bytes.Equal(hash, i.LatestID) {
+		log.Lvlf2("%v %v: Returned chain of skipblocks starts with wrong skipblock hash (prev.Hash=%v, i.LatestID=%v)", i.Ctype, i.DeviceName, hash, i.LatestID)
 		return errors.New("Returned chain of skipblocks starts with wrong skipblock hash")
 	}
 
-	var trustedconfig *common_structs.Config
 	// Check the validity of each skipblock hop
 	for index, block := range blocks {
-		next := block
+		newconfig := block
 		if index > 0 {
 			log.Lvlf2("Checking trust delegation: %v -> %v", index-1, index)
 			cnt := 0
-
-			_, data, err2 := network.Unmarshal(next.Data)
-			if err2 != nil {
-				return errors.New("Couldn't unmarshal subsequent skipblock's SkipBlockFix field")
-			}
-			newconfig, ok := data.(*common_structs.Config)
-			if !ok {
-				return errors.New("Couldn't get type '*Config'")
-			}
-
 			for key, newdevice := range newconfig.Device {
 				if _, exists := trustedconfig.Device[key]; exists {
 					b1, _ := network.Marshal(newdevice.Point)
@@ -486,62 +481,39 @@ func (i *Identity) ValidateConfigChain(blocks []*skipchain.SkipBlock) error {
 				log.Lvlf1("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
 				return errors.New("No sufficient threshold of trusted devices' votes")
 			}
-
-			// Verify the cothority's signatures regarding the forward links
-			link := prev.ForwardLink[len(prev.ForwardLink)-1]
-
-			if !bytes.Equal(link.Hash, next.Hash) {
-				log.Lvlf2("Cothority's signature upon wrong skipblock hash")
-				return errors.New("Cothority's signature upon wrong skipblock hash")
-			}
-			// Check whether cothority's signature verify or not
-			hash := []byte(link.Hash)
-			publics := prev.Roster.Publics()
-			if prev.Roster != nil {
-				err := cosi.VerifySignature(network.Suite, publics, hash, link.Signature)
-				if err != nil {
-					log.Lvlf2("Cothority's signature NOT ok")
-					return errors.New("Cothority's signature doesn't verify")
-				}
-			} else {
-				log.Lvlf2("Found no roster")
-				return errors.New("Found no roster")
-			}
-
 		}
-		prev = next
-		_, data, _ := network.Unmarshal(prev.Data)
-		trustedconfig = data.(*common_structs.Config)
+		trustedconfig = newconfig.Copy()
 	}
 	log.Lvlf3("ValidateConfigChain(): End")
 	return nil
 }
 
-// if h2==0, fetch all the skipblocks until the current head one
-func (i *Identity) GetValidSbPath(id skipchain.SkipBlockID, h1 skipchain.SkipBlockID, h2 skipchain.SkipBlockID) ([]*skipchain.SkipBlock, *common_structs.Cert, skipchain.SkipBlockID, *common_structs.SignatureResponse, error) {
-	log.Lvlf3("GetValidSbPath(): Start")
-	reply := &GetValidSbPathReply{}
-	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &GetValidSbPath{ID: id, Hash1: h1, Hash2: h2}, reply)
+
+
+func (i *Identity) GetValidSbPathLight(id []byte, h1 []byte, h2 []byte) ([]*common_structs.Config, *common_structs.Cert, []byte, *common_structs.SignatureResponse, error) {
+	log.Lvlf2("GetValidSbPathLight(): Start")
+	reply := &GetValidSbPathLightReply{}
+	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &GetValidSbPathLight{ID: id, Hash1: h1, Hash2: h2}, reply)
 	if cerr != nil {
 		return nil, nil, nil, nil, cerr
 	}
-	log.Lvlf3("GetValidSbPath(): Received reply from cothority")
-	sbs := reply.Skipblocks
+	log.Lvlf2("GetValidSbPathLight(): Received %v blocks from cothority", len(reply.Configblocks))
+	sbs := reply.Configblocks
 	cert := reply.Cert
 	hash := reply.Hash
 	pof := reply.PoF
 
 	// check the trust delegation between each pair of subsequent skipblocks/configs	_
-	err := i.ValidateConfigChain(sbs)
+	err := i.ValidateConfigChainLight(sbs)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	log.Lvlf3("GetValidSbPath(): End")
+	log.Lvlf2("GetValidSbPathLight(): End")
 	return sbs, cert, hash, pof, nil
 }
 
 // fetch the current valid cert for the site (not yet expired)
-func (i *Identity) GetCert(id skipchain.SkipBlockID) (*common_structs.Cert, skipchain.SkipBlockID, error) {
+func (i *Identity) GetCert(id []byte) (*common_structs.Cert, []byte, error) {
 	reply := &GetCertReply{}
 	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &GetCert{ID: i.ID}, reply)
 	if cerr != nil {
@@ -554,7 +526,7 @@ func (i *Identity) GetCert(id skipchain.SkipBlockID) (*common_structs.Cert, skip
 }
 
 // fetch the latest PoF for the (latest) skipblock of the site
-func (i *Identity) GetPoF(id skipchain.SkipBlockID) (*common_structs.SignatureResponse, skipchain.SkipBlockID, error) {
+func (i *Identity) GetPoF(id []byte) (*common_structs.SignatureResponse, []byte, error) {
 	reply := &GetPoFReply{}
 	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &GetPoF{ID: i.ID}, reply)
 	if cerr != nil {
@@ -586,51 +558,6 @@ func (i *Identity) PullPublicKey(serverID *network.ServerIdentity) (abstract.Poi
 
 	public := reply.Public
 	return public, nil
-}
-
-// NewIdentityFromCothority searches for a given cothority
-func NewIdentityFromCothority(el *onet.Roster, id skipchain.SkipBlockID) (*Identity, error) {
-	iden := &Identity{
-		CothorityClient: onet.NewClient(ServiceName),
-		Data: Data{
-			Cothority: el,
-			ID:        id,
-		},
-	}
-	err := iden.ConfigUpdate()
-	if err != nil {
-		return nil, err
-	}
-	return iden, nil
-}
-
-// NewIdentityFromStream reads the configuration of that client from
-// any stream
-func NewIdentityFromStream(in io.Reader) (*Identity, error) {
-	data, err := ioutil.ReadAll(in)
-	if err != nil {
-		return nil, err
-	}
-	_, i, err := network.Unmarshal(data)
-	if err != nil {
-		return nil, err
-	}
-	id := i.(*Data)
-	identity := &Identity{
-		CothorityClient: onet.NewClient(ServiceName),
-		Data:            *id,
-	}
-	return identity, nil
-}
-
-// SaveToStream stores the configuration of the client to a stream
-func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.Marshal(&i.Data)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(data)
-	return err
 }
 
 // GetProposed returns the Propose-field or a copy of the config if

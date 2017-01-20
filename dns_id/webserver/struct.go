@@ -17,12 +17,12 @@ const propagateTimeout = 10000
 const maxdiff = 20000
 
 // ID represents one skipblock and corresponds to its Hash.
-type ID skipchain.SkipBlockID
+type ID []byte
 
 // Messages between the Client-API and the Service
 
 type Connect struct {
-	ID skipchain.SkipBlockID
+	ID []byte
 }
 
 type ConnectReply struct {
@@ -30,16 +30,16 @@ type ConnectReply struct {
 	Certs  []*common_structs.Cert
 }
 
-type GetValidSbPath struct {
+type GetValidSbPathLight struct {
 	FQDN  string
-	Hash1 skipchain.SkipBlockID
-	Hash2 skipchain.SkipBlockID
+	Hash1 []byte
+	Hash2 []byte
 	// To be signed with the web servers (current) tls private key
 	Challenge []byte
 }
 
-type GetValidSbPathReply struct {
-	Skipblocks []*skipchain.SkipBlock
+type GetValidSbPathLightReply struct {
+	Configblocks []*common_structs.Config
 	Cert       *common_structs.Cert
 	PoF        *common_structs.SignatureResponse
 	// The signature (using the private tls key) of the chosen webserver upon the challenge

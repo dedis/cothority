@@ -43,7 +43,7 @@ const MaxInt = int(MaxUint >> 1)
 const maxdiff_sign = 300000
 
 // ID represents one skipblock and corresponds to its Hash.
-type ID skipchain.SkipBlockID
+type ID []byte
 
 type My_Scalar struct {
 	Private abstract.Scalar
@@ -52,6 +52,8 @@ type My_Scalar struct {
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
 type Config struct {
+	// hash of the previous config-block
+	BLink []byte
 	FQDN string
 	// The time in ms when the request was started
 	Timestamp int64
@@ -67,6 +69,11 @@ type Config struct {
 	CAs []CAInfo
 
 	ProxyRoster *onet.Roster
+}
+
+type ConfigPlusNextHash struct {
+	Config *Config
+	NextHash []byte
 }
 
 // Device is represented by a public key and possibly the signature of the
@@ -120,7 +127,7 @@ type PinState struct {
 
 type Cert struct {
 	// Site's ID
-	ID skipchain.SkipBlockID
+	ID []byte
 	// The pointed config's hash
 	Hash []byte
 	// The signature of the certification authority upon the 'Hash'
@@ -132,13 +139,13 @@ type Cert struct {
 type CertInfo struct {
 	// Hash of the skiblock the config of which has been certified by the latest cert
 	// which is the only one that is currently valid
-	SbHash skipchain.SkipBlockID
+	SbHash []byte
 	Cert   *Cert
 }
 
 type SignatureResponse struct {
 	// id of the site's genesis skipblock
-	ID skipchain.SkipBlockID
+	ID []byte
 	// the number of ms elapsed since January 1, 1970 UTC
 	Timestamp int64
 	// The tree root that was signed:
@@ -203,6 +210,11 @@ func (c *Config) Hash() ([]byte, error) {
 	hash := network.Suite.Hash()
 
 	_, err := hash.Write([]byte(c.FQDN))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = hash.Write(c.BLink)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +380,7 @@ func (c *Config) IsOlderConfig(c2 *Config) bool {
 	return false
 }
 
-func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff int64) error {
+func (pof *SignatureResponse) Validate(latestconf *Config, maxdiff int64) error {
 	log.Lvlf2("CHECKING POF (identifier: %v)", pof.Identifier)
 	// Check whether the 'latest' skipblock is stale or not (by checking the freshness of the PoF)
 	isfresh := pof.CheckFreshness(maxdiff)
@@ -377,8 +389,6 @@ func (pof *SignatureResponse) Validate(latestsb *skipchain.SkipBlock, maxdiff in
 	}
 
 	signedmsg := RecreateSignedMsg(pof.Root, pof.Timestamp)
-	_, data, _ := network.Unmarshal(latestsb.Data)
-	latestconf, _ := data.(*Config)
 	publics := make([]abstract.Point, 0)
 	for _, proxy := range latestconf.ProxyRoster.List {
 		publics = append(publics, proxy.Public)
@@ -573,7 +583,7 @@ func ElGamalDecrypt(suite abstract.Suite, prikey abstract.Scalar, K, C abstract.
 }
 
 type IdentityReady struct {
-	ID            skipchain.SkipBlockID
+	ID            []byte
 	Cothority     *onet.Roster
 	FirstIdentity *network.ServerIdentity
 	CkhIdentity   *network.ServerIdentity
