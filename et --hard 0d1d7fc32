@@ -1,0 +1,2344 @@
+[33mcommit 072b30160968a0f04bac929753e93ecfe9beaad7[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Wed Jan 18 02:23:33 2017 +0100
+
+    added webserver sync code and measurments, fixed multi-site problem
+
+[33mcommit 9103b0a8a7f10d006995661e54df7b8d914cd190[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Tue Jan 17 23:52:54 2017 +0100
+
+    code for deterlab simul
+
+[33mcommit bdc6eb3210c71ba617c66ae59257e6000c0bd1f9[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Mon Jan 16 17:57:19 2017 +0100
+
+    after resolving the unregistered error
+
+[33mcommit c62c3ec8ba5b8cfa8678a903cce2ea19bd6a686e[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 16 10:30:58 2017 +0100
+
+    more binaries
+
+[33mcommit e1e8a2e44aa28aa2af290c26b69dfc89efcc2dde[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 16 10:29:43 2017 +0100
+
+    removed binaries
+
+[33mcommit 2d45c5ace753c7381e3e9277ed99f5e353dc556d[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 16 10:23:04 2017 +0100
+
+    added ignore for deploy-dir
+
+[33mcommit fb6c5b69ee956b432c29aa73e40780e80b142ab3[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 16 10:22:34 2017 +0100
+
+    removed binaries
+
+[33mcommit 5c557b55505494b337fc823f2f43b0b813b47306[m
+Merge: ae14b6f ac0f047
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 16 09:48:46 2017 +0100
+
+    moved to onet.v1
+
+[33mcommit ae14b6f51758172ba76f904645b610792f4fbf03[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Mon Jan 16 08:48:13 2017 +0100
+
+    pushing simulation code
+
+[33mcommit 0ac0831d92ad24f44b19d43918e460d4bf953fb6[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Sun Jan 15 11:19:55 2017 +0100
+
+    identities cleared at the beginning
+
+[33mcommit 23833ae3755607737bdb715c62f923824844fdcb[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Sun Jan 15 00:26:01 2017 +0100
+
+    fixed code for measurements
+
+[33mcommit ba8e42ccfd9954a5d2800a6306645b6b808806b9[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Sat Jan 14 16:56:40 2017 +0100
+
+    more sync code for simul
+
+[33mcommit ac0f047ef4d2116b8108cc5b09c19d8c5619e947[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 13 17:05:28 2017 +0100
+
+    Conode runscript 721 (#775)
+    
+    * following onet changes
+    
+    * first try
+    
+    * correct skipchain service
+    
+    * updated script
+    
+    * using dataavailable
+    
+    * updating script further
+    
+    * more testing
+    
+    * updated mailing
+    
+    * moved test-file to conode
+    
+    * go get everything
+    
+    * updated script
+    
+    * updated script
+    
+    * moved conode, updated README and added version
+    
+    * updated comments
+
+[33mcommit 0f31f20780079c7c450796cff23dc94079019a73[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Jan 13 16:51:58 2017 +0100
+
+    going to v1.0
+
+[33mcommit 69436db84d7177777055a863f4a672cccd63cde6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 13 15:52:21 2017 +0100
+
+    adjusting READMEs to new framework (#752)
+    
+    * adjusting READMEs to new framework
+    
+    * old readme
+    
+    * updated readmes
+    
+    * first edit pass README.md
+    
+    * some tweaks
+    
+    * further tweaks
+    
+    * more tweaks
+    
+    * tweaks
+    
+    * tweaks
+    
+    * more README tweaks
+    
+    * ...
+    
+    * ...
+    
+    * typo
+    
+    * integrating feedback of Nicolas
+    
+    * typo
+    
+    * mailto
+    
+    * tweaks
+    
+    * typo
+    
+    * ...
+    
+    * update links
+    
+    * simplifications
+    
+    * include Bryan's comments
+    
+    * more tweaks
+    
+    * relative links
+    
+    * relative links
+    
+    * more relative links
+    
+    * start tweaking CoSi README
+    
+    * CoSi README
+    
+    * CoSi README
+    
+    * Update email in cothority README
+    
+    * PATH details
+    
+    * cosi README tweak
+    
+    * ...
+    
+    * ...
+    
+    * Delete README_cothority.md
+    
+    * Delete README_old.md
+    
+    * Delete README_protocols.md
+    
+    * Delete errcheck.sh
+    
+    * Delete gofmt.sh
+    
+    * Delete lint.sh
+    
+    * Delete network.proto
+
+[33mcommit 14f7e771ab0d014895325852f054d92cdee5694d[m
+Author: Philipp Jovanovic <philipp@jovanovic.io>
+Date:   Fri Jan 13 15:45:10 2017 +0100
+
+    Conode Help Text and README (#785)
+    
+    * align conode & cosi help texts; add conode README
+    
+    * formulation
+    
+    * more conode README tweaks
+    
+    * ...
+
+[33mcommit 047c3c993c058e02f6197afff60c720e0b0ad64a[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Fri Jan 13 15:10:32 2017 +0100
+
+    change api according to onet (#783)
+
+[33mcommit fa98f820add4d0fc0047fb1f52f076acafca8bac[m
+Author: Philipp Jovanovic <philipp@jovanovic.io>
+Date:   Fri Jan 13 11:21:43 2017 +0100
+
+    PR: CoSi help texts (#781)
+    
+    * edit pass cosi help text
+
+[33mcommit 46429c56afd1e3dac88ec1efaf3bfde6fed4f058[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 13 09:35:22 2017 +0100
+
+    implements cothority_776 (#779)
+
+[33mcommit 1fc313a15396fff808f28a5b98cc3ac907a8f801[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 13 09:26:23 2017 +0100
+
+    following onet changes 1/2 (#771)
+    
+    * following onet changes
+    * following onet_70 (#778)
+
+[33mcommit 32aeb76a2b7ef6b1ac966544d3186dbc41d533ad[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Thu Jan 12 23:19:47 2017 +0100
+
+    fixed sync error (thread added)
+
+[33mcommit a469897abe9e3dcb65c830998f19626b2f7d481e[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Thu Jan 12 20:43:37 2017 +0100
+
+    code for sync done
+
+[33mcommit 37b75cb899ce788b4d88dc0d810d999205455bc8[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Thu Jan 12 10:55:31 2017 +0100
+
+    adapting code to network changes #722 onet (#772)
+
+[33mcommit ca26ae0375c7792de96219aaf17613df93cc8319[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Wed Jan 11 23:12:38 2017 +0100
+
+    sync code for simul
+
+[33mcommit 4c53957cfe58c73feddc1ba4dea090aad17dc9a2[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Wed Jan 11 13:36:14 2017 +0100
+
+    working after porting to new version
+
+[33mcommit 7eaeae714813d75182936d22d018622bec4b0c2e[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Tue Jan 10 20:34:57 2017 +0100
+
+    still broken after adaption to the new struct
+
+[33mcommit 899252fbf9f60d728512ee1ee1f5d3221756b561[m
+Author: Georgia <georgia.fragkouli@epfl.ch>
+Date:   Tue Jan 10 15:40:17 2017 +0100
+
+    after porting to new version
+
+[33mcommit 1f07cf92e46ddabc4151f979f3cd3c3c196d17cc[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Jan 9 10:49:13 2017 +0100
+
+    removed old crypto references (#765)
+
+[33mcommit 994ef4575e353fa252a071ea8efcb123359adb35[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 6 16:55:47 2017 +0100
+
+    refined cosi-channel-handling (#763)
+    
+    * refined cosi-channel-handling
+
+[33mcommit 004da0cc8aeeea66b253e525c97bc4ebcc6e73a6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 6 16:02:18 2017 +0100
+
+    uses return-value of registernewservice
+
+[33mcommit eb318608a4f11d546b5966c7af9a9ddd50c43d55[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 6 15:52:47 2017 +0100
+
+    Status 734 (#762)
+    
+    * use new stats-structure
+
+[33mcommit 7333be38e4fe6919ff503b97d9cdfeb4fc5b5191[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Jan 6 14:49:58 2017 +0100
+
+    updated travis (#760)
+    
+    * updated travis
+
+[33mcommit 69cc41e02b0a6f8af02bde62640f1cebc7c2d2f6[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Thu Jan 5 17:02:24 2017 +0100
+
+    using CreateProtocol (#746)
+
+[33mcommit 7513dd23e880a134eca90a58b50a94161cab9be2[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Jan 5 15:29:57 2017 +0100
+
+    added simulation-tests (#758)
+    
+    * added simulation-tests
+    * moving cosi to new localhost simulation
+
+[33mcommit 65155a8df6714f038298960166ba78570ed7bc1f[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Jan 4 16:12:15 2017 +0100
+
+    Simulations 744 (#757)
+    
+    * added all simulations
+
+[33mcommit ef3edf489645252e7556ad004934d0326008e4a7[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Jan 4 12:25:19 2017 +0100
+
+    Coveralls exclude 753 (#754)
+    
+    * don't measure coverage in app-dirs
+
+[33mcommit 322aea9867b8f87060112753ed5da79f7ca6d71e[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Jan 4 12:21:37 2017 +0100
+
+    making nicer dispatch-function with correct channel handling (#751)
+
+[33mcommit 940dddc003c2786442e7a3efb3d7a729dd8f696a[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Jan 4 11:51:53 2017 +0100
+
+    moved to new onet-apps (#748)
+    
+    * moved to new onet-apps
+
+[33mcommit 874f4c1801879ca89742df139de650a43d2ca567[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Dec 19 10:23:06 2016 +0100
+
+    Better `check` command output with -detail flag (#740)
+    
+    * adding all known servers
+    
+    * better check
+    
+    * updated ismails server
+    
+    * check roster up to sqrt len
+    
+    * respect debug-flag
+    
+    * flag details
+
+[33mcommit 21ee1d3f8e1d752ae9883e98ecac8ac190efb6dd[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Thu Dec 15 14:00:12 2016 +0100
+
+    renaming left to onet (#738)
+
+[33mcommit a1c9a69afb5f81b781928e94d3558b1e84ad94b6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 15 11:02:34 2016 +0100
+
+    group toml reduced for new version
+
+[33mcommit c4baa588a0c7948ea6ca9f9dbd9f6f1200142aca[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 15 10:09:06 2016 +0100
+
+    Cothority import changed to onet (#736)
+
+[33mcommit e764717ea3079a98e856a5f5f9386eb2c24bcb40[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Dec 14 14:07:22 2016 +0100
+
+    Websocket sda  (#726)
+    
+    * added skipchain and identity-changes
+    
+    * removed VerifySwup from skipchain
+    
+    * added constants
+    
+    * impl but test not working (already before this commit)
+    
+    * debugging
+    
+    * registering services chronologically
+    
+    * registering verification-functions directly to the service
+    
+    * My first RWLock
+    
+    * cleaning up evaluation
+    
+    * skipping 1024 connections when in Travis
+    
+    * running only problematic section with -v
+    
+    * running only problematic section with -v
+    
+    * more verbose testing
+    
+    * 4 was too verbose for travis
+    
+    * don't run long test on Travis
+    
+    * adding websockets
+    
+    * adding shutdown to services
+    
+    * cleaning up
+    
+    * done implementation - testing
+    
+    * cleaning up
+    
+    * should work for cothorityd now
+    
+    * added ping-pong
+    
+    * looping through messages
+    
+    * added a debug method
+    
+    * sending message over websocket
+    
+    * sending message over websocket
+    
+    * sending map[string]string
+    
+    * sending whole status
+    
+    * sending whole status
+    
+    * making correct struct
+    
+    * structure
+    
+    * structure
+    
+    * structure
+    
+    * adding cothorityd-run script
+    
+    * added more status
+    
+    * added cosi to script
+    
+    * added description
+    
+    * testing websockets
+    
+    * wip
+    
+    * services
+    
+    * from websocket_3
+    
+    * also adding websockets
+    
+    * removed merge conflict
+    
+    * more proto files
+    
+    * merge conflict
+    
+    * undo old websocket branch
+    
+    * remove registermessagehandler
+    
+    * cleaning up structs
+    
+    * cleaning up
+    
+    * make tests
+    
+    * cleaned up master-mess
+    
+    * re-did is_description
+    
+    * comment
+    
+    * updated crypto.proto
+    
+    * no websocket-service
+    
+    * renamed
+    
+    * sending to guard
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * merging proto-files down
+    
+    * updated proto-files
+    
+    * cleaning up
+    
+    * go vet
+    
+    * merge-conflict
+    
+    * 83
+    
+    * print aggregate
+    
+    * print aggregate
+    
+    * print aggregate
+    
+    * correct testing of modified roster
+    
+    * Websocket cleanup - 3/3 (#731)
+    
+    * from websocket_3
+    
+    * merge conflict
+    
+    * undo old websocket branch
+    
+    * updated crypto.proto
+    
+    * renamed
+    
+    * sending to guard
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * cleaning up
+    
+    * go vet
+    
+    * merge-conflict
+    
+    * more changes
+    
+    * handle error-codes correctly
+    
+    * cleaning up
+    
+    * using new status-structure
+    
+    * required/optional
+    
+    * commented error-codes
+    
+    * compile error
+    
+    * wrong error code?
+    
+    * logging
+    
+    * logging
+    
+    * removed aggregate
+    
+    * loop while waiting on messages
+    
+    * correctly closing clients
+    
+    * correctly close the client
+    
+    * nicolas comments
+    
+    * Error code websockt (#732)
+    
+    * handle error-codes correctly
+    
+    * cleaning up
+    
+    * using new status-structure
+    
+    * commented error-codes
+    
+    * compile error
+    
+    * wrong error code?
+    
+    * logging
+    
+    * logging
+    
+    * loop while waiting on messages
+    
+    * correctly closing clients
+    
+    * correctly close the client
+    
+    * using registerhandler
+    
+    * optional field
+    
+    * Websocket services - 2/3 (#730)
+    
+    * services
+    
+    * from websocket_3
+    
+    * removed merge conflict
+    
+    * more proto files
+    
+    * merge conflict
+    
+    * undo old websocket branch
+    
+    * updated crypto.proto
+    
+    * renamed
+    
+    * sending to guard
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * merging proto-files down
+    
+    * updated proto-files
+    
+    * cleaning up
+    
+    * go vet
+    
+    * merge-conflict
+    
+    * 83
+    
+    * print aggregate
+    
+    * print aggregate
+    
+    * print aggregate
+    
+    * correct testing of modified roster
+    
+    * Websocket cleanup - 3/3 (#731)
+    
+    * from websocket_3
+    
+    * merge conflict
+    
+    * undo old websocket branch
+    
+    * updated crypto.proto
+    
+    * renamed
+    
+    * sending to guard
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * updated all tests
+    
+    * cleaning up
+    
+    * go vet
+    
+    * merge-conflict
+    
+    * more changes
+    
+    * handle error-codes correctly
+    
+    * cleaning up
+    
+    * using new status-structure
+    
+    * required/optional
+    
+    * commented error-codes
+    
+    * compile error
+    
+    * wrong error code?
+    
+    * logging
+    
+    * logging
+    
+    * removed aggregate
+    
+    * loop while waiting on messages
+    
+    * correctly closing clients
+    
+    * correctly close the client
+    
+    * Error code websockt (#732)
+    
+    * handle error-codes correctly
+    
+    * cleaning up
+    
+    * using new status-structure
+    
+    * commented error-codes
+    
+    * compile error
+    
+    * wrong error code?
+    
+    * logging
+    
+    * logging
+    
+    * loop while waiting on messages
+    
+    * correctly closing clients
+    
+    * correctly close the client
+    
+    * using registerhandler
+    
+    * optional field
+    
+    * last wishes
+
+[33mcommit b42f78248517aefe50b88777a8c19968a9ae4226[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Dec 13 11:08:15 2016 +0100
+
+    adding lefteris
+
+[33mcommit fdb16262a7b80b390e4033f95d2fb201cda01291[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Dec 12 09:06:01 2016 +0100
+
+    added kirill's server
+
+[33mcommit e61328354547d8dc8c5b370e4d679c8a800a7cc1[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 9 10:52:28 2016 +0100
+
+    re-did si_description (#729)
+
+[33mcommit feacbab6e4a6a8747e8a45b44a502cd3e53a6c5d[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 9 08:40:05 2016 +0100
+
+    Revert "adding description to server identity (#712)"
+    
+    This reverts commit ac2e34985da9f412949ee92fa25724f07942adbe.
+
+[33mcommit 0444f35406bf2c7a0500cfeeb002b85b38d441ac[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 9 08:39:52 2016 +0100
+
+    Revert "checkout of websocket_3"
+    
+    This reverts commit d3be43dc3248a9663198dc008ca01bb413b23dff.
+
+[33mcommit d3be43dc3248a9663198dc008ca01bb413b23dff[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 8 16:53:37 2016 +0100
+
+    checkout of websocket_3
+
+[33mcommit ac2e34985da9f412949ee92fa25724f07942adbe[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 8 16:39:51 2016 +0100
+
+    adding description to server identity (#712)
+    
+    * adding description and removing unused method
+    
+    * description in si
+    
+    * added description
+
+[33mcommit e5d7c959a12bbe0caeec49f0ef834059aea41401[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Thu Dec 8 13:33:35 2016 +0100
+
+    Fix wireprotocol for simulation (#718)
+    
+    * register packets in all protocols
+
+[33mcommit 9c0556e1809ffa5519a33f3f7e7f3648e6f2a3e7[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 8 09:04:30 2016 +0100
+
+    adding philipp's server
+
+[33mcommit af6d2f2d7578c6b674205a9d62a890af840a1b7e[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Wed Dec 7 14:39:39 2016 +0100
+
+    Fix network connections - max file descriptors (#720)
+    
+    * add connection-timeout and removing closed connections from map
+
+[33mcommit b7289ff0e3ad36161a7dfbdb9b78ae671615745a[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 2 14:05:08 2016 +0100
+
+    Service test cleanup (#707)
+    
+    * first try
+    
+    * registerprocessorfunc to context+servicemanager
+    
+    * test service dispatcher working
+    
+    * registering
+    
+    * commenting
+    
+    * moved things in order
+    
+    * cleaning up
+    
+    * comments
+
+[33mcommit 30c1a4de09637b02fea600036c66eb5c872abb41[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 2 13:53:06 2016 +0100
+
+    Longer timeout for cosi sign  (#714)
+    
+    * nicer output and 10s timeout
+    
+    * nicer output and 10s timeout
+
+[33mcommit 7889a7346718f7d387793df787e5b5edbec269c5[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 2 11:27:20 2016 +0100
+
+    Remove `InterServiceMessages` (#706)
+    
+    * first try
+    
+    * registerprocessorfunc to context+servicemanager
+    
+    * test service dispatcher working
+    
+    * registering
+    
+    * commenting
+    
+    * panicing ServiceProcessor.Process
+
+[33mcommit 4f27a18b8fa550d542e1ba58d90ec58aa98cf3e6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 2 09:48:23 2016 +0100
+
+    small
+
+[33mcommit 4fdd1d9249a3a289f40d1555c4eae4b50df55e3f[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Dec 2 09:07:36 2016 +0100
+
+    unprinting
+
+[33mcommit ef10498ae9fa6a6fdffc1972137ae6fcff051e83[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 1 16:31:12 2016 +0100
+
+    Refactor packet sda (#716)
+    
+    * adding MessageProxy
+
+[33mcommit 0e010d43925fe109a54bce0400cc19dcfba9e72b[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Thu Dec 1 15:13:06 2016 +0100
+
+    single measure as private with test (#709)
+
+[33mcommit c4d1ec7d777c1462dad9cbfb8f6b2c0e051cd623[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Dec 1 15:05:31 2016 +0100
+
+    Refactor packet cosi (#710)
+    
+    * add messageproxy to overlay
+
+[33mcommit abb0b82a19c02ceedf3dbb7778635543e1e1ec6f[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Nov 29 16:32:57 2016 +0100
+
+    log parse flag cli (#705)
+
+[33mcommit 671ef4b0cc5ba2af92b69c569da943692453489d[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Nov 29 12:52:07 2016 +0100
+
+    cleaning up
+
+[33mcommit 0edad521e56e8371b929b50243edac77a6a71d33[m
+Merge: ce0afa0 6b5147f
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Nov 28 12:40:59 2016 +0100
+
+    Merge branch 'master' of github.com:dedis/cothority
+
+[33mcommit ce0afa068c6dc947d8c05bd48c2c4e388f55cd2c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Nov 28 12:40:43 2016 +0100
+
+    log when re creating connection
+
+[33mcommit 6b5147fb46a4e5d9eb7dd4ad4fea23d7c2419fed[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Nov 25 22:41:53 2016 +0100
+
+    check for return-value in handler + log.contains
+    
+    * making it possible for the logger to print to a buffer
+    
+    * testing of return-value in protocol
+    
+    * checking for return-value
+    
+    * added test-case
+    
+    * merged with latest logger
+    
+    * show message-type and move error to dispatchMsgReader
+    
+    * cleaning up ntree
+    
+    * fixed one more protocol and race-condition in logger
+    
+    * race-condition in test
+    
+    * added Contains*-methods
+    
+    * adjusted tests
+
+[33mcommit 59f96ffb73a8d3e85445db92c481736222d3022d[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Nov 24 16:58:34 2016 +0100
+
+    check-argument in cothorityd and fix address binding (#695)
+
+[33mcommit 9b570d361562e3898e569b3a561c9ee236187036[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Nov 24 08:17:54 2016 +0100
+
+    remove debug-output
+
+[33mcommit 695844d0182e89cdb380260e8df223e237d52df4[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Nov 21 16:56:37 2016 +0100
+
+    AGPL-license (#628)
+    
+    * added AGPL-license and AUTHORS file
+
+[33mcommit 828e36768930ca2d18f7bd83e5aaf6bc1934e96e[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Nov 21 13:07:07 2016 +0100
+
+    log output to buffer for test (#685)
+
+[33mcommit 21669f60123674807620d6f6f8bdd7e7e1c327e3[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Nov 18 12:47:07 2016 +0100
+
+    changed codegangsta to ufavre (#683)
+
+[33mcommit fdbd6491e265323d5a38c315202dd0b26e9e26a0[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Nov 16 14:51:17 2016 +0100
+
+    better output checking servers cosi
+    
+    * putting everything on one line
+    
+    * checking all pairs, even after error
+
+[33mcommit 3c299441e7bc341ab3ecddca5dc963cbe70d9632[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Wed Nov 16 13:58:33 2016 +0100
+
+    Fix some network issues (#673)
+    
+    * fix order of unlocking the sync.Cond.mutex
+    * fixed closing channel issue
+    *  2 * O(n^2) complexity test now
+    * only channel use no more mutex
+    * adding lock over global variable i in testPropagate
+    * test coverage when conn drops and back again
+    * fix golint update version
+
+[33mcommit 9e96a78e3e816a96ff76edb4dbaf46af98e5673e[m
+Author: Nicolas Gailly <nikkolasg@users.noreply.github.com>
+Date:   Mon Nov 14 10:33:37 2016 +0100
+
+    Channge of keys for nikkolasg server
+
+[33mcommit 260318016d362aa5161503c6390951e0b8e0162a[m
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Wed Nov 9 16:29:59 2016 +0100
+
+    Merge cosi into cothority (#665)
+    
+    * bringing cosi back home (first commit)
+    * reduce duplicate code
+    * cleaning comments and docs
+    * remove special install.sh solely dealing with fetching the right dedis/cosi branch
+    * Increment version
+    * dedis servers (group-toml)
+
+[33mcommit 0e63f8d985266b41c9b6a8e158f8ac406f86eef2[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Nov 3 13:56:33 2016 +0100
+
+    Add ProtocolRegister (#658)
+    
+    * Make ProtocolRegister method available to services
+    * needed for simulations where more than one conode is started in one process, and the services use a protocol that depends on service-internal-variables; like in the propagate protocol
+
+[33mcommit b3f67514f43c8462da173a23fd2c523a4dc5474b[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Nov 3 13:50:19 2016 +0100
+
+    return correct IPv6 unspecified address in Address.Host (#657)
+    
+    returns correct IPv6 unspecified address [::] in Address.Host
+
+[33mcommit afa61a9ea3bc8267676639eb1bd944c305612c38[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Oct 31 17:33:30 2016 +0100
+
+    Error handling in network (#654)
+    
+    * implemented
+    
+    * linting
+    
+    * ErrTimeout
+    
+    * correct waiting
+
+[33mcommit 391e3da9a57c5771958c72ffca544cef0400f119[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Oct 14 12:27:58 2016 +0200
+
+    Network 647 (#648)
+    
+    * merged network-related stuff from tls_host
+    
+    * merged changes from tls-branch
+    
+    * removed server_test
+    
+    * removed ServerIdentity-field from Conode
+
+[33mcommit 47375c4e497f5ee79a1a83ae68dcb924476c4fdf[m
+Author: Philipp Jovanovic <philipp@jovanovic.io>
+Date:   Thu Oct 13 16:51:47 2016 +0200
+
+    RandHound 341 (#519)
+    
+    @Daeinar's implementation of:
+    
+    - PVSS
+    - ZK-Proofs for equality of dlogs
+    - RandHound: client-server protocol for generation of unbiasable, publicly verifiable random number generation
+
+[33mcommit e2c06a0b25915a5569f742f98a079d0bd17d73ea[m
+Merge: 08796f1 504417b
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Oct 13 16:31:28 2016 +0200
+
+    Merge pull request #645 from dedis/treenode_protocol
+    
+    Create a new protocol from a TreeNodeInstance
+
+[33mcommit 08796f10dfa5b418c0deae99bcb12fac08f0d846[m
+Merge: 849d3dd c34d4db
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Oct 13 15:04:25 2016 +0200
+
+    Merge pull request #641 from dedis/monochrome_output_617
+    
+    Quickfix: Change default behavior of dbg library to monochrome output
+
+[33mcommit 849d3dd4b294c994ee3e3c7db3a116e66a94a53d[m
+Merge: 5a50902 2acbd17
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Thu Oct 13 14:02:30 2016 +0200
+
+    Merge pull request #644 from dedis/sda_local
+    
+    unified creation of tcp/local conode for local
+
+[33mcommit 504417b860259a6d33e88d27da09e388b88e0fcd[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Oct 13 13:41:49 2016 +0200
+
+    moved test to treenode_test
+
+[33mcommit aa41acb32fa0aead35d087914c2fef55bd9c83b1[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Oct 13 12:46:47 2016 +0200
+
+    with tests
+
+[33mcommit 2acbd1705aaf71ff84bd97ca1da51a2cfd640ab1[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Oct 13 11:34:07 2016 +0200
+
+    linting
+
+[33mcommit 4a65f3827704a8c198c84366abe62ae1980e0e09[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Oct 13 11:32:26 2016 +0200
+
+    CreateProtocol added to treenodeinstance
+
+[33mcommit 34452a828635d581c59a04a7f8192c373045a6e6[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Oct 13 11:25:11 2016 +0200
+
+    unified creation of tcp/local conode for local
+
+[33mcommit 5a50902be706b63409b7dfa76808ff5eecce19db[m
+Merge: 73f9e08 747b3a1
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Wed Oct 12 17:20:24 2016 +0200
+
+    Merge pull request #643 from dedis/matplotlib_scripts
+    
+    using numpy-arrays
+
+[33mcommit c34d4db2cbe75a9d6dce2e3739de96fdb316571c[m
+Author: Liamsi <Liamsi@users.noreply.github.com>
+Date:   Wed Oct 12 16:45:53 2016 +0200
+
+    Changed comment of DEBUG_COLOR
+
+[33mcommit 747b3a1fbb4161c4e54b42992163fb9720366ad6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Oct 12 16:36:26 2016 +0200
+
+    using numpy-arrays
+
+[33mcommit 45b7d909ce1b6c6db96b2a33e999f00e7ca966b7[m
+Author: Liamsi <Liamsi@users.noreply.github.com>
+Date:   Wed Oct 12 13:23:16 2016 +0200
+
+    Quickfix: Change default behavior of dbg library to monochrome output
+
+[33mcommit 73f9e0852310a82aa077a580f65842827e597652[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Oct 10 17:44:29 2016 +0200
+
+    Store protocols in Conode (#635)
+    
+    * first implementation
+    
+    * moved protocol registration to a structure
+    
+    * covered all lines
+    
+    * get it with cosi
+    
+    * made instantiators private and comment
+    
+    * returning error and privatizing even more
+
+[33mcommit 91724a0d340adf96a2e651d22663ba47782c93dc[m
+Merge: 31ac277 3843b7b
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Oct 5 15:20:01 2016 +0200
+
+    Merge pull request #574 from dedis/refactor_network
+    
+    [MAIN] Refactor network - base PR
+
+[33mcommit 3843b7b137b9fa88777c92cb1e4ced1a62afc1ea[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Oct 5 14:00:43 2016 +0200
+
+    vetting
+
+[33mcommit 7c1dafb95803467c65975d8249b70dd5361a65cd[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Oct 5 13:43:51 2016 +0200
+
+    JVSS works like a charm
+
+[33mcommit 7ff947ed099d629f6ea032da1cfff24b750638f3[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Oct 5 09:32:24 2016 +0200
+
+    made app/test-outputs less verbose (#629)
+
+[33mcommit 12307cf7888c9865b143d9d0747c25d70b3428e6[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 16:31:07 2016 +0200
+
+    golang 1.7
+
+[33mcommit 9be9d845e7a6e3c9bd8670e2df937066e352ff47[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 16:03:31 2016 +0200
+
+    coveralls takes the branch name
+
+[33mcommit e111a919a6f2f3312039c2c0c64a2aeb461980ad[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 15:56:58 2016 +0200
+
+    small improvements from PRs
+
+[33mcommit 8f66b11f05d222d92125bc7ceba6a13c8f436954[m
+Merge: 7088c02 da5d0a2
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 15:55:17 2016 +0200
+
+    merging again and passing
+
+[33mcommit 7088c02ae73679461c98e7f1beef5aca81ace5ef[m
+Merge: c3c8b71 31ac277
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 15:50:20 2016 +0200
+
+    merged + sda pass
+
+[33mcommit da5d0a2e25109f83a9c9e7b09cda977c562bd25c[m
+Merge: c3c8b71 5206280
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Oct 4 15:13:43 2016 +0200
+
+    Merge pull request #626 from dedis/refactor_network_whole
+    
+    Refactor network whole
+
+[33mcommit 5206280574178082a1ddf56fc3337a4971aa8b6b[m
+Merge: 5de96d6 c3c8b71
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 15:12:11 2016 +0200
+
+    Merge branch 'refactor_network' into refactor_network_whole
+
+[33mcommit 5de96d651fe2c2a4b28b2ac98c47b4204c8b44af[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Oct 4 14:59:04 2016 +0200
+
+    renaming host->conode and variables (#625)
+
+[33mcommit ef0fceff02439e9a66f7fb7bf2cec98e153745e6[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 14:58:21 2016 +0200
+
+    simulation fixed
+
+[33mcommit f8ecf9600c43b54ed588b94fe3f3f6cdc67b5a6a[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 13:37:18 2016 +0200
+
+    adding messageS
+
+[33mcommit c00e9e2073263620e94031ad64821354f787672a[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 13:34:14 2016 +0200
+
+    adding conode.go
+
+[33mcommit 50b976ee0c13b30ddf0d67fbb8bd54a212cc7bdd[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 12:31:22 2016 +0200
+
+    comments from @ineiti
+
+[33mcommit 673e9bcc4f2ccd313fe0222daeb2679e87ce36ea[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Oct 4 11:11:52 2016 +0200
+
+    comments on conode
+
+[33mcommit 31ac2771b73824ddb8044d3804227091ba1a6e68[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Oct 4 09:51:55 2016 +0200
+
+    adding Clone() and verification loop (#623)
+
+[33mcommit fecaae092a98956b05a692fba009ab9df0cb4498[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Oct 3 16:09:57 2016 +0200
+
+    conode transformations left overs
+
+[33mcommit 10be60ca169be063f27645c0d55629a0d693bdc8[m
+Merge: 78cf7f2 a758f3f
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Oct 3 13:23:32 2016 +0200
+
+    Merge remote-tracking branch 'origin/refactor_network_identity' into refactor_network_whole
+
+[33mcommit 78cf7f20b550e11f2e59b571e9f9238e9118ad40[m
+Author: nicolas gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Oct 3 13:22:55 2016 +0200
+
+    conode transformation
+
+[33mcommit c3c8b71742d23fe47d9175934aa60363b837deb8[m
+Merge: ec83fda fe5df8f
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 16:23:19 2016 +0200
+
+    Merge pull request #571 from dedis/refactor_network_sda
+    
+    [5/7] Refactor network - SDA changes
+
+[33mcommit cf5eff20b6ba1c2c4b6a37fa7408d61ae1848caa[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 15:34:44 2016 +0200
+
+    fixed protocols without medco
+
+[33mcommit 838bf3e527364f55bf58cac55875596dad5f75fc[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 14:22:16 2016 +0200
+
+    last commit
+
+[33mcommit fe5df8f64e428f30edc56740adb5f362d8c2dc35[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 14:09:02 2016 +0200
+
+    last comment on PR
+
+[33mcommit b50c4577ea5a72974b3a928470b29eb0902c2672[m
+Merge: 54316b7 829440a
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 14:06:56 2016 +0200
+
+    network+sda+proto+service works
+
+[33mcommit 54316b771045d2936bbda4687a99b7df676a7799[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 13:23:00 2016 +0200
+
+    make local simul work
+
+[33mcommit 482d793d0ff576f66e3baa71662935f0e4b9f8a6[m
+Merge: 02d2d2e 22ee2f6
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 12:04:43 2016 +0200
+
+    Merge branch 'refactor_network_whole' of github.com:dedis/cothority into refactor_network_whole
+
+[33mcommit 02d2d2ecec0e1f4336bb69a864657d118a0134c1[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 12:04:06 2016 +0200
+
+    intermediate
+
+[33mcommit 22ee2f66e068e13cf12b4ad622ab7bd81a2f30cd[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 12:00:43 2016 +0200
+
+    cleaning up
+
+[33mcommit ec83fdacaef9113ecfb4e39d6a28f0dee450ebdb[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 12:00:29 2016 +0200
+
+    cleaning up
+
+[33mcommit a758f3f02b755474d9cea2073413701dfbbc7438[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 12:00:25 2016 +0200
+
+    cleaning up
+
+[33mcommit a97625246d20b90d68a14937537f67bba2ba8b65[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 12:00:24 2016 +0200
+
+    cleaning up
+
+[33mcommit fb227f964c7f3adfbc900d8446f6bd10d0143d86[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 11:00:37 2016 +0200
+
+    skipchain passign
+
+[33mcommit 4bcae2ee6af38d9e240819ba91c707e154192d1e[m
+Merge: 6b6d7e5 c2931bc
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 10:58:33 2016 +0200
+
+    status working
+
+[33mcommit c2931bc5ffd12a5341a6eb6c44d149a9d9c45755[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 10:55:15 2016 +0200
+
+    removed medco
+
+[33mcommit 49eef6b676100f3e5022f8e258c66648e0b13927[m
+Merge: eb17658 c3a3145
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 10:54:27 2016 +0200
+
+    Merge branch 'refactor_network_identity' of github.com:dedis/cothority into refactor_network_identity
+
+[33mcommit eb176587544c4049b5a14212fcc4763f2f3caf47[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 30 10:52:52 2016 +0200
+
+    all services working
+
+[33mcommit 829440ac4904abf8a62ab92cfe1d4edd378d355e[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 10:22:39 2016 +0200
+
+    cleaning up
+
+[33mcommit 6b6d7e5ed62623cb71e26bd00e1f2dba7c86452e[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 10:17:05 2016 +0200
+
+    cleaning up
+
+[33mcommit 99a30d2448bc122b316536682836f290f10e0017[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 10:16:27 2016 +0200
+
+    cleaning up
+
+[33mcommit c3a31455687e108045874341953f78538effd9c5[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 10:16:13 2016 +0200
+
+    cleaning up
+
+[33mcommit aaf2101edc13e280758f664bd35a0fb7326be1d6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 10:16:09 2016 +0200
+
+    cleaning up
+
+[33mcommit 2c21735180133b1c9f43328aad0ef97273b38980[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 30 08:10:10 2016 +0200
+
+    removing unused protocols
+
+[33mcommit 114fd22f6914f4815b62d05c61d9518854ffbbfa[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Sep 29 17:25:21 2016 +0200
+
+    added skipchain and identity-changes (#607)
+    
+    a SecureTCPHost opens a connection so that it can be closed again
+    putting the time-out in identity-service from 1sec to 10sec
+    adding a test for GetUpdateChain in skipchain
+    registering services uses a slice so that the instantiations get done chronologically
+    verifier-functions in SkipChain get now registered directly to the instance of the service
+
+[33mcommit f62bf0ced87c347b1b520a873ae5670a0a461803[m
+Merge: 093ae2b bb6567c
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Thu Sep 29 15:49:38 2016 +0200
+
+    Merge pull request #616 from dedis/refactor_network_sda_comments
+    
+    Comments for SDA changes [5/7]
+
+[33mcommit f36dbf5188e63ee1349430e21b3878e09bacf01e[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 15:39:55 2016 +0200
+
+    protocols working
+
+[33mcommit 0923a5b7d8b10de8f68ca80adbc2b82094c08977[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 15:32:43 2016 +0200
+
+    manage + bftcosi works
+
+[33mcommit 68ef81031819b74fe323cb97b5eab5fcd8ad4b8c[m
+Merge: 6155a80 093ae2b
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 15:19:35 2016 +0200
+
+    Merge branch 'refactor_network_sda' into refactor_network_identity
+
+[33mcommit 093ae2b1f58eae2c135dc8e4c860d4824bf21906[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 15:12:16 2016 +0200
+
+    comments from pr
+
+[33mcommit b12accc8467e2d3cd82e470f4904920be59f0a8a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 14:47:06 2016 +0200
+
+    corrected local host behavior listen
+
+[33mcommit fa17026cdbbb924bf3f5c0d3f7446dc569eae585[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 14:41:52 2016 +0200
+
+    simulation test working
+
+[33mcommit 9293cb0814cae827e160acfd651e6b7c11cdbe73[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 14:40:56 2016 +0200
+
+    simulation number corrected
+
+[33mcommit cdb7b33152db7fee630de32585d8b72e2df9e3f6[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 13:44:10 2016 +0200
+
+    simulationBF works
+
+[33mcommit e06b9e5756ef1c52a42e26b954d2a525eb86dd1f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Thu Sep 29 13:40:27 2016 +0200
+
+    void commit
+
+[33mcommit 20d2cdb5fddcb322eaf215a8d49becd1800074fd[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 17:09:16 2016 +0200
+
+    comments from PRs
+
+[33mcommit a5621e3ae872089b43c62456825d832edd178e0f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 16:36:37 2016 +0200
+
+    simulation_test still buggy
+
+[33mcommit 518979d6e6cb65fb15a6234af3335a7526073a5f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 16:35:10 2016 +0200
+
+    tcp address :0 corrected in local
+
+[33mcommit 32d5b1b7c96a426c976f952b85e01df347a58fa4[m
+Merge: c373375 5843152
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 16:19:12 2016 +0200
+
+    Merge branch 'refactor_network_router' into refactor_network_sda
+
+[33mcommit 58431523c4d46aca5aeedd5e4942bb1c3496083c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 16:17:57 2016 +0200
+
+    ineiti's comments again
+
+[33mcommit f72dc5a82d311338e7a1073abf1d50402cc6837a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 16:15:12 2016 +0200
+
+    tests working again..
+
+[33mcommit c373375f0a62492a85a6978e05a7238bf42c49d3[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:52:40 2016 +0200
+
+    fixed local leak
+
+[33mcommit a87d69ae61e8c42da29312775fdef30e93e92607[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:19:08 2016 +0200
+
+    trying to get the tests...
+
+[33mcommit 8bb2ab05147badbf7b19925226f31711eea78972[m
+Merge: d402032 7df801c
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:04:07 2016 +0200
+
+    Merge branch 'refactor_network_router' into refactor_network_sda
+
+[33mcommit 7df801cdb5acac6047d7a9c879332196f3bc3003[m
+Merge: d290663 b99bcef
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:03:10 2016 +0200
+
+    Merge branch 'refactor_network_router' of github.com:dedis/cothority into refactor_network_router
+
+[33mcommit d290663a1ee9e02742d6a7d73d586481ee6cf333[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:03:04 2016 +0200
+
+    moved setter after err handling
+
+[33mcommit d402032882b7eb2bbc82a22c70da4b22d3c37ae7[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 14:02:23 2016 +0200
+
+    removed logaftertest
+
+[33mcommit bb6567c0056835d20fdc7d1c3e76ba3f7f4292b6[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Sep 28 12:11:11 2016 +0200
+
+    comments
+
+[33mcommit b99bcef84af3cdbb8f136875bc834982f39709d3[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Sep 28 11:25:42 2016 +0200
+
+    Refactor network router comments (#614)
+
+[33mcommit 37d0ae6200e03895dd4eaa909998c7295e91bd2d[m
+Merge: 453d28e 2478a30
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 11:00:03 2016 +0200
+
+    Merge branch 'refactor_network_router' into refactor_network_sda
+
+[33mcommit 2478a3008c7f6d253e434c23c0a2190e8fb03a7b[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 10:50:35 2016 +0200
+
+    var to const type of conn
+
+[33mcommit e0026c6310755db460493a5ba613eeb15fa9909c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 10:48:18 2016 +0200
+
+    changed tcp_test with tcpconn
+
+[33mcommit 6bad4e9576544f9246b6bafe4a499df5217d7630[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 10:43:48 2016 +0200
+
+    comments from PRs
+
+[33mcommit 3ad8e67096f5ffaba2bbaafe010657b0c85c8fc9[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 28 10:08:26 2016 +0200
+
+    some comments from PRs
+
+[33mcommit 814edb217d8b61158e8ead0e391c673a8f698f63[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:54:28 2016 +0200
+
+    init to the top
+
+[33mcommit 020fa2480409fa14c518c1bbb75dcc56d87cba2b[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:54:02 2016 +0200
+
+    comments & more comments
+
+[33mcommit 13356387861053d4ca7a6c9484df668ff98da9ce[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:46:23 2016 +0200
+
+    removed sendServerIdentity
+
+[33mcommit 6baeca347044cb7ba3502ab0caff1c96ee753245[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:39:31 2016 +0200
+
+    removed closedMut
+
+[33mcommit 26829d03eebd6472292b525743ccaeb0a347acee[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:34:37 2016 +0200
+
+    comment on timeout for client
+
+[33mcommit 851f651692e7c25f5e009abcc74b633c46a089ae[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:33:58 2016 +0200
+
+    deleted wgMut
+
+[33mcommit 4c9fa52b992bc2102087e1f60fb4ef827d5876c1[m
+Merge: 259eb0f c210aed
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:30:37 2016 +0200
+
+    finally ...
+
+[33mcommit c210aedc02ec9acf053d14572e34d06a7ef9741e[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:29:28 2016 +0200
+
+    Revert "changed to tcpconn"
+    
+    This reverts commit 3e145730ee340027a9a0f03951f4e5aa8a38b1b1.
+
+[33mcommit 259eb0fdc68f942150ef1f069f29b9151fd825e5[m
+Merge: 1943953 3e14573
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:25:23 2016 +0200
+
+    revert back
+
+[33mcommit 3e145730ee340027a9a0f03951f4e5aa8a38b1b1[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:22:30 2016 +0200
+
+    changed to tcpconn
+
+[33mcommit 194395327de2a3286afd22b91d38b7f0315a6204[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:20:17 2016 +0200
+
+    adapted router without errtemp
+
+[33mcommit 62845145b5d541cd6282b94c9f695bbfa67217de[m
+Merge: 46e4f9d 720aab8
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:19:28 2016 +0200
+
+    Merge branch 'refactor_network_tcp' into refactor_network_router
+
+[33mcommit 720aab889acb01f0b9412d0e6e055e2000d81480[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:19:09 2016 +0200
+
+    removed errtemp
+
+[33mcommit 9881eb914428524c03fdf2c63ea4791ec9cf5756[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 15:11:31 2016 +0200
+
+    tested sendRaw
+
+[33mcommit b209ca3908dca741fdd43efdcd12d260c02c6e36[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 14:19:52 2016 +0200
+
+    corrected Liamsi's comment
+
+[33mcommit 46e4f9d7bffb9b21e2d4b7b2a8066ffda952dd8c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 14:15:12 2016 +0200
+
+    removed one identity sending
+
+[33mcommit 50ebc5d5acb15d815fe3f722b7346f5c10b08010[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 13:40:26 2016 +0200
+
+    removed getstatus comment
+
+[33mcommit 2e9fce416764da5b6e0c1e02a38cea4270087498[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 13:39:56 2016 +0200
+
+    ineiti's comments done #1
+
+[33mcommit 6748ffb495588b89f72fe8e90ce03d97baee909c[m
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Tue Sep 27 11:25:15 2016 +0200
+
+    Fix coveralls/travis reporting (#613)
+
+[33mcommit 36c79a35852758103a6213f61ea2e327558def24[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Sep 27 10:46:01 2016 +0200
+
+    smaller set of changes (#608)
+    
+    A copy function for copying files (and some minor changes/cleanup in proof.go)
+
+[33mcommit 453d28e216b96330070c10d682d45d19fdf98577[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:41:36 2016 +0200
+
+    making test builds
+
+[33mcommit e8b69c0261e236a0427afc4442890a4a05ffa855[m
+Merge: fb619de b905f01
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:38:15 2016 +0200
+
+    Merge branch 'refactor_network_router' into refactor_network_sda
+
+[33mcommit b905f01f6c992bd4ee73bb0a906343df6da868ad[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:37:46 2016 +0200
+
+    taken from refactor_mocking
+
+[33mcommit e61ebcd1e5cbf9f56f70512722ec7a6b73efb949[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:36:44 2016 +0200
+
+    switched back to localmanager
+
+[33mcommit 53f87c72d9666adb3132ba0e42d1ae3aef77b4b4[m
+Merge: ea709aa def010c
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:34:37 2016 +0200
+
+    Merge branch 'refactor_network_tcp' into refactor_network_router
+
+[33mcommit fb619deda0f65b79f9f062c292426bb11f301192[m
+Merge: 71ea830 ea709aa
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:31:20 2016 +0200
+
+    Merge branch 'refactor_network_router' into refactor_network_sda
+
+[33mcommit def010c89ca6bb78981ad3637143708347eaecaf[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:21:27 2016 +0200
+
+    both are there again
+
+[33mcommit ea709aaf109d9d32d79aa0afe18cc4347215052c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:20:05 2016 +0200
+
+    both are here
+
+[33mcommit 928005bad0b4c11574ca6f03dd9233b801a9afca[m
+Merge: a551ae4 22fd526
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 10:07:00 2016 +0200
+
+    merged + trying to get back to OK state
+
+[33mcommit a9e9fc03fe4962a416c325113a55eea639c6087f[m
+Merge: cbc1c96 22fd526
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 27 09:59:52 2016 +0200
+
+    merged with refactor_network
+
+[33mcommit 22fd5264e20b6fde3286e133bc9e713195f7177b[m
+Merge: 34fb102 b297d0c
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Sep 27 09:54:27 2016 +0200
+
+    Merge pull request #568 from dedis/refactor_mocking_local
+    
+    [2/7] Refactor network - interfaces + Local network
+
+[33mcommit a551ae45f1ea66540c3d1654e901c17025f42719[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:55:21 2016 +0200
+
+    checkout all from refactor_mocking..
+
+[33mcommit 000fefccfedae72aa0407675f86fd0a2de4c24d1[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:51:23 2016 +0200
+
+    local adjusted
+
+[33mcommit c9d57e69f2ce6df58d2c0b859c5be37457584c8a[m
+Merge: 424f3bd cbc1c96
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:45:32 2016 +0200
+
+    Merge branch 'refactor_network_tcp' into refactor_network_router
+
+[33mcommit 424f3bde5f003d5e254b3fd7ab15245642698f0a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:44:08 2016 +0200
+
+    better client tests
+
+[33mcommit cbc1c96028aec802d0755b2e19076d5d26ba778f[m
+Merge: a55dba6 b297d0c
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:44:45 2016 +0200
+
+    Merge branch 'refactor_mocking_local' into refactor_network_tcp
+
+[33mcommit b297d0c6b2bf2bac4eed29d82f7a5d0eeaa14b1c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 17:43:47 2016 +0200
+
+    newconn tries multiple times
+
+[33mcommit e37351bb97003e9b14b591355b21df8634fceff5[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:37:58 2016 +0200
+
+    removed net.go
+
+[33mcommit 383bb412988f4097a6fed37d95d398a8eefee220[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:37:04 2016 +0200
+
+    only one testmain
+
+[33mcommit 317f922f92e0153d1f36bb2875f2708309855985[m
+Merge: d19b755 a55dba6
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:30:49 2016 +0200
+
+    Merge branch 'refactor_network_tcp' into refactor_network_router
+
+[33mcommit a55dba68ca9e10d55dee31ce76152d6622844968[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:30:04 2016 +0200
+
+    change according to @ineiti's comments
+
+[33mcommit d19b75580b1a01179c47d0f96f6b626a9dad2ce0[m
+Merge: 5493315 43390fc
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:20:32 2016 +0200
+
+    Merge branch 'refactor_network_tcp' into refactor_network_router
+
+[33mcommit 43390fc87fed731fbe8409a1a0309b6ce540718d[m
+Merge: fb8832b aa79747
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:20:14 2016 +0200
+
+    Merge branch 'refactor_mocking_local' into refactor_network_tcp
+
+[33mcommit aa79747dad486d3bc70965f2d620edc3a48ac30b[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:19:26 2016 +0200
+
+    modified local comment
+
+[33mcommit 549331558feea57e639f42ef54a61721f459c1df[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 16:15:50 2016 +0200
+
+    merged
+
+[33mcommit fb8832bae1cbce323f504080bb486dc992770140[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 13:43:25 2016 +0200
+
+    removed app/lib
+
+[33mcommit 6cdb82717fafd732d55bb62116f4dbf4aa82186a[m
+Merge: 76b70db 8328532
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 13:42:57 2016 +0200
+
+    merged with network_tcp
+
+[33mcommit 83285325607c90f546e9eb31cce7bfca79784cf0[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 13:39:27 2016 +0200
+
+     no router yet
+
+[33mcommit 60e8d27fdfd2fb84bd03f3a6d3ec03c3f5a340b1[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 13:18:27 2016 +0200
+
+    improved tcp testing
+
+[33mcommit 8b03eb4aa40ae42fd6dffa8321c03b2b28627e4a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 26 13:18:27 2016 +0200
+
+    Merged
+
+[33mcommit f66bd63f52d0d3a363cfd46cc53381b856dfecc7[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Mon Sep 26 09:23:12 2016 +0200
+
+    added missing methods in sda from nsdi branch (#606)
+
+[33mcommit bdd783f13d924d0bec50c97e9082a9a406d61f9f[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 23 10:46:39 2016 +0200
+
+    small protocol changes after nsdi (#605)
+
+[33mcommit b2126f38b042bd483be7a756fadbc1e3b56c05b7[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 23 10:45:59 2016 +0200
+
+    monitor lock at the right place (#601)
+
+[33mcommit 37d04293510c780b7cb32368d7e2fec61b16d6fa[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Thu Sep 8 10:49:06 2016 +0200
+
+    Reviewed comments by @ineiti
+
+[33mcommit dcf609773e5958bd6e867c776df98b73881cd0c2[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Wed Sep 7 14:09:59 2016 +0200
+
+    Comments (#580)
+    
+    * Comments on refactor_mocking_local
+
+[33mcommit 9409f62e6ca6255295274e323be4a2b987497ac5[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 11:35:20 2016 +0200
+
+    bind into newTCPListener
+
+[33mcommit 3fe22253113e711187d00e74f23e15156bb39e6a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:27:55 2016 +0200
+
+    tcp.Close returns ErrClosed if already closed
+
+[33mcommit 9afb0c0372e4b018d5f660d2b568a2112b623cc5[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:26:08 2016 +0200
+
+    removed maxchunksize and sends use all buffer
+
+[33mcommit 070f792afaa1b83c556fbde3acd8b8114657e6c0[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:17:35 2016 +0200
+
+    renamed to receiveRaw & sendRaw
+
+[33mcommit 0ea81534965e252e6a92f2289a0ab33085a4ec0b[m
+Merge: 17ab678 a3cad44
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:08:37 2016 +0200
+
+    Merge branch 'refactor_mocking_local' into refactor_network_tcp
+
+[33mcommit 17ab678abbc88cdb958511d86a4b1b27b2f06305[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:07:24 2016 +0200
+
+    removed ctx for tcp
+
+[33mcommit a3cad4415c9c910fe0e8a8a5358d018f0689e023[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 10:02:26 2016 +0200
+
+    removed context from interface def
+
+[33mcommit 493300d3e145b5a85067b5c1db4cab65705acc40[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Wed Sep 7 09:50:10 2016 +0200
+
+    changed counterIO to Rx() + Tx() method definition
+
+[33mcommit 76f15b67d01155be055c4439dd9347bab533a72e[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 16:06:46 2016 +0200
+
+    made tcpConn use counterSafe
+
+[33mcommit cc49917ac476aaf4ac92d1d94aee893e18bbdb88[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 15:55:10 2016 +0200
+
+    update comment on counterSafe
+
+[33mcommit 5e52b8716f8ca1ab66aff0493cff4f75b1aa7c8b[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 15:54:20 2016 +0200
+
+    renamed ctx to lm
+
+[33mcommit 8ada7700b665fdf087d40820b794749520cfd241[m
+Merge: 8d9a34c 1c5e58d
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 15:39:01 2016 +0200
+
+    Merge branch 'refactor_mocking_local' into refactor_network_tcp
+
+[33mcommit 1c5e58d6e05c68209f15f7095225771d316db51c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 15:34:02 2016 +0200
+
+    oops removed diff
+
+[33mcommit 038e2e99dc2d20ccfebd1306a0b0f340fb47922a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 15:00:17 2016 +0200
+
+    more coverage (>95%) + tx/rx impl
+
+[33mcommit 34fb102f95818c5d52222e22c549409ffd9b665d[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Tue Sep 6 14:04:43 2016 +0200
+
+    Comments (#578)
+    
+    * Adapted comments
+
+[33mcommit 8d9a34c486348e8288ed2c3b86e083c1eac14201[m
+Merge: 143a756 1a5487d
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 10:33:09 2016 +0200
+
+    Merge branch 'refactor_mocking_local' into refactor_network_tcp
+
+[33mcommit 1a5487d92cd7468f4ea58c6f6dcbb63bd1a3e190[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 10:28:08 2016 +0200
+
+    added blocking comment on local listener
+
+[33mcommit dbca8c3efb15bb8244e0b8ac44c42dd595d0f613[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 10:18:00 2016 +0200
+
+    removed getstatus comment from local
+
+[33mcommit 5bbef23c4910325d358d241e6b569ff78985d729[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Tue Sep 6 10:11:05 2016 +0200
+
+    merged bind with NewListenerWithManager
+
+[33mcommit 3d3e12045b74eea54b88be57bff570ecae7c8b74[m
+Merge: 8891cfe e798190
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Tue Sep 6 10:03:27 2016 +0200
+
+    Merge pull request #567 from dedis/refactor_mocking_address
+    
+    [1/7] Network refactoring - Address
+
+[33mcommit 24819ce7db2d2fc9d50499d07e4e551dc8b3963d[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 17:41:08 2016 +0200
+
+    closing returns error + impr tests
+
+[33mcommit 156956e49916824ba42e9d229aa55ea8aae127bb[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 17:11:50 2016 +0200
+
+    corrected comment on listener addr
+
+[33mcommit 4d67fbe9ce1bc241ab02f7cf7215ed543053965f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 17:10:11 2016 +0200
+
+    consistent receiver name for LocalManager
+
+[33mcommit efbfd0b3ecb6bf6842e8082499ef6f5e0ecc7d43[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 17:04:55 2016 +0200
+
+    connQueue commented
+
+[33mcommit 552dd46da4f3fff11575045587f10c1fb37ba19f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 16:53:43 2016 +0200
+
+    renamed LocalContext to LocalManager
+
+[33mcommit f4328845a8d380c6affdeddc1279b1cd7966a2d2[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 16:19:03 2016 +0200
+
+    make methods of LocalContext unexported
+
+[33mcommit 4c335f75cb98e01cc73027772ae70bf4d6d723c0[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 15:55:04 2016 +0200
+
+    renamed receive cc to lc for LocalConn
+
+[33mcommit 5670df41fca6590718fbc0f244dcc4205afa7af2[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 15:25:13 2016 +0200
+
+    removed comment with channels
+
+[33mcommit 55e5d8cc130b8b07c83021352ff77ed07844ac24[m
+Merge: 86357ee e798190
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 15:12:31 2016 +0200
+
+    Merge branch 'refactor_mocking_address' into refactor_mocking_local
+
+[33mcommit e79819075b6e7238e054666c786427bee36af518[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 14:13:16 2016 +0200
+
+    removed isPublic
+
+[33mcommit d0539e06aad4c9ac5b6a80f75f7d84280ea38bd0[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 12:39:50 2016 +0200
+
+    test address working
+
+[33mcommit 9125dfdb38993916d664ae38e305a89e5c48bb7a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 12:31:57 2016 +0200
+
+    impl Public for Address
+
+[33mcommit 7470976f2920499eef3a78f7456f8603c8e0e63f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Mon Sep 5 11:07:48 2016 +0200
+
+    comments on address
+
+[33mcommit 76b70dbee9459ea5a14456ebe6aedc48143edc1f[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 13:46:31 2016 +0200
+
+    added test for struct.go
+
+[33mcommit 0a259985519340568da952c0e06e8c85cb9cd394[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 13:31:59 2016 +0200
+
+    rectifying dispatcher tests
+
+[33mcommit 8c31d86bfa88cfc73f6329fea062bc8cf4d2f355[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 13:26:57 2016 +0200
+
+    added test coverage
+
+[33mcommit 1b4ca0968b1c71df0eb698f299da913e7047427c[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 13:17:08 2016 +0200
+
+    added some test coverage
+
+[33mcommit 8891cfe3745d9ad7e0eac969684d4b4ca4f9bc0a[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:35:01 2016 +0200
+
+    useless commit
+
+[33mcommit 1f983f0998237ae1efea808bc2dadfc7a3b80415[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:30:52 2016 +0200
+
+    the whole set of changes
+
+[33mcommit 6155a8011bf9b6b92751491e834a0d6f000c33f2[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:26:53 2016 +0200
+
+    changes to identity so marshal only data
+
+[33mcommit 71ea8301eddf6f3ff2db05cf0de0297aaf21d01b[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:21:48 2016 +0200
+
+    sda changes
+
+[33mcommit 77235662993b3c4f5d35cf6f9eb810f6353eeff2[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:18:55 2016 +0200
+
+    added host + local
+
+[33mcommit 2aa3a82ba476fca7e90abd3aef56992a26e98758[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:18:33 2016 +0200
+
+    router + all changes in network
+
+[33mcommit 143a756efed9a6a2f06907d004615359d7151291[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 11:15:29 2016 +0200
+
+    tcp stack
+
+[33mcommit 86357eeaf02445c8532833b973faeb506905a233[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 10:49:48 2016 +0200
+
+    local with basic interface definition
+
+[33mcommit 799528cc46b2bf98a2acb5a93166324bc1101311[m
+Author: Nicolas Gailly <nicolas.gailly@epfl.ch>
+Date:   Fri Sep 2 10:27:39 2016 +0200
+
+    network address parts
+
+[33mcommit 48af6455c9a822e4a7d17291fb2d3f299be8ba60[m
+Author: Linus Gasser <linus.gasser@epfl.ch>
+Date:   Fri Sep 2 09:56:18 2016 +0200
+
+    implemented AvailableServices and Service in serviceManager (#566)
+    
+    * impl. AvailableServices + Service in serviceManager
+
+[33mcommit b70b73dddb45abedd964629d6ed568523ecbcc2f[m
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Fri Aug 26 23:22:30 2016 +0200
+
+    Back to 1.6
+    
+    Back to go1.6; directly on master for testing purposes
+
+[33mcommit 5debc738644fef722959c1cdf62ac8d90662aa6c[m
+Author: Ismail Khoffi <Liamsi@users.noreply.github.com>
+Date:   Fri Aug 26 23:20:02 2016 +0200
+
+    Reenable linting and vetting on master
+    
+    Use `make test` in master; was changed (by accident?) in 81ae82b to `make test_verbose` which despite it's name disables linting and vetting of go sources
