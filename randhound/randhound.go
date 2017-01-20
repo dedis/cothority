@@ -337,7 +337,7 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 				if int(msg.ChosenSecret[c]) != t.ChosenSecret[i][j] {
 					return fmt.Errorf("Server %v received wrong client commitment", server)
 				}
-				c += 1
+				c++
 			}
 		}
 	}
