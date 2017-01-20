@@ -331,11 +331,13 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 	// Verify that all servers received the same client commitment
 	for server, msg := range t.I2s {
-		for i := range msg.ChosenSecret {
-			for j := range msg.ChosenSecret[i] {
-				if int(msg.ChosenSecret[i][j]) != t.ChosenSecret[i][j] {
+		c := 0
+		for i := 0; i < len(t.ChosenSecret); i++ {
+			for j := 0; j < len(t.ChosenSecret[i]); j++ {
+				if int(msg.ChosenSecret[c]) != t.ChosenSecret[i][j] {
 					return fmt.Errorf("Server %v received wrong client commitment", server)
 				}
+				c += 1
 			}
 		}
 	}
@@ -625,7 +627,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		// Choose secrets that contribute to collective randomness
 		for i := range rh.server {
 
-			// Randomly remove some secrets so that a threshold of secrets remains
+			// Randomly remove some secrets so that a threshold of secrets remain
 			rand := random.Bytes(rh.Suite().Hash().Size(), random.Stream)
 			prng := rh.Suite().Cipher(rand)
 			secret := goodSecret[i]
@@ -639,14 +641,12 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		log.Lvlf3("Grouping: %v", rh.group)
 		log.Lvlf3("ChosenSecret: %v", rh.chosenSecret)
 
-		// Transformation of commitments from int to uint32 to avoid protobuff errors
-		var chosenSecret = make([][]uint32, len(rh.chosenSecret))
+		// Transformation of commitments from [][]int to []uint32 to avoid protobuf errors
+		var chosenSecret = make([]uint32, 0)
 		for i := range rh.chosenSecret {
-			var l []uint32
 			for j := range rh.chosenSecret[i] {
-				l = append(l, uint32(rh.chosenSecret[i][j]))
+				chosenSecret = append(chosenSecret, uint32(rh.chosenSecret[i][j]))
 			}
-			chosenSecret[i] = l
 		}
 
 		// Prepare a message for each server of a group and send it
