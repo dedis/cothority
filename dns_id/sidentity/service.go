@@ -1051,7 +1051,7 @@ func (s *Service) GoClients(msg network.Message) {
 			if len(m.SiteInfoList) == 1 {
 				idx = 0
 			} else {
-				idx = index
+				idx = index%m.Webservers
 			}
 			s.StartClient(m.Roster, index, m.SiteInfoList[idx : idx+1])
 			client := onet.NewClient(ServiceName)

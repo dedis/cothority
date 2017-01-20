@@ -88,6 +88,8 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 
 	s.WaitWebservers(roster, e.Clients, e.CK)
 
+	//time.Sleep(time.Duration(10*1000) * time.Millisecond)
+
 	doneCh := make(chan bool)
 	go func() {
 		s.WaitClients(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2, siteInfoList)
