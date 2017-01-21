@@ -150,7 +150,6 @@ func (ws *WS) WSAttach(name string, id []byte, cothority *onet.Roster) error {
 // till the current head one and (possibly) updates the tls keypair of the ws
 // Also updates the cert and the PoF
 func (ws *WS) WSUpdate(id []byte) error {
-
 	log.Lvlf3("WSUpdate(): Start")
 	// Check whether the reached ws has been configured as a valid web server of the requested site
 	site := ws.getSiteStorage(id)
@@ -570,6 +569,7 @@ func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message,
 	round := monitor.NewTimeMeasure("client_time")
 	NewUser("", s)
 	round.Record()
+	log.Print("minus 1 client to visit a site")
 	return nil, nil
 }
 

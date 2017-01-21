@@ -84,11 +84,9 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	siteInfoList := s.WaitSetup(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2)
 	log.Print("after waitSetup")
 
-	time.Sleep(time.Duration(10*1000) * time.Millisecond)
-
 	s.WaitWebservers(roster, e.Clients, e.CK)
 
-	//time.Sleep(time.Duration(10*1000) * time.Millisecond)
+	time.Sleep(time.Duration(10*1000) * time.Millisecond)
 
 	doneCh := make(chan bool)
 	go func() {
@@ -108,7 +106,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	}
 	log.Print("SIMULATION FINISHED ")
 
-
+	time.Sleep(time.Duration(20*1000) * time.Millisecond)
 
 /*
 	doneCh := make(chan bool)

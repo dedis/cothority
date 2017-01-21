@@ -3,6 +3,7 @@ package sidentity
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
@@ -11,6 +12,7 @@ import (
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"github.com/satori/go.uuid"
 )
 
 const MaxUint = ^uint(0)
@@ -30,6 +32,28 @@ const refresh_bound = 3000
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID []byte
+
+// VerifierID represents one of the verifications used to accept or
+// deny a msg.
+type VerifierID uuid.UUID
+
+type MsgVerifier func(msg []byte, s *skipchain.SkipBlock) bool
+
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func RegisterVerification(c *onet.Context, v VerifierID, f MsgVerifier) error {
+	scs := c.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).RegisterVerification(v, f)
+}
+
+var (
+	// VerifyNone does nothing and returns true always.
+	VerifyNone = VerifierID(uuid.Nil)
+)
 
 // Copy returns a deep copy of the Storage
 func (sid *Storage) Copy() *Storage {
@@ -67,6 +91,8 @@ func bytesToTimestamp(b []byte) (int64, error) {
 	}
 	return t, nil
 }
+
+
 
 // Messages between the Client-API and the Service
 

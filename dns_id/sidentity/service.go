@@ -34,10 +34,14 @@ import (
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"sort"
+	"github.com/dedis/cothority/bftcosi"
+	"github.com/satori/go.uuid"
 )
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "SIdentity"
+const timestamperBFT = "TimestamperBFT"
 
 var IdentityService onet.ServiceID
 
@@ -69,6 +73,7 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	skipchain *skipchain.Client
+	verifiers map[VerifierID]MsgVerifier
 	ca        *ca.CSRDispatcher
 	*StorageMap
 	identitiesMutex sync.Mutex
@@ -132,11 +137,16 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		return nil,nil
 	}
 	log.Lvlf3("%v: Timestamp Service received New Protocol event", s.String())
+	// if CoSi is to be used in the timestamping service
+	/*
 	pi, err := swupdate.NewCoSiUpdate(tn, dummyVerfier)
 	if err != nil {
 		log.Lvlf2("%v", err)
 	}
 	return pi, err
+	*/
+
+	return nil, nil
 }
 
 /*
@@ -490,6 +500,8 @@ func (s *Service) Propagate(msg network.Message) {
 			if bytes.Equal(p.Config.BLink, latestHash) {
 				log.Lvlf2("Storing proposal..")
 				sid.Proposed = p.Config
+			} else {
+				log.Print("No proper backward link, proposal will not be stored at server: ", s.ServerIdentity())
 			}
 
 		case *ProposeVote:
@@ -734,53 +746,64 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 
 	for now := range c {
 		cnt++
-		log.Lvlf2("_______________________________________________________")
-		log.Lvlf2("START OF A TIMESTAMPER ROUND")
-		log.Lvlf2("_______________________________________________________")
-		data := make([][]byte, 0)
+		//data := make([][]byte, 0)
 		data2 := make([]common_structs.HashID, 0)
 		ids := make([][]byte, 0)
+		idsString := make([]string, 0)
 
 		s.identitiesMutex.Lock()
 		identities := s.Identities
 		s.identitiesMutex.Unlock()
 
 		for _, sid := range identities {
-			latestconf := sid.Latest
-			hash, _ := latestconf.Hash()
-			data = append(data, []byte(hash))
-			data2 = append(data2, hash)
-			log.Lvlf3("site: %v, %v", latestconf.FQDN, []byte(hash))
-			ids = append(ids, sid.ID)
+			idsString = append(idsString, string(sid.ID))
 		}
+		sort.Strings(idsString)
+		for _, id := range idsString {
+			latestconf := identities[id].Latest
+			hash, _ := latestconf.Hash()
+			ids = append(ids, hash)
+			//data = append(data, hash)
+			data2 = append(data2, common_structs.HashID(hash))
+			log.LLvlf3("site: %v, %v", latestconf.FQDN, hash)
+		}
+
 		num := len(identities)
 		if num > 0 {
+			log.Lvlf2("_______________________________________________________")
+			log.LLvlf2("START OF A TIMESTAMPER ROUND")
+			log.Lvlf2("_______________________________________________________")
 			log.LLvl2("------- Signing tree root with timestamp:", now, "got", num, "requests")
 
 			// create merkle tree and message to be signed:
 			root, proofs := common_structs.ProofTree(sha256.New, data2)
 			timestamp := time.Now().Unix() * 1000
+			timeB := timestampToBytes(timestamp)
 			msg := RecreateSignedMsg(root, timestamp)
 			log.Lvlf3("------ Before signing")
 			for _, server := range roster.List {
 				log.Lvlf3("%v", server)
 			}
 
-			signature := s.cosiSign(roster, msg)
+			// Sign it
+
+			// if CoSi is to be used
+			//signature := s.cosiSign(roster, msg)
+
+			// if BFTCoSi is to be used
+			bftSignature, err := s.startBFTSignature(roster, msg, timeB)
+			if err != nil {
+				log.Error(err.Error())
+			}
+			signature := bftSignature.Sig
 
 			log.Lvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
-			i := 0
-			//log.Lvlf3("sites: %v proofs: %v", len(s.Identities), len(proofs))
-			//log.Lvlf3("root hash: %v", []byte(root))
-			//log.Lvlf3("timestamp: %v", timestamp)
-			//log.Lvlf3("signature: %v", signature)
 			sids := make([]*Storage, 0)
-
-			for _, id := range ids {
-				sid := identities[string(id)]
+			for i, idString := range idsString {
+				sid := identities[idString]
 				pof := &common_structs.SignatureResponse{
-					ID:        id,
+					ID:        ids[i],
 					Timestamp: timestamp,
 					Proof:     proofs[i],
 					Root:      root,
@@ -788,7 +811,8 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 					Signature:  signature,
 					Identifier: cnt,
 				}
-
+				/*
+				// if CoSi is to be used
 				// check the validity of pofs
 				signedmsg := RecreateSignedMsg(root, timestamp)
 				publics := make([]abstract.Point, 0)
@@ -800,37 +824,34 @@ func (s *Service) RunLoop(roster *onet.Roster) {
 					log.Lvlf2("Warm Key Holders' signature doesn't verify")
 				}
 				// verify inclusion proof
-				origmsg := data2[i]
+				origmsg := data[i]
 				log.Lvlf3("site: %v", sid.Latest.FQDN)
 				log.Lvlf3("%v", []byte(origmsg))
 				validproof := pof.Proof.Check(sha256.New, root, []byte(origmsg))
 				if !validproof {
 					log.Lvlf2("Invalid inclusion proof!")
 				}
+				*/
 				sid.PoF = pof
 				sids = append(sids, sid)
-				i++
 			}
-
 			log.Lvlf3("Everything OK with the proofs")
 			replies, err := s.PropagateFunc(roster, &PropagatePoF{Storages: sids}, propagateTimeout)
 			log.ErrFatal(err, "Couldn't send")
-
 			if replies != len(roster.List) {
 				log.Warn("Did only get", replies, "out of", len(roster.List))
 			}
+			log.Lvlf2("_______________________________________________________")
+			log.LLvlf2("END OF A TIMESTAMPER ROUND")
+			log.Lvlf2("_______________________________________________________")
+			//debug.FreeOSMemory()
 
 		} else {
 			log.Lvl3("No follow-sites at epoch:", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 		}
-		log.Lvlf2("_______________________________________________________")
-		log.Lvlf2("END OF A TIMESTAMPER ROUND")
-		log.Lvlf2("_______________________________________________________")
-		//debug.FreeOSMemory()
 	}
 }
 
-//func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
 func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
 	log.Lvlf2("server: %s", s.String())
 	sdaTree := roster.GenerateBinaryTree()
@@ -860,6 +881,114 @@ func (s *Service) cosiSign(roster *onet.Roster, msg []byte) []byte {
 
 }
 
+func (s *Service) startBFTSignature(roster *onet.Roster, msg, timeB []byte) (*bftcosi.BFTSignature, error) {
+	log.Lvlf2("server: %s", s.String())
+	var bftSignature *bftcosi.BFTSignature
+	done := make(chan bool)
+	switch len(roster.List) {
+	case 0:
+		return nil, errors.New("Found empty Roster")
+	case 1:
+		return nil, errors.New("Need more than 1 entry for Roster")
+	}
+
+	// Start the protocol
+	tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+
+	node, err := s.CreateProtocol(timestamperBFT, tree)
+	if err != nil {
+		return nil, errors.New("Couldn't create new node: " + err.Error())
+	}
+
+	// Register the function generating the protocol instance
+	root := node.(*bftcosi.ProtocolBFTCoSi)
+	root.Msg = msg
+	root.Data = timeB // timestamp (in bytes) here!!
+
+	// in testing-mode with more than one host and service per cothority-instance
+	// we might have the wrong verification-function, so set it again here.
+	root.VerificationFunction = s.bftVerify
+	// function that will be called when protocol is finished by the root
+	root.RegisterOnDone(func() {
+		done <- true
+	})
+	go node.Start()
+	select {
+	case <-done:
+		log.Lvl2("BFTSignature ready: ", root.Signature())
+		bftSignature = root.Signature()
+		if len(bftSignature.Exceptions) != 0 {
+			log.Print("exceptions=", len(bftSignature.Exceptions))
+			return nil, errors.New("Not everybody signed off the new block")
+		}
+		if err := bftSignature.Verify(network.Suite, roster.Publics()); err != nil {
+			return nil, errors.New("Couldn't verify signature")
+		}
+	case <-time.After(time.Second * 60):
+		return nil, errors.New("Timed out while waiting for signature")
+	}
+	log.Print("startBFTSignature(): Received BFTCoSi response")
+	return bftSignature, nil
+}
+
+
+func (s *Service) bftVerify(msgRec, timeB []byte) bool {
+	log.Lvlf4("%s verifying msgRec %x", s.ServerIdentity(), msgRec)
+
+	data := make([][]byte, 0)
+	data2 := make([]common_structs.HashID, 0)
+	ids := make([]string, 0)
+
+	s.identitiesMutex.Lock()
+	identities := s.Identities
+	s.identitiesMutex.Unlock()
+
+	for _, sid := range identities {
+		ids = append(ids, string(sid.ID))
+	}
+	sort.Strings(ids)
+	for _, id := range ids {
+		latestconf := identities[id].Latest
+		hash, _ := latestconf.Hash()
+		data = append(data, hash)
+		data2 = append(data2, common_structs.HashID(hash))
+		log.Lvlf3("site: %v, %v", latestconf.FQDN, hash)
+	}
+
+	// create merkle tree and message that should be signed:
+	root, _ := common_structs.ProofTree(sha256.New, []common_structs.HashID(data2))
+
+	msg := make([]byte, len(root)+len(timeB))
+	msg = append(msg, root...)
+	msg = append(msg, timeB...)
+
+	if !bytes.Equal(msgRec, msg) {
+		log.LLvlf2("Receiced msg different from what msg should be signed")
+		log.LLvl2(msgRec)
+		log.LLvl2(msg)
+		return false
+	}
+
+	f, ok := s.verifiers[VerifierID(uuid.Nil)]
+	if !ok {
+		log.LLvlf2("Found no user verification for %x", VerifierID(uuid.Nil))
+		return false
+	}
+	return f(msgRec, nil)
+}
+
+// VerifyNoneFunc returns always true.
+func (s *Service) VerifyNoneFunc(msg []byte, sb *skipchain.SkipBlock) bool {
+	log.Lvl4("No verification - accepted")
+	return true
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) RegisterVerification(v VerifierID, f MsgVerifier) error {
+	s.verifiers[v] = f
+	return nil
+}
 // RecreateSignedMsg is a helper that can be used by the client to recreate the
 // message signed by the timestamp service (which is treeroot||timestamp)
 func RecreateSignedMsg(treeroot []byte, timestamp int64) []byte {
@@ -878,18 +1007,16 @@ func newIdentityService(c *onet.Context) onet.Service {
 		ca:               ca.NewCSRDispatcher(),
 		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
 		Publics:          make(map[string]abstract.Point),
-		//EpochDuration:    time.Millisecond * 250000,
-		EpochDuration: time.Millisecond * 1000 * 1,
-		setupDone:     make(chan bool),
-		publicDone:    make(chan bool),
-		attachedDone:  make(chan bool),
-		clientsDone:  make(chan bool),
-		webserversDone:  make(chan bool),
+		EpochDuration: 	  time.Millisecond * 1000 * 1,
+		setupDone:        make(chan bool),
+		publicDone:       make(chan bool),
+		attachedDone:     make(chan bool),
+		clientsDone:      make(chan bool),
+		webserversDone:   make(chan bool),
+		verifiers:        map[VerifierID]MsgVerifier{},
 	}
 	s.ClearIdentities()
-	//if err := s.tryLoad(); err != nil {
-	//	log.Error(err)
-	//}
+
 	var err error
 	s.PropagateFunc, err = messaging.NewPropagationFunc(c, "SIdentityPropagate", s.Propagate)
 	log.ErrFatal(err)
@@ -899,6 +1026,9 @@ func newIdentityService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	s.WebserverFunc, err = messaging.NewPropagationFunc(c, "StartWebserverUpt", s.GoWebservers)
 	log.ErrFatal(err)
+	c.ProtocolRegister(timestamperBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
+	})
 	//ws = c.Service("webserver")
 	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
 		s.CreateIdentityLight, s.ProposeUpdate, s.MinusOneWebserver,
@@ -909,6 +1039,11 @@ func newIdentityService(c *onet.Context) onet.Service {
 			log.Fatal("Registration error:", err)
 		}
 	}
+
+	if err := s.RegisterVerification(VerifyNone, s.VerifyNoneFunc); err != nil {
+		log.Panic(err)
+	}
+
 	return s
 }
 
@@ -944,6 +1079,9 @@ func (s *Service) GoWebservers(msg network.Message) {
 	index_client := 0
 	index_ws := index_client + m.Clients
 	index_CK := index_ws + m.Webservers
+	index_WK := index_CK + m.Webservers
+
+	roster_WK := onet.NewRoster(m.Roster.List[index_WK:])
 
 	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
 	firstIdentity := m.Roster.List[0]
@@ -960,6 +1098,9 @@ func (s *Service) GoWebservers(msg network.Message) {
 			log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWebserver{}, nil))
 		}()
 		return
+	case index == index_WK:
+		// initializer of the timestamper at the warm key holders
+		go s.RunLoop(roster_WK)
 	default:
 		return
 	}
@@ -1031,9 +1172,11 @@ func (s *Service) StartSimul(msg network.Message) {
 		s.identitiesMutex.Lock()
 		s.TheRoster=roster_WK
 		s.identitiesMutex.Unlock()
+		/*
 		if index == index_WK {
 			go s.RunLoop(roster_WK)
 		}
+		*/
 	}
 
 }
@@ -1061,7 +1204,6 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 		log.Print("evol block: ", idx+1)
 		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
 		id.ProposeUpVote()
-		//id.ConfigUpdate()
 	}
 
 	client := onet.NewClient("WebServer")

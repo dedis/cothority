@@ -15,6 +15,7 @@ import (
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority/bftcosi"
 )
 
 /*
@@ -73,6 +74,7 @@ func init() {
 		&LockIdentities{},
 
 		&common_structs.PushedPublic{},
+		&bftcosi.BFTSignature{},
 	} {
 		network.RegisterMessage(s)
 	}

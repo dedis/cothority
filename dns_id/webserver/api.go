@@ -147,7 +147,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 	if pof == nil {
 		log.Print("!!!!!! Null pof!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	}
-	log.Lvlf3("Connect(): Skipblocks fetched")
+	log.LLvlf3("Connect(): %v skipblocks fetched", len(sbs))
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
 	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
