@@ -57,16 +57,10 @@ type Config struct {
 	FQDN string
 	// The time in ms when the request was started
 	Timestamp int64
-	// If a cert is going to be acquired for this config, MaxDuration indicates the maximum
-	// time period for which the cert is going to be valid (countdown starting from the 'Timestamp')
-	MaxDuration int64
 
 	Threshold int
 	Device    map[string]*Device
 	Data      map[string]*WSconfig
-
-	// The public keys of the trusted CAs
-	CAs []CAInfo
 
 	ProxyRoster *onet.Roster
 }
@@ -173,16 +167,13 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(fqdn string, threshold int, pub abstract.Point, proxyroster *onet.Roster, owner string, cas []CAInfo, data map[string]*WSconfig, duration int64) *Config {
+func NewConfig(fqdn string, threshold int, pub abstract.Point, proxyroster *onet.Roster, owner string, data map[string]*WSconfig) *Config {
 	return &Config{
 		FQDN:        fqdn,
 		Threshold:   threshold,
 		Device:      map[string]*Device{owner: {Point: pub}},
-		Data:        data,
-		CAs:         cas,
-		MaxDuration: duration,
-		//ProxyAggr:   proxyaggr,
 		ProxyRoster: proxyroster,
+		Data:        data,
 	}
 }
 
@@ -222,7 +213,6 @@ func (c *Config) Hash() ([]byte, error) {
 	var data = []int64{
 		int64(c.Timestamp),
 		int64(c.Threshold),
-		int64(c.MaxDuration),
 	}
 	err = binary.Write(hash, binary.LittleEndian, data)
 	if err != nil {
@@ -275,17 +265,6 @@ func (c *Config) Hash() ([]byte, error) {
 		}
 	}
 
-	/*
-		for _, info := range c.CAs {
-			//log.Printf("public: %v", info.Public)
-			b, err := network.Marshal(&info)
-			if err != nil {
-				return nil, err
-			}
-			_, err = hash.Write(b)
-		}
-
-	*/
 	// Include the aggregate public key into the hash (cothority is trusted for issuing proofs of freshness)
 	point := &APoint{Point: c.ProxyRoster.Aggregate}
 	b, err2 := network.Marshal(point)
@@ -342,23 +321,13 @@ func (sr *SignatureResponse) CheckFreshness(maxvalue int64) bool {
 	diff := time.Since(time.Unix(0, timestamp*1000000))
 	diff_int := diff.Nanoseconds() / 1000000
 	if diff_int > maxvalue {
-		log.Lvlf2("Stale POF (id: %v) - Time difference: %v exceeds the %v interval", sr.ID, diff, maxvalue)
+		log.LLvlf2("Stale POF (id: %v) - Time difference: %v exceeds the %v interval", sr.ID, diff, maxvalue)
 		return false
 	}
 	log.Lvlf3("Time difference: %v is within the \"fresh\" %v interval", diff, maxvalue)
 	return true
 }
 
-func (c *Config) ExpiredCertConfig() bool {
-	diff := time.Since(time.Unix(0, c.Timestamp*1000000))
-	diff_int := diff.Nanoseconds() / 1000000
-
-	if c.MaxDuration < diff_int {
-		log.Lvlf3("Expired cert!!")
-		return true
-	}
-	return false
-}
 
 // returns true if c is older than c2
 func (c *Config) IsOlderConfig(c2 *Config) bool {
@@ -385,7 +354,7 @@ func (pof *SignatureResponse) Validate(latestconf *Config, maxdiff int64) error 
 	// Check whether the 'latest' skipblock is stale or not (by checking the freshness of the PoF)
 	isfresh := pof.CheckFreshness(maxdiff)
 	if !isfresh {
-		return fmt.Errorf("Stale skipblock can not be accepted")
+		return fmt.Errorf("Stale pof can not be accepted")
 	}
 
 	signedmsg := RecreateSignedMsg(pof.Root, pof.Timestamp)
@@ -609,9 +578,21 @@ type ConnectClient struct {
 type MinusOneClient struct {
 }
 
+type MinusOneWkh struct {
+}
+
 type StartUptWebserver struct {
 }
 
 type MinusOneWebserver struct {
 
+}
+
+type SetupWkh struct {
+	Roster *onet.Roster
+	Wkhs *onet.Roster
+}
+
+type StartTimestamper struct {
+	Wkhs *onet.Roster
 }

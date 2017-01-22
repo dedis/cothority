@@ -125,7 +125,7 @@ func (ws *WS) WSAttach(name string, id []byte, cothority *onet.Roster) error {
 		LatestHash: id,
 		ConfigBlocks: make(map[string]*common_structs.ConfigPlusNextHash),
 	}
-	site.si = sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0)
+	site.si = sidentity.NewIdentity(nil, "", 0, "", "ws", nil)
 	site.si.Cothority = cothority
 	site.si.ID = id
 	site.si.LatestID = id
@@ -492,7 +492,7 @@ func (ws *WS) tryLoad() error {
 func newWSService(c *onet.Context) onet.Service {
 	ws := &WS{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil, nil, 0),
+		si:               sidentity.NewIdentity(nil, "", 0, "", "ws", nil),
 		SiteMap:          &SiteMap{make(map[string]*Site)},
 		NameToID:         make(map[string][]byte),
 		UpdateDuration: time.Millisecond * 1000 * 1,

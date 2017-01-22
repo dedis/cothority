@@ -103,7 +103,7 @@ func (u *User) NewAttachments(sitesInfo []*common_structs.SiteInfo) {
 		log.Lvlf2("NewAttachments(): Trying to attach to site: %v", siteInfo.FQDN)
 		err := u.Connect(siteInfo)
 		if err != nil {
-			log.Lvlf2("%v", err)
+			log.ErrFatal(err)
 		}
 	}
 	return
@@ -151,7 +151,7 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
 	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-	err := latestconf.CheckTimeDiff(maxdiff * 2)
+	err := latestconf.CheckTimeDiff(maxdiff)
 	if err != nil {
 		log.Print("Stale block, check the pof")
 		err = pof.Validate(latestconf, maxdiff)

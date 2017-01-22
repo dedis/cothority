@@ -50,6 +50,7 @@ func init() {
 		&ConfigUpdate{},
 		&ConfigUpdateReply{},
 		&ProposeSend{},
+		&ProposeSendChain{},
 		&ProposeUpdate{},
 		&ProposeUpdateReply{},
 		&ProposeVote{},
@@ -129,7 +130,7 @@ type Data struct {
 // not taken into account in the code)
 //func NewIdentity(cothority *onet.Roster, threshold int, owner string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) *Identity {
 //	switch pinstate.Ctype {
-func NewIdentity(cothority *onet.Roster, fqdn string, threshold int, owner string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) *Identity {
+func NewIdentity(cothority *onet.Roster, fqdn string, threshold int, owner string, ctype string, data map[string]*common_structs.WSconfig) *Identity {
 	switch ctype {
 	case "device":
 		for _, server := range cothority.List {
@@ -143,7 +144,7 @@ func NewIdentity(cothority *onet.Roster, fqdn string, threshold int, owner strin
 				Private:    kp.Secret,
 				Public:     kp.Public,
 				Ctype:      ctype,
-				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, cothority, owner, cas, data, duration),
+				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, cothority, owner, data),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},
@@ -198,15 +199,15 @@ func (i *Identity) CreateIdentityLight() error {
 	return nil
 }
 
-//func NewIdentityMultDevs(cothority *onet.Roster, threshold int, owners []string, pinstate *common_structs.PinState, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
-func NewIdentityMultDevs(cothority *onet.Roster, fqdn string, threshold int, owners []string, ctype string, cas []common_structs.CAInfo, data map[string]*common_structs.WSconfig, duration int64) ([]*Identity, error) {
+
+func NewIdentityMultDevs(cothority *onet.Roster, fqdn string, threshold int, owners []string, ctype string, data map[string]*common_structs.WSconfig) ([]*Identity, error) {
 	log.Lvlf2("NewIdentityMultDevs(): Start")
 	ids := make([]*Identity, len(owners))
 	for index, owner := range owners {
 		if index == 0 {
-			ids[index] = NewIdentity(cothority, fqdn, threshold, owner, ctype, cas, data, duration)
+			ids[0] = NewIdentity(cothority, fqdn, threshold, owner, ctype,  data)
 		} else {
-			ids[index] = NewIdentity(cothority, fqdn, threshold, owner, ctype, cas, data, duration)
+			ids[index] = NewIdentity(cothority, fqdn, threshold, owner, ctype, data)
 			if _, exists := ids[0].Config.Device[owner]; exists {
 				return nil, errors.New("NewIdentityMultDevs(): Adding with an existing account-name")
 			}
@@ -216,45 +217,6 @@ func NewIdentityMultDevs(cothority *onet.Roster, fqdn string, threshold int, own
 	return ids, nil
 }
 
-// CreateIdentityMultDev asks the sidentityService to create a new SIdentity constituted of multiple
-// devices
-func (i *Identity) CreateIdentityMultDevs(ids []*Identity) error {
-	log.Lvlf2("CreateIdentityMultDevs(): Start")
-	_ = i.Config.SetNowTimestamp()
-
-	// configure the tls keypairs of the web servers (pull their public
-	// keys which will be used for the ecnryption of the tls private
-	// key of each one)
-	proposedConf := i.Config.Copy()
-	serverIDs := make([]*network.ServerIdentity, 0)
-	for _, server := range i.Config.Data {
-		serverIDs = append(serverIDs, server.ServerID)
-	}
-	_ = i.UpdateTLSKeypairs(proposedConf, serverIDs)
-	i.Config = proposedConf.Copy()
-
-	hash, _ := i.Config.Hash()
-
-	for _, id := range ids {
-		sig, _ := crypto.SignSchnorr(network.Suite, id.Private, hash)
-		i.Config.Device[id.DeviceName].Vote = &sig
-	}
-	air := &CreateIdentityReply{}
-	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &CreateIdentity{i.Config, i.Cothority}, air)
-	if cerr != nil {
-		return cerr
-	}
-
-	for _, id := range ids {
-		id.ID = air.Data.Hash
-		id.LatestID = air.Data.Hash
-		err := id.ConfigUpdateLight()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 // AttachToIdentity proposes to attach a device to an existing Identity
 func (i *Identity) AttachToIdentity(ID []byte) error {
@@ -296,7 +258,7 @@ func (i *Identity) AttachToIdentity(ID []byte) error {
 // specified by their ServerIdentities as they are given in the argument 'serverIDs')
 // Devices to be revoked regarding the proposed config should NOT vote upon their revocation
 // (or, in the case of voting, a negative vote is the only one accepted)
-func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, duration int64, serverIDs []*network.ServerIdentity) error {
+func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int, serverIDs []*network.ServerIdentity) error {
 	log.Lvlf2("ProposeConfig")
 	var err error
 	err = i.ConfigUpdateLight()
@@ -323,10 +285,6 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int,
 		confPropose.Threshold = thr
 	}
 
-	if duration != 0 {
-		confPropose.MaxDuration = duration
-	}
-
 	if serverIDs != nil {
 		_ = i.UpdateTLSKeypairs(confPropose, serverIDs)
 	}
@@ -338,15 +296,82 @@ func (i *Identity) ProposeConfig(add, revoke map[string]abstract.Point, thr int,
 	return nil
 }
 
+func (i *Identity) EvolveChain(add, revoke map[string]abstract.Point, thr int, serverIDs []*network.ServerIdentity, num_blocks int) error {
+	log.Lvlf2("EvolveChain")
+	var err error
+	err = i.ConfigUpdateLight()
+	if err != nil {
+		return err
+	}
+
+	blocks := make([]*common_structs.Config, 0)
+	for idx:=0; idx<num_blocks; idx++ {
+		log.LLvlf2("evol: %v", idx+1)
+		confPropose := i.Config.Copy()
+		confPropose.BLink, _ = i.Config.Hash()
+
+		for _, dev := range confPropose.Device {
+			dev.Vote = nil
+		}
+
+		for name, point := range add {
+			confPropose.Device[name] = &common_structs.Device{Point: point}
+		}
+		for name, _ := range revoke {
+			if _, exists := confPropose.Device[name]; exists {
+				delete(confPropose.Device, name)
+			}
+		}
+
+		if thr != 0 {
+			confPropose.Threshold = thr
+		}
+
+		if serverIDs != nil {
+			_ = i.UpdateTLSKeypairs(confPropose, serverIDs)
+		}
+		confPropose.SetNowTimestamp()
+
+		var hash []byte
+		hash, err = confPropose.Hash()
+		if err != nil {
+			return err
+		}
+
+		sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+		if err != nil {
+			return err
+		}
+
+		confPropose.Device[i.DeviceName].Vote = &sig
+
+		i.Config = confPropose.Copy()
+		blocks = append(blocks, confPropose.Copy())
+	}
+
+	err = i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeSendChain{ID: i.ID, Blocks: blocks}, nil)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	return nil
+}
+
+
+
 // ProposeSend sends the new proposition of this identity
 func (i *Identity) ProposeSend(il *common_structs.Config) error {
-	log.Lvlf2("Device: %v proposes a config", i.DeviceName)
+	log.LLvlf2("Device: %v proposes a config", i.DeviceName)
 	err := il.SetNowTimestamp()
 	if err != nil {
 		return err
 	}
-	return i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il}, nil)
+	err = i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeSend{i.ID, il}, nil)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	return nil
 }
+
 
 // ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
@@ -359,7 +384,7 @@ func (i *Identity) ProposeUpdate() error {
 	if cerr != nil {
 		return cerr
 	}
-	i.Proposed = reply.Propose
+	i.Proposed = reply.Propose.Copy()
 	log.Lvlf2("Proposal received: %v", i.Proposed)
 	return nil
 }

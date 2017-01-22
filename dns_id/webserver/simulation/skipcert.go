@@ -81,12 +81,16 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 
 	s := config.GetService(sidentity.ServiceName).(*sidentity.Service)
 	var roster = config.Roster
+
+	s.WaitSetupWkhs(roster, e.Clients, e.CK, e.WK)
+	log.Print("after waitSetupWkhs")
+
 	siteInfoList := s.WaitSetup(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2)
 	log.Print("after waitSetup")
 
 	s.WaitWebservers(roster, e.Clients, e.CK)
 
-	time.Sleep(time.Duration(10*1000) * time.Millisecond)
+	time.Sleep(time.Duration(15*1000) * time.Millisecond)
 
 	doneCh := make(chan bool)
 	go func() {
@@ -108,89 +112,7 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 
 	time.Sleep(time.Duration(20*1000) * time.Millisecond)
 
-/*
-	doneCh := make(chan bool)
-	for round := 0; round < e.Rounds; round++ {
-		var ctr int
-		for index_client:=0; index_client<e.Clients; index_client++ {
-			go func(j int) {
-				var idx int
-				if len(siteInfoList) == 1 {
-					idx = 0
-				} else {
-					idx = ctr
-					ctr++
-				}
-				info := siteInfoList[idx : idx+1]
-				if e.MaxWaitInSec > 0 {
-					time.Sleep(time.Duration(rand.Intn(e.MaxWaitInSec*1000)) * time.Millisecond)
-				}
 
-				//round := monitor.NewTimeMeasure("client_time")
-				s.StartClient(roster, index_client, info)
-				//round.Record()
-				doneCh <- true
-			}(index_client)
-		}
-	}
-
-	cnt := 0
-	for _ = range doneCh {
-		cnt++
-		if cnt == e.Clients*e.Rounds {
-			close(doneCh)
-			break
-		}
-	}
-
-	log.Print("SIMULATION FINISHED ")
-*/
-	/*
-	//var ctr int
-	users := make([]*UserInfo, e.Clients)
-
-	doneCh := make(chan bool)
-	for round := 0; round < e.Rounds; round++ {
-		var ctr int
-		log.Lvl1("Starting round", round)
-
-		for i := range users {
-			go func(j int) {
-				var idx int
-				if len(siteInfoList) == 1 {
-					idx = 0
-				} else {
-					idx = ctr
-					ctr++
-				}
-				s := siteInfoList[idx : idx+1]
-				if e.MaxWaitInSec > 0 {
-					time.Sleep(time.Duration(rand.Intn(e.MaxWaitInSec*1000)) * time.Millisecond)
-				}
-				service := config.GetService(webserver.ServiceWSName).(*webserver.WS)
-
-				round := monitor.NewTimeMeasure("client_time")
-				//bw := monitor.NewCounterIOMeasure("client_bw",users[i].User.WSClient)
-				users[i] = &UserInfo{webserver.NewUser("", s), s[0].FQDN}
-				round.Record()
-				//bw.Record()
-				doneCh <- true
-			}(i)
-		}
-
-
-	}
-
-	cnt := 0
-	for _ = range doneCh {
-		cnt++
-		if cnt == e.Clients*e.Rounds {
-			close(doneCh)
-			break
-		}
-	}
-	log.Print("SIMULATION FINISHED ")
-	*/
 
 	return nil
 }

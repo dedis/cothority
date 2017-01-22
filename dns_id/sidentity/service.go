@@ -24,7 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/dns_id/ca"
 	"github.com/dedis/cothority/dns_id/common_structs"
 	"github.com/dedis/cothority/dns_id/skipchain"
 	"github.com/dedis/cothority/dns_id/swupdate"
@@ -60,13 +59,17 @@ func init() {
 	network.RegisterMessage(&StorageMap{})
 	network.RegisterMessage(&Storage{})
 	network.RegisterMessage(&SyncStart{})
+	network.RegisterMessage(&SyncWkhsStart{})
 	network.RegisterMessage(&ClientStart{})
 	network.RegisterMessage(&WebserverStart{})
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&common_structs.PushedPublic{})
 	network.RegisterMessage(common_structs.MinusOne{})
+	network.RegisterMessage(common_structs.MinusOneWkh{})
 	network.RegisterMessage(common_structs.MinusOneClient{})
 	network.RegisterMessage(common_structs.MinusOneWebserver{})
+	network.RegisterMessage(common_structs.SetupWkh{})
+	network.RegisterMessage(common_structs.StartTimestamper{})
 }
 
 // Service handles identities
@@ -74,7 +77,6 @@ type Service struct {
 	*onet.ServiceProcessor
 	skipchain *skipchain.Client
 	verifiers map[VerifierID]MsgVerifier
-	ca        *ca.CSRDispatcher
 	*StorageMap
 	identitiesMutex sync.Mutex
 	path            string
@@ -85,16 +87,20 @@ type Service struct {
 	TheRoster     *onet.Roster
 	PropagateFunc messaging.PropagationFunc
 	SimulFunc     messaging.PropagationFunc
+	WkhsFunc     messaging.PropagationFunc
 	ClientFunc    messaging.PropagationFunc
 	WebserverFunc messaging.PropagationFunc
 	expected      int
 	expected2     int
 	expected3     int
+	expected4     int
 	cnt           int
 	cnt2          int
 	cnt3          int
+	cnt4          int
 	cntMut        sync.Mutex
 	setupDone     chan bool
+	setupWkhsDone     chan bool
 	siteInfoList  []*common_structs.SiteInfo
 	publicDone    chan bool
 	ok            bool
@@ -130,6 +136,8 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	if tn.ProtocolName() == "SIdentityPropagate" {
 		return s.ServiceProcessor.NewProtocol(tn, conf)
 	} else if tn.ProtocolName() == "Sync" {
+		return nil, nil
+	} else if tn.ProtocolName() == "SyncWkhs" {
 		return nil, nil
 	} else if tn.ProtocolName() == "StartClients" {
 		return nil, nil
@@ -237,7 +245,7 @@ func (s *Storage) getConfigBlockByID(sbID []byte) (*common_structs.Config, []byt
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
 func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError) {
-	log.Lvlf2("Storing new proposal")
+	log.LLvlf2("Received proposal at server: %v", s.ServerIdentity())
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
 		log.LLvlf2("Didn't find Identity")
@@ -253,15 +261,63 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 		log.Print(latestHash)
 		return nil, onet.NewClientErrorCode(4100, "No proper backward link")
 	}
-
+	log.LLvlf2("Storing new proposal 2")
 	roster := s.TheRoster
 	replies, err := s.PropagateFunc(roster, p, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
+	log.LLvlf2("Storing new proposal 3 ")
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
+	log.LLvlf2("Storing new proposal 4")
+	return nil, nil
+}
+
+func (s *Service) ProposeSendChain(p *ProposeSendChain) (network.Message, onet.ClientError) {
+	log.LLvlf2("Received chain-proposal at server: %v", s.ServerIdentity())
+	sid := s.getIdentityStorage(p.ID)
+	if sid == nil {
+		log.LLvlf2("Didn't find Identity")
+		return nil, onet.NewClientErrorCode(4100, "Didn't find Identity")
+	}
+
+	blocks := p.Blocks
+	trustedconfig := sid.Latest.Copy()
+	for index, block := range blocks {
+		newconfig := block.Copy()
+		prevHash, _ := trustedconfig.Hash()
+		nextHash, _ := newconfig.Hash()
+		log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prevHash, nextHash)
+		cnt := 0
+		sig := newconfig.Device["CKH1"].Vote
+		if sig != nil {
+			err := crypto.VerifySchnorr(network.Suite, newconfig.Device["CKH1"].Point, nextHash, *sig)
+			if err != nil {
+				log.ErrFatal(err)
+			}
+			cnt++
+		}
+		if cnt < trustedconfig.Threshold {
+			log.LLvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
+		}
+		trustedconfig = newconfig.Copy()
+	}
+
+
+
+	log.LLvlf2("Propagate the blockchain")
+	roster := s.TheRoster
+	replies, err := s.PropagateFunc(roster, p, propagateTimeout)
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
+	}
+
 	return nil, nil
 }
 
@@ -410,12 +466,13 @@ func (s *Service) CheckVoteUpdateId(sid *Storage, v *ProposeVote) (onet.ClientEr
 
 	// If we have enough signatures, update the site identity
 	log.Lvl2("Having at least threshold votes")
-	sid.Latest=sid.Proposed
+	sid.Latest=sid.Proposed.Copy()
 	sid.Proposed=nil
 	sid.Votes = make(map[string]*crypto.SchnorrSig)
 	sid.setConfigBlock(sid.Latest)
 	log.Lvl2("identity constituted of", len(sid.ConfigBlocks), "blocks")
 	log.Lvl2("hash of latest block: ",hash)
+	log.LLvlf2("Server %v has stored the vote", s.ServerIdentity())
 	return nil
 }
 
@@ -425,7 +482,8 @@ func (s *Service) CheckVoteUpdateId(sid *Storage, v *ProposeVote) (onet.ClientEr
 
 // Propagate handles propagation of all data in the identity-service
 func (s *Service) Propagate(msg network.Message) {
-	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	log.LLvlf4(" %v got msg %v", s.ServerIdentity(),reflect.TypeOf(msg).String())
+	log.Lvlf4(" %v got msg %+v %v", s.ServerIdentity(), msg, reflect.TypeOf(msg).String())
 	id := []byte(nil)
 	var sid *Storage
 	switch msg.(type) {
@@ -443,6 +501,8 @@ func (s *Service) Propagate(msg network.Message) {
 		return
 	case *ProposeSend:
 		id = msg.(*ProposeSend).ID
+	case *ProposeSendChain:
+		id = msg.(*ProposeSendChain).ID
 	case *ProposeVote:
 		id = msg.(*ProposeVote).ID
 	case *PropagateIdentityLight:
@@ -485,31 +545,64 @@ func (s *Service) Propagate(msg network.Message) {
 	if id != nil {
 		sid = s.getIdentityStorage(id)
 		if sid == nil {
-			log.Error("Didn't find entity in", s)
+			log.Print("Didn't find entity in", s.ServerIdentity())
 			return
 		}
 		sid.Lock()
+		defer sid.Unlock()
 		switch msg.(type) {
 		case *ProposeSend:
-
 			p := msg.(*ProposeSend)
 
 			// Check whether the block points to the current head block, i.e. its BLink is the hash
 			// of the latest block
 			latestHash, _ := sid.Latest.Hash()
 			if bytes.Equal(p.Config.BLink, latestHash) {
-				log.Lvlf2("Storing proposal..")
-				sid.Proposed = p.Config
+				log.LLvlf2("Storing proposal at server: %v", s.ServerIdentity())
+				sid.Proposed = p.Config.Copy()
 			} else {
 				log.Print("No proper backward link, proposal will not be stored at server: ", s.ServerIdentity())
+			}
+		case *ProposeSendChain:
+			p := msg.(*ProposeSendChain)
+
+			blocks := p.Blocks
+			trustedconfig := sid.Latest.Copy()
+			for index, block := range blocks {
+				newconfig := block.Copy()
+				prevHash, _ := trustedconfig.Hash()
+				nextHash, _ := newconfig.Hash()
+				log.Lvlf2("Checking trust delegation: %v -> %v (%v -> %v)", index-1, index, prevHash, nextHash)
+				cnt := 0
+				sig := newconfig.Device["CKH1"].Vote
+				if sig != nil {
+					err := crypto.VerifySchnorr(network.Suite, newconfig.Device["CKH1"].Point, nextHash, *sig)
+					if err != nil {
+						log.ErrFatal(err)
+					}
+					cnt++
+				}
+				if cnt < trustedconfig.Threshold {
+					log.LLvlf2("number of votes: %v, threshold: %v", cnt, trustedconfig.Threshold)
+				}
+
+
+				// If we have enough signatures, update the site identity
+				log.Lvl2("Having at least threshold votes")
+				sid.Latest=newconfig.Copy()
+				sid.Proposed=nil
+				sid.Votes = make(map[string]*crypto.SchnorrSig)
+				sid.setConfigBlock(sid.Latest)
+
+				trustedconfig = newconfig.Copy()
 			}
 
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			s.CheckVoteUpdateId(sid, v)
 		}
-		sid.Unlock()
 	}
+	return
 }
 
 // Forward traversal of the skipchain from the oldest block as the latter is
@@ -1004,11 +1097,11 @@ func newIdentityService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		skipchain:        skipchain.NewClient(),
-		ca:               ca.NewCSRDispatcher(),
 		StorageMap:       &StorageMap{Identities: make(map[string]*Storage)},
 		Publics:          make(map[string]abstract.Point),
 		EpochDuration: 	  time.Millisecond * 1000 * 1,
 		setupDone:        make(chan bool),
+		setupWkhsDone:    make(chan bool),
 		publicDone:       make(chan bool),
 		attachedDone:     make(chan bool),
 		clientsDone:      make(chan bool),
@@ -1022,6 +1115,8 @@ func newIdentityService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	s.SimulFunc, err = messaging.NewPropagationFunc(c, "Sync", s.StartSimul)
 	log.ErrFatal(err)
+	s.WkhsFunc, err = messaging.NewPropagationFunc(c, "SyncWkhs", s.StartWkhs)
+	log.ErrFatal(err)
 	s.ClientFunc, err = messaging.NewPropagationFunc(c, "StartClients", s.GoClients)
 	log.ErrFatal(err)
 	s.WebserverFunc, err = messaging.NewPropagationFunc(c, "StartWebserverUpt", s.GoWebservers)
@@ -1030,9 +1125,9 @@ func newIdentityService(c *onet.Context) onet.Service {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
 	})
 	//ws = c.Service("webserver")
-	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentityLight, s.ProposeUpdate, s.MinusOneWebserver,
-		s.GetValidSbPathLight, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart,
+	for _, f := range []interface{}{s.ProposeSend, s.ProposeSendChain, s.ProposeVote, s.SetupWkh,
+		s.CreateIdentityLight, s.ProposeUpdate, s.MinusOneWebserver, s.StartTimestamper,
+		s.GetValidSbPathLight, s.PushPublicKey, s.PullPublicKey, s.GetCert, s.GetPoF, s.LetsStart, s.LetsStart0,
 		s.LetsFinish, s.LetsEvolve, s.PushedPublic,
 	} {
 		if err := s.RegisterHandler(f); err != nil {
@@ -1055,6 +1150,13 @@ type SyncStart struct {
 	Cothority  int
 	Evol1      int
 	Evol2      int
+}
+
+type SyncWkhsStart struct {
+	Roster     *onet.Roster
+	Clients    int
+	Webservers int
+	Cothority  int
 }
 
 type ClientStart struct {
@@ -1100,7 +1202,9 @@ func (s *Service) GoWebservers(msg network.Message) {
 		return
 	case index == index_WK:
 		// initializer of the timestamper at the warm key holders
-		go s.RunLoop(roster_WK)
+		wkhIdentity := m.Roster.List[index_WK]
+		client := onet.NewClient(ServiceName)
+		log.ErrFatal(client.SendProtobuf(wkhIdentity, &common_structs.StartTimestamper{roster_WK}, nil))
 	default:
 		return
 	}
@@ -1154,11 +1258,9 @@ func (s *Service) StartSimul(msg network.Message) {
 	switch {
 	case index < index_ws:
 		// client case
-		return
 	case index < index_CK:
 		// webserver case
 		go startWs(m.Roster, roster_WK, index_CK+(index-index_ws), index)
-		return
 	case index < index_WK:
 		// cold key case
 		go func() {
@@ -1169,16 +1271,44 @@ func (s *Service) StartSimul(msg network.Message) {
 		}()
 	default:
 		// cothority warm key case
-		s.identitiesMutex.Lock()
-		s.TheRoster=roster_WK
-		s.identitiesMutex.Unlock()
-		/*
-		if index == index_WK {
-			go s.RunLoop(roster_WK)
-		}
-		*/
 	}
+	return
+}
 
+func (s *Service) StartWkhs(msg network.Message) {
+	log.Print("StartWkhs", s.Context.String())
+	m := msg.(*SyncWkhsStart)
+
+	// [ clients, webservers, cold key holders, cothority]
+	index_client := 0
+	index_ws := index_client + m.Clients
+	index_CK := index_ws + m.Webservers
+	index_WK := index_CK + m.Webservers
+
+	index, _ := m.Roster.Search(s.Context.ServerIdentity().ID)
+
+	roster_WK := onet.NewRoster(m.Roster.List[index_WK:])
+	log.Print(s.Context, " INDEX ", index, " VS", index_ws, " ", index_CK, " ", index_WK)
+
+	switch {
+	case index < index_ws:
+		// client case
+	case index < index_CK:
+		// webserver case
+	case index < index_WK:
+		// cold key case
+	default:
+		// cothority warm key case
+		go s.startWkh(m.Roster, roster_WK, index)
+	}
+	return
+}
+
+
+func (s *Service) startWkh(roster, roster_WK *onet.Roster, index_WK int) {
+	wkhIdentity := roster.List[index_WK]
+	client := onet.NewClient(ServiceName)
+	log.ErrFatal(client.SendProtobuf(wkhIdentity, &common_structs.SetupWkh{roster, roster_WK}, nil))
 }
 
 func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, evol1, evol2 int) {
@@ -1191,21 +1321,27 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 	}
 	log.Print("roster is: %s", roster_WK)
 	fqdn := fmt.Sprintf("site%d", index_ws)
-	id := NewIdentity(roster_WK, fqdn, 1, "CKH_one", "device", nil, data, int64(0))
-	err := id.CreateIdentityLight()
+	ids, err := NewIdentityMultDevs(roster_WK, fqdn, 1, []string{"CKH1", "CKH2", "CKH3", "CKH4", "CKH5"}, "device", data)
+	if err != nil {
+		log.ErrFatal(err)
+	}
+	id := ids[0]
+	err = id.CreateIdentityLight()
 	log.ErrFatal(err)
 	log.Print("Site Identity has been created")
 
 	serverIDs := make([]*network.ServerIdentity, 0)
 	serverIDs = append(serverIDs, wsIdentity)
 	log.Print("Evolution time 1")
-
+	id.EvolveChain(nil, nil, 0,  serverIDs, evol1)
+	/*
 	for idx := 0; idx < evol1; idx++ {
-		log.Print("evol block: ", idx+1)
-		id.ProposeConfig(nil, nil, 0, 0, serverIDs)
+		log.Print("evol block: ", idx+1, "server: ", s.ServerIdentity())
+		id.ProposeConfig(nil, nil, 0,  serverIDs)
+		log.Print("before ProposeUpVote() starts")
 		id.ProposeUpVote()
 	}
-
+	*/
 	client := onet.NewClient("WebServer")
 	log.ErrFatal(client.SendProtobuf(wsIdentity, &common_structs.IdentityReady{
 		ID:            id.ID,
@@ -1222,7 +1358,7 @@ func (s *Service) startCkh(roster, roster_WK *onet.Roster, index_WK, index_ws, e
 
 		for idx := 0; idx < evol2; idx++ {
 			log.Print("evol block: ", idx+1)
-			id.ProposeConfig(nil, nil, 0, 0, serverIDs)
+			id.ProposeConfig(nil, nil, 0,  serverIDs)
 			id.ProposeUpVote()
 		}
 
@@ -1276,6 +1412,24 @@ func (s *Service) WaitSetup(roster *onet.Roster, clients, webservers, cothority,
 	return s.siteInfoList
 }
 
+
+func (s *Service) WaitSetupWkhs(roster *onet.Roster, clients, webservers, cothority int)  {
+	s.cntMut.Lock()
+	s.expected4 = cothority
+	s.cntMut.Unlock()
+	msg := &SyncWkhsStart{
+		Roster:     roster,
+		Clients:    clients,
+		Webservers: webservers,
+		Cothority:  cothority,
+	}
+	s.WkhsFunc(roster, msg, 25000)
+	<-s.setupWkhsDone
+	log.Print(s.Context, "SetupWkhs DONE")
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	return
+}
 func (s *Service) WaitClients(roster *onet.Roster, clients, webservers, cothority, evol1, evol2 int, siteinfolist []*common_structs.SiteInfo) {
 	s.cntMut.Lock()
 	s.expected2 = clients
@@ -1331,6 +1485,18 @@ func (s *Service) LetsStart(req *common_structs.MinusOne) (network.Message, onet
 	return nil, nil
 }
 
+func (s *Service) LetsStart0(req *common_structs.MinusOneWkh) (network.Message, onet.ClientError) {
+
+	s.cntMut.Lock()
+	defer s.cntMut.Unlock()
+	s.cnt4++
+	log.Print("FirstIdentity received a MinusOneWkh message, (in total:", s.cnt4, "out of:", s.expected4, ")")
+	if s.cnt4 == s.expected4 {
+		s.setupWkhsDone <- true
+	}
+	return nil, nil
+}
+
 func (s *Service) LetsFinish(req *common_structs.MinusOneClient) (network.Message, onet.ClientError) {
 	log.Print("FirstIdentity received a MinusOneClient message")
 	s.cntMut.Lock()
@@ -1374,5 +1540,24 @@ func (s *Service) MinusOneWebserver(req *common_structs.MinusOneWebserver) (netw
 	if s.cnt3 == s.expected3 {
 		s.webserversDone <- true
 	}
+	return nil, nil
+}
+
+func (s *Service) SetupWkh(req *common_structs.SetupWkh) (network.Message, onet.ClientError) {
+	roster := req.Roster
+	firstIdentity := roster.List[0]
+	roster_WK :=  req.Wkhs
+	s.identitiesMutex.Lock()
+	s.TheRoster=roster_WK
+	s.identitiesMutex.Unlock()
+	client := onet.NewClient(ServiceName)
+	log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWkh{}, nil))
+	return nil, nil
+}
+
+
+func (s *Service) StartTimestamper(req *common_structs.StartTimestamper) (network.Message, onet.ClientError) {
+	roster_WK :=  req.Wkhs
+	go s.RunLoop(roster_WK)
 	return nil, nil
 }

@@ -19,7 +19,7 @@ const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
 // How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
+const propagateTimeout = 20000
 
 // How many ms at most should be the time difference between a device/cothority node and the
 // the time reflected on the proposed config for the former to sign off
@@ -135,6 +135,12 @@ type ProposeSend struct {
 	ID []byte
 	*common_structs.Config
 }
+
+type ProposeSendChain struct {
+	ID []byte
+	Blocks []*common_structs.Config
+}
+
 
 // ProposeUpdate verifies if a new config is available.
 type ProposeUpdate struct {
