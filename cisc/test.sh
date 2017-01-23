@@ -11,7 +11,7 @@ NBR=4
 main(){
     startTest
 	buildKeys
-	buildCothority "github.com/dedis/cothority/identity"
+	buildConode "github.com/dedis/cothority/identity"
 	test Build
 	test ClientSetup
 	test IdCreate
@@ -46,8 +46,8 @@ testFollow(){
 	clientSetup 1
 	echo ID is $ID
 	testNFile cl3/authorized_keys
-	testFail runCl 3 follow add group.toml 1234 service1
-	testOK runCl 3 follow add group.toml $ID service1
+	testFail runCl 3 follow add public.toml 1234 service1
+	testOK runCl 3 follow add public.toml $ID service1
 	testFail grep -q service1 cl3/authorized_keys
 	testNGrep client1 runCl 3 follow list
 	testGrep $ID runCl 3 follow list
@@ -183,9 +183,9 @@ testIdConnect(){
 	testFail runCl 2 id co
 	echo test > test.toml
 	testFail runCl 2 id co test.toml
-	testFail runCl 2 id co group.toml
-	testOK runCl 2 id co group.toml $ID client2
-	runGrepSed "Public key" "s/.* //" runCl 2 id co group.toml $ID client2
+	testFail runCl 2 id co public.toml
+	testOK runCl 2 id co public.toml $ID client2
+	runGrepSed "Public key" "s/.* //" runCl 2 id co public.toml $ID client2
     PUBLIC=$SED
     if [ -z "$PUBLIC" ]; then
     	fail "no public keys received"
@@ -239,10 +239,10 @@ testIdCreate(){
     testFail runCl 1 id cr
     echo test > test.toml
     testFail runCl 1 id cr test.toml
-    testOK runCl 1 id cr group.toml
+    testOK runCl 1 id cr public.toml
 	testFile cl1/config.bin
-    testGrep $(hostname) runCl 1 id cr group.toml
-    testGrep client1 runCl 1 id cr group.toml client1
+    testGrep $(hostname) runCl 1 id cr public.toml
+    testGrep client1 runCl 1 id cr public.toml client1
 }
 
 testClientSetup(){
@@ -277,12 +277,12 @@ clientSetup(){
 	runCoBG 1 2 3
 	local DBG_OLD=$DBG_SHOW
     DBG_SHOW=2
-    testOK runCl 1 id cr group.toml client1
+    testOK runCl 1 id cr public.toml client1
     runGrepSed ID "s/.* //" runCl 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
-    		testOK runCl $c id co group.toml $ID client$c
+    		testOK runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
 					testOK runCl $b config update

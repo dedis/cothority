@@ -6,7 +6,7 @@ DBG_APP=2
 
 main(){
     startTest
-    buildCothority
+    buildConode
     test Build
     test Network
     stopTest
@@ -15,8 +15,8 @@ main(){
 testNetwork(){
 	runCoBG 1 2
     testOut "Running network"
-    testGrep "Available_Services" runCl -g group.toml
-    testGrep "Available_Services" runCl -g group.toml
+    testGrep "Available_Services" runCl -g public.toml
+    testGrep "Available_Services" runCl -g public.toml
 }
 
 testBuild(){
