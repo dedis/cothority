@@ -11,7 +11,7 @@ NBR=4
 main(){
     startTest
 	buildKeys
-	buildCothority "github.com/dedis/cothority/identity"
+	buildConode "github.com/dedis/cothority/identity"
 	test Build
 	test ClientSetup
 	test IdCreate
