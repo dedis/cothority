@@ -333,8 +333,8 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 	for server, msg := range t.I2s {
 		c := 0
 		for i := 0; i < len(t.ChosenSecret); i++ {
-			for j := 0; j < len(t.ChosenSecret[i]); j++ {
-				if int(msg.ChosenSecret[c]) != t.ChosenSecret[i][j] {
+			for _, cs := range t.ChosenSecret[i] {
+				if int(msg.ChosenSecret[c]) != cs {
 					return fmt.Errorf("Server %v received wrong client commitment", server)
 				}
 				c++
@@ -643,9 +643,9 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 		// Transformation of commitments from [][]int to []uint32 to avoid protobuf errors
 		var chosenSecret = make([]uint32, 0)
-		for i := range rh.chosenSecret {
-			for j := range rh.chosenSecret[i] {
-				chosenSecret = append(chosenSecret, uint32(rh.chosenSecret[i][j]))
+		for i := 0; i < len(rh.chosenSecret); i++ {
+			for _, cs := range rh.chosenSecret[i] {
+				chosenSecret = append(chosenSecret, uint32(cs))
 			}
 		}
 
