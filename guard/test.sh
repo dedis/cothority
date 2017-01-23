@@ -7,7 +7,7 @@ DBG_APP=2
 
 main(){
     startTest
-    buildCothority
+    buildConode
     test Build
     test Network
     stopTest
@@ -16,7 +16,7 @@ main(){
 testNetwork(){
 	runCoBG 1 2
     testOut "Running Guard"
-    testOK runCl su group.toml
+    testOK runCl su public.toml
     testOK runCl s evan dadada Hello
     testFail runCl r evan dadadas
     testOK runCl r evan dadada
