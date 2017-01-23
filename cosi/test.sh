@@ -16,10 +16,10 @@ main(){
         rm -rf $cl
         mkdir $cl
     done
-#    test Build
-#    test ServerCfg
-#    test SignFile
-#    test Check
+    test Build
+    test ServerCfg
+    test SignFile
+    test Check
     test Reconnect
     stopTest
 }
