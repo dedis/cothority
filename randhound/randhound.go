@@ -919,7 +919,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.Marshal(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}
@@ -947,7 +947,7 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.Marshal(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}
@@ -969,7 +969,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal ...
-	mb, err := network.Marshal(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}
