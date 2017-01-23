@@ -332,6 +332,7 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 	// Verify that all servers received the same client commitment
 	for server, msg := range t.I2s {
 		c := 0
+		// Deterministically iterate over map[int][]int
 		for i := 0; i < len(t.ChosenSecret); i++ {
 			for _, cs := range t.ChosenSecret[i] {
 				if int(msg.ChosenSecret[c]) != cs {
@@ -641,7 +642,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		log.Lvlf3("Grouping: %v", rh.group)
 		log.Lvlf3("ChosenSecret: %v", rh.chosenSecret)
 
-		// Transformation of commitments from [][]int to []uint32 to avoid protobuf errors
+		// Transformation of commitments from map[int][]int to []uint32 to avoid protobuf errors
 		var chosenSecret = make([]uint32, 0)
 		for i := 0; i < len(rh.chosenSecret); i++ {
 			for _, cs := range rh.chosenSecret[i] {
