@@ -21,7 +21,7 @@ In the Node-method you can read the files that have been created by the
 
 import (
 	//"math/rand"
-	"time"
+	//"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/dns_id/sidentity"
@@ -43,6 +43,7 @@ type Simulation struct {
 	Clients      int
 	Evol1        int
 	Evol2        int
+	Updates      int
 }
 
 // NewSimulation is used internally to register the simulation (see the init()
@@ -73,29 +74,29 @@ type UserInfo struct {
 	name string
 }
 
-// Run implementsc onet.Simulation.
+// Run implements onet.Simulation.
 func (e *Simulation) Run(config *onet.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", e.Rounds)
-	log.LLvlf1("Roster is: %s", config.Roster)
+	log.Lvlf2("Roster is: %s", config.Roster)
 
 	s := config.GetService(sidentity.ServiceName).(*sidentity.Service)
 	var roster = config.Roster
 
 	s.WaitSetupWkhs(roster, e.Clients, e.CK, e.WK)
-	log.Print("after waitSetupWkhs")
 
 	siteInfoList := s.WaitSetup(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2)
-	log.Print("after waitSetup")
 
-	s.WaitWebservers(roster, e.Clients, e.CK)
+	// wait for the 1st timestamper round to complete
+	s.WaitTimestamper(roster, e.Clients, e.CK)
+	log.Print("--------after 1st timestamper round completes")
+	s.WaitWebservers(roster, e.Clients, e.CK, e.Updates)
 
-	time.Sleep(time.Duration(15*1000) * time.Millisecond)
+	//time.Sleep(time.Duration(15*1000) * time.Millisecond)
 
 	doneCh := make(chan bool)
 	go func() {
 		s.WaitClients(roster, e.Clients, e.CK, e.WK, e.Evol1, e.Evol2, siteInfoList)
-		log.Printf("BACK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 		doneCh <- true
 	}()
 
@@ -108,11 +109,11 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 			break
 		}
 	}
-	log.Print("SIMULATION FINISHED ")
-
-	time.Sleep(time.Duration(20*1000) * time.Millisecond)
 
 
 
+	//log.Print("SIMULATION FINISHES IN ABOUT 20 SECONDS")
+	//time.Sleep(time.Duration(20*1000) * time.Millisecond)
+	//log.Print("SIMULATION FINISHED ")
 	return nil
 }

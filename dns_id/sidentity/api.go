@@ -349,9 +349,11 @@ func (i *Identity) EvolveChain(add, revoke map[string]abstract.Point, thr int, s
 		blocks = append(blocks, confPropose.Copy())
 	}
 
-	err = i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeSendChain{ID: i.ID, Blocks: blocks}, nil)
-	if err != nil {
-		log.ErrFatal(err)
+	if num_blocks>0 {
+		err = i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeSendChain{ID: i.ID, Blocks: blocks}, nil)
+		if err != nil {
+			log.ErrFatal(err)
+		}
 	}
 	return nil
 }
@@ -441,7 +443,7 @@ func (i *Identity) ConfigUpdateLight() error {
 		return errors.New("Didn't find any list in the cothority")
 	}
 	log.Lvlf2("device %v, latest block's hash: %v", i.DeviceName, i.LatestID)
-	blocks, cert, _, _, err := i.GetValidSbPathLight(i.ID, i.LatestID, []byte{0})
+	blocks, cert, _, _, _, err := i.GetValidSbPathLight(i.ID, i.LatestID, []byte{0})
 	if err != nil {
 		return err
 	}
@@ -517,12 +519,13 @@ func (i *Identity) ValidateConfigChainLight(blocks []*common_structs.Config) err
 
 
 
-func (i *Identity) GetValidSbPathLight(id []byte, h1 []byte, h2 []byte) ([]*common_structs.Config, *common_structs.Cert, []byte, *common_structs.SignatureResponse, error) {
+func (i *Identity) GetValidSbPathLight(id []byte, h1 []byte, h2 []byte) ([]*common_structs.Config, *common_structs.Cert, []byte, *common_structs.SignatureResponse, *network.ServerIdentity, error) {
 	log.Lvlf2("GetValidSbPathLight(): Start")
 	reply := &GetValidSbPathLightReply{}
-	cerr := i.CothorityClient.SendProtobuf(i.Cothority.RandomServerIdentity(), &GetValidSbPathLight{ID: id, Hash1: h1, Hash2: h2}, reply)
+	sendTo := i.Cothority.RandomServerIdentity()
+	cerr := i.CothorityClient.SendProtobuf(sendTo, &GetValidSbPathLight{ID: id, Hash1: h1, Hash2: h2}, reply)
 	if cerr != nil {
-		return nil, nil, nil, nil, cerr
+		return nil, nil, nil, nil, sendTo, cerr
 	}
 	log.Lvlf2("GetValidSbPathLight(): Received %v blocks from cothority", len(reply.Configblocks))
 	sbs := reply.Configblocks
@@ -533,10 +536,10 @@ func (i *Identity) GetValidSbPathLight(id []byte, h1 []byte, h2 []byte) ([]*comm
 	// check the trust delegation between each pair of subsequent skipblocks/configs	_
 	err := i.ValidateConfigChainLight(sbs)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, sendTo, err
 	}
 	log.Lvlf2("GetValidSbPathLight(): End")
-	return sbs, cert, hash, pof, nil
+	return sbs, cert, hash, pof, sendTo, nil
 }
 
 // fetch the current valid cert for the site (not yet expired)

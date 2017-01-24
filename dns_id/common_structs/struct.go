@@ -582,9 +582,15 @@ type MinusOneWkh struct {
 }
 
 type StartUptWebserver struct {
+	Roster *onet.Roster
+	Updates int
 }
 
 type MinusOneWebserver struct {
+
+}
+
+type MinusOneTimestamper struct {
 
 }
 
@@ -594,5 +600,25 @@ type SetupWkh struct {
 }
 
 type StartTimestamper struct {
+	Roster *onet.Roster
 	Wkhs *onet.Roster
+}
+
+type CreateEvolveIdentity struct {
+	Roster_WK *onet.Roster
+	Index_CK int
+	FirstIdentity *network.ServerIdentity
+	WsIdentity *network.ServerIdentity
+	Fqdn string
+	Data map[string]*WSconfig
+	Evol1 int
+	Clients int
+	Webservers int
+}
+
+type EvolvedIdentity struct {
+	ID []byte
+	Index_CK int
+	Clients int
+	Webservers int
 }

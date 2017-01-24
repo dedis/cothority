@@ -37,6 +37,7 @@ func init() {
 	network.RegisterMessage(&common_structs.SiteInfo{})
 	network.RegisterMessage(&common_structs.ConnectClient{})
 	network.RegisterMessage(&common_structs.StartUptWebserver{})
+
 }
 
 // WS handles site identities (usually only one)
@@ -161,7 +162,9 @@ func (ws *WS) WSUpdate(id []byte) error {
 	defer site.Unlock() //have been commented before
 
 	log.Lvlf2("Web server %v has latest block with hash: %v", ws.ServerIdentity(), site.LatestHash)
-	sbs, cert, hash, pof, err := site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
+	sbs, cert, hash, pof, sendTo, err := site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
+	log.Print("Webserver", ws.ServerIdentity(), "fetched", len(sbs), "blocks from WKH", sendTo)
+	/*
 	times := 0
 	for len(sbs) == 0 && times < 10 {
 		times++
@@ -170,6 +173,7 @@ func (ws *WS) WSUpdate(id []byte) error {
 		time.Sleep(1000 * time.Millisecond)
 		sbs, cert, hash, pof, err = site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
 	}
+	*/
 
 	// Store the not previously known skipblocks (the latest known is stored again because the
 	// the genesis block of the site's skipchain must be stored the first time WSUpdate() is invoked)
@@ -196,7 +200,7 @@ func (ws *WS) WSUpdate(id []byte) error {
 	site.CertInfo = certinfo
 
 	if pof == nil {
-		log.Print("null pof  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		log.Print(ws.ServerIdentity(), "null pof  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	}
 	site.PoF = pof
 
@@ -500,7 +504,9 @@ func newWSService(c *onet.Context) onet.Service {
 	//if err := ws.tryLoad(); err != nil {
 	//	log.Error(err)
 	//}
-	for _, f := range []interface{}{ws.UserGetValidSbPathLight, ws.StartWebserver, ws.AttachWebserver, ws.ConnectClient, ws.StartUptWebserver} {
+	for _, f := range []interface{}{ws.UserGetValidSbPathLight, ws.StartWebserver, ws.AttachWebserver,
+		ws.ConnectClient, ws.StartUptWebserver,
+	} {
 		if err := ws.RegisterHandler(f); err != nil {
 			log.Fatal("Registration error:", err)
 		}
@@ -523,7 +529,7 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Messag
 
 	site := ws.getSiteStorage(req.ID)
 	if site == nil {
-		log.Lvlf2("WSUpdate failed: web server not yet attached to the requested site")
+		log.LLvlf2("WSUpdate failed: web server not yet attached to the requested site")
 		return nil,  onet.NewClientErrorCode(4100,"WSUpdate failed: web server not yet attached to the requested site")
 	}
 /*
@@ -540,7 +546,7 @@ func (ws *WS) AttachWebserver(req *common_structs.IdentityReady) (network.Messag
 	}()
 
 */
-	log.Print("Webserver is now attached, Sending back to CKH: ", req.CkhIdentity)
+	log.Lvl2("Webserver is now attached, Sending back to CKH: ", req.CkhIdentity)
 	client := onet.NewClient(sidentity.ServiceName)
 	log.ErrFatal(client.SendProtobuf(req.CkhIdentity, siteInfo, nil))
 	log.Lvlf2("Webserver dispatched the attached message")
@@ -554,11 +560,11 @@ func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Messag
 	index_ws, _ := roster.Search(ws.ServerIdentity().ID)
 	ws.fqdn = fmt.Sprintf("site%d", index_ws)
 	ckIdentity := roster.List[index_CK]
-	log.Print(ws.Context, "StartWebServer WSPublishPublicKey")
+	log.Lvl2(ws.Context, "StartWebServer WSPublishPublicKey")
 	log.ErrFatal(ws.WSPushPublicKey(roster_WK))
 
 	client := onet.NewClient(sidentity.ServiceName)
-	log.Print(ws.Context, "StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
+	log.Lvl2(ws.Context, "StartWebServer", index_ws, "Sending back to ColdKeyHolder", index_CK)
 	log.ErrFatal(client.SendProtobuf(ckIdentity, &common_structs.PushedPublic{}, nil))
 	return nil, nil
 }
@@ -569,7 +575,6 @@ func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message,
 	round := monitor.NewTimeMeasure("client_time")
 	NewUser("", s)
 	round.Record()
-	log.Print("minus 1 client to visit a site")
 	return nil, nil
 }
 
@@ -582,15 +587,25 @@ func (ws *WS) StartUptWebserver (req *common_structs.StartUptWebserver) (network
 	}
 	ws.sitesMutex.Unlock()
 	go func(){
-		c := time.Tick(ws.UpdateDuration)
+		// UNCOMMENT the following 2 lines if webservers are to be updated in a periodic manner
+		// during the experiments' duration
+		//c := time.Tick(ws.UpdateDuration)
+		//for _ = range c {
 
-		for _ = range c {
-			log.LLvlf2("Webserver update starts")
+		// COMMENT the following 2 lines if webservers are to be updated in a periodic manner
+		// during the experiments' duration
+		num_updates := req.Updates
+		for idx:=0;idx<num_updates;idx++{
+			log.Lvlf2("Webserver update starts")
 			round := monitor.NewTimeMeasure("ws_time")
 			ws.WSUpdate(id)
 			round.Record()
-			log.LLvlf2("Webserver update ends")
+			log.Lvlf2("Webserver update ends")
 		}
+		roster := req.Roster
+		firstIdentity := roster.List[0]
+		client := onet.NewClient(sidentity.ServiceName)
+		log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWebserver{}, nil))
 	}()
 	return nil, nil
 }
