@@ -572,9 +572,15 @@ func (ws *WS) StartWebserver(req *common_structs.StartWebserver) (network.Messag
 
 func (ws *WS) ConnectClient(req *common_structs.ConnectClient) (network.Message, onet.ClientError) {
 	s := req.Info
+	var user *User
+	user = NewUser("", s)
+
 	round := monitor.NewTimeMeasure("client_time")
-	NewUser("", s)
+	bw := monitor.NewCounterIOMeasure("client_bw", user.WSClient)
+	user.NewAttachments(s)
 	round.Record()
+	bw.Record()
+
 	return nil, nil
 }
 
@@ -589,13 +595,13 @@ func (ws *WS) StartUptWebserver (req *common_structs.StartUptWebserver) (network
 	go func(){
 		// UNCOMMENT the following 2 lines if webservers are to be updated in a periodic manner
 		// during the experiments' duration
-		//c := time.Tick(ws.UpdateDuration)
-		//for _ = range c {
+		c := time.Tick(ws.UpdateDuration)
+		for _ = range c {
 
 		// COMMENT the following 2 lines if webservers are to be updated in a periodic manner
 		// during the experiments' duration
-		num_updates := req.Updates
-		for idx:=0;idx<num_updates;idx++{
+		//num_updates := req.Updates
+		//for idx:=0;idx<num_updates;idx++{
 			log.Lvlf2("Webserver update starts")
 			round := monitor.NewTimeMeasure("ws_time")
 			ws.WSUpdate(id)

@@ -94,7 +94,7 @@ func NewUser(username string, sitesToAttach []*common_structs.SiteInfo) *User {
 			},
 		},
 	}
-	user.NewAttachments(sitesToAttach)
+	//user.NewAttachments(sitesToAttach)
 	return user
 }
 

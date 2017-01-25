@@ -1268,9 +1268,9 @@ func (s *Service) GoWebservers(msg network.Message) {
 
 			// UNCOMMENT the following 3 lines if webservers are to be updated in a periodic manner
 			// during the experiments' duration
-			//firstIdentity := m.Roster.List[0]
-			//client := onet.NewClient(ServiceName)
-			//log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWebserver{}, nil))
+			firstIdentity := m.Roster.List[0]
+			client := onet.NewClient(ServiceName)
+			log.ErrFatal(client.SendProtobuf(firstIdentity, &common_structs.MinusOneWebserver{}, nil))
 		}()
 		return
 	default:
