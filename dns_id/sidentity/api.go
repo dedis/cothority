@@ -144,7 +144,7 @@ func NewIdentity(cothority *onet.Roster, fqdn string, threshold int, owner strin
 				Private:    kp.Secret,
 				Public:     kp.Public,
 				Ctype:      ctype,
-				Config:     common_structs.NewConfig(fqdn, threshold, kp.Public, cothority, owner, data),
+				Config:     common_structs.NewConfig(network.Suite, fqdn, threshold, kp.Public, cothority, owner, data),
 				DeviceName: owner,
 				Cothority:  cothority,
 			},

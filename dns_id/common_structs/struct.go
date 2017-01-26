@@ -16,13 +16,14 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/dns_id/skipchain"
-	"github.com/dedis/cothority/dns_id/swupdate"
+	//"github.com/dedis/cothority/dns_id/swupdate"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"crypto/sha512"
 )
 
 func init() {
@@ -62,7 +63,11 @@ type Config struct {
 	Device    map[string]*Device
 	Data      map[string]*WSconfig
 
-	ProxyRoster *onet.Roster
+	//ProxyRoster *onet.Roster
+	Aggregate abstract.Point
+
+	// Number of authoritative WKHs (strictly more that two-thirds of them have to sign off a valid POF)
+	NbrWkhs int
 }
 
 type ConfigPlusNextHash struct {
@@ -152,6 +157,9 @@ type SignatureResponse struct {
 	// for debug purposes only
 	Identifier int
 
+	// public keys of the wkhs that refused to sign off
+	PublicsRef []abstract.Point
+
 	// TODO should we return the roster used to sign this message?
 }
 
@@ -167,12 +175,26 @@ func NewPinState(ctype string, threshold int, pins []abstract.Point, window int6
 }
 
 // NewConfig returns a new List with the first owner initialised.
-func NewConfig(fqdn string, threshold int, pub abstract.Point, proxyroster *onet.Roster, owner string, data map[string]*WSconfig) *Config {
+func NewConfig(s abstract.Suite, fqdn string, threshold int, pub abstract.Point, proxyroster *onet.Roster, owner string, data map[string]*WSconfig) *Config {
+
+	publics := make([]abstract.Point, 0)
+	for _, proxy := range proxyroster.List {
+		publics = append(publics, proxy.Public)
+	}
+
+	// compute the aggregate key of all the signers
+	aggPublic := s.Point().Null()
+	for i := range publics {
+	aggPublic.Add(aggPublic, publics[i])
+	}
+
 	return &Config{
 		FQDN:        fqdn,
 		Threshold:   threshold,
 		Device:      map[string]*Device{owner: {Point: pub}},
-		ProxyRoster: proxyroster,
+		//ProxyRoster: proxyroster,
+		Aggregate:   aggPublic,
+		NbrWkhs: len(publics),
 		Data:        data,
 	}
 }
@@ -213,6 +235,7 @@ func (c *Config) Hash() ([]byte, error) {
 	var data = []int64{
 		int64(c.Timestamp),
 		int64(c.Threshold),
+		int64(c.NbrWkhs),
 	}
 	err = binary.Write(hash, binary.LittleEndian, data)
 	if err != nil {
@@ -266,7 +289,8 @@ func (c *Config) Hash() ([]byte, error) {
 	}
 
 	// Include the aggregate public key into the hash (cothority is trusted for issuing proofs of freshness)
-	point := &APoint{Point: c.ProxyRoster.Aggregate}
+	//point := &APoint{Point: c.ProxyRoster.Aggregate}
+	point := &APoint{Point: c.Aggregate}
 	b, err2 := network.Marshal(point)
 	if err2 != nil {
 		return nil, err2
@@ -349,24 +373,46 @@ func (c *Config) IsOlderConfig(c2 *Config) bool {
 	return false
 }
 
-func (pof *SignatureResponse) Validate(latestconf *Config, maxdiff int64) error {
+func (pof *SignatureResponse) Validate(s abstract.Suite, latestconf *Config, maxdiff int64) error {
 	log.Lvlf2("CHECKING POF (identifier: %v)", pof.Identifier)
 	// Check whether the 'latest' skipblock is stale or not (by checking the freshness of the PoF)
 	isfresh := pof.CheckFreshness(maxdiff)
 	if !isfresh {
+		log.LLvl2("Stale pof can not be accepted")
 		return fmt.Errorf("Stale pof can not be accepted")
 	}
 
 	signedmsg := RecreateSignedMsg(pof.Root, pof.Timestamp)
+
+	// check that strictly more that two-thirds of the authoritative wkhs have signed off the POF
+	if 3*len(pof.PublicsRef)>latestconf.NbrWkhs-1 {
+		log.LLvl2("More that f byzantine failures out of the 3*f+1 WKHs in total")
+		return errors.New("More that f byzantine failures out of the 3*f+1 WKHs in total")
+	}
+
+	// compute the reduced public aggregate key (all - exception)
+	aggReducedPublic := s.Point().Null().Add(s.Point().Null(), latestconf.Aggregate)
+	for _, public := range pof.PublicsRef {
+		aggReducedPublic.Sub(aggReducedPublic, public)
+	}
+
+	err := VerifySig(network.Suite, aggReducedPublic, signedmsg, pof.Signature)
+	if err != nil {
+		log.LLvlf2("Warm Key Holders' signature doesn't verify")
+		return errors.New("Warm Key Holders' signature doesn't verify")
+	}
+	/*
 	publics := make([]abstract.Point, 0)
 	for _, proxy := range latestconf.ProxyRoster.List {
 		publics = append(publics, proxy.Public)
 	}
+
 	err := swupdate.VerifySignature(network.Suite, publics, signedmsg, pof.Signature)
 	if err != nil {
-		log.Lvlf2("Warm Key Holders' signature doesn't verify")
+		log.LLvlf2("Warm Key Holders' signature doesn't verify")
 		return errors.New("Warm Key Holders' signature doesn't verify")
 	}
+	*/
 	// verify inclusion proof
 	origmsg, _ := latestconf.Hash()
 	log.Lvlf3("for site: %v, %v", latestconf.FQDN, []byte(origmsg))
@@ -376,9 +422,46 @@ func (pof *SignatureResponse) Validate(latestconf *Config, maxdiff int64) error 
 	//log.Lvlf2("proof: %v", pof.Proof)
 	validproof := pof.Proof.Check(sha256.New, pof.Root, []byte(origmsg))
 	if !validproof {
-		log.Lvlf2("Invalid inclusion proof!")
+		log.LLvlf2("Invalid inclusion proof!")
 		return errors.New("Invalid inclusion proof!")
 	}
+	log.LLvl2("Validation of POF DONE")
+	return nil
+}
+
+func VerifySig(suite abstract.Suite, aggPublic abstract.Point, message, sig []byte) error {
+	aggCommitBuff := sig[:32]
+	aggCommit := suite.Point()
+	if err := aggCommit.UnmarshalBinary(aggCommitBuff); err != nil {
+		panic(err)
+	}
+	sigBuff := sig[32:64]
+	sigInt := suite.Scalar().SetBytes(sigBuff)
+
+	aggPublicMarshal, err := aggPublic.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	hash := sha512.New()
+	hash.Write(aggCommitBuff)
+	hash.Write(aggPublicMarshal)
+	hash.Write(message)
+	buff := hash.Sum(nil)
+	k := suite.Scalar().SetBytes(buff)
+
+	// k * -aggPublic + s * B = k*-A + s*B
+	// from s = k * a + r => s * B = k * a * B + r * B <=> s*B = k*A + r*B
+	// <=> s*B + k*-A = r*B
+	minusPublic := suite.Point().Neg(aggPublic)
+	kA := suite.Point().Mul(minusPublic, k)
+	sB := suite.Point().Mul(nil, sigInt)
+	left := suite.Point().Add(kA, sB)
+
+	if !left.Equal(aggCommit) {
+		return errors.New("Signature invalid")
+	}
+
 	return nil
 }
 

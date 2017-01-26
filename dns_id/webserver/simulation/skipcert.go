@@ -21,7 +21,6 @@ In the Node-method you can read the files that have been created by the
 
 import (
 	//"math/rand"
-	//"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/dns_id/sidentity"
@@ -29,6 +28,7 @@ import (
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	//"gopkg.in/dedis/onet.v1/simul/monitor"
+	"time"
 )
 
 func init() {
@@ -109,11 +109,11 @@ func (e *Simulation) Run(config *onet.SimulationConfig) error {
 			break
 		}
 	}
-
+	log.Print("---- ALL CLIENTS DONE ----")
 
 
 	//log.Print("SIMULATION FINISHES IN ABOUT 20 SECONDS")
-	//time.Sleep(time.Duration(20*1000) * time.Millisecond)
+	time.Sleep(time.Duration(10*1000) * time.Millisecond)
 	//log.Print("SIMULATION FINISHED ")
 	return nil
 }

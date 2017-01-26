@@ -12,8 +12,10 @@ const MaxInt = int(MaxUint >> 1)
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
 
+// How many msec since a skipblock is thought to be stale
+const maxdiffConf = 20000
+
 // How many msec since a skipblock is thought to be stale (according to its PoF)
-//const maxdiff = 300000 // 300000 ms = 5 minutes * 60 sec/min * 1000 ms/sec // (REALISTIC)
 const maxdiff = 50000
 
 // ID represents one skipblock and corresponds to its Hash.

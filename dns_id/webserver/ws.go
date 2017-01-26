@@ -163,7 +163,7 @@ func (ws *WS) WSUpdate(id []byte) error {
 
 	log.Lvlf2("Web server %v has latest block with hash: %v", ws.ServerIdentity(), site.LatestHash)
 	sbs, cert, hash, pof, sendTo, err := site.si.GetValidSbPathLight(id, site.LatestHash, []byte{0})
-	log.Print("Webserver", ws.ServerIdentity(), "fetched", len(sbs), "blocks from WKH", sendTo)
+	log.Lvl2("Webserver", ws.ServerIdentity(), "fetched", len(sbs), "blocks from WKH", sendTo)
 	/*
 	times := 0
 	for len(sbs) == 0 && times < 10 {

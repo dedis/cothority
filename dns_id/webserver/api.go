@@ -151,10 +151,10 @@ func (u *User) Connect(siteInfo *common_structs.SiteInfo) error {
 
 	// Check whether the latest config was recently signed by the Cold Key Holders
 	// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-	err := latestconf.CheckTimeDiff(maxdiff)
+	err := latestconf.CheckTimeDiff(maxdiffConf)
 	if err != nil {
 		log.Print("Stale block, check the pof")
-		err = pof.Validate(latestconf, maxdiff)
+		err = pof.Validate(network.Suite, latestconf, maxdiff)
 		if err != nil {
 			log.Lvlf2("%v", err)
 			return err
@@ -245,9 +245,9 @@ func (u *User) ReConnect(name string) error {
 
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		err := latestconf.CheckTimeDiff(maxdiff * 2)
+		err := latestconf.CheckTimeDiff(maxdiffConf)
 		if err != nil {
-			err = pof.Validate(latestconf, maxdiff)
+			err = pof.Validate(network.Suite, latestconf, maxdiff)
 			if err != nil {
 				log.Lvlf2("%v", err)
 				return err
@@ -308,9 +308,9 @@ func (u *User) ReConnect(name string) error {
 
 			// Check whether the latest config was recently signed by the Cold Key Holders
 			// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-			err := latestconf.CheckTimeDiff(maxdiff * 2)
+			err := latestconf.CheckTimeDiff(maxdiffConf)
 			if err != nil {
-				err = pof.Validate(latestconf, maxdiff)
+				err = pof.Validate(network.Suite, latestconf, maxdiff)
 				if err != nil {
 					log.Lvlf2("%v", err)
 					return err
@@ -406,9 +406,9 @@ func (u *User) ReConnect(name string) error {
 		log.Lvlf2("user %v, Latest returned block has hash: %v", u.UserName, latestconfHash)
 		// Check whether the latest config was recently signed by the Cold Key Holders
 		// If not, then check if there exists a "good" PoF signed by the Warm Key Holders
-		err = latestconf.CheckTimeDiff(maxdiff * 2)
+		err = latestconf.CheckTimeDiff(maxdiffConf)
 		if err != nil {
-			err = pof.Validate(latestconf, maxdiff)
+			err = pof.Validate(network.Suite, latestconf, maxdiff)
 			if err != nil {
 				log.LLvlf2("%v", err)
 				return err

@@ -541,7 +541,7 @@ func (s *Service) Propagate(msg network.Message) {
 		log.Lvlf3("Fresh cert is now stored")
 		return
 	case *PropagatePoF:
-		log.LLvlf2("Trying to store PoFs at: %v", s.String())
+		log.Lvlf2("Trying to store PoFs at: %v", s.String())
 		sids := msg.(*PropagatePoF).Storages
 		var identifier int
 		for _, storage := range sids {
@@ -552,7 +552,7 @@ func (s *Service) Propagate(msg network.Message) {
 			sid.PoF = storage.PoF
 			identifier = storage.PoF.Identifier
 		}
-		log.LLvlf2("PoFs (identifier: %v) are now stored at: %v", identifier, s.String())
+		log.Lvlf2("PoFs (identifier: %v) are now stored at: %v", identifier, s.String())
 		return
 	}
 
@@ -908,6 +908,13 @@ func (s *Service) StartTimestamper(req *common_structs.StartTimestamper) (networ
 			}
 			signature := bftSignature.Sig
 
+			// the publics of the wkhs that refused to sign off
+			publicsRef := make([]abstract.Point, 0)
+			for _, ex := range bftSignature.Exceptions {
+				publicsRef = append(publicsRef, roster_WK.Publics()[ex.Index])
+			}
+
+
 			log.Lvlf2("--------- %s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
 			sids := make([]*Storage, 0)
@@ -921,6 +928,7 @@ func (s *Service) StartTimestamper(req *common_structs.StartTimestamper) (networ
 					// Collective signature on Timestamp||hash(treeroot)
 					Signature:  signature,
 					Identifier: cnt,
+					PublicsRef: publicsRef,
 				}
 				/*
 				// if CoSi is to be used
@@ -1609,7 +1617,7 @@ func (s *Service) LetsFinish(req *common_structs.MinusOneClient) (network.Messag
 	s.cntMut.Lock()
 	defer s.cntMut.Unlock()
 	s.cnt2++
-	log.Lvlf2("clients already finished visiting website: %v",s.cnt2)
+	log.LLvlf2("clients already finished visiting website: %v",s.cnt2)
 	if s.cnt2 == s.expected2 {
 		s.clientsDone <- true
 	}
