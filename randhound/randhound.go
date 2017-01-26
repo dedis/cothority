@@ -14,10 +14,10 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // TODO:
@@ -331,11 +331,14 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 	// Verify that all servers received the same client commitment
 	for server, msg := range t.I2s {
-		for i := range msg.ChosenSecret {
-			for j := range msg.ChosenSecret[i] {
-				if int(msg.ChosenSecret[i][j]) != t.ChosenSecret[i][j] {
+		c := 0
+		// Deterministically iterate over map[int][]int
+		for i := 0; i < len(t.ChosenSecret); i++ {
+			for _, cs := range t.ChosenSecret[i] {
+				if int(msg.ChosenSecret[c]) != cs {
 					return fmt.Errorf("Server %v received wrong client commitment", server)
 				}
+				c++
 			}
 		}
 	}
@@ -478,7 +481,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	i1b, err := network.MarshalRegisteredType(msg)
+	i1b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -625,7 +628,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		// Choose secrets that contribute to collective randomness
 		for i := range rh.server {
 
-			// Randomly remove some secrets so that a threshold of secrets remains
+			// Randomly remove some secrets so that a threshold of secrets remain
 			rand := random.Bytes(rh.Suite().Hash().Size(), random.Stream)
 			prng := rh.Suite().Cipher(rand)
 			secret := goodSecret[i]
@@ -639,14 +642,12 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		log.Lvlf3("Grouping: %v", rh.group)
 		log.Lvlf3("ChosenSecret: %v", rh.chosenSecret)
 
-		// Transformation of commitments from int to uint32 to avoid protobuff errors
-		var chosenSecret = make([][]uint32, len(rh.chosenSecret))
-		for i := range rh.chosenSecret {
-			var l []uint32
-			for j := range rh.chosenSecret[i] {
-				l = append(l, uint32(rh.chosenSecret[i][j]))
+		// Transformation of commitments from map[int][]int to []uint32 to avoid protobuf errors
+		var chosenSecret = make([]uint32, 0)
+		for i := 0; i < len(rh.chosenSecret); i++ {
+			for _, cs := range rh.chosenSecret[i] {
+				chosenSecret = append(chosenSecret, uint32(cs))
 			}
-			chosenSecret[i] = l
 		}
 
 		// Prepare a message for each server of a group and send it
@@ -695,7 +696,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 
 	// Compute hash of the client's message
 	msg.Sig = crypto.SchnorrSig{} // XXX: hack
-	i2b, err := network.MarshalRegisteredType(msg)
+	i2b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -918,7 +919,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}
@@ -946,7 +947,7 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal message
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}
@@ -968,7 +969,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
 
 	// Marshal ...
-	mb, err := network.MarshalRegisteredType(m)
+	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
 	if err != nil {
 		return err
 	}

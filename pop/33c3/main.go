@@ -65,16 +65,16 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	loadStaticRoutes(router, staticDir)
-	router.Methods("GET").Path("/entries").HandlerFunc(Entries)
-	router.Methods("GET").Path("/siginfo").HandlerFunc(SigningInfo)
-	router.Methods("POST").Path("/login").HandlerFunc(Login)
-	router.Methods("POST").Path("/vote").HandlerFunc(Vote)
+	router.Methods("GET").Path("/entries").HandlerFunc(entries)
+	router.Methods("GET").Path("/siginfo").HandlerFunc(signingInfo)
+	router.Methods("POST").Path("/login").HandlerFunc(login)
+	router.Methods("POST").Path("/vote").HandlerFunc(vote)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 	log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
 	//log.Fatal(http.ListenAndServe(":8000", loggedRouter))
 }
 
-func Entries(w http.ResponseWriter, r *http.Request) {
+func entries(w http.ResponseWriter, r *http.Request) {
 	// check if user is registered or not
 	var tag []byte
 	var cookie *http.Cookie
@@ -102,7 +102,7 @@ func Entries(w http.ResponseWriter, r *http.Request) {
 	w.Write(entries)
 }
 
-func SigningInfo(w http.ResponseWriter, r *http.Request) {
+func signingInfo(w http.ResponseWriter, r *http.Request) {
 	var container struct {
 		Attendees [][]byte
 		Nonce     string
@@ -115,7 +115,7 @@ func SigningInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		container.Attendees = append(container.Attendees, b)
 	}
-	nonce := Secure32()
+	nonce := secure32()
 	container.Nonce = string(nonce)
 	sessionStore.NonceStore(nonce)
 	container.Context = string(context)
@@ -127,7 +127,7 @@ func SigningInfo(w http.ResponseWriter, r *http.Request) {
 // Fetch the signature from the client and verifies it. If the signature is
 // correct, it replies with an authenticated cookie, otherwise it justs replies
 // a status unauthorized code.
-func Login(w http.ResponseWriter, r *http.Request) {
+func login(w http.ResponseWriter, r *http.Request) {
 	var loginInfo struct {
 		Nonce     []byte
 		Signature []byte
@@ -172,7 +172,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write(ctag)
 }
 
-func Vote(w http.ResponseWriter, r *http.Request) {
+func vote(w http.ResponseWriter, r *http.Request) {
 	// parse cookie
 	var cookie *http.Cookie
 	var err error
@@ -221,7 +221,7 @@ func Vote(w http.ResponseWriter, r *http.Request) {
 // session store / cookie related
 // Cookies contains the tag provided when the user made the linkable ring
 // signature
-type sessionStore_ struct {
+type sessionStoreStruct struct {
 	Sessions     [][]byte
 	Nonces       [][]byte
 	HashKey      []byte
@@ -230,8 +230,8 @@ type sessionStore_ struct {
 	sync.Mutex
 }
 
-func newSessionStore() *sessionStore_ {
-	st := &sessionStore_{
+func newSessionStore() *sessionStoreStruct {
+	st := &sessionStoreStruct{
 		Sessions: [][]byte{},
 		Nonces:   [][]byte{},
 		HashKey:  securecookie.GenerateRandomKey(64),
@@ -241,14 +241,14 @@ func newSessionStore() *sessionStore_ {
 	return st
 }
 
-func (st *sessionStore_) Store(tag []byte) {
+func (st *sessionStoreStruct) Store(tag []byte) {
 	st.Lock()
 	defer st.Unlock()
 	log.Printf("Storing %x", tag)
 	st.Sessions = append(st.Sessions, tag)
 }
 
-func (st *sessionStore_) Exists(tag []byte) bool {
+func (st *sessionStoreStruct) Exists(tag []byte) bool {
 	st.Lock()
 	defer st.Unlock()
 	for _, t := range st.Sessions {
@@ -259,14 +259,14 @@ func (st *sessionStore_) Exists(tag []byte) bool {
 	return false
 }
 
-func (st *sessionStore_) NonceStore(nonce []byte) {
+func (st *sessionStoreStruct) NonceStore(nonce []byte) {
 	st.Lock()
 	defer st.Unlock()
 	st.Nonces = append(st.Nonces, nonce)
 }
 
 // return error if nonce was not present
-func (st *sessionStore_) NonceDelete(nonce []byte) error {
+func (st *sessionStoreStruct) NonceDelete(nonce []byte) error {
 	st.Lock()
 	defer st.Unlock()
 	for i, n := range st.Nonces {
@@ -279,7 +279,7 @@ func (st *sessionStore_) NonceDelete(nonce []byte) error {
 }
 
 // Save stores the sessionStore into the file 'name'.
-func (st *sessionStore_) Save(name string) error {
+func (st *sessionStoreStruct) Save(name string) error {
 	file, err := os.OpenFile(name, os.O_RDWR+os.O_CREATE, 0660)
 	if err != nil {
 		return err
@@ -291,7 +291,7 @@ func (st *sessionStore_) Save(name string) error {
 }
 
 // Load tries to load the content of the file 'name' into the sessionstore.
-func (st *sessionStore_) Load(name string) error {
+func (st *sessionStoreStruct) Load(name string) error {
 	_, err := os.Stat(name)
 	if err != nil {
 		return err
@@ -309,7 +309,7 @@ func (st *sessionStore_) Load(name string) error {
 	return nil
 }
 
-func Secure32() []byte {
+func secure32() []byte {
 	var n [32]byte
 	rand.Read(n[:])
 	return n[:]

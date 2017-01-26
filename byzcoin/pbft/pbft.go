@@ -9,8 +9,8 @@ import (
 
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 const (
@@ -37,7 +37,7 @@ type Protocol struct {
 	index int
 
 	// we do not care for servers or clients (just store one block here)
-	trBlock *blockchain.TrBlock
+	TrBlock *blockchain.TrBlock
 
 	prepMsgCount   int
 	commitMsgCount int
@@ -47,7 +47,7 @@ type Protocol struct {
 	prepareChan    chan prepareChan
 	commitChan     chan commitChan
 
-	onDoneCB func()
+	OnDoneCB func()
 
 	state int
 
@@ -130,7 +130,7 @@ func (p *Protocol) PrePrepare() error {
 	// pre-prepare: broadcast the block
 	var err error
 	log.Lvl2(p.Name(), "Broadcast PrePrepare")
-	prep := &PrePrepare{p.trBlock}
+	prep := &PrePrepare{p.TrBlock}
 	p.broadcast(func(tn *onet.TreeNode) {
 		tempErr := p.SendTo(tn, prep)
 		if tempErr != nil {
@@ -245,9 +245,9 @@ func (p *Protocol) handleCommit(com *Commit) {
 		// reset counter
 		p.commitMsgCount = 0
 		log.Lvl3(p.Name(), "Threshold reached: We are done... CONSENSUS")
-		if p.IsRoot() && p.onDoneCB != nil {
+		if p.IsRoot() && p.OnDoneCB != nil {
 			log.Lvl3(p.Name(), "We are root and threshold reached: return to the simulation.")
-			p.onDoneCB()
+			p.OnDoneCB()
 			p.finish()
 		}
 		return

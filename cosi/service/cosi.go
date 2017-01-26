@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -22,14 +22,13 @@ const ServiceName = "CoSi"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newCoSiService)
-	network.RegisterPacketType(&SignatureRequest{})
-	network.RegisterPacketType(&SignatureResponse{})
+	network.RegisterMessage(&SignatureRequest{})
+	network.RegisterMessage(&SignatureResponse{})
 }
 
 // CoSi is the service that handles collective signing operations
 type CoSi struct {
 	*onet.ServiceProcessor
-	path string
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -45,7 +44,7 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, onet.ClientError) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
 	if req.Roster.ID == onet.RosterID(uuid.Nil) {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
@@ -85,14 +84,12 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Body, onet.Clie
 func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
 	pi, err := cosi.NewProtocol(tn)
-	go pi.Dispatch()
 	return pi, err
 }
 
-func newCoSiService(c *onet.Context, path string) onet.Service {
+func newCoSiService(c *onet.Context) onet.Service {
 	s := &CoSi{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 	}
 	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {

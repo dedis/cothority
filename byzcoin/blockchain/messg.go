@@ -7,8 +7,7 @@ import (
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/suites"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 type MessageType int
@@ -29,7 +28,7 @@ type BlockReply struct {
 	Block         Block           // The Block including a number of transactions
 	MerkleRoot    []byte          // root of the merkle tree
 	PrfLen        int             // Length of proof
-	Prf           crypto.Proof    // Merkle proof of value
+	Prf           Proof           // Merkle proof of value
 	Response      abstract.Scalar // Aggregate response
 	Challenge     abstract.Scalar // Aggregate challenge
 	AggCommit     abstract.Point  // Aggregate commitment key

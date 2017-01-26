@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=1
+DBG_TEST=1
 # Debug-level for app
-DBG_APP=0
-DBG_SRV=0
-# Uncomment to build in local dir
-#STATICDIR=test
+DBG_APP=2
 # Needs 4 clients
 NBR=4
 
-. ../app/lib/test/libtest.sh
-. ../app/lib/test/cothorityd.sh
+. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 main(){
     startTest
-    build
+	buildKeys
+	buildConode "github.com/dedis/cothority/identity"
 	test Build
 	test ClientSetup
 	test IdCreate
@@ -49,8 +46,8 @@ testFollow(){
 	clientSetup 1
 	echo ID is $ID
 	testNFile cl3/authorized_keys
-	testFail runCl 3 follow add group.toml 1234 service1
-	testOK runCl 3 follow add group.toml $ID service1
+	testFail runCl 3 follow add public.toml 1234 service1
+	testOK runCl 3 follow add public.toml $ID service1
 	testFail grep -q service1 cl3/authorized_keys
 	testNGrep client1 runCl 3 follow list
 	testGrep $ID runCl 3 follow list
@@ -186,9 +183,9 @@ testIdConnect(){
 	testFail runCl 2 id co
 	echo test > test.toml
 	testFail runCl 2 id co test.toml
-	testFail runCl 2 id co group.toml
-	testOK runCl 2 id co group.toml $ID client2
-	runGrepSed "Public key" "s/.* //" runCl 2 id co group.toml $ID client2
+	testFail runCl 2 id co public.toml
+	testOK runCl 2 id co public.toml $ID client2
+	runGrepSed "Public key" "s/.* //" runCl 2 id co public.toml $ID client2
     PUBLIC=$SED
     if [ -z "$PUBLIC" ]; then
     	fail "no public keys received"
@@ -238,14 +235,14 @@ testConfigList(){
 }
 
 testIdCreate(){
-    cothoritySetup
+	runCoBG 1 2 3
     testFail runCl 1 id cr
     echo test > test.toml
     testFail runCl 1 id cr test.toml
-    testOK runCl 1 id cr group.toml
+    testOK runCl 1 id cr public.toml
 	testFile cl1/config.bin
-    testGrep $(hostname) runCl 1 id cr group.toml
-    testGrep client1 runCl 1 id cr group.toml client1
+    testGrep $(hostname) runCl 1 id cr public.toml
+    testGrep client1 runCl 1 id cr public.toml client1
 }
 
 testClientSetup(){
@@ -265,8 +262,8 @@ testClientSetup(){
 }
 
 testBuild(){
-    testOK dbgRun ./cothorityd --help
-    testOK dbgRun ./cisc -c cl1 -cs cl1 --help
+    testOK dbgRun runCo 1 --help
+    testOK dbgRun runCl 1 --help
 }
 
 runCl(){
@@ -277,15 +274,15 @@ runCl(){
 
 clientSetup(){
     local CLIENTS=${1:-0} c b
-	cothoritySetup
+	runCoBG 1 2 3
 	local DBG_OLD=$DBG_SHOW
     DBG_SHOW=2
-    testOK runCl 1 id cr group.toml client1
+    testOK runCl 1 id cr public.toml client1
     runGrepSed ID "s/.* //" runCl 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
-    		testOK runCl $c id co group.toml $ID client$c
+    		testOK runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
 					testOK runCl $b config update
@@ -300,29 +297,9 @@ clientSetup(){
     DBG_SHOW=$DBG_OLD
 }
 
-build(){
-    BUILDDIR=$(pwd)
-    if [ "$STATICDIR" ]; then
-        DIR=$STATICDIR
-    else
-        DIR=$(mktemp -d)
-    fi
-    mkdir -p $DIR
-    cd $DIR
-    echo "Building in $DIR"
-    for app in cothorityd cisc; do
-        if [ ! -e $app -o "$BUILD" ]; then
-            if ! go build -o $app $BUILDDIR/$app/*.go; then
-                fail "Couldn't build $app"
-            fi
-        fi
-    done
-    echo "Creating keys"
+buildKeys(){
+    testOut "Creating keys"
     for n in $(seq $NBR); do
-        co=co$n
-        rm -f $co/*bin
-        mkdir -p $co
-
         cl=cl$n
         rm -f $cl/*bin $cl/config $cl/*.{pub,key} $cl/auth*
         mkdir -p $cl
@@ -330,15 +307,7 @@ build(){
         if [ ! -f $key ]; then
         	ssh-keygen -t rsa -b 4096 -N "" -f $key > /dev/null
         fi
-
-        co=co$n
-        rm -f $co/*
-        mkdir -p $co
     done
 }
-
-if [ "$1" -a "$STATICDIR" ]; then
-    rm -f $STATICDIR/{cothorityd,cisc}
-fi
 
 main

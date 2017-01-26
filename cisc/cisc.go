@@ -20,8 +20,8 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/identity"
-	"github.com/dedis/onet/app/config"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -182,7 +182,7 @@ func configVote(c *cli.Context) error {
 	}
 	if c.NArg() == 0 {
 		cfg.showDifference()
-		if !config.InputYN(true, "Do you want to accept the changes") {
+		if !app.InputYN(true, "Do you want to accept the changes") {
 			return nil
 		}
 	}

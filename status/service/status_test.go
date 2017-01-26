@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/example/channels"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestMain(m *testing.M) {
@@ -31,6 +31,8 @@ func TestServiceStatus(t *testing.T) {
 	log.ErrFatal(cerr)
 	log.Lvl1(stat)
 	assert.NotEmpty(t, stat.Msg["Status"].Field["Available_Services"])
+	log.Lvl1(stat.Msg["Status"])
+	log.Lvl1(stat.Msg["Status"].Field["Available_Services"])
 	pi, err := local.CreateProtocol("ExampleChannels", tr)
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)

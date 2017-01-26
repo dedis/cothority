@@ -50,6 +50,7 @@ func readContainer(suite abstract.Suite, containerB string) *container {
 	}
 }
 
+// Toy is my first exported function!
 func Toy() string {
 	return "hello world"
 }

@@ -10,11 +10,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestMain(m *testing.M) {
@@ -458,7 +458,7 @@ func (sv *ServiceVerify) NewProtocol(tn *onet.TreeNodeInstance, c *onet.GenericC
 	return nil, nil
 }
 
-func newServiceVerify(c *onet.Context, path string) onet.Service {
+func newServiceVerify(c *onet.Context) onet.Service {
 	sv := &ServiceVerify{}
 	log.ErrFatal(RegisterVerification(c, ServiceVerifier, sv.Verify))
 	return sv
@@ -486,8 +486,8 @@ func makeGenesisRoster(s *Service, el *onet.Roster) (*SkipBlock, error) {
 }
 
 // Makes a Host, an Roster, and a service
-func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Conode, *onet.Roster, *Service) {
-	hosts := local.GenConodes(nbr)
+func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Server, *onet.Roster, *Service) {
+	hosts := local.GenServers(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }

@@ -1,0 +1,7 @@
+Servers = 10
+Simulation = "ByzCoinPBFT"
+Rounds = 5
+BF = 5
+
+Hosts, Blocksize
+20, 5000

@@ -14,11 +14,11 @@ import (
 	s "github.com/dedis/cothority/cosi/service"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/app/config"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -26,7 +26,7 @@ import (
 // signature from each.
 func checkConfig(c *cli.Context) error {
 	tomlFileName := c.String(optionGroup)
-	return check.Config(tomlFileName)
+	return check.Config(tomlFileName, c.Bool("detail"))
 }
 
 // signFile will search for the file and sign it
@@ -97,7 +97,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := config.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 	log.Lvl4("Reading group definition")
-	el, err := config.ReadGroupToml(fGroup)
+	el, err := app.ReadGroupToml(fGroup)
 	if err != nil {
 		return err
 	}

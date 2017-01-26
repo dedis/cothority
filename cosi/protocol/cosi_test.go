@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func TestCosi(t *testing.T) {
@@ -56,7 +56,7 @@ func TestCosi(t *testing.T) {
 		}
 		root.RegisterResponseHook(responseFunc)
 		root.RegisterSignatureHook(doneFunc)
-		go root.StartProtocol()
+		go root.Start()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 2):

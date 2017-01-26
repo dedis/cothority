@@ -3,14 +3,14 @@ package channels
 import (
 	"errors"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
-	network.RegisterPacketType(Announce{})
-	network.RegisterPacketType(Reply{})
+	network.RegisterMessage(Announce{})
+	network.RegisterMessage(Reply{})
 	onet.GlobalProtocolRegister("ExampleChannels", NewExampleChannels)
 }
 
@@ -45,57 +45,52 @@ func NewExampleChannels(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error)
 // Start sends the Announce message to all children
 func (p *ProtocolExampleChannels) Start() error {
 	log.Lvl3("Starting ExampleChannels")
-	for _, c := range p.Children() {
-		if err := p.SendTo(c, &Announce{"Example is here"}); err != nil {
-			log.Error(p.Info(), "failed to send Announcment to",
-				c.Name(), err)
-		}
-	}
+	p.ChannelAnnounce <- StructAnnounce{nil, Announce{"Example is here"}}
 	return nil
 }
 
-// Dispatch is an infinite loop to handle messages from channels
+// Dispatch imposes an order on the incoming messages by waiting only on the
+// appropriate channels
 func (p *ProtocolExampleChannels) Dispatch() error {
-	for {
-		select {
-		case announcement := <-p.ChannelAnnounce:
-			if !p.IsLeaf() {
-				// If we have children, send the same message to all of them
-				for _, c := range p.Children() {
-					err := p.SendTo(c, &announcement.Announce)
-					if err != nil {
-						log.Error(p.Info(),
-							"failed to send to",
-							c.Name(), err)
-					}
-				}
-			} else {
-				// If we're the leaf, start to reply
-				err := p.SendTo(p.Parent(), &Reply{1})
-				if err != nil {
-					log.Error(p.Info(), "failed to send reply to",
-						p.Parent().Name(), err)
-				}
-				return nil
-			}
-		case reply := <-p.ChannelReply:
-			children := 1
-			for _, c := range reply {
-				children += c.ChildrenCount
-			}
-			log.Lvl3(p.ServerIdentity().Address, "is done with total of", children)
-			if !p.IsRoot() {
-				log.Lvl3("Sending to parent")
-				err := p.SendTo(p.Parent(), &Reply{children})
-				if err != nil {
-					log.Error(p.Info(), "failed to reply to",
-						p.Parent().Name(), err)
-				}
-			} else {
-				log.Lvl3("Root-node is done - nbr of children found:", children)
-				p.ChildCount <- children
-			}
-			return nil
+	announcement := <-p.ChannelAnnounce
+	if p.IsLeaf() {
+		// If we're the leaf, start to reply
+		err := p.SendTo(p.Parent(), &Reply{1})
+		if err != nil {
+			log.Error(p.Info(), "failed to send reply to",
+				p.Parent().Name(), err)
+		}
+		// Leaf-node is done and doesn't wait on a reply
+		return nil
+	}
+
+	// Send the same message to all our children
+	for _, c := range p.Children() {
+		err := p.SendTo(c, &announcement.Announce)
+		if err != nil {
+			log.Error(p.Info(),
+				"failed to send to",
+				c.Name(), err)
 		}
 	}
+
+	// Wait for a reply of all our children
+	reply := <-p.ChannelReply
+	children := 1
+	for _, c := range reply {
+		children += c.ChildrenCount
+	}
+	log.Lvl3(p.ServerIdentity().Address, "is done with total of", children)
+	if !p.IsRoot() {
+		log.Lvl3("Sending to parent")
+		err := p.SendTo(p.Parent(), &Reply{children})
+		if err != nil {
+			log.Error(p.Info(), "failed to reply to",
+				p.Parent().Name(), err)
+		}
+	} else {
+		log.Lvl3("Root-node is done - nbr of children found:", children)
+		p.ChildCount <- children
+	}
+	return nil
 }

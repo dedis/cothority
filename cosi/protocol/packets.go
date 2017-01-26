@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 		Challenge{},
 		Response{},
 	} {
-		network.RegisterPacketType(r)
+		network.RegisterMessage(r)
 	}
 }
 
@@ -34,14 +34,14 @@ const (
 )
 
 // ProtocolPacketID is the network.PacketTypeID of the CoSi ProtocolPacket
-var ProtocolPacketID = network.RegisterPacketType(ProtocolPacket{})
+var ProtocolPacketID = network.RegisterMessage(ProtocolPacket{})
 
 // ProtocolPacket is the main message for the CoSi protocol which includes
 // every information that the CoSi protocol might need.
 type ProtocolPacket struct {
 	Phase uint32
 
-	OverlayMessage *onet.OverlayMessage
+	OverlayMessage *onet.OverlayMsg
 
 	Ann  *Announcement
 	Comm *Commitment
@@ -54,7 +54,7 @@ type MessageProxy struct{}
 
 // Wrap implements the onet.MessageProxy interface by wrapping up any of the
 // four-step messages into a ProtooclPacket.
-func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMessage) (interface{}, error) {
+func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMsg) (interface{}, error) {
 	var packet = new(ProtocolPacket)
 	packet.OverlayMessage = info
 
@@ -78,9 +78,9 @@ func (p *MessageProxy) Wrap(msg interface{}, info *onet.OverlayMessage) (interfa
 
 // Unwrap implements the onet.MessageProxy interface by unwraping and returning the
 // specific message of one of the four steps.
-func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *onet.OverlayMessage, error) {
+func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *onet.OverlayMsg, error) {
 	var inner interface{}
-	packet, ok := msg.(ProtocolPacket)
+	packet, ok := msg.(*ProtocolPacket)
 	if !ok {
 		return nil, nil, errors.New("cosi protocolio: unknown packet to unwrap")
 	}
@@ -104,7 +104,7 @@ func (p *MessageProxy) Unwrap(msg interface{}) (interface{}, *onet.OverlayMessag
 
 // PacketType implements the onet.MessageProxy interface by returning the type of
 // the ProtocolPacket.
-func (p *MessageProxy) PacketType() network.PacketTypeID {
+func (p *MessageProxy) PacketType() network.MessageTypeID {
 	return ProtocolPacketID
 }
 

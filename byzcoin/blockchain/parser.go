@@ -4,10 +4,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
+
+	"crypto/tls"
+	"net/http"
+
+	"io"
+
+	"crypto/sha256"
+
+	"encoding/hex"
 
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 type Parser struct {
@@ -57,25 +65,10 @@ func (p *Parser) Parse(first_block, last_block int) ([]blkparser.Tx, error) {
 	return transactions, nil
 }
 
-// SimulDirToBlockDir creates a path to the 'protocols/byzcoin/block'-dir by
-// using 'dir' which comes from 'cothority/simul'
-// If that directory doesn't exist, it will be created.
-func SimulDirToBlockDir(dir string) string {
-	reg, _ := regexp.Compile("simul/.*")
-	blockDir := string(reg.ReplaceAll([]byte(dir), []byte("protocols/byzcoin/block")))
-	if _, err := os.Stat(blockDir); os.IsNotExist(err) {
-		if err := os.Mkdir(blockDir, 0777); err != nil {
-			log.Error("Couldn't create blocks directory", err)
-		}
-	}
-	return blockDir
-}
-
 // CheckBlockAvailable looks if the directory with the block exists or not.
 // It takes 'dir' as the base-directory, generated from 'cothority/simul'.
 func GetBlockName(dir string) string {
-	blockDir := SimulDirToBlockDir(dir)
-	m, _ := filepath.Glob(blockDir + "/*.dat")
+	m, _ := filepath.Glob(dir + "/*.dat")
 	if m != nil {
 		return m[0]
 	} else {
@@ -96,19 +89,38 @@ func GetBlockDir() string {
 // DownloadBlock takes 'dir' as the directory where to download the block.
 // It returns the downloaded file
 func DownloadBlock(dir string) (string, error) {
-	blockDir := SimulDirToBlockDir(dir)
-	cmd := exec.Command("wget", "--no-check-certificate", "-O",
-		blockDir+"/blk00000.dat", "-c",
-		"https://icsil1-box.epfl.ch:5001/fbsharing/IzTFdOxf")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	log.Lvl1("Cmd is", cmd)
-	if err := cmd.Start(); err != nil {
+	log.Info("Downloading block-file")
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	resp, err := client.Get("https://pop.dedis.ch/blk00000.dat")
+	if err != nil {
 		return "", err
 	}
-	if err := cmd.Wait(); err != nil {
+
+	os.RemoveAll(dir)
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return "", err
 	}
+	out, err := os.Create(dir + "/blk00000.dat")
+	defer out.Close()
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Calculate SHA-256 to make sure we downloaded the correct file
+	out.Seek(0, 0)
+	hash := sha256.New()
+	if _, err := io.Copy(hash, out); err != nil {
+		log.Fatal(err)
+	}
+	sha256 := hex.EncodeToString(hash.Sum(nil))
+	if sha256 != "3fb2b64a3aaadbc67268113ba4791cde76ea18205fff3862fc3ac0de47a7cdbb" {
+		log.Fatal("sha256 of downloaded file is wrong: ", sha256)
+	}
+
 	return GetBlockName(dir), nil
 }
 
@@ -116,15 +128,17 @@ func DownloadBlock(dir string) (string, error) {
 // download it. Finally the block will be copied to the 'simul'-provided
 // directory for simulation.
 func EnsureBlockIsAvailable(dir string) error {
-	block := GetBlockName(dir)
+	tmpdir := "/tmp/byzcoin"
+	block := GetBlockName(tmpdir)
 	if block == "" {
 		var err error
-		block, err = DownloadBlock(dir)
+		block, err = DownloadBlock(tmpdir)
 		if err != nil || block == "" {
 			return err
 		}
 	}
 	destDir := dir + "/blocks"
+	os.RemoveAll(destDir)
 	if err := os.Mkdir(destDir, 0777); err != nil {
 		return err
 	}

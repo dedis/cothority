@@ -6,7 +6,7 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/poly"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/onet.v1/crypto"
 )
 
 // Package proof provides functionality to create and verify non-interactive

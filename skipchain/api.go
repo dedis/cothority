@@ -3,9 +3,9 @@ package skipchain
 import (
 	"bytes"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // TODO - correctly convert the BFT-signature to CoSi-Signature by removing
@@ -87,12 +87,12 @@ func (c *Client) CreateRoster(el *onet.Roster, baseH, maxH int, ver VerifierID, 
 
 // ProposeData will propose to add a new SkipBlock containing 'data' to an existing
 // SkipChain. If it succeeds, it will return the old and the new SkipBlock.
-func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Body) (*ProposedSkipBlockReply, onet.ClientError) {
+func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Message) (*ProposedSkipBlockReply, onet.ClientError) {
 	return c.proposeSkipBlock(latest, parent.Roster, d)
 }
 
 // CreateData will create a new SkipChainData with the parameters given
-func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.Body) (
+func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, d network.Message) (
 	*SkipBlock, *SkipBlock, onet.ClientError) {
 	data := NewSkipBlock()
 	data.MaximumHeight = maxH
@@ -148,7 +148,7 @@ func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *G
 // - rosterSkipBlock if data is nil, the Roster will be taken from 'el'
 // - dataSkipBlock if data is non-nil. Furthermore 'el' will hold the activeRoster
 // to send the request to.
-func (c *Client) proposeSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Body) (reply *ProposedSkipBlockReply, cerr onet.ClientError) {
+func (c *Client) proposeSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *ProposedSkipBlockReply, cerr onet.ClientError) {
 	log.Lvl3(latest)
 	activeRoster := latest.Roster
 	hash := latest.Hash
@@ -168,7 +168,7 @@ func (c *Client) proposeSkipBlock(latest *SkipBlock, el *onet.Roster, d network.
 	}
 	if d != nil {
 		// Set either a new or a proposed SkipBlock
-		b, e := network.MarshalRegisteredType(d)
+		b, e := network.Marshal(d)
 		if e != nil {
 			cerr = onet.NewClientError(e)
 			return

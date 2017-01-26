@@ -13,59 +13,59 @@ import (
 	"time"
 )
 
-type JSON struct {
-	Schedule Schedule
+type jsonSchedule struct {
+	Schedule schedule
 }
 
-type Schedule struct {
-	Conference Conference
+type schedule struct {
+	Conference conference
 }
 
-type Conference struct {
-	Days []Day
+type conference struct {
+	Days []day
 }
 
-type Day struct {
-	Rooms map[string][]Track
+type day struct {
+	Rooms map[string][]track
 }
 
-type Track struct {
-	Id       int
+type track struct {
+	ID       int
 	Duration string
-	Persons  []Person
+	Persons  []person
 	Date     string
 	Room     string
 	Title    string
 }
 
-type Person struct {
+type person struct {
 	Public string `json:"public_name"`
 }
 
 // custom database yay
-type database_ struct {
-	DB map[int]*Entry_
+type databaseStruct struct {
+	DB map[int]*entryStruct
 	sync.Mutex
 }
 
 // Entry_ represents any conferences at 33c3
-type Entry_ struct {
+type entryStruct struct {
 	Name     string
 	Duration string
 	Persons  string
 	Date     string
 	Room     string
 	// map of tag => vote status
-	Votes []Vote_
+	Votes []voteStruct
 }
 
-type Vote_ struct {
+type voteStruct struct {
 	Tag  []byte
 	Vote bool
 }
 
-type EntryJSON struct {
-	Id       int
+type entryJSON struct {
+	ID       int
 	Name     string
 	Persons  string
 	Room     string
@@ -76,33 +76,33 @@ type EntryJSON struct {
 	Voted    bool
 }
 
-type EntriesJSON struct {
-	Entries []EntryJSON
+type entriesJSON struct {
+	Entries []entryJSON
 }
 
-func (ej *EntriesJSON) Len() int {
+func (ej *entriesJSON) Len() int {
 	return len(ej.Entries)
 }
 
-func (ej *EntriesJSON) Less(i, j int) bool {
+func (ej *entriesJSON) Less(i, j int) bool {
 	return ej.Entries[i].Name < ej.Entries[j].Name
 }
 
-func (ej *EntriesJSON) Swap(i, j int) {
+func (ej *entriesJSON) Swap(i, j int) {
 	ej.Entries[i], ej.Entries[j] = ej.Entries[j], ej.Entries[i]
 }
 
-func newDatabase() *database_ {
-	return &database_{DB: map[int]*Entry_{}}
+func newDatabase() *databaseStruct {
+	return &databaseStruct{DB: map[int]*entryStruct{}}
 }
 
 // Returns the JSON representation with information including whether this tag
 // has voted or not
-func (d *database_) JSON(tag []byte, update bool) ([]byte, error) {
+func (d *databaseStruct) JSON(tag []byte, update bool) ([]byte, error) {
 	d.Lock()
 	defer d.Unlock()
 
-	var entriesJSON []EntryJSON
+	var entriesJSON []entryJSON
 	// list of entries
 	for id, entry := range d.DB {
 		var voted bool
@@ -118,27 +118,27 @@ func (d *database_) JSON(tag []byte, update bool) ([]byte, error) {
 				down++
 			}
 		}
-		eJson := EntryJSON{
-			Id:    id,
+		eJSON := entryJSON{
+			ID:    id,
 			Up:    up,
 			Down:  down,
 			Voted: voted,
 		}
 		if !update {
-			eJson.Name = entry.Name
-			eJson.Persons = entry.Persons
-			eJson.Duration = entry.Duration
-			eJson.Date = entry.Date
-			eJson.Room = entry.Room
+			eJSON.Name = entry.Name
+			eJSON.Persons = entry.Persons
+			eJSON.Duration = entry.Duration
+			eJSON.Date = entry.Date
+			eJSON.Room = entry.Room
 		}
-		entriesJSON = append(entriesJSON, eJson)
+		entriesJSON = append(entriesJSON, eJSON)
 	}
-	var ej = &EntriesJSON{entriesJSON}
+	var ej = &entriesJSON{entriesJSON}
 	sort.Stable(ej)
 	return json.Marshal(ej.Entries)
 }
 
-func (d *database_) VoteOrError(id int, tag []byte, vote bool) error {
+func (d *databaseStruct) VoteOrError(id int, tag []byte, vote bool) error {
 	d.Lock()
 	defer d.Unlock()
 	e, ok := d.DB[id]
@@ -154,12 +154,12 @@ func (d *database_) VoteOrError(id int, tag []byte, vote bool) error {
 			return nil
 		}
 	}
-	e.Votes = append(e.Votes, Vote_{tag, vote})
+	e.Votes = append(e.Votes, voteStruct{tag, vote})
 	fmt.Println("Voted for ", e.Name, " from ", hex.EncodeToString(tag))
 	return nil
 }
 
-func (d *database_) load(fileName string) {
+func (d *databaseStruct) load(fileName string) {
 	d.Lock()
 	defer d.Unlock()
 	file, err := os.Open(fileName)
@@ -167,7 +167,7 @@ func (d *database_) load(fileName string) {
 		panic(err)
 	}
 
-	var j JSON
+	var j jsonSchedule
 	if err := json.NewDecoder(file).Decode(&j); err != nil {
 		panic(err)
 	}
@@ -184,20 +184,20 @@ func (d *database_) load(fileName string) {
 				}
 				date, err := time.Parse(time.RFC3339, t.Date)
 				if err != nil {
-					fmt.Printf("[-] Could not parse date %d: %s\n", t.Date, t.Title)
+					fmt.Printf("[-] Could not parse date %s: %s\n", t.Date, t.Title)
 					continue
 				}
 				formattedDate := fmt.Sprintf("%02d/%02d %02d:%02d", date.Day(),
 					date.Month(),
 					date.Hour(),
 					date.Minute())
-				d.DB[t.Id] = &Entry_{
+				d.DB[t.ID] = &entryStruct{
 					Name:     t.Title,
 					Date:     formattedDate,
 					Persons:  strings.Join(personStr, ","),
 					Duration: t.Duration,
 					Room:     t.Room,
-					Votes:    []Vote_{},
+					Votes:    []voteStruct{},
 				}
 			}
 		}
@@ -206,7 +206,7 @@ func (d *database_) load(fileName string) {
 }
 
 // VotesSave stores the votes for later usage
-func (d *database_) VotesSave(fullName string) error {
+func (d *databaseStruct) VotesSave(fullName string) error {
 	file, err := os.OpenFile(fullName, os.O_RDWR+os.O_CREATE, 0660)
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ func (d *database_) VotesSave(fullName string) error {
 // loads the database without votes. scheduleName is the plain
 // json-database from the CCC-website, fullName is the database
 // including the votes.
-func (d *database_) VotesLoad(scheduleName, fullName string) error {
+func (d *databaseStruct) VotesLoad(scheduleName, fullName string) error {
 	d.load(scheduleName)
 	_, err := os.Stat(fullName)
 	if err != nil {
@@ -235,6 +235,6 @@ func (d *database_) VotesLoad(scheduleName, fullName string) error {
 	return json.NewDecoder(file).Decode(d)
 }
 
-func (t *Track) String() string {
-	return fmt.Sprintf("%d: %s (%s in %s)", t.Id, t.Title, t.Duration, t.Room)
+func (t *track) String() string {
+	return fmt.Sprintf("%d: %s (%s in %s)", t.ID, t.Title, t.Duration, t.Room)
 }

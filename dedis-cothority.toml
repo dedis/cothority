@@ -1,0 +1,34 @@
+[[servers]]
+  Address = "tcp://78.46.227.60:7770"
+  Public = "5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY="
+  Description = "Ineiti's Cothority-server"
+
+[[servers]]
+  Address = "tcp://192.33.210.8:7770"
+  Public = "A2vzFuHqbn6Z4LtxNBnRbAtnlL+dxELMTPNsP5Nek88="
+  Description = "EPFL Cothority-server"
+
+[[servers]]
+  Address = "tcp://5.135.161.91:2000"
+  Public = "UsanfHVs5fO+80FABsRVVq63CEwPPkRn3ScQeSeRLFE="
+  Description = "Nikkolasg's server serving the cothority"
+
+[[servers]]
+  Address = "tcp://185.26.156.40:61116"
+  Public = "m1T9+7OROPCkWgjhchq06yV+DyRsk6JyFU1lFFR1YpA="
+  Description = "Ismail's server"
+
+[[servers]]
+  Address = "tcp://95.143.172.241:62306"
+  Public = "WIrdwfvZxAOGjg0KwgA+fHU40KkVT72zz3coIvDryCc="
+  Description = "Philipp's Cothority Server"
+
+[[servers]]
+  Address = "tcp://46.101.254.191:6879"
+  Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
+  Description = "Kirill's server"
+
+[[servers]]
+ Address = "tcp://83.212.82.23:6789"
+ Public = "guhk0GIw2qLpChrCTsc4vNnlRYZ3518eZKm1FKcR1jA="
+ Description = "Lefteris"

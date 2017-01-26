@@ -5,9 +5,17 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/network"
 )
+
+func init() {
+	for _, p := range []interface{}{I1{}, R1{}, I2{}, R2{},
+		WI1{}, WR1{}, WI2{}, WR2{}} {
+		network.RegisterMessage(p)
+	}
+}
 
 // RandHound is the main protocol struct and implements the
 // onet.ProtocolInstance interface.
@@ -100,7 +108,7 @@ type R1 struct {
 type I2 struct {
 	Sig          crypto.SchnorrSig // Schnorr signature
 	SID          []byte            // Session identifier
-	ChosenSecret [][]uint32        // Chosen secrets
+	ChosenSecret []uint32          // Chosen secrets (flattened)
 	EncShare     []Share           // Encrypted shares
 	PolyCommit   []abstract.Point  // Polynomial commitments
 }

@@ -4,16 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
 	// register network messages and protocol
-	network.RegisterPacketType(Message{})
-	network.RegisterPacketType(SignatureReply{})
+	network.RegisterMessage(Message{})
+	network.RegisterMessage(SignatureReply{})
 	onet.GlobalProtocolRegister("NaiveTree", NewProtocol)
 }
 
@@ -22,10 +22,13 @@ type Protocol struct {
 	*onet.TreeNodeInstance
 	// the message we want to sign (and the root node propagates)
 	Message []byte
+	// VerifySignature reflects whether the signature will be checked
+	// 0 - never
+	// 1 - verify the collective signature
+	// 2 - verify all sub-signatures
+	VerifySignature int
 	// signature of this particular participant:
 	signature *SignatureReply
-	// Simulation related
-	verifySignature int
 }
 
 // NewProtocol is used internally to register the protocol.
@@ -54,14 +57,14 @@ func (p *Protocol) Start() error {
 	}
 	log.Lvl3("Starting ntree/naive")
 	return p.HandleSignRequest(structMessage{p.TreeNode(),
-		Message{p.Message, p.verifySignature}})
+		Message{p.Message, p.VerifySignature}})
 }
 
 // HandleSignRequest is a handler for incoming sign-requests. It's registered as
 // a handler in the onet.Node.
 func (p *Protocol) HandleSignRequest(msg structMessage) error {
 	p.Message = msg.Msg
-	p.verifySignature = msg.VerifySignature
+	p.VerifySignature = msg.VerifySignature
 	signature, err := crypto.SignSchnorr(network.Suite, p.Private(), p.Message)
 	if err != nil {
 		return err
@@ -102,19 +105,19 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	for _, sigs := range reply {
 		// Check only direct children
 		// see https://github.com/dedis/cothority/issues/260
-		if p.verifySignature == 1 || p.verifySignature == 2 {
+		if p.VerifySignature == 1 || p.VerifySignature == 2 {
 			s := p.verifySignatureReply(sigs.ChildSig)
 			log.Lvl3(p.Name(), "direct children verification:", s)
 		}
 		// Verify also the whole subtree
-		if p.verifySignature == 2 {
+		if p.VerifySignature == 2 {
 			log.Lvl3(p.Name(), "Doing Subtree verification")
 			for _, sub := range sigs.SubSigs {
 				s := p.verifySignatureReply(sub)
 				log.Lvl3(p.Name(), "verifying subtree signature:", s)
 			}
 		}
-		if p.verifySignature == 0 {
+		if p.VerifySignature == 0 {
 			log.Lvl3(p.Name(), "Skipping signature verification..")
 		}
 		// add both the children signature + the sub tree signatures

@@ -9,8 +9,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 type Block struct {
@@ -107,13 +106,13 @@ func NewHeader(transactions TransactionList, parent, parentKey string) *Header {
 	return hdr
 }
 func HashRootTransactions(transactions TransactionList) string {
-	var hashes []crypto.HashID
+	var hashes []HashID
 
 	for _, t := range transactions.Txs {
 		temp, _ := hex.DecodeString(t.Hash)
 		hashes = append(hashes, temp)
 	}
-	out, _ := crypto.ProofTree(sha256.New, hashes)
+	out, _ := ProofTree(sha256.New, hashes)
 	return hex.EncodeToString(out)
 }
 

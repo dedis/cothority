@@ -6,8 +6,8 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/cosi"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // Name can be used to reference the registered protocol.
@@ -38,11 +38,11 @@ type CoSi struct {
 	// The channel waiting for Announcement message
 	announce chan chanAnnouncement
 	// the channel waiting for Commitment message
-	commit chan chanCommitment
+	commit chan []chanCommitment
 	// the channel waiting for Challenge message
 	challenge chan chanChallenge
 	// the channel waiting for Response message
-	response chan chanResponse
+	response chan []chanResponse
 	// the channel that indicates if we are finished or not
 	done chan bool
 	// temporary buffer of commitment messages
@@ -127,24 +127,44 @@ func NewProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // Dispatch will listen on the four channels we use (i.e. four steps)
 func (c *CoSi) Dispatch() error {
-	for {
-		var err error
-		select {
-		case packet := <-c.announce:
-			err = c.handleAnnouncement(&packet.Announcement)
-		case packet := <-c.commit:
-			err = c.handleCommitment(&packet.Commitment)
-		case packet := <-c.challenge:
-			err = c.handleChallenge(&packet.Challenge)
-		case packet := <-c.response:
-			err = c.handleResponse(&packet.Response)
-		case <-c.done:
-			return nil
-		}
+	nbrChild := len(c.Children())
+	if !c.IsRoot() {
+		log.Lvl3(c.Name(), "Waiting for announcement")
+		ann := (<-c.announce).Announcement
+		err := c.handleAnnouncement(&ann)
 		if err != nil {
-			log.Error("ProtocolCosi -> err treating incoming:", err)
+			return err
 		}
 	}
+	if !c.IsLeaf() {
+		for n, commit := range <-c.commit {
+			log.Lvlf3("%s Handling commitment %d/%d",
+				c.Name(), n+1, nbrChild)
+			err := c.handleCommitment(&commit.Commitment)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if !c.IsRoot() {
+		log.Lvl3(c.Name(), "Waiting for Challenge")
+		challenge := (<-c.challenge).Challenge
+		err := c.handleChallenge(&challenge)
+		if err != nil {
+			return err
+		}
+	}
+	if !c.IsLeaf() {
+		for n, response := range <-c.response {
+			log.Lvlf3("%s Handling response of child %d/%d", c.Name(), n+1, nbrChild)
+			err := c.handleResponse(&response.Response)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	<-c.done
+	return nil
 }
 
 // Start will call the announcement function of its inner Round structure. It

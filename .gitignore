@@ -13,3 +13,6 @@ sda/testdata
 *.iml
 .DS_Store
 config/
+build/
+cothority
+*.cov

@@ -38,7 +38,7 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func init() {
@@ -48,7 +48,7 @@ func init() {
 		Challenge{},
 		Response{},
 	} {
-		network.RegisterPacketType(r)
+		network.RegisterMessage(r)
 	}
 }
 

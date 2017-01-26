@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dedis/onet/app/server"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -17,11 +17,11 @@ const (
 	BinaryName = "cosi"
 
 	// Version of the binary
-	Version = "0.10"
+	Version = "1.00"
 
 	// DefaultGroupFile is the name of the default file to lookup for group
 	// definition
-	DefaultGroupFile = "group.toml"
+	DefaultGroupFile = "public.toml"
 
 	optionGroup      = "group"
 	optionGroupShort = "g"
@@ -35,10 +35,10 @@ const (
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "CoSi app"
-	app.Usage = "Collectively sign a file or verify its signature."
-	app.Version = Version
+	cliApp := cli.NewApp()
+	cliApp.Name = "cosi"
+	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
+	cliApp.Version = Version
 	binaryFlags := []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug, d",
@@ -51,41 +51,42 @@ func main() {
 		cli.StringFlag{
 			Name:  optionGroup + ", " + optionGroupShort,
 			Value: DefaultGroupFile,
-			Usage: "CoSi group definition file",
+			Usage: "Cosi group definition file",
 		},
 	}
 
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  optionConfig + ", " + optionConfigShort,
-			Value: server.GetDefaultConfigFile(BinaryName),
+			Value: app.GetDefaultConfigFile(BinaryName),
 			Usage: "Configuration file of the server",
 		},
 	}
-	app.Commands = []cli.Command{
+	cliApp.Commands = []cli.Command{
 		// BEGIN CLIENT ----------
 		{
-			Name:    "sign",
-			Aliases: []string{"s"},
-			Usage:   "Collectively sign a 'msgFile'. The signature is written to STDOUT by default.",
-			Action:  signFile,
+			Name:      "sign",
+			Aliases:   []string{"s"},
+			Usage:     "Request a collectively signature for a 'file'; signature is written to STDOUT by default",
+			ArgsUsage: "file",
+			Action:    signFile,
 			Flags: append(clientFlags, []cli.Flag{
 				cli.StringFlag{
 					Name:  "out, o",
-					Usage: "Write signature to 'sig' instead of STDOUT.",
+					Usage: "Write signature to 'file.sig' instead of STDOUT",
 				},
 			}...),
 		},
 		{
 			Name:      "verify",
 			Aliases:   []string{"v"},
-			Usage:     "Verify collective signature of a 'msgFile'. Signature is read by default from STDIN.",
-			ArgsUsage: "msgFile",
+			Usage:     "Verify a collective signature of a 'file'; signature is read from STDIN by default",
+			ArgsUsage: "file",
 			Action:    verifyFile,
 			Flags: append(clientFlags, []cli.Flag{
 				cli.StringFlag{
 					Name:  "signature, s",
-					Usage: "Read signature from 'sig' instead of STDIN",
+					Usage: "Read signature from 'file.sig' instead of STDIN",
 				},
 			}...),
 		},
@@ -94,14 +95,18 @@ func main() {
 			Aliases: []string{"c"},
 			Usage:   "Check if the servers in the group definition are up and running",
 			Action:  checkConfig,
-			Flags:   clientFlags,
+			Flags: append(clientFlags,
+				cli.BoolFlag{
+					Name:  "detail, l",
+					Usage: "Show details of all servers",
+				}),
 		},
 
 		// CLIENT END ----------
 		// BEGIN SERVER --------
 		{
 			Name:  "server",
-			Usage: "act as Cothority server",
+			Usage: "Start cosi server",
 			Action: func(c *cli.Context) error {
 				runServer(c)
 				return nil
@@ -111,15 +116,15 @@ func main() {
 				{
 					Name:    "setup",
 					Aliases: []string{"s"},
-					Usage:   "Setup the configuration for the server (interactive)",
+					Usage:   "Setup server configuration (interactive)",
 					Action: func(c *cli.Context) error {
 						if c.String(optionConfig) != "" {
-							log.Fatal("[-] Configuration file option can't be used for the 'setup' command")
+							log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
 						}
 						if c.GlobalIsSet("debug") {
-							log.Fatal("[-] Debug option can't be used for the 'setup' command")
+							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						server.InteractiveConfig(BinaryName)
+						app.InteractiveConfig(BinaryName)
 						return nil
 					},
 				},
@@ -128,11 +133,11 @@ func main() {
 		// SERVER END ----------
 	}
 
-	app.Flags = binaryFlags
-	app.Before = func(c *cli.Context) error {
+	cliApp.Flags = binaryFlags
+	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.GlobalInt("debug"))
 		return nil
 	}
-	err := app.Run(os.Args)
+	err := cliApp.Run(os.Args)
 	log.ErrFatal(err)
 }
