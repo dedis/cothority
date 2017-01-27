@@ -230,7 +230,7 @@ EOF
 }
 
 test(){
-	. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+	. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 	if [ "$1" != "-update_rec" ]; then
 		testUpdate
