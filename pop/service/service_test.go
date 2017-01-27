@@ -5,10 +5,10 @@ import (
 
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/config"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 var serviceId onet.ServiceID

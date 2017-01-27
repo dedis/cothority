@@ -6,10 +6,10 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/base64"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 const (

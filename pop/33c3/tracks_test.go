@@ -6,9 +6,9 @@ import (
 
 	"os"
 
-	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 const (

@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // Name is the name to refer to the Template service from another

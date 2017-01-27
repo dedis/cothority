@@ -19,10 +19,10 @@ import (
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/crypto/anon"
 	"github.com/dedis/crypto/ed25519"
-	"github.com/dedis/onet/log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 const (
