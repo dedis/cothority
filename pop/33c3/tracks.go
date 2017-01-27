@@ -102,7 +102,7 @@ func (d *databaseStruct) JSON(tag []byte, update bool) ([]byte, error) {
 	d.Lock()
 	defer d.Unlock()
 
-	var entriesJSON []entryJSON
+	var eJSONs []entryJSON
 	// list of entries
 	for id, entry := range d.DB {
 		var voted bool
@@ -131,9 +131,9 @@ func (d *databaseStruct) JSON(tag []byte, update bool) ([]byte, error) {
 			eJSON.Date = entry.Date
 			eJSON.Room = entry.Room
 		}
-		entriesJSON = append(entriesJSON, eJSON)
+		eJSONs = append(eJSONs, eJSON)
 	}
-	var ej = &entriesJSON{entriesJSON}
+	var ej = &entriesJSON{eJSONs}
 	sort.Stable(ej)
 	return json.Marshal(ej.Entries)
 }

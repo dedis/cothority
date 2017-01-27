@@ -8,12 +8,12 @@ import (
 	"github.com/dedis/crypto/ed25519"
 	"github.com/dedis/crypto/random"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/onet.v1/crypto"
 )
 
 func TestSig(t *testing.T) {
 	suite := ed25519.NewAES128SHA256Ed25519(false)
 	private := suite.NewKey(random.Stream)
-	privMarsh, _ := private.MarshalBinary()
 	public := suite.Point().Mul(nil, private)
 	marsh1, _ := public.MarshalBinary()
 
@@ -37,6 +37,8 @@ func TestSig(t *testing.T) {
 	err := toml.NewEncoder(&b).Encode(cont)
 	assert.Nil(t, err)
 
-	_, errStr := Sign(string(privMarsh), b.String())
+	buf := &bytes.Buffer{}
+	assert.Nil(t, crypto.Write64Scalar(suite, buf, private))
+	_, errStr := Sign(buf.String(), b.String())
 	assert.Empty(t, errStr)
 }

@@ -70,8 +70,15 @@ func main() {
 	router.Methods("POST").Path("/login").HandlerFunc(login)
 	router.Methods("POST").Path("/vote").HandlerFunc(vote)
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
-	//log.Fatal(http.ListenAndServe(":8000", loggedRouter))
+	if _, err := os.Stat("server.crt"); err == nil {
+		log.Print("Starting TLS-server on port 8000 - delete server.crt if you want plain http")
+		log.Fatal(http.ListenAndServeTLS(":8000", "server.crt", "server.key", loggedRouter))
+	} else {
+		log.Print("Starting plain HTTP on port 8000 - run ./cert.sh if you want TLS")
+		log.Print("Most browsers won't allow the camera to be turned on if you don't")
+		log.Print("Connect through https! So be sure to enable a proxy.")
+		log.Fatal(http.ListenAndServe(":8000", loggedRouter))
+	}
 }
 
 func entries(w http.ResponseWriter, r *http.Request) {
