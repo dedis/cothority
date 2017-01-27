@@ -241,7 +241,8 @@ func kvDel(c *cli.Context) error {
  * ssh:device:server / ssh_public_key
  * where 'ssh' is a fixed string, 'device' is the device where the private
  * key is stored and 'server' the server that should add the public key to
- * its authorized_keys.
+ * its authorized_keys. For safety reasons, this function saves to
+ * authorized_keys.cisc. But the sysadmin can make a link.
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
