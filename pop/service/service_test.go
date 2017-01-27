@@ -93,7 +93,7 @@ func TestService_CheckConfigReply(t *testing.T) {
 	copy(s0.final.Attendees, atts)
 
 	ccr := CheckConfigReply{0, desc.Hash(), atts}
-	req := &network.Packet{
+	req := &network.Envelope{
 		Msg:  ccr,
 		From: nodes[1].ServerIdentity.Address,
 	}

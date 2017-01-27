@@ -29,14 +29,14 @@ import (
 	"github.com/dedis/crypto/abstract"
 	"github.com/dedis/crypto/anon"
 	"github.com/dedis/crypto/random"
-	"github.com/dedis/onet/app/config"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
 func init() {
-	network.RegisterPacketType(Config{})
+	network.RegisterMessage(Config{})
 }
 
 var client *service.Client
@@ -54,12 +54,12 @@ var mainConfig *Config
 var fileConfig string
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "SSH keystore client"
-	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
-	app.Version = "0.3"
-	app.Commands = []cli.Command{
-		commandMgr,
+	appCli := cli.NewApp()
+	appCli.Name = "SSH keystore client"
+	appCli.Usage = "Connects to a ssh-keystore-server and updates/changes information"
+	appCli.Version = "0.3"
+	appCli.Commands = []cli.Command{
+		commandOrg,
 		commandClient,
 		{
 			Name:      "check",
@@ -69,7 +69,7 @@ func main() {
 			Action:    checkConfig,
 		},
 	}
-	app.Flags = []cli.Flag{
+	appCli.Flags = []cli.Flag{
 		cli.IntFlag{
 			Name:  "debug,d",
 			Value: 0,
@@ -81,19 +81,19 @@ func main() {
 			Usage: "The configuration-directory of pop",
 		},
 	}
-	app.Before = func(c *cli.Context) error {
+	appCli.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		client = service.NewClient()
 		fileConfig = path.Join(c.String("config"), "config.bin")
 		readConfig()
 		return nil
 	}
-	app.Run(os.Args)
+	appCli.Run(os.Args)
 }
 
 // links this pop to a cothority
-func mgrLink(c *cli.Context) error {
-	log.Info("Mgr: Link")
+func orgLink(c *cli.Context) error {
+	log.Info("Org: Link")
 	if c.NArg() == 0 {
 		log.Fatal("Please give an IP and optionally a pin")
 	}
@@ -107,7 +107,12 @@ func mgrLink(c *cli.Context) error {
 		return err
 	}
 	addr := network.NewAddress(network.PlainTCP, fmt.Sprintf("%s:%s", addrs[0], port))
-	if err := client.Pin(addr, c.Args().Get(1), mainConfig.Public); err != nil {
+	pin := c.Args().Get(1)
+	if err := client.Pin(addr, pin, mainConfig.Public); err != nil {
+		if err.ErrorCode() == service.ErrorWrongPIN && pin == "" {
+			log.Info("Please read PIN in server-log")
+			return nil
+		}
 		return err
 	}
 	mainConfig.Address = addr
@@ -117,8 +122,8 @@ func mgrLink(c *cli.Context) error {
 }
 
 // sets up a configuration
-func mgrConfig(c *cli.Context) error {
-	log.Info("Mgr: Config", mainConfig.Address.String())
+func orgConfig(c *cli.Context) error {
+	log.Info("Org: Config", mainConfig.Address.String())
 	if c.NArg() != 2 {
 		log.Fatal("Please give pop_desc.toml and group.toml")
 	}
@@ -143,8 +148,8 @@ func mgrConfig(c *cli.Context) error {
 }
 
 // adds a public key to the list
-func mgrPublic(c *cli.Context) error {
-	log.Info("Mgr: Adding public keys", c.Args().First())
+func orgPublic(c *cli.Context) error {
+	log.Info("Org: Adding public keys", c.Args().First())
 	if c.NArg() < 1 {
 		log.Fatal("Please give a public key")
 	}
@@ -175,8 +180,8 @@ func mgrPublic(c *cli.Context) error {
 }
 
 // finalizes the statement
-func mgrFinal(c *cli.Context) error {
-	log.Info("Mgr: Final")
+func orgFinal(c *cli.Context) error {
+	log.Info("Org: Final")
 	if len(mainConfig.Final.Attendees) == 0 {
 		log.Fatal("No attendees stored - first store at least one")
 	}
@@ -288,10 +293,10 @@ func clientVerify(c *cli.Context) error {
 	return nil
 }
 
-func readGroup(name string) *config.Group {
+func readGroup(name string) *app.Group {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := config.ReadGroupDescToml(f)
+	group, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
@@ -303,7 +308,7 @@ func readGroup(name string) *config.Group {
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
 func checkConfig(c *cli.Context) error {
-	return check.Config(c.Args().First())
+	return check.Config(c.Args().First(), false)
 }
 
 func newConfig() {
@@ -319,14 +324,14 @@ func newConfig() {
 }
 
 func readConfig() {
-	file := config.TildeToHome(fileConfig)
+	file := app.TildeToHome(fileConfig)
 	if _, err := os.Stat(file); err != nil {
 		newConfig()
 		return
 	}
 	buf, err := ioutil.ReadFile(file)
 	if err == nil {
-		_, msg, err := network.UnmarshalRegistered(buf)
+		_, msg, err := network.Unmarshal(buf)
 		if err == nil {
 			var ok bool
 			mainConfig, ok = msg.(*Config)
@@ -340,9 +345,9 @@ func readConfig() {
 }
 
 func writeConfig() {
-	buf, err := network.MarshalRegisteredType(mainConfig)
+	buf, err := network.Marshal(mainConfig)
 	log.ErrFatal(err)
-	file := config.TildeToHome(fileConfig)
+	file := app.TildeToHome(fileConfig)
 	os.MkdirAll(path.Dir(file), 0770)
 	log.ErrFatal(ioutil.WriteFile(file, buf, 0660))
 }

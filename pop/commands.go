@@ -6,10 +6,10 @@ import "gopkg.in/urfave/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandMgr, commandClient cli.Command
+var commandOrg, commandClient cli.Command
 
 func init() {
-	commandMgr = cli.Command{
+	commandOrg = cli.Command{
 		Name:  "org",
 		Usage: "Organising a PoParty",
 		Subcommands: []cli.Command{
@@ -18,26 +18,26 @@ func init() {
 				Aliases:   []string{"l"},
 				Usage:     "link to a cothority",
 				ArgsUsage: "IP-address:port",
-				Action:    mgrLink,
+				Action:    orgLink,
 			},
 			{
 				Name:      "config",
 				Aliases:   []string{"c"},
 				Usage:     "stores the configuration",
 				ArgsUsage: "pop_desc.toml group.toml",
-				Action:    mgrConfig,
+				Action:    orgConfig,
 			},
 			{
 				Name:    "public",
 				Aliases: []string{"p"},
 				Usage:   "stores a public key during the party",
-				Action:  mgrPublic,
+				Action:  orgPublic,
 			},
 			{
 				Name:    "final",
 				Aliases: []string{"f"},
 				Usage:   "finalizes the party",
-				Action:  mgrFinal,
+				Action:  orgFinal,
 			},
 		},
 	}

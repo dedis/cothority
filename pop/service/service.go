@@ -6,15 +6,11 @@ runs on the node.
 */
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
 	"bytes"
-
-	"io/ioutil"
-	"os"
-
-	"path"
 
 	"time"
 
@@ -29,15 +25,15 @@ import (
 const Name = "PoPServer"
 const cfgName = "pop.bin"
 
-var checkConfigID network.PacketTypeID
-var checkConfigReplyID network.PacketTypeID
+var checkConfigID network.MessageTypeID
+var checkConfigReplyID network.MessageTypeID
 
 func init() {
 	onet.RegisterNewService(Name, newService)
-	network.RegisterPacketType(CheckConfig{})
-	network.RegisterPacketType(saveData{})
-	checkConfigID = network.RegisterPacketType(CheckConfig{})
-	checkConfigReplyID = network.RegisterPacketType(CheckConfigReply{})
+	network.RegisterMessage(CheckConfig{})
+	network.RegisterMessage(saveData{})
+	checkConfigID = network.RegisterMessage(CheckConfig{})
+	checkConfigReplyID = network.RegisterMessage(CheckConfigReply{})
 }
 
 // Service is our template-service
@@ -62,7 +58,7 @@ type saveData struct {
 
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
-func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
+func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
 	if req.Pin == "" {
 		rand.Seed(int64(time.Now().Nanosecond()))
 		s.data.Pin = fmt.Sprintf("%06d", rand.Intn(1000000))
@@ -79,7 +75,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Body, onet.ClientError) {
 }
 
 // StoreConfig saves the pop-config locally
-func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError) {
+func (s *Service) StoreConfig(req *StoreConfig) (network.Message, onet.ClientError) {
 	log.Lvlf3("%s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
 	if req.Desc.Roster == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
@@ -95,7 +91,7 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Body, onet.ClientError)
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.ClientError) {
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.ClientError) {
 	if s.data.Final == nil || s.data.Final.Desc == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked or no config yet")
 	}
@@ -126,7 +122,7 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Body, onet.Clie
 // a CheckConfigReply filled according to this structure's description. If
 // the config has been found, it strips its own attendees from the one missing
 // in the other configuration.
-func (s *Service) CheckConfig(req *network.Packet) {
+func (s *Service) CheckConfig(req *network.Envelope) {
 	cc, ok := req.Msg.(CheckConfig)
 	if !ok {
 		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
@@ -156,7 +152,7 @@ func (s *Service) CheckConfig(req *network.Packet) {
 
 // CheckConfigReply strips the attendees missing in the reply, if the
 // PopStatus == 3.
-func (s *Service) CheckConfigReply(req *network.Packet) {
+func (s *Service) CheckConfigReply(req *network.Envelope) {
 	ccrVal, ok := req.Msg.(CheckConfigReply)
 	var ccr *CheckConfigReply
 	ccr = func() *CheckConfigReply {
@@ -197,42 +193,38 @@ func (s *Service) intersectAttendees(atts []abstract.Point) {
 
 // saves the actual identity
 func (s *Service) save() {
-	log.Lvl3("Saving service")
-	b, err := network.MarshalRegisteredType(s.data)
+	log.LLvl3("Saving service")
+	err := s.Save("storage", s.data)
 	if err != nil {
-		log.Error("Couldn't marshal service:", err)
-	} else {
-		err = ioutil.WriteFile(path.Join(s.path, cfgName), b, 0660)
-		if err != nil {
-			log.Error("Couldn't save file:", err)
-		}
+		log.Error("Couldn't save data:", err)
 	}
+	log.Print("saved succesfully")
 }
 
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	configFile := path.Join(s.path, cfgName)
-	b, err := ioutil.ReadFile(configFile)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Error while reading %s: %s", configFile, err)
+	if !s.DataAvailable("storage") {
+		log.Print("No data available")
+		return nil
 	}
-	if len(b) > 0 {
-		_, msg, err := network.UnmarshalRegistered(b)
-		if err != nil {
-			return fmt.Errorf("Couldn't unmarshal: %s", err)
-		}
-		log.Lvl3("Successfully loaded")
-		s.data = msg.(*saveData)
+	msg, err := s.Load("storage")
+	if err != nil {
+		return err
 	}
+	var ok bool
+	s.data, ok = msg.(*saveData)
+	if !ok {
+		return errors.New("Data of wrong type")
+	}
+	log.Print("loaded succesfully")
 	return nil
 }
 
 // newService registers the request-methods.
-func newService(c *onet.Context, path string) onet.Service {
+func newService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		path:             path,
 		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
 	}

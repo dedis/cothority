@@ -24,8 +24,8 @@ const (
 )
 
 func init() {
-	network.RegisterPacketType(&FinalStatement{})
-	network.RegisterPacketType(&PopDesc{})
+	network.RegisterMessage(&FinalStatement{})
+	network.RegisterMessage(&PopDesc{})
 }
 
 // FinalStatement is the final configuration holding all data necessary

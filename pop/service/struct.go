@@ -17,7 +17,7 @@ func init() {
 		PinRequest{},
 		FinalizeRequest{}, FinalizeResponse{},
 	} {
-		network.RegisterPacketType(msg)
+		network.RegisterMessage(msg)
 	}
 }
 

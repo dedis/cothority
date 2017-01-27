@@ -1,30 +1,38 @@
 #!/usr/bin/env bash
 
-DBG_SHOW=2
+DBG_TEST=2
 # Debug-level for server
-DBG_SRV=1
-DBG_APP=1
-# For easier debugging
-STATICDIR=test
+DBG_SRV=2
+DBG_APP=3
 NBR_CLIENTS=3
 NBR_SERVERS=3
 
-. ../libcothority/cothority.sh
+. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 main(){
     startTest
-    buildApp
+    buildConode
+    echo "Creating directories"
+    for n in $(seq $NBR_CLIENTS); do
+        cl=cl$n
+        rm -f $cl/*
+        mkdir -p $cl
+    done
+    addr1=127.0.0.1:2002
+    addr2=127.0.0.1:2004
+    addr3=127.0.0.1:2006
+
 #    test Build
-#    test MgrLink
-#	test Save
-#    test MgrConfig
-#	test ClCreate
-#	test MgrPublic
-#	test MgrFinal
-#	test MgrFinal2
-#	test ClJoin
+#    test OrgLink
+	test Save
+    test OrgConfig
+	test ClCreate
+	test OrgPublic
+	test OrgFinal
+	test OrgFinal2
+	test ClJoin
 	test ClSign
-#	test ClVerify
+	test ClVerify
     stopTest
 }
 
@@ -70,49 +78,49 @@ testClJoin(){
 
 mkFinal(){
 	mkConfig 1 2
-	runCl 1 mgr public $pub1
-	runCl 1 mgr public $pub2
-	runCl 2 mgr public $pub1
-	runCl 2 mgr public $pub2
-	runCl 1 mgr final
-	runCl 2 mgr final | tail -n +3 | head -n 8 > final.toml
+	runCl 1 org public $pub1
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	runCl 1 org final
+	runCl 2 org final | tail -n +3 | head -n 8 > final.toml
 }
 
-testMgrFinal2(){
+testOrgFinal2(){
 	mkLink
 	mkKeypair
 	mkPopConfig
-	runCl 1 mgr config pop_desc.toml group.toml
-	runCl 2 mgr config pop_desc.toml group.toml
-	runCl 1 mgr public $pub2
-	runCl 2 mgr public $pub1
-	runCl 2 mgr public $pub2
-	testFail runCl 1 mgr final
-	testOK runCl 2 mgr final
-	testOK runCl 1 mgr final
-	runCl 1 mgr final > final1.toml
-	runCl 2 mgr final > final2.toml
-	testNGrep , echo $( runCl 1 mgr final | grep Attend )
-	testNGrep , echo $( runCl 2 mgr final | grep Attend )
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	testFail runCl 1 org final
+	testOK runCl 2 org final
+	testOK runCl 1 org final
+	runCl 1 org final > final1.toml
+	runCl 2 org final > final2.toml
+	testNGrep , echo $( runCl 1 org final | grep Attend )
+	testNGrep , echo $( runCl 2 org final | grep Attend )
 	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
 }
 
-testMgrFinal(){
+testOrgFinal(){
 	mkLink
 	mkKeypair
 	mkPopConfig
-	runCl 1 mgr config pop_desc.toml group.toml
-	runCl 2 mgr config pop_desc.toml group.toml
-	runCl 1 mgr public $pub2
-	runCl 2 mgr public $pub1
-	runCl 2 mgr public $pub2
-	testFail runCl 1 mgr final
-	testOK runCl 2 mgr final
-	testOK runCl 1 mgr final
-	runCl 1 mgr final > final1.toml
-	runCl 2 mgr final > final2.toml
-	testNGrep , echo $( runCl 1 mgr final | grep Attend )
-	testNGrep , echo $( runCl 2 mgr final | grep Attend )
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	testFail runCl 1 org final
+	testOK runCl 2 org final
+	testOK runCl 1 org final
+	runCl 1 org final > final1.toml
+	runCl 2 org final > final2.toml
+	testNGrep , echo $( runCl 1 org final | grep Attend )
+	testNGrep , echo $( runCl 2 org final | grep Attend )
 	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
 }
 
@@ -122,29 +130,29 @@ mkConfig(){
 	mkKeypair
 	mkPopConfig
 	for cl in $@; do
-		runCl $cl mgr config pop_desc.toml group.toml
+		runCl $cl org config pop_desc.toml public.toml
 	done
 }
 
-testMgrFinal(){
+testOrgFinal(){
 	mkLink
 	mkKeypair
 	mkPopConfig
-	runCl 1 mgr config pop_desc.toml group.toml
-	runCl 2 mgr config pop_desc.toml group.toml
-	runCl 1 mgr public $pub1
-	runCl 1 mgr public $pub2
-	runCl 2 mgr public "\[\"$pub1\",\"$pub2\"\]"
-	testFail runCl 1 mgr final
-	testOK runCl 2 mgr final
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub1
+	runCl 1 org public $pub2
+	runCl 2 org public "\[\"$pub1\",\"$pub2\"\]"
+	testFail runCl 1 org final
+	testOK runCl 2 org final
 }
 
-testMgrPublic(){
+testOrgPublic(){
 	mkKeypair
-	testFail runCl 1 mgr public
-	testOK runCl 1 mgr public $pub1
-	testFail runCl 1 mgr public $pub1
-	testOK runCl 1 mgr public $pub2
+	testFail runCl 1 org public
+	testOK runCl 1 org public $pub1
+	testFail runCl 1 org public $pub1
+	testOK runCl 1 org public $pub2
 }
 
 testClCreate(){
@@ -162,61 +170,62 @@ mkKeypair(){
 	pub2=$( grep Public keypair.2 | sed -e "s/.* //" )
 }
 
-testMgrConfig(){
+testOrgConfig(){
 	mkPopConfig
-	testFail runCl 1 mgr config pop_desc.toml group.toml
+	testFail runCl 1 org config pop_desc.toml public.toml
 	mkLink
-	testOK runCl 1 mgr config pop_desc.toml group.toml
-	testOK runCl 2 mgr config pop_desc.toml group.toml
+	testOK runCl 1 org config pop_desc.toml public.toml
+	testOK runCl 2 org config pop_desc.toml public.toml
 }
 
 mkPopConfig(){
 	cat << EOF > pop_desc.toml
 Name = "33c3 Proof-of-Personhood Party"
 DateTime = "2016-12-29 15:00 UTC"
-Location = "Earth, Germany, Hannover, Hall A1"
+Location = "Earth, Germany, Hamburg, Hall A1"
 EOF
 }
 
 testSave(){
 	runCoBG 1
 	runCoBG 2
-	testFail runCl 1 mgr config pop_desc.toml group.toml
-	pkill -9 -f cothority
+	mkPopConfig
+	testFail runCl 1 org config pop_desc.toml public.toml
+	pkill -9 -f conode
 	mkLink
-	pkill -9 -f cothority
+	pkill -9 -f conode
 	runCoBG 1
 	runCoBG 2
-	testOK runCl 1 mgr config pop_desc.toml group.toml
+	testOK runCl 1 org config pop_desc.toml public.toml
 }
 
 mkLink(){
 	runCoBG 1
 	runCoBG 2
-	runCl 1 mgr link $addr1
+	runCl 1 org link $addr1
 	pin1=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
-	runCl 1 mgr link $addr1 $pin1
-	runCl 2 mgr link $addr2
+	runCl 1 org link $addr1 $pin1
+	runCl 2 org link $addr2
 	pin2=$( grep PIN ${COLOG}2.log | sed -e "s/.* //" )
-	runCl 2 mgr link $addr2 $pin2
+	runCl 2 org link $addr2 $pin2
 }
 
-testMgrLink(){
+testOrgLink(){
 	runCoBG 1
 	runCoBG 2
-	testOK runCl 1 mgr link $addr1
+	testOK runCl 1 org link $addr1
 	testGrep PIN cat ${COLOG}1.log
 	pin1=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
-	testFail runCl 1 mgr link $addr1 abcdefg
-	testOK runCl 1 mgr link $addr1 $pin1
-	testOK runCl 2 mgr link $addr2
+	testFail runCl 1 org link $addr1 abcdefg
+	testOK runCl 1 org link $addr1 $pin1
+	testOK runCl 2 org link $addr2
 	testGrep PIN cat ${COLOG}2.log
 	pin2=$( grep PIN ${COLOG}2.log | sed -e "s/.* //" )
-	testOK runCl 2 mgr link $addr2 $pin2
+	testOK runCl 2 org link $addr2 $pin2
 }
 
 testBuild(){
-    testOK dbgRun ./cothority --help
+    testOK dbgRun ./conode --help
     testOK dbgRun ./pop --help
 }
 
@@ -225,24 +234,5 @@ runCl(){
     shift
     dbgRun ./pop -d $DBG_APP -c $D $@
 }
-
-buildApp(){
-    startTest
-	appBuild
-	cothorityBuild
-    echo "Creating directories"
-    for n in $(seq $NBR_CLIENTS); do
-        cl=cl$n
-        rm -f $cl/*
-        mkdir -p $cl
-    done
-    addr1=127.0.0.1:2002
-    addr2=127.0.0.1:2004
-    addr3=127.0.0.1:2006
-}
-
-if [ "$1" -a "$STATICDIR" ]; then
-    rm -f $STATICDIR/{cothority,pop}
-fi
 
 main
