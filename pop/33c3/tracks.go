@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 type jsonSchedule struct {
@@ -202,7 +204,7 @@ func (d *databaseStruct) load(fileName string) {
 			}
 		}
 	}
-	fmt.Println("[+] Loaded ", count, " tracks")
+	log.Info("[+] Loaded ", count, " tracks")
 }
 
 // VotesSave stores the votes for later usage
