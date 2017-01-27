@@ -6,7 +6,7 @@ DBG_APP=2
 # Needs 4 clients
 NBR=4
 
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
