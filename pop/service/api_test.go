@@ -25,7 +25,7 @@ func TestFinalStatement_ToToml(t *testing.T) {
 	}
 	fs.Signature = fs.Desc.Hash()
 	fsStr := fs.ToToml()
-	log.LLvl2(fsStr)
+	log.Lvl2(fsStr)
 	fs2 := NewFinalStatementFromString(fsStr)
 	require.Equal(t, fs.Desc.DateTime, fs2.Desc.DateTime)
 	require.True(t, fs.Desc.Roster.Aggregate.Equal(fs2.Desc.Roster.Aggregate))

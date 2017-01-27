@@ -18,7 +18,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_FinalizeRequest(t *testing.T) {
@@ -45,10 +45,12 @@ func TestService_FinalizeRequest(t *testing.T) {
 
 	// Send a request to all services but the first one
 	for _, s := range services[1:] {
+		log.Lvl2("Asking", s, "to finalize")
 		_, err := s.FinalizeRequest(&FinalizeRequest{descHash, atts})
 		require.NotNil(t, err)
 	}
 
+	log.Lvl2("Final finalizing")
 	final, err := services[0].FinalizeRequest(&FinalizeRequest{descHash, atts})
 	require.Nil(t, err)
 	require.NotNil(t, final)
@@ -92,7 +94,7 @@ func TestService_CheckConfigReply(t *testing.T) {
 	s0.data.Final.Attendees = make([]abstract.Point, len(atts))
 	copy(s0.data.Final.Attendees, atts)
 
-	ccr := CheckConfigReply{0, desc.Hash(), atts}
+	ccr := &CheckConfigReply{0, desc.Hash(), atts}
 	req := &network.Envelope{
 		Msg:            ccr,
 		ServerIdentity: nodes[1].ServerIdentity,
@@ -126,6 +128,7 @@ func TestService_StoreConfig(t *testing.T) {
 		DateTime: "tomorrow",
 		Roster:   onet.NewRoster(r.List),
 	}
+	service.data.Public = network.Suite.Point().Null()
 	msg, cerr := service.StoreConfig(&StoreConfig{desc})
 	log.ErrFatal(cerr)
 	_, ok := msg.(*StoreConfigReply)
@@ -148,6 +151,7 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int) (*PopDesc, []abst
 	sret := []*Service{}
 	for _, s := range srvcs {
 		sret = append(sret, s.(*Service))
+		s.(*Service).data.Public = network.Suite.Point().Null()
 		s.(*Service).StoreConfig(&StoreConfig{desc})
 	}
 	return desc, atts, sret

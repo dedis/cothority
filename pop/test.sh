@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
-# Debug-level for server
-DBG_SRV=2
+DBG_TEST=1
 DBG_APP=3
 NBR_CLIENTS=3
 NBR_SERVERS=3
@@ -22,8 +20,8 @@ main(){
     addr2=127.0.0.1:2004
     addr3=127.0.0.1:2006
 
-#    test Build
-#    test OrgLink
+    test Build
+    test OrgLink
 	test Save
     test OrgConfig
 	test ClCreate
@@ -47,8 +45,8 @@ testClVerify(){
 
 mkClSign(){
 	mkClJoin
-	runCl 1 client sign msg1 ctx1 > sign1.toml
-	runCl 2 client sign msg1 ctx1 > sign2.toml
+	runDbgCl 1 1 client sign msg1 ctx1 > sign1.toml
+	runDbgCl 1 2 client sign msg1 ctx1 > sign2.toml
 	tag1=$( grep Tag: sign1.toml | sed -e "s/.* //")
 	sig1=$( grep Signature: sign1.toml | sed -e "s/.* //")
 	tag2=$( grep Tag: sign2.toml | sed -e "s/.* //")
@@ -83,7 +81,7 @@ mkFinal(){
 	runCl 2 org public $pub1
 	runCl 2 org public $pub2
 	runCl 1 org final
-	runCl 2 org final | tail -n +3 | head -n 8 > final.toml
+	runDbgCl 1 2 org final | tail -n +3 | head -n 8 > final.toml
 }
 
 testOrgFinal2(){
@@ -98,8 +96,8 @@ testOrgFinal2(){
 	testFail runCl 1 org final
 	testOK runCl 2 org final
 	testOK runCl 1 org final
-	runCl 1 org final > final1.toml
-	runCl 2 org final > final2.toml
+	runDbgCl 1 1 org final > final1.toml
+	runDbgCl 1 2 org final > final2.toml
 	testNGrep , echo $( runCl 1 org final | grep Attend )
 	testNGrep , echo $( runCl 2 org final | grep Attend )
 	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
@@ -117,8 +115,8 @@ testOrgFinal(){
 	testFail runCl 1 org final
 	testOK runCl 2 org final
 	testOK runCl 1 org final
-	runCl 1 org final > final1.toml
-	runCl 2 org final > final2.toml
+	runDbgCl 1 1 org final > final1.toml
+	runDbgCl 1 2 org final > final2.toml
 	testNGrep , echo $( runCl 1 org final | grep Attend )
 	testNGrep , echo $( runCl 2 org final | grep Attend )
 	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
@@ -162,8 +160,8 @@ testClCreate(){
 }
 
 mkKeypair(){
-	runCl 1 client create > keypair.1
-	runCl 1 client create > keypair.2
+	runDbgCl 1 1 client create > keypair.1
+	runDbgCl 1 1 client create > keypair.2
 	priv1=$( grep Private keypair.1 | sed -e "s/.* //" )
 	priv2=$( grep Private keypair.2 | sed -e "s/.* //" )
 	pub1=$( grep Public keypair.1 | sed -e "s/.* //" )
@@ -230,9 +228,15 @@ testBuild(){
 }
 
 runCl(){
-    local D=cl$1
+    local CFG=cl$1
     shift
-    dbgRun ./pop -d $DBG_APP -c $D $@
+    dbgRun ./pop -d $DBG_APP -c $CFG $@
 }
 
+runDbgCl(){
+	local DBG=$1
+	local CFG=cl$2
+	shift 2
+	./pop -d $DBG -c $CFG $@
+}
 main

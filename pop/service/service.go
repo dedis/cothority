@@ -92,8 +92,12 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, onet.ClientErr
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
 func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.ClientError) {
+	log.Lvlf3("%s %+v", s.Context.ServerIdentity(), req)
+	if s.data.Public == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+	}
 	if s.data.Final == nil || s.data.Final.Desc == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked or no config yet")
+		return nil, onet.NewClientErrorCode(ErrorInternal, "No config found")
 	}
 	// Contact all other nodes and ask them if they already have a config.
 	s.data.Final.Attendees = make([]abstract.Point, len(req.Attendees))
@@ -123,7 +127,7 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.C
 // the config has been found, it strips its own attendees from the one missing
 // in the other configuration.
 func (s *Service) CheckConfig(req *network.Envelope) {
-	cc, ok := req.Msg.(CheckConfig)
+	cc, ok := req.Msg.(*CheckConfig)
 	if !ok {
 		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
 		return
@@ -153,7 +157,7 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 // CheckConfigReply strips the attendees missing in the reply, if the
 // PopStatus == 3.
 func (s *Service) CheckConfigReply(req *network.Envelope) {
-	ccrVal, ok := req.Msg.(CheckConfigReply)
+	ccrVal, ok := req.Msg.(*CheckConfigReply)
 	var ccr *CheckConfigReply
 	ccr = func() *CheckConfigReply {
 		if !ok {
@@ -165,11 +169,11 @@ func (s *Service) CheckConfigReply(req *network.Envelope) {
 			return nil
 		}
 		if ccrVal.PopStatus < 3 {
-			log.Warn("Wrong pop-status:", ccrVal.PopStatus)
+			log.Lvl1("Wrong pop-status:", ccrVal.PopStatus)
 			return nil
 		}
 		s.intersectAttendees(ccrVal.Attendees)
-		return &ccrVal
+		return ccrVal
 	}()
 	if len(s.ccChannel) == 0 {
 		s.ccChannel <- ccr
@@ -193,19 +197,17 @@ func (s *Service) intersectAttendees(atts []abstract.Point) {
 
 // saves the actual identity
 func (s *Service) save() {
-	log.LLvl3("Saving service")
+	log.Lvl3("Saving service")
 	err := s.Save("storage", s.data)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
-	log.Print("saved succesfully")
 }
 
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
 	if !s.DataAvailable("storage") {
-		log.Print("No data available")
 		return nil
 	}
 	msg, err := s.Load("storage")
@@ -217,7 +219,6 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
-	log.Print("loaded succesfully")
 	return nil
 }
 
