@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-cd static
-cd js
-gopherjs build ../sig.go
-cd ../..
+( cd static/js; gopherjs build sig.go )
 go build
 if [ ! -f server.key ]; then
 	./cert.sh
