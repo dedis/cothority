@@ -32,7 +32,7 @@ func TestService_FinalizeRequest(t *testing.T) {
 	desc, atts, services := storeDesc(local.GetServices(nodes, serviceId), r, nbrAtt)
 	descHash := desc.Hash()
 	// Clear config of first one
-	services[0].final = nil
+	services[0].data.Final = nil
 
 	// Send a request to all services
 	for _, s := range services {
@@ -61,8 +61,8 @@ func TestService_CheckConfig(t *testing.T) {
 	defer local.CloseAll()
 	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceId), r, 2)
 	for _, s := range srvcs {
-		s.final.Attendees = make([]abstract.Point, len(atts))
-		copy(s.final.Attendees, atts)
+		s.data.Final.Attendees = make([]abstract.Point, len(atts))
+		copy(s.data.Final.Attendees, atts)
 	}
 
 	cc := &CheckConfig{[]byte{}, atts}
@@ -72,14 +72,14 @@ func TestService_CheckConfig(t *testing.T) {
 	cc.PopHash = desc.Hash()
 	srvcs[0].SendRaw(r.List[1], cc)
 	require.NotNil(t, <-srvcs[0].ccChannel)
-	require.Equal(t, 2, len(srvcs[0].final.Attendees))
-	require.Equal(t, 2, len(srvcs[1].final.Attendees))
+	require.Equal(t, 2, len(srvcs[0].data.Final.Attendees))
+	require.Equal(t, 2, len(srvcs[1].data.Final.Attendees))
 
 	cc.Attendees = atts[:1]
 	srvcs[0].SendRaw(r.List[1], cc)
 	require.NotNil(t, <-srvcs[0].ccChannel)
-	require.Equal(t, 1, len(srvcs[0].final.Attendees))
-	require.Equal(t, 1, len(srvcs[1].final.Attendees))
+	require.Equal(t, 1, len(srvcs[0].data.Final.Attendees))
+	require.Equal(t, 1, len(srvcs[1].data.Final.Attendees))
 }
 
 func TestService_CheckConfigReply(t *testing.T) {
@@ -89,30 +89,30 @@ func TestService_CheckConfigReply(t *testing.T) {
 	defer local.CloseAll()
 	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceId), r, 2)
 	s0 := srvcs[0]
-	s0.final.Attendees = make([]abstract.Point, len(atts))
-	copy(s0.final.Attendees, atts)
+	s0.data.Final.Attendees = make([]abstract.Point, len(atts))
+	copy(s0.data.Final.Attendees, atts)
 
 	ccr := CheckConfigReply{0, desc.Hash(), atts}
 	req := &network.Envelope{
-		Msg:  ccr,
-		From: nodes[1].ServerIdentity.Address,
+		Msg:            ccr,
+		ServerIdentity: nodes[1].ServerIdentity,
 	}
 
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
-	require.Equal(t, 2, len(s0.final.Attendees))
+	require.Equal(t, 2, len(s0.data.Final.Attendees))
 
 	ccr.Attendees = atts[:1]
 	req.Msg = ccr
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
-	require.Equal(t, 2, len(s0.final.Attendees))
+	require.Equal(t, 2, len(s0.data.Final.Attendees))
 
 	ccr.PopStatus = 3
 	req.Msg = ccr
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
-	require.Equal(t, 1, len(s0.final.Attendees))
+	require.Equal(t, 1, len(s0.data.Final.Attendees))
 }
 
 func TestService_StoreConfig(t *testing.T) {
@@ -131,7 +131,7 @@ func TestService_StoreConfig(t *testing.T) {
 	_, ok := msg.(*StoreConfigReply)
 	require.True(t, ok)
 	hash := desc.Hash()
-	require.Equal(t, service.final.Desc.Hash(), hash)
+	require.Equal(t, service.data.Final.Desc.Hash(), hash)
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int) (*PopDesc, []abstract.Point, []*Service) {
