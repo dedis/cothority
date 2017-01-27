@@ -1,8 +1,0 @@
-Attendees = ["6KjZvCXcE3hLGyQF7mFAmjmvWCsF3KCIuq1Axh1s/+s=", "2wxD1OkYH5ZTlwQyNrVXfMBbFByXlJSJ08/vgptw5IM=", "LlwS5ocJop4tJYsp/COqQImOgQcYBqxNeBScqSLG6Jc=", "E22TUP0xffmM1HNX6FNdEjOH+Qx66hDBoVSFzVVmsuk="]
-Signature = "c2lnbmVk"
-
-[Desc]
-  Name = "testpop"
-  DateTime = "2016-12-16 09:00"
-  Location = "Earth, Germany, Hannover, Hall A1"
-  Roster = [["tcp://192.33.210.8:7772", "", "830cdc09-977c-539f-9b25-1442fc1aaf60", "ItfbJ3u11GbrbRmNYwJJZhZSeWMYsyPNemXF944CAL0="], ["tcp://78.46.227.60:7772", "", "4f99d8f7-8901-5854-a861-41b450b2dd0a", "QBFcZvt7dHhruxS13QVXAbF190abrJUmZBro3M7Krxo="]]

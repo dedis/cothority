@@ -326,8 +326,8 @@ func loadStaticRoutes(router *mux.Router, dir string) {
 	// inspired from https://stackoverflow.com/questions/15834278/serving-static-content-with-a-root-url-with-the-gorilla-toolkit
 	staticPaths := map[string]string{
 		"css":              dir + "css/",
-		"bower_components": dir + "bower_components/",
-		"images":           dir + "images/",
+		//"bower_components": dir + "bower_components/",
+		"fonts":           dir + "fonts/",
 		"js":               dir + "js/",
 	}
 	for pathName, pathValue := range staticPaths {
