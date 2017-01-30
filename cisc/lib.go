@@ -129,7 +129,7 @@ func (cfg *ciscConfig) showDifference() {
 	for k, v := range cfg.Proposed.Data {
 		orig, ok := cfg.Config.Data[k]
 		if !ok || v != orig {
-			log.Info("New or changed key:", k)
+			log.Infof("New or changed key: %s/%s", k, v)
 		}
 	}
 	for k := range cfg.Config.Data {
