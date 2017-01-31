@@ -96,15 +96,17 @@ func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Config) {
 	log.ErrFatal(cfg.ConfigUpdate())
 }
 
-// writes the ssh-keys to an 'authorized_keys.cisc'-file
+// writes the ssh-keys to an 'authorized_keys.cisc'-file. If
+// `authorized_keys` doesn't exist, it will be created as a
+// soft-link pointing to `authorized_keys.cisc`.
 func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	var keys []string
 	dir, _ := sshDirConfig(c)
-	authFileOrig := filepath.Join(dir, "authorized_keys")
-	authFile := authFileOrig + ".cisc"
-	if _, err := os.Stat(authFileOrig); os.IsNotExist(err) {
+	authKeys := filepath.Join(dir, "authorized_keys")
+	authKeysCisc := authKeys + ".cisc"
+	if _, err := os.Stat(authKeys); os.IsNotExist(err) {
 		log.Info("Making link from authorized_keys to authorized_keys.cisc")
-		os.Symlink(authFile, authFileOrig)
+		os.Symlink(authKeysCisc, authKeys)
 	}
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
@@ -115,7 +117,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
 		}
 	}
-	err := ioutil.WriteFile(authFile,
+	err := ioutil.WriteFile(authKeysCisc,
 		[]byte(strings.Join(keys, "\n")), 0600)
 	log.ErrFatal(err)
 }
