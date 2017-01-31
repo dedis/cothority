@@ -284,26 +284,23 @@ runDbgCl(){
 clientSetup(){
     local CLIENTS=${1:-0} c b
 	runCoBG 1 2 3
-	local DBG_OLD=$DBG_SHOW
-    DBG_SHOW=2
-    testOK runCl 1 id cr public.toml client1
-    runGrepSed ID "s/.* //" runCl 1 config ls
+    runDbgCl 0 1 id cr public.toml client1
+    runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
-    		testOK runCl $c id co public.toml $ID client$c
+    		runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
-					testOK runCl $b config update
-					testOK runCl $b config vote y
+					runDbgCl 0 $b config update
+					runDbgCl 0 $b config vote y
 				fi
 			done
 		done
 		for c in $( seq $CLIENTS ); do
-			testOK runCl $c config update
+			runDbgCl 0 $c config update
 		done
 	fi
-    DBG_SHOW=$DBG_OLD
 }
 
 buildKeys(){
