@@ -217,7 +217,7 @@ func kvAdd(c *cli.Context) error {
 	value := c.Args().Get(1)
 	prop := cfg.GetProposed()
 	prop.Data[key] = value
-	log.ErrFatal(cfg.ProposeSend(prop))
+	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
 func kvDel(c *cli.Context) error {
@@ -231,7 +231,7 @@ func kvDel(c *cli.Context) error {
 		log.Fatal("Didn't find key", key, "in the config")
 	}
 	delete(prop.Data, key)
-	log.ErrFatal(cfg.ProposeSend(prop))
+	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
 
