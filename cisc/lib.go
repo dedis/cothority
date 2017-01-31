@@ -13,6 +13,8 @@ import (
 
 	"strings"
 
+	"path/filepath"
+
 	"github.com/dedis/cothority/identity"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
@@ -94,18 +96,18 @@ func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Config) {
 	log.ErrFatal(cfg.ConfigUpdate())
 }
 
-// writes the ssh-keys to an 'authorized_keys'-file
+// writes the ssh-keys to an 'authorized_keys.cisc'-file. If
+// `authorized_keys` doesn't exist, it will be created as a
+// soft-link pointing to `authorized_keys.cisc`.
 func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	var keys []string
 	dir, _ := sshDirConfig(c)
-	authFile := dir + "/authorized_keys"
-	// Make backup
-	b, err := ioutil.ReadFile(authFile)
-	if err == nil {
-		err = ioutil.WriteFile(authFile+".back", b, 0600)
-		log.ErrFatal(err)
+	authKeys := filepath.Join(dir, "authorized_keys")
+	authKeysCisc := authKeys + ".cisc"
+	if _, err := os.Stat(authKeys); os.IsNotExist(err) {
+		log.Info("Making link from authorized_keys to authorized_keys.cisc")
+		os.Symlink(authKeysCisc, authKeys)
 	}
-	log.Info("Made a backup of your", authFile, "before creating new one.")
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
 		for _, s := range f.Config.GetIntermediateColumn("ssh", f.DeviceName) {
@@ -115,7 +117,7 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
 		}
 	}
-	err = ioutil.WriteFile(authFile,
+	err := ioutil.WriteFile(authKeysCisc,
 		[]byte(strings.Join(keys, "\n")), 0600)
 	log.ErrFatal(err)
 }

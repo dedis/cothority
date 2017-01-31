@@ -25,6 +25,7 @@ main(){
 	test SSHAdd
 	test SSHDel
 	test Follow
+	test SymLink
 	test Revoke
     stopTest
 }
@@ -42,24 +43,38 @@ testRevoke(){
 	testOK runCl 1 config update
 }
 
+testSymLink(){
+	clientSetup 1
+	testFail [ -L cl3/authorized_keys ]
+	testNFile cl3/authorized_keys.cisc
+	testOK runCl 3 follow add public.toml $ID service1
+	testOK [ -L cl3/authorized_keys ]
+	testFile cl3/authorized_keys.cisc
+	rm cl3/authorized*
+	echo my_secret_ssh_key > cl3/authorized_keys
+	runCl 3 follow add public.toml $ID service1
+	testFile cl3/authorized_keys
+	testFile cl3/authorized_keys.cisc
+}
+
 testFollow(){
 	clientSetup 1
 	echo ID is $ID
-	testNFile cl3/authorized_keys
+	testNFile cl3/authorized_keys.cisc
 	testFail runCl 3 follow add public.toml 1234 service1
 	testOK runCl 3 follow add public.toml $ID service1
-	testFail grep -q service1 cl3/authorized_keys
+	testFail grep -q service1 cl3/authorized_keys.cisc
 	testNGrep client1 runCl 3 follow list
 	testGrep $ID runCl 3 follow list
 	testOK runCl 1 ssh add service1
 	testOK runCl 3 follow update
-	testOK grep -q service1 cl3/authorized_keys
+	testOK grep -q service1 cl3/authorized_keys.cisc
 	testGrep service1 runCl 3 follow list
 	testReGrep client1
 	testOK runCl 3 follow rm $ID
 	testNGrep client1 runCl 3 follow list
 	testReNGrep service1
-	testFail grep -q service1 cl3/authorized_keys
+	testFail grep -q service1 cl3/authorized_keys.cisc
 }
 
 testSSHDel(){

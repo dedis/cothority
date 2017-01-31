@@ -238,10 +238,22 @@ func kvDel(c *cli.Context) error {
 /*
  * Commands related to the ssh-handling. All ssh-keys are stored in the
  * identity-sc as
- * ssh:device:server / ssh_public_key
+ *
+ *   ssh:device:server = ssh_public_key
+ *
  * where 'ssh' is a fixed string, 'device' is the device where the private
  * key is stored and 'server' the server that should add the public key to
  * its authorized_keys.
+ *
+ * For safety reasons, this function saves to authorized_keys.cisc instead
+ * of overwriting authorized_keys. If authorized_keys doesn't exist,
+ * a symbolic link to authorized_keys.cisc is created.
+ *
+ * If you want to use your own authorized_keys but also allow keys in
+ * authorized_keys.cisc to log in to your system, you can add the following
+ * line to /etc/ssh/sshd_config
+ *
+ *   AuthorizedKeysFile ~/.ssh/authorized_keys ~/.ssh/authorized_keys.cisc
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
