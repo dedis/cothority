@@ -12,8 +12,8 @@ import (
 
 	"github.com/dedis/cothority/cosi/check"
 	s "github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/cosi"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/crypto"

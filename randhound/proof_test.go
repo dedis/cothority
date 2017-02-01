@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/randhound"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/edwards"
-	"github.com/dedis/crypto/random"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/edwards"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/log"
 )
 

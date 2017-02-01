@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dedis/crypto/config"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"

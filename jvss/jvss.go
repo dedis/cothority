@@ -17,9 +17,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
-	"github.com/dedis/crypto/poly"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/poly"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

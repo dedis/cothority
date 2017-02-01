@@ -4,8 +4,8 @@ package cosi
 import (
 	"sync"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/cosi"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

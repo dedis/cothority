@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/crypto/cosi"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )
