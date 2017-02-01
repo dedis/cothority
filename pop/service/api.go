@@ -30,6 +30,26 @@ func init() {
 	network.RegisterMessage(&PopDesc{})
 }
 
+// Client is a structure to communicate with any app that wants to use our
+// service.
+type Client struct {
+	*onet.Client
+}
+
+// NewClient instantiates a new Client
+func NewClient() *Client {
+	return &Client{Client: onet.NewClient(Name)}
+}
+
+// PinRequest takes a destination-address, a PIN and a public key as an argument.
+// If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
+// If the PIN is given and is correct, the public key will be stored in the
+// service.
+func (c *Client) PinRequest(dst network.Address, pin string, pub abstract.Point) onet.ClientError {
+	si := &network.ServerIdentity{Address: dst}
+	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
+}
+
 // FinalStatement is the final configuration holding all data necessary
 // for a verifier.
 type FinalStatement struct {

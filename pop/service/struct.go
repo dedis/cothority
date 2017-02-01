@@ -13,6 +13,7 @@ import (
 func init() {
 	for _, msg := range []interface{}{
 		CheckConfig{}, CheckConfigReply{},
+		PinRequest{},
 	} {
 		network.RegisterMessage(msg)
 	}
@@ -35,4 +36,12 @@ type CheckConfigReply struct {
 	PopStatus int
 	PopHash   []byte
 	Attendees []abstract.Point
+}
+
+// PinRequest will print a random pin on stdout if the pin is empty. If
+// the pin is given and is equal to the random pin chosen before, the
+// public-key is stored as a reference to the allowed client.
+type PinRequest struct {
+	Pin    string
+	Public abstract.Point
 }

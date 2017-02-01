@@ -27,8 +27,12 @@ attendee.
 
 import (
 	"errors"
+	"fmt"
+
+	"math/big"
 
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -64,6 +68,23 @@ type saveData struct {
 	Final *FinalStatement
 }
 
+// PinRequest prints out a pin if none is given, else it verifies it has the
+// correct pin, and if so, it stores the public key as reference.
+func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
+	if req.Pin == "" {
+		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+		log.Info("PIN:", s.data.Pin)
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+	}
+	if req.Pin != s.data.Pin {
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+	}
+	s.data.Public = req.Public
+	s.save()
+	log.Lvl1("Successfully registered PIN/Public", s.data.Pin, req.Public)
+	return nil, nil
+}
+
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
@@ -97,6 +118,9 @@ func newService(c *onet.Context) onet.Service {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
+	}
+	if err := s.RegisterHandlers(s.PinRequest); err != nil {
+		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
