@@ -50,6 +50,16 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub abstract.Point)
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
+// StoreConfig sends the configuration to the conode for later usage.
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc) onet.ClientError {
+	si := &network.ServerIdentity{Address: dst}
+	err := c.SendProtobuf(si, &StoreConfig{p}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // FinalStatement is the final configuration holding all data necessary
 // for a verifier.
 type FinalStatement struct {

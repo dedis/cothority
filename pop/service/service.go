@@ -85,6 +85,20 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError
 	return nil, nil
 }
 
+// StoreConfig saves the pop-config locally
+func (s *Service) StoreConfig(req *StoreConfig) (network.Message, onet.ClientError) {
+	log.Lvlf3("%s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
+	if req.Desc.Roster == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
+	}
+	if s.data.Public == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+	}
+	s.data.Final = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
+	s.save()
+	return &StoreConfigReply{req.Desc.Hash()}, nil
+}
+
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
@@ -119,7 +133,7 @@ func newService(c *onet.Context) onet.Service {
 		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
 	}
-	if err := s.RegisterHandlers(s.PinRequest); err != nil {
+	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

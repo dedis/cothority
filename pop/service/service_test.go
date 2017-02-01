@@ -44,3 +44,23 @@ func TestService_PinRequest(t *testing.T) {
 	log.Error(cerr)
 	require.Equal(t, service.data.Public, pub)
 }
+
+func TestService_StoreConfig(t *testing.T) {
+	local := onet.NewTCPTest()
+	defer local.CloseAll()
+	nodes, r, _ := local.GenTree(2, true)
+	defer local.CloseAll()
+	service := local.GetServices(nodes, serviceId)[0].(*Service)
+	desc := &PopDesc{
+		Name:     "test",
+		DateTime: "tomorrow",
+		Roster:   onet.NewRoster(r.List),
+	}
+	service.data.Public = network.Suite.Point().Null()
+	msg, cerr := service.StoreConfig(&StoreConfig{desc})
+	log.ErrFatal(cerr)
+	_, ok := msg.(*StoreConfigReply)
+	require.True(t, ok)
+	hash := desc.Hash()
+	require.Equal(t, service.data.Final.Desc.Hash(), hash)
+}

@@ -45,3 +45,16 @@ type PinRequest struct {
 	Pin    string
 	Public abstract.Point
 }
+
+// StoreConfig presents a config to store
+// TODO: sign this with the private key of the linked app
+type StoreConfig struct {
+	Desc *PopDesc
+}
+
+// StoreConfigReply gives back the hash.
+// TODO: StoreConfigReply will give in a later version a handler that can be used to
+// identify that config.
+type StoreConfigReply struct {
+	ID []byte
+}
