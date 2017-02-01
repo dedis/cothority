@@ -60,6 +60,23 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc) onet.ClientError {
 	return nil
 }
 
+// Finalize takes the address of the conode-server, a pop-description and a
+// list of attendees public keys. It contacts the other conodes and checks
+// if they are available and already have a description. If so, all attendees
+// not in all the conodes will be stripped, and that new pop-description
+// collectively signed. The new pop-description and the final statement
+// will be returned.
+func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point) (
+	*FinalStatement, onet.ClientError) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &FinalizeResponse{}
+	err := c.SendProtobuf(si, &FinalizeRequest{p.Hash(), attendees}, res)
+	if err != nil {
+		return nil, err
+	}
+	return res.Final, nil
+}
+
 // FinalStatement is the final configuration holding all data necessary
 // for a verifier.
 type FinalStatement struct {

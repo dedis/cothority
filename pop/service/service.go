@@ -32,6 +32,7 @@ import (
 
 	"math/big"
 
+	"github.com/dedis/cothority/cosi/protocol"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
@@ -43,6 +44,7 @@ import (
 // package.
 const Name = "PoPServer"
 const cfgName = "pop.bin"
+const protoCoSi = "CoSiFinal"
 
 var checkConfigID network.MessageTypeID
 var checkConfigReplyID network.MessageTypeID
@@ -105,6 +107,59 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, onet.ClientErr
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
 
+// FinalizeRequest returns the FinalStatement if all conodes already received
+// a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
+// pruned attendees-public-key-list and the collective signature.
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.ClientError) {
+	log.Lvlf3("%s %+v", s.Context.ServerIdentity(), req)
+	if s.data.Public == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+	}
+	if s.data.Final == nil || s.data.Final.Desc == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "No config found")
+	}
+
+	// Contact all other nodes and ask them if they already have a config.
+	s.data.Final.Attendees = make([]abstract.Point, len(req.Attendees))
+	copy(s.data.Final.Attendees, req.Attendees)
+	cc := &CheckConfig{s.data.Final.Desc.Hash(), req.Attendees}
+	for _, c := range s.data.Final.Desc.Roster.List {
+		if !c.ID.Equal(s.ServerIdentity().ID) {
+			log.Lvl3("Contacting", c, cc.Attendees)
+			err := s.SendRaw(c, cc)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+			}
+			rep := <-s.ccChannel
+			if rep == nil {
+				return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+					"Not all other conodes finalized yet")
+			}
+		}
+	}
+
+	// Create final signature
+	tree := s.data.Final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	node, err := s.CreateProtocol(cosi.Name, tree)
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	signature := make(chan []byte)
+	c := node.(*cosi.CoSi)
+	c.RegisterSignatureHook(func(sig []byte) {
+		signature <- sig[:64]
+	})
+	c.Message, err = s.data.Final.Hash()
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	go node.Start()
+
+	s.data.Final.Signature = <-signature
+	s.save()
+	return &FinalizeResponse{s.data.Final}, nil
+}
+
 // CheckConfig receives a hash for a config and a list of attendees. It returns
 // a CheckConfigReply filled according to this structure's description. If
 // the config has been found, it strips its own attendees from the one missing
@@ -119,13 +174,13 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 	ccr := &CheckConfigReply{0, cc.PopHash, nil}
 	if s.data.Final != nil {
 		if !bytes.Equal(s.data.Final.Desc.Hash(), cc.PopHash) {
-			ccr.PopStatus = 1
+			ccr.PopStatus = PopStatusWrongHash
 		} else {
 			s.intersectAttendees(cc.Attendees)
 			if len(s.data.Final.Attendees) == 0 {
-				ccr.PopStatus = 2
+				ccr.PopStatus = PopStatusNoAttendees
 			} else {
-				ccr.PopStatus = 3
+				ccr.PopStatus = PopStatusOK
 				ccr.Attendees = s.data.Final.Attendees
 			}
 		}
@@ -138,7 +193,7 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 }
 
 // CheckConfigReply strips the attendees missing in the reply, if the
-// PopStatus == 3.
+// PopStatus == PopStatusOK.
 func (s *Service) CheckConfigReply(req *network.Envelope) {
 	ccrVal, ok := req.Msg.(*CheckConfigReply)
 	var ccr *CheckConfigReply
@@ -151,7 +206,7 @@ func (s *Service) CheckConfigReply(req *network.Envelope) {
 			log.Error("Not correct hash")
 			return nil
 		}
-		if ccrVal.PopStatus < 3 {
+		if ccrVal.PopStatus < PopStatusOK {
 			log.Lvl1("Wrong pop-status:", ccrVal.PopStatus)
 			return nil
 		}
@@ -212,7 +267,7 @@ func newService(c *onet.Context) onet.Service {
 		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
 	}
-	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig); err != nil {
+	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {

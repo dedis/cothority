@@ -11,10 +11,10 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-var serviceId onet.ServiceID
+var serviceID onet.ServiceID
 
 func init() {
-	serviceId = onet.ServiceFactory.ServiceID(Name)
+	serviceID = onet.ServiceFactory.ServiceID(Name)
 }
 
 func TestMain(m *testing.M) {
@@ -25,7 +25,7 @@ func TestServiceSave(t *testing.T) {
 	local := onet.NewTCPTest()
 	defer local.CloseAll()
 	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceId)[0].(*Service)
+	service := local.GetServices(servers, serviceID)[0].(*Service)
 	service.data.Pin = "1234"
 	service.save()
 	service.data.Pin = ""
@@ -36,7 +36,7 @@ func TestService_PinRequest(t *testing.T) {
 	local := onet.NewTCPTest()
 	defer local.CloseAll()
 	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceId)[0].(*Service)
+	service := local.GetServices(servers, serviceID)[0].(*Service)
 	require.Equal(t, "", service.data.Pin)
 	pub, _ := network.Suite.Point().Pick(nil, network.Suite.Cipher([]byte("test")))
 	_, cerr := service.PinRequest(&PinRequest{"", pub})
@@ -52,7 +52,7 @@ func TestService_StoreConfig(t *testing.T) {
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
 	defer local.CloseAll()
-	service := local.GetServices(nodes, serviceId)[0].(*Service)
+	service := local.GetServices(nodes, serviceID)[0].(*Service)
 	desc := &PopDesc{
 		Name:     "test",
 		DateTime: "tomorrow",
@@ -72,7 +72,7 @@ func TestService_CheckConfig(t *testing.T) {
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
 	defer local.CloseAll()
-	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceId), r, 2)
+	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceID), r, 2)
 	for _, s := range srvcs {
 		s.data.Final.Attendees = make([]abstract.Point, len(atts))
 		copy(s.data.Final.Attendees, atts)
@@ -100,7 +100,7 @@ func TestService_CheckConfigReply(t *testing.T) {
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
 	defer local.CloseAll()
-	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceId), r, 2)
+	desc, atts, srvcs := storeDesc(local.GetServices(nodes, serviceID), r, 2)
 	s0 := srvcs[0]
 	s0.data.Final.Attendees = make([]abstract.Point, len(atts))
 	copy(s0.data.Final.Attendees, atts)
@@ -126,6 +126,44 @@ func TestService_CheckConfigReply(t *testing.T) {
 	s0.CheckConfigReply(req)
 	<-s0.ccChannel
 	require.Equal(t, 1, len(s0.data.Final.Attendees))
+}
+
+func TestService_FinalizeRequest(t *testing.T) {
+	local := onet.NewTCPTest()
+	defer local.CloseAll()
+	nbrNodes := 3
+	nbrAtt := 4
+	nodes, r, _ := local.GenTree(nbrNodes, true)
+
+	// Get all service-instances
+	desc, atts, services := storeDesc(local.GetServices(nodes, serviceID), r, nbrAtt)
+	descHash := desc.Hash()
+	// Clear config of first one
+	services[0].data.Final = nil
+
+	// Send a request to all services
+	for _, s := range services {
+		_, err := s.FinalizeRequest(&FinalizeRequest{descHash, atts})
+		require.NotNil(t, err)
+	}
+
+	// Create a new config for the first one
+	services[0].StoreConfig(&StoreConfig{desc})
+
+	// Send a request to all services but the first one
+	for _, s := range services[1:] {
+		log.Lvl2("Asking", s, "to finalize")
+		_, err := s.FinalizeRequest(&FinalizeRequest{descHash, atts})
+		require.NotNil(t, err)
+	}
+
+	log.Lvl2("Final finalizing")
+	final, err := services[0].FinalizeRequest(&FinalizeRequest{descHash, atts})
+	require.Nil(t, err)
+	require.NotNil(t, final)
+	fin, ok := final.(*FinalizeResponse)
+	require.True(t, ok)
+	require.Nil(t, fin.Final.Verify())
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int) (*PopDesc, []abstract.Point, []*Service) {

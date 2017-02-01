@@ -19,18 +19,24 @@ func init() {
 	}
 }
 
+const (
+	// PopStatusWrongHash - The different configs in the roster don't have the same hash
+	PopStatusWrongHash = iota
+	// PopStatusNoAttendees - No common attendees found
+	PopStatusNoAttendees
+	// PopStatusOK - Everything is OK
+	PopStatusOK
+)
+
 // CheckConfig asks whether the pop-config and the attendees are available.
 type CheckConfig struct {
 	PopHash   []byte
 	Attendees []abstract.Point
 }
 
-// CheckConfigReply sends back an integer for the Pop:
-// - 0 - no popconfig yet
-// - 1 - popconfig, but other hash
-// - 2 - popconfig with the same hash but no attendees in common
-// - 3 - popconfig with same hash and at least one attendee in common
-// if PopStatus == 3, then the Attendees will be the common attendees between
+// CheckConfigReply sends back an integer for the Pop. 0 means no config yet,
+// other values are defined as constants.
+// If PopStatus == PopStatusOK, then the Attendees will be the common attendees between
 // the two nodes.
 type CheckConfigReply struct {
 	PopStatus int
@@ -57,4 +63,18 @@ type StoreConfig struct {
 // identify that config.
 type StoreConfigReply struct {
 	ID []byte
+}
+
+// FinalizeRequest asks to finalize on the given descid-popconfig.
+// TODO: support more than one popconfig
+type FinalizeRequest struct {
+	DescID    []byte
+	Attendees []abstract.Point
+}
+
+// FinalizeResponse returns the FinalStatement if all conodes already received
+// a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
+// pruned attendees-public-key-list and the collective signature.
+type FinalizeResponse struct {
+	Final *FinalStatement
 }
