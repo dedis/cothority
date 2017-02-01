@@ -26,6 +26,7 @@ attendee.
 */
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
@@ -43,9 +44,14 @@ import (
 const Name = "PoPServer"
 const cfgName = "pop.bin"
 
+var checkConfigID network.MessageTypeID
+var checkConfigReplyID network.MessageTypeID
+
 func init() {
 	onet.RegisterNewService(Name, newService)
 	network.RegisterMessage(&saveData{})
+	checkConfigID = network.RegisterMessage(CheckConfig{})
+	checkConfigReplyID = network.RegisterMessage(CheckConfigReply{})
 }
 
 // Service represents data needed for one pop-party.
@@ -99,6 +105,79 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, onet.ClientErr
 	return &StoreConfigReply{req.Desc.Hash()}, nil
 }
 
+// CheckConfig receives a hash for a config and a list of attendees. It returns
+// a CheckConfigReply filled according to this structure's description. If
+// the config has been found, it strips its own attendees from the one missing
+// in the other configuration.
+func (s *Service) CheckConfig(req *network.Envelope) {
+	cc, ok := req.Msg.(*CheckConfig)
+	if !ok {
+		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
+		return
+	}
+
+	ccr := &CheckConfigReply{0, cc.PopHash, nil}
+	if s.data.Final != nil {
+		if !bytes.Equal(s.data.Final.Desc.Hash(), cc.PopHash) {
+			ccr.PopStatus = 1
+		} else {
+			s.intersectAttendees(cc.Attendees)
+			if len(s.data.Final.Attendees) == 0 {
+				ccr.PopStatus = 2
+			} else {
+				ccr.PopStatus = 3
+				ccr.Attendees = s.data.Final.Attendees
+			}
+		}
+	}
+	log.Lvl3(s.Context.ServerIdentity(), ccr.PopStatus, ccr.Attendees)
+	err := s.SendRaw(req.ServerIdentity, ccr)
+	if err != nil {
+		log.Error("Couldn't send reply:", err)
+	}
+}
+
+// CheckConfigReply strips the attendees missing in the reply, if the
+// PopStatus == 3.
+func (s *Service) CheckConfigReply(req *network.Envelope) {
+	ccrVal, ok := req.Msg.(*CheckConfigReply)
+	var ccr *CheckConfigReply
+	ccr = func() *CheckConfigReply {
+		if !ok {
+			log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
+			return nil
+		}
+		if !bytes.Equal(ccrVal.PopHash, s.data.Final.Desc.Hash()) {
+			log.Error("Not correct hash")
+			return nil
+		}
+		if ccrVal.PopStatus < 3 {
+			log.Lvl1("Wrong pop-status:", ccrVal.PopStatus)
+			return nil
+		}
+		s.intersectAttendees(ccrVal.Attendees)
+		return ccrVal
+	}()
+	if len(s.ccChannel) == 0 {
+		s.ccChannel <- ccr
+	}
+}
+
+// Get intersection of attendees
+func (s *Service) intersectAttendees(atts []abstract.Point) {
+	na := []abstract.Point{}
+	for i, p := range s.data.Final.Attendees {
+		for _, d := range atts {
+			if p.Equal(d) {
+				na = append(na, p)
+				continue
+			}
+		}
+		s.data.Final.Attendees[i] = nil
+	}
+	s.data.Final.Attendees = na
+}
+
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
@@ -139,5 +218,7 @@ func newService(c *onet.Context) onet.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
+	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
+	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	return s
 }
