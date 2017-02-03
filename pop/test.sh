@@ -26,7 +26,80 @@ main(){
 	test Save
     test OrgConfig
 	test ClCreate
+	test OrgPublic
+	test OrgFinal1
+	test OrgFinal2
+	test OrgFinal3
     stopTest
+}
+
+testOrgFinal3(){
+	mkLink
+	mkKeypair
+	mkPopConfig
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	testFail runCl 1 org final
+	testOK runCl 2 org final
+	testOK runCl 1 org final
+	runDbgCl 1 1 org final > final1.toml
+	runDbgCl 1 2 org final > final2.toml
+	testNGrep , echo $( runCl 1 org final | grep Attend )
+	testNGrep , echo $( runCl 2 org final | grep Attend )
+	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
+}
+
+testOrgFinal2(){
+	mkLink
+	mkKeypair
+	mkPopConfig
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	testFail runCl 1 org final
+	testOK runCl 2 org final
+	testOK runCl 1 org final
+	runDbgCl 1 1 org final > final1.toml
+	runDbgCl 1 2 org final > final2.toml
+	testNGrep , echo $( runCl 1 org final | grep Attend )
+	testNGrep , echo $( runCl 2 org final | grep Attend )
+	testOK [ $( md5 -q final1.toml ) = $( md5 -q final2.toml ) ]
+}
+
+mkConfig(){
+	local cl
+	mkLink
+	mkKeypair
+	mkPopConfig
+	for cl in $@; do
+		runCl $cl org config pop_desc.toml public.toml
+	done
+}
+
+testOrgFinal1(){
+	mkLink
+	mkKeypair
+	mkPopConfig
+	runCl 1 org config pop_desc.toml public.toml
+	runCl 2 org config pop_desc.toml public.toml
+	runCl 1 org public $pub1
+	runCl 1 org public $pub2
+	runCl 2 org public "\[\"$pub1\",\"$pub2\"\]"
+	testFail runCl 1 org final
+	testOK runCl 2 org final
+}
+
+testOrgPublic(){
+	mkKeypair
+	testFail runCl 1 org public
+	testOK runCl 1 org public $pub1
+	testFail runCl 1 org public $pub1
+	testOK runCl 1 org public $pub2
 }
 
 testClCreate(){

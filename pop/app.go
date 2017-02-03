@@ -15,6 +15,8 @@ import (
 
 	"net"
 
+	"strings"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"gopkg.in/dedis/crypto.v0/abstract"
@@ -143,6 +145,66 @@ func orgConfig(c *cli.Context) error {
 	log.ErrFatal(client.StoreConfig(cfg.Address, desc))
 	cfg.Final.Desc = desc
 	cfg.write()
+	return nil
+}
+
+// adds a public key to the list
+func orgPublic(c *cli.Context) error {
+	log.Info("Org: Adding public keys", c.Args().First())
+	if c.NArg() < 1 {
+		log.Fatal("Please give a public key")
+	}
+	str := c.Args().First()
+	if !strings.HasPrefix(str, "[") {
+		str = "[" + str + "]"
+	}
+	// TODO: better cleanup rules
+	str = strings.Replace(str, "\"", "", -1)
+	str = strings.Replace(str, "[", "", -1)
+	str = strings.Replace(str, "]", "", -1)
+	str = strings.Replace(str, "\\", "", -1)
+	log.Print(str)
+	keys := strings.Split(str, ",")
+	cfg, _ := getConfigClient(c)
+	for _, k := range keys {
+		pub, err := crypto.String64ToPub(network.Suite, k)
+		if err != nil {
+			log.Fatal("Couldn't parse public key:", k, err)
+		}
+		for _, p := range cfg.Final.Attendees {
+			if p.Equal(pub) {
+				log.Fatal("This key already exists")
+			}
+		}
+		cfg.Final.Attendees = append(cfg.Final.Attendees, pub)
+	}
+	cfg.write()
+	return nil
+}
+
+// finalizes the statement
+func orgFinal(c *cli.Context) error {
+	log.Info("Org: Final")
+	cfg, client := getConfigClient(c)
+	if len(cfg.Final.Attendees) == 0 {
+		log.Fatal("No attendees stored - first store at least one")
+	}
+	if cfg.Address == "" {
+		log.Fatal("Not linked")
+	}
+	if len(cfg.Final.Signature) > 0 {
+		finst, err := cfg.Final.ToToml()
+		log.ErrFatal(err)
+		log.Info("Final statement already here:\n", "\n"+string(finst))
+		return nil
+	}
+	fs, cerr := client.Finalize(cfg.Address, cfg.Final.Desc, cfg.Final.Attendees)
+	log.ErrFatal(cerr)
+	cfg.Final = fs
+	cfg.write()
+	finst, err := cfg.Final.ToToml()
+	log.ErrFatal(err)
+	log.Info("Created final statement:\n", "\n"+string(finst))
 	return nil
 }
 

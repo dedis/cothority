@@ -27,6 +27,18 @@ func init() {
 				ArgsUsage: "pop_desc.toml group.toml",
 				Action:    orgConfig,
 			},
+			{
+				Name:    "public",
+				Aliases: []string{"p"},
+				Usage:   "stores a public key during the party",
+				Action:  orgPublic,
+			},
+			{
+				Name:    "final",
+				Aliases: []string{"f"},
+				Usage:   "finalizes the party",
+				Action:  orgFinal,
+			},
 		},
 	}
 	commandClient = cli.Command{
