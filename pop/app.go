@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
+	"errors"
 	"os"
+	"path"
 
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/protocol"
@@ -10,10 +13,15 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"net"
+
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
@@ -49,6 +57,8 @@ func main() {
 	appCli.Version = "0.1"
 	appCli.Commands = []cli.Command{}
 	appCli.Commands = []cli.Command{
+		commandOrg,
+		commandClient,
 		{
 			Name:      "check",
 			Aliases:   []string{"c"},
@@ -76,6 +86,87 @@ func main() {
 		return nil
 	}
 	appCli.Run(os.Args)
+}
+
+// links this pop to a cothority
+func orgLink(c *cli.Context) error {
+	log.Info("Org: Link")
+	if c.NArg() == 0 {
+		log.Fatal("Please give an IP and optionally a pin")
+	}
+	cfg, client := getConfigClient(c)
+
+	host, port, err := net.SplitHostPort(c.Args().First())
+	if err != nil {
+		return err
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return err
+	}
+	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	pin := c.Args().Get(1)
+	if err := client.PinRequest(addr, pin, cfg.Public); err != nil {
+		if err.ErrorCode() == service.ErrorWrongPIN && pin == "" {
+			log.Info("Please read PIN in server-log")
+			return nil
+		}
+		return err
+	}
+	cfg.Address = addr
+	log.Info("Successfully linked with", addr)
+	cfg.write()
+	return nil
+}
+
+// sets up a configuration
+func orgConfig(c *cli.Context) error {
+	log.Info("Org: Config")
+	if c.NArg() != 2 {
+		log.Fatal("Please give pop_desc.toml and group.toml")
+	}
+	cfg, client := getConfigClient(c)
+	if cfg.Address.String() == "" {
+		log.Fatal("No address")
+		return errors.New("No address found - please link first")
+	}
+	desc := &service.PopDesc{}
+	pdFile := c.Args().First()
+	buf, err := ioutil.ReadFile(pdFile)
+	log.ErrFatal(err, "While reading", pdFile)
+	_, err = toml.Decode(string(buf), desc)
+	log.ErrFatal(err, "While decoding", pdFile)
+	group := readGroup(c.Args().Get(1))
+	desc.Roster = group.Roster
+	log.Info("Hash of config is:", base64.StdEncoding.EncodeToString(desc.Hash()))
+	//log.ErrFatal(check.Servers(group), "Couldn't check servers")
+	log.ErrFatal(client.StoreConfig(cfg.Address, desc))
+	cfg.Final.Desc = desc
+	cfg.write()
+	return nil
+}
+
+// creates a new private/public pair
+func clientCreate(c *cli.Context) error {
+	priv := network.Suite.NewKey(random.Stream)
+	pub := network.Suite.Point().Mul(nil, priv)
+	privStr, err := crypto.ScalarToString64(nil, priv)
+	if err != nil {
+		return err
+	}
+	pubStr, err := crypto.PubToString64(nil, pub)
+	if err != nil {
+		return err
+	}
+	log.Infof("Private: %s\nPublic: %s", privStr, pubStr)
+	return nil
+}
+
+// getConfigClient returns the configuration and a client-structure.
+func getConfigClient(c *cli.Context) (*Config, *service.Client) {
+	cfg, err := newConfig(path.Join(c.GlobalString("config"), "config.bin"))
+	log.ErrFatal(err)
+	return cfg, service.NewClient()
 }
 
 // newConfig tries to read the config and returns an organizer-
@@ -118,4 +209,17 @@ func (cfg *Config) write() {
 	buf, err := network.Marshal(cfg)
 	log.ErrFatal(err)
 	log.ErrFatal(ioutil.WriteFile(cfg.name, buf, 0660))
+}
+
+// readGroup fetches group definition file.
+func readGroup(name string) *app.Group {
+	f, err := os.Open(name)
+	log.ErrFatal(err, "Couldn't open group definition file")
+	group, err := app.ReadGroupDescToml(f)
+	log.ErrFatal(err, "Error while reading group definition file", err)
+	if len(group.Roster.List) == 0 {
+		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
+			name)
+	}
+	return group
 }
