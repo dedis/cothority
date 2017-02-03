@@ -51,6 +51,26 @@ func init() {
 				Usage:   "create a private/public key pair",
 				Action:  clientCreate,
 			},
+			{
+				Name:    "join",
+				Aliases: []string{"j"},
+				Usage:   "joins a poparty",
+				Action:  clientJoin,
+			},
+			{
+				Name:      "sign",
+				Aliases:   []string{"s"},
+				Usage:     "sign a message and its context",
+				ArgsUsage: "message context",
+				Action:    clientSign,
+			},
+			{
+				Name:      "verify",
+				Aliases:   []string{"v"},
+				Usage:     "verifies a tag and a signature",
+				ArgsUsage: "message context tag signature",
+				Action:    clientVerify,
+			},
 		},
 	}
 }

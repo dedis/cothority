@@ -17,9 +17,12 @@ import (
 
 	"strings"
 
+	"bytes"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/anon"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/app"
@@ -221,6 +224,93 @@ func clientCreate(c *cli.Context) error {
 		return err
 	}
 	log.Infof("Private: %s\nPublic: %s", privStr, pubStr)
+	return nil
+}
+
+// joins a poparty
+func clientJoin(c *cli.Context) error {
+	log.Info("Client: join")
+	if c.NArg() < 2 {
+		log.Fatal("Please give final.toml and private key.")
+	}
+	finalName := c.Args().First()
+	privStr := c.Args().Get(1)
+	privBuf, err := base64.StdEncoding.DecodeString(privStr)
+	log.ErrFatal(err)
+	priv := network.Suite.Scalar()
+	log.ErrFatal(priv.UnmarshalBinary(privBuf))
+	buf, err := ioutil.ReadFile(finalName)
+	log.ErrFatal(err)
+	cfg, _ := getConfigClient(c)
+	cfg.Final, err = service.NewFinalStatementFromToml(buf)
+	log.ErrFatal(err)
+	if cfg.Final == nil {
+		log.Fatal("Couldn't parse final statement")
+	}
+	cfg.Private = priv
+	cfg.Public = network.Suite.Point().Mul(nil, priv)
+	cfg.Index = -1
+	for i, p := range cfg.Final.Attendees {
+		if p.Equal(cfg.Public) {
+			log.Info("Found public key at index", i)
+			cfg.Index = i
+		}
+	}
+	if cfg.Index == -1 {
+		log.Fatal("Didn't find our public key in the final statement!")
+	}
+	cfg.write()
+	log.Info("Stored new final statement and key.")
+	return nil
+}
+
+// signs a message + context
+func clientSign(c *cli.Context) error {
+	log.Info("Client: sign")
+	cfg, _ := getConfigClient(c)
+	if cfg.Index == -1 {
+		log.Fatal("No public key stored.")
+	}
+	if c.NArg() < 2 {
+		log.Fatal("Please give msg and context")
+	}
+	msg := []byte(c.Args().First())
+	ctx := []byte(c.Args().Get(1))
+
+	Set := anon.Set(cfg.Final.Attendees)
+	sigtag := anon.Sign(network.Suite, random.Stream, msg,
+		Set, ctx, cfg.Index, cfg.Private)
+	sig := sigtag[:len(sigtag)-32]
+	tag := sigtag[len(sigtag)-32:]
+	log.Infof("\nSignature: %s\nTag: %s", base64.StdEncoding.EncodeToString(sig),
+		base64.StdEncoding.EncodeToString(tag))
+	return nil
+}
+
+// verifies a signature and tag
+func clientVerify(c *cli.Context) error {
+	log.Info("Client: verify")
+	cfg, _ := getConfigClient(c)
+	if cfg.Index == -1 {
+		log.Fatal("No public key stored")
+	}
+	if c.NArg() < 4 {
+		log.Fatal("Please give a msg, context, signature and a tag")
+	}
+	msg := []byte(c.Args().First())
+	ctx := []byte(c.Args().Get(1))
+	sig, err := base64.StdEncoding.DecodeString(c.Args().Get(2))
+	log.ErrFatal(err)
+	tag, err := base64.StdEncoding.DecodeString(c.Args().Get(3))
+	log.ErrFatal(err)
+	sigtag := append(sig, tag...)
+	ctag, err := anon.Verify(network.Suite, msg,
+		anon.Set(cfg.Final.Attendees), ctx, sigtag)
+	log.ErrFatal(err)
+	if !bytes.Equal(tag, ctag) {
+		log.Fatalf("Tag and calculated tag are not equal:\n%x - %x", tag, ctag)
+	}
+	log.Info("Successfully verified signature and tag")
 	return nil
 }
 

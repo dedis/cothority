@@ -30,7 +30,60 @@ main(){
 	test OrgFinal1
 	test OrgFinal2
 	test OrgFinal3
+	test ClJoin
+	test ClSign
+	test ClVerify
     stopTest
+}
+
+testClVerify(){
+	mkClSign
+	testFail runCl 1 client verify msg1 ctx1 $tag1 $sig1
+	testOK runCl 1 client verify msg1 ctx1 $sig1 $tag1
+	testFail runCl 1 client verify msg1 ctx1 $sig1 $tag2
+	testOK runCl 1 client verify msg1 ctx1 $sig2 $tag2
+	testFail runCl 1 client verify msg1 ctx1 $sig2 $tag1
+}
+
+mkClSign(){
+	mkClJoin
+	runDbgCl 1 1 client sign msg1 ctx1 > sign1.toml
+	runDbgCl 1 2 client sign msg1 ctx1 > sign2.toml
+	tag1=$( grep Tag: sign1.toml | sed -e "s/.* //")
+	sig1=$( grep Signature: sign1.toml | sed -e "s/.* //")
+	tag2=$( grep Tag: sign2.toml | sed -e "s/.* //")
+	sig2=$( grep Signature: sign2.toml | sed -e "s/.* //")
+}
+
+testClSign(){
+	mkClJoin
+	testFail runCl 1 client sign
+	testOK runCl 1 client sign msg1 ctx1
+	testOK runCl 1 client sign msg1 ctx1
+}
+
+mkClJoin(){
+	mkFinal
+	runCl 1 client join final.toml $priv1
+	runCl 2 client join final.toml $priv2
+}
+
+testClJoin(){
+	mkFinal
+	testFail runCl 1 client join final.toml
+	testFail runCl 1 client join final.toml badkey
+	testOK runCl 1 client join final.toml $priv1
+	testOK runCl 2 client join final.toml $priv2
+}
+
+mkFinal(){
+	mkConfig 1 2
+	runCl 1 org public $pub1
+	runCl 1 org public $pub2
+	runCl 2 org public $pub1
+	runCl 2 org public $pub2
+	runCl 1 org final
+	runDbgCl 1 2 org final | tail -n +3 | head -n 8 > final.toml
 }
 
 testOrgFinal3(){
