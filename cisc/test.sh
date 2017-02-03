@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
 # Needs 4 clients
@@ -12,20 +12,20 @@ main(){
     startTest
 	buildKeys
 	buildConode "github.com/dedis/cothority/identity"
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
 	test ConfigVote
-#	test IdConnect
-#	test IdDel
-#	test KeyAdd
-#	test KeyAdd2
-#	test KeyDel
-#	test SSHAdd
-#	test SSHDel
-#	test Follow
-#	test Revoke
+	test IdConnect
+	test IdDel
+	test KeyAdd
+	test KeyAdd2
+	test KeyDel
+	test SSHAdd
+	test SSHDel
+	test Follow
+	test Revoke
     stopTest
 }
 
@@ -108,7 +108,7 @@ testKeyDel(){
 	clientSetup 2
 	testOK runCl 1 kv add key1 value1
 	testOK runCl 1 kv add key2 value2
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testOK runCl 2 config update
 	testOK runCl 2 config vote y
 	testOK runCl 1 config update
@@ -116,7 +116,7 @@ testKeyDel(){
 	testGrep key2 runCl 1 kv ls
 	testFail runCl 1 kv rm key3
 	testOK runCl 1 kv rm key2
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testOK runCl 2 config update
 	testOK runCl 2 config vote y
 	testNGrep key2 runCl 2 kv ls
@@ -131,7 +131,9 @@ testKeyAdd2(){
 		clientSetup $C
 		testOK runCl 1 kv add key1 value1
 		testOK runCl 1 kv add key2 value2
-		testOK runCl 1 config vote y
+		if [ $C != 1 ]; then
+			testFail runCl 1 config vote y
+		fi
 		if [ $C -gt 1 ]; then
 			testNGrep key1 runCl 2 kv ls
 			testOK runCl 2 config update
@@ -149,7 +151,7 @@ testKeyAdd(){
 	clientSetup 2
 	testNGrep key1 runCl 1 kv ls
 	testOK runCl 1 kv add key1 value1
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testGrep key1 runCl 1 config ls -p
 	testOK runCl 2 config update
 	testNGrep key1 runCl 2 kv ls
@@ -211,23 +213,22 @@ testIdConnect(){
 }
 
 testConfigVote(){
-	clientSetup
+	clientSetup 2
 	testOK runCl 1 kv add one two
-	testNGrep one runCl 1 kv ls
-	testOK runCl 1 config vote n
+	testFail runCl 1 config vote y
 	testNGrep one runCl 1 kv ls
 
-	testOK runCl 1 config vote y
-	exit
-	testGrep two echo n | runDbgCl 1 1 config vote n
-	testGrep one runCl 1 kv ls
+	testOK runCl 2 config vote n
+	testNGrep one runCl 2 kv ls
+	echo y | testOK runCl 2 config vote
 
 	testOK runCl 1 kv add three four
 	testNGrep three runCl 1 kv ls
-	echo "n" | testOK runCl 1 config vote
+	echo "n" | testOK runCl 2 config vote
 	testNGrep three runCl 1 kv ls
-	echo "y" | testOK runCl 1 config vote
+	echo "y" | testOK runCl 2 config vote
 	testGrep three runCl 1 kv ls
+	testGrep three runCl 2 kv ls
 }
 
 testConfigList(){
