@@ -84,7 +84,6 @@ func idCreate(c *cli.Context) error {
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
 	log.Infof("IC is %x", cfg.ID)
-	log.Infof("Config to be saved: %+v", cfg.Identity.Cothority)
 	return cfg.saveConfig(c)
 }
 
@@ -98,14 +97,14 @@ func idConnect(c *cli.Context) error {
 	case 3:
 		name = c.Args().Get(2)
 	default:
-		log.Fatal("Please give the following arguments: group.toml id [hostname]", c.NArg())
+		log.Fatal("Please give the following arguments: group.toml id [hostname]")
 	}
 	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
-	cfg.AttachToIdentity(id)
+	log.ErrFatal(cfg.AttachToIdentity(id))
 	log.Infof("Public key: %s",
 		cfg.Proposed.Device[cfg.DeviceName].Point.String())
 	return cfg.saveConfig(c)
