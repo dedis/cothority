@@ -3,7 +3,7 @@ package jvss
 import (
 	"strings"
 
-	"github.com/dedis/crypto/poly"
+	"gopkg.in/dedis/crypto.v0/poly"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"

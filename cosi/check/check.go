@@ -21,7 +21,7 @@ import (
 	"math"
 
 	"github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/crypto/cosi"
+	"gopkg.in/dedis/crypto.v0/cosi"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.

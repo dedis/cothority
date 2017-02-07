@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/suites"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/suites"
 	"gopkg.in/dedis/onet.v1/log"
 )
 
