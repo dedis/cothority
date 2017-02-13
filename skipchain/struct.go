@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	"github.com/dedis/cothority/bftcosi"
+	"gopkg.in/dedis/cothority.v1/bftcosi"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"

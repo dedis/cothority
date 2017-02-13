@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/dedis/cothority/cosi/check"
-	_ "github.com/dedis/cothority/cosi/protocol"
-	_ "github.com/dedis/cothority/cosi/service"
+	"gopkg.in/dedis/cothority.v1/cosi/check"
+	_ "gopkg.in/dedis/cothority.v1/cosi/protocol"
+	_ "gopkg.in/dedis/cothority.v1/cosi/service"
 
 	"fmt"
 	"io/ioutil"
@@ -20,7 +20,7 @@ import (
 	"bytes"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/pop/service"
+	"gopkg.in/dedis/cothority.v1/pop/service"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/anon"
 	"gopkg.in/dedis/crypto.v0/config"

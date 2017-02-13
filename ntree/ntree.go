@@ -104,7 +104,7 @@ func (p *Protocol) HandleSignBundle(reply []structSignatureBundle) error {
 	sig.SubSigs = make([]*SignatureReply, count)
 	for _, sigs := range reply {
 		// Check only direct children
-		// see https://github.com/dedis/cothority/issues/260
+		// see https://gopkg.in/dedis/cothority.v1/issues/260
 		if p.VerifySignature == 1 || p.VerifySignature == 2 {
 			s := p.verifySignatureReply(sigs.ChildSig)
 			log.Lvl3(p.Name(), "direct children verification:", s)
@@ -155,7 +155,7 @@ func (p *Protocol) verifySignatureReply(sig *SignatureReply) string {
 type Message struct {
 	Msg []byte
 	// Simulation purpose
-	// see https://github.com/dedis/cothority/issues/260
+	// see https://gopkg.in/dedis/cothority.v1/issues/260
 	VerifySignature int
 }
 

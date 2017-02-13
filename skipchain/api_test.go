@@ -136,7 +136,7 @@ func TestClient_ProposeData(t *testing.T) {
 }
 
 func TestClient_ProposeRoster(t *testing.T) {
-	t.Skip("See https://github.com/dedis/cothority/issues/733")
+	t.Skip("See https://gopkg.in/dedis/cothority.v1/issues/733")
 	nbrHosts := 5
 	l := onet.NewTCPTest()
 	_, el, _ := l.GenTree(nbrHosts, true)

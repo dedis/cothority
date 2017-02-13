@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/example/handlers"
+	"gopkg.in/dedis/cothority.v1/example/handlers"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/simul/monitor"

@@ -12,8 +12,8 @@ import (
 
 	"time"
 
-	"github.com/dedis/cothority/bftcosi"
-	"github.com/dedis/cothority/messaging"
+	"gopkg.in/dedis/cothority.v1/bftcosi"
+	"gopkg.in/dedis/cothority.v1/messaging"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"

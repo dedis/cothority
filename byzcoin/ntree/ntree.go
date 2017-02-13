@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"math"
 
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
+	"gopkg.in/dedis/cothority.v1/byzcoin"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain/blkparser"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"

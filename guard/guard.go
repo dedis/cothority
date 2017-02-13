@@ -27,7 +27,7 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/guard/service"
+	"gopkg.in/dedis/cothority.v1/guard/service"
 	"gopkg.in/dedis/onet.v1/network"
 )
 

@@ -32,7 +32,7 @@ import (
 
 	"math/big"
 
-	"github.com/dedis/cothority/cosi/protocol"
+	"gopkg.in/dedis/cothority.v1/cosi/protocol"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"

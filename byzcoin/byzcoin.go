@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
-	"github.com/dedis/cothority/byzcoin/cosi"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain/blkparser"
+	"gopkg.in/dedis/cothority.v1/byzcoin/cosi"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"

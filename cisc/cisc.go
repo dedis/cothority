@@ -19,7 +19,7 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/identity"
+	"gopkg.in/dedis/cothority.v1/identity"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"

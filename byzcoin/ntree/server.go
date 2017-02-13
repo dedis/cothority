@@ -1,7 +1,7 @@
 package byzcoinNtree
 
 import (
-	"github.com/dedis/cothority/byzcoin"
+	"gopkg.in/dedis/cothority.v1/byzcoin"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

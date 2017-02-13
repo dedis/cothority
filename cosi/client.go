@@ -10,8 +10,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/cosi/check"
-	s "github.com/dedis/cothority/cosi/service"
+	"gopkg.in/dedis/cothority.v1/cosi/check"
+	s "gopkg.in/dedis/cothority.v1/cosi/service"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
