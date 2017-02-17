@@ -1,6 +1,6 @@
 Simulation = "NaiveTree"
 Servers = 16
-Bf = 4
+Bf = 3
 Rounds = 10
 
 Depth, VerifySignature
