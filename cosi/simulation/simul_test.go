@@ -7,6 +7,8 @@ import (
 )
 
 func TestSimulation(t *testing.T) {
-	os.Args = []string{os.Args[0], "cosi.toml", "cosi_verification.toml"}
+	os.Args = []string{os.Args[0], "cosi.toml"}
+	main()
+	os.Args = []string{os.Args[0], "cosi_verification.toml"}
 	main()
 }
