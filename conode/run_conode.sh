@@ -85,7 +85,7 @@ runLocal(){
 	killall -9 $CONODE_BIN || true
 	go install $CONODE_GO
 
-	rm public.toml
+	rm -f public.toml
 	for n in $( seq $NBR ); do
 		co=co$n
 		if [ -f $co/public.toml ]; then
