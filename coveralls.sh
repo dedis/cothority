@@ -4,9 +4,10 @@
 DIR_EXCLUDE="$@"
 DIR_SOURCE="$(find . -maxdepth 10 -type f -not -path '*/vendor*' -name '*.go' | xargs -I {} dirname {} | sort | uniq)"
 
-if [ "$TRAVIS_BUILD_DIR" ]; then
-  cd $TRAVIS_BUILD_DIR
-fi
+cd $GOPATH/src/gopkg.in/dedis
+rm -rf cothority.v1
+ln -s $GOPATH/src/github.com/dedis/cothority cothority.v1
+cd cothority.v1
 
 # Run test coverage on each subdirectories and merge the coverage profile.
 all_tests_passed=true
