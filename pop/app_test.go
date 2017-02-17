@@ -28,3 +28,8 @@ func TestConfigNew(t *testing.T) {
 	log.ErrFatal(err)
 	require.Equal(t, 777, cfg.Index)
 }
+
+func TestMainFunc(t *testing.T) {
+	os.Args = []string{os.Args[0], "--help"}
+	main()
+}
