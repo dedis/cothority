@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/cothority/byzcoin/ntree"
+	"gopkg.in/dedis/cothority.v1/byzcoin"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain"
+	"gopkg.in/dedis/cothority.v1/byzcoin/ntree"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/simul/monitor"

@@ -36,8 +36,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/crypto/abstract"
-	"github.com/dedis/crypto/config"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1/network"
 )
 

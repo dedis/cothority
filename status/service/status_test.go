@@ -3,8 +3,8 @@ package status
 import (
 	"testing"
 
-	"github.com/dedis/cothority/example/channels"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/dedis/cothority.v1/example/channels"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

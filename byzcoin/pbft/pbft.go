@@ -7,8 +7,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/byzcoin/blockchain"
-	"github.com/dedis/crypto/abstract"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

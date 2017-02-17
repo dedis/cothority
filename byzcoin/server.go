@@ -3,7 +3,7 @@ package byzcoin
 import (
 	"sync"
 
-	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
+	"gopkg.in/dedis/cothority.v1/byzcoin/blockchain/blkparser"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

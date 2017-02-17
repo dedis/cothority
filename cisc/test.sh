@@ -6,12 +6,12 @@ DBG_APP=2
 # Needs 4 clients
 NBR=4
 
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
 	buildKeys
-	buildCothority "github.com/dedis/cothority/identity"
+	buildConode "github.com/dedis/cothority/identity"
 	test Build
 	test ClientSetup
 	test IdCreate
@@ -25,6 +25,7 @@ main(){
 	test SSHAdd
 	test SSHDel
 	test Follow
+	test SymLink
 	test Revoke
     stopTest
 }
@@ -42,24 +43,38 @@ testRevoke(){
 	testOK runCl 1 config update
 }
 
+testSymLink(){
+	clientSetup 1
+	testFail [ -L cl3/authorized_keys ]
+	testNFile cl3/authorized_keys.cisc
+	testOK runCl 3 follow add public.toml $ID service1
+	testOK [ -L cl3/authorized_keys ]
+	testFile cl3/authorized_keys.cisc
+	rm cl3/authorized*
+	echo my_secret_ssh_key > cl3/authorized_keys
+	runCl 3 follow add public.toml $ID service1
+	testFile cl3/authorized_keys
+	testFile cl3/authorized_keys.cisc
+}
+
 testFollow(){
 	clientSetup 1
 	echo ID is $ID
-	testNFile cl3/authorized_keys
-	testFail runCl 3 follow add group.toml 1234 service1
-	testOK runCl 3 follow add group.toml $ID service1
-	testFail grep -q service1 cl3/authorized_keys
+	testNFile cl3/authorized_keys.cisc
+	testFail runCl 3 follow add public.toml 1234 service1
+	testOK runCl 3 follow add public.toml $ID service1
+	testFail grep -q service1 cl3/authorized_keys.cisc
 	testNGrep client1 runCl 3 follow list
 	testGrep $ID runCl 3 follow list
 	testOK runCl 1 ssh add service1
 	testOK runCl 3 follow update
-	testOK grep -q service1 cl3/authorized_keys
+	testOK grep -q service1 cl3/authorized_keys.cisc
 	testGrep service1 runCl 3 follow list
 	testReGrep client1
 	testOK runCl 3 follow rm $ID
 	testNGrep client1 runCl 3 follow list
 	testReNGrep service1
-	testFail grep -q service1 cl3/authorized_keys
+	testFail grep -q service1 cl3/authorized_keys.cisc
 }
 
 testSSHDel(){
@@ -108,7 +123,7 @@ testKeyDel(){
 	clientSetup 2
 	testOK runCl 1 kv add key1 value1
 	testOK runCl 1 kv add key2 value2
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testOK runCl 2 config update
 	testOK runCl 2 config vote y
 	testOK runCl 1 config update
@@ -116,7 +131,7 @@ testKeyDel(){
 	testGrep key2 runCl 1 kv ls
 	testFail runCl 1 kv rm key3
 	testOK runCl 1 kv rm key2
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testOK runCl 2 config update
 	testOK runCl 2 config vote y
 	testNGrep key2 runCl 2 kv ls
@@ -131,7 +146,9 @@ testKeyAdd2(){
 		clientSetup $C
 		testOK runCl 1 kv add key1 value1
 		testOK runCl 1 kv add key2 value2
-		testOK runCl 1 config vote y
+		if [ $C != 1 ]; then
+			testFail runCl 1 config vote y
+		fi
 		if [ $C -gt 1 ]; then
 			testNGrep key1 runCl 2 kv ls
 			testOK runCl 2 config update
@@ -149,7 +166,7 @@ testKeyAdd(){
 	clientSetup 2
 	testNGrep key1 runCl 1 kv ls
 	testOK runCl 1 kv add key1 value1
-	testOK runCl 1 config vote y
+	testFail runCl 1 config vote y
 	testGrep key1 runCl 1 config ls -p
 	testOK runCl 2 config update
 	testNGrep key1 runCl 2 kv ls
@@ -183,9 +200,9 @@ testIdConnect(){
 	testFail runCl 2 id co
 	echo test > test.toml
 	testFail runCl 2 id co test.toml
-	testFail runCl 2 id co group.toml
-	testOK runCl 2 id co group.toml $ID client2
-	runGrepSed "Public key" "s/.* //" runCl 2 id co group.toml $ID client2
+	testFail runCl 2 id co public.toml
+	testOK runCl 2 id co public.toml $ID client2
+	runGrepSed "Public key" "s/.* //" runCl 2 id co public.toml $ID client2
     PUBLIC=$SED
     if [ -z "$PUBLIC" ]; then
     	fail "no public keys received"
@@ -211,21 +228,22 @@ testIdConnect(){
 }
 
 testConfigVote(){
-	clientSetup
+	clientSetup 2
 	testOK runCl 1 kv add one two
-	testNGrep one runCl 1 kv ls
-	testOK runCl 1 config vote n
+	testFail runCl 1 config vote y
 	testNGrep one runCl 1 kv ls
 
-	testOK runCl 1 config vote y
-	testGrep one runCl 1 kv ls
+	testOK runCl 2 config vote n
+	testNGrep one runCl 2 kv ls
+	echo y | testOK runCl 2 config vote
 
 	testOK runCl 1 kv add three four
 	testNGrep three runCl 1 kv ls
-	echo "n" | testOK runCl 1 config vote
+	echo "n" | testOK runCl 2 config vote
 	testNGrep three runCl 1 kv ls
-	echo "y" | testOK runCl 1 config vote
+	echo "y" | testOK runCl 2 config vote
 	testGrep three runCl 1 kv ls
+	testGrep three runCl 2 kv ls
 }
 
 testConfigList(){
@@ -239,10 +257,10 @@ testIdCreate(){
     testFail runCl 1 id cr
     echo test > test.toml
     testFail runCl 1 id cr test.toml
-    testOK runCl 1 id cr group.toml
+    testOK runCl 1 id cr public.toml
 	testFile cl1/config.bin
-    testGrep $(hostname) runCl 1 id cr group.toml
-    testGrep client1 runCl 1 id cr group.toml client1
+    testGrep $(hostname) runCl 1 id cr public.toml
+    testGrep client1 runCl 1 id cr public.toml client1
 }
 
 testClientSetup(){
@@ -272,29 +290,33 @@ runCl(){
     dbgRun ./cisc -d $DBG_APP -c $D --cs $D $@
 }
 
+runDbgCl(){
+    local DBG=$1
+    local CFG=cl$2
+    shift 2
+    ./cisc -d $DBG -c $CFG --cs $CFG $@
+}
+
 clientSetup(){
     local CLIENTS=${1:-0} c b
 	runCoBG 1 2 3
-	local DBG_OLD=$DBG_SHOW
-    DBG_SHOW=2
-    testOK runCl 1 id cr group.toml client1
-    runGrepSed ID "s/.* //" runCl 1 config ls
+    runDbgCl 0 1 id cr public.toml client1
+    runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
-    		testOK runCl $c id co group.toml $ID client$c
+    		runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
-					testOK runCl $b config update
-					testOK runCl $b config vote y
+					runDbgCl 0 $b config update
+					runDbgCl 0 $b config vote y
 				fi
 			done
 		done
 		for c in $( seq $CLIENTS ); do
-			testOK runCl $c config update
+			runDbgCl 0 $c config update
 		done
 	fi
-    DBG_SHOW=$DBG_OLD
 }
 
 buildKeys(){

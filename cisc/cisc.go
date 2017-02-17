@@ -19,7 +19,7 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/identity"
+	"gopkg.in/dedis/cothority.v1/identity"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
@@ -84,7 +84,6 @@ func idCreate(c *cli.Context) error {
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
 	log.ErrFatal(cfg.CreateIdentity())
 	log.Infof("IC is %x", cfg.ID)
-	log.Infof("Config to be saved: %+v", cfg.Identity.Cothority)
 	return cfg.saveConfig(c)
 }
 
@@ -98,14 +97,14 @@ func idConnect(c *cli.Context) error {
 	case 3:
 		name = c.Args().Get(2)
 	default:
-		log.Fatal("Please give the following arguments: group.toml id [hostname]", c.NArg())
+		log.Fatal("Please give the following arguments: group.toml id [hostname]")
 	}
 	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
 	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
-	cfg.AttachToIdentity(id)
+	log.ErrFatal(cfg.AttachToIdentity(id))
 	log.Infof("Public key: %s",
 		cfg.Proposed.Device[cfg.DeviceName].Point.String())
 	return cfg.saveConfig(c)
@@ -217,7 +216,7 @@ func kvAdd(c *cli.Context) error {
 	value := c.Args().Get(1)
 	prop := cfg.GetProposed()
 	prop.Data[key] = value
-	log.ErrFatal(cfg.ProposeSend(prop))
+	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
 func kvDel(c *cli.Context) error {
@@ -231,17 +230,29 @@ func kvDel(c *cli.Context) error {
 		log.Fatal("Didn't find key", key, "in the config")
 	}
 	delete(prop.Data, key)
-	log.ErrFatal(cfg.ProposeSend(prop))
+	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
 
 /*
  * Commands related to the ssh-handling. All ssh-keys are stored in the
  * identity-sc as
- * ssh:device:server / ssh_public_key
+ *
+ *   ssh:device:server = ssh_public_key
+ *
  * where 'ssh' is a fixed string, 'device' is the device where the private
  * key is stored and 'server' the server that should add the public key to
  * its authorized_keys.
+ *
+ * For safety reasons, this function saves to authorized_keys.cisc instead
+ * of overwriting authorized_keys. If authorized_keys doesn't exist,
+ * a symbolic link to authorized_keys.cisc is created.
+ *
+ * If you want to use your own authorized_keys but also allow keys in
+ * authorized_keys.cisc to log in to your system, you can add the following
+ * line to /etc/ssh/sshd_config
+ *
+ *   AuthorizedKeysFile ~/.ssh/authorized_keys ~/.ssh/authorized_keys.cisc
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)

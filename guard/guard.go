@@ -15,7 +15,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 
-	"github.com/dedis/crypto/abstract"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
@@ -27,7 +27,7 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/guard/service"
+	"gopkg.in/dedis/cothority.v1/guard/service"
 	"gopkg.in/dedis/onet.v1/network"
 )
 

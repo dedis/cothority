@@ -2,11 +2,9 @@
 
 DBG_TEST=1
 # Debug-level for app
-DBG_APP=0
+DBG_APP=2
 
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
-
-tails=8
+. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
@@ -33,7 +31,7 @@ testReconnect(){
         echo "My Test Message File" > foo.txt
         testOK runCl 1 sign foo.txt
         testOut "Killing server $s"
-        pkill -9 -f "c srv$s/config"
+        pkill -9 -f "c srv$s/private"
         testFail runCl 1 sign foo.txt
         testOut "Starting server $s again"
         runSrv $s
@@ -47,7 +45,7 @@ testCheck(){
     setupServers 1
     testOK runCl 1 check
     runSrvCfg 3
-    tail -n 4 srv3/group.toml >> cl1/servers.toml
+    cat srv3/public.toml >> cl1/servers.toml
     testFail runCl 1 check
 }
 
@@ -68,7 +66,7 @@ testSignFile(){
 testServerCfg(){
     runSrvCfg 1
     pkill -9 cosi
-    testFile srv1/config.toml
+    testFile srv1/private.toml
 }
 
 testBuild(){
@@ -83,10 +81,10 @@ setupServers(){
     rm -f srv1/*
     rm -f srv2/*
     runSrvCfg 1 
-    tail -n 4 srv1/group.toml >  $SERVERS
+    cp srv1/public.toml $SERVERS
     runSrvCfg 2 
     echo >> $SERVERS
-    tail -n 4 srv2/group.toml >> $SERVERS
+    cat srv2/public.toml >> $SERVERS
     runSrv 1
     runSrv 2
     OUT=$OOUT
@@ -104,7 +102,7 @@ runSrvCfg(){
 }
 
 runSrv(){
-    ( ./cosi -d $DBG_SRV server -c srv$1/config.toml & )
+    ( ./cosi -d $DBG_SRV server -c srv$1/private.toml & )
 }
 
 main
