@@ -18,6 +18,7 @@ VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\
 VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
 ALL_ARGS="$*"
+LOG=/tmp/conode-$$.log
 
 main(){
 	if [ ! "$1" ]; then
@@ -156,7 +157,6 @@ runPublic(){
 	else
 		go install $CONODE_GO
 	fi
-	LOG=$( mktemp )
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
