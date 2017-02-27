@@ -199,13 +199,13 @@ migrate(){
 			fi
 			echo 1.0-1 > $PATH_VERSION
 			;;
-		1.0-1)
+		$VERSION)
 			echo No migration necessary
 			;;
         *)
             echo Found wrong version $PATH_VERSION - trying to fix
             if [ -d $PATH_CO/conode ]; then
-            	echo 1.0 > $PATH_CO/conode/version
+            	echo $VERSION > $PATH_CO/conode/version
             fi
             echo "Check $PATH_CO to verify configuration is OK and re-run $0"
             exit 1
