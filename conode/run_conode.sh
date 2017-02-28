@@ -18,6 +18,7 @@ VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\
 VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
 ALL_ARGS="$*"
+LOG=/tmp/conode-$$.log
 
 main(){
 	if [ ! "$1" ]; then
@@ -156,7 +157,6 @@ runPublic(){
 	else
 		go install $CONODE_GO
 	fi
-	LOG=$( mktemp )
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
@@ -199,13 +199,13 @@ migrate(){
 			fi
 			echo 1.0-1 > $PATH_VERSION
 			;;
-		1.0-1)
+		$VERSION)
 			echo No migration necessary
 			;;
         *)
             echo Found wrong version $PATH_VERSION - trying to fix
             if [ -d $PATH_CO/conode ]; then
-            	echo 1.0 > $PATH_CO/conode/version
+            	echo $VERSION > $PATH_CO/conode/version
             fi
             echo "Check $PATH_CO to verify configuration is OK and re-run $0"
             exit 1
