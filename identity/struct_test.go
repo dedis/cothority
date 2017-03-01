@@ -29,9 +29,9 @@ func TestKvGetIntKeys(t *testing.T) {
 	assert.Equal(t, "gh", s2)
 }
 
-func setupConfig() *Config {
-	return &Config{
-		Data: map[string]string{
+func setupConfig() *Data {
+	return &Data{
+		Storage: map[string]string{
 			"web:one":     "1",
 			"web:one:one": "2",
 			"web:two":     "3",

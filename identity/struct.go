@@ -21,12 +21,12 @@ const propagateTimeout = 10000
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
-// Config holds the information about all devices and the data stored in this
-// identity-blockchain. All Devices have voting-rights to the Config-structure.
-type Config struct {
+// Data holds the information about all devices and the data stored in this
+// identity-blockchain. All Devices have voting-rights to the Data-structure.
+type Data struct {
 	Threshold int
 	Device    map[string]*Device
-	Data      map[string]string
+	Storage   map[string]string
 }
 
 // Device is represented by a public key.
@@ -34,18 +34,18 @@ type Device struct {
 	Point abstract.Point
 }
 
-// NewConfig returns a new List with the first owner initialised.
-func NewConfig(threshold int, pub abstract.Point, owner string) *Config {
-	return &Config{
+// NewData returns a new List with the first owner initialised.
+func NewData(threshold int, pub abstract.Point, owner string) *Data {
+	return &Data{
 		Threshold: threshold,
 		Device:    map[string]*Device{owner: {pub}},
-		Data:      make(map[string]string),
+		Storage:   make(map[string]string),
 	}
 }
 
 // Copy returns a deep copy of the AccountList.
-func (c *Config) Copy() *Config {
-	b, err := network.Marshal(c)
+func (d *Data) Copy() *Data {
+	b, err := network.Marshal(d)
 	if err != nil {
 		log.Error("Couldn't marshal AccountList:", err)
 		return nil
@@ -54,23 +54,23 @@ func (c *Config) Copy() *Config {
 	if err != nil {
 		log.Error("Couldn't unmarshal AccountList:", err)
 	}
-	ilNew := msg.(*Config)
-	if len(ilNew.Data) == 0 {
-		ilNew.Data = make(map[string]string)
+	ilNew := msg.(*Data)
+	if len(ilNew.Storage) == 0 {
+		ilNew.Storage = make(map[string]string)
 	}
 	return ilNew
 }
 
-// Hash makes a cryptographic hash of the configuration-file - this
+// Hash makes a cryptographic hash of the data-file - this
 // can be used as an ID.
-func (c *Config) Hash() ([]byte, error) {
+func (d *Data) Hash() ([]byte, error) {
 	hash := network.Suite.Hash()
-	err := binary.Write(hash, binary.LittleEndian, int32(c.Threshold))
+	err := binary.Write(hash, binary.LittleEndian, int32(d.Threshold))
 	if err != nil {
 		return nil, err
 	}
 	var owners []string
-	for s := range c.Device {
+	for s := range d.Device {
 		owners = append(owners, s)
 	}
 	sort.Strings(owners)
@@ -79,11 +79,11 @@ func (c *Config) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(c.Data[s]))
+		_, err = hash.Write([]byte(d.Storage[s]))
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.Marshal(c.Device[s])
+		b, err := network.Marshal(d.Device[s])
 		if err != nil {
 			return nil, err
 		}
@@ -96,29 +96,29 @@ func (c *Config) Hash() ([]byte, error) {
 }
 
 // String returns a nicely formatted output of the AccountList
-func (c *Config) String() string {
+func (d *Data) String() string {
 	var owners []string
-	for n := range c.Device {
+	for n := range d.Device {
 		owners = append(owners, fmt.Sprintf("Owner: %s", n))
 	}
 	var data []string
-	for k, v := range c.Data {
+	for k, v := range d.Storage {
 		data = append(data, fmt.Sprintf("Data: %s/%s", k, v))
 	}
-	return fmt.Sprintf("Threshold: %d\n%s\n%s", c.Threshold,
+	return fmt.Sprintf("Threshold: %d\n%s\n%s", d.Threshold,
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
 
 // GetSuffixColumn returns the unique values up to the next ":" of the keys.
 // If given a slice of keys, it will join them using ":" and return the
 // unique keys with that prefix.
-func (c *Config) GetSuffixColumn(keys ...string) []string {
+func (d *Data) GetSuffixColumn(keys ...string) []string {
 	var ret []string
 	start := strings.Join(keys, ":")
 	if len(start) > 0 {
 		start += ":"
 	}
-	for k := range c.Data {
+	for k := range d.Storage {
 		if strings.HasPrefix(k, start) {
 			// Create subkey
 			subkey := strings.TrimPrefix(k, start)
@@ -132,9 +132,9 @@ func (c *Config) GetSuffixColumn(keys ...string) []string {
 // GetValue returns the value of the key. If more than one key is given,
 // the slice is joined using ":" and the value is returned. If the key
 // is not found, an empty string is returned.
-func (c *Config) GetValue(keys ...string) string {
+func (d *Data) GetValue(keys ...string) string {
 	key := strings.Join(keys, ":")
-	for k, v := range c.Data {
+	for k, v := range d.Storage {
 		if k == key {
 			return v
 		}
@@ -145,7 +145,7 @@ func (c *Config) GetValue(keys ...string) string {
 // GetIntermediateColumn returns the values of the column in the middle of
 // prefix and suffix. Searching for the column-values, the method will add ":"
 // after the prefix and before the suffix.
-func (c *Config) GetIntermediateColumn(prefix, suffix string) []string {
+func (d *Data) GetIntermediateColumn(prefix, suffix string) []string {
 	var ret []string
 	if len(prefix) > 0 {
 		prefix += ":"
@@ -153,7 +153,7 @@ func (c *Config) GetIntermediateColumn(prefix, suffix string) []string {
 	if len(suffix) > 0 {
 		suffix = ":" + suffix
 	}
-	for k := range c.Data {
+	for k := range d.Storage {
 		if strings.HasPrefix(k, prefix) && strings.HasSuffix(k, suffix) {
 			interm := strings.TrimPrefix(k, prefix)
 			interm = strings.TrimSuffix(interm, suffix)
@@ -182,9 +182,9 @@ func sortUniq(slice []string) []string {
 // Messages between the Client-API and the Service
 
 // CreateIdentity starts a new identity-skipchain with the initial
-// Config and asking all nodes in Roster to participate.
+// Data and asking all nodes in Roster to participate.
 type CreateIdentity struct {
-	Config *Config
+	Data   *Data
 	Roster *onet.Roster
 }
 
@@ -195,31 +195,31 @@ type CreateIdentityReply struct {
 	Data *skipchain.SkipBlock
 }
 
-// ConfigUpdate verifies if a new update is available.
-type ConfigUpdate struct {
+// DataUpdate verifies if a new update is available.
+type DataUpdate struct {
 	ID ID
 }
 
-// ConfigUpdateReply returns the updated configuration.
-type ConfigUpdateReply struct {
-	Config *Config
+// DataUpdateReply returns the updated data.
+type DataUpdateReply struct {
+	Data *Data
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
 	ID ID
-	*Config
+	*Data
 }
 
-// ProposeUpdate verifies if a new config is available.
+// ProposeUpdate verifies if new data is available.
 type ProposeUpdate struct {
 	ID ID
 }
 
-// ProposeUpdateReply returns the updated propose-configuration.
+// ProposeUpdateReply returns the updated propose-data.
 type ProposeUpdateReply struct {
-	Propose *Config
+	Propose *Data
 }
 
 // ProposeVote sends the signature for a specific IdentityList. It replies nil
