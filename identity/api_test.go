@@ -26,10 +26,10 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	c1 := NewIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
-	conf2 := c1.Config.Copy()
+	conf2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
-	conf2.Data["two"] = "public2"
+	conf2.Storage["two"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
 
 	log.ErrFatal(c1.ProposeUpdate())
@@ -39,7 +39,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	o2, ok := al.Device["two"]
 	assert.True(t, ok)
 	assert.True(t, kp2.Public.Equal(o2.Point))
-	pub2, ok := al.Data["two"]
+	pub2, ok := al.Storage["two"]
 	assert.True(t, ok)
 	assert.Equal(t, "public2", pub2)
 }
@@ -78,10 +78,10 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 
 	c2 := NewTestIdentity(el, 50, "two", l)
 	c2.ID = c1.ID
-	log.ErrFatal(c2.ConfigUpdate())
+	log.ErrFatal(c2.DataUpdate())
 
-	assert.NotNil(t, c2.Config)
-	o1 := c2.Config.Device[c1.DeviceName]
+	assert.NotNil(t, c2.Data)
+	o1 := c2.Data.Device[c1.DeviceName]
 	if !o1.Point.Equal(c1.Public) {
 		t.Fatal("Owner is not c1")
 	}
@@ -96,7 +96,7 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 	log.ErrFatal(c.CreateIdentity())
 
 	// Check we're in the configuration
-	assert.NotNil(t, c.Config)
+	assert.NotNil(t, c.Data)
 }
 
 func TestIdentity_ConfigNewPropose(t *testing.T) {
@@ -108,7 +108,7 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	conf2 := c1.Config.Copy()
+	conf2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two"] = &Device{kp2.Public}
 	log.ErrFatal(c1.ProposeSend(conf2))
@@ -140,15 +140,15 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	c1 := NewTestIdentity(el, 50, "one1", l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	conf2 := c1.Config.Copy()
+	conf2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	conf2.Device["two2"] = &Device{kp2.Public}
-	conf2.Data["two2"] = "public2"
+	conf2.Storage["two2"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
 	log.ErrFatal(c1.ProposeUpdate())
 	log.ErrFatal(c1.ProposeVote(true))
 
-	if len(c1.Config.Device) != 2 {
+	if len(c1.Data.Device) != 2 {
 		t.Fatal("Should have two owners now")
 	}
 }
@@ -170,15 +170,15 @@ func TestIdentity_SaveToStream(t *testing.T) {
 	log.ErrFatal(err)
 	tmpfile.Close()
 
-	if id.Config.Threshold != id2.Config.Threshold {
+	if id.Data.Threshold != id2.Data.Threshold {
 		t.Fatal("Loaded threshold is not the same")
 	}
-	p, p2 := id.Config.Device["one1"].Point, id2.Config.Device["one1"].Point
+	p, p2 := id.Data.Device["one1"].Point, id2.Data.Device["one1"].Point
 	if !p.Equal(p2) {
 		t.Fatal("Public keys are not the same")
 	}
-	if id.Config.Data["one1"] != id2.Config.Data["one1"] {
-		t.Fatal("Owners are not the same", id.Config.Data, id2.Config.Data)
+	if id.Data.Storage["one1"] != id2.Data.Storage["one1"] {
+		t.Fatal("Owners are not the same", id.Data.Storage, id2.Data.Storage)
 	}
 }
 
@@ -194,17 +194,17 @@ func TestCrashAfterRevocation(t *testing.T) {
 	c1 := NewIdentity(el, 2, "one")
 	c2 := NewIdentity(el, 2, "two")
 	c3 := NewIdentity(el, 2, "three")
-	defer c1.Close()
-	defer c2.Close()
-	defer c3.Close()
+	defer c1.Client.Close()
+	defer c2.Client.Close()
+	defer c3.Client.Close()
 	log.ErrFatal(c1.CreateIdentity())
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	proposeUpVote(c1)
 	log.ErrFatal(c3.AttachToIdentity(c1.ID))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
-	log.ErrFatal(c1.ConfigUpdate())
-	log.Lvl2(c1.Config)
+	log.ErrFatal(c1.DataUpdate())
+	log.Lvl2(c1.Data)
 
 	conf := c1.GetProposed()
 	delete(conf.Device, "three")
@@ -212,8 +212,8 @@ func TestCrashAfterRevocation(t *testing.T) {
 	log.ErrFatal(c1.ProposeSend(conf))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
-	log.ErrFatal(c1.ConfigUpdate())
-	log.Lvl2(c1.Config)
+	log.ErrFatal(c1.DataUpdate())
+	log.Lvl2(c1.Data)
 
 	log.Lvl1("C3 trying to send anyway")
 	conf = c3.GetProposed()
