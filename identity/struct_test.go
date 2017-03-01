@@ -30,7 +30,7 @@ func TestKvGetIntKeys(t *testing.T) {
 }
 
 func setupConfig() *Data {
-	return &Data{
+	d := &Data{
 		Storage: map[string]string{
 			"web:one":     "1",
 			"web:one:one": "2",
@@ -39,5 +39,7 @@ func setupConfig() *Data {
 			"ssh:mbp:dl":  "5",
 			"ssh:mba:gh":  "6",
 		},
+		Device: map[string]*Device{},
 	}
+	return d
 }
