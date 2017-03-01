@@ -17,8 +17,11 @@ import (
 
 	"errors"
 
+	"fmt"
+
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -29,6 +32,7 @@ import (
 const ServiceName = "Identity"
 
 var identityService onet.ServiceID
+var verifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
 
 func init() {
 	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
@@ -57,9 +61,8 @@ type Storage struct {
 	sync.Mutex
 	Latest   *Data
 	Proposed *Data
-	Votes    map[string]*crypto.SchnorrSig
-	Root     *skipchain.SkipBlock
-	Data     *skipchain.SkipBlock
+	SCRoot   *skipchain.SkipBlock
+	SCData   *skipchain.SkipBlock
 }
 
 /*
@@ -75,19 +78,20 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
+	ids.SCRoot, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
 		skipchain.VerifyNone, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
-	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Data)
+	log.Lvl3("Creating Data-skipchain", ai.Data)
+	ids.SCRoot, ids.SCData, cerr = s.skipchain.CreateData(ids.SCRoot, 2, 10,
+		//skipchain.VerifyNone, ai.Data)
+		verifyIdentity, ai.Data)
 	if cerr != nil {
 		return nil, cerr
 	}
 
-	roster := ids.Root.Roster
+	roster := ids.SCRoot.Roster
 	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
@@ -95,23 +99,39 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
-	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
+	log.Lvlf2("New chain is\n%x", []byte(ids.SCData.Hash))
 	s.save()
 
 	return &CreateIdentityReply{
-		Root: ids.Root,
-		Data: ids.Data,
+		Root: ids.SCRoot,
+		Data: ids.SCData,
 	}, nil
 }
 
 // DataUpdate returns a new data-update
 func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError) {
+	// Check if there is something new on the skipchain - in case we've been
+	// offline
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
+	reply, cerr := s.skipchain.GetUpdateChain(sid.SCRoot, sid.SCData.Hash)
+	if cerr != nil {
+		return nil, cerr
+	}
+	if len(reply.Update) > 1 {
+		log.Lvl3("Got new data")
+		// TODO: check that update-chain is legit
+		sid.SCData = reply.Update[len(reply.Update)-1]
+		_, dataInt, err := network.Unmarshal(sid.SCData.Data)
+		if err != nil {
+			return nil, onet.NewClientErrorCode(ErrorDataMissing, err.Error())
+		}
+		sid.Latest = dataInt.(*Data)
+	}
 	log.Lvl3(s, "Sending data-update")
 	return &DataUpdateReply{
 		Data: sid.Latest,
@@ -126,7 +146,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 	if sid == nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
-	roster := sid.Root.Roster
+	roster := sid.SCRoot.Roster
 	replies, err := s.propagateData(roster, p, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
@@ -179,7 +199,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if err != nil {
 			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
 		}
-		if _, exists := sid.Votes[v.Signer]; exists {
+		if sid.Proposed.Votes[v.Signer] != nil {
 			return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
@@ -196,19 +216,20 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 	}
 
 	// Propagate the vote
-	_, err := s.propagateData(sid.Root.Roster, v, propagateTimeout)
+	_, err := s.propagateData(sid.SCRoot.Roster, v, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 	}
-	if len(sid.Votes) >= sid.Latest.Threshold ||
-		len(sid.Votes) == len(sid.Latest.Device) {
+	votesCnt := len(sid.Proposed.Votes)
+	if votesCnt >= sid.Latest.Threshold ||
+		votesCnt == len(sid.Latest.Device) {
 		// If we have enough signatures, make a new data-skipblock and
 		// propagate it
 		log.Lvl3("Having majority or all votes")
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		reply, cerr := s.skipchain.ProposeData(sid.SCRoot, sid.SCData, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -218,14 +239,78 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = s.propagateSkipBlock(sid.Root.Roster, usb, propagateTimeout)
+		_, err = s.propagateSkipBlock(sid.SCRoot.Roster, usb, propagateTimeout)
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 		}
 		s.save()
-		return &ProposeVoteReply{sid.Data}, nil
+		return &ProposeVoteReply{sid.SCData}, nil
 	}
 	return nil, nil
+}
+
+// VerifyBlock makes sure that the new block is legit. This function will be
+// called by the skipchain on all nodes before they sign.
+func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
+	// Putting it all in a function for easier error-printing
+	err := func() error {
+		if sb.Index == 0 {
+			log.Lvl4("Always accepting genesis-block")
+			return nil
+		}
+		_, dataInt, err := network.Unmarshal(sb.Data)
+		if err != nil {
+			return errors.New("got unknown packet")
+		}
+		data, ok := dataInt.(*Data)
+		if !ok {
+			return fmt.Errorf("got packet-type %s", reflect.TypeOf(dataInt))
+		}
+		hash, err := data.Hash()
+		if err != nil {
+			return err
+		}
+		// Verify that all signatures work out
+		if len(sb.BackLinkIds) == 0 {
+			return errors.New("No backlinks stored")
+		}
+		s.identitiesMutex.Lock()
+		defer s.identitiesMutex.Unlock()
+		var latest *skipchain.SkipBlock
+		for _, id := range s.Identities {
+			if id.SCData.Hash.Equal(sb.BackLinkIds[0]) {
+				latest = id.SCData
+			}
+		}
+		if latest == nil {
+			return errors.New("Backlink was not our latest block")
+		}
+		_, dataInt, err = network.Unmarshal(latest.Data)
+		if err != nil {
+			return err
+		}
+		dataLatest := dataInt.(*Data)
+		sigCnt := 0
+		for dev, sig := range data.Votes {
+			if pub := dataLatest.Device[dev]; pub != nil {
+				if err := crypto.VerifySchnorr(network.Suite, pub.Point, hash, *sig); err != nil {
+					return err
+				}
+				sigCnt++
+			} else {
+				log.Lvl2("Not representative signature detected:", dev)
+			}
+		}
+		if sigCnt >= dataLatest.Threshold || sigCnt == len(dataLatest.Device) {
+			return nil
+		}
+		return errors.New("not enough signatures")
+	}()
+	if err != nil {
+		log.Lvl2("Error while validating block:", err)
+		return false
+	}
+	return true
 }
 
 /*
@@ -258,10 +343,27 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Data
-			sid.Votes = make(map[string]*crypto.SchnorrSig)
+			if len(sid.Proposed.Votes) == 0 {
+				sid.Proposed.Votes = map[string]*crypto.SchnorrSig{}
+			}
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
-			sid.Votes[v.Signer] = v.Signature
+			d := sid.Latest.Device[v.Signer]
+			if d == nil {
+				log.Error("Got signature from unknown device", v.Signer)
+				return
+			}
+			hash, err := sid.Proposed.Hash()
+			if err != nil {
+				log.Error("Couldn't hash proposed block:", err)
+				return
+			}
+			err = crypto.VerifySchnorr(network.Suite, d.Point, hash, *v.Signature)
+			if err != nil {
+				log.Error("Got invalid signature:", err)
+				return
+			}
+			sid.Proposed.Votes[v.Signer] = v.Signature
 		}
 	}
 }
@@ -292,7 +394,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 		log.Error(err)
 		return
 	}
-	sid.Data = skipblock
+	sid.SCData = skipblock
 	sid.Latest = al
 	sid.Proposed = nil
 }
@@ -305,7 +407,7 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		log.Error("Got a wrong message for propagation")
 		return
 	}
-	id := ID(pi.Data.Hash)
+	id := ID(pi.SCData.Hash)
 	if s.getIdentityStorage(id) != nil {
 		log.Error("Couldn't store new identity")
 		return
@@ -392,11 +494,10 @@ func newIdentityService(c *onet.Context) onet.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate} {
-		if err := s.RegisterHandler(f); err != nil {
-			log.Fatal("Registration error:", err)
-		}
+	if err := s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
+		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate); err != nil {
+		log.Fatal("Registration error:", err)
 	}
+	skipchain.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
 	return s
 }

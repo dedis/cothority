@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -18,7 +20,7 @@ func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *
 	return id
 }
 
-func TestIdentity_ConfigNewCheck(t *testing.T) {
+func TestIdentity_DataNewCheck(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
@@ -26,11 +28,11 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	c1 := NewIdentity(el, 50, "one")
 	log.ErrFatal(c1.CreateIdentity())
 
-	conf2 := c1.Data.Copy()
+	data2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
-	conf2.Device["two"] = &Device{kp2.Public}
-	conf2.Storage["two"] = "public2"
-	log.ErrFatal(c1.ProposeSend(conf2))
+	data2.Device["two"] = &Device{kp2.Public}
+	data2.Storage["two"] = "public2"
+	log.ErrFatal(c1.ProposeSend(data2))
 
 	log.ErrFatal(c1.ProposeUpdate())
 	al := c1.Proposed
@@ -62,13 +64,13 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
 		if len(is.Identities) != 1 {
-			t.Fatal("The configuration hasn't been proposed in all services")
+			t.Fatal("The new data hasn't been proposed in all services")
 		}
 		is.identitiesMutex.Unlock()
 	}
 }
 
-func TestIdentity_ConfigUpdate(t *testing.T) {
+func TestIdentity_DataUpdate(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
@@ -95,11 +97,11 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 	c := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c.CreateIdentity())
 
-	// Check we're in the configuration
+	// Check we're in the data
 	assert.NotNil(t, c.Data)
 }
 
-func TestIdentity_ConfigNewPropose(t *testing.T) {
+func TestIdentity_DataNewPropose(t *testing.T) {
 	l := onet.NewTCPTest()
 	hosts, el, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
@@ -108,10 +110,10 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	c1 := NewTestIdentity(el, 50, "one", l)
 	log.ErrFatal(c1.CreateIdentity())
 
-	conf2 := c1.Data.Copy()
+	data2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
-	conf2.Device["two"] = &Device{kp2.Public}
-	log.ErrFatal(c1.ProposeSend(conf2))
+	data2.Device["two"] = &Device{kp2.Public}
+	log.ErrFatal(c1.ProposeSend(data2))
 
 	for _, s := range services {
 		is := s.(*Service)
@@ -122,7 +124,7 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 		}
 		assert.NotNil(t, id1.Proposed)
 		if len(id1.Proposed.Device) != 2 {
-			t.Fatal("The proposed config should have 2 entries now")
+			t.Fatal("The proposed data should have 2 entries now")
 		}
 		id1.Unlock()
 	}
@@ -139,12 +141,11 @@ func TestIdentity_ProposeVote(t *testing.T) {
 
 	c1 := NewTestIdentity(el, 50, "one1", l)
 	log.ErrFatal(c1.CreateIdentity())
-
-	conf2 := c1.Data.Copy()
+	data2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
-	conf2.Device["two2"] = &Device{kp2.Public}
-	conf2.Storage["two2"] = "public2"
-	log.ErrFatal(c1.ProposeSend(conf2))
+	data2.Device["two2"] = &Device{kp2.Public}
+	data2.Storage["two2"] = "public2"
+	log.ErrFatal(c1.ProposeSend(data2))
 	log.ErrFatal(c1.ProposeUpdate())
 	log.ErrFatal(c1.ProposeVote(true))
 
@@ -206,22 +207,67 @@ func TestCrashAfterRevocation(t *testing.T) {
 	log.ErrFatal(c1.DataUpdate())
 	log.Lvl2(c1.Data)
 
-	conf := c1.GetProposed()
-	delete(conf.Device, "three")
-	log.Lvl2(conf)
-	log.ErrFatal(c1.ProposeSend(conf))
+	data := c1.GetProposed()
+	delete(data.Device, "three")
+	log.Lvl2(data)
+	log.ErrFatal(c1.ProposeSend(data))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
 	log.ErrFatal(c1.DataUpdate())
 	log.Lvl2(c1.Data)
 
 	log.Lvl1("C3 trying to send anyway")
-	conf = c3.GetProposed()
-	c3.ProposeSend(conf)
+	data = c3.GetProposed()
+	c3.ProposeSend(data)
 	if c3.ProposeVote(true) == nil {
 		t.Fatal("Should not be able to vote")
 	}
 	log.ErrFatal(c1.ProposeUpdate())
+}
+
+func TestVerificationFunction(t *testing.T) {
+	l := onet.NewTCPTest()
+	hosts, el, _ := l.GenTree(2, true)
+	services := l.GetServices(hosts, identityService)
+	s0 := services[0].(*Service)
+	defer l.CloseAll()
+	for _, s := range services {
+		log.Lvl3(s.(*Service).Identities)
+	}
+
+	c1 := NewTestIdentity(el, 50, "one1", l)
+	log.ErrFatal(c1.CreateIdentity())
+
+	// Hack: create own data-structure with twice our signature
+	// and send it directly to the skipblock. Without a proper
+	// verification-function, this should pass.
+	data2 := c1.Data.Copy()
+	kp2 := config.NewKeyPair(network.Suite)
+	data2.Device["two2"] = &Device{kp2.Public}
+	data2.Storage["two2"] = "public2"
+	hash, err := data2.Hash()
+	log.ErrFatal(err)
+	sig, err := crypto.SignSchnorr(network.Suite, kp2.Secret, hash)
+	log.ErrFatal(err)
+	data2.Votes["one1"] = &sig
+	data2.Votes["two2"] = &sig
+	id := s0.getIdentityStorage(c1.ID)
+	require.NotNil(t, id, "Didn't find identity")
+	_, cerr := s0.skipchain.ProposeData(id.SCRoot, id.SCData, data2)
+	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
+
+	// Unhack: verify that the correct way of doing it works, even if
+	// we bypass the identity.
+	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
+	log.ErrFatal(err)
+	data2.Votes["one1"] = &sig
+	_, cerr = s0.skipchain.ProposeData(id.SCRoot, id.SCData, data2)
+	log.ErrFatal(err)
+	log.ErrFatal(c1.DataUpdate())
+
+	if len(c1.Data.Device) != 2 {
+		t.Fatal("Should have two owners now")
+	}
 }
 
 func proposeUpVote(i *Identity) {

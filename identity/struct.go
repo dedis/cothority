@@ -27,10 +27,15 @@ type Data struct {
 	Threshold int
 	Device    map[string]*Device
 	Storage   map[string]string
+	// Votes for that block, mapped by name of the devices.
+	// This has to be verified with the previous data-block, because only
+	// the previous data-block has the authority to sign for a new block.
+	Votes map[string]*crypto.SchnorrSig
 }
 
 // Device is represented by a public key.
 type Device struct {
+	// Point is the public key of that device
 	Point abstract.Point
 }
 
@@ -40,29 +45,32 @@ func NewData(threshold int, pub abstract.Point, owner string) *Data {
 		Threshold: threshold,
 		Device:    map[string]*Device{owner: {pub}},
 		Storage:   make(map[string]string),
+		Votes:     map[string]*crypto.SchnorrSig{},
 	}
 }
 
-// Copy returns a deep copy of the AccountList.
+// Copy returns a deep copy of the Data.
 func (d *Data) Copy() *Data {
 	b, err := network.Marshal(d)
 	if err != nil {
-		log.Error("Couldn't marshal AccountList:", err)
+		log.Error("Couldn't marshal Data:", err)
 		return nil
 	}
 	_, msg, err := network.Unmarshal(b)
 	if err != nil {
-		log.Error("Couldn't unmarshal AccountList:", err)
+		log.Error("Couldn't unmarshal Data:", err)
 	}
-	ilNew := msg.(*Data)
-	if len(ilNew.Storage) == 0 {
-		ilNew.Storage = make(map[string]string)
+	dNew := msg.(*Data)
+	if len(dNew.Storage) == 0 {
+		dNew.Storage = make(map[string]string)
 	}
-	return ilNew
+	dNew.Votes = map[string]*crypto.SchnorrSig{}
+
+	return dNew
 }
 
 // Hash makes a cryptographic hash of the data-file - this
-// can be used as an ID.
+// can be used as an ID. The vote of the devices is not included in the hash!
 func (d *Data) Hash() ([]byte, error) {
 	hash := network.Suite.Hash()
 	err := binary.Write(hash, binary.LittleEndian, int32(d.Threshold))
@@ -83,11 +91,7 @@ func (d *Data) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.Marshal(d.Device[s])
-		if err != nil {
-			return nil, err
-		}
-		_, err = hash.Write(b)
+		_, err := d.Device[s].Point.MarshalTo(hash)
 		if err != nil {
 			return nil, err
 		}
