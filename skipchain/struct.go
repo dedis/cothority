@@ -5,7 +5,10 @@ import (
 
 	"fmt"
 
-	"github.com/dedis/cothority/bftcosi"
+	"sync"
+
+	"errors"
+
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
@@ -50,8 +53,9 @@ func (sbid SkipBlockID) Equal(sb SkipBlockID) bool {
 // SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
 // and signed.
 type SkipBlockFix struct {
+	// Index of the block in the chain. Index == 0 -> genesis-block.
 	Index int
-	// Height of that SkipBlock
+	// Height of that SkipBlock, starts at 1.
 	Height int
 	// The max height determines the height of the next block
 	MaximumHeight int
@@ -66,10 +70,10 @@ type SkipBlockFix struct {
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
 	ParentBlockID SkipBlockID
-	// Aggregate is the aggregate key of our responsible roster
-	Aggregate abstract.Point
-	// AggregateResp is the aggreate key of the responsible block for us
-	AggregateResp abstract.Point
+	// GenesisID is the ID of the genesis-block.
+	GenesisID SkipBlockID
+	// RespPublic is the list of public keys of our responsible
+	RespPublic []abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
 	// Roster holds the roster-definition of that SkipBlock
@@ -96,15 +100,13 @@ type SkipBlock struct {
 	*SkipBlockFix
 	// Hash is our Block-hash
 	Hash SkipBlockID
-	// BlockSig is the BFT-signature of the hash
-	BlockSig *bftcosi.BFTSignature
 
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
-	ChildSL *BlockLink
+	ChildSL []SkipBlockID
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over
@@ -114,28 +116,75 @@ func NewSkipBlock() *SkipBlock {
 		SkipBlockFix: &SkipBlockFix{
 			Data: make([]byte, 0),
 		},
-		BlockSig: &bftcosi.BFTSignature{
-			Sig: make([]byte, 0),
-			Msg: make([]byte, 0),
-		},
 	}
 }
 
-// VerifySignatures returns whether all signatures are correctly signed
-// by the aggregate public key of the roster. It needs the aggregate key.
-func (sb *SkipBlock) VerifySignatures() error {
-	if err := sb.BlockSig.Verify(network.Suite, sb.Roster.Publics()); err != nil {
-		log.Error(err.Error() + log.Stack())
-		return err
+// VerifyForwardSignatures returns whether all signatures in the forward-links
+// are correctly signed by the aggregate public key of the roster.
+func (sb *SkipBlock) VerifyForwardSignatures() error {
+	for _, fl := range sb.ForwardLink {
+		if err := fl.VerifySignature(sb.RespPublic); err != nil {
+			return errors.New("Wrong signature in forward-link: " + err.Error())
+		}
 	}
-	//for _, fl := range sb.ForwardLink {
-	//	if err := fl.VerifySignature(sb.Aggregate); err != nil {
-	//		return err
-	//	}
-	//}
-	//if sb.ChildSL != nil && sb.ChildSL.Hash == nil {
-	//	return sb.ChildSL.VerifySignature(sb.Aggregate)
-	//}
+	return nil
+}
+
+// VerifyLinks makes sure that all forward- and backward-links are correct.
+// It needs a SkipBlockMap to fetch other necessary blocks.
+func (sb *SkipBlock) VerifyLinks(sbm *SkipBlockMap) error {
+	if len(sb.BackLinkIds) == 0 {
+		return errors.New("need at least one backlink")
+	}
+
+	if err := sb.VerifyForwardSignatures(); err != nil {
+		return errors.New("Wrong signatures: " + err.Error())
+	}
+
+	// Verify if we're in the responsible-list
+	if !sb.ParentBlockID.IsNull() {
+		parent, ok := sbm.GetSkipBlockByID(sb.ParentBlockID)
+		if !ok {
+			return errors.New("Didn't find parent")
+		}
+		if err := parent.VerifyForwardSignatures(); err != nil {
+			return err
+		}
+		found := false
+		for _, child := range parent.ChildSL {
+			if child.Equal(sb.Hash) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("parent doesn't know about us")
+		}
+	}
+
+	// We don't check backward-links for genesis-blocks
+	if sb.Index == 0 {
+		return nil
+	}
+	for _, back := range sb.BackLinkIds {
+		sbBack, ok := sbm.GetSkipBlockByID(back)
+		if !ok {
+			return errors.New("didn't find skipblock in sbm")
+		}
+		if err := sbBack.VerifyForwardSignatures(); err != nil {
+			return err
+		}
+		found := false
+		for _, forward := range sb.ForwardLink {
+			if forward.Hash.Equal(sb.Hash) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("didn't find our block in forward-links")
+		}
+	}
 	return nil
 }
 
@@ -149,20 +198,12 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := *sb
 	sbf := *b.SkipBlockFix
 	b.SkipBlockFix = &sbf
-	sigCopy := make([]byte, len(b.BlockSig.Sig))
-	copy(sigCopy, b.BlockSig.Sig)
-	b.BlockSig = &bftcosi.BFTSignature{
-		Sig:        sigCopy,
-		Msg:        b.BlockSig.Msg,
-		Exceptions: b.BlockSig.Exceptions,
-	}
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
-	if b.ChildSL != nil {
-		b.ChildSL = sb.ChildSL.Copy()
-	}
+	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
+	copy(b.ChildSL, sb.ChildSL)
 	return &b
 }
 
@@ -171,25 +212,35 @@ func (sb *SkipBlock) String() string {
 }
 
 // GetResponsible searches for the block that is responsible for us - for
-// - Data - it's his parent
-// - else - it's himself
-func (sb *SkipBlock) GetResponsible(s *Service) (*onet.Roster, onet.ClientError) {
-	el := sb.Roster
-	if el == nil {
+// - Root_Genesis - himself
+// - Data || Inter_Gensis - it's his parent
+// - else - it's the previous block
+func (sb *SkipBlock) GetResponsible(s *SkipBlockMap) (*SkipBlock, error) {
+	if sb == nil {
+		log.Panic(log.Stack())
+	}
+	if sb.Index == 0 && sb.ParentBlockID.IsNull() {
+		return sb, nil
+	}
+	if sb.Roster == nil || sb.Index == 0 {
 		// We're a data-block, so use the parent's Roster
 		if sb.ParentBlockID.IsNull() {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent, "Didn't find a Roster")
+			return nil, errors.New("Didn't find a Roster")
 		}
-		parent, ok := s.getSkipBlockByID(sb.ParentBlockID)
+		ret, ok := s.GetSkipBlockByID(sb.ParentBlockID)
 		if !ok {
-			return nil, onet.NewClientErrorCode(ErrorBlockNoParent, "No Roster and no parent")
+			return nil, errors.New("No Roster and no parent")
 		}
-		if parent.Roster == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent, "Parent doesn't have Roster")
-		}
-		el = parent.Roster
+		return ret, nil
 	}
-	return el, nil
+	if len(sb.BackLinkIds) == 0 {
+		return nil, errors.New("No backlink for non-genesis block")
+	}
+	prev, ok := s.GetSkipBlockByID(sb.BackLinkIds[0])
+	if !ok {
+		return nil, errors.New("Didn't find responsible")
+	}
+	return prev, nil
 }
 
 func (sb *SkipBlock) updateHash() SkipBlockID {
@@ -224,7 +275,42 @@ func (bl *BlockLink) Copy() *BlockLink {
 // VerifySignature returns whether the BlockLink has been signed
 // correctly using the aggregate key given.
 func (bl *BlockLink) VerifySignature(publics []abstract.Point) error {
-	// TODO: enable real verification once we have signatures
-	//return nil
+	if len(bl.Signature) == 0 {
+		return errors.New("No signature present" + log.Stack())
+	}
 	return cosi.VerifySignature(network.Suite, publics, bl.Hash, bl.Signature)
+}
+
+// SkipBlockMap holds the map to the skipblocks so it can be marshaled.
+type SkipBlockMap struct {
+	SkipBlocks map[string]*SkipBlock
+	sync.Mutex
+}
+
+// NewSkipBlockMap returns a pre-initialised SkipBlockMap
+func NewSkipBlockMap() *SkipBlockMap {
+	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
+}
+
+// GetSkipBlockByID returns the skip-block or false if it doesn't exist
+func (s *SkipBlockMap) GetSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
+	s.Lock()
+	b, ok := s.SkipBlocks[string(sbID)]
+	s.Unlock()
+	return b, ok
+}
+
+// StoreSkipBlock stores the given SkipBlock in the service-list
+func (s *SkipBlockMap) StoreSkipBlock(sb *SkipBlock) SkipBlockID {
+	s.Lock()
+	s.SkipBlocks[string(sb.Hash)] = sb
+	s.Unlock()
+	return sb.Hash
+}
+
+// LenSkipBlock returns the actual length using mutexes
+func (s *SkipBlockMap) LenSkipBlocks() int {
+	s.Lock()
+	defer s.Unlock()
+	return len(s.SkipBlocks)
 }

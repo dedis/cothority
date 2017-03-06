@@ -7,6 +7,7 @@ import (
 
 	"sync"
 
+	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -64,15 +65,13 @@ func TestClient_CreateRootInter(t *testing.T) {
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
-	if err := root.VerifySignatures(); err != nil {
+	if err := root.VerifyForwardSignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
-	if err := inter.VerifySignatures(); err != nil {
+	if err := inter.VerifyForwardSignatures(); err != nil {
 		t.Fatal("Root signature invalid:", err)
 	}
-	if !bytes.Equal(root.ChildSL.Hash, inter.Hash) {
-		t.Fatal("Root doesn't point to intermediate")
-	}
+	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
 	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
 		t.Fatal("Intermediate doesn't point to root")
 	}
@@ -89,15 +88,13 @@ func TestClient_CreateData(t *testing.T) {
 	td := &testData{1, "data-sc"}
 	inter, data, cerr := c.CreateData(inter, 1, 1, VerifyNone, td)
 	log.ErrFatal(cerr)
-	if err := data.VerifySignatures(); err != nil {
+	if err := data.VerifyForwardSignatures(); err != nil {
 		t.Fatal("Couldn't verify data-signature:", err)
 	}
 	if !bytes.Equal(data.ParentBlockID, inter.Hash) {
 		t.Fatal("Data-chain doesn't point to intermediate-chain")
 	}
-	if !bytes.Equal(inter.ChildSL.Hash, data.Hash) {
-		t.Fatal("Intermediate chain doesn't point to data-chain")
-	}
+	require.True(t, inter.ChildSL[0].Equal(data.Hash), "Intermediate chain doesn't point to data-chain")
 	_, td1, err := network.Unmarshal(data.Data)
 	log.ErrFatal(err)
 	reconstructed := td1.(*testData)
