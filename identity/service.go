@@ -75,7 +75,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
+	ids.Root, cerr = s.skipchain.CreateGenesis(ai.Roster, 2, 10,
 		skipchain.VerifyNone, nil)
 	if cerr != nil {
 		return nil, cerr
