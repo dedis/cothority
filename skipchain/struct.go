@@ -9,8 +9,6 @@ import (
 
 	"errors"
 
-	"strings"
-
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
@@ -194,24 +192,21 @@ func (sb *SkipBlock) VerifyLinks(sbm *SkipBlockMap) error {
 	if sb.Index == 0 {
 		return nil
 	}
-	for _, back := range sb.BackLinkIDs {
-		sbBack, ok := sbm.GetByID(back)
-		if !ok {
-			return errors.New("didn't find skipblock in sbm")
+
+	// Verify we're referenced by our previous block
+	sbBack, ok := sbm.GetByID(sb.BackLinkIDs[0])
+	if !ok {
+		if len(sb.ForwardLink) > 0 {
+			log.LLvl3("Didn't find back-link, but have a good forward-link")
+			return nil
 		}
-		if err := sbBack.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := false
-		for _, forward := range sbBack.ForwardLink {
-			if forward.Hash.Equal(sb.Hash) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New("didn't find our block in forward-links")
-		}
+		return errors.New("Didn't find height-0 skipblock in sbm")
+	}
+	if err := sbBack.VerifyForwardSignatures(); err != nil {
+		return err
+	}
+	if !sbBack.ForwardLink[0].Hash.Equal(sb.Hash) {
+		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
 }
@@ -324,19 +319,25 @@ func (s *SkipBlockMap) GetByID(sbID SkipBlockID) (*SkipBlock, bool) {
 // Store stores the given SkipBlock in the service-list
 func (s *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 	s.Lock()
+	defer s.Unlock()
 	if sbOld, exists := s.SkipBlocks[string(sb.Hash)]; exists {
-		// If this skipblock already exists, only copy forward-links.
-		for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-			if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
-				log.Error("Got a known block with wrong signature in forward-link")
-				return nil
+		// If this skipblock already exists, only copy forward-links and
+		// new children.
+		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
+				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+					log.Error("Got a known block with wrong signature in forward-link")
+					return nil
+				}
+				sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
 			}
-			sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+		}
+		if len(sb.ChildSL) > len(sbOld.ChildSL) {
+			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
 		}
 	} else {
 		s.SkipBlocks[string(sb.Hash)] = sb
 	}
-	s.Unlock()
 	return sb.Hash
 }
 
@@ -345,33 +346,4 @@ func (s *SkipBlockMap) Length() int {
 	s.Lock()
 	defer s.Unlock()
 	return len(s.SkipBlocks)
-}
-
-// StringMaps returns a string of all map-keys
-func (s *SkipBlockMap) StringMaps() string {
-	var str []string
-	for k := range s.SkipBlocks {
-		str = append(str, fmt.Sprintf("%8x", k))
-	}
-	return strings.Join(str, "\n")
-}
-
-// VerifyLink searches for a link between two IDs. The second ID must
-// be reachable through forward-links from the first ID. The return-value
-// can be:
-//  0 - All forward-links are correct
-//  1 - Not enough forward-links - first and second exist, but no link is found
-//  2 - Some error occurred: either wrong signatures, other block-id, or other
-func (s *SkipBlockMap) VerifyLink(src, dst SkipBlockID) (result int) {
-	result = 2
-	sbSrc, exists := s.GetByID(src)
-	if !exists {
-		return
-	}
-	sbDst, exists := s.GetByID(dst)
-	if !exists {
-		return
-	}
-	log.Print(sbSrc, sbDst)
-	return 0
 }

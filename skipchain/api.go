@@ -130,7 +130,6 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster, baseHeight,
 	if cerr != nil {
 		return
 	}
-	log.Print("Done")
 	return root, control, cerr
 }
 
@@ -140,8 +139,5 @@ func (c *Client) GetUpdateChain(latest *SkipBlock) (reply *GetUpdateChainReply, 
 	h := latest.Roster.RandomServerIdentity()
 	reply = &GetUpdateChainReply{}
 	cerr = c.SendProtobuf(h, &GetUpdateChain{latest.Hash}, reply)
-	if cerr != nil {
-		return
-	}
 	return
 }

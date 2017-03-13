@@ -18,8 +18,33 @@ func init() {
 	network.RegisterMessage(&testData{})
 }
 
-func TestClient_ProposeSkipBlock(t *testing.T) {
+func TestClient_CreateGenesis(t *testing.T) {
+	l := onet.NewTCPTest()
+	_, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+	c := newTestClient(l)
+	_, cerr := c.CreateGenesis(roster, 1, 1, VerificationNone,
+		[]byte{1, 2, 3}, nil)
+	require.NotNil(t, cerr)
+	_, cerr = c.CreateGenesis(roster, 1, 0, VerificationNone,
+		&testData{}, nil)
+	require.NotNil(t, cerr)
+	_, cerr = c.CreateGenesis(roster, 1, 1, VerificationNone,
+		&testData{}, nil)
+	require.Nil(t, cerr)
+	_, _, cerr = c.CreateRootControl(roster, roster, 1, 1, 0,
+		VerificationNone, VerificationNone)
+	require.NotNil(t, cerr)
+}
 
+func TestClient_CreateRootControl(t *testing.T) {
+	l := onet.NewTCPTest()
+	_, roster, _ := l.GenTree(3, true)
+	defer l.CloseAll()
+	c := newTestClient(l)
+	_, _, cerr := c.CreateRootControl(roster, roster, 0, 0, 0,
+		VerificationNone, VerificationNone)
+	require.NotNil(t, cerr)
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
@@ -59,7 +84,6 @@ func TestClient_CreateRootInter(t *testing.T) {
 	root, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1,
 		VerificationNone, VerificationNone)
 	log.ErrFatal(cerr)
-	log.Print(root, inter)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
@@ -97,7 +121,9 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	require.NotNil(t, cerr,
 		"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
-	sb2, cerr := c.StoreSkipBlock(sb1.Latest, el2, nil)
+	sb2, cerr := c.StoreSkipBlock(sb1.Latest, el2, []byte{1, 2, 3})
+	require.NotNil(t, cerr)
+	sb2, cerr = c.StoreSkipBlock(sb1.Latest, el2, &testData{})
 	log.ErrFatal(cerr)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
@@ -110,7 +136,6 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		updates, cerr = c.GetUpdateChain(inter)
 		log.ErrFatal(cerr)
-		log.Print(updates)
 	}
 	if len(updates.Update) != 3 {
 		t.Fatal("Should now have three Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)

@@ -75,11 +75,14 @@ type PropagateSkipBlocks struct {
 // update their forward-links. Each cothority needs to get the necessary
 // blocks and propagate the skipblocks itself.
 type ForwardSignature struct {
+	// TargetHeight is the index in the backlink-slice of the skipblock
+	// to update
+	TargetHeight int
 	// Previous is the second-newest skipblock
 	Previous SkipBlockID
-	// Destination is the skipblock this should attach to
-	Destination SkipBlockID
-	// ForwardLink is the proof to the newest block
+	// Newest is the newest skipblock, signed by previous
+	Newest *SkipBlock
+	// ForwardLink is the signature from Previous to Newest
 	ForwardLink *BlockLink
 }
 
