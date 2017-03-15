@@ -9,11 +9,12 @@ import (
 
 	"errors"
 
+	"encoding/binary"
+
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -108,16 +109,32 @@ type SkipBlockFix struct {
 
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
+// TODO: calculate hash by hand
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
-	b, err := network.Marshal(sbf)
-	if err != nil {
-		log.Panic("Couldn't marshal SkipBlockFix:", err)
+	hash := network.Suite.Hash()
+	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
+		sbf.BaseHeight} {
+		binary.Write(hash, binary.LittleEndian, i)
 	}
-	h, err := crypto.HashBytes(network.Suite.Hash(), b)
-	if err != nil {
-		log.Panic("Couldn't hash SkipBlockFix:", err)
+	for _, bl := range sbf.BackLinkIDs {
+		hash.Write(bl)
 	}
-	return h
+	for _, v := range sbf.VerifierIDs {
+		hash.Write(v[:])
+	}
+	hash.Write(sbf.ParentBlockID)
+	hash.Write(sbf.GenesisID)
+	for _, pub := range sbf.RespPublic {
+		pub.MarshalTo(hash)
+	}
+	hash.Write(sbf.Data)
+	if sbf.Roster != nil {
+		for _, pub := range sbf.Roster.Publics() {
+			pub.MarshalTo(hash)
+		}
+	}
+	buf := hash.Sum(nil)
+	return buf
 }
 
 // SkipBlock represents a SkipBlock of any type - the fields that won't
