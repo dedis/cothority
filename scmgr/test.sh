@@ -12,9 +12,9 @@ main(){
     buildConode github.com/dedis/cothority/skipchain
     CFG=$BUILDDIR/config.bin
     test Config
-#	test Create
-#	test Join
-#	test Add
+	test Create
+	test Join
+	test Add
     stopTest
 }
 
@@ -43,15 +43,15 @@ testJoin(){
 	testFail runSc join public.toml 1234
 	testGrep "Didn't find any" runSc list
 	testOK runSc join public.toml $ID
-	testGrep $ID runSc list
+	testGrep $ID runSc list -l
 }
 
 testCreate(){
 	startCl
-    testGrep "Didn't find any" runSc list
+    testGrep "Didn't find any" runSc list -l
     testFail runSc create
     testOK runSc create public.toml
-    testGrep "Genesis-block" runSc list
+    testGrep "Genesis-block" runSc list -l
 }
 
 testConfig(){
