@@ -255,6 +255,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if err != nil {
 			return err
 		}
+		// TODO: is this really signed by target.roster?
 		sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
 		if err != nil {
 			return errors.New("Couldn't get signature")

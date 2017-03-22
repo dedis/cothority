@@ -100,6 +100,7 @@ type SkipBlockFix struct {
 	// GenesisID is the ID of the genesis-block.
 	GenesisID SkipBlockID
 	// RespPublic is the list of public keys of our responsible
+	// TODO: can this be put in the SkipBlock or even deleted?
 	RespPublic []abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
