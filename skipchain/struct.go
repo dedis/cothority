@@ -207,6 +207,19 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 	return sb.Hash
 }
 
+func (sb *SkipBlock) Sprint(short bool) string {
+	hash := hex.EncodeToString(sb.Hash)
+	if short {
+		hash = hash[:8]
+	}
+	if sb.Index == 0 {
+		return fmt.Sprintf("Genesis-block %s with roster %s",
+			hash, sb.Roster.List)
+	}
+	return fmt.Sprintf("Block %s and roster %s",
+		hash, sb.Roster.List)
+}
+
 // BlockLink has the hash and a signature of a block
 type BlockLink struct {
 	Hash      SkipBlockID
@@ -384,8 +397,21 @@ func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 // If there are multiple matching skipblocks, the first one is chosen. If none
 // match, nil will be returned.
 //
-// The search is done in any part of the ID, even in wrong nibbles!
+// The search is done in the following order:
+//  1. as prefix - if none is found
+//  2. as suffix - if none is found
+//  3. anywhere
 func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
+	for _, sb := range sbm.SkipBlocks {
+		if strings.HasPrefix(hex.EncodeToString(sb.Hash), id) {
+			return sb
+		}
+	}
+	for _, sb := range sbm.SkipBlocks {
+		if strings.HasSuffix(hex.EncodeToString(sb.Hash), id) {
+			return sb
+		}
+	}
 	for _, sb := range sbm.SkipBlocks {
 		if strings.Contains(hex.EncodeToString(sb.Hash), id) {
 			return sb

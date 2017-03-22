@@ -109,7 +109,13 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
-		prop.GenesisID = prev.GenesisID
+		if prop.Index > 1 {
+			prop.GenesisID = prev.GenesisID
+		} else {
+			// The genesis-block cannot include his own hash in the
+			// SkipBlockFix that is hashed.
+			prop.GenesisID = prev.Hash
+		}
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
