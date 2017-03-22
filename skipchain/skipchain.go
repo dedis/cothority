@@ -83,9 +83,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 				err.Error())
 		}
 		if !prop.ParentBlockID.IsNull() {
-			parent, ok := s.Sbm.GetByID(prop.ParentBlockID)
+			parent := s.Sbm.GetByID(prop.ParentBlockID)
 			//log.Print(parent, ok)
-			if !ok {
+			if parent == nil {
 				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
 					"Didn't find parent")
 			}
@@ -95,9 +95,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		changed = append(changed, prop)
 	} else {
 		// We're appending a block to an existing chain
-		var ok bool
-		prev, ok = s.Sbm.GetByID(psbd.LatestID)
-		if !ok {
+		prev = s.Sbm.GetByID(psbd.LatestID)
+		if prev == nil {
 			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 				"Didn't find latest block")
 		}
@@ -124,9 +123,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		pointer := prev
 		for h := range prop.BackLinkIDs {
 			for pointer.Height < h+1 {
-				var ok bool
-				pointer, ok = s.Sbm.GetByID(pointer.BackLinkIDs[0])
-				if !ok {
+				pointer = s.Sbm.GetByID(pointer.BackLinkIDs[0])
+				if pointer == nil {
 					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 						"Didn't find convenient SkipBlock for height "+
 							strconv.Itoa(h))
@@ -141,8 +139,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		}
 		changed = append(changed, prev, prop)
 		for i, bl := range prop.BackLinkIDs[1:] {
-			back, ok := s.Sbm.GetByID(bl)
-			if !ok {
+			back := s.Sbm.GetByID(bl)
+			if back == nil {
 				return nil, onet.NewClientErrorCode(ErrorBlockContent,
 					"Didn't get skipblock in back-link")
 			}
@@ -156,7 +154,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 			}
 		}
 	}
-	el, err := prop.GetResponsible(s.Sbm)
+	el, err := s.Sbm.GetResponsible(prop)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockContent, err.Error())
 	}
@@ -180,8 +178,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
-	block, ok := s.Sbm.GetByID(latestKnown.LatestID)
-	if !ok {
+	block := s.Sbm.GetByID(latestKnown.LatestID)
+	if block == nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
@@ -189,8 +187,8 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
 	for len(block.ForwardLink) > 0 {
 		link := block.ForwardLink[len(block.ForwardLink)-1]
-		next, ok := s.Sbm.GetByID(link.Hash)
-		if !ok {
+		next := s.Sbm.GetByID(link.Hash)
+		if next == nil {
 			log.Lvl3("Didn't find next block, updating block")
 			var err error
 			next, err = s.getUpdateBlock(block, link.Hash)
@@ -248,8 +246,8 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
 			return errors.New("This backlink-height doesn't exist")
 		}
-		target, ok := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
-		if !ok {
+		target := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
+		if target == nil {
 			return errors.New("Didn't find target-block")
 		}
 		data, err := network.Marshal(fs)
@@ -276,8 +274,8 @@ func (s *Service) getBlock(env *network.Envelope) {
 		log.Error("Didn't receive GetBlock")
 		return
 	}
-	sb, ok := s.Sbm.GetByID(gb.ID)
-	if !ok {
+	sb := s.Sbm.GetByID(gb.ID)
+	if sb == nil {
 		log.Error("Did not find block")
 		return
 	}
@@ -301,7 +299,7 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 		log.Error("Didn't receive GetBlock")
 		return
 	}
-	if err := gbr.SkipBlock.VerifyLinks(s.Sbm); err != nil {
+	if err := s.Sbm.VerifyLinks(gbr.SkipBlock); err != nil {
 		log.Error("Received invalid skipblock: " + err.Error())
 	}
 	id := s.Sbm.Store(gbr.SkipBlock)
@@ -321,8 +319,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !ok {
 			return errors.New("Didn't receive a ForwardSignature")
 		}
-		previous, ok := s.Sbm.GetByID(fs.Previous)
-		if !ok {
+		previous := s.Sbm.GetByID(fs.Previous)
+		if previous == nil {
 			return errors.New("Didn't find newest block")
 		}
 		newest := fs.Newest
@@ -335,8 +333,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !fs.ForwardLink.Hash.Equal(newest.Hash) {
 			return errors.New("No forward-link from previous to newest")
 		}
-		target, ok := s.Sbm.GetByID(newest.BackLinkIDs[fs.TargetHeight])
-		if !ok {
+		target := s.Sbm.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+		if target == nil {
 			return errors.New("Don't have target-block")
 		}
 		if len(target.ForwardLink) >= fs.TargetHeight+1 {
@@ -360,8 +358,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	src := data[0:32]
-	srcSB, ok := s.Sbm.GetByID(src)
-	if !ok {
+	srcSB := s.Sbm.GetByID(src)
+	if srcSB == nil {
 		log.Error("Didn't find src-skipblock")
 		return false
 	}
@@ -410,7 +408,7 @@ func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 	if s.verifyBlock(newSB) != nil {
 		return false
 	}
-	if newSB.VerifyLinks(s.Sbm) != nil {
+	if s.Sbm.VerifyLinks(newSB) != nil {
 		return false
 	}
 	log.Lvl4("No verification - accepted")
@@ -424,8 +422,8 @@ func (s *Service) verifyFuncShard(newID []byte, newSB *SkipBlock) bool {
 		log.Lvl3("No parent skipblock to verify against")
 		return false
 	}
-	sbParent, exists := s.Sbm.GetByID(newSB.ParentBlockID)
-	if !exists {
+	sbParent := s.Sbm.GetByID(newSB.ParentBlockID)
+	if sbParent == nil {
 		log.Lvl3("Parent skipblock doesn't exist")
 		return false
 	}

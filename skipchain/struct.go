@@ -11,6 +11,9 @@ import (
 
 	"encoding/binary"
 
+	"encoding/hex"
+	"strings"
+
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
@@ -174,61 +177,6 @@ func (sb *SkipBlock) VerifyForwardSignatures() error {
 	return nil
 }
 
-// VerifyLinks makes sure that all forward- and backward-links are correct.
-// It needs a SkipBlockMap to fetch other necessary blocks.
-func (sb *SkipBlock) VerifyLinks(sbm *SkipBlockMap) error {
-	if len(sb.BackLinkIDs) == 0 {
-		return errors.New("need at least one backlink")
-	}
-
-	if err := sb.VerifyForwardSignatures(); err != nil {
-		return errors.New("Wrong signatures: " + err.Error())
-	}
-
-	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNull() {
-		parent, ok := sbm.GetByID(sb.ParentBlockID)
-		if !ok {
-			return errors.New("Didn't find parent")
-		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := false
-		for _, child := range parent.ChildSL {
-			if child.Equal(sb.Hash) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New("parent doesn't know about us")
-		}
-	}
-
-	// We don't check backward-links for genesis-blocks
-	if sb.Index == 0 {
-		return nil
-	}
-
-	// Verify we're referenced by our previous block
-	sbBack, ok := sbm.GetByID(sb.BackLinkIDs[0])
-	if !ok {
-		if len(sb.ForwardLink) > 0 {
-			log.LLvl3("Didn't find back-link, but have a good forward-link")
-			return nil
-		}
-		return errors.New("Didn't find height-0 skipblock in sbm")
-	}
-	if err := sbBack.VerifyForwardSignatures(); err != nil {
-		return err
-	}
-	if !sbBack.ForwardLink[0].Hash.Equal(sb.Hash) {
-		return errors.New("didn't find our block in forward-links")
-	}
-	return nil
-}
-
 // Equal returns bool if both hashes are equal
 func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 	return bytes.Equal(sb.Hash, other.Hash)
@@ -252,36 +200,6 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 
 func (sb *SkipBlock) Short() string {
 	return sb.Hash.Short()
-}
-
-// GetResponsible searches for the block that is responsible for us - for
-// - Root_Genesis - himself
-// - *_Gensis - it's his parent
-// - else - it's the previous block
-func (sb *SkipBlock) GetResponsible(sbm *SkipBlockMap) (*SkipBlock, error) {
-	if sb == nil {
-		log.Panic(log.Stack())
-	}
-	if sb.Index == 0 {
-		// Genesis-block
-		if sb.ParentBlockID.IsNull() {
-			// Root-skipchain, no other parent
-			return sb, nil
-		}
-		ret, ok := sbm.GetByID(sb.ParentBlockID)
-		if !ok {
-			return nil, errors.New("No Roster and no parent")
-		}
-		return ret, nil
-	}
-	if len(sb.BackLinkIDs) == 0 {
-		return nil, errors.New("Invalid block: no backlink")
-	}
-	prev, ok := sbm.GetByID(sb.BackLinkIDs[0])
-	if !ok {
-		return nil, errors.New("Didn't find responsible")
-	}
-	return prev, nil
 }
 
 func (sb *SkipBlock) updateHash() SkipBlockID {
@@ -326,19 +244,18 @@ func NewSkipBlockMap() *SkipBlockMap {
 	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
 }
 
-// GetByID returns the skip-block or false if it doesn't exist
-func (s *SkipBlockMap) GetByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.Lock()
-	b, ok := s.SkipBlocks[string(sbID)]
-	s.Unlock()
-	return b, ok
+// GetByID returns the skip-block or nil if it doesn't exist
+func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
+	sbm.Lock()
+	defer sbm.Unlock()
+	return sbm.SkipBlocks[string(sbID)]
 }
 
 // Store stores the given SkipBlock in the service-list
-func (s *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
-	s.Lock()
-	defer s.Unlock()
-	if sbOld, exists := s.SkipBlocks[string(sb.Hash)]; exists {
+func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
+	sbm.Lock()
+	defer sbm.Unlock()
+	if sbOld, exists := sbm.SkipBlocks[string(sb.Hash)]; exists {
 		// If this skipblock already exists, only copy forward-links and
 		// new children.
 		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
@@ -354,14 +271,125 @@ func (s *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
 		}
 	} else {
-		s.SkipBlocks[string(sb.Hash)] = sb
+		sbm.SkipBlocks[string(sb.Hash)] = sb
 	}
 	return sb.Hash
 }
 
 // Length returns the actual length using mutexes
-func (s *SkipBlockMap) Length() int {
-	s.Lock()
-	defer s.Unlock()
-	return len(s.SkipBlocks)
+func (sbm *SkipBlockMap) Length() int {
+	sbm.Lock()
+	defer sbm.Unlock()
+	return len(sbm.SkipBlocks)
+}
+
+// GetResponsible searches for the block that is responsible for sb
+// - Root_Genesis - himself
+// - *_Gensis - it's his parent
+// - else - it's the previous block
+func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
+	if sb == nil {
+		log.Panic(log.Stack())
+	}
+	if sb.Index == 0 {
+		// Genesis-block
+		if sb.ParentBlockID.IsNull() {
+			// Root-skipchain, no other parent
+			return sb, nil
+		}
+		ret := sbm.GetByID(sb.ParentBlockID)
+		if ret == nil {
+			return nil, errors.New("No Roster and no parent")
+		}
+		return ret, nil
+	}
+	if len(sb.BackLinkIDs) == 0 {
+		return nil, errors.New("Invalid block: no backlink")
+	}
+	prev := sbm.GetByID(sb.BackLinkIDs[0])
+	if prev == nil {
+		return nil, errors.New("Didn't find responsible")
+	}
+	return prev, nil
+}
+
+// VerifyLinks makes sure that all forward- and backward-links are correct.
+// It takes a skipblock to verify and returns nil in case of success.
+func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
+	if len(sb.BackLinkIDs) == 0 {
+		return errors.New("need at least one backlink")
+	}
+
+	if err := sb.VerifyForwardSignatures(); err != nil {
+		return errors.New("Wrong signatures: " + err.Error())
+	}
+
+	// Verify if we're in the responsible-list
+	if !sb.ParentBlockID.IsNull() {
+		parent := sbm.GetByID(sb.ParentBlockID)
+		if parent == nil {
+			return errors.New("Didn't find parent")
+		}
+		if err := parent.VerifyForwardSignatures(); err != nil {
+			return err
+		}
+		found := false
+		for _, child := range parent.ChildSL {
+			if child.Equal(sb.Hash) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("parent doesn't know about us")
+		}
+	}
+
+	// We don't check backward-links for genesis-blocks
+	if sb.Index == 0 {
+		return nil
+	}
+
+	// Verify we're referenced by our previous block
+	sbBack := sbm.GetByID(sb.BackLinkIDs[0])
+	if sbBack == nil {
+		if len(sb.ForwardLink) > 0 {
+			log.LLvl3("Didn't find back-link, but have a good forward-link")
+			return nil
+		}
+		return errors.New("Didn't find height-0 skipblock in sbm")
+	}
+	if err := sbBack.VerifyForwardSignatures(); err != nil {
+		return err
+	}
+	if !sbBack.ForwardLink[0].Hash.Equal(sb.Hash) {
+		return errors.New("didn't find our block in forward-links")
+	}
+	return nil
+}
+
+// GetLatest searches for the latest available block for that skipblock.
+func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	latest := sb
+	for len(latest.ForwardLink) > 0 {
+		latest = sbm.GetByID(latest.ForwardLink[len(latest.ForwardLink)-1].Hash)
+		if latest == nil {
+			return nil, errors.New("missing block")
+		}
+	}
+	return latest, nil
+}
+
+// GetFuzzy searches for a block that resembles the given ID, if ID is not full.
+// If there are multiple matching skipblocks, the first one is chosen. If none
+// match, nil will be returned.
+//
+// The search is done in any part of the ID, even in wrong nibbles!
+func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
+	for _, sb := range sbm.SkipBlocks {
+		if strings.Contains(hex.EncodeToString(sb.Hash), id) {
+			return sb
+		}
+	}
+	return nil
 }

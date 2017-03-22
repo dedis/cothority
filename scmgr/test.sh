@@ -11,9 +11,10 @@ main(){
     startTest
     buildConode github.com/dedis/cothority/skipchain
     CFG=$BUILDDIR/config.bin
+    test Config
 #	test Create
 #	test Join
-	test Add
+#	test Add
     stopTest
 }
 
@@ -53,8 +54,19 @@ testCreate(){
     testGrep "Genesis-block" runSc list
 }
 
+testConfig(){
+	startCl
+	OLDCFG=$CFG
+	CFGDIR=$( mktemp -d )
+	CFG=$CFGDIR/config.bin
+	rmdir $CFGDIR
+	testOK runSc create public.toml
+	rm -rf $CFGDIR
+	CFG=$OLDCFG
+}
+
 runSc(){
-    dbgRun ./$APP -c $BUILDDIR/config.bin -d $DBG_APP $@
+    dbgRun ./$APP -c $CFG -d $DBG_APP $@
 }
 
 startCl(){

@@ -15,6 +15,8 @@ import (
 
 	"encoding/hex"
 
+	"path"
+
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/network"
 	"gopkg.in/dedis/onet.v1/log"
@@ -22,7 +24,7 @@ import (
 )
 
 type Config struct {
-	Latest map[string]*skipchain.SkipBlock
+	*skipchain.SkipBlockMap
 }
 
 func main() {
@@ -106,7 +108,7 @@ func create(c *cli.Context) error {
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg := getConfigOrFail(c)
-	log.ErrFatal(cfg.addBlock(sb))
+	cfg.Store(sb)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -134,7 +136,7 @@ func join(c *cli.Context) error {
 	}
 	log.Infof("Joined skipchain %x", genesis)
 	cfg := getConfigOrFail(c)
-	log.ErrFatal(cfg.addBlock(latest))
+	cfg.Store(latest)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -145,14 +147,10 @@ func add(c *cli.Context) error {
 	if c.NArg() < 2 {
 		return errors.New("Please give group-file and id to add")
 	}
-	latestID, err := hex.DecodeString(c.Args().Get(0))
 	group := readGroup(c, 1)
-	if err != nil {
-		return errors.New("while decoding id: " + err.Error())
-	}
 	cfg := getConfigOrFail(c)
-	sb, err := cfg.getBlock(latestID)
-	if err != nil {
+	sb := cfg.GetFuzzy(c.Args().First())
+	if sb == nil {
 		return errors.New("didn't find latest block - update first")
 	}
 	client := skipchain.NewClient()
@@ -160,7 +158,7 @@ func add(c *cli.Context) error {
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	log.ErrFatal(cfg.addBlock(ssbr.Latest))
+	cfg.Store(ssbr.Latest)
 	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
 	return nil
 }
@@ -171,14 +169,10 @@ func update(c *cli.Context) error {
 	if c.NArg() < 1 {
 		return errors.New("please give block-id to update")
 	}
-	latestID, err := hex.DecodeString(c.Args().First())
-	if err != nil {
-		return errors.New("while decoding id: " + err.Error())
-	}
 	cfg := getConfigOrFail(c)
 
-	sb, err := cfg.getBlock(latestID)
-	if err != nil {
+	sb := cfg.GetFuzzy(c.Args().First())
+	if sb == nil {
 		return errors.New("didn't find latest block in local store!")
 	}
 	client := skipchain.NewClient()
@@ -191,7 +185,7 @@ func update(c *cli.Context) error {
 	} else {
 		for _, b := range guc.Update[1:] {
 			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
-			log.ErrFatal(cfg.addBlock(b))
+			cfg.Store(b)
 		}
 	}
 	latest := guc.Update[len(guc.Update)-1]
@@ -206,10 +200,10 @@ func list(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
-	if len(cfg.Latest) == 0 {
+	if cfg.Length() == 0 {
 		log.Info("Didn't find any blocks yet")
 	} else {
-		for _, sb := range cfg.Latest {
+		for _, sb := range cfg.SkipBlockMap.SkipBlocks {
 			if sb.GenesisID.IsNull() {
 				log.Infof("Genesis-block %x with roster %s",
 					sb.Hash, sb.Roster.List)
@@ -244,18 +238,12 @@ func getConfigOrFail(c *cli.Context) *Config {
 	return cfg
 }
 
-func NewConfig() *Config {
-	return &Config{
-		Latest: map[string]*skipchain.SkipBlock{},
-	}
-}
-
 func LoadConfig(c *cli.Context) (*Config, error) {
 	path := app.TildeToHome(c.GlobalString("config"))
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return NewConfig(), nil
+			return &Config{SkipBlockMap: skipchain.NewSkipBlockMap()}, nil
 		} else {
 			return nil, fmt.Errorf("Could not open file %s", path)
 		}
@@ -271,26 +259,21 @@ func LoadConfig(c *cli.Context) (*Config, error) {
 	return cfg.(*Config), err
 }
 
-func (cfg *Config) addBlock(sb *skipchain.SkipBlock) error {
-	if cfg.Latest[string(sb.Hash)] != nil {
-		return errors.New("That skipblock already exists")
-	}
-	cfg.Latest[string(sb.Hash)] = sb
-	return nil
-}
-
-func (cfg *Config) getBlock(id skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-	if cfg.Latest[string(id)] == nil {
-		return nil, errors.New("Don't know that skipblock")
-	}
-	return cfg.Latest[string(id)], nil
-}
-
 func (cfg *Config) save(c *cli.Context) error {
-	path := app.TildeToHome(c.GlobalString("config"))
 	buf, err := network.Marshal(cfg)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, buf, 0660)
+	file := app.TildeToHome(c.GlobalString("config"))
+	path := path.Dir(file)
+	_, err = os.Stat(path)
+	if os.IsNotExist(err) {
+		err := os.MkdirAll(path, 0770)
+		if err != nil {
+			return err
+		}
+	} else {
+		return err
+	}
+	return ioutil.WriteFile(file, buf, 0660)
 }
