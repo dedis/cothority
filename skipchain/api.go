@@ -134,10 +134,11 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster, baseHeight,
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
-// the most current SkipBlock of the chain.
-func (c *Client) GetUpdateChain(latest *SkipBlock) (reply *GetUpdateChainReply, cerr onet.ClientError) {
-	h := latest.Roster.RandomServerIdentity()
+// the most current SkipBlock of the chain. It takes a roster that knows the
+// 'latest' skipblock and the id (=hash) of the latest skipblock.
+func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, cerr onet.ClientError) {
 	reply = &GetUpdateChainReply{}
-	cerr = c.SendProtobuf(h, &GetUpdateChain{latest.Hash}, reply)
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetUpdateChain{latest}, reply)
 	return
 }

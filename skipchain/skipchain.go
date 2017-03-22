@@ -75,7 +75,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		// genesis block has a random back-link:
 		bl := random.Bytes(32, random.Stream)
 		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl)}
-		prop.GenesisID = prop.updateHash()
+		prop.GenesisID = nil
+		prop.updateHash()
 		err := s.verifyBlock(prop)
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
@@ -83,7 +84,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		}
 		if !prop.ParentBlockID.IsNull() {
 			parent, ok := s.Sbm.GetByID(prop.ParentBlockID)
-			log.Print(parent, ok)
+			//log.Print(parent, ok)
 			if !ok {
 				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
 					"Didn't find parent")
@@ -136,7 +137,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		prop.updateHash()
 		if err := s.addForwardLink(prev, prop, 1); err != nil {
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
-				"Couldn't get forward signature on block.")
+				"Couldn't get forward signature on block: "+err.Error())
 		}
 		changed = append(changed, prev, prop)
 		for i, bl := range prop.BackLinkIDs[1:] {
@@ -222,7 +223,7 @@ func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBl
 	node := known.Roster.RandomServerIdentity()
 	if err := s.SendRaw(node,
 		&GetBlock{unknown}); err != nil {
-		return nil, errors.New("Couldn't get updated block: " + known.String())
+		return nil, errors.New("Couldn't get updated block: " + known.Short())
 	}
 	var block *SkipBlock
 	select {
@@ -231,7 +232,7 @@ func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBl
 		delete(s.blockRequests, string(unknown))
 	case <-time.After(time.Millisecond * time.Duration(propagateTimeout)):
 		delete(s.blockRequests, string(unknown))
-		return nil, errors.New("Couldn't get updated block in time: " + unknown.String())
+		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
 	}
 	return block, nil
 }

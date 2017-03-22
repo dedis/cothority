@@ -30,7 +30,7 @@ func (sbid SkipBlockID) IsNull() bool {
 	return len(sbid) == 0
 }
 
-func (sbid SkipBlockID) String() string {
+func (sbid SkipBlockID) Short() string {
 	if sbid.IsNull() {
 		return "Nil"
 	}
@@ -250,8 +250,8 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	return &b
 }
 
-func (sb *SkipBlock) String() string {
-	return sb.Hash.String()
+func (sb *SkipBlock) Short() string {
+	return sb.Hash.Short()
 }
 
 // GetResponsible searches for the block that is responsible for us - for

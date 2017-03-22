@@ -1,41 +1,65 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
+#DBG_SRV=3
 
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
-    buildConode
-	test Count
-	test Time
+    buildConode github.com/dedis/cothority/skipchain
+    CFG=$BUILDDIR/config.bin
+#	test Create
+#	test Join
+	test Add
     stopTest
 }
 
-testCount(){
-       runCoBG 1 2
-       testFail runTmpl counter
-       testOK runTmpl counter public.toml
-       testGrep ": 0" runTmpl counter public.toml
-       runTmpl time public.toml
-       testGrep ": 1" runTmpl counter public.toml
+testAdd(){
+	startCl
+	setupGenesis
+	testFail runSc add 1234 public.toml
+	testOK runSc add $ID public.toml
+	runCoBG 3
+	runGrepSed "Latest block of" "s/.* //" runSc update $ID
+	LATEST=$SED
+	testOK runSc add $LATEST public.toml
 }
 
-testTime(){
-       runCoBG 1 2
-       testFail runTmpl time
-       testOK runTmpl time public.toml
-       testGrep Time runTmpl time public.toml
+setupGenesis(){
+	runGrepSed "Created new" "s/.* //" runSc create public.toml
+	ID=$SED
 }
 
-testBuild(){
-    testOK dbgRun runTmpl --help
+testJoin(){
+	startCl
+	runGrepSed "Created new" "s/.* //" runSc create public.toml
+	ID=$SED
+	rm $CFG
+	testGrep "Didn't find any" runSc list
+	testFail runSc join public.toml 1234
+	testGrep "Didn't find any" runSc list
+	testOK runSc join public.toml $ID
+	testGrep $ID runSc list
 }
 
-runTmpl(){
-    dbgRun ./$APP -d $DBG_APP $@
+testCreate(){
+	startCl
+    testGrep "Didn't find any" runSc list
+    testFail runSc create
+    testOK runSc create public.toml
+    testGrep "Genesis-block" runSc list
+}
+
+runSc(){
+    dbgRun ./$APP -c $BUILDDIR/config.bin -d $DBG_APP $@
+}
+
+startCl(){
+	rm $CFG
+	runCoBG 1 2
 }
 
 main
