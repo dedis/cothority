@@ -21,8 +21,8 @@ import (
 	"sort"
 
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet/network"
 	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
