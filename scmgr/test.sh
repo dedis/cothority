@@ -12,9 +12,9 @@ main(){
     buildConode github.com/dedis/cothority/skipchain
     CFG=$BUILDDIR/config.bin
     test Config
-	test Create
-	test Join
-	test Add
+#	test Create
+#	test Join
+#	test Add
     stopTest
 }
 
@@ -60,6 +60,10 @@ testConfig(){
 	CFGDIR=$( mktemp -d )
 	CFG=$CFGDIR/config.bin
 	rmdir $CFGDIR
+	head -n 4 public.toml > one.toml
+#	testGrep "More than one" runSc create one.toml
+#	testGrep "More than one" runSc create one.toml
+	testOK runSc create one.toml
 	testOK runSc create public.toml
 	rm -rf $CFGDIR
 	CFG=$OLDCFG

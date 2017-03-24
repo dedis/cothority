@@ -173,5 +173,5 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	sig := make([]byte, 64+len(servers)/8)
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
-	return &bftcosi.BFTSignature{sig, msg, nil}, nil
+	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
 }

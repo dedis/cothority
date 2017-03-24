@@ -570,7 +570,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	case <-time.After(time.Second * 60):
 		return nil, errors.New("Timed out while waiting for signature")
 	}
-	return sig, nil
 }
 
 // notify other services about new/updated skipblock
