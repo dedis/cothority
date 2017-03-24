@@ -42,6 +42,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	genesis.BaseHeight = 2
 	genesis.ParentBlockID = sbRoot.Hash
 	genesis.Roster = sbRoot.Roster
+	genesis.VerifierIDs = VerificationStandard
 	blockCount := 0
 	psbrMsg, err := service.StoreSkipBlock(&StoreSkipBlock{nil, genesis})
 	assert.Nil(t, err)
@@ -399,8 +400,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
-	genesis, ok := service.Sbm.GetByID(root.Hash)
-	if !ok {
+	genesis := service.Sbm.GetByID(root.Hash)
+	if genesis == nil {
 		return errors.New("Didn't find genesis-block in service")
 	}
 	if len(genesis.ForwardLink) != height {

@@ -111,7 +111,7 @@ func create(c *cli.Context) error {
 	group := readGroup(c, 0)
 	client := skipchain.NewClient()
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationNone, nil, nil)
+		skipchain.VerificationStandard, nil, nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}

@@ -220,6 +220,14 @@ func (sb *SkipBlock) Sprint(short bool) string {
 		hash, sb.Roster.List)
 }
 
+// SkipChainID is the hash of the genesis-block.
+func (sb *SkipBlock) SkipChainID() SkipBlockID {
+	if sb.Index == 0 {
+		return sb.Hash
+	}
+	return sb.GenesisID
+}
+
 // BlockLink has the hash and a signature of a block
 type BlockLink struct {
 	Hash      SkipBlockID

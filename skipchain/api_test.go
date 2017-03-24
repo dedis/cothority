@@ -67,7 +67,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, cerr := clients[i%8].GetUpdateChain(inter)
+			_, cerr := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
 			log.ErrFatal(cerr)
 			wg.Done()
 		}(i)
@@ -91,7 +91,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 		"Root signature invalid:")
 	log.ErrFatal(inter.VerifyForwardSignatures(),
 		"Root signature invalid:")
-	update, cerr := c.GetUpdateChain(root)
+	update, cerr := c.GetUpdateChain(root.Roster, root.Hash)
 	log.ErrFatal(cerr)
 	root = update.Update[0]
 	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
@@ -134,7 +134,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	var updates *GetUpdateChainReply
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
-		updates, cerr = c.GetUpdateChain(inter)
+		updates, cerr = c.GetUpdateChain(inter.Roster, inter.Hash)
 		log.ErrFatal(cerr)
 	}
 	if len(updates.Update) != 3 {

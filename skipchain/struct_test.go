@@ -38,19 +38,19 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	inter1.Index++
 	inter1.BackLinkIDs = []SkipBlockID{inter0.Hash}
 
-	b, err := root0.GetResponsible(sbm)
+	b, err := sbm.GetResponsible(root0)
 	log.ErrFatal(err)
 	assert.True(t, root0.Equal(b))
 
-	b, err = root1.GetResponsible(sbm)
+	b, err = sbm.GetResponsible(root1)
 	log.ErrFatal(err)
 	assert.True(t, root0.Equal(b))
 
-	b, err = inter0.GetResponsible(sbm)
+	b, err = sbm.GetResponsible(inter0)
 	log.ErrFatal(err)
 	assert.True(t, root1.Equal(b))
 
-	b, err = inter1.GetResponsible(sbm)
+	b, err = sbm.GetResponsible(inter1)
 	log.ErrFatal(err)
 	assert.True(t, inter0.Equal(b))
 }
@@ -67,14 +67,14 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	root.Hash = root.calculateHash()
 	sbm.Store(root)
 	log.ErrFatal(root.VerifyForwardSignatures())
-	log.ErrFatal(root.VerifyLinks(sbm))
+	log.ErrFatal(sbm.VerifyLinks(root))
 
 	block1 := root.Copy()
 	block1.BackLinkIDs = append(block1.BackLinkIDs, root.Hash)
 	block1.Index++
 	sbm.Store(block1)
 	require.Nil(t, block1.VerifyForwardSignatures())
-	require.NotNil(t, block1.VerifyLinks(sbm))
+	require.NotNil(t, sbm.VerifyLinks(block1))
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {

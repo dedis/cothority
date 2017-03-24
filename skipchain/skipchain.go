@@ -347,7 +347,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 			return errors.New("Already have forward-link at height " +
 				strconv.Itoa(fs.TargetHeight+1))
 		}
-		if !target.GenesisID.Equal(newest.GenesisID) {
+		if !target.SkipChainID().Equal(newest.GenesisID) {
 			return errors.New("Target and newest not from same skipchain")
 		}
 		return nil
@@ -412,9 +412,6 @@ func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 		return false
 	}
 	if s.verifyBlock(newSB) != nil {
-		return false
-	}
-	if s.Sbm.VerifyLinks(newSB) != nil {
 		return false
 	}
 	log.Lvl4("No verification - accepted")
