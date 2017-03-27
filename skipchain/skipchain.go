@@ -109,13 +109,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
-		if prop.Index > 1 {
-			prop.GenesisID = prev.GenesisID
-		} else {
-			// The genesis-block cannot include his own hash in the
-			// SkipBlockFix that is hashed.
-			prop.GenesisID = prev.Hash
-		}
+		prop.GenesisID = prev.SkipChainID()
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
@@ -347,7 +341,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 			return errors.New("Already have forward-link at height " +
 				strconv.Itoa(fs.TargetHeight+1))
 		}
-		if !target.SkipChainID().Equal(newest.GenesisID) {
+		if !target.SkipChainID().Equal(newest.SkipChainID()) {
 			return errors.New("Target and newest not from same skipchain")
 		}
 		return nil

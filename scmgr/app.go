@@ -89,6 +89,11 @@ func main() {
 			},
 			Action: list,
 		},
+		{
+			Name:   "index",
+			Usage:  "create index-files for all known skiplists",
+			Action: index,
+		},
 	}
 	cliApp.Flags = []cli.Flag{
 		app.FlagDebug,
@@ -211,6 +216,41 @@ func update(c *cli.Context) error {
 
 // List gets all known skipblocks
 func list(c *cli.Context) error {
+	cfg, err := LoadConfig(c)
+	if err != nil {
+		return errors.New("couldn't read config: " + err.Error())
+	}
+	if cfg.Sbm.Length() == 0 {
+		log.Info("Didn't find any blocks yet")
+		return nil
+	}
+	genesis := SBL{}
+	for _, sb := range cfg.Sbm.SkipBlocks {
+		if sb.Index == 0 {
+			genesis = append(genesis, sb)
+		}
+	}
+	sort.Sort(genesis)
+	for _, g := range genesis {
+		short := !c.Bool("long")
+		log.Info(g.Sprint(short))
+		sub := SBLI{}
+		for _, sb := range cfg.Sbm.SkipBlocks {
+			if sb.GenesisID.Equal(g.Hash) {
+				sub = append(sub, sb)
+			}
+		}
+		sort.Sort(sub)
+		for _, sb := range sub {
+			log.Info("  " + sb.Sprint(short))
+		}
+	}
+	return nil
+}
+
+// Index writes one index-file for every known skiplist and an index.html
+// for all skiplists.
+func index(c *cli.Context) error {
 	cfg, err := LoadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
