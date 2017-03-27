@@ -248,8 +248,8 @@ func list(c *cli.Context) error {
 	return nil
 }
 
-// Index writes one index-file for every known skiplist and an index.html
-// for all skiplists.
+// Index writes one index-file for every known skipchain and an index.html
+// for all skiplchains.
 func index(c *cli.Context) error {
 	cfg, err := LoadConfig(c)
 	if err != nil {
