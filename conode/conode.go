@@ -87,7 +87,12 @@ func main() {
 			Action: func(c *cli.Context) {
 				printQr(c)
 			},
-			Flags: serverFlags,
+			Flags: append(serverFlags,
+				cli.StringFlag{
+					Name:  "address, a",
+					Usage: "use this as address",
+				},
+			),
 		},
 		{
 			Name:      "check",
@@ -143,7 +148,14 @@ func printQr(c *cli.Context) {
 	// Let's read the config
 	_, server, err := app.ParseCothority(c.String("config"))
 	log.ErrFatal(err)
-	qr, err := qrgo.NewQR("conode://" + server.ServerIdentity.Address.NetworkAddress())
+	addr := c.String("address")
+	if addr == "" {
+		addr = server.ServerIdentity.Address.Host()
+	}
+	addr = addr + ":" + server.ServerIdentity.Address.Port()
+	log.Print(addr)
+
+	qr, err := qrgo.NewQR("conode://" + addr)
 	log.ErrFatal(err)
 	qr.OutputTerminal()
 }
