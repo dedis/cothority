@@ -15,6 +15,7 @@ main(){
 	test Create
 	test Join
 	test Add
+	test Index
     stopTest
 }
 
@@ -52,6 +53,20 @@ testCreate(){
     testFail runSc create
     testOK runSc create public.toml
     testGrep "Genesis-block" runSc list -l
+}
+
+testIndex(){
+    startCl
+    setupGenesis
+    touch random.html
+
+    testFail runSc index
+    testOK runSc index -o $PWD
+    testGrep "$ID" cat index.html
+    testGrep "127.0.0.1" cat index.html
+    testGrep "$ID" cat "$ID.html"
+    testGrep "127.0.0.1" cat "$ID.html"
+    testGrep 0 $([ -f random.html ] && echo -1 || echo 0)
 }
 
 testConfig(){

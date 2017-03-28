@@ -24,6 +24,9 @@ import (
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
+	"encoding/json"
+	"path/filepath"
+	"strings"
 )
 
 type Config struct {
@@ -92,6 +95,12 @@ func main() {
 		{
 			Name:   "index",
 			Usage:  "create index-files for all known skiplists",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "output, o",
+					Usage: "output path of the files",
+				},
+			},
 			Action: index,
 		},
 	}
@@ -251,36 +260,88 @@ func list(c *cli.Context) error {
 // Index writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
 func index(c *cli.Context) error {
+	output := c.String("output")
+	if len(output) == 0 {
+		return errors.New("Missing output path")
+	}
+
+	cleanHtmlFiles(output)
+
 	cfg, err := LoadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
-	if cfg.Sbm.Length() == 0 {
-		log.Info("Didn't find any blocks yet")
-		return nil
-	}
+
+	// Get the list of genesis block
 	genesis := SBL{}
 	for _, sb := range cfg.Sbm.SkipBlocks {
 		if sb.Index == 0 {
 			genesis = append(genesis, sb)
 		}
 	}
+
 	sort.Sort(genesis)
-	for _, g := range genesis {
-		short := !c.Bool("long")
-		log.Info(g.Sprint(short))
-		sub := SBLI{}
-		for _, sb := range cfg.Sbm.SkipBlocks {
-			if sb.GenesisID.Equal(g.Hash) {
-				sub = append(sub, sb)
-			}
+
+	// Build the json structure
+	blocks := jsonBlockList{}
+	blocks.Blocks = make([]JsonBlock, len(genesis))
+	for i, g := range genesis {
+		block := &blocks.Blocks[i]
+		block.GenesisID = hex.EncodeToString(g.Hash)
+		block.Servers = make([]string, len(g.Roster.List))
+
+		for j, server := range g.Roster.List {
+			block.Servers[j] = server.Address.Host() + ":" + server.Address.Port()
 		}
-		sort.Sort(sub)
-		for _, sb := range sub {
-			log.Info("  " + sb.Sprint(short))
+
+		// Write the genesis block file
+		content, _ := json.Marshal(block)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID + ".html"), content, 0644)
+
+		if err != nil {
+			log.Info("Cannot write block-specific file")
 		}
 	}
+
+	content, err := json.Marshal(blocks)
+	if err != nil {
+		log.Info("Cannot convert to json")
+	}
+
+	// Write the json into the index.html
+	err = ioutil.WriteFile(filepath.Join(output, "index.html"), content, 0644)
+	if err != nil {
+		log.Info("Cannot write in the file")
+	}
+
 	return nil
+}
+
+func cleanHtmlFiles(dir string) error {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".html") {
+			err := os.Remove(filepath.Join(dir, f.Name()))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+type JsonBlock struct {
+	GenesisID string
+	Servers []string
+}
+
+type jsonBlockList struct {
+	Blocks []JsonBlock
 }
 
 type SBL []*skipchain.SkipBlock
