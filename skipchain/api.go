@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -112,21 +113,23 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 // CreateRootControl is a convenience function and creates two Skipchains:
 // a root SkipChain with maximumHeight of maxHRoot and a control SkipChain with
 // maximumHeight of maxHControl. It connects both chains for later
-// reference.
+// reference. The root-chain will use `VerificationRoot` and the config-chain
+// will use `VerificationConfig`.
 //
 // A slice of verification-functions is given for the root and the control
 // skipchain.
-func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster, baseHeight,
-	maxHRoot, maxHControl int, verRoot, verControl []VerifierID) (root, control *SkipBlock, cerr onet.ClientError) {
+func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
+	keys []abstract.Point, baseHeight,
+	maxHRoot, maxHControl int) (root, control *SkipBlock, cerr onet.ClientError) {
 	log.Lvl2("Creating root roster", elRoot)
 	root, cerr = c.CreateGenesis(elRoot, baseHeight, maxHRoot,
-		verRoot, nil, nil)
+		VerificationRoot, nil, nil)
 	if cerr != nil {
 		return
 	}
 	log.Lvl2("Creating control roster", elControl)
 	control, cerr = c.CreateGenesis(elControl, baseHeight, maxHControl,
-		verControl, nil, root.Hash)
+		VerificationControl, nil, root.Hash)
 	if cerr != nil {
 		return
 	}

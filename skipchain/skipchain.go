@@ -400,39 +400,6 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	return true
 }
 
-// VerifyBase checks basic parameters between two skipblocks.
-func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
-	if !newSB.Hash.Equal(newID) {
-		return false
-	}
-	if s.verifyBlock(newSB) != nil {
-		return false
-	}
-	log.Lvl4("No verification - accepted")
-	return true
-}
-
-// VerifyShardFunc makes sure that the cothority of the child-skipchain is
-// part of the root-cothority.
-func (s *Service) verifyFuncShard(newID []byte, newSB *SkipBlock) bool {
-	if newSB.ParentBlockID.IsNull() {
-		log.Lvl3("No parent skipblock to verify against")
-		return false
-	}
-	sbParent := s.Sbm.GetByID(newSB.ParentBlockID)
-	if sbParent == nil {
-		log.Lvl3("Parent skipblock doesn't exist")
-		return false
-	}
-	for _, e := range newSB.Roster.List {
-		if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
-			log.Lvl3("ServerIdentity in child doesn't exist in parent")
-			return false
-		}
-	}
-	return true
-}
-
 // PropagateSkipBlock will save a new SkipBlock
 func (s *Service) propagateSkipBlock(msg network.Message) {
 	sbs, ok := msg.(*PropagateSkipBlocks)
@@ -637,7 +604,9 @@ func newSkipchainService(c *onet.Context) onet.Service {
 		s.getBlockReply)
 
 	log.ErrFatal(s.registerVerification(VerifyBase, s.verifyFuncBase))
-	log.ErrFatal(s.registerVerification(VerifyShard, s.verifyFuncShard))
+	log.ErrFatal(s.registerVerification(VerifyRoot, s.verifyFuncRoot))
+	log.ErrFatal(s.registerVerification(VerifyControl, s.verifyFuncControl))
+	log.ErrFatal(s.registerVerification(VerifyData, s.verifyFuncData))
 
 	var err error
 	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)
