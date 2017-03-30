@@ -26,12 +26,12 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-type Config struct {
+type config struct {
 	Sbm *skipchain.SkipBlockMap
 }
 
 func main() {
-	network.RegisterMessage(&Config{})
+	network.RegisterMessage(&config{})
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"
@@ -193,7 +193,7 @@ func update(c *cli.Context) error {
 
 	sb := cfg.Sbm.GetFuzzy(c.Args().First())
 	if sb == nil {
-		return errors.New("didn't find latest block in local store!")
+		return errors.New("didn't find latest block in local store")
 	}
 	client := skipchain.NewClient()
 	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
@@ -216,7 +216,7 @@ func update(c *cli.Context) error {
 
 // List gets all known skipblocks
 func list(c *cli.Context) error {
-	cfg, err := LoadConfig(c)
+	cfg, err := loadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
@@ -224,7 +224,7 @@ func list(c *cli.Context) error {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
-	genesis := SBL{}
+	genesis := sbl{}
 	for _, sb := range cfg.Sbm.SkipBlocks {
 		if sb.Index == 0 {
 			genesis = append(genesis, sb)
@@ -234,7 +234,7 @@ func list(c *cli.Context) error {
 	for _, g := range genesis {
 		short := !c.Bool("long")
 		log.Info(g.Sprint(short))
-		sub := SBLI{}
+		sub := sbli{}
 		for _, sb := range cfg.Sbm.SkipBlocks {
 			if sb.GenesisID.Equal(g.Hash) {
 				sub = append(sub, sb)
@@ -251,7 +251,7 @@ func list(c *cli.Context) error {
 // Index writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
 func index(c *cli.Context) error {
-	cfg, err := LoadConfig(c)
+	cfg, err := loadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
@@ -259,7 +259,7 @@ func index(c *cli.Context) error {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
-	genesis := SBL{}
+	genesis := sbl{}
 	for _, sb := range cfg.Sbm.SkipBlocks {
 		if sb.Index == 0 {
 			genesis = append(genesis, sb)
@@ -269,7 +269,7 @@ func index(c *cli.Context) error {
 	for _, g := range genesis {
 		short := !c.Bool("long")
 		log.Info(g.Sprint(short))
-		sub := SBLI{}
+		sub := sbli{}
 		for _, sb := range cfg.Sbm.SkipBlocks {
 			if sb.GenesisID.Equal(g.Hash) {
 				sub = append(sub, sb)
@@ -283,27 +283,30 @@ func index(c *cli.Context) error {
 	return nil
 }
 
-type SBL []*skipchain.SkipBlock
+// sbl is used to make a nice output with ordered list of geneis-skipblocks.
+type sbl []*skipchain.SkipBlock
 
-func (s SBL) Len() int {
+func (s sbl) Len() int {
 	return len(s)
 }
-func (s SBL) Less(i, j int) bool {
+func (s sbl) Less(i, j int) bool {
 	return bytes.Compare(s[i].Hash, s[j].Hash) < 0
 }
-func (s SBL) Swap(i, j int) {
+func (s sbl) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-type SBLI SBL
+// sbli is used to make a nice output with ordered list of skipblocks of a
+// skipchain.
+type sbli sbl
 
-func (s SBLI) Len() int {
+func (s sbli) Len() int {
 	return len(s)
 }
-func (s SBLI) Less(i, j int) bool {
+func (s sbli) Less(i, j int) bool {
 	return s[i].Index < s[j].Index
 }
-func (s SBLI) Swap(i, j int) {
+func (s sbli) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
@@ -323,21 +326,20 @@ func readGroup(c *cli.Context, pos int) *app.Group {
 	return group
 }
 
-func getConfigOrFail(c *cli.Context) *Config {
-	cfg, err := LoadConfig(c)
+func getConfigOrFail(c *cli.Context) *config {
+	cfg, err := loadConfig(c)
 	log.ErrFatal(err)
 	return cfg
 }
 
-func LoadConfig(c *cli.Context) (*Config, error) {
+func loadConfig(c *cli.Context) (*config, error) {
 	path := app.TildeToHome(c.GlobalString("config"))
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &Config{Sbm: skipchain.NewSkipBlockMap()}, nil
-		} else {
-			return nil, fmt.Errorf("Could not open file %s", path)
+			return &config{Sbm: skipchain.NewSkipBlockMap()}, nil
 		}
+		return nil, fmt.Errorf("Could not open file %s", path)
 	}
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -347,10 +349,10 @@ func LoadConfig(c *cli.Context) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return cfg.(*Config), err
+	return cfg.(*config), err
 }
 
-func (cfg *Config) save(c *cli.Context) error {
+func (cfg *config) save(c *cli.Context) error {
 	buf, err := network.Marshal(cfg)
 	if err != nil {
 		return err
