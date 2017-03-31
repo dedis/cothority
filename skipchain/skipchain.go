@@ -84,7 +84,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 		}
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.Sbm.GetByID(prop.ParentBlockID)
-			//log.Print(parent, ok)
 			if parent == nil {
 				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
 					"Didn't find parent")
@@ -154,12 +153,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 			}
 		}
 	}
-	el, err := s.Sbm.GetResponsible(prop)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockContent, err.Error())
-	}
-	prop.RespPublic = el.Roster.Publics()
-
 	if err := s.startPropagation(changed); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorVerification,
 			"Couldn't propagate new blocks: "+err.Error())
@@ -303,6 +296,7 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 		log.Error("Received invalid skipblock: " + err.Error())
 	}
 	id := s.Sbm.Store(gbr.SkipBlock)
+	s.save()
 	log.Lvl3("Sending block to channel")
 	s.blockRequests[string(id)] <- gbr.SkipBlock
 }
@@ -413,6 +407,7 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			return
 		}
 		s.Sbm.Store(sb)
+		s.save()
 		log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
 	}
 }
@@ -546,12 +541,10 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
-	//log.Print(s.ServerIdentity(), "Starting")
 	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
 	if err != nil {
 		return err
 	}
-	//log.Print(s.ServerIdentity(), "Stopped")
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}

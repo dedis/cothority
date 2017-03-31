@@ -1,6 +1,10 @@
 package skipchain
 
 import (
+	"encoding/hex"
+	"io/ioutil"
+	"net/http"
+
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
@@ -134,6 +138,27 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 		return
 	}
 	return root, control, cerr
+}
+
+// FindSkipChain takes the ID of a skipchain and an optional URL for finding the
+// appropriate skipchain. If no URL is given, the default
+// "http://skipchain.dedis.ch" is used. If successful, it will return the latest
+// known block.
+func (c *Client) FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
+	if url == "" {
+		url = "http://skipchain.dedis.ch"
+	}
+	resp, err := http.Get(url + "/" + hex.EncodeToString(id))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	log.Print(body)
+	return nil, nil
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to

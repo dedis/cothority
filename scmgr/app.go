@@ -20,13 +20,14 @@ import (
 	"bytes"
 	"sort"
 
+	"encoding/json"
+	"path/filepath"
+	"strings"
+
 	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
-	"encoding/json"
-	"path/filepath"
-	"strings"
 )
 
 type config struct {
