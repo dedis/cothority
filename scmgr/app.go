@@ -94,14 +94,9 @@ func main() {
 			Action: list,
 		},
 		{
-			Name:  "index",
-			Usage: "create index-files for all known skiplists",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "output, o",
-					Usage: "output path of the files",
-				},
-			},
+			Name:   "index",
+			Usage:  "create index-files for all known skiplists",
+			ArgsUsage: "output path",
 			Action: index,
 		},
 	}
@@ -261,7 +256,7 @@ func list(c *cli.Context) error {
 // Index writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
 func index(c *cli.Context) error {
-	output := c.String("output")
+	output := c.Args().First()
 	if len(output) == 0 {
 		return errors.New("Missing output path")
 	}
@@ -297,7 +292,7 @@ func index(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID + ".html"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -318,6 +313,7 @@ func index(c *cli.Context) error {
 	return nil
 }
 
+// Remove every file matching *.html in the given directory
 func cleanHTMLFiles(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -336,11 +332,13 @@ func cleanHTMLFiles(dir string) error {
 	return nil
 }
 
+// JSON skipblock element to be written in the index.html file
 type jsonBlock struct {
 	GenesisID string
-	Servers   []string
+	Servers []string
 }
 
+// JSON list of skipblocks element to be written in the index.html file
 type jsonBlockList struct {
 	Blocks []jsonBlock
 }
