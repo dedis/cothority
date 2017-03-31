@@ -9,7 +9,6 @@ import (
 
 	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -184,14 +183,13 @@ func sortUniq(slice []string) []string {
 // CreateIdentity starts a new identity-skipchain with the initial
 // Config and asking all nodes in Roster to participate.
 type CreateIdentity struct {
-	Config *Config
-	Roster *onet.Roster
+	Config  *Config
+	Control *skipchain.SkipBlock
 }
 
 // CreateIdentityReply is the reply when a new Identity has been added. It
-// returns the Root and Data-skipchain.
+// returns the genesis-Data-skipblock.
 type CreateIdentityReply struct {
-	Root *skipchain.SkipBlock
 	Data *skipchain.SkipBlock
 }
 

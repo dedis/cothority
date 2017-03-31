@@ -11,12 +11,21 @@ main(){
     startTest
     buildConode github.com/dedis/cothority/skipchain
     CFG=$BUILDDIR/config.bin
-    test Config
-	test Create
-	test Join
-	test Add
-	test Index
+    test Restart
+#    test Config
+#	test Create
+#	test Join
+#	test Add
+#	test Index
     stopTest
+}
+
+testRestart(){
+	startCl
+	setupGenesis
+	pkill -9 conode 2> /dev/null
+	runCoBG 1 2
+	testOK runSc add $ID public.toml
 }
 
 testAdd(){

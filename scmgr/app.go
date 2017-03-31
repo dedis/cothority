@@ -20,13 +20,14 @@ import (
 	"bytes"
 	"sort"
 
+	"encoding/json"
+	"path/filepath"
+	"strings"
+
 	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
-	"encoding/json"
-	"path/filepath"
-	"strings"
 )
 
 type config struct {
@@ -93,11 +94,11 @@ func main() {
 			Action: list,
 		},
 		{
-			Name:   "index",
-			Usage:  "create index-files for all known skiplists",
+			Name:  "index",
+			Usage: "create index-files for all known skiplists",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name: "output, o",
+					Name:  "output, o",
 					Usage: "output path of the files",
 				},
 			},
@@ -265,7 +266,7 @@ func index(c *cli.Context) error {
 		return errors.New("Missing output path")
 	}
 
-	cleanHtmlFiles(output)
+	cleanHTMLFiles(output)
 
 	cfg, err := loadConfig(c)
 	if err != nil {
@@ -284,7 +285,7 @@ func index(c *cli.Context) error {
 
 	// Build the json structure
 	blocks := jsonBlockList{}
-	blocks.Blocks = make([]JsonBlock, len(genesis))
+	blocks.Blocks = make([]jsonBlock, len(genesis))
 	for i, g := range genesis {
 		block := &blocks.Blocks[i]
 		block.GenesisID = hex.EncodeToString(g.Hash)
@@ -296,7 +297,7 @@ func index(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID + ".html"), content, 0644)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -317,7 +318,7 @@ func index(c *cli.Context) error {
 	return nil
 }
 
-func cleanHtmlFiles(dir string) error {
+func cleanHTMLFiles(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
@@ -335,13 +336,13 @@ func cleanHtmlFiles(dir string) error {
 	return nil
 }
 
-type JsonBlock struct {
+type jsonBlock struct {
 	GenesisID string
-	Servers []string
+	Servers   []string
 }
 
 type jsonBlockList struct {
-	Blocks []JsonBlock
+	Blocks []jsonBlock
 }
 
 // sbl is used to make a nice output with ordered list of geneis-skipblocks.

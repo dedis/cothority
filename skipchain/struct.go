@@ -82,7 +82,7 @@ var (
 	// that there is now new block if a newer parent is present.
 	// It also makes sure that no more than 1/3 of the members of the roster
 	// change between two blocks.
-	VerifyControl = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Root"))
+	VerifyControl = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Control"))
 	// VerifyData makes sure that:
 	//   - it has a parent-chain with `VerificationControl`
 	//   - its Roster doesn't change between blocks
@@ -131,18 +131,49 @@ type SkipBlockFix struct {
 	ParentBlockID SkipBlockID
 	// GenesisID is the ID of the genesis-block.
 	GenesisID SkipBlockID
-	// RespPublic is the list of public keys of our responsible
-	// TODO: can this be put in the SkipBlock or even deleted?
-	RespPublic []abstract.Point
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
 	// Roster holds the roster-definition of that SkipBlock
 	Roster *onet.Roster
 }
 
+// SkipBlockData represents all entries - as maps are not ordered and thus
+// difficult to hash, this is as a slice to {key,data}-pairs.
+type SkipBlockData struct {
+	Entries []SkipBlockDataEntry
+}
+
+// Get returns the data-portion of the key. If key does not exist, it returns
+// nil.
+func (sbd *SkipBlockData) Get(key string) []byte {
+	for _, d := range sbd.Entries {
+		if d.Key == key {
+			return d.Data
+		}
+	}
+	return nil
+}
+
+// Set replaces an existing entry or adds a new entry if the key is not
+// existant.
+func (sbd *SkipBlockData) Set(key string, data []byte) {
+	for i := range sbd.Entries {
+		if sbd.Entries[i].Key == key {
+			sbd.Entries[i].Data = data
+			return
+		}
+	}
+	sbd.Entries = append(sbd.Entries, SkipBlockDataEntry{key, data})
+}
+
+// SkipBlockDataEntry is one entry for the SkipBlockData.
+type SkipBlockDataEntry struct {
+	Key  string
+	Data []byte
+}
+
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
-// TODO: calculate hash by hand
 func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
 	hash := network.Suite.Hash()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
@@ -157,9 +188,6 @@ func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
 	}
 	hash.Write(sbf.ParentBlockID)
 	hash.Write(sbf.GenesisID)
-	for _, pub := range sbf.RespPublic {
-		pub.MarshalTo(hash)
-	}
 	hash.Write(sbf.Data)
 	if sbf.Roster != nil {
 		for _, pub := range sbf.Roster.Publics() {
