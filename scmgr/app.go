@@ -95,12 +95,6 @@ func main() {
 		{
 			Name:   "index",
 			Usage:  "create index-files for all known skiplists",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name: "output, o",
-					Usage: "output path of the files",
-				},
-			},
 			Action: index,
 		},
 	}
@@ -260,7 +254,7 @@ func list(c *cli.Context) error {
 // Index writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
 func index(c *cli.Context) error {
-	output := c.String("output")
+	output := c.Args().First()
 	if len(output) == 0 {
 		return errors.New("Missing output path")
 	}
