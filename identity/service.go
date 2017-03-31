@@ -59,6 +59,7 @@ type Storage struct {
 	Proposed *Config
 	Votes    map[string]*crypto.SchnorrSig
 	Root     *skipchain.SkipBlock
+	Control  *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
 }
 
@@ -75,14 +76,14 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
+	ids.Root, ids.Control, cerr = s.skipchain.CreateRootControl(ai.Roster, ai.Roster,
+		nil, 2, 10, 10)
 	if cerr != nil {
 		return nil, cerr
 	}
 	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Config)
+	ids.Data, cerr = s.skipchain.CreateGenesis(ai.Roster, 2, 10,
+		skipchain.VerificationData, nil, ai.Config.Hash())
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -208,7 +209,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		reply, cerr := s.skipchain.StoreSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}

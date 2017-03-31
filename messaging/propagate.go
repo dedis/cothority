@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"errors"
 	"sync"
 
 	"time"
@@ -90,6 +91,9 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 		name, pid)
 	return func(el *onet.Roster, msg network.Message, msec int) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		if tree == nil {
+			return 0, errors.New("Didn't find root in tree")
+		}
 		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
 		pi, err := c.CreateProtocol(name, tree)
 		if err != nil {
