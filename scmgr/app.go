@@ -279,7 +279,7 @@ func index(c *cli.Context) error {
 
 	// Build the json structure
 	blocks := jsonBlockList{}
-	blocks.Blocks = make([]JsonBlock, len(genesis))
+	blocks.Blocks = make([]jsonBlock, len(genesis))
 	for i, g := range genesis {
 		block := &blocks.Blocks[i]
 		block.GenesisID = hex.EncodeToString(g.Hash)
@@ -312,6 +312,7 @@ func index(c *cli.Context) error {
 	return nil
 }
 
+// Remove every file matching *.html in the given directory
 func cleanHTMLFiles(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -330,13 +331,15 @@ func cleanHTMLFiles(dir string) error {
 	return nil
 }
 
-type JsonBlock struct {
+// JSON skipblock element to be written in the index.html file
+type jsonBlock struct {
 	GenesisID string
 	Servers []string
 }
 
+// JSON list of skipblocks element to be written in the index.html file
 type jsonBlockList struct {
-	Blocks []JsonBlock
+	Blocks []jsonBlock
 }
 
 // sbl is used to make a nice output with ordered list of geneis-skipblocks.
