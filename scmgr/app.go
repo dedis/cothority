@@ -96,6 +96,7 @@ func main() {
 		{
 			Name:   "index",
 			Usage:  "create index-files for all known skiplists",
+			ArgsUsage: "output path",
 			Action: index,
 		},
 	}

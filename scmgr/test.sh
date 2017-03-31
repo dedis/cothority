@@ -75,7 +75,7 @@ testIndex(){
     testGrep "127.0.0.1" cat index.html
     testGrep "$ID" cat "$ID.html"
     testGrep "127.0.0.1" cat "$ID.html"
-    testFail [ -f random.html ]
+    testNFile random.html
 }
 
 testConfig(){
