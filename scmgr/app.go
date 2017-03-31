@@ -260,7 +260,7 @@ func index(c *cli.Context) error {
 		return errors.New("Missing output path")
 	}
 
-	cleanHtmlFiles(output)
+	cleanHTMLFiles(output)
 
 	cfg, err := loadConfig(c)
 	if err != nil {
@@ -312,7 +312,7 @@ func index(c *cli.Context) error {
 	return nil
 }
 
-func cleanHtmlFiles(dir string) error {
+func cleanHTMLFiles(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
