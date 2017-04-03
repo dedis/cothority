@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority/skipchain"
+	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -17,8 +18,9 @@ import (
 // How many msec to wait before a timeout is generated in the propagation
 const propagateTimeout = 10000
 
-// ID represents one skipblock and corresponds to its Hash.
-type ID skipchain.SkipBlockID
+var verifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
+var verificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase,
+	skipchain.VerifyData, verifyIdentity}
 
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
@@ -195,7 +197,7 @@ type CreateIdentityReply struct {
 
 // ConfigUpdate verifies if a new update is available.
 type ConfigUpdate struct {
-	ID ID
+	ID skipchain.SkipBlockID
 }
 
 // ConfigUpdateReply returns the updated configuration.
@@ -206,13 +208,13 @@ type ConfigUpdateReply struct {
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
-	ID ID
+	ID skipchain.SkipBlockID
 	*Config
 }
 
 // ProposeUpdate verifies if a new config is available.
 type ProposeUpdate struct {
-	ID ID
+	ID skipchain.SkipBlockID
 }
 
 // ProposeUpdateReply returns the updated propose-configuration.
@@ -223,7 +225,7 @@ type ProposeUpdateReply struct {
 // ProposeVote sends the signature for a specific IdentityList. It replies nil
 // if the threshold hasn't been reached, or the new SkipBlock
 type ProposeVote struct {
-	ID        ID
+	ID        skipchain.SkipBlockID
 	Signer    string
 	Signature *crypto.SchnorrSig
 }
@@ -243,6 +245,6 @@ type PropagateIdentity struct {
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
-	ID     ID
+	ID     skipchain.SkipBlockID
 	Latest *skipchain.SkipBlock
 }

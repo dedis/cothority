@@ -32,8 +32,7 @@ func TestClient_CreateGenesis(t *testing.T) {
 	_, cerr = c.CreateGenesis(roster, 1, 1, VerificationNone,
 		&testData{}, nil)
 	require.Nil(t, cerr)
-	_, _, cerr = c.CreateRootControl(roster, roster, 1, 1, 0,
-		VerificationNone, VerificationNone)
+	_, _, cerr = c.CreateRootControl(roster, roster, nil, 1, 1, 0)
 	require.NotNil(t, cerr)
 }
 
@@ -42,8 +41,7 @@ func TestClient_CreateRootControl(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
-	_, _, cerr := c.CreateRootControl(roster, roster, 0, 0, 0,
-		VerificationNone, VerificationNone)
+	_, _, cerr := c.CreateRootControl(roster, roster, nil, 0, 0, 0)
 	require.NotNil(t, cerr)
 }
 
@@ -59,8 +57,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := range [8]byte{} {
 		clients[i] = newTestClient(l)
 	}
-	_, inter, cerr := clients[0].CreateRootControl(el, el, 1, 1, 1,
-		VerificationNone, VerificationNone)
+	_, inter, cerr := clients[0].CreateRootControl(el, el, nil, 1, 1, 1)
 	log.ErrFatal(cerr)
 
 	wg := sync.WaitGroup{}
@@ -81,8 +78,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 	defer l.CloseAll()
 
 	c := newTestClient(l)
-	root, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1,
-		VerificationNone, VerificationNone)
+	root, inter, cerr := c.CreateRootControl(el, el, nil, 1, 1, 1)
 	log.ErrFatal(cerr)
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
@@ -108,8 +104,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 
 	c := newTestClient(l)
 	log.Lvl1("Creating root and control chain")
-	_, inter, cerr := c.CreateRootControl(el, el, 1, 1, 1,
-		VerificationNone, VerificationNone)
+	_, inter, cerr := c.CreateRootControl(el, el, nil, 1, 1, 1)
 	log.ErrFatal(cerr)
 	el2 := onet.NewRoster(el.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", el2)

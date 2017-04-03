@@ -44,9 +44,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	genesis.Roster = sbRoot.Roster
 	genesis.VerifierIDs = VerificationStandard
 	blockCount := 0
-	psbrMsg, err := service.StoreSkipBlock(&StoreSkipBlock{nil, genesis})
+	psbr, err := service.StoreSkipBlock(&StoreSkipBlock{nil, genesis})
 	assert.Nil(t, err)
-	psbr := psbrMsg.(*StoreSkipBlockReply)
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
 	assert.Equal(t, blockCount, latest.Index)
@@ -62,9 +61,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	next.ParentBlockID = sbRoot.Hash
 	next.Roster = sbRoot.Roster
 	id := psbr.Latest.Hash
-	psbrMsg, err = service.StoreSkipBlock(&StoreSkipBlock{id, next})
+	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{id, next})
 	assert.Nil(t, err)
-	psbr2 := psbrMsg.(*StoreSkipBlockReply)
 	log.Lvl2(psbr2)
 	if psbr2 == nil {
 		t.Fatal("Didn't get anything in return")
@@ -102,9 +100,8 @@ func TestService_GetUpdateChain(t *testing.T) {
 		newSB.Roster = onet.NewRoster(el.List[i : i+2])
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Doing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
-		psbrMsg, err := service.StoreSkipBlock(&StoreSkipBlock{sbs[i-1].Hash, newSB})
+		reply, err := service.StoreSkipBlock(&StoreSkipBlock{sbs[i-1].Hash, newSB})
 		assert.Nil(t, err)
-		reply := psbrMsg.(*StoreSkipBlockReply)
 		require.NotNil(t, reply.Latest)
 		sbs[i] = reply.Latest
 	}
@@ -227,7 +224,7 @@ func TestService_MultiLevel(t *testing.T) {
 				sb.Roster = el
 				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{latest.Hash, sb})
 				log.ErrFatal(err)
-				latest = psbr.(*StoreSkipBlockReply).Latest
+				latest = psbr.Latest
 			}
 
 			log.ErrFatal(checkMLForwardBackward(service, sbRoot, base, height))
@@ -254,9 +251,9 @@ func TestService_Verification(t *testing.T) {
 	sb.MaximumHeight = 1
 	sb.BaseHeight = 1
 	sb.ParentBlockID = sbRoot.Hash
-	sb.VerifierIDs = []VerifierID{VerifyShard}
+	sb.VerifierIDs = VerificationStandard
 	//_, err = service.ProposeSkipBlock(&ProposeSkipBlock{nil, sb})
-	//require.NotNil(t, err, "Shouldn't accept a non-confoirming skipblock")
+	//require.NotNil(t, err, "Shouldn't accept a non-conforming skipblock")
 
 	log.Lvl1("Creating skipblock with same Roster as root")
 	sbInter, err := makeGenesisRosterArgs(service, elRoot, sbRoot.Hash, sb.VerifierIDs, 1, 1)
@@ -280,9 +277,8 @@ func TestService_SignBlock(t *testing.T) {
 	el2 := onet.NewRoster(el.List[0:2])
 	sb := NewSkipBlock()
 	sb.Roster = el2
-	psbr, err := service.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb})
+	reply, err := service.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb})
 	log.ErrFatal(err)
-	reply := psbr.(*StoreSkipBlockReply)
 	sbRoot = reply.Previous
 	sbSecond := reply.Latest
 	log.Lvl1("Verifying signatures")
@@ -368,16 +364,14 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
+	ssbr, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
 	log.ErrFatal(cerr)
-	ssbr := ssbrep.(*StoreSkipBlockReply)
 	roster2 := onet.NewRoster(roster.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", roster2)
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
-	ssbrep, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
+	ssbr, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
 	log.ErrFatal(cerr)
-	ssbr = ssbrep.(*StoreSkipBlockReply)
 	require.NotNil(t, ssbr.Latest)
 
 	// Error testing
@@ -393,10 +387,40 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	_, cerr = s1.StoreSkipBlock(&StoreSkipBlock{nil, sbErr})
 	require.NotNil(t, cerr)
 	_, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbErr.ParentBlockID, sbErr})
+	// Last successful log...
 	require.NotNil(t, cerr)
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
+}
+
+func TestService_StoreSkipBlockSpeed(t *testing.T) {
+	nbrHosts := 3
+	local := onet.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, nbrHosts)
+
+	log.Lvl1("Creating root and control chain")
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
+	log.ErrFatal(cerr)
+
+	last := time.Now()
+	for i := 0; i < 500; i++ {
+		now := time.Now()
+		log.Print(i, now.Sub(last))
+		last = now
+		ssbrep, cerr = s1.StoreSkipBlock(&StoreSkipBlock{ssbrep.Latest.Hash,
+			sbRoot})
+		log.ErrFatal(cerr)
+	}
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
@@ -471,11 +495,10 @@ func makeGenesisRosterArgs(s *Service, el *onet.Roster, parent SkipBlockID,
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierIDs = vid
-	psbrMsg, err := s.StoreSkipBlock(&StoreSkipBlock{nil, sb})
+	psbr, err := s.StoreSkipBlock(&StoreSkipBlock{nil, sb})
 	if err != nil {
 		return nil, err
 	}
-	psbr := psbrMsg.(*StoreSkipBlockReply)
 	return psbr.Latest, nil
 }
 
