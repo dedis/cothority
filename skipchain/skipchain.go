@@ -42,6 +42,7 @@ type Service struct {
 	propagate     messaging.PropagationFunc
 	verifiers     map[VerifierID]SkipBlockVerifier
 	blockRequests map[string]chan *SkipBlock
+	lastSave      time.Time
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -61,7 +62,7 @@ type Service struct {
 // If the latest block is non-nil and exists, the skipblock will be added to the
 // skipchain after verification that it fits and no other block already has been
 // added.
-func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.ClientError) {
+func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, onet.ClientError) {
 	prop := psbd.NewBlock
 	var prev *SkipBlock
 	var changed []*SkipBlock
@@ -144,7 +145,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (network.Message, onet.Cl
 					"Didn't get skipblock in back-link")
 			}
 			if err := s.SendRaw(back.Roster.RandomServerIdentity(),
-				&ForwardSignature{i + 1, prev.Hash, prop, prev.ForwardLink[0]}); err != nil {
+				&ForwardSignature{i + 1, prev.Hash, prop,
+					prev.GetForward(0)}); err != nil {
 				// This is not a critical failure - we have at least
 				// one forward-link
 				log.Error("Couldn't get old block to sign")
@@ -178,8 +180,8 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
 	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
-	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[len(block.ForwardLink)-1]
+	for block.GetForwardLen() > 0 {
+		link := block.ForwardLink[block.GetForwardLen()-1]
 		next := s.Sbm.GetByID(link.Hash)
 		if next == nil {
 			log.Lvl3("Didn't find next block, updating block")
@@ -252,7 +254,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if err != nil {
 			return errors.New("Couldn't get signature")
 		}
-		target.ForwardLink = append(target.ForwardLink, &BlockLink{fs.ForwardLink.Hash, sig.Sig})
+		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
 		s.startPropagation([]*SkipBlock{target})
 		return nil
 	}()
@@ -331,7 +333,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if target == nil {
 			return errors.New("Don't have target-block")
 		}
-		if len(target.ForwardLink) >= fs.TargetHeight+1 {
+		if target.GetForwardLen() >= fs.TargetHeight+1 {
 			return errors.New("Already have forward-link at height " +
 				strconv.Itoa(fs.TargetHeight+1))
 		}
@@ -371,7 +373,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	isFree := func() bool {
 		for i, b := range dst.BackLinkIDs {
 			if b.Equal(src) {
-				return len(srcSB.ForwardLink) == i
+				return srcSB.GetForwardLen() == i
 			}
 		}
 		return false
@@ -454,7 +456,7 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 // If it finds a valid block, a forward-link will be added and a BFT-signature
 // requested.
 func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
-	if height <= len(src.ForwardLink) {
+	if height <= src.GetForwardLen() {
 		return errors.New("already have forward-link at this height")
 	}
 	// create the message we want to sign for this round
@@ -474,7 +476,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
 		Hash:      dst.Hash,
 		Signature: sig.Sig,
 	}
-	src.ForwardLink = append(src.ForwardLink, fwd)
+	src.AddForward(fwd)
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
@@ -553,8 +555,14 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 // saves all skipblocks.
 func (s *Service) save() {
+	if time.Now().Sub(s.lastSave) < time.Second*timeBetweenSave {
+		return
+	}
+	s.lastSave = time.Now()
 	log.Lvl3("Saving service")
+	s.Sbm.Lock()
 	err := s.Save(skipblocksID, s.Sbm)
+	s.Sbm.Unlock()
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -588,6 +596,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
+	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)

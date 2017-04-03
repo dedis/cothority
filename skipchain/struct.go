@@ -25,6 +25,9 @@ import (
 // How many msec to wait before a timeout is generated in the propagation.
 const propagateTimeout = 10000
 
+// How often we save the skipchains - in seconds.
+const timeBetweenSave = 60
+
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
 
@@ -208,6 +211,7 @@ type SkipBlock struct {
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
+	fwMutex     sync.Mutex
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
@@ -226,6 +230,8 @@ func NewSkipBlock() *SkipBlock {
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
+	sb.fwMutex.Lock()
+	defer sb.fwMutex.Unlock()
 	for _, fl := range sb.ForwardLink {
 		if err := fl.VerifySignature(sb.Roster.Publics()); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
@@ -242,6 +248,7 @@ func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 // Copy makes a deep copy of the SkipBlock
 func (sb *SkipBlock) Copy() *SkipBlock {
 	b := *sb
+	sb.fwMutex.Lock()
 	sbf := *b.SkipBlockFix
 	b.SkipBlockFix = &sbf
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
@@ -252,6 +259,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	copy(b.ChildSL, sb.ChildSL)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
+	sb.fwMutex.Unlock()
 	return &b
 }
 
@@ -281,6 +289,31 @@ func (sb *SkipBlock) SkipChainID() SkipBlockID {
 		return sb.Hash
 	}
 	return sb.GenesisID
+}
+
+// AddForward stores the forward-link with mutex protection.
+func (sb *SkipBlock) AddForward(fw *BlockLink) {
+	sb.fwMutex.Lock()
+	sb.ForwardLink = append(sb.ForwardLink, fw)
+	sb.fwMutex.Unlock()
+}
+
+// GetForward returns copy of the forward-link at position i. It returns nil if no link
+// at that level exists.
+func (sb *SkipBlock) GetForward(i int) *BlockLink {
+	sb.fwMutex.Lock()
+	defer sb.fwMutex.Unlock()
+	if len(sb.ForwardLink) <= i {
+		return nil
+	}
+	return sb.ForwardLink[i].Copy()
+}
+
+// GetForwardLen returns the number of ForwardLinks.
+func (sb *SkipBlock) GetForwardLen() int {
+	sb.fwMutex.Lock()
+	defer sb.fwMutex.Unlock()
+	return len(sb.ForwardLink)
 }
 
 func (sb *SkipBlock) updateHash() SkipBlockID {
@@ -339,14 +372,16 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 	if sbOld, exists := sbm.SkipBlocks[string(sb.Hash)]; exists {
 		// If this skipblock already exists, only copy forward-links and
 		// new children.
-		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+		if sb.GetForwardLen() > sbOld.GetForwardLen() {
+			sb.fwMutex.Lock()
 			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
 				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
 					log.Error("Got a known block with wrong signature in forward-link")
 					return nil
 				}
-				sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+				sbOld.AddForward(fl)
 			}
+			sb.fwMutex.Unlock()
 		}
 		if len(sb.ChildSL) > len(sbOld.ChildSL) {
 			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
@@ -434,7 +469,7 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 	// Verify we're referenced by our previous block
 	sbBack := sbm.GetByID(sb.BackLinkIDs[0])
 	if sbBack == nil {
-		if len(sb.ForwardLink) > 0 {
+		if sb.GetForwardLen() > 0 {
 			log.LLvl3("Didn't find back-link, but have a good forward-link")
 			return nil
 		}
@@ -443,7 +478,7 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.ForwardLink[0].Hash.Equal(sb.Hash) {
+	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
@@ -452,8 +487,8 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 // GetLatest searches for the latest available block for that skipblock.
 func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
-	for len(latest.ForwardLink) > 0 {
-		latest = sbm.GetByID(latest.ForwardLink[len(latest.ForwardLink)-1].Hash)
+	for latest.GetForwardLen() > 0 {
+		latest = sbm.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
 		if latest == nil {
 			return nil, errors.New("missing block")
 		}
