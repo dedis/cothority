@@ -71,6 +71,7 @@ type Storage struct {
 func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
+		log.Printf("%#v", s.StorageMap)
 		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
 	}
 	sid.Lock()
@@ -326,7 +327,7 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
-	log.Lvl3("Successfully loaded")
+	log.LLvl3("Successfully loaded")
 	return nil
 }
 

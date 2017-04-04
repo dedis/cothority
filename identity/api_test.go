@@ -63,7 +63,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	c1 := NewTestIdentity(el, 50, "one", l)
 
 	c2 := NewTestIdentity(nil, 50, "two", l)
-	log.ErrFatal(c2.AttachToIdentity(c1.id()))
+	log.ErrFatal(c2.AttachToIdentity(c1.ID()))
 	for _, s := range services {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
@@ -118,7 +118,7 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 
 	for _, s := range services {
 		is := s.(*Service)
-		id1 := is.getIdentityStorage(c1.id())
+		id1 := is.getIdentityStorage(c1.ID())
 		id1.Lock()
 		if id1 == nil {
 			t.Fatal("Didn't find")
@@ -199,9 +199,9 @@ func TestCrashAfterRevocation(t *testing.T) {
 	defer c1.client.Close()
 	defer c2.client.Close()
 	defer c3.client.Close()
-	log.ErrFatal(c2.AttachToIdentity(c1.id()))
+	log.ErrFatal(c2.AttachToIdentity(c1.ID()))
 	proposeUpVote(c1)
-	log.ErrFatal(c3.AttachToIdentity(c1.id()))
+	log.ErrFatal(c3.AttachToIdentity(c1.ID()))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
 	log.ErrFatal(c1.ConfigUpdate())

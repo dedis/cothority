@@ -1,9 +1,7 @@
 package skipchain
 
 import (
-	"encoding/hex"
-	"io/ioutil"
-	"net/http"
+	"errors"
 
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
@@ -140,27 +138,6 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 	return root, control, cerr
 }
 
-// FindSkipChain takes the ID of a skipchain and an optional URL for finding the
-// appropriate skipchain. If no URL is given, the default
-// "http://skipchain.dedis.ch" is used. If successful, it will return the latest
-// known block.
-func (c *Client) FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
-	if url == "" {
-		url = "http://skipchain.dedis.ch"
-	}
-	resp, err := http.Get(url + "/" + hex.EncodeToString(id))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	log.Print(body)
-	return nil, nil
-}
-
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
@@ -169,4 +146,37 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
 		&GetUpdateChain{latest}, reply)
 	return
+}
+
+// FindSkipChain takes the ID of a skipchain and an optional URL for finding the
+// appropriate skipchain. If no URL is given, the default
+// "http://skipchain.dedis.ch" is used. If successful, it will return the latest
+// known block.
+func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
+	c := NewClient()
+	reply := &GetUpdateChainReply{}
+	sid := network.NewServerIdentity(nil, "localhost:2002")
+	cerr := c.SendProtobuf(sid,
+		&GetUpdateChain{id}, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	if len(reply.Update) == 0 {
+		return nil, errors.New("Didn't find skipblock")
+	}
+	return reply.Update[len(reply.Update)-1], nil
+	//if url == "" {
+	//	url = "http://skipchain.dedis.ch"
+	//}
+	//resp, err := http.Get(url + "/" + hex.EncodeToString(id))
+	//if err != nil {
+	//	return nil, err
+	//}
+	//defer resp.Body.Close()
+	//body, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//log.Print(body)
+	//return nil, nil
 }

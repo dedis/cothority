@@ -26,7 +26,7 @@ import (
 const propagateTimeout = 10000
 
 // How often we save the skipchains - in seconds.
-const timeBetweenSave = 60
+const timeBetweenSave = 0
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte

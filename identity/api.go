@@ -92,7 +92,7 @@ func NewIdentity(control *skipchain.SkipBlock, threshold int, owner string) (*Id
 	var sbData *skipchain.SkipBlock
 	if control != nil {
 		var err error
-		sbData, err = skipchain.NewClient().CreateGenesis(control.Roster, 2, 10,
+		sbData, err = skipchain.NewClient().CreateGenesis(control.Roster, 4, 4,
 			verificationIdentity, config, control.SkipChainID())
 		if err != nil {
 			return nil, err
@@ -113,7 +113,7 @@ func NewIdentity(control *skipchain.SkipBlock, threshold int, owner string) (*Id
 // added.
 func NewIdentityFromRoster(el *onet.Roster, rootKeys []abstract.Point, threshold int, owner string) (root, control *skipchain.SkipBlock, id *Identity, err error) {
 	root, control, err = skipchain.NewClient().CreateRootControl(
-		el, el, rootKeys, 2, 10, 10)
+		el, el, rootKeys, 4, 4, 4)
 	if err != nil {
 		return
 	}
@@ -139,6 +139,25 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	return id, nil
 }
 
+// NewFollower searches for an existing identity-skipchain and returns a
+// read-only identity. The url is where the skipchain holding the identity
+// can be found. If it is empty (""), it defaults to skipchain.dedis.ch.
+func NewFollower(id skipchain.SkipBlockID, url string) (*Identity, error) {
+	sb, err := skipchain.FindSkipChain(id, url)
+	if err != nil {
+		return nil, err
+	}
+	_, idInt, err := network.Unmarshal(sb.Data)
+	if err != nil {
+		return nil, err
+	}
+	identity, ok := idInt.(*Identity)
+	if !ok {
+		return nil, errors.New("This is not a cisc-skipchain")
+	}
+	return identity, nil
+}
+
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
 	data, err := network.Marshal(i)
@@ -158,9 +177,9 @@ func (i *Identity) GetProposed() *Config {
 	return i.Config.Copy()
 }
 
-// AttachToIdentity proposes to attach it to an existing Identity
-func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) onet.ClientError {
-
+// AttachToIdentity proposes to attach it to an existing Identity. It takes
+// the name of this device that should sign up to the identity-skipchain.
+func (i *Identity) AttachToIdentity(name string) onet.ClientError {
 	cerr := i.ConfigUpdate()
 	if cerr != nil {
 		return cerr
@@ -169,7 +188,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) onet.ClientError {
 		return onet.NewClientErrorCode(ErrorAccountDouble, "Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Device[i.DeviceName] = &Device{i.Public}
+	confPropose.Device[name] = &Device{i.Public}
 	cerr = i.ProposeSend(confPropose)
 	if cerr != nil {
 		return cerr
@@ -181,7 +200,7 @@ func (i *Identity) AttachToIdentity(ID skipchain.SkipBlockID) onet.ClientError {
 // ProposeVote
 func (i *Identity) ProposeSend(il *Config) onet.ClientError {
 	log.Lvl3("Sending proposal", il)
-	err := i.client.SendProtobuf(i.randomSI(),
+	err := i.sendProtobuf(i.randomSI(),
 		&ProposeSend{i.SkipBlock.SkipChainID(), il}, nil)
 	i.Proposed = il
 	return err
@@ -192,7 +211,7 @@ func (i *Identity) ProposeSend(il *Config) onet.ClientError {
 func (i *Identity) ProposeUpdate() onet.ClientError {
 	log.Lvl3("Updating proposal")
 	cnc := &ProposeUpdateReply{}
-	err := i.client.SendProtobuf(i.randomSI(), &ProposeUpdate{
+	err := i.sendProtobuf(i.randomSI(), &ProposeUpdate{
 		ID: i.SkipBlock.SkipChainID(),
 	}, cnc)
 	if err != nil {
@@ -221,8 +240,8 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	pvr := &ProposeVoteReply{}
-	cerr := i.client.SendProtobuf(i.randomSI(), &ProposeVote{
-		ID:        i.id(),
+	cerr := i.sendProtobuf(i.randomSI(), &ProposeVote{
+		ID:        i.ID(),
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	}, pvr)
@@ -243,19 +262,42 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() onet.ClientError {
 	log.Lvl3("ConfigUpdate", i)
-	cur := &ConfigUpdateReply{}
-	err := i.client.SendProtobuf(i.randomSI(),
-		&ConfigUpdate{ID: i.id()}, cur)
+	gucr, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
+	if cerr != nil {
+		return cerr
+	}
+	if len(gucr.Update) == 0 {
+		log.Lvl3("Didn't get any update")
+		return nil
+	}
+	last := gucr.Update[len(gucr.Update)-1]
+	_, d, err := network.Unmarshal(last.Data)
 	if err != nil {
-		return err
+		return onet.NewClientError(err)
+	}
+	conf, ok := d.(*Config)
+	if !ok {
+		return onet.NewClientErrorCode(4000, "Didn't find config in data-part")
 	}
 	// TODO - verify new config
-	i.Config = cur.Config
+	i.Config = conf
 	return nil
 }
 
-func (i *Identity) id() skipchain.SkipBlockID {
+// ID returns the id of the identity-skipchain, which is the genesis-id
+// of the data-skipchain holding the data.
+func (i *Identity) ID() skipchain.SkipBlockID {
 	return i.SkipBlock.SkipChainID()
+}
+
+// convenience-function that wraps the creation of a client if necessary. This
+// is handy if the identity-structure got loaded from inside another structure,
+// like it is done in cothority/cisc/lib::loadConfig.
+func (i *Identity) sendProtobuf(dst *network.ServerIdentity, msg interface{}, ret interface{}) onet.ClientError {
+	if i.client == nil {
+		i.client = onet.NewClientKeep(ServiceName)
+	}
+	return i.client.SendProtobuf(dst, msg, ret)
 }
 
 func (i *Identity) randomSI() *network.ServerIdentity {
