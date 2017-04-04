@@ -22,10 +22,8 @@ import (
 	_ "github.com/dedis/cothority/cosi/service"
 	_ "github.com/dedis/cothority/guard/service"
 	_ "github.com/dedis/cothority/identity"
-	_ "github.com/dedis/cothority/pop/service"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
-	"github.com/qantik/qrgo"
 	"gopkg.in/dedis/onet.v1/app"
 )
 
@@ -82,19 +80,6 @@ func main() {
 			Flags: serverFlags,
 		},
 		{
-			Name:  "qrcode",
-			Usage: "Print QRCode of current server",
-			Action: func(c *cli.Context) {
-				printQr(c)
-			},
-			Flags: append(serverFlags,
-				cli.StringFlag{
-					Name:  "address, a",
-					Usage: "use this as address",
-				},
-			),
-		},
-		{
 			Name:      "check",
 			Aliases:   []string{"c"},
 			Usage:     "Check if the servers in the group definition are up and running",
@@ -142,20 +127,4 @@ func checkConfig(c *cli.Context) error {
 		tomlFileName = c.Args().First()
 	}
 	return check.Config(tomlFileName, c.Bool("detail"))
-}
-
-func printQr(c *cli.Context) {
-	// Let's read the config
-	_, server, err := app.ParseCothority(c.String("config"))
-	log.ErrFatal(err)
-	addr := c.String("address")
-	if addr == "" {
-		addr = server.ServerIdentity.Address.Host()
-	}
-	addr = addr + ":" + server.ServerIdentity.Address.Port()
-	log.Print(addr)
-
-	qr, err := qrgo.NewQR("conode://" + addr)
-	log.ErrFatal(err)
-	qr.OutputTerminal()
 }
