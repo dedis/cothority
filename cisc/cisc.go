@@ -137,7 +137,10 @@ func idCheck(c *cli.Context) error {
 }
 func idQrcode(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	str := fmt.Sprintf("cisc://%s/%x", cfg.Identity.Cothority.List[0].Address.NetworkAddress(),
+	if c.NArg() == 0 {
+		log.Fatal("Give public IP-address")
+	}
+	str := fmt.Sprintf("cisc://%s:2002/%x", c.Args().First(),
 		cfg.ID)
 	log.Info("QrCode for", str)
 	qr, err := qrgo.NewQR(str)
