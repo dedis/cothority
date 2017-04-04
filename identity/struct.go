@@ -90,7 +90,7 @@ func (d *Data) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err := d.Device[s].Point.MarshalTo(hash)
+		_, err = d.Device[s].Point.MarshalTo(hash)
 		if err != nil {
 			return nil, err
 		}

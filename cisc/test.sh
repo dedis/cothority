@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
 # Needs 4 clients
@@ -244,6 +244,11 @@ testConfigVote(){
 	echo "y" | testOK runCl 2 config vote
 	testGrep three runCl 1 kv ls
 	testGrep three runCl 2 kv ls
+
+	testOK runCl 1 kv add five six
+	echo y | testOK runCl 2 config vote
+	testGrep five runCl 1 kv ls
+	testGrep five runCl 2 kv ls
 }
 
 testConfigList(){
