@@ -74,7 +74,7 @@ type propagationContext interface {
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		p := &Propagate{
-			sd:               &PropagateSendData{[]byte{}, 1000},
+			sd:               &PropagateSendData{[]byte{}, 100000},
 			TreeNodeInstance: n,
 			received:         0,
 			subtreeCount:     n.TreeNode().SubtreeCount(),
@@ -172,7 +172,8 @@ func (p *Propagate) Dispatch() error {
 			}
 		case <-time.After(timeout):
 			_, a, err := network.Unmarshal(p.sd.Data)
-			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+			log.Fatalf("Timeout of %s reached. %v %s\n%s", timeout, a, err,
+				log.Stack())
 			process = false
 		}
 	}
