@@ -142,7 +142,8 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 	_, err = rand.Read(k)
 	log.ErrFatal(err)
 	// secretkeys is the Shamir Secret share of the keys.
-	secretkeys := s.Create(2, len(db.Cothority.List), string(k))
+	secretkeys, err := s.Create(2, len(db.Cothority.List), string(k))
+	log.ErrFatal(err)
 	blind := make([]byte, 12)
 	_, err = rand.Read(blind)
 	log.ErrFatal(err)
@@ -288,7 +289,8 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 		stream.XORKeyStream(msg, []byte(getuser(uid).Keys[i]))
 		keys[i] = string(msg)
 	}
-	k := s.Combine(keys)
+	k, err := s.Combine(keys)
+	log.ErrFatal(err)
 	if len(k) == 0 {
 		log.Fatal("You entered the wrong password")
 	}
