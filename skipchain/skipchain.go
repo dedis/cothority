@@ -410,7 +410,6 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		}
 		s.Sbm.Store(sb)
 		s.save()
-		log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
 	}
 }
 

@@ -94,10 +94,10 @@ func main() {
 			Action: list,
 		},
 		{
-			Name:   "index",
-			Usage:  "create index-files for all known skiplists",
+			Name:      "index",
+			Usage:     "create index-files for all known skiplists",
 			ArgsUsage: "output path",
-			Action: index,
+			Action:    index,
 		},
 	}
 	cliApp.Flags = []cli.Flag{
@@ -292,7 +292,7 @@ func index(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID + ".html"), content, 0644)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -335,7 +335,7 @@ func cleanHTMLFiles(dir string) error {
 // JSON skipblock element to be written in the index.html file
 type jsonBlock struct {
 	GenesisID string
-	Servers []string
+	Servers   []string
 }
 
 // JSON list of skipblocks element to be written in the index.html file
