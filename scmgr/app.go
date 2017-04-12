@@ -34,8 +34,13 @@ type config struct {
 	Sbm *skipchain.SkipBlockMap
 }
 
+type html struct {
+	Data []byte
+}
+
 func main() {
 	network.RegisterMessage(&config{})
+	network.RegisterMessage(&html{})
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"
@@ -58,6 +63,10 @@ func main() {
 					Value: 2,
 					Usage: "maximum height of skipchain",
 				},
+				cli.StringFlag{
+					Name:  "html",
+					Usage: "URL of html-skipchain",
+				},
 			},
 			Action: create,
 		},
@@ -74,6 +83,13 @@ func main() {
 			Aliases:   []string{"a"},
 			ArgsUsage: "skipchain-id " + groupsDef,
 			Action:    add,
+		},
+		{
+			Name:      "addWeb",
+			Usage:     "add a web-site to a skipchain",
+			Aliases:   []string{"a"},
+			ArgsUsage: "skipchain-id page.html",
+			Action:    addWeb,
 		},
 		{
 			Name:      "update",
@@ -120,8 +136,15 @@ func create(c *cli.Context) error {
 	log.Info("Create skipchain")
 	group := readGroup(c, 0)
 	client := skipchain.NewClient()
+	data := []byte{}
+	if address := c.String("html"); address != "" {
+		if !strings.HasPrefix(address, "http") {
+			log.Fatal("Please give http-address")
+		}
+		data = []byte(address)
+	}
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, nil, nil)
+		skipchain.VerificationStandard, &html{data}, nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}
@@ -179,6 +202,39 @@ func add(c *cli.Context) error {
 	}
 	latest := guc.Update[len(guc.Update)-1]
 	ssbr, cerr := client.StoreSkipBlock(latest, group.Roster, nil)
+	if cerr != nil {
+		return errors.New("while storing block: " + cerr.Error())
+	}
+	cfg.Sbm.Store(ssbr.Latest)
+	log.ErrFatal(cfg.save(c))
+	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	return nil
+}
+
+// Adds a block with the page inside.
+func addWeb(c *cli.Context) error {
+	log.Info("Adding a block with a page")
+	if c.NArg() < 2 {
+		log.Fatal("Please give skipchain-id and html-file to save")
+	}
+	for i, s := range c.Args() {
+		log.Print(i, s)
+	}
+	cfg := getConfigOrFail(c)
+	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	if sb == nil {
+		return errors.New("didn't find latest block - update first")
+	}
+	client := skipchain.NewClient()
+	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	if cerr != nil {
+		return cerr
+	}
+	latest := guc.Update[len(guc.Update)-1]
+	log.Print("Reading file", c.Args().Get(1))
+	data, err := ioutil.ReadFile(c.Args().Get(1))
+	log.ErrFatal(err)
+	ssbr, cerr := client.StoreSkipBlock(latest, nil, &html{data})
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
@@ -285,6 +341,7 @@ func index(c *cli.Context) error {
 		block := &blocks.Blocks[i]
 		block.GenesisID = hex.EncodeToString(g.Hash)
 		block.Servers = make([]string, len(g.Roster.List))
+		block.Data = g.Data
 
 		for j, server := range g.Roster.List {
 			block.Servers[j] = server.Address.Host() + ":" + server.Address.Port()
@@ -336,6 +393,7 @@ func cleanHTMLFiles(dir string) error {
 type jsonBlock struct {
 	GenesisID string
 	Servers   []string
+	Data      []byte
 }
 
 // JSON list of skipblocks element to be written in the index.html file

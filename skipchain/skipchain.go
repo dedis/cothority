@@ -560,6 +560,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
+	log.Print("Finished propagation")
 	return nil
 }
 

@@ -17,7 +17,19 @@ main(){
 	test Join
 	test Add
 	test Index
+	test Html
     stopTest
+}
+
+testHtml(){
+	startCl
+	testOK runSc create -html http://dedis.ch public.toml
+	ID=$( runSc list | head -n 1 | sed -e "s/.*block \(.*\) with.*/\1/" )
+	html=$(mktemp)
+	echo "TestWeb" > $html
+	echo $ID - $html
+	testOK runSc addWeb $ID $html
+	rm $html
 }
 
 testRestart(){

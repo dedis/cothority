@@ -223,7 +223,7 @@ func TestService_MultiLevel(t *testing.T) {
 			latest := sbRoot
 			log.Lvl1("Adding blocks for", base, height)
 			for sbi := 1; sbi < 10; sbi++ {
-				log.Lvl3("Adding block", sbi)
+				log.LLvl3("Adding block", sbi)
 				sb := NewSkipBlock()
 				sb.Roster = el
 				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{latest.Hash, sb})
@@ -237,6 +237,7 @@ func TestService_MultiLevel(t *testing.T) {
 		}
 	}
 	// Setting up two chains and linking one to the other
+	//time.Sleep(time.Second)
 }
 
 func checkBacklinks(services []*Service, sb *SkipBlock) {
