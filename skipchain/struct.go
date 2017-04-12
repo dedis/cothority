@@ -247,15 +247,16 @@ func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 
 // Copy makes a deep copy of the SkipBlock
 func (sb *SkipBlock) Copy() *SkipBlock {
-	b := *sb
 	sb.fwMutex.Lock()
-	sbf := *b.SkipBlockFix
-	b.SkipBlockFix = &sbf
-	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
+	sbf := *sb.SkipBlockFix
+	b := &SkipBlock{
+		SkipBlockFix: &sbf,
+		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
+		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
+	}
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
-	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
 	copy(b.ChildSL, sb.ChildSL)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)

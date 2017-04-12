@@ -11,6 +11,8 @@ func init() {
 		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
+		// Request updated block
+		&GetSingleBlock{},
 		// - Internal calls
 		// Propagation
 		&PropagateSkipBlocks{},
@@ -86,10 +88,23 @@ type ForwardSignature struct {
 	ForwardLink *BlockLink
 }
 
+// GetSingleBlock asks for a single block.
+type GetSingleBlock struct {
+	ID SkipBlockID
+}
+
+// Internal calls
+
 // GetBlock asks for an updated block, in case for a conode that is not
 // in the roster-list of that block.
 type GetBlock struct {
 	ID SkipBlockID
+}
+
+// PropagateSkipBlock sends a newly signed SkipBlock to all members of
+// the Cothority
+type PropagateSkipBlock struct {
+	SkipBlock *SkipBlock
 }
 
 // GetBlockReply returns the requested block.

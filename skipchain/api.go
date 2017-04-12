@@ -180,3 +180,12 @@ func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
 	//log.Print(body)
 	//return nil, nil
 }
+
+// GetSingleBlock searches for a block with the given ID and returns that block,
+// or an error if that block is not found.
+func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *SkipBlock, cerr onet.ClientError) {
+	reply = &SkipBlock{}
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetSingleBlock{id}, reply)
+	return
+}

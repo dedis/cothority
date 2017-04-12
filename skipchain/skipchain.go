@@ -211,6 +211,17 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	return reply, nil
 }
 
+// GetSingleBlock searches for the given block and returns it. If no such block is
+// found, a nil is returned.
+func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientError) {
+	sb := s.Sbm.GetByID(id.ID)
+	if sb == nil {
+		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			"No such block")
+	}
+	return sb, nil
+}
+
 func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
 	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
 	node := known.Roster.RandomServerIdentity()
@@ -596,7 +607,8 @@ func newSkipchainService(c *onet.Context) onet.Service {
 		log.Error(err)
 	}
 	s.lastSave = time.Now()
-	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain))
+	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
+		s.GetSingleBlock))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),
