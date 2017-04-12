@@ -12,11 +12,11 @@ main(){
     buildConode github.com/dedis/cothority/skipchain
     CFG=$BUILDDIR/config.bin
     test Restart
-#    test Config
-#	test Create
-#	test Join
-#	test Add
-#	test Index
+    test Config
+	test Create
+	test Join
+	test Add
+	test Index
     stopTest
 }
 

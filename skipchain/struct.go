@@ -26,7 +26,7 @@ import (
 const propagateTimeout = 10000
 
 // How often we save the skipchains - in seconds.
-const timeBetweenSave = 100
+const timeBetweenSave = 0
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -261,7 +261,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
 	sb.fwMutex.Unlock()
-	return &b
+	return b
 }
 
 // Short returns only the 8 first bytes of the hash as hex-encoded string.
