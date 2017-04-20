@@ -36,6 +36,21 @@ func init() {
 // deny a SkipBlock.
 type VerifierID uuid.UUID
 
+// String returns canonical string representation of the ID
+func (vId VerifierID) String() string {
+	return uuid.UUID(vId).String()
+}
+
+// Equal returns true if and only if the given VerifierID equals the current one.
+func (vId VerifierID) Equal(vId2 VerifierID) bool {
+	return uuid.Equal(uuid.UUID(vId), uuid.UUID(vId2))
+}
+
+//IsNil returns true iff the VerifierID is Nil
+func (vId VerifierID) IsNil() bool {
+	return vId.Equal(VerifierID(uuid.Nil))
+}
+
 // SkipBlockVerifier is function that should return whether this skipblock is
 // accepted or not. This function is used during a BFTCosi round, but wrapped
 // around so it accepts a block.
