@@ -1,0 +1,12 @@
+Login = "gfkal"
+Host = "users.deterlab.net"
+Project = "SAFER"
+Experiment = "RandHerdSM3"
+ProxyAddress = "localhost"
+MonitorAddress = "users.isi.deterlab.net"
+MonitorPort = 10000
+Servers = 22
+Simulation = "SkipCert"
+Hosts = 0
+Debug = 0
+RunWait = 20000

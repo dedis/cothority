@@ -1,0 +1,41 @@
+---simul1---
+1. What to test: 
+	a) bandwidth required for a "frequent" webclient, i.e. one that visits the site's webserver frequently enough (regarding the update rate of the site's skipchain) 
+	b) the same for an "infrequent" webclient (e.g. let the website move to a new id-block every 1 minute and have the infrewuent webclient to visit it after 15 minutes have elapsed - equivalent to having the CKHs sing off a new block every 2 days on average while an infrequent client visits it after a month -)
+2. Measurements: 
+	bandwidth between 1 webserver and 1 webclient category (i.e. frequent or infrequent)
+3. Need to Setup
+	1 website (e.g. 1 CKH)
+	WKHs (e.g. 10 of them)
+	//1 CA
+	1 webserver
+	1 webclient (per category)
+
+
+---simul2---
+1. What to test: 
+	how a webserver scales as the number of concurrent webclients visiting the site increases
+2. Measurements: 
+	time it takes for webclient to be served by a webserver as the number of concurrent webclients increases
+3. Need to Setup
+	1 website (e.g. 1 CKH)
+	WKHs (e.g. 10 of them)
+	//1 CA
+	1 webserver
+	different webclients' quantities (e.g. 1, 100, 1000, 10000)
+
+
+---simul3---
+1. What to test: 
+	how the WKHs (i.e. the cothority) scale as the number of served websites increases (for different cothority sizes)
+2. Measurements: 
+	time it takes for each webclient (concurrent ones, one per website) to visit a website (i.e. to fetch from the associated webserver the required block) right after - at worst - all the relevant websites have moved to their next configuration 
+3. Need to Setup
+	different websites' quantities (e.g. 10, 100, 1000) each one having a constant number of CKHs (e.g. 1 CKH)
+	different WKHs' quantities (e.g. 10, 100, 1000)
+	//1 CA
+	different webservers' quantities (e.g. 1, 100, 1000, 10000)
+	1 webclient per webserver
+
+
+	
