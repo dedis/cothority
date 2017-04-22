@@ -172,6 +172,7 @@ func (p *Propagate) Dispatch() error {
 			process = false
 		}
 	}
+	log.Lvl3(p.ServerIdentity(), "done, isroot:", p.IsRoot())
 	if p.IsRoot() {
 		if p.onDoneCb != nil {
 			p.onDoneCb(p.received + 1)

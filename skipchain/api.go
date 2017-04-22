@@ -8,8 +8,9 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// TODO - correctly convert the BFT-signature to CoSi-Signature by removing
-//	the exception-field - has to wait for new cosi-library in crypto
+// TODO:
+// - change 'Propose*' to 'Add*'
+// - find better names for Roster- and Data-SkipChain
 
 const (
 	// ErrorBlockNotFound indicates that for any number of operations the
@@ -49,6 +50,8 @@ func NewLocalClient(local *onet.LocalTest) *Client {
 // maximumHeight of maxHRoot and an control SkipChain with
 // maximumHeight of maxHControl. It connects both chains for later
 // reference.
+//
+// Both chains will be created as 'Roster'-chains.
 func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster, baseHeight, maxHRoot, maxHControl int, ver VerifierID) (root, control *SkipBlock, cerr onet.ClientError) {
 	log.Lvl2("Creating root roster", elRoot)
 	root, cerr = c.CreateRoster(elRoot, baseHeight, maxHRoot, ver, nil)
@@ -61,13 +64,6 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster, baseHeight, m
 		return
 	}
 	return c.LinkParentChildBlock(root, control)
-}
-
-// ProposeRoster will propose to add a new SkipBlock containing the 'roster' to
-// an existing SkipChain. If it succeeds, it will return the old and the new
-// SkipBlock.
-func (c *Client) ProposeRoster(latest *SkipBlock, el *onet.Roster) (*ProposedSkipBlockReply, onet.ClientError) {
-	return c.proposeSkipBlock(latest, el, nil)
 }
 
 // CreateRoster will create a new SkipChainRoster with the parameters given
@@ -85,10 +81,11 @@ func (c *Client) CreateRoster(el *onet.Roster, baseH, maxH int, ver VerifierID, 
 	return sb.Latest, nil
 }
 
-// ProposeData will propose to add a new SkipBlock containing 'data' to an existing
-// SkipChain. If it succeeds, it will return the old and the new SkipBlock.
-func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Message) (*ProposedSkipBlockReply, onet.ClientError) {
-	return c.proposeSkipBlock(latest, parent.Roster, d)
+// ProposeRoster will propose to add a new SkipBlock containing the 'roster' to
+// an existing SkipChain. If it succeeds, it will return the old and the new
+// SkipBlock.
+func (c *Client) ProposeRoster(latest *SkipBlock, el *onet.Roster) (*ProposedSkipBlockReply, onet.ClientError) {
+	return c.proposeSkipBlock(latest, el, nil)
 }
 
 // CreateData will create a new SkipChainData with the parameters given
@@ -109,12 +106,18 @@ func (c *Client) CreateData(parent *SkipBlock, baseH, maxH int, ver VerifierID, 
 	return c.LinkParentChildBlock(parent, data)
 }
 
+// ProposeData will propose to add a new SkipBlock containing 'data' to an existing
+// SkipChain. If it succeeds, it will return the old and the new SkipBlock.
+func (c *Client) ProposeData(parent *SkipBlock, latest *SkipBlock, d network.Message) (*ProposedSkipBlockReply, onet.ClientError) {
+	return c.proposeSkipBlock(latest, parent.Roster, d)
+}
+
 // LinkParentChildBlock sends a request to create a link from the parent to the
 // child block and inversely. The child-block is supposed to already have
 // the parentBlockID set and be accepted.
 func (c *Client) LinkParentChildBlock(parent, child *SkipBlock) (*SkipBlock, *SkipBlock, onet.ClientError) {
 	log.Lvl3(parent, child)
-	if err := child.VerifySignatures(); err != nil {
+	if err := child.VerifyForwardSignatures(); err != nil {
 		return nil, nil, onet.NewClientError(err)
 	}
 	if !bytes.Equal(parent.Hash, child.ParentBlockID) {
@@ -149,7 +152,7 @@ func (c *Client) GetUpdateChain(parent *SkipBlock, latest SkipBlockID) (reply *G
 // - dataSkipBlock if data is non-nil. Furthermore 'el' will hold the activeRoster
 // to send the request to.
 func (c *Client) proposeSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *ProposedSkipBlockReply, cerr onet.ClientError) {
-	log.Lvl3(latest)
+	log.Lvlf3("%#v", latest)
 	activeRoster := latest.Roster
 	hash := latest.Hash
 	propose := latest
