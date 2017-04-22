@@ -16,3 +16,4 @@ config/
 build/
 cothority
 *.cov
+deploy/
