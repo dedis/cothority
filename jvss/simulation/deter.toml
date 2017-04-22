@@ -1,0 +1,12 @@
+Login = "gfkal"
+Host = "users.deterlab.net"
+Project = "SAFER"
+Experiment = "DISSENT-CS2"
+ProxyAddress = "localhost"
+MonitorAddress = "users.isi.deterlab.net"
+MonitorPort = 10000
+Servers = 4
+Simulation = "JVSS"
+Hosts = 0
+Debug = 0
+RunWait = 0

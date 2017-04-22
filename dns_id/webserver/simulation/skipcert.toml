@@ -1,0 +1,8 @@
+Servers = 22
+Simulation = "SkipCert"
+BF = 5
+Rounds = 1
+RunWait = 20000
+
+Hosts,CK,WK,Clients,Evol1,Evol2,Updates
+2050,20,10,2000,0,0,0
