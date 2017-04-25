@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 DBG_APP=3
+DBG_SRV=3
 NBR_CLIENTS=3
 NBR_SERVERS=3
 
@@ -29,8 +30,8 @@ main(){
 	test ClCreate
 	test OrgPublic
 	test OrgFinal1
-#	test OrgFinal2
-#	test OrgFinal3
+	test OrgFinal2
+	test OrgFinal3
 	test ClJoin
 	test ClSign
 	test ClVerify
@@ -118,6 +119,8 @@ testOrgFinal2(){
 	testFail runCl 1 org final
 	testOK runCl 2 org final
 	testOK runCl 1 org final
+	runDbgCl 1 1 org final
+	runDbgCl 1 2 org final
 	runDbgCl 1 1 org final > final1.toml
 	runDbgCl 1 2 org final > final2.toml
 	testNGrep , echo $( runCl 1 org final | grep Attend )
