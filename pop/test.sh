@@ -1,39 +1,41 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 DBG_APP=3
+DBG_SRV=3
 NBR_CLIENTS=3
 NBR_SERVERS=3
 
 . $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
-    startTest
-    buildConode
-    echo "Creating directories"
-    for n in $(seq $NBR_CLIENTS); do
-        cl=cl$n
-        rm -f $cl/*
-        mkdir -p $cl
-    done
-    addr1=127.0.0.1:2002
-    addr2=127.0.0.1:2004
-    addr3=127.0.0.1:2006
+	startTest
+	COT=github.com/dedis/cothority
+	buildConode $COT/cosi/service $COT/pop/service
+	echo "Creating directories"
+	for n in $(seq $NBR_CLIENTS); do
+		cl=cl$n
+		rm -f $cl/*
+		mkdir -p $cl
+	done
+	addr1=127.0.0.1:2002
+	addr2=127.0.0.1:2004
+	addr3=127.0.0.1:2006
 
-    test Build
-    test Check
-    test OrgLink
+	test Build
+	test Check
+	test OrgLink
 	test Save
-    test OrgConfig
+	test OrgConfig
 	test ClCreate
 	test OrgPublic
 	test OrgFinal1
-	test OrgFinal2
-	test OrgFinal3
+#	test OrgFinal2
+#	test OrgFinal3
 	test ClJoin
 	test ClSign
 	test ClVerify
-    stopTest
+	stopTest
 }
 
 testClVerify(){
@@ -228,14 +230,14 @@ testCheck(){
 }
 
 testBuild(){
-    testOK dbgRun ./conode --help
-    testOK dbgRun ./pop --help
+	testOK dbgRun ./conode --help
+	testOK dbgRun ./pop --help
 }
 
 runCl(){
-    local CFG=cl$1
-    shift
-    dbgRun ./pop -d $DBG_APP -c $CFG $@
+	local CFG=cl$1
+	shift
+	dbgRun ./pop -d $DBG_APP -c $CFG $@
 }
 
 runDbgCl(){
