@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_APP=3
-DBG_SRV=3
 NBR_CLIENTS=3
 NBR_SERVERS=3
 
