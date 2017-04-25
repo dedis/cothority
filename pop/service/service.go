@@ -154,7 +154,6 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.C
 	signature := make(chan []byte)
 	c := node.(*cosi.CoSi)
 	c.RegisterSignatureHook(func(sig []byte) {
-		log.Printf("Got signature %x", sig)
 		signature <- sig[:64]
 	})
 	c.Message, err = s.data.Final.Hash()
@@ -187,7 +186,7 @@ func (s *Service) PropagateFinal(msg network.Message) {
 	}
 	s.data.Final = fs
 	s.save()
-	log.LLvlf3("%s Stored final statement %v", s.ServerIdentity(), s.data.Final)
+	log.Lvlf3("%s Stored final statement %v", s.ServerIdentity(), s.data.Final)
 }
 
 // CheckConfig receives a hash for a config and a list of attendees. It returns
