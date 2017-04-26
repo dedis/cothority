@@ -3,7 +3,7 @@
 DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
-DBG_SRV=3
+DBG_SRV=2
 # Needs 4 clients
 NBR=4
 

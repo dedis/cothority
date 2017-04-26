@@ -186,7 +186,6 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 		}
-		s.save()
 		return &ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
@@ -227,6 +226,7 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 			v := msg.(*ProposeVote)
 			sid.Votes[v.Signer] = v.Signature
 		}
+		s.save()
 	}
 }
 
@@ -259,6 +259,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 	sid.Data = skipblock
 	sid.Latest = al
 	sid.Proposed = nil
+	s.save()
 }
 
 // propagateIdentity stores a new identity in all nodes.
@@ -297,6 +298,7 @@ func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Identities[string(id)] = is
+	s.save()
 }
 
 // saves the actual identity

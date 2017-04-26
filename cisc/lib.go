@@ -67,7 +67,7 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
 	}
-	log.Printf("%+v", cfg.SkipBlock)
+	log.Printf("Loading block %x", cfg.SkipBlock.Hash)
 	log.ErrFatal(cfg.ConfigUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
 	return cfg

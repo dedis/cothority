@@ -98,6 +98,7 @@ func NewIdentity(control *skipchain.SkipBlock, threshold int, owner string) (*Id
 			return nil, err
 		}
 	}
+	log.Printf("Id is %x", sbData.Hash)
 	return &Identity{
 		Private:    kp.Secret,
 		Public:     kp.Public,
@@ -264,6 +265,7 @@ func (i *Identity) ConfigUpdate() onet.ClientError {
 	log.Lvl3("ConfigUpdate", i)
 	gucr, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
 	if cerr != nil {
+		log.Error(cerr)
 		return cerr
 	}
 	if len(gucr.Update) == 0 {
@@ -273,6 +275,7 @@ func (i *Identity) ConfigUpdate() onet.ClientError {
 	last := gucr.Update[len(gucr.Update)-1]
 	_, d, err := network.Unmarshal(last.Data)
 	if err != nil {
+		log.Error(err)
 		return onet.NewClientError(err)
 	}
 	conf, ok := d.(*Config)
