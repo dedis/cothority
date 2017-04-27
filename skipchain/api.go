@@ -48,7 +48,8 @@ func NewClient() *Client {
 //   are nil, a new skipchain will be created with 'latest' as genesis-block.
 //  - el is the new roster for that block. If el is nil, the previous roster
 //   will be used.
-//  - d is the data for the new block. It can be nil.
+//  - d is the data for the new block. It can be nil. If it is not of type
+//   []byte, it will be marshalled using `network.Marshal`.
 func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	var newBlock *SkipBlock
@@ -61,12 +62,16 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 			newBlock.Roster = el
 		}
 		if d != nil {
-			buf, err := network.Marshal(d)
-			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-					"Couldn't marshal data: "+err.Error())
+			var ok bool
+			newBlock.Data, ok = d.([]byte)
+			if !ok {
+				buf, err := network.Marshal(d)
+				if err != nil {
+					return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+						"Couldn't marshal data: "+err.Error())
+				}
+				newBlock.Data = buf
 			}
-			newBlock.Data = buf
 		}
 		latestID = latest.Hash
 	}

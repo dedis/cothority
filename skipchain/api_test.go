@@ -116,9 +116,10 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	require.NotNil(t, cerr,
 		"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
-	sb2, cerr := c.StoreSkipBlock(sb1.Latest, el2, []byte{1, 2, 3})
-	require.NotNil(t, cerr)
-	sb2, cerr = c.StoreSkipBlock(sb1.Latest, el2, &testData{})
+	sb1, cerr = c.StoreSkipBlock(sb1.Latest, el2, []byte{1, 2, 3})
+	log.ErrFatal(cerr)
+	require.Equal(t, sb1.Latest.Data, []byte{1, 2, 3})
+	sb2, cerr := c.StoreSkipBlock(sb1.Latest, el2, &testData{})
 	log.ErrFatal(cerr)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
@@ -132,10 +133,10 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		updates, cerr = c.GetUpdateChain(inter.Roster, inter.Hash)
 		log.ErrFatal(cerr)
 	}
-	if len(updates.Update) != 3 {
-		t.Fatal("Should now have three Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
+	if len(updates.Update) != 4 {
+		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
 	}
-	if !updates.Update[2].Equal(sb2.Latest) {
+	if !updates.Update[len(updates.Update)-1].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 	c.Close()
