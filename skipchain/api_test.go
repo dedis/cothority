@@ -141,6 +141,32 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	c.Close()
 }
 
+func TestClient_GetAllSkipchains(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest()
+	_, el, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+	log.Lvl1("Creating root and control chain")
+	sb1, cerr := c.CreateGenesis(el, 1, 1, VerificationNone, nil, nil)
+	log.ErrFatal(cerr)
+	_, cerr = c.StoreSkipBlock(sb1, el, nil)
+	log.ErrFatal(cerr)
+	sb2, cerr := c.CreateGenesis(el, 1, 1, VerificationNone, nil, nil)
+	log.ErrFatal(cerr)
+	sb1id := sb1.SkipChainID()
+	sb2id := sb2.SkipChainID()
+
+	sbs, cerr := c.GetAllSkipchains(el.List[0])
+	require.Equal(t, 2, len(sbs.SkipChains))
+	sbs1id := sbs.SkipChains[0].SkipChainID()
+	sbs2id := sbs.SkipChains[1].SkipChainID()
+	require.True(t, sb1id.Equal(sbs1id) || sb1id.Equal(sbs2id))
+	require.True(t, sb1id.Equal(sbs2id) || sb2id.Equal(sbs2id))
+	require.NotEmpty(t, sb1id, sb2id)
+}
+
 func newTestClient(l *onet.LocalTest) *Client {
 	c := NewClient()
 	c.Client = l.NewClient("Skipchain")

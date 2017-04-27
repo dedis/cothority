@@ -79,7 +79,7 @@ func main() {
 		},
 		{
 			Name:      "add",
-			Usage:     "add a block to a skipchain",
+			Usage:     "add a new roster to a skipchain",
 			Aliases:   []string{"a"},
 			ArgsUsage: "skipchain-id " + groupsDef,
 			Action:    add,
@@ -100,20 +100,39 @@ func main() {
 		},
 		{
 			Name:  "list",
-			Usage: "lists all known skipblocks",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "long, l",
-					Usage: "give long id of blocks",
+			Usage: "handle list of skipblocks",
+			Subcommands: []cli.Command{
+				{
+					Name:    "known",
+					Aliases: []string{"k"},
+					Usage:   "lists all known skipblocks",
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "long, l",
+							Usage: "give long id of blocks",
+						},
+					},
+					Action: lsKnown,
+				},
+				{
+					Name:      "index",
+					Usage:     "create index-files for all known skipchains",
+					ArgsUsage: "output path",
+					Action:    lsIndex,
+				},
+				{
+					Name:      "fetch",
+					Usage:     "ask all known conodes for skipchains",
+					ArgsUsage: "[group-file]",
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "recursive, r",
+							Usage: "recurse into other conodes",
+						},
+					},
+					Action: lsFetch,
 				},
 			},
-			Action: list,
-		},
-		{
-			Name:      "index",
-			Usage:     "create index-files for all known skiplists",
-			ArgsUsage: "output path",
-			Action:    index,
 		},
 	}
 	cliApp.Flags = []cli.Flag{
@@ -275,8 +294,8 @@ func update(c *cli.Context) error {
 	return nil
 }
 
-// List gets all known skipblocks
-func list(c *cli.Context) error {
+// lsKnown shows all known skipblocks
+func lsKnown(c *cli.Context) error {
 	cfg, err := loadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
@@ -309,9 +328,9 @@ func list(c *cli.Context) error {
 	return nil
 }
 
-// Index writes one index-file for every known skipchain and an index.html
+// lsIndex writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
-func index(c *cli.Context) error {
+func lsIndex(c *cli.Context) error {
 	output := c.Args().First()
 	if len(output) == 0 {
 		return errors.New("Missing output path")
@@ -368,6 +387,57 @@ func index(c *cli.Context) error {
 	}
 
 	return nil
+}
+
+func lsFetch(c *cli.Context) error {
+	cfg := getConfigOrFail(c)
+	rec := c.Bool("recursive")
+	sisAll := map[network.ServerIdentityID]*network.ServerIdentity{}
+	group := readGroup(c, 0)
+	for _, sb := range cfg.Sbm.SkipBlocks {
+		for _, si := range sb.Roster.List {
+			sisAll[si.ID] = si
+		}
+	}
+	for _, si := range group.Roster.List {
+		sisAll[si.ID] = si
+	}
+	log.Info("The following ips will be searched:")
+	for _, si := range sisAll {
+		log.Info(si.Address)
+	}
+	client := skipchain.NewClient()
+	sisNew := sisAll
+	for len(sisNew) > 0 {
+		log.Print("sisNew is", sisNew)
+		sisIterate := sisNew
+		sisNew = map[network.ServerIdentityID]*network.ServerIdentity{}
+		for _, si := range sisIterate {
+			log.Info("Fetching all skipchains from", si.Address)
+			gasr, cerr := client.GetAllSkipchains(si)
+			if cerr != nil {
+				// Error is not fatal here - perhaps the node is down,
+				// but we can continue anyway.
+				log.Error(cerr)
+				continue
+			}
+			for _, sb := range gasr.SkipChains {
+				log.Printf("Found skipchain %x", sb.SkipChainID())
+				cfg.Sbm.SkipBlocks[string(sb.SkipChainID())] = sb
+				if rec {
+					log.Print("rec")
+					for _, si := range sb.Roster.List {
+						if _, exists := sisAll[si.ID]; !exists {
+							log.Print("Adding", si)
+							sisNew[si.ID] = si
+							sisAll[si.ID] = si
+						}
+					}
+				}
+			}
+		}
+	}
+	return cfg.save(c)
 }
 
 // Remove every file matching *.html in the given directory

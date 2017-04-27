@@ -8,23 +8,34 @@ DBG_APP=2
 . $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
-    startTest
-    buildConode github.com/dedis/cothority/skipchain
-    CFG=$BUILDDIR/config.bin
-    test Restart
-    test Config
+	startTest
+	buildConode github.com/dedis/cothority/skipchain
+	CFG=$BUILDDIR/config.bin
+	test Restart
+	test Config
 	test Create
 	test Join
 	test Add
 	test Index
 	test Html
-    stopTest
+	test Fetch
+	stopTest
+}
+
+testFetch(){
+	startCl
+	setupGenesis
+	rm $CFG
+	testFail runSc list fetch
+	testOK runSc list fetch public.toml
+	testGrep 2002 runSc list known
+	testGrep 2004 runSc list known
 }
 
 testHtml(){
 	startCl
 	testOK runSc create -html http://dedis.ch public.toml
-	ID=$( runSc list | head -n 1 | sed -e "s/.*block \(.*\) with.*/\1/" )
+	ID=$( runSc list known | head -n 1 | sed -e "s/.*block \(.*\) with.*/\1/" )
 	html=$(mktemp)
 	echo "TestWeb" > $html
 	echo $ID - $html
@@ -61,33 +72,33 @@ testJoin(){
 	runGrepSed "Created new" "s/.* //" runSc create public.toml
 	ID=$SED
 	rm $CFG
-	testGrep "Didn't find any" runSc list
+	testGrep "Didn't find any" runSc list known
 	testFail runSc join public.toml 1234
-	testGrep "Didn't find any" runSc list
+	testGrep "Didn't find any" runSc list known
 	testOK runSc join public.toml $ID
-	testGrep $ID runSc list -l
+	testGrep $ID runSc list known -l
 }
 
 testCreate(){
 	startCl
-    testGrep "Didn't find any" runSc list -l
-    testFail runSc create
-    testOK runSc create public.toml
-    testGrep "Genesis-block" runSc list -l
+	testGrep "Didn't find any" runSc list known -l
+	testFail runSc create
+	testOK runSc create public.toml
+	testGrep "Genesis-block" runSc list known -l
 }
 
 testIndex(){
-    startCl
-    setupGenesis
-    touch random.html
+	startCl
+	setupGenesis
+	touch random.html
 
-    testFail runSc index
-    testOK runSc index $PWD
-    testGrep "$ID" cat index.html
-    testGrep "127.0.0.1" cat index.html
-    testGrep "$ID" cat "$ID.html"
-    testGrep "127.0.0.1" cat "$ID.html"
-    testNFile random.html
+	testFail runSc list index
+	testOK runSc list index $PWD
+	testGrep "$ID" cat index.html
+	testGrep "127.0.0.1" cat index.html
+	testGrep "$ID" cat "$ID.html"
+	testGrep "127.0.0.1" cat "$ID.html"
+	testNFile random.html
 }
 
 testConfig(){
@@ -104,7 +115,7 @@ testConfig(){
 }
 
 runSc(){
-    dbgRun ./$APP -c $CFG -d $DBG_APP $@
+	dbgRun ./$APP -c $CFG -d $DBG_APP $@
 }
 
 startCl(){

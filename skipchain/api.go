@@ -148,6 +148,15 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 	return
 }
 
+// GetAllSkipchains returns all skipchains known to that conode. If none are
+// known, an empty slice is returned.
+func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkipchainsReply,
+	cerr onet.ClientError) {
+	reply = &GetAllSkipchainsReply{}
+	cerr = c.SendProtobuf(si, &GetAllSkipchains{}, reply)
+	return
+}
+
 // FindSkipChain takes the ID of a skipchain and an optional URL for finding the
 // appropriate skipchain. If no URL is given, the default
 // "http://skipchain.dedis.ch" is used. If successful, it will return the latest

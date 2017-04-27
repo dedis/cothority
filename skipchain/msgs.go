@@ -13,6 +13,9 @@ func init() {
 		&GetUpdateChainReply{},
 		// Request updated block
 		&GetSingleBlock{},
+		// Fetch all skipchains
+		&GetAllSkipchains{},
+		&GetAllSkipchainsReply{},
 		// - Internal calls
 		// Propagation
 		&PropagateSkipBlocks{},
@@ -62,6 +65,15 @@ type GetUpdateChain struct {
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
 	Update []*SkipBlock
+}
+
+// GetAllSkipchains - returns all known last blocks of skipchains.
+type GetAllSkipchains struct {
+}
+
+// GetAllSkipchainsReply - returns all known last blocks of skipchains.
+type GetAllSkipchainsReply struct {
+	SkipChains []*SkipBlock
 }
 
 // Internal calls

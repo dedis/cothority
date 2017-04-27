@@ -222,6 +222,25 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientErr
 	return sb, nil
 }
 
+// GetAllSkipchains returns a list of all known skipchains
+func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
+	// Write all known skipblocks to a map, thus removing double blocks.
+	chains := map[string]*SkipBlock{}
+	s.Sbm.Lock()
+	for _, sb := range s.Sbm.SkipBlocks {
+		chains[string(sb.SkipChainID())] = sb
+	}
+	s.Sbm.Unlock()
+
+	reply := &GetAllSkipchainsReply{
+		SkipChains: make([]*SkipBlock, 0, len(chains)),
+	}
+	for _, sb := range chains {
+		reply.SkipChains = append(reply.SkipChains, sb)
+	}
+	return reply, nil
+}
+
 func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
 	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
 	node := known.Roster.RandomServerIdentity()
@@ -560,7 +579,6 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
-	log.Print("Finished propagation")
 	return nil
 }
 
@@ -609,7 +627,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	}
 	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
-		s.GetSingleBlock))
+		s.GetSingleBlock, s.GetAllSkipchains))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),
