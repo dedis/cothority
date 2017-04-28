@@ -19,8 +19,11 @@ import (
 
 	"bytes"
 
+	"fmt"
+
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/qantik/qrgo"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
@@ -134,6 +137,17 @@ func idDel(c *cli.Context) error {
 }
 func idCheck(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
+	return nil
+}
+func idQrcode(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	id := []byte(cfg.ID)
+	str := fmt.Sprintf("cisc://%s/%x", cfg.Cothority.RandomServerIdentity().Address.NetworkAddress(),
+		id)
+	log.Info("QrCode for", str)
+	qr, err := qrgo.NewQR(str)
+	log.ErrFatal(err)
+	qr.OutputTerminal()
 	return nil
 }
 

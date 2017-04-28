@@ -199,11 +199,11 @@ func (i *Identity) AttachToIdentity(name string) onet.ClientError {
 
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
-func (i *Identity) ProposeSend(il *Config) onet.ClientError {
-	log.Lvl3("Sending proposal", il)
+func (i *Identity) ProposeSend(cnf *Config) onet.ClientError {
+	log.Lvl3("Sending proposal", cnf)
 	err := i.sendProtobuf(i.randomSI(),
-		&ProposeSend{i.SkipBlock.SkipChainID(), il}, nil)
-	i.Proposed = il
+		&ProposeSend{i.SkipBlock.SkipChainID(), cnf}, nil)
+	i.Proposed = cnf
 	return err
 }
 
