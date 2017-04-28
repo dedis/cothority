@@ -255,7 +255,7 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 		switch msg.(type) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
-			sid.Proposed = p.Config
+			sid.Proposed = p.Propose
 			sid.Votes = make(map[string]*crypto.SchnorrSig)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)

@@ -208,8 +208,8 @@ type ConfigUpdateReply struct {
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
-	ID ID
-	*Config
+	ID      ID
+	Propose *Config
 }
 
 // ProposeUpdate verifies if a new config is available.

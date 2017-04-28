@@ -137,8 +137,9 @@ func idCheck(c *cli.Context) error {
 }
 func idQrcode(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
+	id := []byte(cfg.ID)
 	str := fmt.Sprintf("cisc://%s/%x", cfg.Cothority.RandomServerIdentity().Address.NetworkAddress(),
-		cfg.ID)
+		id)
 	log.Info("QrCode for", str)
 	qr, err := qrgo.NewQR(str)
 	log.ErrFatal(err)
