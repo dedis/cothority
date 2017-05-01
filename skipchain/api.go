@@ -148,7 +148,9 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, cerr onet.ClientError) {
 	reply = &GetUpdateChainReply{}
-	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+	r := roster.RandomServerIdentity()
+	log.Print(r)
+	cerr = c.SendProtobuf(r,
 		&GetUpdateChain{latest}, reply)
 	return
 }

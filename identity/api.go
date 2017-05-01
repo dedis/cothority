@@ -89,24 +89,21 @@ type Identity struct {
 func NewIdentity(control *skipchain.SkipBlock, threshold int, owner string) (*Identity, error) {
 	kp := config.NewKeyPair(network.Suite)
 	config := NewConfig(threshold, kp.Public, owner)
-	var sbData *skipchain.SkipBlock
-	if control != nil {
-		var err error
-		sbData, err = skipchain.NewClient().CreateGenesis(control.Roster, 4, 4,
-			verificationIdentity, config, control.SkipChainID())
-		if err != nil {
-			return nil, err
-		}
-	}
-	log.Printf("Id is %x", sbData.Hash)
-	return &Identity{
+	i := &Identity{
 		Private:    kp.Secret,
 		Public:     kp.Public,
 		Config:     config,
 		DeviceName: owner,
-		SkipBlock:  sbData,
 		client:     onet.NewClient(ServiceName),
-	}, nil
+	}
+	cir := &CreateIdentityReply{}
+	cerr := i.sendProtobuf(control.Roster.RandomServerIdentity(),
+		&CreateIdentity{config, control}, cir)
+	if cerr != nil {
+		return nil, cerr
+	}
+	i.SkipBlock = cir.Data
+	return i, nil
 }
 
 // NewIdentityFromRoster takes a roster and creates a root-, and
@@ -210,12 +207,14 @@ func (i *Identity) ProposeSend(cnf *Config) onet.ClientError {
 // ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ProposeUpdate() onet.ClientError {
-	log.Lvl3("Updating proposal")
+	r := i.randomSI()
+	log.LLvl3("Updating proposal", i.ID(), r)
 	cnc := &ProposeUpdateReply{}
-	err := i.sendProtobuf(i.randomSI(), &ProposeUpdate{
-		ID: i.SkipBlock.SkipChainID(),
+	err := i.sendProtobuf(r, &ProposeUpdate{
+		ID: i.ID(),
 	}, cnc)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 	i.Proposed = cnc.Propose
@@ -262,7 +261,7 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() onet.ClientError {
-	log.Lvl3("ConfigUpdate", i)
+	log.LLvl3("ConfigUpdate", i.ID())
 	gucr, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
 	if cerr != nil {
 		log.Error(cerr)

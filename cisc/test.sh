@@ -301,7 +301,8 @@ runDbgCl(){
 clientSetup(){
     local CLIENTS=${1:-0} c b
 	runCoBG 1 2 3
-    runDbgCl 0 1 id cr public.toml client1
+	D=2
+    runDbgCl $D 1 id cr public.toml client1
     runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
     if [ "$CLIENTS" -gt 1 ]; then
@@ -309,8 +310,8 @@ clientSetup(){
     		runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
-					runDbgCl 0 $b config update
-					runDbgCl 0 $b config vote y
+					runDbgCl $D $b config update
+					runDbgCl $D $b config vote y
 				fi
 			done
 		done

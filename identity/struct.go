@@ -182,8 +182,8 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
-// CreateIdentity starts a new identity-skipchain with the initial
-// Config and asking all nodes in Roster to participate.
+// CreateIdentity takes a configuration and a control-skipblock. It creates
+// the data-skipchain with the config in the genesis-block.
 type CreateIdentity struct {
 	Config  *Config
 	Control *skipchain.SkipBlock
@@ -193,16 +193,6 @@ type CreateIdentity struct {
 // returns the genesis-Data-skipblock.
 type CreateIdentityReply struct {
 	Data *skipchain.SkipBlock
-}
-
-// ConfigUpdate verifies if a new update is available.
-type ConfigUpdate struct {
-	ID skipchain.SkipBlockID
-}
-
-// ConfigUpdateReply returns the updated configuration.
-type ConfigUpdateReply struct {
-	Config *Config
 }
 
 // ProposeSend sends a new proposition to be stored in all identities. It

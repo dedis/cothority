@@ -67,18 +67,25 @@ type Storage struct {
  * API messages
  */
 
-// ConfigUpdate returns a new configuration update
-func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
-	sid := s.getIdentityStorage(cu.ID)
-	if sid == nil {
-		log.Printf("%#v", s.StorageMap)
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+// SaveIdentity stores a new identity for propose-config
+func (s *Service) CreateIdentity(ci *CreateIdentity) (*CreateIdentityReply, onet.ClientError) {
+	var sbData *skipchain.SkipBlock
+	if ci.Control != nil {
+		var err error
+		sbData, err = skipchain.NewClient().CreateGenesis(ci.Control.Roster, 4, 4,
+			verificationIdentity, ci.Config, ci.Control.SkipChainID())
+		if err != nil {
+			return nil, onet.NewClientError(err)
+		}
 	}
-	sid.Lock()
-	defer sid.Unlock()
-	log.Lvl3(s, "Sending config-update")
-	return &ConfigUpdateReply{
-		Config: sid.Latest,
+	s.setIdentityStorage(sbData.SkipChainID(), &Storage{
+		Latest:  ci.Config,
+		Votes:   map[string]*crypto.SchnorrSig{},
+		Control: ci.Control,
+		Data:    sbData,
+	})
+	return &CreateIdentityReply{
+		Data: sbData,
 	}, nil
 }
 
@@ -103,6 +110,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 
 // ProposeUpdate returns an eventual config-proposition
 func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.ClientError) {
+	log.Print("Getting ID", cnc.ID)
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
