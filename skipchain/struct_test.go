@@ -48,7 +48,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 
 	b, err = sbm.GetResponsible(inter0)
 	log.ErrFatal(err)
-	assert.True(t, root1.Equal(b))
+	assert.Equal(t, root1.Hash, b.Hash)
 
 	b, err = sbm.GetResponsible(inter1)
 	log.ErrFatal(err)

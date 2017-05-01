@@ -251,6 +251,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	sbf := *sb.SkipBlockFix
 	b := &SkipBlock{
 		SkipBlockFix: &sbf,
+		Hash:         make([]byte, len(sb.Hash)),
 		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
 		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
 	}
@@ -258,6 +259,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		b.ForwardLink[i] = fl.Copy()
 	}
 	copy(b.ChildSL, sb.ChildSL)
+	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
 	sb.fwMutex.Unlock()
