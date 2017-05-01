@@ -41,12 +41,12 @@ func (vId VerifierID) String() string {
 	return uuid.UUID(vId).String()
 }
 
-// Equal returns true if and only if the given VerifierID equals the current one.
-func (vId VerifierID) Equal(vId2 VerifierID) bool {
-	return uuid.Equal(uuid.UUID(vId), uuid.UUID(vId2))
+// Equal returns true if and only if the given VerifierID equals vId.
+func (vId VerifierID) Equal(vID2 VerifierID) bool {
+	return uuid.Equal(uuid.UUID(vId), uuid.UUID(vID2))
 }
 
-//IsNil returns true iff the VerifierID is Nil
+// IsNil returns true iff the VerifierID is Nil
 func (vId VerifierID) IsNil() bool {
 	return vId.Equal(VerifierID(uuid.Nil))
 }
