@@ -265,11 +265,11 @@ func (i *Identity) ConfigUpdate() onet.ClientError {
 		log.Error(cerr)
 		return cerr
 	}
-	if len(gucr.Update) == 0 {
+	if len(gucr.Reply) == 0 {
 		log.Lvl3("Didn't get any update")
 		return nil
 	}
-	last := gucr.Update[len(gucr.Update)-1]
+	last := gucr.Reply[len(gucr.Reply)-1]
 	_, d, err := network.Unmarshal(last.Data)
 	if err != nil {
 		log.Error(err)

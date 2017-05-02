@@ -31,7 +31,7 @@ import (
 )
 
 type config struct {
-	Sbm *skipchain.SkipBlockMap
+	Sbm *skipchain.SkipBlockBunch
 }
 
 type html struct {
@@ -190,7 +190,7 @@ func join(c *cli.Context) error {
 	if cerr != nil {
 		return cerr
 	}
-	latest := gcr.Update[len(gcr.Update)-1]
+	latest := gcr.Reply[len(gcr.Reply)-1]
 	genesis := latest.GenesisID
 	if genesis == nil {
 		genesis = latest.Hash
@@ -219,7 +219,7 @@ func add(c *cli.Context) error {
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Update[len(guc.Update)-1]
+	latest := guc.Reply[len(guc.Reply)-1]
 	ssbr, cerr := client.StoreSkipBlock(latest, group.Roster, nil)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
@@ -249,7 +249,7 @@ func addWeb(c *cli.Context) error {
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Update[len(guc.Update)-1]
+	latest := guc.Reply[len(guc.Reply)-1]
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
@@ -280,15 +280,15 @@ func update(c *cli.Context) error {
 	if cerr != nil {
 		return errors.New("while updating chain: " + cerr.Error())
 	}
-	if len(guc.Update) == 1 {
+	if len(guc.Reply) == 1 {
 		log.Info("No new block available")
 	} else {
-		for _, b := range guc.Update[1:] {
+		for _, b := range guc.Reply[1:] {
 			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
 			cfg.Sbm.Store(b)
 		}
 	}
-	latest := guc.Update[len(guc.Update)-1]
+	latest := guc.Reply[len(guc.Reply)-1]
 	log.Infof("Latest block of %x is %x", latest.GenesisID, latest.Hash)
 	log.ErrFatal(cfg.save(c))
 	return nil
@@ -525,7 +525,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &config{Sbm: skipchain.NewSkipBlockMap()}, nil
+			return &config{Sbm: skipchain.NewSkipBlockBunch()}, nil
 		}
 		return nil, fmt.Errorf("Could not open file %s", path)
 	}

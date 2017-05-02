@@ -9,8 +9,8 @@ func init() {
 		&StoreSkipBlock{},
 		&StoreSkipBlockReply{},
 		// Requests for data
-		&GetUpdateChain{},
-		&GetUpdateChainReply{},
+		&GetBlocks{},
+		&GetBlocksReply{},
 		// Request updated block
 		&GetSingleBlock{},
 		// Fetch all skipchains
@@ -40,11 +40,9 @@ func init() {
 
 // External calls
 
-// StoreSkipBlock - Requests a new skipblock to be appended to
-// the given SkipBlock. If the given SkipBlock has Index 0 (which
-// is invalid), a new SkipChain will be created.
+// StoreSkipBlock - Requests a new skipblock to be stored on the skipchain.
+// For more details, see skipchain.Client::StoreSkipBlock
 type StoreSkipBlock struct {
-	LatestID SkipBlockID
 	NewBlock *SkipBlock
 }
 
@@ -54,17 +52,18 @@ type StoreSkipBlockReply struct {
 	Latest   *SkipBlock
 }
 
-// GetUpdateChain - the client sends the hash of the last known
-// Skipblock and will get back a list of all necessary SkipBlocks
-// to get to the latest.
-type GetUpdateChain struct {
-	LatestID SkipBlockID
+// GetBlocks - requests blocks from the skipchain. Different return-modes
+// are possible: update, all, shortest. For more detail, see
+// skipchain.Client::GetBlocks.
+type GetBlocks struct {
+	Start     SkipBlockID
+	End       SkipBlockID
+	MaxHeight int
 }
 
-// GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
-// starting from the SkipBlock the client sent
-type GetUpdateChainReply struct {
-	Update []*SkipBlock
+// GetBlocksReply - returns the request from the GetBlocks.
+type GetBlocksReply struct {
+	Reply []*SkipBlock
 }
 
 // GetAllSkipchains - returns all known last blocks of skipchains.

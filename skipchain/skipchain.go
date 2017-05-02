@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 
+	"sync"
+
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/satori/go.uuid"
@@ -25,7 +27,8 @@ const bftFollowBlock = "SkipchainBFTFollow"
 
 func init() {
 	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
-	network.RegisterMessage(&SkipBlockMap{})
+	network.RegisterMessage(&SkipBlockBunch{})
+	network.RegisterMessage(&storage{})
 }
 
 // Only used in tests
@@ -37,8 +40,7 @@ const skipblocksID = "skipblocks"
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	// Sbm is the skipblock-map that holds all known skipblocks to this service.
-	Sbm           *SkipBlockMap
+	Storage       *storage
 	propagate     messaging.PropagationFunc
 	verifiers     map[VerifierID]SkipBlockVerifier
 	blockRequests map[string]chan *SkipBlock
@@ -52,22 +54,18 @@ type Service struct {
 // The conode servicing the request needs to be part of the actual valid latest
 // skipblock, else it will fail.
 //
-// It takes a hash for the latest valid SkipBlock and a SkipBlock
-// that will be verified. If the verification returns true, the new SkipBlock
-// will be stored, else it will be discarded and an error will be returned.
-//
-// If the latest block given is nil it will create a new skipchain and store
-// the given block as genesis-block.
-//
-// If the latest block is non-nil and exists, the skipblock will be added to the
-// skipchain after verification that it fits and no other block already has been
-// added.
+// Depending on the data given in the new SkipBlock, different actions will
+// be done:
+//   - GenesisID: if it is nil, a genesis-block will be created. You need
+//     to set MaximumHeight, BaseHeight and the VerifierIDs
+//   - Index: if 0, then it will be added to the latest skipblock, if > 0, then
+//     it will be added at that position, if this is the latest position.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, onet.ClientError) {
 	prop := psbd.NewBlock
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
-	if psbd.LatestID.IsNull() {
+	if prop.GenesisID.IsNull() {
 		// A new chain is created, suppose all arguments in SkipBlock
 		// are correctly set up
 		prop.Index = 0
@@ -84,7 +82,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 				err.Error())
 		}
 		if !prop.ParentBlockID.IsNull() {
-			parent := s.Sbm.GetByID(prop.ParentBlockID)
+			parent := s.Storage.getByID(prop.ParentBlockID)
 			if parent == nil {
 				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
 					"Didn't find parent")
@@ -95,7 +93,12 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		changed = append(changed, prop)
 	} else {
 		// We're appending a block to an existing chain
-		prev = s.Sbm.GetByID(psbd.LatestID)
+		bunch := s.Storage.getBunch(prop.GenesisID)
+		if bunch == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Didn't find skipchain for given genesisid")
+		}
+		prev = bunch.Latest
 		if prev == nil {
 			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 				"Didn't find latest block")
@@ -104,12 +107,15 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"We're not responsible for latest block")
 		}
+		if prop.Index > 0 && prev.Index+1 != prop.Index {
+			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				"Chosen index is not next index - did you miss a block?")
+		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
 		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
-		prop.GenesisID = prev.SkipChainID()
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
@@ -123,7 +129,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		pointer := prev
 		for h := range prop.BackLinkIDs {
 			for pointer.Height < h+1 {
-				pointer = s.Sbm.GetByID(pointer.BackLinkIDs[0])
+				pointer = bunch.GetByID(pointer.BackLinkIDs[0])
 				if pointer == nil {
 					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 						"Didn't find convenient SkipBlock for height "+
@@ -134,12 +140,16 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		}
 		prop.updateHash()
 		if err := s.addForwardLink(prev, prop, 1); err != nil {
+			log.Printf("Previous is %v/%#v", prev, prev.SkipBlockFix)
+			for _, sb := range bunch.SkipBlocks {
+				log.Printf("%#v", sb)
+			}
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
 		}
 		changed = append(changed, prev, prop)
 		for i, bl := range prop.BackLinkIDs[1:] {
-			back := s.Sbm.GetByID(bl)
+			back := bunch.GetByID(bl)
 			if back == nil {
 				return nil, onet.NewClientErrorCode(ErrorBlockContent,
 					"Didn't get skipblock in back-link")
@@ -168,25 +178,64 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 	return reply, nil
 }
 
-// GetUpdateChain returns a slice of SkipBlocks which describe the part of the
-// skipchain from the latest block the caller knows of to the actual latest
-// SkipBlock.
-// Somehow comparable to search in SkipLists.
-func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
-	block := s.Sbm.GetByID(latestKnown.LatestID)
-	if block == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
+// GetBlocks returns a slice of SkipBlocks which describe the part of the
+// skipchain desired in the requested format:
+//  - Start: if nil, End must be given
+//  - End: if nil, get chain from Start to latest; if Start is nil, get only that
+//    block
+//  - MaxHeight: how fast to jump. If MaxHeight == 0, go to the maximum height
+//    possible. If MaxHeight == 1, give all intermediate blocks
+func (s *Service) GetBlocks(request *GetBlocks) (*GetBlocksReply, onet.ClientError) {
+	var start, end *SkipBlock
+	blocks := []*SkipBlock{}
+	var bunch *SkipBlockBunch
+	if !request.Start.IsNull() {
+		start = s.Storage.getByID(request.Start)
+		if start == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Couldn't find starting block")
+		}
+		blocks = append(blocks, start)
+		bunch = s.Storage.getBunch(start.SkipChainID())
+		if bunch == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Didn't find corresponding bunch for start-block")
+		}
 	}
-	// at least the latest know and the next block:
-	blocks := []*SkipBlock{block}
-	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
-	for block.GetForwardLen() > 0 {
-		link := block.ForwardLink[block.GetForwardLen()-1]
-		next := s.Sbm.GetByID(link.Hash)
+	if !request.End.IsNull() {
+		end = s.Storage.getByID(request.End)
+		if end == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Couldn't find ending block")
+		}
+		blocks = append(blocks, end)
+		endBunch := s.Storage.getBunch(end.SkipChainID())
+		if endBunch == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Didn't find corresponding bunch for end-block")
+		}
+		if bunch != nil && bunch != endBunch {
+			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				"Cannot get blocks between two different skipchains")
+		}
+		bunch = endBunch
+	}
+	if start != nil && end != nil && start.Index >= end.Index {
+		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			"Order of start and end inversed")
+	}
+	log.Lvlf3("Starting to search chain from %v to %v", start, end)
+	for start != nil && start.GetForwardLen() > 0 {
+		height := start.GetForwardLen()
+		if request.MaxHeight > 0 && height > request.MaxHeight {
+			height = request.MaxHeight
+		}
+		link := start.ForwardLink[start.GetForwardLen()-1]
+		next := bunch.GetByID(link.Hash)
 		if next == nil {
 			log.Lvl3("Didn't find next block, updating block")
 			var err error
-			next, err = s.getUpdateBlock(block, link.Hash)
+			next, err = s.getUpdateBlock(start, link.Hash)
 			if err != nil {
 				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 					err.Error())
@@ -202,43 +251,37 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 				}
 			}
 		}
-		block = next
+		start = next
 		blocks = append(blocks, next)
+		if end != nil {
+			if start.Index == end.Index {
+				break
+			}
+			if start.Index > end.Index {
+				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					"Didn't find end-block in chain - perhaps try with maxHeight = 1")
+			}
+		}
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
-	reply := &GetUpdateChainReply{blocks}
+	reply := &GetBlocksReply{blocks}
 
 	return reply, nil
-}
-
-// GetSingleBlock searches for the given block and returns it. If no such block is
-// found, a nil is returned.
-func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientError) {
-	sb := s.Sbm.GetByID(id.ID)
-	if sb == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
-			"No such block")
-	}
-	return sb, nil
 }
 
 // GetAllSkipchains returns a list of all known skipchains
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
 	// Write all known skipblocks to a map, thus removing double blocks.
-	chains := map[string]*SkipBlock{}
-	s.Sbm.Lock()
-	for _, sb := range s.Sbm.SkipBlocks {
-		chains[string(sb.SkipChainID())] = sb
+	s.Storage.Lock()
+	chains := make([]*SkipBlock, 0, len(s.Storage.Bunches))
+	for _, sbc := range s.Storage.Bunches {
+		chains = append(chains, sbc.Latest)
 	}
-	s.Sbm.Unlock()
+	s.Storage.Unlock()
 
-	reply := &GetAllSkipchainsReply{
-		SkipChains: make([]*SkipBlock, 0, len(chains)),
-	}
-	for _, sb := range chains {
-		reply.SkipChains = append(reply.SkipChains, sb)
-	}
-	return reply, nil
+	return &GetAllSkipchainsReply{
+		SkipChains: chains,
+	}, nil
 }
 
 func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
@@ -271,7 +314,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
 			return errors.New("This backlink-height doesn't exist")
 		}
-		target := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
+		target := s.Storage.getByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
 			return errors.New("Didn't find target-block")
 		}
@@ -299,7 +342,7 @@ func (s *Service) getBlock(env *network.Envelope) {
 		log.Error("Didn't receive GetBlock")
 		return
 	}
-	sb := s.Sbm.GetByID(gb.ID)
+	sb := s.Storage.getByID(gb.ID)
 	if sb == nil {
 		log.Error("Did not find block")
 		return
@@ -324,10 +367,16 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 		log.Error("Didn't receive GetBlock")
 		return
 	}
-	if err := s.Sbm.VerifyLinks(gbr.SkipBlock); err != nil {
-		log.Error("Received invalid skipblock: " + err.Error())
+	bunch := s.Storage.getBunch(gbr.SkipBlock.SkipChainID())
+	if bunch == nil {
+		log.Error("Don't know about this bunch")
+		return
 	}
-	id := s.Sbm.Store(gbr.SkipBlock)
+	if err := bunch.VerifyLinks(gbr.SkipBlock); err != nil {
+		log.Error("Received invalid skipblock: " + err.Error())
+		return
+	}
+	id := bunch.Store(gbr.SkipBlock)
 	s.save()
 	log.Lvl3("Sending block to channel")
 	s.blockRequests[string(id)] <- gbr.SkipBlock
@@ -345,7 +394,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !ok {
 			return errors.New("Didn't receive a ForwardSignature")
 		}
-		previous := s.Sbm.GetByID(fs.Previous)
+		previous := s.Storage.getByID(fs.Previous)
 		if previous == nil {
 			return errors.New("Didn't find newest block")
 		}
@@ -359,7 +408,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !fs.ForwardLink.Hash.Equal(newest.Hash) {
 			return errors.New("No forward-link from previous to newest")
 		}
-		target := s.Sbm.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+		target := s.Storage.getByID(newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
 			return errors.New("Don't have target-block")
 		}
@@ -384,7 +433,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	src := data[0:32]
-	srcSB := s.Sbm.GetByID(src)
+	srcSB := s.Storage.getByID(src)
 	if srcSB == nil {
 		log.Error("Didn't find src-skipblock")
 		return false
@@ -438,9 +487,14 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			log.Error(err)
 			return
 		}
-		s.Sbm.Store(sb)
-		s.save()
+		bunch := s.Storage.getBunch(sb.SkipChainID())
+		if bunch == nil {
+			s.Storage.addBunch(sb)
+		} else {
+			bunch.Store(sb)
+		}
 	}
+	s.save()
 }
 
 // RegisterVerification stores the verification in a map and will
@@ -486,7 +540,8 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 // requested.
 func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
 	if height <= src.GetForwardLen() {
-		return errors.New("already have forward-link at this height")
+		return fmt.Errorf("already have %d forward-links: height %d",
+			src.GetForwardLen(), height)
 	}
 	// create the message we want to sign for this round
 	roster := src.Roster
@@ -582,6 +637,66 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	return nil
 }
 
+type storage struct {
+	sync.Mutex
+	// Stores a bunch for each skipchain
+	Bunches map[string]*SkipBlockBunch
+}
+
+func newStorage() *storage {
+	return &storage{
+		Bunches: map[string]*SkipBlockBunch{},
+	}
+}
+
+func (s *storage) addBunch(sb *SkipBlock) *SkipBlockBunch {
+	s.Lock()
+	defer s.Unlock()
+	bunch := NewSkipBlockBunch()
+	bunch.Store(sb)
+	if s.Bunches[string(sb.SkipChainID())] != nil {
+		log.Error("That bunch already exists")
+		return nil
+	}
+	s.Bunches[string(sb.SkipChainID())] = bunch
+	return bunch
+}
+
+func (s *storage) getByID(id SkipBlockID) *SkipBlock {
+	s.Lock()
+	defer s.Unlock()
+	for _, b := range s.Bunches {
+		if sb := b.GetByID(id); sb != nil {
+			return sb
+		}
+	}
+	return nil
+}
+
+func (s *storage) getFromGenesisByID(genesis, id SkipBlockID) *SkipBlock {
+	sbc := s.getBunch(genesis)
+	if sbc == nil {
+		return nil
+	}
+	return sbc.GetByID(id)
+}
+
+func (s *storage) getBunch(genesis SkipBlockID) *SkipBlockBunch {
+	s.Lock()
+	defer s.Unlock()
+	return s.Bunches[string(genesis)]
+}
+
+func (s *storage) getLatest(genesis SkipBlockID) *SkipBlock {
+	s.Lock()
+	defer s.Unlock()
+	b, ok := s.Bunches[string(genesis)]
+	if ok {
+		return b.Latest
+	}
+	return nil
+}
+
 // saves all skipblocks.
 func (s *Service) save() {
 	if time.Now().Sub(s.lastSave) < time.Second*timeBetweenSave {
@@ -589,9 +704,9 @@ func (s *Service) save() {
 	}
 	s.lastSave = time.Now()
 	log.Lvl3("Saving service")
-	s.Sbm.Lock()
-	err := s.Save(skipblocksID, s.Sbm)
-	s.Sbm.Unlock()
+	s.Storage.Lock()
+	err := s.Save(skipblocksID, s.Storage)
+	s.Storage.Unlock()
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -608,7 +723,7 @@ func (s *Service) tryLoad() error {
 		return err
 	}
 	var ok bool
-	s.Sbm, ok = msg.(*SkipBlockMap)
+	s.Storage, ok = msg.(*storage)
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
@@ -618,7 +733,7 @@ func (s *Service) tryLoad() error {
 func newSkipchainService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		Sbm:              NewSkipBlockMap(),
+		Storage:          newStorage(),
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		blockRequests:    make(map[string]chan *SkipBlock),
 	}
@@ -626,8 +741,8 @@ func newSkipchainService(c *onet.Context) onet.Service {
 		log.Error(err)
 	}
 	s.lastSave = time.Now()
-	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
-		s.GetSingleBlock, s.GetAllSkipchains))
+	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetBlocks,
+		s.GetAllSkipchains))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),

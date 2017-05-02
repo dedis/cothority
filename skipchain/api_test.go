@@ -89,7 +89,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 		"Root signature invalid:")
 	update, cerr := c.GetUpdateChain(root.Roster, root.Hash)
 	log.ErrFatal(cerr)
-	root = update.Update[0]
+	root = update.Reply[0]
 	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
 	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
 		t.Fatal("Intermediate doesn't point to root")
@@ -127,16 +127,16 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
-	var updates *GetUpdateChainReply
+	var updates *GetBlocksReply
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
 		updates, cerr = c.GetUpdateChain(inter.Roster, inter.Hash)
 		log.ErrFatal(cerr)
 	}
-	if len(updates.Update) != 4 {
-		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Update), inter, sb2)
+	if len(updates.Reply) != 4 {
+		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Reply), inter, sb2)
 	}
-	if !updates.Update[len(updates.Update)-1].Equal(sb2.Latest) {
+	if !updates.Reply[len(updates.Reply)-1].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 	c.Close()

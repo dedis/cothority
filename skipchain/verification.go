@@ -43,7 +43,7 @@ func (s *Service) verifyFuncData(newID []byte, newSB *SkipBlock) bool {
 		log.Lvl3("No parent skipblock to verify against")
 		return false
 	}
-	sbParent := s.Sbm.GetByID(newSB.ParentBlockID)
+	sbParent := s.Storage.getByID(newSB.ParentBlockID)
 	if sbParent == nil {
 		log.Lvl3("Parent skipblock doesn't exist")
 		return false

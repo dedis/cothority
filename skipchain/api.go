@@ -53,7 +53,6 @@ func NewClient() *Client {
 func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	var newBlock *SkipBlock
-	var latestID SkipBlockID
 	if el == nil && d == nil {
 		newBlock = latest
 	} else {
@@ -73,11 +72,12 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 				newBlock.Data = buf
 			}
 		}
-		latestID = latest.Hash
+		newBlock.Index = latest.Index + 1
+		newBlock.GenesisID = latest.SkipChainID()
 	}
 	host := latest.Roster.RandomServerIdentity()
 	reply = &StoreSkipBlockReply{}
-	cerr = c.SendProtobuf(host, &StoreSkipBlock{latestID, newBlock}, reply)
+	cerr = c.SendProtobuf(host, &StoreSkipBlock{newBlock}, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -146,12 +146,10 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
-func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, cerr onet.ClientError) {
-	reply = &GetUpdateChainReply{}
-	r := roster.RandomServerIdentity()
-	log.Print(r)
-	cerr = c.SendProtobuf(r,
-		&GetUpdateChain{latest}, reply)
+func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetBlocksReply, cerr onet.ClientError) {
+	reply = &GetBlocksReply{}
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetBlocks{latest, nil, 0}, reply)
 	return
 }
 
@@ -170,17 +168,17 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 // known block.
 func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
 	c := NewClient()
-	reply := &GetUpdateChainReply{}
+	reply := &GetBlocksReply{}
 	sid := network.NewServerIdentity(nil, "localhost:2002")
 	cerr := c.SendProtobuf(sid,
-		&GetUpdateChain{id}, reply)
+		&GetBlocks{nil, id, 0}, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
-	if len(reply.Update) == 0 {
+	if len(reply.Reply) == 0 {
 		return nil, errors.New("Didn't find skipblock")
 	}
-	return reply.Update[len(reply.Update)-1], nil
+	return reply.Reply[len(reply.Reply)-1], nil
 	//if url == "" {
 	//	url = "http://skipchain.dedis.ch"
 	//}

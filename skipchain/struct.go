@@ -349,27 +349,31 @@ func (bl *BlockLink) VerifySignature(publics []abstract.Point) error {
 	return cosi.VerifySignature(network.Suite, publics, bl.Hash, bl.Signature)
 }
 
-// SkipBlockMap holds the map to the skipblocks. This is used for verification,
-// so that all links can be followed.
-type SkipBlockMap struct {
+// SkipBlockBunch holds all blocks necessary to track this chain up to the
+// genesis-block. It can be used by clients to hold all necessary blocks and
+// use it as verification for unknown blocks or to update.
+type SkipBlockBunch struct {
+	GenesisID  SkipBlockID
+	Latest     *SkipBlock
 	SkipBlocks map[string]*SkipBlock
 	sync.Mutex
 }
 
-// NewSkipBlockMap returns a pre-initialised SkipBlockMap.
-func NewSkipBlockMap() *SkipBlockMap {
-	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
+// NewSkipBlockBunch returns a pre-initialised SkipBlockBunch.
+func NewSkipBlockBunch() *SkipBlockBunch {
+	return &SkipBlockBunch{SkipBlocks: make(map[string]*SkipBlock)}
 }
 
 // GetByID returns the skip-block or nil if it doesn't exist
-func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
+func (sbm *SkipBlockBunch) GetByID(sbID SkipBlockID) *SkipBlock {
 	sbm.Lock()
 	defer sbm.Unlock()
 	return sbm.SkipBlocks[string(sbID)]
 }
 
-// Store stores the given SkipBlock in the service-list
-func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
+// Store stores the given SkipBlock in the service-list. If the block is already
+// known, only new forward-links and child-links will be added.
+func (sbm *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 	sbm.Lock()
 	defer sbm.Unlock()
 	if sbOld, exists := sbm.SkipBlocks[string(sb.Hash)]; exists {
@@ -391,12 +395,13 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 		}
 	} else {
 		sbm.SkipBlocks[string(sb.Hash)] = sb
+		sbm.Latest = sb
 	}
 	return sb.Hash
 }
 
 // Length returns the actual length using mutexes
-func (sbm *SkipBlockMap) Length() int {
+func (sbm *SkipBlockBunch) Length() int {
 	sbm.Lock()
 	defer sbm.Unlock()
 	return len(sbm.SkipBlocks)
@@ -406,7 +411,7 @@ func (sbm *SkipBlockMap) Length() int {
 // - Root_Genesis - himself
 // - *_Gensis - it's his parent
 // - else - it's the previous block
-func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
+func (sbm *SkipBlockBunch) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
 		log.Panic(log.Stack())
 	}
@@ -434,7 +439,7 @@ func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 
 // VerifyLinks makes sure that all forward- and backward-links are correct.
 // It takes a skipblock to verify and returns nil in case of success.
-func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
+func (sbm *SkipBlockBunch) VerifyLinks(sb *SkipBlock) error {
 	if len(sb.BackLinkIDs) == 0 {
 		return errors.New("need at least one backlink")
 	}
@@ -487,18 +492,6 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 	return nil
 }
 
-// GetLatest searches for the latest available block for that skipblock.
-func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
-	latest := sb
-	for latest.GetForwardLen() > 0 {
-		latest = sbm.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
-		if latest == nil {
-			return nil, errors.New("missing block")
-		}
-	}
-	return latest, nil
-}
-
 // GetFuzzy searches for a block that resembles the given ID, if ID is not full.
 // If there are multiple matching skipblocks, the first one is chosen. If none
 // match, nil will be returned.
@@ -507,7 +500,7 @@ func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 //  1. as prefix - if none is found
 //  2. as suffix - if none is found
 //  3. anywhere
-func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
+func (sbm *SkipBlockBunch) GetFuzzy(id string) *SkipBlock {
 	for _, sb := range sbm.SkipBlocks {
 		if strings.HasPrefix(hex.EncodeToString(sb.Hash), id) {
 			return sb
