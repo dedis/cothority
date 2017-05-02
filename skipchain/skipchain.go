@@ -652,12 +652,11 @@ func newStorage() *storage {
 func (s *storage) addBunch(sb *SkipBlock) *SkipBlockBunch {
 	s.Lock()
 	defer s.Unlock()
-	bunch := NewSkipBlockBunch()
-	bunch.Store(sb)
 	if s.Bunches[string(sb.SkipChainID())] != nil {
 		log.Error("That bunch already exists")
 		return nil
 	}
+	bunch := NewSkipBlockBunch(sb)
 	s.Bunches[string(sb.SkipChainID())] = bunch
 	return bunch
 }

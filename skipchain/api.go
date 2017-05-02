@@ -42,7 +42,7 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient("Skipchain")}
 }
 
-// StoreSkipBlock asks the cothority to store the new skipblock, and eventually
+// AddSkipBlock asks the cothority to store the new skipblock, and eventually
 // attach it to the 'latest' skipblock.
 //  - latest is the skipblock where the new skipblock is appended. If el and d
 //   are nil, a new skipchain will be created with 'latest' as genesis-block.
@@ -50,7 +50,7 @@ func NewClient() *Client {
 //   will be used.
 //  - d is the data for the new block. It can be nil. If it is not of type
 //   []byte, it will be marshalled using `network.Marshal`.
-func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
+func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	var newBlock *SkipBlock
 	if el == nil && d == nil {
@@ -110,7 +110,7 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 		}
 		genesis.Data = buf
 	}
-	sb, cerr := c.StoreSkipBlock(genesis, nil, nil)
+	sb, cerr := c.AddSkipBlock(genesis, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -153,6 +153,18 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 	return
 }
 
+// GetFlatUpdateChain will return the chain of SkipBlocks going from the 'latest' to
+// the most current SkipBlock of the chain. It takes a roster that knows the
+// 'latest' skipblock and the id (=hash) of the latest skipblock. Instead of
+// returning the shortest chain following the forward-links, it returns the
+// chain with maximum-height == 1.
+func (c *Client) GetFlatUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetBlocksReply, cerr onet.ClientError) {
+	reply = &GetBlocksReply{}
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetBlocks{latest, nil, 1}, reply)
+	return
+}
+
 // GetAllSkipchains returns all skipchains known to that conode. If none are
 // known, an empty slice is returned.
 func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkipchainsReply,
@@ -160,6 +172,35 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 	reply = &GetAllSkipchainsReply{}
 	cerr = c.SendProtobuf(si, &GetAllSkipchains{}, reply)
 	return
+}
+
+// GetSingleBlock searches for a block with the given ID and returns that block,
+// or an error if that block is not found.
+func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, onet.ClientError) {
+	reply := &GetBlocksReply{}
+	cerr := c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetBlocks{nil, id, 0}, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.Reply[0], nil
+}
+
+// UpdateBunch contacts the nodes and asks for an update of the chains available
+// in the bunch.
+func (c *Client) UpdateBunch(bunch *SkipBlockBunch) onet.ClientError {
+	reply := &GetBlocksReply{}
+	cerr := c.SendProtobuf(bunch.Latest.Roster.RandomServerIdentity(),
+		&GetBlocks{bunch.Latest.Hash, nil, 0}, reply)
+	if cerr != nil {
+		return cerr
+	}
+	if len(reply.Reply) > 1 {
+		for _, sb := range reply.Reply {
+			bunch.Store(sb)
+		}
+	}
+	return nil
 }
 
 // FindSkipChain takes the ID of a skipchain and an optional URL for finding the
@@ -193,13 +234,4 @@ func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
 	//}
 	//log.Print(body)
 	//return nil, nil
-}
-
-// GetSingleBlock searches for a block with the given ID and returns that block,
-// or an error if that block is not found.
-func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *SkipBlock, cerr onet.ClientError) {
-	reply = &SkipBlock{}
-	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
-		&GetSingleBlock{id}, reply)
-	return
 }

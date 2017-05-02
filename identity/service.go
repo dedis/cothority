@@ -180,7 +180,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientErr
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.StoreSkipBlock(sid.Data, nil, sid.Proposed)
+		reply, cerr := s.skipchain.AddSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}

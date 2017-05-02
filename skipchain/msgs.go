@@ -11,8 +11,6 @@ func init() {
 		// Requests for data
 		&GetBlocks{},
 		&GetBlocksReply{},
-		// Request updated block
-		&GetSingleBlock{},
 		// Fetch all skipchains
 		&GetAllSkipchains{},
 		&GetAllSkipchainsReply{},
@@ -97,11 +95,6 @@ type ForwardSignature struct {
 	Newest *SkipBlock
 	// ForwardLink is the signature from Previous to Newest
 	ForwardLink *BlockLink
-}
-
-// GetSingleBlock asks for a single block.
-type GetSingleBlock struct {
-	ID SkipBlockID
 }
 
 // Internal calls

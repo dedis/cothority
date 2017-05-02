@@ -220,7 +220,7 @@ func add(c *cli.Context) error {
 		return cerr
 	}
 	latest := guc.Reply[len(guc.Reply)-1]
-	ssbr, cerr := client.StoreSkipBlock(latest, group.Roster, nil)
+	ssbr, cerr := client.AddSkipBlock(latest, group.Roster, nil)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
@@ -253,7 +253,7 @@ func addWeb(c *cli.Context) error {
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
-	ssbr, cerr := client.StoreSkipBlock(latest, nil, &html{data})
+	ssbr, cerr := client.AddSkipBlock(latest, nil, &html{data})
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}

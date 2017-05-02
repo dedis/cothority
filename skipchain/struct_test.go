@@ -20,12 +20,11 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
-	sbm := NewSkipBlockBunch()
 	root0 := NewSkipBlock()
 	root0.Roster = roster
 	root0.Hash = root0.calculateHash()
 	root0.BackLinkIDs = []SkipBlockID{root0.Hash}
-	sbm.Store(root0)
+	sbm := NewSkipBlockBunch(root0)
 	root1 := root0.Copy()
 	root1.Index++
 	sbm.Store(root1)
@@ -60,12 +59,11 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
-	sbm := NewSkipBlockBunch()
 	root := NewSkipBlock()
 	root.Roster = roster2
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
 	root.Hash = root.calculateHash()
-	sbm.Store(root)
+	sbm := NewSkipBlockBunch(root)
 	log.ErrFatal(root.VerifyForwardSignatures())
 	log.ErrFatal(sbm.VerifyLinks(root))
 
