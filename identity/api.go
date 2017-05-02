@@ -33,8 +33,6 @@ func init() {
 		// API messages
 		&CreateIdentity{},
 		&CreateIdentityReply{},
-		&ConfigUpdate{},
-		&ConfigUpdateReply{},
 		&ProposeSend{},
 		&ProposeUpdate{},
 		&ProposeUpdateReply{},

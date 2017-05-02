@@ -109,7 +109,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.ClientError) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (*ProposeUpdateReply, onet.ClientError) {
 	log.Print("Getting ID", cnc.ID)
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
@@ -126,7 +126,7 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.Clien
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError) {
+func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
@@ -367,6 +367,6 @@ func newIdentityService(c *onet.Context) onet.Service {
 		log.Error(err)
 	}
 	log.ErrFatal(s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
-		s.ProposeUpdate, s.ConfigUpdate))
+		s.ProposeUpdate, s.CreateIdentity))
 	return s
 }
