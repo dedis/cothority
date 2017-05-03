@@ -3,15 +3,21 @@ package skipchain
 import (
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// TODO:
-// - change 'Propose*' to 'Add*'
-// - find better names for Roster- and Data-SkipChain
+// Client is a structure to communicate with the Skipchain
+// service from the outside
+type Client struct {
+	*onet.Client
+}
+
+// NewClient instantiates a new client with name 'n'
+func NewClient() *Client {
+	return &Client{Client: onet.NewClient("Skipchain")}
+}
 
 const (
 	// ErrorBlockNotFound indicates that for any number of operations the
@@ -31,17 +37,6 @@ const (
 	ErrorOnet
 )
 
-// Client is a structure to communicate with the Skipchain
-// service from the outside
-type Client struct {
-	*onet.Client
-}
-
-// NewClient instantiates a new client with name 'n'
-func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Skipchain")}
-}
-
 // AddSkipBlock asks the cothority to store the new skipblock, and eventually
 // attach it to the 'latest' skipblock.
 //  - latest is the skipblock where the new skipblock is appended. If el and d
@@ -50,7 +45,10 @@ func NewClient() *Client {
 //   will be used.
 //  - d is the data for the new block. It can be nil. If it is not of type
 //   []byte, it will be marshalled using `network.Marshal`.
-func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
+//
+// If you need to change the parent, you have to use StoreSkipBlock
+func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster,
+	d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	var newBlock *SkipBlock
 	if el == nil && d == nil {
@@ -84,6 +82,21 @@ func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Mess
 	return reply, nil
 }
 
+// StoreSkipBlock asks the cothority to store the given skipblock to the
+// appropriate service. The SkipBlock must be correctly filled out:
+//  - GenesisID: if this is nil, a new skipchain will be generated
+//  - Roster: needs to be non-nil, but can be copied from previous block
+//  - MaximumHeight, BaseHeight, VerifierIDs: for a new skipchain, they need
+//    to be initialised
+func (c *Client) StoreSkipBlock(sb *SkipBlock) (*SkipBlock, onet.ClientError) {
+	reply := &StoreSkipBlockReply{}
+	cerr := c.SendProtobuf(sb.Roster.RandomServerIdentity(), &StoreSkipBlock{sb}, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.Latest, nil
+}
+
 // CreateGenesis is a convenience function to create a new SkipChain with the
 // given parameters.
 //  - el is the responsible roster
@@ -115,32 +128,6 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 		return nil, cerr
 	}
 	return sb.Latest, nil
-}
-
-// CreateRootControl is a convenience function and creates two Skipchains:
-// a root SkipChain with maximumHeight of maxHRoot and a control SkipChain with
-// maximumHeight of maxHControl. It connects both chains for later
-// reference. The root-chain will use `VerificationRoot` and the config-chain
-// will use `VerificationConfig`.
-//
-// A slice of verification-functions is given for the root and the control
-// skipchain.
-func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
-	keys []abstract.Point, baseHeight,
-	maxHRoot, maxHControl int) (root, control *SkipBlock, cerr onet.ClientError) {
-	log.Lvl2("Creating root roster", elRoot)
-	root, cerr = c.CreateGenesis(elRoot, baseHeight, maxHRoot,
-		VerificationRoot, nil, nil)
-	if cerr != nil {
-		return
-	}
-	log.Lvl2("Creating control roster", elControl)
-	control, cerr = c.CreateGenesis(elControl, baseHeight, maxHControl,
-		VerificationControl, nil, root.Hash)
-	if cerr != nil {
-		return
-	}
-	return root, control, cerr
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
@@ -186,9 +173,24 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 	return reply.Reply[0], nil
 }
 
-// UpdateBunch contacts the nodes and asks for an update of the chains available
+// BunchAddBlock adds a block to the latest block from the bunch. If the block
+// doesn't have a roster set, it will be copied from the last block.
+func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, sb *SkipBlock) (*SkipBlock, onet.ClientError) {
+	sbNew, err := c.AddSkipBlock(bunch.Latest, sb.Roster, sb.Data)
+	if err != nil {
+		return nil, err
+	}
+	id := bunch.Store(sbNew.Latest)
+	if id == nil {
+		return nil, onet.NewClientErrorCode(ErrorVerification,
+			"Couldn't add block to bunch")
+	}
+	return sb, nil
+}
+
+// BunchUpdate contacts the nodes and asks for an update of the chains available
 // in the bunch.
-func (c *Client) UpdateBunch(bunch *SkipBlockBunch) onet.ClientError {
+func (c *Client) BunchUpdate(bunch *SkipBlockBunch) onet.ClientError {
 	reply := &GetBlocksReply{}
 	cerr := c.SendProtobuf(bunch.Latest.Roster.RandomServerIdentity(),
 		&GetBlocks{bunch.Latest.Hash, nil, 0}, reply)
@@ -204,8 +206,8 @@ func (c *Client) UpdateBunch(bunch *SkipBlockBunch) onet.ClientError {
 }
 
 // FindSkipChain takes the ID of a skipchain and an optional URL for finding the
-// appropriate skipchain. If no URL is given, the default
-// "http://skipchain.dedis.ch" is used. If successful, it will return the latest
+// appropriate service. If no URL is given, the default
+// "http://service.dedis.ch" is used. If successful, it will return the latest
 // known block.
 func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
 	c := NewClient()
@@ -221,7 +223,7 @@ func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
 	}
 	return reply.Reply[len(reply.Reply)-1], nil
 	//if url == "" {
-	//	url = "http://skipchain.dedis.ch"
+	//	url = "http://service.dedis.ch"
 	//}
 	//resp, err := http.Get(url + "/" + hex.EncodeToString(id))
 	//if err != nil {

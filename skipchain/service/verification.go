@@ -1,13 +1,16 @@
-package skipchain
+package service
 
-import "github.com/dedis/onet/log"
+import (
+	"github.com/dedis/cothority/skipchain"
+	"gopkg.in/dedis/onet.v1/log"
+)
 
 /*
 This file holds all verification-functions for the skipchain.
 */
 
 // VerifyBase checks basic parameters between two skipblocks.
-func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
+func (s *Service) verifyFuncBase(newID []byte, newSB *skipchain.SkipBlock) bool {
 	if !newSB.Hash.Equal(newID) {
 		return false
 	}
@@ -22,7 +25,7 @@ func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 // that are used to sign the next block. The private part of those
 // keys are supposed to be offline. It makes sure
 // that every new block is signed by the keys present in the previous block.
-func (s *Service) verifyFuncRoot(newID []byte, newSB *SkipBlock) bool {
+func (s *Service) verifyFuncRoot(newID []byte, newSB *skipchain.SkipBlock) bool {
 	return true
 }
 
@@ -30,7 +33,7 @@ func (s *Service) verifyFuncRoot(newID []byte, newSB *SkipBlock) bool {
 // that there is now new block if a newer parent is present.
 // It also makes sure that no more than 1/3 of the members of the roster
 // change between two blocks.
-func (s *Service) verifyFuncControl(newID []byte, newSB *SkipBlock) bool {
+func (s *Service) verifyFuncControl(newID []byte, newSB *skipchain.SkipBlock) bool {
 	return true
 }
 
@@ -38,7 +41,7 @@ func (s *Service) verifyFuncControl(newID []byte, newSB *SkipBlock) bool {
 //   - it has a parent-chain with `VerificationControl`
 //   - its Roster doesn't change between blocks
 //   - if there is a newer parent, no new block will be appended to that chain.
-func (s *Service) verifyFuncData(newID []byte, newSB *SkipBlock) bool {
+func (s *Service) verifyFuncData(newID []byte, newSB *skipchain.SkipBlock) bool {
 	if newSB.ParentBlockID.IsNull() {
 		log.Lvl3("No parent skipblock to verify against")
 		return false

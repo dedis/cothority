@@ -129,8 +129,7 @@ func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, msec i
 // Start will contact everyone and make the connections
 func (p *Propagate) Start() error {
 	log.Lvl4("going to contact", p.Root().ServerIdentity)
-	p.SendTo(p.Root(), p.sd)
-	return nil
+	return p.SendTo(p.Root(), p.sd)
 }
 
 // Dispatch can handle timeouts

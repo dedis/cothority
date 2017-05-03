@@ -3,8 +3,8 @@ package identity
 import (
 	"testing"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )

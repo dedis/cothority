@@ -6,6 +6,8 @@ package main
 import (
 	"os"
 
+	"github.com/dedis/cothority/skipchain"
+
 	"gopkg.in/dedis/onet.v1/app"
 
 	"fmt"
@@ -24,14 +26,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
 type config struct {
-	Sbm *skipchain.SkipBlockBunch
+	Sbb map[string]*skipchain.SkipBlockBunch
 }
 
 type html struct {
@@ -169,7 +170,7 @@ func create(c *cli.Context) error {
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg := getConfigOrFail(c)
-	cfg.Sbm.Store(sb)
+	cfg.Sbb.Store(sb)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -197,7 +198,7 @@ func join(c *cli.Context) error {
 	}
 	log.Infof("Joined skipchain %x", genesis)
 	cfg := getConfigOrFail(c)
-	cfg.Sbm.Store(latest)
+	cfg.Sbb.Store(latest)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -210,7 +211,7 @@ func add(c *cli.Context) error {
 	}
 	group := readGroup(c, 1)
 	cfg := getConfigOrFail(c)
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block - update first")
 	}
@@ -224,7 +225,7 @@ func add(c *cli.Context) error {
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbm.Store(ssbr.Latest)
+	cfg.Sbb.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
 	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
 	return nil
@@ -240,7 +241,7 @@ func addWeb(c *cli.Context) error {
 		log.Print(i, s)
 	}
 	cfg := getConfigOrFail(c)
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block - update first")
 	}
@@ -257,7 +258,7 @@ func addWeb(c *cli.Context) error {
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbm.Store(ssbr.Latest)
+	cfg.Sbb.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
 	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
 	return nil
@@ -271,7 +272,7 @@ func update(c *cli.Context) error {
 	}
 	cfg := getConfigOrFail(c)
 
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block in local store")
 	}
@@ -285,7 +286,7 @@ func update(c *cli.Context) error {
 	} else {
 		for _, b := range guc.Reply[1:] {
 			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
-			cfg.Sbm.Store(b)
+			cfg.Sbb.Store(b)
 		}
 	}
 	latest := guc.Reply[len(guc.Reply)-1]
@@ -300,12 +301,12 @@ func lsKnown(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
-	if cfg.Sbm.Length() == 0 {
+	if cfg.Sbb.Length() == 0 {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
 	genesis := sbl{}
-	for _, sb := range cfg.Sbm.SkipBlocks {
+	for _, sb := range cfg.Sbb.SkipBlocks {
 		if sb.Index == 0 {
 			genesis = append(genesis, sb)
 		}
@@ -315,7 +316,7 @@ func lsKnown(c *cli.Context) error {
 		short := !c.Bool("long")
 		log.Info(g.Sprint(short))
 		sub := sbli{}
-		for _, sb := range cfg.Sbm.SkipBlocks {
+		for _, sb := range cfg.Sbb.SkipBlocks {
 			if sb.GenesisID.Equal(g.Hash) {
 				sub = append(sub, sb)
 			}
@@ -345,7 +346,7 @@ func lsIndex(c *cli.Context) error {
 
 	// Get the list of genesis block
 	genesis := sbl{}
-	for _, sb := range cfg.Sbm.SkipBlocks {
+	for _, sb := range cfg.Sbb.SkipBlocks {
 		if sb.Index == 0 {
 			genesis = append(genesis, sb)
 		}
@@ -394,7 +395,7 @@ func lsFetch(c *cli.Context) error {
 	rec := c.Bool("recursive")
 	sisAll := map[network.ServerIdentityID]*network.ServerIdentity{}
 	group := readGroup(c, 0)
-	for _, sb := range cfg.Sbm.SkipBlocks {
+	for _, sb := range cfg.Sbb.SkipBlocks {
 		for _, si := range sb.Roster.List {
 			sisAll[si.ID] = si
 		}
@@ -423,7 +424,7 @@ func lsFetch(c *cli.Context) error {
 			}
 			for _, sb := range gasr.SkipChains {
 				log.Printf("Found skipchain %x", sb.SkipChainID())
-				cfg.Sbm.SkipBlocks[string(sb.SkipChainID())] = sb
+				cfg.Sbb.SkipBlocks[string(sb.SkipChainID())] = sb
 				if rec {
 					log.Print("rec")
 					for _, si := range sb.Roster.List {
@@ -525,7 +526,9 @@ func loadConfig(c *cli.Context) (*config, error) {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &config{Sbm: skipchain.NewSkipBlockBunch()}, nil
+			return &config{
+				Sbb: make(map[string]*skipchain.SkipBlockBunch),
+			}, nil
 		}
 		return nil, fmt.Errorf("Could not open file %s", path)
 	}

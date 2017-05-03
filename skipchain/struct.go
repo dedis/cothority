@@ -21,11 +21,16 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// How many msec to wait before a timeout is generated in the propagation.
-const propagateTimeout = 10000
+func init() {
+	for _, m := range []interface{}{
+		// - Data structures
+		&SkipBlockFix{},
+		&SkipBlock{},
+	} {
+		network.RegisterMessage(m)
+	}
 
-// How often we save the skipchains - in seconds.
-const timeBetweenSave = 0
+}
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -60,52 +65,17 @@ type VerifierID uuid.UUID
 //   newSB is the new block
 type SkipBlockVerifier func(newID []byte, newSB *SkipBlock) bool
 
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
-func RegisterVerification(c *onet.Context, v VerifierID, f SkipBlockVerifier) error {
-	scs := c.Service(ServiceName)
-	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
-	}
-	return scs.(*Service).registerVerification(v, f)
-}
-
 var (
 	// VerifyBase checks that the base-parameters are correct, i.e.,
 	// the links are correctly set up, the height-parameters and the
 	// verification didn't change.
 	VerifyBase = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Base"))
-	// VerifyRoot depends on a data-block being a slice of public keys
-	// that are used to sign the next block. The private part of those
-	// keys are supposed to be offline. It makes sure
-	// that every new block is signed by the keys present in the previous block.
-	VerifyRoot = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Root"))
-	// VerifyControl makes sure this chain is a child of a Root-chain and
-	// that there is now new block if a newer parent is present.
-	// It also makes sure that no more than 1/3 of the members of the roster
-	// change between two blocks.
-	VerifyControl = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Control"))
-	// VerifyData makes sure that:
-	//   - it has a parent-chain with `VerificationControl`
-	//   - its Roster doesn't change between blocks
-	//   - if there is a newer parent, no new block will be appended to that chain.
-	VerifyData = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Data"))
 )
 
 // VerificationStandard makes sure that all links are correct and that the
 // basic parameters like height, GenesisID and others don't change between
 // blocks.
 var VerificationStandard = []VerifierID{VerifyBase}
-
-// VerificationRoot is used to create a root-chain that has 'Control'-chains
-// as its children.
-var VerificationRoot = []VerifierID{VerifyBase, VerifyRoot}
-
-// VerificationControl is used in chains that depend on a 'Root'-chain.
-var VerificationControl = []VerifierID{VerifyBase, VerifyControl}
-
-// VerificationData is used in chains that depend on a 'Control'-chain.
-var VerificationData = []VerifierID{VerifyBase, VerifyData}
 
 // VerificationNone is mostly used for test - it allows for nearly every new
 // block to be appended.
@@ -176,7 +146,7 @@ type SkipBlockDataEntry struct {
 
 // addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
 // This is used
-func (sbf *SkipBlockFix) calculateHash() SkipBlockID {
+func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	hash := network.Suite.Hash()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
 		sbf.BaseHeight} {
@@ -318,8 +288,8 @@ func (sb *SkipBlock) GetForwardLen() int {
 	return len(sb.ForwardLink)
 }
 
-func (sb *SkipBlock) updateHash() SkipBlockID {
-	sb.Hash = sb.calculateHash()
+func (sb *SkipBlock) UpdateHash() SkipBlockID {
+	sb.Hash = sb.CalculateHash()
 	return sb.Hash
 }
 

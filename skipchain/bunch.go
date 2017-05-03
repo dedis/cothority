@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v1/log"
 )
 
 // SkipBlockBunch holds all blocks necessary to track this chain up to the

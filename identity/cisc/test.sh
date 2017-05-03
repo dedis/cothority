@@ -295,7 +295,7 @@ runDbgCl(){
     local DBG=$1
     local CFG=cl$2
     shift 2
-    ./cisc -d $DBG -c $CFG --cs $CFG $@
+    cisc -d $DBG -c $CFG --cs $CFG $@
 }
 
 clientSetup(){

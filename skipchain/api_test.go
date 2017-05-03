@@ -1,4 +1,4 @@
-package skipchain
+package skipchain_test
 
 import (
 	"testing"
@@ -9,6 +9,10 @@ import (
 
 	"sync"
 
+	"time"
+
+	"github.com/dedis/cothority/skipchain"
+	_ "github.com/dedis/cothority/skipchain/service"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -18,31 +22,25 @@ func init() {
 	network.RegisterMessage(&testData{})
 }
 
+func TestMain(m *testing.M) {
+	log.MainTest(m, 3)
+}
+
 func TestClient_CreateGenesis(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
-	c := NewClient()
-	_, cerr := c.CreateGenesis(roster, 1, 1, VerificationNone,
+	c := skipchain.NewClient()
+	_, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
 		[]byte{1, 2, 3}, nil)
 	require.NotNil(t, cerr)
-	_, cerr = c.CreateGenesis(roster, 1, 0, VerificationNone,
+	_, cerr = c.CreateGenesis(roster, 1, 0, skipchain.VerificationNone,
 		&testData{}, nil)
 	require.NotNil(t, cerr)
-	_, cerr = c.CreateGenesis(roster, 1, 1, VerificationNone,
+	_, cerr = c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
 		&testData{}, nil)
 	require.Nil(t, cerr)
-	_, _, cerr = c.CreateRootControl(roster, roster, nil, 1, 1, 0)
-	require.NotNil(t, cerr)
-}
-
-func TestClient_CreateRootControl(t *testing.T) {
-	l := onet.NewTCPTest()
-	_, roster, _ := l.GenTree(3, true)
-	defer l.CloseAll()
-	c := NewClient()
-	_, _, cerr := c.CreateRootControl(roster, roster, nil, 0, 0, 0)
-	require.NotNil(t, cerr)
+	time.Sleep(time.Second)
 }
 
 func TestClient_GetUpdateChain(t *testing.T) {
@@ -53,47 +51,23 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	clients := make(map[int]*Client)
+	clients := make(map[int]*skipchain.Client)
 	for i := range [8]byte{} {
-		clients[i] = NewClient()
+		clients[i] = skipchain.NewClient()
 	}
-	_, inter, cerr := clients[0].CreateRootControl(el, el, nil, 1, 1, 1)
+	genesis, cerr := clients[0].CreateGenesis(el, 1, 1, nil, nil, nil)
 	log.ErrFatal(cerr)
 
 	wg := sync.WaitGroup{}
 	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, cerr := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
+			_, cerr := clients[i%8].GetUpdateChain(genesis.Roster, genesis.Hash)
 			log.ErrFatal(cerr)
 			wg.Done()
 		}(i)
 	}
 	wg.Wait()
-}
-
-func TestClient_CreateRootInter(t *testing.T) {
-	l := onet.NewTCPTest()
-	_, el, _ := l.GenTree(5, true)
-	defer l.CloseAll()
-
-	c := NewClient()
-	root, inter, cerr := c.CreateRootControl(el, el, nil, 1, 1, 1)
-	log.ErrFatal(cerr)
-	if root == nil || inter == nil {
-		t.Fatal("Pointers are nil")
-	}
-	log.ErrFatal(root.VerifyForwardSignatures(),
-		"Root signature invalid:")
-	log.ErrFatal(inter.VerifyForwardSignatures(),
-		"Root signature invalid:")
-	update, cerr := c.GetUpdateChain(root.Roster, root.Hash)
-	log.ErrFatal(cerr)
-	root = update.Reply[0]
-	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
-	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
-		t.Fatal("Intermediate doesn't point to root")
-	}
 }
 
 func TestClient_StoreSkipBlock(t *testing.T) {
@@ -102,17 +76,17 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	_, inter, cerr := c.CreateRootControl(el, el, nil, 1, 1, 1)
+	genesis, cerr := c.CreateGenesis(el, 1, 1, nil, nil, nil)
 	log.ErrFatal(cerr)
 	el2 := onet.NewRoster(el.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", el2)
-	var sb1 *StoreSkipBlockReply
-	sb1, cerr = c.AddSkipBlock(inter, el2, nil)
+	var sb1 *skipchain.StoreSkipBlockReply
+	sb1, cerr = c.AddSkipBlock(genesis, el2, nil)
 	log.ErrFatal(cerr)
 	log.Lvl1("Proposing same roster again")
-	_, cerr = c.AddSkipBlock(inter, el2, nil)
+	_, cerr = c.AddSkipBlock(genesis, el2, nil)
 	require.NotNil(t, cerr,
 		"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
@@ -127,14 +101,14 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
-	var updates *GetBlocksReply
+	var updates *skipchain.GetBlocksReply
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
-		updates, cerr = c.GetUpdateChain(inter.Roster, inter.Hash)
+		updates, cerr = c.GetUpdateChain(genesis.Roster, genesis.Hash)
 		log.ErrFatal(cerr)
 	}
 	if len(updates.Reply) != 4 {
-		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Reply), inter, sb2)
+		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Reply), genesis, sb2)
 	}
 	if !updates.Reply[len(updates.Reply)-1].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
@@ -148,13 +122,13 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	sb1, cerr := c.CreateGenesis(el, 1, 1, VerificationNone, nil, nil)
+	sb1, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	_, cerr = c.AddSkipBlock(sb1, el, nil)
 	log.ErrFatal(cerr)
-	sb2, cerr := c.CreateGenesis(el, 1, 1, VerificationNone, nil, nil)
+	sb2, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	sb1id := sb1.SkipChainID()
 	sb2id := sb2.SkipChainID()
@@ -174,17 +148,17 @@ func TestClient_UpdateBunch(t *testing.T) {
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
-	c := NewClient()
+	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	genesis, cerr := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	genesis, cerr := c.CreateGenesis(ro, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	sb1, cerr := c.AddSkipBlock(genesis, ro, nil)
 	log.ErrFatal(cerr)
 	_, cerr = c.AddSkipBlock(sb1.Latest, ro, nil)
 	log.ErrFatal(cerr)
 
-	bunch := NewSkipBlockBunch(genesis)
-	cerr = c.UpdateBunch(bunch)
+	bunch := skipchain.NewSkipBlockBunch(genesis)
+	cerr = c.BunchUpdate(bunch)
 	log.ErrFatal(cerr)
 	require.Equal(t, 2, bunch.Latest.Index)
 }

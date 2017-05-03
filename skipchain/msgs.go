@@ -14,20 +14,6 @@ func init() {
 		// Fetch all skipchains
 		&GetAllSkipchains{},
 		&GetAllSkipchainsReply{},
-		// - Internal calls
-		// Propagation
-		&PropagateSkipBlocks{},
-		// Request forward-signature
-		&ForwardSignature{},
-		// Request updated block
-		&GetBlock{},
-		// Reply with updated block
-		&GetBlockReply{},
-		// - Data structures
-		&SkipBlockFix{},
-		&SkipBlock{},
-		// Own service
-		&Service{},
 	} {
 		network.RegisterMessage(m)
 	}
@@ -71,47 +57,4 @@ type GetAllSkipchains struct {
 // GetAllSkipchainsReply - returns all known last blocks of skipchains.
 type GetAllSkipchainsReply struct {
 	SkipChains []*SkipBlock
-}
-
-// Internal calls
-
-// PropagateSkipBlocks sends a newly signed SkipBlock to all members of
-// the Cothority
-type PropagateSkipBlocks struct {
-	SkipBlocks []*SkipBlock
-}
-
-// ForwardSignature is called once a new skipblock has been accepted by
-// signing the forward-link, and then the older skipblocks need to
-// update their forward-links. Each cothority needs to get the necessary
-// blocks and propagate the skipblocks itself.
-type ForwardSignature struct {
-	// TargetHeight is the index in the backlink-slice of the skipblock
-	// to update
-	TargetHeight int
-	// Previous is the second-newest skipblock
-	Previous SkipBlockID
-	// Newest is the newest skipblock, signed by previous
-	Newest *SkipBlock
-	// ForwardLink is the signature from Previous to Newest
-	ForwardLink *BlockLink
-}
-
-// Internal calls
-
-// GetBlock asks for an updated block, in case for a conode that is not
-// in the roster-list of that block.
-type GetBlock struct {
-	ID SkipBlockID
-}
-
-// PropagateSkipBlock sends a newly signed SkipBlock to all members of
-// the Cothority
-type PropagateSkipBlock struct {
-	SkipBlock *SkipBlock
-}
-
-// GetBlockReply returns the requested block.
-type GetBlockReply struct {
-	SkipBlock *SkipBlock
 }
