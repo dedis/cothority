@@ -9,14 +9,14 @@ DBG_APP=2
 
 main(){
 	startTest
-	buildConode github.com/dedis/cothority/skipchain
+	buildConode github.com/dedis/cothority/skipchain/service
 	CFG=$BUILDDIR/config.bin
-	test Restart
-	test Config
-	test Create
-	test Join
-	test Add
-	test Index
+#	test Restart
+#	test Config
+#	test Create
+#	test Join
+#	test Add
+#	test Index
 	test Html
 	test Fetch
 	stopTest
@@ -25,7 +25,7 @@ main(){
 testFetch(){
 	startCl
 	setupGenesis
-	rm $CFG
+	rm -f $CFG
 	testFail runSc list fetch
 	testOK runSc list fetch public.toml
 	testGrep 2002 runSc list known
@@ -34,13 +34,12 @@ testFetch(){
 
 testHtml(){
 	startCl
-	testOK runSc create -html http://dedis.ch public.toml
-	ID=$( runSc list known | head -n 1 | sed -e "s/.*block \(.*\) with.*/\1/" )
+	testOK runSc create -url http://dedis.ch public.toml
+	ID=$( runSc list known | head -n 1 | sed -e "s/.*SkipChain \(.*\)/\1/" )
 	html=$(mktemp)
 	echo "TestWeb" > $html
-	echo $ID - $html
 	testOK runSc addWeb $ID $html
-	rm $html
+	rm -f $html
 }
 
 testRestart(){
@@ -71,7 +70,7 @@ testJoin(){
 	startCl
 	runGrepSed "Created new" "s/.* //" runSc create public.toml
 	ID=$SED
-	rm $CFG
+	rm -f $CFG
 	testGrep "Didn't find any" runSc list known
 	testFail runSc join public.toml 1234
 	testGrep "Didn't find any" runSc list known
@@ -119,7 +118,7 @@ runSc(){
 }
 
 startCl(){
-	rm $CFG
+	rm -f $CFG
 	runCoBG 1 2
 }
 

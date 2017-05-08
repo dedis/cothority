@@ -24,7 +24,6 @@ import (
 func init() {
 	for _, m := range []interface{}{
 		// - Data structures
-		&SkipBlockFix{},
 		&SkipBlock{},
 	} {
 		network.RegisterMessage(m)
@@ -61,9 +60,8 @@ type VerifierID uuid.UUID
 // accepted or not. This function is used during a BFTCosi round, but wrapped
 // around so it accepts a block.
 //
-//   newID is the hash of the new block that will be signed
 //   newSB is the new block
-type SkipBlockVerifier func(newID []byte, newSB *SkipBlock) bool
+type SkipBlockVerifier func(newSB *SkipBlock) bool
 
 var (
 	// VerifyBase checks that the base-parameters are correct, i.e.,
@@ -81,9 +79,10 @@ var VerificationStandard = []VerifierID{VerifyBase}
 // block to be appended.
 var VerificationNone = []VerifierID{}
 
-// SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
-// and signed.
-type SkipBlockFix struct {
+// SkipBlock is the basic data-structure holding one block in the chain.
+type SkipBlock struct {
+	// These first fields form the fixed part of the skipblock.
+
 	// Index of the block in the chain. Index == 0 -> genesis-block.
 	Index int
 	// Height of that SkipBlock, starts at 1.
@@ -107,73 +106,9 @@ type SkipBlockFix struct {
 	Data []byte
 	// Roster holds the roster-definition of that SkipBlock
 	Roster *onet.Roster
-}
 
-// SkipBlockData represents all entries - as maps are not ordered and thus
-// difficult to hash, this is as a slice to {key,data}-pairs.
-type SkipBlockData struct {
-	Entries []SkipBlockDataEntry
-}
+	// This part is calculated on the previous fields
 
-// Get returns the data-portion of the key. If key does not exist, it returns
-// nil.
-func (sbd *SkipBlockData) Get(key string) []byte {
-	for _, d := range sbd.Entries {
-		if d.Key == key {
-			return d.Data
-		}
-	}
-	return nil
-}
-
-// Set replaces an existing entry or adds a new entry if the key is not
-// existant.
-func (sbd *SkipBlockData) Set(key string, data []byte) {
-	for i := range sbd.Entries {
-		if sbd.Entries[i].Key == key {
-			sbd.Entries[i].Data = data
-			return
-		}
-	}
-	sbd.Entries = append(sbd.Entries, SkipBlockDataEntry{key, data})
-}
-
-// SkipBlockDataEntry is one entry for the SkipBlockData.
-type SkipBlockDataEntry struct {
-	Key  string
-	Data []byte
-}
-
-// addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
-// This is used
-func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
-	hash := network.Suite.Hash()
-	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
-		sbf.BaseHeight} {
-		binary.Write(hash, binary.LittleEndian, i)
-	}
-	for _, bl := range sbf.BackLinkIDs {
-		hash.Write(bl)
-	}
-	for _, v := range sbf.VerifierIDs {
-		hash.Write(v[:])
-	}
-	hash.Write(sbf.ParentBlockID)
-	hash.Write(sbf.GenesisID)
-	hash.Write(sbf.Data)
-	if sbf.Roster != nil {
-		for _, pub := range sbf.Roster.Publics() {
-			pub.MarshalTo(hash)
-		}
-	}
-	buf := hash.Sum(nil)
-	return buf
-}
-
-// SkipBlock represents a SkipBlock of any type - the fields that won't
-// be hashed (yet).
-type SkipBlock struct {
-	*SkipBlockFix
 	// Hash is our Block-hash
 	Hash SkipBlockID
 
@@ -190,10 +125,34 @@ type SkipBlock struct {
 // the network
 func NewSkipBlock() *SkipBlock {
 	return &SkipBlock{
-		SkipBlockFix: &SkipBlockFix{
-			Data: make([]byte, 0),
-		},
+		Data: make([]byte, 0),
 	}
+}
+
+// addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
+// This is used
+func (sb *SkipBlock) CalculateHash() SkipBlockID {
+	hash := network.Suite.Hash()
+	for _, i := range []int{sb.Index, sb.Height, sb.MaximumHeight,
+		sb.BaseHeight} {
+		binary.Write(hash, binary.LittleEndian, i)
+	}
+	for _, bl := range sb.BackLinkIDs {
+		hash.Write(bl)
+	}
+	for _, v := range sb.VerifierIDs {
+		hash.Write(v[:])
+	}
+	hash.Write(sb.ParentBlockID)
+	hash.Write(sb.GenesisID)
+	hash.Write(sb.Data)
+	if sb.Roster != nil {
+		for _, pub := range sb.Roster.Publics() {
+			pub.MarshalTo(hash)
+		}
+	}
+	buf := hash.Sum(nil)
+	return buf
 }
 
 // VerifyForwardSignatures returns whether all signatures in the forward-links
@@ -217,13 +176,11 @@ func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 // Copy makes a deep copy of the SkipBlock
 func (sb *SkipBlock) Copy() *SkipBlock {
 	sb.fwMutex.Lock()
-	sbf := *sb.SkipBlockFix
-	b := &SkipBlock{
-		SkipBlockFix: &sbf,
-		Hash:         make([]byte, len(sb.Hash)),
-		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
-		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
-	}
+	b := *sb
+	b.fwMutex = sync.Mutex{}
+	b.Hash = make([]byte, len(sb.Hash))
+	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
+	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
@@ -232,7 +189,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
 	sb.fwMutex.Unlock()
-	return b
+	return &b
 }
 
 // Short returns only the 8 first bytes of the hash as hex-encoded string.

@@ -30,7 +30,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID)
 	service := genService.(*Service)
-	service.Storage = newStorage()
+	service.Storage = skipchain.NewSBBStorage()
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -78,8 +78,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	assert.NotEqual(t, 0, latest2.BackLinkIDs)
 
 	// 1 block in root and 2 blocks in the children-chain
-	assert.Equal(t, 1, service.Storage.getBunch(sbRoot.SkipChainID()).Length())
-	assert.Equal(t, 2, service.Storage.getBunch(genesis.SkipChainID()).Length())
+	assert.Equal(t, 1, service.Storage.GetBunch(sbRoot.SkipChainID()).Length())
+	assert.Equal(t, 2, service.Storage.GetBunch(genesis.SkipChainID()).Length())
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -319,7 +319,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 	_, el, s := local.MakeHELS(3, skipchainSID)
 	s1 := s.(*Service)
 	count := make(chan bool, 3)
-	verifyFunc := func(newID []byte, newSB *skipchain.SkipBlock) bool {
+	verifyFunc := func(newSB *skipchain.SkipBlock) bool {
 		count <- true
 		return true
 	}
@@ -355,7 +355,7 @@ func TestService_RegisterVerification(t *testing.T) {
 	hosts, el, s1 := makeHELS(local, 3)
 	VerifyTest := skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
 	ver := make(chan bool, 3)
-	verifier := func(msg []byte, s *skipchain.SkipBlock) bool {
+	verifier := func(s *skipchain.SkipBlock) bool {
 		ver <- true
 		return true
 	}
@@ -384,12 +384,10 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 
 	log.Lvl1("Creating root and control chain")
 	sbRoot := &skipchain.SkipBlock{
-		SkipBlockFix: &skipchain.SkipBlockFix{
-			MaximumHeight: 1,
-			BaseHeight:    1,
-			Roster:        roster,
-			Data:          []byte{},
-		},
+		MaximumHeight: 1,
+		BaseHeight:    1,
+		Roster:        roster,
+		Data:          []byte{},
 	}
 	ssbr, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbRoot})
 	log.ErrFatal(cerr)
@@ -404,12 +402,10 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 
 	// Error testing
 	sbErr := &skipchain.SkipBlock{
-		SkipBlockFix: &skipchain.SkipBlockFix{
-			MaximumHeight: 1,
-			BaseHeight:    1,
-			Roster:        roster,
-			Data:          []byte{},
-		},
+		MaximumHeight: 1,
+		BaseHeight:    1,
+		Roster:        roster,
+		Data:          []byte{},
 	}
 	sbErr.ParentBlockID = skipchain.SkipBlockID([]byte{1, 2, 3})
 	_, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbErr})
@@ -433,12 +429,10 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 
 	log.Lvl1("Creating root and control chain")
 	sbRoot := &skipchain.SkipBlock{
-		SkipBlockFix: &skipchain.SkipBlockFix{
-			MaximumHeight: 1,
-			BaseHeight:    1,
-			Roster:        roster,
-			Data:          []byte{},
-		},
+		MaximumHeight: 1,
+		BaseHeight:    1,
+		Roster:        roster,
+		Data:          []byte{},
 	}
 	ssbrep, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbRoot})
 	log.ErrFatal(cerr)
@@ -455,7 +449,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 }
 
 func checkMLForwardBackward(service *Service, root *skipchain.SkipBlock, base, height int) error {
-	genesis := service.Storage.getByID(root.Hash)
+	genesis := service.Storage.GetByID(root.Hash)
 	if genesis == nil {
 		return errors.New("Didn't find genesis-block in service")
 	}
@@ -502,7 +496,7 @@ type ServiceVerify struct {
 	*onet.ServiceProcessor
 }
 
-func (sv *ServiceVerify) Verify(msg []byte, sb *skipchain.SkipBlock) bool {
+func (sv *ServiceVerify) Verify(sb *skipchain.SkipBlock) bool {
 	ServiceVerifierChan <- true
 	return true
 }

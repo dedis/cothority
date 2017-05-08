@@ -32,7 +32,7 @@ import (
 )
 
 type config struct {
-	Sbb map[string]*skipchain.SkipBlockBunch
+	Sbb *skipchain.SBBStorage
 }
 
 type html struct {
@@ -65,7 +65,7 @@ func main() {
 					Usage: "maximum height of skipchain",
 				},
 				cli.StringFlag{
-					Name:  "html",
+					Name:  "url",
 					Usage: "URL of html-skipchain",
 				},
 			},
@@ -157,9 +157,9 @@ func create(c *cli.Context) error {
 	group := readGroup(c, 0)
 	client := skipchain.NewClient()
 	data := []byte{}
-	if address := c.String("html"); address != "" {
-		if !strings.HasPrefix(address, "http") {
-			log.Fatal("Please give http-address")
+	if address := c.String("url"); address != "" {
+		if !strings.HasPrefix(address, "http") && !strings.HasPrefix(address, "context") {
+			log.Fatal("Please give http- or config-address")
 		}
 		data = []byte(address)
 	}
@@ -170,7 +170,7 @@ func create(c *cli.Context) error {
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg := getConfigOrFail(c)
-	cfg.Sbb.Store(sb)
+	cfg.Sbb.AddBunch(sb)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -198,7 +198,7 @@ func join(c *cli.Context) error {
 	}
 	log.Infof("Joined skipchain %x", genesis)
 	cfg := getConfigOrFail(c)
-	cfg.Sbb.Store(latest)
+	cfg.Sbb.AddBunch(latest)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -301,25 +301,25 @@ func lsKnown(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
-	if cfg.Sbb.Length() == 0 {
+	if len(cfg.Sbb.Bunches) == 0 {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
 	genesis := sbl{}
-	for _, sb := range cfg.Sbb.SkipBlocks {
-		if sb.Index == 0 {
-			genesis = append(genesis, sb)
-		}
+	for _, bunch := range cfg.Sbb.Bunches {
+		genesis = append(genesis, bunch.Latest)
 	}
 	sort.Sort(genesis)
 	for _, g := range genesis {
 		short := !c.Bool("long")
-		log.Info(g.Sprint(short))
+		if short {
+			log.Infof("SkipChain %x", g.SkipChainID()[0:8])
+		} else {
+			log.Infof("SkipChain %x", g.SkipChainID())
+		}
 		sub := sbli{}
-		for _, sb := range cfg.Sbb.SkipBlocks {
-			if sb.GenesisID.Equal(g.Hash) {
-				sub = append(sub, sb)
-			}
+		for _, sb := range cfg.Sbb.GetBunch(g.SkipChainID()).SkipBlocks {
+			sub = append(sub, sb)
 		}
 		sort.Sort(sub)
 		for _, sb := range sub {
@@ -346,10 +346,8 @@ func lsIndex(c *cli.Context) error {
 
 	// Get the list of genesis block
 	genesis := sbl{}
-	for _, sb := range cfg.Sbb.SkipBlocks {
-		if sb.Index == 0 {
-			genesis = append(genesis, sb)
-		}
+	for g := range cfg.Sbb.Bunches {
+		genesis = append(genesis, cfg.Sbb.GetByID(skipchain.SkipBlockID(g)))
 	}
 
 	sort.Sort(genesis)
@@ -395,9 +393,11 @@ func lsFetch(c *cli.Context) error {
 	rec := c.Bool("recursive")
 	sisAll := map[network.ServerIdentityID]*network.ServerIdentity{}
 	group := readGroup(c, 0)
-	for _, sb := range cfg.Sbb.SkipBlocks {
-		for _, si := range sb.Roster.List {
-			sisAll[si.ID] = si
+	for _, bunch := range cfg.Sbb.Bunches {
+		for _, sb := range bunch.SkipBlocks {
+			for _, si := range sb.Roster.List {
+				sisAll[si.ID] = si
+			}
 		}
 	}
 	for _, si := range group.Roster.List {
@@ -410,7 +410,6 @@ func lsFetch(c *cli.Context) error {
 	client := skipchain.NewClient()
 	sisNew := sisAll
 	for len(sisNew) > 0 {
-		log.Print("sisNew is", sisNew)
 		sisIterate := sisNew
 		sisNew = map[network.ServerIdentityID]*network.ServerIdentity{}
 		for _, si := range sisIterate {
@@ -424,7 +423,7 @@ func lsFetch(c *cli.Context) error {
 			}
 			for _, sb := range gasr.SkipChains {
 				log.Printf("Found skipchain %x", sb.SkipChainID())
-				cfg.Sbb.SkipBlocks[string(sb.SkipChainID())] = sb
+				cfg.Sbb.Store(sb)
 				if rec {
 					log.Print("rec")
 					for _, si := range sb.Roster.List {
@@ -479,7 +478,7 @@ func (s sbl) Len() int {
 	return len(s)
 }
 func (s sbl) Less(i, j int) bool {
-	return bytes.Compare(s[i].Hash, s[j].Hash) < 0
+	return bytes.Compare(s[i].SkipChainID(), s[j].SkipChainID()) < 0
 }
 func (s sbl) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
@@ -527,7 +526,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &config{
-				Sbb: make(map[string]*skipchain.SkipBlockBunch),
+				Sbb: skipchain.NewSBBStorage(),
 			}, nil
 		}
 		return nil, fmt.Errorf("Could not open file %s", path)
