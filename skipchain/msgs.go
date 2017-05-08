@@ -41,7 +41,7 @@ func (vId VerifierID) String() string {
 	return uuid.UUID(vId).String()
 }
 
-// Equal returns true if and only if the given VerifierID equals vId.
+// Equal returns true if and only if vID2 equals this VerifierID.
 func (vId VerifierID) Equal(vID2 VerifierID) bool {
 	return uuid.Equal(uuid.UUID(vId), uuid.UUID(vID2))
 }
