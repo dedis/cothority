@@ -83,7 +83,7 @@ func (c *Config) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		b, err := network.Marshal(c.Device[s])
+		b, err := c.Device[s].Point.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
