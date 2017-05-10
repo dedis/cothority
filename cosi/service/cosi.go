@@ -48,7 +48,9 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 	if req.Roster.ID == onet.RosterID(uuid.Nil) {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
-	tree := req.Roster.GenerateBinaryTree()
+
+	_, root := req.Roster.Search(cs.ServerIdentity().ID)
+	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
