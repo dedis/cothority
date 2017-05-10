@@ -34,7 +34,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
-	conf2.Device["two"] = &identity.Device{kp2.Public}
+	conf2.Device["two"] = &identity.Device{Point: kp2.Public}
 	conf2.Data["two"] = "public2"
 	log.ErrFatal(c1.ProposeSend(conf2))
 

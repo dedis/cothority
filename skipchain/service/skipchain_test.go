@@ -45,7 +45,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	genesis.Roster = sbRoot.Roster
 	genesis.VerifierIDs = skipchain.VerificationStandard
 	blockCount := 0
-	psbr, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{genesis})
+	psbr, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: genesis})
 	assert.Nil(t, err)
 	latest := psbr.Latest
 	// verify creation of GenesisBlock:
@@ -62,7 +62,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	next.ParentBlockID = sbRoot.Hash
 	next.Roster = sbRoot.Roster
 	next.GenesisID = genesis.SkipChainID()
-	psbr2, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{next})
+	psbr2, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: next})
 	assert.Nil(t, err)
 	log.Lvl2(psbr2)
 	if psbr2 == nil {
@@ -103,7 +103,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 		newSB.GenesisID = sbs[0].SkipChainID()
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Adding skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
-		reply, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{newSB})
+		reply, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: newSB})
 		assert.Nil(t, err)
 		require.NotNil(t, reply.Latest)
 		sbs[i] = reply.Latest
@@ -227,7 +227,7 @@ func TestService_MultiLevel(t *testing.T) {
 				sb := skipchain.NewSkipBlock()
 				sb.Roster = el
 				sb.GenesisID = sbRoot.SkipChainID()
-				psbr, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{sb})
+				psbr, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sb})
 				log.ErrFatal(err)
 				latest = psbr.Latest
 				checkBacklinks(services, latest)
@@ -303,7 +303,7 @@ func TestService_SignBlock(t *testing.T) {
 	sb := skipchain.NewSkipBlock()
 	sb.Roster = el2
 	sb.GenesisID = sbRoot.SkipChainID()
-	reply, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{sb})
+	reply, err := service.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sb})
 	log.ErrFatal(err)
 	sbRoot = reply.Previous
 	sbSecond := reply.Latest
@@ -333,7 +333,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 	sbNext := sbRoot.Copy()
 	sbNext.BackLinkIDs = []skipchain.SkipBlockID{sbRoot.Hash}
 	sbNext.GenesisID = sbRoot.Hash
-	_, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbNext})
+	_, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbNext})
 	log.ErrFatal(cerr)
 	for i := 0; i < 3; i++ {
 		select {
@@ -389,14 +389,14 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 		Roster:        roster,
 		Data:          []byte{},
 	}
-	ssbr, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbRoot})
+	ssbr, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbRoot})
 	log.ErrFatal(cerr)
 	roster2 := onet.NewRoster(roster.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", roster2)
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
 	sb1.GenesisID = sbRoot.SkipChainID()
-	ssbr, cerr = s2.StoreSkipBlock(&skipchain.StoreSkipBlock{sb1})
+	ssbr, cerr = s2.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sb1})
 	log.ErrFatal(cerr)
 	require.NotNil(t, ssbr.Latest)
 
@@ -408,15 +408,15 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 		Data:          []byte{},
 	}
 	sbErr.ParentBlockID = skipchain.SkipBlockID([]byte{1, 2, 3})
-	_, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbErr})
+	_, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbErr})
 	require.NotNil(t, cerr)
 	sbErr.GenesisID = sbErr.ParentBlockID
-	_, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbErr})
+	_, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbErr})
 	// Last successful log...
 	require.NotNil(t, cerr)
 	sbErr = ssbr.Latest.Copy()
 	sbErr.GenesisID = ssbr.Latest.Hash
-	_, cerr = s3.StoreSkipBlock(&skipchain.StoreSkipBlock{sbErr})
+	_, cerr = s3.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbErr})
 	require.NotNil(t, cerr)
 }
 
@@ -434,7 +434,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		Roster:        roster,
 		Data:          []byte{},
 	}
-	ssbrep, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbRoot})
+	ssbrep, cerr := s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbRoot})
 	log.ErrFatal(cerr)
 
 	last := time.Now()
@@ -443,7 +443,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		log.Print(i, now.Sub(last))
 		last = now
 		sbRoot.GenesisID = ssbrep.Latest.SkipChainID()
-		ssbrep, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{sbRoot})
+		ssbrep, cerr = s1.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sbRoot})
 		log.ErrFatal(cerr)
 	}
 }
@@ -520,7 +520,7 @@ func makeGenesisRosterArgs(s *Service, el *onet.Roster, parent skipchain.SkipBlo
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierIDs = vid
-	psbr, err := s.StoreSkipBlock(&skipchain.StoreSkipBlock{sb})
+	psbr, err := s.StoreSkipBlock(&skipchain.StoreSkipBlock{NewBlock: sb})
 	if err != nil {
 		return nil, err
 	}

@@ -80,12 +80,11 @@ func (s *Service) CreateIdentity(ci *identity.CreateIdentity) (*identity.CreateI
 	answ, err := s.propagateIdentity(ci.Roster, &PropagateIdentity{sbData}, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(identity.ErrorOnet, err.Error())
-	} else {
-		if answ < len(ci.Roster.List) {
-			log.Warn("Did not get answer from everybody")
-		}
 	}
-	return &identity.CreateIdentityReply{sbData}, nil
+	if answ < len(ci.Roster.List) {
+		log.Warn("Did not get answer from everybody")
+	}
+	return &identity.CreateIdentityReply{Genesis: sbData}, nil
 }
 
 // ProposeSend only stores the proposed configuration internally. Signatures
@@ -192,7 +191,7 @@ func (s *Service) ProposeVote(v *identity.ProposeVote) (*identity.ProposeVoteRep
 		if err != nil {
 			return nil, onet.NewClientErrorCode(identity.ErrorOnet, cerr.Error())
 		}
-		return &identity.ProposeVoteReply{sid.Data}, nil
+		return &identity.ProposeVoteReply{Data: sid.Data}, nil
 	}
 	return nil, nil
 }

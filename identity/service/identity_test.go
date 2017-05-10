@@ -25,10 +25,12 @@ func TestService_CreateIdentity(t *testing.T) {
 	root, cerr := skipchain.NewClient().CreateGenesis(r, 1, 1, identity.VerificationIdentity, nil, nil)
 	log.ErrFatal(cerr)
 
-	cir, cerr := service.CreateIdentity(&identity.CreateIdentity{&identity.Config{}, root})
+	cir, cerr := service.CreateIdentity(&identity.CreateIdentity{
+		Roster: root.Roster,
+		Config: &identity.Config{}})
 	log.ErrFatal(cerr)
-	require.NotNil(t, cir.Data)
+	require.NotNil(t, cir.Genesis)
 	require.Equal(t, 1, len(service.StorageMap.Identities))
-	stor := service.StorageMap.Identities[string(cir.Data.Hash)]
+	stor := service.StorageMap.Identities[string(cir.Genesis.Hash)]
 	require.Equal(t, &identity.Config{}, stor.Latest)
 }

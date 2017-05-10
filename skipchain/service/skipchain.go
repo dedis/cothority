@@ -331,7 +331,10 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if err != nil {
 			return errors.New("Couldn't get signature")
 		}
-		target.AddForward(&skipchain.BlockLink{fs.ForwardLink.Hash, sig.Sig})
+		target.AddForward(&skipchain.BlockLink{
+			Hash:      fs.ForwardLink.Hash,
+			Signature: sig.Sig,
+		})
 		s.startPropagation([]*skipchain.SkipBlock{target})
 		return nil
 	}()

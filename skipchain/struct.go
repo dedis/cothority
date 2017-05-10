@@ -5,8 +5,6 @@ import (
 
 	"fmt"
 
-	"sync"
-
 	"errors"
 
 	"encoding/binary"
@@ -115,7 +113,6 @@ type SkipBlock struct {
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
-	fwMutex     sync.Mutex
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
@@ -129,8 +126,7 @@ func NewSkipBlock() *SkipBlock {
 	}
 }
 
-// addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
-// This is used
+// CalculateHash returns the hash of the fixed part of the skipchain.
 func (sb *SkipBlock) CalculateHash() SkipBlockID {
 	hash := network.Suite.Hash()
 	for _, i := range []int{sb.Index, sb.Height, sb.MaximumHeight,
@@ -158,8 +154,6 @@ func (sb *SkipBlock) CalculateHash() SkipBlockID {
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
-	sb.fwMutex.Lock()
-	defer sb.fwMutex.Unlock()
 	for _, fl := range sb.ForwardLink {
 		if err := fl.VerifySignature(sb.Roster.Publics()); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
@@ -175,9 +169,7 @@ func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 
 // Copy makes a deep copy of the SkipBlock
 func (sb *SkipBlock) Copy() *SkipBlock {
-	sb.fwMutex.Lock()
 	b := *sb
-	b.fwMutex = sync.Mutex{}
 	b.Hash = make([]byte, len(sb.Hash))
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
 	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
@@ -188,7 +180,6 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
-	sb.fwMutex.Unlock()
 	return &b
 }
 
@@ -222,16 +213,12 @@ func (sb *SkipBlock) SkipChainID() SkipBlockID {
 
 // AddForward stores the forward-link with mutex protection.
 func (sb *SkipBlock) AddForward(fw *BlockLink) {
-	sb.fwMutex.Lock()
 	sb.ForwardLink = append(sb.ForwardLink, fw)
-	sb.fwMutex.Unlock()
 }
 
 // GetForward returns copy of the forward-link at position i. It returns nil if no link
 // at that level exists.
 func (sb *SkipBlock) GetForward(i int) *BlockLink {
-	sb.fwMutex.Lock()
-	defer sb.fwMutex.Unlock()
 	if len(sb.ForwardLink) <= i {
 		return nil
 	}
@@ -240,11 +227,10 @@ func (sb *SkipBlock) GetForward(i int) *BlockLink {
 
 // GetForwardLen returns the number of ForwardLinks.
 func (sb *SkipBlock) GetForwardLen() int {
-	sb.fwMutex.Lock()
-	defer sb.fwMutex.Unlock()
 	return len(sb.ForwardLink)
 }
 
+// UpdateHash overwrites the existing hash.
 func (sb *SkipBlock) UpdateHash() SkipBlockID {
 	sb.Hash = sb.CalculateHash()
 	return sb.Hash

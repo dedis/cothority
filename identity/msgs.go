@@ -23,7 +23,11 @@ func init() {
 	}
 }
 
+// VerifyIdentity makes sure that all necessary signatures are present.
 var VerifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
+
+// VerificationIdentity adds the VerifyBase to the VerifyIdentity for a complete
+// skipchain.
 var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase,
 	VerifyIdentity}
 
