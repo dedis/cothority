@@ -7,20 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dedis/paper_17_sosp_omniledger/state/skipchain"
-	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
-
-var verifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
-var verificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase,
-	skipchain.VerifyData, verifyIdentity}
+// ServiceName can be used to refer to the name of this service
+const ServiceName = "Identity"
 
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
@@ -178,63 +171,4 @@ func sortUniq(slice []string) []string {
 		}
 	}
 	return ret
-}
-
-// Messages between the Client-API and the Service
-
-// CreateIdentity takes a configuration and a control-skipblock. It creates
-// the data-skipchain with the config in the genesis-block.
-type CreateIdentity struct {
-	Config  *Config
-	Control *skipchain.SkipBlock
-}
-
-// CreateIdentityReply is the reply when a new Identity has been added. It
-// returns the genesis-Data-skipblock.
-type CreateIdentityReply struct {
-	Data *skipchain.SkipBlock
-}
-
-// ProposeSend sends a new proposition to be stored in all identities. It
-// either replies a nil-message for success or an error.
-type ProposeSend struct {
-	ID      skipchain.SkipBlockID
-	Propose *Config
-}
-
-// ProposeUpdate verifies if a new config is available.
-type ProposeUpdate struct {
-	ID skipchain.SkipBlockID
-}
-
-// ProposeUpdateReply returns the updated propose-configuration.
-type ProposeUpdateReply struct {
-	Propose *Config
-}
-
-// ProposeVote sends the signature for a specific IdentityList. It replies nil
-// if the threshold hasn't been reached, or the new SkipBlock
-type ProposeVote struct {
-	ID        skipchain.SkipBlockID
-	Signer    string
-	Signature *crypto.SchnorrSig
-}
-
-// ProposeVoteReply returns the signed new skipblock if the threshold of
-// votes have arrived.
-type ProposeVoteReply struct {
-	Data *skipchain.SkipBlock
-}
-
-// Messages to be sent from one identity to another
-
-// PropagateIdentity sends a new identity to other identityServices
-type PropagateIdentity struct {
-	*Storage
-}
-
-// UpdateSkipBlock asks the service to fetch the latest SkipBlock
-type UpdateSkipBlock struct {
-	ID     skipchain.SkipBlockID
-	Latest *skipchain.SkipBlock
 }

@@ -85,8 +85,7 @@ func idCreate(c *cli.Context) error {
 	log.Info("Creating new blockchain-identity for", name)
 
 	thr := c.Int("threshold")
-	_, _, ident, err := identity.NewIdentityFromRoster(group.Roster,
-		nil, thr, name)
+	ident, err := identity.NewIdentity(group.Roster, thr, name)
 	log.ErrFatal(err)
 	cfg := &ciscConfig{Identity: ident}
 	log.Infof("IC is %x", cfg.ID())

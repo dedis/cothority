@@ -9,7 +9,7 @@ cothority using forward-links, so that an external observer can check the
 collective signatures and be assured that the blockchain is valid.
 */
 
-package identity
+package service
 
 import (
 	"reflect"
@@ -17,21 +17,22 @@ import (
 
 	"errors"
 
+	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/messaging"
-	"gopkg.in/dedis/cothority.v1/skipchain"
+	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// ServiceName can be used to refer to the name of this service
-const ServiceName = "Identity"
+// How many msec to wait before a timeout is generated in the propagation
+const propagateTimeout = 10000
 
 var identityService onet.ServiceID
 
 func init() {
-	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
+	identityService, _ = onet.RegisterNewService(identity.ServiceName, newIdentityService)
 	network.RegisterMessage(&StorageMap{})
 	network.RegisterMessage(&Storage{})
 }
@@ -55,11 +56,9 @@ type StorageMap struct {
 // Storage stores one identity together with the skipblocks.
 type Storage struct {
 	sync.Mutex
-	Latest   *Config
-	Proposed *Config
+	Latest   *identity.Config
+	Proposed *identity.Config
 	Votes    map[string]*crypto.SchnorrSig
-	Root     *skipchain.SkipBlock
-	Control  *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
 }
 
@@ -67,40 +66,40 @@ type Storage struct {
  * API messages
  */
 
-// SaveIdentity stores a new identity for propose-config
-func (s *Service) CreateIdentity(ci *CreateIdentity) (*CreateIdentityReply, onet.ClientError) {
+// CreateIdentity stores a new identity for propose-config
+func (s *Service) CreateIdentity(ci *identity.CreateIdentity) (*identity.CreateIdentityReply, onet.ClientError) {
 	var sbData *skipchain.SkipBlock
-	if ci.Control != nil {
+	if ci.Roster != nil {
 		var err error
-		sbData, err = skipchain.NewClient().CreateGenesis(ci.Control.Roster, 4, 4,
-			verificationIdentity, ci.Config, ci.Control.SkipChainID())
+		sbData, err = skipchain.NewClient().CreateGenesis(ci.Roster, 4, 4,
+			identity.VerificationIdentity, ci.Config, nil)
 		if err != nil {
 			return nil, onet.NewClientError(err)
 		}
 	}
-	s.setIdentityStorage(sbData.SkipChainID(), &Storage{
-		Latest:  ci.Config,
-		Votes:   map[string]*crypto.SchnorrSig{},
-		Control: ci.Control,
-		Data:    sbData,
-	})
-	return &CreateIdentityReply{
-		Data: sbData,
-	}, nil
+	answ, err := s.propagateIdentity(ci.Roster, &PropagateIdentity{sbData}, propagateTimeout)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(identity.ErrorOnet, err.Error())
+	} else {
+		if answ < len(ci.Roster.List) {
+			log.Warn("Did not get answer from everybody")
+		}
+	}
+	return &identity.CreateIdentityReply{sbData}, nil
 }
 
 // ProposeSend only stores the proposed configuration internally. Signatures
 // come later.
-func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError) {
+func (s *Service) ProposeSend(p *identity.ProposeSend) (network.Message, onet.ClientError) {
 	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+		return nil, onet.NewClientErrorCode(identity.ErrorBlockMissing, "Didn't find Identity")
 	}
-	roster := sid.Root.Roster
+	roster := sid.Data.Roster
 	replies, err := s.propagateConfig(roster, p, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return nil, onet.NewClientErrorCode(identity.ErrorOnet, err.Error())
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -109,16 +108,15 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 }
 
 // ProposeUpdate returns an eventual config-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (*ProposeUpdateReply, onet.ClientError) {
-	log.Print("Getting ID", cnc.ID)
+func (s *Service) ProposeUpdate(cnc *identity.ProposeUpdate) (*identity.ProposeUpdateReply, onet.ClientError) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+		return nil, onet.NewClientErrorCode(identity.ErrorBlockMissing, "Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	return &ProposeUpdateReply{
+	return &identity.ProposeUpdateReply{
 		Propose: sid.Proposed,
 	}, nil
 }
@@ -126,12 +124,12 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (*ProposeUpdateReply, onet.C
 // ProposeVote takes int account a vote for the proposed config. It also verifies
 // that the voter is in the latest config.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientError) {
+func (s *Service) ProposeVote(v *identity.ProposeVote) (*identity.ProposeVoteReply, onet.ClientError) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find identity")
+		return nil, onet.NewClientErrorCode(identity.ErrorBlockMissing, "Didn't find identity")
 	}
 
 	// Putting this in a function because of the lock which needs to be held
@@ -142,23 +140,23 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientErr
 		log.Lvl3("Voting on", sid.Proposed.Device)
 		owner, ok := sid.Latest.Device[v.Signer]
 		if !ok {
-			return onet.NewClientErrorCode(ErrorAccountMissing, "Didn't find signer")
+			return onet.NewClientErrorCode(identity.ErrorAccountMissing, "Didn't find signer")
 		}
 		if sid.Proposed == nil {
-			return onet.NewClientErrorCode(ErrorConfigMissing, "No proposed block")
+			return onet.NewClientErrorCode(identity.ErrorConfigMissing, "No proposed block")
 		}
 		hash, err := sid.Proposed.Hash()
 		if err != nil {
-			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
+			return onet.NewClientErrorCode(identity.ErrorOnet, "Couldn't get hash")
 		}
 		if _, exists := sid.Votes[v.Signer]; exists {
-			return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
+			return onet.NewClientErrorCode(identity.ErrorVoteDouble, "Already voted for that block")
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
 			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
 			if err != nil {
-				return onet.NewClientErrorCode(ErrorVoteSignature, "Wrong signature: "+err.Error())
+				return onet.NewClientErrorCode(identity.ErrorVoteSignature, "Wrong signature: "+err.Error())
 			}
 		}
 		return nil
@@ -168,9 +166,9 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientErr
 	}
 
 	// Propagate the vote
-	_, err := s.propagateConfig(sid.Root.Roster, v, propagateTimeout)
+	_, err := s.propagateConfig(sid.Data.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
+		return nil, onet.NewClientErrorCode(identity.ErrorOnet, cerr.Error())
 	}
 	if len(sid.Votes) >= sid.Latest.Threshold ||
 		len(sid.Votes) == len(sid.Latest.Device) {
@@ -185,16 +183,16 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, onet.ClientErr
 			return nil, cerr
 		}
 		_, msg, _ := network.Unmarshal(reply.Latest.Data)
-		log.Lvl3("SB signed is", msg.(*Config).Device)
+		log.Lvl3("SB signed is", msg.(*identity.Config).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = s.propagateSkipBlock(sid.Root.Roster, usb, propagateTimeout)
+		_, err = s.propagateSkipBlock(sid.Data.Roster, usb, propagateTimeout)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
+			return nil, onet.NewClientErrorCode(identity.ErrorOnet, cerr.Error())
 		}
-		return &ProposeVoteReply{sid.Data}, nil
+		return &identity.ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
 }
@@ -208,10 +206,10 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
 	id := skipchain.SkipBlockID(nil)
 	switch msg.(type) {
-	case *ProposeSend:
-		id = msg.(*ProposeSend).ID
-	case *ProposeVote:
-		id = msg.(*ProposeVote).ID
+	case *identity.ProposeSend:
+		id = msg.(*identity.ProposeSend).ID
+	case *identity.ProposeVote:
+		id = msg.(*identity.ProposeVote).ID
 	default:
 		log.Errorf("Got an unidentified propagation-request: %v", msg)
 		return
@@ -226,12 +224,12 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 		sid.Lock()
 		defer sid.Unlock()
 		switch msg.(type) {
-		case *ProposeSend:
-			p := msg.(*ProposeSend)
+		case *identity.ProposeSend:
+			p := msg.(*identity.ProposeSend)
 			sid.Proposed = p.Propose
 			sid.Votes = make(map[string]*crypto.SchnorrSig)
-		case *ProposeVote:
-			v := msg.(*ProposeVote)
+		case *identity.ProposeVote:
+			v := msg.(*identity.ProposeVote)
 			sid.Votes[v.Signer] = v.Signature
 		}
 		s.save()
@@ -259,7 +257,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 		log.Error(err)
 		return
 	}
-	al, ok := msgLatest.(*Config)
+	al, ok := msgLatest.(*identity.Config)
 	if !ok {
 		log.Error(err)
 		return
@@ -278,13 +276,23 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		log.Error("Got a wrong message for propagation")
 		return
 	}
-	id := skipchain.SkipBlockID(pi.Data.Hash)
+	id := skipchain.SkipBlockID(pi.NewBlock.Hash)
 	if s.getIdentityStorage(id) != nil {
-		log.Error("Couldn't store new identity")
+		log.Errorf("Identity %x already exists", id)
 		return
 	}
 	log.Lvl3("Storing identity in", s)
-	s.setIdentityStorage(id, pi.Storage)
+	_, cfg, err := network.Unmarshal(pi.NewBlock.Data)
+	if err != nil {
+		log.Error("Couldn't get config-data")
+		return
+	}
+	storage := &Storage{
+		Latest: cfg.(*identity.Config),
+		Votes:  make(map[string]*crypto.SchnorrSig),
+		Data:   pi.NewBlock,
+	}
+	s.setIdentityStorage(id, storage)
 	return
 }
 

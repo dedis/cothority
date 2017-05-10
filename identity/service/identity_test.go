@@ -1,10 +1,12 @@
-package identity
+package service
 
 import (
 	"testing"
 
+	"github.com/dedis/cothority/identity"
+	"github.com/dedis/cothority/skipchain"
+	_ "github.com/dedis/cothority/skipchain/service"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )
@@ -20,13 +22,13 @@ func TestService_CreateIdentity(t *testing.T) {
 	defer local.CloseAll()
 	service := local.GetServices(nodes, identityService)[0].(*Service)
 
-	root, cerr := skipchain.NewClient().CreateGenesis(r, 1, 1, verificationIdentity, nil, nil)
+	root, cerr := skipchain.NewClient().CreateGenesis(r, 1, 1, identity.VerificationIdentity, nil, nil)
 	log.ErrFatal(cerr)
 
-	cir, cerr := service.CreateIdentity(&CreateIdentity{&Config{}, root})
+	cir, cerr := service.CreateIdentity(&identity.CreateIdentity{&identity.Config{}, root})
 	log.ErrFatal(cerr)
 	require.NotNil(t, cir.Data)
 	require.Equal(t, 1, len(service.StorageMap.Identities))
 	stor := service.StorageMap.Identities[string(cir.Data.Hash)]
-	require.Equal(t, &Config{}, stor.Latest)
+	require.Equal(t, &identity.Config{}, stor.Latest)
 }
