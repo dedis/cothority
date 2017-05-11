@@ -111,11 +111,11 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 // NewFollower searches for an existing identity-skipchain id in the roster r
 // and returns a read-only identity.
 func NewFollower(r *onet.Roster, id skipchain.SkipBlockID) (*Identity, error) {
-	gbr, cerr := skipchain.NewClient().GetUpdateChain(r, id)
+	sbs, cerr := skipchain.NewClient().GetUpdateChain(r, id)
 	if cerr != nil {
 		return nil, cerr
 	}
-	latest := gbr.Reply[len(gbr.Reply)-1]
+	latest := sbs[len(sbs)-1]
 	_, idInt, err := network.Unmarshal(latest.Data)
 	if err != nil {
 		return nil, err
@@ -243,16 +243,16 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() onet.ClientError {
 	log.Lvl3("ConfigUpdate", i.ID())
-	gucr, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
+	sbs, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
 	if cerr != nil {
 		log.Error(cerr)
 		return cerr
 	}
-	if len(gucr.Reply) == 0 {
+	if len(sbs) == 0 {
 		log.Lvl3("Didn't get any update")
 		return nil
 	}
-	last := gucr.Reply[len(gucr.Reply)-1]
+	last := sbs[len(sbs)-1]
 	_, d, err := network.Unmarshal(last.Data)
 	if err != nil {
 		log.Error(err)
