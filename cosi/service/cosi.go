@@ -45,7 +45,7 @@ type SignatureResponse struct {
 
 // SignatureRequest treats external request to this service.
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
-	if req.Roster.ID == onet.RosterID(uuid.Nil) {
+	if req.Roster.ID.IsNil() {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
 
