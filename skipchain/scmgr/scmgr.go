@@ -187,11 +187,11 @@ func join(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gcr, cerr := client.GetUpdateChain(group.Roster, hash)
+	sbs, cerr := client.GetUpdateChain(group.Roster, hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := gcr.Reply[len(gcr.Reply)-1]
+	latest := sbs[len(sbs)-1]
 	genesis := latest.GenesisID
 	if genesis == nil {
 		genesis = latest.Hash
@@ -216,11 +216,11 @@ func add(c *cli.Context) error {
 		return errors.New("didn't find latest block - update first")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Reply[len(guc.Reply)-1]
+	latest := sbs[len(sbs)-1]
 	ssbr, cerr := client.AddSkipBlock(latest, group.Roster, nil)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
@@ -246,11 +246,11 @@ func addWeb(c *cli.Context) error {
 		return errors.New("didn't find latest block - update first")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Reply[len(guc.Reply)-1]
+	latest := sbs[len(sbs)-1]
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
@@ -277,19 +277,19 @@ func update(c *cli.Context) error {
 		return errors.New("didn't find latest block in local store")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return errors.New("while updating chain: " + cerr.Error())
 	}
-	if len(guc.Reply) == 1 {
+	if len(sbs) == 1 {
 		log.Info("No new block available")
 	} else {
-		for _, b := range guc.Reply[1:] {
+		for _, b := range sbs[1:] {
 			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
 			cfg.Sbb.Store(b)
 		}
 	}
-	latest := guc.Reply[len(guc.Reply)-1]
+	latest := sbs[len(sbs)-1]
 	log.Infof("Latest block of %x is %x", latest.GenesisID, latest.Hash)
 	log.ErrFatal(cfg.save(c))
 	return nil
@@ -539,7 +539,11 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return cfg.(*config), err
+	conf := cfg.(*config)
+	if conf.Sbb == nil {
+		conf.Sbb = skipchain.NewSBBStorage()
+	}
+	return conf, err
 }
 
 func (cfg *config) save(c *cli.Context) error {

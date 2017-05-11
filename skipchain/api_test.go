@@ -101,16 +101,16 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
-	var updates *skipchain.GetBlocksReply
+	var updates []*skipchain.SkipBlock
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
 		updates, cerr = c.GetUpdateChain(genesis.Roster, genesis.Hash)
 		log.ErrFatal(cerr)
 	}
-	if len(updates.Reply) != 4 {
-		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates.Reply), genesis, sb2)
+	if len(updates) != 4 {
+		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates), genesis, sb2)
 	}
-	if !updates.Reply[len(updates.Reply)-1].Equal(sb2.Latest) {
+	if !updates[len(updates)-1].Equal(sb2.Latest) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 	c.Close()

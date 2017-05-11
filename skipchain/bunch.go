@@ -221,6 +221,9 @@ func NewSBBStorage() *SBBStorage {
 func (s *SBBStorage) AddBunch(sb *SkipBlock) *SkipBlockBunch {
 	s.Lock()
 	defer s.Unlock()
+	if len(s.Bunches) == 0 {
+		s.Bunches = make(map[string]*SkipBlockBunch)
+	}
 	if s.Bunches[string(sb.SkipChainID())] != nil {
 		log.Error("That bunch already exists")
 		return nil
