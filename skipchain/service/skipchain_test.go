@@ -265,13 +265,10 @@ func checkBacklinks(services []*Service, sb *skipchain.SkipBlock) {
 				})
 				log.ErrFatal(err)
 				bl := gbr.Reply[0]
-				bl.Lock()
 				if len(bl.ForwardLink) == n+1 &&
 					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
-					bl.Unlock()
 					break
 				}
-				bl.Unlock()
 				time.Sleep(10 * time.Millisecond)
 			}
 		}

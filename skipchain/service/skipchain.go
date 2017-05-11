@@ -9,8 +9,6 @@ import (
 
 	"fmt"
 
-	"sync"
-
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
@@ -68,7 +66,6 @@ type Service struct {
 //     it will be added at that position, if this is the latest position.
 func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.StoreSkipBlockReply, onet.ClientError) {
 	prop := psbd.NewBlock
-	prop.Mutex = &sync.Mutex{}
 	var prev *skipchain.SkipBlock
 	var changed []*skipchain.SkipBlock
 
@@ -209,7 +206,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Couldn't find starting block")
 		}
-		blocks = append(blocks, start)
+		blocks = append(blocks, start.Copy())
 		bunch = s.Storage.GetBunch(start.SkipChainID())
 		if bunch == nil {
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
@@ -222,7 +219,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Couldn't find ending block")
 		}
-		blocks = append(blocks, end)
+		blocks = append(blocks, end.Copy())
 		endBunch := s.Storage.GetBunch(end.SkipChainID())
 		if endBunch == nil {
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
@@ -266,7 +263,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 			}
 		}
 		start = next
-		blocks = append(blocks, next)
+		blocks = append(blocks, next.Copy())
 		if end != nil {
 			if start.Index == end.Index {
 				break
@@ -325,7 +322,6 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if !ok {
 			return nil, errors.New("Didn't receive a ForwardSignature")
 		}
-		fs.Newest.Mutex = &sync.Mutex{}
 		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
 			return nil, errors.New("This backlink-height doesn't exist")
 		}
@@ -337,7 +333,6 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if err != nil {
 			return
 		}
-		// TODO: is this really signed by target.roster?
 		sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
 		if err != nil {
 			return nil, errors.New("Couldn't get signature")
@@ -416,7 +411,6 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !ok {
 			return errors.New("Didn't receive a ForwardSignature")
 		}
-		fs.Newest.Mutex = &sync.Mutex{}
 		previous := s.Storage.GetByID(fs.Previous)
 		if previous == nil {
 			return errors.New("Didn't find newest block")
@@ -506,7 +500,6 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		return
 	}
 	for _, sb := range sbs.SkipBlocks {
-		sb.Mutex = &sync.Mutex{}
 		if err := sb.VerifyForwardSignatures(); err != nil {
 			log.Error(err)
 			return

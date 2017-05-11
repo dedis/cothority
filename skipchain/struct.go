@@ -11,8 +11,6 @@ import (
 
 	"encoding/hex"
 
-	"sync"
-
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
@@ -117,16 +115,13 @@ type SkipBlock struct {
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
-
-	*sync.Mutex
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over
 // the network
 func NewSkipBlock() *SkipBlock {
 	return &SkipBlock{
-		Data:  make([]byte, 0),
-		Mutex: &sync.Mutex{},
+		Data: make([]byte, 0),
 	}
 }
 
@@ -158,8 +153,6 @@ func (sb *SkipBlock) CalculateHash() SkipBlockID {
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
-	sb.Lock()
-	defer sb.Unlock()
 	for _, fl := range sb.ForwardLink {
 		if err := fl.VerifySignature(sb.Roster.Publics()); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
@@ -175,10 +168,7 @@ func (sb *SkipBlock) Equal(other *SkipBlock) bool {
 
 // Copy makes a deep copy of the SkipBlock
 func (sb *SkipBlock) Copy() *SkipBlock {
-	sb.Lock()
-	defer sb.Unlock()
 	b := *sb
-	b.Mutex = &sync.Mutex{}
 	b.Hash = make([]byte, len(sb.Hash))
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
 	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
@@ -194,16 +184,12 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 
 // Short returns only the 8 first bytes of the hash as hex-encoded string.
 func (sb *SkipBlock) Short() string {
-	sb.Lock()
-	defer sb.Unlock()
 	return sb.Hash.Short()
 }
 
 // Sprint returns a string describing that block. If 'short' is true, it will
 // only return the first 8 bytes of the genesis and its own id.
 func (sb *SkipBlock) Sprint(short bool) string {
-	sb.Lock()
-	defer sb.Unlock()
 	hash := hex.EncodeToString(sb.Hash)
 	if short {
 		hash = hash[:8]
@@ -218,26 +204,20 @@ func (sb *SkipBlock) Sprint(short bool) string {
 
 // SkipChainID is the hash of the genesis-block.
 func (sb *SkipBlock) SkipChainID() SkipBlockID {
-	sb.Lock()
-	defer sb.Unlock()
 	if sb.Index == 0 {
 		return sb.Hash
 	}
 	return sb.GenesisID
 }
 
-// AddForward stores the forward-link with mutex protection.
+// AddForward stores the forward-link.
 func (sb *SkipBlock) AddForward(fw *BlockLink) {
-	sb.Lock()
-	defer sb.Unlock()
 	sb.ForwardLink = append(sb.ForwardLink, fw)
 }
 
 // GetForward returns copy of the forward-link at position i. It returns nil if no link
 // at that level exists.
 func (sb *SkipBlock) GetForward(i int) *BlockLink {
-	sb.Lock()
-	defer sb.Unlock()
 	if len(sb.ForwardLink) <= i {
 		return nil
 	}
@@ -246,8 +226,6 @@ func (sb *SkipBlock) GetForward(i int) *BlockLink {
 
 // GetForwardLen returns the number of ForwardLinks.
 func (sb *SkipBlock) GetForwardLen() int {
-	sb.Lock()
-	defer sb.Unlock()
 	return len(sb.ForwardLink)
 }
 
