@@ -110,7 +110,11 @@ func TestService_GetUpdateChain(t *testing.T) {
 	}
 
 	for i := 0; i < sbCount; i++ {
-		gbr, err := s.GetBlocks(&skipchain.GetBlocks{sbs[i].Hash, nil, 0})
+		gbr, err := s.GetBlocks(&skipchain.GetBlocks{
+			Start:     sbs[i].Hash,
+			End:       nil,
+			MaxHeight: 0,
+		})
 		log.ErrFatal(err)
 		if !gbr.Reply[0].Equal(sbs[i]) {
 			t.Fatal("First hash is not from our SkipBlock")
@@ -163,7 +167,11 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for i, h := range hosts {
 		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		gbr, err := s.GetBlocks(&skipchain.GetBlocks{sbRoot.Hash, nil, 0})
+		gbr, err := s.GetBlocks(&skipchain.GetBlocks{
+			Start:     sbRoot.Hash,
+			End:       nil,
+			MaxHeight: 0,
+		})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		log.Lvl2(s.Context)
 		if len(gbr.Reply) != 1 {
@@ -186,7 +194,11 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 
-		gbr, cerr := s.GetBlocks(&skipchain.GetBlocks{sbInter.Hash, nil, 0})
+		gbr, cerr := s.GetBlocks(&skipchain.GetBlocks{
+			Start:     sbInter.Hash,
+			End:       nil,
+			MaxHeight: 0,
+		})
 
 		log.ErrFatal(cerr)
 		if len(gbr.Reply) != 1 {
@@ -246,7 +258,11 @@ func checkBacklinks(services []*Service, sb *skipchain.SkipBlock) {
 		for ns, s := range services {
 			for {
 				log.Lvl3("Checking backlink", n, ns)
-				gbr, err := s.GetBlocks(&skipchain.GetBlocks{nil, i, 0})
+				gbr, err := s.GetBlocks(&skipchain.GetBlocks{
+					Start:     nil,
+					End:       i,
+					MaxHeight: 0,
+				})
 				log.ErrFatal(err)
 				bl := gbr.Reply[0]
 				if len(bl.ForwardLink) == n+1 &&
@@ -462,7 +478,11 @@ func checkMLForwardBackward(service *Service, root *skipchain.SkipBlock, base, h
 
 func checkMLUpdate(service *Service, root, latest *skipchain.SkipBlock, base, height int) error {
 	log.Lvl3(service, root, latest, base, height)
-	gbr, err := service.GetBlocks(&skipchain.GetBlocks{root.Hash, nil, 0})
+	gbr, err := service.GetBlocks(&skipchain.GetBlocks{
+		Start:     root.Hash,
+		End:       nil,
+		MaxHeight: 0,
+	})
 	if err != nil {
 		return err
 	}

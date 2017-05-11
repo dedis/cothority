@@ -268,7 +268,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 		}
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
-	reply := &skipchain.GetBlocksReply{blocks}
+	reply := &skipchain.GetBlocksReply{Reply: blocks}
 
 	return reply, nil
 }
