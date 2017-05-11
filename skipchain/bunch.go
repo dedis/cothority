@@ -62,7 +62,6 @@ func (sbb *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 		// If this skipblock already exists, only copy forward-links and
 		// new children.
 		if sb.GetForwardLen() > sbOld.GetForwardLen() {
-			sb.fwMutex.Lock()
 			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
 				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
 					log.Error("Got a known block with wrong signature in forward-link")
@@ -70,7 +69,6 @@ func (sbb *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 				}
 				sbOld.AddForward(fl)
 			}
-			sb.fwMutex.Unlock()
 		}
 		if len(sb.ChildSL) > len(sbOld.ChildSL) {
 			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)

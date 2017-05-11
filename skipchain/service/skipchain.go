@@ -472,7 +472,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	for _, ver := range sb.VerifierIDs {
 		f, ok := s.verifiers[ver]
 		if !ok {
-			log.Lvlf2("Found no user verification for %x", ver)
+			log.Lvlf2("Found no verification-function for %x", ver)
 			return false
 		}
 		if !f(sb) {

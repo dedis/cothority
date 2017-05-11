@@ -14,9 +14,9 @@ main(){
 	buildKeys
 	buildConode "github.com/dedis/cothority/identity/service"
 #	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
 	test ConfigVote
 	test IdConnect
 	test IdDel
@@ -295,7 +295,7 @@ runDbgCl(){
     local DBG=$1
     local CFG=cl$2
     shift 2
-    cisc -d $DBG -c $CFG --cs $CFG $@
+    ./cisc -d $DBG -c $CFG --cs $CFG $@
 }
 
 clientSetup(){
@@ -305,11 +305,14 @@ clientSetup(){
     runDbgCl $D 1 id cr public.toml client1
     runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
+    dbgOut "ID is $ID"
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
+    		dbgOut "Connecting client $c"
     		runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
+    				dbgOut "Updating and voting for client $c"
 					runDbgCl $D $b config update
 					runDbgCl $D $b config vote y
 				fi

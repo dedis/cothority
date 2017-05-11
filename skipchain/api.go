@@ -3,6 +3,7 @@ package skipchain
 import (
 	"errors"
 
+	"github.com/dedis/crypto/config"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -210,9 +211,11 @@ func (c *Client) BunchUpdate(bunch *SkipBlockBunch) onet.ClientError {
 // "http://service.dedis.ch" is used. If successful, it will return the latest
 // known block.
 func FindSkipChain(id SkipBlockID, url string) (*SkipBlock, error) {
+	log.Fatal("Not implemented yet")
 	c := NewClient()
 	reply := &GetBlocksReply{}
-	sid := network.NewServerIdentity(nil, "localhost:2002")
+	kp := config.NewKeyPair(network.Suite)
+	sid := network.NewServerIdentity(kp.Public, "localhost:2002")
 	cerr := c.SendProtobuf(sid,
 		&GetBlocks{nil, id, 0}, reply)
 	if cerr != nil {

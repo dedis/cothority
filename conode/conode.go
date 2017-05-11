@@ -21,8 +21,8 @@ import (
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/service"
 	_ "github.com/dedis/cothority/guard/service"
-	_ "github.com/dedis/cothority/identity"
-	_ "github.com/dedis/cothority/skipchain"
+	_ "github.com/dedis/cothority/identity/service"
+	_ "github.com/dedis/cothority/skipchain/service"
 	_ "github.com/dedis/cothority/status/service"
 	"gopkg.in/dedis/onet.v1/app"
 )

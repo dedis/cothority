@@ -97,18 +97,21 @@ func idConnect(c *cli.Context) error {
 	name, err := os.Hostname()
 	log.ErrFatal(err)
 	switch c.NArg() {
-	case 1:
-		// We'll get all arguments after
 	case 2:
+		// We'll get all arguments after
+	case 3:
 		name = c.Args().Get(1)
 	default:
-		log.Fatal("Please give the following arguments: id [hostname]")
+		log.Fatal("Please give the following arguments: group.toml id [hostname]")
 	}
+	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
+	log.Printf("%x", idBytes)
 	id := skipchain.SkipBlockID(idBytes)
-	ident, err := identity.NewFollower(id, "")
+	ident, err := identity.NewFollower(group.Roster, id)
 	log.ErrFatal(err)
+	ident.DeviceName = name
 	cfg := &ciscConfig{Identity: ident}
 	log.ErrFatal(cfg.AttachToIdentity(name))
 	log.Infof("Public key: %s",
@@ -362,14 +365,15 @@ func sshSync(c *cli.Context) error {
 }
 
 func followAdd(c *cli.Context) error {
-	if c.NArg() < 1 {
-		log.Fatal("Please give the ID of the skipchain to follow, and optionally a service-name")
+	if c.NArg() < 2 {
+		log.Fatal("Please give: group.toml id [device-name]")
 	}
 	cfg, _ := loadConfig(c)
+	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := skipchain.SkipBlockID(idBytes)
-	newID, err := identity.NewFollower(id, "")
+	newID, err := identity.NewFollower(group.Roster, id)
 	log.ErrFatal(err)
 	if c.NArg() == 3 {
 		newID.DeviceName = c.Args().Get(2)

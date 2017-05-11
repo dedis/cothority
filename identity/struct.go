@@ -73,15 +73,23 @@ func (c *Config) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(c.Data[s]))
-		if err != nil {
-			return nil, err
-		}
-		b, err := network.Marshal(c.Device[s])
+		b, err := c.Device[s].Point.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
 		_, err = hash.Write(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	// TODO: Write data correctly to hash
+	var keys []string
+	for k := range c.Data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		_, err = hash.Write([]byte(c.Data[k]))
 		if err != nil {
 			return nil, err
 		}

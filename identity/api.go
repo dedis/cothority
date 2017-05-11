@@ -108,23 +108,29 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	return id, nil
 }
 
-// NewFollower searches for an existing identity-skipchain and returns a
-// read-only identity. The url is where the skipchain holding the identity
-// can be found. If it is empty (""), it defaults to skipchain.dedis.ch.
-func NewFollower(id skipchain.SkipBlockID, url string) (*Identity, error) {
-	sb, err := skipchain.FindSkipChain(id, url)
+// NewFollower searches for an existing identity-skipchain id in the roster r
+// and returns a read-only identity.
+func NewFollower(r *onet.Roster, id skipchain.SkipBlockID) (*Identity, error) {
+	gbr, cerr := skipchain.NewClient().GetUpdateChain(r, id)
+	if cerr != nil {
+		return nil, cerr
+	}
+	latest := gbr.Reply[len(gbr.Reply)-1]
+	_, idInt, err := network.Unmarshal(latest.Data)
 	if err != nil {
 		return nil, err
 	}
-	_, idInt, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		return nil, err
-	}
-	identity, ok := idInt.(*Identity)
+	cfg, ok := idInt.(*Config)
 	if !ok {
 		return nil, errors.New("This is not a cisc-skipchain")
 	}
-	return identity, nil
+	kp := config.NewKeyPair(network.Suite)
+	return &Identity{
+		Private:   kp.Secret,
+		Public:    kp.Public,
+		Config:    cfg,
+		SkipBlock: latest,
+	}, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
@@ -140,10 +146,14 @@ func (i *Identity) SaveToStream(out io.Writer) error {
 // GetProposed returns the Propose-field or a copy of the config if
 // the Propose-field is nil
 func (i *Identity) GetProposed() *Config {
-	if i.Proposed != nil {
-		return i.Proposed
+	p := i.Proposed
+	if p == nil {
+		p = i.Config.Copy()
 	}
-	return i.Config.Copy()
+	if len(p.Data) == 0 {
+		p.Data = map[string]string{}
+	}
+	return p
 }
 
 // AttachToIdentity proposes to attach it to an existing Identity. It takes

@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/cothority/skipchain/service"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -344,8 +345,12 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
-	log.LLvl3("Successfully loaded")
+	log.Lvl3("Successfully loaded")
 	return nil
+}
+
+func (s *Service) verifyNewBlock(sb *skipchain.SkipBlock) bool {
+	return true
 }
 
 func newIdentityService(c *onet.Context) onet.Service {
@@ -373,6 +378,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
+	service.RegisterVerification(c, identity.VerifyIdentity, s.verifyNewBlock)
 	log.ErrFatal(s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
 		s.ProposeUpdate, s.CreateIdentity))
 	return s
