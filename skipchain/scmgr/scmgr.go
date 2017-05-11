@@ -221,13 +221,13 @@ func add(c *cli.Context) error {
 		return cerr
 	}
 	latest := sbs[len(sbs)-1]
-	ssbr, cerr := client.AddSkipBlock(latest, group.Roster, nil)
+	_, sbNew, cerr := client.AddSkipBlock(latest, group.Roster, nil)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbb.Store(ssbr.Latest)
+	cfg.Sbb.Store(sbNew)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", sbNew.Hash, sbNew.GenesisID)
 	return nil
 }
 
@@ -254,13 +254,13 @@ func addWeb(c *cli.Context) error {
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
-	ssbr, cerr := client.AddSkipBlock(latest, nil, &html{data})
+	_, sbNew, cerr := client.AddSkipBlock(latest, nil, &html{data})
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbb.Store(ssbr.Latest)
+	cfg.Sbb.Store(sbNew)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", sbNew.Hash, sbNew.GenesisID)
 	return nil
 }
 

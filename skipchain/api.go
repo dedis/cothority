@@ -87,51 +87,6 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 
 // Combined and convenience methods for skipchains
 
-// AddSkipBlock asks the cothority to store the new skipblock, and eventually
-// attach it to the 'latest' skipblock.
-//  - latest is the skipblock where the new skipblock is appended. If el and d
-//   are nil, a new skipchain will be created with 'latest' as genesis-block.
-//  - el is the new roster for that block. If el is nil, the previous roster
-//   will be used.
-//  - d is the data for the new block. It can be nil. If it is not of type
-//   []byte, it will be marshalled using `network.Marshal`.
-//
-// If you need to change the parent, you have to use StoreSkipBlock
-func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster,
-	d network.Message) (reply *StoreSkipBlockReply, cerr onet.ClientError) {
-	log.Lvlf3("%#v", latest)
-	var newBlock *SkipBlock
-	if el == nil && d == nil {
-		newBlock = latest
-	} else {
-		newBlock = latest.Copy()
-		if el != nil {
-			newBlock.Roster = el
-		}
-		if d != nil {
-			var ok bool
-			newBlock.Data, ok = d.([]byte)
-			if !ok {
-				buf, err := network.Marshal(d)
-				if err != nil {
-					return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-						"Couldn't marshal data: "+err.Error())
-				}
-				newBlock.Data = buf
-			}
-		}
-		newBlock.Index = latest.Index + 1
-		newBlock.GenesisID = latest.SkipChainID()
-	}
-	host := latest.Roster.RandomServerIdentity()
-	reply = &StoreSkipBlockReply{}
-	cerr = c.SendProtobuf(host, &StoreSkipBlock{newBlock}, reply)
-	if cerr != nil {
-		return nil, cerr
-	}
-	return reply, nil
-}
-
 // CreateGenesis is a convenience function to create a new SkipChain with the
 // given parameters.
 //  - el is the responsible roster
@@ -158,11 +113,58 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 		}
 		genesis.Data = buf
 	}
-	sb, cerr := c.AddSkipBlock(genesis, nil, nil)
+	_, sb, cerr := c.AddSkipBlock(genesis, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
-	return sb.Latest, nil
+	return sb, nil
+}
+
+// AddSkipBlock asks the cothority to store the new skipblock, and eventually
+// attach it to the 'latest' skipblock.
+//  - latest is the skipblock where the new skipblock is appended. If el and d
+//   are nil, a new skipchain will be created with 'latest' as genesis-block.
+//  - el is the new roster for that block. If el is nil, the previous roster
+//   will be used.
+//  - d is the data for the new block. It can be nil. If it is not of type
+//   []byte, it will be marshalled using `network.Marshal`.
+//
+// If you need to change the parent, you have to use StoreSkipBlock
+func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster,
+	d network.Message) (previousSB, latestSB *SkipBlock, cerr onet.ClientError) {
+	log.Lvlf3("%#v", latest)
+	var newBlock *SkipBlock
+	if el == nil && d == nil {
+		newBlock = latest
+	} else {
+		newBlock = latest.Copy()
+		if el != nil {
+			newBlock.Roster = el
+		}
+		if d != nil {
+			var ok bool
+			newBlock.Data, ok = d.([]byte)
+			if !ok {
+				buf, err := network.Marshal(d)
+				if err != nil {
+					return nil, nil, onet.NewClientErrorCode(ErrorParameterWrong,
+						"Couldn't marshal data: "+err.Error())
+				}
+				newBlock.Data = buf
+			}
+		}
+		newBlock.Index = latest.Index + 1
+		newBlock.GenesisID = latest.SkipChainID()
+	}
+	host := latest.Roster.RandomServerIdentity()
+	reply := &StoreSkipBlockReply{}
+	cerr = c.SendProtobuf(host, &StoreSkipBlock{newBlock}, reply)
+	if cerr != nil {
+		return
+	}
+	previousSB = reply.Previous
+	latestSB = reply.Latest
+	return
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
@@ -194,11 +196,11 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 // BunchAddBlock adds a block to the latest block from the bunch. If the block
 // doesn't have a roster set, it will be copied from the last block.
 func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, sb *SkipBlock) (*SkipBlock, onet.ClientError) {
-	sbNew, err := c.AddSkipBlock(bunch.Latest, sb.Roster, sb.Data)
+	_, sbNew, err := c.AddSkipBlock(bunch.Latest, sb.Roster, sb.Data)
 	if err != nil {
 		return nil, err
 	}
-	id := bunch.Store(sbNew.Latest)
+	id := bunch.Store(sbNew)
 	if id == nil {
 		return nil, onet.NewClientErrorCode(ErrorVerification,
 			"Couldn't add block to bunch")

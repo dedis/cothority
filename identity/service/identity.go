@@ -178,15 +178,15 @@ func (s *Service) ProposeVote(v *identity.ProposeVote) (*identity.ProposeVoteRep
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.AddSkipBlock(sid.Data, nil, sid.Proposed)
+		_, sbNew, cerr := s.skipchain.AddSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
-		_, msg, _ := network.Unmarshal(reply.Latest.Data)
+		_, msg, _ := network.Unmarshal(sbNew.Data)
 		log.Lvl3("SB signed is", msg.(*identity.Config).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
-			Latest: reply.Latest,
+			Latest: sbNew,
 		}
 		_, err = s.propagateSkipBlock(sid.Data.Roster, usb, propagateTimeout)
 		if err != nil {

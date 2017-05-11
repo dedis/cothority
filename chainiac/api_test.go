@@ -41,7 +41,7 @@ func TestClient_CreateRootControl2(t *testing.T) {
 		"Root signature invalid:")
 	update, cerr := skipchain.NewClient().GetUpdateChain(root.Roster, root.Hash)
 	log.ErrFatal(cerr)
-	root = update.Reply[0]
+	root = update[0]
 	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
 	if !bytes.Equal(inter.ParentBlockID, root.Hash) {
 		t.Fatal("Intermediate doesn't point to root")

@@ -82,22 +82,21 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	log.ErrFatal(cerr)
 	el2 := onet.NewRoster(el.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", el2)
-	var sb1 *skipchain.StoreSkipBlockReply
-	sb1, cerr = c.AddSkipBlock(genesis, el2, nil)
+	_, sb1, cerr := c.AddSkipBlock(genesis, el2, nil)
 	log.ErrFatal(cerr)
 	log.Lvl1("Proposing same roster again")
-	_, cerr = c.AddSkipBlock(genesis, el2, nil)
+	_, _, cerr = c.AddSkipBlock(genesis, el2, nil)
 	require.NotNil(t, cerr,
 		"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
-	sb1, cerr = c.AddSkipBlock(sb1.Latest, el2, []byte{1, 2, 3})
+	_, sb1, cerr = c.AddSkipBlock(sb1, el2, []byte{1, 2, 3})
 	log.ErrFatal(cerr)
-	require.Equal(t, sb1.Latest.Data, []byte{1, 2, 3})
-	sb2, cerr := c.AddSkipBlock(sb1.Latest, el2, &testData{})
+	require.Equal(t, sb1.Data, []byte{1, 2, 3})
+	sb2Prev, sb2, cerr := c.AddSkipBlock(sb1, el2, &testData{})
 	log.ErrFatal(cerr)
-	require.True(t, sb2.Previous.Equal(sb1.Latest),
+	require.True(t, sb2Prev.Equal(sb1),
 		"New previous should be previous latest")
-	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].Hash, sb2.Latest.Hash),
+	require.True(t, bytes.Equal(sb2Prev.ForwardLink[0].Hash, sb2.Hash),
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
@@ -110,7 +109,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	if len(updates) != 4 {
 		t.Fatal("Should now have four Blocks to go from Genesis to current, but have", len(updates), genesis, sb2)
 	}
-	if !updates[len(updates)-1].Equal(sb2.Latest) {
+	if !updates[len(updates)-1].Equal(sb2) {
 		t.Fatal("Last block in update-chain should be last block added")
 	}
 	c.Close()
@@ -126,7 +125,7 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	log.Lvl1("Creating root and control chain")
 	sb1, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
-	_, cerr = c.AddSkipBlock(sb1, el, nil)
+	_, _, cerr = c.AddSkipBlock(sb1, el, nil)
 	log.ErrFatal(cerr)
 	sb2, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
@@ -152,9 +151,9 @@ func TestClient_UpdateBunch(t *testing.T) {
 	log.Lvl1("Creating root and control chain")
 	genesis, cerr := c.CreateGenesis(ro, 1, 1, skipchain.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
-	sb1, cerr := c.AddSkipBlock(genesis, ro, nil)
+	_, sb1, cerr := c.AddSkipBlock(genesis, ro, nil)
 	log.ErrFatal(cerr)
-	_, cerr = c.AddSkipBlock(sb1.Latest, ro, nil)
+	_, _, cerr = c.AddSkipBlock(sb1, ro, nil)
 	log.ErrFatal(cerr)
 
 	bunch := skipchain.NewSkipBlockBunch(genesis)
