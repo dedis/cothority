@@ -20,8 +20,7 @@ import (
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
-	// as we use the skipchain-service, make sure it will be loaded
-	_ "github.com/dedis/cothority/skipchain/service"
+	"github.com/dedis/cothority/skipchain/service"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
