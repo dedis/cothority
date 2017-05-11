@@ -425,7 +425,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !fs.ForwardLink.Hash.Equal(newest.Hash) {
 			return errors.New("No forward-link from previous to newest")
 		}
-		target := s.Storage.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+		target := s.Storage.GetByID(newest.BackLinkIDs[fs.TargetHeight]).Copy()
 		if target == nil {
 			return errors.New("Don't have target-block")
 		}
