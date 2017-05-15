@@ -109,12 +109,16 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 	genesis.BaseHeight = baseH
 	genesis.ParentBlockID = parent
 	if data != nil {
-		buf, err := network.Marshal(data)
-		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-				err.Error())
+		var ok bool
+		genesis.Data, ok = data.([]byte)
+		if !ok {
+			buf, err := network.Marshal(data)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+					"Couldn't marshal data: "+err.Error())
+			}
+			genesis.Data = buf
 		}
-		genesis.Data = buf
 	}
 	_, sb, cerr := c.AddSkipBlock(genesis, nil, nil)
 	if cerr != nil {

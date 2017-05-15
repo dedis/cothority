@@ -37,13 +37,8 @@ type config struct {
 	Sbb *skipchain.SBBStorage
 }
 
-type html struct {
-	Data []byte
-}
-
 func main() {
 	network.RegisterMessage(&config{})
-	network.RegisterMessage(&html{})
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"
@@ -171,7 +166,7 @@ func create(c *cli.Context) error {
 		data = []byte(address)
 	}
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, &html{data}, nil)
+		skipchain.VerificationStandard, []byte(data), nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}
@@ -261,7 +256,7 @@ func addWeb(c *cli.Context) error {
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
-	_, sbNew, cerr := client.AddSkipBlock(latest, nil, &html{data})
+	_, sbNew, cerr := client.AddSkipBlock(latest, nil, []byte(data))
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
