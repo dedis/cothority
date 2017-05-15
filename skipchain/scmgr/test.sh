@@ -15,10 +15,10 @@ main(){
 	test Config
 	test Create
 	test Join
-	test Add
-	test Index
-	test Html
-	test Fetch
+#	test Add
+#	test Index
+#	test Html
+#	test Fetch
 	stopTest
 }
 
@@ -57,6 +57,7 @@ testAdd(){
 	testOK runSc add $ID public.toml
 	runCoBG 3
 	runGrepSed "Latest block of" "s/.* //" runSc update $ID
+	testOK runSc update -d $ID
 	LATEST=$SED
 	testOK runSc add $LATEST public.toml
 }

@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"encoding/base64"
+
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
@@ -97,7 +99,12 @@ func main() {
 			Usage:     "get latest valid block",
 			Aliases:   []string{"u"},
 			ArgsUsage: "skipchain-id",
-			Action:    update,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name: "data, d",
+				},
+			},
+			Action: update,
 		},
 		{
 			Name:  "list",
@@ -158,7 +165,7 @@ func create(c *cli.Context) error {
 	client := skipchain.NewClient()
 	data := []byte{}
 	if address := c.String("url"); address != "" {
-		if !strings.HasPrefix(address, "http") && !strings.HasPrefix(address, "context") {
+		if !strings.HasPrefix(address, "http") && !strings.HasPrefix(address, "config") {
 			log.Fatal("Please give http- or config-address")
 		}
 		data = []byte(address)
@@ -291,6 +298,9 @@ func update(c *cli.Context) error {
 	}
 	latest := sbs[len(sbs)-1]
 	log.Infof("Latest block of %x is %x", latest.GenesisID, latest.Hash)
+	if c.Bool("data") {
+		log.Info(base64.StdEncoding.EncodeToString(latest.Data))
+	}
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -345,9 +355,21 @@ func lsIndex(c *cli.Context) error {
 	}
 
 	// Get the list of genesis block
+	cl := skipchain.NewClient()
 	genesis := sbl{}
-	for g := range cfg.Sbb.Bunches {
-		genesis = append(genesis, cfg.Sbb.GetByID(skipchain.SkipBlockID(g)))
+	for g, bunch := range cfg.Sbb.Bunches {
+		gid := skipchain.SkipBlockID(g)
+		gen := cfg.Sbb.GetByID(gid)
+		if gen == nil {
+			log.Print("Getting genesis-block")
+			gen, err = cl.GetSingleBlock(bunch.Latest.Roster, gid)
+			if err != nil {
+				log.Error("Couldn't get genesis-skipblock:", err)
+				continue
+			}
+			bunch.Store(gen)
+		}
+		genesis = append(genesis, gen)
 	}
 
 	sort.Sort(genesis)
@@ -385,7 +407,7 @@ func lsIndex(c *cli.Context) error {
 		log.Info("Cannot write in the file")
 	}
 
-	return nil
+	return cfg.save(c)
 }
 
 func lsFetch(c *cli.Context) error {
