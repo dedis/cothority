@@ -20,7 +20,6 @@ import (
 )
 
 // ServiceName can be used to refer to the name of this service
-const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
 
@@ -31,7 +30,7 @@ const propagateTimeout = 10000
 const timeBetweenSave = 0
 
 func init() {
-	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
+	skipchainSID, _ = onet.RegisterNewService(skipchain.ServiceName, newSkipchainService)
 	network.RegisterMessage(&skipchain.SkipBlockBunch{})
 }
 
@@ -699,9 +698,9 @@ func (s *Service) tryLoad() error {
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
 func RegisterVerification(c *onet.Context, v skipchain.VerifierID, f skipchain.SkipBlockVerifier) error {
-	scs := c.Service(ServiceName)
+	scs := c.Service(skipchain.ServiceName)
 	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
+		return errors.New("Didn't find our service: " + skipchain.ServiceName)
 	}
 	return scs.(*Service).registerVerification(v, f)
 }

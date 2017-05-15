@@ -3,12 +3,14 @@ package skipchain
 import (
 	"errors"
 
-	"gopkg.in/dedis/cothority.v1/cosi/service"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
+
+// ServiceName is used to register this service to onet.
+const ServiceName = "Skipchain"
 
 // Client is a structure to communicate with the Skipchain
 // service from the outside
@@ -18,7 +20,7 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(service.ServiceName)}
+	return &Client{Client: onet.NewClient(ServiceName)}
 }
 
 const (

@@ -15,10 +15,10 @@ main(){
 	test Config
 	test Create
 	test Join
-#	test Add
-#	test Index
-#	test Html
-#	test Fetch
+	test Add
+	test Index
+	test Html
+	test Fetch
 	stopTest
 }
 
