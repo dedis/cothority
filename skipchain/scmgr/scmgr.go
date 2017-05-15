@@ -166,7 +166,7 @@ func create(c *cli.Context) error {
 		data = []byte(address)
 	}
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, []byte(data), nil)
+		skipchain.VerificationStandard, data, nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}
@@ -256,7 +256,7 @@ func addWeb(c *cli.Context) error {
 	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
-	_, sbNew, cerr := client.AddSkipBlock(latest, nil, []byte(data))
+	_, sbNew, cerr := client.AddSkipBlock(latest, nil, data)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
