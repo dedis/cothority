@@ -92,7 +92,7 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 
 // CreateGenesis is a convenience function to create a new SkipChain with the
 // given parameters.
-//  - el is the responsible roster
+//  - r is the responsible roster
 //  - baseH is the base-height - the distance between two non-height-1 skipblocks
 //  - maxH is the maximum height, which must be <= baseH
 //  - ver is a slice of verifications to apply to that block
@@ -100,10 +100,10 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 //  - parent is the responsible parent-block, can be 'nil'
 //
 // This function returns the created skipblock or nil and an error.
-func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierID,
+func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []VerifierID,
 	data interface{}, parent SkipBlockID) (*SkipBlock, onet.ClientError) {
 	genesis := NewSkipBlock()
-	genesis.Roster = el
+	genesis.Roster = r
 	genesis.VerifierIDs = ver
 	genesis.MaximumHeight = maxH
 	genesis.BaseHeight = baseH
@@ -129,24 +129,24 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 
 // AddSkipBlock asks the cothority to store the new skipblock, and eventually
 // attach it to the 'latest' skipblock.
-//  - latest is the skipblock where the new skipblock is appended. If el and d
+//  - latest is the skipblock where the new skipblock is appended. If r and d
 //   are nil, a new skipchain will be created with 'latest' as genesis-block.
-//  - el is the new roster for that block. If el is nil, the previous roster
+//  - r is the new roster for that block. If r is nil, the previous roster
 //   will be used.
 //  - d is the data for the new block. It can be nil. If it is not of type
 //   []byte, it will be marshalled using `network.Marshal`.
 //
 // If you need to change the parent, you have to use StoreSkipBlock
-func (c *Client) AddSkipBlock(latest *SkipBlock, el *onet.Roster,
+func (c *Client) AddSkipBlock(latest *SkipBlock, r *onet.Roster,
 	d network.Message) (previousSB, latestSB *SkipBlock, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	var newBlock *SkipBlock
-	if el == nil && d == nil {
+	if r == nil && d == nil {
 		newBlock = latest
 	} else {
 		newBlock = latest.Copy()
-		if el != nil {
-			newBlock.Roster = el
+		if r != nil {
+			newBlock.Roster = r
 		}
 		if d != nil {
 			var ok bool
@@ -202,8 +202,8 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 
 // BunchAddBlock adds a block to the latest block from the bunch. If the block
 // doesn't have a roster set, it will be copied from the last block.
-func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, sb *SkipBlock) (*SkipBlock, onet.ClientError) {
-	_, sbNew, err := c.AddSkipBlock(bunch.Latest, sb.Roster, sb.Data)
+func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, r *onet.Roster, data interface{}) (*SkipBlock, onet.ClientError) {
+	_, sbNew, err := c.AddSkipBlock(bunch.Latest, r, data)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, sb *SkipBlock) (*SkipBlock
 		return nil, onet.NewClientErrorCode(ErrorVerification,
 			"Couldn't add block to bunch")
 	}
-	return sb, nil
+	return sbNew, nil
 }
 
 // BunchUpdate contacts the nodes and asks for an update of the chains available

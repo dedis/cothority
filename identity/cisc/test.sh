@@ -13,10 +13,10 @@ main(){
     startTest
 	buildKeys
 	buildConode "github.com/dedis/cothority/identity/service"
-#	test Build
-#	test ClientSetup
-#	test IdCreate
-#	test ConfigList
+	test Build
+	test ClientSetup
+	test IdCreate
+	test ConfigList
 	test ConfigVote
 	test IdConnect
 	test IdDel

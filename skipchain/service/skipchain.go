@@ -143,9 +143,9 @@ func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.Sto
 		}
 		prop.UpdateHash()
 		if err := s.addForwardLink(prev, prop, 1); err != nil {
-			log.Printf("Previous is %+v", prev)
+			log.Lvlf3("Previous is %+v", prev)
 			for _, sb := range bunch.SkipBlocks {
-				log.Printf("%#v", sb)
+				log.Lvlf3("%#v", sb)
 			}
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
@@ -158,7 +158,7 @@ func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.Sto
 					"Didn't get skipblock in back-link")
 			}
 			if prop == nil {
-				log.Print(log.Stack())
+				log.Lvlf3(log.Stack())
 			}
 			if err := s.SendRaw(back.Roster.RandomServerIdentity(),
 				&ForwardSignature{
