@@ -376,7 +376,7 @@ func TestService_RegisterVerification(t *testing.T) {
 		return true
 	}
 	for _, h := range hosts {
-		s := h.GetService(ServiceName).(*Service)
+		s := h.GetService(skipchain.ServiceName).(*Service)
 		log.ErrFatal(s.registerVerification(VerifyTest, verifier))
 	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, []skipchain.VerifierID{VerifyTest}, 1, 1)

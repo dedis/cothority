@@ -33,7 +33,7 @@ func TestClient_CreateGenesis(t *testing.T) {
 	c := skipchain.NewClient()
 	_, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
 		[]byte{1, 2, 3}, nil)
-	require.NotNil(t, cerr)
+	require.Nil(t, cerr)
 	_, cerr = c.CreateGenesis(roster, 1, 0, skipchain.VerificationNone,
 		&testData{}, nil)
 	require.NotNil(t, cerr)
