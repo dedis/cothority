@@ -25,7 +25,7 @@ testRead(){
 	FILE=$SED
 	testOK runCl 2 manage join public.toml $SID $READER
 	testFail runCl 2 read request bar3 $READER
-	runGrepSed "Request-id" "s/.* //" runCl 2 read request bar3 $SED
+	runGrepSed "Request-id" "s/.* //" runCl 2 read request bar3 $FILE
 	READREQ=$SED
 	tmp=$( mktemp )
 	testOK runCl 2 read fetch $READREQ $tmp

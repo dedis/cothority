@@ -47,6 +47,12 @@ func main() {
 					Action:    mngCreate,
 				},
 				{
+					Name:    "list",
+					Usage:   "list the id of the log-read skipchain",
+					Aliases: []string{"ls"},
+					Action:  mngList,
+				},
+				{
 					Name:      "join",
 					Usage:     "join a write log-read skipchain",
 					Aliases:   []string{"cr"},
@@ -90,6 +96,12 @@ func main() {
 							Usage:   "list all roles",
 							Aliases: []string{"ls"},
 							Action:  mngRoleList,
+							Flags: []cli.Flag{
+								cli.BoolFlag{
+									Name:  "acls, a",
+									Usage: "also print ACL",
+								},
+							},
 						},
 					},
 				},
@@ -162,6 +174,13 @@ func mngCreate(c *cli.Context) error {
 	log.Infof("Created new skipchains and added %s as admin", pseudo)
 	log.Infof("WLR-skipchainid: %x", cfg.WLRBunch.GenesisID)
 	return cfg.saveConfig(c)
+}
+
+// Prints the id of the WLR-skipchain
+func mngList(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	log.Infof("WLR-skipchainid:\t%x", cfg.WLRBunch.GenesisID)
+	return nil
 }
 
 // Joins an existing wlr skipchain.
@@ -246,15 +265,14 @@ func mngRoleCreate(c *cli.Context) error {
 	}
 	log.Infof("Added role:%s for pseudo:%s", role, pseudo)
 	cfg.Roles.List = append(cfg.Roles.List, cred)
-	priv, err := cred.Private.MarshalBinary()
+	priv, err := crypto.ScalarToStringHex(network.Suite, cred.Private)
 	log.ErrFatal(err)
-	log.Infof("Private key: %x", priv)
+	log.Infof("Private key:\t%s", priv)
 
 	_, err = logread.NewClient().EvolveACL(cfg.ACLBunch, acls, admin)
 	if err != nil {
 		return err
 	}
-	log.Info(cfg.Acls())
 	return cfg.saveConfig(c)
 }
 func mngRoleAdd(c *cli.Context) error {
@@ -267,7 +285,16 @@ func mngRoleRm(c *cli.Context) error {
 }
 func mngRoleList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.Info("Current ACLs:\n", cfg.Acls())
+	if c.Bool("acls") {
+		log.Info("Current ACLs:")
+		log.Info(cfg.Acls())
+	}
+	log.Info("Known private keys:")
+	for _, s := range cfg.Roles.List {
+		priv, err := crypto.ScalarToStringHex(network.Suite, s.Private)
+		log.ErrFatal(err)
+		log.Infof("User %s:\t%s", s.Pseudonym, priv)
+	}
 	return nil
 }
 
@@ -282,7 +309,7 @@ func write(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Stored file %s in skipblock %x", file, sb.Hash)
+	log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
 	return nil
 }
 
@@ -332,7 +359,7 @@ func readReq(c *cli.Context) error {
 		log.Fatal("Wrong signature")
 	}
 	log.Info("Successfully added read-request to skipchain.")
-	log.Infof("Request-id is: %x", sb.Hash)
+	log.Infof("Request-id is:\t%x", sb.Hash)
 	cfg.WLRBunch.Store(sb)
 	return cfg.saveConfig(c)
 }
