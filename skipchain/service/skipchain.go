@@ -510,6 +510,7 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			bunch.Store(sb)
 		}
 	}
+	//log.Print(s.ServerIdentity(), "Saved")
 	s.save()
 }
 
@@ -655,7 +656,8 @@ func (s *Service) startPropagation(blocks []*skipchain.SkipBlock) error {
 
 // VerifyBase checks basic parameters between two skipblocks.
 func (s *Service) verifyFuncBase(newSB *skipchain.SkipBlock) bool {
-	if s.verifyBlock(newSB) != nil {
+	if err := s.verifyBlock(newSB); err != nil {
+		log.LLvl2("verifyBlock failed:", err)
 		return false
 	}
 	log.Lvl4("No verification - accepted")
