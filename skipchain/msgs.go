@@ -54,7 +54,10 @@ func (vId VerifierID) IsNil() bool {
 // SkipBlockVerifier is function that should return whether this skipblock is
 // accepted or not. This function is used during a BFTCosi round, but wrapped
 // around so it accepts a block.
-type SkipBlockVerifier func(msg []byte, s *SkipBlock) bool
+//
+//   sbID is the hash of the new block that will be signed
+//   sb is the new block
+type SkipBlockVerifier func(sbID []byte, sb *SkipBlock) bool
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
