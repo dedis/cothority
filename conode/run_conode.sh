@@ -84,7 +84,28 @@ runLocal(){
 		exit 1
 	fi
 	NBR=$1
-	DEBUG=${2:-1}
+	shift
+	WAIT=""
+	DEBUG=1
+	while [ "$1" ]; do
+		case $1 in
+		-update)
+			UPDATE=yes
+			;;
+		-debug|-d)
+			DEBUG=$2
+			shift
+			;;
+		-wait_for_apocalypse|-wait)
+			WAIT=true
+			;;
+		*)
+			DEBUG=$1
+			;;
+		esac
+		shift
+	done
+
 	killall -9 $CONODE_BIN || true
 	go install $CONODE_GO
 
@@ -113,6 +134,13 @@ runLocal(){
 Now you can use public.toml as the group-toml file to interact with your
 local cothority.
 EOF
+
+	if [ "$WAIT" ]; then
+		echo -e "\nWaiting for <ctrl-c>"
+		while sleep 3600; do
+			date
+		done
+	fi
 }
 
 runPublic(){
