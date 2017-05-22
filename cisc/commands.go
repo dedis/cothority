@@ -46,6 +46,12 @@ func init() {
 				Usage:   "check the health of the cothority",
 				Action:  idCheck,
 			},
+			{
+				Name:    "qrcode",
+				Aliases: []string{"qr"},
+				Usage:   "print out the qrcode of the identity",
+				Action:  idQrcode,
+			},
 		},
 	}
 	commandConfig = cli.Command{
