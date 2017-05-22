@@ -67,7 +67,7 @@ type Storage struct {
  * API messages
  */
 
-// SaveIdentity stores a new identity for propose-config
+// CreateIdentity stores a new identity for propose-config
 func (s *Service) CreateIdentity(ci *CreateIdentity) (*CreateIdentityReply, onet.ClientError) {
 	var sbData *skipchain.SkipBlock
 	if ci.Control != nil {
