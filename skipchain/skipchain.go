@@ -178,7 +178,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
-	blocks := []*SkipBlock{block}
+	blocks := []*SkipBlock{block.Copy()}
 	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
 	for block.GetForwardLen() > 0 {
 		link := block.ForwardLink[block.GetForwardLen()-1]
@@ -203,7 +203,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 			}
 		}
 		block = next
-		blocks = append(blocks, next)
+		blocks = append(blocks, next.Copy())
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
 	reply := &GetUpdateChainReply{blocks}
@@ -360,6 +360,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 			return errors.New("No forward-link from previous to newest")
 		}
 		target := s.Sbm.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+		s.Sbm.Lock()
+		defer s.Sbm.Unlock()
 		if target == nil {
 			return errors.New("Don't have target-block")
 		}
@@ -584,14 +586,14 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 // saves all skipblocks.
 func (s *Service) save() {
+	s.Sbm.Lock()
+	defer s.Sbm.Unlock()
 	if time.Now().Sub(s.lastSave) < time.Second*timeBetweenSave {
 		return
 	}
 	s.lastSave = time.Now()
 	log.Lvl3("Saving service")
-	s.Sbm.Lock()
 	err := s.Save(skipblocksID, s.Sbm)
-	s.Sbm.Unlock()
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
