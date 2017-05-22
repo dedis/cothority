@@ -59,50 +59,13 @@ type Storage struct {
 	Proposed *Config
 	Votes    map[string]*crypto.SchnorrSig
 	Root     *skipchain.SkipBlock
+	Control  *skipchain.SkipBlock
 	Data     *skipchain.SkipBlock
 }
 
 /*
  * API messages
  */
-
-// CreateIdentity will register a new SkipChain and add it to our list of
-// managed identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
-	log.Lvlf3("%s Creating new identity with config %+v", s, ai.Config)
-	ids := &Storage{
-		Latest: ai.Config,
-	}
-	log.Lvl3("Creating Root-skipchain")
-	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
-	if cerr != nil {
-		return nil, cerr
-	}
-	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Config)
-	if cerr != nil {
-		return nil, cerr
-	}
-
-	roster := ids.Root.Roster
-	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
-	}
-	if replies != len(roster.List) {
-		log.Warn("Did only get", replies, "out of", len(roster.List))
-	}
-	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
-	s.save()
-
-	return &CreateIdentityReply{
-		Root: ids.Root,
-		Data: ids.Data,
-	}, nil
-}
 
 // ConfigUpdate returns a new configuration update
 func (s *Service) ConfigUpdate(cu *ConfigUpdate) (network.Message, onet.ClientError) {
@@ -208,7 +171,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		reply, cerr := s.skipchain.StoreSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -235,7 +198,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 // propagateConfig handles propagation of all configuration-proposals in the identity-service.
 func (s *Service) propagateConfigHandler(msg network.Message) {
 	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
-	id := ID(nil)
+	id := skipchain.SkipBlockID(nil)
 	switch msg.(type) {
 	case *ProposeSend:
 		id = msg.(*ProposeSend).ID
@@ -305,7 +268,7 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		log.Error("Got a wrong message for propagation")
 		return
 	}
-	id := ID(pi.Data.Hash)
+	id := skipchain.SkipBlockID(pi.Data.Hash)
 	if s.getIdentityStorage(id) != nil {
 		log.Error("Couldn't store new identity")
 		return
@@ -317,7 +280,7 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 
 // getIdentityStorage returns the corresponding IdentityStorage or nil
 // if none was found
-func (s *Service) getIdentityStorage(id ID) *Storage {
+func (s *Service) getIdentityStorage(id skipchain.SkipBlockID) *Storage {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	is, ok := s.Identities[string(id)]
@@ -328,7 +291,7 @@ func (s *Service) getIdentityStorage(id ID) *Storage {
 }
 
 // setIdentityStorage saves an IdentityStorage
-func (s *Service) setIdentityStorage(id ID, is *Storage) {
+func (s *Service) setIdentityStorage(id skipchain.SkipBlockID, is *Storage) {
 	s.identitiesMutex.Lock()
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
@@ -392,11 +355,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	for _, f := range []interface{}{s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.ConfigUpdate} {
-		if err := s.RegisterHandler(f); err != nil {
-			log.Fatal("Registration error:", err)
-		}
-	}
+	log.ErrFatal(s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
+		s.ProposeUpdate, s.ConfigUpdate))
 	return s
 }
