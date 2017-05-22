@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
+DBG_SRV=2
 # Needs 4 clients
 NBR=4
 
@@ -11,7 +12,7 @@ NBR=4
 main(){
     startTest
 	buildKeys
-	buildConode "github.com/dedis/cothority/identity"
+	buildConode "github.com/dedis/cothority/identity/service"
 	test Build
 	test ClientSetup
 	test IdCreate
@@ -300,16 +301,20 @@ runDbgCl(){
 clientSetup(){
     local CLIENTS=${1:-0} c b
 	runCoBG 1 2 3
-    runDbgCl 0 1 id cr public.toml client1
+	D=2
+    runDbgCl $D 1 id cr public.toml client1
     runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
+    dbgOut "ID is $ID"
     if [ "$CLIENTS" -gt 1 ]; then
     	for c in $( seq 2 $CLIENTS ); do
+    		dbgOut "Connecting client $c"
     		runCl $c id co public.toml $ID client$c
     		for b in 1 2; do
     			if [ $b -lt $c ]; then
-					runDbgCl 0 $b config update
-					runDbgCl 0 $b config vote y
+    				dbgOut "Updating and voting for client $c"
+					runDbgCl $D $b config update
+					runDbgCl $D $b config vote y
 				fi
 			done
 		done

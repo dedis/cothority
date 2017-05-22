@@ -7,19 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
-
-// ID represents one skipblock and corresponds to its Hash.
-type ID skipchain.SkipBlockID
+// ServiceName can be used to refer to the name of this service
+const ServiceName = "Identity"
 
 // Config holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Config-structure.
@@ -79,15 +73,23 @@ func (c *Config) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(c.Data[s]))
-		if err != nil {
-			return nil, err
-		}
-		b, err := network.Marshal(c.Device[s])
+		b, err := c.Device[s].Point.MarshalBinary()
 		if err != nil {
 			return nil, err
 		}
 		_, err = hash.Write(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	// TODO: Write data correctly to hash
+	var keys []string
+	for k := range c.Data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		_, err = hash.Write([]byte(c.Data[k]))
 		if err != nil {
 			return nil, err
 		}
@@ -177,74 +179,4 @@ func sortUniq(slice []string) []string {
 		}
 	}
 	return ret
-}
-
-// Messages between the Client-API and the Service
-
-// CreateIdentity starts a new identity-skipchain with the initial
-// Config and asking all nodes in Roster to participate.
-type CreateIdentity struct {
-	Config *Config
-	Roster *onet.Roster
-}
-
-// CreateIdentityReply is the reply when a new Identity has been added. It
-// returns the Root and Data-skipchain.
-type CreateIdentityReply struct {
-	Root *skipchain.SkipBlock
-	Data *skipchain.SkipBlock
-}
-
-// ConfigUpdate verifies if a new update is available.
-type ConfigUpdate struct {
-	ID ID
-}
-
-// ConfigUpdateReply returns the updated configuration.
-type ConfigUpdateReply struct {
-	Config *Config
-}
-
-// ProposeSend sends a new proposition to be stored in all identities. It
-// either replies a nil-message for success or an error.
-type ProposeSend struct {
-	ID ID
-	*Config
-}
-
-// ProposeUpdate verifies if a new config is available.
-type ProposeUpdate struct {
-	ID ID
-}
-
-// ProposeUpdateReply returns the updated propose-configuration.
-type ProposeUpdateReply struct {
-	Propose *Config
-}
-
-// ProposeVote sends the signature for a specific IdentityList. It replies nil
-// if the threshold hasn't been reached, or the new SkipBlock
-type ProposeVote struct {
-	ID        ID
-	Signer    string
-	Signature *crypto.SchnorrSig
-}
-
-// ProposeVoteReply returns the signed new skipblock if the threshold of
-// votes have arrived.
-type ProposeVoteReply struct {
-	Data *skipchain.SkipBlock
-}
-
-// Messages to be sent from one identity to another
-
-// PropagateIdentity sends a new identity to other identityServices
-type PropagateIdentity struct {
-	*Storage
-}
-
-// UpdateSkipBlock asks the service to fetch the latest SkipBlock
-type UpdateSkipBlock struct {
-	ID     ID
-	Latest *skipchain.SkipBlock
 }

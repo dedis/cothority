@@ -40,7 +40,7 @@ test_verbose:
 
 # use test_verbose instead if you want to use this Makefile locally
 test_go:
-	./coveralls.sh ./cosi ./cisc ./byzcoin/* ./jvss/simulation
+	./coveralls.sh ./byzcoin/* ./jvss/simulation
 
 test: test_fmt test_lint test_go
 

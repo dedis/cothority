@@ -10,9 +10,11 @@ simul/simul
 sda/testdata
 *.pyc
 .DS_Store
-*.iml
+#*.iml
+#cothority.iml
 .DS_Store
 config/
 build/
-cothority
+#cothority
 *.cov
+public.toml

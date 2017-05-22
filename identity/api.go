@@ -5,6 +5,9 @@ import (
 
 	"io/ioutil"
 
+	"errors"
+
+	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
@@ -25,22 +28,6 @@ func init() {
 		&Device{},
 		&Identity{},
 		&Config{},
-		&Storage{},
-		&Service{},
-		// API messages
-		&CreateIdentity{},
-		&CreateIdentityReply{},
-		&ConfigUpdate{},
-		&ConfigUpdateReply{},
-		&ProposeSend{},
-		&ProposeUpdate{},
-		&ProposeUpdateReply{},
-		&ProposeVote{},
-		&Data{},
-		&ProposeVoteReply{},
-		// Internal messages
-		&PropagateIdentity{},
-		&UpdateSkipBlock{},
 	} {
 		network.RegisterMessage(s)
 	}
@@ -63,22 +50,10 @@ const (
 // identity-service. Each identity-skipchain is tied to a roster that is defined
 // in 'Cothority'
 type Identity struct {
-	// Client is included for easy `Send`-methods.
-	*onet.Client
-	// IdentityData holds all the data related to this identity
-	// It can be stored and loaded from a config file.
-	Data
-}
-
-// Data contains the data that will be stored / loaded from / to a file
-// that enables a client to use the Identity service.
-type Data struct {
 	// Private key for that device.
 	Private abstract.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
 	Public abstract.Point
-	// ID of the skipchain this device is tied to.
-	ID ID
 	// Config is the actual, valid configuration of the identity-skipchain.
 	Config *Config
 	// Proposed is the new configuration that has not been validated by a
@@ -86,42 +61,33 @@ type Data struct {
 	Proposed *Config
 	// DeviceName must be unique in the identity-skipchain.
 	DeviceName string
-	// Cothority is the roster responsible for the identity-skipchain. It
-	// might change in the case of a roster-update.
-	Cothority *onet.Roster
+	// SkipBlock is the latest block holding our data.
+	SkipBlock *skipchain.SkipBlock
+	// client for easy communication
+	client *onet.Client
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
-// different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string) *Identity {
-	client := onet.NewClient(ServiceName)
+// different accounts. It takes a roster as an argument and will
+// create a skipblock using those nodes.
+func NewIdentity(roster *onet.Roster, threshold int, owner string) (*Identity, error) {
 	kp := config.NewKeyPair(network.Suite)
-	return &Identity{
-		Client: client,
-		Data: Data{
-			Private:    kp.Secret,
-			Public:     kp.Public,
-			Config:     NewConfig(threshold, kp.Public, owner),
-			DeviceName: owner,
-			Cothority:  cothority,
-		},
+	config := NewConfig(threshold, kp.Public, owner)
+	i := &Identity{
+		Private:    kp.Secret,
+		Public:     kp.Public,
+		Config:     config,
+		DeviceName: owner,
+		client:     onet.NewClient(ServiceName),
 	}
-}
-
-// NewIdentityFromCothority searches for a given cothority
-func NewIdentityFromCothority(el *onet.Roster, id ID) (*Identity, error) {
-	iden := &Identity{
-		Client: onet.NewClient(ServiceName),
-		Data: Data{
-			Cothority: el,
-			ID:        id,
-		},
+	cir := &CreateIdentityReply{}
+	cerr := i.sendProtobuf(roster.RandomServerIdentity(),
+		&CreateIdentity{roster, config}, cir)
+	if cerr != nil {
+		return nil, cerr
 	}
-	err := iden.ConfigUpdate()
-	if err != nil {
-		return nil, err
-	}
-	return iden, nil
+	i.SkipBlock = cir.Genesis
+	return i, nil
 }
 
 // NewIdentityFromStream reads the configuration of that client from
@@ -135,17 +101,41 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := i.(*Data)
-	identity := &Identity{
-		Client: onet.NewClient(ServiceName),
-		Data:   *id,
+	id, ok := i.(*Identity)
+	if !ok {
+		return nil, errors.New("could not convert to Identity")
 	}
-	return identity, nil
+	return id, nil
+}
+
+// NewFollower searches for an existing identity-skipchain id in the roster r
+// and returns a read-only identity.
+func NewFollower(r *onet.Roster, id skipchain.SkipBlockID) (*Identity, error) {
+	sbs, cerr := skipchain.NewClient().GetUpdateChain(r, id)
+	if cerr != nil {
+		return nil, cerr
+	}
+	latest := sbs[len(sbs)-1]
+	_, idInt, err := network.Unmarshal(latest.Data)
+	if err != nil {
+		return nil, err
+	}
+	cfg, ok := idInt.(*Config)
+	if !ok {
+		return nil, errors.New("This is not a cisc-skipchain")
+	}
+	kp := config.NewKeyPair(network.Suite)
+	return &Identity{
+		Private:   kp.Secret,
+		Public:    kp.Public,
+		Config:    cfg,
+		SkipBlock: latest,
+	}, nil
 }
 
 // SaveToStream stores the configuration of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
-	data, err := network.Marshal(&i.Data)
+	data, err := network.Marshal(i)
 	if err != nil {
 		return err
 	}
@@ -156,15 +146,19 @@ func (i *Identity) SaveToStream(out io.Writer) error {
 // GetProposed returns the Propose-field or a copy of the config if
 // the Propose-field is nil
 func (i *Identity) GetProposed() *Config {
-	if i.Proposed != nil {
-		return i.Proposed
+	p := i.Proposed
+	if p == nil {
+		p = i.Config.Copy()
 	}
-	return i.Config.Copy()
+	if len(p.Data) == 0 {
+		p.Data = map[string]string{}
+	}
+	return p
 }
 
-// AttachToIdentity proposes to attach it to an existing Identity
-func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
-	i.ID = ID
+// AttachToIdentity proposes to attach it to an existing Identity. It takes
+// the name of this device that should sign up to the identity-skipchain.
+func (i *Identity) AttachToIdentity(name string) onet.ClientError {
 	cerr := i.ConfigUpdate()
 	if cerr != nil {
 		return cerr
@@ -173,7 +167,7 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 		return onet.NewClientErrorCode(ErrorAccountDouble, "Adding with an existing account-name")
 	}
 	confPropose := i.Config.Copy()
-	confPropose.Device[i.DeviceName] = &Device{i.Public}
+	confPropose.Device[name] = &Device{i.Public}
 	cerr = i.ProposeSend(confPropose)
 	if cerr != nil {
 		return cerr
@@ -181,39 +175,27 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-// CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity() onet.ClientError {
-	log.Lvl3("Creating identity", i)
-	air := &CreateIdentityReply{}
-	err := i.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&CreateIdentity{i.Config, i.Cothority},
-		air)
-	if err != nil {
-		return err
-	}
-	i.ID = ID(air.Data.Hash)
-	return nil
-}
-
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
-func (i *Identity) ProposeSend(il *Config) onet.ClientError {
-	log.Lvl3("Sending proposal", il)
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&ProposeSend{i.ID, il}, nil)
-	i.Proposed = il
+func (i *Identity) ProposeSend(cnf *Config) onet.ClientError {
+	log.Lvl3("Sending proposal", cnf, i.SkipBlock.SkipChainID())
+	err := i.sendProtobuf(i.randomSI(),
+		&ProposeSend{i.SkipBlock.SkipChainID(), cnf}, nil)
+	i.Proposed = cnf
 	return err
 }
 
 // ProposeUpdate verifies if there is a new configuration awaiting that
 // needs approval from clients
 func (i *Identity) ProposeUpdate() onet.ClientError {
-	log.Lvl3("Updating proposal")
+	r := i.randomSI()
+	log.Lvl3("Updating proposal", i.ID().Short(), r)
 	cnc := &ProposeUpdateReply{}
-	err := i.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
-		ID: i.ID,
+	err := i.sendProtobuf(r, &ProposeUpdate{
+		ID: i.ID(),
 	}, cnc)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 	i.Proposed = cnc.Propose
@@ -239,8 +221,8 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	pvr := &ProposeVoteReply{}
-	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
-		ID:        i.ID,
+	cerr := i.sendProtobuf(i.randomSI(), &ProposeVote{
+		ID:        i.ID(),
 		Signer:    i.DeviceName,
 		Signature: &sig,
 	}, pvr)
@@ -260,17 +242,47 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 // ConfigUpdate asks if there is any new config available that has already
 // been approved by others and updates the local configuration
 func (i *Identity) ConfigUpdate() onet.ClientError {
-	log.Lvl3("ConfigUpdate", i)
-	if i.Cothority == nil || len(i.Cothority.List) == 0 {
-		return onet.NewClientErrorCode(ErrorListMissing, "Didn't find any list in the cothority")
+	log.Lvl3("ConfigUpdate", i.ID())
+	sbs, cerr := skipchain.NewClient().GetUpdateChain(i.SkipBlock.Roster, i.ID())
+	if cerr != nil {
+		log.Error(cerr)
+		return cerr
 	}
-	cur := &ConfigUpdateReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&ConfigUpdate{ID: i.ID}, cur)
+	if len(sbs) == 0 {
+		log.Lvl3("Didn't get any update")
+		return nil
+	}
+	last := sbs[len(sbs)-1]
+	_, d, err := network.Unmarshal(last.Data)
 	if err != nil {
-		return err
+		log.Error(err)
+		return onet.NewClientError(err)
+	}
+	conf, ok := d.(*Config)
+	if !ok {
+		return onet.NewClientErrorCode(4000, "Didn't find config in data-part")
 	}
 	// TODO - verify new config
-	i.Config = cur.Config
+	i.Config = conf
 	return nil
+}
+
+// ID returns the id of the identity-skipchain, which is the genesis-id
+// of the data-skipchain holding the data.
+func (i *Identity) ID() skipchain.SkipBlockID {
+	return i.SkipBlock.SkipChainID()
+}
+
+// convenience-function that wraps the creation of a client if necessary. This
+// is handy if the identity-structure got loaded from inside another structure,
+// like it is done in cothority/cisc/lib::loadConfig.
+func (i *Identity) sendProtobuf(dst *network.ServerIdentity, msg interface{}, ret interface{}) onet.ClientError {
+	if i.client == nil {
+		i.client = onet.NewClient(ServiceName)
+	}
+	return i.client.SendProtobuf(dst, msg, ret)
+}
+
+func (i *Identity) randomSI() *network.ServerIdentity {
+	return i.SkipBlock.Roster.RandomServerIdentity()
 }
