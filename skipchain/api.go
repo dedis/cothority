@@ -7,10 +7,6 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// TODO:
-// - change 'Propose*' to 'Add*'
-// - find better names for Roster- and Data-SkipChain
-
 const (
 	// ErrorBlockNotFound indicates that for any number of operations the
 	// corresponding block has not been found.
