@@ -5,6 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"fmt"
+
+	"github.com/dedis/cothority/skipchain"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
@@ -13,9 +16,16 @@ import (
 )
 
 func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest) *Identity {
-	id := NewIdentity(cothority, majority, owner)
-	id.Client = local.NewClient(ServiceName)
+	_, _, id := NewTestIdentityRootControl(cothority, majority, owner, local)
 	return id
+}
+
+func NewTestIdentityRootControl(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest) (root, control *skipchain.SkipBlock, id *Identity) {
+	var err error
+	root, control, id, err = NewIdentityFromRoster(cothority, nil, majority, owner)
+	log.ErrFatal(err)
+	id.client = local.NewClient(ServiceName)
+	return
 }
 
 func TestIdentity_ConfigNewCheck(t *testing.T) {
@@ -23,8 +33,7 @@ func TestIdentity_ConfigNewCheck(t *testing.T) {
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
-	c1 := NewIdentity(el, 50, "one")
-	log.ErrFatal(c1.CreateIdentity())
+	c1 := NewTestIdentity(el, 50, "one", l)
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
@@ -54,10 +63,9 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewTestIdentity(el, 50, "one", l)
-	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewTestIdentity(el, 50, "two", l)
-	log.ErrFatal(c2.AttachToIdentity(c1.ID))
+	c2 := NewTestIdentity(nil, 50, "two", l)
+	log.ErrFatal(c2.AttachToIdentity(fmt.Sprintf("%x", c1.ID())))
 	for _, s := range services {
 		is := s.(*Service)
 		is.identitiesMutex.Lock()
@@ -74,10 +82,9 @@ func TestIdentity_ConfigUpdate(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewTestIdentity(el, 50, "one", l)
-	log.ErrFatal(c1.CreateIdentity())
 
-	c2 := NewTestIdentity(el, 50, "two", l)
-	c2.ID = c1.ID
+	c2 := NewTestIdentity(nil, 50, "two", l)
+	c2.SkipBlock = c1.SkipBlock
 	log.ErrFatal(c2.ConfigUpdate())
 
 	assert.NotNil(t, c2.Config)
@@ -93,7 +100,6 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 	defer l.CloseAll()
 
 	c := NewTestIdentity(el, 50, "one", l)
-	log.ErrFatal(c.CreateIdentity())
 
 	// Check we're in the configuration
 	assert.NotNil(t, c.Config)
@@ -106,7 +112,6 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := NewTestIdentity(el, 50, "one", l)
-	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
@@ -115,7 +120,7 @@ func TestIdentity_ConfigNewPropose(t *testing.T) {
 
 	for _, s := range services {
 		is := s.(*Service)
-		id1 := is.getIdentityStorage(c1.ID)
+		id1 := is.getIdentityStorage(c1.ID())
 		id1.Lock()
 		if id1 == nil {
 			t.Fatal("Didn't find")
@@ -138,7 +143,6 @@ func TestIdentity_ProposeVote(t *testing.T) {
 	}
 
 	c1 := NewTestIdentity(el, 50, "one1", l)
-	log.ErrFatal(c1.CreateIdentity())
 
 	conf2 := c1.Config.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
@@ -157,7 +161,7 @@ func TestIdentity_SaveToStream(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
-	id := NewIdentity(el, 50, "one1")
+	id := NewTestIdentity(el, 50, "one1", l)
 	tmpfile, err := ioutil.TempFile("", "example")
 	log.ErrFatal(err)
 	defer os.Remove(tmpfile.Name())
@@ -191,16 +195,15 @@ func TestCrashAfterRevocation(t *testing.T) {
 		log.Lvl3(s.(*Service).Identities)
 	}
 
-	c1 := NewIdentity(el, 2, "one")
-	c2 := NewIdentity(el, 2, "two")
-	c3 := NewIdentity(el, 2, "three")
-	defer c1.Close()
-	defer c2.Close()
-	defer c3.Close()
-	log.ErrFatal(c1.CreateIdentity())
-	log.ErrFatal(c2.AttachToIdentity(c1.ID))
+	c1 := NewTestIdentity(el, 2, "one", l)
+	c2 := NewTestIdentity(nil, 2, "two", l)
+	c3 := NewTestIdentity(nil, 2, "three", l)
+	defer c1.client.Close()
+	defer c2.client.Close()
+	defer c3.client.Close()
+	log.ErrFatal(c2.AttachToIdentity(fmt.Sprintf("%x", c1.ID())))
 	proposeUpVote(c1)
-	log.ErrFatal(c3.AttachToIdentity(c1.ID))
+	log.ErrFatal(c3.AttachToIdentity(fmt.Sprintf("%x", c1.ID())))
 	proposeUpVote(c1)
 	proposeUpVote(c2)
 	log.ErrFatal(c1.ConfigUpdate())

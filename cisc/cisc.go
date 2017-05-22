@@ -19,7 +19,11 @@ import (
 
 	"bytes"
 
+	"fmt"
+
 	"github.com/dedis/cothority/identity"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/qantik/qrgo"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
@@ -81,9 +85,11 @@ func idCreate(c *cli.Context) error {
 	log.Info("Creating new blockchain-identity for", name)
 
 	thr := c.Int("threshold")
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
-	log.ErrFatal(cfg.CreateIdentity())
-	log.Infof("IC is %x", cfg.ID)
+	_, _, ident, err := identity.NewIdentityFromRoster(group.Roster,
+		nil, thr, name)
+	log.ErrFatal(err)
+	cfg := &ciscConfig{Identity: ident}
+	log.Infof("IC is %x", cfg.ID())
 	return cfg.saveConfig(c)
 }
 
@@ -92,19 +98,20 @@ func idConnect(c *cli.Context) error {
 	name, err := os.Hostname()
 	log.ErrFatal(err)
 	switch c.NArg() {
-	case 2:
+	case 1:
 		// We'll get all arguments after
-	case 3:
-		name = c.Args().Get(2)
+	case 2:
+		name = c.Args().Get(1)
 	default:
-		log.Fatal("Please give the following arguments: group.toml id [hostname]")
+		log.Fatal("Please give the following arguments: id [hostname]")
 	}
-	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
-	id := identity.ID(idBytes)
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
-	log.ErrFatal(cfg.AttachToIdentity(id))
+	id := skipchain.SkipBlockID(idBytes)
+	ident, err := identity.NewFollower(id, "")
+	log.ErrFatal(err)
+	cfg := &ciscConfig{Identity: ident}
+	log.ErrFatal(cfg.AttachToIdentity(name))
 	log.Infof("Public key: %s",
 		cfg.Proposed.Device[cfg.DeviceName].Point.String())
 	return cfg.saveConfig(c)
@@ -132,6 +139,17 @@ func idCheck(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
+func idQrcode(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	id := []byte(cfg.ID())
+	str := fmt.Sprintf("cisc://%s/%x", cfg.SkipBlock.Roster.RandomServerIdentity().Address.NetworkAddress(),
+		id)
+	log.Info("QrCode for", str)
+	qr, err := qrgo.NewQR(str)
+	log.ErrFatal(err)
+	qr.OutputTerminal()
+	return nil
+}
 
 /*
  * Commands related to the config in general
@@ -152,7 +170,7 @@ func configUpdate(c *cli.Context) error {
 func configList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	log.Info("Account name:", cfg.DeviceName)
-	log.Infof("Identity-ID: %x", cfg.ID)
+	log.Infof("Identity-ID: %x", cfg.ID())
 	if c.Bool("d") {
 		log.Info(cfg.Config.Data)
 	} else {
@@ -197,7 +215,7 @@ func configVote(c *cli.Context) error {
  */
 func kvList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.Infof("config for id %x", cfg.ID)
+	log.Infof("config for id %x", cfg.ID())
 	for k, v := range cfg.Config.Data {
 		log.Infof("%s: %s", k, v)
 	}
@@ -345,15 +363,14 @@ func sshSync(c *cli.Context) error {
 }
 
 func followAdd(c *cli.Context) error {
-	if c.NArg() < 2 {
-		log.Fatal("Please give a group-definition, an ID, and optionally a service-name of the skipchain to follow")
+	if c.NArg() < 1 {
+		log.Fatal("Please give the ID of the skipchain to follow, and optionally a service-name")
 	}
 	cfg, _ := loadConfig(c)
-	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
-	id := identity.ID(idBytes)
-	newID, err := identity.NewIdentityFromCothority(group.Roster, id)
+	id := skipchain.SkipBlockID(idBytes)
+	newID, err := identity.NewFollower(id, "")
 	log.ErrFatal(err)
 	if c.NArg() == 3 {
 		newID.DeviceName = c.Args().Get(2)
@@ -378,10 +395,10 @@ func followDel(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	idBytes, err := hex.DecodeString(c.Args().First())
 	log.ErrFatal(err)
-	idDel := identity.ID(idBytes)
+	idDel := skipchain.SkipBlockID(idBytes)
 	newSlice := cfg.Follow[:0]
 	for _, id := range cfg.Follow {
-		if !bytes.Equal(id.ID, idDel) {
+		if !bytes.Equal(id.ID(), idDel) {
 			newSlice = append(newSlice, id)
 		}
 	}

@@ -3,31 +3,30 @@ package identity
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/crypto.v0/config"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func TestService_CreateIdentity2(t *testing.T) {
+func TestService_CreateIdentity(t *testing.T) {
 	local := onet.NewTCPTest()
 	defer local.CloseAll()
-	_, el, s := local.MakeHELS(5, identityService)
-	service := s.(*Service)
+	nodes, r, _ := local.GenTree(2, true)
+	defer local.CloseAll()
+	service := local.GetServices(nodes, identityService)[0].(*Service)
 
-	keypair := config.NewKeyPair(network.Suite)
-	il := NewConfig(50, keypair.Public, "one")
-	msg, cerr := service.CreateIdentity(&CreateIdentity{il, el})
+	root, cerr := skipchain.NewClient().CreateGenesis(r, 1, 1, verificationIdentity, nil, nil)
 	log.ErrFatal(cerr)
-	air := msg.(*CreateIdentityReply)
 
-	data := air.Data
-	id, ok := service.Identities[string(data.Hash)]
-	assert.True(t, ok)
-	assert.NotNil(t, id)
+	cir, cerr := service.CreateIdentity(&CreateIdentity{&Config{}, root})
+	log.ErrFatal(cerr)
+	require.NotNil(t, cir.Data)
+	require.Equal(t, 1, len(service.StorageMap.Identities))
+	stor := service.StorageMap.Identities[string(cir.Data.Hash)]
+	require.Equal(t, &Config{}, stor.Latest)
 }

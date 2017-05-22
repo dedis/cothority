@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 
 	"github.com/dedis/cothority/identity"
-	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -44,19 +43,18 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return
+			return nil, false
 		}
 		log.ErrFatal(err)
 	}
 	_, msg, err := network.Unmarshal(buf)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
-	cfg.Identity.Client = onet.NewClient(identity.ServiceName)
-	for _, f := range cfg.Follow {
-		f.Client = onet.NewClient(identity.ServiceName)
-	}
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
+	}
+	if cfg.SkipBlock == nil {
+		log.Fatal("Identity doesn't hold skipblock")
 	}
 	return
 }
@@ -69,6 +67,7 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
 	}
+	log.Printf("Loading block %x", cfg.SkipBlock.Hash)
 	log.ErrFatal(cfg.ConfigUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
 	return cfg
