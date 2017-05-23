@@ -45,10 +45,12 @@ type SignatureResponse struct {
 
 // SignatureRequest treats external request to this service.
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
-	if req.Roster.ID == onet.RosterID(uuid.Nil) {
+	if req.Roster.ID.IsNil() {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
-	tree := req.Roster.GenerateBinaryTree()
+
+	_, root := req.Roster.Search(cs.ServerIdentity().ID)
+	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {

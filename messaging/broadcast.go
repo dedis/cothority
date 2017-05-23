@@ -31,7 +31,7 @@ func NewBroadcastProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 		tnIndex:          -1,
 	}
 	for i, tn := range n.Tree().List() {
-		if tn.ID == n.TreeNode().ID {
+		if tn.ID.Equal(n.TreeNode().ID) {
 			b.tnIndex = i
 		}
 	}
@@ -65,7 +65,7 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	ContactNodes
 }) error {
 	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
-	if msg.TreeNode.ID == b.Root().ID {
+	if msg.TreeNode.ID.Equal(b.Root().ID) {
 		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
 		if b.repliesLeft == 0 {
 			log.Lvl3("Won't contact anybody - finishing")
