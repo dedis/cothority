@@ -91,7 +91,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
 		}
-		changed = append(changed, prop)
+		changed = append(changed, prop.Copy())
 	} else {
 		// We're appending a block to an existing chain
 		prev = s.Sbm.GetByID(psbd.LatestID)
@@ -136,7 +136,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
 		}
-		changed = append(changed, prev, prop)
+		changed = append(changed, prev.Copy(), prop.Copy())
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := s.Sbm.GetByID(bl)
 			if back == nil {
@@ -150,7 +150,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 				// one forward-link
 				log.Error("Couldn't get old block to sign")
 			} else {
-				changed = append(changed, back)
+				changed = append(changed, back.Copy())
 			}
 		}
 	}
@@ -283,8 +283,10 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		if err != nil {
 			return errors.New("Couldn't get signature")
 		}
+		s.Sbm.Lock()
 		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
-		s.startPropagation([]*SkipBlock{target})
+		s.Sbm.Unlock()
+		s.startPropagation([]*SkipBlock{target.Copy()})
 		return nil
 	}()
 	if err != nil {

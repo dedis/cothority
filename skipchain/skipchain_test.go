@@ -247,13 +247,10 @@ func checkBacklinks(services []*Service, sb *SkipBlock) {
 				log.Lvl3("Checking backlink", n, ns)
 				bl, err := s.GetSingleBlock(&GetSingleBlock{i})
 				log.ErrFatal(err)
-				bl.fwMutex.Lock()
 				if len(bl.ForwardLink) == n+1 &&
 					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
-					bl.fwMutex.Unlock()
 					break
 				}
-				bl.fwMutex.Unlock()
 				time.Sleep(10 * time.Millisecond)
 			}
 		}
