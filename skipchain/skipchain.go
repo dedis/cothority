@@ -1,19 +1,19 @@
 package skipchain
 
 import (
-	"crypto/rand"
 	"errors"
-
-	"bytes"
-
-	"sync"
 
 	"strconv"
 
 	"time"
 
+	"fmt"
+
 	"gopkg.in/dedis/cothority.v1/bftcosi"
 	"gopkg.in/dedis/cothority.v1/messaging"
+
+	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -21,7 +21,8 @@ import (
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "Skipchain"
-const skipchainBFT = "SkipchainBFT"
+const bftNewBlock = "SkipchainBFTNew"
+const bftFollowBlock = "SkipchainBFTFollow"
 
 func init() {
 	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
@@ -37,44 +38,78 @@ const skipblocksID = "skipblocks"
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	// SkipBlocks points from SkipBlockID to SkipBlock but SkipBlockID is not a valid
-	// key-type for maps, so we need to cast it to string
-	*SkipBlockMap
-	Propagate messaging.PropagationFunc
-	gMutex    sync.Mutex
-	verifiers map[VerifierID]SkipBlockVerifier
-
-	// testVerify is set to true if a verification happened - only for testing
-	testVerify bool
+	// Sbm is the skipblock-map that holds all known skipblocks to this service.
+	Sbm           *SkipBlockMap
+	propagate     messaging.PropagationFunc
+	verifiers     map[VerifierID]SkipBlockVerifier
+	blockRequests map[string]chan *SkipBlock
+	lastSave      time.Time
 }
 
-// SkipBlockMap holds the map to the skipblocks so it can be marshaled.
-type SkipBlockMap struct {
-	SkipBlocks map[string]*SkipBlock
-}
-
-// ProposeSkipBlock takes a hash for the latest valid SkipBlock and a SkipBlock
+// StoreSkipBlock stores a new skipblock in the system. This can be either a
+// genesis-skipblock, that will create a new skipchain, or a new skipblock,
+// that will be added to an existing chain.
+//
+// The conode servicing the request needs to be part of the actual valid latest
+// skipblock, else it will fail.
+//
+// It takes a hash for the latest valid SkipBlock and a SkipBlock
 // that will be verified. If the verification returns true, the new SkipBlock
-// will be signed and added to the chain and returned.
-// If the the latest block given is nil it verify if we are actually creating
-// the first (genesis) block and creates it. If it is called with nil although
-// there already exist previous blocks, it will return an error.
-func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Message, onet.ClientError) {
-	prop := psbd.Proposed
+// will be stored, else it will be discarded and an error will be returned.
+//
+// If the latest block given is nil it will create a new skipchain and store
+// the given block as genesis-block.
+//
+// If the latest block is non-nil and exists, the skipblock will be added to the
+// skipchain after verification that it fits and no other block already has been
+// added.
+func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, onet.ClientError) {
+	prop := psbd.NewBlock
 	var prev *SkipBlock
+	var changed []*SkipBlock
 
-	if !psbd.LatestID.IsNull() {
+	if psbd.LatestID.IsNull() {
+		// A new chain is created
+		prop.Index = 0
+		prop.Height = prop.MaximumHeight
+		prop.ForwardLink = make([]*BlockLink, 0)
+		// genesis block has a random back-link:
+		bl := random.Bytes(32, random.Stream)
+		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl)}
+		prop.GenesisID = nil
+		prop.updateHash()
+		err := s.verifyBlock(prop)
+		if err != nil {
+			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+				err.Error())
+		}
+		if !prop.ParentBlockID.IsNull() {
+			parent := s.Sbm.GetByID(prop.ParentBlockID)
+			if parent == nil {
+				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+					"Didn't find parent")
+			}
+			parent.ChildSL = append(parent.ChildSL, prop.Hash)
+			changed = append(changed, parent)
+		}
+		changed = append(changed, prop)
+	} else {
 		// We're appending a block to an existing chain
-		var ok bool
-		prev, ok = s.getSkipBlockByID(psbd.LatestID)
-		if !ok {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Didn't find latest block")
+		prev = s.Sbm.GetByID(psbd.LatestID)
+		if prev == nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				"Didn't find latest block")
+		}
+		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
+			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				"We're not responsible for latest block")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
-		prop.ParentBlockID = prev.ParentBlockID
-		prop.VerifierID = prev.VerifierID
+		prop.ParentBlockID = nil
+		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
+		prop.GenesisID = prev.SkipChainID()
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
@@ -84,55 +119,49 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Message, one
 		}
 		log.Lvl4("Found height", prop.Height, "for index", prop.Index,
 			"and maxHeight", prop.MaximumHeight, "and base", prop.BaseHeight)
-		prop.BackLinkIds = make([]SkipBlockID, prop.Height)
+		prop.BackLinkIDs = make([]SkipBlockID, prop.Height)
 		pointer := prev
-		for h := range prop.BackLinkIds {
+		for h := range prop.BackLinkIDs {
 			for pointer.Height < h+1 {
-				var ok bool
-				pointer, ok = s.getSkipBlockByID(pointer.BackLinkIds[0])
-				if !ok {
-					return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Didn't find convenient SkipBlock for height "+
-						strconv.Itoa(h))
+				pointer = s.Sbm.GetByID(pointer.BackLinkIDs[0])
+				if pointer == nil {
+					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+						"Didn't find convenient SkipBlock for height "+
+							strconv.Itoa(h))
 				}
 			}
-			prop.BackLinkIds[h] = pointer.Hash
+			prop.BackLinkIDs[h] = pointer.Hash
 		}
-	} else {
-		// A new chain is created, suppose all arguments in SkipBlock
-		// are correctly set up
-		prop.Index = 0
-		if prop.MaximumHeight == 0 {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong, "Set a maximumHeight > 0")
+		prop.updateHash()
+		if err := s.addForwardLink(prev, prop, 1); err != nil {
+			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				"Couldn't get forward signature on block: "+err.Error())
 		}
-		if prop.BaseHeight == 0 {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong, "Set a baseHeight > 0")
+		changed = append(changed, prev, prop)
+		for i, bl := range prop.BackLinkIDs[1:] {
+			back := s.Sbm.GetByID(bl)
+			if back == nil {
+				return nil, onet.NewClientErrorCode(ErrorBlockContent,
+					"Didn't get skipblock in back-link")
+			}
+			if err := s.SendRaw(back.Roster.RandomServerIdentity(),
+				&ForwardSignature{i + 1, prev.Hash, prop,
+					prev.GetForward(0)}); err != nil {
+				// This is not a critical failure - we have at least
+				// one forward-link
+				log.Error("Couldn't get old block to sign")
+			} else {
+				changed = append(changed, back)
+			}
 		}
-		prop.Height = prop.MaximumHeight
-		prop.ForwardLink = make([]*BlockLink, 0)
-		// genesis block has a random back-link:
-		bl := make([]byte, 32)
-		rand.Read(bl)
-		prop.BackLinkIds = []SkipBlockID{SkipBlockID(bl)}
 	}
-	if prop.Roster != nil {
-		prop.Aggregate = prop.Roster.Aggregate
-	}
-	el, cerr := prop.GetResponsible(s)
-	if cerr != nil {
-		return nil, cerr
-	}
-	prop.AggregateResp = el.Aggregate
-
-	prop.updateHash()
-
-	var err error
-	prev, prop, err = s.signNewSkipBlock(prev, prop)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorVerification, "Verification error: "+err.Error())
+	if err := s.startPropagation(changed); err != nil {
+		return nil, onet.NewClientErrorCode(ErrorVerification,
+			"Couldn't propagate new blocks: "+err.Error())
 	}
 	s.save()
 
-	reply := &ProposedSkipBlockReply{
+	reply := &StoreSkipBlockReply{
 		Previous: prev,
 		Latest:   prop,
 	}
@@ -144,20 +173,37 @@ func (s *Service) ProposeSkipBlock(psbd *ProposeSkipBlock) (network.Message, one
 // SkipBlock.
 // Somehow comparable to search in SkipLists.
 func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
-	block, ok := s.getSkipBlockByID(latestKnown.LatestID)
-	if !ok {
+	block := s.Sbm.GetByID(latestKnown.LatestID)
+	if block == nil {
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block}
-	log.Lvl3("Starting to search chain")
-	for len(block.ForwardLink) > 0 {
-		link := block.ForwardLink[len(block.ForwardLink)-1]
-		block, ok = s.getSkipBlockByID(link.Hash)
-		if !ok {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Missing block in forward-chain")
+	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
+	for block.GetForwardLen() > 0 {
+		link := block.ForwardLink[block.GetForwardLen()-1]
+		next := s.Sbm.GetByID(link.Hash)
+		if next == nil {
+			log.Lvl3("Didn't find next block, updating block")
+			var err error
+			next, err = s.getUpdateBlock(block, link.Hash)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					err.Error())
+			}
+		} else {
+			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
+				log.Lvl3("We're not responsible for", next, "- asking for update")
+				var err error
+				next, err = s.getUpdateBlock(next, link.Hash)
+				if err != nil {
+					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+						err.Error())
+				}
+			}
 		}
-		blocks = append(blocks, block)
+		block = next
+		blocks = append(blocks, next)
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
 	reply := &GetUpdateChainReply{blocks}
@@ -165,310 +211,391 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	return reply, nil
 }
 
-// SetChildrenSkipBlock creates a new SkipChain if that 'service' doesn't exist
-// yet.
-func (s *Service) SetChildrenSkipBlock(scsb *SetChildrenSkipBlock) (network.Message, onet.ClientError) {
-	parentID := scsb.ParentID
-	childID := scsb.ChildID
-	parent, ok := s.getSkipBlockByID(parentID)
-	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
+// GetSingleBlock searches for the given block and returns it. If no such block is
+// found, a nil is returned.
+func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientError) {
+	sb := s.Sbm.GetByID(id.ID)
+	if sb == nil {
+		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			"No such block")
 	}
-	child, ok := s.getSkipBlockByID(childID)
-	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "couldn't find skipblock")
-	}
-	child.ParentBlockID = parentID
-	parent.ChildSL = NewBlockLink()
-	parent.ChildSL.Hash = childID
+	return sb, nil
+}
 
-	cerr := s.startPropagation([]*SkipBlock{child, parent})
-	if cerr != nil {
-		return nil, cerr
+// GetAllSkipchains returns a list of all known skipchains
+func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
+	// Write all known skipblocks to a map, thus removing double blocks.
+	chains := map[string]*SkipBlock{}
+	s.Sbm.Lock()
+	for _, sb := range s.Sbm.SkipBlocks {
+		chains[string(sb.SkipChainID())] = sb
 	}
-	// Parent-block is always of type roster, but child-block can be
-	// data or roster.
-	reply := &SetChildrenSkipBlockReply{parent, child}
-	s.save()
+	s.Sbm.Unlock()
 
+	reply := &GetAllSkipchainsReply{
+		SkipChains: make([]*SkipBlock, 0, len(chains)),
+	}
+	for _, sb := range chains {
+		reply.SkipChains = append(reply.SkipChains, sb)
+	}
 	return reply, nil
 }
 
-// PropagateSkipBlock will save a new SkipBlock
-func (s *Service) PropagateSkipBlock(msg network.Message) {
-	sb, ok := msg.(*SkipBlock)
-	if !ok {
-		log.Error("Couldn't convert to SkipBlock")
-		return
+func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
+	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
+	node := known.Roster.RandomServerIdentity()
+	if err := s.SendRaw(node,
+		&GetBlock{unknown}); err != nil {
+		return nil, errors.New("Couldn't get updated block: " + known.Short())
 	}
-	if err := sb.VerifySignatures(); err != nil {
-		log.Error(err)
-		return
+	var block *SkipBlock
+	select {
+	case block = <-s.blockRequests[string(unknown)]:
+		log.Lvl3("Got block", block)
+		delete(s.blockRequests, string(unknown))
+	case <-time.After(time.Millisecond * time.Duration(propagateTimeout)):
+		delete(s.blockRequests, string(unknown))
+		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
 	}
-	s.storeSkipBlock(sb)
-	log.Lvlf3("Stored skip block %+v in %x", *sb, s.Context.ServerIdentity().ID[0:8])
+	return block, nil
 }
 
-// VerifyShardFunc makes sure that the cothority of the child-skipchain is
-// part of the root-cothority.
-func (s *Service) VerifyShardFunc(msg []byte, sb *SkipBlock) bool {
-	if sb.ParentBlockID.IsNull() {
-		log.Lvl3("No parent skipblock to verify against")
+// forwardSignature receives a signature request of a newly accepted block.
+// It only needs the 2nd-newest block and the forward-link.
+func (s *Service) forwardSignature(env *network.Envelope) {
+	err := func() error {
+		fs, ok := env.Msg.(*ForwardSignature)
+		if !ok {
+			return errors.New("Didn't receive a ForwardSignature")
+		}
+		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
+			return errors.New("This backlink-height doesn't exist")
+		}
+		target := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
+		if target == nil {
+			return errors.New("Didn't find target-block")
+		}
+		data, err := network.Marshal(fs)
+		if err != nil {
+			return err
+		}
+		// TODO: is this really signed by target.roster?
+		sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
+		if err != nil {
+			return errors.New("Couldn't get signature")
+		}
+		s.Sbm.Lock()
+		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
+		s.Sbm.Unlock()
+		s.startPropagation([]*SkipBlock{target})
+		return nil
+	}()
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func (s *Service) getBlock(env *network.Envelope) {
+	gb, ok := env.Msg.(*GetBlock)
+	if !ok {
+		log.Error("Didn't receive GetBlock")
+		return
+	}
+	sb := s.Sbm.GetByID(gb.ID)
+	if sb == nil {
+		log.Error("Did not find block")
+		return
+	}
+	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i < 0 {
+		log.Lvl3("Not responsible for that block, recursing")
+		var err error
+		sb, err = s.getUpdateBlock(sb, sb.Hash)
+		if err != nil {
+			log.Error(err)
+			sb = nil
+		}
+	}
+	if err := s.SendRaw(env.ServerIdentity, &GetBlockReply{sb}); err != nil {
+		log.Error(err)
+	}
+}
+
+func (s *Service) getBlockReply(env *network.Envelope) {
+	gbr, ok := env.Msg.(*GetBlockReply)
+	if !ok {
+		log.Error("Didn't receive GetBlock")
+		return
+	}
+	if err := s.Sbm.VerifyLinks(gbr.SkipBlock); err != nil {
+		log.Error("Received invalid skipblock: " + err.Error())
+	}
+	id := s.Sbm.Store(gbr.SkipBlock)
+	s.save()
+	log.Lvl3("Sending block to channel")
+	s.blockRequests[string(id)] <- gbr.SkipBlock
+}
+
+// verifyFollowBlock makes sure that a signature-request for a forward-link
+// is valid.
+func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
+	err := func() error {
+		_, fsInt, err := network.Unmarshal(data)
+		if err != nil {
+			return err
+		}
+		fs, ok := fsInt.(*ForwardSignature)
+		if !ok {
+			return errors.New("Didn't receive a ForwardSignature")
+		}
+		previous := s.Sbm.GetByID(fs.Previous)
+		if previous == nil {
+			return errors.New("Didn't find newest block")
+		}
+		newest := fs.Newest
+		if len(newest.BackLinkIDs) <= fs.TargetHeight {
+			return errors.New("Asked for signing too high a backlink")
+		}
+		if err := fs.ForwardLink.VerifySignature(previous.Roster.Publics()); err != nil {
+			return errors.New("Wrong forward-link signature: " + err.Error())
+		}
+		if !fs.ForwardLink.Hash.Equal(newest.Hash) {
+			return errors.New("No forward-link from previous to newest")
+		}
+		target := s.Sbm.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+		s.Sbm.Lock()
+		defer s.Sbm.Unlock()
+		if target == nil {
+			return errors.New("Don't have target-block")
+		}
+		if target.GetForwardLen() >= fs.TargetHeight+1 {
+			return errors.New("Already have forward-link at height " +
+				strconv.Itoa(fs.TargetHeight+1))
+		}
+		if !target.SkipChainID().Equal(newest.SkipChainID()) {
+			return errors.New("Target and newest not from same skipchain")
+		}
+		return nil
+	}()
+	if err != nil {
+		log.Error(err)
 		return false
 	}
-	sbParent, exists := s.getSkipBlockByID(sb.ParentBlockID)
-	if !exists {
-		log.Lvl3("Parent skipblock doesn't exist")
+	return true
+}
+
+// verifyNewBlock makes sure that a signature-request for a forward-link
+// is valid.
+func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
+	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
+	src := data[0:32]
+	srcSB := s.Sbm.GetByID(src)
+	if srcSB == nil {
+		log.Error("Didn't find src-skipblock")
 		return false
 	}
-	for _, e := range sb.Roster.List {
-		if i, _ := sbParent.Roster.Search(e.ID); i < 0 {
-			log.Lvl3("ServerIdentity in child doesn't exist in parent")
+	_, dstN, err := network.Unmarshal(data[32:])
+	if err != nil {
+		log.Error("Couldn't unmarshal SkipBlock", data)
+		return false
+	}
+	dst := dstN.(*SkipBlock)
+	if !dst.Hash.Equal(SkipBlockID(msg)) {
+		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(dst.Hash))
+		return false
+	}
+
+	isFree := func() bool {
+		for i, b := range dst.BackLinkIDs {
+			if b.Equal(src) {
+				return srcSB.GetForwardLen() == i
+			}
+		}
+		return false
+	}()
+	if !isFree {
+		log.Lvl2("Didn't find a free corresponding forward-link")
+		return false
+	}
+
+	for _, ver := range dst.VerifierIDs {
+		f, ok := s.verifiers[ver]
+		if !ok {
+			log.Lvlf2("Found no user verification for %x", ver)
+			return false
+		}
+		if !f(msg, dst) {
 			return false
 		}
 	}
 	return true
 }
 
-// VerifyNoneFunc returns always true.
-func (s *Service) VerifyNoneFunc(msg []byte, sb *SkipBlock) bool {
-	log.Lvl4("No verification - accepted")
-	return true
+// PropagateSkipBlock will save a new SkipBlock
+func (s *Service) propagateSkipBlock(msg network.Message) {
+	sbs, ok := msg.(*PropagateSkipBlocks)
+	if !ok {
+		log.Error("Couldn't convert to slice of SkipBlocks")
+		return
+	}
+	for _, sb := range sbs.SkipBlocks {
+		if err := sb.VerifyForwardSignatures(); err != nil {
+			log.Error(err)
+			return
+		}
+		s.Sbm.Store(sb)
+		s.save()
+	}
 }
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func (s *Service) RegisterVerification(v VerifierID, f SkipBlockVerifier) error {
+func (s *Service) registerVerification(v VerifierID, f SkipBlockVerifier) error {
 	s.verifiers[v] = f
 	return nil
 }
 
-// signNewSkipBlock should start a BFT-signature on the newest block
-// which will propagate and update all forward-links of all blocks.
-// As a simple solution it verifies the validity of the block,
-// simulates a signature and propagates the latest and newest block.
-func (s *Service) signNewSkipBlock(latest, newest *SkipBlock) (*SkipBlock, *SkipBlock, error) {
-	log.Lvl4("Signing new block", newest, "on block", latest)
-	if newest != nil && newest.Roster == nil {
-		log.Lvl3("Got a data-block")
-		if newest.ParentBlockID.IsNull() {
-			return nil, nil, onet.NewClientErrorCode(ErrorBlockNoParent, "Data skipblock without parent")
-		}
-		parent, ok := s.getSkipBlockByID(newest.ParentBlockID)
-		if !ok {
-			return nil, nil, onet.NewClientErrorCode(ErrorBlockNoParent, "Didn't find parent block")
-		}
-		newest.Roster = parent.Roster
+// checkBlock makes sure the basic parameters of a block are correct and returns
+// an error if something fails.
+func (s *Service) verifyBlock(sb *SkipBlock) error {
+	if sb.MaximumHeight <= 0 {
+		return errors.New("Set a maximumHeight > 0")
 	}
-	// Now verify if it's a valid block
-	if err := s.verifyNewSkipBlock(latest, newest); err != nil {
-		return nil, nil, onet.NewClientErrorCode(ErrorVerification, "Verification of newest SkipBlock failed: "+err.Error())
+	if sb.BaseHeight <= 0 {
+		return errors.New("Set a baseHeight > 0")
 	}
-
-	// Sign it
-	err := s.startBFTSignature(newest)
-	if err != nil {
-		return nil, nil, err
+	if sb.MaximumHeight > sb.BaseHeight {
+		return errors.New("maximumHeight must be smaller or equal baseHeight")
 	}
-	if err := newest.VerifySignatures(); err != nil {
-		log.Error("Couldn't verify signature: " + err.Error())
-		return nil, nil, err
+	if sb.Index < 0 {
+		return errors.New("Can't have an index < 0")
 	}
-
-	newblocks := make([]*SkipBlock, 1)
-	if latest == nil {
-		// Genesis-block only
-		newblocks[0] = newest
-	} else {
-		// Adjust forward-links if it's an additional block
-		var err error
-		newblocks, err = s.addForwardLinks(newest)
-		if err != nil {
-			return nil, nil, err
-		}
-		latest = newblocks[1]
+	if len(sb.BackLinkIDs) <= 0 {
+		return errors.New("Need at least one backlinkID")
 	}
-
-	// Store and propagate the new SkipBlocks
-	log.Lvl4("Finished signing new block", newest)
-	if err = s.startPropagation(newblocks); err != nil {
-		return nil, nil, err
+	if sb.Height < 1 {
+		return errors.New("Minimum height is 1")
 	}
-	return latest, newblocks[0], nil
+	if sb.Height > sb.MaximumHeight {
+		return errors.New("Height must be <= maximumHeight")
+	}
+	if sb.Roster == nil {
+		return errors.New("Need a roster")
+	}
+	return nil
 }
 
-func (s *Service) startBFTSignature(block *SkipBlock) error {
-	done := make(chan bool)
-	// create the message we want to sign for this round
-	msg := []byte(block.Hash)
-	el, cerr := block.GetResponsible(s)
-	if cerr != nil {
-		return cerr
+// addForwardLink verifies if the new block is valid. If it is not valid, it
+// returns with an error.
+// If it finds a valid block, a forward-link will be added and a BFT-signature
+// requested.
+func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
+	if height <= src.GetForwardLen() {
+		return errors.New("already have forward-link at this height")
 	}
-	switch len(el.List) {
+	// create the message we want to sign for this round
+	roster := src.Roster
+	log.Lvlf3("%s is adding forward-link to %s", s.ServerIdentity(), roster.List)
+	data, err := network.Marshal(dst)
+	if err != nil {
+		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
+	}
+	msg := []byte(dst.Hash)
+	sig, err := s.startBFT(bftNewBlock, roster, msg, append(src.Hash, data...))
+	if err != nil {
+		return err
+	}
+
+	fwd := &BlockLink{
+		Hash:      dst.Hash,
+		Signature: sig.Sig,
+	}
+	src.AddForward(fwd)
+	if err = src.VerifyForwardSignatures(); err != nil {
+		return errors.New("Wrong BFT-signature: " + err.Error())
+	}
+	return nil
+}
+
+// startBFT starts a BFT-protocol with the given parameters.
+func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.BFTSignature, error) {
+	switch len(roster.List) {
 	case 0:
-		return errors.New("Found empty Roster")
+		return nil, errors.New("Found empty Roster")
 	case 1:
-		return errors.New("Need more than 1 entry for Roster")
+		return nil, errors.New("Need more than 1 entry for Roster")
 	}
 
 	// Start the protocol
-	tree := el.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
-
-	node, e := s.CreateProtocol(skipchainBFT, tree)
-	if e != nil {
-		return onet.NewClientErrorCode(ErrorOnet, "Couldn't create new node: "+e.Error())
+	tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	//tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	node, err := s.CreateProtocol(proto, tree)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't create new node: %s", err.Error())
 	}
 
 	// Register the function generating the protocol instance
 	root := node.(*bftcosi.ProtocolBFTCoSi)
 	root.Msg = msg
-	data, e := network.Marshal(block)
-	if e != nil {
-		return errors.New("Couldn't marshal block: " + cerr.Error())
-	}
 	root.Data = data
 
 	// in testing-mode with more than one host and service per cothority-instance
 	// we might have the wrong verification-function, so set it again here.
-	root.VerificationFunction = s.bftVerify
+	//root.VerificationFunction = s.bftVerifyNewBlock
 	// function that will be called when protocol is finished by the root
+	done := make(chan bool)
 	root.RegisterOnDone(func() {
 		done <- true
 	})
 	go node.Start()
+	var sig *bftcosi.BFTSignature
 	select {
 	case <-done:
-		block.BlockSig = root.Signature()
-		if len(block.BlockSig.Exceptions) != 0 {
-			return errors.New("Not everybody signed off the new block")
+		sig = root.Signature()
+		if sig.Sig == nil {
+			return nil, errors.New("Couldn't sign forward-link")
 		}
-		if e := block.BlockSig.Verify(network.Suite, el.Publics()); e != nil {
-			return errors.New("Couldn't verify signature")
-		}
+		return sig, nil
 	case <-time.After(time.Second * 60):
-		return errors.New("Timed out while waiting for signature")
+		return nil, errors.New("Timed out while waiting for signature")
 	}
-	return nil
-}
-
-func (s *Service) verifyNewSkipBlock(latest, newest *SkipBlock) error {
-	// Do some sanity-checks on the latest and newest skipblock
-	if latest != nil {
-		if len(latest.ForwardLink) != 0 {
-			return errors.New("Latest already has forward link")
-		}
-		if !bytes.Equal(newest.BackLinkIds[0], latest.Hash) {
-			return errors.New("Newest doesn't point to latest")
-		}
-	}
-
-	// TODO: add a registration service for verifiers
-	return nil
-}
-
-// addForwardLinks checks if we have a valid link connecting the two
-// SkipBlocks with each other.
-func (s *Service) addForwardLinks(newest *SkipBlock) ([]*SkipBlock, error) {
-	height := len(newest.BackLinkIds)
-	blocks := make([]*SkipBlock, height+1)
-	blocks[0] = newest
-	for h := range newest.BackLinkIds {
-		log.Lvl4("Searching forward-link for", h)
-		b, ok := s.getSkipBlockByID(newest.BackLinkIds[h])
-		if !ok {
-			return nil, errors.New("Found unknwon backlink in block")
-		}
-		bc := b.Copy()
-		log.Lvl4("Checking", b.Index, b, len(bc.ForwardLink))
-		if len(bc.ForwardLink) >= h+1 {
-			return nil, errors.New("Backlinking to a block which has a forwardlink")
-		}
-		for len(bc.ForwardLink) < h+1 {
-			fl := NewBlockLink()
-			fl.Hash = newest.Hash
-			bc.ForwardLink = append(bc.ForwardLink, fl)
-		}
-		log.Lvl4("Block has now height of", len(bc.ForwardLink))
-		blocks[h+1] = bc
-	}
-	return blocks, nil
 }
 
 // notify other services about new/updated skipblock
-func (s *Service) startPropagation(blocks []*SkipBlock) onet.ClientError {
-	log.Lvlf3("Starting to propagate for service %x", s.Context.ServerIdentity().ID[0:8])
+func (s *Service) startPropagation(blocks []*SkipBlock) error {
+	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
+	siMap := map[string]*network.ServerIdentity{}
+	// Add all rosters of all blocks - everybody needs to be contacted
 	for _, block := range blocks {
-		roster := block.Roster
-		if roster == nil {
-			// Suppose it's a dataSkipBlock
-			sb, ok := s.getSkipBlockByID(block.ParentBlockID)
-			if !ok {
-				return onet.NewClientErrorCode(ErrorBlockNoParent, "Didn't find Roster nor parent")
-			}
-			roster = sb.Roster
+		for _, si := range block.Roster.List {
+			siMap[uuid.UUID(si.ID).String()] = si
 		}
-		replies, e := s.Propagate(roster, block, propagateTimeout)
-		if e != nil {
-			return onet.NewClientErrorCode(ErrorOnet, e.Error())
-		}
-		if replies != len(roster.List) {
-			log.Warn("Did only get", replies, "out of", len(roster.List))
-		}
+	}
+	siList := make([]*network.ServerIdentity, 0, len(siMap))
+	for _, si := range siMap {
+		siList = append(siList, si)
+	}
+	roster := onet.NewRoster(siList)
+
+	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
+	if err != nil {
+		return err
+	}
+	if replies != len(roster.List) {
+		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil
 }
 
-// bftVerify takes a message and verifies it's valid
-func (s *Service) bftVerify(msg []byte, data []byte) bool {
-	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	s.testVerify = true
-	_, sbN, err := network.Unmarshal(data)
-	if err != nil {
-		log.Error("Couldn't unmarshal SkipBlock", data)
-		return false
-	}
-	sb := sbN.(*SkipBlock)
-	if !sb.Hash.Equal(SkipBlockID(msg)) {
-		log.Lvlf2("Data skipBlock different from msg %x %x", msg, sb.Hash)
-		return false
-	}
-
-	f, ok := s.verifiers[sb.VerifierID]
-	if !ok {
-		log.Lvlf2("Found no user verification for %x", sb.VerifierID)
-		return false
-	}
-	return f(msg, sb)
-}
-
-// getSkipBlockByID returns the skip-block or false if it doesn't exist
-func (s *Service) getSkipBlockByID(sbID SkipBlockID) (*SkipBlock, bool) {
-	s.gMutex.Lock()
-	b, ok := s.SkipBlocks[string(sbID)]
-	s.gMutex.Unlock()
-	return b, ok
-}
-
-// storeSkipBlock stores the given SkipBlock in the service-list
-func (s *Service) storeSkipBlock(sb *SkipBlock) SkipBlockID {
-	s.gMutex.Lock()
-	s.SkipBlocks[string(sb.Hash)] = sb
-	s.gMutex.Unlock()
-	return sb.Hash
-}
-
-// lenSkipBlock returns the actual length using mutexes
-func (s *Service) lenSkipBlocks() int {
-	s.gMutex.Lock()
-	defer s.gMutex.Unlock()
-	return len(s.SkipBlocks)
-}
-
-// saves the actual identity
+// saves all skipblocks.
 func (s *Service) save() {
+	s.Sbm.Lock()
+	defer s.Sbm.Unlock()
+	if time.Now().Sub(s.lastSave) < time.Second*timeBetweenSave {
+		return
+	}
+	s.lastSave = time.Now()
 	log.Lvl3("Saving service")
-	err := s.Save(skipblocksID, s.SkipBlockMap)
+	err := s.Save(skipblocksID, s.Sbm)
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -485,7 +612,7 @@ func (s *Service) tryLoad() error {
 		return err
 	}
 	var ok bool
-	s.SkipBlockMap, ok = msg.(*SkipBlockMap)
+	s.Sbm, ok = msg.(*SkipBlockMap)
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
@@ -495,25 +622,36 @@ func (s *Service) tryLoad() error {
 func newSkipchainService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		SkipBlockMap:     &SkipBlockMap{make(map[string]*SkipBlock)},
+		Sbm:              NewSkipBlockMap(),
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
+		blockRequests:    make(map[string]chan *SkipBlock),
 	}
-	var err error
-	s.Propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.PropagateSkipBlock)
-	log.ErrFatal(err)
-	c.ProtocolRegister(skipchainBFT, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerify)
-	})
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
-	log.ErrFatal(s.RegisterHandlers(s.ProposeSkipBlock, s.SetChildrenSkipBlock,
-		s.GetUpdateChain))
-	if err := s.RegisterVerification(VerifyShard, s.VerifyShardFunc); err != nil {
-		log.Panic(err)
-	}
-	if err := s.RegisterVerification(VerifyNone, s.VerifyNoneFunc); err != nil {
-		log.Panic(err)
-	}
+	s.lastSave = time.Now()
+	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
+		s.GetSingleBlock, s.GetAllSkipchains))
+	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
+		s.forwardSignature)
+	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),
+		s.getBlock)
+	s.RegisterProcessorFunc(network.MessageType(GetBlockReply{}),
+		s.getBlockReply)
+
+	log.ErrFatal(s.registerVerification(VerifyBase, s.verifyFuncBase))
+	log.ErrFatal(s.registerVerification(VerifyRoot, s.verifyFuncRoot))
+	log.ErrFatal(s.registerVerification(VerifyControl, s.verifyFuncControl))
+	log.ErrFatal(s.registerVerification(VerifyData, s.verifyFuncData))
+
+	var err error
+	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)
+	log.ErrFatal(err)
+	s.ProtocolRegister(bftNewBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyNewBlock)
+	})
+	s.ProtocolRegister(bftFollowBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFollowBlock)
+	})
 	return s
 }
