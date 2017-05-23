@@ -19,6 +19,7 @@ VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
 ALL_ARGS="$*"
 LOG=/tmp/conode-$$.log
+MEMLIMIT=""
 
 main(){
 	if [ ! "$1" ]; then
@@ -70,6 +71,7 @@ public			  	# runs a public conode - supposes it's already configured
 	-mail			# every time the cothority restarts, the last 200 lines get sent
 					# to $MAILADDR
 	-debug 3 		# Set the debug-level for the conode-run
+	-memory 500		# Restarts the process if it exceeds 500MBytes
 
 local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
 			      	# argument: 1-sparse..5-flood.
@@ -140,6 +142,14 @@ runPublic(){
 				echo "sudo apt-get install bsd-mailx"
 			fi
 			;;
+		-memory)
+			MEMORY=$2
+			shift
+			if [ "$MEMORY" -lt 500 ]; then
+				echo "It will not run with less than 500 MBytes of RAM."
+				exit 1
+			fi
+			;;
 		*)
 			ARGS="$ARGS $1"
 			;;
@@ -158,6 +168,10 @@ runPublic(){
 		go install $CONODE_GO
 	fi
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
+	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
+	if [ "$MEMLIMIT" ]; then
+		ulimit -Sv $(( MEMLIMIT * 1024 ))
+	fi
 	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
