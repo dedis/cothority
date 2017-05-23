@@ -33,6 +33,7 @@ import (
 	"math/big"
 
 	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/messaging"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
@@ -65,6 +66,8 @@ type Service struct {
 	data *saveData
 	// channel to return the configreply
 	ccChannel chan *CheckConfigReply
+	// propagate final message
+	Propagate messaging.PropagationFunc
 }
 
 type saveData struct {
@@ -118,6 +121,10 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.C
 	if s.data.Final == nil || s.data.Final.Desc == nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "No config found")
 	}
+	if s.data.Final != nil && s.data.Final.Desc != nil && s.data.Final.Verify() == nil {
+		log.Lvl2("Sending known final statement")
+		return &FinalizeResponse{s.data.Final}, nil
+	}
 
 	// Contact all other nodes and ask them if they already have a config.
 	s.data.Final.Attendees = make([]abstract.Point, len(req.Attendees))
@@ -156,8 +163,30 @@ func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, onet.C
 	go node.Start()
 
 	s.data.Final.Signature = <-signature
-	s.save()
+	replies, err := s.Propagate(s.data.Final.Desc.Roster, s.data.Final, 10000)
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	if replies != len(s.data.Final.Desc.Roster.List) {
+		log.Warn("Did only get", replies)
+	}
 	return &FinalizeResponse{s.data.Final}, nil
+}
+
+// PropagateFinal saves the new final statement
+func (s *Service) PropagateFinal(msg network.Message) {
+	fs, ok := msg.(*FinalStatement)
+	if !ok {
+		log.Error("Couldn't convert to a FinalStatement")
+		return
+	}
+	if err := fs.Verify(); err != nil {
+		log.Error(err)
+		return
+	}
+	s.data.Final = fs
+	s.save()
+	log.Lvlf3("%s Stored final statement %v", s.ServerIdentity(), s.data.Final)
 }
 
 // CheckConfig receives a hash for a config and a list of attendees. It returns
@@ -267,12 +296,14 @@ func newService(c *onet.Context) onet.Service {
 		data:             &saveData{},
 		ccChannel:        make(chan *CheckConfigReply, 1),
 	}
-	if err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest); err != nil {
-		log.ErrFatal(err, "Couldn't register messages")
-	}
+	log.ErrFatal(s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest),
+		"Couldn't register messages")
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 	}
+	var err error
+	s.Propagate, err = messaging.NewPropagationFunc(c, "PoPPropagate", s.PropagateFinal)
+	log.ErrFatal(err)
 	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	return s

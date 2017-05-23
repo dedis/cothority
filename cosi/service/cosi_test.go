@@ -13,9 +13,11 @@ func NewTestClient(l *onet.LocalTest) *Client {
 	return &Client{Client: l.NewClient(ServiceName)}
 }
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 func TestServiceCosi(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	local := onet.NewTCPTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
@@ -42,8 +44,6 @@ func TestServiceCosi(t *testing.T) {
 }
 
 func TestCreateAggregate(t *testing.T) {
-	defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	local := onet.NewTCPTest()
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
