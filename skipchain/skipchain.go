@@ -91,7 +91,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
 		}
-		changed = append(changed, prop.Copy())
+		changed = append(changed, prop)
 	} else {
 		// We're appending a block to an existing chain
 		prev = s.Sbm.GetByID(psbd.LatestID)
@@ -136,7 +136,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
 		}
-		changed = append(changed, prev.Copy(), prop.Copy())
+		changed = append(changed, prev, prop)
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := s.Sbm.GetByID(bl)
 			if back == nil {
@@ -150,7 +150,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 				// one forward-link
 				log.Error("Couldn't get old block to sign")
 			} else {
-				changed = append(changed, back.Copy())
+				changed = append(changed, back)
 			}
 		}
 	}
@@ -177,7 +177,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
-	blocks := []*SkipBlock{block.Copy()}
+	blocks := []*SkipBlock{block}
 	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
 	for block.GetForwardLen() > 0 {
 		link := block.ForwardLink[block.GetForwardLen()-1]
@@ -202,7 +202,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 			}
 		}
 		block = next
-		blocks = append(blocks, next.Copy())
+		blocks = append(blocks, next)
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
 	reply := &GetUpdateChainReply{blocks}
@@ -286,7 +286,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 		s.Sbm.Lock()
 		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
 		s.Sbm.Unlock()
-		s.startPropagation([]*SkipBlock{target.Copy()})
+		s.startPropagation([]*SkipBlock{target})
 		return nil
 	}()
 	if err != nil {
