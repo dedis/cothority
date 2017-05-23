@@ -68,8 +68,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 	var changed []*SkipBlock
 
 	if psbd.LatestID.IsNull() {
-		// A new chain is created, suppose all arguments in SkipBlock
-		// are correctly set up
+		// A new chain is created
 		prop.Index = 0
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
