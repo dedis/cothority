@@ -75,14 +75,14 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
+	ids.Root, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+		[]skipchain.VerifierID{}, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
 	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Config)
+	ids.Data, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+		[]skipchain.VerifierID{}, ai.Config, ids.Root.Hash)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -96,7 +96,6 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.Data.Hash))
-	s.save()
 
 	return &CreateIdentityReply{
 		Root: ids.Root,
@@ -208,7 +207,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		reply, cerr := s.skipchain.StoreSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -222,7 +221,6 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 		}
-		s.save()
 		return &ProposeVoteReply{sid.Data}, nil
 	}
 	return nil, nil
@@ -257,12 +255,13 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 		switch msg.(type) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
-			sid.Proposed = p.Config
+			sid.Proposed = p.Propose
 			sid.Votes = make(map[string]*crypto.SchnorrSig)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			sid.Votes[v.Signer] = v.Signature
 		}
+		s.save()
 	}
 }
 
@@ -295,6 +294,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 	sid.Data = skipblock
 	sid.Latest = al
 	sid.Proposed = nil
+	s.save()
 }
 
 // propagateIdentity stores a new identity in all nodes.
@@ -333,6 +333,7 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Identities[string(id)] = is
+	s.save()
 }
 
 // saves the actual identity
