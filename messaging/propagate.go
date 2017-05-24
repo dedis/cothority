@@ -18,6 +18,9 @@ func init() {
 	network.RegisterMessage(PropagateReply{})
 }
 
+// How long to wait before timing out on waiting for the time-out.
+const initialWait = 100000
+
 // Propagate is a protocol that sends some data to all attached nodes
 // and waits for confirmation before returning.
 type Propagate struct {
@@ -74,7 +77,7 @@ type propagationContext interface {
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		p := &Propagate{
-			sd:               &PropagateSendData{[]byte{}, 100000},
+			sd:               &PropagateSendData{[]byte{}, initialWait},
 			TreeNodeInstance: n,
 			received:         0,
 			subtreeCount:     n.TreeNode().SubtreeCount(),
