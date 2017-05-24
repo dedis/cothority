@@ -141,8 +141,7 @@ testKeyDel(){
 
 testKeyAdd2(){
 	MAXCLIENTS=3
-#	for C in $( seq $MAXCLIENTS ); do
-	for C in $( seq 2 $MAXCLIENTS ); do
+	for C in $( seq $MAXCLIENTS ); do
 		testOut "Running with $C devices"
 		clientSetup $C
 		testOK runCl 1 kv add key1 value1
