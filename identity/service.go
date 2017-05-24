@@ -75,14 +75,14 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.Root, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
+	ids.Root, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+		[]skipchain.VerifierID{}, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
 	log.Lvl3("Creating Data-skipchain")
-	ids.Root, ids.Data, cerr = s.skipchain.CreateData(ids.Root, 2, 10,
-		skipchain.VerifyNone, ai.Config)
+	ids.Data, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+		[]skipchain.VerifierID{}, ai.Config, ids.Root.Hash)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -207,7 +207,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.Root, sid.Data, sid.Proposed)
+		reply, cerr := s.skipchain.StoreSkipBlock(sid.Data, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}

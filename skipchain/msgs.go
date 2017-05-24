@@ -1,81 +1,55 @@
 package skipchain
 
-import (
-	"errors"
-
-	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
-)
+import "gopkg.in/dedis/onet.v1/network"
 
 func init() {
-	var msgs = []interface{}{
-		// Propose
-		&ProposeSkipBlock{},
-		&ProposedSkipBlockReply{},
-		&SetChildrenSkipBlock{},
-		&SetChildrenSkipBlockReply{},
-		// Propagation
-		&PropagateSkipBlock{},
+	for _, m := range []interface{}{
+		// - API calls
+		// Store new skipblock
+		&StoreSkipBlock{},
+		&StoreSkipBlockReply{},
 		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
-		// Data-structures
+		// Request updated block
+		&GetSingleBlock{},
+		// Fetch all skipchains
+		&GetAllSkipchains{},
+		&GetAllSkipchainsReply{},
+		// - Internal calls
+		// Propagation
+		&PropagateSkipBlocks{},
+		// Request forward-signature
 		&ForwardSignature{},
+		// Request updated block
+		&GetBlock{},
+		// Reply with updated block
+		&GetBlockReply{},
+		// - Data structures
 		&SkipBlockFix{},
 		&SkipBlock{},
 		// Own service
 		&Service{},
-	}
-	for _, m := range msgs {
+	} {
 		network.RegisterMessage(m)
 	}
 }
-
-// VerifierID represents one of the verifications used to accept or
-// deny a SkipBlock.
-type VerifierID uuid.UUID
-
-// SkipBlockVerifier is function that should return whether this skipblock is
-// accepted or not. This function is used during a BFTCosi round, but wrapped
-// around so it accepts a block.
-type SkipBlockVerifier func(msg []byte, s *SkipBlock) bool
-
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
-func RegisterVerification(c *onet.Context, v VerifierID, f SkipBlockVerifier) error {
-	scs := c.Service(ServiceName)
-	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
-	}
-	return scs.(*Service).RegisterVerification(v, f)
-}
-
-var (
-	// VerifyNone does nothing and returns true always.
-	VerifyNone = VerifierID(uuid.Nil)
-	// VerifyShard makes sure that the child SkipChain will always be
-	// a part of its parent SkipChain
-	VerifyShard = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Shard"))
-)
 
 // This file holds all messages that can be sent to the SkipChain,
 // both from the outside and between instances of this service
 
 // External calls
 
-// ProposeSkipBlock - Requests a new skipblock to be appended to
+// StoreSkipBlock - Requests a new skipblock to be appended to
 // the given SkipBlock. If the given SkipBlock has Index 0 (which
 // is invalid), a new SkipChain will be created.
-// The AppId will be used to call the corresponding verification-
-// routines who will have to sign off on the new Tree.
-type ProposeSkipBlock struct {
+type StoreSkipBlock struct {
 	LatestID SkipBlockID
-	Proposed *SkipBlock
+	NewBlock *SkipBlock
 }
 
-// ProposedSkipBlockReply - returns the signed SkipBlock with updated backlinks
-type ProposedSkipBlockReply struct {
+// StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
+type StoreSkipBlockReply struct {
 	Previous *SkipBlock
 	Latest   *SkipBlock
 }
@@ -93,30 +67,51 @@ type GetUpdateChainReply struct {
 	Update []*SkipBlock
 }
 
-// SetChildrenSkipBlock adds a link to a child-SkipBlock in the
-// parent-SkipBlock
-type SetChildrenSkipBlock struct {
-	ParentID SkipBlockID
-	ChildID  SkipBlockID
+// GetAllSkipchains - returns all known last blocks of skipchains.
+type GetAllSkipchains struct {
 }
 
-// SetChildrenSkipBlockReply is the reply from SetChildrenSkipBlock. Only one
-// of ChildData and ChildRoster will be non-nil
-type SetChildrenSkipBlockReply struct {
-	Parent *SkipBlock
-	Child  *SkipBlock
-}
-
-// GetChildrenSkipList - if the SkipList doesn't exist yet, creates the
-// Genesis-block of that SkipList.
-// It returns a 'GetUpdateChainReply' with the chain from the first to
-// the last SkipBlock.
-type GetChildrenSkipList struct {
-	Current    *SkipBlock
-	VerifierID VerifierID
+// GetAllSkipchainsReply - returns all known last blocks of skipchains.
+type GetAllSkipchainsReply struct {
+	SkipChains []*SkipBlock
 }
 
 // Internal calls
+
+// PropagateSkipBlocks sends a newly signed SkipBlock to all members of
+// the Cothority
+type PropagateSkipBlocks struct {
+	SkipBlocks []*SkipBlock
+}
+
+// ForwardSignature is called once a new skipblock has been accepted by
+// signing the forward-link, and then the older skipblocks need to
+// update their forward-links. Each cothority needs to get the necessary
+// blocks and propagate the skipblocks itself.
+type ForwardSignature struct {
+	// TargetHeight is the index in the backlink-slice of the skipblock
+	// to update
+	TargetHeight int
+	// Previous is the second-newest skipblock
+	Previous SkipBlockID
+	// Newest is the newest skipblock, signed by previous
+	Newest *SkipBlock
+	// ForwardLink is the signature from Previous to Newest
+	ForwardLink *BlockLink
+}
+
+// GetSingleBlock asks for a single block.
+type GetSingleBlock struct {
+	ID SkipBlockID
+}
+
+// Internal calls
+
+// GetBlock asks for an updated block, in case for a conode that is not
+// in the roster-list of that block.
+type GetBlock struct {
+	ID SkipBlockID
+}
 
 // PropagateSkipBlock sends a newly signed SkipBlock to all members of
 // the Cothority
@@ -124,10 +119,7 @@ type PropagateSkipBlock struct {
 	SkipBlock *SkipBlock
 }
 
-// ForwardSignature asks this responsible for a SkipChain to sign off
-// a new ForwardLink. This will probably be sent to all members of any
-// SkipChain-definition at time 'n'
-type ForwardSignature struct {
-	ToUpdate SkipBlockID
-	Latest   *SkipBlock
+// GetBlockReply returns the requested block.
+type GetBlockReply struct {
+	SkipBlock *SkipBlock
 }
