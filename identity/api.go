@@ -130,7 +130,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 // SaveToStream stores the data of the client to a stream
 func (i *Identity) SaveToStream(out io.Writer) error {
 	// Marshal doesn't work with the Client, so a copy is generated
-	// and it's Client is set to nil.
+	// and its Client is set to nil.
 	iCopy := &Identity{}
 	*iCopy = *i
 	iCopy.Client = nil
