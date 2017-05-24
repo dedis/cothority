@@ -253,7 +253,7 @@ func TestVerificationFunction(t *testing.T) {
 	data2.Votes["two2"] = &sig
 	id := s0.getIdentityStorage(c1.ID)
 	require.NotNil(t, id, "Didn't find identity")
-	_, cerr := s0.skipchain.ProposeData(id.SCRoot, id.SCData, data2)
+	_, cerr := s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
 
 	// Unhack: verify that the correct way of doing it works, even if
@@ -261,7 +261,7 @@ func TestVerificationFunction(t *testing.T) {
 	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
 	log.ErrFatal(err)
 	data2.Votes["one1"] = &sig
-	_, cerr = s0.skipchain.ProposeData(id.SCRoot, id.SCData, data2)
+	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	log.ErrFatal(err)
 	log.ErrFatal(c1.DataUpdate())
 

@@ -186,11 +186,11 @@ func (i *Identity) CreateIdentity() onet.ClientError {
 
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
-func (i *Identity) ProposeSend(il *Data) onet.ClientError {
-	log.Lvl3("Sending proposal", il)
+func (i *Identity) ProposeSend(cnf *Data) onet.ClientError {
+	log.Lvl3("Sending proposal", cnf)
 	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&ProposeSend{i.ID, il}, nil)
-	i.Proposed = il
+		&ProposeSend{i.ID, cnf}, nil)
+	i.Proposed = cnf
 	return err
 }
 

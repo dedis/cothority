@@ -77,6 +77,9 @@ func (d *Data) Hash() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Write all devices in alphabetical order, because golang
+	// randomizes the maps.
 	var owners []string
 	for s := range d.Device {
 		owners = append(owners, s)
@@ -87,11 +90,21 @@ func (d *Data) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err = hash.Write([]byte(d.Storage[s]))
+		_, err := d.Device[s].Point.MarshalTo(hash)
 		if err != nil {
 			return nil, err
 		}
-		_, err := d.Device[s].Point.MarshalTo(hash)
+	}
+
+	// And write all keys in alphabetical order, because golang
+	// randomizes the maps.
+	var keys []string
+	for k := range d.Storage {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		_, err = hash.Write([]byte(d.Storage[k]))
 		if err != nil {
 			return nil, err
 		}
@@ -212,8 +225,8 @@ type DataUpdateReply struct {
 // ProposeSend sends a new proposition to be stored in all identities. It
 // either replies a nil-message for success or an error.
 type ProposeSend struct {
-	ID ID
-	*Data
+	ID      ID
+	Propose *Data
 }
 
 // ProposeUpdate verifies if new data is available.

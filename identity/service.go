@@ -32,6 +32,9 @@ import (
 const ServiceName = "Identity"
 
 var identityService onet.ServiceID
+
+// VerificationIdentity gives a combined VerifyBase + verifyIdentity.
+var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, verifyIdentity}
 var verifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
 
 func init() {
@@ -78,15 +81,14 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.SCRoot, cerr = s.skipchain.CreateRoster(ai.Roster, 2, 10,
-		skipchain.VerifyNone, nil)
+	ids.SCRoot, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+		[]skipchain.VerifierID{}, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
 	log.Lvl3("Creating Data-skipchain", ai.Data)
-	ids.SCRoot, ids.SCData, cerr = s.skipchain.CreateData(ids.SCRoot, 2, 10,
-		//skipchain.VerifyNone, ai.Data)
-		verifyIdentity, ai.Data)
+	ids.SCData, cerr = s.skipchain.CreateGenesis(ids.SCRoot.Roster, 10, 10,
+		VerificationIdentity, ai.Data, ids.SCRoot.Hash)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -100,7 +102,6 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	log.Lvlf2("New chain is\n%x", []byte(ids.SCData.Hash))
-	s.save()
 
 	return &CreateIdentityReply{
 		Root: ids.SCRoot,
@@ -118,7 +119,7 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	reply, cerr := s.skipchain.GetUpdateChain(sid.SCRoot, sid.SCData.Hash)
+	reply, cerr := s.skipchain.GetUpdateChain(sid.SCRoot.Roster, sid.SCData.Hash)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -199,8 +200,12 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if err != nil {
 			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
 		}
-		if sid.Proposed.Votes[v.Signer] != nil {
-			return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
+		if oldvote := sid.Proposed.Votes[v.Signer]; oldvote != nil {
+			// It can either be an update-vote (accepted), or a second
+			// vote (refused).
+			if crypto.VerifySchnorr(network.Suite, owner.Point, hash, *oldvote) == nil {
+				return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
+			}
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
@@ -229,7 +234,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.ProposeData(sid.SCRoot, sid.SCData, sid.Proposed)
+		reply, cerr := s.skipchain.StoreSkipBlock(sid.SCData, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
@@ -243,7 +248,6 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
 		}
-		s.save()
 		return &ProposeVoteReply{sid.SCData}, nil
 	}
 	return nil, nil
@@ -271,14 +275,14 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 			return err
 		}
 		// Verify that all signatures work out
-		if len(sb.BackLinkIds) == 0 {
+		if len(sb.BackLinkIDs) == 0 {
 			return errors.New("No backlinks stored")
 		}
 		s.identitiesMutex.Lock()
 		defer s.identitiesMutex.Unlock()
 		var latest *skipchain.SkipBlock
 		for _, id := range s.Identities {
-			if id.SCData.Hash.Equal(sb.BackLinkIds[0]) {
+			if id.SCData.Hash.Equal(sb.BackLinkIDs[0]) {
 				latest = id.SCData
 			}
 		}
@@ -342,7 +346,7 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 		switch msg.(type) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
-			sid.Proposed = p.Data
+			sid.Proposed = p.Propose
 			if len(sid.Proposed.Votes) == 0 {
 				sid.Proposed.Votes = map[string]*crypto.SchnorrSig{}
 			}
@@ -365,6 +369,7 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 			}
 			sid.Proposed.Votes[v.Signer] = v.Signature
 		}
+		s.save()
 	}
 }
 
@@ -397,6 +402,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 	sid.SCData = skipblock
 	sid.Latest = al
 	sid.Proposed = nil
+	s.save()
 }
 
 // propagateIdentity stores a new identity in all nodes.
@@ -435,6 +441,7 @@ func (s *Service) setIdentityStorage(id ID, is *Storage) {
 	defer s.identitiesMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Identities[string(id)] = is
+	s.save()
 }
 
 // saves the actual identity
