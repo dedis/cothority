@@ -240,7 +240,7 @@ func TestVerificationFunction(t *testing.T) {
 
 	// Hack: create own data-structure with twice our signature
 	// and send it directly to the skipblock. Without a proper
-	// verification-function, this should pass.
+	// verification-function, this would pass.
 	data2 := c1.Data.Copy()
 	kp2 := config.NewKeyPair(network.Suite)
 	data2.Device["two2"] = &Device{kp2.Public}
