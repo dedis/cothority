@@ -9,10 +9,6 @@ import (
 	"gopkg.in/dedis/onet.v1/log"
 )
 
-func NewTestClient(l *onet.LocalTest) *Client {
-	return &Client{Client: l.NewClient(ServiceName)}
-}
-
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
@@ -25,7 +21,7 @@ func TestServiceCosi(t *testing.T) {
 	defer local.CloseAll()
 
 	// Send a request to the service to all hosts
-	client := NewTestClient(local)
+	client := NewClient()
 	msg := []byte("hello cosi service")
 	serviceReq := &SignatureRequest{
 		Roster:  el,
@@ -51,7 +47,7 @@ func TestCreateAggregate(t *testing.T) {
 	defer local.CloseAll()
 
 	// Send a request to the service
-	client := NewTestClient(local)
+	client := NewClient()
 	msg := []byte("hello cosi service")
 	log.Lvl1("Sending request to service...")
 
