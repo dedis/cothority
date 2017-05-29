@@ -125,13 +125,17 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 	}
 	if len(reply.Update) > 1 {
 		log.Lvl3("Got new data")
-		// TODO: check that update-chain is legit
+		// TODO: check that update-chain has correct forward-links and fits into existing blocks
 		sid.SCData = reply.Update[len(reply.Update)-1]
 		_, dataInt, err := network.Unmarshal(sid.SCData.Data)
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorDataMissing, err.Error())
 		}
-		sid.Latest = dataInt.(*Data)
+		var ok bool
+		sid.Latest, ok = dataInt.(*Data)
+		if !ok {
+			return nil, onet.NewClientErrorCode(ErrorDataMissing, "did get invalid block from skipchain")
+		}
 	}
 	log.Lvl3(s, "Sending data-update")
 	return &DataUpdateReply{
