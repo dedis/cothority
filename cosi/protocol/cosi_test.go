@@ -10,9 +10,11 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
+
 func TestCosi(t *testing.T) {
-	//defer log.AfterTest(t)
-	log.TestOutput(testing.Verbose(), 4)
 	for _, nbrHosts := range []int{1, 3, 13} {
 		log.Lvl2("Running cosi with", nbrHosts, "hosts")
 		local := onet.NewLocalTest()
