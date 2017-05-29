@@ -69,7 +69,7 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
 	}
-	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.DataUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
 	return cfg
 }
@@ -90,10 +90,10 @@ func (cfg *ciscConfig) saveConfig(c *cli.Context) error {
 }
 
 // convenience function to send and vote a proposition and update.
-func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Config) {
+func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Data) {
 	log.ErrFatal(cfg.ProposeSend(p))
 	log.ErrFatal(cfg.ProposeVote(true))
-	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.DataUpdate())
 }
 
 // writes the ssh-keys to an 'authorized_keys.cisc'-file. If
@@ -110,8 +110,8 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 	}
 	for _, f := range cfg.Follow {
 		log.Lvlf2("Parsing IC %x", f.ID)
-		for _, s := range f.Config.GetIntermediateColumn("ssh", f.DeviceName) {
-			pub := f.Config.GetValue("ssh", s, f.DeviceName)
+		for _, s := range f.Data.GetIntermediateColumn("ssh", f.DeviceName) {
+			pub := f.Data.GetValue("ssh", s, f.DeviceName)
 			log.Lvlf2("Value of %s is %s", s, pub)
 			log.Info("Writing key for", s, "to authorized_keys")
 			keys = append(keys, pub+" "+s+"@"+f.DeviceName)
@@ -128,25 +128,25 @@ func (cfg *ciscConfig) showDifference() {
 		log.Info("No proposed config found")
 		return
 	}
-	for k, v := range cfg.Proposed.Data {
-		orig, ok := cfg.Config.Data[k]
+	for k, v := range cfg.Proposed.Storage {
+		orig, ok := cfg.Data.Storage[k]
 		if !ok || v != orig {
 			log.Infof("New or changed key: %s/%s", k, v)
 		}
 	}
-	for k := range cfg.Config.Data {
-		_, ok := cfg.Proposed.Data[k]
+	for k := range cfg.Data.Storage {
+		_, ok := cfg.Proposed.Storage[k]
 		if !ok {
 			log.Info("Deleted key:", k)
 		}
 	}
 	for dev, pub := range cfg.Proposed.Device {
-		if _, exists := cfg.Config.Device[dev]; !exists {
+		if _, exists := cfg.Data.Device[dev]; !exists {
 			log.Infof("New device: %s / %s", dev,
 				pub.Point.String())
 		}
 	}
-	for dev := range cfg.Config.Device {
+	for dev := range cfg.Data.Device {
 		if _, exists := cfg.Proposed.Device[dev]; !exists {
 			log.Info("Deleted device:", dev)
 		}
@@ -155,10 +155,10 @@ func (cfg *ciscConfig) showDifference() {
 
 // shows only the keys, but not the data
 func (cfg *ciscConfig) showKeys() {
-	for d := range cfg.Config.Device {
+	for d := range cfg.Data.Device {
 		log.Info("Connected device", d)
 	}
-	for k := range cfg.Config.Data {
+	for k := range cfg.Data.Storage {
 		log.Info("Key set", k)
 	}
 }
