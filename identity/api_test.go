@@ -256,6 +256,14 @@ func TestVerificationFunction(t *testing.T) {
 	_, cerr := s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
 
+	// Gibberish signature
+	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
+	log.ErrFatal(err)
+	sig.Response.Add(sig.Response, network.Suite.Scalar().One())
+	data2.Votes["one1"] = &sig
+	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	require.NotNil(t, cerr, "Skipchain accepted our fake signature!")
+
 	// Unhack: verify that the correct way of doing it works, even if
 	// we bypass the identity.
 	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
