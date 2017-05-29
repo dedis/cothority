@@ -49,7 +49,7 @@ func init() {
 			{
 				Name:    "qrcode",
 				Aliases: []string{"qr"},
-				Usage:   "print out the qrcode of the identity",
+				Usage:   "print out the qrcode of the identity-skipchain and a node for contact",
 				Action:  idQrcode,
 			},
 		},
