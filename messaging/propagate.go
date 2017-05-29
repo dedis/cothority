@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"errors"
 	"sync"
 
 	"time"
@@ -16,6 +17,9 @@ func init() {
 	network.RegisterMessage(PropagateSendData{})
 	network.RegisterMessage(PropagateReply{})
 }
+
+// How long to wait before timing out on waiting for the time-out.
+const initialWait = 100000
 
 // Propagate is a protocol that sends some data to all attached nodes
 // and waits for confirmation before returning.
@@ -73,7 +77,7 @@ type propagationContext interface {
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		p := &Propagate{
-			sd:               &PropagateSendData{[]byte{}, 1000},
+			sd:               &PropagateSendData{[]byte{}, initialWait},
 			TreeNodeInstance: n,
 			received:         0,
 			subtreeCount:     n.TreeNode().SubtreeCount(),
@@ -90,6 +94,9 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 		name, pid)
 	return func(el *onet.Roster, msg network.Message, msec int) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		if tree == nil {
+			return 0, errors.New("Didn't find root in tree")
+		}
 		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
 		pi, err := c.CreateProtocol(name, tree)
 		if err != nil {
