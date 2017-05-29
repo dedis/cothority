@@ -317,6 +317,7 @@ clientSetup(){
 			runDbgCl 0 $c config update
 		done
 	fi
+	rm -f */authorized_keys*
 }
 
 buildKeys(){
