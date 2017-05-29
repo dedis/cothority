@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
 # Needs 4 clients
@@ -12,21 +12,21 @@ main(){
     startTest
 	buildKeys
 	buildConode "github.com/dedis/cothority/identity"
-	test Build
-	test ClientSetup
-	test IdCreate
-	test ConfigList
+#	test Build
+#	test ClientSetup
+#	test IdCreate
+#	test ConfigList
 	test ConfigVote
-	test IdConnect
-	test IdDel
-	test KeyAdd
-	test KeyAdd2
-	test KeyDel
-	test SSHAdd
-	test SSHDel
-	test Follow
-	test SymLink
-	test Revoke
+#	test IdConnect
+#	test IdDel
+#	test KeyAdd
+#	test KeyAdd2
+#	test KeyDel
+#	test SSHAdd
+#	test SSHDel
+#	test Follow
+#	test SymLink
+#	test Revoke
     stopTest
 }
 
@@ -244,6 +244,11 @@ testConfigVote(){
 	echo "y" | testOK runCl 2 config vote
 	testGrep three runCl 1 kv ls
 	testGrep three runCl 2 kv ls
+
+	testOK runCl 1 kv add five six
+	echo y | testOK runCl 2 config vote
+	testGrep five runCl 1 kv ls
+	testGrep five runCl 2 kv ls
 }
 
 testConfigList(){

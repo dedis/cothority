@@ -259,6 +259,10 @@ func (s *Service) propagateConfigHandler(msg network.Message) {
 			sid.Votes = make(map[string]*crypto.SchnorrSig)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
+			if len(sid.Votes) == 0 {
+				// Make sure the map is initialised
+				sid.Votes = make(map[string]*crypto.SchnorrSig)
+			}
 			sid.Votes[v.Signer] = v.Signature
 		}
 		s.save()
