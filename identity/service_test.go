@@ -21,7 +21,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	service := s.(*Service)
 
 	keypair := config.NewKeyPair(network.Suite)
-	il := NewConfig(50, keypair.Public, "one")
+	il := NewData(50, keypair.Public, "one")
 	msg, cerr := service.CreateIdentity(&CreateIdentity{il, el})
 	log.ErrFatal(cerr)
 	air := msg.(*CreateIdentityReply)
