@@ -142,7 +142,7 @@ wlogr -c second manage join public.toml $WLR_ID $BOB
 Now Bob can request and fetch the file using this chain:
 
 ```bash
-READ_ID2=$( wlogr -c second read request bob $FILE_ID )
+READ_ID2=$( wlogr -c second read request bob $FILE_ID | grep Request-id | cut -f 2 )
 wlogr -c second read fetch $READ_ID2 index_copy2.html
 ```
 
