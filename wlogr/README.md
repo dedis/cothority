@@ -37,8 +37,8 @@ for services. Different services are available, but for now we only care about
 the logread-service.
 
 ```bash
-go get github.com/dedis/cothority/conode
-$GOPATH/src/github.com/dedis/cothority/conode/run_conode.sh local 3
+go get github.com/dedis/logread/conode
+$GOPATH/src/github.com/dedis/logread/conode/run_conode.sh local 3
 ```
 
 This starts 3 conodes locally on your computer and writes a `public.toml`-file
@@ -62,7 +62,7 @@ conode check public.toml
 Once the conodes are running, you can setup your first logread-skipchain:
 
 ```bash
-go get github.com/dedis/cothority/logread/wlogr
+go get github.com/dedis/logread/wlogr
 wlogr manage create public.toml manager
 ```
 
