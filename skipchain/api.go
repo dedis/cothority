@@ -65,6 +65,9 @@ func (c *Client) StoreSkipBlock(sb *SkipBlock) (*SkipBlock, onet.ClientError) {
 //    max := 1 and get _all_ skipblocks from start to end. If max == 0, return
 //    only the shortest skipchain from start to end (or the latest, if end == nil).
 func (c *Client) GetBlocks(roster *onet.Roster, start, end SkipBlockID, max int) ([]*SkipBlock, onet.ClientError) {
+	if roster == nil {
+		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "No roster given")
+	}
 	if start == nil && end == nil {
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "Start and/or end must be given")
 	}
@@ -139,7 +142,7 @@ func (c *Client) AddSkipBlock(latest *SkipBlock, r *onet.Roster,
 			newBlock.Roster = r
 		}
 		if err := newBlock.SetData(data); err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
+			return nil, nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 		}
 		newBlock.Index = latest.Index + 1
 		newBlock.GenesisID = latest.SkipChainID()

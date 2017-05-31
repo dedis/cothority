@@ -32,6 +32,9 @@ func TestClient_CreateGenesis(t *testing.T) {
 	defer l.CloseAll()
 	c := skipchain.NewClient()
 	_, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
+		struct{ A int }{}, nil)
+	require.NotNil(t, cerr)
+	_, cerr = c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
 		[]byte{1, 2, 3}, nil)
 	require.Nil(t, cerr)
 	_, cerr = c.CreateGenesis(roster, 1, 0, skipchain.VerificationNone,
@@ -73,14 +76,23 @@ func TestClient_GetUpdateChain(t *testing.T) {
 func TestClient_StoreSkipBlock(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest()
-	_, el, _ := l.GenTree(nbrHosts, true)
+	_, r, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
 	c := skipchain.NewClient()
-	log.Lvl1("Creating root and control chain")
-	genesis, cerr := c.CreateGenesis(el, 1, 1, nil, nil, nil)
+	log.Lvl1("Creating root chain")
+	genesisPropose := &skipchain.SkipBlock{
+		Roster:        r,
+		MaximumHeight: 0,
+		BaseHeight:    1,
+		Data:          []byte{},
+	}
+	genesis, cerr := c.StoreSkipBlock(genesisPropose)
+	require.NotNil(t, cerr)
+	genesisPropose.MaximumHeight = 1
+	genesis, cerr = c.StoreSkipBlock(genesisPropose)
 	log.ErrFatal(cerr)
-	el2 := onet.NewRoster(el.List[:nbrHosts-1])
+	el2 := onet.NewRoster(r.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", el2)
 	_, sb1, cerr := c.AddSkipBlock(genesis, el2, nil)
 	log.ErrFatal(cerr)
@@ -160,6 +172,30 @@ func TestClient_UpdateBunch(t *testing.T) {
 	cerr = c.BunchUpdate(bunch)
 	log.ErrFatal(cerr)
 	require.Equal(t, 2, bunch.Latest.Index)
+}
+
+func TestClient_GetBlocks(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest()
+	_, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := skipchain.NewClient()
+	log.Lvl1("Creating root and control chain")
+	genesis, cerr := c.CreateGenesis(ro, 1, 1, skipchain.VerificationNone, nil, nil)
+	log.ErrFatal(cerr)
+	_, sb, cerr := c.AddSkipBlock(genesis, ro, nil)
+	log.ErrFatal(cerr)
+
+	blocks, cerr := c.GetBlocks(nil, nil, nil, 0)
+	require.NotNil(t, cerr)
+	blocks, cerr = c.GetBlocks(ro, nil, nil, 0)
+	require.NotNil(t, cerr)
+	blocks, cerr = c.GetBlocks(ro, skipchain.SkipBlockID{1}, nil, 0)
+	require.NotNil(t, cerr)
+	blocks, cerr = c.GetBlocks(ro, genesis.SkipChainID(), nil, 0)
+	require.Nil(t, cerr)
+	require.True(t, blocks[len(blocks)-1].Equal(sb))
 }
 
 type testData struct {
