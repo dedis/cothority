@@ -87,10 +87,10 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		BaseHeight:    1,
 		Data:          []byte{},
 	}
-	genesis, cerr := c.StoreSkipBlock(genesisPropose)
+	_, genesis, cerr := c.StoreSkipBlock(genesisPropose)
 	require.NotNil(t, cerr)
 	genesisPropose.MaximumHeight = 1
-	genesis, cerr = c.StoreSkipBlock(genesisPropose)
+	_, genesis, cerr = c.StoreSkipBlock(genesisPropose)
 	log.ErrFatal(cerr)
 	el2 := onet.NewRoster(r.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", el2)
@@ -196,6 +196,48 @@ func TestClient_GetBlocks(t *testing.T) {
 	blocks, cerr = c.GetBlocks(ro, genesis.SkipChainID(), nil, 0)
 	require.Nil(t, cerr)
 	require.True(t, blocks[len(blocks)-1].Equal(sb))
+}
+
+func TestClient_GetFlatUpdateChain(t *testing.T) {
+	add := 4
+	tb := newTestBunch(3, 2, add)
+	defer tb.End()
+
+	blocks, cerr := tb.client.GetFlatUpdateChain(tb.genesis.Roster, tb.genesis.Hash)
+	log.ErrFatal(cerr)
+	for _, b := range blocks {
+		log.Lvlf3("%x", b.Hash)
+		for i, l := range b.ForwardLink {
+			log.Lvlf3("%d: %x", i, l.Hash)
+		}
+	}
+	require.Equal(t, add+1, len(blocks))
+}
+
+func TestClient_GetSingleBlock(t *testing.T) {
+	tb := newTestBunch(3, 2, 1)
+	defer tb.End()
+
+	block, cerr := tb.client.GetSingleBlock(tb.roster, tb.genesis.Hash)
+	log.ErrFatal(cerr)
+	require.True(t, block.Equal(tb.genesis))
+}
+
+func TestClient_BunchAddBlock(t *testing.T) {
+	tb := newTestBunch(3, 2, 1)
+	defer tb.End()
+
+	sb, cerr := tb.client.BunchAddBlock(tb.bunch, nil, nil)
+	log.ErrFatal(cerr)
+	require.True(t, sb.Equal(tb.bunch.Latest))
+}
+
+func TestClient_AddSkipBlock(t *testing.T) {
+	tb := newTestBunch(3, 2, 1)
+	defer tb.End()
+
+	_, _, cerr := tb.client.AddSkipBlock(tb.bunch.Latest, tb.roster, tb)
+	require.NotNil(t, cerr)
 }
 
 type testData struct {

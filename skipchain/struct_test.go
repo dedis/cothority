@@ -17,44 +17,6 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-func TestSkipBlock_GetResponsible(t *testing.T) {
-	l := onet.NewTCPTest()
-	_, roster, _ := l.GenTree(3, true)
-	defer l.CloseAll()
-	root0 := skipchain.NewSkipBlock()
-	root0.Roster = roster
-	root0.Hash = root0.CalculateHash()
-	root0.BackLinkIDs = []skipchain.SkipBlockID{root0.Hash}
-	sbm := skipchain.NewSkipBlockBunch(root0)
-	root1 := root0.Copy()
-	root1.Index++
-	sbm.Store(root1)
-	inter0 := skipchain.NewSkipBlock()
-	inter0.ParentBlockID = root1.Hash
-	inter0.Roster = roster
-	inter0.Hash = inter0.CalculateHash()
-	sbm.Store(inter0)
-	inter1 := inter0.Copy()
-	inter1.Index++
-	inter1.BackLinkIDs = []skipchain.SkipBlockID{inter0.Hash}
-
-	b, err := sbm.GetResponsible(root0)
-	log.ErrFatal(err)
-	assert.True(t, root0.Equal(b))
-
-	b, err = sbm.GetResponsible(root1)
-	log.ErrFatal(err)
-	assert.True(t, root0.Equal(b))
-
-	b, err = sbm.GetResponsible(inter0)
-	log.ErrFatal(err)
-	assert.Equal(t, root1.Hash, b.Hash)
-
-	b, err = sbm.GetResponsible(inter1)
-	log.ErrFatal(err)
-	assert.True(t, inter0.Equal(b))
-}
-
 func TestSkipBlock_VerifySignatures(t *testing.T) {
 	l := onet.NewTCPTest()
 	_, roster3, _ := l.GenTree(3, true)
@@ -107,6 +69,16 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	assert.NotEqual(t, h1, h2)
 }
 
+func TestSkipBlock_Short(t *testing.T) {
+	sb := skipchain.NewSkipBlock()
+	sb.Hash = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	sb.Roster = &onet.Roster{}
+	require.Equal(t, "0102030405060708", sb.Short())
+
+	require.Equal(t, "Genesis-block 010203040506070809 with roster []", sb.Sprint(false))
+	require.Equal(t, "Genesis-block 01020304 with roster []", sb.Sprint(true))
+}
+
 func TestBlockLink_Copy(t *testing.T) {
 	// Test if copy is deep or only shallow
 	b1 := &skipchain.BlockLink{}
@@ -142,6 +114,14 @@ func TestSign(t *testing.T) {
 	sig.Msg = sha512.New().Sum([]byte{1})
 	require.NotNil(t, sig.Verify(network.Suite, roster.Publics()))
 	defer l.CloseAll()
+}
+
+func TestSkipBlockID_Short(t *testing.T) {
+	var sbid skipchain.SkipBlockID
+	require.Equal(t, "Nil", sbid.Short())
+
+	sbid = skipchain.SkipBlockID{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb}
+	require.Equal(t, "0102030405060708", sbid.Short())
 }
 
 func sign(msg skipchain.SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {

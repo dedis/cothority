@@ -244,7 +244,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 		if request.MaxHeight > 0 && height > request.MaxHeight {
 			height = request.MaxHeight
 		}
-		link := start.ForwardLink[start.GetForwardLen()-1]
+		link := start.ForwardLink[height-1]
 		next := bunch.GetByID(link.Hash)
 		if next == nil {
 			log.Lvl3("Didn't find next block, updating block")

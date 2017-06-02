@@ -400,17 +400,17 @@ func getConfigOrFail(c *cli.Context) *config {
 }
 
 func loadConfig(c *cli.Context) (*config, error) {
-	cfg_path := app.TildeToHome(c.GlobalString("config"))
-	_, err := os.Stat(cfg_path)
+	cfgPath := app.TildeToHome(c.GlobalString("config"))
+	_, err := os.Stat(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return &config{
 				Sbb: skipchain.NewSBBStorage(),
 			}, nil
 		}
-		return nil, fmt.Errorf("Could not open file %s", cfg_path)
+		return nil, fmt.Errorf("Could not open file %s", cfgPath)
 	}
-	f, err := ioutil.ReadFile(cfg_path)
+	f, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -431,11 +431,11 @@ func (cfg *config) save(c *cli.Context) error {
 		return err
 	}
 	file := app.TildeToHome(c.GlobalString("config"))
-	cfg_path := path.Dir(file)
-	_, err = os.Stat(cfg_path)
+	cfgPath := path.Dir(file)
+	_, err = os.Stat(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := os.MkdirAll(cfg_path, 0770)
+			err := os.MkdirAll(cfgPath, 0770)
 			if err != nil {
 				return err
 			}
