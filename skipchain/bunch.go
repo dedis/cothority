@@ -31,7 +31,6 @@ type SkipBlockBunch struct {
 	GenesisID  SkipBlockID
 	Latest     *SkipBlock
 	SkipBlocks map[string]*SkipBlock
-	Parents    map[string]*SkipBlockBunch
 	sync.Mutex
 }
 
@@ -42,7 +41,6 @@ func NewSkipBlockBunch(sb *SkipBlock) *SkipBlockBunch {
 		GenesisID:  sb.SkipChainID(),
 		Latest:     sb,
 		SkipBlocks: map[string]*SkipBlock{string(sb.Hash): sb},
-		Parents:    make(map[string]*SkipBlockBunch),
 	}
 }
 
@@ -93,7 +91,7 @@ func (sbb *SkipBlockBunch) Length() int {
 // - else - it's the previous block
 func (sbb *SkipBlockBunch) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
-		log.Panic(log.Stack())
+		return nil, errors.New("can't get responsible of nil")
 	}
 	if sb.Index == 0 {
 		// Genesis-block
@@ -101,24 +99,21 @@ func (sbb *SkipBlockBunch) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 			// Root-skipchain, no other parent
 			return sb, nil
 		}
-		ret := sbb.GetByID(sb.ParentBlockID)
-		if ret == nil {
-			return nil, errors.New("No Roster and no parent")
-		}
-		return ret, nil
+		return nil, errors.New("parents are not stored in SkipBlockBunch")
 	}
 	if len(sb.BackLinkIDs) == 0 {
-		return nil, errors.New("Invalid block: no backlink")
+		return nil, errors.New("invalid block: no backlink")
 	}
 	prev := sbb.GetByID(sb.BackLinkIDs[0])
 	if prev == nil {
-		return nil, errors.New("Didn't find responsible")
+		return nil, errors.New("didn't find responsible")
 	}
 	return prev, nil
 }
 
 // VerifyLinks makes sure that all forward- and backward-links are correct.
 // It takes a skipblock to verify and returns nil in case of success.
+// It cannot verify if it's a child or not.
 func (sbb *SkipBlockBunch) VerifyLinks(sb *SkipBlock) error {
 	if len(sb.BackLinkIDs) == 0 {
 		return errors.New("need at least one backlink")
@@ -126,27 +121,6 @@ func (sbb *SkipBlockBunch) VerifyLinks(sb *SkipBlock) error {
 
 	if err := sb.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong signatures: " + err.Error())
-	}
-
-	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNull() {
-		parent := sbb.GetByID(sb.ParentBlockID)
-		if parent == nil {
-			return errors.New("Didn't find parent")
-		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := false
-		for _, child := range parent.ChildSL {
-			if child.Equal(sb.Hash) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New("parent doesn't know about us")
-		}
 	}
 
 	// We don't check backward-links for genesis-blocks
@@ -225,7 +199,6 @@ func (s *SBBStorage) AddBunch(sb *SkipBlock) *SkipBlockBunch {
 		s.Bunches = make(map[string]*SkipBlockBunch)
 	}
 	if s.Bunches[string(sb.SkipChainID())] != nil {
-		log.Error("That bunch already exists")
 		return nil
 	}
 	bunch := NewSkipBlockBunch(sb)
@@ -318,6 +291,55 @@ func (s *SBBStorage) GetLatest(genesis SkipBlockID) *SkipBlock {
 	b, ok := s.Bunches[string(genesis)]
 	if ok {
 		return b.Latest
+	}
+	return nil
+}
+
+// Update asks the cothority of a block for an update and stores it.
+func (s *SBBStorage) Update(sb *SkipBlock) error {
+	block, cerr := NewClient().GetSingleBlock(sb.Roster, sb.Hash)
+	if cerr != nil {
+		return cerr
+	}
+	s.Store(block)
+	return nil
+}
+
+// VerifyLinks checks forward-links and parent-links
+func (s *SBBStorage) VerifyLinks(sb *SkipBlock) error {
+	bunch := s.GetBunch(sb.SkipChainID())
+	if bunch == nil {
+		return errors.New("don't have this skipblock in a bunch")
+	}
+	if err := bunch.VerifyLinks(sb); err != nil {
+		return err
+	}
+	if !sb.ParentBlockID.IsNull() {
+		parent := s.GetByID(sb.ParentBlockID)
+		if parent == nil {
+			return errors.New("Didn't find parent")
+		}
+		if err := parent.VerifyForwardSignatures(); err != nil {
+			return err
+		}
+		found := 0
+		for found < 2 {
+			for _, child := range parent.ChildSL {
+				if child.Equal(sb.Hash) {
+					found = 2
+					break
+				}
+			}
+			switch found {
+			case 0:
+				if err := s.Update(parent); err != nil {
+					return err
+				}
+				found = 1
+			case 1:
+				return errors.New("parent doesn't know about us")
+			}
+		}
 	}
 	return nil
 }

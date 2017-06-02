@@ -46,13 +46,16 @@ const (
 //  - Roster: needs to be non-nil, but can be copied from previous block
 //  - MaximumHeight, BaseHeight, VerifierIDs: for a new skipchain, they need
 //    to be initialised
-func (c *Client) StoreSkipBlock(sb *SkipBlock) (*SkipBlock, onet.ClientError) {
+// It returns the previous skipblock (nil for a new skipchain), the latest
+// skipblock (the one created) and an eventual non-nill ClientError
+func (c *Client) StoreSkipBlock(sb *SkipBlock) (previous, latest *SkipBlock, cerr onet.ClientError) {
 	reply := &StoreSkipBlockReply{}
-	cerr := c.SendProtobuf(sb.Roster.RandomServerIdentity(), &StoreSkipBlock{sb}, reply)
+	cerr = c.SendProtobuf(sb.Roster.RandomServerIdentity(), &StoreSkipBlock{sb}, reply)
 	if cerr != nil {
-		return nil, cerr
+		return
 	}
-	return reply.Latest, nil
+	previous, latest = reply.Previous, reply.Latest
+	return
 }
 
 // GetBlocks returns a list of blocks:
@@ -129,33 +132,23 @@ func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []VerifierID
 //  - d is the data for the new block. It can be nil. If it is not of type
 //   []byte, it will be marshalled using `network.Marshal`.
 //
-// If you need to change the parent, you have to use StoreSkipBlock
+// If you need to change the parent, you have to use StoreSkipBlock.
+//
+// It returns the previous and the latest skipblock, as well as an eventual
+// non-nil error.
 func (c *Client) AddSkipBlock(latest *SkipBlock, r *onet.Roster,
 	data network.Message) (previousSB, latestSB *SkipBlock, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
-	var newBlock *SkipBlock
-	if r == nil && data == nil {
-		newBlock = latest
-	} else {
-		newBlock = latest.Copy()
-		if r != nil {
-			newBlock.Roster = r
-		}
-		if err := newBlock.SetData(data); err != nil {
-			return nil, nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
-		}
-		newBlock.Index = latest.Index + 1
-		newBlock.GenesisID = latest.SkipChainID()
+	newBlock := latest.Copy()
+	if r != nil {
+		newBlock.Roster = r
 	}
-	host := latest.Roster.RandomServerIdentity()
-	reply := &StoreSkipBlockReply{}
-	cerr = c.SendProtobuf(host, &StoreSkipBlock{newBlock}, reply)
-	if cerr != nil {
-		return
+	if err := newBlock.SetData(data); err != nil {
+		return nil, nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 	}
-	previousSB = reply.Previous
-	latestSB = reply.Latest
-	return
+	newBlock.Index = latest.Index + 1
+	newBlock.GenesisID = latest.SkipChainID()
+	return c.StoreSkipBlock(newBlock)
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
