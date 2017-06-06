@@ -14,21 +14,6 @@
   Description = "Nikkolasg's server serving the cothority"
 
 [[servers]]
-  Address = "tcp://185.26.156.40:61116"
-  Public = "m1T9+7OROPCkWgjhchq06yV+DyRsk6JyFU1lFFR1YpA="
-  Description = "Ismail's server"
-
-[[servers]]
-  Address = "tcp://95.143.172.241:62306"
-  Public = "WIrdwfvZxAOGjg0KwgA+fHU40KkVT72zz3coIvDryCc="
-  Description = "Philipp's Cothority Server"
-
-[[servers]]
   Address = "tcp://46.101.254.191:6879"
   Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
   Description = "Kirill's server"
-
-[[servers]]
- Address = "tcp://83.212.82.23:6789"
- Public = "guhk0GIw2qLpChrCTsc4vNnlRYZ3518eZKm1FKcR1jA="
- Description = "Lefteris"
