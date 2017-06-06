@@ -1,0 +1,4 @@
+
+message LatestBlockResponse {
+    repeated SkipBlock Update = 1;
+}

@@ -1,0 +1,4 @@
+
+message LatestBlockRequest {
+    required bytes LatestID = 1;
+}

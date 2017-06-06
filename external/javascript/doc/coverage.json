@@ -1,0 +1,19 @@
+{
+  "coverage": "94.11%",
+  "expectCount": 17,
+  "actualCount": 16,
+  "files": {
+    "src/index.js": {
+      "expectCount": 11,
+      "actualCount": 11,
+      "undocumentLines": []
+    },
+    "src/cothority-protobuf.js": {
+      "expectCount": 6,
+      "actualCount": 5,
+      "undocumentLines": [
+        15
+      ]
+    }
+  }
+}

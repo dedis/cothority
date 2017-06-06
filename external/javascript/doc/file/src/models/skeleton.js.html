@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">src/models/skeleton.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/Gilthoniel/CothorityProtoBuf" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/cothority-protobuf.js~CothorityProtobuf.html">CothorityProtobuf</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/index.js~CothorityMessages.html">CothorityMessages</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-cothorityMessages">cothorityMessages</a></span></span></li>
+<li data-ice="doc"><div data-ice="dirPath" class="nav-dir-path">models</div><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-root">root</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/models/skeleton.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">export default &apos;{&quot;nested&quot;:{&quot;cothority&quot;:{},&quot;BlockLink&quot;:{&quot;fields&quot;:{&quot;Hash&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;Signature&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:2}}},&quot;LatestBlockRequest&quot;:{&quot;fields&quot;:{&quot;LatestID&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1}}},&quot;LatestBlockResponse&quot;:{&quot;fields&quot;:{&quot;Update&quot;:{&quot;rule&quot;:&quot;repeated&quot;,&quot;type&quot;:&quot;SkipBlock&quot;,&quot;id&quot;:1,&quot;options&quot;:{&quot;packed&quot;:false}}}},&quot;RandomRequest&quot;:{&quot;fields&quot;:{}},&quot;RandomResponse&quot;:{&quot;fields&quot;:{&quot;R&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;T&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;Transcript&quot;,&quot;id&quot;:2}},&quot;nested&quot;:{&quot;Transcript&quot;:{&quot;fields&quot;:{&quot;nodes&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:1},&quot;groups&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:2},&quot;purpose&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;string&quot;,&quot;id&quot;:3},&quot;time&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;fixed64&quot;,&quot;id&quot;:4}}}}},&quot;google&quot;:{&quot;nested&quot;:{&quot;protobuf&quot;:{&quot;nested&quot;:{&quot;Timestamp&quot;:{&quot;fields&quot;:{&quot;seconds&quot;:{&quot;type&quot;:&quot;int64&quot;,&quot;id&quot;:1},&quot;nanos&quot;:{&quot;type&quot;:&quot;int32&quot;,&quot;id&quot;:2}}}}}}},&quot;Roster&quot;:{&quot;fields&quot;:{&quot;id&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;list&quot;:{&quot;rule&quot;:&quot;repeated&quot;,&quot;type&quot;:&quot;ServerIdentity&quot;,&quot;id&quot;:2,&quot;options&quot;:{&quot;packed&quot;:false}},&quot;aggregate&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:3}}},&quot;ServerIdentity&quot;:{&quot;fields&quot;:{&quot;public&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;id&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:2},&quot;address&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;string&quot;,&quot;id&quot;:3},&quot;description&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;string&quot;,&quot;id&quot;:4}}},&quot;SignatureRequest&quot;:{&quot;fields&quot;:{&quot;message&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;roster&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;Roster&quot;,&quot;id&quot;:2}}},&quot;SignatureResponse&quot;:{&quot;fields&quot;:{&quot;hash&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;signature&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:2}}},&quot;SkipBlock&quot;:{&quot;fields&quot;:{&quot;Index&quot;:{&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:1},&quot;Height&quot;:{&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:2},&quot;MaximumHeight&quot;:{&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:3},&quot;BaseHeight&quot;:{&quot;type&quot;:&quot;sint32&quot;,&quot;id&quot;:4},&quot;BackLinkIDs&quot;:{&quot;rule&quot;:&quot;repeated&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:5,&quot;options&quot;:{&quot;packed&quot;:false}},&quot;VerifierIDs&quot;:{&quot;rule&quot;:&quot;repeated&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:6,&quot;options&quot;:{&quot;packed&quot;:false}},&quot;ParentBlockID&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:7},&quot;GenesisID&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:8},&quot;Data&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:9},&quot;Roster&quot;:{&quot;type&quot;:&quot;Roster&quot;,&quot;id&quot;:10},&quot;Hash&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:11},&quot;ForwardLink&quot;:{&quot;rule&quot;:&quot;repeated&quot;,&quot;type&quot;:&quot;BlockLink&quot;,&quot;id&quot;:12,&quot;options&quot;:{&quot;packed&quot;:false}},&quot;ChildSL&quot;:{&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:13}}},&quot;StatusResponse&quot;:{&quot;fields&quot;:{&quot;system&quot;:{&quot;keyType&quot;:&quot;string&quot;,&quot;type&quot;:&quot;Status&quot;,&quot;id&quot;:1},&quot;server&quot;:{&quot;type&quot;:&quot;ServerIdentity&quot;,&quot;id&quot;:2}},&quot;nested&quot;:{&quot;Status&quot;:{&quot;fields&quot;:{&quot;field&quot;:{&quot;keyType&quot;:&quot;string&quot;,&quot;type&quot;:&quot;string&quot;,&quot;id&quot;:1}}}}},&quot;StoreSkipBlockRequest&quot;:{&quot;fields&quot;:{&quot;LatestID&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;bytes&quot;,&quot;id&quot;:1},&quot;NewBlock&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;SkipBlock&quot;,&quot;id&quot;:2}}},&quot;StoreSkipBlockResponse&quot;:{&quot;fields&quot;:{&quot;Previous&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;SkipBlock&quot;,&quot;id&quot;:1},&quot;Latest&quot;:{&quot;rule&quot;:&quot;required&quot;,&quot;type&quot;:&quot;SkipBlock&quot;,&quot;id&quot;:2}}}}}&apos;;</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.5.2)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

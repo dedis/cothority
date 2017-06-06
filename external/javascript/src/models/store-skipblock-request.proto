@@ -1,0 +1,5 @@
+
+message StoreSkipBlockRequest {
+    required bytes LatestID = 1;
+    required SkipBlock NewBlock = 2;
+}

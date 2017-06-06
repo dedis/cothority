@@ -1,0 +1,37 @@
+{
+  "name": "cothority-protobuf",
+  "version": "0.0.1",
+  "description": "Cothority messages over protobuf",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gilthoniel/CothorityProtoBuf.git"
+  },
+  "keywords": [
+    "cothority",
+    "protobuf"
+  ],
+  "author": "Gaylor Bosson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Gilthoniel/CothorityProtoBuf/issues"
+  },
+  "homepage": "https://github.com/Gilthoniel/CothorityProtoBuf#readme",
+  "dependencies": {
+    "bytebuffer": "^5.0.1",
+    "protobufjs": "^6.6.3"
+  },
+  "devDependencies": {
+    "babel-jest": "^19.0.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-es2015-rollup": "^3.0.0",
+    "faker": "^4.1.0",
+    "jest": "^19.0.2",
+    "rollup": "^0.41.6",
+    "rollup-plugin-babel": "^2.7.1",
+    "watchify": "^3.9.0"
+  }
+}

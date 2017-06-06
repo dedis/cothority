@@ -1,0 +1,16 @@
+
+message SkipBlock {
+    optional sint32 Index = 1;
+    optional sint32 Height = 2;
+    optional sint32 MaximumHeight = 3;
+    optional sint32 BaseHeight = 4;
+    repeated bytes BackLinkIDs = 5;
+    repeated bytes VerifierIDs = 6;
+    optional bytes ParentBlockID = 7;
+    optional bytes GenesisID = 8;
+    optional bytes Data = 9;
+    optional Roster Roster = 10;
+    optional bytes Hash = 11;
+    repeated BlockLink ForwardLink = 12;
+    optional bytes ChildSL = 13;
+}

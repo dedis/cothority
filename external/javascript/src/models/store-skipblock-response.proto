@@ -1,0 +1,5 @@
+
+message StoreSkipBlockResponse {
+    required SkipBlock Previous = 1;
+    required SkipBlock Latest = 2;
+}

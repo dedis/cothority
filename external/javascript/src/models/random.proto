@@ -1,0 +1,18 @@
+import "google/protobuf/timestamp.proto";
+
+message RandomRequest {
+    required sint32 index = 1;
+}
+
+message RandomResponse {
+    required bytes R = 1;
+    required Transcript T = 2;
+    optional sint32 index = 3;
+
+    message Transcript {
+        required sint32 nodes = 1;
+        required sint32 groups = 2;
+        required string purpose = 3;
+        required fixed64 time = 4;
+    }
+}

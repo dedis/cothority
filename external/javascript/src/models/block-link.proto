@@ -1,0 +1,5 @@
+
+message BlockLink {
+    required bytes Hash = 1;
+    required bytes Signature = 2;
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/index.js | API Document</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  
+  
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <a data-ice="repoURL" href="https://github.com/Gilthoniel/CothorityProtoBuf" class="repo-url-github">Repository</a>
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/cothority-protobuf.js~CothorityProtobuf.html">CothorityProtobuf</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/index.js~CothorityMessages.html">CothorityMessages</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-cothorityMessages">cothorityMessages</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/index.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">import CothorityProtobuf from &apos;./cothority-protobuf&apos;
+
+/**
+ * Helpers to encode and decode messages of the Cothority
+ *
+ * @author Gaylor Bosson (gaylor.bosson@epfl.ch)
+ */
+class CothorityMessages extends CothorityProtobuf {
+  
+  /**
+   * Create an encoded message to make a sign request to a cothority node
+   * @param {Uint8Array} message - Message to sign stored in a Uint8Array
+   * @param {Array} servers - list of ServerIdentity
+   * @returns {*|Buffer|Uint8Array}
+   */
+  createSignatureRequest(message, servers) {
+    if (!(message instanceof Uint8Array)) {
+      throw new Error(&quot;message must be a instance of Uint8Array&quot;);
+    }
+    
+    const fields = {
+      message,
+      roster: {
+        list: servers
+      }
+    };
+    
+    return this.encodeMessage(&apos;SignatureRequest&apos;, fields);
+  }
+  
+  /**
+   * Return the decoded response of a signature request
+   * @param {*|Buffer|Uint8Array} response - Response of the Cothority
+   * @returns {Object}
+   */
+  decodeSignatureResponse(response) {
+    response = new Uint8Array(response);
+
+    return this.decodeMessage(&apos;SignatureResponse&apos;, response);
+  }
+  
+  /**
+   * Return the decoded response of a status request
+   * @param {*|Buffer|Uint8Array} response - Response of the Cothority
+   * @returns {*}
+   */
+  decodeStatusResponse(response) {
+    response = new Uint8Array(response);
+
+    return this.decodeMessage(&apos;StatusResponse&apos;, response);
+  }
+
+  /**
+   * Create a message to store a new block
+   * @param {Uint8Array} id - ID of the current latest block
+   * @param {Array} servers - list of ServerIdentity
+   * @returns {*|Buffer|Uint8Array}
+   */
+  createStoreSkipBlockRequest(id, servers) {
+    if (!(id instanceof Uint8Array)) {
+      throw new Error(&quot;message must be a instance of Uint8Array&quot;);
+    }
+
+    return this.encodeMessage(&apos;StoreSkipBlockRequest&apos;, {
+      LatestID: id,
+      NewBlock: {
+        MaximumHeight: 1,
+        BaseHeight: 1,
+        Data: new Uint8Array([]),
+        Roster: {
+          list: servers
+        }
+      }
+    });
+  }
+
+  /**
+   * Return the decoded message of a store skip block request
+   * @param {*|Buffer|Uint8Array} response - Response of the Cothority
+   * @returns {*}
+   */
+  decodeStoreSkipBlockResponse(response) {
+    response = new Uint8Array(response);
+
+    return this.decodeMessage(&apos;StoreSkipBlockResponse&apos;, response);
+  }
+
+  /**
+   * Create a message request to get the latest blocks of a skip-chain
+   * @param {Uint8Array} id - ID of the genesis block of the skip-chain
+   * @returns {*|Buffer|Uint8Array}
+   */
+  createLatestBlockRequest(id) {
+    if (!(id instanceof Uint8Array)) {
+      throw new Error(&quot;message must be a instance of Uint8Array&quot;);
+    }
+
+    return this.encodeMessage(&apos;LatestBlockRequest&apos;, {
+      LatestID: id
+    });
+  }
+
+  /**
+   * Return the decoded message of a latest block request
+   * @param {*|Buffer|Uint8Array} response - Response of the Cothority
+   * @returns {*}
+   */
+  decodeLatestBlockResponse(response) {
+    response = new Uint8Array(response);
+
+    return this.decodeMessage(&apos;LatestBlockResponse&apos;, response);
+  }
+
+  /**
+   * Create a message request to get a random number
+   * @returns {*|Buffer|Uint8Array}
+   */
+  createRandomMessage() {
+    return this.encodeMessage(&apos;RandomRequest&apos;);
+  }
+
+  /**
+   * Return the decoded message of a random number request
+   * @param {*|Buffer|Uint8Array} response - Response of the Cothority
+   * @returns {*}
+   */
+  decodeRandomResponse(response) {
+    response = new Uint8Array(response);
+
+    return this.decodeMessage(&apos;RandomResponse&apos;, response);
+  }
+  
+}
+
+/**
+ * Singleton
+ */
+export default new CothorityMessages();</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(0.5.2)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

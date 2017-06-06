@@ -1,0 +1,6 @@
+message ServerIdentity{
+    required bytes public = 1;
+    required bytes id = 2;
+    required string address = 3;
+    required string description = 4;
+}

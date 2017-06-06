@@ -1,0 +1,1343 @@
+[
+  {
+    "__docId__": 0,
+    "kind": "file",
+    "name": "src/cothority-protobuf.js",
+    "content": "import Root from './models/root'\n\n/**\n * Base class for the protobuf library that provides helpers to encode and decode\n * messages according to a given model\n *\n * @author Gaylor Bosson (gaylor.bosson@epfl.ch)\n */\nexport default class CothorityProtobuf {\n\n  /**\n   * @constructor\n   */\n  constructor() {\n    this.root = Root;\n  }\n  \n  /**\n   * Encode a model to be transmitted over websocket\n   * @param {String} name\n   * @param {Object} fields\n   * @returns {*|Buffer|Uint8Array}\n   */\n  encodeMessage(name, fields) {\n    const model = this.getModel(name);\n    \n    // Create the message with the model\n    const msg = model.create(fields);\n\n    // Encode the message in a BufferArray\n    return model.encode(msg).finish();\n  }\n  \n  /**\n   * Decode a message coming from a websocket\n   * @param {String} name\n   * @param {*|Buffer|Uint8Array} buffer\n   */\n  decodeMessage(name, buffer) {\n    const model = this.getModel(name);\n    return model.decode(buffer);\n  }\n  \n  /**\n   * Return the protobuf loaded model\n   * @param {String} name\n   * @returns {ReflectionObject|?ReflectionObject|string}\n   */\n  getModel(name) {\n    return this.root.lookup(`${name}`);\n  }\n}\n",
+    "static": true,
+    "longname": "src/cothority-protobuf.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 1,
+    "kind": "class",
+    "name": "CothorityProtobuf",
+    "memberof": "src/cothority-protobuf.js",
+    "static": true,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf",
+    "access": null,
+    "export": true,
+    "importPath": "cothority-protobuf/src/cothority-protobuf.js",
+    "importStyle": "CothorityProtobuf",
+    "description": "Base class for the protobuf library that provides helpers to encode and decode\nmessages according to a given model",
+    "lineNumber": 9,
+    "unknown": [
+      {
+        "tagName": "@author",
+        "tagValue": "Gaylor Bosson (gaylor.bosson@epfl.ch)"
+      }
+    ],
+    "interface": false
+  },
+  {
+    "__docId__": 2,
+    "kind": "constructor",
+    "name": "constructor",
+    "memberof": "src/cothority-protobuf.js~CothorityProtobuf",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf#constructor",
+    "access": null,
+    "description": "",
+    "lineNumber": 14,
+    "unknown": [
+      {
+        "tagName": "@constructor",
+        "tagValue": ""
+      }
+    ],
+    "params": []
+  },
+  {
+    "__docId__": 3,
+    "kind": "member",
+    "name": "root",
+    "memberof": "src/cothority-protobuf.js~CothorityProtobuf",
+    "static": false,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf#root",
+    "access": null,
+    "description": null,
+    "lineNumber": 15,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 4,
+    "kind": "method",
+    "name": "encodeMessage",
+    "memberof": "src/cothority-protobuf.js~CothorityProtobuf",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf#encodeMessage",
+    "access": null,
+    "description": "Encode a model to be transmitted over websocket",
+    "lineNumber": 24,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*|Buffer|Uint8Array}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "name",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "fields",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*",
+        "Buffer",
+        "Uint8Array"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 5,
+    "kind": "method",
+    "name": "decodeMessage",
+    "memberof": "src/cothority-protobuf.js~CothorityProtobuf",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf#decodeMessage",
+    "access": null,
+    "description": "Decode a message coming from a websocket",
+    "lineNumber": 39,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "name",
+        "description": ""
+      },
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "buffer",
+        "description": ""
+      }
+    ],
+    "return": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 6,
+    "kind": "method",
+    "name": "getModel",
+    "memberof": "src/cothority-protobuf.js~CothorityProtobuf",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/cothority-protobuf.js~CothorityProtobuf#getModel",
+    "access": null,
+    "description": "Return the protobuf loaded model",
+    "lineNumber": 49,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{ReflectionObject|?ReflectionObject|string}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "String"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "name",
+        "description": ""
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "ReflectionObject",
+        "?ReflectionObject",
+        "string"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 7,
+    "kind": "file",
+    "name": "src/index.js",
+    "content": "import CothorityProtobuf from './cothority-protobuf'\n\n/**\n * Helpers to encode and decode messages of the Cothority\n *\n * @author Gaylor Bosson (gaylor.bosson@epfl.ch)\n */\nclass CothorityMessages extends CothorityProtobuf {\n  \n  /**\n   * Create an encoded message to make a sign request to a cothority node\n   * @param {Uint8Array} message - Message to sign stored in a Uint8Array\n   * @param {Array} servers - list of ServerIdentity\n   * @returns {*|Buffer|Uint8Array}\n   */\n  createSignatureRequest(message, servers) {\n    if (!(message instanceof Uint8Array)) {\n      throw new Error(\"message must be a instance of Uint8Array\");\n    }\n    \n    const fields = {\n      message,\n      roster: {\n        list: servers\n      }\n    };\n    \n    return this.encodeMessage('SignatureRequest', fields);\n  }\n  \n  /**\n   * Return the decoded response of a signature request\n   * @param {*|Buffer|Uint8Array} response - Response of the Cothority\n   * @returns {Object}\n   */\n  decodeSignatureResponse(response) {\n    response = new Uint8Array(response);\n\n    return this.decodeMessage('SignatureResponse', response);\n  }\n  \n  /**\n   * Return the decoded response of a status request\n   * @param {*|Buffer|Uint8Array} response - Response of the Cothority\n   * @returns {*}\n   */\n  decodeStatusResponse(response) {\n    response = new Uint8Array(response);\n\n    return this.decodeMessage('StatusResponse', response);\n  }\n\n  /**\n   * Create a message to store a new block\n   * @param {Uint8Array} id - ID of the current latest block\n   * @param {Array} servers - list of ServerIdentity\n   * @returns {*|Buffer|Uint8Array}\n   */\n  createStoreSkipBlockRequest(id, servers) {\n    if (!(id instanceof Uint8Array)) {\n      throw new Error(\"message must be a instance of Uint8Array\");\n    }\n\n    return this.encodeMessage('StoreSkipBlockRequest', {\n      LatestID: id,\n      NewBlock: {\n        MaximumHeight: 1,\n        BaseHeight: 1,\n        Data: new Uint8Array([]),\n        Roster: {\n          list: servers\n        }\n      }\n    });\n  }\n\n  /**\n   * Return the decoded message of a store skip block request\n   * @param {*|Buffer|Uint8Array} response - Response of the Cothority\n   * @returns {*}\n   */\n  decodeStoreSkipBlockResponse(response) {\n    response = new Uint8Array(response);\n\n    return this.decodeMessage('StoreSkipBlockResponse', response);\n  }\n\n  /**\n   * Create a message request to get the latest blocks of a skip-chain\n   * @param {Uint8Array} id - ID of the genesis block of the skip-chain\n   * @returns {*|Buffer|Uint8Array}\n   */\n  createLatestBlockRequest(id) {\n    if (!(id instanceof Uint8Array)) {\n      throw new Error(\"message must be a instance of Uint8Array\");\n    }\n\n    return this.encodeMessage('LatestBlockRequest', {\n      LatestID: id\n    });\n  }\n\n  /**\n   * Return the decoded message of a latest block request\n   * @param {*|Buffer|Uint8Array} response - Response of the Cothority\n   * @returns {*}\n   */\n  decodeLatestBlockResponse(response) {\n    response = new Uint8Array(response);\n\n    return this.decodeMessage('LatestBlockResponse', response);\n  }\n\n  /**\n   * Create a message request to get a random number\n   * @returns {*|Buffer|Uint8Array}\n   */\n  createRandomMessage() {\n    return this.encodeMessage('RandomRequest');\n  }\n\n  /**\n   * Return the decoded message of a random number request\n   * @param {*|Buffer|Uint8Array} response - Response of the Cothority\n   * @returns {*}\n   */\n  decodeRandomResponse(response) {\n    response = new Uint8Array(response);\n\n    return this.decodeMessage('RandomResponse', response);\n  }\n  \n}\n\n/**\n * Singleton\n */\nexport default new CothorityMessages();",
+    "static": true,
+    "longname": "src/index.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 8,
+    "kind": "class",
+    "name": "CothorityMessages",
+    "memberof": "src/index.js",
+    "static": true,
+    "longname": "src/index.js~CothorityMessages",
+    "access": null,
+    "export": true,
+    "importPath": "cothority-protobuf/src/index.js",
+    "importStyle": null,
+    "description": "Helpers to encode and decode messages of the Cothority",
+    "lineNumber": 8,
+    "pseudoExport": true,
+    "unknown": [
+      {
+        "tagName": "@author",
+        "tagValue": "Gaylor Bosson (gaylor.bosson@epfl.ch)"
+      }
+    ],
+    "interface": false,
+    "extends": [
+      "src/cothority-protobuf.js~CothorityProtobuf"
+    ]
+  },
+  {
+    "__docId__": 9,
+    "kind": "method",
+    "name": "createSignatureRequest",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#createSignatureRequest",
+    "access": null,
+    "description": "Create an encoded message to make a sign request to a cothority node",
+    "lineNumber": 16,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*|Buffer|Uint8Array}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "message",
+        "description": "Message to sign stored in a Uint8Array"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "servers",
+        "description": "list of ServerIdentity"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*",
+        "Buffer",
+        "Uint8Array"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 10,
+    "kind": "method",
+    "name": "decodeSignatureResponse",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#decodeSignatureResponse",
+    "access": null,
+    "description": "Return the decoded response of a signature request",
+    "lineNumber": 36,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Object}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "response",
+        "description": "Response of the Cothority"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 11,
+    "kind": "method",
+    "name": "decodeStatusResponse",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#decodeStatusResponse",
+    "access": null,
+    "description": "Return the decoded response of a status request",
+    "lineNumber": 47,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "response",
+        "description": "Response of the Cothority"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 12,
+    "kind": "method",
+    "name": "createStoreSkipBlockRequest",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#createStoreSkipBlockRequest",
+    "access": null,
+    "description": "Create a message to store a new block",
+    "lineNumber": 59,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*|Buffer|Uint8Array}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": "ID of the current latest block"
+      },
+      {
+        "nullable": null,
+        "types": [
+          "Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "servers",
+        "description": "list of ServerIdentity"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*",
+        "Buffer",
+        "Uint8Array"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 13,
+    "kind": "method",
+    "name": "decodeStoreSkipBlockResponse",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#decodeStoreSkipBlockResponse",
+    "access": null,
+    "description": "Return the decoded message of a store skip block request",
+    "lineNumber": 82,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "response",
+        "description": "Response of the Cothority"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 14,
+    "kind": "method",
+    "name": "createLatestBlockRequest",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#createLatestBlockRequest",
+    "access": null,
+    "description": "Create a message request to get the latest blocks of a skip-chain",
+    "lineNumber": 93,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*|Buffer|Uint8Array}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "id",
+        "description": "ID of the genesis block of the skip-chain"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*",
+        "Buffer",
+        "Uint8Array"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 15,
+    "kind": "method",
+    "name": "decodeLatestBlockResponse",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#decodeLatestBlockResponse",
+    "access": null,
+    "description": "Return the decoded message of a latest block request",
+    "lineNumber": 108,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "response",
+        "description": "Response of the Cothority"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 16,
+    "kind": "method",
+    "name": "createRandomMessage",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#createRandomMessage",
+    "access": null,
+    "description": "Create a message request to get a random number",
+    "lineNumber": 118,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*|Buffer|Uint8Array}"
+      }
+    ],
+    "params": [],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*",
+        "Buffer",
+        "Uint8Array"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 17,
+    "kind": "method",
+    "name": "decodeRandomResponse",
+    "memberof": "src/index.js~CothorityMessages",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/index.js~CothorityMessages#decodeRandomResponse",
+    "access": null,
+    "description": "Return the decoded message of a random number request",
+    "lineNumber": 127,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{*}"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "*",
+          "Buffer",
+          "Uint8Array"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "response",
+        "description": "Response of the Cothority"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "*"
+      ],
+      "spread": false,
+      "description": ""
+    }
+  },
+  {
+    "__docId__": 18,
+    "kind": "variable",
+    "name": "cothorityMessages",
+    "memberof": "src/index.js",
+    "static": true,
+    "longname": "src/index.js~cothorityMessages",
+    "access": null,
+    "export": true,
+    "importPath": "cothority-protobuf/src/index.js",
+    "importStyle": "cothorityMessages",
+    "description": "Singleton",
+    "lineNumber": 138,
+    "type": {
+      "types": [
+        "src/index.js~CothorityMessages"
+      ]
+    }
+  },
+  {
+    "__docId__": 19,
+    "kind": "file",
+    "name": "src/models/root.js",
+    "content": "import protobuf from \"protobufjs\"\nimport skeleton from './skeleton'\n\nconst {Root} = protobuf;\n\n/**\n * As we need to create a bundle, we cannot use the *.proto files and the a script will wrap\n * them in a skeleton file that contains the JSON representation that can be used in the js code\n */\nexport default Root.fromJSON(JSON.parse(skeleton));",
+    "static": true,
+    "longname": "src/models/root.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 20,
+    "kind": "variable",
+    "name": "Root",
+    "memberof": "src/models/root.js",
+    "static": true,
+    "longname": "src/models/root.js~Root",
+    "access": null,
+    "export": false,
+    "importPath": "cothority-protobuf/src/models/root.js",
+    "importStyle": null,
+    "description": null,
+    "lineNumber": 4,
+    "undocument": true,
+    "unknown": [
+      {
+        "tagName": "@_undocument",
+        "tagValue": ""
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 22,
+    "kind": "external",
+    "name": "Infinity",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Infinity",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Infinity",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 23,
+    "kind": "external",
+    "name": "NaN",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/NaN",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~NaN",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 24,
+    "kind": "external",
+    "name": "undefined",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/undefined",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~undefined",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 25,
+    "kind": "external",
+    "name": "null",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~null",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 26,
+    "kind": "external",
+    "name": "Object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Object",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 27,
+    "kind": "external",
+    "name": "object",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~object",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 28,
+    "kind": "external",
+    "name": "Function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Function",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 29,
+    "kind": "external",
+    "name": "function",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~function",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 30,
+    "kind": "external",
+    "name": "Boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Boolean",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 31,
+    "kind": "external",
+    "name": "boolean",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~boolean",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 32,
+    "kind": "external",
+    "name": "Symbol",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Symbol",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 33,
+    "kind": "external",
+    "name": "Error",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Error",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 34,
+    "kind": "external",
+    "name": "EvalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~EvalError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 35,
+    "kind": "external",
+    "name": "InternalError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/InternalError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~InternalError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 36,
+    "kind": "external",
+    "name": "RangeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RangeError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 37,
+    "kind": "external",
+    "name": "ReferenceError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ReferenceError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 38,
+    "kind": "external",
+    "name": "SyntaxError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~SyntaxError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 39,
+    "kind": "external",
+    "name": "TypeError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~TypeError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 40,
+    "kind": "external",
+    "name": "URIError",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~URIError",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 41,
+    "kind": "external",
+    "name": "Number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Number",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 42,
+    "kind": "external",
+    "name": "number",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~number",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 43,
+    "kind": "external",
+    "name": "Date",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Date",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 44,
+    "kind": "external",
+    "name": "String",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~String",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 45,
+    "kind": "external",
+    "name": "string",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~string",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 46,
+    "kind": "external",
+    "name": "RegExp",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~RegExp",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 47,
+    "kind": "external",
+    "name": "Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 48,
+    "kind": "external",
+    "name": "Int8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int8Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 49,
+    "kind": "external",
+    "name": "Uint8Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 50,
+    "kind": "external",
+    "name": "Uint8ClampedArray",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8ClampedArray",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint8ClampedArray",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 51,
+    "kind": "external",
+    "name": "Int16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int16Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 52,
+    "kind": "external",
+    "name": "Uint16Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint16Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint16Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 53,
+    "kind": "external",
+    "name": "Int32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Int32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Int32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 54,
+    "kind": "external",
+    "name": "Uint32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Uint32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 55,
+    "kind": "external",
+    "name": "Float32Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float32Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float32Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 56,
+    "kind": "external",
+    "name": "Float64Array",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Float64Array",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Float64Array",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 57,
+    "kind": "external",
+    "name": "Map",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Map",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 58,
+    "kind": "external",
+    "name": "Set",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Set",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 59,
+    "kind": "external",
+    "name": "WeakMap",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakMap",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 60,
+    "kind": "external",
+    "name": "WeakSet",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~WeakSet",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 61,
+    "kind": "external",
+    "name": "ArrayBuffer",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~ArrayBuffer",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 62,
+    "kind": "external",
+    "name": "DataView",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~DataView",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 63,
+    "kind": "external",
+    "name": "JSON",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~JSON",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 64,
+    "kind": "external",
+    "name": "Promise",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Promise",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 65,
+    "kind": "external",
+    "name": "Generator",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Generator",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 66,
+    "kind": "external",
+    "name": "GeneratorFunction",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~GeneratorFunction",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 67,
+    "kind": "external",
+    "name": "Reflect",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Reflect",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 68,
+    "kind": "external",
+    "name": "Proxy",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy",
+    "memberof": "BuiltinExternal/ECMAScriptExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/ECMAScriptExternal.js~Proxy",
+    "access": null,
+    "description": "",
+    "lineNumber": 193,
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 70,
+    "kind": "external",
+    "name": "CanvasRenderingContext2D",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~CanvasRenderingContext2D",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 71,
+    "kind": "external",
+    "name": "DocumentFragment",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~DocumentFragment",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 72,
+    "kind": "external",
+    "name": "Element",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Element",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Element",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 73,
+    "kind": "external",
+    "name": "Event",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Event",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Event",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 74,
+    "kind": "external",
+    "name": "Node",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~Node",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 75,
+    "kind": "external",
+    "name": "NodeList",
+    "externalLink": "https://developer.mozilla.org/en-US/docs/Web/API/NodeList",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~NodeList",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 76,
+    "kind": "external",
+    "name": "XMLHttpRequest",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~XMLHttpRequest",
+    "access": null,
+    "description": "",
+    "builtinExternal": true
+  },
+  {
+    "__docId__": 77,
+    "kind": "external",
+    "name": "AudioContext",
+    "externalLink": "https://developer.mozilla.org/en/docs/Web/API/AudioContext",
+    "memberof": "BuiltinExternal/WebAPIExternal.js",
+    "static": true,
+    "longname": "BuiltinExternal/WebAPIExternal.js~AudioContext",
+    "access": null,
+    "description": "",
+    "lineNumber": 34,
+    "builtinExternal": true
+  }
+]
