@@ -115,8 +115,10 @@ class CothorityMessages extends CothorityProtobuf {
    * Create a message request to get a random number
    * @returns {*|Buffer|Uint8Array}
    */
-  createRandomMessage() {
-    return this.encodeMessage('RandomRequest');
+  createRandomMessage(index) {
+    return this.encodeMessage('RandomRequest', {
+    	index
+    	});
   }
 
   /**

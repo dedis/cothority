@@ -4,7 +4,8 @@
 
 <script>
     var rm = CothorityProtobuf.createRandomMessage(10);
-    var wsrh = new WebSocket("ws://copulsar.dedis.ch:9003/RandHound/RandRequest");
+    var wsrh = new WebSocket("wss://pulsar.dedis.ch:9000/RandHound/RandRequest");
+    wsrh.binaryType = 'arraybuffer';
     <!--var wsrh = new WebSocket("ws://localhost:7003/RandHound/RandRequest");-->
     wsrh.onopen = function(event){
         console.log("Sending");
@@ -14,6 +15,7 @@
         console.log(event);
         reply = CothorityProtobuf.decodeRandomResponse(event.data);
         console.log("Received: " + reply);
+        console.log(reply);
     }
 </script>
 </html>

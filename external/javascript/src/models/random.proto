@@ -7,7 +7,7 @@ message RandomRequest {
 message RandomResponse {
     required bytes R = 1;
     required Transcript T = 2;
-    optional sint32 index = 3;
+    required sint32 index = 3;
 
     message Transcript {
         required sint32 nodes = 1;
