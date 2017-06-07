@@ -3,8 +3,17 @@
 <script type="text/javascript" src="dist/bundle.js" ></script>
 
 <script>
-    var rm = CothorityProtobuf.createRandomMessage();
-    rm.index = 2;
-    alert("hi" + rm);
+    var rm = CothorityProtobuf.createRandomMessage(10);
+    var wsrh = new WebSocket("ws://copulsar.dedis.ch:9003/RandHound/RandRequest");
+    <!--var wsrh = new WebSocket("ws://localhost:7003/RandHound/RandRequest");-->
+    wsrh.onopen = function(event){
+        console.log("Sending");
+        wsrh.send(rm);
+    }
+    wsrh.onmessage = function(event){
+        console.log(event);
+        reply = CothorityProtobuf.decodeRandomResponse(event.data);
+        console.log("Received: " + reply);
+    }
 </script>
 </html>
