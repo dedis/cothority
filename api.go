@@ -176,7 +176,7 @@ func (c *Client) EncryptKeyRequest(key []byte, roster *onet.Roster) (encKey []by
 	return
 }
 
-// DecryptKeyRequest does something to the key before it is sent to the skipchain.
+// DecryptKeyRequest has to retrieve the key from the skipchain.
 func (c *Client) DecryptKeyRequest(readReq *skipchain.SkipBlock, roster *onet.Roster) (key []byte,
 	cerr onet.ClientError) {
 	request := &DecryptKeyRequest{

@@ -106,8 +106,8 @@ runLocal(){
 		shift
 	done
 
-	killall -9 $CONODE_BIN || true
-	go install $CONODE_GO
+#	killall -9 $CONODE_BIN || true
+#	go install $CONODE_GO
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do

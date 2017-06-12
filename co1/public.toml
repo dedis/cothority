@@ -1,0 +1,4 @@
+[[servers]]
+  Address = "tcp://127.0.0.1:7002"
+  Public = "mkA0EYEqjNMC+jVxtVCPaUI3oWjwt5TNDK8bpXgHL0Q="
+  Description = "Conode_1"
