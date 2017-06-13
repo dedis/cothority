@@ -224,7 +224,6 @@ func mngJoin(c *cli.Context) error {
 	}
 	cr.Private = private
 	cfg.Roles = logread.NewCredentials(cr)
-	log.Print(cfg.Roles)
 	return cfg.saveConfig(c)
 }
 
@@ -269,10 +268,11 @@ func mngRoleCreate(c *cli.Context) error {
 	log.ErrFatal(err)
 	log.Infof("Private key:\t%s", priv)
 
-	_, err = logread.NewClient().EvolveACL(cfg.ACLBunch, acls, admin)
+	reply, err := logread.NewClient().EvolveACL(cfg.ACLBunch.Latest, acls, admin)
 	if err != nil {
 		return err
 	}
+	cfg.ACLBunch.Store(reply.SB)
 	return cfg.saveConfig(c)
 }
 func mngRoleAdd(c *cli.Context) error {
@@ -380,7 +380,8 @@ func readFetch(c *cli.Context) error {
 	if dwlr == nil || dwlr.Read == nil {
 		log.Fatal("This is not a read-request-id")
 	}
-	key, cerr := logread.NewClient().DecryptKeyRequest(sb, sb.Roster)
+	role, _ := cfg.Roles.FindPseudo(dwlr.Read.Pseudonym)
+	key, cerr := logread.NewClient().DecryptKeyRequest(sb.Roster, sb.Hash, role)
 	log.ErrFatal(cerr)
 	sbs, cerr := skipchain.NewClient().GetSingleBlock(sb.Roster, dwlr.Read.File)
 	log.ErrFatal(cerr)
@@ -389,7 +390,6 @@ func readFetch(c *cli.Context) error {
 		log.Fatal("Referenced file does not exist")
 	}
 	dataEnc := dwlrFile.Write.File
-	log.Printf("Using key %x", key)
 	cipher := network.Suite.Cipher(key)
 	data, err := cipher.Open(nil, dataEnc)
 	log.ErrFatal(err)
