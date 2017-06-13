@@ -144,7 +144,7 @@ func (s *Service) WriteRequest(req *logread.WriteRequest) (reply *logread.WriteR
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
 func (s *Service) ReadRequest(req *logread.ReadRequest) (reply *logread.ReadReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Requesting a file. Reader=", req.Read.Pseudonym)
+	log.Lvl2("Requesting a file. Reader:", req.Read.Pseudonym)
 	reply = &logread.ReadReply{}
 	wlrBunch := s.Storage.WLRs.GetBunch(req.Wlr)
 	wlr := wlrBunch.GetByID(req.Wlr)
@@ -170,7 +170,44 @@ func (s *Service) ReadRequest(req *logread.ReadRequest) (reply *logread.ReadRepl
 	return
 }
 
-// EncryptKeyRequest - TODO: do something cool here
+// GetReadRequests returns up to a maximum number of read-requests.
+func (s *Service) GetReadRequests(req *logread.GetReadRequests) (reply *logread.GetReadRequestsReply, cerr onet.ClientError) {
+	reply = &logread.GetReadRequestsReply{}
+	current := s.Storage.WLRs.GetByID(req.Start)
+	if current == nil {
+		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "didn't find starting skipblock")
+	}
+	for len(reply.Documents) < req.Count {
+		// Search next read-request
+		_, dwlri, err := network.Unmarshal(current.Data)
+		if err == nil && dwlri != nil {
+			dwlr, ok := dwlri.(*logread.DataWlr)
+			if !ok {
+				return nil, onet.NewClientErrorCode(logread.ErrorParameter,
+					"unknown block in wlr-skipchain")
+			}
+			if dwlr.Read != nil {
+				doc := &logread.ReadDoc{
+					Reader: dwlr.Read.Pseudonym,
+					ReadID: current.Hash,
+					FileID: dwlr.Read.File,
+				}
+				reply.Documents = append(reply.Documents, doc)
+			}
+		}
+		if len(current.ForwardLink) > 0 {
+			current = s.Storage.WLRs.GetFromGenesisByID(current.SkipChainID(),
+				current.ForwardLink[0].Hash)
+		} else {
+			log.Lvl3("No forward-links, stopping")
+			break
+		}
+	}
+	log.Lvl3("Found", len(reply.Documents), "out of a maximum of", req.Count, "documents.")
+	return
+}
+
+// EncryptKeyRequest - TODO: Return the public secret key for encryption
 // The returned value should be something that the client can use to encrypt his
 // key, so that a reader can use DecryptKeyRequest in order to get the key
 // encrypted under the reader's keypair.
@@ -181,7 +218,7 @@ func (s *Service) EncryptKeyRequest(req *logread.EncryptKeyRequest) (reply *logr
 	return
 }
 
-// DecryptKeyRequest - TODO: do something cool here
+// DecryptKeyRequest - TODO: Re-encrypt under the public key of the reader
 // This should return the key encrypted under the public-key of the reader, so
 // that the reader can use his private key to decrypt the file-key.
 func (s *Service) DecryptKeyRequest(req *logread.DecryptKeyRequest) (reply *logread.DecryptKeyReply,
@@ -370,6 +407,18 @@ func (s *Service) propagateACLFunc(sbI network.Message) {
 func (s *Service) propagateWLRFunc(sbI network.Message) {
 	sb := sbI.(*skipchain.SkipBlock)
 	s.Storage.WLRs.Store(sb)
+	if sb.Index == 0 {
+		return
+	}
+	c := skipchain.NewClient()
+	for _, sbID := range sb.BackLinkIDs {
+		sbNew, cerr := c.GetSingleBlock(sb.Roster, sbID)
+		if cerr != nil {
+			log.Error(cerr)
+		} else {
+			s.Storage.WLRs.Store(sbNew)
+		}
+	}
 }
 
 // newTemplate receives the context and a path where it can write its
@@ -384,7 +433,7 @@ func newService(c *onet.Context) onet.Service {
 		},
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchains, s.EvolveACL,
-		s.WriteRequest, s.ReadRequest,
+		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.EncryptKeyRequest, s.DecryptKeyRequest); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}

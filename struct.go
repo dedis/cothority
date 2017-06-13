@@ -29,6 +29,7 @@ func init() {
 		ReadRequest{}, ReadReply{},
 		EncryptKeyRequest{}, EncryptKeyReply{},
 		DecryptKeyRequest{}, DecryptKeyReply{},
+		GetReadRequests{}, GetReadRequestsReply{},
 	} {
 		network.RegisterMessage(msg)
 	}
@@ -325,6 +326,13 @@ type DataWlrRead struct {
 	Signature *crypto.SchnorrSig
 }
 
+// ReadDoc represents one read-request by a reader.
+type ReadDoc struct {
+	Reader string
+	ReadID skipchain.SkipBlockID
+	FileID skipchain.SkipBlockID
+}
+
 // Requests and replies to/from the service
 
 // CreateSkipchainsRequest asks for setting up a new wlr/acl skipchain pair.
@@ -393,4 +401,15 @@ type DecryptKeyRequest struct {
 // reader's public key.
 type DecryptKeyReply struct {
 	KeyParts []*ElGamal
+}
+
+// GetReadRequests asks for a list of requests
+type GetReadRequests struct {
+	Start skipchain.SkipBlockID
+	Count int
+}
+
+// GetReadRequestsReply returns the requests
+type GetReadRequestsReply struct {
+	Documents []*ReadDoc
 }

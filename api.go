@@ -244,3 +244,15 @@ func (c *Client) DecryptKeyRequest(roster *onet.Roster, reqID skipchain.SkipBloc
 	}
 	return
 }
+
+// GetReadRequests searches the skipchain starting at 'start' for requests and returns all found
+// requests. A maximum of 'count' requests are returned.
+func (c *Client) GetReadRequests(roster *onet.Roster, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
+	request := &GetReadRequests{start, count}
+	reply := &GetReadRequestsReply{}
+	cerr := c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.Documents, nil
+}
