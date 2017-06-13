@@ -13,6 +13,8 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
+// TODO: SBB.StoreAndUpdate should ask all `BacklinkIDs` to get updated
+
 func init() {
 	for _, m := range []interface{}{
 		// - Data structures
