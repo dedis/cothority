@@ -186,6 +186,8 @@ type DataACL struct {
 	Readers *Credentials
 }
 
+// NewDataACL takes a slice of a DataACLEvolve that is stored in the ACL-skipchain-data
+// and returns the ACL. If there is an error, 'nil' is returned.
 func NewDataACL(b []byte) *DataACL {
 	_, dacli, err := network.Unmarshal(b)
 	if err != nil {

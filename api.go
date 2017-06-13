@@ -91,17 +91,14 @@ func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, r *onet.Roster, data inter
 // EvolveACL asks the skipchain to store a new block with a new Access-Control-List.
 // The admin-credential must be present in the previous block, else it will be
 // rejected.
-func (c *Client) EvolveACL(acl *SkipBlockBunch, newACL *DataACL, admin *Credential) (rep *EvolveACLReply,
+func (c *Client) EvolveACL(acl *skipchain.SkipBlock, newACL *DataACL, admin *Credential) (rep *EvolveACLReply,
 	cerr onet.ClientError) {
 	req := &EvolveACLRequest{
-		ACL:     acl.GenesisID,
-		NewAcls: NewDataACLEvolve(newACL, acl.Latest, admin.Private),
+		ACL:     acl.SkipChainID(),
+		NewAcls: NewDataACLEvolve(newACL, acl, admin.Private),
 	}
 	rep = &EvolveACLReply{}
-	cerr = NewClient().SendProtobuf(acl.Latest.Roster.RandomServerIdentity(), req, rep)
-	if cerr == nil {
-		acl.Store(rep.SB)
-	}
+	cerr = NewClient().SendProtobuf(acl.Roster.RandomServerIdentity(), req, rep)
 	return
 }
 
