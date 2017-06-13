@@ -106,8 +106,11 @@ runLocal(){
 		shift
 	done
 
-#	killall -9 $CONODE_BIN || true
-#	go install $CONODE_GO
+	if [ "$( which killall )" ]; then
+		echo Stopping old conodes
+		killall -9 $CONODE_BIN || true
+		go install $CONODE_GO
+	fi
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do
