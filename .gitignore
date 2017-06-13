@@ -1,4 +1,4 @@
-.idea
+.idea/*
 test_data
 simul/platform/deterlab/build
 simul/platform/deterlab/remote/*
@@ -11,7 +11,6 @@ sda/testdata
 *.pyc
 .DS_Store
 *.iml
-.DS_Store
 config/
 build/
 cothority
