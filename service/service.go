@@ -52,7 +52,7 @@ type Storage struct {
 // CreateSkipchains sets up a new pair of ACL/WLR-skipchain.
 func (s *Service) CreateSkipchains(req *logread.CreateSkipchainsRequest) (reply *logread.CreateSkipchainsReply,
 	cerr onet.ClientError) {
-	log.Lvl3("Creating ACL")
+	log.Lvl2("Creating ACL-skipchain")
 
 	c := skipchain.NewClient()
 	reply = &logread.CreateSkipchainsReply{}
@@ -60,6 +60,8 @@ func (s *Service) CreateSkipchains(req *logread.CreateSkipchainsRequest) (reply 
 	if cerr != nil {
 		return
 	}
+
+	log.Lvl2("Creating WLR-skipchain")
 	wlrData := &logread.DataWlr{
 		Config: &logread.DataWlrConfig{
 			ACL: reply.ACL.SkipChainID(),
@@ -87,6 +89,7 @@ func (s *Service) CreateSkipchains(req *logread.CreateSkipchainsRequest) (reply 
 // EvolveACL adds a new block to the ACL-skipchain.
 func (s *Service) EvolveACL(req *logread.EvolveACLRequest) (reply *logread.EvolveACLReply,
 	cerr onet.ClientError) {
+	log.Lvl2("Evolving ACL")
 	reply = &logread.EvolveACLReply{}
 	bunch := s.Storage.ACLs.GetBunch(req.ACL)
 	if bunch == nil {
@@ -112,6 +115,7 @@ func (s *Service) EvolveACL(req *logread.EvolveACLRequest) (reply *logread.Evolv
 // WriteRequest adds a block the WLR-skipchain with a new file.
 func (s *Service) WriteRequest(req *logread.WriteRequest) (reply *logread.WriteReply,
 	cerr onet.ClientError) {
+	log.Lvl2("Writing a file to the skipchain")
 	reply = &logread.WriteReply{}
 	wlrBunch := s.Storage.WLRs.GetBunch(req.Wlr)
 	wlr := wlrBunch.GetByID(req.Wlr)
@@ -140,6 +144,7 @@ func (s *Service) WriteRequest(req *logread.WriteRequest) (reply *logread.WriteR
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
 func (s *Service) ReadRequest(req *logread.ReadRequest) (reply *logread.ReadReply,
 	cerr onet.ClientError) {
+	log.Lvl2("Requesting a file. Reader=", req.Read.Pseudonym)
 	reply = &logread.ReadReply{}
 	wlrBunch := s.Storage.WLRs.GetBunch(req.Wlr)
 	wlr := wlrBunch.GetByID(req.Wlr)
@@ -172,7 +177,7 @@ func (s *Service) ReadRequest(req *logread.ReadRequest) (reply *logread.ReadRepl
 func (s *Service) EncryptKeyRequest(req *logread.EncryptKeyRequest) (reply *logread.EncryptKeyReply,
 	cerr onet.ClientError) {
 	reply = &logread.EncryptKeyReply{}
-	log.Lvl2("Do something funky in here")
+	log.Lvl2("Return the public shared secret")
 	return
 }
 
@@ -182,9 +187,9 @@ func (s *Service) EncryptKeyRequest(req *logread.EncryptKeyRequest) (reply *logr
 func (s *Service) DecryptKeyRequest(req *logread.DecryptKeyRequest) (reply *logread.DecryptKeyReply,
 	cerr onet.ClientError) {
 	reply = &logread.DecryptKeyReply{
-		Key: []byte{},
+		KeyParts: []*logread.ElGamal{},
 	}
-	log.Lvl2("Unfunky that stuff")
+	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
 	readSB := s.Storage.WLRs.GetByID(req.Read)
 	read := logread.NewDataWlr(readSB.Data)
@@ -196,7 +201,15 @@ func (s *Service) DecryptKeyRequest(req *logread.DecryptKeyRequest) (reply *logr
 	if file == nil || file.Write == nil {
 		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "File-block is broken")
 	}
-	reply.Key = file.Write.Key
+
+	// Use multiple Elgamal-encryptions for the key-parts, as they might not
+	// fit inside.
+	remainder := file.Write.Key
+	var eg *logread.ElGamal
+	for len(remainder) > 0 {
+		eg, remainder = logread.ElGamalEncrypt(network.Suite, read.Read.Public, remainder)
+		reply.KeyParts = append(reply.KeyParts, eg)
+	}
 	return
 }
 

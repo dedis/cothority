@@ -123,7 +123,7 @@ func (cfg *wlrConfig) StoreFile(writer, file string) (sb *skipchain.SkipBlock, e
 		return
 	}
 	log.ErrFatal(err)
-	sb, err = logread.NewClient().WriteRequest(cfg.WLRBunch.Latest, data, cred)
+	sb, err = logread.NewClient().EncryptAndWriteRequest(cfg.WLRBunch.Latest, data, cred)
 	return
 }
 

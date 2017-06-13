@@ -9,12 +9,13 @@ This part of the service runs on the client or the app.
 */
 
 import (
+	"errors"
+
 	"github.com/dedis/cothority/skipchain"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
@@ -104,27 +105,38 @@ func (c *Client) EvolveACL(acl *SkipBlockBunch, newACL *DataACL, admin *Credenti
 	return
 }
 
-// WriteRequest pushes a new block on the skipchain with the encrypted file
-// on it.
-func (c *Client) WriteRequest(wlr *skipchain.SkipBlock, data []byte, cred *Credential) (sb *skipchain.SkipBlock,
+// EncryptAndWriteRequest takes data and a credential, then it creates a new
+// symmetric encryption key, encrypts the document, and stores the document and
+// the encryption key on the blockchain.
+func (c *Client) EncryptAndWriteRequest(wlr *skipchain.SkipBlock, data []byte, cred *Credential) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(data) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
 	}
-	encKey, cerr := c.EncryptKeyRequest(random.Bytes(32, random.Stream), wlr.Roster)
+	key := random.Bytes(32, random.Stream)
+	cipher := network.Suite.Cipher(key)
+	str := cipher.Seal(nil, data)
+	encKey, cerr := c.EncryptKeyRequest(wlr.Roster, key)
 	if cerr != nil {
 		return
 	}
-	log.Printf("Using key %x", encKey)
-	cipher := network.Suite.Cipher(encKey)
-	str := cipher.Seal(nil, data)
+	return c.WriteRequest(wlr, str, encKey, cred)
+}
+
+// WriteRequest pushes a new block on the skipchain with the encrypted file
+// on it.
+func (c *Client) WriteRequest(wlr *skipchain.SkipBlock, encData []byte, encKey []byte, cred *Credential) (sb *skipchain.SkipBlock,
+	cerr onet.ClientError) {
+	if len(encData) > 1e7 {
+		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
+	}
 	sig, err := crypto.SignSchnorr(network.Suite, cred.Private, encKey)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
 	}
 	wr := &WriteRequest{
 		Write: &DataWlrWrite{
-			File:      str,
+			File:      encData,
 			Key:       encKey,
 			Signature: &sig,
 		},
@@ -136,6 +148,27 @@ func (c *Client) WriteRequest(wlr *skipchain.SkipBlock, data []byte, cred *Crede
 	return
 }
 
+// GetFile returns the encrypted file with a given id. It takes the roster of the
+// latest block and the id of the file to retrieve. It checks extensively if
+// the block is correct and returns the encrypted data of the file.
+func (c *Client) GetFile(roster *onet.Roster, file skipchain.SkipBlockID) ([]byte,
+	onet.ClientError) {
+	cl := skipchain.NewClient()
+	sb, cerr := cl.GetSingleBlock(roster, file)
+	if cerr != nil {
+		return nil, cerr
+	}
+	_, wlrDataI, err := network.Unmarshal(sb.Data)
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	wlrData, ok := wlrDataI.(*DataWlr)
+	if !ok || wlrData.Write == nil {
+		return nil, onet.NewClientError(errors.New("not correct type of data"))
+	}
+	return wlrData.Write.File, nil
+}
+
 // ReadRequest asks the wlr-skipchain to add a block giving access to 'reader'
 // for the file that references the skipblock it is stored in.
 func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
@@ -144,10 +177,28 @@ func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
 	if err != nil {
 		return nil, err
 	}
+	sbCl := skipchain.NewClient()
+	sbFile, cerr := sbCl.GetSingleBlock(wlr.Roster, file)
+	if cerr != nil {
+		return nil, cerr
+	}
+	_, dwI, err := network.Unmarshal(sbFile.Data)
+	if err != nil {
+		return nil, err
+	}
+	dw, ok := dwI.(*DataWlr)
+	if !ok {
+		return nil, errors.New("didn't get file-block")
+	}
+	if dw == nil || dw.Write == nil {
+		return nil, errors.New("this is not a write-block")
+	}
 	request := &ReadRequest{
 		Read: &DataWlrRead{
 			Pseudonym: reader.Pseudonym,
+			Public:    reader.Public,
 			File:      file,
+			EncKey:    dw.Write.Key,
 			Signature: &sig,
 		},
 		Wlr: wlr.SkipChainID(),
@@ -161,7 +212,7 @@ func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
 }
 
 // EncryptKeyRequest does something to the key before it is sent to the skipchain.
-func (c *Client) EncryptKeyRequest(key []byte, roster *onet.Roster) (encKey []byte,
+func (c *Client) EncryptKeyRequest(roster *onet.Roster, key []byte) (encKey []byte,
 	cerr onet.ClientError) {
 	request := &EncryptKeyRequest{
 		Roster: roster,
@@ -177,17 +228,22 @@ func (c *Client) EncryptKeyRequest(key []byte, roster *onet.Roster) (encKey []by
 }
 
 // DecryptKeyRequest has to retrieve the key from the skipchain.
-func (c *Client) DecryptKeyRequest(readReq *skipchain.SkipBlock, roster *onet.Roster) (key []byte,
+func (c *Client) DecryptKeyRequest(roster *onet.Roster, reqID skipchain.SkipBlockID, reader *Credential) (key []byte,
 	cerr onet.ClientError) {
 	request := &DecryptKeyRequest{
-		Read: readReq.Hash,
+		Read: reqID,
 	}
 	reply := &DecryptKeyReply{}
 	cerr = c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
 	if cerr != nil {
 		return
 	}
-	// TODO: do something good with the reply
-	key = reply.Key
+	for _, eg := range reply.KeyParts {
+		msg, err := ElGamalDecrypt(network.Suite, reader.Private, eg)
+		if err != nil {
+			return nil, onet.NewClientError(err)
+		}
+		key = append(key, msg...)
+	}
 	return
 }

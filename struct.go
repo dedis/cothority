@@ -118,6 +118,25 @@ func (cs *Credentials) AddPseudo(n string) *Credential {
 	return c
 }
 
+// FindPseudo searches for the name and returns the credential and the index.
+// If it is not found, an index of -1 is returned.
+func (cs *Credentials) FindPseudo(n string) (cred *Credential, index int) {
+	for index, cred = range cs.List {
+		if cred.Pseudonym == n {
+			return
+		}
+	}
+	return nil, -1
+}
+
+// DelPseudo removes credentials with a given pseudo
+func (cs *Credentials) DelPseudo(n string) {
+	_, remove := cs.FindPseudo(n)
+	if remove >= 0 {
+		cs.List = append(cs.List[0:remove], cs.List[remove:]...)
+	}
+}
+
 // String prints the credentials.
 func (cs *Credentials) String() string {
 	var ret []string
@@ -165,6 +184,18 @@ type DataACL struct {
 	Admins  *Credentials
 	Writers *Credentials
 	Readers *Credentials
+}
+
+func NewDataACL(b []byte) *DataACL {
+	_, dacli, err := network.Unmarshal(b)
+	if err != nil {
+		return nil
+	}
+	dacl, ok := dacli.(*DataACLEvolve)
+	if !ok {
+		return nil
+	}
+	return dacl.ACL
 }
 
 // Hash returns the hash of all credential-hashes.
@@ -286,9 +317,13 @@ type DataWlrWrite struct {
 // holding the file.
 type DataWlrRead struct {
 	Pseudonym string
+	Public    abstract.Point
 	File      skipchain.SkipBlockID
+	EncKey    []byte
 	Signature *crypto.SchnorrSig
 }
+
+// Requests and replies to/from the service
 
 // CreateSkipchainsRequest asks for setting up a new wlr/acl skipchain pair.
 type CreateSkipchainsRequest struct {
@@ -355,5 +390,5 @@ type DecryptKeyRequest struct {
 // DecryptKeyReply is sent back to the api with the key encrypted under the
 // reader's public key.
 type DecryptKeyReply struct {
-	Key []byte
+	KeyParts []*ElGamal
 }
