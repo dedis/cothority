@@ -1,6 +1,0 @@
-# This file contains your private key.
-# Do not give it away lightly!
-Public = "963a23969e4528ed391d9453cb9695015e6469658dfb4bf17c81cb677756efd4"
-Private = "97141c5ac5c008d8e9b595f766717555da497d70db463ccff3c22b323b3ffe04"
-Address = "tcp://127.0.0.1:7004"
-Description = "Conode_2"

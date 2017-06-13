@@ -45,3 +45,27 @@ and read-requests from readers
 TODO:
 
 - Implement the EncryptKey and DecryptKey methods to have protected keys.
+
+# Docker-files
+
+A handy docker-file exists for easy testing of the logread-skipchain. You
+can build it using:
+
+```bash
+make docker
+```
+
+Once it's built, run it with
+
+```bash
+make docker_run
+```
+
+## Testing the docker-file
+
+If the docker-file is running, you can create a simple chain, add a document
+and read it again:
+
+```bash
+go run example/main.go
+```
