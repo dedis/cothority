@@ -75,7 +75,9 @@ func (sbb *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 		}
 	} else {
 		sbb.SkipBlocks[string(sb.Hash)] = sb
-		sbb.Latest = sb
+		if sb.Index > sbb.Latest.Index {
+			sbb.Latest = sb
+		}
 	}
 	return sb.Hash
 }
