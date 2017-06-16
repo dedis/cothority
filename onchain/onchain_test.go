@@ -12,7 +12,7 @@ import (
 
 func TestOnchain(t *testing.T) {
 	// 1 - share generation
-	nbrPeers := 1
+	nbrPeers := 5
 	peers := make([]*Peer, nbrPeers)
 	// 1a - initialisation
 	for i := range peers {
