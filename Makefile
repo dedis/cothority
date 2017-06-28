@@ -1,4 +1,4 @@
-all: test_playground
+all: test
 
 test_fmt:
 	@echo Checking correct formatting of files
