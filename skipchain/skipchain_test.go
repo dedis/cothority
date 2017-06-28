@@ -24,6 +24,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -81,6 +82,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
+	defer log.AfterTest(t)
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
 	local := onet.NewLocalTest()
@@ -143,6 +145,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// How many nodes in Root
 	nodesRoot := 3
 
@@ -202,6 +205,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
+	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(3, skipchainSID)
@@ -258,6 +262,7 @@ func checkBacklinks(services []*Service, sb *SkipBlock) {
 }
 
 func TestService_Verification(t *testing.T) {
+	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 4
@@ -289,6 +294,7 @@ func TestService_Verification(t *testing.T) {
 }
 
 func TestService_SignBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -310,6 +316,7 @@ func TestService_SignBlock(t *testing.T) {
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -344,6 +351,7 @@ func TestService_ForwardSignature(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest()
@@ -356,7 +364,7 @@ func TestService_RegisterVerification(t *testing.T) {
 		return true
 	}
 	for _, h := range hosts {
-		s := h.GetService(ServiceName).(*Service)
+		s := h.Service(ServiceName).(*Service)
 		log.ErrFatal(s.registerVerification(VerifyTest, verifier))
 	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, []VerifierID{VerifyTest}, 1, 1)
@@ -371,6 +379,7 @@ func TestService_RegisterVerification(t *testing.T) {
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
+	defer log.AfterTest(t)
 	nbrHosts := 3
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
