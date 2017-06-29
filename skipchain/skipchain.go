@@ -9,6 +9,8 @@ import (
 
 	"fmt"
 
+	"sync"
+
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/satori/go.uuid"
@@ -38,11 +40,13 @@ const skipblocksID = "skipblocks"
 type Service struct {
 	*onet.ServiceProcessor
 	// Sbm is the skipblock-map that holds all known skipblocks to this service.
-	Sbm           *SkipBlockMap
-	propagate     messaging.PropagationFunc
-	verifiers     map[VerifierID]SkipBlockVerifier
-	blockRequests map[string]chan *SkipBlock
-	lastSave      time.Time
+	Sbm              *SkipBlockMap
+	propagate        messaging.PropagationFunc
+	verifiers        map[VerifierID]SkipBlockVerifier
+	blockRequests    map[string]chan *SkipBlock
+	lastSave         time.Time
+	propagating      int64
+	propagatingMutex sync.Mutex
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -575,7 +579,11 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
+	s.propagatingMutex.Lock()
+	s.propagating++
 	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
+	s.propagating--
+	s.propagatingMutex.Unlock()
 	if err != nil {
 		return err
 	}
@@ -583,6 +591,12 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil
+}
+
+func (s *Service) IsPropagating() bool {
+	s.propagatingMutex.Lock()
+	defer s.propagatingMutex.Unlock()
+	return s.propagating > 0
 }
 
 // saves all skipblocks.

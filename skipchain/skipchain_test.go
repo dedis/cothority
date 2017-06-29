@@ -236,8 +236,31 @@ func TestService_MultiLevel(t *testing.T) {
 			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
 		}
 	}
-	// Setting up two chains and linking one to the other
-	//time.Sleep(time.Second)
+	waitPropagationFinished(local)
+}
+
+func waitPropagationFinished(local *onet.LocalTest) {
+	var servers []*onet.Server
+	for _, s := range local.Servers {
+		servers = append(servers, s)
+	}
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	propagating := true
+	for propagating {
+		propagating = false
+		for _, s := range services {
+			if s.IsPropagating() {
+				log.Print("Service", s, "is still propagating")
+				propagating = true
+			}
+		}
+		if propagating {
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
 }
 
 func checkBacklinks(services []*Service, sb *SkipBlock) {
@@ -286,6 +309,7 @@ func TestService_Verification(t *testing.T) {
 	elSub := onet.NewRoster(el.List[0:2])
 	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, sb.VerifierIDs, 1, 1)
 	log.ErrFatal(err)
+	waitPropagationFinished(local)
 }
 
 func TestService_SignBlock(t *testing.T) {
@@ -307,6 +331,7 @@ func TestService_SignBlock(t *testing.T) {
 	log.Lvl1("Verifying signatures")
 	log.ErrFatal(sbRoot.VerifyForwardSignatures())
 	log.ErrFatal(sbSecond.VerifyForwardSignatures())
+	waitPropagationFinished(local)
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
@@ -338,6 +363,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 			t.Fatal("Timeout while waiting for reply", i)
 		}
 	}
+	waitPropagationFinished(local)
 }
 
 func TestService_ForwardSignature(t *testing.T) {
@@ -368,6 +394,7 @@ func TestService_RegisterVerification(t *testing.T) {
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
+	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
@@ -415,6 +442,7 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
+	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
