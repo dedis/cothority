@@ -356,7 +356,7 @@ func TestService_RegisterVerification(t *testing.T) {
 		return true
 	}
 	for _, h := range hosts {
-		s := h.GetService(ServiceName).(*Service)
+		s := h.Service(ServiceName).(*Service)
 		log.ErrFatal(s.registerVerification(VerifyTest, verifier))
 	}
 	sb, err := makeGenesisRosterArgs(s1, el, nil, []VerifierID{VerifyTest}, 1, 1)
@@ -415,6 +415,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
+	// This should go away with the
+	time.Sleep(time.Second)
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {

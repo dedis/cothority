@@ -76,10 +76,16 @@ func (vId VerifierID) IsNil() bool {
 //   newSB is the new block
 type SkipBlockVerifier func(newID []byte, newSB *SkipBlock) bool
 
+// GetService makes it possible to give either an `onet.Context` or
+// `onet.Server` to `RegisterVerification`.
+type GetService interface {
+	Service(name string) onet.Service
+}
+
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func RegisterVerification(c *onet.Context, v VerifierID, f SkipBlockVerifier) error {
-	scs := c.Service(ServiceName)
+func RegisterVerification(s GetService, v VerifierID, f SkipBlockVerifier) error {
+	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)
 	}
