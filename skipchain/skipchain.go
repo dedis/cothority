@@ -244,6 +244,13 @@ func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply
 	return reply, nil
 }
 
+// IsPropagating returns true if there is at least one propagation running.
+func (s *Service) IsPropagating() bool {
+	s.propagatingMutex.Lock()
+	defer s.propagatingMutex.Unlock()
+	return s.propagating > 0
+}
+
 func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
 	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
 	node := known.Roster.RandomServerIdentity()
@@ -591,12 +598,6 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
 	}
 	return nil
-}
-
-func (s *Service) IsPropagating() bool {
-	s.propagatingMutex.Lock()
-	defer s.propagatingMutex.Unlock()
-	return s.propagating > 0
 }
 
 // saves all skipblocks.
