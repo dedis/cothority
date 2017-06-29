@@ -588,7 +588,9 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 
 	s.propagatingMutex.Lock()
 	s.propagating++
+	s.propagatingMutex.Unlock()
 	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
+	s.propagatingMutex.Lock()
 	s.propagating--
 	s.propagatingMutex.Unlock()
 	if err != nil {
