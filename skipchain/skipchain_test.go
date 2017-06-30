@@ -24,6 +24,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -81,6 +82,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
+	defer log.AfterTest(t)
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
 	local := onet.NewLocalTest()
@@ -143,6 +145,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// How many nodes in Root
 	nodesRoot := 3
 
@@ -202,6 +205,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
+	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(3, skipchainSID)
@@ -236,8 +240,31 @@ func TestService_MultiLevel(t *testing.T) {
 			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
 		}
 	}
-	// Setting up two chains and linking one to the other
-	//time.Sleep(time.Second)
+	waitPropagationFinished(local)
+}
+
+func waitPropagationFinished(local *onet.LocalTest) {
+	var servers []*onet.Server
+	for _, s := range local.Servers {
+		servers = append(servers, s)
+	}
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	propagating := true
+	for propagating {
+		propagating = false
+		for _, s := range services {
+			if s.IsPropagating() {
+				log.Print("Service", s, "is still propagating")
+				propagating = true
+			}
+		}
+		if propagating {
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
 }
 
 func checkBacklinks(services []*Service, sb *SkipBlock) {
@@ -258,6 +285,7 @@ func checkBacklinks(services []*Service, sb *SkipBlock) {
 }
 
 func TestService_Verification(t *testing.T) {
+	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 4
@@ -286,9 +314,11 @@ func TestService_Verification(t *testing.T) {
 	elSub := onet.NewRoster(el.List[0:2])
 	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, sb.VerifierIDs, 1, 1)
 	log.ErrFatal(err)
+	waitPropagationFinished(local)
 }
 
 func TestService_SignBlock(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -307,9 +337,11 @@ func TestService_SignBlock(t *testing.T) {
 	log.Lvl1("Verifying signatures")
 	log.ErrFatal(sbRoot.VerifyForwardSignatures())
 	log.ErrFatal(sbSecond.VerifyForwardSignatures())
+	waitPropagationFinished(local)
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -338,12 +370,14 @@ func TestService_ProtocolVerification(t *testing.T) {
 			t.Fatal("Timeout while waiting for reply", i)
 		}
 	}
+	waitPropagationFinished(local)
 }
 
 func TestService_ForwardSignature(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
+	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest()
@@ -368,9 +402,11 @@ func TestService_RegisterVerification(t *testing.T) {
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
+	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
+	defer log.AfterTest(t)
 	nbrHosts := 3
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -415,11 +451,11 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
-	// This should go away with the
-	time.Sleep(time.Second)
+	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
+	defer log.AfterTest(t)
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
 	local := onet.NewLocalTest()
