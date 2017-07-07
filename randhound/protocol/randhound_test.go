@@ -11,8 +11,8 @@ import (
 func TestRandHound(test *testing.T) {
 
 	name := "RandHound"
-	nodes := 30
-	groups := 4
+	nodes := 11
+	groups := 2
 	purpose := "RandHound test run"
 
 	local := onet.NewLocalTest()
