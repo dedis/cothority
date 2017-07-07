@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dedis/onet/log"
+
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/crypto.v0/random"
@@ -181,6 +183,7 @@ func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 	}
 
 	if !bytes.Equal(t.SID, sid) {
+		log.Lvlf1("Verify: %v %v", t.SID, sid)
 		return fmt.Errorf("wrong session identifier")
 	}
 

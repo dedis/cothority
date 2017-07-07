@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/dedis/onet/log"
+
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/crypto.v0/random"
@@ -37,6 +39,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 
 	// Verify session identifier
 	if !bytes.Equal(rh.sid, msg.SID) {
+		log.Lvlf1("handleI1: %v %v", rh.sid, msg.SID)
 		return errorWrongSession
 	}
 
