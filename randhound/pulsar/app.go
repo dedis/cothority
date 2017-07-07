@@ -1,7 +1,3 @@
-/*
-* This is a template for creating an app. It only has one command which
-* prints out the name of the app.
- */
 package main
 
 import (

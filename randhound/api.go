@@ -2,17 +2,18 @@ package randhound
 
 import "gopkg.in/dedis/onet.v1"
 
-// Client ...
+// Client is a Pulsar[RandHound] client that can communicate with the corresponding service.
 type Client struct {
 	*onet.Client
 }
 
-// NewClient ...
+// NewClient constructor of Pulsar[RandHound] clients.
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("RandHound")}
+	return &Client{Client: onet.NewClient("Pulsar[RandHound]")}
 }
 
-// Setup ...
+// Setup sends a message to a node of the given roster (currently the one at
+// index 0) to request the setup of a Pulsar[RandHound] service.
 func (c *Client) Setup(roster *onet.Roster, groups int, purpose string,
 	interval int) (*SetupReply, onet.ClientError) {
 	dst := roster.List[0]
@@ -29,7 +30,8 @@ func (c *Client) Setup(roster *onet.Roster, groups int, purpose string,
 	return reply, nil
 }
 
-// Random ...
+// Random allows to request collective randomness from a running
+// Pulsar[RandHound] service.
 func (c *Client) Random(roster *onet.Roster) (*RandReply, onet.ClientError) {
 	dst := roster.List[0]
 	request := &RandRequest{}

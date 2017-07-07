@@ -14,24 +14,25 @@ func init() {
 	network.RegisterMessage(RandReply{})
 }
 
-// SetupRequest ...
+// SetupRequest is a message sent to a conode asking for the instantiation of a
+// Pulsar service with the given parameters.
 type SetupRequest struct {
-	Roster   *onet.Roster
-	Groups   int
-	Purpose  string
-	Interval int // the interval in milliseconds between to random-generations
+	Roster   *onet.Roster // List of nodes
+	Groups   int          // Number of sub-groups
+	Purpose  string       // Purpose of the randomness
+	Interval int          // Interval time (in millieseconds) between two random values
 }
 
-// SetupReply ...
+// SetupReply is sent once the Pulsar service was set up successfully.
 type SetupReply struct {
 }
 
-// RandRequest sent from client to randomness service to request collective randomness.
+// RandRequest is a message sent from a client to a randomness service to request collective randomness.
 type RandRequest struct {
 }
 
-// RandReply sent from randomness service to client to return collective randomness.
+// RandReply is a message sent from a randomness service to a client to return collective randomness.
 type RandReply struct {
-	R []byte
-	T *protocol.Transcript
+	R []byte               // Collective randomness
+	T *protocol.Transcript // RandHound protocol transcript
 }

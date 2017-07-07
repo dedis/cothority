@@ -87,7 +87,7 @@ func (rh *RandHound) Start() error {
 }
 
 // Shard uses the seed to produce a pseudorandom permutation of the numbers of
-// 1,...,n-1, and to group them into s shards.
+// 1,...,n-1 and splits the result into s shards.
 func Shard(suite abstract.Suite, seed []byte, n, s int) ([][]int, error) {
 	if n == 0 || s == 0 || n < s {
 		return nil, fmt.Errorf("number of requested shards not supported")

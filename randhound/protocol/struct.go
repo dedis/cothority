@@ -43,7 +43,7 @@ type RandHound struct {
 	participants           []int                   // Servers participating in collective signing
 }
 
-// Session ...
+// Session contains all the information necessary for a RandHound run.
 type Session struct {
 	nodes      int                // Total number of nodes (client and servers)
 	groups     int                // Number of groups
@@ -60,7 +60,7 @@ type Session struct {
 	sid        []byte             // Session identifier
 }
 
-// Messages ...
+// Messages stores all the messages the client collects during a RandHound run.
 type Messages struct {
 	i1  *I1         // I1 message sent to servers
 	i2s map[int]*I2 // I2 messages sent to servers (index: server)
@@ -70,7 +70,8 @@ type Messages struct {
 	r3s map[int]*R3 // R3 messages received from servers (index: server)
 }
 
-// Record ...
+// Record stores related encrypted and decrypted PVSS shares together with the
+// commitment.
 type Record struct {
 	Eval     abstract.Point    // Commitment of polynomial evaluation
 	EncShare *pvss.PubVerShare // Encrypted verifiable share

@@ -13,8 +13,8 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// ServiceName ...
-const ServiceName = "RandHound"
+// ServiceName denotes the name of the service.
+const ServiceName = "Pulsar[RandHound]"
 
 var randhoundService onet.ServiceID
 
@@ -23,7 +23,7 @@ func init() {
 	network.RegisterMessage(propagateSetup{})
 }
 
-// Service ...
+// Service is the main struct of the Pulsar service.
 type Service struct {
 	*onet.ServiceProcessor
 	setup      bool
@@ -38,12 +38,12 @@ type Service struct {
 	tree       *onet.Tree
 }
 
-// Setup ...
+// Setup runs, upon request, the instantiation of the service.
 func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, onet.ClientError) {
 
 	// Service has already been setup, ignoring further setup requests
 	if s.setup == true {
-		return nil, onet.NewClientError(errors.New("Randomness service already setup"))
+		return nil, onet.NewClientError(errors.New("Pulsar[RandHound] - service already setup"))
 	}
 	s.setup = true
 	s.tree = msg.Roster.GenerateBinaryTree()
@@ -67,7 +67,7 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	return reply, nil
 }
 
-// Random accepts client randomness-generation requests, runs the
+// Random accepts client randomness generation requests, runs the
 // RandHound protocol, and returns the collective randomness together with the
 // corresponding protocol transcript.
 func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet.ClientError) {
@@ -75,7 +75,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 	s.randLock.Lock()
 	defer s.randLock.Unlock()
 	if s.setup == false || s.random == nil {
-		return nil, onet.NewClientError(errors.New("Randomness service not setup"))
+		return nil, onet.NewClientError(errors.New("Pulsar[RandHound] - service not setup"))
 	}
 
 	return &randhound.RandReply{
@@ -91,7 +91,7 @@ func (s *Service) propagate(env *network.Envelope) {
 func (s *Service) loop() {
 	for {
 		err := func() error {
-			log.Lvl2("Creating randomness")
+			log.Lvl2("Pulsar[RandHound] - creating randomness")
 			proto, err := s.CreateProtocol(ServiceName, s.tree)
 			if err != nil {
 				return err
@@ -108,20 +108,20 @@ func (s *Service) loop() {
 			select {
 			case <-rh.Done:
 
-				log.Lvlf1("RandHound - done")
+				log.Lvlf1("Pulsar[RandHound] - done")
 
 				random, transcript, err := rh.Random()
 				if err != nil {
 					return err
 				}
-				log.Lvlf1("RandHound - collective randomness: ok")
+				log.Lvlf1("Pulsar[RandHound] - collective randomness: ok")
 				//log.Lvlf1("RandHound - collective randomness: %v", random)
 
 				err = protocol.Verify(rh.Suite(), random, transcript)
 				if err != nil {
 					return err
 				}
-				log.Lvlf1("RandHound - verification: ok")
+				log.Lvlf1("Pulsar[RandHound] - verification: ok")
 
 				s.randLock.Lock()
 				if s.random == nil {
@@ -137,13 +137,14 @@ func (s *Service) loop() {
 			return nil
 		}()
 		if err != nil {
-			log.Error("While creating randomness:", err)
+			log.Error("Pulsar[RandHound] - while creating randomness:", err)
 		}
 		time.Sleep(time.Duration(s.interval) * time.Millisecond)
 	}
 }
 
 type propagateSetup struct {
+	// TODO
 }
 
 func newService(c *onet.Context) onet.Service {
@@ -152,7 +153,7 @@ func newService(c *onet.Context) onet.Service {
 		randReady:        make(chan bool),
 	}
 	if err := s.RegisterHandlers(s.Setup, s.Random); err != nil {
-		log.ErrFatal(err, "RandHound - couldn't register message processing functions")
+		log.ErrFatal(err, "Pulsar[RandHound] - couldn't register message processing functions")
 	}
 	s.RegisterProcessorFunc(network.MessageType(propagateSetup{}), s.propagate)
 	return s

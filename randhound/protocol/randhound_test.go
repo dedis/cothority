@@ -22,11 +22,11 @@ func TestRandHound(test *testing.T) {
 	log.Lvlf1("RandHound - starting")
 	protocol, err := local.CreateProtocol(name, tree)
 	if err != nil {
-		test.Fatal("Couldn't initialise RandHound protocol:", err)
+		test.Fatal("RandHound - couldn't initialise protocol:", err)
 	}
 	rh := protocol.(*RandHound)
 	if err := rh.Setup(nodes, groups, purpose); err != nil {
-		test.Fatal("Couldn't initialise RandHound protocol:", err)
+		test.Fatal("RandHound - couldn't initialise protocol:", err)
 	}
 	if err := rh.Start(); err != nil {
 		test.Fatal(err)
