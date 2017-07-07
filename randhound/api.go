@@ -9,7 +9,7 @@ type Client struct {
 
 // NewClient constructor of Pulsar[RandHound] clients.
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Pulsar[RandHound]")}
+	return &Client{Client: onet.NewClient("RandHound")}
 }
 
 // Setup sends a message to a node of the given roster (currently the one at

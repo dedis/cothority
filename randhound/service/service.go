@@ -14,7 +14,7 @@ import (
 )
 
 // ServiceName denotes the name of the service.
-const ServiceName = "Pulsar[RandHound]"
+const ServiceName = "RandHound"
 
 var randhoundService onet.ServiceID
 
@@ -144,7 +144,6 @@ func (s *Service) loop() {
 }
 
 type propagateSetup struct {
-	// TODO
 }
 
 func newService(c *onet.Context) onet.Service {
