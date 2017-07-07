@@ -10,10 +10,10 @@ import (
 
 func TestRandHound(test *testing.T) {
 
-	var name = "RandHound"
-	var nodes int = 30
-	var groups int = 4
-	var purpose string = "RandHound test run"
+	name := "RandHound"
+	nodes := 30
+	groups := 4
+	purpose := "RandHound test run"
 
 	local := onet.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), true)

@@ -193,7 +193,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 		// Collect commits and mark participating nodes
 		rh.participants = make([]int, 0)
-		subComms := make([]abstract.Point, 0)
+		var subComms []abstract.Point
 		for i, V := range rh.commits {
 			subComms = append(subComms, V)
 			rh.cosi.SetMaskBit(i, true)
@@ -368,7 +368,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	// TODO: What condition to proceed? We need at least a reply from the 2/3 of
 	// nodes that we chose earlier. Should we have a timer?
 	if len(rh.r2s) == rh.nodes-1 {
-		responses := make([]abstract.Scalar, 0)
+		var responses []abstract.Scalar
 		for _, src := range rh.participants {
 			responses = append(responses, rh.r2s[src].R)
 		}
@@ -428,7 +428,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	}
 
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
-	decShares := make([]*Share, 0)
+	var decShares []*Share
 
 	for src, records := range rh.records {
 		for tgt, record := range records {
