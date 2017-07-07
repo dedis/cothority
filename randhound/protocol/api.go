@@ -13,8 +13,11 @@ import (
 	"gopkg.in/dedis/onet.v1"
 )
 
+// Name can be used to refer to the protool name
+var Name = "RandHound"
+
 func init() {
-	onet.GlobalProtocolRegister("RandHound", NewRandHound)
+	onet.GlobalProtocolRegister(Name, NewRandHound)
 }
 
 // NewRandHound generates a new RandHound instance.
