@@ -17,7 +17,12 @@ func TestRandHoundService(t *testing.T) {
 	nodes, roster, _ := local.GenTree(num, true)
 	defer local.CloseAll()
 
-	setupRequest := &randhound.SetupRequest{roster, groups, purpose, interval}
+	setupRequest := &randhound.SetupRequest{
+		Roster:   roster,
+		Groups:   groups,
+		Purpose:  purpose,
+		Interval: interval,
+	}
 	service := local.GetServices(nodes, randhoundService)[0].(*Service)
 
 	_, err := service.Setup(setupRequest)
