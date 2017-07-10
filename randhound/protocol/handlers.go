@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/dedis/onet/log"
 
@@ -32,8 +33,14 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return err
 	}
 
+	// Fix time zone
+	loc, err := time.LoadLocation("Europe/Vienna")
+	if err != nil {
+		return err
+	}
+
 	// Setup session
-	if rh.Session, err = rh.newSession(nodes, msg.Groups, msg.Purpose, msg.Time, msg.Seed, clientKey); err != nil {
+	if rh.Session, err = rh.newSession(nodes, msg.Groups, msg.Purpose, msg.Time.In(loc), msg.Seed, clientKey); err != nil {
 		return err
 	}
 
