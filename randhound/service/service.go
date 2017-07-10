@@ -59,7 +59,7 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	s.interval = msg.Interval
 
 	// This only locks the nodes but does not prevent from using them in
-	// another randhound-setup.
+	// another RandHound setup.
 	for _, n := range msg.Roster.List {
 		if err := s.SendRaw(n, &propagateSetup{}); err != nil {
 			return nil, onet.NewClientError(err)
@@ -67,21 +67,21 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	}
 
 	// Run RandHound in a loop
-	go func() {
-		for {
-			s.run()
-			time.Sleep(time.Duration(s.interval) * time.Millisecond)
-		}
-	}()
+	go s.run()
+	//go func() {
+	//	for {
+	//		s.run()
+	//		time.Sleep(time.Duration(s.interval) * time.Millisecond)
+	//	}
+	//}()
 	<-s.randReady
 
 	reply := &randhound.SetupReply{}
 	return reply, nil
 }
 
-// Random accepts client randomness generation requests, runs the
-// RandHound protocol, and returns the collective randomness together with the
-// corresponding protocol transcript.
+// Random accepts client randomness requests and returns the latest collective
+// randomness together with the corresponding protocol transcript.
 func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet.ClientError) {
 
 	s.randLock.Lock()
