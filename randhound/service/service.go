@@ -61,6 +61,9 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	// This only locks the nodes but does not prevent from using them in
 	// another RandHound setup.
 	for _, n := range msg.Roster.List {
+		if n.Public.Equal(s.Context.ServerIdentity().Public) {
+			continue
+		}
 		if err := s.SendRaw(n, &propagateSetup{}); err != nil {
 			return nil, onet.NewClientError(err)
 		}
