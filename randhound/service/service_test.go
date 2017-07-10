@@ -13,7 +13,7 @@ func TestRandHoundService(t *testing.T) {
 	num := 10
 	groups := 2
 	purpose := "Pulsar[RandHound] - service test run"
-	interval := 0
+	interval := 5000
 	nodes, roster, _ := local.GenTree(num, true)
 	defer local.CloseAll()
 

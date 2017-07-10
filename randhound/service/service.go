@@ -47,7 +47,7 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	}
 	s.setup = true
 
-	if msg.Interval < 0 {
+	if msg.Interval <= 0 {
 		return nil, onet.NewClientError(errors.New("Pulsar[RandHound] - bad interval parameter"))
 	}
 
@@ -65,11 +65,14 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 			return nil, onet.NewClientError(err)
 		}
 	}
-	if s.interval == 0 {
-		go s.run()
-	} else {
-		go s.loop()
-	}
+
+	// Run RandHound in a loop
+	go func() {
+		for {
+			s.run()
+			time.Sleep(time.Duration(s.interval) * time.Millisecond)
+		}
+	}()
 	<-s.randReady
 
 	reply := &randhound.SetupReply{}
@@ -146,13 +149,6 @@ func (s *Service) run() {
 	}()
 	if err != nil {
 		log.Error("Pulsar[RandHound] - while creating randomness:", err)
-	}
-}
-
-func (s *Service) loop() {
-	for {
-		s.run()
-		time.Sleep(time.Duration(s.interval) * time.Millisecond)
 	}
 }
 
