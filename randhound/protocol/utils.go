@@ -21,8 +21,10 @@ func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp
 	var err error
 
 	if timestamp.IsZero() {
-		timestamp = time.Now()
+		timestamp = time.Now().UTC()
 	}
+
+	timestamp = timestamp.UTC() // convert to UTC
 
 	if seed == nil {
 		seed = random.Bytes(rh.Suite().Hash().Size(), random.Stream)
@@ -118,6 +120,7 @@ func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]ab
 	}
 
 	// Process time stamp
+	timestamp = timestamp.UTC()
 	t, err := timestamp.MarshalBinary()
 	if err != nil {
 		return nil, err

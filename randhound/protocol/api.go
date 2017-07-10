@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dedis/onet/log"
-
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/crypto.v0/random"
@@ -40,11 +38,8 @@ func NewRandHound(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (rh *RandHound) Setup(nodes int, groups int, purpose string) error {
 	var err error
 
-	location, _ := time.LoadLocation("Europe/Vienna")
-	time := time.Now().In(location)
-
 	// Setup session information
-	if rh.Session, err = rh.newSession(nodes, groups, purpose, time, nil, rh.Public()); err != nil {
+	if rh.Session, err = rh.newSession(nodes, groups, purpose, time.Now(), nil, rh.Public()); err != nil {
 		return err
 	}
 
@@ -170,20 +165,13 @@ func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 		serverKeys[i] = k
 	}
 
-	// Fix time zone
-	loc, err := time.LoadLocation("Europe/Vienna")
-	if err != nil {
-		return err
-	}
-
 	// Verify session identifier
-	sid, err := sessionID(suite, clientKey, serverKeys, indices, t.Purpose, t.Time.In(loc))
+	sid, err := sessionID(suite, clientKey, serverKeys, indices, t.Purpose, t.Time)
 	if err != nil {
 		return err
 	}
 
 	if !bytes.Equal(t.SID, sid) {
-		log.Lvlf1("Verify: %v %v", t.SID, sid)
 		return fmt.Errorf("wrong session identifier")
 	}
 
