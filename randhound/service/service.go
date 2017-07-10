@@ -99,9 +99,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 }
 
 func (s *Service) propagate(env *network.Envelope) {
-	s.randLock.Lock()
 	s.setup = true
-	s.randLock.Unlock()
 }
 
 func (s *Service) run() {
