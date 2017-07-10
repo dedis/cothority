@@ -67,13 +67,12 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	}
 
 	// Run RandHound in a loop
-	go s.run()
-	//go func() {
-	//	for {
-	//		s.run()
-	//		time.Sleep(time.Duration(s.interval) * time.Millisecond)
-	//	}
-	//}()
+	go func() {
+		for {
+			s.run()
+			time.Sleep(time.Duration(s.interval) * time.Millisecond)
+		}
+	}()
 	<-s.randReady
 
 	reply := &randhound.SetupReply{}
@@ -97,7 +96,9 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 }
 
 func (s *Service) propagate(env *network.Envelope) {
+	s.randLock.Lock()
 	s.setup = true
+	s.randLock.Unlock()
 }
 
 func (s *Service) run() {
