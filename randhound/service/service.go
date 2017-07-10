@@ -46,6 +46,11 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 		return nil, onet.NewClientError(errors.New("Pulsar[RandHound] - service already setup"))
 	}
 	s.setup = true
+
+	if msg.Interval < 0 {
+		return nil, onet.NewClientError(errors.New("Pulsar[RandHound] - bad interval parameter"))
+	}
+
 	s.tree = msg.Roster.GenerateBinaryTree()
 
 	s.nodes = len(msg.Roster.List)
@@ -60,7 +65,11 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 			return nil, onet.NewClientError(err)
 		}
 	}
-	go s.loop()
+	if s.interval == 0 {
+		go s.run()
+	} else {
+		go s.loop()
+	}
 	<-s.randReady
 
 	reply := &randhound.SetupReply{}
@@ -88,57 +97,61 @@ func (s *Service) propagate(env *network.Envelope) {
 	s.setup = true
 }
 
-func (s *Service) loop() {
-	for {
-		err := func() error {
-			log.Lvl2("Pulsar[RandHound] - creating randomness")
-			proto, err := s.CreateProtocol(ServiceName, s.tree)
+func (s *Service) run() {
+	err := func() error {
+		log.Lvl2("Pulsar[RandHound] - creating randomness")
+		proto, err := s.CreateProtocol(ServiceName, s.tree)
+		if err != nil {
+			return err
+		}
+		rh := proto.(*protocol.RandHound)
+		if err := rh.Setup(s.nodes, s.groups, s.purpose); err != nil {
+			return err
+		}
+
+		if err := rh.Start(); err != nil {
+			return err
+		}
+
+		select {
+		case <-rh.Done:
+
+			log.Lvlf1("Pulsar[RandHound] - done")
+
+			random, transcript, err := rh.Random()
 			if err != nil {
 				return err
 			}
-			rh := proto.(*protocol.RandHound)
-			if err := rh.Setup(s.nodes, s.groups, s.purpose); err != nil {
+			log.Lvlf1("Pulsar[RandHound] - collective randomness: ok")
+			//log.Lvlf1("RandHound - collective randomness: %v", random)
+
+			err = protocol.Verify(rh.Suite(), random, transcript)
+			if err != nil {
 				return err
 			}
+			log.Lvlf1("Pulsar[RandHound] - verification: ok")
 
-			if err := rh.Start(); err != nil {
-				return err
+			s.randLock.Lock()
+			if s.random == nil {
+				s.randReady <- true
 			}
+			s.random = random
+			s.transcript = transcript
+			s.randLock.Unlock()
 
-			select {
-			case <-rh.Done:
-
-				log.Lvlf1("Pulsar[RandHound] - done")
-
-				random, transcript, err := rh.Random()
-				if err != nil {
-					return err
-				}
-				log.Lvlf1("Pulsar[RandHound] - collective randomness: ok")
-				//log.Lvlf1("RandHound - collective randomness: %v", random)
-
-				err = protocol.Verify(rh.Suite(), random, transcript)
-				if err != nil {
-					return err
-				}
-				log.Lvlf1("Pulsar[RandHound] - verification: ok")
-
-				s.randLock.Lock()
-				if s.random == nil {
-					s.randReady <- true
-				}
-				s.random = random
-				s.transcript = transcript
-				s.randLock.Unlock()
-
-			case <-time.After(time.Second * time.Duration(s.nodes) * 2):
-				return err
-			}
-			return nil
-		}()
-		if err != nil {
-			log.Error("Pulsar[RandHound] - while creating randomness:", err)
+		case <-time.After(time.Second * time.Duration(s.nodes) * 2):
+			return err
 		}
+		return nil
+	}()
+	if err != nil {
+		log.Error("Pulsar[RandHound] - while creating randomness:", err)
+	}
+}
+
+func (s *Service) loop() {
+	for {
+		s.run()
 		time.Sleep(time.Duration(s.interval) * time.Millisecond)
 	}
 }

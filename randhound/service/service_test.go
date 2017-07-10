@@ -13,7 +13,7 @@ func TestRandHoundService(t *testing.T) {
 	num := 10
 	groups := 2
 	purpose := "Pulsar[RandHound] - service test run"
-	interval := 2000
+	interval := 0
 	nodes, roster, _ := local.GenTree(num, true)
 	defer local.CloseAll()
 
@@ -32,6 +32,6 @@ func TestRandHoundService(t *testing.T) {
 	reply, err := service.Random(randRequest)
 	log.ErrFatal(err, "Pulsar[RandHound] - service randomness request failed")
 
-	//log.Lvl1("Pulsar[RandHound] - randomness:", reply.R)
-	//log.Lvl1("Pulsar[RandHound] - transcript:", reply.T)
+	log.Lvl1("Pulsar[RandHound] - randomness:", reply.R)
+	log.Lvl1("Pulsar[RandHound] - transcript:", reply.T)
 }
