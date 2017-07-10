@@ -5,16 +5,96 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/crypto.v0/random"
+	"gopkg.in/dedis/crypto.v0/share/pvss"
 	"gopkg.in/dedis/onet.v1"
 )
 
 // Name can be used to refer to the protool name
 var Name = "RandHound"
+
+// RandHound is the main protocol struct and implements the
+// onet.ProtocolInstance interface.
+type RandHound struct {
+	*onet.TreeNodeInstance                         // The tree node instance of the client / server
+	*Session                                       // Session information (client and servers)
+	*Messages                                      // Message information (client only)
+	mutex                  sync.Mutex              // An awesome mutex!
+	Done                   chan bool               // Channel to signal the end of a protocol run
+	SecretReady            bool                    // Boolean to indicate whether the collect randomness is ready or not
+	cosi                   *cosi.CoSi              // Collective signing instance
+	commits                map[int]abstract.Point  // Commits for collective signing
+	chosenSecrets          []uint32                // Chosen secrets contributing to collective randomness
+	records                map[int]map[int]*Record // Records with shares of chosen PVSS secrets; format: [source][target]*Record
+	statement              []byte                  // Statement to be collectively signed
+	cosig                  []byte                  // Collective signature on statement
+	participants           []int                   // Servers participating in collective signing
+}
+
+// Session contains all the information necessary for a RandHound run.
+type Session struct {
+	nodes      int                // Total number of nodes (client and servers)
+	groups     int                // Number of groups
+	purpose    string             // Purpose of protocol run
+	time       time.Time          // Timestamp of protocol initiation
+	seed       []byte             // Client-chosen seed for sharding
+	clientKey  abstract.Point     // Client public key
+	servers    [][]*onet.TreeNode // Grouped servers
+	serverKeys [][]abstract.Point // Grouped server keys
+	indices    [][]int            // Grouped server indices
+	thresholds []uint32           // Grouped thresholds
+	groupNum   map[int]int        // Mapping of roster server index to group number
+	groupPos   map[int]int        // Mapping of roster server index to position in the group
+	sid        []byte             // Session identifier
+}
+
+// Messages stores all the messages the client collects during a RandHound run.
+type Messages struct {
+	i1  *I1         // I1 message sent to servers
+	i2s map[int]*I2 // I2 messages sent to servers (index: server)
+	i3  *I3         // I3 message sent to servers
+	r1s map[int]*R1 // R1 messages received from servers (index: server)
+	r2s map[int]*R2 // R2 messages received from servers (index: server)
+	r3s map[int]*R3 // R3 messages received from servers (index: server)
+}
+
+// Record stores related encrypted and decrypted PVSS shares together with the
+// commitment.
+type Record struct {
+	Eval     abstract.Point    // Commitment of polynomial evaluation
+	EncShare *pvss.PubVerShare // Encrypted verifiable share
+	DecShare *pvss.PubVerShare // Decrypted verifiable share
+}
+
+// Share contains information on public verifiable shares and the source and
+// target servers.
+type Share struct {
+	Source      int               // Source roster index
+	Target      int               // Target roster index
+	PubVerShare *pvss.PubVerShare // Public verifiable share
+}
+
+// TODO: Do we need to store the public commitment polynomials in the transcript?
+// NOTE: We already store the evaluations of the polynomials in the records.
+
+// Transcript represents the record of a protocol run created by the client.
+type Transcript struct {
+	Nodes      int                     // Total number of nodes (client + server)
+	Groups     int                     // Number of groups
+	Purpose    string                  // Purpose of protocol run
+	Time       time.Time               // Timestamp of protocol initiation
+	Seed       []byte                  // Client-chosen seed for sharding
+	Keys       []abstract.Point        // Public keys (client + server)
+	Thresholds []uint32                // Grouped secret sharing thresholds
+	SID        []byte                  // Session identifier
+	CoSig      []byte                  // Collective signature on chosen secrets
+	Records    map[int]map[int]*Record // Records containing chosen PVSS shares; format: [source][target]*Record
+}
 
 func init() {
 	onet.GlobalProtocolRegister(Name, NewRandHound)
