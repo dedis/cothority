@@ -17,6 +17,7 @@ import (
 var errorWrongSession = errors.New("wrong session identifier")
 
 func (rh *RandHound) handleI1(i1 WI1) error {
+	// Executed on the randomness servers
 	msg := &i1.I1
 	var err error
 	src := i1.RosterIndex
@@ -90,12 +91,18 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 }
 
 func (rh *RandHound) handleR1(r1 WR1) error {
+	// Executed on the client
 	msg := &r1.R1
 	src := r1.RosterIndex
 	grp := rh.groupNum[src]
 	pos := rh.groupPos[src]
 	rh.mutex.Lock()
 	defer rh.mutex.Unlock()
+
+	// Do not accept new R1 messages if we have already committed to secrets before
+	if len(rh.chosenSecrets) > 0 {
+		return nil
+	}
 
 	// Verify R1 message signature
 	if err := verifySchnorr(rh.Suite(), rh.serverKeys[grp][pos], msg); err != nil {
@@ -118,11 +125,6 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 	// Record server commit
 	rh.commits[src] = msg.V
-
-	// Return, if we already committed to secrets before
-	if len(rh.chosenSecrets) > 0 {
-		return nil
-	}
 
 	// Verify encrypted shares and record valid ones
 	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
@@ -165,7 +167,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	}
 
 	// Proceed, if there are enough good secrets and more than 2/3 of servers replied
-	// TODO: maybe we want to have a timer here to give nodes chances to send their replies
+	// (TODO: maybe we want to have a timer here to give nodes chances to send their replies)
 	if len(goodSecrets) == rh.groups && 2*rh.nodes/3 < len(rh.records) {
 
 		for i := range rh.servers {
@@ -192,12 +194,10 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.cosi.SetMaskBit(rh.TreeNode().RosterIndex, true)
 
 		// Collect commits and mark participating nodes
-		rh.participants = make([]int, 0)
 		var subComms []abstract.Point
 		for i, V := range rh.commits {
 			subComms = append(subComms, V)
 			rh.cosi.SetMaskBit(i, true)
-			rh.participants = append(rh.participants, i)
 		}
 
 		// Compute aggregate commit
@@ -260,6 +260,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 }
 
 func (rh *RandHound) handleI2(i2 WI2) error {
+	// Executed on the randomness servers
 	msg := &i2.I2
 
 	// Verify I2 message signature
@@ -336,6 +337,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 }
 
 func (rh *RandHound) handleR2(r2 WR2) error {
+	// Executed on the client
 	msg := &r2.R2
 	src := r2.RosterIndex
 	grp := rh.groupNum[src]
@@ -363,15 +365,19 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	}
 
 	// Record R2 message
-	rh.r2s[src] = msg
+	// NOTE: we only consider messages from servers that committed earlier
+	if _, ok := rh.commits[src]; ok {
+		rh.r2s[src] = msg
+	}
 
-	// TODO: What condition to proceed? We need at least a reply from the 2/3 of
-	// nodes that we chose earlier. Should we have a timer?
-	if len(rh.r2s) == rh.nodes-1 {
+	// Proceed once we have all responses from servers that committed earlier
+	if len(rh.commits) <= len(rh.r2s) {
+
 		var responses []abstract.Scalar
-		for _, src := range rh.participants {
+		for src, _ := range rh.commits {
 			responses = append(responses, rh.r2s[src].R)
 		}
+
 		if _, err := rh.cosi.Response(responses); err != nil {
 			return err
 		}
@@ -394,6 +400,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 }
 
 func (rh *RandHound) handleI3(i3 WI3) error {
+	// Executed on the randomness servers
 	msg := &i3.I3
 
 	// Verify I3 message signature
@@ -458,6 +465,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 }
 
 func (rh *RandHound) handleR3(r3 WR3) error {
+	// Executed on the client
 	msg := &r3.R3
 	src := r3.RosterIndex
 	grp := rh.groupNum[src]

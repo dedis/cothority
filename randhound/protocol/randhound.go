@@ -28,12 +28,11 @@ type RandHound struct {
 	Done                   chan bool               // Channel to signal the end of a protocol run
 	SecretReady            bool                    // Boolean to indicate whether the collect randomness is ready or not
 	cosi                   *cosi.CoSi              // Collective signing instance
-	commits                map[int]abstract.Point  // Commits for collective signing
+	commits                map[int]abstract.Point  // Commits for collective signing (index: source)
 	chosenSecrets          []uint32                // Chosen secrets contributing to collective randomness
 	records                map[int]map[int]*Record // Records with shares of chosen PVSS secrets; format: [source][target]*Record
 	statement              []byte                  // Statement to be collectively signed
 	cosig                  []byte                  // Collective signature on statement
-	participants           []int                   // Servers participating in collective signing
 }
 
 // Session contains all the information necessary for a RandHound run.
