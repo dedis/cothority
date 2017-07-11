@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"sync"
 
 	"strconv"
 
@@ -43,11 +44,13 @@ const skipblocksID = "skipblocks"
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	Storage       *skipchain.SBBStorage
-	propagate     messaging.PropagationFunc
-	verifiers     map[skipchain.VerifierID]skipchain.SkipBlockVerifier
-	blockRequests map[string]chan *skipchain.SkipBlock
-	lastSave      time.Time
+	Storage          *skipchain.SBBStorage
+	propagate        messaging.PropagationFunc
+	verifiers        map[skipchain.VerifierID]skipchain.SkipBlockVerifier
+	blockRequests    map[string]chan *skipchain.SkipBlock
+	lastSave         time.Time
+	propagating      int64
+	propagatingMutex sync.Mutex
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -292,6 +295,13 @@ func (s *Service) GetAllSkipchains(id *skipchain.GetAllSkipchains) (*skipchain.G
 	return &skipchain.GetAllSkipchainsReply{
 		SkipChains: chains,
 	}, nil
+}
+
+// IsPropagating returns true if there is at least one propagation running.
+func (s *Service) IsPropagating() bool {
+	s.propagatingMutex.Lock()
+	defer s.propagatingMutex.Unlock()
+	return s.propagating > 0
 }
 
 func (s *Service) getUpdateBlock(known *skipchain.SkipBlock, unknown skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
@@ -644,7 +654,13 @@ func (s *Service) startPropagation(blocks []*skipchain.SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
+	s.propagatingMutex.Lock()
+	s.propagating++
+	s.propagatingMutex.Unlock()
 	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
+	s.propagatingMutex.Lock()
+	s.propagating--
+	s.propagatingMutex.Unlock()
 	if err != nil {
 		return err
 	}
