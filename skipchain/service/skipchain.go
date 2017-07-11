@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"sync"
 
 	"strconv"
 
@@ -45,11 +46,11 @@ const skipblocksID = "skipblocks"
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	Storage       *skipchain.SBBStorage
-	propagate     messaging.PropagationFunc
-	verifiers     map[skipchain.VerifierID]skipchain.SkipBlockVerifier
-	blockRequests map[string]chan *skipchain.SkipBlock
-	lastSave      time.Time
+	Storage          *skipchain.SBBStorage
+	propagate        messaging.PropagationFunc
+	verifiers        map[skipchain.VerifierID]skipchain.SkipBlockVerifier
+	blockRequests    map[string]chan *skipchain.SkipBlock
+	lastSave         time.Time
 	propagating      int64
 	propagatingMutex sync.Mutex
 }
