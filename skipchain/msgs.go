@@ -61,7 +61,7 @@ type GetAllSkipchainsReply struct {
 	SkipChains []*SkipBlock
 }
 
-// GetSingleBlockByIndex asks for a single block.
+// GetBlockByIndex asks for a single block.
 type GetBlockByIndex struct {
 	Genesis SkipBlockID
 	Index   int
