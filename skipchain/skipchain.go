@@ -229,6 +229,9 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 			"No such genesis-block")
 	}
+	if sb.Index == id.Index {
+		return sb, nil
+	}
 	for len(sb.ForwardLink) > 0 {
 		sb = s.Sbm.GetByID(sb.ForwardLink[0].Hash)
 		if sb.Index == id.Index {
