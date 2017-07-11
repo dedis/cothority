@@ -73,7 +73,7 @@ func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.Sto
 	var prev *skipchain.SkipBlock
 	var changed []*skipchain.SkipBlock
 
-	if prop.GenesisID.IsNull() {
+	if prop.GenesisID.IsNil() {
 		// A new chain is created, suppose all arguments in SkipBlock
 		// are correctly set up
 		prop.Index = 0
@@ -89,7 +89,7 @@ func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.Sto
 			return nil, onet.NewClientErrorCode(skipchain.ErrorParameterWrong,
 				err.Error())
 		}
-		if !prop.ParentBlockID.IsNull() {
+		if !prop.ParentBlockID.IsNil() {
 			parent := s.Storage.GetByID(prop.ParentBlockID)
 			if parent == nil {
 				return nil, onet.NewClientErrorCode(skipchain.ErrorParameterWrong,
@@ -184,7 +184,6 @@ func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.Sto
 		return nil, onet.NewClientErrorCode(skipchain.ErrorVerification,
 			"Couldn't propagate new blocks: "+err.Error())
 	}
-	s.save()
 
 	reply := &skipchain.StoreSkipBlockReply{
 		Previous: prev,
@@ -204,7 +203,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 	var start, end *skipchain.SkipBlock
 	blocks := []*skipchain.SkipBlock{}
 	var bunch *skipchain.SkipBlockBunch
-	if !request.Start.IsNull() {
+	if !request.Start.IsNil() {
 		start = s.Storage.GetByID(request.Start)
 		if start == nil {
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
@@ -217,7 +216,7 @@ func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksR
 				"Didn't find corresponding bunch for start-block")
 		}
 	}
-	if !request.End.IsNull() {
+	if !request.End.IsNil() {
 		end = s.Storage.GetByID(request.End)
 		if end == nil {
 			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
@@ -543,7 +542,6 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			bunch.Store(sb)
 		}
 	}
-	//log.Print(s.ServerIdentity(), "Saved")
 	s.save()
 }
 

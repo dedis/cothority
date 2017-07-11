@@ -32,14 +32,14 @@ func init() {
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
 
-// IsNull returns true if the ID is undefined
-func (sbid SkipBlockID) IsNull() bool {
+// IsNil returns true if the ID is undefined
+func (sbid SkipBlockID) IsNil() bool {
 	return len(sbid) == 0
 }
 
 // Short returns only the 8 first bytes of the ID as a hex-encoded string.
 func (sbid SkipBlockID) Short() string {
-	if sbid.IsNull() {
+	if sbid.IsNil() {
 		return "Nil"
 	}
 	return fmt.Sprintf("%x", []byte(sbid[0:8]))
@@ -53,6 +53,21 @@ func (sbid SkipBlockID) Equal(sb SkipBlockID) bool {
 // VerifierID represents one of the verifications used to accept or
 // deny a SkipBlock.
 type VerifierID uuid.UUID
+
+// String returns canonical string representation of the ID
+func (vId VerifierID) String() string {
+	return uuid.UUID(vId).String()
+}
+
+// Equal returns true if and only if vID2 equals this VerifierID.
+func (vId VerifierID) Equal(vID2 VerifierID) bool {
+	return uuid.Equal(uuid.UUID(vId), uuid.UUID(vID2))
+}
+
+// IsNil returns true iff the VerifierID is Nil
+func (vId VerifierID) IsNil() bool {
+	return vId.Equal(VerifierID(uuid.Nil))
+}
 
 // SkipBlockVerifier is function that should return whether this skipblock is
 // accepted or not. This function is used during a BFTCosi round, but wrapped
