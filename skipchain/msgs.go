@@ -14,6 +14,8 @@ func init() {
 		// Fetch all skipchains
 		&GetAllSkipchains{},
 		&GetAllSkipchainsReply{},
+		// Get only one block
+		&GetBlockByIndex{},
 	} {
 		network.RegisterMessage(m)
 	}
@@ -57,4 +59,10 @@ type GetAllSkipchains struct {
 // GetAllSkipchainsReply - returns all known last blocks of skipchains.
 type GetAllSkipchainsReply struct {
 	SkipChains []*SkipBlock
+}
+
+// GetSingleBlockByIndex asks for a single block.
+type GetBlockByIndex struct {
+	Genesis SkipBlockID
+	Index   int
 }

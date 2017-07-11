@@ -240,6 +240,28 @@ func TestClient_AddSkipBlock(t *testing.T) {
 	require.NotNil(t, cerr)
 }
 
+func TestClient_GetSingleBlockByIndex(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest()
+	_, roster, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := skipchain.NewClient()
+	log.Lvl1("Creating root and control chain")
+	sb1, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone, nil, nil)
+	log.ErrFatal(cerr)
+	_, latest, cerr := c.AddSkipBlock(sb1, roster, nil)
+	log.ErrFatal(cerr)
+	search, cerr := c.GetBlockByIndex(roster, sb1.Hash, -1)
+	require.NotNil(t, cerr)
+	search, cerr = c.GetBlockByIndex(roster, sb1.Hash, 0)
+	require.True(t, sb1.Equal(search))
+	search, cerr = c.GetBlockByIndex(roster, sb1.Hash, 1)
+	require.True(t, latest.Equal(search))
+	search, cerr = c.GetBlockByIndex(roster, sb1.Hash, 2)
+	require.NotNil(t, cerr)
+}
+
 type testData struct {
 	A int
 	B string

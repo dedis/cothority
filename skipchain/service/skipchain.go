@@ -299,6 +299,27 @@ func (s *Service) GetAllSkipchains(id *skipchain.GetAllSkipchains) (*skipchain.G
 	}, nil
 }
 
+// GetBlockByIndex searches for the given block and returns it. If no such block is
+// found, a nil is returned.
+func (s *Service) GetBlockByIndex(id *skipchain.GetBlockByIndex) (*skipchain.SkipBlock, onet.ClientError) {
+	sb := s.Storage.GetByID(id.Genesis)
+	if sb == nil {
+		return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
+			"No such genesis-block")
+	}
+	if sb.Index == id.Index {
+		return sb, nil
+	}
+	for len(sb.ForwardLink) > 0 {
+		sb = s.Storage.GetByID(sb.ForwardLink[0].Hash)
+		if sb.Index == id.Index {
+			return sb, nil
+		}
+	}
+	return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
+		"No block with this index found")
+}
+
 // IsPropagating returns true if there is at least one propagation running.
 func (s *Service) IsPropagating() bool {
 	s.propagatingMutex.Lock()
@@ -743,7 +764,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	}
 	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetBlocks,
-		s.GetAllSkipchains))
+		s.GetAllSkipchains, s.GetBlockByIndex))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),
