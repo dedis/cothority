@@ -715,10 +715,16 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
+// GetService makes it possible to give either an `onet.Context` or
+// `onet.Server` to `RegisterVerification`.
+type GetService interface {
+	Service(name string) onet.Service
+}
+
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func RegisterVerification(c *onet.Context, v skipchain.VerifierID, f skipchain.SkipBlockVerifier) error {
-	scs := c.Service(skipchain.ServiceName)
+func RegisterVerification(s GetService, v skipchain.VerifierID, f skipchain.SkipBlockVerifier) error {
+	scs := s.Service(skipchain.ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + skipchain.ServiceName)
 	}
