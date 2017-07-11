@@ -7,9 +7,9 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/bftcosi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/cothority.v1/bftcosi"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
