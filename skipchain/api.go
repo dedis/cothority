@@ -82,6 +82,15 @@ func (c *Client) GetBlocks(roster *onet.Roster, start, end SkipBlockID, max int)
 	return reply.Reply, nil
 }
 
+// GetBlockByIndex searches for a block with the given index following the genesis-block.
+// It returns that block, or an error if that block is not found.
+func (c *Client) GetBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *SkipBlock, cerr onet.ClientError) {
+	reply = &SkipBlock{}
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetBlockByIndex{genesis, index}, reply)
+	return
+}
+
 // GetAllSkipchains returns all skipchains known to that conode. If none are
 // known, an empty slice is returned.
 func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkipchainsReply,
