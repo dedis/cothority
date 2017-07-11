@@ -10,8 +10,6 @@ import (
 
 	"fmt"
 
-	"sync"
-
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"

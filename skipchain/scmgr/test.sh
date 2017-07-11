@@ -38,7 +38,7 @@ testHtml(){
 	ID=$( runSc list known | head -n 1 | sed -e "s/.*SkipChain \(.*\)/\1/" )
 	html=$(mktemp)
 	echo "TestWeb" > $html
-	testOK runSc addWeb $ID $html
+	testOK runSc add web $ID $html
 	rm -f $html
 }
 
@@ -47,19 +47,19 @@ testRestart(){
 	setupGenesis
 	pkill -9 conode 2> /dev/null
 	runCoBG 1 2
-	testOK runSc add $ID public.toml
+	testOK runSc add roster $ID public.toml
 }
 
 testAdd(){
 	startCl
 	setupGenesis
-	testFail runSc add 1234 public.toml
-	testOK runSc add $ID public.toml
+	testFail runSc add roster 1234 public.toml
+	testOK runSc add roster $ID public.toml
 	runCoBG 3
 	runGrepSed "Latest block of" "s/.* //" runSc update $ID
 	testOK runSc update -d $ID
 	LATEST=$SED
-	testOK runSc add $LATEST public.toml
+	testOK runSc add roster $LATEST public.toml
 }
 
 setupGenesis(){

@@ -26,6 +26,9 @@ import (
 
 	"encoding/base64"
 
+	"encoding/json"
+	"path/filepath"
+
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
@@ -74,11 +77,25 @@ func main() {
 			Action:    join,
 		},
 		{
-			Name:      "add",
-			Usage:     "add a new roster to a skipchain",
-			Aliases:   []string{"a"},
-			ArgsUsage: "skipchain-id " + groupsDef,
-			Action:    add,
+			Name:    "add",
+			Usage:   "add a new block to the skipchain",
+			Aliases: []string{"a"},
+			Subcommands: []cli.Command{
+				{
+					Name:      "roster",
+					Usage:     "add a new roster to a skipchain",
+					Aliases:   []string{"a"},
+					ArgsUsage: "skipchain-id " + groupsDef,
+					Action:    addRoster,
+				},
+				{
+					Name:      "web",
+					Usage:     "add a web-page to a skipchain",
+					Aliases:   []string{"a"},
+					ArgsUsage: "skipchain-id page.html",
+					Action:    addWeb,
+				},
+			},
 		},
 		{
 			Name:      "update",
@@ -107,6 +124,12 @@ func main() {
 						},
 					},
 					Action: lsKnown,
+				},
+				{
+					Name:      "index",
+					Usage:     "create index-files for all known skipchains",
+					ArgsUsage: "output path",
+					Action:    lsIndex,
 				},
 				{
 					Name:      "fetch",
@@ -191,7 +214,7 @@ func join(c *cli.Context) error {
 }
 
 // Returns the number of calls.
-func add(c *cli.Context) error {
+func addRoster(c *cli.Context) error {
 	log.Info("Adding a block with a new group")
 	if c.NArg() < 2 {
 		return errors.New("Please give group-file and id to add")
@@ -209,6 +232,39 @@ func add(c *cli.Context) error {
 	}
 	latest := sbs[len(sbs)-1]
 	_, sbNew, cerr := client.AddSkipBlock(latest, group.Roster, nil)
+	if cerr != nil {
+		return errors.New("while storing block: " + cerr.Error())
+	}
+	cfg.Sbb.Store(sbNew)
+	log.ErrFatal(cfg.save(c))
+	log.Infof("Added new block %x to chain %x", sbNew.Hash, sbNew.GenesisID)
+	return nil
+}
+
+// Adds a block with the page inside.
+func addWeb(c *cli.Context) error {
+	log.Info("Adding a block with a page")
+	if c.NArg() < 2 {
+		log.Fatal("Please give skipchain-id and html-file to save")
+	}
+	for i, s := range c.Args() {
+		log.Print(i, s)
+	}
+	cfg := getConfigOrFail(c)
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
+	if sb == nil {
+		return errors.New("didn't find latest block - update first")
+	}
+	client := skipchain.NewClient()
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	if cerr != nil {
+		return cerr
+	}
+	latest := sbs[len(sbs)-1]
+	log.Print("Reading file", c.Args().Get(1))
+	data, err := ioutil.ReadFile(c.Args().Get(1))
+	log.ErrFatal(err)
+	_, sbNew, cerr := client.AddSkipBlock(latest, nil, data)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
@@ -286,6 +342,77 @@ func lsKnown(c *cli.Context) error {
 	return nil
 }
 
+// lsIndex writes one index-file for every known skipchain and an index.html
+// for all skiplchains.
+func lsIndex(c *cli.Context) error {
+	output := c.Args().First()
+	if len(output) == 0 {
+		return errors.New("Missing output path")
+	}
+
+	cleanHTMLFiles(output)
+
+	cfg, err := loadConfig(c)
+	if err != nil {
+		return errors.New("couldn't read config: " + err.Error())
+	}
+
+	// Get the list of genesis block
+	cl := skipchain.NewClient()
+	genesis := sbl{}
+	for g, bunch := range cfg.Sbb.Bunches {
+		gid := skipchain.SkipBlockID(g)
+		gen := cfg.Sbb.GetByID(gid)
+		if gen == nil {
+			log.Print("Getting genesis-block")
+			gen, err = cl.GetSingleBlock(bunch.Latest.Roster, gid)
+			if err != nil {
+				log.Error("Couldn't get genesis-skipblock:", err)
+				continue
+			}
+			bunch.Store(gen)
+		}
+		genesis = append(genesis, gen)
+	}
+
+	sort.Sort(genesis)
+
+	// Build the json structure
+	blocks := jsonBlockList{}
+	blocks.Blocks = make([]jsonBlock, len(genesis))
+	for i, g := range genesis {
+		block := &blocks.Blocks[i]
+		block.GenesisID = hex.EncodeToString(g.Hash)
+		block.Servers = make([]string, len(g.Roster.List))
+		block.Data = g.Data
+
+		for j, server := range g.Roster.List {
+			block.Servers[j] = server.Address.Host() + ":" + server.Address.Port()
+		}
+
+		// Write the genesis block file
+		content, _ := json.Marshal(block)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
+
+		if err != nil {
+			log.Info("Cannot write block-specific file")
+		}
+	}
+
+	content, err := json.Marshal(blocks)
+	if err != nil {
+		log.Info("Cannot convert to json")
+	}
+
+	// Write the json into the index.html
+	err = ioutil.WriteFile(filepath.Join(output, "index.html"), content, 0644)
+	if err != nil {
+		log.Info("Cannot write in the file")
+	}
+
+	return cfg.save(c)
+}
+
 func lsFetch(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
 	rec := c.Bool("recursive")
@@ -336,6 +463,25 @@ func lsFetch(c *cli.Context) error {
 		}
 	}
 	return cfg.save(c)
+}
+
+// Remove every file matching *.html in the given directory
+func cleanHTMLFiles(dir string) error {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".html") {
+			err := os.Remove(filepath.Join(dir, f.Name()))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // JSON skipblock element to be written in the index.html file
