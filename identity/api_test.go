@@ -253,7 +253,7 @@ func TestVerificationFunction(t *testing.T) {
 	data2.Votes["two2"] = &sig
 	id := s0.getIdentityStorage(c1.ID)
 	require.NotNil(t, id, "Didn't find identity")
-	_, cerr := s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	_, _, cerr := s0.skipchain.AddSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
 
 	// Gibberish signature
@@ -261,7 +261,7 @@ func TestVerificationFunction(t *testing.T) {
 	log.ErrFatal(err)
 	sig.Response.Add(sig.Response, network.Suite.Scalar().One())
 	data2.Votes["one1"] = &sig
-	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	_, _, cerr = s0.skipchain.AddSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake signature!")
 
 	// Unhack: verify that the correct way of doing it works, even if
@@ -269,7 +269,7 @@ func TestVerificationFunction(t *testing.T) {
 	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
 	log.ErrFatal(err)
 	data2.Votes["one1"] = &sig
-	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	_, _, cerr = s0.skipchain.AddSkipBlock(id.SCData, nil, data2)
 	log.ErrFatal(err)
 	log.ErrFatal(c1.DataUpdate())
 

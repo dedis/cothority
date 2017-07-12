@@ -6,6 +6,8 @@ package main
 import (
 	"os"
 
+	"github.com/dedis/cothority/skipchain"
+
 	"gopkg.in/dedis/onet.v1/app"
 
 	"fmt"
@@ -20,11 +22,13 @@ import (
 	"bytes"
 	"sort"
 
-	"encoding/json"
-	"path/filepath"
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
+	"encoding/base64"
+
+	"encoding/json"
+	"path/filepath"
+
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -32,16 +36,11 @@ import (
 )
 
 type config struct {
-	Sbm *skipchain.SkipBlockMap
-}
-
-type html struct {
-	Data []byte
+	Sbb *skipchain.SBBStorage
 }
 
 func main() {
 	network.RegisterMessage(&config{})
-	network.RegisterMessage(&html{})
 	cliApp := cli.NewApp()
 	cliApp.Name = "scmgr"
 	cliApp.Usage = "Create, modify and query skipchains"
@@ -65,7 +64,7 @@ func main() {
 					Usage: "maximum height of skipchain",
 				},
 				cli.StringFlag{
-					Name:  "html",
+					Name:  "url",
 					Usage: "URL of html-skipchain",
 				},
 			},
@@ -79,25 +78,37 @@ func main() {
 			Action:    join,
 		},
 		{
-			Name:      "add",
-			Usage:     "add a new roster to a skipchain",
-			Aliases:   []string{"a"},
-			ArgsUsage: "skipchain-id " + groupsDef,
-			Action:    add,
-		},
-		{
-			Name:      "addWeb",
-			Usage:     "add a web-site to a skipchain",
-			Aliases:   []string{"a"},
-			ArgsUsage: "skipchain-id page.html",
-			Action:    addWeb,
+			Name:    "add",
+			Usage:   "add a new block to the skipchain",
+			Aliases: []string{"a"},
+			Subcommands: []cli.Command{
+				{
+					Name:      "roster",
+					Usage:     "add a new roster to a skipchain",
+					Aliases:   []string{"a"},
+					ArgsUsage: "skipchain-id " + groupsDef,
+					Action:    addRoster,
+				},
+				{
+					Name:      "web",
+					Usage:     "add a web-page to a skipchain",
+					Aliases:   []string{"a"},
+					ArgsUsage: "skipchain-id page.html",
+					Action:    addWeb,
+				},
+			},
 		},
 		{
 			Name:      "update",
 			Usage:     "get latest valid block",
 			Aliases:   []string{"u"},
 			ArgsUsage: "skipchain-id",
-			Action:    update,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name: "data, d",
+				},
+			},
+			Action: update,
 		},
 		{
 			Name:  "list",
@@ -157,20 +168,20 @@ func create(c *cli.Context) error {
 	group := readGroup(c, 0)
 	client := skipchain.NewClient()
 	data := []byte{}
-	if address := c.String("html"); address != "" {
-		if !strings.HasPrefix(address, "http") {
-			log.Fatal("Please give http-address")
+	if address := c.String("url"); address != "" {
+		if !strings.HasPrefix(address, "http") && !strings.HasPrefix(address, "config") {
+			log.Fatal("Please give http- or config-address")
 		}
 		data = []byte(address)
 	}
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, &html{data}, nil)
+		skipchain.VerificationStandard, data, nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg := getConfigOrFail(c)
-	cfg.Sbm.Store(sb)
+	cfg.Sbb.AddBunch(sb)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -187,47 +198,47 @@ func join(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	gcr, cerr := client.GetUpdateChain(group.Roster, hash)
+	sbs, cerr := client.GetUpdateChain(group.Roster, hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := gcr.Update[len(gcr.Update)-1]
+	latest := sbs[len(sbs)-1]
 	genesis := latest.GenesisID
 	if genesis == nil {
 		genesis = latest.Hash
 	}
 	log.Infof("Joined skipchain %x", genesis)
 	cfg := getConfigOrFail(c)
-	cfg.Sbm.Store(latest)
+	cfg.Sbb.AddBunch(latest)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
 
 // Returns the number of calls.
-func add(c *cli.Context) error {
+func addRoster(c *cli.Context) error {
 	log.Info("Adding a block with a new group")
 	if c.NArg() < 2 {
 		return errors.New("Please give group-file and id to add")
 	}
 	group := readGroup(c, 1)
 	cfg := getConfigOrFail(c)
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block - update first")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Update[len(guc.Update)-1]
-	ssbr, cerr := client.StoreSkipBlock(latest, group.Roster, nil)
+	latest := sbs[len(sbs)-1]
+	_, sbNew, cerr := client.AddSkipBlock(latest, group.Roster, nil)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbm.Store(ssbr.Latest)
+	cfg.Sbb.Store(sbNew)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", sbNew.Hash, sbNew.GenesisID)
 	return nil
 }
 
@@ -238,29 +249,29 @@ func addWeb(c *cli.Context) error {
 		log.Fatal("Please give skipchain-id and html-file to save")
 	}
 	for i, s := range c.Args() {
-		log.Info(i, s)
+		log.Print(i, s)
 	}
 	cfg := getConfigOrFail(c)
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block - update first")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return cerr
 	}
-	latest := guc.Update[len(guc.Update)-1]
-	log.Info("Reading file", c.Args().Get(1))
+	latest := sbs[len(sbs)-1]
+	log.Print("Reading file", c.Args().Get(1))
 	data, err := ioutil.ReadFile(c.Args().Get(1))
 	log.ErrFatal(err)
-	ssbr, cerr := client.StoreSkipBlock(latest, nil, &html{data})
+	_, sbNew, cerr := client.AddSkipBlock(latest, nil, data)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
-	cfg.Sbm.Store(ssbr.Latest)
+	cfg.Sbb.Store(sbNew)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", sbNew.Hash, sbNew.GenesisID)
 	return nil
 }
 
@@ -272,25 +283,28 @@ func update(c *cli.Context) error {
 	}
 	cfg := getConfigOrFail(c)
 
-	sb := cfg.Sbm.GetFuzzy(c.Args().First())
+	sb := cfg.Sbb.GetFuzzy(c.Args().First())
 	if sb == nil {
 		return errors.New("didn't find latest block in local store")
 	}
 	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	sbs, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return errors.New("while updating chain: " + cerr.Error())
 	}
-	if len(guc.Update) == 1 {
+	if len(sbs) == 1 {
 		log.Info("No new block available")
 	} else {
-		for _, b := range guc.Update[1:] {
+		for _, b := range sbs[1:] {
 			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
-			cfg.Sbm.Store(b)
+			cfg.Sbb.Store(b)
 		}
 	}
-	latest := guc.Update[len(guc.Update)-1]
+	latest := sbs[len(sbs)-1]
 	log.Infof("Latest block of %x is %x", latest.GenesisID, latest.Hash)
+	if c.Bool("data") {
+		log.Info(base64.StdEncoding.EncodeToString(latest.Data))
+	}
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -301,18 +315,20 @@ func lsKnown(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
 	}
-	if cfg.Sbm.Length() == 0 {
+	if len(cfg.Sbb.Bunches) == 0 {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
 	for _, g := range cfg.getSortedGenesis() {
 		short := !c.Bool("long")
-		log.Info(g.Sprint(short))
+		if short {
+			log.Infof("SkipChain %x", g.SkipChainID()[0:8])
+		} else {
+			log.Infof("SkipChain %x", g.SkipChainID())
+		}
 		sub := sbli{}
-		for _, sb := range cfg.Sbm.SkipBlocks {
-			if sb.GenesisID.Equal(g.Hash) {
-				sub = append(sub, sb)
-			}
+		for _, sb := range cfg.Sbb.GetBunch(g.SkipChainID()).SkipBlocks {
+			sub = append(sub, sb)
 		}
 		sort.Sort(sub)
 		for _, sb := range sub {
@@ -373,7 +389,7 @@ func lsIndex(c *cli.Context) error {
 		log.Info("Cannot write in the file")
 	}
 
-	return nil
+	return cfg.save(c)
 }
 
 func lsFetch(c *cli.Context) error {
@@ -384,8 +400,8 @@ func lsFetch(c *cli.Context) error {
 	var sisNew []*network.ServerIdentity
 
 	// Get ServerIdentities from all skipblocks
-	for _, sb := range cfg.Sbm.SkipBlocks {
-		sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
+	for _, sb := range cfg.Sbb.Bunches {
+		sisNew = updateNewSIs(sb.Latest.Roster, sisNew, sisAll)
 	}
 
 	// Get ServerIdentities from the given group-file
@@ -413,7 +429,7 @@ func lsFetch(c *cli.Context) error {
 		}
 		for _, sb := range gasr.SkipChains {
 			log.Infof("Found skipchain %x", sb.SkipChainID())
-			cfg.Sbm.Store(sb)
+			cfg.Sbb.Store(sb)
 			if rec {
 				log.Info("Recursive fetch")
 				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
@@ -461,7 +477,8 @@ func (s sbl) Len() int {
 	return len(s)
 }
 func (s sbl) Less(i, j int) bool {
-	return bytes.Compare(s[i].Hash, s[j].Hash) < 0
+	log.Print(s[i], s[j])
+	return bytes.Compare(s[i].SkipChainID(), s[j].SkipChainID()) < 0
 }
 func (s sbl) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
@@ -504,15 +521,17 @@ func getConfigOrFail(c *cli.Context) *config {
 }
 
 func loadConfig(c *cli.Context) (*config, error) {
-	path := app.TildeToHome(c.GlobalString("config"))
-	_, err := os.Stat(path)
+	cfgPath := app.TildeToHome(c.GlobalString("config"))
+	_, err := os.Stat(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &config{Sbm: skipchain.NewSkipBlockMap()}, nil
+			return &config{
+				Sbb: skipchain.NewSBBStorage(),
+			}, nil
 		}
-		return nil, fmt.Errorf("Could not open file %s", path)
+		return nil, fmt.Errorf("Could not open file %s", cfgPath)
 	}
-	f, err := ioutil.ReadFile(path)
+	f, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -520,7 +539,11 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return cfg.(*config), err
+	conf := cfg.(*config)
+	if conf.Sbb == nil {
+		conf.Sbb = skipchain.NewSBBStorage()
+	}
+	return conf, err
 }
 
 func (cfg *config) save(c *cli.Context) error {
@@ -529,11 +552,11 @@ func (cfg *config) save(c *cli.Context) error {
 		return err
 	}
 	file := app.TildeToHome(c.GlobalString("config"))
-	path := path.Dir(file)
-	_, err = os.Stat(path)
+	cfgPath := path.Dir(file)
+	_, err = os.Stat(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := os.MkdirAll(path, 0770)
+			err := os.MkdirAll(cfgPath, 0770)
 			if err != nil {
 				return err
 			}
@@ -546,10 +569,8 @@ func (cfg *config) save(c *cli.Context) error {
 
 func (cfg *config) getSortedGenesis() []*skipchain.SkipBlock {
 	genesis := sbl{}
-	for _, sb := range cfg.Sbm.SkipBlocks {
-		if sb.Index == 0 {
-			genesis = append(genesis, sb)
-		}
+	for _, sb := range cfg.Sbb.Bunches {
+		genesis = append(genesis, sb.GetByID(sb.GenesisID))
 	}
 	sort.Sort(genesis)
 	return genesis

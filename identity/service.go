@@ -21,6 +21,7 @@ import (
 
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/cothority/skipchain/service"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
@@ -119,14 +120,14 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	reply, cerr := s.skipchain.GetUpdateChain(sid.SCRoot.Roster, sid.SCData.Hash)
+	blocks, cerr := s.skipchain.GetUpdateChain(sid.SCRoot.Roster, sid.SCData.Hash)
 	if cerr != nil {
 		return nil, cerr
 	}
-	if len(reply.Update) > 1 {
+	if len(blocks) > 1 {
 		log.Lvl3("Got new data")
 		// TODO: check that update-chain has correct forward-links and fits into existing blocks
-		sid.SCData = reply.Update[len(reply.Update)-1]
+		sid.SCData = blocks[len(blocks)-1]
 		_, dataInt, err := network.Unmarshal(sid.SCData.Data)
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorDataMissing, err.Error())
@@ -238,15 +239,15 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.StoreSkipBlock(sid.SCData, nil, sid.Proposed)
+		_, latest, cerr := s.skipchain.AddSkipBlock(sid.SCData, nil, sid.Proposed)
 		if cerr != nil {
 			return nil, cerr
 		}
-		_, msg, _ := network.Unmarshal(reply.Latest.Data)
+		_, msg, _ := network.Unmarshal(latest.Data)
 		log.Lvl3("SB signed is", msg.(*Data).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
-			Latest: reply.Latest,
+			Latest: latest,
 		}
 		_, err = s.propagateSkipBlock(sid.SCRoot.Roster, usb, propagateTimeout)
 		if err != nil {
@@ -259,7 +260,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 // VerifyBlock makes sure that the new block is legit. This function will be
 // called by the skipchain on all nodes before they sign.
-func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
+func (s *Service) VerifyBlock(sb *skipchain.SkipBlock) bool {
 	// Putting it all in a function for easier error-printing
 	err := func() error {
 		if sb.Index == 0 {
@@ -509,6 +510,6 @@ func newIdentityService(c *onet.Context) onet.Service {
 		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate); err != nil {
 		log.Fatal("Registration error:", err)
 	}
-	skipchain.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
+	service.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
 	return s
 }
