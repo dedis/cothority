@@ -29,6 +29,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
+	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
@@ -318,12 +319,7 @@ func lsKnown(c *cli.Context) error {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
-	genesis := sbl{}
-	for _, bunch := range cfg.Sbb.Bunches {
-		genesis = append(genesis, bunch.Latest)
-	}
-	sort.Sort(genesis)
-	for _, g := range genesis {
+	for _, g := range cfg.getSortedGenesis() {
 		short := !c.Bool("long")
 		if short {
 			log.Infof("SkipChain %x", g.SkipChainID()[0:8])
@@ -358,24 +354,7 @@ func lsIndex(c *cli.Context) error {
 	}
 
 	// Get the list of genesis block
-	cl := skipchain.NewClient()
-	genesis := sbl{}
-	for g, bunch := range cfg.Sbb.Bunches {
-		gid := skipchain.SkipBlockID(g)
-		gen := cfg.Sbb.GetByID(gid)
-		if gen == nil {
-			log.Print("Getting genesis-block")
-			gen, err = cl.GetSingleBlock(bunch.Latest.Roster, gid)
-			if err != nil {
-				log.Error("Couldn't get genesis-skipblock:", err)
-				continue
-			}
-			bunch.Store(gen)
-		}
-		genesis = append(genesis, gen)
-	}
-
-	sort.Sort(genesis)
+	genesis := cfg.getSortedGenesis()
 
 	// Build the json structure
 	blocks := jsonBlockList{}
@@ -418,47 +397,42 @@ func lsFetch(c *cli.Context) error {
 	rec := c.Bool("recursive")
 	sisAll := map[network.ServerIdentityID]*network.ServerIdentity{}
 	group := readGroup(c, 0)
-	for _, bunch := range cfg.Sbb.Bunches {
-		for _, sb := range bunch.SkipBlocks {
-			for _, si := range sb.Roster.List {
-				sisAll[si.ID] = si
-			}
-		}
+	var sisNew []*network.ServerIdentity
+
+	// Get ServerIdentities from all skipblocks
+	for _, sb := range cfg.Sbb.Bunches {
+		sisNew = updateNewSIs(sb.Latest.Roster, sisNew, sisAll)
 	}
-	for _, si := range group.Roster.List {
-		sisAll[si.ID] = si
-	}
+
+	// Get ServerIdentities from the given group-file
+	sisNew = updateNewSIs(group.Roster, sisNew, sisAll)
+
 	log.Info("The following ips will be searched:")
-	for _, si := range sisAll {
+	for _, si := range sisNew {
 		log.Info(si.Address)
 	}
 	client := skipchain.NewClient()
-	sisNew := sisAll
 	for len(sisNew) > 0 {
-		sisIterate := sisNew
-		sisNew = map[network.ServerIdentityID]*network.ServerIdentity{}
-		for _, si := range sisIterate {
-			log.Info("Fetching all skipchains from", si.Address)
-			gasr, cerr := client.GetAllSkipchains(si)
-			if cerr != nil {
-				// Error is not fatal here - perhaps the node is down,
-				// but we can continue anyway.
-				log.Error(cerr)
-				continue
-			}
-			for _, sb := range gasr.SkipChains {
-				log.Printf("Found skipchain %x", sb.SkipChainID())
-				cfg.Sbb.Store(sb)
-				if rec {
-					log.Print("rec")
-					for _, si := range sb.Roster.List {
-						if _, exists := sisAll[si.ID]; !exists {
-							log.Print("Adding", si)
-							sisNew[si.ID] = si
-							sisAll[si.ID] = si
-						}
-					}
-				}
+		si := sisNew[0]
+		if len(sisNew) > 1 {
+			sisNew = sisNew[1:]
+		} else {
+			sisNew = []*network.ServerIdentity{}
+		}
+		log.Info("si, sisNew:", si, sisNew)
+		gasr, cerr := client.GetAllSkipchains(si)
+		if cerr != nil {
+			// Error is not fatal here - perhaps the node is down,
+			// but we can continue anyway.
+			log.Error(cerr)
+			continue
+		}
+		for _, sb := range gasr.SkipChains {
+			log.Infof("Found skipchain %x", sb.SkipChainID())
+			cfg.Sbb.Store(sb)
+			if rec {
+				log.Info("Recursive fetch")
+				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
 			}
 		}
 	}
@@ -503,6 +477,7 @@ func (s sbl) Len() int {
 	return len(s)
 }
 func (s sbl) Less(i, j int) bool {
+	log.Print(s[i], s[j])
 	return bytes.Compare(s[i].SkipChainID(), s[j].SkipChainID()) < 0
 }
 func (s sbl) Swap(i, j int) {
@@ -590,4 +565,25 @@ func (cfg *config) save(c *cli.Context) error {
 		}
 	}
 	return ioutil.WriteFile(file, buf, 0660)
+}
+
+func (cfg *config) getSortedGenesis() []*skipchain.SkipBlock {
+	genesis := sbl{}
+	for _, sb := range cfg.Sbb.Bunches {
+		genesis = append(genesis, sb.GetByID(sb.GenesisID))
+	}
+	sort.Sort(genesis)
+	return genesis
+}
+
+func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
+	sisAll map[network.ServerIdentityID]*network.ServerIdentity) []*network.ServerIdentity {
+	for _, si := range roster.List {
+		if _, exists := sisAll[si.ID]; !exists {
+			log.Info("Adding", si)
+			sisNew = append(sisNew, si)
+			sisAll[si.ID] = si
+		}
+	}
+	return sisNew
 }
