@@ -209,7 +209,7 @@ func (lr *Logread) ReadFile(read *FileRequest) (file, key []byte, err error) {
 // requests. if 'start' is nil, the first read-requests are returned. A maximum
 // of 'count' requests are returned.
 func (lr *Logread) GetReadRequests(start skipchain.SkipBlockID, count int) ([]*ReadDoc, error) {
-	if start.IsNull() {
+	if start.IsNil() {
 		start = lr.LatestWlr.SkipChainID()
 	}
 	return lr.cl.GetReadRequests(lr.LatestWlr.Roster, start, count)

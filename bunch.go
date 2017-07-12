@@ -98,7 +98,7 @@ func (sbb *SkipBlockBunch) GetResponsible(sb *skipchain.SkipBlock) (*skipchain.S
 	}
 	if sb.Index == 0 {
 		// Genesis-block
-		if sb.ParentBlockID.IsNull() {
+		if sb.ParentBlockID.IsNil() {
 			// Root-skipchain, no other parent
 			return sb, nil
 		}
@@ -130,7 +130,7 @@ func (sbb *SkipBlockBunch) VerifyLinks(sb *skipchain.SkipBlock) error {
 	}
 
 	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNull() {
+	if !sb.ParentBlockID.IsNil() {
 		parent := sbb.GetByID(sb.ParentBlockID)
 		if parent == nil {
 			return errors.New("Didn't find parent")
