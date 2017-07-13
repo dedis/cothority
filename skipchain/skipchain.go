@@ -225,6 +225,27 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientErr
 	return sb, nil
 }
 
+// GetSingleBlockByIndex searches for the given block and returns it. If no such block is
+// found, a nil is returned.
+func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, onet.ClientError) {
+	sb := s.Sbm.GetByID(id.Genesis)
+	if sb == nil {
+		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			"No such genesis-block")
+	}
+	if sb.Index == id.Index {
+		return sb, nil
+	}
+	for len(sb.ForwardLink) > 0 {
+		sb = s.Sbm.GetByID(sb.ForwardLink[0].Hash)
+		if sb.Index == id.Index {
+			return sb, nil
+		}
+	}
+	return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+		"No block with this index found")
+}
+
 // GetAllSkipchains returns a list of all known skipchains
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
 	// Write all known skipblocks to a map, thus removing double blocks.
@@ -647,7 +668,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	}
 	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
-		s.GetSingleBlock, s.GetAllSkipchains))
+		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains))
 	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
 		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),

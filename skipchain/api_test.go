@@ -168,6 +168,28 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	require.NotEmpty(t, sb1id, sb2id)
 }
 
+func TestClient_GetSingleBlockByIndex(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest()
+	_, roster, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+	log.Lvl1("Creating root and control chain")
+	sb1, cerr := c.CreateGenesis(roster, 1, 1, VerificationNone, nil, nil)
+	log.ErrFatal(cerr)
+	reply2, cerr := c.StoreSkipBlock(sb1, roster, nil)
+	log.ErrFatal(cerr)
+	search, cerr := c.GetSingleBlockByIndex(roster, sb1.Hash, -1)
+	require.NotNil(t, cerr)
+	search, cerr = c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
+	require.True(t, sb1.Equal(search))
+	search, cerr = c.GetSingleBlockByIndex(roster, sb1.Hash, 1)
+	require.True(t, reply2.Latest.Equal(search))
+	search, cerr = c.GetSingleBlockByIndex(roster, sb1.Hash, 2)
+	require.NotNil(t, cerr)
+}
+
 func newTestClient(l *onet.LocalTest) *Client {
 	c := NewClient()
 	c.Client = l.NewClient("Skipchain")
