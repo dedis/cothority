@@ -19,6 +19,6 @@
   Description = "Kirill's server"
 
 [[servers]]
-  Addresses = ["139.59.10.242:3000"]
-  Public = "RXBGUgQOkKyQeNwgR06EG3Jf6RsqSwxSsKD95v0Ptz0="
-  Description = "BL1"
+  Address = "tcp://139.59.10.242:3000"
+  Public = "4OwnNWMX6+XIenC/8orGHYzwhuxSwSLGhUCyAsDTvt8="
+  Description = "Brahma-BL1"
