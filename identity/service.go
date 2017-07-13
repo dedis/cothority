@@ -351,7 +351,6 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Propose
-			sid.Proposed.Votes = make(map[string]*crypto.SchnorrSig)
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			d := sid.Latest.Device[v.Signer]
