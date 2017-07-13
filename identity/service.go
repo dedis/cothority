@@ -351,9 +351,6 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 		case *ProposeSend:
 			p := msg.(*ProposeSend)
 			sid.Proposed = p.Propose
-			if len(sid.Proposed.Votes) == 0 {
-				sid.Proposed.Votes = map[string]*crypto.SchnorrSig{}
-			}
 		case *ProposeVote:
 			v := msg.(*ProposeVote)
 			d := sid.Latest.Device[v.Signer]
@@ -370,6 +367,10 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 			if err != nil {
 				log.Error("Got invalid signature:", err)
 				return
+			}
+			if len(sid.Proposed.Votes) == 0 {
+				// Make sure the map is initialised
+				sid.Proposed.Votes = make(map[string]*crypto.SchnorrSig)
 			}
 			sid.Proposed.Votes[v.Signer] = v.Signature
 		}

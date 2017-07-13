@@ -244,6 +244,11 @@ testConfigVote(){
 	echo "y" | testOK runCl 2 config vote
 	testGrep three runCl 1 kv ls
 	testGrep three runCl 2 kv ls
+
+	testOK runCl 1 kv add five six
+	echo y | testOK runCl 2 config vote
+	testGrep five runCl 1 kv ls
+	testGrep five runCl 2 kv ls
 }
 
 testConfigList(){
