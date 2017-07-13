@@ -68,7 +68,9 @@ func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error
 	}
 	// get back the commit to recreate  the challenge
 	origCommit := s.Point()
-	if err := origCommit.UnmarshalBinary(bs.Sig[0:32]); err != nil {
+	pointLen := s.PointLen()
+	sigLen := pointLen + s.ScalarLen()
+	if err := origCommit.UnmarshalBinary(bs.Sig[0:pointLen]); err != nil {
 		return err
 	}
 
@@ -89,7 +91,7 @@ func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error
 	k := s.Scalar().SetBytes(h.Sum(nil))
 	minusPublic := s.Point().Neg(aggReducedPublic)
 	ka := s.Point().Mul(minusPublic, k)
-	r := s.Scalar().SetBytes(bs.Sig[32:64])
+	r := s.Scalar().SetBytes(bs.Sig[pointLen:sigLen])
 	rb := s.Point().Mul(nil, r)
 	left := s.Point().Add(rb, ka)
 

@@ -502,7 +502,9 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 		return err
 	}
 	// replace the old one with the corrected one
-	copy(cosiSig[32:64], correctResponseBuff)
+	pointLen := bft.Suite().PointLen()
+	sigLen := pointLen + bft.Suite().ScalarLen()
+	copy(cosiSig[pointLen:sigLen], correctResponseBuff)
 	bft.prepareSignature = cosiSig
 
 	// Verify the signature is correct

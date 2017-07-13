@@ -30,7 +30,7 @@ test_lint:
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd services/skipchain; \
+	cd skipchain; \
 	for a in $$( seq 10 ); do \
 	  go test -v -race -short || exit 1 ; \
 	done;
@@ -40,7 +40,7 @@ test_verbose:
 
 # use test_verbose instead if you want to use this Makefile locally
 test_go:
-	./coveralls.sh ./cosi ./cisc ./byzcoin/*
+	./coveralls.sh ./cosi ./cisc ./byzcoin/* ./jvss/simulation
 
 test: test_fmt test_lint test_go
 

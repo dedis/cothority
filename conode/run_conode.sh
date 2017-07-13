@@ -18,6 +18,8 @@ VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\
 VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
 ALL_ARGS="$*"
+LOG=/tmp/conode-$$.log
+MEMLIMIT=""
 
 main(){
 	if [ ! "$1" ]; then
@@ -69,6 +71,7 @@ public			  	# runs a public conode - supposes it's already configured
 	-mail			# every time the cothority restarts, the last 200 lines get sent
 					# to $MAILADDR
 	-debug 3 		# Set the debug-level for the conode-run
+	-memory 500		# Restarts the process if it exceeds 500MBytes
 
 local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
 			      	# argument: 1-sparse..5-flood.
@@ -81,7 +84,28 @@ runLocal(){
 		exit 1
 	fi
 	NBR=$1
-	DEBUG=${2:-1}
+	shift
+	WAIT=""
+	DEBUG=1
+	while [ "$1" ]; do
+		case $1 in
+		-update)
+			UPDATE=yes
+			;;
+		-debug|-d)
+			DEBUG=$2
+			shift
+			;;
+		-wait_for_apocalypse|-wait)
+			WAIT=true
+			;;
+		*)
+			DEBUG=$1
+			;;
+		esac
+		shift
+	done
+
 	killall -9 $CONODE_BIN || true
 	go install $CONODE_GO
 
@@ -110,6 +134,13 @@ runLocal(){
 Now you can use public.toml as the group-toml file to interact with your
 local cothority.
 EOF
+
+	if [ "$WAIT" ]; then
+		echo -e "\nWaiting for <ctrl-c>"
+		while sleep 3600; do
+			date
+		done
+	fi
 }
 
 runPublic(){
@@ -139,6 +170,14 @@ runPublic(){
 				echo "sudo apt-get install bsd-mailx"
 			fi
 			;;
+		-memory)
+			MEMORY=$2
+			shift
+			if [ "$MEMORY" -lt 500 ]; then
+				echo "It will not run with less than 500 MBytes of RAM."
+				exit 1
+			fi
+			;;
 		*)
 			ARGS="$ARGS $1"
 			;;
@@ -156,8 +195,11 @@ runPublic(){
 	else
 		go install $CONODE_GO
 	fi
-	LOG=$( mktemp )
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
+	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
+	if [ "$MEMLIMIT" ]; then
+		ulimit -Sv $(( MEMLIMIT * 1024 ))
+	fi
 	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
@@ -199,13 +241,13 @@ migrate(){
 			fi
 			echo 1.0-1 > $PATH_VERSION
 			;;
-		1.0-1)
+		$VERSION)
 			echo No migration necessary
 			;;
         *)
             echo Found wrong version $PATH_VERSION - trying to fix
             if [ -d $PATH_CO/conode ]; then
-            	echo 1.0 > $PATH_CO/conode/version
+            	echo $VERSION > $PATH_CO/conode/version
             fi
             echo "Check $PATH_CO to verify configuration is OK and re-run $0"
             exit 1

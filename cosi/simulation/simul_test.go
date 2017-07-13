@@ -1,11 +1,14 @@
-package main_test
+package main
 
 import (
 	"testing"
 
-	"gopkg.in/dedis/onet.v1/simul"
+	"os"
 )
 
 func TestSimulation(t *testing.T) {
-	simul.Start("cosi.toml", "cosi_verification.toml")
+	os.Args = []string{os.Args[0], "cosi.toml"}
+	main()
+	os.Args = []string{os.Args[0], "cosi_verification.toml"}
+	main()
 }

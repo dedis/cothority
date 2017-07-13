@@ -19,7 +19,11 @@ import (
 
 	"bytes"
 
+	"fmt"
+
 	"gopkg.in/dedis/cothority.v1/identity"
+
+	"github.com/qantik/qrgo"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
@@ -115,15 +119,15 @@ func idDel(c *cli.Context) error {
 	}
 	cfg := loadConfigOrFail(c)
 	dev := c.Args().First()
-	if _, ok := cfg.Config.Device[dev]; !ok {
+	if _, ok := cfg.Data.Device[dev]; !ok {
 		log.Error("Didn't find", dev, "in config. Available devices:")
 		configList(c)
 		log.Fatal("Device not found in config.")
 	}
 	prop := cfg.GetProposed()
 	delete(prop.Device, dev)
-	for _, s := range cfg.Config.GetSuffixColumn("ssh", dev) {
-		delete(prop.Data, "ssh:"+dev+":"+s)
+	for _, s := range cfg.Data.GetSuffixColumn("ssh", dev) {
+		delete(prop.Storage, "ssh:"+dev+":"+s)
 	}
 	cfg.proposeSendVoteUpdate(prop)
 	return nil
@@ -132,13 +136,24 @@ func idCheck(c *cli.Context) error {
 	log.Fatal("Not yet implemented")
 	return nil
 }
+func idQrcode(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	id := []byte(cfg.ID)
+	str := fmt.Sprintf("cisc://%s/%x", cfg.Cothority.RandomServerIdentity().Address.NetworkAddress(),
+		id)
+	log.Info("QrCode for", str)
+	qr, err := qrgo.NewQR(str)
+	log.ErrFatal(err)
+	qr.OutputTerminal()
+	return nil
+}
 
 /*
  * Commands related to the config in general
  */
 func configUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.DataUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
 	log.Info("Successfully updated")
 	log.ErrFatal(cfg.saveConfig(c))
@@ -154,7 +169,7 @@ func configList(c *cli.Context) error {
 	log.Info("Account name:", cfg.DeviceName)
 	log.Infof("Identity-ID: %x", cfg.ID)
 	if c.Bool("d") {
-		log.Info(cfg.Config.Data)
+		log.Info(cfg.Data.Storage)
 	} else {
 		cfg.showKeys()
 	}
@@ -173,7 +188,7 @@ func configPropose(c *cli.Context) error {
 }
 func configVote(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.ErrFatal(cfg.ConfigUpdate())
+	log.ErrFatal(cfg.DataUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
 	if cfg.Proposed == nil {
 		log.Info("No proposed config")
@@ -198,7 +213,7 @@ func configVote(c *cli.Context) error {
 func kvList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	log.Infof("config for id %x", cfg.ID)
-	for k, v := range cfg.Config.Data {
+	for k, v := range cfg.Data.Storage {
 		log.Infof("%s: %s", k, v)
 	}
 	return nil
@@ -215,7 +230,7 @@ func kvAdd(c *cli.Context) error {
 	key := c.Args().Get(0)
 	value := c.Args().Get(1)
 	prop := cfg.GetProposed()
-	prop.Data[key] = value
+	prop.Storage[key] = value
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
@@ -226,10 +241,10 @@ func kvDel(c *cli.Context) error {
 	}
 	key := c.Args().First()
 	prop := cfg.GetProposed()
-	if _, ok := prop.Data[key]; !ok {
+	if _, ok := prop.Storage[key]; !ok {
 		log.Fatal("Didn't find key", key, "in the config")
 	}
-	delete(prop.Data, key)
+	delete(prop.Storage, key)
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
@@ -292,7 +307,7 @@ func sshAdd(c *cli.Context) error {
 	key := strings.Join([]string{"ssh", cfg.DeviceName, hostname}, ":")
 	pub, err := ioutil.ReadFile(filePub)
 	log.ErrFatal(err)
-	prop.Data[key] = strings.TrimSpace(string(pub))
+	prop.Storage[key] = strings.TrimSpace(string(pub))
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
@@ -300,12 +315,12 @@ func sshLs(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	var devs []string
 	if c.Bool("a") {
-		devs = cfg.Config.GetSuffixColumn("ssh")
+		devs = cfg.Data.GetSuffixColumn("ssh")
 	} else {
 		devs = []string{cfg.DeviceName}
 	}
 	for _, dev := range devs {
-		for _, pub := range cfg.Config.GetSuffixColumn("ssh", dev) {
+		for _, pub := range cfg.Data.GetSuffixColumn("ssh", dev) {
 			log.Printf("SSH-key for device %s: %s", dev, pub)
 		}
 	}
@@ -321,7 +336,7 @@ func sshDel(c *cli.Context) error {
 	log.ErrFatal(err)
 	// Converting ah to a hostname if found in ssh-config
 	host := sc.ConvertAliasToHostname(c.Args().First())
-	if len(cfg.Config.GetValue("ssh", cfg.DeviceName, host)) == 0 {
+	if len(cfg.Data.GetValue("ssh", cfg.DeviceName, host)) == 0 {
 		log.Error("Didn't find alias or host", host, "here is what I know:")
 		sshLs(c)
 		log.Fatal("Unknown alias or host.")
@@ -331,7 +346,7 @@ func sshDel(c *cli.Context) error {
 	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
 	log.ErrFatal(err)
 	prop := cfg.GetProposed()
-	delete(prop.Data, "ssh:"+cfg.DeviceName+":"+host)
+	delete(prop.Storage, "ssh:"+cfg.DeviceName+":"+host)
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
@@ -396,14 +411,14 @@ func followList(c *cli.Context) error {
 		server := id.DeviceName
 		log.Infof("Server %s is asked to accept ssh-keys from %s:",
 			server,
-			id.Config.GetIntermediateColumn("ssh", server))
+			id.Data.GetIntermediateColumn("ssh", server))
 	}
 	return nil
 }
 func followUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, f := range cfg.Follow {
-		log.ErrFatal(f.ConfigUpdate())
+		log.ErrFatal(f.DataUpdate())
 	}
 	cfg.writeAuthorizedKeys(c)
 	return cfg.saveConfig(c)
