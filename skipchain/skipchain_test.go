@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"sync"
 	"testing"
 
 	"bytes"
@@ -11,6 +12,8 @@ import (
 	"fmt"
 
 	"time"
+
+	"math/rand"
 
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +27,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -82,7 +84,6 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
-	defer log.AfterTest(t)
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
 	local := onet.NewLocalTest()
@@ -145,7 +146,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// How many nodes in Root
 	nodesRoot := 3
 
@@ -205,7 +205,6 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
-	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(3, skipchainSID)
@@ -285,7 +284,6 @@ func checkBacklinks(services []*Service, sb *SkipBlock) {
 }
 
 func TestService_Verification(t *testing.T) {
-	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	sbLength := 4
@@ -318,7 +316,6 @@ func TestService_Verification(t *testing.T) {
 }
 
 func TestService_SignBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -341,7 +338,6 @@ func TestService_SignBlock(t *testing.T) {
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -377,7 +373,6 @@ func TestService_ForwardSignature(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest()
@@ -406,7 +401,6 @@ func TestService_RegisterVerification(t *testing.T) {
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
-	defer log.AfterTest(t)
 	nbrHosts := 3
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -455,7 +449,6 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
-	defer log.AfterTest(t)
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
 	local := onet.NewLocalTest()
@@ -482,6 +475,41 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		ssbrep, cerr = s1.StoreSkipBlock(&StoreSkipBlock{ssbrep.Latest.Hash,
 			sbRoot})
 		log.ErrFatal(cerr)
+	}
+}
+
+func TestService_WriteParallelBlocks(t *testing.T) {
+	local := onet.NewLocalTest()
+	defer local.CloseAll()
+	conodes := 10
+	servers, roster, gs := local.MakeHELS(conodes, skipchainSID)
+	s := gs.(*Service)
+	latest, err := makeGenesisRoster(s, onet.NewRoster(roster.List[0:2]))
+	log.ErrFatal(err)
+
+	for _, nbrBlocks := range []int{1, 7, 20} {
+		wg := &sync.WaitGroup{}
+		wg.Add(nbrBlocks)
+		log.Lvl1("Asking for", nbrBlocks, "blocks concurrently")
+		for i := 0; i < nbrBlocks; i++ {
+			go func(i int) {
+				newSB := NewSkipBlock()
+				newSB.Roster = roster
+				service := local.Services[servers[i%conodes].ServerIdentity.ID][skipchainSID].(*Service)
+				log.Lvl2("Doing skipblock", i, servers[i%conodes].ServerIdentity, newSB.Roster.List)
+				for try := 0; try < 100; try++ {
+					reply, err := service.StoreSkipBlock(&StoreSkipBlock{latest.Hash, newSB})
+					if err == nil {
+						latest = reply.Latest
+						break
+					}
+					time.Sleep(time.Duration(rand.Intn(20)*try) * time.Millisecond)
+				}
+				log.Lvl1("Got block", i)
+				wg.Done()
+			}(i)
+		}
+		wg.Wait()
 	}
 }
 
