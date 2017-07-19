@@ -536,3 +536,47 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 	}
 	return nil
 }
+
+// newBlocks is used in the skipchain-structure to put a lock on blocks that
+// are about to be signed.
+type newBlocks struct {
+	list map[string]SkipBlockID
+	sync.Mutex
+}
+
+// addBlock stores the src->dst pair of blocks in the list of blocks to
+// be verified. The return-value is if the list has been updated successfully.
+// If src is already in the list, this fails, as it means somebody else is in
+// the process of adding a block to src.
+func (n *newBlocks) addBlock(src, dst SkipBlockID) bool {
+	n.Lock()
+	defer n.Unlock()
+	if _, blocked := n.list[string(src)]; blocked {
+		return false
+	}
+	n.list[string(src)] = dst
+	return true
+}
+
+// rmBlock removes the src-block from the list.
+func (n *newBlocks) rmBlock(src SkipBlockID) {
+	n.Lock()
+	delete(n.list, string(src))
+	n.Unlock()
+}
+
+// acceptSign takes a src->dst pair and returns true if that pair is OK to be
+// signed. This is true for the following cases:
+//  - the pair src->dst has been entered as-is in the list
+//  - src is not in the list
+// if src is in the list and points to another dst, false will be returned.
+func (n *newBlocks) acceptSign(src, dst SkipBlockID) bool {
+	n.Lock()
+	defer n.Unlock()
+	e, blocked := n.list[string(src)]
+	if !blocked {
+		n.list[string(src)] = dst
+		return true
+	}
+	return e.Equal(dst)
+}

@@ -47,6 +47,7 @@ type Service struct {
 	lastSave         time.Time
 	propagating      int64
 	propagatingMutex sync.Mutex
+	newBlocks        newBlocks
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -96,6 +97,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			changed = append(changed, parent)
 		}
 		changed = append(changed, prop)
+
 	} else {
 		// We're appending a block to an existing chain
 		prev = s.Sbm.GetByID(psbd.LatestID)
@@ -106,6 +108,10 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"We're not responsible for latest block")
+		}
+		if len(prev.ForwardLink) > 0 {
+			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				"the latest block already has a follower")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
@@ -136,7 +142,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			prop.BackLinkIDs[h] = pointer.Hash
 		}
 		prop.updateHash()
-		if err := s.addForwardLink(prev, prop, 1); err != nil {
+		if err := s.addForwardLink(prev, prop); err != nil {
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
 		}
@@ -163,7 +169,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			"Couldn't propagate new blocks: "+err.Error())
 	}
 	s.save()
-
 	reply := &StoreSkipBlockReply{
 		Previous: prev,
 		Latest:   prop,
@@ -418,47 +423,53 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 // is valid.
 func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	src := data[0:32]
-	srcSB := s.Sbm.GetByID(src)
-	if srcSB == nil {
+	srcHash := data[0:32]
+	prevSB := s.Sbm.GetByID(srcHash)
+	if prevSB == nil {
 		log.Error("Didn't find src-skipblock")
 		return false
 	}
-	_, dstN, err := network.Unmarshal(data[32:])
+	_, newSBi, err := network.Unmarshal(data[32:])
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
 	}
-	dst := dstN.(*SkipBlock)
-	if !dst.Hash.Equal(SkipBlockID(msg)) {
-		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(dst.Hash))
+	newSB := newSBi.(*SkipBlock)
+	if !newSB.Hash.Equal(SkipBlockID(msg)) {
+		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(newSB.Hash))
 		return false
 	}
 
-	isFree := func() bool {
-		for i, b := range dst.BackLinkIDs {
-			if b.Equal(src) {
-				return srcSB.GetForwardLen() == i
+	if !newSB.BackLinkIDs[0].Equal(srcHash) {
+		log.Lvl2("Backlink does not point to previous block:", prevSB.Index, newSB.Index)
+		return false
+	}
+	if len(prevSB.ForwardLink) > 0 {
+		log.Lvl2("previous block already has forward-link")
+		return false
+	}
+	if !s.newBlocks.acceptSign(prevSB.Hash, newSB.Hash) {
+		log.Lvl2("previous block points to another block")
+		return false
+	}
+
+	ok := func() bool {
+		for _, ver := range newSB.VerifierIDs {
+			f, ok := s.verifiers[ver]
+			if !ok {
+				log.Lvlf2("Found no user verification for %x", ver)
+				return false
+			}
+			if !f(msg, newSB) {
+				return false
 			}
 		}
-		return false
+		return true
 	}()
-	if !isFree {
-		log.Lvl2("Didn't find a free corresponding forward-link")
-		return false
+	if !ok {
+		s.newBlocks.rmBlock(prevSB.Hash)
 	}
-
-	for _, ver := range dst.VerifierIDs {
-		f, ok := s.verifiers[ver]
-		if !ok {
-			log.Lvlf2("Found no user verification for %x", ver)
-			return false
-		}
-		if !f(msg, dst) {
-			return false
-		}
-	}
-	return true
+	return ok
 }
 
 // PropagateSkipBlock will save a new SkipBlock
@@ -475,6 +486,7 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		}
 		s.Sbm.Store(sb)
 		s.save()
+		s.newBlocks.rmBlock(sb.BackLinkIDs[0])
 	}
 }
 
@@ -519,13 +531,20 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 // returns with an error.
 // If it finds a valid block, a forward-link will be added and a BFT-signature
 // requested.
-func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
-	if height <= src.GetForwardLen() {
+func (s *Service) addForwardLink(src, dst *SkipBlock) error {
+	if src.GetForwardLen() > 0 {
 		return errors.New("already have forward-link at this height")
 	}
+	if !s.newBlocks.addBlock(src.Hash, dst.Hash) {
+		return errors.New("signing in process")
+	}
+
+	defer s.newBlocks.rmBlock(src.Hash)
+
 	// create the message we want to sign for this round
 	roster := src.Roster
-	log.Lvlf3("%s is adding forward-link to %s", s.ServerIdentity(), roster.List)
+	log.Lvlf3("%s is adding forward-link to %s: %d->%d", s.ServerIdentity(),
+		roster.List, src.Index, dst.Index)
 	data, err := network.Marshal(dst)
 	if err != nil {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
@@ -540,7 +559,13 @@ func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
 		Hash:      dst.Hash,
 		Signature: sig.Sig,
 	}
-	src.AddForward(fwd)
+	fwl := s.Sbm.GetByID(src.Hash).ForwardLink
+	log.Lvlf3("%s adds forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
+		roster.List, src.Index, dst.Index, fwl)
+	if len(fwl) > 0 {
+		return errors.New("Forward-link got signed during our signing")
+	}
+	src.ForwardLink = []*BlockLink{fwd}
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
@@ -558,7 +583,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 
 	// Start the protocol
 	tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
-	//tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 	node, err := s.CreateProtocol(proto, tree)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't create new node: %s", err.Error())
@@ -569,9 +593,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	root.Msg = msg
 	root.Data = data
 
-	// in testing-mode with more than one host and service per cothority-instance
-	// we might have the wrong verification-function, so set it again here.
-	//root.VerificationFunction = s.bftVerifyNewBlock
 	// function that will be called when protocol is finished by the root
 	done := make(chan bool)
 	root.RegisterOnDone(func() {
@@ -662,6 +683,9 @@ func newSkipchainService(c *onet.Context) onet.Service {
 		Sbm:              NewSkipBlockMap(),
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		blockRequests:    make(map[string]chan *SkipBlock),
+		newBlocks: newBlocks{
+			list: make(map[string]SkipBlockID),
+		},
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
