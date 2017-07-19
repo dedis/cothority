@@ -321,7 +321,6 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 			return errors.New("Couldn't get signature")
 		}
 		s.Sbm.Lock()
-		log.Lvl1("Adding forward-link to", target.Index)
 		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
 		s.Sbm.Unlock()
 		s.startPropagation([]*SkipBlock{target})
@@ -468,7 +467,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		return true
 	}()
 	if !ok {
-		s.newBlocks.rmBlock(prevSB.Hash, newSB.Hash)
+		s.newBlocks.rmBlock(prevSB.Hash)
 	}
 	return ok
 }
@@ -487,7 +486,7 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		}
 		s.Sbm.Store(sb)
 		s.save()
-		s.newBlocks.rmBlock(sb.BackLinkIDs[0], sb.Hash)
+		s.newBlocks.rmBlock(sb.BackLinkIDs[0])
 	}
 }
 
@@ -540,7 +539,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 		return errors.New("signing in process")
 	}
 
-	defer s.newBlocks.rmBlock(src.Hash, dst.Hash)
+	defer s.newBlocks.rmBlock(src.Hash)
 
 	// create the message we want to sign for this round
 	roster := src.Roster
