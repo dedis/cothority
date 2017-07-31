@@ -9,7 +9,7 @@ DBG_SRV=2
 
 main(){
     startTest
-    buildConode "github.com/dedis/logread/service"
+    buildConode "github.com/dedis/onchain-secrets/service"
 	test Build
 	test Create
 	test RoleCreate

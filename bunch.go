@@ -1,4 +1,4 @@
-package logread
+package onchain_secrets
 
 import (
 	"encoding/hex"
@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/dedis/cothority/skipchain"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -98,7 +98,7 @@ func (sbb *SkipBlockBunch) GetResponsible(sb *skipchain.SkipBlock) (*skipchain.S
 	}
 	if sb.Index == 0 {
 		// Genesis-block
-		if sb.ParentBlockID.IsNil() {
+		if sb.ParentBlockID.IsNull() {
 			// Root-skipchain, no other parent
 			return sb, nil
 		}
@@ -130,7 +130,7 @@ func (sbb *SkipBlockBunch) VerifyLinks(sb *skipchain.SkipBlock) error {
 	}
 
 	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNil() {
+	if !sb.ParentBlockID.IsNull() {
 		parent := sbb.GetByID(sb.ParentBlockID)
 		if parent == nil {
 			return errors.New("Didn't find parent")

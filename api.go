@@ -1,4 +1,4 @@
-package logread
+package onchain_secrets
 
 /*
 The api.go defines the methods that can be called from the outside. Most
@@ -11,34 +11,34 @@ This part of the service runs on the client or the app.
 import (
 	"errors"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName is used for registration on the onet.
-const ServiceName = "LogRead"
+const ServiceName = "OnChainSecrets"
 
-// VerifyLogreadACL makes sure that all necessary signatures are present when
+// VerifyOCSACL makes sure that all necessary signatures are present when
 // updating the ACL-skipchain.
-var VerifyLogreadACL = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "LogreadACL"))
+var VerifyOCSACL = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCSACL"))
 
-// VerificationLogreadACL adds the VerifyBase to the VerifyLogreadACL for a complete
+// VerificationOCSACL adds the VerifyBase to the VerifyOCSACL for a complete
 // skipchain.
-var VerificationLogreadACL = []skipchain.VerifierID{skipchain.VerifyBase,
-	VerifyLogreadACL}
+var VerificationOCSACL = []skipchain.VerifierID{skipchain.VerifyBase,
+	VerifyOCSACL}
 
-// VerifyLogreadWLR makes sure that all necessary signatures are present when
-// updating the WLR-skipchain.
-var VerifyLogreadWLR = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "LogreadWLR"))
+// VerifyOCSDoc makes sure that all necessary signatures are present when
+// updating the Doc-skipchain.
+var VerifyOCSDoc = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCSDoc"))
 
-// VerificationLogreadWLR adds the VerifyBase to the VerifyLogreadWLR for a complete
+// VerificationOCSDoc adds the VerifyBase to the VerifyOCSDoc for a complete
 // skipchain.
-var VerificationLogreadWLR = []skipchain.VerifierID{skipchain.VerifyBase,
-	VerifyLogreadWLR}
+var VerificationOCSDoc = []skipchain.VerifierID{skipchain.VerifyBase,
+	VerifyOCSDoc}
 
 // Client is a structure to communicate with the CoSi
 // service
@@ -57,8 +57,8 @@ func NewClient() *Client {
 
 // CreateSkipchains creates a new credential for the administrator and the two
 // necessary skipchains. It returns:
-//  - acl-skipchain, wlr-skipchain, admin-credentials, error
-func (c *Client) CreateSkipchains(r *onet.Roster, n string) (acl, wlr *skipchain.SkipBlock,
+//  - acl-skipchain, ocs-skipchain, admin-credentials, error
+func (c *Client) CreateSkipchains(r *onet.Roster, n string) (acl, ocs *skipchain.SkipBlock,
 	admin *Credential, cerr onet.ClientError) {
 	admin = NewCredential(n)
 	dataACL := &DataACL{Admins: NewCredentials(admin)}
@@ -68,7 +68,7 @@ func (c *Client) CreateSkipchains(r *onet.Roster, n string) (acl, wlr *skipchain
 	}
 	reply := &CreateSkipchainsReply{}
 	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
-	acl, wlr = reply.ACL, reply.Wlr
+	acl, ocs = reply.ACL, reply.Doc
 	return
 }
 
@@ -105,7 +105,7 @@ func (c *Client) EvolveACL(acl *skipchain.SkipBlock, newACL *DataACL, admin *Cre
 // EncryptAndWriteRequest takes data and a credential, then it creates a new
 // symmetric encryption key, encrypts the document, and stores the document and
 // the encryption key on the blockchain.
-func (c *Client) EncryptAndWriteRequest(wlr *skipchain.SkipBlock, data []byte, cred *Credential) (sb *skipchain.SkipBlock,
+func (c *Client) EncryptAndWriteRequest(ocs *skipchain.SkipBlock, data []byte, cred *Credential) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(data) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
@@ -113,16 +113,16 @@ func (c *Client) EncryptAndWriteRequest(wlr *skipchain.SkipBlock, data []byte, c
 	key := random.Bytes(32, random.Stream)
 	cipher := network.Suite.Cipher(key)
 	str := cipher.Seal(nil, data)
-	encKey, cerr := c.EncryptKeyRequest(wlr.Roster, key)
+	encKey, cerr := c.EncryptKeyRequest(ocs.Roster, key)
 	if cerr != nil {
 		return
 	}
-	return c.WriteRequest(wlr, str, encKey, cred)
+	return c.WriteRequest(ocs, str, encKey, cred)
 }
 
 // WriteRequest pushes a new block on the skipchain with the encrypted file
 // on it.
-func (c *Client) WriteRequest(wlr *skipchain.SkipBlock, encData []byte, encKey []byte, cred *Credential) (sb *skipchain.SkipBlock,
+func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, encKey []byte, cred *Credential) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(encData) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
@@ -132,15 +132,15 @@ func (c *Client) WriteRequest(wlr *skipchain.SkipBlock, encData []byte, encKey [
 		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
 	}
 	wr := &WriteRequest{
-		Write: &DataWlrWrite{
+		Write: &DataOCSWrite{
 			File:      encData,
 			Key:       encKey,
 			Signature: &sig,
 		},
-		Wlr: wlr.SkipChainID(),
+		Doc: ocs.SkipChainID(),
 	}
 	reply := &WriteReply{}
-	cerr = c.SendProtobuf(wlr.Roster.RandomServerIdentity(), wr, reply)
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
 	sb = reply.SB
 	return
 }
@@ -155,27 +155,27 @@ func (c *Client) GetFile(roster *onet.Roster, file skipchain.SkipBlockID) ([]byt
 	if cerr != nil {
 		return nil, cerr
 	}
-	_, wlrDataI, err := network.Unmarshal(sb.Data)
+	_, ocsDataI, err := network.Unmarshal(sb.Data)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
-	wlrData, ok := wlrDataI.(*DataWlr)
-	if !ok || wlrData.Write == nil {
+	ocsData, ok := ocsDataI.(*DataOCS)
+	if !ok || ocsData.Write == nil {
 		return nil, onet.NewClientError(errors.New("not correct type of data"))
 	}
-	return wlrData.Write.File, nil
+	return ocsData.Write.File, nil
 }
 
-// ReadRequest asks the wlr-skipchain to add a block giving access to 'reader'
+// ReadRequest asks the ocs-skipchain to add a block giving access to 'reader'
 // for the file that references the skipblock it is stored in.
-func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
+func (c *Client) ReadRequest(ocs *skipchain.SkipBlock, reader *Credential,
 	file skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
 	sig, err := crypto.SignSchnorr(network.Suite, reader.Private, file)
 	if err != nil {
 		return nil, err
 	}
 	sbCl := skipchain.NewClient()
-	sbFile, cerr := sbCl.GetSingleBlock(wlr.Roster, file)
+	sbFile, cerr := sbCl.GetSingleBlock(ocs.Roster, file)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -183,7 +183,7 @@ func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
 	if err != nil {
 		return nil, err
 	}
-	dw, ok := dwI.(*DataWlr)
+	dw, ok := dwI.(*DataOCS)
 	if !ok {
 		return nil, errors.New("didn't get file-block")
 	}
@@ -191,17 +191,17 @@ func (c *Client) ReadRequest(wlr *skipchain.SkipBlock, reader *Credential,
 		return nil, errors.New("this is not a write-block")
 	}
 	request := &ReadRequest{
-		Read: &DataWlrRead{
+		Read: &DataOCSRead{
 			Pseudonym: reader.Pseudonym,
 			Public:    reader.Public,
 			File:      file,
 			EncKey:    dw.Write.Key,
 			Signature: &sig,
 		},
-		Wlr: wlr.SkipChainID(),
+		Doc: ocs.SkipChainID(),
 	}
 	reply := &ReadReply{}
-	err = c.SendProtobuf(wlr.Roster.RandomServerIdentity(), request, reply)
+	err = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
 	if err != nil {
 		return nil, err
 	}

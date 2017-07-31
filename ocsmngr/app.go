@@ -17,8 +17,8 @@ import (
 
 	"io/ioutil"
 
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/logread"
+	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -36,7 +36,7 @@ func main() {
 	cliApp.Commands = []cli.Command{
 		{
 			Name:    "manage",
-			Usage:   "manage the wlr, acl and roles",
+			Usage:   "manage the doc, acl and roles",
 			Aliases: []string{"m"},
 			Subcommands: []cli.Command{
 				{
@@ -56,7 +56,7 @@ func main() {
 					Name:      "join",
 					Usage:     "join a write log-read skipchain",
 					Aliases:   []string{"cr"},
-					ArgsUsage: "group wlr-skipchain-id private_key",
+					ArgsUsage: "group doc-skipchain-id private_key",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "overwrite, o",
@@ -109,7 +109,7 @@ func main() {
 		},
 		{
 			Name:      "write",
-			Usage:     "write to the wlr-skipchain",
+			Usage:     "write to the doc-skipchain",
 			Aliases:   []string{"w"},
 			ArgsUsage: "pseudonym file",
 			Action:    write,
@@ -122,7 +122,7 @@ func main() {
 		},
 		{
 			Name:    "read",
-			Usage:   "read from the wlr-skipchain",
+			Usage:   "read from the doc-skipchain",
 			Aliases: []string{"r"},
 			Subcommands: []cli.Command{
 				{
@@ -155,44 +155,44 @@ func main() {
 	cliApp.Run(os.Args)
 }
 
-// Creates a new acl and wlr skipchain.
+// Creates a new acl and doc skipchain.
 func mngCreate(c *cli.Context) error {
 	if c.NArg() < 2 {
 		log.Fatal("Please give group-toml and pseudo")
 	}
-	log.Info("Creating ACL- and WLR-skipchain")
+	log.Info("Creating ACL- and Doc-skipchain")
 	pseudo := c.Args().Get(1)
 	group := getGroup(c)
-	cl := logread.NewClient()
-	acl, wlr, admin, err := cl.CreateSkipchains(group.Roster, pseudo)
+	cl := onchain_secrets.NewClient()
+	acl, doc, admin, err := cl.CreateSkipchains(group.Roster, pseudo)
 	log.ErrFatal(err)
-	cfg := &wlrConfig{
-		ACLBunch: logread.NewSkipBlockBunch(acl),
-		WLRBunch: logread.NewSkipBlockBunch(wlr),
-		Roles:    logread.NewCredentials(admin),
+	cfg := &ocsConfig{
+		ACLBunch: onchain_secrets.NewSkipBlockBunch(acl),
+		DocBunch: onchain_secrets.NewSkipBlockBunch(doc),
+		Roles:    onchain_secrets.NewCredentials(admin),
 	}
 	log.Infof("Created new skipchains and added %s as admin", pseudo)
-	log.Infof("WLR-skipchainid: %x", cfg.WLRBunch.GenesisID)
+	log.Infof("Doc-skipchainid: %x", cfg.DocBunch.GenesisID)
 	return cfg.saveConfig(c)
 }
 
-// Prints the id of the WLR-skipchain
+// Prints the id of the Doc-skipchain
 func mngList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.Infof("WLR-skipchainid:\t%x", cfg.WLRBunch.GenesisID)
+	log.Infof("Doc-skipchainid:\t%x", cfg.DocBunch.GenesisID)
 	return nil
 }
 
-// Joins an existing wlr skipchain.
+// Joins an existing doc skipchain.
 func mngJoin(c *cli.Context) error {
 	if c.NArg() < 3 {
-		log.Fatal("Please give: group wlr-skipchain-id private_key")
+		log.Fatal("Please give: group doc-skipchain-id private_key")
 	}
 	cfg, loaded := loadConfig(c)
 	if loaded && !c.Bool("overwrite") {
 		log.Fatal("Config is present but overwrite-flag not given")
 	}
-	cfg = &wlrConfig{}
+	cfg = &ocsConfig{}
 	group := getGroup(c)
 	sid, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
@@ -201,17 +201,17 @@ func mngJoin(c *cli.Context) error {
 	public := network.Suite.Point().Mul(nil, private)
 	log.Info("Public key is:", public.String())
 	log.Info("Joining ACL-skipchain")
-	cfg.WLRBunch, err = CreateWLRBunch(group.Roster, sid)
+	cfg.DocBunch, err = CreateDocBunch(group.Roster, sid)
 	log.ErrFatal(err)
-	wlrGenesis := cfg.WLRBunch.GetByID(cfg.WLRBunch.GenesisID)
-	wlrData := logread.NewDataWlr(wlrGenesis.Data)
-	cfg.ACLBunch, err = CreateACLBunch(group.Roster, wlrData.Config.ACL)
+	docGenesis := cfg.DocBunch.GetByID(cfg.DocBunch.GenesisID)
+	docData := onchain_secrets.NewDataOCS(docGenesis.Data)
+	cfg.ACLBunch, err = CreateACLBunch(group.Roster, docData.Config.ACL)
 	log.ErrFatal(err)
 	acl := cfg.Acls()
 	if acl == nil {
 		log.Fatal("Empty data in ACL-skipchain")
 	}
-	var cr *logread.Credential
+	var cr *onchain_secrets.Credential
 	if cr = acl.Admins.SearchPublic(public); cr != nil {
 		log.Info("Found admin user", cr.Pseudonym)
 	} else if cr = acl.Writers.SearchPublic(public); cr != nil {
@@ -223,7 +223,7 @@ func mngJoin(c *cli.Context) error {
 		return errors.New("credential not found")
 	}
 	cr.Private = private
-	cfg.Roles = logread.NewCredentials(cr)
+	cfg.Roles = onchain_secrets.NewCredentials(cr)
 	return cfg.saveConfig(c)
 }
 
@@ -242,7 +242,7 @@ func mngRoleCreate(c *cli.Context) error {
 	}
 	role, pseudo := rolePseudo[0], rolePseudo[1]
 	acls := cfg.Acls()
-	var cred *logread.Credential
+	var cred *onchain_secrets.Credential
 	switch strings.ToLower(role) {
 	case "admin":
 		if acls.Admins.SearchPseudo(pseudo) != nil {
@@ -268,7 +268,7 @@ func mngRoleCreate(c *cli.Context) error {
 	log.ErrFatal(err)
 	log.Infof("Private key:\t%s", priv)
 
-	reply, err := logread.NewClient().EvolveACL(cfg.ACLBunch.Latest, acls, admin)
+	reply, err := onchain_secrets.NewClient().EvolveACL(cfg.ACLBunch.Latest, acls, admin)
 	if err != nil {
 		return err
 	}
@@ -316,8 +316,8 @@ func write(c *cli.Context) error {
 func list(c *cli.Context) error {
 	log.Info("Listing existing files")
 	cfg := loadConfigOrFail(c)
-	for _, sb := range cfg.WLRBunch.SkipBlocks {
-		log.Info(logread.NewDataWlr(sb.Data))
+	for _, sb := range cfg.DocBunch.SkipBlocks {
+		log.Info(onchain_secrets.NewDataOCS(sb.Data))
 	}
 	return nil
 }
@@ -338,13 +338,13 @@ func readReq(c *cli.Context) error {
 	file, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	log.Infof("Requesting read-access to file %x", file)
-	sb, cerr := logread.NewClient().ReadRequest(cfg.WLRBunch.Latest, cred, file)
+	sb, cerr := onchain_secrets.NewClient().ReadRequest(cfg.DocBunch.Latest, cred, file)
 	log.ErrFatal(cerr)
 	if sb == nil {
 		log.Fatal("Got empty skipblock")
 	}
 	_, dwI, err := network.Unmarshal(sb.Data)
-	dw, ok := dwI.(*logread.DataWlr)
+	dw, ok := dwI.(*onchain_secrets.DataOCS)
 	if !ok {
 		log.Fatal("Didn't find read-request")
 	}
@@ -360,7 +360,7 @@ func readReq(c *cli.Context) error {
 	}
 	log.Info("Successfully added read-request to skipchain.")
 	log.Infof("Request-id is:\t%x", sb.Hash)
-	cfg.WLRBunch.Store(sb)
+	cfg.DocBunch.Store(sb)
 	return cfg.saveConfig(c)
 }
 func readFetch(c *cli.Context) error {
@@ -372,24 +372,24 @@ func readFetch(c *cli.Context) error {
 	log.ErrFatal(err)
 	file := c.Args().Get(1)
 	log.Info("Writing to file:", file)
-	sb := cfg.WLRBunch.GetByID(read)
+	sb := cfg.DocBunch.GetByID(read)
 	if sb == nil {
 		log.Fatal("Didn't find read-request-id")
 	}
-	dwlr := logread.NewDataWlr(sb.Data)
-	if dwlr == nil || dwlr.Read == nil {
+	ddoc := onchain_secrets.NewDataOCS(sb.Data)
+	if ddoc == nil || ddoc.Read == nil {
 		log.Fatal("This is not a read-request-id")
 	}
-	role, _ := cfg.Roles.FindPseudo(dwlr.Read.Pseudonym)
-	key, cerr := logread.NewClient().DecryptKeyRequest(sb.Roster, sb.Hash, role)
+	role, _ := cfg.Roles.FindPseudo(ddoc.Read.Pseudonym)
+	key, cerr := onchain_secrets.NewClient().DecryptKeyRequest(sb.Roster, sb.Hash, role)
 	log.ErrFatal(cerr)
-	sbs, cerr := skipchain.NewClient().GetSingleBlock(sb.Roster, dwlr.Read.File)
+	sbs, cerr := skipchain.NewClient().GetSingleBlock(sb.Roster, ddoc.Read.File)
 	log.ErrFatal(cerr)
-	dwlrFile := logread.NewDataWlr(sbs.Data)
-	if dwlrFile == nil || dwlrFile.Write == nil {
+	docsFile := onchain_secrets.NewDataOCS(sbs.Data)
+	if docsFile == nil || docsFile.Write == nil {
 		log.Fatal("Referenced file does not exist")
 	}
-	dataEnc := dwlrFile.Write.File
+	dataEnc := docsFile.Write.File
 	cipher := network.Suite.Cipher(key)
 	data, err := cipher.Open(nil, dataEnc)
 	log.ErrFatal(err)

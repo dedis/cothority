@@ -1,5 +1,5 @@
 // Catena implements the simplest possible example of how to set up the
-// logread-service. It shall be used as a source for copy/pasting.
+// onchain-secret service. It shall be used as a source for copy/pasting.
 package main
 
 import (
@@ -7,8 +7,8 @@ import (
 
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/logread"
+	"gopkg.in/dedis/cothority.v1/skipchain"
+	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/crypto.v0/cipher/sha3"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/app"
@@ -43,22 +43,22 @@ func main() {
 	// Don't show program-lines - set to 1 or higher for mroe debugging
 	// messages
 	log.SetDebugVisible(0)
-	lr, err := setupChains()
+	ocs, err := setupChains()
 	log.ErrFatal(err)
 
-	// Marshalling the logread-structure, so that it can be stored
+	// Marshalling the onchain-secret structure, so that it can be stored
 	// in a file or as a value in a keyvalue storage.
-	forStorage, err := lr.Marshal()
+	forStorage, err := ocs.Marshal()
 	log.ErrFatal(err)
-	log.Info("Having", len(forStorage), "bytes for logread-storage")
+	log.Info("Having", len(forStorage), "bytes for onchain-secret storage")
 
-	// Unmarshalling the logread-structure to access it
-	lrLoaded, err := logread.NewLogreadUnmarshal(forStorage)
-	fileID, err := writeFile(lrLoaded, invoiceData)
+	// Unmarshalling the onchain-secret structure to access it
+	ocsLoaded, err := onchain_secrets.NewOnchainSecretsUnmarshal(forStorage)
+	fileID, err := writeFile(ocsLoaded, invoiceData)
 	log.ErrFatal(err)
 
 	// Getting the file off the skipchain
-	data, err := readFile(lrLoaded, fileID, "chaincode")
+	data, err := readFile(ocsLoaded, fileID, "chaincode")
 	log.ErrFatal(err)
 	if bytes.Compare(invoiceData, data) != 0 {
 		log.Fatal("Original data and retrieved data are not the same")
@@ -66,7 +66,7 @@ func main() {
 	log.Info("Retrieved data:", string(data))
 
 	// Reading at most 4 read-requests from the start
-	requests, err := lrLoaded.GetReadRequests(nil, 4)
+	requests, err := ocsLoaded.GetReadRequests(nil, 4)
 	log.ErrFatal(err)
 	for _, req := range requests {
 		log.Infof("User %s read document %x", req.Reader, req.FileID)
@@ -77,16 +77,16 @@ func main() {
 //  - admin - with the right to add/remove users
 //  - client - with the right to write to the skipchain
 //  - chaincode - with the right to read from the skipchain
-func setupChains() (lr *logread.Logread, err error) {
+func setupChains() (ocs *onchain_secrets.OnchainSecrets, err error) {
 	group, err := app.ReadGroupDescToml(strings.NewReader(publicTomlData))
 	if err != nil {
 		return
 	}
 
-	// In the next step we create a new logread-skipchain with an admin-user
+	// In the next step we create a new ocs-skipchain with an admin-user
 	// called 'admin'.
 	log.Info("Setting up skipchains")
-	lr, err = logread.NewLogread(group.Roster, "admin")
+	ocs, err = onchain_secrets.NewOnchainSecrets(group.Roster, "admin")
 	if err != nil {
 		return
 	}
@@ -95,10 +95,10 @@ func setupChains() (lr *logread.Logread, err error) {
 	// client - with write access
 	// chaincode - with read access
 	log.Info("Adding users")
-	if err = lr.AddUser("client", logread.UserWriter); err != nil {
+	if err = ocs.AddUser("client", onchain_secrets.UserWriter); err != nil {
 		return
 	}
-	if err = lr.AddUser("chaincode", logread.UserReader); err != nil {
+	if err = ocs.AddUser("chaincode", onchain_secrets.UserReader); err != nil {
 		return
 	}
 	return
@@ -107,7 +107,7 @@ func setupChains() (lr *logread.Logread, err error) {
 // writeFile stores the data on the skipchain and returns a fileID that can
 // be used to retrieve that data. fileID is a unique identifier over all
 // the skipchain.
-func writeFile(lr *logread.Logread, data []byte) (fileID skipchain.SkipBlockID, err error) {
+func writeFile(ocs *onchain_secrets.OnchainSecrets, data []byte) (fileID skipchain.SkipBlockID, err error) {
 	// The client stores a file on the skipchain.
 	log.Info("Encrypting file and sending it to the skipchain")
 	// 1. Create a random symmetric key
@@ -116,29 +116,29 @@ func writeFile(lr *logread.Logread, data []byte) (fileID skipchain.SkipBlockID, 
 	cipher := sha3.NewShakeCipher128(key)
 	encData := cipher.Seal(nil, data)
 	// 3. Encrypt the key using the secret share public key
-	encKey, cerr := lr.EncryptKey(key)
+	encKey, cerr := ocs.EncryptKey(key)
 	if cerr != nil {
 		err = cerr
 		return
 	}
 	// 4. Write the encrypted data with the encrypted key to the skipchain.
-	fileID, err = lr.AddFile(encData, encKey, "client")
+	fileID, err = ocs.AddFile(encData, encKey, "client")
 	return
 }
 
 // readFile requests the data from the skipchain under the reader's name. If
 // reader is not registered to the skipchain, the function will return an error.
-func readFile(lr *logread.Logread, idFile skipchain.SkipBlockID, reader string) ([]byte, error) {
+func readFile(ocs *onchain_secrets.OnchainSecrets, idFile skipchain.SkipBlockID, reader string) ([]byte, error) {
 	// Now the chaincode requests access to the file.
 	log.Info("Send file-request")
-	readRequest, err := lr.RequestFile(idFile, reader)
+	readRequest, err := ocs.RequestFile(idFile, reader)
 	if err != nil {
 		return nil, err
 	}
 
 	// Finally fetch the file (supposing we don't have it yet)
 	log.Info("Get re-encrypted key")
-	encData, key, err := lr.ReadFile(readRequest)
+	encData, key, err := ocs.ReadFile(readRequest)
 	if err != nil {
 		return nil, err
 	}

@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/logread"
+	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
@@ -15,20 +15,20 @@ import (
 )
 
 func init() {
-	network.RegisterMessage(wlrConfig{})
+	network.RegisterMessage(ocsConfig{})
 }
 
-type wlrConfig struct {
-	ACLBunch *logread.SkipBlockBunch
-	WLRBunch *logread.SkipBlockBunch
-	Roles    *logread.Credentials
+type ocsConfig struct {
+	ACLBunch *onchain_secrets.SkipBlockBunch
+	DocBunch *onchain_secrets.SkipBlockBunch
+	Roles    *onchain_secrets.Credentials
 }
 
 // loadConfig will try to load the configuration and `fatal` if it is there but
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
-func loadConfig(c *cli.Context) (cfg *wlrConfig, loaded bool) {
-	cfg = &wlrConfig{}
+func loadConfig(c *cli.Context) (cfg *ocsConfig, loaded bool) {
+	cfg = &ocsConfig{}
 	loaded = true
 
 	configFile := getConfig(c)
@@ -42,11 +42,11 @@ func loadConfig(c *cli.Context) (cfg *wlrConfig, loaded bool) {
 	}
 	_, msg, err := network.Unmarshal(buf)
 	log.ErrFatal(err)
-	cfg, loaded = msg.(*wlrConfig)
+	cfg, loaded = msg.(*ocsConfig)
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}
-	if cfg.ACLBunch == nil || cfg.WLRBunch == nil {
+	if cfg.ACLBunch == nil || cfg.DocBunch == nil {
 		log.Fatal("Identity doesn't hold skipblock")
 	}
 	return
@@ -55,7 +55,7 @@ func loadConfig(c *cli.Context) (cfg *wlrConfig, loaded bool) {
 // loadConfigOrFail tries to load the config and fails if it doesn't succeed.
 // If a configuration has been loaded, it will update the config and propose
 // part of the identity.
-func loadConfigOrFail(c *cli.Context) *wlrConfig {
+func loadConfigOrFail(c *cli.Context) *ocsConfig {
 	cfg, loaded := loadConfig(c)
 	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
@@ -64,7 +64,7 @@ func loadConfigOrFail(c *cli.Context) *wlrConfig {
 }
 
 // Saves the clientApp in the configfile - refuses to save an empty file.
-func (cfg *wlrConfig) saveConfig(c *cli.Context) error {
+func (cfg *ocsConfig) saveConfig(c *cli.Context) error {
 	configFile := getConfig(c)
 	if cfg == nil {
 		return errors.New("Cannot save empty clientApp")
@@ -79,7 +79,7 @@ func (cfg *wlrConfig) saveConfig(c *cli.Context) error {
 }
 
 // Gets the admin-role
-func (cfg *wlrConfig) Admin() *logread.Credential {
+func (cfg *ocsConfig) Admin() *onchain_secrets.Credential {
 	acls := cfg.Acls()
 	for _, c := range cfg.Roles.List {
 		if a := acls.Admins.SearchPseudo(c.Pseudonym); a != nil && a.Public.Equal(c.Public) {
@@ -90,30 +90,30 @@ func (cfg *wlrConfig) Admin() *logread.Credential {
 }
 
 // Gets the latest acls
-func (cfg *wlrConfig) Acls() *logread.DataACL {
+func (cfg *ocsConfig) Acls() *onchain_secrets.DataACL {
 	_, aclI, err := network.Unmarshal(cfg.ACLBunch.Latest.Data)
 	if err != nil {
 		return nil
 	}
-	aclsE, ok := aclI.(*logread.DataACLEvolve)
+	aclsE, ok := aclI.(*onchain_secrets.DataACLEvolve)
 	if !ok {
 		return nil
 	}
 	acls := aclsE.ACL
 	if acls.Admins == nil {
-		acls.Admins = &logread.Credentials{}
+		acls.Admins = &onchain_secrets.Credentials{}
 	}
 	if acls.Writers == nil {
-		acls.Writers = &logread.Credentials{}
+		acls.Writers = &onchain_secrets.Credentials{}
 	}
 	if acls.Readers == nil {
-		acls.Readers = &logread.Credentials{}
+		acls.Readers = &onchain_secrets.Credentials{}
 	}
 	return acls
 }
 
 // StoreFile asks the skipchain to store the given file.
-func (cfg *wlrConfig) StoreFile(writer, file string) (sb *skipchain.SkipBlock, err error) {
+func (cfg *ocsConfig) StoreFile(writer, file string) (sb *skipchain.SkipBlock, err error) {
 	cred := cfg.Roles.SearchPseudo(writer)
 	if cred == nil {
 		return nil, errors.New("Didn't find writer: " + writer)
@@ -123,13 +123,13 @@ func (cfg *wlrConfig) StoreFile(writer, file string) (sb *skipchain.SkipBlock, e
 		return
 	}
 	log.ErrFatal(err)
-	sb, err = logread.NewClient().EncryptAndWriteRequest(cfg.WLRBunch.Latest, data, cred)
+	sb, err = onchain_secrets.NewClient().EncryptAndWriteRequest(cfg.DocBunch.Latest, data, cred)
 	return
 }
 
-// CreateWLRBunch returns the WLR-bunch from a slice of skipblocks and does some basic
+// CreateDocBunch returns the Doc-bunch from a slice of skipblocks and does some basic
 // tests.
-func CreateWLRBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*logread.SkipBlockBunch, error) {
+func CreateDocBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*onchain_secrets.SkipBlockBunch, error) {
 	cl := skipchain.NewClient()
 	sbsReply, err := cl.GetUpdateChain(roster, sid)
 	if err != nil {
@@ -140,20 +140,20 @@ func CreateWLRBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*logread.Sk
 		return nil, errors.New("Didn't find skipchain or it is empty")
 	}
 	genesis := sbs[0]
-	if genesis.VerifierIDs[1] != logread.VerificationLogreadWLR[1] {
-		return nil, errors.New("This is not a WLR-skipchain")
+	if genesis.VerifierIDs[1] != onchain_secrets.VerificationOCSDoc[1] {
+		return nil, errors.New("This is not a Doc-skipchain")
 	}
 	if genesis.Index != 0 {
 		return nil, errors.New("This is not the genesis-block")
 	}
-	dataWlr := logread.NewDataWlr(genesis.Data)
-	if dataWlr == nil {
-		return nil, errors.New("Data is not dataWLR")
+	dataOCS := onchain_secrets.NewDataOCS(genesis.Data)
+	if dataOCS == nil {
+		return nil, errors.New("Data is not dataOCS")
 	}
-	if dataWlr.Config == nil {
+	if dataOCS.Config == nil {
 		return nil, errors.New("Configuration of genesis-block should be non-nil")
 	}
-	bunch := logread.NewSkipBlockBunch(genesis)
+	bunch := onchain_secrets.NewSkipBlockBunch(genesis)
 	for _, sb := range sbs[1:] {
 		if bunch.Store(sb) == nil {
 			return nil, errors.New("Error in Skipchain")
@@ -164,7 +164,7 @@ func CreateWLRBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*logread.Sk
 
 // CreateACLBunch returns the ACL-bunch from a slice of skipblocks and does some basic
 // tests.
-func CreateACLBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*logread.SkipBlockBunch, error) {
+func CreateACLBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*onchain_secrets.SkipBlockBunch, error) {
 	cl := skipchain.NewClient()
 	sbsReply, err := cl.GetUpdateChain(roster, sid)
 	if err != nil {
@@ -175,13 +175,13 @@ func CreateACLBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*logread.Sk
 		return nil, errors.New("Didn't find skipchain or it is empty")
 	}
 	genesis := sbs[0]
-	if genesis.VerifierIDs[1] != logread.VerificationLogreadACL[1] {
+	if genesis.VerifierIDs[1] != onchain_secrets.VerificationOCSACL[1] {
 		return nil, errors.New("This is not a ACL-skipchain")
 	}
 	if genesis.Index != 0 {
 		return nil, errors.New("This is not the genesis-block")
 	}
-	bunch := logread.NewSkipBlockBunch(genesis)
+	bunch := onchain_secrets.NewSkipBlockBunch(genesis)
 	for _, sb := range sbs[1:] {
 		if bunch.Store(sb) == nil {
 			return nil, errors.New("Error in Skipchain")

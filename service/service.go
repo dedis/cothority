@@ -10,9 +10,9 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/logread"
+	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/messaging"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -27,83 +27,83 @@ const propagationTimeout = 10000
 func init() {
 	network.RegisterMessage(Storage{})
 	var err error
-	templateID, err = onet.RegisterNewService(logread.ServiceName, newService)
+	templateID, err = onet.RegisterNewService(onchain_secrets.ServiceName, newService)
 	log.ErrFatal(err)
 }
 
-// Service holds all data for the logread-service
+// Service holds all data for the onchain-secrets service
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*onet.ServiceProcessor
 
 	propagateACL messaging.PropagationFunc
-	propagateWLR messaging.PropagationFunc
+	propagateDoc messaging.PropagationFunc
 
 	Storage *Storage
 }
 
-// Storage holds the skipblock-bunches for the ACL- and WLR-skipchains.
+// Storage holds the skipblock-bunches for the ACL- and Doc-skipchains.
 type Storage struct {
-	ACLs *logread.SBBStorage
-	WLRs *logread.SBBStorage
+	ACLs *onchain_secrets.SBBStorage
+	Docs *onchain_secrets.SBBStorage
 }
 
-// CreateSkipchains sets up a new pair of ACL/WLR-skipchain.
-func (s *Service) CreateSkipchains(req *logread.CreateSkipchainsRequest) (reply *logread.CreateSkipchainsReply,
+// CreateSkipchains sets up a new pair of ACL/Doc-skipchain.
+func (s *Service) CreateSkipchains(req *onchain_secrets.CreateSkipchainsRequest) (reply *onchain_secrets.CreateSkipchainsReply,
 	cerr onet.ClientError) {
 	log.Lvl2("Creating ACL-skipchain")
 
 	c := skipchain.NewClient()
-	reply = &logread.CreateSkipchainsReply{}
-	reply.ACL, cerr = c.CreateGenesis(req.Roster, 4, 4, logread.VerificationLogreadACL, req.ACL, nil)
+	reply = &onchain_secrets.CreateSkipchainsReply{}
+	reply.ACL, cerr = c.CreateGenesis(req.Roster, 4, 4, onchain_secrets.VerificationOCSACL, req.ACL, nil)
 	if cerr != nil {
 		return
 	}
 
-	log.Lvl2("Creating WLR-skipchain")
-	wlrData := &logread.DataWlr{
-		Config: &logread.DataWlrConfig{
+	log.Lvl2("Creating Doc-skipchain")
+	docData := &onchain_secrets.DataOCS{
+		Config: &onchain_secrets.DataOCSConfig{
 			ACL: reply.ACL.SkipChainID(),
 		},
 	}
-	reply.Wlr, cerr = c.CreateGenesis(req.Roster, 4, 4, logread.VerificationLogreadWLR, wlrData, nil)
+	reply.Doc, cerr = c.CreateGenesis(req.Roster, 4, 4, onchain_secrets.VerificationOCSDoc, docData, nil)
 	replies, err := s.propagateACL(req.Roster, reply.ACL, propagationTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorProtocol, err.Error())
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
 	}
 	if replies != len(req.Roster.List) {
 		log.Warn("Got only", replies, "replies for acl-propagation")
 	}
-	replies, err = s.propagateWLR(req.Roster, reply.Wlr, propagationTimeout)
+	replies, err = s.propagateDoc(req.Roster, reply.Doc, propagationTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorProtocol, err.Error())
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
 	}
 	if replies != len(req.Roster.List) {
-		log.Warn("Got only", replies, "replies for wlr-propagation")
+		log.Warn("Got only", replies, "replies for doc-propagation")
 	}
 	s.save()
 	return
 }
 
 // EvolveACL adds a new block to the ACL-skipchain.
-func (s *Service) EvolveACL(req *logread.EvolveACLRequest) (reply *logread.EvolveACLReply,
+func (s *Service) EvolveACL(req *onchain_secrets.EvolveACLRequest) (reply *onchain_secrets.EvolveACLReply,
 	cerr onet.ClientError) {
 	log.Lvl2("Evolving ACL")
-	reply = &logread.EvolveACLReply{}
+	reply = &onchain_secrets.EvolveACLReply{}
 	bunch := s.Storage.ACLs.GetBunch(req.ACL)
 	if bunch == nil {
-		cerr = onet.NewClientErrorCode(logread.ErrorParameter, "Didn't find acl")
+		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find acl")
 		return
 	}
-	reply.SB, cerr = logread.NewClient().BunchAddBlock(bunch, nil, req.NewAcls)
+	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(bunch, nil, req.NewAcls)
 	if cerr != nil {
 		return
 	}
 
 	replies, err := s.propagateACL(bunch.Latest.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(logread.ErrorProtocol, err.Error())
+		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
 		return
 	}
 	if replies != len(bunch.Latest.Roster.List) {
@@ -112,91 +112,91 @@ func (s *Service) EvolveACL(req *logread.EvolveACLRequest) (reply *logread.Evolv
 	return
 }
 
-// WriteRequest adds a block the WLR-skipchain with a new file.
-func (s *Service) WriteRequest(req *logread.WriteRequest) (reply *logread.WriteReply,
+// WriteRequest adds a block the Doc-skipchain with a new file.
+func (s *Service) WriteRequest(req *onchain_secrets.WriteRequest) (reply *onchain_secrets.WriteReply,
 	cerr onet.ClientError) {
 	log.Lvl2("Writing a file to the skipchain")
-	reply = &logread.WriteReply{}
-	wlrBunch := s.Storage.WLRs.GetBunch(req.Wlr)
-	wlr := wlrBunch.GetByID(req.Wlr)
-	if wlr == nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "Didn't find wlr-skipchain")
+	reply = &onchain_secrets.WriteReply{}
+	docBunch := s.Storage.Docs.GetBunch(req.Doc)
+	doc := docBunch.GetByID(req.Doc)
+	if doc == nil {
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find doc-skipchain")
 	}
-	data := &logread.DataWlr{
+	data := &onchain_secrets.DataOCS{
 		Write: req.Write,
 	}
-	reply.SB, cerr = logread.NewClient().BunchAddBlock(wlrBunch, wlr.Roster, data)
+	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(docBunch, doc.Roster, data)
 	if cerr != nil {
 		return
 	}
 
-	replies, err := s.propagateWLR(wlrBunch.Latest.Roster, reply.SB, propagationTimeout)
+	replies, err := s.propagateDoc(docBunch.Latest.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(logread.ErrorProtocol, err.Error())
+		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
 		return
 	}
-	if replies != len(wlrBunch.Latest.Roster.List) {
+	if replies != len(docBunch.Latest.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
 	return
 }
 
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
-func (s *Service) ReadRequest(req *logread.ReadRequest) (reply *logread.ReadReply,
+func (s *Service) ReadRequest(req *onchain_secrets.ReadRequest) (reply *onchain_secrets.ReadReply,
 	cerr onet.ClientError) {
 	log.Lvl2("Requesting a file. Reader:", req.Read.Pseudonym)
-	reply = &logread.ReadReply{}
-	wlrBunch := s.Storage.WLRs.GetBunch(req.Wlr)
-	wlr := wlrBunch.GetByID(req.Wlr)
-	if wlr == nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "Didn't find wlr-skipchain")
+	reply = &onchain_secrets.ReadReply{}
+	docBunch := s.Storage.Docs.GetBunch(req.Doc)
+	doc := docBunch.GetByID(req.Doc)
+	if doc == nil {
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find doc-skipchain")
 	}
-	data := &logread.DataWlr{
+	data := &onchain_secrets.DataOCS{
 		Read: req.Read,
 	}
-	reply.SB, cerr = logread.NewClient().BunchAddBlock(wlrBunch, wlr.Roster, data)
+	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(docBunch, doc.Roster, data)
 	if cerr != nil {
 		return
 	}
 
-	replies, err := s.propagateWLR(wlrBunch.Latest.Roster, reply.SB, propagationTimeout)
+	replies, err := s.propagateDoc(docBunch.Latest.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(logread.ErrorProtocol, err.Error())
+		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
 		return
 	}
-	if replies != len(wlrBunch.Latest.Roster.List) {
+	if replies != len(docBunch.Latest.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
 	return
 }
 
 // GetReadRequests returns up to a maximum number of read-requests.
-func (s *Service) GetReadRequests(req *logread.GetReadRequests) (reply *logread.GetReadRequestsReply, cerr onet.ClientError) {
-	reply = &logread.GetReadRequestsReply{}
-	current := s.Storage.WLRs.GetByID(req.Start)
+func (s *Service) GetReadRequests(req *onchain_secrets.GetReadRequests) (reply *onchain_secrets.GetReadRequestsReply, cerr onet.ClientError) {
+	reply = &onchain_secrets.GetReadRequestsReply{}
+	current := s.Storage.Docs.GetByID(req.Start)
 	if current == nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "didn't find starting skipblock")
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "didn't find starting skipblock")
 	}
 	for len(reply.Documents) < req.Count {
 		// Search next read-request
-		_, dwlri, err := network.Unmarshal(current.Data)
-		if err == nil && dwlri != nil {
-			dwlr, ok := dwlri.(*logread.DataWlr)
+		_, ddoci, err := network.Unmarshal(current.Data)
+		if err == nil && ddoci != nil {
+			ddoc, ok := ddoci.(*onchain_secrets.DataOCS)
 			if !ok {
-				return nil, onet.NewClientErrorCode(logread.ErrorParameter,
-					"unknown block in wlr-skipchain")
+				return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter,
+					"unknown block in doc-skipchain")
 			}
-			if dwlr.Read != nil {
-				doc := &logread.ReadDoc{
-					Reader: dwlr.Read.Pseudonym,
+			if ddoc.Read != nil {
+				doc := &onchain_secrets.ReadDoc{
+					Reader: ddoc.Read.Pseudonym,
 					ReadID: current.Hash,
-					FileID: dwlr.Read.File,
+					FileID: ddoc.Read.File,
 				}
 				reply.Documents = append(reply.Documents, doc)
 			}
 		}
 		if len(current.ForwardLink) > 0 {
-			current = s.Storage.WLRs.GetFromGenesisByID(current.SkipChainID(),
+			current = s.Storage.Docs.GetFromGenesisByID(current.SkipChainID(),
 				current.ForwardLink[0].Hash)
 		} else {
 			log.Lvl3("No forward-links, stopping")
@@ -211,9 +211,9 @@ func (s *Service) GetReadRequests(req *logread.GetReadRequests) (reply *logread.
 // The returned value should be something that the client can use to encrypt his
 // key, so that a reader can use DecryptKeyRequest in order to get the key
 // encrypted under the reader's keypair.
-func (s *Service) EncryptKeyRequest(req *logread.EncryptKeyRequest) (reply *logread.EncryptKeyReply,
+func (s *Service) EncryptKeyRequest(req *onchain_secrets.EncryptKeyRequest) (reply *onchain_secrets.EncryptKeyReply,
 	cerr onet.ClientError) {
-	reply = &logread.EncryptKeyReply{}
+	reply = &onchain_secrets.EncryptKeyReply{}
 	log.Lvl2("Return the public shared secret")
 	return
 }
@@ -221,30 +221,30 @@ func (s *Service) EncryptKeyRequest(req *logread.EncryptKeyRequest) (reply *logr
 // DecryptKeyRequest - TODO: Re-encrypt under the public key of the reader
 // This should return the key encrypted under the public-key of the reader, so
 // that the reader can use his private key to decrypt the file-key.
-func (s *Service) DecryptKeyRequest(req *logread.DecryptKeyRequest) (reply *logread.DecryptKeyReply,
+func (s *Service) DecryptKeyRequest(req *onchain_secrets.DecryptKeyRequest) (reply *onchain_secrets.DecryptKeyReply,
 	cerr onet.ClientError) {
-	reply = &logread.DecryptKeyReply{
-		KeyParts: []*logread.ElGamal{},
+	reply = &onchain_secrets.DecryptKeyReply{
+		KeyParts: []*onchain_secrets.ElGamal{},
 	}
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
-	readSB := s.Storage.WLRs.GetByID(req.Read)
-	read := logread.NewDataWlr(readSB.Data)
+	readSB := s.Storage.Docs.GetByID(req.Read)
+	read := onchain_secrets.NewDataOCS(readSB.Data)
 	if read == nil || read.Read == nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "This is not a read-block")
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "This is not a read-block")
 	}
-	fileSB := s.Storage.WLRs.GetByID(read.Read.File)
-	file := logread.NewDataWlr(fileSB.Data)
+	fileSB := s.Storage.Docs.GetByID(read.Read.File)
+	file := onchain_secrets.NewDataOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
-		return nil, onet.NewClientErrorCode(logread.ErrorParameter, "File-block is broken")
+		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "File-block is broken")
 	}
 
 	// Use multiple Elgamal-encryptions for the key-parts, as they might not
 	// fit inside.
 	remainder := file.Write.Key
-	var eg *logread.ElGamal
+	var eg *onchain_secrets.ElGamal
 	for len(remainder) > 0 {
-		eg, remainder = logread.ElGamalEncrypt(network.Suite, read.Read.Public, remainder)
+		eg, remainder = onchain_secrets.ElGamalEncrypt(network.Suite, read.Read.Public, remainder)
 		reply.KeyParts = append(reply.KeyParts, eg)
 	}
 	return
@@ -289,7 +289,7 @@ func (s *Service) verifyACL(newID []byte, sb *skipchain.SkipBlock) bool {
 		log.Lvl3("couldn't unmarshal data")
 		return false
 	}
-	acl, ok := aclI.(*logread.DataACLEvolve)
+	acl, ok := aclI.(*onchain_secrets.DataACLEvolve)
 	if !ok {
 		log.Lvl3("Not correct acl")
 		return false
@@ -305,7 +305,7 @@ func (s *Service) verifyACL(newID []byte, sb *skipchain.SkipBlock) bool {
 		log.Lvl3("Couldn't unmarshal data")
 		return false
 	}
-	prevACL, ok := prevACLI.(*logread.DataACLEvolve)
+	prevACL, ok := prevACLI.(*onchain_secrets.DataACLEvolve)
 	if !ok {
 		log.Lvl3("Not correct acl")
 		return false
@@ -321,32 +321,32 @@ func (s *Service) verifyACL(newID []byte, sb *skipchain.SkipBlock) bool {
 	log.Lvl3("Didn't find correct signature")
 	return false
 }
-func (s *Service) verifyWLR(newID []byte, sb *skipchain.SkipBlock) bool {
-	log.Lvl3(s.ServerIdentity(), "Verifying WLR")
-	wlr := logread.NewDataWlr(sb.Data)
-	if wlr == nil {
-		log.Lvl3("Didn't find wlr")
+func (s *Service) verifyDoc(newID []byte, sb *skipchain.SkipBlock) bool {
+	log.Lvl3(s.ServerIdentity(), "Verifying Doc")
+	ocs := onchain_secrets.NewDataOCS(sb.Data)
+	if ocs == nil {
+		log.Lvl3("Didn't find ocs")
 		return false
 	}
-	if wlr.Config != nil {
+	if ocs.Config != nil {
 		// Only accept config in genesis-block
 		if sb.Index > 0 {
 			log.Lvl3("Config-block in non-genesis block")
 			return false
 		}
 	}
-	genesis := s.Storage.WLRs.GetFromGenesisByID(sb.SkipChainID(), sb.SkipChainID())
+	genesis := s.Storage.Docs.GetFromGenesisByID(sb.SkipChainID(), sb.SkipChainID())
 	if genesis == nil {
 		log.Lvl3("No genesis-block")
 		return false
 	}
-	wlrData := logread.NewDataWlr(genesis.Data)
-	if wlrData == nil {
-		log.Lvl3("No wlr-data in genesis-block")
+	ocsData := onchain_secrets.NewDataOCS(genesis.Data)
+	if ocsData == nil {
+		log.Lvl3("No ocs-data in genesis-block")
 		return false
 	}
 
-	aclBunch := s.Storage.ACLs.GetBunch(wlrData.Config.ACL)
+	aclBunch := s.Storage.ACLs.GetBunch(ocsData.Config.ACL)
 	if aclBunch == nil {
 		log.Lvl3("Didn't find corresponding acl-bunch")
 		return false
@@ -356,13 +356,13 @@ func (s *Service) verifyWLR(newID []byte, sb *skipchain.SkipBlock) bool {
 		log.Error(err)
 		return false
 	}
-	aclEvolve, ok := aclEvolveInt.(*logread.DataACLEvolve)
+	aclEvolve, ok := aclEvolveInt.(*onchain_secrets.DataACLEvolve)
 	if !ok {
 		log.Lvl3("Didn't find ACL")
 		return false
 	}
 	acl := aclEvolve.ACL
-	if write := wlr.Write; write != nil {
+	if write := ocs.Write; write != nil {
 		// Write has to check if the signature comes from a valid writer.
 		log.Lvl3("It's a write", acl.Writers)
 		for _, w := range acl.Writers.List {
@@ -371,13 +371,13 @@ func (s *Service) verifyWLR(newID []byte, sb *skipchain.SkipBlock) bool {
 			}
 		}
 		return false
-	} else if read := wlr.Read; read != nil {
+	} else if read := ocs.Read; read != nil {
 		// Read has to check that it's a valid reader
 		log.Lvl3("It's a read")
 		// Search file
 		found := false
-		for _, sb := range s.Storage.WLRs.GetBunch(genesis.Hash).SkipBlocks {
-			wd := logread.NewDataWlr(sb.Data)
+		for _, sb := range s.Storage.Docs.GetBunch(genesis.Hash).SkipBlocks {
+			wd := onchain_secrets.NewDataOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
 				if bytes.Compare(sb.Hash, read.File) == 0 {
 					found = true
@@ -404,9 +404,9 @@ func (s *Service) propagateACLFunc(sbI network.Message) {
 	sb := sbI.(*skipchain.SkipBlock)
 	s.Storage.ACLs.Store(sb)
 }
-func (s *Service) propagateWLRFunc(sbI network.Message) {
+func (s *Service) propagateDocFunc(sbI network.Message) {
 	sb := sbI.(*skipchain.SkipBlock)
-	s.Storage.WLRs.Store(sb)
+	s.Storage.Docs.Store(sb)
 	if sb.Index == 0 {
 		return
 	}
@@ -416,7 +416,7 @@ func (s *Service) propagateWLRFunc(sbI network.Message) {
 		if cerr != nil {
 			log.Error(cerr)
 		} else {
-			s.Storage.WLRs.Store(sbNew)
+			s.Storage.Docs.Store(sbNew)
 		}
 	}
 }
@@ -428,8 +428,8 @@ func newService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
-			ACLs: logread.NewSBBStorage(),
-			WLRs: logread.NewSBBStorage(),
+			ACLs: onchain_secrets.NewSBBStorage(),
+			Docs: onchain_secrets.NewSBBStorage(),
 		},
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchains, s.EvolveACL,
@@ -437,12 +437,12 @@ func newService(c *onet.Context) onet.Service {
 		s.EncryptKeyRequest, s.DecryptKeyRequest); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
-	skipchain.RegisterVerification(c, logread.VerifyLogreadACL, s.verifyACL)
-	skipchain.RegisterVerification(c, logread.VerifyLogreadWLR, s.verifyWLR)
+	skipchain.RegisterVerification(c, onchain_secrets.VerifyOCSACL, s.verifyACL)
+	skipchain.RegisterVerification(c, onchain_secrets.VerifyOCSDoc, s.verifyDoc)
 	var err error
-	s.propagateACL, err = messaging.NewPropagationFunc(c, "LogreadPropagateAcl", s.propagateACLFunc)
+	s.propagateACL, err = messaging.NewPropagationFunc(c, "OCSPropagateAcl", s.propagateACLFunc)
 	log.ErrFatal(err)
-	s.propagateWLR, err = messaging.NewPropagationFunc(c, "LogreadPropagateWlr", s.propagateWLRFunc)
+	s.propagateDoc, err = messaging.NewPropagationFunc(c, "OCSPropagateDoc", s.propagateDocFunc)
 	log.ErrFatal(err)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

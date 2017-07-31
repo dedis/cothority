@@ -1,4 +1,4 @@
-package logread
+package onchain_secrets
 
 import (
 	"gopkg.in/dedis/crypto.v0/abstract"

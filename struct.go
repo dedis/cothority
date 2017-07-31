@@ -1,4 +1,4 @@
-package logread
+package onchain_secrets
 
 /*
 This holds the messages used to communicate with the service over the network.
@@ -9,7 +9,7 @@ import (
 
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
@@ -22,7 +22,7 @@ func init() {
 	for _, msg := range []interface{}{
 		Credential{},
 		DataACL{}, DataACLEvolve{},
-		DataWlr{}, DataWlrWrite{}, DataWlrRead{}, DataWlrConfig{},
+		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, DataOCSConfig{},
 		CreateSkipchainsRequest{}, CreateSkipchainsReply{},
 		EvolveACLRequest{}, EvolveACLReply{},
 		WriteRequest{}, WriteReply{},
@@ -262,23 +262,23 @@ func (eda *DataACLEvolve) VerifySig(prev *skipchain.SkipBlock, pub abstract.Poin
 	return crypto.VerifySchnorr(network.Suite, pub, data, *eda.Signature)
 }
 
-// DataWlr has either the configuration (only valid in genesis-block),
+// DataOCS has either the configuration (only valid in genesis-block),
 // write or grant field non-nil.
-type DataWlr struct {
-	Config *DataWlrConfig
-	Write  *DataWlrWrite
-	Read   *DataWlrRead
+type DataOCS struct {
+	Config *DataOCSConfig
+	Write  *DataOCSWrite
+	Read   *DataOCSRead
 }
 
-// NewDataWlr returns a pointer to a DataWlr structure created from
-// the given data-slice. If the slice is not a valid DataWlr-structure,
+// NewDataOCS returns a pointer to a DataOCS structure created from
+// the given data-slice. If the slice is not a valid DataOCS-structure,
 // nil is returned.
-func NewDataWlr(b []byte) *DataWlr {
+func NewDataOCS(b []byte) *DataOCS {
 	_, dwi, err := network.Unmarshal(b)
 	if err != nil {
 		return nil
 	}
-	dw, ok := dwi.(*DataWlr)
+	dw, ok := dwi.(*DataOCS)
 	if !ok {
 		return nil
 	}
@@ -286,7 +286,7 @@ func NewDataWlr(b []byte) *DataWlr {
 }
 
 // String returns a nice string.
-func (dw *DataWlr) String() string {
+func (dw *DataOCS) String() string {
 	if dw == nil {
 		return "nil-pointer"
 	}
@@ -299,26 +299,26 @@ func (dw *DataWlr) String() string {
 	if dw.Read != nil {
 		return fmt.Sprintf("Read: %s read file %x", dw.Read.Pseudonym, dw.Read.File)
 	}
-	return "all nil DataWlr"
+	return "all nil DataOCS"
 }
 
-// DataWlrConfig points to the responsible acl-skipchain
-type DataWlrConfig struct {
+// DataOCSConfig points to the responsible acl-skipchain
+type DataOCSConfig struct {
 	ACL skipchain.SkipBlockID
 }
 
-// DataWlrWrite stores the file and the encrypted secret
-type DataWlrWrite struct {
+// DataOCSWrite stores the file and the encrypted secret
+type DataOCSWrite struct {
 	File []byte
 	// TODO: this has to be the key encrypted under the shared secret
 	Key       []byte
 	Signature *crypto.SchnorrSig
 }
 
-// DataWlrRead stores a read-request which is the secret encrypted under the
+// DataOCSRead stores a read-request which is the secret encrypted under the
 // pseudonym's public key. The File is the skipblock-id of the skipblock
 // holding the file.
-type DataWlrRead struct {
+type DataOCSRead struct {
 	Pseudonym string
 	Public    abstract.Point
 	File      skipchain.SkipBlockID
@@ -335,7 +335,7 @@ type ReadDoc struct {
 
 // Requests and replies to/from the service
 
-// CreateSkipchainsRequest asks for setting up a new wlr/acl skipchain pair.
+// CreateSkipchainsRequest asks for setting up a new ocs/acl skipchain pair.
 type CreateSkipchainsRequest struct {
 	Roster *onet.Roster
 	ACL    *DataACLEvolve
@@ -344,7 +344,7 @@ type CreateSkipchainsRequest struct {
 // CreateSkipchainsReply holds the two genesis-skipblocks and the admin-credentials.
 type CreateSkipchainsReply struct {
 	ACL   *skipchain.SkipBlock
-	Wlr   *skipchain.SkipBlock
+	Doc   *skipchain.SkipBlock
 	Admin *Credential
 }
 
@@ -359,10 +359,10 @@ type EvolveACLReply struct {
 	SB *skipchain.SkipBlock
 }
 
-// WriteRequest asks the wlr-skipchain to store a new file on the skipchain.
+// WriteRequest asks the doc-skipchain to store a new file on the skipchain.
 type WriteRequest struct {
-	Write *DataWlrWrite
-	Wlr   skipchain.SkipBlockID
+	Write *DataOCSWrite
+	Doc   skipchain.SkipBlockID
 }
 
 // WriteReply returns the created skipblock
@@ -370,10 +370,10 @@ type WriteReply struct {
 	SB *skipchain.SkipBlock
 }
 
-// ReadRequest asks the wlr-skipchain to allow a reader to access a document.
+// ReadRequest asks the doc-skipchain to allow a reader to access a document.
 type ReadRequest struct {
-	Read *DataWlrRead
-	Wlr  skipchain.SkipBlockID
+	Read *DataOCSRead
+	Doc  skipchain.SkipBlockID
 }
 
 // ReadReply is the added skipblock, if successful.

@@ -1,4 +1,4 @@
-# Write log-read skipchain
+# Onchain secrets
 
 This is a first implementation of a skipchain that has the following features:
 
@@ -12,7 +12,7 @@ It uses two kind of skipchains:
 	- write: these keys can add new documents to the skipchain
 	- read: any public key in here can ask for read access
 	
-- document-skipchain with a structure that holds:
+- ocs-skipchain with a structure that holds:
 	- configuration-blocks
 		- link to acl-skipchain
 	- write-blocks
@@ -32,14 +32,14 @@ reader's public key
 ## App
 
 There is a simple app that can be used to set up and interact with the skipchain.
-For more information, refer to the README-file in <a href="wlogr/README.md">wlogr</a>
+For more information, refer to the README-file in <a href="ocs/README.md">ocs</a>
 
 ## Service
 
 The service ensures the correct usage of the skipchains:
 - the ACL-skipchain only evolves when a new ACL signed by a previous admin is
 proposed
-- the WLR-skipchain allows only write-requests from writers in the ACL-skipchain
+- the OCS-skipchain allows only write-requests from writers in the ACL-skipchain
 and read-requests from readers
 
 TODO:
