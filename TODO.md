@@ -1,46 +1,23 @@
-# Discussion with Bryan on 19th of May 2017
+# Items that are still waiting for completion
 
-## Write-transaction
+## Actual re-encryption of symmetric encryption key
 
-The key for the file is given like:
+The core of the onchain-secrets algorithm is not done yet: the symmetric
+key is stored as-is on the skipchain. We have an implementation of Lefteris'
+paper-draft, but still need to port it as a 'protocol'.
 
-g**r, Key * Y
+Estimated time: 2 days
 
-The whole write-log needs to be signed by the writer, proofing that he knows
-r.
+## Using of new skipchains
 
-## Read-transaction
+The current implementation of skipchains lacks in multiple ways:
 
-Signed by the reader.
-
-Data-part includes 
-- hash of the write-transaction (skipblock-id)
-- encrypted key
-
--> Request to re-encrypt to "C"
-
-? collective signature is only in the forward-link of the previous block(s)
-
-## SHU - Secret Holding Unit
-
-Have to know which cothorities are allowed to sign off.
-
-### PVSS
-
-Can be done in a way that each node can re-encrypt the share to the
-public-key of the Reader.
-
-Each node does it's H**a_j and G**(z_i*x_i)
-	- ElGamal-encrypts it to C 
-
--> time-vaults?
--> Shamir re-sharing?
-
-### VSS
-
-Each month a new share-holding group is created and all keys are re-encrypted
-to the new share-holding group.
-
-x: collective private key
-X = g**x: collective public key
-
+- parallel writing/reading to the skipchain is not handled correctly
+	- done in development version
+	- 1 day of porting
+- saving the data is done as a big blob - needs a database
+	- needs to rewrite part of the underlying framework
+	- 1 week
+- all blocks are held in memory - out of memory error if too many blocks exist
+	- `bunch` needs to allow for dropping unused blocks
+	- once the database is in place, 1 day

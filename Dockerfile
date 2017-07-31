@@ -1,6 +1,6 @@
 FROM golang:1.8
 
-WORKDIR /go/src/github.com/dedis/logread
+WORKDIR /go/src/github.com/dedis/onchain-secrets
 COPY . .
 
 RUN go get -d -v ./conode

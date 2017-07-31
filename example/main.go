@@ -1,49 +1,37 @@
-// Catena implements the simplest possible example of how to set up the
+// This implements the simplest possible example of how to set up the
 // onchain-secret service. It shall be used as a source for copy/pasting.
 package main
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
 
 	"strings"
 
-	"gopkg.in/dedis/cothority.v1/skipchain"
 	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/cipher/sha3"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 )
 
-// publicTomlData is defined as a constant here - depending on the setup
-// chosen to link the docker-containers, the addresses might need to be
-// adjusted.
-// Even though the ports given here are 7002, 7004 and 7006, the communication
-// between the app and the conodes happens on ports 7003, 7005 and 7007.
-const publicTomlData = `[[servers]]
-  Address = "tcp://127.0.0.1:7002"
-  Public = "mkA0EYEqjNMC+jVxtVCPaUI3oWjwt5TNDK8bpXgHL0Q="
-  Description = "Conode_1"
-[[servers]]
-  Address = "tcp://127.0.0.1:7004"
-  Public = "ljojlp5FKO05HZRTy5aVAV5kaWWN+0vxfIHLZ3dW79Q="
-  Description = "Conode_2"
-[[servers]]
-  Address = "tcp://127.0.0.1:7006"
-  Public = "imd1y9Mp3vey1GdyFy6gk+w0XAuAN7wO34u5rcKiIHI="
-  Description = "Conode_3"
-`
-
-// dummy invoice data that will be stored on the skipchain.
-var invoiceData = []byte("company x orders y at z for _ CHF")
+// dummy document that will be stored on the skipchain.
+var secretDoc = []byte("Top-secret file about Switzerlands plan to build an A-bomb in the 1940s")
 
 // main creates a new chain, stores the invoiceData on it, and then retrieves
 // the data.
 func main() {
 	// Don't show program-lines - set to 1 or higher for mroe debugging
 	// messages
+	if len(os.Args) < 2 {
+		log.Fatal("Please give public.toml as argument")
+	}
+	publicToml, err := ioutil.ReadFile(os.Args[1])
+	log.ErrFatal(err)
 	log.SetDebugVisible(0)
-	ocs, err := setupChains()
+	ocs, err := setupChains(string(publicToml))
 	log.ErrFatal(err)
 
 	// Marshalling the onchain-secret structure, so that it can be stored
@@ -54,13 +42,13 @@ func main() {
 
 	// Unmarshalling the onchain-secret structure to access it
 	ocsLoaded, err := onchain_secrets.NewOnchainSecretsUnmarshal(forStorage)
-	fileID, err := writeFile(ocsLoaded, invoiceData)
+	fileID, err := writeFile(ocsLoaded, secretDoc)
 	log.ErrFatal(err)
 
 	// Getting the file off the skipchain
 	data, err := readFile(ocsLoaded, fileID, "chaincode")
 	log.ErrFatal(err)
-	if bytes.Compare(invoiceData, data) != 0 {
+	if bytes.Compare(secretDoc, data) != 0 {
 		log.Fatal("Original data and retrieved data are not the same")
 	}
 	log.Info("Retrieved data:", string(data))
@@ -77,8 +65,8 @@ func main() {
 //  - admin - with the right to add/remove users
 //  - client - with the right to write to the skipchain
 //  - chaincode - with the right to read from the skipchain
-func setupChains() (ocs *onchain_secrets.OnchainSecrets, err error) {
-	group, err := app.ReadGroupDescToml(strings.NewReader(publicTomlData))
+func setupChains(public string) (ocs *onchain_secrets.OnchainSecrets, err error) {
+	group, err := app.ReadGroupDescToml(strings.NewReader(public))
 	if err != nil {
 		return
 	}

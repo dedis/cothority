@@ -12,9 +12,9 @@ import (
 	"errors"
 
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -67,7 +67,7 @@ func (c *Client) CreateSkipchains(r *onet.Roster, n string) (acl, ocs *skipchain
 		ACL:    NewDataACLEvolve(dataACL, nil, admin.Private),
 	}
 	reply := &CreateSkipchainsReply{}
-	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
+	cerr = c.SendProtobuf(r.Get(0), req, reply)
 	acl, ocs = reply.ACL, reply.Doc
 	return
 }
@@ -98,7 +98,7 @@ func (c *Client) EvolveACL(acl *skipchain.SkipBlock, newACL *DataACL, admin *Cre
 		NewAcls: NewDataACLEvolve(newACL, acl, admin.Private),
 	}
 	rep = &EvolveACLReply{}
-	cerr = NewClient().SendProtobuf(acl.Roster.RandomServerIdentity(), req, rep)
+	cerr = NewClient().SendProtobuf(acl.Roster.Get(0), req, rep)
 	return
 }
 
@@ -140,7 +140,7 @@ func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, encKey [
 		Doc: ocs.SkipChainID(),
 	}
 	reply := &WriteReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
+	cerr = c.SendProtobuf(ocs.Roster.Get(0), wr, reply)
 	sb = reply.SB
 	return
 }
@@ -201,7 +201,7 @@ func (c *Client) ReadRequest(ocs *skipchain.SkipBlock, reader *Credential,
 		Doc: ocs.SkipChainID(),
 	}
 	reply := &ReadReply{}
-	err = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	err = c.SendProtobuf(ocs.Roster.Get(0), request, reply)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (c *Client) EncryptKeyRequest(roster *onet.Roster, key []byte) (encKey []by
 		Roster: roster,
 	}
 	reply := &EncryptKeyReply{}
-	cerr = c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
+	cerr = c.SendProtobuf(roster.Get(0), request, reply)
 	if cerr != nil {
 		return
 	}
@@ -231,7 +231,7 @@ func (c *Client) DecryptKeyRequest(roster *onet.Roster, reqID skipchain.SkipBloc
 		Read: reqID,
 	}
 	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
+	cerr = c.SendProtobuf(roster.Get(0), request, reply)
 	if cerr != nil {
 		return
 	}
@@ -250,7 +250,7 @@ func (c *Client) DecryptKeyRequest(roster *onet.Roster, reqID skipchain.SkipBloc
 func (c *Client) GetReadRequests(roster *onet.Roster, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
 	request := &GetReadRequests{start, count}
 	reply := &GetReadRequestsReply{}
-	cerr := c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
+	cerr := c.SendProtobuf(roster.Get(0), request, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
