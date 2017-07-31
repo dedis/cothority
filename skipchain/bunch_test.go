@@ -32,14 +32,6 @@ func TestSkipBlockBunch_GetResponsible(t *testing.T) {
 	_, err = tb.bunch.GetResponsible(tb.skipblocks[1])
 	require.Nil(t, err)
 
-	// Create a fake child-skipchain
-	g := tb.bunch.GetByID(tb.bunch.GenesisID).Copy()
-	g.ParentBlockID = invalidID
-	g.Roster = nil
-
-	_, err = tb.bunch.GetResponsible(g)
-	require.NotNil(t, err)
-
 	bl := tb.bunch.Latest.Copy()
 	bl.BackLinkIDs = []skipchain.SkipBlockID{}
 	_, err = tb.bunch.GetResponsible(bl)
@@ -159,10 +151,6 @@ func TestNewSBBStorage_VerifyLinks(t *testing.T) {
 	tb.storage.Store(child)
 	log.ErrFatal(cerr)
 	log.ErrFatal(tb.storage.VerifyLinks(child))
-
-	cc = child.Copy()
-	cc.ParentBlockID = invalidID
-	require.NotNil(t, tb.storage.VerifyLinks(cc))
 
 	cc = child.Copy()
 	cc.Hash = invalidID

@@ -16,13 +16,11 @@ message SkipBlock {
     optional sint32 BaseHeight = 4;
     repeated bytes BackLinkIDs = 5;
     repeated bytes VerifierIDs = 6;
-    optional bytes ParentBlockID = 7;
-    optional bytes GenesisID = 8;
-    optional bytes Data = 9;
-    optional onet.Roster Roster = 10;
-    optional bytes Hash = 11;
-    repeated BlockLink ForwardLink = 12;
-    optional bytes ChildSL = 13;
+    optional bytes GenesisID = 7;
+    optional bytes Data = 8;
+    optional onet.Roster Roster = 9;
+    optional bytes Hash = 10;
+    repeated BlockLink ForwardLink = 11;
 }
 
 message StoreSkipBlockRequest {

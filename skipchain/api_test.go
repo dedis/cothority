@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/skipchain"
-	_ "github.com/dedis/cothority/skipchain/service"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -20,10 +19,6 @@ import (
 
 func init() {
 	network.RegisterMessage(&testData{})
-}
-
-func TestMain(m *testing.M) {
-	log.MainTest(m)
 }
 
 func TestClient_CreateGenesis(t *testing.T) {

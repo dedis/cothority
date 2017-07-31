@@ -95,9 +95,6 @@ type SkipBlock struct {
 	BackLinkIDs []SkipBlockID
 	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
 	VerifierIDs []VerifierID
-	// SkipBlockParent points to the SkipBlock of the responsible Roster -
-	// is nil if this is the Root-roster
-	ParentBlockID SkipBlockID
 	// GenesisID is the ID of the genesis-block.
 	GenesisID SkipBlockID
 	// Data is any data to be stored in that SkipBlock
@@ -112,9 +109,6 @@ type SkipBlock struct {
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
 	ForwardLink []*BlockLink
-	// SkipLists that depend on us, given as the first SkipBlock - can
-	// be a Data or a Roster SkipBlock
-	ChildSL []SkipBlockID
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over
@@ -138,7 +132,6 @@ func (sb *SkipBlock) CalculateHash() SkipBlockID {
 	for _, v := range sb.VerifierIDs {
 		hash.Write(v[:])
 	}
-	hash.Write(sb.ParentBlockID)
 	hash.Write(sb.GenesisID)
 	hash.Write(sb.Data)
 	if sb.Roster != nil {
@@ -171,11 +164,9 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := *sb
 	b.Hash = make([]byte, len(sb.Hash))
 	b.ForwardLink = make([]*BlockLink, len(sb.ForwardLink))
-	b.ChildSL = make([]SkipBlockID, len(sb.ChildSL))
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
-	copy(b.ChildSL, sb.ChildSL)
 	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)

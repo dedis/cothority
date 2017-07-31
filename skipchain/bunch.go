@@ -58,6 +58,9 @@ func (sbb *SkipBlockBunch) GetByID(sbID SkipBlockID) *SkipBlock {
 func (sbb *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 	sbb.Lock()
 	defer sbb.Unlock()
+	if !sb.CalculateHash().Equal(sb.Hash) {
+		return nil
+	}
 	if sbOld, exists := sbb.SkipBlocks[string(sb.Hash)]; exists {
 		// If this skipblock already exists, only copy forward-links and
 		// new children.
@@ -69,9 +72,6 @@ func (sbb *SkipBlockBunch) Store(sb *SkipBlock) SkipBlockID {
 				}
 				sbOld.AddForward(fl)
 			}
-		}
-		if len(sb.ChildSL) > len(sbOld.ChildSL) {
-			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
 		}
 	} else {
 		sbb.SkipBlocks[string(sb.Hash)] = sb
@@ -91,7 +91,6 @@ func (sbb *SkipBlockBunch) Length() int {
 
 // GetResponsible searches for the block that is responsible for sb
 // - Root_Genesis - himself
-// - *_Gensis - it's his parent
 // - else - it's the previous block
 func (sbb *SkipBlockBunch) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
@@ -99,11 +98,7 @@ func (sbb *SkipBlockBunch) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	}
 	if sb.Index == 0 {
 		// Genesis-block
-		if sb.ParentBlockID.IsNil() {
-			// Root-skipchain, no other parent
-			return sb, nil
-		}
-		return nil, errors.New("parents are not stored in SkipBlockBunch")
+		return sb, nil
 	}
 	if len(sb.BackLinkIDs) == 0 {
 		return nil, errors.New("invalid block: no backlink")
@@ -311,39 +306,15 @@ func (s *SBBStorage) Update(sb *SkipBlock) error {
 
 // VerifyLinks checks forward-links and parent-links
 func (s *SBBStorage) VerifyLinks(sb *SkipBlock) error {
+	if !sb.CalculateHash().Equal(sb.Hash) {
+		return errors.New("wrong hash of skipblock")
+	}
 	bunch := s.GetBunch(sb.SkipChainID())
 	if bunch == nil {
 		return errors.New("don't have this skipblock in a bunch")
 	}
 	if err := bunch.VerifyLinks(sb); err != nil {
 		return err
-	}
-	if !sb.ParentBlockID.IsNil() {
-		parent := s.GetByID(sb.ParentBlockID)
-		if parent == nil {
-			return errors.New("Didn't find parent")
-		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := 0
-		for found < 2 {
-			for _, child := range parent.ChildSL {
-				if child.Equal(sb.Hash) {
-					found = 2
-					break
-				}
-			}
-			switch found {
-			case 0:
-				if err := s.Update(parent); err != nil {
-					return err
-				}
-				found = 1
-			case 1:
-				return errors.New("parent doesn't know about us")
-			}
-		}
 	}
 	return nil
 }

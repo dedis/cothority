@@ -119,7 +119,6 @@ func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []VerifierID
 	genesis.VerifierIDs = ver
 	genesis.MaximumHeight = maxH
 	genesis.BaseHeight = baseH
-	genesis.ParentBlockID = parent
 	if err := genesis.SetData(data); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 	}

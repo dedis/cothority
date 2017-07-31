@@ -90,13 +90,7 @@ func TestBlockLink_Copy(t *testing.T) {
 	}
 
 	sb1 := skipchain.NewSkipBlock()
-	sb1.ChildSL = append(sb1.ChildSL, []byte{3})
 	sb2 := sb1.Copy()
-	sb1.ChildSL[0] = []byte{1}
-	sb2.ChildSL[0] = []byte{2}
-	if bytes.Equal(sb1.ChildSL[0], sb2.ChildSL[0]) {
-		t.Fatal("They should not be equal")
-	}
 	sb1.Height = 10
 	sb2.Height = 20
 	if sb1.Height == sb2.Height {
