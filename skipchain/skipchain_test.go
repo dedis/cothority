@@ -430,6 +430,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
 	ssbr, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
+	require.NotNil(t, cerr)
+	ssbr, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
 	log.ErrFatal(cerr)
 	require.NotNil(t, ssbr.Latest)
 
@@ -448,6 +450,7 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	_, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbErr.ParentBlockID, sbErr})
 	// Last successful log...
 	require.NotNil(t, cerr)
+
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
