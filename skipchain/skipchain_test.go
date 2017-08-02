@@ -12,6 +12,8 @@ import (
 
 	"time"
 
+	"sync"
+
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -486,6 +488,45 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			sbRoot})
 		log.ErrFatal(cerr)
 	}
+}
+
+func TestService_ParallelStore(t *testing.T) {
+	nbrRoutines := 30
+	local := onet.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 3)
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
+	log.ErrFatal(cerr)
+	latest := ssbrep.Latest.Hash
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(i int) {
+			for {
+				rep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{latest, sbRoot})
+				if cerr == nil {
+					latest = rep.Latest.Hash
+					log.Lvl1("Done with", i)
+					wg.Done()
+					break
+				} else if cerr.ErrorCode() != ErrorBlockInProgress &&
+					cerr.ErrorCode() != ErrorBlockContent {
+					log.Fatal(cerr)
+				}
+			}
+
+		}(i)
+	}
+	wg.Wait()
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
