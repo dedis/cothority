@@ -1,13 +1,10 @@
-package skipchain
+package libsc
 
 import (
 	"encoding/hex"
 	"errors"
 	"strings"
 	"sync"
-
-	"fmt"
-	"regexp"
 
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -16,14 +13,7 @@ import (
 // TODO: SBB.StoreAndUpdate should ask all `BacklinkIDs` to get updated
 
 func init() {
-	for _, m := range []interface{}{
-		// - Data structures
-		&SkipBlockBunch{},
-		&SBBStorage{},
-	} {
-		network.RegisterMessage(m)
-	}
-
+	network.RegisterMessage(&SkipBlockBunch{})
 }
 
 // SkipBlockBunch holds all blocks necessary to track this chain up to the
@@ -168,153 +158,6 @@ func (sbb *SkipBlockBunch) GetFuzzy(id string) *SkipBlock {
 		if strings.Contains(hex.EncodeToString(sb.Hash), id) {
 			return sb
 		}
-	}
-	return nil
-}
-
-// SBBStorage is a convenience-structure to store multiple skipchains in
-// your application. This is used in the skipchain-service, scmgr, but can
-// also be used in any application that needs to store more than one
-// skipchain.
-type SBBStorage struct {
-	sync.Mutex
-	// Stores a bunch for each skipchain
-	Bunches map[string]*SkipBlockBunch
-}
-
-// NewSBBStorage returns a pre-initialized structure.
-func NewSBBStorage() *SBBStorage {
-	return &SBBStorage{
-		Bunches: map[string]*SkipBlockBunch{},
-	}
-}
-
-// AddBunch takes a new skipblock sb and adds the corresponding
-// bunch to SBBStorage.
-func (s *SBBStorage) AddBunch(sb *SkipBlock) *SkipBlockBunch {
-	s.Lock()
-	defer s.Unlock()
-	if len(s.Bunches) == 0 {
-		s.Bunches = make(map[string]*SkipBlockBunch)
-	}
-	if s.Bunches[string(sb.SkipChainID())] != nil {
-		return nil
-	}
-	bunch := NewSkipBlockBunch(sb)
-	s.Bunches[string(sb.SkipChainID())] = bunch
-	return bunch
-}
-
-// Store is a generic storing method that will put the SkipBlock sb
-// either in a new bunch or append it to an existing one.
-func (s *SBBStorage) Store(sb *SkipBlock) {
-	s.Lock()
-	defer s.Unlock()
-	bunch, ok := s.Bunches[string(sb.SkipChainID())]
-	if !ok {
-		bunch = NewSkipBlockBunch(sb)
-		s.Bunches[string(sb.SkipChainID())] = bunch
-	}
-	bunch.Store(sb)
-}
-
-// GetByID searches all bunches for a given skipblockID.
-func (s *SBBStorage) GetByID(id SkipBlockID) *SkipBlock {
-	s.Lock()
-	defer s.Unlock()
-	for _, b := range s.Bunches {
-		if sb := b.GetByID(id); sb != nil {
-			return sb
-		}
-	}
-	return nil
-}
-
-// GetFuzzy searches all bunches for a given ID and returns the first
-// SkipBlock that matches. It searches first all beginnings of SkipBlockIDs,
-// then all endings, and finally all in-betweens.
-func (s *SBBStorage) GetFuzzy(id string) *SkipBlock {
-	sb := s.GetReg("^" + id)
-	if sb != nil {
-		return sb
-	}
-	sb = s.GetReg(id + "$")
-	if sb != nil {
-		return sb
-	}
-	sb = s.GetReg(id)
-	if sb != nil {
-		return sb
-	}
-
-	return nil
-}
-
-// GetReg searches for the regular-expression in all skipblock-ids.
-func (s *SBBStorage) GetReg(idRe string) *SkipBlock {
-	re, err := regexp.Compile(idRe)
-	if err != nil {
-		return nil
-	}
-	for _, b := range s.Bunches {
-		for _, sb := range b.SkipBlocks {
-			if re.MatchString(fmt.Sprintf("%x", sb.Hash)) {
-				return sb
-			}
-		}
-	}
-	return nil
-}
-
-// GetFromGenesisByID returns the skipblock directly from a given genesis-
-// and block-id. This is faster than GetByID.
-func (s *SBBStorage) GetFromGenesisByID(genesis, id SkipBlockID) *SkipBlock {
-	sbc := s.GetBunch(genesis)
-	if sbc == nil {
-		return nil
-	}
-	return sbc.GetByID(id)
-}
-
-// GetBunch returns the bunch corresponding to the genesis-skipblock-id.
-func (s *SBBStorage) GetBunch(genesis SkipBlockID) *SkipBlockBunch {
-	s.Lock()
-	defer s.Unlock()
-	return s.Bunches[string(genesis)]
-}
-
-// GetLatest returns the latest skipblock of the given genesis-id.
-func (s *SBBStorage) GetLatest(genesis SkipBlockID) *SkipBlock {
-	s.Lock()
-	defer s.Unlock()
-	b, ok := s.Bunches[string(genesis)]
-	if ok {
-		return b.Latest
-	}
-	return nil
-}
-
-// Update asks the cothority of a block for an update and stores it.
-func (s *SBBStorage) Update(sb *SkipBlock) error {
-	block, cerr := NewClient().GetSingleBlock(sb.Roster, sb.Hash)
-	if cerr != nil {
-		return cerr
-	}
-	s.Store(block)
-	return nil
-}
-
-// VerifyLinks checks forward-links and parent-links
-func (s *SBBStorage) VerifyLinks(sb *SkipBlock) error {
-	if !sb.CalculateHash().Equal(sb.Hash) {
-		return errors.New("wrong hash of skipblock")
-	}
-	bunch := s.GetBunch(sb.SkipChainID())
-	if bunch == nil {
-		return errors.New("don't have this skipblock in a bunch")
-	}
-	if err := bunch.VerifyLinks(sb); err != nil {
-		return err
 	}
 	return nil
 }

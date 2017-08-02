@@ -1,4 +1,4 @@
-package skipchain_test
+package libsc_test
 
 import (
 	"testing"
@@ -8,7 +8,8 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority/bftcosi"
-	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/cothority/skipchain/libsc"
+	_ "github.com/dedis/cothority/skipchain/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/crypto.v0/random"
@@ -22,11 +23,11 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
-	root := skipchain.NewSkipBlock()
+	root := libsc.NewSkipBlock()
 	root.Roster = roster2
-	root.BackLinkIDs = append(root.BackLinkIDs, skipchain.SkipBlockID{1, 2, 3, 4})
+	root.BackLinkIDs = append(root.BackLinkIDs, libsc.SkipBlockID{1, 2, 3, 4})
 	root.Hash = root.CalculateHash()
-	sbm := skipchain.NewSkipBlockBunch(root)
+	sbm := libsc.NewSkipBlockBunch(root)
 	log.ErrFatal(root.VerifyForwardSignatures())
 	log.ErrFatal(sbm.VerifyLinks(root))
 
@@ -39,13 +40,13 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
-	sbd1 := skipchain.NewSkipBlock()
+	sbd1 := libsc.NewSkipBlock()
 	sbd1.Data = []byte("1")
 	sbd1.Height = 4
 	h1 := sbd1.UpdateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := skipchain.NewSkipBlock()
+	sbd2 := libsc.NewSkipBlock()
 	sbd2.Data = []byte("2")
 	sbd1.Height = 2
 	h2 := sbd2.UpdateHash()
@@ -56,13 +57,13 @@ func TestSkipBlock_Hash2(t *testing.T) {
 	local := onet.NewLocalTest()
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
-	sbd1 := skipchain.NewSkipBlock()
+	sbd1 := libsc.NewSkipBlock()
 	sbd1.Roster = el
 	sbd1.Height = 1
 	h1 := sbd1.UpdateHash()
 	assert.Equal(t, h1, sbd1.Hash)
 
-	sbd2 := skipchain.NewSkipBlock()
+	sbd2 := libsc.NewSkipBlock()
 	sbd2.Roster = local.GenRosterFromHost(hosts[0])
 	sbd2.Height = 1
 	h2 := sbd2.UpdateHash()
@@ -70,7 +71,7 @@ func TestSkipBlock_Hash2(t *testing.T) {
 }
 
 func TestSkipBlock_Short(t *testing.T) {
-	sb := skipchain.NewSkipBlock()
+	sb := libsc.NewSkipBlock()
 	sb.Hash = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	sb.Roster = &onet.Roster{}
 	require.Equal(t, "0102030405060708", sb.Short())
@@ -81,7 +82,7 @@ func TestSkipBlock_Short(t *testing.T) {
 
 func TestBlockLink_Copy(t *testing.T) {
 	// Test if copy is deep or only shallow
-	b1 := &skipchain.BlockLink{}
+	b1 := &libsc.BlockLink{}
 	b1.Signature = []byte{1}
 	b2 := b1.Copy()
 	b2.Signature = []byte{2}
@@ -89,7 +90,7 @@ func TestBlockLink_Copy(t *testing.T) {
 		t.Fatal("They should not be equal")
 	}
 
-	sb1 := skipchain.NewSkipBlock()
+	sb1 := libsc.NewSkipBlock()
 	sb2 := sb1.Copy()
 	sb1.Height = 10
 	sb2.Height = 20
@@ -111,14 +112,14 @@ func TestSign(t *testing.T) {
 }
 
 func TestSkipBlockID_Short(t *testing.T) {
-	var sbid skipchain.SkipBlockID
+	var sbid libsc.SkipBlockID
 	require.Equal(t, "Nil", sbid.Short())
 
-	sbid = skipchain.SkipBlockID{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb}
+	sbid = libsc.SkipBlockID{1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb}
 	require.Equal(t, "0102030405060708", sbid.Short())
 }
 
-func sign(msg skipchain.SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {
+func sign(msg libsc.SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {
 	aggScalar := network.Suite.Scalar().Zero()
 	aggPoint := network.Suite.Point().Null()
 	for _, s := range servers {

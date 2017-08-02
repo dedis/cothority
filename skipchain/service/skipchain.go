@@ -1,4 +1,4 @@
-package skipchain
+package service
 
 import (
 	"errors"
@@ -12,6 +12,8 @@ import (
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/cothority/skipchain/libsc"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
@@ -30,8 +32,8 @@ const propagateTimeout = 10000
 const timeBetweenSave = 0
 
 func init() {
-	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
-	network.RegisterMessage(&SkipBlockBunch{})
+	skipchainSID, _ = onet.RegisterNewService(skipchain.ServiceName, newSkipchainService)
+	network.RegisterMessage(&libsc.SkipBlockBunch{})
 }
 
 // Only used in tests
@@ -43,10 +45,10 @@ const skipblocksID = "skipblocks"
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	Storage          *SBBStorage
+	Storage          *skipchain.SBBStorage
 	propagate        messaging.PropagationFunc
-	verifiers        map[VerifierID]SkipBlockVerifier
-	blockRequests    map[string]chan *SkipBlock
+	verifiers        map[libsc.VerifierID]libsc.SkipBlockVerifier
+	blockRequests    map[string]chan *libsc.SkipBlock
 	lastSave         time.Time
 	propagating      int64
 	propagatingMutex sync.Mutex
@@ -65,25 +67,25 @@ type Service struct {
 //     to set MaximumHeight, BaseHeight and the VerifierIDs
 //   - Index: if 0, then it will be added to the latest skipblock, if > 0, then
 //     it will be added at that position, if this is the latest position.
-func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, onet.ClientError) {
+func (s *Service) StoreSkipBlock(psbd *skipchain.StoreSkipBlock) (*skipchain.StoreSkipBlockReply, onet.ClientError) {
 	prop := psbd.NewBlock
-	var prev *SkipBlock
-	var changed []*SkipBlock
+	var prev *libsc.SkipBlock
+	var changed []*libsc.SkipBlock
 
 	if prop.GenesisID.IsNil() {
 		// A new chain is created, suppose all arguments in SkipBlock
 		// are correctly set up
 		prop.Index = 0
 		prop.Height = prop.MaximumHeight
-		prop.ForwardLink = make([]*BlockLink, 0)
+		prop.ForwardLink = make([]*libsc.BlockLink, 0)
 		// genesis block has a random back-link:
 		bl := random.Bytes(32, random.Stream)
-		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl)}
+		prop.BackLinkIDs = []libsc.SkipBlockID{libsc.SkipBlockID(bl)}
 		prop.GenesisID = nil
 		prop.UpdateHash()
 		err := s.verifyBlock(prop)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorParameterWrong,
 				err.Error())
 		}
 		changed = append(changed, prop)
@@ -91,20 +93,20 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		// We're appending a block to an existing chain
 		bunch := s.Storage.GetBunch(prop.GenesisID)
 		if bunch == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Didn't find skipchain for given genesisid")
 		}
 		prev = bunch.Latest
 		if prev == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Didn't find latest block")
 		}
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 				"We're not responsible for latest block")
 		}
 		if prop.Index > 0 && prev.Index+1 != prop.Index {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 				"Chosen index is not next index - did you miss a block?")
 		}
 		prop.MaximumHeight = prev.MaximumHeight
@@ -120,13 +122,13 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		}
 		log.Lvl4("Found height", prop.Height, "for index", prop.Index,
 			"and maxHeight", prop.MaximumHeight, "and base", prop.BaseHeight)
-		prop.BackLinkIDs = make([]SkipBlockID, prop.Height)
+		prop.BackLinkIDs = make([]libsc.SkipBlockID, prop.Height)
 		pointer := prev
 		for h := range prop.BackLinkIDs {
 			for pointer.Height < h+1 {
 				pointer = bunch.GetByID(pointer.BackLinkIDs[0])
 				if pointer == nil {
-					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 						"Didn't find convenient SkipBlock for height "+
 							strconv.Itoa(h))
 				}
@@ -139,14 +141,14 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			for _, sb := range bunch.SkipBlocks {
 				log.Lvlf3("%#v", sb)
 			}
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 				"Couldn't get forward signature on block: "+err.Error())
 		}
 		changed = append(changed, prev, prop)
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := bunch.GetByID(bl)
 			if back == nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 					"Didn't get skipblock in back-link")
 			}
 			if prop == nil {
@@ -168,11 +170,11 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		}
 	}
 	if err := s.startPropagation(changed); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorVerification,
+		return nil, onet.NewClientErrorCode(skipchain.ErrorVerification,
 			"Couldn't propagate new blocks: "+err.Error())
 	}
 
-	reply := &StoreSkipBlockReply{
+	reply := &skipchain.StoreSkipBlockReply{
 		Previous: prev,
 		Latest:   prop,
 	}
@@ -186,43 +188,43 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 //    block
 //  - MaxHeight: how fast to jump. If MaxHeight == 0, go to the maximum height
 //    possible. If MaxHeight == 1, give all intermediate blocks
-func (s *Service) GetBlocks(request *GetBlocks) (*GetBlocksReply, onet.ClientError) {
-	var start, end *SkipBlock
-	blocks := []*SkipBlock{}
-	var bunch *SkipBlockBunch
+func (s *Service) GetBlocks(request *skipchain.GetBlocks) (*skipchain.GetBlocksReply, onet.ClientError) {
+	var start, end *libsc.SkipBlock
+	blocks := []*libsc.SkipBlock{}
+	var bunch *libsc.SkipBlockBunch
 	if !request.Start.IsNil() {
 		start = s.Storage.GetByID(request.Start)
 		if start == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Couldn't find starting block")
 		}
 		blocks = append(blocks, start.Copy())
 		bunch = s.Storage.GetBunch(start.SkipChainID())
 		if bunch == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Didn't find corresponding bunch for start-block")
 		}
 	}
 	if !request.End.IsNil() {
 		end = s.Storage.GetByID(request.End)
 		if end == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Couldn't find ending block")
 		}
 		blocks = append(blocks, end.Copy())
 		endBunch := s.Storage.GetBunch(end.SkipChainID())
 		if endBunch == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 				"Didn't find corresponding bunch for end-block")
 		}
 		if bunch != nil && bunch != endBunch {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, onet.NewClientErrorCode(skipchain.ErrorBlockContent,
 				"Cannot get blocks between two different skipchains")
 		}
 		bunch = endBunch
 	}
 	if start != nil && end != nil && start.Index >= end.Index {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+		return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 			"Order of start and end inversed")
 	}
 	log.Lvlf3("Starting to search chain from %v to %v", start, end)
@@ -238,7 +240,7 @@ func (s *Service) GetBlocks(request *GetBlocks) (*GetBlocksReply, onet.ClientErr
 			var err error
 			next, err = s.getUpdateBlock(start, link.Hash)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 					err.Error())
 			}
 		} else {
@@ -247,7 +249,7 @@ func (s *Service) GetBlocks(request *GetBlocks) (*GetBlocksReply, onet.ClientErr
 				var err error
 				next, err = s.getUpdateBlock(next, link.Hash)
 				if err != nil {
-					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 						err.Error())
 				}
 			}
@@ -259,38 +261,38 @@ func (s *Service) GetBlocks(request *GetBlocks) (*GetBlocksReply, onet.ClientErr
 				break
 			}
 			if start.Index > end.Index {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 					"Didn't find end-block in chain - perhaps try with maxHeight = 1")
 			}
 		}
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
-	reply := &GetBlocksReply{Reply: blocks}
+	reply := &skipchain.GetBlocksReply{Reply: blocks}
 
 	return reply, nil
 }
 
 // GetAllSkipchains returns a list of all known skipchains
-func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
+func (s *Service) GetAllSkipchains(id *skipchain.GetAllSkipchains) (*skipchain.GetAllSkipchainsReply, onet.ClientError) {
 	// Write all known skipblocks to a map, thus removing double blocks.
 	s.Storage.Lock()
-	chains := make([]*SkipBlock, 0, len(s.Storage.Bunches))
+	chains := make([]*libsc.SkipBlock, 0, len(s.Storage.Bunches))
 	for _, sbc := range s.Storage.Bunches {
 		chains = append(chains, sbc.Latest)
 	}
 	s.Storage.Unlock()
 
-	return &GetAllSkipchainsReply{
+	return &skipchain.GetAllSkipchainsReply{
 		SkipChains: chains,
 	}, nil
 }
 
 // GetBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
-func (s *Service) GetBlockByIndex(id *GetBlockByIndex) (*SkipBlock, onet.ClientError) {
+func (s *Service) GetBlockByIndex(id *skipchain.GetBlockByIndex) (*libsc.SkipBlock, onet.ClientError) {
 	sb := s.Storage.GetByID(id.Genesis)
 	if sb == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+		return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 			"No such genesis-block")
 	}
 	if sb.Index == id.Index {
@@ -302,7 +304,7 @@ func (s *Service) GetBlockByIndex(id *GetBlockByIndex) (*SkipBlock, onet.ClientE
 			return sb, nil
 		}
 	}
-	return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+	return nil, onet.NewClientErrorCode(skipchain.ErrorBlockNotFound,
 		"No block with this index found")
 }
 
@@ -313,14 +315,14 @@ func (s *Service) IsPropagating() bool {
 	return s.propagating > 0
 }
 
-func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
-	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
+func (s *Service) getUpdateBlock(known *libsc.SkipBlock, unknown libsc.SkipBlockID) (*libsc.SkipBlock, error) {
+	s.blockRequests[string(unknown)] = make(chan *libsc.SkipBlock)
 	node := known.Roster.RandomServerIdentity()
 	if err := s.SendRaw(node,
 		&GetBlock{unknown}); err != nil {
 		return nil, errors.New("Couldn't get updated block: " + known.Short())
 	}
-	var block *SkipBlock
+	var block *libsc.SkipBlock
 	select {
 	case block = <-s.blockRequests[string(unknown)]:
 		log.Lvl3("Got block", block)
@@ -335,7 +337,7 @@ func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBl
 // forwardSignature receives a signature request of a newly accepted block.
 // It only needs the 2nd-newest block and the forward-link.
 func (s *Service) forwardSignature(env *network.Envelope) {
-	target, err := func() (target *SkipBlock, err error) {
+	target, err := func() (target *libsc.SkipBlock, err error) {
 		fs, ok := env.Msg.(*ForwardSignature)
 		if !ok {
 			return nil, errors.New("Didn't receive a ForwardSignature")
@@ -356,7 +358,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 			return nil, errors.New("Couldn't get signature")
 		}
 		s.Storage.Mutex.Lock()
-		target.AddForward(&BlockLink{
+		target.AddForward(&libsc.BlockLink{
 			Hash:      fs.ForwardLink.Hash,
 			Signature: sig.Sig,
 		})
@@ -366,7 +368,7 @@ func (s *Service) forwardSignature(env *network.Envelope) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = s.startPropagation([]*SkipBlock{target}); err != nil {
+	if err = s.startPropagation([]*libsc.SkipBlock{target}); err != nil {
 		log.Error(err)
 	}
 }
@@ -478,8 +480,8 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
 	}
-	sb := dstN.(*SkipBlock)
-	if !sb.Hash.Equal(SkipBlockID(msg)) {
+	sb := dstN.(*libsc.SkipBlock)
+	if !sb.Hash.Equal(libsc.SkipBlockID(msg)) {
 		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(sb.Hash))
 		return false
 	}
@@ -534,14 +536,14 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func (s *Service) registerVerification(v VerifierID, f SkipBlockVerifier) error {
+func (s *Service) registerVerification(v libsc.VerifierID, f libsc.SkipBlockVerifier) error {
 	s.verifiers[v] = f
 	return nil
 }
 
 // checkBlock makes sure the basic parameters of a block are correct and returns
 // an error if something fails.
-func (s *Service) verifyBlock(sb *SkipBlock) error {
+func (s *Service) verifyBlock(sb *libsc.SkipBlock) error {
 	if sb.MaximumHeight <= 0 {
 		return errors.New("Set a maximumHeight > 0")
 	}
@@ -573,7 +575,7 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 // returns with an error.
 // If it finds a valid block, a forward-link will be added and a BFT-signature
 // requested.
-func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
+func (s *Service) addForwardLink(src, dst *libsc.SkipBlock, height int) error {
 	if height <= src.GetForwardLen() {
 		return fmt.Errorf("already have %d forward-links: height %d",
 			src.GetForwardLen(), height)
@@ -591,7 +593,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock, height int) error {
 		return err
 	}
 
-	fwd := &BlockLink{
+	fwd := &libsc.BlockLink{
 		Hash:      dst.Hash,
 		Signature: sig.Sig,
 	}
@@ -647,7 +649,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 }
 
 // notify other services about new/updated skipblock
-func (s *Service) startPropagation(blocks []*SkipBlock) error {
+func (s *Service) startPropagation(blocks []*libsc.SkipBlock) error {
 	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
 	siMap := map[string]*network.ServerIdentity{}
 	// Add all rosters of all blocks - everybody needs to be contacted
@@ -679,7 +681,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 }
 
 // VerifyBase checks basic parameters between two skipblocks.
-func (s *Service) verifyFuncBase(newSB *SkipBlock) bool {
+func (s *Service) verifyFuncBase(newSB *libsc.SkipBlock) bool {
 	if err := s.verifyBlock(newSB); err != nil {
 		log.LLvl2("verifyBlock failed:", err)
 		return false
@@ -714,7 +716,7 @@ func (s *Service) tryLoad() error {
 		return err
 	}
 	var ok bool
-	s.Storage, ok = msg.(*SBBStorage)
+	s.Storage, ok = msg.(*skipchain.SBBStorage)
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
@@ -729,10 +731,10 @@ type GetService interface {
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
-func RegisterVerification(s GetService, v VerifierID, f SkipBlockVerifier) error {
-	scs := s.Service(ServiceName)
+func RegisterVerification(s GetService, v libsc.VerifierID, f libsc.SkipBlockVerifier) error {
+	scs := s.Service(skipchain.ServiceName)
 	if scs == nil {
-		return errors.New("Didn't find our service: " + ServiceName)
+		return errors.New("Didn't find our service: " + skipchain.ServiceName)
 	}
 	return scs.(*Service).registerVerification(v, f)
 }
@@ -740,9 +742,9 @@ func RegisterVerification(s GetService, v VerifierID, f SkipBlockVerifier) error
 func newSkipchainService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		Storage:          NewSBBStorage(),
-		verifiers:        map[VerifierID]SkipBlockVerifier{},
-		blockRequests:    make(map[string]chan *SkipBlock),
+		Storage:          skipchain.NewSBBStorage(),
+		verifiers:        map[libsc.VerifierID]libsc.SkipBlockVerifier{},
+		blockRequests:    make(map[string]chan *libsc.SkipBlock),
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
@@ -757,7 +759,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	s.RegisterProcessorFunc(network.MessageType(GetBlockReply{}),
 		s.getBlockReply)
 
-	log.ErrFatal(s.registerVerification(VerifyBase, s.verifyFuncBase))
+	log.ErrFatal(s.registerVerification(libsc.VerifyBase, s.verifyFuncBase))
 
 	var err error
 	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)

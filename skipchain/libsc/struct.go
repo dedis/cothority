@@ -1,4 +1,4 @@
-package skipchain
+package libsc
 
 import (
 	"bytes"
@@ -20,13 +20,7 @@ import (
 )
 
 func init() {
-	for _, m := range []interface{}{
-		// - Data structures
-		&SkipBlock{},
-	} {
-		network.RegisterMessage(m)
-	}
-
+	network.RegisterMessage(&SkipBlock{})
 }
 
 // SkipBlockID represents the Hash of the SkipBlock

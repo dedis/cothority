@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"github.com/dedis/cothority/skipchain/libsc"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -48,7 +49,7 @@ const (
 //    to be initialised
 // It returns the previous skipblock (nil for a new skipchain), the latest
 // skipblock (the one created) and an eventual non-nill ClientError
-func (c *Client) StoreSkipBlock(sb *SkipBlock) (previous, latest *SkipBlock, cerr onet.ClientError) {
+func (c *Client) StoreSkipBlock(sb *libsc.SkipBlock) (previous, latest *libsc.SkipBlock, cerr onet.ClientError) {
 	reply := &StoreSkipBlockReply{}
 	cerr = c.SendProtobuf(sb.Roster.RandomServerIdentity(), &StoreSkipBlock{sb}, reply)
 	if cerr != nil {
@@ -67,7 +68,7 @@ func (c *Client) StoreSkipBlock(sb *SkipBlock) (previous, latest *SkipBlock, cer
 //  - max: the maximum height. If you have a multi-level skipchain, you can set
 //    max := 1 and get _all_ skipblocks from start to end. If max == 0, return
 //    only the shortest skipchain from start to end (or the latest, if end == nil).
-func (c *Client) GetBlocks(roster *onet.Roster, start, end SkipBlockID, max int) ([]*SkipBlock, onet.ClientError) {
+func (c *Client) GetBlocks(roster *onet.Roster, start, end libsc.SkipBlockID, max int) ([]*libsc.SkipBlock, onet.ClientError) {
 	if roster == nil {
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "No roster given")
 	}
@@ -84,8 +85,8 @@ func (c *Client) GetBlocks(roster *onet.Roster, start, end SkipBlockID, max int)
 
 // GetBlockByIndex searches for a block with the given index following the genesis-block.
 // It returns that block, or an error if that block is not found.
-func (c *Client) GetBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *SkipBlock, cerr onet.ClientError) {
-	reply = &SkipBlock{}
+func (c *Client) GetBlockByIndex(roster *onet.Roster, genesis libsc.SkipBlockID, index int) (reply *libsc.SkipBlock, cerr onet.ClientError) {
+	reply = &libsc.SkipBlock{}
 	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
 		&GetBlockByIndex{genesis, index}, reply)
 	return
@@ -112,9 +113,9 @@ func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkip
 //  - parent is the responsible parent-block, can be 'nil'
 //
 // This function returns the created skipblock or nil and an error.
-func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []VerifierID,
-	data interface{}, parent SkipBlockID) (*SkipBlock, onet.ClientError) {
-	genesis := NewSkipBlock()
+func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []libsc.VerifierID,
+	data interface{}, parent libsc.SkipBlockID) (*libsc.SkipBlock, onet.ClientError) {
+	genesis := libsc.NewSkipBlock()
 	genesis.Roster = r
 	genesis.VerifierIDs = ver
 	genesis.MaximumHeight = maxH
@@ -144,8 +145,8 @@ func (c *Client) CreateGenesis(r *onet.Roster, baseH, maxH int, ver []VerifierID
 //
 // It returns the previous and the latest skipblock, as well as an eventual
 // non-nil error.
-func (c *Client) AddSkipBlock(latest *SkipBlock, r *onet.Roster,
-	data network.Message) (previousSB, latestSB *SkipBlock, cerr onet.ClientError) {
+func (c *Client) AddSkipBlock(latest *libsc.SkipBlock, r *onet.Roster,
+	data network.Message) (previousSB, latestSB *libsc.SkipBlock, cerr onet.ClientError) {
 	log.Lvlf3("%#v", latest)
 	newBlock := latest.Copy()
 	if r != nil {
@@ -162,7 +163,7 @@ func (c *Client) AddSkipBlock(latest *SkipBlock, r *onet.Roster,
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
-func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) ([]*SkipBlock, onet.ClientError) {
+func (c *Client) GetUpdateChain(roster *onet.Roster, latest libsc.SkipBlockID) ([]*libsc.SkipBlock, onet.ClientError) {
 	return c.GetBlocks(roster, latest, nil, 0)
 }
 
@@ -171,13 +172,13 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) ([]*Ski
 // 'latest' skipblock and the id (=hash) of the latest skipblock. Instead of
 // returning the shortest chain following the forward-links, it returns the
 // chain with maximum-height == 1.
-func (c *Client) GetFlatUpdateChain(roster *onet.Roster, latest SkipBlockID) ([]*SkipBlock, onet.ClientError) {
+func (c *Client) GetFlatUpdateChain(roster *onet.Roster, latest libsc.SkipBlockID) ([]*libsc.SkipBlock, onet.ClientError) {
 	return c.GetBlocks(roster, latest, nil, 1)
 }
 
 // GetSingleBlock searches for a block with the given ID and returns that block,
 // or an error if that block is not found.
-func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock, onet.ClientError) {
+func (c *Client) GetSingleBlock(roster *onet.Roster, id libsc.SkipBlockID) (*libsc.SkipBlock, onet.ClientError) {
 	sbs, cerr := c.GetBlocks(roster, nil, id, 0)
 	if cerr != nil {
 		return nil, cerr
@@ -187,7 +188,7 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (*SkipBlock
 
 // BunchAddBlock adds a block to the latest block from the bunch. If the block
 // doesn't have a roster set, it will be copied from the last block.
-func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, r *onet.Roster, data interface{}) (*SkipBlock, onet.ClientError) {
+func (c *Client) BunchAddBlock(bunch *libsc.SkipBlockBunch, r *onet.Roster, data interface{}) (*libsc.SkipBlock, onet.ClientError) {
 	_, sbNew, err := c.AddSkipBlock(bunch.Latest, r, data)
 	if err != nil {
 		return nil, err
@@ -202,7 +203,7 @@ func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, r *onet.Roster, data inter
 
 // BunchUpdate contacts the nodes and asks for an update of the chains available
 // in the bunch.
-func (c *Client) BunchUpdate(bunch *SkipBlockBunch) onet.ClientError {
+func (c *Client) BunchUpdate(bunch *libsc.SkipBlockBunch) onet.ClientError {
 	sbs, cerr := c.GetUpdateChain(bunch.Latest.Roster, bunch.Latest.Hash)
 	if cerr != nil {
 		return cerr

@@ -1,4 +1,4 @@
-package skipchain
+package service
 
 import (
 	"testing"
@@ -96,7 +96,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	// init skipchain
 	for i := 1; i < sbCount; i++ {
 		newSB := NewSkipBlock()
-		newSB.Roster = onet.NewRoster(roster.List[i : i+2])
+		newSB.Roster = onet.NewRoster(roster.List[i : i + 2])
 		newSB.GenesisID = sbs[0].SkipChainID()
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Adding skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
@@ -117,15 +117,15 @@ func TestService_GetUpdateChain(t *testing.T) {
 			t.Fatal("First hash is not from our SkipBlock")
 		}
 		require.True(t, len(gbr.Reply) > 0, "Empty update-chain")
-		if !gbr.Reply[len(gbr.Reply)-1].Equal(sbs[sbCount-1]) {
-			log.Lvl2(gbr.Reply[len(gbr.Reply)-1].Hash)
-			log.Lvl2(sbs[sbCount-1].Hash)
+		if !gbr.Reply[len(gbr.Reply) - 1].Equal(sbs[sbCount - 1]) {
+			log.Lvl2(gbr.Reply[len(gbr.Reply) - 1].Hash)
+			log.Lvl2(sbs[sbCount - 1].Hash)
 			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
 		for up, sb1 := range gbr.Reply {
 			log.ErrFatal(sb1.VerifyForwardSignatures())
-			if up < len(gbr.Reply)-1 {
-				sb2 := gbr.Reply[up+1]
+			if up < len(gbr.Reply) - 1 {
+				sb2 := gbr.Reply[up + 1]
 				h1 := sb1.Height
 				h2 := sb2.Height
 				log.Lvl3("sbc1.Height=", sb1.Height)
@@ -135,10 +135,10 @@ func TestService_GetUpdateChain(t *testing.T) {
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sb1.ForwardLink[height-1].Hash,
+				if !bytes.Equal(sb1.ForwardLink[height - 1].Hash,
 					sb2.Hash) {
 					t.Fatal("Forward-pointer of", up,
-						"is different of hash in", up+1)
+						"is different of hash in", up + 1)
 				}
 			}
 		}
@@ -220,7 +220,7 @@ func checkBacklinks(services []*Service, sb *SkipBlock) {
 				})
 				log.ErrFatal(err)
 				bl := gbr.Reply[0]
-				if len(bl.ForwardLink) == n+1 &&
+				if len(bl.ForwardLink) == n + 1 &&
 					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
 					break
 				}
@@ -361,7 +361,7 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	}
 	ssbr, cerr := s1.StoreSkipBlock(&StoreSkipBlock{NewBlock: sbRoot})
 	log.ErrFatal(cerr)
-	roster2 := onet.NewRoster(roster.List[:nbrHosts-1])
+	roster2 := onet.NewRoster(roster.List[:nbrHosts - 1])
 	log.Lvl1("Proposing roster", roster2)
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
@@ -443,7 +443,7 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	if len(updates[1].BackLinkIDs) != height {
 		return errors.New("Second block doesn't have correct number of backlinks")
 	}
-	l := updates[len(updates)-1]
+	l := updates[len(updates) - 1]
 	if len(l.ForwardLink) != 0 {
 		return errors.New("Last block still has forward-links")
 	}
@@ -482,7 +482,7 @@ func newServiceVerify(c *onet.Context) onet.Service {
 
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, roster *onet.Roster,
-	vid []VerifierID, base, height int) (*SkipBlock, error) {
+vid []VerifierID, base, height int) (*SkipBlock, error) {
 	sb := NewSkipBlock()
 	sb.Roster = roster
 	sb.MaximumHeight = height
