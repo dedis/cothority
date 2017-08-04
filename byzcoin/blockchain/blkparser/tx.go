@@ -2,6 +2,8 @@
 package blkparser
 
 import (
+	"log"
+	"os"
 	"encoding/binary"
 	//"github.com/btcsuite/btcd/chaincfg"
 	//"github.com/btcsuite/btcd/txscript"
@@ -103,6 +105,8 @@ func NewTxIn(txinraw []byte) (txin *TxIn, offset int) {
 }
 
 func NewTxOut(txoutraw []byte) (txout *TxOut, offset int) {
+	log.Fatal("This does not run anymore until https://github.com/btcsuite/btcutil/issues/103 is fixed")
+	os.Exit(-1)
 	txout = new(TxOut)
 	txout.Value = binary.LittleEndian.Uint64(txoutraw[0:8])
 	offset = 8
