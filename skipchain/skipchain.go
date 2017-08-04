@@ -650,7 +650,6 @@ func (s *Service) newBlockEnd(sb *SkipBlock) bool {
 	if _, processing := s.newBlocks[string(sb.Hash)]; !processing {
 		return false
 	}
-	network.Suite.Scalar().Zero()
 	delete(s.newBlocks, string(sb.Hash))
 	return true
 }
