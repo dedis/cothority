@@ -2,9 +2,9 @@
 package blkparser
 
 import (
+	"encoding/binary"
 	"log"
 	"os"
-	"encoding/binary"
 	//"github.com/btcsuite/btcd/chaincfg"
 	//"github.com/btcsuite/btcd/txscript"
 )
