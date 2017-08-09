@@ -12,6 +12,8 @@ import (
 
 	"time"
 
+	"sync"
+
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -421,6 +423,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
 	ssbr, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
+	require.NotNil(t, cerr)
+	ssbr, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
 	log.ErrFatal(cerr)
 	require.NotNil(t, ssbr.Latest)
 
@@ -439,6 +443,7 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	_, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbErr.ParentBlockID, sbErr})
 	// Last successful log...
 	require.NotNil(t, cerr)
+
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
@@ -473,6 +478,53 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			sbRoot})
 		log.ErrFatal(cerr)
 	}
+}
+
+func TestService_ParallelStore(t *testing.T) {
+	nbrRoutines := 30
+	local := onet.NewLocalTest()
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 3)
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
+	log.ErrFatal(cerr)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(i int, latest *SkipBlock) {
+			cl := NewClient()
+			block := sbRoot.Copy()
+			for {
+				_, cerr := s1.StoreSkipBlock(&StoreSkipBlock{latest.Hash, block})
+				if cerr == nil {
+					log.Lvl1("Done with", i)
+					wg.Done()
+					break
+				} else if cerr.ErrorCode() != ErrorBlockInProgress &&
+					cerr.ErrorCode() != ErrorBlockContent {
+					log.Fatal(cerr)
+				}
+				for {
+					time.Sleep(10 * time.Millisecond)
+					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
+					if cerr == nil {
+						latest = update.Update[len(update.Update)-1]
+						break
+					}
+				}
+			}
+
+		}(i, ssbrep.Latest.Copy())
+	}
+	wg.Wait()
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
