@@ -40,13 +40,14 @@ const skipblocksID = "skipblocks"
 type Service struct {
 	*onet.ServiceProcessor
 	// Sbm is the skipblock-map that holds all known skipblocks to this service.
-	Sbm           *SkipBlockMap
-	propagate     messaging.PropagationFunc
-	verifiers     map[VerifierID]SkipBlockVerifier
-	blockRequests map[string]chan *SkipBlock
-	lastSave      time.Time
-	newBlocksLock sync.Mutex
-	newBlocks     map[string]bool
+	Sbm                *SkipBlockMap
+	propagate          messaging.PropagationFunc
+	verifiers          map[VerifierID]SkipBlockVerifier
+	blockRequestsMutex sync.Mutex
+	blockRequests      map[string]chan *SkipBlock
+	lastSave           time.Time
+	newBlocksMutex     sync.Mutex
+	newBlocks          map[string]bool
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -280,13 +281,21 @@ func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply
 
 // IsPropagating returns true if there is at least one propagation running.
 func (s *Service) IsPropagating() bool {
-	s.newBlocksLock.Lock()
-	defer s.newBlocksLock.Unlock()
+	s.newBlocksMutex.Lock()
+	defer s.newBlocksMutex.Unlock()
 	return len(s.newBlocks) > 0
 }
 
 func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
-	s.blockRequests[string(unknown)] = make(chan *SkipBlock)
+	s.blockRequestsMutex.Lock()
+	request := make(chan *SkipBlock)
+	s.blockRequests[string(unknown)] = request
+	s.blockRequestsMutex.Unlock()
+	defer func() {
+		s.blockRequestsMutex.Lock()
+		delete(s.blockRequests, string(unknown))
+		s.blockRequestsMutex.Unlock()
+	}()
 	node := known.Roster.RandomServerIdentity()
 	if err := s.SendRaw(node,
 		&GetBlock{unknown}); err != nil {
@@ -294,11 +303,9 @@ func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBl
 	}
 	var block *SkipBlock
 	select {
-	case block = <-s.blockRequests[string(unknown)]:
+	case block = <-request:
 		log.Lvl3("Got block", block)
-		delete(s.blockRequests, string(unknown))
 	case <-time.After(time.Millisecond * time.Duration(propagateTimeout)):
-		delete(s.blockRequests, string(unknown))
 		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
 	}
 	return block, nil
@@ -635,8 +642,8 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 }
 
 func (s *Service) newBlockStart(sb *SkipBlock) bool {
-	s.newBlocksLock.Lock()
-	defer s.newBlocksLock.Unlock()
+	s.newBlocksMutex.Lock()
+	defer s.newBlocksMutex.Unlock()
 	if _, processing := s.newBlocks[string(sb.Hash)]; processing {
 		return false
 	}
@@ -645,8 +652,8 @@ func (s *Service) newBlockStart(sb *SkipBlock) bool {
 }
 
 func (s *Service) newBlockEnd(sb *SkipBlock) bool {
-	s.newBlocksLock.Lock()
-	defer s.newBlocksLock.Unlock()
+	s.newBlocksMutex.Lock()
+	defer s.newBlocksMutex.Unlock()
 	if _, processing := s.newBlocks[string(sb.Hash)]; !processing {
 		return false
 	}

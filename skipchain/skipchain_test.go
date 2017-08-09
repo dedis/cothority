@@ -505,16 +505,16 @@ func TestService_ParallelStore(t *testing.T) {
 	}
 	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
 	log.ErrFatal(cerr)
-	latest := ssbrep.Latest.Hash
 
 	wg := &sync.WaitGroup{}
 	wg.Add(nbrRoutines)
 	for i := 0; i < nbrRoutines; i++ {
-		go func(i int) {
+		go func(i int, latest *SkipBlock) {
+			cl := NewClient()
+			block := sbRoot.Copy()
 			for {
-				rep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{latest, sbRoot})
+				_, cerr := s1.StoreSkipBlock(&StoreSkipBlock{latest.Hash, block})
 				if cerr == nil {
-					latest = rep.Latest.Hash
 					log.Lvl1("Done with", i)
 					wg.Done()
 					break
@@ -522,9 +522,17 @@ func TestService_ParallelStore(t *testing.T) {
 					cerr.ErrorCode() != ErrorBlockContent {
 					log.Fatal(cerr)
 				}
+				for {
+					time.Sleep(10 * time.Millisecond)
+					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
+					if cerr == nil {
+						latest = update.Update[len(update.Update)-1]
+						break
+					}
+				}
 			}
 
-		}(i)
+		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
 }
