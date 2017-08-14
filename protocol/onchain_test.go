@@ -16,8 +16,8 @@ var suite = network.Suite
 
 func TestOnchain(t *testing.T) {
 	// 1 - share generation
-	nbrPeers := 5
-	threshold := 3
+	nbrPeers := 3
+	threshold := 2
 	peers := make([]*Peer, nbrPeers)
 	publics := make([]abstract.Point, nbrPeers)
 	// 1a - initialisation
@@ -50,6 +50,7 @@ func TestOnchain(t *testing.T) {
 					justification, err := p.DKG.ProcessResponse(r)
 					log.ErrFatal(err)
 					require.Nil(t, justification)
+					log.Print("Certified:", i, j, k, p.DKG.Certified())
 				}
 			}
 		}

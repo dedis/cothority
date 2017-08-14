@@ -29,7 +29,7 @@ func init() {
 type Init struct {
 }
 
-type chanInit struct {
+type structInit struct {
 	*onet.TreeNode
 	Init
 }
@@ -39,7 +39,7 @@ type InitReply struct {
 	Public abstract.Point
 }
 
-type chanInitReply struct {
+type structInitReply struct {
 	*onet.TreeNode
 	InitReply
 }
@@ -47,10 +47,10 @@ type chanInitReply struct {
 // StartDeal is used by the leader to initiate the Deals.
 type StartDeal struct {
 	Publics   []abstract.Point
-	Threshold uint
+	Threshold uint32
 }
 
-type chanStartDeal struct {
+type structStartDeal struct {
 	*onet.TreeNode
 	StartDeal
 }
@@ -60,7 +60,7 @@ type Deal struct {
 	Deal *dkg.Deal
 }
 
-type chanDeal struct {
+type structDeal struct {
 	*onet.TreeNode
 	Deal
 }
@@ -70,7 +70,7 @@ type Response struct {
 	Response *dkg.Response
 }
 
-type chanResponse struct {
+type structResponse struct {
 	*onet.TreeNode
 	Response
 }
@@ -80,7 +80,7 @@ type SecretCommit struct {
 	SecretCommit *dkg.SecretCommits
 }
 
-type chanSecretCommit struct {
+type structSecretCommit struct {
 	*onet.TreeNode
 	SecretCommit
 }
@@ -90,7 +90,7 @@ type chanSecretCommit struct {
 type Verification struct {
 }
 
-type chanVerification struct {
+type structVerification struct {
 	*onet.TreeNode
 	Verification
 }
@@ -101,7 +101,7 @@ type VerificationReply struct {
 	Public abstract.Point
 }
 
-type chanVerificationReply struct {
+type structVerificationReply struct {
 	*onet.TreeNode
 	VerificationReply
 }
