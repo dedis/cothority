@@ -4,10 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/crypto.v0/share"
-	"gopkg.in/dedis/crypto.v0/share/dkg"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -18,61 +17,10 @@ func TestOnchain(t *testing.T) {
 	// 1 - share generation
 	nbrPeers := 5
 	threshold := 3
-	peers := make([]*Peer, nbrPeers)
-	publics := make([]abstract.Point, nbrPeers)
-	// 1a - initialisation
-	for i := range peers {
-		peers[i] = NewPeer(suite)
-		publics[i] = peers[i].Public()
-	}
-
-	// 1b - key-sharing
-	for _, p := range peers {
-		log.ErrFatal(p.GenerateKey(publics, threshold))
-	}
-	// Exchange of Deals
-	responses := make([][]*dkg.Response, nbrPeers)
-	for i, p := range peers {
-		responses[i] = make([]*dkg.Response, nbrPeers)
-		deals, err := p.DKG.Deals()
-		log.ErrFatal(err)
-		for j, d := range deals {
-			responses[i][j], err = peers[j].DKG.ProcessDeal(d)
-			log.ErrFatal(err)
-		}
-	}
-	// ProcessResponses
-	for i, resp := range responses {
-		for j, r := range resp {
-			for k, p := range peers {
-				if r != nil && j != k {
-					log.Print("Response from-to-peer:", i, j, k)
-					justification, err := p.DKG.ProcessResponse(r)
-					log.ErrFatal(err)
-					require.Nil(t, justification)
-				}
-			}
-		}
-	}
-
-	// Secret commits
-	for _, p := range peers {
-		commit, err := p.DKG.SecretCommits()
-		log.ErrFatal(err)
-		for _, p2 := range peers {
-			compl, err := p2.DKG.ProcessSecretCommits(commit)
-			log.ErrFatal(err)
-			require.Nil(t, compl)
-		}
-	}
-
-	// Verify if all is OK
-	for _, p := range peers {
-		require.True(t, p.DKG.Finished())
-	}
+	dkgs, err := CreateDKGs(suite, nbrPeers, threshold)
 
 	// Get aggregate public share
-	dks, err := peers[0].DKG.DistKeyShare()
+	dks, err := dkgs[0].DistKeyShare()
 	log.ErrFatal(err)
 	X := dks.Public()
 
@@ -83,38 +31,36 @@ func TestOnchain(t *testing.T) {
 	cipher := suite.Cipher(key)
 	encData := cipher.Seal(nil, data)
 
-	keyPoint, rem := suite.Point().Pick(key, random.Stream)
-	require.Equal(t, 0, len(rem))
+	U, Cs := EncodeKey(suite, X, key)
+	// U and Cs is shared with everybody
 
-	r := suite.Scalar().Pick(random.Stream)
-	C := X.Clone().Mul(X, r)
-	C.Add(C, keyPoint)
-	U := suite.Point().Mul(nil, r)
-	// U and C is shared with everybody
+	// Reader's keypair
+	xc := config.NewKeyPair(network.Suite)
 
 	// Decryption
 	Ui := make([]*share.PubShare, nbrPeers)
 	for i := range Ui {
+		dks, err := dkgs[i].DistKeyShare()
+		log.ErrFatal(err)
+		v := suite.Point().Mul(U, dks.Share.V)
+		v.Add(v, suite.Point().Mul(xc.Public, dks.Share.V))
 		Ui[i] = &share.PubShare{
 			I: i,
-			V: peers[i].MulWithSecret(U),
+			V: v,
 		}
 	}
 
-	// Xhat is the re-encrypted share under the reader's public key
-	Xhat, err := share.RecoverCommit(suite, Ui, threshold, nbrPeers)
+	// XhatEnc is the re-encrypted share under the reader's public key
+	XhatEnc, err := share.RecoverCommit(suite, Ui, threshold, nbrPeers)
 	log.ErrFatal(err)
-	XhatInv := suite.Point().Neg(Xhat)
 
-	keyPointHat := suite.Point().Add(C, XhatInv)
-
-	require.True(t, keyPointHat.Equal(keyPoint))
+	// Decrypt XhatEnc
+	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Secret)
+	log.ErrFatal(err)
 
 	// Extract the message - keyHat is the recovered key
-	keyHat, err := keyPointHat.Data()
-	log.ErrFatal(err)
 	cipherHat := suite.Cipher(keyHat)
-	log.Print(encData)
+	log.Lvl2(encData)
 	dataHat, err := cipherHat.Open(nil, encData)
 	log.ErrFatal(err)
 	require.Equal(t, data, dataHat)
