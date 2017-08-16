@@ -1,7 +1,8 @@
 package protocol
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/crypto.v0/share/dkg"
