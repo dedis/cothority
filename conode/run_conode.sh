@@ -37,10 +37,10 @@ main(){
 	fi
 	case $( uname ) in
 	Darwin)
-		PATH_CO=~/Library/
+		PATH_CO=~/Library
 		;;
 	*)
-		PATH_CO=~/.config/
+		PATH_CO=~/.config
 		;;
 	esac
 
@@ -185,15 +185,14 @@ runPublic(){
 		shift
 	done
 	migrate
-	if [ ! -f $PATH_CONODE/private.toml ]; then
-		echo "Didn't fine private.toml in $PATH_CONODE, please set up conode first"
-		echo "Using 'conode setup'"
-		exit 1
-	fi
 	if [ "$UPDATE" ]; then
 		update
 	else
 		go install $CONODE_GO
+	fi
+	if [ ! -f $PATH_CONODE/private.toml ]; then
+		echo "Didn't find private.toml in $PATH_CONODE - setting up conode"
+		$CONODE_BIN setup
 	fi
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
@@ -223,6 +222,10 @@ migrate(){
 		echo 0.9 > $PATH_VERSION
 	fi
 	PATH_CONODE=$PATH_CO/conode
+	if [ ! -f $PATH_VERSION ]; then
+	    echo $VERSION > $PATH_VERSION
+	    return
+	fi
 
 	while [ "$( cat $PATH_VERSION )" != $VERSION ]; do
 		case $( cat $PATH_VERSION ) in
@@ -239,7 +242,7 @@ migrate(){
 				echo "Adding description"
 				grep Description $PATH_CONODE/public.toml >> $PATH_CONODE/private.toml
 			fi
-			echo 1.0-1 > $PATH_VERSION
+			echo $VERSION > $PATH_VERSION
 			;;
 		$VERSION)
 			echo No migration necessary

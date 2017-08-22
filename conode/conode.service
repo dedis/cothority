@@ -1,0 +1,10 @@
+[Unit]
+Description=Collective Authority node
+After=syslog.target network.target
+
+[Service]
+ExecStart=docker run -it --rm -p 7002-7003:7002-7003 --name conode -v %h/conode_data:/root/.local/share/conode/ \
+          	    -v %h/conode_data:/root/.config//conode $(IMAGE_NAME)
+
+[Install]
+WantedBy=mult-user.target
