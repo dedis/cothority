@@ -1,6 +1,6 @@
 CONTAINER = conode
 IMAGE_NAME = dedis/$(CONTAINER)
-VERSION = 1.1.0
+VERSION = 1.1.0-1
 
 all: docker link
 
