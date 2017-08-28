@@ -192,7 +192,13 @@ runPublic(){
 	fi
 	if [ ! -f $PATH_CONODE/private.toml ]; then
 		echo "Didn't find private.toml in $PATH_CONODE - setting up conode"
-		$CONODE_BIN setup
+		if $CONODE_BIN setup; then
+		    echo "Successfully setup conode."
+		    exit 0
+		else
+		    echo "Something went wrong during the setup"
+		    exit 1
+		fi
 	fi
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
