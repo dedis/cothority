@@ -196,8 +196,7 @@ type SkipBlockDataEntry struct {
 	Data []byte
 }
 
-// addSliceToHash hashes the whole SkipBlockFix plus a slice of bytes.
-// This is used
+// CalculateHash hashes the whole SkipBlockFix plus a slice of bytes.
 func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	hash := network.Suite.Hash()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
