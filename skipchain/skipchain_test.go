@@ -241,6 +241,28 @@ func TestService_MultiLevel(t *testing.T) {
 		}
 	}
 	waitPropagationFinished(local)
+	time.Sleep(time.Second)
+}
+
+func TestService_Propagation(t *testing.T) {
+	nbr_nodes := 100
+	defer log.AfterTest(t)
+	local := onet.NewLocalTest()
+	defer local.CloseAll()
+	servers, ro, genService := local.MakeHELS(nbr_nodes, skipchainSID)
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	service := genService.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
+		3, 3)
+	log.ErrFatal(err)
+	require.NotNil(t, sbRoot)
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sbRoot})
+	log.ErrFatal(err)
+	waitPropagationFinished(local)
 }
 
 func waitPropagationFinished(local *onet.LocalTest) {
@@ -430,6 +452,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
 	ssbr, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
+	require.NotNil(t, cerr)
+	ssbr, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
 	log.ErrFatal(cerr)
 	require.NotNil(t, ssbr.Latest)
 

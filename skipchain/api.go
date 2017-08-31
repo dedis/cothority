@@ -21,6 +21,9 @@ const (
 	// ErrorVerification indicates that a given block could not be verified
 	// and a signature is invalid.
 	ErrorVerification
+	// ErrorBlockInProgress indicates that currently a block is being formed
+	// and propagated
+	ErrorBlockInProgress
 	// ErrorOnet indicates an error from the onet framework
 	ErrorOnet
 )
@@ -69,7 +72,7 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 		}
 		latestID = latest.Hash
 	}
-	host := latest.Roster.RandomServerIdentity()
+	host := latest.Roster.Get(0)
 	reply = &StoreSkipBlockReply{}
 	cerr = c.SendProtobuf(host, &StoreSkipBlock{latestID, newBlock}, reply)
 	if cerr != nil {

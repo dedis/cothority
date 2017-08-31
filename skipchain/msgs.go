@@ -100,7 +100,7 @@ type ForwardSignature struct {
 	ForwardLink *BlockLink
 }
 
-// GetSingleBlock asks for a single block.
+// GetSingleBlock asks for a single block. It returns a *SkipBlock.
 type GetSingleBlock struct {
 	ID SkipBlockID
 }

@@ -23,7 +23,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	sbm := NewSkipBlockMap()
 	root0 := NewSkipBlock()
 	root0.Roster = roster
-	root0.Hash = root0.calculateHash()
+	root0.Hash = root0.CalculateHash()
 	root0.BackLinkIDs = []SkipBlockID{root0.Hash}
 	sbm.Store(root0)
 	root1 := root0.Copy()
@@ -32,7 +32,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	inter0 := NewSkipBlock()
 	inter0.ParentBlockID = root1.Hash
 	inter0.Roster = roster
-	inter0.Hash = inter0.calculateHash()
+	inter0.Hash = inter0.CalculateHash()
 	sbm.Store(inter0)
 	inter1 := inter0.Copy()
 	inter1.Index++
@@ -64,7 +64,7 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	root := NewSkipBlock()
 	root.Roster = roster2
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
-	root.Hash = root.calculateHash()
+	root.Hash = root.CalculateHash()
 	sbm.Store(root)
 	log.ErrFatal(root.VerifyForwardSignatures())
 	log.ErrFatal(sbm.VerifyLinks(root))
