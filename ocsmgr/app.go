@@ -224,6 +224,7 @@ func read(c *cli.Context) error {
 		log.Fatal("Got empty skipblock - read refused")
 	}
 
+	log.Info("Asking to re-encrypt the symmetric key")
 	key, cerr := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
 	log.ErrFatal(cerr)
 	fileEnc, cerr := cl.GetData(cfg.SkipChainURL, fileID)
@@ -232,6 +233,7 @@ func read(c *cli.Context) error {
 	file, err := cipher.Open(nil, fileEnc)
 	log.ErrFatal(err)
 
+	log.Info("Outputting file")
 	if out := c.String("o"); out != "" {
 		return ioutil.WriteFile(out, file, 0660)
 	}

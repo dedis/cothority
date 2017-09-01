@@ -79,7 +79,7 @@ keypair for the reader that will be allowed to read it from the skipchain.
 We can also add more than one reader, but let's start with one:
 
 ```bash
-READER=$( ocsmgr role keypair )
+READER=$( ocsmgr keypair )
 READER_PRIV=$( echo $READER | cut -f 1 -d : )
 READER_PUB=$( echo $READER | cut -f 2 -d : )
 ```
