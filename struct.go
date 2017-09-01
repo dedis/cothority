@@ -7,11 +7,9 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"fmt"
 
-	"strings"
-
+	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -21,7 +19,6 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		Credential{},
 		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, DataOCSReaders{},
 		CreateSkipchainsRequest{}, CreateSkipchainsReply{},
 		WriteRequest{}, WriteReply{},
@@ -31,6 +28,18 @@ func init() {
 		GetReadRequests{}, GetReadRequestsReply{})
 }
 
+// ServiceName is used for registration on the onet.
+const ServiceName = "OnChainSecrets"
+
+// VerifyOCS makes sure that all necessary signatures are present when
+// updating the OCS-skipchain.
+var VerifyOCS = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCS"))
+
+// VerificationOCS adds the VerifyBase to the VerifyOCS for a complete
+// skipchain.
+var VerificationOCS = []skipchain.VerifierID{skipchain.VerifyBase,
+	VerifyOCS}
+
 const (
 	// ErrorParameter is used when one of the parameters is faulty or leads
 	// to a fault.
@@ -39,102 +48,6 @@ const (
 	// an error.
 	ErrorProtocol
 )
-
-// Credential is a certificate or a private key. The 'Private' part is always
-// nil in the skipchain.
-type Credential struct {
-	Public  abstract.Point
-	Private abstract.Scalar
-}
-
-// NewCredential creates a nes public/private key pair and returns the
-// filled out credential-structure.
-func NewCredential() *Credential {
-	kp := config.NewKeyPair(network.Suite)
-	return &Credential{
-		Public:  kp.Public,
-		Private: kp.Secret,
-	}
-}
-
-// HidePrivate returns the Credential without the private key.
-func (c *Credential) HidePrivate() *Credential {
-	return &Credential{
-		Public: c.Public,
-	}
-}
-
-// Credentials holds the list of credentials.
-type Credentials struct {
-	List []*Credential
-}
-
-// NewCredentials initializes a Credentials-structure.
-func NewCredentials(c *Credential) *Credentials {
-	return &Credentials{
-		List: []*Credential{c},
-	}
-}
-
-// SearchPublic returns the corresponding credential or nil if not found.
-func (cs *Credentials) SearchPublic(p abstract.Point) *Credential {
-	if cs == nil {
-		return nil
-	}
-	for _, c := range cs.List {
-		if c.Public.Equal(p) {
-			return c
-		}
-	}
-	return nil
-}
-
-// AddPseudo creates a new credential with the given pseudo
-func (cs *Credentials) AddPseudo() *Credential {
-	c := NewCredential()
-	cs.List = append(cs.List, c)
-	return c
-}
-
-// String prints the credentials.
-func (cs *Credentials) String() string {
-	var ret []string
-	for _, c := range cs.List {
-		var name string
-		if c.Private != nil {
-			name = "(*)"
-		} else {
-			name = "( )"
-		}
-		ret = append(ret, fmt.Sprintf("%s: %s", name, c.Public.String()))
-	}
-	return strings.Join(ret, "\n")
-}
-
-// HidePrivate removes private keys.
-func (cs *Credentials) HidePrivate() *Credentials {
-	ret := &Credentials{}
-	if cs != nil && cs.List != nil {
-		for _, c := range cs.List {
-			ret.List = append(ret.List, c.HidePrivate())
-		}
-	}
-	return ret
-}
-
-// Hash returns the hash of the credentials.
-func (cs *Credentials) Hash() []byte {
-	hash := network.Suite.Hash()
-	if cs != nil {
-		for _, l := range cs.List {
-			l.Public.MarshalTo(hash)
-			if l.Private != nil {
-				l.Private.MarshalTo(hash)
-			}
-		}
-	}
-	return hash.Sum(nil)
-}
 
 // DataOCS holds eihter:
 // - a read request

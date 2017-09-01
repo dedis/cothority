@@ -12,26 +12,12 @@ import (
 	"errors"
 
 	"github.com/dedis/onchain-secrets/protocol"
-	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/network"
 )
-
-// ServiceName is used for registration on the onet.
-const ServiceName = "OnChainSecrets"
-
-// VerifyOCS makes sure that all necessary signatures are present when
-// updating the OCS-skipchain.
-var VerifyOCS = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCS"))
-
-// VerificationOCS adds the VerifyBase to the VerifyOCS for a complete
-// skipchain.
-var VerificationOCS = []skipchain.VerifierID{skipchain.VerifyBase,
-	VerifyOCS}
 
 // Client is a structure to communicate with the CoSi
 // service
@@ -61,32 +47,22 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *skipchain.SkipBlock,
 	return
 }
 
-// EncryptAndWriteRequest takes data and a credential, then it creates a new
-// symmetric encryption key, encrypts the document, and stores the document and
-// the encryption key on the blockchain.
-func (c *Client) EncryptAndWriteRequest(ocs *skipchain.SkipBlock, data []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
-	cerr onet.ClientError) {
-	if len(data) > 1e7 {
-		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
-	}
-	key := random.Bytes(32, random.Stream)
-	cipher := network.Suite.Cipher(key)
-	str := cipher.Seal(nil, data)
-	return c.WriteRequest(ocs, str, key, readList)
-}
-
 // WriteRequest pushes a new block on the skipchain with the encrypted file
 // on it.
-func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, encKey []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
+func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, symKey []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(encData) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
 	}
-	X, cerr := c.SharedPublic(ocs)
+
+	requestShared := &SharedPublicRequest{Genesis: ocs.SkipChainID()}
+	shared := &SharedPublicReply{}
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), requestShared, shared)
 	if cerr != nil {
-		return nil, cerr
+		return
 	}
-	U, Cs := protocol.EncodeKey(network.Suite, X, encKey)
+
+	U, Cs := protocol.EncodeKey(network.Suite, shared.X, symKey)
 	wr := &WriteRequest{
 		Write: &DataOCSWrite{
 			File:    encData,
@@ -103,6 +79,50 @@ func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, encKey [
 	reply := &WriteReply{}
 	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
 	sb = reply.SB
+	return
+}
+
+// ReadRequest asks the ocs-skipchain to add a block giving access to 'reader'
+// for the file that references the skipblock it is stored in.
+func (c *Client) ReadRequest(ocs *skipchain.SkipBlock, reader abstract.Scalar,
+	file skipchain.SkipBlockID) (*skipchain.SkipBlock, onet.ClientError) {
+	sig, err := crypto.SignSchnorr(network.Suite, reader, file)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+	}
+
+	request := &ReadRequest{
+		Read: &DataOCSRead{
+			Public:    network.Suite.Point().Mul(nil, reader),
+			File:      file,
+			Signature: &sig,
+		},
+		OCS: ocs.SkipChainID(),
+	}
+	reply := &ReadReply{}
+	cerr := c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.SB, nil
+}
+
+// DecryptKeyRequest has to retrieve the key from the skipchain.
+func (c *Client) DecryptKeyRequest(readSB *skipchain.SkipBlock, reader abstract.Scalar) (key []byte,
+	cerr onet.ClientError) {
+	request := &DecryptKeyRequest{
+		Read: readSB.Hash,
+	}
+	reply := &DecryptKeyReply{}
+	cerr = c.SendProtobuf(readSB.Roster.RandomServerIdentity(), request, reply)
+	if cerr != nil {
+		return
+	}
+	key, err := protocol.DecodeKey(network.Suite, reply.X,
+		reply.Cs, reply.XhatEnc, reader)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode key: "+err.Error())
+	}
 	return
 }
 
@@ -127,62 +147,6 @@ func (c *Client) GetFile(roster *onet.Roster, file skipchain.SkipBlockID) ([]byt
 	return ocsData.Write.File, nil
 }
 
-// ReadRequest asks the ocs-skipchain to add a block giving access to 'reader'
-// for the file that references the skipblock it is stored in.
-func (c *Client) ReadRequest(ocs *skipchain.SkipBlock, reader abstract.Scalar,
-	file skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-	sig, err := crypto.SignSchnorr(network.Suite, reader, file)
-	if err != nil {
-		return nil, err
-	}
-
-	request := &ReadRequest{
-		Read: &DataOCSRead{
-			Public:    network.Suite.Point().Mul(nil, reader),
-			File:      file,
-			Signature: &sig,
-		},
-		OCS: ocs.SkipChainID(),
-	}
-	reply := &ReadReply{}
-	err = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
-	if err != nil {
-		return nil, err
-	}
-	return reply.SB, nil
-}
-
-// SharedPublic does something to the key before it is sent to the skipchain.
-func (c *Client) SharedPublic(genesis *skipchain.SkipBlock) (X abstract.Point,
-	cerr onet.ClientError) {
-	request := &SharedPublicRequest{Genesis: genesis.SkipChainID()}
-	reply := &SharedPublicReply{}
-	cerr = c.SendProtobuf(genesis.Roster.RandomServerIdentity(), request, reply)
-	if cerr != nil {
-		return
-	}
-	return reply.X, nil
-}
-
-// DecryptKeyRequest has to retrieve the key from the skipchain.
-func (c *Client) DecryptKeyRequest(readSB *skipchain.SkipBlock, reader abstract.Scalar) (key []byte,
-	cerr onet.ClientError) {
-	request := &DecryptKeyRequest{
-		Read: readSB.Hash,
-	}
-	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(readSB.Roster.RandomServerIdentity(), request, reply)
-	if cerr != nil {
-		return
-	}
-	key, err := protocol.DecodeKey(network.Suite, reply.X,
-		reply.Cs, reply.XhatEnc, reader)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode key: "+err.Error())
-	}
-	return
-}
-
 // GetReadRequests searches the skipchain starting at 'start' for requests and returns all found
 // requests. A maximum of 'count' requests are returned. If 'count' == 0, 'start'
 // must point to a write-block, and all read-requests for that write-block will
@@ -195,15 +159,4 @@ func (c *Client) GetReadRequests(roster *onet.Roster, start skipchain.SkipBlockI
 		return nil, cerr
 	}
 	return reply.Documents, nil
-}
-
-// GetBunches returns all genesis-blocks of all bunches
-func (c *Client) GetBunches(roster *onet.Roster) ([]*skipchain.SkipBlock, onet.ClientError) {
-	request := &GetBunchRequest{}
-	reply := &GetBunchReply{}
-	cerr := c.SendProtobuf(roster.RandomServerIdentity(), request, reply)
-	if cerr != nil {
-		return nil, cerr
-	}
-	return reply.Bunches, nil
 }
