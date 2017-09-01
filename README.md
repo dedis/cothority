@@ -43,7 +43,7 @@ This is how onchain-secrets work:
 
 ## App
 
-The OnChain Manager (ocsmgr) is a text-based app that interacts with the
+The OnChain-Secret Manager (ocsmgr) is a text-based app that interacts with the
 onchain-secrets skipchain. You can find more information in its directory
 at [ocsmgr/README.md]
 
@@ -62,9 +62,9 @@ Key Generation (DKG) using  "Secure Distributed Key Generation for Discrete-Log
 Based Cryptosystems" by R. Gennaro, S. Jarecki, H. Krawczyk, and T. Rabin.
 
 DKG enables a group of participants to generate a distributed key
-with each participants holding only a share of the key. The key is also
-never computed locally but generated distributively whereas the public part
-of the key is known by every participants.
+with each participants holding only a share of the associated private key.
+The private key is never computed locally but generated distributively
+whereas the public part of the key is known by every participants.
 
 The second protocol uses that distributed key to re-encrypt a symmetric
 key
@@ -82,7 +82,7 @@ API to the OCS-protocols:
 
 The skipchain has the following transactions:
 - write-blocks
-	- the symmetrically encrypted document ( <10MB)
+	- the symmetrically encrypted data ( <10MB)
 	- encryption key (secret-share encrypted)
 - read-blocks
 	- signed request from a reader for a data-blob
@@ -101,25 +101,6 @@ purposes or install it on a public server to create public cothorities.
 
 ocsmgr is a minimalistic app that interacts with the onchain-secrets skipchain.
 For more information, refer to the README-file in <a href="ocsmgr/README.md">ocsmgr</a>
-
-# Starting a local set of test-nodes
-
-## Using run_conode.sh
-
-To start a set of local conodes that store documents, simply run:
-
-```bash
-conode/run_conode.sh local 3 2
-```
-
-The number `3` indicates how many nodes should be started, and the number `2`
-indicates the debug-level: `0` is silent, and `5` is very verbose.
- 
-To stop the running nodes, use
-
-```bash
-pkill -f conode
-```
 
 ## Docker-files
 
