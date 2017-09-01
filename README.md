@@ -10,9 +10,9 @@ The skipchain has the following transactions:
 	- the symmetrically encrypted document ( <10MB)
 	- encryption key (secret-share encrypted)
 - read-blocks
-	- signed request from a reader for a file
+	- signed request from a reader for a data-blob
 - readers
-    - a list of readers that are allowed to access a file. Either a
+    - a list of readers that are allowed to access a data-blob. Either a
     static list, or a modifiable list that can be updated by
     one or more administrators
 
@@ -27,7 +27,7 @@ The service ensures the correct usage of the skipchains and offers an
 API to the OCS-protocols:
 
 - creating a skipchain
-- writing an encrypted symmetric key and a file
+- writing an encrypted symmetric key and a data-blob
 - create a read request
 - get public key of the Distributed Key Generator (DKG)
 - get all read requests
