@@ -1,4 +1,4 @@
-package onchain_secrets
+package ocs
 
 import (
 	"encoding/hex"
@@ -76,7 +76,9 @@ func (sbb *SkipBlockBunch) Store(sb *skipchain.SkipBlock) skipchain.SkipBlockID 
 		}
 	} else {
 		sbb.SkipBlocks[string(sb.Hash)] = sb
-		sbb.Latest = sb
+		if sb.Index > sbb.Latest.Index {
+			sbb.Latest = sb
+		}
 	}
 	return sb.Hash
 }

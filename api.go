@@ -1,4 +1,4 @@
-package onchain_secrets
+package ocs
 
 /*
 The api.go defines the methods that can be called from the outside. Most
@@ -11,43 +11,24 @@ This part of the service runs on the client or the app.
 import (
 	"errors"
 
-	"github.com/satori/go.uuid"
+	"github.com/dedis/onchain-secrets/protocol"
 	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/random"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// ServiceName is used for registration on the onet.
-const ServiceName = "OnChainSecrets"
-
-// VerifyOCSACL makes sure that all necessary signatures are present when
-// updating the ACL-skipchain.
-var VerifyOCSACL = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCSACL"))
-
-// VerificationOCSACL adds the VerifyBase to the VerifyOCSACL for a complete
-// skipchain.
-var VerificationOCSACL = []skipchain.VerifierID{skipchain.VerifyBase,
-	VerifyOCSACL}
-
-// VerifyOCSDoc makes sure that all necessary signatures are present when
-// updating the Doc-skipchain.
-var VerifyOCSDoc = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCSDoc"))
-
-// VerificationOCSDoc adds the VerifyBase to the VerifyOCSDoc for a complete
-// skipchain.
-var VerificationOCSDoc = []skipchain.VerifierID{skipchain.VerifyBase,
-	VerifyOCSDoc}
-
-// Client is a structure to communicate with the CoSi
-// service
+// Client is a structure to communicate with the OCS service
+// service. It can handle connections to different nodes, and
+// will re-use existing connections transparently. To force
+// closing of all connections, use Client.Close()
 type Client struct {
 	*onet.Client
 	sbc *skipchain.Client
 }
 
-// NewClient instantiates a new cosi.Client
+// NewClient instantiates a new ocs.Client
 func NewClient() *Client {
 	return &Client{
 		Client: onet.NewClient(ServiceName),
@@ -55,103 +36,171 @@ func NewClient() *Client {
 	}
 }
 
-// CreateSkipchains creates a new credential for the administrator and the two
-// necessary skipchains. It returns:
-//  - acl-skipchain, ocs-skipchain, admin-credentials, error
-func (c *Client) CreateSkipchains(r *onet.Roster, n string) (acl, ocs *skipchain.SkipBlock,
-	admin *Credential, cerr onet.ClientError) {
-	admin = NewCredential(n)
-	dataACL := &DataACL{Admins: NewCredentials(admin)}
+// CreateSkipchain creates a new OCS-skipchain using the roster r. The OCS-service
+// will create a new skipchain with an empty first genesis-block. You can create more
+// than one skipchain at the same time.
+//
+// Input:
+//  - r [*onet.Roster] - the roster of the nodes holding the new skipchain
+//
+// Returns:
+//  - ocs [*SkipChainURL] - the identity of that new skipchain
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
+	cerr onet.ClientError) {
 	req := &CreateSkipchainsRequest{
 		Roster: r,
-		ACL:    NewDataACLEvolve(dataACL, nil, admin.Private),
 	}
 	reply := &CreateSkipchainsReply{}
-	cerr = c.SendProtobuf(r.Get(0), req, reply)
-	acl, ocs = reply.ACL, reply.Doc
+	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	ocs = NewSkipChainURL(reply.OCS)
 	return
 }
 
-// BunchAddBlock adds a block to the latest block from the bunch. If the block
-// doesn't have a roster set, it will be copied from the last block.
-func (c *Client) BunchAddBlock(bunch *SkipBlockBunch, r *onet.Roster, data interface{}) (*skipchain.SkipBlock, onet.ClientError) {
-	reply, err := skipchain.NewClient().StoreSkipBlock(bunch.Latest, r, data)
-	if err != nil {
-		return nil, err
-	}
-	sbNew := reply.Latest
-	id := bunch.Store(sbNew)
-	if id == nil {
-		return nil, onet.NewClientErrorCode(ErrorProtocol,
-			"Couldn't add block to bunch")
-	}
-	return sbNew, nil
-}
-
-// EvolveACL asks the skipchain to store a new block with a new Access-Control-List.
-// The admin-credential must be present in the previous block, else it will be
-// rejected.
-func (c *Client) EvolveACL(acl *skipchain.SkipBlock, newACL *DataACL, admin *Credential) (rep *EvolveACLReply,
+// WriteRequest contacts the ocs-service and requests the addition of a new write-
+// block with the given encData. The encData has already to be encrypted using the symmetric
+// symKey. This method will encrypt the symKey using the public shared key of the
+// ocs-service and only send this encrypted key over the network. The block will also
+// contain the list of readers that are allowed to request the key.
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//  - encData [[]byte] - the data - already encrypted using symKey
+//  - symKey [[]byte] - the symmetric key - it will be encrypted using the shared public key
+//  - readList [[]abstract.point] - a list of public key that can request a re-encryption
+//    of the symmetric encryption key
+//
+// Output:
+//  - sb [*skipchain.SkipBlock] - the actual block written in the skipchain. The
+//    Data-field of the block contains the actual write request.
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
-	req := &EvolveACLRequest{
-		ACL:     acl.SkipChainID(),
-		NewAcls: NewDataACLEvolve(newACL, acl, admin.Private),
+	if len(encData) > 1e7 {
+		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store data bigger than 10MB")
 	}
-	rep = &EvolveACLReply{}
-	cerr = NewClient().SendProtobuf(acl.Roster.Get(0), req, rep)
-	return
-}
 
-// EncryptAndWriteRequest takes data and a credential, then it creates a new
-// symmetric encryption key, encrypts the document, and stores the document and
-// the encryption key on the blockchain.
-func (c *Client) EncryptAndWriteRequest(ocs *skipchain.SkipBlock, data []byte, cred *Credential) (sb *skipchain.SkipBlock,
-	cerr onet.ClientError) {
-	if len(data) > 1e7 {
-		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
-	}
-	key := random.Bytes(32, random.Stream)
-	cipher := network.Suite.Cipher(key)
-	str := cipher.Seal(nil, data)
-	encKey, cerr := c.EncryptKeyRequest(ocs.Roster, key)
+	requestShared := &SharedPublicRequest{Genesis: ocs.Genesis}
+	shared := &SharedPublicReply{}
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), requestShared, shared)
 	if cerr != nil {
 		return
 	}
-	return c.WriteRequest(ocs, str, encKey, cred)
-}
 
-// WriteRequest pushes a new block on the skipchain with the encrypted file
-// on it.
-func (c *Client) WriteRequest(ocs *skipchain.SkipBlock, encData []byte, encKey []byte, cred *Credential) (sb *skipchain.SkipBlock,
-	cerr onet.ClientError) {
-	if len(encData) > 1e7 {
-		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store files bigger than 10MB")
-	}
-	sig, err := crypto.SignSchnorr(network.Suite, cred.Private, encKey)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
-	}
+	U, Cs := protocol.EncodeKey(network.Suite, shared.X, symKey)
 	wr := &WriteRequest{
 		Write: &DataOCSWrite{
-			File:      encData,
-			Key:       encKey,
-			Signature: &sig,
+			Data:    encData,
+			U:       U,
+			Cs:      Cs,
+			Readers: []byte{},
 		},
-		Doc: ocs.SkipChainID(),
+		Readers: &DataOCSReaders{
+			ID:      []byte{},
+			Readers: readList,
+		},
+		OCS: ocs.Genesis,
 	}
 	reply := &WriteReply{}
-	cerr = c.SendProtobuf(ocs.Roster.Get(0), wr, reply)
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
 	sb = reply.SB
 	return
 }
 
-// GetFile returns the encrypted file with a given id. It takes the roster of the
-// latest block and the id of the file to retrieve. It checks extensively if
-// the block is correct and returns the encrypted data of the file.
-func (c *Client) GetFile(roster *onet.Roster, file skipchain.SkipBlockID) ([]byte,
-	onet.ClientError) {
+// ReadRequest is used to request a re-encryption of the symmetric key of the
+// given data. The ocs-skipchain will verify if the signature corresponds to
+// one of the public keys given in the write-request, and only if this is valid,
+// it will add the block to the skipchain.
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//  - data [skipchain.SkipBlockID] - the hash of the write-request where the
+//    data is stored
+//  - reader [abstract.Scalar] - the private key of the reader. It is used to
+//    sign the request to authenticate to the skipchain.
+//
+// Output:
+//  - sb [*skipchain.SkipBlock] - the read-request that has been added to the
+//    skipchain if it accepted the signature.
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
+	reader abstract.Scalar) (sb *skipchain.SkipBlock, cerr onet.ClientError) {
+	sig, err := crypto.SignSchnorr(network.Suite, reader, dataID)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+	}
+
+	request := &ReadRequest{
+		Read: &DataOCSRead{
+			Public:    network.Suite.Point().Mul(nil, reader),
+			DataID:    dataID,
+			Signature: &sig,
+		},
+		OCS: ocs.Genesis,
+	}
+	reply := &ReadReply{}
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.SB, nil
+}
+
+// DecryptKeyRequest takes the id of a successful read-request and asks the cothority
+// to re-encrypt the symmetric key under the reader's public key. The cothority
+// does a distributed re-encryption, so that the actual symmetric key is never revealed
+// to any of the nodes.
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//  - readID [skipchain.SkipBlockID] - the ID of the successful read-request
+//  - reader [abstract.Scalar] - the private key of the reader. It will be used to
+//    decrypt the symmetric key.
+//
+// Output:
+//  - sym [[]byte] - the decrypted symmetric key
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlockID, reader abstract.Scalar) (sym []byte,
+	cerr onet.ClientError) {
+	request := &DecryptKeyRequest{
+		Read: readID,
+	}
+	reply := &DecryptKeyReply{}
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	if cerr != nil {
+		return
+	}
+
+	var err error
+	sym, err = protocol.DecodeKey(network.Suite, reply.X,
+		reply.Cs, reply.XhatEnc, reader)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
+	}
+	return
+}
+
+// GetData returns the encrypted data from a write-request given its id. It requests
+// the data from the skipchain. To decode the data, the caller has to have a
+// decrypted symmetric key, then he can decrypt the data with:
+//
+//   cipher := network.Suite.Cipher(key)
+//   data, err := cipher.Open(nil, encData)
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//  - dataID [skipchain.SkipBlockID] - the hash of the skipblock where the data
+//    is stored
+//
+// Output:
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encData []byte,
+	cerr onet.ClientError) {
 	cl := skipchain.NewClient()
-	sb, cerr := cl.GetSingleBlock(roster, file)
+	sb, cerr := cl.GetSingleBlock(ocs.Roster, dataID)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -163,94 +212,23 @@ func (c *Client) GetFile(roster *onet.Roster, file skipchain.SkipBlockID) ([]byt
 	if !ok || ocsData.Write == nil {
 		return nil, onet.NewClientError(errors.New("not correct type of data"))
 	}
-	return ocsData.Write.File, nil
-}
-
-// ReadRequest asks the ocs-skipchain to add a block giving access to 'reader'
-// for the file that references the skipblock it is stored in.
-func (c *Client) ReadRequest(ocs *skipchain.SkipBlock, reader *Credential,
-	file skipchain.SkipBlockID) (*skipchain.SkipBlock, error) {
-	sig, err := crypto.SignSchnorr(network.Suite, reader.Private, file)
-	if err != nil {
-		return nil, err
-	}
-	sbCl := skipchain.NewClient()
-	sbFile, cerr := sbCl.GetSingleBlock(ocs.Roster, file)
-	if cerr != nil {
-		return nil, cerr
-	}
-	_, dwI, err := network.Unmarshal(sbFile.Data)
-	if err != nil {
-		return nil, err
-	}
-	dw, ok := dwI.(*DataOCS)
-	if !ok {
-		return nil, errors.New("didn't get file-block")
-	}
-	if dw == nil || dw.Write == nil {
-		return nil, errors.New("this is not a write-block")
-	}
-	request := &ReadRequest{
-		Read: &DataOCSRead{
-			Pseudonym: reader.Pseudonym,
-			Public:    reader.Public,
-			File:      file,
-			EncKey:    dw.Write.Key,
-			Signature: &sig,
-		},
-		Doc: ocs.SkipChainID(),
-	}
-	reply := &ReadReply{}
-	err = c.SendProtobuf(ocs.Roster.Get(0), request, reply)
-	if err != nil {
-		return nil, err
-	}
-	return reply.SB, nil
-}
-
-// EncryptKeyRequest does something to the key before it is sent to the skipchain.
-func (c *Client) EncryptKeyRequest(roster *onet.Roster, key []byte) (encKey []byte,
-	cerr onet.ClientError) {
-	request := &EncryptKeyRequest{
-		Roster: roster,
-	}
-	reply := &EncryptKeyReply{}
-	cerr = c.SendProtobuf(roster.Get(0), request, reply)
-	if cerr != nil {
-		return
-	}
-	// TODO: do something good with the reply
-	encKey = key
-	return
-}
-
-// DecryptKeyRequest has to retrieve the key from the skipchain.
-func (c *Client) DecryptKeyRequest(roster *onet.Roster, reqID skipchain.SkipBlockID, reader *Credential) (key []byte,
-	cerr onet.ClientError) {
-	request := &DecryptKeyRequest{
-		Read: reqID,
-	}
-	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(roster.Get(0), request, reply)
-	if cerr != nil {
-		return
-	}
-	for _, eg := range reply.KeyParts {
-		msg, err := ElGamalDecrypt(network.Suite, reader.Private, eg)
-		if err != nil {
-			return nil, onet.NewClientError(err)
-		}
-		key = append(key, msg...)
-	}
-	return
+	return ocsData.Write.Data, nil
 }
 
 // GetReadRequests searches the skipchain starting at 'start' for requests and returns all found
-// requests. A maximum of 'count' requests are returned.
-func (c *Client) GetReadRequests(roster *onet.Roster, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
+// requests. A maximum of 'count' requests are returned. If 'count' == 0, 'start'
+// must point to a write-block, and all read-requests for that write-block will
+// be returned.
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//
+// Output:
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
 	request := &GetReadRequests{start, count}
 	reply := &GetReadRequestsReply{}
-	cerr := c.SendProtobuf(roster.Get(0), request, reply)
+	cerr := c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
