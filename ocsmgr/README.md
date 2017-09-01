@@ -1,4 +1,4 @@
-# OCSmngr - OnChainSecrets manager
+# OCSmgr - OnChainSecrets manager
 
 This app interacts with the onchain-secrets service and allows for storing encrypted
 files on the skipchain while only giving the key to registered readers.
