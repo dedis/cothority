@@ -3,12 +3,12 @@
 This app interacts with the onchain-secrets service and allows for storing encrypted
 files on the skipchain while only giving the key to registered readers.
 
-The app needs a running cothority with the ocs-service enabled to function.
+The app needs a running cothority with the ocs service enabled to function.
 Then you can:
 
-- set up a new OCS-skipchain
+- set up a new OCS skipchain
 - evolve the roles: admin/reader
-- join an onchain-secrets skipchain
+- join an OCS skipchain
 - write a new file to the blockchain, where it is stored encrypted
 - read a file from the blockchain
 
@@ -18,7 +18,7 @@ This set up has been tested on MacOSX, but it should also work on Linux. You
 will create a directory for the experiment, download the code, create a
 cothority and finally use the onchain-secrets skipchain.
 
-If you haven't set up go 1.8, please go to https://golang.org/doc/install and
+If you haven't set up go 1.8 (or 1.9), please go to https://golang.org/doc/install and
 follow the instructions. Then you can do:
 
 ```bash
