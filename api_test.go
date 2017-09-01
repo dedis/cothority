@@ -1,4 +1,4 @@
-package onchain_secrets_test
+package ocs_test
 
 import (
 	"testing"

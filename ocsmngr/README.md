@@ -3,12 +3,12 @@
 This app interacts with the onchain-secrets service and allows for storing encrypted
 files on the skipchain while only giving the key to registered readers.
 
-The app needs a running cothority with the logread-service enabled to function.
+The app needs a running cothority with the ocs-service enabled to function.
 Then you can:
 
-- set up a new pair of ACL/Doc-skipchains
-- evolve the roles: admin/writer/reader
-- join an onchain-secrets skipchain as one of admin/writer/reader
+- set up a new OCS-skipchain
+- evolve the roles: admin/reader
+- join an onchain-secrets skipchain
 - write a new file to the blockchain, where it is stored encrypted
 - read a file from the blockchain
 
@@ -30,11 +30,11 @@ cd ocs
 For all further directions in this README we suppose you're in your `~/ocs`
 directory and have followed the steps one-by-one.
 
-## Creating a local cothority
+### Creating a local cothority
 
 First you need to create a cothority, which is a set of nodes listening to requests
 for services. Different services are available, but for now we only care about
-the logread-service.
+the ocs-service.
 
 ```bash
 go get github.com/dedis/onchain-secrets/conode
@@ -57,67 +57,68 @@ command:
 conode check public.toml
 ```
 
-## Setting up a logread-skipchain
+# Basic operations
 
-Once the conodes are running, you can setup your first logread-skipchain:
+This gives an introduction to use the OCS-skipchains in an easy way. This
+is not safe for a production system, as the skipchain has no access control
+for writing, so anybody knowing the id of the skipchain can fill it up!
+
+## Setting up an ocs-skipchain
+
+Once the conodes are running, you can setup your first ocs-skipchain:
 
 ```bash
 go get github.com/dedis/onchain-secrets/ocsmngr
-ocsmngr manage create public.toml manager
+ocsmngr manage create public.toml
 ```
 
-This also prints the ID of the Doc-skipchain that you need for the next steps.
+This also prints the ID of the OCS-skipchain that you need for the next steps.
 You can store it like this:
 
 ```bash
 DOC_ID=$( ocsmngr manage list | cut -f 2 )
 ```
 
-## Adding a writer and a reader
-
-Now we need somebody to write and somebody to read the file:
-
-```bash
-ocsmngr manage role create writer:alice
-ocsmngr manage role create reader:bob
-```
-
-This prints out the private keys of the users that you need for accessing the
-skipchain from another account. For easier handling, you can store them:
-
-```bash
-ALICE=$( ocsmngr manage role list | grep alice | cut -f 2 )
-BOB=$( ocsmngr manage role list | grep bob | cut -f 2 )
-```
-
 ## Writing a file to the skipchain
 
-Let's get today's news and write the html-file to the skipchain:
+Before we write a document to the skipchain, we need a private/public
+keypair for the reader that will be allowed to read it from the skipchain.
+We can also add more than one reader, but let's start with one:
 
 ```bash
-wget https://news.ycombinator.com
-FILE_ID=$( ocsmngr write alice index.html | grep Stored | cut -f 2 )
+READER=$( ocsmngr role keypair )
+READER_PRIV=$( echo $READER | cut -f 1 )
+READER_PUB=$( echo $READER | cut -f 2 )
 ```
 
-Now `index.html` is stored on the WLR-skipchain, encrypted with a symmetric key that
+Lets get today's news and write the html-file to the skipchain, allowing
+the holder of the private key we created to read it:
+
+```bash
+wget -Oindex.html https://news.ycombinator.com
+FILE_ID=$( ocsmngr write index.html $READER_PUB | grep Stored | cut -f 2 )
+```
+
+Now `index.html` is stored on the OCS-skipchain, encrypted with a symmetric key that
 is stored on the skipchain. It also outputs the ID of the file that has been
 stored on the skipchain and stores it in $FILE_ID.
 
 ## Reading the file from the skipchain
 
-To get the file back from the skipchain, a reader first needs to make a read-request,
-before he can fetch the file from the skipchain and get the appropriate
-decryption-key.
+Reading a file from the skipchain is a two-step process, but `ocsmngr`
+does both steps with one call:
+
+1. send a read-request to the skipchain
+2. ask the cothority to re-encrypt the symmetric key
+
+For the read-request we can give a file to output the decrypted file to.
+If we don't give this `-o`-option, the file will be outputted to the
+standard output. We also have to give the private key of the reader.
+It will not be sent, but used for creating a signature to authenticate
+to the cothority.
 
 ```bash
-READ_ID=$( ocsmngr read request bob $FILE_ID | grep Request-id | cut -f 2 )
-```
-
-Now there is a new block on the WLR-skipchain with a log that says `bob` requested
-read access to file `$FILE_ID`. Bob can now get the file:
-
-```bash
-ocsmngr read fetch $READ_ID index_copy.html
+ocsmngr read -o index_copy.html $FILE_ID $READER_PRIV
 ```
 
 A verification using `cmp` shows it's the same file:
@@ -133,17 +134,16 @@ existing skipchain. For this we add the `-c second` argument to `ocsmngr`, so
 that all configuration will be stored in the `second/`-directory (the default
 directory is `~/.config/ocsmngr`).
 
-So let's join the previous WLR-skipchain with Bob's reading permissions:
+So let's join the previous OCS-skipchain:
 
 ```bash
-ocsmngr -c second manage join public.toml $DOC_ID $BOB
+ocsmngr -c second manage join public.toml $DOC_ID
 ```
 
-Now Bob can request and fetch the file using this chain:
+Now we can request and fetch the file using this chain:
 
 ```bash
-READ_ID2=$( ocsmngr -c second read request bob $FILE_ID | grep Request-id | cut -f 2 )
-ocsmngr -c second read fetch $READ_ID2 index_copy2.html
+ocsmngr -c second read -o index_copy2.html $FILE_ID $READER_PRIV
 ```
 
 And again we can verify all files are the same:
@@ -151,10 +151,3 @@ And again we can verify all files are the same:
 ```bash
 cmp index.html index_copy2.html && echo Files are the same
 ```
-
-# Access control
-
-There are three access-rights, and every user only has one at any given time:
-- admin - can add and remove rights from other users
-- write - can add new documents to the chain
-- read - can request a re-encryption of the key and fetch the document

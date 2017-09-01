@@ -9,16 +9,15 @@ import (
 
 	"gopkg.in/dedis/onet.v1/app"
 
-	"strings"
-
-	"errors"
-
 	"encoding/hex"
 
 	"io/ioutil"
 
+	"fmt"
+
 	"github.com/dedis/onchain-secrets"
-	"gopkg.in/dedis/cothority.v1/skipchain"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -43,7 +42,7 @@ func main() {
 					Name:      "create",
 					Usage:     "create a write log-read skipchain",
 					Aliases:   []string{"cr"},
-					ArgsUsage: "group pseudonym",
+					ArgsUsage: "group [private_key]",
 					Action:    mngCreate,
 				},
 				{
@@ -55,8 +54,8 @@ func main() {
 				{
 					Name:      "join",
 					Usage:     "join a write log-read skipchain",
-					Aliases:   []string{"cr"},
-					ArgsUsage: "group doc-skipchain-id private_key",
+					Aliases:   []string{"j"},
+					ArgsUsage: "group doc-skipchain-id [private_key]",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "overwrite, o",
@@ -65,53 +64,19 @@ func main() {
 					},
 					Action: mngJoin,
 				},
-				{
-					Name:    "role",
-					Usage:   "role control",
-					Aliases: []string{"r"},
-					Subcommands: []cli.Command{
-						{
-							Name:      "create",
-							Usage:     "create admin, writer or reader",
-							Aliases:   []string{"cr"},
-							ArgsUsage: "(admin|writer|reader):pseudo",
-							Action:    mngRoleCreate,
-						},
-						{
-							Name:      "add",
-							Usage:     "add admin, writer or reader",
-							Aliases:   []string{"a"},
-							ArgsUsage: "private_key",
-							Action:    mngRoleAdd,
-						},
-						{
-							Name:      "remove",
-							Usage:     "remove admin, writer or reader",
-							Aliases:   []string{"rm"},
-							ArgsUsage: "role:pseudo",
-							Action:    mngRoleRm,
-						},
-						{
-							Name:    "list",
-							Usage:   "list all roles",
-							Aliases: []string{"ls"},
-							Action:  mngRoleList,
-							Flags: []cli.Flag{
-								cli.BoolFlag{
-									Name:  "acls, a",
-									Usage: "also print ACL",
-								},
-							},
-						},
-					},
-				},
 			},
+		},
+		{
+			Name:    "keypair",
+			Usage:   "create a keypair and write it to stdout",
+			Aliases: []string{"kp"},
+			Action:  keypair,
 		},
 		{
 			Name:      "write",
 			Usage:     "write to the doc-skipchain",
 			Aliases:   []string{"w"},
-			ArgsUsage: "pseudonym file",
+			ArgsUsage: "file",
 			Action:    write,
 		},
 		{
@@ -121,21 +86,15 @@ func main() {
 			Action:  list,
 		},
 		{
-			Name:    "read",
-			Usage:   "read from the doc-skipchain",
-			Aliases: []string{"r"},
-			Subcommands: []cli.Command{
-				{
-					Name:      "request",
-					Usage:     "request a read operation",
-					ArgsUsage: "pseudonym file",
-					Action:    readReq,
-				},
-				{
-					Name:      "fetch",
-					Usage:     "fetch a requested file",
-					ArgsUsage: "pseudonym file",
-					Action:    readFetch,
+			Name:      "read",
+			Usage:     "read from the doc-skipchain",
+			Aliases:   []string{"r"},
+			ArgsUsage: "file_id private_key",
+			Action:    read,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "o, output",
+					Usage: "output file",
 				},
 			},
 		},
@@ -157,36 +116,34 @@ func main() {
 
 // Creates a new acl and doc skipchain.
 func mngCreate(c *cli.Context) error {
-	if c.NArg() < 2 {
-		log.Fatal("Please give group-toml and pseudo")
+	if c.NArg() < 1 {
+		log.Fatal("Please give group-toml [pseudo]")
 	}
 	log.Info("Creating ACL- and Doc-skipchain")
 	pseudo := c.Args().Get(1)
 	group := getGroup(c)
-	cl := onchain_secrets.NewClient()
-	acl, doc, admin, err := cl.CreateSkipchains(group.Roster, pseudo)
+	cl := ocs.NewClient()
+	sc, err := cl.CreateSkipchain(group.Roster)
 	log.ErrFatal(err)
 	cfg := &ocsConfig{
-		ACLBunch: onchain_secrets.NewSkipBlockBunch(acl),
-		DocBunch: onchain_secrets.NewSkipBlockBunch(doc),
-		Roles:    onchain_secrets.NewCredentials(admin),
+		Bunch: ocs.NewSkipBlockBunch(sc),
 	}
 	log.Infof("Created new skipchains and added %s as admin", pseudo)
-	log.Infof("Doc-skipchainid: %x", cfg.DocBunch.GenesisID)
+	log.Infof("Doc-skipchainid: %x", cfg.Bunch.GenesisID)
 	return cfg.saveConfig(c)
 }
 
 // Prints the id of the Doc-skipchain
 func mngList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.Infof("Doc-skipchainid:\t%x", cfg.DocBunch.GenesisID)
+	log.Infof("OCS-skipchainid:\t%x", cfg.Bunch.GenesisID)
 	return nil
 }
 
 // Joins an existing doc skipchain.
 func mngJoin(c *cli.Context) error {
-	if c.NArg() < 3 {
-		log.Fatal("Please give: group doc-skipchain-id private_key")
+	if c.NArg() < 2 {
+		log.Fatal("Please give: group doc-skipchain-id")
 	}
 	cfg, loaded := loadConfig(c)
 	if loaded && !c.Bool("overwrite") {
@@ -196,116 +153,39 @@ func mngJoin(c *cli.Context) error {
 	group := getGroup(c)
 	sid, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
-	private, err := crypto.StringHexToScalar(network.Suite, c.Args().Get(2))
+	cfg.Bunch, err = CreateBunch(group.Roster, sid)
 	log.ErrFatal(err)
-	public := network.Suite.Point().Mul(nil, private)
-	log.Info("Public key is:", public.String())
-	log.Info("Joining ACL-skipchain")
-	cfg.DocBunch, err = CreateDocBunch(group.Roster, sid)
-	log.ErrFatal(err)
-	docGenesis := cfg.DocBunch.GetByID(cfg.DocBunch.GenesisID)
-	docData := onchain_secrets.NewDataOCS(docGenesis.Data)
-	cfg.ACLBunch, err = CreateACLBunch(group.Roster, docData.Config.ACL)
-	log.ErrFatal(err)
-	acl := cfg.Acls()
-	if acl == nil {
-		log.Fatal("Empty data in ACL-skipchain")
-	}
-	var cr *onchain_secrets.Credential
-	if cr = acl.Admins.SearchPublic(public); cr != nil {
-		log.Info("Found admin user", cr.Pseudonym)
-	} else if cr = acl.Writers.SearchPublic(public); cr != nil {
-		log.Info("Found writer", cr.Pseudonym)
-	} else if cr = acl.Readers.SearchPublic(public); cr != nil {
-		log.Info("Found reader", cr.Pseudonym)
-	} else {
-		log.Info(acl)
-		return errors.New("credential not found")
-	}
-	cr.Private = private
-	cfg.Roles = onchain_secrets.NewCredentials(cr)
 	return cfg.saveConfig(c)
 }
 
-func mngRoleCreate(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	admin := cfg.Admin()
-	if admin == nil {
-		log.Fatal("You don't have an admin-role")
-	}
-	if c.NArg() < 1 {
-		log.Fatal("Please give role:pseudo")
-	}
-	rolePseudo := strings.Split(c.Args().First(), ":")
-	if len(rolePseudo) != 2 {
-		log.Fatal("Please give role:pseudo")
-	}
-	role, pseudo := rolePseudo[0], rolePseudo[1]
-	acls := cfg.Acls()
-	var cred *onchain_secrets.Credential
-	switch strings.ToLower(role) {
-	case "admin":
-		if acls.Admins.SearchPseudo(pseudo) != nil {
-			log.Fatal("Pseudo already exists")
-		}
-		cred = acls.Admins.AddPseudo(pseudo)
-	case "writer":
-		if acls.Writers.SearchPseudo(pseudo) != nil {
-			log.Fatal("Pseudo already exists")
-		}
-		cred = acls.Writers.AddPseudo(pseudo)
-	case "reader":
-		if acls.Readers.SearchPseudo(pseudo) != nil {
-			log.Fatal("Pseudo already exists")
-		}
-		cred = acls.Readers.AddPseudo(pseudo)
-	default:
-		return errors.New("Didn't find role")
-	}
-	log.Infof("Added role:%s for pseudo:%s", role, pseudo)
-	cfg.Roles.List = append(cfg.Roles.List, cred)
-	priv, err := crypto.ScalarToStringHex(network.Suite, cred.Private)
-	log.ErrFatal(err)
-	log.Infof("Private key:\t%s", priv)
-
-	reply, err := onchain_secrets.NewClient().EvolveACL(cfg.ACLBunch.Latest, acls, admin)
+func keypair(c *cli.Context) error {
+	kp := config.NewKeyPair(network.Suite)
+	privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
 	if err != nil {
 		return err
 	}
-	cfg.ACLBunch.Store(reply.SB)
-	return cfg.saveConfig(c)
-}
-func mngRoleAdd(c *cli.Context) error {
-	log.Info("")
-	return nil
-}
-func mngRoleRm(c *cli.Context) error {
-	log.Info("")
-	return nil
-}
-func mngRoleList(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.Bool("acls") {
-		log.Info("Current ACLs:")
-		log.Info(cfg.Acls())
+	pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
+	if err != nil {
+		return err
 	}
-	log.Info("Known private keys:")
-	for _, s := range cfg.Roles.List {
-		priv, err := crypto.ScalarToStringHex(network.Suite, s.Private)
-		log.ErrFatal(err)
-		log.Infof("User %s:\t%s", s.Pseudonym, priv)
-	}
+	fmt.Printf("%s:%s\n", privStr, pubStr)
 	return nil
 }
 
 func write(c *cli.Context) error {
 	if c.NArg() < 2 {
-		log.Fatal("Please give the following: writer file")
+		log.Fatal("Please give the following: file reader1[,reader2,...]")
 	}
 	cfg := loadConfigOrFail(c)
-	writer, file := c.Args().Get(0), c.Args().Get(1)
-	log.Info("Going to write file to skipchain under writer", writer)
-	sb, err := cfg.StoreFile(writer, file)
+	file := c.Args().Get(0)
+	var readers []abstract.Point
+	for _, r := range c.Args().Tail() {
+		pub, err := crypto.String64ToPub(network.Suite, r)
+		log.ErrFatal(err)
+		readers = append(readers, pub)
+	}
+	log.Info("Going to write file to skipchain")
+	sb, err := cfg.StoreFile(file, readers)
 	if err != nil {
 		return err
 	}
@@ -316,84 +196,41 @@ func write(c *cli.Context) error {
 func list(c *cli.Context) error {
 	log.Info("Listing existing files")
 	cfg := loadConfigOrFail(c)
-	for _, sb := range cfg.DocBunch.SkipBlocks {
-		log.Info(onchain_secrets.NewDataOCS(sb.Data))
+	for _, sb := range cfg.Bunch.SkipBlocks {
+		log.Info(ocs.NewDataOCS(sb.Data))
 	}
 	return nil
 }
 
-func readReq(c *cli.Context) error {
+func read(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
-		log.Fatal("Please give the following: pseudo file-id")
+		log.Fatal("Please give the following: fileID private_key")
 	}
-	pseudo := c.Args().Get(0)
-	cred := cfg.Roles.SearchPseudo(pseudo)
-	if cred == nil || cred.Private == nil {
-		log.Fatal("Don't have credentials for reader", pseudo)
-	}
-	if cfg.Acls().Readers.SearchPseudo(pseudo) == nil {
-		log.Fatal("Reader", pseudo, "not in acl-read")
-	}
-	file, err := hex.DecodeString(c.Args().Get(1))
+	fileID, err := hex.DecodeString(c.Args().Get(0))
 	log.ErrFatal(err)
-	log.Infof("Requesting read-access to file %x", file)
-	sb, cerr := onchain_secrets.NewClient().ReadRequest(cfg.DocBunch.Latest, cred, file)
+	log.Infof("Requesting read-access to file %x", fileID)
+	priv, err := crypto.String64ToScalar(network.Suite, c.Args().Get(1))
+	log.ErrFatal(err)
+	cl := ocs.NewClient()
+	sb, cerr := cl.ReadRequest(cfg.Bunch.Latest, priv, fileID)
 	log.ErrFatal(cerr)
 	if sb == nil {
-		log.Fatal("Got empty skipblock")
+		log.Fatal("Got empty skipblock - read refused")
 	}
-	_, dwI, err := network.Unmarshal(sb.Data)
-	dw, ok := dwI.(*onchain_secrets.DataOCS)
-	if !ok {
-		log.Fatal("Didn't find read-request")
-	}
-	req := dw.Read
-	if req.Pseudonym != pseudo {
-		log.Fatal("Got wrong pseudo")
-	}
-	if !req.File.Equal(file) {
-		log.Fatal("Got wrong file")
-	}
-	if crypto.VerifySchnorr(network.Suite, cred.Public, req.File, *req.Signature) != nil {
-		log.Fatal("Wrong signature")
-	}
-	log.Info("Successfully added read-request to skipchain.")
-	log.Infof("Request-id is:\t%x", sb.Hash)
-	cfg.DocBunch.Store(sb)
-	return cfg.saveConfig(c)
-}
-func readFetch(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 2 {
-		log.Fatal("Please give the following: read-request-id filename")
-	}
-	read, err := hex.DecodeString(c.Args().First())
-	log.ErrFatal(err)
-	file := c.Args().Get(1)
-	log.Info("Writing to file:", file)
-	sb := cfg.DocBunch.GetByID(read)
-	if sb == nil {
-		log.Fatal("Didn't find read-request-id")
-	}
-	ddoc := onchain_secrets.NewDataOCS(sb.Data)
-	if ddoc == nil || ddoc.Read == nil {
-		log.Fatal("This is not a read-request-id")
-	}
-	role, _ := cfg.Roles.FindPseudo(ddoc.Read.Pseudonym)
-	key, cerr := onchain_secrets.NewClient().DecryptKeyRequest(sb.Roster, sb.Hash, role)
+	cfg.Bunch.Store(sb)
+
+	key, cerr := cl.DecryptKeyRequest(sb, priv)
 	log.ErrFatal(cerr)
-	sbs, cerr := skipchain.NewClient().GetSingleBlock(sb.Roster, ddoc.Read.File)
+	fileEnc, cerr := cl.GetFile(sb.Roster, fileID)
 	log.ErrFatal(cerr)
-	docsFile := onchain_secrets.NewDataOCS(sbs.Data)
-	if docsFile == nil || docsFile.Write == nil {
-		log.Fatal("Referenced file does not exist")
-	}
-	dataEnc := docsFile.Write.File
 	cipher := network.Suite.Cipher(key)
-	data, err := cipher.Open(nil, dataEnc)
+	file, err := cipher.Open(nil, fileEnc)
 	log.ErrFatal(err)
-	ioutil.WriteFile(file, data, 0640)
-	log.Infof("Successfully written %d bytes to %s", len(data), file)
+
+	if out := c.String("o"); out != "" {
+		return ioutil.WriteFile(out, file, 0660)
+	}
+	fmt.Println(file)
 	return nil
 }

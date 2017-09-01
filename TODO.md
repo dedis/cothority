@@ -1,20 +1,15 @@
 # Items that are still waiting for completion
 
-## Actual re-encryption of symmetric encryption key
+## Handling of public keys
 
-The core of the onchain-secrets algorithm is not done yet: the symmetric
-key is stored as-is on the skipchain. We have an implementation of Lefteris'
-paper-draft, but still need to port it as a 'protocol'.
+Now the public keys, the documents and the symmetric keys are
+all stored in the same skipchain. If the public keys need to be
+separated, we'd have to re-enable this feature.
 
-Estimated time: 2 days
-
-## Using of new skipchains
+## Improving skipchains
 
 The current implementation of skipchains lacks in multiple ways:
 
-- parallel writing/reading to the skipchain is not handled correctly
-	- done in development version
-	- 1 day of porting
 - saving the data is done as a big blob - needs a database
 	- needs to rewrite part of the underlying framework
 	- 1 week

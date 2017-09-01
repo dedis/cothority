@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
 DBG_SRV=2
+
+# Have always 3 servers
+NBR=3
+NBR_SERVERS_GROUP=3
 
 . $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
+    mkdir -p cl{1..3}
     buildConode "github.com/dedis/onchain-secrets/service"
 	test Build
 	test Create
-	test RoleCreate
 	test ManageJoin
 	test Write
 	test Read
@@ -20,66 +24,47 @@ main(){
 }
 
 testRead(){
-	setupWlr
-	runGrepSed "Stored file" "s/.* //" runCl 1 write bar2 public.toml
+	setupOCS
+	runGrepSed "Stored file" "s/.* //" runCl 1 write public.toml $READER1_PUB
 	FILE=$SED
-	testOK runCl 2 manage join public.toml $SID $READER
-	testFail runCl 2 read request bar3 $READER
-	runGrepSed "Request-id" "s/.* //" runCl 2 read request bar3 $FILE
-	READREQ=$SED
+	testOK runCl 2 manage join public.toml $SID
+	testFail runCl 2 read $FILE $READER2_PRIV
 	tmp=$( mktemp )
-	testOK runCl 2 read fetch $READREQ $tmp
-	testOK [ $( md5 -q public.toml ) = $( md5 -q $tmp ) ]
+	testOK runCl 2 read -o $tmp $FILE $READER1_PRIV
+	testOK cmp public.toml $tmp
 	rm $tmp
 }
 
 testWrite(){
-	setupWlr
-	testFail runCl 1 write admin public.toml
-	testOK runCl 1 write bar2 public.toml
-	testOK runCl 2 manage join public.toml $SID $WRITER
-	testOK runCl 2 write bar2 public.toml
+	setupOCS
+	testFail runCl 1 write public.toml
+	testOK runCl 1 write public.toml $READER1_PUB
+	testOK runCl 2 manage join public.toml $SID
+	testOK runCl 2 write public.toml $READER2_PUB
 }
 
 testManageJoin(){
-	setupWlr
-	testFail runCl 2 manage join public.toml $SID a7d0124049e3829893cb2b264f93961bb7491032e0dfb56154777a0ca55a5400
-	testGrep "Found admin" runCl 2 manage join public.toml $SID $ADMIN
-	testFail runCl 2 manage join public.toml $SID $WRITER
-	testGrep "Found writer" runCl 2 manage join -overwrite public.toml $SID $WRITER
-	testGrep "Found reader" runCl 2 manage join -overwrite public.toml $SID $READER
+	setupOCS
+	testOK runCl 2 manage join public.toml $SID
 }
 
-setupWlr(){
-	runCoBG 1 2
-	runGrepSed skipchainid "s/.* //" runCl 1 manage create public.toml foo
+setupOCS(){
+	runCoBG 1 2 3
+	runGrepSed skipchainid "s/.* //" runCl 1 manage create public.toml
 	SID=$SED
-	runGrepSed Private "s/.* //" runCl 1 manage role create admin:bar1
-	ADMIN=$SED
-	runGrepSed Private "s/.* //" runCl 1 manage role create writer:bar2
-	WRITER=$SED
-	runGrepSed Private "s/.* //" runCl 1 manage role create reader:bar3
-	READER=$SED
-}
-
-testRoleCreate(){
-	runCoBG 1 2
-	runCl 1 manage create public.toml foo
-	testFail runCl 1 manage role create admin:foo
-	testFail runCl 1 manage role create unknown:bar
-	testOK runCl 1 manage role create admin:bar
-	testOK runCl 1 manage role create writer:foo2
-	testOK runCl 1 manage role create reader:foo3
-	testGrep foo runCl 1 manage role list
-	testGrep bar runCl 1 manage role list
-	testGrep foo2 runCl 1 manage role list
-	testGrep foo3 runCl 1 manage role list
+	READER1=$( runCl 1 keypair )
+    READER1_PRIV=$( echo $READER1 | cut -f 1 -d : )
+    READER1_PUB=$( echo $READER1 | cut -f 2 -d : )
+	READER2=$( runCl 1 keypair )
+    READER2_PRIV=$( echo $READER2 | cut -f 1 -d : )
+    READER2_PUB=$( echo $READER2 | cut -f 2 -d : )
 }
 
 testCreate(){
-       runCoBG 1 2
+       runCoBG 1 2 3
+       cat public.toml
        testFail runCl 1 list
-       testOK runCl 1 manage create public.toml foo
+       testOK runCl 1 manage create public.toml
        testOK runCl 1 list
 }
 

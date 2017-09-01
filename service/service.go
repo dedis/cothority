@@ -10,13 +10,21 @@ import (
 
 	"bytes"
 
-	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/cothority.v1/messaging"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+
+	"sync"
+	"time"
+
+	"math/rand"
+
+	"github.com/dedis/onchain-secrets"
+	"github.com/dedis/onchain-secrets/protocol"
+	"gopkg.in/dedis/crypto.v0/share"
 )
 
 // Used for tests
@@ -27,233 +35,363 @@ const propagationTimeout = 10000
 func init() {
 	network.RegisterMessage(Storage{})
 	var err error
-	templateID, err = onet.RegisterNewService(onchain_secrets.ServiceName, newService)
+	templateID, err = onet.RegisterNewService(ocs.ServiceName, newService)
 	log.ErrFatal(err)
 }
 
-// Service holds all data for the onchain-secrets service
+// Service holds all data for the ocs-service
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*onet.ServiceProcessor
 
-	propagateACL messaging.PropagationFunc
-	propagateDoc messaging.PropagationFunc
+	propagateOCS messaging.PropagationFunc
 
-	Storage *Storage
+	Storage   *Storage
+	saveMutex sync.Mutex
 }
 
-// Storage holds the skipblock-bunches for the ACL- and Doc-skipchains.
+// Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
-	ACLs *onchain_secrets.SBBStorage
-	Docs *onchain_secrets.SBBStorage
+	OCSs   *ocs.SBBStorage
+	Shared map[string]*protocol.SharedSecret
 }
 
-// CreateSkipchains sets up a new pair of ACL/Doc-skipchain.
-func (s *Service) CreateSkipchains(req *onchain_secrets.CreateSkipchainsRequest) (reply *onchain_secrets.CreateSkipchainsReply,
+// CreateSkipchains sets up a new OCS-skipchain.
+func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs.CreateSkipchainsReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Creating ACL-skipchain")
 
+	// Create OCS-skipchian
 	c := skipchain.NewClient()
-	reply = &onchain_secrets.CreateSkipchainsReply{}
-	reply.ACL, cerr = c.CreateGenesis(req.Roster, 4, 4, onchain_secrets.VerificationOCSACL, req.ACL, nil)
+	reply = &ocs.CreateSkipchainsReply{}
+
+	log.Lvl2("Creating OCS-skipchain")
+	ocsData := &ocs.DataOCS{}
+	reply.OCS, cerr = c.CreateGenesis(req.Roster, 1, 1, ocs.VerificationOCS, ocsData, nil)
 	if cerr != nil {
-		return
+		return nil, cerr
+	}
+	replies, err := s.propagateOCS(req.Roster, reply.OCS, propagationTimeout)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+	}
+	if replies != len(req.Roster.List) {
+		log.Warn("Got only", replies, "replies for ocs-propagation")
 	}
 
-	log.Lvl2("Creating Doc-skipchain")
-	docData := &onchain_secrets.DataOCS{
-		Config: &onchain_secrets.DataOCSConfig{
-			ACL: reply.ACL.SkipChainID(),
-		},
+	// Do DKG on the nodes
+	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
+	pi, err := s.CreateProtocol(protocol.NameDKG, tree)
+	setupDKG := pi.(*protocol.SetupDKG)
+	setupDKG.Wait = true
+	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
+	//log.Print(s.ServerIdentity(), reply.OCS.Hash)
+	if err := pi.Start(); err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
-	reply.Doc, cerr = c.CreateGenesis(req.Roster, 4, 4, onchain_secrets.VerificationOCSDoc, docData, nil)
-	replies, err := s.propagateACL(req.Roster, reply.ACL, propagationTimeout)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
+	log.Lvl3("Started DKG-protocol - waiting for done")
+	select {
+	case <-setupDKG.Done:
+		shared, err := setupDKG.SharedSecret()
+		if err != nil {
+			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		}
+		s.saveMutex.Lock()
+		s.Storage.Shared[string(reply.OCS.Hash)] = shared
+		s.saveMutex.Unlock()
+		reply.X = shared.X
+	case <-time.After(propagationTimeout * time.Millisecond):
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
+			"dkg didn't finish in time")
 	}
-	if replies != len(req.Roster.List) {
-		log.Warn("Got only", replies, "replies for acl-propagation")
-	}
-	replies, err = s.propagateDoc(req.Roster, reply.Doc, propagationTimeout)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
-	}
-	if replies != len(req.Roster.List) {
-		log.Warn("Got only", replies, "replies for doc-propagation")
-	}
-	s.save()
+
 	return
 }
 
-// EvolveACL adds a new block to the ACL-skipchain.
-func (s *Service) EvolveACL(req *onchain_secrets.EvolveACLRequest) (reply *onchain_secrets.EvolveACLReply,
+// WriteRequest adds a block the OCS-skipchain with a new file.
+func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Evolving ACL")
-	reply = &onchain_secrets.EvolveACLReply{}
-	bunch := s.Storage.ACLs.GetBunch(req.ACL)
-	if bunch == nil {
-		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find acl")
-		return
+	reply = &ocs.WriteReply{}
+	s.saveMutex.Lock()
+	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
+	s.saveMutex.Unlock()
+	if ocsBunch == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find that bunch")
 	}
-	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(bunch, nil, req.NewAcls)
+	block := ocsBunch.GetByID(req.OCS)
+	if block == nil {
+		log.Error("not")
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
+	}
+	data := &ocs.DataOCS{
+		Write:   req.Write,
+		Readers: req.Readers,
+	}
+
+	i := 1
+	for {
+		reply.SB, cerr = s.BunchAddBlock(ocsBunch, block.Roster, data)
+		if cerr == nil {
+			break
+		}
+		if cerr.ErrorCode() == skipchain.ErrorBlockInProgress {
+			log.Lvl2("Waiting for block to be propagated...")
+			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
+			i++
+		} else {
+			return nil, cerr
+		}
+	}
+
+	log.Lvl2("Writing a key to the skipchain")
 	if cerr != nil {
+		log.Error(cerr)
 		return
 	}
 
-	replies, err := s.propagateACL(bunch.Latest.Roster, reply.SB, propagationTimeout)
+	replies, err := s.propagateOCS(ocsBunch.Latest.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
+		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		return
 	}
-	if replies != len(bunch.Latest.Roster.List) {
-		log.Warn("Got only", replies, "replies for acl-propagation")
-	}
-	return
-}
-
-// WriteRequest adds a block the Doc-skipchain with a new file.
-func (s *Service) WriteRequest(req *onchain_secrets.WriteRequest) (reply *onchain_secrets.WriteReply,
-	cerr onet.ClientError) {
-	log.Lvl2("Writing a file to the skipchain")
-	reply = &onchain_secrets.WriteReply{}
-	docBunch := s.Storage.Docs.GetBunch(req.Doc)
-	doc := docBunch.GetByID(req.Doc)
-	if doc == nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find doc-skipchain")
-	}
-	data := &onchain_secrets.DataOCS{
-		Write: req.Write,
-	}
-	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(docBunch, doc.Roster, data)
-	if cerr != nil {
-		return
-	}
-
-	replies, err := s.propagateDoc(docBunch.Latest.Roster, reply.SB, propagationTimeout)
-	if err != nil {
-		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
-		return
-	}
-	if replies != len(docBunch.Latest.Roster.List) {
+	if replies != len(ocsBunch.Latest.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
 	return
 }
 
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
-func (s *Service) ReadRequest(req *onchain_secrets.ReadRequest) (reply *onchain_secrets.ReadReply,
+func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Requesting a file. Reader:", req.Read.Pseudonym)
-	reply = &onchain_secrets.ReadReply{}
-	docBunch := s.Storage.Docs.GetBunch(req.Doc)
-	doc := docBunch.GetByID(req.Doc)
-	if doc == nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "Didn't find doc-skipchain")
+	log.Lvl2("Requesting a file. Reader:", req.Read.Public)
+	reply = &ocs.ReadReply{}
+	s.saveMutex.Lock()
+	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
+	s.saveMutex.Unlock()
+	if ocsBunch == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find that block")
 	}
-	data := &onchain_secrets.DataOCS{
+	block := ocsBunch.GetByID(req.OCS)
+	if block == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
+	}
+	data := &ocs.DataOCS{
 		Read: req.Read,
 	}
-	reply.SB, cerr = onchain_secrets.NewClient().BunchAddBlock(docBunch, doc.Roster, data)
-	if cerr != nil {
-		return
+
+	i := 1
+	for {
+		reply.SB, cerr = s.BunchAddBlock(ocsBunch, block.Roster, data)
+		if cerr == nil {
+			break
+		}
+		if cerr.ErrorCode() == skipchain.ErrorBlockInProgress {
+			log.Lvl2("Waiting for block to be propagated...")
+			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
+			i++
+		} else {
+			return nil, cerr
+		}
 	}
 
-	replies, err := s.propagateDoc(docBunch.Latest.Roster, reply.SB, propagationTimeout)
+	replies, err := s.propagateOCS(ocsBunch.Latest.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(onchain_secrets.ErrorProtocol, err.Error())
+		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		return
 	}
-	if replies != len(docBunch.Latest.Roster.List) {
+	if replies != len(ocsBunch.Latest.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
 	return
 }
 
 // GetReadRequests returns up to a maximum number of read-requests.
-func (s *Service) GetReadRequests(req *onchain_secrets.GetReadRequests) (reply *onchain_secrets.GetReadRequestsReply, cerr onet.ClientError) {
-	reply = &onchain_secrets.GetReadRequestsReply{}
-	current := s.Storage.Docs.GetByID(req.Start)
+func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadRequestsReply, cerr onet.ClientError) {
+	reply = &ocs.GetReadRequestsReply{}
+	s.saveMutex.Lock()
+	current := s.Storage.OCSs.GetByID(req.Start)
+	s.saveMutex.Unlock()
+	log.Lvlf2("Asking read-requests on writeID: %x", req.Start)
+
 	if current == nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "didn't find starting skipblock")
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find starting skipblock")
 	}
-	for len(reply.Documents) < req.Count {
+	var doc skipchain.SkipBlockID
+	if req.Count == 0 {
+		dataOCS := ocs.NewDataOCS(current.Data)
+		if dataOCS == nil || dataOCS.Write == nil {
+			log.Error("Didn't find this writeID")
+			return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
+				"id is not a writer-block")
+		}
+		log.Lvl2("Got first block")
+		doc = current.Hash
+	}
+	for req.Count == 0 || len(reply.Documents) < req.Count {
 		// Search next read-request
-		_, ddoci, err := network.Unmarshal(current.Data)
-		if err == nil && ddoci != nil {
-			ddoc, ok := ddoci.(*onchain_secrets.DataOCS)
+		_, docsi, err := network.Unmarshal(current.Data)
+		if err == nil && docsi != nil {
+			dataOCS, ok := docsi.(*ocs.DataOCS)
 			if !ok {
-				return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter,
-					"unknown block in doc-skipchain")
+				return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
+					"unknown block in ocs-skipchain")
 			}
-			if ddoc.Read != nil {
-				doc := &onchain_secrets.ReadDoc{
-					Reader: ddoc.Read.Pseudonym,
-					ReadID: current.Hash,
-					FileID: ddoc.Read.File,
+			if dataOCS.Read != nil {
+				if req.Count == 0 && !dataOCS.Read.File.Equal(doc) {
+					log.Lvl3("count == 0 and not interesting read found")
+					continue
 				}
+				doc := &ocs.ReadDoc{
+					Reader: dataOCS.Read.Public,
+					ReadID: current.Hash,
+					FileID: dataOCS.Read.File,
+				}
+				log.Lvl2("Found read-request from", doc.Reader)
 				reply.Documents = append(reply.Documents, doc)
 			}
 		}
 		if len(current.ForwardLink) > 0 {
-			current = s.Storage.Docs.GetFromGenesisByID(current.SkipChainID(),
+			s.saveMutex.Lock()
+			current = s.Storage.OCSs.GetFromGenesisByID(current.SkipChainID(),
 				current.ForwardLink[0].Hash)
+			s.saveMutex.Unlock()
 		} else {
 			log.Lvl3("No forward-links, stopping")
 			break
 		}
 	}
-	log.Lvl3("Found", len(reply.Documents), "out of a maximum of", req.Count, "documents.")
+	log.Lvlf2("WriteID %x: found %d out of a maximum of %d documents", req.Start, len(reply.Documents), req.Count)
 	return
 }
 
-// EncryptKeyRequest - TODO: Return the public secret key for encryption
-// The returned value should be something that the client can use to encrypt his
-// key, so that a reader can use DecryptKeyRequest in order to get the key
-// encrypted under the reader's keypair.
-func (s *Service) EncryptKeyRequest(req *onchain_secrets.EncryptKeyRequest) (reply *onchain_secrets.EncryptKeyReply,
-	cerr onet.ClientError) {
-	reply = &onchain_secrets.EncryptKeyReply{}
-	log.Lvl2("Return the public shared secret")
-	return
-}
-
-// DecryptKeyRequest - TODO: Re-encrypt under the public key of the reader
-// This should return the key encrypted under the public-key of the reader, so
-// that the reader can use his private key to decrypt the file-key.
-func (s *Service) DecryptKeyRequest(req *onchain_secrets.DecryptKeyRequest) (reply *onchain_secrets.DecryptKeyReply,
-	cerr onet.ClientError) {
-	reply = &onchain_secrets.DecryptKeyReply{
-		KeyParts: []*onchain_secrets.ElGamal{},
+// GetSharedPublic returns the shared public key of a skipchain.
+func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedPublicReply, error onet.ClientError) {
+	s.saveMutex.Lock()
+	shared, ok := s.Storage.Shared[string(req.Genesis)]
+	s.saveMutex.Unlock()
+	if !ok {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find this skipchain")
 	}
+	return &ocs.SharedPublicReply{X: shared.X}, nil
+}
+
+// DecryptKeyRequest re-encrypts the stored symmetric key under the public
+// key of the read-request. Once the read-request is on the skipchain, it is
+// not necessary to check its validity again.
+func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.DecryptKeyReply,
+	cerr onet.ClientError) {
+	reply = &ocs.DecryptKeyReply{}
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
-	readSB := s.Storage.Docs.GetByID(req.Read)
-	read := onchain_secrets.NewDataOCS(readSB.Data)
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
+	readSB := s.Storage.OCSs.GetByID(req.Read)
+	read := ocs.NewDataOCS(readSB.Data)
 	if read == nil || read.Read == nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "This is not a read-block")
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "This is not a read-block")
 	}
-	fileSB := s.Storage.Docs.GetByID(read.Read.File)
-	file := onchain_secrets.NewDataOCS(fileSB.Data)
+	fileSB := s.Storage.OCSs.GetByID(read.Read.File)
+	file := ocs.NewDataOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
-		return nil, onet.NewClientErrorCode(onchain_secrets.ErrorParameter, "File-block is broken")
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "File-block is broken")
 	}
 
-	// Use multiple Elgamal-encryptions for the key-parts, as they might not
-	// fit inside.
-	remainder := file.Write.Key
-	var eg *onchain_secrets.ElGamal
-	for len(remainder) > 0 {
-		eg, remainder = onchain_secrets.ElGamalEncrypt(network.Suite, read.Read.Public, remainder)
-		reply.KeyParts = append(reply.KeyParts, eg)
+	// Start OCS-protocol to re-encrypt the file's symmetric key under the
+	// reader's public key.
+	nodes := len(fileSB.Roster.List)
+	tree := fileSB.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
+	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
+	ocsProto := pi.(*protocol.OCS)
+	ocsProto.U = file.Write.U
+	ocsProto.Xc = read.Read.Public
+	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
+	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
+	err = ocsProto.Start()
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+	}
+	log.Lvl3("Waiting for end of ocs-protocol")
+	<-ocsProto.Done
+	reply.XhatEnc, err = share.RecoverCommit(network.Suite, ocsProto.Uis,
+		nodes-1, nodes)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+	}
+	reply.Cs = file.Write.Cs
+	reply.X = s.Storage.Shared[string(fileSB.GenesisID)].X
 	return
+}
+
+// GetBunches returns all defined bunches in this conode.
+func (s *Service) GetBunches(req *ocs.GetBunchRequest) (reply *ocs.GetBunchReply, cerr onet.ClientError) {
+	reply = &ocs.GetBunchReply{}
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
+	for _, b := range s.Storage.OCSs.Bunches {
+		reply.Bunches = append(reply.Bunches, b.GetByID(b.GenesisID))
+	}
+	return reply, nil
+}
+
+// NewProtocol intercepts the DKG and OCS protocols to retrieve the values
+func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
+	//log.Print(s.ServerIdentity(), tn.ProtocolName(), conf)
+	switch tn.ProtocolName() {
+	case protocol.NameDKG:
+		pi, err := protocol.NewSetupDKG(tn)
+		if err != nil {
+			return nil, err
+		}
+		setupDKG := pi.(*protocol.SetupDKG)
+		go func(conf *onet.GenericConfig) {
+			<-setupDKG.Done
+			shared, err := setupDKG.SharedSecret()
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			log.Lvl3(s.ServerIdentity(), "Got shared", shared)
+			//log.Print(conf)
+			s.saveMutex.Lock()
+			s.Storage.Shared[string(conf.Data)] = shared
+			s.saveMutex.Unlock()
+		}(conf)
+		return pi, nil
+	case protocol.NameOCS:
+		s.saveMutex.Lock()
+		shared, ok := s.Storage.Shared[string(conf.Data)]
+		s.saveMutex.Unlock()
+		if !ok {
+			return nil, errors.New("didn't find skipchain")
+		}
+		pi, err := protocol.NewOCS(tn)
+		if err != nil {
+			return nil, err
+		}
+		ocs := pi.(*protocol.OCS)
+		ocs.Shared = shared
+		return ocs, nil
+	}
+	return nil, nil
 }
 
 // saves the actual identity
 func (s *Service) save() {
-	log.Lvl3("Saving service")
+	log.Lvl3(s.String(), "Saving service")
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
+	s.Storage.OCSs.Lock()
+	defer s.Storage.OCSs.Unlock()
+	for _, b := range s.Storage.OCSs.Bunches {
+		b.Lock()
+	}
 	err := s.Save("storage", s.Storage)
+	for _, b := range s.Storage.OCSs.Bunches {
+		b.Unlock()
+	}
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -262,6 +400,8 @@ func (s *Service) save() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	if !s.DataAvailable("storage") {
 		return nil
 	}
@@ -278,120 +418,64 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
-func (s *Service) verifyACL(newID []byte, sb *skipchain.SkipBlock) bool {
-	log.Lvl3(s.ServerIdentity(), "Verifying ACL")
-	if sb.Index == 0 {
-		log.Lvl3("Genesis-block")
-		return true
-	}
-	_, aclI, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		log.Lvl3("couldn't unmarshal data")
-		return false
-	}
-	acl, ok := aclI.(*onchain_secrets.DataACLEvolve)
-	if !ok {
-		log.Lvl3("Not correct acl")
-		return false
-	}
-	prev := s.Storage.ACLs.GetByID(sb.BackLinkIDs[0])
-	if prev == nil {
-		log.Lvl3("No valid backlink")
-		return false
-	}
-
-	_, prevACLI, err := network.Unmarshal(prev.Data)
-	if err != nil {
-		log.Lvl3("Couldn't unmarshal data")
-		return false
-	}
-	prevACL, ok := prevACLI.(*onchain_secrets.DataACLEvolve)
-	if !ok {
-		log.Lvl3("Not correct acl")
-		return false
-	}
-	log.Lvlf3("Found signature %s", acl.Signature)
-	for _, a := range prevACL.ACL.Admins.List {
-		log.Lvlf3("Verifying admin %s/%s", a.Pseudonym, a.Public)
-		if acl.VerifySig(prev, a.Public) == nil {
-			log.Lvl3("Found signature by", a.Pseudonym)
-			return true
-		}
-	}
-	log.Lvl3("Didn't find correct signature")
-	return false
-}
-func (s *Service) verifyDoc(newID []byte, sb *skipchain.SkipBlock) bool {
-	log.Lvl3(s.ServerIdentity(), "Verifying Doc")
-	ocs := onchain_secrets.NewDataOCS(sb.Data)
-	if ocs == nil {
+func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
+	log.Lvl3(s.ServerIdentity(), "Verifying ocs")
+	dataOCS := ocs.NewDataOCS(sb.Data)
+	if dataOCS == nil {
 		log.Lvl3("Didn't find ocs")
 		return false
 	}
-	if ocs.Config != nil {
-		// Only accept config in genesis-block
-		if sb.Index > 0 {
-			log.Lvl3("Config-block in non-genesis block")
-			return false
-		}
-	}
-	genesis := s.Storage.Docs.GetFromGenesisByID(sb.SkipChainID(), sb.SkipChainID())
+	s.saveMutex.Lock()
+	genesis := s.Storage.OCSs.GetFromGenesisByID(sb.SkipChainID(), sb.SkipChainID())
+	s.saveMutex.Unlock()
 	if genesis == nil {
 		log.Lvl3("No genesis-block")
 		return false
 	}
-	ocsData := onchain_secrets.NewDataOCS(genesis.Data)
+	ocsData := ocs.NewDataOCS(genesis.Data)
 	if ocsData == nil {
 		log.Lvl3("No ocs-data in genesis-block")
 		return false
 	}
 
-	aclBunch := s.Storage.ACLs.GetBunch(ocsData.Config.ACL)
-	if aclBunch == nil {
-		log.Lvl3("Didn't find corresponding acl-bunch")
-		return false
-	}
-	_, aclEvolveInt, err := network.Unmarshal(aclBunch.Latest.Data)
-	if err != nil {
-		log.Error(err)
-		return false
-	}
-	aclEvolve, ok := aclEvolveInt.(*onchain_secrets.DataACLEvolve)
-	if !ok {
-		log.Lvl3("Didn't find ACL")
-		return false
-	}
-	acl := aclEvolve.ACL
-	if write := ocs.Write; write != nil {
+	if write := dataOCS.Write; write != nil {
 		// Write has to check if the signature comes from a valid writer.
-		log.Lvl3("It's a write", acl.Writers)
-		for _, w := range acl.Writers.List {
-			if crypto.VerifySchnorr(network.Suite, w.Public, write.Key, *write.Signature) == nil {
-				return true
-			}
-		}
-		return false
-	} else if read := ocs.Read; read != nil {
+		log.Lvl3("No writing-checking yet")
+		return true
+	} else if read := dataOCS.Read; read != nil {
 		// Read has to check that it's a valid reader
 		log.Lvl3("It's a read")
 		// Search file
-		found := false
-		for _, sb := range s.Storage.Docs.GetBunch(genesis.Hash).SkipBlocks {
-			wd := onchain_secrets.NewDataOCS(sb.Data)
+		var writeBlock *ocs.DataOCSWrite
+		var readersBlock *ocs.DataOCSReaders
+		for _, sb := range s.Storage.OCSs.GetBunch(genesis.Hash).SkipBlocks {
+			wd := ocs.NewDataOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
 				if bytes.Compare(sb.Hash, read.File) == 0 {
-					found = true
+					writeBlock = wd.Write
+					readersBlock = wd.Readers
 					break
 				}
 			}
 		}
-		if found == false {
+		if writeBlock == nil {
 			log.Lvl3("Didn't find file")
 			return false
 		}
-		for _, w := range acl.Readers.List {
-			if crypto.VerifySchnorr(network.Suite, w.Public, read.File, *read.Signature) == nil {
-				log.Lvl3("OK for file")
+		if len(writeBlock.Readers) > 0 {
+			log.Error("Reader-ids not yet supported")
+			return false
+		}
+		if readersBlock == nil {
+			log.Error("Found empty readers-block")
+			return false
+		}
+		for _, pk := range readersBlock.Readers {
+			err := crypto.VerifySchnorr(network.Suite, pk, read.File, *read.Signature)
+			if err != nil {
+				log.Lvl3("Didn't find signature:", err)
+			} else {
+				log.Lvl2("Found valid signature from public key", pk)
 				return true
 			}
 		}
@@ -400,13 +484,15 @@ func (s *Service) verifyDoc(newID []byte, sb *skipchain.SkipBlock) bool {
 	return false
 }
 
-func (s *Service) propagateACLFunc(sbI network.Message) {
-	sb := sbI.(*skipchain.SkipBlock)
-	s.Storage.ACLs.Store(sb)
-}
-func (s *Service) propagateDocFunc(sbI network.Message) {
-	sb := sbI.(*skipchain.SkipBlock)
-	s.Storage.Docs.Store(sb)
+func (s *Service) propagateOCSFunc(sbI network.Message) {
+	sb, ok := sbI.(*skipchain.SkipBlock)
+	if !ok {
+		log.Error("got something else than a skipblock")
+		return
+	}
+	s.saveMutex.Lock()
+	s.Storage.OCSs.Store(sb)
+	s.saveMutex.Unlock()
 	if sb.Index == 0 {
 		return
 	}
@@ -416,9 +502,33 @@ func (s *Service) propagateDocFunc(sbI network.Message) {
 		if cerr != nil {
 			log.Error(cerr)
 		} else {
-			s.Storage.Docs.Store(sbNew)
+			s.saveMutex.Lock()
+			s.Storage.OCSs.Store(sbNew)
+			s.saveMutex.Unlock()
 		}
 	}
+	s.save()
+}
+
+// BunchAddBlock adds a block to the latest block from the bunch. If the block
+// doesn't have a roster set, it will be copied from the last block.
+func (s *Service) BunchAddBlock(bunch *ocs.SkipBlockBunch, r *onet.Roster, data interface{}) (*skipchain.SkipBlock, onet.ClientError) {
+	s.saveMutex.Lock()
+	latest := bunch.Latest.Copy()
+	s.saveMutex.Unlock()
+	reply, err := skipchain.NewClient().StoreSkipBlock(latest, r, data)
+	if err != nil {
+		return nil, err
+	}
+	sbNew := reply.Latest
+	s.saveMutex.Lock()
+	id := bunch.Store(sbNew)
+	s.saveMutex.Unlock()
+	if id == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
+			"Couldn't add block to bunch")
+	}
+	return sbNew, nil
 }
 
 // newTemplate receives the context and a path where it can write its
@@ -428,21 +538,19 @@ func newService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
-			ACLs: onchain_secrets.NewSBBStorage(),
-			Docs: onchain_secrets.NewSBBStorage(),
+			OCSs:   ocs.NewSBBStorage(),
+			Shared: map[string]*protocol.SharedSecret{},
 		},
 	}
-	if err := s.RegisterHandlers(s.CreateSkipchains, s.EvolveACL,
+	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
-		s.EncryptKeyRequest, s.DecryptKeyRequest); err != nil {
+		s.DecryptKeyRequest, s.SharedPublic,
+		s.GetBunches); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
-	skipchain.RegisterVerification(c, onchain_secrets.VerifyOCSACL, s.verifyACL)
-	skipchain.RegisterVerification(c, onchain_secrets.VerifyOCSDoc, s.verifyDoc)
+	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)
 	var err error
-	s.propagateACL, err = messaging.NewPropagationFunc(c, "OCSPropagateAcl", s.propagateACLFunc)
-	log.ErrFatal(err)
-	s.propagateDoc, err = messaging.NewPropagationFunc(c, "OCSPropagateDoc", s.propagateDocFunc)
+	s.propagateOCS, err = messaging.NewPropagationFunc(c, "PropagateOCS", s.propagateOCSFunc)
 	log.ErrFatal(err)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

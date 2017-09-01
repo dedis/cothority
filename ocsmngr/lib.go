@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/cothority.v1/skipchain"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
@@ -19,9 +20,8 @@ func init() {
 }
 
 type ocsConfig struct {
-	ACLBunch *onchain_secrets.SkipBlockBunch
-	DocBunch *onchain_secrets.SkipBlockBunch
-	Roles    *onchain_secrets.Credentials
+	Bunch *ocs.SkipBlockBunch
+	Roles *ocs.Credentials
 }
 
 // loadConfig will try to load the configuration and `fatal` if it is there but
@@ -46,7 +46,7 @@ func loadConfig(c *cli.Context) (cfg *ocsConfig, loaded bool) {
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}
-	if cfg.ACLBunch == nil || cfg.DocBunch == nil {
+	if cfg.Bunch == nil {
 		log.Fatal("Identity doesn't hold skipblock")
 	}
 	return
@@ -78,58 +78,20 @@ func (cfg *ocsConfig) saveConfig(c *cli.Context) error {
 	return ioutil.WriteFile(configFile, buf, 0660)
 }
 
-// Gets the admin-role
-func (cfg *ocsConfig) Admin() *onchain_secrets.Credential {
-	acls := cfg.Acls()
-	for _, c := range cfg.Roles.List {
-		if a := acls.Admins.SearchPseudo(c.Pseudonym); a != nil && a.Public.Equal(c.Public) {
-			return c
-		}
-	}
-	return nil
-}
-
-// Gets the latest acls
-func (cfg *ocsConfig) Acls() *onchain_secrets.DataACL {
-	_, aclI, err := network.Unmarshal(cfg.ACLBunch.Latest.Data)
-	if err != nil {
-		return nil
-	}
-	aclsE, ok := aclI.(*onchain_secrets.DataACLEvolve)
-	if !ok {
-		return nil
-	}
-	acls := aclsE.ACL
-	if acls.Admins == nil {
-		acls.Admins = &onchain_secrets.Credentials{}
-	}
-	if acls.Writers == nil {
-		acls.Writers = &onchain_secrets.Credentials{}
-	}
-	if acls.Readers == nil {
-		acls.Readers = &onchain_secrets.Credentials{}
-	}
-	return acls
-}
-
 // StoreFile asks the skipchain to store the given file.
-func (cfg *ocsConfig) StoreFile(writer, file string) (sb *skipchain.SkipBlock, err error) {
-	cred := cfg.Roles.SearchPseudo(writer)
-	if cred == nil {
-		return nil, errors.New("Didn't find writer: " + writer)
-	}
+func (cfg *ocsConfig) StoreFile(file string, readers []abstract.Point) (sb *skipchain.SkipBlock, err error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return
 	}
 	log.ErrFatal(err)
-	sb, err = onchain_secrets.NewClient().EncryptAndWriteRequest(cfg.DocBunch.Latest, data, cred)
+	sb, err = ocs.NewClient().EncryptAndWriteRequest(cfg.Bunch.Latest, data, readers)
 	return
 }
 
-// CreateDocBunch returns the Doc-bunch from a slice of skipblocks and does some basic
+// CreateBunch returns the OCS-bunch from a slice of skipblocks and does some basic
 // tests.
-func CreateDocBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*onchain_secrets.SkipBlockBunch, error) {
+func CreateBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*ocs.SkipBlockBunch, error) {
 	cl := skipchain.NewClient()
 	sbsReply, err := cl.GetUpdateChain(roster, sid)
 	if err != nil {
@@ -140,48 +102,13 @@ func CreateDocBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*onchain_se
 		return nil, errors.New("Didn't find skipchain or it is empty")
 	}
 	genesis := sbs[0]
-	if genesis.VerifierIDs[1] != onchain_secrets.VerificationOCSDoc[1] {
+	if genesis.VerifierIDs[1] != ocs.VerificationOCS[1] {
 		return nil, errors.New("This is not a Doc-skipchain")
 	}
 	if genesis.Index != 0 {
 		return nil, errors.New("This is not the genesis-block")
 	}
-	dataOCS := onchain_secrets.NewDataOCS(genesis.Data)
-	if dataOCS == nil {
-		return nil, errors.New("Data is not dataOCS")
-	}
-	if dataOCS.Config == nil {
-		return nil, errors.New("Configuration of genesis-block should be non-nil")
-	}
-	bunch := onchain_secrets.NewSkipBlockBunch(genesis)
-	for _, sb := range sbs[1:] {
-		if bunch.Store(sb) == nil {
-			return nil, errors.New("Error in Skipchain")
-		}
-	}
-	return bunch, nil
-}
-
-// CreateACLBunch returns the ACL-bunch from a slice of skipblocks and does some basic
-// tests.
-func CreateACLBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*onchain_secrets.SkipBlockBunch, error) {
-	cl := skipchain.NewClient()
-	sbsReply, err := cl.GetUpdateChain(roster, sid)
-	if err != nil {
-		return nil, err
-	}
-	sbs := sbsReply.Update
-	if len(sbs) == 0 {
-		return nil, errors.New("Didn't find skipchain or it is empty")
-	}
-	genesis := sbs[0]
-	if genesis.VerifierIDs[1] != onchain_secrets.VerificationOCSACL[1] {
-		return nil, errors.New("This is not a ACL-skipchain")
-	}
-	if genesis.Index != 0 {
-		return nil, errors.New("This is not the genesis-block")
-	}
-	bunch := onchain_secrets.NewSkipBlockBunch(genesis)
+	bunch := ocs.NewSkipBlockBunch(genesis)
 	for _, sb := range sbs[1:] {
 		if bunch.Store(sb) == nil {
 			return nil, errors.New("Error in Skipchain")
