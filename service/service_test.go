@@ -101,7 +101,7 @@ func initTest(nbrNodes, step int) *test {
 			t.reader = config.NewKeyPair(network.Suite)
 			wr := &ocs.WriteRequest{
 				Write: &ocs.DataOCSWrite{
-					File:    []byte{},
+					Data:    []byte{},
 					U:       t.U,
 					Cs:      t.Cs,
 					Readers: []byte{},
@@ -121,7 +121,7 @@ func initTest(nbrNodes, step int) *test {
 			read := &ocs.ReadRequest{
 				Read: &ocs.DataOCSRead{
 					Public:    t.reader.Public,
-					File:      t.writeReply.SB.Hash,
+					DataID:    t.writeReply.SB.Hash,
 					Signature: &sig,
 				},
 				OCS: t.createReply.OCS.Hash,

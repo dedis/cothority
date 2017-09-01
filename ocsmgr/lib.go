@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/dedis/onchain-secrets"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -19,7 +17,7 @@ func init() {
 }
 
 type ocsConfig struct {
-	Bunch *ocs.SkipBlockBunch
+	SkipChainURL *ocs.SkipChainURL
 }
 
 // loadConfig will try to load the configuration and `fatal` if it is there but
@@ -44,7 +42,7 @@ func loadConfig(c *cli.Context) (cfg *ocsConfig, loaded bool) {
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
 	}
-	if cfg.Bunch == nil {
+	if cfg.SkipChainURL == nil {
 		log.Fatal("Identity doesn't hold skipblock")
 	}
 	return
@@ -74,34 +72,6 @@ func (cfg *ocsConfig) saveConfig(c *cli.Context) error {
 	}
 	log.Lvl2("Saving to", configFile)
 	return ioutil.WriteFile(configFile, buf, 0660)
-}
-
-// CreateBunch returns the OCS-bunch from a slice of skipblocks and does some basic
-// tests.
-func CreateBunch(roster *onet.Roster, sid skipchain.SkipBlockID) (*ocs.SkipBlockBunch, error) {
-	cl := skipchain.NewClient()
-	sbsReply, err := cl.GetUpdateChain(roster, sid)
-	if err != nil {
-		return nil, err
-	}
-	sbs := sbsReply.Update
-	if len(sbs) == 0 {
-		return nil, errors.New("Didn't find skipchain or it is empty")
-	}
-	genesis := sbs[0]
-	if genesis.VerifierIDs[1] != ocs.VerificationOCS[1] {
-		return nil, errors.New("This is not a Doc-skipchain")
-	}
-	if genesis.Index != 0 {
-		return nil, errors.New("This is not the genesis-block")
-	}
-	bunch := ocs.NewSkipBlockBunch(genesis)
-	for _, sb := range sbs[1:] {
-		if bunch.Store(sb) == nil {
-			return nil, errors.New("Error in Skipchain")
-		}
-	}
-	return bunch, nil
 }
 
 // Returns the config-file from the configuration

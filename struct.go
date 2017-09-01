@@ -49,6 +49,22 @@ const (
 	ErrorProtocol
 )
 
+// SkipChainURL represents a skipchain. It needs to know the roster of the
+// responsible nodes, and the hash of the genesis-block, which is the ID
+// of the Skipchain.
+type SkipChainURL struct {
+	Roster  *onet.Roster
+	Genesis skipchain.SkipBlockID
+}
+
+// NewSkipChainURL returns a SkipChainURL from a skipblock.
+func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
+	return &SkipChainURL{
+		Roster:  sb.Roster,
+		Genesis: sb.SkipChainID(),
+	}
+}
+
 // DataOCS holds eihter:
 // - a read request
 // - a write
@@ -87,17 +103,17 @@ func (dw *DataOCS) String() string {
 		return "nil-pointer"
 	}
 	if dw.Write != nil {
-		return fmt.Sprintf("Write: file-length of %d", len(dw.Write.File))
+		return fmt.Sprintf("Write: data-length of %d", len(dw.Write.Data))
 	}
 	if dw.Read != nil {
-		return fmt.Sprintf("Read: %s read file %x", dw.Read.Public, dw.Read.File)
+		return fmt.Sprintf("Read: %s read data %x", dw.Read.Public, dw.Read.DataID)
 	}
 	return "all nil DataOCS"
 }
 
-// DataOCSWrite stores the file and the encrypted secret
+// DataOCSWrite stores the data and the encrypted secret
 type DataOCSWrite struct {
-	File []byte
+	Data []byte
 	U    abstract.Point
 	Cs   []abstract.Point
 	// Readers is the ID of the DataOCSReaders block. If it is nil, then the
@@ -118,11 +134,11 @@ type DataOCSReaders struct {
 }
 
 // DataOCSRead stores a read-request which is the secret encrypted under the
-// pseudonym's public key. The File is the skipblock-id of the skipblock
-// holding the file.
+// pseudonym's public key. The Data is the skipblock-id of the skipblock
+// holding the data.
 type DataOCSRead struct {
 	Public    abstract.Point
-	File      skipchain.SkipBlockID
+	DataID    skipchain.SkipBlockID
 	Signature *crypto.SchnorrSig
 }
 
@@ -130,7 +146,7 @@ type DataOCSRead struct {
 type ReadDoc struct {
 	Reader abstract.Point
 	ReadID skipchain.SkipBlockID
-	FileID skipchain.SkipBlockID
+	DataID skipchain.SkipBlockID
 }
 
 // Requests and replies to/from the service
@@ -146,7 +162,7 @@ type CreateSkipchainsReply struct {
 	X   abstract.Point
 }
 
-// WriteRequest asks the OCS-skipchain to store a new file on the skipchain.
+// WriteRequest asks the OCS-skipchain to store data on the skipchain.
 // Readers can be empty if Write points to a valid reader.
 type WriteRequest struct {
 	Write   *DataOCSWrite

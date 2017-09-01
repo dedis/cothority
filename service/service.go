@@ -237,14 +237,14 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 					"unknown block in ocs-skipchain")
 			}
 			if dataOCS.Read != nil {
-				if req.Count == 0 && !dataOCS.Read.File.Equal(doc) {
+				if req.Count == 0 && !dataOCS.Read.DataID.Equal(doc) {
 					log.Lvl3("count == 0 and not interesting read found")
 					continue
 				}
 				doc := &ocs.ReadDoc{
 					Reader: dataOCS.Read.Public,
 					ReadID: current.Hash,
-					FileID: dataOCS.Read.File,
+					DataID: dataOCS.Read.DataID,
 				}
 				log.Lvl2("Found read-request from", doc.Reader)
 				reply.Documents = append(reply.Documents, doc)
@@ -290,10 +290,10 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	if read == nil || read.Read == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "This is not a read-block")
 	}
-	fileSB := s.Storage.OCSs.GetByID(read.Read.File)
+	fileSB := s.Storage.OCSs.GetByID(read.Read.DataID)
 	file := ocs.NewDataOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "File-block is broken")
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Data-block is broken")
 	}
 
 	// Start OCS-protocol to re-encrypt the file's symmetric key under the
@@ -451,7 +451,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		for _, sb := range s.Storage.OCSs.GetBunch(genesis.Hash).SkipBlocks {
 			wd := ocs.NewDataOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
-				if bytes.Compare(sb.Hash, read.File) == 0 {
+				if bytes.Compare(sb.Hash, read.DataID) == 0 {
 					writeBlock = wd.Write
 					readersBlock = wd.Readers
 					break
@@ -471,7 +471,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			return false
 		}
 		for _, pk := range readersBlock.Readers {
-			err := crypto.VerifySchnorr(network.Suite, pk, read.File, *read.Signature)
+			err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
 			if err != nil {
 				log.Lvl3("Didn't find signature:", err)
 			} else {

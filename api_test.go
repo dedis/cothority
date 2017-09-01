@@ -36,7 +36,7 @@ func TestClient_DecryptKeyRequest(t *testing.T) {
 	doTest(t, 3)
 }
 
-func TestClient_GetFile(t *testing.T) {
+func TestClient_GetData(t *testing.T) {
 	doTest(t, 4)
 }
 
@@ -45,15 +45,15 @@ func TestClient_GetReadRequests(t *testing.T) {
 }
 
 type testStruct struct {
-	local   *onet.LocalTest
-	roster  *onet.Roster
-	cl      *ocs.Client
-	data    []byte
-	reader  *config.KeyPair
-	sym     []byte
-	genesis *skipchain.SkipBlock
-	write   *skipchain.SkipBlock
-	read    *skipchain.SkipBlock
+	local  *onet.LocalTest
+	roster *onet.Roster
+	cl     *ocs.Client
+	data   []byte
+	reader *config.KeyPair
+	sym    []byte
+	scurl  *ocs.SkipChainURL
+	write  *skipchain.SkipBlock
+	read   *skipchain.SkipBlock
 }
 
 func doTest(t *testing.T, step int) {
@@ -64,7 +64,7 @@ func doTest(t *testing.T, step int) {
 	defer test.local.CloseAll()
 	_, test.roster, _ = test.local.GenTree(3, true)
 
-	for i := 0; i < step; i++ {
+	for i := 0; i <= step; i++ {
 		switch i {
 		case 0:
 			createSkipchain(t, test)
@@ -75,7 +75,7 @@ func doTest(t *testing.T, step int) {
 		case 3:
 			decryptKey(t, test)
 		case 4:
-			getFile(t, test)
+			getData(t, test)
 		case 5:
 			getReadRequests(t, test)
 		}
@@ -84,7 +84,7 @@ func doTest(t *testing.T, step int) {
 
 func createSkipchain(t *testing.T, test *testStruct) {
 	var cerr onet.ClientError
-	test.genesis, cerr = test.cl.CreateSkipchain(test.roster)
+	test.scurl, cerr = test.cl.CreateSkipchain(test.roster)
 	log.ErrFatal(cerr)
 }
 
@@ -95,7 +95,7 @@ func writeData(t *testing.T, test *testStruct) {
 	var enc []byte
 	enc, test.sym = encryptDocument(test.data)
 	test.reader = config.NewKeyPair(network.Suite)
-	test.write, cerr = test.cl.WriteRequest(test.genesis, enc, test.sym, []abstract.Point{test.reader.Public})
+	test.write, cerr = test.cl.WriteRequest(test.scurl, enc, test.sym, []abstract.Point{test.reader.Public})
 	log.ErrFatal(cerr)
 
 	dataOCS := ocs.NewDataOCS(test.write.Data)
@@ -105,41 +105,41 @@ func writeData(t *testing.T, test *testStruct) {
 
 func readData(t *testing.T, test *testStruct) {
 	var cerr onet.ClientError
-	test.read, cerr = test.cl.ReadRequest(test.write, test.reader.Secret, test.write.Hash)
+	test.read, cerr = test.cl.ReadRequest(test.scurl, test.write.Hash, test.reader.Secret)
 	log.ErrFatal(cerr)
 }
 
 func decryptKey(t *testing.T, test *testStruct) {
 	var cerr onet.ClientError
 
-	sym, cerr := test.cl.DecryptKeyRequest(test.read, test.reader.Secret)
+	sym, cerr := test.cl.DecryptKeyRequest(test.scurl, test.read.Hash, test.reader.Secret)
 	log.ErrFatal(cerr)
 	require.Equal(t, test.sym, sym)
 }
 
-func getFile(t *testing.T, test *testStruct) {
-	fileEnc, cerr := test.cl.GetFile(test.write.Roster, test.write.Hash)
+func getData(t *testing.T, test *testStruct) {
+	encData, cerr := test.cl.GetData(test.scurl, test.write.Hash)
 	log.ErrFatal(cerr)
 
 	cipher := network.Suite.Cipher(test.sym)
-	file, err := cipher.Open(nil, fileEnc)
+	data, err := cipher.Open(nil, encData)
 	log.ErrFatal(err)
 
-	require.Equal(t, test.data, file)
+	require.Equal(t, test.data, data)
 }
 
 func getReadRequests(t *testing.T, test *testStruct) {
-	docs, cerr := test.cl.GetReadRequests(test.genesis.Roster, test.genesis.SkipChainID(), 0)
+	docs, cerr := test.cl.GetReadRequests(test.scurl, test.write.Hash, 0)
 	log.ErrFatal(cerr)
 	require.Equal(t, 1, len(docs))
-	require.Equal(t, test.write.Hash, docs[0].FileID)
+	require.Equal(t, test.write.Hash, docs[0].DataID)
 }
 
 // EncryptDocument takes data and a credential, then it creates a new
 // symmetric encryption key, encrypts the document, and stores the document and
 // the encryption key on the blockchain.
 func encryptDocument(data []byte) (encData, key []byte) {
-	key = random.Bytes(32, random.Stream)
+	key = random.Bytes(128, random.Stream)
 	cipher := network.Suite.Cipher(key)
 	encData = cipher.Seal(nil, data)
 	return

@@ -15,57 +15,54 @@ main(){
     startTest
     mkdir -p cl{1..3}
     buildConode "github.com/dedis/onchain-secrets/service"
-	test Build
-	test Create
-	test ManageJoin
-	test Write
-	test Read
+    test Build
+    test Create
+    test ManageJoin
+    test Write
+    test Read
     stopTest
 }
 
 testRead(){
-	setupOCS
-	runGrepSed "Stored file" "s/.* //" runCl 1 write public.toml $READER1_PUB
-	FILE=$SED
-	testOK runCl 2 manage join public.toml $SID
-	testFail runCl 2 read $FILE $READER2_PRIV
-	tmp=$( mktemp )
-	testOK runCl 2 read -o $tmp $FILE $READER1_PRIV
-	testOK cmp public.toml $tmp
-	rm $tmp
+    setupOCS
+    runGrepSed "Stored file" "s/.* //" runCl 1 write public.toml $READER1_PUB
+    FILE=$SED
+    testOK runCl 2 manage join public.toml $SID
+    testFail runCl 2 read $FILE $READER2_PRIV
+    tmp=$( mktemp )
+    testOK runCl 2 read -o $tmp $FILE $READER1_PRIV
+    testOK cmp public.toml $tmp
+    rm $tmp
 }
 
 testWrite(){
-	setupOCS
-	testFail runCl 1 write public.toml
-	testOK runCl 1 write public.toml $READER1_PUB
-	testOK runCl 2 manage join public.toml $SID
-	testOK runCl 2 write public.toml $READER2_PUB
+    setupOCS
+    testFail runCl 1 write public.toml
+    testOK runCl 1 write public.toml $READER1_PUB
+    testOK runCl 2 manage join public.toml $SID
+    testOK runCl 2 write public.toml $READER2_PUB
 }
 
 testManageJoin(){
-	setupOCS
-	testOK runCl 2 manage join public.toml $SID
+    setupOCS
+    testOK runCl 2 manage join public.toml $SID
 }
 
 setupOCS(){
-	runCoBG 1 2 3
-	runGrepSed skipchainid "s/.* //" runCl 1 manage create public.toml
-	SID=$SED
-	READER1=$( runCl 1 keypair )
+    runCoBG 1 2 3
+    runGrepSed skipchainid "s/.* //" runCl 1 manage create public.toml
+    SID=$SED
+    READER1=$( runCl 1 keypair )
     READER1_PRIV=$( echo $READER1 | cut -f 1 -d : )
     READER1_PUB=$( echo $READER1 | cut -f 2 -d : )
-	READER2=$( runCl 1 keypair )
+    READER2=$( runCl 1 keypair )
     READER2_PRIV=$( echo $READER2 | cut -f 1 -d : )
     READER2_PUB=$( echo $READER2 | cut -f 2 -d : )
 }
 
 testCreate(){
-       runCoBG 1 2 3
-       cat public.toml
-       testFail runCl 1 list
-       testOK runCl 1 manage create public.toml
-       testOK runCl 1 list
+    runCoBG 1 2 3
+    testOK runCl 1 manage create public.toml
 }
 
 testBuild(){

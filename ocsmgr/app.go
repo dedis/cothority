@@ -30,7 +30,7 @@ type logConfig struct{}
 func main() {
 	network.RegisterMessage(logConfig{})
 	cliApp := cli.NewApp()
-	cliApp.Name = "WLogR"
+	cliApp.Name = "OCS"
 	cliApp.Usage = "Write secrets to the skipchains and do logged read-requests"
 	cliApp.Version = "0.1"
 	cliApp.Commands = []cli.Command{
@@ -56,7 +56,7 @@ func main() {
 					Name:      "join",
 					Usage:     "join a write log-read skipchain",
 					Aliases:   []string{"j"},
-					ArgsUsage: "group doc-skipchain-id [private_key]",
+					ArgsUsage: "group ocs-skipchain-id [private_key]",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "overwrite, o",
@@ -75,7 +75,7 @@ func main() {
 		},
 		{
 			Name:      "write",
-			Usage:     "write to the doc-skipchain",
+			Usage:     "write to the ocs-skipchain",
 			Aliases:   []string{"w"},
 			ArgsUsage: "file",
 			Action:    write,
@@ -88,7 +88,7 @@ func main() {
 		},
 		{
 			Name:      "read",
-			Usage:     "read from the doc-skipchain",
+			Usage:     "read from the ocs-skipchain",
 			Aliases:   []string{"r"},
 			ArgsUsage: "file_id private_key",
 			Action:    read,
@@ -104,8 +104,8 @@ func main() {
 		app.FlagDebug,
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "~/.config/wlogr",
-			Usage: "The configuration-directory for wlogr",
+			Value: "~/.config/ocs",
+			Usage: "The configuration-directory for ocs",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
@@ -115,36 +115,36 @@ func main() {
 	cliApp.Run(os.Args)
 }
 
-// Creates a new acl and doc skipchain.
+// Creates a new ocs skipchain.
 func mngCreate(c *cli.Context) error {
 	if c.NArg() < 1 {
 		log.Fatal("Please give group-toml [pseudo]")
 	}
-	log.Info("Creating ACL- and Doc-skipchain")
+	log.Info("Creating OCS-skipchain")
 	pseudo := c.Args().Get(1)
 	group := getGroup(c)
 	cl := ocs.NewClient()
-	sc, err := cl.CreateSkipchain(group.Roster)
+	scurl, err := cl.CreateSkipchain(group.Roster)
 	log.ErrFatal(err)
 	cfg := &ocsConfig{
-		Bunch: ocs.NewSkipBlockBunch(sc),
+		SkipChainURL: scurl,
 	}
 	log.Infof("Created new skipchains and added %s as admin", pseudo)
-	log.Infof("Doc-skipchainid: %x", cfg.Bunch.GenesisID)
+	log.Infof("OCS-skipchainid: %x", scurl.Genesis)
 	return cfg.saveConfig(c)
 }
 
-// Prints the id of the Doc-skipchain
+// Prints the id of the OCS-skipchain
 func mngList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	log.Infof("OCS-skipchainid:\t%x", cfg.Bunch.GenesisID)
+	log.Infof("OCS-skipchainid:\t%x", cfg.SkipChainURL.Genesis)
 	return nil
 }
 
-// Joins an existing doc skipchain.
+// Joins an existing OCS skipchain.
 func mngJoin(c *cli.Context) error {
 	if c.NArg() < 2 {
-		log.Fatal("Please give: group doc-skipchain-id")
+		log.Fatal("Please give: group ocs-skipchain-id")
 	}
 	cfg, loaded := loadConfig(c)
 	if loaded && !c.Bool("overwrite") {
@@ -154,7 +154,10 @@ func mngJoin(c *cli.Context) error {
 	group := getGroup(c)
 	sid, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
-	cfg.Bunch, err = CreateBunch(group.Roster, sid)
+	cfg.SkipChainURL = &ocs.SkipChainURL{
+		Roster:  group.Roster,
+		Genesis: sid,
+	}
 	log.ErrFatal(err)
 	return cfg.saveConfig(c)
 }
@@ -193,18 +196,14 @@ func write(c *cli.Context) error {
 	cipher := network.Suite.Cipher(symKey)
 	encData := cipher.Seal(nil, data)
 
-	sb, err := ocs.NewClient().WriteRequest(cfg.Bunch.Latest, encData, symKey, readers)
+	sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, readers)
 	log.ErrFatal(err)
 	log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
 	return nil
 }
 
 func list(c *cli.Context) error {
-	log.Info("Listing existing files")
-	cfg := loadConfigOrFail(c)
-	for _, sb := range cfg.Bunch.SkipBlocks {
-		log.Info(ocs.NewDataOCS(sb.Data))
-	}
+	log.Info("Listing existing files - not possible for the moment")
 	return nil
 }
 
@@ -219,16 +218,15 @@ func read(c *cli.Context) error {
 	priv, err := crypto.String64ToScalar(network.Suite, c.Args().Get(1))
 	log.ErrFatal(err)
 	cl := ocs.NewClient()
-	sb, cerr := cl.ReadRequest(cfg.Bunch.Latest, priv, fileID)
+	sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
 	log.ErrFatal(cerr)
 	if sb == nil {
 		log.Fatal("Got empty skipblock - read refused")
 	}
-	cfg.Bunch.Store(sb)
 
-	key, cerr := cl.DecryptKeyRequest(sb, priv)
+	key, cerr := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
 	log.ErrFatal(cerr)
-	fileEnc, cerr := cl.GetFile(sb.Roster, fileID)
+	fileEnc, cerr := cl.GetData(cfg.SkipChainURL, fileID)
 	log.ErrFatal(cerr)
 	cipher := network.Suite.Cipher(key)
 	file, err := cipher.Open(nil, fileEnc)
