@@ -20,13 +20,13 @@ func TestConfigNew(t *testing.T) {
 	os.Remove(tmp.Name())
 	cfg, err = newConfig(tmp.Name())
 	log.ErrFatal(err)
-	require.Equal(t, -1, cfg.Index)
-	cfg.Index = 777
+	require.Equal(t, "", string(cfg.Address))
+	cfg.Address = "127.0.0.1:3123"
 	cfg.write()
 
 	cfg, err = newConfig(tmp.Name())
 	log.ErrFatal(err)
-	require.Equal(t, 777, cfg.Index)
+	require.Equal(t, "127.0.0.1:3123", string(cfg.Address))
 }
 
 func TestMainFunc(t *testing.T) {
