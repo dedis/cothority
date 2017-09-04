@@ -6,9 +6,38 @@ import "gopkg.in/urfave/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandID, commandConfig, commandKeyvalue, commandSSH, commandFollow cli.Command
+var commandAdmin, commandID, commandConfig, commandKeyvalue, commandSSH, commandFollow cli.Command
 
 func init() {
+	commandAdmin = cli.Command{
+		Name:  "admin",
+		Usage: "admin options",
+		Subcommands: []cli.Command{
+			{
+				Name:      "link",
+				Usage:     "links admin to cothority",
+				ArgsUsage: "IP address public key [PIN]",
+				Action:    adminLink,
+			},
+			{
+				Name:      "store",
+				Usage:     "stores the authentication data in cothority",
+				ArgsUsage: "IP address public key",
+				Action:    adminStore,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name: "type,t",
+						Usage: `type of authentication it wants to store
+							: PoP, PIN`,
+					},
+					cli.StringFlag{
+						Name:  "file,f",
+						Usage: "File containing auth info(e.g. final.toml)",
+					},
+				},
+			},
+		},
+	}
 	commandID = cli.Command{
 		Name:  "id",
 		Usage: "working on the identity",
@@ -23,6 +52,14 @@ func init() {
 						Name:  "thr,threshold",
 						Usage: "the threshold necessary to add a block",
 						Value: 2,
+					},
+					cli.StringFlag{
+						Name:  "type,t",
+						Usage: "type of client authentication: PoP, PIN",
+					},
+					cli.StringFlag{
+						Name:  "file,f",
+						Usage: "File containing auth info(e.g. token.toml)",
 					},
 				},
 				Action: idCreate,

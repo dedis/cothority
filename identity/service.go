@@ -18,10 +18,14 @@ import (
 	"errors"
 
 	"fmt"
+	"math/big"
 
-	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v1/messaging"
+	"gopkg.in/dedis/cothority.v1/skipchain"
+	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/anon"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -30,6 +34,12 @@ import (
 
 // ServiceName can be used to refer to the name of this service
 const ServiceName = "Identity"
+
+// Size of nonce used in autentication
+const nonceSize = 64
+
+// Default number of skipchains, each user can create
+const defaultNumberSkipchains = 5
 
 var identityService onet.ServiceID
 
@@ -52,6 +62,8 @@ type Service struct {
 	propagateData      messaging.PropagationFunc
 	identitiesMutex    sync.Mutex
 	skipchain          *skipchain.Client
+	limits             map[string]int8
+	auth               authData
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -68,14 +80,116 @@ type Storage struct {
 	SCData   *skipchain.SkipBlock
 }
 
+type authData struct {
+	// set of pins and keys
+	pins map[string]struct{}
+	// sets of public keys to verify linkable ring signatures
+	sets []anon.Set
+	// list of adminKeys
+	adminKeys []abstract.Point
+	// set of nonces
+	nonces map[string]struct{}
+}
+
 /*
  * API messages
  */
 
+// PinRequest will check PIN of admin or print it in case PIN is not provided
+// then save the admin's public key
+func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
+	log.Lvl3("PinRequest", s.ServerIdentity())
+	if req.PIN == "" {
+		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+		s.auth.pins[pin] = struct{}{}
+		log.Info("PIN:", pin)
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+	}
+	if _, ok := s.auth.pins[req.PIN]; !ok {
+		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+	}
+	s.auth.adminKeys = append(s.auth.adminKeys, req.Public)
+	s.save()
+	log.Lvl1("Successfully registered PIN/Public", req.PIN, req.Public)
+	return nil, nil
+}
+
+func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) {
+	log.Lvl3("Store key", s.ServerIdentity())
+	// check FinalStatement
+	if req.Final.Verify() != nil {
+		log.Error(s.ServerIdentity(), "Invalid FinalStatement")
+		return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
+			"Signature of final statement is invalid")
+	}
+	// check Signature
+	valid := false
+	msg, err := req.Final.Hash()
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	for _, key := range s.auth.adminKeys {
+		if crypto.VerifySchnorr(network.Suite, key, msg, req.Sig) == nil {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		log.Error(s.ServerIdentity(), "No keys for sent signature are stored")
+		return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
+			"Invalid signature on StoreKeys")
+	}
+	s.auth.sets = append(s.auth.sets, anon.Set(req.Final.Attendees))
+	return nil, nil
+}
+
+// Authenticate will create nonce and ctx and send it to user
+// It saves nonces in set
+// Replay attack is impossible, because after successful authentification nonce will
+// be deleted.
+func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
+	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
+	ap.Nonce = random.Bytes(nonceSize, random.Stream)
+	s.auth.nonces[string(ap.Nonce)] = struct{}{}
+	return ap, nil
+}
+
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
 func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
-	log.Lvlf3("%s Creating new identity with data %+v", s, ai.Data)
+	ctx := []byte(ServiceName + s.ServerIdentity().String())
+	if _, ok := s.auth.nonces[string(ai.Nonce)]; !ok {
+		log.Error("Given nonce is not stored on ", s.ServerIdentity())
+		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			fmt.Sprintf("Given nonce is not stored on %s", s.ServerIdentity()))
+	}
+	var valid bool
+	var tag string
+	for _, set := range s.auth.sets {
+		t, err := anon.Verify(network.Suite, ai.Nonce, set, ctx, ai.Sig)
+		if err == nil {
+			tag = string(t)
+			valid = true
+			// The counter will be decremented in propagation handler
+			if n, ok := s.limits[tag]; !ok {
+				s.limits[tag] = defaultNumberSkipchains
+			} else {
+				if n <= 0 {
+					return nil, onet.NewClientErrorCode(ErrorAuthentication,
+						"No more skipchains is allowed to create")
+				}
+			}
+			// authentication succeeded. we need to delete the nonce
+			delete(s.auth.nonces, string(ai.Nonce))
+			break
+		}
+	}
+	if !valid {
+		log.Error(s.ServerIdentity(), "Authentication is failed")
+		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			"Invalid Signature on CreateIdentity")
+	}
+	log.Lvlf3("%s Creating new identity with data %+v", s.ServerIdentity(), ai.Data)
 	ids := &Storage{
 		Latest: ai.Data,
 	}
@@ -94,7 +208,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 
 	roster := ids.SCRoot.Roster
-	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids}, propagateTimeout)
+	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids, tag}, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
@@ -192,7 +306,6 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 	cerr := func() onet.ClientError {
 		sid.Lock()
 		defer sid.Unlock()
-		log.Lvl3("Voting on", sid.Proposed.Device)
 		owner, ok := sid.Latest.Device[v.Signer]
 		if !ok {
 			return onet.NewClientErrorCode(ErrorAccountMissing, "Didn't find signer")
@@ -200,6 +313,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if sid.Proposed == nil {
 			return onet.NewClientErrorCode(ErrorDataMissing, "No proposed block")
 		}
+		log.Lvl3("Voting on", sid.Proposed.Device)
 		hash, err := sid.Proposed.Hash()
 		if err != nil {
 			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
@@ -418,6 +532,16 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		log.Error("Got a wrong message for propagation")
 		return
 	}
+	if n, ok := s.limits[string(pi.Tag)]; ok {
+		if n <= 0 {
+			// unreachable in normal work mode of nodes
+			log.Error("No more skipchains is allowed to create")
+			return
+		}
+	} else {
+		s.limits[string(pi.Tag)] = defaultNumberSkipchains
+	}
+	s.limits[string(pi.Tag)]--
 	id := ID(pi.SCData.Hash)
 	if s.getIdentityStorage(id) != nil {
 		log.Error("Couldn't store new identity")
@@ -477,6 +601,9 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
+	if s.Identities == nil {
+		s.Identities = make(map[string]*Storage)
+	}
 	log.Lvl3("Successfully loaded")
 	return nil
 }
@@ -507,9 +634,15 @@ func newIdentityService(c *onet.Context) onet.Service {
 		log.Error(err)
 	}
 	if err := s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate); err != nil {
+		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate, s.PinRequest,
+		s.StoreKeys, s.Authenticate); err != nil {
 		log.Fatal("Registration error:", err)
 	}
 	skipchain.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
+	s.auth.pins = make(map[string]struct{})
+	s.auth.nonces = make(map[string]struct{})
+	s.auth.sets = make([]anon.Set, 0)
+	s.auth.adminKeys = make([]abstract.Point, 0)
+	s.limits = make(map[string]int8)
 	return s
 }
