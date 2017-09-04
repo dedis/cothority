@@ -18,13 +18,19 @@ import (
 	"strings"
 
 	"bytes"
+	"net"
 
 	"fmt"
 
 	"github.com/dedis/cothority/identity"
+	"github.com/dedis/cothority/pop/service"
 	"github.com/qantik/qrgo"
+	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -34,6 +40,7 @@ func main() {
 	app.Usage = "Connects to a ssh-keystore-server and updates/changes information"
 	app.Version = "0.3"
 	app.Commands = []cli.Command{
+		commandAdmin,
 		commandID,
 		commandConfig,
 		commandKeyvalue,
@@ -62,7 +69,115 @@ func main() {
 		return nil
 	}
 	app.Run(os.Args)
+}
 
+/*
+ * Admins commands
+ */
+func adminLink(c *cli.Context) error {
+	log.Info("Org: Link")
+	if c.NArg() < 1 {
+		log.Fatal("please give IP address and optionally PIN")
+	}
+
+	host, port, err := net.SplitHostPort(c.Args().First())
+	if err != nil {
+		return err
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return err
+	}
+	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	si := &network.ServerIdentity{Address: addr}
+
+	pin := c.Args().Get(1)
+
+	cfg := loadConfigAdminOrFail(c)
+
+	public := network.Suite.Point().Null()
+	var found = true
+	var kp *keyPair
+	if pin != "" {
+		kp, found = cfg.KeyPairs[string(addr)]
+		if !found {
+			ckp := config.NewKeyPair(network.Suite)
+			kp = &keyPair{}
+			kp.Public = ckp.Public
+			kp.Private = ckp.Secret
+		}
+		public = kp.Public
+	}
+	client := onet.NewClient(identity.ServiceName)
+	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
+		if err.ErrorCode() == identity.ErrorWrongPIN && pin == "" {
+			log.Info("Please read PIN in server-log")
+			return nil
+		}
+		return err
+	}
+	log.Info("Successfully linked with", addr)
+	// storing keys only if successfully linked
+	if !found {
+		cfg.KeyPairs[string(addr)] = kp
+	}
+	cfg.saveConfig(c)
+	return nil
+}
+
+func adminStore(c *cli.Context) error {
+	if c.NArg() < 1 {
+		log.Fatal("please give IP address")
+	}
+	host, port, err := net.SplitHostPort(c.Args().First())
+	if err != nil {
+		return err
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return err
+	}
+	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	si := &network.ServerIdentity{Address: addr}
+
+	cfg := loadConfigAdminOrFail(c)
+	kp, ok := cfg.KeyPairs[string(addr)]
+	if !ok {
+		log.Fatal("not linked")
+	}
+
+	t := c.String("type")
+	client := onet.NewClient(identity.ServiceName)
+	switch t {
+	case "PoP":
+		finalName := c.String("file")
+		buf, err := ioutil.ReadFile(finalName)
+		log.ErrFatal(err)
+		final, err := service.NewFinalStatementFromToml(buf)
+		log.ErrFatal(err)
+		if err := final.Verify(); err != nil {
+			log.Error("Signature s invalid")
+			return err
+		}
+		hash, err := final.Hash()
+		if err != nil {
+			log.Error("error while Hashing")
+			return err
+		}
+		sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+		if err != nil {
+			return err
+		}
+		cerr := client.SendProtobuf(si, &identity.StoreKeys{Final: final, Sig: sig}, nil)
+		if cerr != nil {
+			return cerr
+		}
+	case "PIN":
+		log.Fatal("not implemented")
+	default:
+		log.Fatal("no such auth method")
+	}
+	return nil
 }
 
 /*
@@ -70,11 +185,27 @@ func main() {
  */
 func idCreate(c *cli.Context) error {
 	log.Info("Creating id")
-	if c.NArg() == 0 {
-		log.Fatal("Please give at least a group-definition")
+	if c.NArg() < 1 {
+		log.Fatal("Please give a group-definition")
 	}
 
 	group := getGroup(c)
+	t := c.String("type")
+	var token *service.PopToken
+	switch t {
+	case "PoP":
+		finalName := c.String("file")
+		buf, err := ioutil.ReadFile(finalName)
+		log.ErrFatal(err)
+		token, err = service.NewPopTokenFromToml(buf)
+		if err != nil {
+			return err
+		}
+	case "PIN":
+		log.Fatal("not implemented")
+	default:
+		log.Fatal("no such auth method")
+	}
 
 	name, err := os.Hostname()
 	log.ErrFatal(err)
@@ -84,8 +215,11 @@ func idCreate(c *cli.Context) error {
 	log.Info("Creating new blockchain-identity for", name)
 
 	thr := c.Int("threshold")
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, thr, name)}
-	log.ErrFatal(cfg.CreateIdentity())
+	kp := &config.KeyPair{}
+	kp.Public = token.Public
+	kp.Secret = token.Private
+	cfg := newCiscConfig(identity.NewIdentity(group.Roster, thr, name, kp))
+	log.ErrFatal(cfg.CreateIdentity(token.Final.Attendees))
 	log.Infof("IC is %x", cfg.ID)
 	return cfg.saveConfig(c)
 }
@@ -106,7 +240,7 @@ func idConnect(c *cli.Context) error {
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
 	log.ErrFatal(err)
 	id := identity.ID(idBytes)
-	cfg := &ciscConfig{Identity: identity.NewIdentity(group.Roster, 0, name)}
+	cfg := newCiscConfig(identity.NewIdentity(group.Roster, 0, name, nil))
 	log.ErrFatal(cfg.AttachToIdentity(id))
 	log.Infof("Public key: %s",
 		cfg.Proposed.Device[cfg.DeviceName].Point.String())
