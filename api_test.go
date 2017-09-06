@@ -21,71 +21,24 @@ func TestMain(m *testing.M) {
 }
 
 func TestClient_CreateSkipchain(t *testing.T) {
-	doTest(t, 0)
-}
-
-func TestClient_WriteRequest(t *testing.T) {
-	doTest(t, 1)
-}
-
-func TestClient_ReadRequest(t *testing.T) {
-	doTest(t, 2)
-}
-
-func TestClient_DecryptKeyRequest(t *testing.T) {
-	doTest(t, 3)
-}
-
-func TestClient_GetData(t *testing.T) {
-	doTest(t, 4)
-}
-
-func TestClient_GetReadRequests(t *testing.T) {
-	doTest(t, 5)
-}
-
-type testStruct struct {
-	local  *onet.LocalTest
-	roster *onet.Roster
-	cl     *ocs.Client
-	data   []byte
-	reader *config.KeyPair
-	sym    []byte
-	scurl  *ocs.SkipChainURL
-	write  *skipchain.SkipBlock
-	read   *skipchain.SkipBlock
-}
-
-func doTest(t *testing.T, step int) {
-	test := &testStruct{
-		local: onet.NewTCPTest(),
-		cl:    ocs.NewClient(),
-	}
+	test := newTestStruct()
 	defer test.local.CloseAll()
-	_, test.roster, _ = test.local.GenTree(3, true)
 
-	for i := 0; i <= step; i++ {
-		switch i {
-		case 0:
-			createSkipchain(t, test)
-		case 1:
-			writeData(t, test)
-		case 2:
-			readData(t, test)
-		case 3:
-			decryptKey(t, test)
-		case 4:
-			getData(t, test)
-		case 5:
-			getReadRequests(t, test)
-		}
-	}
+	createSkipchain(t, test)
 }
 
 func createSkipchain(t *testing.T, test *testStruct) {
 	var cerr onet.ClientError
 	test.scurl, cerr = test.cl.CreateSkipchain(test.roster)
 	log.ErrFatal(cerr)
+}
+
+func TestClient_WriteRequest(t *testing.T) {
+	test := newTestStruct()
+	defer test.local.CloseAll()
+
+	createSkipchain(t, test)
+	writeData(t, test)
 }
 
 func writeData(t *testing.T, test *testStruct) {
@@ -103,10 +56,29 @@ func writeData(t *testing.T, test *testStruct) {
 	require.NotNil(t, dataOCS.Write)
 }
 
+func TestClient_ReadRequest(t *testing.T) {
+	test := newTestStruct()
+	defer test.local.CloseAll()
+
+	createSkipchain(t, test)
+	writeData(t, test)
+	readData(t, test)
+}
+
 func readData(t *testing.T, test *testStruct) {
 	var cerr onet.ClientError
 	test.read, cerr = test.cl.ReadRequest(test.scurl, test.write.Hash, test.reader.Secret)
 	log.ErrFatal(cerr)
+}
+
+func TestClient_DecryptKeyRequest(t *testing.T) {
+	test := newTestStruct()
+	defer test.local.CloseAll()
+
+	createSkipchain(t, test)
+	writeData(t, test)
+	readData(t, test)
+	decryptKey(t, test)
 }
 
 func decryptKey(t *testing.T, test *testStruct) {
@@ -115,6 +87,17 @@ func decryptKey(t *testing.T, test *testStruct) {
 	sym, cerr := test.cl.DecryptKeyRequest(test.scurl, test.read.Hash, test.reader.Secret)
 	log.ErrFatal(cerr)
 	require.Equal(t, test.sym, sym)
+}
+
+func TestClient_GetData(t *testing.T) {
+	test := newTestStruct()
+	defer test.local.CloseAll()
+
+	createSkipchain(t, test)
+	writeData(t, test)
+	readData(t, test)
+	decryptKey(t, test)
+	getData(t, test)
 }
 
 func getData(t *testing.T, test *testStruct) {
@@ -128,11 +111,45 @@ func getData(t *testing.T, test *testStruct) {
 	require.Equal(t, test.data, data)
 }
 
+func TestClient_GetReadRequests(t *testing.T) {
+	test := newTestStruct()
+	defer test.local.CloseAll()
+
+	createSkipchain(t, test)
+	writeData(t, test)
+	readData(t, test)
+	decryptKey(t, test)
+	getData(t, test)
+	getReadRequests(t, test)
+}
+
 func getReadRequests(t *testing.T, test *testStruct) {
 	docs, cerr := test.cl.GetReadRequests(test.scurl, test.write.Hash, 0)
 	log.ErrFatal(cerr)
 	require.Equal(t, 1, len(docs))
 	require.Equal(t, test.write.Hash, docs[0].DataID)
+}
+
+type testStruct struct {
+	local  *onet.LocalTest
+	roster *onet.Roster
+	cl     *ocs.Client
+	data   []byte
+	reader *config.KeyPair
+	sym    []byte
+	scurl  *ocs.SkipChainURL
+	write  *skipchain.SkipBlock
+	read   *skipchain.SkipBlock
+}
+
+func newTestStruct() *testStruct {
+	test := &testStruct{
+		local: onet.NewTCPTest(),
+		cl:    ocs.NewClient(),
+	}
+	_, test.roster, _ = test.local.GenTree(3, true)
+
+	return test
 }
 
 // EncryptDocument takes data and a credential, then it creates a new
