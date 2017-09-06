@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"errors"
 
 	"github.com/BurntSushi/toml"
 	"github.com/satori/go.uuid"
@@ -23,6 +24,15 @@ const (
 	// ErrorOtherFinals indicates that one or more of the other conodes
 	// are still missing the finalization-step
 	ErrorOtherFinals
+	// ErrorMerge indicates that other parties have not recieved
+	// the merge request yet
+	ErrorMerge
+	// ErrorTimeout indicates that waiting on network was too long
+	// Either node is down or network is partitioned
+	ErrorTimeout
+	// ErrorMergeInProgress indicates that there was an attempt
+	// to launch proccess twice on the same node
+	ErrorMergeInProgress
 )
 
 func init() {
@@ -51,13 +61,29 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub abstract.Point)
 }
 
 // StoreConfig sends the configuration to the conode for later usage.
-func (c *Client) StoreConfig(dst network.Address, p *PopDesc) onet.ClientError {
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv abstract.Scalar) onet.ClientError {
 	si := &network.ServerIdentity{Address: dst}
-	err := c.SendProtobuf(si, &StoreConfig{p}, nil)
+	sg, e := crypto.SignSchnorr(network.Suite, priv, p.Hash())
+	if e != nil {
+		return onet.NewClientError(e)
+	}
+	err := c.SendProtobuf(si, &storeConfig{p, sg}, nil)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// Send Request to update local final statement
+func (c *Client) FetchFinal(dst network.Address, hash []byte) (
+	*FinalStatement, onet.ClientError) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &finalizeResponse{}
+	err := c.SendProtobuf(si, &fetchRequest{hash}, res)
+	if err != nil {
+		return nil, err
+	}
+	return res.Final, nil
 }
 
 // Finalize takes the address of the conode-server, a pop-description and a
@@ -66,13 +92,45 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc) onet.ClientError {
 // not in all the conodes will be stripped, and that new pop-description
 // collectively signed. The new pop-description and the final statement
 // will be returned.
-func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point) (
+func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point,
+	priv abstract.Scalar) (*FinalStatement, onet.ClientError) {
+	si := &network.ServerIdentity{Address: dst}
+	req := &finalizeRequest{}
+	req.DescID = p.Hash()
+	req.Attendees = attendees
+	hash, err := req.hash()
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	res := &finalizeResponse{}
+	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
+	if err != nil {
+		return nil, onet.NewClientError(err)
+	}
+	req.Signature = sg
+	e := c.SendProtobuf(si, req, res)
+	if e != nil {
+		return nil, e
+	}
+	return res.Final, nil
+}
+
+// Merge takes the address of the conode-server, pop-description and the
+// private key of organizer. It triggers merge process on nodes mentioned in
+// config
+func (c *Client) Merge(dst network.Address, p *PopDesc, priv abstract.Scalar) (
 	*FinalStatement, onet.ClientError) {
 	si := &network.ServerIdentity{Address: dst}
-	res := &FinalizeResponse{}
-	err := c.SendProtobuf(si, &FinalizeRequest{p.Hash(), attendees}, res)
+	res := &finalizeResponse{}
+	hash := p.Hash()
+	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
 	if err != nil {
-		return nil, err
+		return nil, onet.NewClientError(err)
+	}
+
+	e := c.SendProtobuf(si, &mergeRequest{hash, sg}, res)
+	if e != nil {
+		return nil, e
 	}
 	return res.Final, nil
 }
@@ -86,6 +144,8 @@ type FinalStatement struct {
 	Attendees []abstract.Point
 	// Signature is created by all conodes responsible for that pop-party
 	Signature []byte
+	// Flag indicates, that party was merged
+	Merged bool
 }
 
 // The toml-structure for (un)marshaling with toml
@@ -93,6 +153,33 @@ type finalStatementToml struct {
 	Desc      *popDescToml
 	Attendees []string
 	Signature string
+	Merged    bool
+}
+
+func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatement, error) {
+	desc, err := newPopDescFromTomlStruct(fsToml.Desc)
+	if err != nil {
+		return nil, err
+	}
+	atts := []abstract.Point{}
+	for _, p := range fsToml.Attendees {
+		pub, err := crypto.String64ToPub(network.Suite, p)
+		if err != nil {
+			return nil, err
+		}
+		atts = append(atts, pub)
+	}
+	sig, err := base64.StdEncoding.DecodeString(fsToml.Signature)
+	// TODO: sign and verify signature
+	if err != nil {
+		return nil, err
+	}
+	return &FinalStatement{
+		Desc:      desc,
+		Attendees: atts,
+		Signature: sig,
+		Merged:    fsToml.Merged,
+	}, nil
 }
 
 // NewFinalStatementFromToml creates a final statement from a toml slice-of-bytes.
@@ -102,8 +189,78 @@ func NewFinalStatementFromToml(b []byte) (*FinalStatement, error) {
 	if err != nil {
 		return nil, err
 	}
+	fs, err := newFinalStatementFromTomlStruct(fsToml)
+	if err != nil {
+		return nil, err
+	}
+	return fs, nil
+
+}
+
+func decodeMapFinal(b []byte) (map[string]*FinalStatement, error) {
+	mapToml := make(map[string]*finalStatementToml)
+	_, err := toml.Decode(string(b), &mapToml)
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[string]*FinalStatement)
+	for _, fsToml := range mapToml {
+		fs, err := newFinalStatementFromTomlStruct(fsToml)
+		if err != nil {
+			return nil, err
+		}
+		res[string(fs.Desc.Hash())] = fs
+	}
+	return res, nil
+}
+
+func encodeMapFinal(stmts map[string]*FinalStatement) ([]byte, error) {
+	mapToml := make(map[string]*finalStatementToml)
+	var err error
+	for key, fs := range stmts {
+		mapToml[string(base64.StdEncoding.EncodeToString([]byte(key)))], err = fs.toTomlStruct()
+		if err != nil {
+			return nil, err
+		}
+	}
+	var buf bytes.Buffer
+	err = toml.NewEncoder(&buf).Encode(mapToml)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (desc *PopDesc) toTomlStruct() (*popDescToml, error) {
+	rostr, err := toToml(desc.Roster)
+	if err != nil {
+		return nil, err
+	}
+	parties := make([]shortDescToml, len(desc.Parties))
+	for i, p := range desc.Parties {
+		parties[i] = shortDescToml{}
+		parties[i].Location = p.Location
+		parties[i].Roster, err = toToml(p.Roster)
+		if err != nil {
+			return nil, err
+		}
+	}
+	descToml := &popDescToml{
+		Name:     desc.Name,
+		DateTime: desc.DateTime,
+		Location: desc.Location,
+		Roster:   rostr,
+		Parties:  parties,
+	}
+	return descToml, nil
+}
+
+func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 	sis := []*network.ServerIdentity{}
-	for _, s := range fsToml.Desc.Roster {
+	if descToml == nil {
+		return nil, onet.NewClientErrorCode(ErrorInternal, "failed toml struct")
+	}
+	for _, s := range descToml.Roster {
 		uid, err := uuid.FromString(s[2])
 		if err != nil {
 			return nil, err
@@ -120,66 +277,84 @@ func NewFinalStatementFromToml(b []byte) (*FinalStatement, error) {
 		})
 	}
 	rostr := onet.NewRoster(sis)
-	desc := &PopDesc{
-		Name:     fsToml.Desc.Name,
-		DateTime: fsToml.Desc.DateTime,
-		Location: fsToml.Desc.Location,
-		Roster:   rostr,
-	}
-	atts := []abstract.Point{}
-	for _, p := range fsToml.Attendees {
-		pub, err := crypto.String64ToPub(network.Suite, p)
-		if err != nil {
-			return nil, err
+	mparties := make([]*ShortDesc, len(descToml.Parties))
+	for i, desc := range descToml.Parties {
+		mparties[i] = &ShortDesc{}
+		mparties[i].Location = desc.Location
+
+		sis := []*network.ServerIdentity{}
+		for _, s := range desc.Roster {
+			uid, err := uuid.FromString(s[2])
+			if err != nil {
+				return nil, err
+			}
+			pub, err := crypto.String64ToPub(network.Suite, s[3])
+			if err != nil {
+				return nil, err
+			}
+			sis = append(sis, &network.ServerIdentity{
+				Address:     network.Address(s[0]),
+				Description: s[1],
+				ID:          network.ServerIdentityID(uid),
+				Public:      pub,
+			})
 		}
-		atts = append(atts, pub)
+		mparties[i].Roster = onet.NewRoster(sis)
 	}
-	sig := make([]byte, 64)
-	sig, err = base64.StdEncoding.DecodeString(fsToml.Signature)
-	// TODO: sign and verify signature
-	if err != nil {
-		return nil, err
-	}
-	return &FinalStatement{
-		Desc:      desc,
-		Attendees: atts,
-		Signature: sig,
+
+	return &PopDesc{
+		Name:     descToml.Name,
+		DateTime: descToml.DateTime,
+		Location: descToml.Location,
+		Roster:   rostr,
+		Parties:  mparties,
 	}, nil
 }
 
-// ToToml returns a toml-slice of byte and an eventual error.
-func (fs *FinalStatement) ToToml() ([]byte, error) {
-	rostr := [][]string{}
-	for _, si := range fs.Desc.Roster.List {
-		str, err := crypto.PubToString64(nil, si.Public)
-		if err != nil {
-			return nil, err
+func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
+	descToml, err := fs.Desc.toTomlStruct()
+	if err != nil {
+		return nil, err
+	}
+	if len(fs.Desc.Parties) > 1 {
+		descToml.Parties = make([]shortDescToml, len(fs.Desc.Parties))
+		for i, p := range fs.Desc.Parties {
+			rostr, err := toToml(p.Roster)
+			if err != nil {
+				return nil, err
+			}
+			sh := shortDescToml{
+				Location: p.Location,
+				Roster:   rostr,
+			}
+			descToml.Parties[i] = sh
 		}
-		sistr := []string{si.Address.String(), si.Description,
-			uuid.UUID(si.ID).String(), str}
-		rostr = append(rostr, sistr)
 	}
-	descToml := &popDescToml{
-		Name:     fs.Desc.Name,
-		DateTime: fs.Desc.DateTime,
-		Location: fs.Desc.Location,
-		Roster:   rostr,
-	}
-	atts := []string{}
-	for _, p := range fs.Attendees {
+	atts := make([]string, len(fs.Attendees))
+	for i, p := range fs.Attendees {
 		str, err := crypto.PubToString64(nil, p)
 		if err != nil {
 			return nil, err
 		}
-		atts = append(atts, str)
+		atts[i] = str
 	}
 	fsToml := &finalStatementToml{
 		Desc:      descToml,
 		Attendees: atts,
 		Signature: base64.StdEncoding.EncodeToString(fs.Signature),
+		Merged:    fs.Merged,
+	}
+	return fsToml, nil
+}
+
+// ToToml returns a toml-slice of byte and an eventual error.
+func (fs *FinalStatement) ToToml() ([]byte, error) {
+	fsToml, err := fs.toTomlStruct()
+	if err != nil {
+		return nil, err
 	}
 	var buf bytes.Buffer
-	err := toml.NewEncoder(&buf).Encode(fsToml)
+	err = toml.NewEncoder(&buf).Encode(fsToml)
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +403,27 @@ type PopDesc struct {
 	Location string
 	// Roster of all responsible conodes for that party.
 	Roster *onet.Roster
+	// List of parties to be merged
+	Parties []*ShortDesc
 }
 
 // represents a PopDesc in string-version for toml.
 type popDescToml struct {
 	Name     string
 	DateTime string
+	Location string
+	Roster   [][]string
+	Parties  []shortDescToml
+}
+
+// represents Short Description of Pop party
+// Used in merge configuration
+type ShortDesc struct {
+	Location string
+	Roster   *onet.Roster
+}
+
+type shortDescToml struct {
 	Location string
 	Roster   [][]string
 }
@@ -249,6 +439,93 @@ func (p *PopDesc) Hash() []byte {
 		log.Error(err)
 		return []byte{}
 	}
-	hash.Write([]byte(buf))
+	hash.Write(buf)
+	if len(p.Parties) > 0 {
+		for _, party := range p.Parties {
+			hash.Write([]byte(party.Location))
+			buf, err = party.Roster.Aggregate.MarshalBinary()
+			if err != nil {
+				log.Error(err)
+				return []byte{}
+			}
+			hash.Write(buf)
+		}
+	}
 	return hash.Sum(nil)
+}
+
+// Checks if the first list contains the second
+func Equal(r1, r2 *onet.Roster) bool {
+	if len(r1.List) != len(r2.List) {
+		return false
+	}
+	for _, p := range r2.List {
+		found := false
+		for _, d := range r1.List {
+			if p.Equal(d) {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+func toToml(r *onet.Roster) ([][]string, error) {
+	rostr := make([][]string, len(r.List))
+	for i, si := range r.List {
+		str, err := crypto.PubToString64(nil, si.Public)
+		if err != nil {
+			return nil, err
+		}
+		sistr := []string{si.Address.String(), si.Description,
+			uuid.UUID(si.ID).String(), str}
+		rostr[i] = sistr
+	}
+	return rostr, nil
+}
+
+type PopToken struct {
+	Final   *FinalStatement
+	Private abstract.Scalar
+	Public  abstract.Point
+}
+
+type popTokenToml struct {
+	Final   *finalStatementToml
+	Private string
+	Public  string
+}
+
+func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
+	token := &PopToken{}
+	var err error
+	token.Final, err = newFinalStatementFromTomlStruct(t.Final)
+	if err != nil {
+		return nil, err
+	}
+	token.Private, err = crypto.String64ToScalar(network.Suite, t.Private)
+	if err != nil {
+		return nil, err
+	}
+	token.Public, err = crypto.String64ToPub(network.Suite, t.Public)
+	if err != nil {
+		return nil, err
+	}
+	if token.Final.Verify() != nil {
+		return nil, errors.New("FinalStatement is invalid")
+	}
+	return token, nil
+}
+
+func NewPopTokenFromToml(b []byte) (*PopToken, error) {
+	mapTokenToml := map[string]*popTokenToml{}
+	_, err := toml.Decode(string(b), &mapTokenToml)
+	if err != nil {
+		return nil, err
+	}
+	tokenToml := mapTokenToml["token"]
+	return newPopTokenFromTomlStruct(tokenToml)
 }

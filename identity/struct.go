@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/cothority/pop/service"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
@@ -198,11 +199,25 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
+// PinRequest used for admin autentification
+type PinRequest struct {
+	PIN    string
+	Public abstract.Point
+}
+
+// StoreKeys used for setting autentification
+type StoreKeys struct {
+	Final *service.FinalStatement
+	Sig   crypto.SchnorrSig
+}
+
 // CreateIdentity starts a new identity-skipchain with the initial
 // Data and asking all nodes in Roster to participate.
 type CreateIdentity struct {
 	Data   *Data
 	Roster *onet.Roster
+	Sig    []byte
+	Nonce  []byte
 }
 
 // CreateIdentityReply is the reply when a new Identity has been added. It
@@ -258,10 +273,16 @@ type ProposeVoteReply struct {
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
 	*Storage
+	Tag string
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
 	ID     ID
 	Latest *skipchain.SkipBlock
+}
+
+type Authenticate struct {
+	Nonce []byte
+	Ctx   []byte
 }
