@@ -384,7 +384,9 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 	id := s.Sbm.Store(gbr.SkipBlock)
 	s.save()
 	log.Lvl3("Sending block to channel")
+	s.blockRequestsMutex.Lock()
 	s.blockRequests[string(id)] <- gbr.SkipBlock
+	s.blockRequestsMutex.Unlock()
 }
 
 // verifyFollowBlock makes sure that a signature-request for a forward-link
