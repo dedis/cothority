@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/crypto.v0/cosi"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
@@ -31,10 +31,10 @@ func TestServiceCosi(t *testing.T) {
 		reply := &SignatureResponse{}
 		log.Lvl1("Sending request to service...")
 		cerr := client.SendProtobuf(dst, serviceReq, reply)
-		log.ErrFatal(cerr, "Couldn't send")
+		require.Nil(t, cerr, "Couldn't send")
 
 		// verify the response still
-		assert.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
+		require.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
 			msg, reply.Signature))
 	}
 }
@@ -51,12 +51,15 @@ func TestCreateAggregate(t *testing.T) {
 	msg := []byte("hello cosi service")
 	log.Lvl1("Sending request to service...")
 
+	el1 := &onet.Roster{}
+	_, err := client.SignatureRequest(el1, msg)
+	require.NotNil(t, err)
 	// Create a roster with a missing aggregate and ID.
 	el2 := &onet.Roster{List: el.List}
 	res, err := client.SignatureRequest(el2, msg)
-	log.ErrFatal(err, "Couldn't send")
+	require.Nil(t, err, "Couldn't send")
 
 	// verify the response still
-	assert.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
+	require.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
 		msg, res.Signature))
 }
