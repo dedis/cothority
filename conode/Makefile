@@ -9,8 +9,8 @@ docker: Dockerfile
 
 docker_run:
 	mkdir -p data
-	docker run -it --rm -p 7002-7003:7002-7003 --name $(CONTAINER) -v $$(pwd)/data:/root/.local/share/conode/ \
-	    -v $$(pwd)/data:/root/.config//conode $(IMAGE_NAME)
+	docker run -it --rm -p 6879-6880:6879-6880 --name $(CONTAINER) -v $$(pwd)/conode_data:/root/.local/share/conode/ \
+	    -v $$(pwd)/conode_data:/root/.config//conode $(IMAGE_NAME)
 
 clean:
 	docker kill $(CONTAINER) || echo nothing to stop

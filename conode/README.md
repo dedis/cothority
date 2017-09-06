@@ -14,7 +14,7 @@ or with docker.
 ## Docker
 
 In order to start a conode on your computer with docker, you can use the
-pre-compiled docker image at https://hub.docker.com/r/dedis/conode and
+pre-compiled docker image at [https://hub.docker.com/r/dedis/conode] and
 follow the instructions. You can also create your own docker-image and
 run it with
 
@@ -22,6 +22,11 @@ run it with
 make docker
 make docker_run
 ```
+
+If you use `make docker_run`, a directory called `conode_data` will be
+created
+
+For more information, see [Docker.md]
 
 ## Conode Binary
 
