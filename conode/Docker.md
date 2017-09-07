@@ -25,6 +25,9 @@ There are two important files in there:
 - private.toml - do not give this away - it's your private key!
 - public.toml - the description of your conode that you can send to dedis@epfl.ch and ask us to include it
 
+If you change the port-number, you will have to adjust the numbers
+used in the `docker run`-command.
+
 ### Starting Conode Using Crontab
 
 An easy way to start a conode upon system-startup is crontab. Add the following line to your crontab (`crontab -e`) and your conode will start with the next system-startup:

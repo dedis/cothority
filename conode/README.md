@@ -23,8 +23,14 @@ make docker
 make docker_run
 ```
 
-If you use `make docker_run`, a directory called `conode_data` will be
-created
+If you use `make docker_run` the first time, a directory called `conode_data` will be
+created and you will be asked for a port - use 6879 or adapt the Makefile - and a
+description of you node. Your public and private key for the conode will be stored
+in `conode_data`. If you run `make docker_run` again, the stored configuration will
+be used.
+
+To stop the docker, simply run `make docker_stop` or kill the docker-container. All
+configuration is stored in `conode_data`
 
 For more information, see [Docker.md]
 
