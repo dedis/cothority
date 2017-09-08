@@ -80,6 +80,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 
 	// We've added 2 blocks, + root block = 3
 	assert.Equal(t, 3, service.Sbm.Length())
+
+	waitPropagationFinished(local)
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -142,6 +144,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 			}
 		}
 	}
+	waitPropagationFinished(local)
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
@@ -201,6 +204,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
+	waitPropagationFinished(local)
 }
 
 func TestService_MultiLevel(t *testing.T) {
@@ -239,47 +243,6 @@ func TestService_MultiLevel(t *testing.T) {
 		}
 	}
 	waitPropagationFinished(local)
-}
-
-func waitPropagationFinished(local *onet.LocalTest) {
-	var servers []*onet.Server
-	for _, s := range local.Servers {
-		servers = append(servers, s)
-	}
-	services := make([]*Service, len(servers))
-	for i, s := range local.GetServices(servers, skipchainSID) {
-		services[i] = s.(*Service)
-	}
-	propagating := true
-	for propagating {
-		propagating = false
-		for _, s := range services {
-			if s.IsPropagating() {
-				log.Print("Service", s, "is still propagating")
-				propagating = true
-			}
-		}
-		if propagating {
-			time.Sleep(time.Millisecond * 100)
-		}
-	}
-}
-
-func checkBacklinks(services []*Service, sb *SkipBlock) {
-	for n, i := range sb.BackLinkIDs {
-		for ns, s := range services {
-			for {
-				log.Lvl3("Checking backlink", n, ns)
-				bl, err := s.GetSingleBlock(&GetSingleBlock{i})
-				log.ErrFatal(err)
-				if len(bl.ForwardLink) == n+1 &&
-					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
-					break
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
-		}
-	}
 }
 
 func TestService_Verification(t *testing.T) {
@@ -366,9 +329,6 @@ func TestService_ProtocolVerification(t *testing.T) {
 		}
 	}
 	waitPropagationFinished(local)
-}
-
-func TestService_ForwardSignature(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
@@ -478,6 +438,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			sbRoot})
 		log.ErrFatal(cerr)
 	}
+	waitPropagationFinished(local)
 }
 
 func TestService_ParallelStore(t *testing.T) {
@@ -525,6 +486,7 @@ func TestService_ParallelStore(t *testing.T) {
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
+	waitPropagationFinished(local)
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
@@ -615,4 +577,45 @@ func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Server, *onet.Roster, *Se
 	hosts := local.GenServers(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
+}
+
+func waitPropagationFinished(local *onet.LocalTest) {
+	var servers []*onet.Server
+	for _, s := range local.Servers {
+		servers = append(servers, s)
+	}
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	propagating := true
+	for propagating {
+		propagating = false
+		for _, s := range services {
+			if s.IsPropagating() {
+				log.Print("Service", s, "is still propagating")
+				propagating = true
+			}
+		}
+		if propagating {
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
+}
+
+func checkBacklinks(services []*Service, sb *SkipBlock) {
+	for n, i := range sb.BackLinkIDs {
+		for ns, s := range services {
+			for {
+				log.Lvl3("Checking backlink", n, ns)
+				bl, err := s.GetSingleBlock(&GetSingleBlock{i})
+				log.ErrFatal(err)
+				if len(bl.ForwardLink) == n+1 &&
+					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
+					break
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+		}
+	}
 }
