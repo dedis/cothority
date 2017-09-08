@@ -32,7 +32,7 @@ test_lint:
 test_playground:
 	cd skipchain; \
 	for a in $$( seq 100 ); do \
-	  go test -v -race -short || exit 1 ; \
+	  go test -race -short || exit 1 ; \
 	done;
 
 test_verbose:
