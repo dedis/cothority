@@ -20,7 +20,18 @@ main(){
     test ManageJoin
     test Write
     test Read
+    test SCRead
     stopTest
+}
+
+testSCRead(){
+	setupOCS
+	testGrep last runCl 1 skipchain
+    runGrepSed "Stored file" "s/.* //" runCl 1 write public.toml $READER1_PUB
+    FILE=$SED
+    runGrepSed "Next block:" "s/.* //" runCl 1 skipchain
+    NEXT=$SED
+    testOK runCl 1 skipchain $NEXT
 }
 
 testRead(){

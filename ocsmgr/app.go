@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/crypto.v0/random"
@@ -98,6 +99,13 @@ func main() {
 					Usage: "output file",
 				},
 			},
+		},
+		{
+			Name:      "skipchain",
+			Usage:     "read a block from the skipchain",
+			Aliases:   []string{"sc"},
+			ArgsUsage: "[skipblockID]",
+			Action:    scread,
 		},
 	}
 	cliApp.Flags = []cli.Flag{
@@ -238,5 +246,46 @@ func read(c *cli.Context) error {
 		return ioutil.WriteFile(out, file, 0660)
 	}
 	fmt.Println(file)
+	return nil
+}
+
+func scread(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	var sc skipchain.SkipBlockID
+	if c.NArg() >= 1 {
+		var err error
+		sc, err = hex.DecodeString(c.Args().First())
+		if err != nil {
+			return err
+		}
+	} else {
+		sc = cfg.SkipChainURL.Genesis
+	}
+	cl := skipchain.NewClient()
+	sb, cerr := cl.GetSingleBlock(cfg.SkipChainURL.Roster, sc)
+	if cerr != nil {
+		return cerr
+	}
+	log.Printf("SkipblockID (Hash): %x", sb.Hash)
+	log.Printf("Index: %d", sb.Index)
+	_, data, err := network.Unmarshal(sb.Data)
+	if err != nil {
+		return err
+	}
+	ocs := data.(*ocs.DataOCS)
+	if ocs.Write != nil {
+		log.Printf("Writer: %#v", ocs.Write)
+	}
+	if ocs.Read != nil {
+		log.Printf("Read: %#v", ocs.Read)
+	}
+	if ocs.Readers != nil {
+		log.Printf("Readers: %#v", ocs.Readers)
+	}
+	if len(sb.ForwardLink) > 0 {
+		log.Printf("Next block: %x", sb.ForwardLink[0].Hash)
+	} else {
+		log.Print("This is the last block")
+	}
 	return nil
 }
