@@ -442,6 +442,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 }
 
 func TestService_ParallelStore(t *testing.T) {
+	log.Print("Starting Parallel")
 	nbrRoutines := 30
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
@@ -486,7 +487,9 @@ func TestService_ParallelStore(t *testing.T) {
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
+	log.Print("Finished Parallel")
 	waitPropagationFinished(local)
+	log.Print("Propagation finished")
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
