@@ -235,7 +235,20 @@ func TestService_MultiLevel(t *testing.T) {
 				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{latest.Hash, sb})
 				log.ErrFatal(err)
 				latest = psbr.Latest
-				checkBacklinks(services, latest)
+				for n, i := range sb.BackLinkIDs {
+					for ns, s := range services {
+						for {
+							log.Lvl3("Checking backlink", n, ns)
+							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
+							log.ErrFatal(err)
+							if len(bl.ForwardLink) == n+1 &&
+								bl.ForwardLink[n].Hash.Equal(sb.Hash) {
+								break
+							}
+							time.Sleep(10 * time.Millisecond)
+						}
+					}
+				}
 			}
 
 			log.ErrFatal(checkMLForwardBackward(service, sbRoot, base, height))
@@ -600,23 +613,6 @@ func waitPropagationFinished(local *onet.LocalTest) {
 		}
 		if propagating {
 			time.Sleep(time.Millisecond * 100)
-		}
-	}
-}
-
-func checkBacklinks(services []*Service, sb *SkipBlock) {
-	for n, i := range sb.BackLinkIDs {
-		for ns, s := range services {
-			for {
-				log.Lvl3("Checking backlink", n, ns)
-				bl, err := s.GetSingleBlock(&GetSingleBlock{i})
-				log.ErrFatal(err)
-				if len(bl.ForwardLink) == n+1 &&
-					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
-					break
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
 		}
 	}
 }
