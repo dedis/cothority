@@ -444,7 +444,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 func TestService_ParallelStore(t *testing.T) {
 	defer log.AfterTest(t)
 	log.Print("Starting Parallel")
-	nbrRoutines := 50
+	nbrRoutines := 10
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, 3)
