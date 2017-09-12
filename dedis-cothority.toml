@@ -22,3 +22,8 @@
   Address = "tcp://139.59.10.242:3000"
   Public = "4OwnNWMX6+XIenC/8orGHYzwhuxSwSLGhUCyAsDTvt8="
   Description = "Brahma-BL1"
+
+[[servers]]
+  Address = "tcp://167.160.36.37:3000"
+  Public = "Nw0ZhZgLzZ3Vjkgx/lWkCd2LIN+E+IM3AI2jBv4j9dk="
+  Description = "sina's conode"
