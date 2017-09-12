@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/anon"
 	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -56,6 +58,9 @@ const (
 	ErrorVoteSignature
 	ErrorListMissing
 	ErrorOnet
+	ErrorWrongPIN
+	ErrorAuthentication
+	ErrorInvalidSignature
 )
 
 // Identity structure holds the data necessary for a client/device to use the
@@ -84,9 +89,11 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string) *Identity {
+func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *config.KeyPair) *Identity {
 	client := onet.NewClient(ServiceName)
-	kp := config.NewKeyPair(network.Suite)
+	if kp == nil {
+		kp = config.NewKeyPair(network.Suite)
+	}
 	return &Identity{
 		Client:     client,
 		Private:    kp.Secret,
@@ -171,14 +178,34 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 }
 
 // CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity() onet.ClientError {
+func (i *Identity) CreateIdentity(atts []abstract.Point) onet.ClientError {
 	log.Lvl3("Creating identity", i)
+
+	au := &Authenticate{[]byte{}, []byte{}}
+	si := i.Cothority.RandomServerIdentity()
+	cerr := i.Client.SendProtobuf(si, au, au)
+	if cerr != nil {
+		return cerr
+	}
+	// we need to find index of public key
+	index := 0
+	for j, key := range atts {
+		if key.Equal(i.Public) {
+			index = j
+			break
+		}
+	}
+	sigtag := anon.Sign(network.Suite, random.Stream, au.Nonce,
+		anon.Set(atts), au.Ctx, index, i.Private)
+	cr := &CreateIdentity{}
+	cr.Data = i.Data
+	cr.Roster = i.Cothority
+	cr.Sig = sigtag
+	cr.Nonce = au.Nonce
 	air := &CreateIdentityReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&CreateIdentity{i.Data, i.Cothority},
-		air)
-	if err != nil {
-		return err
+	cerr = i.Client.SendProtobuf(si, cr, air)
+	if cerr != nil {
+		return cerr
 	}
 	i.ID = ID(air.Data.Hash)
 	return nil
@@ -222,6 +249,9 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	hash, err := i.Proposed.Hash()
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+	}
+	if i.Private == nil {
+		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
 	}
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {
