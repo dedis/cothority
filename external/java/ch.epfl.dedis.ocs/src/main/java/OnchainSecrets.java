@@ -1,12 +1,14 @@
 import java.security.PublicKey;
 
 public class OnchainSecrets {
-
-    public class CothorityError extends Exception {
-    }
+    private Roster roster;
 
     public OnchainSecrets(String group) {
+        this.roster = new Roster(group);
+    }
 
+    public Boolean verify() throws CothorityError{
+        this.roster.Nodes.forEach(n -> n.testNode());
     }
 
     public void addAccountToSkipchain(Account admin, Account newAccount) throws CothorityError {
@@ -37,4 +39,6 @@ public class OnchainSecrets {
         return null;
     }
 
+    public class CothorityError extends Exception {
+    }
 }

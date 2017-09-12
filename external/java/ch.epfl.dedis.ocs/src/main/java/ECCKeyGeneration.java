@@ -10,7 +10,7 @@ public class ECCKeyGeneration {
         KeyPairGenerator kpg;
         kpg = KeyPairGenerator.getInstance("EC","SunEC");
         ECGenParameterSpec ecsp;
-        ecsp = new ECGenParameterSpec("secp192r1");
+        ecsp = new ECGenParameterSpec("ed25519-sha-512");
         kpg.initialize(ecsp);
 
         KeyPair kp = kpg.genKeyPair();
