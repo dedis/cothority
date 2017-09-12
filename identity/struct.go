@@ -207,17 +207,26 @@ type PinRequest struct {
 
 // StoreKeys used for setting autentification
 type StoreKeys struct {
-	Final *service.FinalStatement
-	Sig   crypto.SchnorrSig
+	Type    AuthType
+	Final   *service.FinalStatement
+	Publics []abstract.Point
+	Sig     crypto.SchnorrSig
 }
 
 // CreateIdentity starts a new identity-skipchain with the initial
 // Data and asking all nodes in Roster to participate.
 type CreateIdentity struct {
-	Data   *Data
+	Data *Data
+	// list of conodes on which skipchain is created
 	Roster *onet.Roster
-	Sig    []byte
-	Nonce  []byte
+	Type   AuthType
+	// authentication via Public key
+	Public  abstract.Point
+	SchnSig crypto.SchnorrSig
+	// authentication via Linkable Ring Signature
+	Sig []byte
+	// Nonce plays in this case message of authentication
+	Nonce []byte
 }
 
 // CreateIdentityReply is the reply when a new Identity has been added. It
@@ -273,7 +282,8 @@ type ProposeVoteReply struct {
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
 	*Storage
-	Tag string
+	Tag    string
+	Public abstract.Point
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock

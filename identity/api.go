@@ -63,6 +63,15 @@ const (
 	ErrorInvalidSignature
 )
 
+// AuthType is type of authentication to create skipchains
+type AuthType int
+
+// AuthType consts
+const (
+	PoPAuth AuthType = 100 + iota
+	PublicAuth
+)
+
 // Identity structure holds the data necessary for a client/device to use the
 // identity-service. Each identity-skipchain is tied to a roster that is defined
 // in 'Cothority'
@@ -177,16 +186,7 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-// CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity(atts []abstract.Point) onet.ClientError {
-	log.Lvl3("Creating identity", i)
-
-	au := &Authenticate{[]byte{}, []byte{}}
-	si := i.Cothority.RandomServerIdentity()
-	cerr := i.Client.SendProtobuf(si, au, au)
-	if cerr != nil {
-		return cerr
-	}
+func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -202,6 +202,50 @@ func (i *Identity) CreateIdentity(atts []abstract.Point) onet.ClientError {
 	cr.Roster = i.Cothority
 	cr.Sig = sigtag
 	cr.Nonce = au.Nonce
+	return cr, nil
+}
+
+func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
+	sig, err := crypto.SignSchnorr(network.Suite, i.Private, msg)
+	if err != nil {
+		return nil, err
+	}
+	cr := &CreateIdentity{}
+	cr.Data = i.Data
+	cr.Sig = []byte{}
+	cr.Roster = i.Cothority
+	cr.Public = i.Public
+	cr.SchnSig = sig
+	cr.Nonce = msg
+	return cr, nil
+}
+
+// CreateIdentity asks the identityService to create a new Identity
+func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.ClientError {
+	log.Lvl3("Creating identity", i)
+
+	// request for authentication
+	si := i.Cothority.RandomServerIdentity()
+	au := &Authenticate{[]byte{}, []byte{}}
+	cerr := i.Client.SendProtobuf(si, au, au)
+	if cerr != nil {
+		return cerr
+	}
+
+	var cr *CreateIdentity
+	var err error
+	switch t {
+	case PoPAuth:
+		cr, err = i.popAuth(au, atts)
+	case PublicAuth:
+		cr, err = i.publicAuth(au.Nonce)
+	default:
+		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
+	}
+	if err != nil {
+		return onet.NewClientError(err)
+	}
+	cr.Type = t
 	air := &CreateIdentityReply{}
 	cerr = i.Client.SendProtobuf(si, cr, air)
 	if cerr != nil {

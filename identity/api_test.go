@@ -84,9 +84,37 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	sig, err := crypto.SignSchnorr(network.Suite, keypairAdmin.Secret, hash)
 	log.ErrFatal(err)
-	_, cerr := srvc.StoreKeys(&StoreKeys{final, sig})
+	_, cerr := srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, cerr)
 	require.Equal(t, 1, len(srvc.auth.sets))
+}
+
+func TestIdentity_StoreKeys2(t *testing.T) {
+	local := onet.NewTCPTest()
+	defer local.CloseAll()
+	servers := local.GenServers(1)
+	srvc := local.GetServices(servers, identityService)[0].(*Service)
+	keypairAdmin := config.NewKeyPair(network.Suite)
+
+	N := 5
+	pubs := make([]abstract.Point, N)
+	h := network.Suite.Hash()
+	for i := 0; i < N; i++ {
+		kp := config.NewKeyPair(network.Suite)
+		pubs[i] = kp.Public
+		b, err := kp.Public.MarshalBinary()
+		log.ErrFatal(err)
+		_, err = h.Write(b)
+		log.ErrFatal(err)
+	}
+	hash := h.Sum(nil)
+
+	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
+	sig, err := crypto.SignSchnorr(network.Suite, keypairAdmin.Secret, hash)
+	log.ErrFatal(err)
+	_, cerr := srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
+	require.Nil(t, cerr)
+	require.Equal(t, N, len(srvc.auth.keys))
 }
 
 func TestIdentity_DataNewCheck(t *testing.T) {
@@ -278,7 +306,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	defer c1.Client.Close()
 	defer c2.Client.Close()
 	defer c3.Client.Close()
-	log.ErrFatal(c1.CreateIdentity(set))
+	log.ErrFatal(c1.CreateIdentity(PoPAuth, set))
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	proposeUpVote(c1)
 	log.ErrFatal(c3.AttachToIdentity(c1.ID))
@@ -372,6 +400,6 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster,
 	}
 
 	c := NewTestIdentity(el, 50, name, l, keypair)
-	log.ErrFatal(c.CreateIdentity(set))
+	log.ErrFatal(c.CreateIdentity(PoPAuth, set))
 	return c
 }

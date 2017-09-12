@@ -25,7 +25,9 @@ import (
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/qantik/qrgo"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/crypto"
@@ -126,10 +128,10 @@ func adminLink(c *cli.Context) error {
 }
 
 func adminStore(c *cli.Context) error {
-	if c.NArg() < 1 {
-		log.Fatal("please give IP address")
+	if c.NArg() < 2 {
+		log.Fatal("please give IP address and final statement")
 	}
-	host, port, err := net.SplitHostPort(c.Args().First())
+	host, port, err := net.SplitHostPort(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -146,36 +148,101 @@ func adminStore(c *cli.Context) error {
 		log.Fatal("not linked")
 	}
 
-	t := c.String("type")
 	client := onet.NewClient(identity.ServiceName)
-	switch t {
-	case "PoP":
-		finalName := c.String("file")
-		buf, err := ioutil.ReadFile(finalName)
-		log.ErrFatal(err)
-		final, err := service.NewFinalStatementFromToml(buf)
-		log.ErrFatal(err)
-		if err := final.Verify(); err != nil {
-			log.Error("Signature s invalid")
-			return err
-		}
-		hash, err := final.Hash()
+
+	finalName := c.Args().First()
+	buf, err := ioutil.ReadFile(finalName)
+	log.ErrFatal(err)
+	final, err := service.NewFinalStatementFromToml(buf)
+	log.ErrFatal(err)
+	if err := final.Verify(); err != nil {
+		log.Error("Signature s invalid")
+		return err
+	}
+	hash, err := final.Hash()
+	if err != nil {
+		log.Error("error while Hashing")
+		return err
+	}
+	sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+	if err != nil {
+		return err
+	}
+	cerr := client.SendProtobuf(si,
+		&identity.StoreKeys{Type: identity.PoPAuth, Final: final,
+			Publics: nil, Sig: sig}, nil)
+	if cerr != nil {
+		return cerr
+	}
+	return nil
+}
+
+func adminAdd(c *cli.Context) error {
+	if c.NArg() < 2 {
+		log.Fatal("please give public keys and IP address")
+	}
+	host, port, err := net.SplitHostPort(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return err
+	}
+	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	si := &network.ServerIdentity{Address: addr}
+
+	cfg := loadConfigAdminOrFail(c)
+	kp, ok := cfg.KeyPairs[string(addr)]
+	if !ok {
+		log.Fatal("not linked")
+	}
+
+	client := onet.NewClient(identity.ServiceName)
+
+	// keys processing
+	str := c.Args().First()
+	if !strings.HasPrefix(str, "[") {
+		str = "[" + str + "]"
+	}
+	str = strings.Replace(str, "\"", "", -1)
+	str = strings.Replace(str, "[", "", -1)
+	str = strings.Replace(str, "]", "", -1)
+	str = strings.Replace(str, "\\", "", -1)
+	log.Lvl3("Niceified public keys are:\n", str)
+	keys := strings.Split(str, ",")
+
+	h := network.Suite.Hash()
+	pubs := make([]abstract.Point, len(keys))
+	for i, k := range keys {
+		pub, err := crypto.String64ToPub(network.Suite, k)
 		if err != nil {
-			log.Error("error while Hashing")
+			log.Error("Couldn't parse public key:", k)
 			return err
 		}
-		sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+		b, err := pub.MarshalBinary()
 		if err != nil {
+			log.Error("Couldn't marshal public key:", k)
 			return err
 		}
-		cerr := client.SendProtobuf(si, &identity.StoreKeys{Final: final, Sig: sig}, nil)
-		if cerr != nil {
-			return cerr
+		_, err = h.Write(b)
+		if err != nil {
+			log.Error("Couldn't calculate hash:", k)
+			return err
 		}
-	case "PIN":
-		log.Fatal("not implemented")
-	default:
-		log.Fatal("no such auth method")
+		pubs[i] = pub
+	}
+	hash := h.Sum(nil)
+
+	sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+	if err != nil {
+		return err
+	}
+	cerr := client.SendProtobuf(si,
+		&identity.StoreKeys{Type: identity.PublicAuth, Final: nil,
+			Publics: pubs, Sig: sig}, nil)
+	if cerr != nil {
+		return cerr
 	}
 	return nil
 }
@@ -183,43 +250,71 @@ func adminStore(c *cli.Context) error {
 /*
  * Identity-related commands
  */
+
+func idKeyPair(c *cli.Context) error {
+	priv := network.Suite.NewKey(random.Stream)
+	pub := network.Suite.Point().Mul(nil, priv)
+	privStr, err := crypto.ScalarToString64(nil, priv)
+	if err != nil {
+		return err
+	}
+	pubStr, err := crypto.PubToString64(nil, pub)
+	if err != nil {
+		return err
+	}
+	log.Lvlf2("Private: %s\nPublic: %s", privStr, pubStr)
+	return nil
+}
+
 func idCreate(c *cli.Context) error {
 	log.Info("Creating id")
-	if c.NArg() < 1 {
-		log.Fatal("Please give a group-definition")
+	if c.NArg() < 2 {
+		log.Fatal("Please give a group-definition and auth data")
 	}
 
 	group := getGroup(c)
 	t := c.String("type")
-	var token *service.PopToken
+	var atts []abstract.Point
+	kp := &config.KeyPair{}
+
+	var typ identity.AuthType
 	switch t {
 	case "PoP":
-		finalName := c.String("file")
+		typ = identity.PoPAuth
+		finalName := c.Args().Get(1)
 		buf, err := ioutil.ReadFile(finalName)
 		log.ErrFatal(err)
-		token, err = service.NewPopTokenFromToml(buf)
+		token, err := service.NewPopTokenFromToml(buf)
+		kp.Public = token.Public
+		kp.Secret = token.Private
+		atts = token.Final.Attendees
 		if err != nil {
 			return err
 		}
-	case "PIN":
-		log.Fatal("not implemented")
+	case "Public":
+		typ = identity.PublicAuth
+		priv := c.Args().Get(1)
+		var err error
+		kp.Secret, err = crypto.String64ToScalar(network.Suite, priv)
+		if err != nil {
+			log.Error("Couldn't parse private key")
+			return err
+		}
+		kp.Public = network.Suite.Point().Mul(nil, kp.Secret)
 	default:
 		log.Fatal("no such auth method")
 	}
 
 	name, err := os.Hostname()
 	log.ErrFatal(err)
-	if c.NArg() > 1 {
-		name = c.Args().Get(1)
+	if c.NArg() > 2 {
+		name = c.Args().Get(2)
 	}
 	log.Info("Creating new blockchain-identity for", name)
 
 	thr := c.Int("threshold")
-	kp := &config.KeyPair{}
-	kp.Public = token.Public
-	kp.Secret = token.Private
 	cfg := newCiscConfig(identity.NewIdentity(group.Roster, thr, name, kp))
-	log.ErrFatal(cfg.CreateIdentity(token.Final.Attendees))
+	log.ErrFatal(cfg.CreateIdentity(typ, atts))
 	log.Infof("IC is %x", cfg.ID)
 	return cfg.saveConfig(c)
 }

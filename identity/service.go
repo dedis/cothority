@@ -62,8 +62,11 @@ type Service struct {
 	propagateData      messaging.PropagationFunc
 	identitiesMutex    sync.Mutex
 	skipchain          *skipchain.Client
-	limits             map[string]int8
-	auth               authData
+	// limits on number of skipchain creation. Map keys are link tags
+	tagsLimits map[string]int8
+	// limits on number of skipchain creation. Map keys are public keys
+	pointsLimits map[string]int8
+	auth         authData
 }
 
 // StorageMap holds the map to the storages so it can be marshaled.
@@ -85,6 +88,8 @@ type authData struct {
 	pins map[string]struct{}
 	// sets of public keys to verify linkable ring signatures
 	sets []anon.Set
+	// list of public keys to verify simple authentication with Schnorr sig
+	keys []abstract.Point
 	// list of adminKeys
 	adminKeys []abstract.Point
 	// set of nonces
@@ -117,18 +122,55 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError
 // StoreKeys accepts finalStatement, verifies it and saves public credentials from it
 func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) {
 	log.Lvl3("Store key", s.ServerIdentity())
+	var msg []byte
+	var err error
+	switch req.Type {
 	// check FinalStatement
-	if req.Final.Verify() != nil {
-		log.Error(s.ServerIdentity(), "Invalid FinalStatement")
-		return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
-			"Signature of final statement is invalid")
+	case PoPAuth:
+		if req.Final == nil {
+			log.Error("No final statement in request")
+			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+				"Invalid request")
+		}
+		if req.Final.Verify() != nil {
+			log.Error(s.ServerIdentity(), "Invalid FinalStatement")
+			return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
+				"Signature of final statement is invalid")
+		}
+		msg, err = req.Final.Hash()
+		if err != nil {
+			return nil, onet.NewClientError(err)
+		}
+	case PublicAuth:
+		if req.Publics == nil || len(req.Publics) == 0 {
+			log.Error("No public keys in request")
+			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+				"Invalid request")
+		}
+
+		h := network.Suite.Hash()
+
+		for _, k := range req.Publics {
+			b, err := k.MarshalBinary()
+			if err != nil {
+				log.Error("failed to marshal public key")
+				return nil, onet.NewClientError(err)
+			}
+			_, err = h.Write(b)
+			if err != nil {
+				log.Error("failed to hash public key")
+				return nil, onet.NewClientError(err)
+			}
+
+		}
+		msg = h.Sum(nil)
+	default:
+		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			"No such type of authentication")
 	}
+
 	// check Signature
 	valid := false
-	msg, err := req.Final.Hash()
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
 	for _, key := range s.auth.adminKeys {
 		if crypto.VerifySchnorr(network.Suite, key, msg, req.Sig) == nil {
 			valid = true
@@ -140,7 +182,12 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 		return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
 			"Invalid signature on StoreKeys")
 	}
-	s.auth.sets = append(s.auth.sets, anon.Set(req.Final.Attendees))
+	switch req.Type {
+	case PoPAuth:
+		s.auth.sets = append(s.auth.sets, anon.Set(req.Final.Attendees))
+	case PublicAuth:
+		s.auth.keys = append(s.auth.keys, req.Publics...)
+	}
 	return nil, nil
 }
 
@@ -164,32 +211,73 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		return nil, onet.NewClientErrorCode(ErrorAuthentication,
 			fmt.Sprintf("Given nonce is not stored on %s", s.ServerIdentity()))
 	}
-	var valid bool
+	valid := false
 	var tag string
-	for _, set := range s.auth.sets {
-		t, err := anon.Verify(network.Suite, ai.Nonce, set, ctx, ai.Sig)
-		if err == nil {
-			tag = string(t)
-			valid = true
-			// The counter will be decremented in propagation handler
-			if n, ok := s.limits[tag]; !ok {
-				s.limits[tag] = defaultNumberSkipchains
-			} else {
-				if n <= 0 {
-					return nil, onet.NewClientErrorCode(ErrorAuthentication,
-						"No more skipchains is allowed to create")
-				}
-			}
-			// authentication succeeded. we need to delete the nonce
-			delete(s.auth.nonces, string(ai.Nonce))
-			break
+	switch ai.Type {
+	case PoPAuth:
+		if ai.Public != nil {
+			log.Error("Wrong authentication message")
+			ai.Public = nil
 		}
+		for _, set := range s.auth.sets {
+			t, err := anon.Verify(network.Suite, ai.Nonce, set, ctx, ai.Sig)
+			if err == nil {
+				tag = string(t)
+				valid = true
+				// The counter will be decremented in propagation handler
+				if n, ok := s.tagsLimits[tag]; !ok {
+					s.tagsLimits[tag] = defaultNumberSkipchains
+				} else {
+					if n <= 0 {
+						return nil, onet.NewClientErrorCode(ErrorAuthentication,
+							"No more skipchains is allowed to create")
+					}
+				}
+				// authentication succeeded. we need to delete the nonce
+				delete(s.auth.nonces, string(ai.Nonce))
+				break
+			}
+		}
+	case PublicAuth:
+		if ai.Public == nil {
+			log.Error("nil public key or signature")
+			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+				"wrong public key authentication data")
+		}
+		found := false
+		for _, k := range s.auth.keys {
+			if k.Equal(ai.Public) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+				"No such key is stored")
+		}
+		if crypto.VerifySchnorr(network.Suite, ai.Public, ai.Nonce, ai.SchnSig) != nil {
+			valid = false
+		} else {
+			valid = true
+		}
+		str := ai.Public.String()
+		if n, ok := s.pointsLimits[str]; !ok {
+			s.pointsLimits[str] = defaultNumberSkipchains
+		} else {
+			if n <= 0 {
+				return nil, onet.NewClientErrorCode(ErrorAuthentication,
+					"No more skipchains is allowed to create")
+			}
+		}
+	default:
+		return nil, onet.NewClientErrorCode(ErrorAuthentication, "Wrong authentication type")
 	}
 	if !valid {
 		log.Error(s.ServerIdentity(), "Authentication is failed")
 		return nil, onet.NewClientErrorCode(ErrorAuthentication,
 			"Invalid Signature on CreateIdentity")
 	}
+
 	log.Lvlf3("%s Creating new identity with data %+v", s.ServerIdentity(), ai.Data)
 	ids := &Storage{
 		Latest: ai.Data,
@@ -209,7 +297,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 
 	roster := ids.SCRoot.Roster
-	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids, tag}, propagateTimeout)
+	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids, tag, ai.Public}, propagateTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
@@ -533,16 +621,30 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		log.Error("Got a wrong message for propagation")
 		return
 	}
-	if n, ok := s.limits[string(pi.Tag)]; ok {
-		if n <= 0 {
-			// unreachable in normal work mode of nodes
-			log.Error("No more skipchains is allowed to create")
-			return
+	if pi.Tag != "" {
+		if n, ok := s.tagsLimits[string(pi.Tag)]; ok {
+			if n <= 0 {
+				// unreachable in normal work mode of nodes
+				log.Error("No more skipchains is allowed to create")
+				return
+			}
+		} else {
+			s.tagsLimits[string(pi.Tag)] = defaultNumberSkipchains
 		}
-	} else {
-		s.limits[string(pi.Tag)] = defaultNumberSkipchains
+		s.tagsLimits[string(pi.Tag)]--
+	} else if pi.Public != nil {
+		str := pi.Public.String()
+		if n, ok := s.pointsLimits[str]; ok {
+			if n <= 0 {
+				// unreachable in normal work mode of nodes
+				log.Error("No more skipchains is allowed to create")
+				return
+			}
+		} else {
+			s.pointsLimits[str] = defaultNumberSkipchains
+		}
+		s.pointsLimits[str]--
 	}
-	s.limits[string(pi.Tag)]--
 	id := ID(pi.SCData.Hash)
 	if s.getIdentityStorage(id) != nil {
 		log.Error("Couldn't store new identity")
@@ -644,6 +746,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 	s.auth.nonces = make(map[string]struct{})
 	s.auth.sets = make([]anon.Set, 0)
 	s.auth.adminKeys = make([]abstract.Point, 0)
-	s.limits = make(map[string]int8)
+	s.tagsLimits = make(map[string]int8)
+	s.pointsLimits = make(map[string]int8)
 	return s
 }

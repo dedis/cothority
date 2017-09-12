@@ -16,25 +16,27 @@ func init() {
 			{
 				Name:      "link",
 				Usage:     "links admin to cothority",
-				ArgsUsage: "IP address public key [PIN]",
+				ArgsUsage: "IP address [PIN]",
 				Action:    adminLink,
 			},
 			{
 				Name:      "store",
 				Usage:     "stores the authentication data in cothority",
-				ArgsUsage: "IP address public key",
+				ArgsUsage: "file or string with auth data IP address",
 				Action:    adminStore,
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name: "type,t",
 						Usage: `type of authentication it wants to store
-							: PoP, PIN`,
-					},
-					cli.StringFlag{
-						Name:  "file,f",
-						Usage: "File containing auth info(e.g. final.toml)",
+							: PoP, etc.`,
 					},
 				},
+			},
+			{
+				Name:      "add",
+				Usage:     "adds public keys in cothority",
+				ArgsUsage: "string with keys IP address",
+				Action:    adminAdd,
 			},
 		},
 	}
@@ -46,7 +48,7 @@ func init() {
 				Name:      "create",
 				Aliases:   []string{"cr"},
 				Usage:     "start a new identity",
-				ArgsUsage: "group [id-name]",
+				ArgsUsage: "group(public.toml) file(token.toml) or string with auth data  [id-name]",
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "thr,threshold",
@@ -58,11 +60,17 @@ func init() {
 						Usage: "type of client authentication: PoP, PIN",
 					},
 					cli.StringFlag{
-						Name:  "file,f",
-						Usage: "File containing auth info(e.g. token.toml)",
+						Name:  "cred,credentials",
+						Usage: "auth data : PoP-token file or PIN-string",
 					},
 				},
 				Action: idCreate,
+			},
+			{
+				Name:    "keypair",
+				Aliases: []string{"kp"},
+				Usage:   "create keypair",
+				Action:  idKeyPair,
 			},
 			{
 				Name:      "connect",

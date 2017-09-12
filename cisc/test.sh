@@ -26,8 +26,11 @@ main(){
     test Build
     test Link
     test Store
+    test Add
     test ClientSetup
+    test IdKeyPair
     test IdCreate
+    test IdCreate2
     test ConfigList
     test ConfigVote
     test IdConnect
@@ -272,25 +275,62 @@ testConfigList(){
 
 testIdCreate(){
     runCoBG 1 2 3
-    testFail runCl 1 id cr -t PoP -f token.toml public.toml
+    testFail runCl 1 id cr -t PoP public.toml token.toml
     runStore 3
     testFail runCl 1 id cr
     echo test > test.toml
     testFail runCl 1 id cr test.toml
-    testFail runCl 1 id cr -t PoP -f token.toml test.toml
+    testFail runCl 1 id cr -t PoP test.toml token.toml
     cat token.toml > test_token.toml
     sed -i 's/^Private = .*$/Private = "abcd"/'  test_token.toml
-    testFail runCl 1 id cr -t PoP -f test_token.toml public.toml
+    testFail runCl 1 id cr -t PoP test_token.toml public.toml
 
-    testOK runCl 1 id cr -t PoP -f token.toml public.toml
+    testOK runCl 1 id cr -t PoP public.toml token.toml
     testFile cl1/config.bin
-    testGrep $(hostname) runCl 1 id cr -t PoP -f token.toml public.toml
-    testGrep client1 runCl 1 id cr -t PoP -f token.toml public.toml client1
+    testGrep $(hostname) runCl 1 id cr -t PoP public.toml token.toml
+    testGrep client1 runCl 1 id cr -t PoP public.toml token.toml client1
 
     for i in {1..2}; do
-    	testOK runCl 1 id cr -t PoP -f token.toml public.toml
+        testOK runCl 1 id cr -t PoP public.toml token.toml
     done
-    testFail runCl 1 id cr -t PoP -f token.toml public.toml
+    # run out of skipchain creation limit
+    testFail runCl 1 id cr -t PoP public.toml token.toml
+    rm cl1/config.bin
+}
+
+testIdCreate2(){
+    runCoBG 1 2 3
+    local KP
+    KP=$( mktemp )
+    runDbgCl 2 1 id kp > $KP
+    local pub=$( grep Public $KP | sed -e "s/.* //")
+    local priv=$( grep Private $KP | sed -e "s/.* //")
+    runDbgCl 2 1 id kp > $KP
+    local pub1=$( grep Public $KP | sed -e "s/.* //")
+    pubs="\[\"$pub\",\"$pub1\"\]"
+
+    testFail runCl 1 id cr -t Public public.toml $priv
+    runAdd 3 $pubs
+    testFail runCl 1 id cr -t Public public.toml
+    testOK runCl 1 id cr -t Public public.toml $priv
+    testFile cl1/config.bin
+    testGrep $(hostname) runCl 1 id cr -t Public public.toml $priv
+    testGrep client1 runCl 1 id cr -t Public public.toml $priv client1
+
+    for i in {1..2}; do
+        testOK runCl 1 id cr -t Public public.toml $priv
+    done
+    # run out of skipchain creation limit
+    testFail runCl 1 id cr -t Public public.toml $priv
+    rm cl1/config.bin
+}
+
+testIdKeyPair(){
+    testOK runCl 1 id kp
+    runDbgCl 2 1 id kp > keypair.1
+    runDbgCl 2 1 id kp > keypair.2
+    cmp keypair.1 keypair.2
+    testOK [ $? -eq 1 ]
 }
 
 testClientSetup(){
@@ -313,15 +353,33 @@ runStore(){
     runLink $1
     for (( i=1; i<=$1; i++ ))
     do
-        runCl 1 admin store -t PoP -f final.toml ${addr[$i]}
+        runCl 1 admin store -t PoP final.toml ${addr[$i]}
     done
 }
 
+runAdd() {
+    runLink $1
+    for (( i=1; i<=$1; i++ ))
+    do
+        runCl 1 admin add $2 ${addr[$i]}
+    done
+}
 testStore(){
     runCoBG 1
     runLink 1
     testFail runCl 1 admin store -t PoP
-    testOK runCl 1 admin store -t PoP -f final.toml ${addr[1]}
+    testOK runCl 1 admin store -t PoP final.toml ${addr[1]}
+}
+
+testAdd(){
+    runCoBG 1
+    runLink 1
+    local KP
+    KP=$( mktemp )
+    runDbgCl 2 1 id kp > $KP
+    local pub=$( grep Public $KP | sed -e "s/.* //")
+    testFail runCl 1 admin add $pub
+    testOK runCl 1 admin  add $pub ${addr[1]}
 }
 
 runLink(){
@@ -369,7 +427,7 @@ clientSetup(){
     local CLIENTS=${1:-0} c b
     # admin
     runStore 3
-    runDbgCl 0 1 id cr -t PoP -f token.toml public.toml client1
+    runDbgCl 0 1 id cr -t PoP public.toml token.toml client1
     runGrepSed ID "s/.* //" runDbgCl 2 1 config ls
     ID=$SED
     echo "ID is" $ID

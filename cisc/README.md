@@ -24,13 +24,18 @@ Cisc takes different commands and sub-commands with arguments. The main commands
 
 Admin's command. It helps connect to conodes and save the authentication data there. To conect and store date, you need to use cisc admin followed by:
   * Link - Connects to conode.
-  * Store - Saves the authentication data on the conode: PoP, PIN(not implemented)
+  * Store - Saves the authentication data on the conode: PoP
+  * Add - Saves public keys on the conode
 
 ## cisc id
 
 Each device can be _connected_ to one identity but _linked_ to multiple identities. You can manage the connections with cisc id followed by:
-  * Create - asks the skipchain to create a new identity and returns its id#. It also connects to that identity.
+  * Create - asks the skipchain to create a new identity and returns its id #. It also connects to that identity.
+  	Users have to authenticate to get possibility to create skipchain. Current implementation supports two ways of authentication:
+	* Pop-Token - in this case user will keep privacy - service won't know who creates the skipchain
+	* Public keys - no privacy, but no pop-party visit is required
   * Connect - will ask the devices of the remote skipwchain to vote on the inclusion of this device in the skipchain - each device can only be connected to one identity
+  * Keypair - will create new keypair and ouput it in log
 
 For later:
   * Remove - removes the link to that skipchain - also needs to be voted upon
