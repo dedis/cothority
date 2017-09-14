@@ -31,8 +31,8 @@ test_lint:
 # to `make test_playground`.
 test_playground:
 	cd skipchain; \
-	for a in $$( seq 10 ); do \
-	  go test -v -race -short || exit 1 ; \
+	for a in $$( seq 100 ); do \
+	  go test -v -race -short -run ParallelStore || exit 1 ; \
 	done;
 
 test_verbose:
