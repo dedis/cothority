@@ -7,8 +7,17 @@ public class OnchainSecrets {
         this.roster = new Roster(group);
     }
 
+    Boolean ok;
     public Boolean verify() throws CothorityError{
-        this.roster.Nodes.forEach(n -> n.testNode());
+        ok = true;
+        this.roster.Nodes.forEach(n -> {
+            try {
+                n.GetStatus();
+            } catch (Exception e){
+                ok = false;
+            }
+        });
+        return ok;
     }
 
     public void addAccountToSkipchain(Account admin, Account newAccount) throws CothorityError {

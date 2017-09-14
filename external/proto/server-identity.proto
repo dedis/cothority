@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+option java_package = "proto";
+
+message ServerIdentity{
+    required bytes public = 1;
+    optional bytes id = 2;
+    required string address = 3;
+    optional string description = 4;
+}
+
+
