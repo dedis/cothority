@@ -19,7 +19,7 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, DataOCSReaders{},
+		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, Darc{},
 		CreateSkipchainsRequest{}, CreateSkipchainsReply{},
 		WriteRequest{}, WriteReply{},
 		ReadRequest{}, ReadReply{},
@@ -65,15 +65,22 @@ func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
 	}
 }
 
-// DataOCS holds eihter:
+// DataOCS holds either:
 // - a read request
 // - a write
 // - a key-update
 // - a write and a key-update
+// additionally it can hold a slice of bytes with any data that the user wants to
+// add to bind to that transaction.
 type DataOCS struct {
 	Write   *DataOCSWrite
 	Read    *DataOCSRead
-	Readers *DataOCSReaders
+	Readers *Darc
+	Meta    *Meta
+}
+
+type Meta struct {
+	Data []byte
 }
 
 // NewDataOCS returns a pointer to a DataOCS structure created from
@@ -116,21 +123,6 @@ type DataOCSWrite struct {
 	Data []byte
 	U    abstract.Point
 	Cs   []abstract.Point
-	// Readers is the ID of the DataOCSReaders block. If it is nil, then the
-	// DataOCSReaders must be present in the same DataOCS as this DataOCSWrite.
-	Readers []byte
-}
-
-// DataOCSReaders stores a new configuration for keys. If the same ID is already
-// on the blockchain, it needs to be signed by a threshold of admins in the
-// last block. If Admins is nil, no other block with the same ID can be stored.
-// If ID is nil, this is a unique block for a single DataOCSWrite.
-type DataOCSReaders struct {
-	ID        []byte
-	Readers   []abstract.Point
-	Admins    []abstract.Point
-	Threshold int
-	Signature *crypto.SchnorrSig
 }
 
 // DataOCSRead stores a read-request which is the secret encrypted under the
@@ -162,12 +154,40 @@ type CreateSkipchainsReply struct {
 	X   abstract.Point
 }
 
+// ReadDarcRequest returns the latest Darc for that ID. If recursive is
+// true, it will search for all connected Darcs.
+type ReadDarcRequest struct {
+	DarcID    []byte
+	Recursive bool
+}
+
+// ReadDarcReply returns all darcs that are attached to the requested
+// darc. If a recursive search has been requested, the first darc will be
+// the root-darc, but all other darcs will be in a random order.
+type ReadDarcReply struct {
+	Darc []*Darc
+}
+
+// EditDarcRequest allows to set up new accounts or edit existing
+// read-rights in documents.
+type EditDarcRequest struct {
+	OCS  skipchain.SkipBlockID
+	Darc *Darc
+}
+
+// EditDarcReply contains the skipblock with the account stored
+// in it.
+type EditDarcReply struct {
+	SB *skipchain.SkipBlock
+}
+
 // WriteRequest asks the OCS-skipchain to store data on the skipchain.
 // Readers can be empty if Write points to a valid reader.
 type WriteRequest struct {
-	Write   *DataOCSWrite
-	Readers *DataOCSReaders
 	OCS     skipchain.SkipBlockID
+	Write   *DataOCSWrite
+	Readers *Darc
+	Data    *[]byte
 }
 
 // WriteReply returns the created skipblock which is the write-id
@@ -177,8 +197,8 @@ type WriteReply struct {
 
 // ReadRequest asks the OCS-skipchain to allow a reader to access a document.
 type ReadRequest struct {
-	Read *DataOCSRead
 	OCS  skipchain.SkipBlockID
+	Read *DataOCSRead
 }
 
 // ReadReply is the added skipblock, if successful.

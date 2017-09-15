@@ -48,7 +48,9 @@ func writeData(t *testing.T, test *testStruct) {
 	var enc []byte
 	enc, test.sym = encryptDocument(test.data)
 	test.reader = config.NewKeyPair(network.Suite)
-	test.write, cerr = test.cl.WriteRequest(test.scurl, enc, test.sym, []abstract.Point{test.reader.Public})
+	darc := ocs.NewDarc(test.scurl.Genesis)
+	darc.Public = []abstract.Point{test.reader.Public}
+	test.write, cerr = test.cl.WriteRequest(test.scurl, enc, test.sym, darc)
 	log.ErrFatal(cerr)
 
 	dataOCS := ocs.NewDataOCS(test.write.Data)

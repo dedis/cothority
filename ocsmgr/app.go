@@ -190,12 +190,6 @@ func write(c *cli.Context) error {
 	}
 	cfg := loadConfigOrFail(c)
 	file := c.Args().Get(0)
-	var readers []abstract.Point
-	for _, r := range c.Args().Tail() {
-		pub, err := crypto.String64ToPub(network.Suite, r)
-		log.ErrFatal(err)
-		readers = append(readers, pub)
-	}
 
 	log.Info("Going to write file to skipchain")
 	data, err := ioutil.ReadFile(file)
@@ -203,8 +197,15 @@ func write(c *cli.Context) error {
 	symKey := random.Bytes(32, random.Stream)
 	cipher := network.Suite.Cipher(symKey)
 	encData := cipher.Seal(nil, data)
+	darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
+	darc.Public = []abstract.Point{}
+	for _, r := range c.Args().Tail() {
+		pub, err := crypto.String64ToPub(network.Suite, r)
+		log.ErrFatal(err)
+		darc.Public = append(darc.Public, pub)
+	}
 
-	sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, readers)
+	sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, darc)
 	log.ErrFatal(err)
 	log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
 	return nil

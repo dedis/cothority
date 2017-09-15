@@ -60,6 +60,21 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 	return
 }
 
+// EditDarc creates a new account on the skipchain. If the account-ID already exists,
+// there must be a valid signature provided in the Darc-structure, and all elements
+// must be valid: Version_new = Version_old + 1, Threshold_new = Threshold_old and the
+// different Darc-changes must follow the rules.
+func (c *Client) EditAccount(ocs *SkipChainURL, d *Darc) (sb *skipchain.SkipBlock,
+	cerr onet.ClientError) {
+	req := &EditDarcRequest{
+		Darc: d,
+		OCS:  ocs.Genesis,
+	}
+	reply := &EditDarcReply{}
+	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), req, reply)
+	return reply.SB, nil
+}
+
 // WriteRequest contacts the ocs-service and requests the addition of a new write-
 // block with the given encData. The encData has already to be encrypted using the symmetric
 // symKey. This method will encrypt the symKey using the public shared key of the
@@ -70,14 +85,14 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //  - encData [[]byte] - the data - already encrypted using symKey
 //  - symKey [[]byte] - the symmetric key - it will be encrypted using the shared public key
-//  - readList [[]abstract.point] - a list of public key that can request a re-encryption
-//    of the symmetric encryption key
+//  - acl [Darc] - the access control list of public keys that are allowed to access
+//    that resource
 //
 // Output:
 //  - sb [*skipchain.SkipBlock] - the actual block written in the skipchain. The
 //    Data-field of the block contains the actual write request.
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
+func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, acl *Darc) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(encData) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store data bigger than 10MB")
@@ -93,16 +108,12 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 	U, Cs := protocol.EncodeKey(network.Suite, shared.X, symKey)
 	wr := &WriteRequest{
 		Write: &DataOCSWrite{
-			Data:    encData,
-			U:       U,
-			Cs:      Cs,
-			Readers: []byte{},
+			Data: encData,
+			U:    U,
+			Cs:   Cs,
 		},
-		Readers: &DataOCSReaders{
-			ID:      []byte{},
-			Readers: readList,
-		},
-		OCS: ocs.Genesis,
+		Readers: acl,
+		OCS:     ocs.Genesis,
 	}
 	reply := &WriteReply{}
 	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)

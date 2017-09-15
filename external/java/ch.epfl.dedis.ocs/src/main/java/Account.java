@@ -9,22 +9,18 @@ public class Account {
         ADMIN, WRITER, READER
     }
 
-    private byte[] ID;
-    private PublicKey Pub;
-    private PrivateKey Priv;
-    private AccessRight Access;
+    public byte[] ID;
+    public PublicKey Pub;
+    public PrivateKey Priv;
+    public AccessRight Access;
 
     public Account(AccessRight a) throws Exception{
-        this.Access = a;
-        KeyPairGenerator kpg;
-        kpg = KeyPairGenerator.getInstance("EC","SunEC");
-        ECGenParameterSpec ecsp;
-        ecsp = new ECGenParameterSpec("secp192r1");
-        kpg.initialize(ecsp);
+        Access = a;
+        ID = Crypto.uuid4();
 
-        KeyPair kp = kpg.genKeyPair();
-        this.Priv = kp.getPrivate();
-        this.Pub = kp.getPublic();
+        Crypto.EdKeyPair kp = new Crypto.EdKeyPair();
+        Priv = kp.Public;
+        Pub = kp.Private;
     }
 }
 

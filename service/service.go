@@ -53,8 +53,9 @@ type Service struct {
 
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
-	OCSs   *ocs.SBBStorage
-	Shared map[string]*protocol.SharedSecret
+	OCSs     *ocs.SBBStorage
+	Accounts map[string]*ocs.Darc
+	Shared   map[string]*protocol.SharedSecret
 }
 
 // CreateSkipchains sets up a new OCS-skipchain.
@@ -106,6 +107,27 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	}
 
 	return
+}
+
+// EditDarc adds a new account or modifies an existing one.
+func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
+	cerr onet.ClientError) {
+	if _, exists := s.Storage.Accounts[string(req.Darc.ID)]; exists {
+		log.LLvl1("Modifying existing account")
+	} else {
+		log.LLvl1("Adding new account")
+	}
+	data := &ocs.DataOCS{
+		Readers: req.Darc,
+	}
+	s.saveMutex.Lock()
+	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
+	s.saveMutex.Unlock()
+	sb, cerr := s.BunchAddBlock(ocsBunch, ocsBunch.Latest.Roster, data)
+	if cerr != nil {
+		return
+	}
+	return &ocs.EditDarcReply{SB: sb}, nil
 }
 
 // WriteRequest adds a block the OCS-skipchain with a new file.
@@ -447,7 +469,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		log.Lvl3("It's a read")
 		// Search file
 		var writeBlock *ocs.DataOCSWrite
-		var readersBlock *ocs.DataOCSReaders
+		var readersBlock *ocs.Darc
 		for _, sb := range s.Storage.OCSs.GetBunch(genesis.Hash).SkipBlocks {
 			wd := ocs.NewDataOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
@@ -462,15 +484,11 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			log.Lvl3("Didn't find file")
 			return false
 		}
-		if len(writeBlock.Readers) > 0 {
-			log.Error("Reader-ids not yet supported")
-			return false
-		}
 		if readersBlock == nil {
 			log.Error("Found empty readers-block")
 			return false
 		}
-		for _, pk := range readersBlock.Readers {
+		for _, pk := range readersBlock.Public {
 			err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
 			if err != nil {
 				log.Lvl3("Didn't find signature:", err)
@@ -480,6 +498,9 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			}
 		}
 		return false
+	} else if darc := dataOCS.Readers; darc != nil {
+		log.Lvl3("Accepting all darc side")
+		return true
 	}
 	return false
 }
@@ -545,7 +566,7 @@ func newService(c *onet.Context) onet.Service {
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
-		s.GetBunches); err != nil {
+		s.GetBunches, s.EditDarc); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)

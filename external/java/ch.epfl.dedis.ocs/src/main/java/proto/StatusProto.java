@@ -443,11 +443,11 @@ public final class StatusProto {
     /**
      * <code>optional .ServerIdentity server = 2;</code>
      */
-    proto.ServerIdentityOuterClass.ServerIdentity getServer();
+    proto.ServerIdentityProto.ServerIdentity getServer();
     /**
      * <code>optional .ServerIdentity server = 2;</code>
      */
-    proto.ServerIdentityOuterClass.ServerIdentityOrBuilder getServerOrBuilder();
+    proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder();
   }
   /**
    * Protobuf type {@code Response}
@@ -505,11 +505,11 @@ public final class StatusProto {
               break;
             }
             case 18: {
-              proto.ServerIdentityOuterClass.ServerIdentity.Builder subBuilder = null;
+              proto.ServerIdentityProto.ServerIdentity.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = server_.toBuilder();
               }
-              server_ = input.readMessage(proto.ServerIdentityOuterClass.ServerIdentity.PARSER, extensionRegistry);
+              server_ = input.readMessage(proto.ServerIdentityProto.ServerIdentity.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(server_);
                 server_ = subBuilder.buildPartial();
@@ -1323,7 +1323,7 @@ public final class StatusProto {
     }
 
     public static final int SERVER_FIELD_NUMBER = 2;
-    private proto.ServerIdentityOuterClass.ServerIdentity server_;
+    private proto.ServerIdentityProto.ServerIdentity server_;
     /**
      * <code>optional .ServerIdentity server = 2;</code>
      */
@@ -1333,14 +1333,14 @@ public final class StatusProto {
     /**
      * <code>optional .ServerIdentity server = 2;</code>
      */
-    public proto.ServerIdentityOuterClass.ServerIdentity getServer() {
-      return server_ == null ? proto.ServerIdentityOuterClass.ServerIdentity.getDefaultInstance() : server_;
+    public proto.ServerIdentityProto.ServerIdentity getServer() {
+      return server_ == null ? proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
     }
     /**
      * <code>optional .ServerIdentity server = 2;</code>
      */
-    public proto.ServerIdentityOuterClass.ServerIdentityOrBuilder getServerOrBuilder() {
-      return server_ == null ? proto.ServerIdentityOuterClass.ServerIdentity.getDefaultInstance() : server_;
+    public proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
+      return server_ == null ? proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1831,9 +1831,9 @@ public final class StatusProto {
         return this;
       }
 
-      private proto.ServerIdentityOuterClass.ServerIdentity server_ = null;
+      private proto.ServerIdentityProto.ServerIdentity server_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          proto.ServerIdentityOuterClass.ServerIdentity, proto.ServerIdentityOuterClass.ServerIdentity.Builder, proto.ServerIdentityOuterClass.ServerIdentityOrBuilder> serverBuilder_;
+          proto.ServerIdentityProto.ServerIdentity, proto.ServerIdentityProto.ServerIdentity.Builder, proto.ServerIdentityProto.ServerIdentityOrBuilder> serverBuilder_;
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
@@ -1843,9 +1843,9 @@ public final class StatusProto {
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
-      public proto.ServerIdentityOuterClass.ServerIdentity getServer() {
+      public proto.ServerIdentityProto.ServerIdentity getServer() {
         if (serverBuilder_ == null) {
-          return server_ == null ? proto.ServerIdentityOuterClass.ServerIdentity.getDefaultInstance() : server_;
+          return server_ == null ? proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
         } else {
           return serverBuilder_.getMessage();
         }
@@ -1853,7 +1853,7 @@ public final class StatusProto {
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
-      public Builder setServer(proto.ServerIdentityOuterClass.ServerIdentity value) {
+      public Builder setServer(proto.ServerIdentityProto.ServerIdentity value) {
         if (serverBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1870,7 +1870,7 @@ public final class StatusProto {
        * <code>optional .ServerIdentity server = 2;</code>
        */
       public Builder setServer(
-          proto.ServerIdentityOuterClass.ServerIdentity.Builder builderForValue) {
+          proto.ServerIdentityProto.ServerIdentity.Builder builderForValue) {
         if (serverBuilder_ == null) {
           server_ = builderForValue.build();
           onChanged();
@@ -1883,13 +1883,13 @@ public final class StatusProto {
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
-      public Builder mergeServer(proto.ServerIdentityOuterClass.ServerIdentity value) {
+      public Builder mergeServer(proto.ServerIdentityProto.ServerIdentity value) {
         if (serverBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
               server_ != null &&
-              server_ != proto.ServerIdentityOuterClass.ServerIdentity.getDefaultInstance()) {
+              server_ != proto.ServerIdentityProto.ServerIdentity.getDefaultInstance()) {
             server_ =
-              proto.ServerIdentityOuterClass.ServerIdentity.newBuilder(server_).mergeFrom(value).buildPartial();
+              proto.ServerIdentityProto.ServerIdentity.newBuilder(server_).mergeFrom(value).buildPartial();
           } else {
             server_ = value;
           }
@@ -1916,7 +1916,7 @@ public final class StatusProto {
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
-      public proto.ServerIdentityOuterClass.ServerIdentity.Builder getServerBuilder() {
+      public proto.ServerIdentityProto.ServerIdentity.Builder getServerBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
         return getServerFieldBuilder().getBuilder();
@@ -1924,23 +1924,23 @@ public final class StatusProto {
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
-      public proto.ServerIdentityOuterClass.ServerIdentityOrBuilder getServerOrBuilder() {
+      public proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
         if (serverBuilder_ != null) {
           return serverBuilder_.getMessageOrBuilder();
         } else {
           return server_ == null ?
-              proto.ServerIdentityOuterClass.ServerIdentity.getDefaultInstance() : server_;
+              proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
         }
       }
       /**
        * <code>optional .ServerIdentity server = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          proto.ServerIdentityOuterClass.ServerIdentity, proto.ServerIdentityOuterClass.ServerIdentity.Builder, proto.ServerIdentityOuterClass.ServerIdentityOrBuilder> 
+          proto.ServerIdentityProto.ServerIdentity, proto.ServerIdentityProto.ServerIdentity.Builder, proto.ServerIdentityProto.ServerIdentityOrBuilder> 
           getServerFieldBuilder() {
         if (serverBuilder_ == null) {
           serverBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              proto.ServerIdentityOuterClass.ServerIdentity, proto.ServerIdentityOuterClass.ServerIdentity.Builder, proto.ServerIdentityOuterClass.ServerIdentityOrBuilder>(
+              proto.ServerIdentityProto.ServerIdentity, proto.ServerIdentityProto.ServerIdentity.Builder, proto.ServerIdentityProto.ServerIdentityOrBuilder>(
                   getServer(),
                   getParentForChildren(),
                   isClean());
@@ -2051,7 +2051,7 @@ public final class StatusProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          proto.ServerIdentityOuterClass.getDescriptor(),
+          proto.ServerIdentityProto.getDescriptor(),
         }, assigner);
     internal_static_Request_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -2083,7 +2083,7 @@ public final class StatusProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Response_Status_FieldEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    proto.ServerIdentityOuterClass.getDescriptor();
+    proto.ServerIdentityProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -1,21 +1,26 @@
+import com.google.protobuf.ByteString;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import proto.ServerIdentityProto;
 import proto.StatusProto;
+
+import javax.xml.bind.DatatypeConverter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
-    String tomlFile = "[[servers]]\n" +
-            "  Address = \"tcp://127.0.0.1:7002\"\n" +
-            "  Public = \"5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY=\"\n" +
-            "  Description = \"Conode_1\"";
+    static ServerIdentity si = new ServerIdentity(LocalRosters.first);
+
+    @BeforeAll
+    static void initAll() throws Exception {
+    }
 
     @Test
     void testGetStatus() {
-        ServerIdentity s = new ServerIdentity(tomlFile);
         try {
-            StatusProto.Response resp = s.GetStatus();
+            StatusProto.Response resp = si.GetStatus();
             assertNotNull(resp);
-//            System.out.println(resp.toString());
+            System.out.println(resp.toString());
         } catch (Exception e) {
             System.out.println(e.toString());
             assertFalse(true);
@@ -24,10 +29,16 @@ class ServerIdentityTest {
 
     @Test
     void testCreate() {
-        ServerIdentity s = new ServerIdentity(tomlFile);
-        assertEquals("tcp://127.0.0.1:7002", s.Address);
-        assertEquals("127.0.0.1:7003", s.AddressWebSocket());
-        assertEquals("Conode_1", s.Description);
-        assertNotEquals(null, s.Public);
+        assertEquals("tcp://127.0.0.1:7002", si.Address);
+        assertEquals("127.0.0.1:7003", si.AddressWebSocket());
+        assertEquals("Conode_1", si.Description);
+        assertNotEquals(null, si.Public);
+    }
+
+    @Test
+    void testProto(){
+        ServerIdentityProto.ServerIdentity si_proto = si.getProto();
+        byte[] id = DatatypeConverter.parseHexBinary(LocalRosters.ids[0]);
+        assertArrayEquals(ByteString.copyFrom(id).toByteArray(), si_proto.getId().toByteArray());
     }
 }

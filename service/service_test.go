@@ -106,7 +106,7 @@ func initTest(nbrNodes, step int) *test {
 					Cs:      t.Cs,
 					Readers: []byte{},
 				},
-				Readers: &ocs.DataOCSReaders{
+				Readers: &ocs.Darc{
 					ID:      []byte{},
 					Readers: []abstract.Point{t.reader.Public},
 				},
