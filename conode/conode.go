@@ -18,7 +18,7 @@ import (
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/urfave/cli.v1"
 
-	"gopkg.in/dedis/cothority.v1/cosi/check"
+	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/onchain-secrets/service"
 	"gopkg.in/dedis/onet.v1/app"
 )

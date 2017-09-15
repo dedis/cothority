@@ -10,8 +10,8 @@ import (
 
 	"bytes"
 
-	"gopkg.in/dedis/cothority.v1/messaging"
-	"gopkg.in/dedis/cothority.v1/skipchain"
+	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"

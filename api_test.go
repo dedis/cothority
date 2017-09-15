@@ -7,7 +7,7 @@ import (
 	"github.com/dedis/onchain-secrets"
 	_ "github.com/dedis/onchain-secrets/service"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v1/skipchain"
+	"github.com/dedis/cothority/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/crypto.v0/random"
