@@ -101,14 +101,13 @@ func initTest(nbrNodes, step int) *test {
 			t.reader = config.NewKeyPair(network.Suite)
 			wr := &ocs.WriteRequest{
 				Write: &ocs.DataOCSWrite{
-					Data:    []byte{},
-					U:       t.U,
-					Cs:      t.Cs,
-					Readers: []byte{},
+					Data: []byte{},
+					U:    t.U,
+					Cs:   t.Cs,
 				},
 				Readers: &ocs.Darc{
-					ID:      []byte{},
-					Readers: []abstract.Point{t.reader.Public},
+					ID:     []byte{},
+					Public: []abstract.Point{t.reader.Public},
 				},
 				OCS: t.createReply.OCS.Hash,
 			}
