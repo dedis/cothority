@@ -32,3 +32,9 @@
   Address = "tcp://167.160.36.37:3000"
   Public = "Nw0ZhZgLzZ3Vjkgx/lWkCd2LIN+E+IM3AI2jBv4j9dk="
   Description = "sina's conode"
+
+[[servers]]
+  Address = "tcp://46.101.101.102:9000"
+  Public = "TX6jUNkOPB7daK7Paq87x5eCBIcMcc9ELrxZkcwtpJs="
+  Description = "jwhite's server"
+
