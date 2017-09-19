@@ -13,7 +13,7 @@ import javax.xml.bind.DatatypeConverter;
 public class ServerIdentity {
     public String Address;
     public String Description;
-    public PublicKey Public;
+    public Crypto.Point Public;
 
     public ServerIdentity(String definition) {
         this(new Toml().read(definition).getTables("servers").get(0));
@@ -22,9 +22,9 @@ public class ServerIdentity {
     public ServerIdentity(Toml t) {
         this.Address = t.getString("Address");
         this.Description = t.getString("Description");
-        String pub = t.getString("Public");
+        String pub = t.getString("Point");
         byte[] pubBytes = Base64.getDecoder().decode(pub);
-        this.Public = Crypto.toPublic(pubBytes);
+        this.Public = new Crypto.Point(pubBytes);
     }
 
     public String AddressWebSocket() {
@@ -49,9 +49,8 @@ public class ServerIdentity {
     public ServerIdentityProto.ServerIdentity getProto(){
         ServerIdentityProto.ServerIdentity.Builder si =
                 ServerIdentityProto.ServerIdentity.newBuilder();
-        byte[] pub = Crypto.toBytes(Public);
-        si.setPublic(ByteString.copyFrom(pub));
-        String pubStr = "https://dedis.epfl.ch/id/" + DatatypeConverter.printHexBinary(pub).toLowerCase();
+        si.setPublic(Public.toProto());
+        String pubStr = "https://dedis.epfl.ch/id/" + Public.toString().toLowerCase();
         byte[] id = UUIDType5.toBytes(UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, pubStr));
         si.setId(ByteString.copyFrom(id));
         si.setAddress(Address);

@@ -16,6 +16,7 @@ import (
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
@@ -185,6 +186,7 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 		return
 	}
 
+	log.LLvl2("Got decryption key")
 	var err error
 	sym, err = protocol.DecodeKey(network.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, reader)

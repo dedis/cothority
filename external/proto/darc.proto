@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+option java_package = "proto";
+option java_outer_classname = "DarcProto";
+
+message Darc {
+    required bytes id = 1;
+    repeated DarcLink accounts = 2;
+    repeated bytes public_keys = 3;
+    required int32 version = 4;
+    optional DarcSig signature = 5;
+}
+
+message DarcLink {
+    required bytes id = 1;
+    required int32 rights = 2;
+    required int32 threshold = 3;
+}
+
+message DarcSig {
+    required bytes id = 1;
+    required int32 version = 2;
+    required bytes signature = 3;
+}

@@ -3,9 +3,67 @@ package main
 import (
 	"testing"
 
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/crypto.v0/config"
 	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
+}
+
+func TestPriv(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		kp := config.NewKeyPair(network.Suite)
+		priv := kp.Secret
+		privStr := priv.String()
+		log.Print("privStr:", privStr)
+		privStr2, err := crypto.ScalarToStringHex(network.Suite, priv)
+		log.ErrFatal(err)
+		log.Print("scatostr:", privStr2)
+		privDec, err := crypto.StringHexToScalar(network.Suite, privStr)
+		log.ErrFatal(err)
+		log.Print("privDec:", privDec)
+		neg := network.Suite.Scalar().Neg(priv)
+		log.Print("Sum:", neg.Add(neg, priv))
+		log.Print("Sum:", neg.Add(priv, neg))
+		log.Print()
+	}
+}
+
+func TestEndian(t *testing.T) {
+	//privStr := "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156"
+	privStr := "77d8aa14f60a5e4c6d82769da56f536ccae145bfb55f2f59dcea67a336b45c7b"
+	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
+	log.ErrFatal(err)
+	log.Print("private:", priv)
+	str, err := crypto.ScalarToStringHex(network.Suite, priv)
+	log.ErrFatal(err)
+	log.Print("private:", str)
+	pub := network.Suite.Point().Mul(nil, priv)
+	log.Print("public:", pub)
+
+	priv.Add(priv, network.Suite.Scalar().One())
+	log.Print("private+1:", priv)
+	pub.Add(pub, network.Suite.Point().Base())
+	log.Print("public+1:", pub)
+
+	priv.Add(priv, network.Suite.Scalar().One())
+	log.Print("private+2:", priv)
+	pub = network.Suite.Point().Mul(nil, priv)
+	log.Print("public+2:", pub)
+}
+
+func TestNegate(t *testing.T) {
+	privStr := "762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304"
+	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
+	log.ErrFatal(err)
+
+	log.Print("Private:", priv)
+	neg := network.Suite.Scalar().Neg(priv)
+	log.Print("Negative:", neg)
+	priv.Add(priv, network.Suite.Scalar().One())
+	sum := network.Suite.Scalar().Add(neg, priv)
+	log.Print("Sum:", sum)
 }

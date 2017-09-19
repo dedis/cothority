@@ -1,26 +1,20 @@
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.spec.ECGenParameterSpec;
-
 public class Account {
-    public enum AccessRight {
-        ADMIN, WRITER, READER
-    }
+    static public int ADMIN = 1;
+    static public int WRITER = 2;
+    static public int READER = 4;
 
     public byte[] ID;
-    public PublicKey Pub;
-    public PrivateKey Priv;
-    public AccessRight Access;
+    public Crypto.Point Point;
+    public Crypto.Scalar Scalar;
+    public int Access;
 
-    public Account(AccessRight a) throws Exception{
+    public Account(int a) throws Exception{
         Access = a;
         ID = Crypto.uuid4();
 
-        Crypto.EdKeyPair kp = new Crypto.EdKeyPair();
-        Priv = kp.Public;
-        Pub = kp.Private;
+        Crypto.KeyPair kp = new Crypto.KeyPair();
+        Scalar = kp.Scalar;
+        Point = kp.Point;
     }
 }
 

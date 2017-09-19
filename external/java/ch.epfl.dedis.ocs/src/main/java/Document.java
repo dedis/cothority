@@ -1,72 +1,67 @@
 import com.google.protobuf.ByteString;
+import net.i2p.crypto.eddsa.math.GroupElement;
 import proto.OCSProto;
 
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.ArrayList;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
-import java.util.List;
 
 public class Document {
     public byte[] id;
     public byte[] data;
+    public byte[] extra_data;
     public byte[] symmetricKey;
-    public byte[] darc_id;
+    public Darc readers;
+    public OCSProto.OCSWrite ocswrite;
 
-    public Document(byte[] data) {
+    public Document(Document doc) {
+        id = doc.id;
+        data = doc.data;
+        extra_data = doc.extra_data;
+        symmetricKey = doc.symmetricKey;
+        readers = doc.readers;
+    }
+
+    public Document(byte[] data, int keylen) {
         this.data = data;
-        symmetricKey = Crypto.uuid4();
+//        symmetricKey = new byte[keylen];
+//        new Random().nextBytes(symmetricKey);
+        symmetricKey = DatatypeConverter.parseHexBinary("294AEDA9694E0391EEC2D8C133BEBBFF");
+        extra_data = "".getBytes();
     }
 
-    public Document(String data) {
-        this(data.getBytes());
+    public Document(String data, int keylen) {
+        this(data.getBytes(), keylen);
     }
 
-    public OCSProto.OCSWrite getWrite(PublicKey X) throws Crypto.CryptoException {
-        OCSProto.OCSWrite.Builder write = OCSProto.OCSWrite.newBuilder();
-//        cipher := network.Suite.Cipher(symKey)
-//        encData := cipher.Seal(nil, data)
-        write.setData(ByteString.copyFrom(data));
-
-        // Input:
-//   - suite - the cryptographic suite to use
-//   - X - the aggregate public key of the DKG
-//   - key - the symmetric key for the document
-//
-// Output:
-//   - U - the schnorr commit
-//   - Cs - encrypted key-slices
-//        func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.Point, Cs []abstract.Point) {
-//            r := suite.Scalar().Pick(random.Stream)
-//            U = suite.Point().Mul(nil, r)
-//
-//            rem := make([]byte, len(key))
-//            copy(rem, key)
-//            for len(rem) > 0 {
-//                var kp abstract.Point
-//                kp, rem = suite.Point().Pick(rem, random.Stream)
-//                C := suite.Point().Mul(X, r)
-//                Cs = append(Cs, C.Add(C, kp))
-//            }
-//            return
-//        }
-        KeyPair randkp = Crypto.keyPair();
-        PrivateKey r = randkp.getPrivate();
-        PublicKey U = randkp.getPublic();
-//        PublicKey C = Crypto.toGroup(X).scalarMultiply(Crypto.toScalar(r));
-
-        List<PublicKey> Cs = new ArrayList<>();
-        for (int i = 0; i < symmetricKey.length; i += Crypto.pubLen) {
-            int to = i + Crypto.pubLen;
-            if (to > symmetricKey.length) {
-                to = symmetricKey.length - i;
-            }
-            PublicKey kp = Crypto.pubStore(Arrays.copyOfRange(symmetricKey, i, to));
-            Cs.add(kp);
+    public OCSProto.OCSWrite getWrite(Crypto.Point X) throws Exception {
+        if (ocswrite != null) {
+            return ocswrite;
         }
+        OCSProto.OCSWrite.Builder write = OCSProto.OCSWrite.newBuilder();
 
-        write.setU(Crypto.toProto(U));
+        Cipher cipher = Cipher.getInstance(Crypto.algo);
+        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(symmetricKey, Crypto.algoKey));
+        byte[] data_enc = cipher.doFinal(data);
+        write.setData(ByteString.copyFrom(data_enc));
+
+        Crypto.KeyPair randkp = new Crypto.KeyPair();
+        Crypto.Scalar r = randkp.Scalar;
+        Crypto.Point U = randkp.Point;
+        write.setU(U.toProto());
+
+        Crypto.Point C = X.scalarMult(r);
+        for (int from = 0; from < symmetricKey.length; from += Crypto.pubLen) {
+            int to = from + Crypto.pubLen;
+            if (to > symmetricKey.length) {
+                to = symmetricKey.length;
+            }
+            Crypto.Point keyPoint = Crypto.Point.pubStore(Arrays.copyOfRange(symmetricKey, from, to));
+            Crypto.Point Cs = C.add(keyPoint);
+            write.addCs(Cs.toProto());
+        }
+        ocswrite = write.build();
         return write.build();
     }
 }

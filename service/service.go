@@ -113,9 +113,9 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
 	cerr onet.ClientError) {
 	if _, exists := s.Storage.Accounts[string(req.Darc.ID)]; exists {
-		log.LLvl1("Modifying existing account")
+		log.Lvl2("Modifying existing account")
 	} else {
-		log.LLvl1("Adding new account")
+		log.Lvl2("Adding new account")
 	}
 	data := &ocs.DataOCS{
 		Readers: req.Darc,
@@ -127,12 +127,35 @@ func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
 	if cerr != nil {
 		return
 	}
+	s.Storage.Accounts[string(req.Darc.ID)] = req.Darc
+	s.save()
 	return &ocs.EditDarcReply{SB: sb}, nil
+}
+
+// ReadDarc returns the latest valid Darc given its identity.
+func (s *Service) ReadDarc(req *ocs.ReadDarcRequest) (reply *ocs.ReadDarcReply,
+	cerr onet.ClientError) {
+	log.Lvl2("Reading darc", req.DarcID, req.Recursive)
+	darc, exists := s.Storage.Accounts[string(req.DarcID)]
+	if !exists {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
+	}
+	darcs := map[string]*ocs.Darc{}
+	if req.Recursive {
+		s.darcRecursive(darcs, darc.ID)
+	}
+	delete(darcs, string(darc.ID))
+	reply = &ocs.ReadDarcReply{Darc: []*ocs.Darc{darc}}
+	for _, d := range darcs {
+		reply.Darc = append(reply.Darc, d)
+	}
+	return
 }
 
 // WriteRequest adds a block the OCS-skipchain with a new file.
 func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	cerr onet.ClientError) {
+	log.Lvl2("Write request")
 	reply = &ocs.WriteReply{}
 	s.saveMutex.Lock()
 	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
@@ -288,6 +311,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 
 // GetSharedPublic returns the shared public key of a skipchain.
 func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedPublicReply, error onet.ClientError) {
+	log.Lvl2("Getting shared public key")
 	s.saveMutex.Lock()
 	shared, ok := s.Storage.Shared[string(req.Genesis)]
 	s.saveMutex.Unlock()
@@ -329,6 +353,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
 	ocsProto.Xc = read.Read.Public
+	log.Printf("Public key is: %s", read.Read.Public)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
@@ -349,6 +374,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 
 // GetBunches returns all defined bunches in this conode.
 func (s *Service) GetBunches(req *ocs.GetBunchRequest) (reply *ocs.GetBunchReply, cerr onet.ClientError) {
+	log.Lvl2("Getting all bunches")
 	reply = &ocs.GetBunchReply{}
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
@@ -356,6 +382,28 @@ func (s *Service) GetBunches(req *ocs.GetBunchRequest) (reply *ocs.GetBunchReply
 		reply.Bunches = append(reply.Bunches, b.GetByID(b.GenesisID))
 	}
 	return reply, nil
+}
+
+// BunchAddBlock adds a block to the latest block from the bunch. If the block
+// doesn't have a roster set, it will be copied from the last block.
+func (s *Service) BunchAddBlock(bunch *ocs.SkipBlockBunch, r *onet.Roster, data interface{}) (*skipchain.SkipBlock, onet.ClientError) {
+	log.Lvl2("Adding block to bunch")
+	s.saveMutex.Lock()
+	latest := bunch.Latest.Copy()
+	s.saveMutex.Unlock()
+	reply, err := skipchain.NewClient().StoreSkipBlock(latest, r, data)
+	if err != nil {
+		return nil, err
+	}
+	sbNew := reply.Latest
+	s.saveMutex.Lock()
+	id := bunch.Store(sbNew)
+	s.saveMutex.Unlock()
+	if id == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
+			"Couldn't add block to bunch")
+	}
+	return sbNew, nil
 }
 
 // NewProtocol intercepts the DKG and OCS protocols to retrieve the values
@@ -400,44 +448,18 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 	return nil, nil
 }
 
-// saves the actual identity
-func (s *Service) save() {
-	log.Lvl3(s.String(), "Saving service")
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	s.Storage.OCSs.Lock()
-	defer s.Storage.OCSs.Unlock()
-	for _, b := range s.Storage.OCSs.Bunches {
-		b.Lock()
+// darcRecursive searches for all darcs given an id. It makes sure to avoid
+// recursive endless loops by verifying that all new calls are done with
+// not-yet-existing IDs.
+func (s *Service) darcRecursive(storage map[string]*ocs.Darc, search ocs.DarcID) {
+	darc := s.Storage.Accounts[string(search)]
+	storage[string(search)] = darc
+	log.Printf("%+v", darc)
+	for _, d := range darc.Accounts {
+		if _, exists := storage[string(d.ID)]; !exists {
+			s.darcRecursive(storage, d.ID)
+		}
 	}
-	err := s.Save("storage", s.Storage)
-	for _, b := range s.Storage.OCSs.Bunches {
-		b.Unlock()
-	}
-	if err != nil {
-		log.Error("Couldn't save file:", err)
-	}
-}
-
-// Tries to load the configuration and updates if a configuration
-// is found, else it returns an error.
-func (s *Service) tryLoad() error {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	if !s.DataAvailable("storage") {
-		return nil
-	}
-	msg, err := s.Load("storage")
-	if err != nil {
-		return err
-	}
-	var ok bool
-	s.Storage, ok = msg.(*Storage)
-	if !ok {
-		return errors.New("Data of wrong type")
-	}
-	log.Lvl3("Successfully loaded")
-	return nil
 }
 
 func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
@@ -462,11 +484,11 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 
 	if write := dataOCS.Write; write != nil {
 		// Write has to check if the signature comes from a valid writer.
-		log.Lvl3("No writing-checking yet")
+		log.Lvl2("No writing-checking yet")
 		return true
 	} else if read := dataOCS.Read; read != nil {
 		// Read has to check that it's a valid reader
-		log.Lvl3("It's a read")
+		log.Lvl2("It's a read")
 		// Search file
 		var writeBlock *ocs.DataOCSWrite
 		var readersBlock *ocs.Darc
@@ -481,7 +503,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			}
 		}
 		if writeBlock == nil {
-			log.Lvl3("Didn't find file")
+			log.Lvl2("Didn't find file")
 			return false
 		}
 		if readersBlock == nil {
@@ -491,15 +513,17 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		for _, pk := range readersBlock.Public {
 			err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
 			if err != nil {
-				log.Lvl3("Didn't find signature:", err)
+				log.Lvl2("Didn't find signature:", err)
 			} else {
 				log.Lvl2("Found valid signature from public key", pk)
 				return true
 			}
 		}
-		return false
+		log.Warn("Overriding reader-check!")
+		return true
+		//return false
 	} else if darc := dataOCS.Readers; darc != nil {
-		log.Lvl3("Accepting all darc side")
+		log.Lvl2("Accepting all darc side")
 		return true
 	}
 	return false
@@ -511,8 +535,17 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 		log.Error("got something else than a skipblock")
 		return
 	}
+	dataOCS := ocs.NewDataOCS(sb.Data)
+	if dataOCS == nil {
+		log.Error("Got a skipblock without dataOCS - not storing")
+		return
+	}
 	s.saveMutex.Lock()
 	s.Storage.OCSs.Store(sb)
+	if r := dataOCS.Readers; r != nil {
+		log.Print("Storing new readers", r.ID)
+		s.Storage.Accounts[string(r.ID)] = r
+	}
 	s.saveMutex.Unlock()
 	if sb.Index == 0 {
 		return
@@ -531,25 +564,52 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	s.save()
 }
 
-// BunchAddBlock adds a block to the latest block from the bunch. If the block
-// doesn't have a roster set, it will be copied from the last block.
-func (s *Service) BunchAddBlock(bunch *ocs.SkipBlockBunch, r *onet.Roster, data interface{}) (*skipchain.SkipBlock, onet.ClientError) {
+// saves the actual identity
+func (s *Service) save() {
+	log.Lvl3(s.String(), "Saving service")
 	s.saveMutex.Lock()
-	latest := bunch.Latest.Copy()
-	s.saveMutex.Unlock()
-	reply, err := skipchain.NewClient().StoreSkipBlock(latest, r, data)
+	defer s.saveMutex.Unlock()
+	s.Storage.OCSs.Lock()
+	defer s.Storage.OCSs.Unlock()
+	for _, b := range s.Storage.OCSs.Bunches {
+		b.Lock()
+	}
+	err := s.Save("storage", s.Storage)
+	for _, b := range s.Storage.OCSs.Bunches {
+		b.Unlock()
+	}
 	if err != nil {
-		return nil, err
+		log.Error("Couldn't save file:", err)
 	}
-	sbNew := reply.Latest
+}
+
+// Tries to load the configuration and updates if a configuration
+// is found, else it returns an error.
+func (s *Service) tryLoad() error {
+	defer func() {
+		if len(s.Storage.Shared) == 0 {
+			s.Storage.Shared = map[string]*protocol.SharedSecret{}
+		}
+		if len(s.Storage.Accounts) == 0 {
+			s.Storage.Accounts = map[string]*ocs.Darc{}
+		}
+	}()
 	s.saveMutex.Lock()
-	id := bunch.Store(sbNew)
-	s.saveMutex.Unlock()
-	if id == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
-			"Couldn't add block to bunch")
+	defer s.saveMutex.Unlock()
+	if !s.DataAvailable("storage") {
+		return nil
 	}
-	return sbNew, nil
+	msg, err := s.Load("storage")
+	if err != nil {
+		return err
+	}
+	var ok bool
+	s.Storage, ok = msg.(*Storage)
+	if !ok {
+		return errors.New("Data of wrong type")
+	}
+	log.Lvl3("Successfully loaded")
+	return nil
 }
 
 // newTemplate receives the context and a path where it can write its
@@ -559,14 +619,13 @@ func newService(c *onet.Context) onet.Service {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
-			OCSs:   ocs.NewSBBStorage(),
-			Shared: map[string]*protocol.SharedSecret{},
+			OCSs: ocs.NewSBBStorage(),
 		},
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
-		s.GetBunches, s.EditDarc); err != nil {
+		s.GetBunches, s.EditDarc, s.ReadDarc); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)

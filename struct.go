@@ -7,8 +7,8 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"fmt"
 
-	"github.com/satori/go.uuid"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
@@ -157,6 +157,7 @@ type CreateSkipchainsReply struct {
 // ReadDarcRequest returns the latest Darc for that ID. If recursive is
 // true, it will search for all connected Darcs.
 type ReadDarcRequest struct {
+	OCS       skipchain.SkipBlockID
 	DarcID    []byte
 	Recursive bool
 }

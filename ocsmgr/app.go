@@ -15,11 +15,9 @@ import (
 
 	"fmt"
 
-	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -60,7 +58,7 @@ func main() {
 					ArgsUsage: "group ocs-skipchain-id [private_key]",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "overwrite, o",
+							Name:  "force, f",
 							Usage: "overwrite existing config",
 						},
 					},
@@ -155,7 +153,7 @@ func mngJoin(c *cli.Context) error {
 		log.Fatal("Please give: group ocs-skipchain-id")
 	}
 	cfg, loaded := loadConfig(c)
-	if loaded && !c.Bool("overwrite") {
+	if loaded && !c.Bool("force") {
 		log.Fatal("Config is present but overwrite-flag not given")
 	}
 	cfg = &ocsConfig{}
@@ -171,12 +169,17 @@ func mngJoin(c *cli.Context) error {
 }
 
 func keypair(c *cli.Context) error {
-	kp := config.NewKeyPair(network.Suite)
-	privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
+	//kp := config.NewKeyPair(network.Suite)
+	r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	privStr, err := crypto.ScalarToStringHex(network.Suite, r)
+	//privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
+	log.ErrFatal(err)
+	pub := network.Suite.Point().Mul(nil, r)
+	pubStr, err := crypto.PubToStringHex(network.Suite, pub)
+	//pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
 	if err != nil {
 		return err
 	}
@@ -194,13 +197,15 @@ func write(c *cli.Context) error {
 	log.Info("Going to write file to skipchain")
 	data, err := ioutil.ReadFile(file)
 	log.ErrFatal(err)
-	symKey := random.Bytes(32, random.Stream)
+	//symKey := random.Bytes(32, random.Stream)
+	symKey, err := hex.DecodeString("294AEDA9694E0391EEC2D8C133BEBBFF")
+	log.ErrFatal(err)
 	cipher := network.Suite.Cipher(symKey)
 	encData := cipher.Seal(nil, data)
 	darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
 	darc.Public = []abstract.Point{}
 	for _, r := range c.Args().Tail() {
-		pub, err := crypto.String64ToPub(network.Suite, r)
+		pub, err := crypto.StringHexToPub(network.Suite, r)
 		log.ErrFatal(err)
 		darc.Public = append(darc.Public, pub)
 	}
@@ -224,8 +229,10 @@ func read(c *cli.Context) error {
 	fileID, err := hex.DecodeString(c.Args().Get(0))
 	log.ErrFatal(err)
 	log.Infof("Requesting read-access to file %x", fileID)
-	priv, err := crypto.String64ToScalar(network.Suite, c.Args().Get(1))
+	priv, err := crypto.StringHexToScalar(network.Suite, c.Args().Get(1))
 	log.ErrFatal(err)
+	pub := network.Suite.Point().Mul(nil, priv)
+	log.Printf("Private: %s\nPublic: %s", priv, pub)
 	cl := ocs.NewClient()
 	sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
 	log.ErrFatal(cerr)

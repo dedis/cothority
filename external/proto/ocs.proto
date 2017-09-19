@@ -1,0 +1,95 @@
+syntax = "proto2";
+
+import "skipblock.proto";
+import "darc.proto";
+import "roster.proto";
+
+option java_package = "proto";
+option java_outer_classname = "OCSProto";
+
+message CreateSkipchainsRequest {
+    required Roster roster = 1;
+}
+
+message CreateSkipchainsReply {
+    required SkipBlock SB = 1;
+    required bytes X = 2;
+}
+
+message ReadDarcRequest {
+    required bytes ocs = 1;
+    required bytes darc_id = 2;
+    optional bool recursive = 3;
+}
+
+message ReadDarcReply {
+    repeated Darc darc = 1;
+}
+
+message EditDarcRequest {
+    required bytes ocs = 1;
+    required Darc darc = 2;
+}
+
+message EditDarcReply {
+    required SkipBlock sb = 1;
+}
+
+message SharedPublicRequest {
+    required bytes genesis = 1;
+}
+
+message SharedPublicReply {
+    required bytes x = 1;
+}
+
+message WriteRequest {
+    required bytes ocs = 1;
+    required OCSWrite write = 2;
+    required Darc reader = 3;
+    // Extra data
+    required bytes data = 4;
+}
+
+message OCSWrite {
+    // Encrypted data
+    required bytes data = 1;
+    // Challenge
+    required bytes U = 2;
+    // Encrypted symmetric key
+    repeated bytes Cs = 3;
+}
+
+message WriteReply {
+    required SkipBlock sb = 1;
+}
+
+message ReadRequest {
+    required bytes ocs = 1;
+    required OCSRead read = 2;
+}
+
+message OCSRead {
+    required bytes public = 1;
+    required bytes data_id = 2;
+    required SchnorrSig signature = 3;
+}
+
+message SchnorrSig {
+    required bytes challenge = 1;
+    required bytes response = 2;
+}
+
+message ReadReply {
+    required SkipBlock sb = 1;
+}
+
+message DecryptKeyRequest {
+    required bytes read_id = 1;
+}
+
+message DecryptKeyReply {
+    repeated bytes Cs = 1;
+    required bytes XhatEnc = 2;
+    required bytes X = 3;
+}

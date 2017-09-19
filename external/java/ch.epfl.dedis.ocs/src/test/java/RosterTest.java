@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RosterTest {
     private static Roster r = new Roster(LocalRosters.group);
-    private static PublicKey agg = Crypto.hexToPublic(LocalRosters.aggregate);
+    private static Crypto.Point agg = new Crypto.Point(LocalRosters.aggregate);
 
     @Test
     void testRoster() {
@@ -18,16 +18,16 @@ class RosterTest {
 
     @Test
     void testAggregate() {
-        GroupElement pub = Crypto.add(r.Nodes.get(0).Public, r.Nodes.get(1).Public);
-        pub = Crypto.add(pub, r.Nodes.get(2).Public);
-        assertArrayEquals(pub.toByteArray(), Crypto.toBytes(agg));
+        Crypto.Point pub = r.Nodes.get(0).Public.add(r.Nodes.get(1).Public);
+        pub = pub.add(r.Nodes.get(2).Public);
+        assertTrue(pub.equals(agg));
     }
 
     @Test
     void testProto() throws Exception {
         RosterProto.Roster r_proto = r.getProto();
         assertEquals(3, r_proto.getListList().size());
-        assertArrayEquals(r_proto.getAggregate().toByteArray(), Crypto.toBytes(agg));
+        assertArrayEquals(r_proto.getAggregate().toByteArray(), agg.toBytes());
         assertEquals(16, r_proto.getId().toByteArray().length);
     }
 }

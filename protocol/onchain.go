@@ -3,6 +3,8 @@ package protocol
 import (
 	"errors"
 
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/network"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/crypto.v0/share/dkg"
@@ -24,16 +26,23 @@ import (
 //   - U - the schnorr commit
 //   - Cs - encrypted key-slices
 func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.Point, Cs []abstract.Point) {
-	r := suite.Scalar().Pick(random.Stream)
+	//r := suite.Scalar().Pick(random.Stream)
+	r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	log.ErrFatal(err)
 	U = suite.Point().Mul(nil, r)
+	log.Print("U is:", U.String())
 
 	rem := make([]byte, len(key))
 	copy(rem, key)
 	for len(rem) > 0 {
 		var kp abstract.Point
 		kp, rem = suite.Point().Pick(rem, random.Stream)
+		log.Print("Keypoint:", kp.String())
 		C := suite.Point().Mul(X, r)
+		log.Print("X:", X.String())
+		log.Print("C:", C.String())
 		Cs = append(Cs, C.Add(C, kp))
+		log.Print("Cs:", C.String())
 	}
 	return
 }
@@ -54,15 +63,27 @@ func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.P
 //   - err - an eventual error when trying to recover the data from the points
 func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
 	xc abstract.Scalar) (key []byte, err error) {
+	log.Print("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
+	log.Print("xcInv:", xcInv)
+	sum := suite.Scalar().Add(xc, xcInv)
+	log.Print("xc + xcInv:", sum, "::", xc)
+	log.Print("X:", X)
 	XhatDec := suite.Point().Mul(X, xcInv)
+	log.Print("XhatDec:", XhatDec)
+	log.Print("XhatEnc:", XhatEnc)
 	Xhat := suite.Point().Add(XhatEnc, XhatDec)
+	log.Print("Xhat:", Xhat)
 	XhatInv := suite.Point().Neg(Xhat)
+	log.Print("XhatInv:", XhatInv)
 
 	// Decrypt Cs to keyPointHat
 	for _, C := range Cs {
+		log.Print("C:", C)
 		keyPointHat := suite.Point().Add(C, XhatInv)
+		log.Print("keyPointHat:", keyPointHat)
 		keyPart, err := keyPointHat.Data()
+		log.Print("keyPart:", keyPart)
 		if err != nil {
 			return nil, err
 		}

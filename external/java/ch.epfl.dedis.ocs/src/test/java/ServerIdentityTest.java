@@ -20,7 +20,6 @@ class ServerIdentityTest {
         try {
             StatusProto.Response resp = si.GetStatus();
             assertNotNull(resp);
-            System.out.println(resp.toString());
         } catch (Exception e) {
             System.out.println(e.toString());
             assertFalse(true);
