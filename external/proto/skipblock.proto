@@ -3,7 +3,7 @@ syntax = "proto2";
 import "server-identity.proto";
 import "roster.proto";
 
-option java_package = "proto";
+option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "SkipBlockProto";
 
 message SkipBlock {
