@@ -1,2 +1,6 @@
 target/
 classes/
+
+# InteliJ IDEA
+*.iml
+.idea/
