@@ -1,3 +1,6 @@
 co?
 public.toml
 build/
+*.iml
+.idea
+.DS_Store
