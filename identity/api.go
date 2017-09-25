@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/anon"
 	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
@@ -56,6 +58,18 @@ const (
 	ErrorVoteSignature
 	ErrorListMissing
 	ErrorOnet
+	ErrorWrongPIN
+	ErrorAuthentication
+	ErrorInvalidSignature
+)
+
+// AuthType is type of authentication to create skipchains
+type AuthType int
+
+// AuthType consts
+const (
+	PoPAuth AuthType = 100 + iota
+	PublicAuth
 )
 
 // Identity structure holds the data necessary for a client/device to use the
@@ -84,9 +98,11 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string) *Identity {
+func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *config.KeyPair) *Identity {
 	client := onet.NewClient(ServiceName)
-	kp := config.NewKeyPair(network.Suite)
+	if kp == nil {
+		kp = config.NewKeyPair(network.Suite)
+	}
 	return &Identity{
 		Client:     client,
 		Private:    kp.Secret,
@@ -170,15 +186,70 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-// CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity() onet.ClientError {
-	log.Lvl3("Creating identity", i)
-	air := &CreateIdentityReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
-		&CreateIdentity{i.Data, i.Cothority},
-		air)
+func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
+	// we need to find index of public key
+	index := 0
+	for j, key := range atts {
+		if key.Equal(i.Public) {
+			index = j
+			break
+		}
+	}
+	sigtag := anon.Sign(network.Suite, random.Stream, au.Nonce,
+		anon.Set(atts), au.Ctx, index, i.Private)
+	cr := &CreateIdentity{}
+	cr.Data = i.Data
+	cr.Roster = i.Cothority
+	cr.Sig = sigtag
+	cr.Nonce = au.Nonce
+	return cr, nil
+}
+
+func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
+	sig, err := crypto.SignSchnorr(network.Suite, i.Private, msg)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	cr := &CreateIdentity{}
+	cr.Data = i.Data
+	cr.Sig = []byte{}
+	cr.Roster = i.Cothority
+	cr.Public = i.Public
+	cr.SchnSig = sig
+	cr.Nonce = msg
+	return cr, nil
+}
+
+// CreateIdentity asks the identityService to create a new Identity
+func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.ClientError {
+	log.Lvl3("Creating identity", i)
+
+	// request for authentication
+	si := i.Cothority.RandomServerIdentity()
+	au := &Authenticate{[]byte{}, []byte{}}
+	cerr := i.Client.SendProtobuf(si, au, au)
+	if cerr != nil {
+		return cerr
+	}
+
+	var cr *CreateIdentity
+	var err error
+	switch t {
+	case PoPAuth:
+		cr, err = i.popAuth(au, atts)
+	case PublicAuth:
+		cr, err = i.publicAuth(au.Nonce)
+	default:
+		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
+	}
+	if err != nil {
+		return onet.NewClientError(err)
+	}
+	cr.Type = t
+	air := &CreateIdentityReply{}
+	cerr = i.Client.SendProtobuf(si, cr, air)
+	if cerr != nil {
+		return cerr
 	}
 	i.ID = ID(air.Data.Hash)
 	return nil
@@ -222,6 +293,9 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	hash, err := i.Proposed.Hash()
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+	}
+	if i.Private == nil {
+		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
 	}
 	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
 	if err != nil {

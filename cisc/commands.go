@@ -6,9 +6,40 @@ import "gopkg.in/urfave/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandID, commandConfig, commandKeyvalue, commandSSH, commandFollow cli.Command
+var commandAdmin, commandID, commandConfig, commandKeyvalue, commandSSH, commandFollow cli.Command
 
 func init() {
+	commandAdmin = cli.Command{
+		Name:  "admin",
+		Usage: "admin options",
+		Subcommands: []cli.Command{
+			{
+				Name:      "link",
+				Usage:     "links admin to cothority",
+				ArgsUsage: "IP address [PIN]",
+				Action:    adminLink,
+			},
+			{
+				Name:      "store",
+				Usage:     "stores the authentication data in cothority",
+				ArgsUsage: "file or string with auth data IP address",
+				Action:    adminStore,
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name: "type,t",
+						Usage: `type of authentication it wants to store
+							: PoP, etc.`,
+					},
+				},
+			},
+			{
+				Name:      "add",
+				Usage:     "adds public keys in cothority",
+				ArgsUsage: "string with keys IP address",
+				Action:    adminAdd,
+			},
+		},
+	}
 	commandID = cli.Command{
 		Name:  "id",
 		Usage: "working on the identity",
@@ -17,15 +48,29 @@ func init() {
 				Name:      "create",
 				Aliases:   []string{"cr"},
 				Usage:     "start a new identity",
-				ArgsUsage: "group [id-name]",
+				ArgsUsage: "group(public.toml) file(token.toml) or string with auth data  [id-name]",
 				Flags: []cli.Flag{
 					cli.IntFlag{
 						Name:  "thr,threshold",
 						Usage: "the threshold necessary to add a block",
 						Value: 2,
 					},
+					cli.StringFlag{
+						Name:  "type,t",
+						Usage: "type of client authentication: PoP, PIN",
+					},
+					cli.StringFlag{
+						Name:  "cred,credentials",
+						Usage: "auth data : PoP-token file or PIN-string",
+					},
 				},
 				Action: idCreate,
+			},
+			{
+				Name:    "keypair",
+				Aliases: []string{"kp"},
+				Usage:   "create keypair",
+				Action:  idKeyPair,
 			},
 			{
 				Name:      "connect",
