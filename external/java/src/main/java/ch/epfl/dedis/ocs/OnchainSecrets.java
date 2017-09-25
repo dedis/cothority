@@ -60,9 +60,9 @@ public class OnchainSecrets {
      * @param ocsID - the ID of the used skipchain
      */
     public OnchainSecrets(String group, byte[] ocsID) throws Exception {
+        this.ocsID = ocsID; // unfortunately order is important, key generation need genesis (first block ID)
         this.roster = new Roster(group);
         this.X = getSharedPublicKey();
-        this.ocsID = ocsID;
     }
 
     /**
@@ -86,8 +86,8 @@ public class OnchainSecrets {
      * @return true only if all nodes are OK, else false.
      * @throws CothorityError
      */
-    public Boolean verify() throws CothorityError {
-        Boolean ok = true;
+    public boolean verify() throws CothorityError {
+        boolean ok = true;
         for (ServerIdentity n : roster.Nodes) {
             logger.info("Testing node {}", n.Address);
             try {
@@ -97,7 +97,6 @@ public class OnchainSecrets {
                 ok = false;
             }
         }
-        ;
         return ok;
     }
 
