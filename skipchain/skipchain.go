@@ -91,6 +91,12 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
 				err.Error())
 		}
+		if !s.newBlockStart(prop) {
+			return nil, onet.NewClientErrorCode(ErrorBlockInProgress,
+				"this skipchain-id is currently processing a block")
+		}
+		defer s.newBlockEnd(prop)
+
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.Sbm.GetByID(prop.ParentBlockID)
 			if parent == nil {
@@ -162,7 +168,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 				return nil, onet.NewClientErrorCode(ErrorBlockContent,
 					"Didn't get skipblock in back-link")
 			}
-			if err := s.SendRaw(back.Roster.RandomServerIdentity(),
+			if err := s.forwardSignature(
 				&ForwardSignature{i + 1, prev.Hash, prop,
 					prev.GetForward(0)}); err != nil {
 				// This is not a critical failure - we have at least
@@ -313,38 +319,29 @@ func (s *Service) getUpdateBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBl
 
 // forwardSignature receives a signature request of a newly accepted block.
 // It only needs the 2nd-newest block and the forward-link.
-func (s *Service) forwardSignature(env *network.Envelope) {
-	err := func() error {
-		fs, ok := env.Msg.(*ForwardSignature)
-		if !ok {
-			return errors.New("Didn't receive a ForwardSignature")
-		}
-		if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
-			return errors.New("This backlink-height doesn't exist")
-		}
-		target := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
-		if target == nil {
-			return errors.New("Didn't find target-block")
-		}
-		data, err := network.Marshal(fs)
-		if err != nil {
-			return err
-		}
-		// TODO: is this really signed by target.roster?
-		sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
-		if err != nil {
-			return errors.New("Couldn't get signature")
-		}
-		s.Sbm.Lock()
-		log.Lvl1("Adding forward-link to", target.Index)
-		target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
-		s.Sbm.Unlock()
-		s.startPropagation([]*SkipBlock{target})
-		return nil
-	}()
-	if err != nil {
-		log.Error(err)
+func (s *Service) forwardSignature(fs *ForwardSignature) error {
+	if fs.TargetHeight >= len(fs.Newest.BackLinkIDs) {
+		return errors.New("This backlink-height doesn't exist")
 	}
+	target := s.Sbm.GetByID(fs.Newest.BackLinkIDs[fs.TargetHeight])
+	if target == nil {
+		return errors.New("Didn't find target-block")
+	}
+	data, err := network.Marshal(fs)
+	if err != nil {
+		return err
+	}
+	// TODO: is this really signed by target.roster?
+	sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
+	if err != nil {
+		return errors.New("Couldn't get signature")
+	}
+	s.Sbm.Lock()
+	log.Lvl1("Adding forward-link to", target.Index)
+	target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
+	s.Sbm.Unlock()
+	s.startPropagation([]*SkipBlock{target})
+	return nil
 }
 
 func (s *Service) getBlock(env *network.Envelope) {
@@ -649,6 +646,9 @@ func (s *Service) newBlockStart(sb *SkipBlock) bool {
 	if _, processing := s.newBlocks[string(sb.Hash)]; processing {
 		return false
 	}
+	if len(s.newBlocks) > 0 {
+		return false
+	}
 	s.newBlocks[string(sb.Hash)] = true
 	return true
 }
@@ -710,8 +710,6 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains))
-	s.RegisterProcessorFunc(network.MessageType(ForwardSignature{}),
-		s.forwardSignature)
 	s.RegisterProcessorFunc(network.MessageType(GetBlock{}),
 		s.getBlock)
 	s.RegisterProcessorFunc(network.MessageType(GetBlockReply{}),
