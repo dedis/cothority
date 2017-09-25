@@ -1,3 +1,5 @@
+// +build experimental
+
 // Package pbft is the Practical Byzantine Fault Tolerance algorithm with some simplifications.
 package pbft
 

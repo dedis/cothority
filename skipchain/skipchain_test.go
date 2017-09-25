@@ -28,6 +28,7 @@ func TestMain(m *testing.M) {
 func TestService_StoreSkipBlock(t *testing.T) {
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID)
 	service := genService.(*Service)
@@ -80,14 +81,13 @@ func TestService_StoreSkipBlock(t *testing.T) {
 
 	// We've added 2 blocks, + root block = 3
 	assert.Equal(t, 3, service.Sbm.Length())
-
-	waitPropagationFinished(local)
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	conodes := 10
 	sbCount := conodes - 1
@@ -144,7 +144,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 			}
 		}
 	}
-	waitPropagationFinished(local)
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
@@ -152,6 +151,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	nodesRoot := 3
 
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID)
 	service := genService.(*Service)
@@ -204,11 +204,11 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
-	waitPropagationFinished(local)
 }
 
 func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(3, skipchainSID)
 	services := make([]*Service, len(servers))
@@ -255,11 +255,11 @@ func TestService_MultiLevel(t *testing.T) {
 			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
 		}
 	}
-	waitPropagationFinished(local)
 }
 
 func TestService_Verification(t *testing.T) {
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	sbLength := 4
 	_, el, genService := local.MakeHELS(sbLength, skipchainSID)
@@ -287,12 +287,12 @@ func TestService_Verification(t *testing.T) {
 	elSub := onet.NewRoster(el.List[0:2])
 	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, sb.VerifierIDs, 1, 1)
 	log.ErrFatal(err)
-	waitPropagationFinished(local)
 }
 
 func TestService_SignBlock(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(3, skipchainSID)
 	service := genService.(*Service)
@@ -309,12 +309,12 @@ func TestService_SignBlock(t *testing.T) {
 	log.Lvl1("Verifying signatures")
 	log.ErrFatal(sbRoot.VerifyForwardSignatures())
 	log.ErrFatal(sbSecond.VerifyForwardSignatures())
-	waitPropagationFinished(local)
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(3, skipchainSID)
 	s1 := s.(*Service)
@@ -341,13 +341,13 @@ func TestService_ProtocolVerification(t *testing.T) {
 			t.Fatal("Timeout while waiting for reply", i)
 		}
 	}
-	waitPropagationFinished(local)
 }
 
 func TestService_RegisterVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, el, s1 := makeHELS(local, 3)
 	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
@@ -369,12 +369,12 @@ func TestService_RegisterVerification(t *testing.T) {
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
-	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
 	nbrHosts := 3
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, roster, s1 := makeHELS(local, nbrHosts)
 	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
@@ -420,13 +420,13 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
-	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, nbrHosts)
 
@@ -451,13 +451,12 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			sbRoot})
 		log.ErrFatal(cerr)
 	}
-	waitPropagationFinished(local)
 }
 
 func TestService_ParallelStore(t *testing.T) {
-	defer log.AfterTest(t)
 	nbrRoutines := 10
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, 3)
 	sbRoot := &SkipBlock{
@@ -500,7 +499,26 @@ func TestService_ParallelStore(t *testing.T) {
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
-	waitPropagationFinished(local)
+}
+
+func TestService_Propagation(t *testing.T) {
+	nbr_nodes := 100
+	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	servers, ro, genService := local.MakeHELS(nbr_nodes, skipchainSID)
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	service := genService.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
+		3, 3)
+	log.ErrFatal(err)
+	require.NotNil(t, sbRoot)
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sbRoot})
+	log.ErrFatal(err)
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
@@ -593,7 +611,7 @@ func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Server, *onet.Roster, *Se
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 }
 
-func waitPropagationFinished(local *onet.LocalTest) {
+func waitPropagationFinished(t *testing.T, local *onet.LocalTest) {
 	var servers []*onet.Server
 	for _, s := range local.Servers {
 		servers = append(servers, s)
@@ -615,4 +633,5 @@ func waitPropagationFinished(local *onet.LocalTest) {
 			time.Sleep(time.Millisecond * 100)
 		}
 	}
+	log.AfterTest(t)
 }
