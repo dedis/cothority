@@ -22,7 +22,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestServiceSave(t *testing.T) {
