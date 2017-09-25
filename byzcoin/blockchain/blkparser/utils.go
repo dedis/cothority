@@ -1,3 +1,5 @@
+// +build experimental
+
 // Package blkparser basically is an adaptation from a file at https://github.com/tsileo/blkparser
 package blkparser
 

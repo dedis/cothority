@@ -1,3 +1,5 @@
+// +build experimental
+
 /*
 Package cosi is the Collective Signing implementation according to the paper of
 Bryan Ford: http://arxiv.org/pdf/1503.08768v1.pdf .

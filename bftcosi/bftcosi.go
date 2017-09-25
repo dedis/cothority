@@ -203,11 +203,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	if err := bft.handleChallengeCommit(<-bft.challengeCommitChan); err != nil {
 		return err
 	}
-	if err := bft.handleResponse(<-bft.responseChan); err != nil {
-		return err
-	}
-
-	return nil
+	return bft.handleResponse(<-bft.responseChan)
 }
 
 // Signature will generate the final signature, the output of the BFTCoSi

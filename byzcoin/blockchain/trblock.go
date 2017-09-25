@@ -1,3 +1,5 @@
+// +build experimental
+
 // Bitcoin-blockchain specific functions.
 package blockchain
 
