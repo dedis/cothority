@@ -301,9 +301,10 @@ type UpdateSkipBlock struct {
 }
 
 // Authenticate first message of authentication protocol
-// Empty message serves as trigger to start authentication protocol
-// It also serves as response from server to sign nonce within LinkCtx
-type Authenticate struct {
+type Authenticate struct{}
+
+// AuthenticateReply is the response from server to sign nonce within context Ctx
+type AuthenticateReply struct {
 	Nonce []byte
 	Ctx   []byte
 }

@@ -31,14 +31,14 @@ func TestIdentity_PinRequest(t *testing.T) {
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
 	require.Equal(t, 0, len(srvc.auth.pins))
 	pub, _ := network.Suite.Point().Pick(nil, network.Suite.Cipher([]byte("test")))
-	_, cerr := srvc.PinRequest(&RequestLink{"", pub})
+	_, cerr := srvc.RequestLink(&RequestLink{"", pub})
 	require.NotNil(t, cerr)
 	require.NotEqual(t, 0, len(srvc.auth.pins))
 	pin := ""
 	for t, _ := range srvc.auth.pins {
 		pin = t
 	}
-	_, cerr = srvc.PinRequest(&RequestLink{pin, pub})
+	_, cerr = srvc.RequestLink(&RequestLink{pin, pub})
 	log.Error(cerr)
 	require.Equal(t, pub, srvc.auth.adminKeys[0])
 }

@@ -188,7 +188,7 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
+func (i *Identity) popAuth(au *AuthenticateReply, atts []abstract.Point) (*CreateIdentity, error) {
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -235,8 +235,8 @@ func (i *Identity) CreateIdentity(auth AuthType, atts []abstract.Point, leader *
 	if si == nil {
 		si = i.Cothority.RandomServerIdentity()
 	}
-	au := &Authenticate{[]byte{}, []byte{}}
-	cerr := i.Client.SendProtobuf(si, au, au)
+	reply := &AuthenticateReply{}
+	cerr := i.Client.SendProtobuf(si, &Authenticate{}, reply)
 	if cerr != nil {
 		return cerr
 	}
@@ -245,9 +245,9 @@ func (i *Identity) CreateIdentity(auth AuthType, atts []abstract.Point, leader *
 	var err error
 	switch auth {
 	case PoPAuth:
-		cr, err = i.popAuth(au, atts)
+		cr, err = i.popAuth(reply, atts)
 	case PublicAuth:
-		cr, err = i.publicAuth(au.Nonce)
+		cr, err = i.publicAuth(reply.Nonce)
 	default:
 		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
 	}
@@ -366,14 +366,14 @@ func (i *Identity) RequestLinkPrivate(si *network.ServerIdentity, private abstra
 	if si.Public != nil && si.Public.Equal(public) {
 		return onet.NewClientErrorCode(ErrorAuthentication, "don't use conode's public key for authentication")
 	}
-	auth := &Authenticate{}
-	if err := i.Client.SendProtobuf(si, auth, auth); err != nil {
+	reply := &AuthenticateReply{}
+	if err := i.Client.SendProtobuf(si, &Authenticate{}, reply); err != nil {
 		return err
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, auth.Nonce)
+	sig, err := crypto.SignSchnorr(network.Suite, private, reply.Nonce)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorAuthentication, "error while schnorr signing the nonce")
 	}
 
-	return i.Client.SendProtobuf(si, &RequestLink{Public: public, Nonce: &auth.Nonce, Sig: &sig}, nil)
+	return i.Client.SendProtobuf(si, &RequestLink{Public: public, Nonce: &reply.Nonce, Sig: &sig}, nil)
 }

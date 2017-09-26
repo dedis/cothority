@@ -2,6 +2,7 @@
 
 DBG_TEST=1
 DBG_APP=3
+DBG_SRV=0
 NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
@@ -61,11 +62,11 @@ testMerge(){
 	runCl 3 org public ${pub[4]} ${pop_hash[3]}
 
 	runCl 1 org final  ${pop_hash[1]}
-	runDbgCl 1 2 org final  ${pop_hash[1]} | tail -n +3 > final1.toml
+	runDbgCl 1 2 org final  ${pop_hash[1]} | tail -n +3 | sed "$ d" > final1.toml
 	runCl 2 org final  ${pop_hash[2]}
-	runDbgCl 1 3 org final  ${pop_hash[2]} | tail -n +3> final2.toml
+	runDbgCl 1 3 org final  ${pop_hash[2]} | tail -n +3 | sed "$ d" > final2.toml
 	runCl 3 org final  ${pop_hash[3]}
-	runDbgCl 1 1 org final  ${pop_hash[3]} | tail -n +3 > final3.toml
+	runDbgCl 1 1 org final  ${pop_hash[3]} | tail -n +3 | sed "$ d" > final3.toml
 
 
 	testFail runCl 1 attendee join -y ${priv[1]} final1.toml
@@ -77,7 +78,7 @@ testMerge(){
 	testFail runCl 3 org merge ${pop_hash[1]}
 
 	testOK runCl 1 org merge ${pop_hash[1]}
-	runDbgCl 1 2 org merge ${pop_hash[2]} | tail -n +3 > merge_final.toml
+	runDbgCl 1 2 org merge ${pop_hash[2]} | tail -n +3 | sed "$ d" > merge_final.toml
 	for i in {1..4}
 	do
 		testOK runCl $i attendee join -y ${priv[$i]} merge_final.toml
@@ -114,9 +115,9 @@ testAtMultipleKey(){
 	runCl 2 org public ${pub[3]} ${pop_hash[2]}
 
 	runCl 1 org final  ${pop_hash[1]}
-	runDbgCl 2 2 org final  ${pop_hash[1]} | tail -n +3 > final1.toml
+	runDbgCl 2 2 org final  ${pop_hash[1]} | tail -n +3 | sed "$ d" > final1.toml
 	runCl 1 org final  ${pop_hash[2]}
-	runDbgCl 2 2 org final  ${pop_hash[2]} | tail -n +3 > final2.toml
+	runDbgCl 2 2 org final  ${pop_hash[2]} | tail -n +3 | sed "$ d" > final2.toml
 
 
 	testOK runCl 1 attendee join -y ${priv[1]} final1.toml
@@ -221,11 +222,11 @@ testAtJoin(){
 	testFail runCl 1 attendee join -y ${priv[1]} ${pop_hash[1]}
 
 	runCl 1 org final  ${pop_hash[1]}
-	runDbgCl 2 2 org final  ${pop_hash[1]} | tail > final1.toml
+	runDbgCl 2 2 org final  ${pop_hash[1]} | tail | sed "$ d" > final1.toml
 	runCl 2 org final  ${pop_hash[2]}
-	runDbgCl 2 3 org final  ${pop_hash[2]} | tail > final2.toml
+	runDbgCl 2 3 org final  ${pop_hash[2]} | tail | sed "$ d" > final2.toml
 	runCl 3 org final  ${pop_hash[3]}
-	runDbgCl 2 1 org final  ${pop_hash[3]} | tail > final3.toml
+	runDbgCl 2 1 org final  ${pop_hash[3]} | tail | sed "$ d" > final3.toml
 	cat final1.toml
 
 	testFail runCl 1 attendee join -y
@@ -254,11 +255,11 @@ mkFinal(){
 	runCl 3 org public ${pub[1]} ${pop_hash[3]}
 
 	runCl 1 org final  ${pop_hash[1]}
-	runDbgCl 2 2 org final  ${pop_hash[1]} | tail -n +3 > final1.toml
+	runDbgCl 2 2 org final  ${pop_hash[1]} | tail -n +3 | sed "$ d" > final1.toml
 	runCl 2 org final  ${pop_hash[2]}
-	runDbgCl 2 3 org final  ${pop_hash[2]} | tail -n +3> final2.toml
+	runDbgCl 2 3 org final  ${pop_hash[2]} | tail -n +3 | sed "$ d" > final2.toml
 	runCl 3 org final  ${pop_hash[3]}
-	runDbgCl 2 1 org final  ${pop_hash[3]} | tail -n +3 > final3.toml
+	runDbgCl 2 1 org final  ${pop_hash[3]} | tail -n +3 | sed "$ d" > final3.toml
 }
 
 testOrgFinal3(){
@@ -290,8 +291,8 @@ testOrgFinal2(){
 	testFail runCl 1 org final ${pop_hash[1]}
 	testOK runCl 2 org final ${pop_hash[1]}
 	testOK runCl 1 org final ${pop_hash[1]}
-	runDbgCl 1 1 org final ${pop_hash[1]} > final1.toml
-	runDbgCl 1 2 org final ${pop_hash[1]} > final2.toml
+	runDbgCl 1 1 org final ${pop_hash[1]} | sed "$ d" > final1.toml
+	runDbgCl 1 2 org final ${pop_hash[1]} | sed "$ d" > final2.toml
 	testNGrep , echo $( runCl 1 org final | grep Attend )
 	testNGrep , echo $( runCl 2 org final | grep Attend )
 	cmp -s final1.toml final2.toml

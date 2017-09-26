@@ -50,7 +50,7 @@ func newCiscConfig(i *identity.Identity) *ciscConfig {
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
 func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
-	cfg = newCiscConfig(&identity.Identity{})
+	cfg = newCiscConfig(&identity.Identity{Client: onet.NewClient(identity.ServiceName)})
 	loaded = true
 
 	configFile := getConfig(c)

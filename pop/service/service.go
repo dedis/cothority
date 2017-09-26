@@ -122,7 +122,7 @@ type sync struct {
 	mcChannel chan *mergeConfigReply
 }
 
-// PinRequest prints out a pin if none is given, else it verifies it has the
+// RequestLink prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
 	if req.Pin == "" {

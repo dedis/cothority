@@ -3,13 +3,14 @@
 DBG_TEST=2
 # Debug-level for app
 DBG_APP=3
-DBG_SRV=3
+DBG_SRV=2
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
 PACKAGE_POP="$GOPATH/src/$PACKAGE_POP_GO"
 pop=`basename $PACKAGE_POP`
 PACKAGE_IDEN="github.com/dedis/cothority/identity"
+#. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 . $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 main(){
@@ -423,7 +424,6 @@ testBuild(){
 runCl(){
     local D=cl$1
     shift
-    echo ./cisc -d $DBG_APP -c $D --cs $D $@
     dbgRun ./cisc -d $DBG_APP -c $D --cs $D $@
 }
 
@@ -513,7 +513,6 @@ createFinal(){
     local pub_user1=$( grep Public $KP | sed -e "s/.* //")
     createPopDesc $1
 
-	runCl 1 admin link ${addr[1]}
 	rm -rf clpop{1,2}
 	mkdir clpop{1,2}
     ./$pop -d 4 -c clpop1 org link ${addr[1]}

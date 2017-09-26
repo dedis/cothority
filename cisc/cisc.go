@@ -127,7 +127,6 @@ func adminLink(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-
 		if err := cfg.Identity.RequestLinkPrivate(si, secret, kp.Public); err != nil {
 			return err
 		}
