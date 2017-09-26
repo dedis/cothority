@@ -20,7 +20,6 @@ import (
 
 	"gopkg.in/dedis/cothority.v1/cosi/check"
 	_ "gopkg.in/dedis/cothority.v1/cosi/service"
-	_ "gopkg.in/dedis/cothority.v1/guard/service"
 	_ "gopkg.in/dedis/cothority.v1/identity"
 	_ "gopkg.in/dedis/cothority.v1/skipchain"
 	_ "gopkg.in/dedis/cothority.v1/status/service"

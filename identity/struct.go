@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/dedis/cothority.v1/pop/service"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
@@ -90,7 +91,7 @@ func (d *Data) Hash() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		_, err := d.Device[s].Point.MarshalTo(hash)
+		_, err = d.Device[s].Point.MarshalTo(hash)
 		if err != nil {
 			return nil, err
 		}
@@ -198,11 +199,34 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
+// PinRequest used for admin autentification
+type PinRequest struct {
+	PIN    string
+	Public abstract.Point
+}
+
+// StoreKeys used for setting autentification
+type StoreKeys struct {
+	Type    AuthType
+	Final   *service.FinalStatement
+	Publics []abstract.Point
+	Sig     crypto.SchnorrSig
+}
+
 // CreateIdentity starts a new identity-skipchain with the initial
 // Data and asking all nodes in Roster to participate.
 type CreateIdentity struct {
-	Data   *Data
+	Data *Data
+	// list of conodes on which skipchain is created
 	Roster *onet.Roster
+	Type   AuthType
+	// authentication via Public key
+	Public  abstract.Point
+	SchnSig crypto.SchnorrSig
+	// authentication via Linkable Ring Signature
+	Sig []byte
+	// Nonce plays in this case message of authentication
+	Nonce []byte
 }
 
 // CreateIdentityReply is the reply when a new Identity has been added. It
@@ -258,10 +282,20 @@ type ProposeVoteReply struct {
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
 	*Storage
+	Tag    string
+	Public abstract.Point
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock
 type UpdateSkipBlock struct {
 	ID     ID
 	Latest *skipchain.SkipBlock
+}
+
+// Authenticate first message of authentication protocol
+// Empty message serves as trigger to start authentication protocol
+// It also serves as response from server to sign nonce within LinkCtx
+type Authenticate struct {
+	Nonce []byte
+	Ctx   []byte
 }

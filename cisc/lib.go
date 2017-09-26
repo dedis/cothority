@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 
 	"gopkg.in/dedis/cothority.v1/identity"
+	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/app"
 	"gopkg.in/dedis/onet.v1/log"
@@ -25,18 +26,31 @@ import (
 
 func init() {
 	network.RegisterMessage(ciscConfig{})
+	network.RegisterMessage(keyPair{})
+}
+
+type keyPair struct {
+	Public  abstract.Point
+	Private abstract.Scalar
 }
 
 type ciscConfig struct {
 	*identity.Identity
 	Follow []*identity.Identity
+	// admin key pairs. Key of map is address of conode
+	KeyPairs map[string]*keyPair
+}
+
+func newCiscConfig(i *identity.Identity) *ciscConfig {
+	return &ciscConfig{Identity: i,
+		KeyPairs: make(map[string]*keyPair)}
 }
 
 // loadConfig will try to load the configuration and `fatal` if it is there but
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
 func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
-	cfg = &ciscConfig{Identity: &identity.Identity{}}
+	cfg = newCiscConfig(&identity.Identity{})
 	loaded = true
 
 	configFile := getConfig(c)
@@ -71,6 +85,16 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	}
 	log.ErrFatal(cfg.DataUpdate())
 	log.ErrFatal(cfg.ProposeUpdate())
+	return cfg
+}
+
+// loadConfigAdminOrFail tries to load the config and fails if it doesn't succeed.
+// it doesn't load data and propose updates unlike loadConfigOrFail
+func loadConfigAdminOrFail(c *cli.Context) *ciscConfig {
+	cfg, loaded := loadConfig(c)
+	if !loaded {
+		log.Fatal("Couldn't load configuration-file")
+	}
 	return cfg
 }
 
@@ -168,6 +192,13 @@ func getConfig(c *cli.Context) string {
 	configDir := app.TildeToHome(c.GlobalString("config"))
 	log.ErrFatal(mkdir(configDir, 0770))
 	return configDir + "/config.bin"
+}
+
+// Returns the config-file for admins containing key-pair
+func getKeyConfig(c *cli.Context) string {
+	configDir := app.TildeToHome(c.GlobalString("config"))
+	log.ErrFatal(mkdir(configDir, 0770))
+	return configDir + "/admin_key.bin"
 }
 
 // Reads the group-file and returns it

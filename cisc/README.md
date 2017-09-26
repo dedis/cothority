@@ -14,17 +14,28 @@ For further convenience, a simple mechanism allows for grouping identities with 
 # Command reference
 
 Cisc takes different commands and sub-commands with arguments. The main commands are:
+  * Admin - manages the authentication data for users
   * Id - manages the identities this device is connected to
   * Config - handles the data of the identities this device is connected to
   * Ssh - interfaces the ssh-data of the identities
   * Kv - direct key/value pair editing
   * Follow - for servers or other computers that want to follow a Skipchain
+## cisc admin
+
+Admin's command. It helps connect to conodes and save the authentication data there. To conect and store date, you need to use cisc admin followed by:
+  * Link - Connects to conode.
+  * Store - Saves the authentication data on the conode: PoP
+  * Add - Saves public keys on the conode
 
 ## cisc id
 
 Each device can be _connected_ to one identity but _linked_ to multiple identities. You can manage the connections with cisc id followed by:
-  * Create - asks the skipchain to create a new identity and returns its id#. It also connects to that identity.
+  * Create - asks the skipchain to create a new identity and returns its id #. It also connects to that identity.
+  	Users have to authenticate to get possibility to create skipchain. Current implementation supports two ways of authentication:
+	* Pop-Token - in this case user will keep privacy - service won't know who creates the skipchain
+	* Public keys - no privacy, but no pop-party visit is required
   * Connect - will ask the devices of the remote skipwchain to vote on the inclusion of this device in the skipchain - each device can only be connected to one identity
+  * Keypair - will create new keypair and ouput it in log
 
 For later:
   * Remove - removes the link to that skipchain - also needs to be voted upon
@@ -59,9 +70,9 @@ cisc kv has the following subcommands:
   * Value - returns the value of a given key
   * Add - adds a key/value pair by proposing the new data to the identity
   * Rm - removes a key/value pair by proposing the new data to the identity
-  
+
 ## cisc follow
-A server can set up cisc to follow a skipchain and update the 
+A server can set up cisc to follow a skipchain and update the
 `authorized_keys.cisc`-file whenever a change in the list of ssh-keys occurs.
 For convenience, cisc writes to `authorized_keys.cisc`, so that you can keep
 your own keys, too. If you don't have a `authorized_keys`-file, cisc will
@@ -85,5 +96,5 @@ any key that is present in either of the files.
   * list - prints a list of all connected skipchains and the keys stored
   in them
   * update [-p interval] - looks for updates of one of the skipchains. In
-   case it finds a change in the ssh-keys, it will update 
+   case it finds a change in the ssh-keys, it will update
    `~/.ssh/authorized_keys.cisc`

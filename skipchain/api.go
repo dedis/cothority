@@ -23,6 +23,9 @@ const (
 	ErrorVerification
 	// ErrorOnet indicates an error from the onet framework
 	ErrorOnet
+	// ErrorBlockInProgress indicates that currently a block is being formed
+	// and propagated
+	ErrorBlockInProgress
 )
 
 // Client is a structure to communicate with the Skipchain
@@ -69,7 +72,7 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 		}
 		latestID = latest.Hash
 	}
-	host := latest.Roster.RandomServerIdentity()
+	host := latest.Roster.Get(0)
 	reply = &StoreSkipBlockReply{}
 	cerr = c.SendProtobuf(host, &StoreSkipBlock{latestID, newBlock}, reply)
 	if cerr != nil {
@@ -163,5 +166,14 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *Ski
 	reply = &SkipBlock{}
 	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
 		&GetSingleBlock{id}, reply)
+	return
+}
+
+// GetSingleBlockByIndex searches for a block with the given index following the genesis-block.
+// It returns that block, or an error if that block is not found.
+func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *SkipBlock, cerr onet.ClientError) {
+	reply = &SkipBlock{}
+	cerr = c.SendProtobuf(roster.RandomServerIdentity(),
+		&GetSingleBlockByIndex{genesis, index}, reply)
 	return
 }

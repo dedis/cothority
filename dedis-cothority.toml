@@ -14,6 +14,26 @@
   Description = "Nikkolasg's server serving the cothority"
 
 [[servers]]
+  Address = "tcp://159.100.249.178:6879"
+  Public = "9nzWwjezfPVlu5U9q07h2HWTsBJmXXsRBJO+6AHonkw="
+  Description = "Daeinar's Conode"
+
+[[servers]]
   Address = "tcp://46.101.254.191:6879"
   Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
   Description = "Kirill's server"
+
+[[servers]]
+  Address = "tcp://139.59.10.242:3000"
+  Public = "4OwnNWMX6+XIenC/8orGHYzwhuxSwSLGhUCyAsDTvt8="
+  Description = "Brahma-BL1"
+
+[[servers]]
+  Address = "tcp://167.160.36.37:3000"
+  Public = "Nw0ZhZgLzZ3Vjkgx/lWkCd2LIN+E+IM3AI2jBv4j9dk="
+  Description = "sina's conode"
+
+[[servers]]
+  Address = "tcp://46.101.101.102:9100"
+  Public = "TX6jUNkOPB7daK7Paq87x5eCBIcMcc9ELrxZkcwtpJs="
+  Description = "jwhite's server"

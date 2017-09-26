@@ -105,6 +105,12 @@ type GetSingleBlock struct {
 	ID SkipBlockID
 }
 
+// GetSingleBlockByIndex asks for a single block.
+type GetSingleBlockByIndex struct {
+	Genesis SkipBlockID
+	Index   int
+}
+
 // Internal calls
 
 // GetBlock asks for an updated block, in case for a conode that is not

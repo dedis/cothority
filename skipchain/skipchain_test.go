@@ -12,6 +12,8 @@ import (
 
 	"time"
 
+	"sync"
+
 	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,9 +26,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID)
 	service := genService.(*Service)
@@ -82,10 +84,10 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
-	defer log.AfterTest(t)
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	conodes := 10
 	sbCount := conodes - 1
@@ -145,11 +147,11 @@ func TestService_GetUpdateChain(t *testing.T) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// How many nodes in Root
 	nodesRoot := 3
 
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID)
 	service := genService.(*Service)
@@ -205,8 +207,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
-	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(3, skipchainSID)
 	services := make([]*Service, len(servers))
@@ -233,60 +235,31 @@ func TestService_MultiLevel(t *testing.T) {
 				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{latest.Hash, sb})
 				log.ErrFatal(err)
 				latest = psbr.Latest
-				checkBacklinks(services, latest)
+				for n, i := range sb.BackLinkIDs {
+					for ns, s := range services {
+						for {
+							log.Lvl3("Checking backlink", n, ns)
+							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
+							log.ErrFatal(err)
+							if len(bl.ForwardLink) == n+1 &&
+								bl.ForwardLink[n].Hash.Equal(sb.Hash) {
+								break
+							}
+							time.Sleep(10 * time.Millisecond)
+						}
+					}
+				}
 			}
 
 			log.ErrFatal(checkMLForwardBackward(service, sbRoot, base, height))
 			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
 		}
 	}
-	waitPropagationFinished(local)
-}
-
-func waitPropagationFinished(local *onet.LocalTest) {
-	var servers []*onet.Server
-	for _, s := range local.Servers {
-		servers = append(servers, s)
-	}
-	services := make([]*Service, len(servers))
-	for i, s := range local.GetServices(servers, skipchainSID) {
-		services[i] = s.(*Service)
-	}
-	propagating := true
-	for propagating {
-		propagating = false
-		for _, s := range services {
-			if s.IsPropagating() {
-				log.Print("Service", s, "is still propagating")
-				propagating = true
-			}
-		}
-		if propagating {
-			time.Sleep(time.Millisecond * 100)
-		}
-	}
-}
-
-func checkBacklinks(services []*Service, sb *SkipBlock) {
-	for n, i := range sb.BackLinkIDs {
-		for ns, s := range services {
-			for {
-				log.Lvl3("Checking backlink", n, ns)
-				bl, err := s.GetSingleBlock(&GetSingleBlock{i})
-				log.ErrFatal(err)
-				if len(bl.ForwardLink) == n+1 &&
-					bl.ForwardLink[n].Hash.Equal(sb.Hash) {
-					break
-				}
-				time.Sleep(10 * time.Millisecond)
-			}
-		}
-	}
 }
 
 func TestService_Verification(t *testing.T) {
-	defer log.AfterTest(t)
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	sbLength := 4
 	_, el, genService := local.MakeHELS(sbLength, skipchainSID)
@@ -314,13 +287,12 @@ func TestService_Verification(t *testing.T) {
 	elSub := onet.NewRoster(el.List[0:2])
 	sbInter, err = makeGenesisRosterArgs(service, elSub, sbRoot.Hash, sb.VerifierIDs, 1, 1)
 	log.ErrFatal(err)
-	waitPropagationFinished(local)
 }
 
 func TestService_SignBlock(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(3, skipchainSID)
 	service := genService.(*Service)
@@ -337,13 +309,12 @@ func TestService_SignBlock(t *testing.T) {
 	log.Lvl1("Verifying signatures")
 	log.ErrFatal(sbRoot.VerifyForwardSignatures())
 	log.ErrFatal(sbSecond.VerifyForwardSignatures())
-	waitPropagationFinished(local)
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, s := local.MakeHELS(3, skipchainSID)
 	s1 := s.(*Service)
@@ -370,17 +341,13 @@ func TestService_ProtocolVerification(t *testing.T) {
 			t.Fatal("Timeout while waiting for reply", i)
 		}
 	}
-	waitPropagationFinished(local)
-}
-
-func TestService_ForwardSignature(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
-	defer log.AfterTest(t)
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, el, s1 := makeHELS(local, 3)
 	VerifyTest := VerifierID(uuid.NewV5(uuid.NamespaceURL, "Test1"))
@@ -402,13 +369,12 @@ func TestService_RegisterVerification(t *testing.T) {
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
-	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
-	defer log.AfterTest(t)
 	nbrHosts := 3
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, roster, s1 := makeHELS(local, nbrHosts)
 	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
@@ -430,6 +396,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
 	ssbr, cerr = s2.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
+	require.NotNil(t, cerr)
+	ssbr, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sb1})
 	log.ErrFatal(cerr)
 	require.NotNil(t, ssbr.Latest)
 
@@ -448,17 +416,17 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	_, cerr = s1.StoreSkipBlock(&StoreSkipBlock{sbErr.ParentBlockID, sbErr})
 	// Last successful log...
 	require.NotNil(t, cerr)
+
 	sbErr = ssbr.Latest.Copy()
 	_, cerr = s3.StoreSkipBlock(&StoreSkipBlock{ssbr.Latest.Hash, sbErr})
 	require.NotNil(t, cerr)
-	waitPropagationFinished(local)
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
-	defer log.AfterTest(t)
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
 	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, nbrHosts)
 
@@ -483,6 +451,74 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			sbRoot})
 		log.ErrFatal(cerr)
 	}
+}
+
+func TestService_ParallelStore(t *testing.T) {
+	nbrRoutines := 10
+	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 3)
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	ssbrep, cerr := s1.StoreSkipBlock(&StoreSkipBlock{nil, sbRoot})
+	log.ErrFatal(cerr)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(i int, latest *SkipBlock) {
+			cl := NewClient()
+			block := sbRoot.Copy()
+			for {
+				_, cerr := s1.StoreSkipBlock(&StoreSkipBlock{latest.Hash, block})
+				if cerr == nil {
+					log.Lvl1("Done with", i)
+					wg.Done()
+					break
+				} else if cerr.ErrorCode() != ErrorBlockInProgress &&
+					cerr.ErrorCode() != ErrorBlockContent {
+					log.Fatal(cerr)
+				}
+				for {
+					time.Sleep(10 * time.Millisecond)
+					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
+					if cerr == nil {
+						latest = update.Update[len(update.Update)-1]
+						break
+					}
+				}
+			}
+
+		}(i, ssbrep.Latest.Copy())
+	}
+	wg.Wait()
+}
+
+func TestService_Propagation(t *testing.T) {
+	nbr_nodes := 100
+	local := onet.NewLocalTest()
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	servers, ro, genService := local.MakeHELS(nbr_nodes, skipchainSID)
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	service := genService.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
+		3, 3)
+	log.ErrFatal(err)
+	require.NotNil(t, sbRoot)
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{sbRoot.Hash, sbRoot})
+	log.ErrFatal(err)
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
@@ -573,4 +609,29 @@ func makeHELS(local *onet.LocalTest, nbr int) ([]*onet.Server, *onet.Roster, *Se
 	hosts := local.GenServers(nbr)
 	el := local.GenRosterFromHost(hosts...)
 	return hosts, el, local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
+}
+
+func waitPropagationFinished(t *testing.T, local *onet.LocalTest) {
+	var servers []*onet.Server
+	for _, s := range local.Servers {
+		servers = append(servers, s)
+	}
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	propagating := true
+	for propagating {
+		propagating = false
+		for _, s := range services {
+			if s.IsPropagating() {
+				log.Lvl1("Service", s, "is still propagating")
+				propagating = true
+			}
+		}
+		if propagating {
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
+	log.AfterTest(t)
 }

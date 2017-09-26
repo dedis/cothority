@@ -50,6 +50,9 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 	}
 
 	_, root := req.Roster.Search(cs.ServerIdentity().ID)
+	if root == nil {
+		return nil, onet.NewClientErrorCode(4102, "Couldn't find a serverIdetity in Roster")
+	}
 	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
