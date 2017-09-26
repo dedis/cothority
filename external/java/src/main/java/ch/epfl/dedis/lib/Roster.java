@@ -1,13 +1,10 @@
 package ch.epfl.dedis.lib;
 
-import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.RosterProto;
 import com.google.protobuf.ByteString;
-import com.moandjiezana.toml.Toml;
 
-import javax.xml.bind.DatatypeConverter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * dedis/lib
@@ -20,30 +17,38 @@ import java.util.stream.Collectors;
  */
 
 public class Roster {
-    public List<ServerIdentity> Nodes;
-    public Crypto.Point Aggregate;
+    private List<ServerIdentity> nodes = new ArrayList<>();
+    private Crypto.Point aggregate; // TODO: can we find better name for it? like aggregatePublicKey or aggregatedKey?
 
-    public Roster(String group_toml) {
-        Toml toml = new Toml().read(group_toml);
-        List<Toml> servers = toml.getTables("servers");
-        Nodes = servers.stream().map(server -> new ServerIdentity(server)).collect(Collectors.toList());
-        Aggregate = Nodes.get(0).Public;
-        for (int i = 1; i < Nodes.size(); i++) {
-            Aggregate = Aggregate.add(Nodes.get(i).Public);
+    public Roster(List<ServerIdentity> servers) {
+        nodes.addAll(servers);
+
+        for (final ServerIdentity serverIdentity : nodes) {
+            if (aggregate == null) {
+                // TODO: it will be much better if there is some kind of 'zero' element for Point type. Is it possible to use just a new created Point
+                aggregate = serverIdentity.Public;
+            }
+            else {
+                aggregate = aggregate.add(serverIdentity.Public);
+            }
         }
     }
 
-    public RosterProto.Roster getProto() throws Exception {
+    public List<ServerIdentity> getNodes() {
+        return nodes;
+    }
+
+    public RosterProto.Roster getProto() {
         RosterProto.Roster.Builder r = RosterProto.Roster.newBuilder();
         r.setId(ByteString.copyFrom(Crypto.uuid4()));
-        Nodes.forEach(n -> r.addList(n.getProto()));
-        r.setAggregate(Aggregate.toProto());
+        nodes.forEach(n -> r.addList(n.getProto()));
+        r.setAggregate(aggregate.toProto());
 
         return r.build();
     }
 
-    public ByteString SendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityError{
+    public ByteString SendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
-        return ByteString.copyFrom(Nodes.get(0).SendMessage(path, proto.toByteArray()));
+        return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
     }
 }

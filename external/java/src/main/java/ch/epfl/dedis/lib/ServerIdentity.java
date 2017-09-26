@@ -1,20 +1,17 @@
 package ch.epfl.dedis.lib;
 
-import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.ServerIdentityProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 
-import com.moandjiezana.toml.*;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * dedis/lib
@@ -27,26 +24,17 @@ import javax.xml.bind.DatatypeConverter;
  */
 
 public class ServerIdentity {
-    public String Address;
-    public String Description;
+    private final URI conodeAddress;
     public Crypto.Point Public;
 
-    public ServerIdentity(String definition) {
-        this(new Toml().read(definition).getTables("servers").get(0));
+    public ServerIdentity(final URI serverWsAddress, final String publicKey) {
+        this.conodeAddress = serverWsAddress;
+        // TODO: It will be better to use some class for server key and move this conversion outside of this class
+        this.Public = new Crypto.Point(Base64.getDecoder().decode(publicKey));
     }
 
-    public ServerIdentity(Toml t) {
-        this.Address = t.getString("Address");
-        this.Description = t.getString("Description");
-        String pub = t.getString("Point");
-        byte[] pubBytes = Base64.getDecoder().decode(pub);
-        this.Public = new Crypto.Point(pubBytes);
-    }
-
-    public String AddressWebSocket() {
-        String[] ipPort = Address.replaceFirst("^tcp://", "").split(":");
-        int Port = Integer.valueOf(ipPort[1]);
-        return String.format("%s:%d", ipPort[0], Port + 1);
+    public URI getAddress() {
+        return conodeAddress;
     }
 
     public StatusProto.Response GetStatus() throws Exception {
@@ -69,12 +57,12 @@ public class ServerIdentity {
         String pubStr = "https://dedis.epfl.ch/id/" + Public.toString().toLowerCase();
         byte[] id = UUIDType5.toBytes(UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, pubStr));
         si.setId(ByteString.copyFrom(id));
-        si.setAddress(Address);
-        si.setDescription(Description);
+        si.setAddress(getAddress().toString());
+        si.setDescription("");
         return si.build();
     }
 
-    public byte[] SendMessage(String path, byte[] data) throws CothorityError{
+    public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
         try {
             ServerIdentity.SyncSendMessage msg =
                     new ServerIdentity.SyncSendMessage(path, data);
@@ -82,13 +70,12 @@ public class ServerIdentity {
             if (msg.ok) {
                 return msg.response.array();
             } else {
-                throw new CothorityError("Error while sending message: " + msg.error);
+                throw new CothorityCommunicationException("Error while sending message: " + msg.error);
             }
         } catch (Exception e) {
-            throw new CothorityError(e.toString());
+            throw new CothorityCommunicationException("Cothority communication error: " + e.getMessage(), e);
         }
     }
-
 
     public class SyncSendMessage {
         public ByteBuffer response;
@@ -97,8 +84,7 @@ public class ServerIdentity {
 
         public SyncSendMessage(String path, byte[] msg) throws Exception {
             final CountDownLatch statusLatch = new CountDownLatch(1);
-            String uri = String.format("ws://%s/%s", AddressWebSocket(), path);
-            WebSocketClient ws = new WebSocketClient(new URI(uri)) {
+            WebSocketClient ws = new WebSocketClient(buildWebSocketAdddress(path)) {
                 @Override
                 public void onMessage(String msg) {
                     error = "This should never happen:" + msg;
@@ -148,6 +134,16 @@ public class ServerIdentity {
                 super(message);
                 System.out.println(message);
             }
+        }
+
+        private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
+            return new URI("ws",
+                    conodeAddress.getUserInfo(),
+                    conodeAddress.getHost(),
+                    conodeAddress.getPort() + 1, // client operation use higher port number
+                    servicePath.startsWith("/") ? servicePath : "/".concat(servicePath),
+                    conodeAddress.getQuery(),
+                    conodeAddress.getFragment());
         }
     }
 }

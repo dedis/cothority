@@ -1,6 +1,6 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.CothorityError;
+import ch.epfl.dedis.lib.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.lib.DecryptKey;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,7 +24,16 @@ class OnchainSecretsTest {
 
     @BeforeAll
     static void initAll() throws Exception {
-        ocs = new OnchainSecrets(LocalRosters.group);
+        OcsFactory ocsFactory = new OcsFactory()
+                .addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1)
+                .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
+                .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
+                .initialiseNewChain();
+
+        ocs = ocsFactory.createConnection();
+
+        //ocs = ConnectingWithTomlConfig.connectClusterWithTomlConfig(LocalRosters.groupToml);
+
         admin = new Account(Account.ADMIN);
         publisher = new Account(Account.WRITER);
         reader = new Account(Account.READER);
@@ -44,7 +53,7 @@ class OnchainSecretsTest {
             ocs.addAccountToSkipchain(publisher, publisher);
 //            fail("this should not be possible");
             System.out.println("this should not be possible");
-        } catch (CothorityError e) {
+        } catch (CothorityCommunicationException e) {
             System.out.println(e);
         }
         ocs.addAccountToSkipchain(admin, publisher);
@@ -118,5 +127,4 @@ class OnchainSecretsTest {
         byte[] data = dk.decryptDocument(docNew.ocswrite, reader);
         assertArrayEquals(doc.data, data);
     }
-
 }

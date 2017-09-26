@@ -2,25 +2,33 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.proto.RosterProto;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class RosterTest {
-    private static Roster r = new Roster(LocalRosters.group);
+    private static Roster r = new Roster(Arrays.asList(
+            new ServerIdentity(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1),
+            new ServerIdentity(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2),
+            new ServerIdentity(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)));
+
+    //private static Roster r = ConnectingWithTomlConfig.constructRosterWithTomlConfig(LocalRosters.firstToml);
+
     private static Crypto.Point agg = new Crypto.Point(LocalRosters.aggregate);
 
     @Test
     void testRoster() {
-        assertEquals(3, r.Nodes.size());
-        assertEquals("Conode_2", r.Nodes.get(1).Description);
+        assertEquals(3, r.getNodes().size());
     }
 
     @Test
     void testAggregate() {
-        Crypto.Point pub = r.Nodes.get(0).Public.add(r.Nodes.get(1).Public);
-        pub = pub.add(r.Nodes.get(2).Public);
+        Crypto.Point pub = r.getNodes().get(0).Public.add(r.getNodes().get(1).Public);
+        pub = pub.add(r.getNodes().get(2).Public);
         assertTrue(pub.equals(agg));
     }
 

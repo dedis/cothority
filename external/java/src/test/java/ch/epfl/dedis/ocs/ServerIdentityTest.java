@@ -4,19 +4,17 @@ import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.proto.ServerIdentityProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
+import static ch.epfl.dedis.ocs.LocalRosters.CONODE_PUB_1;
+import static ch.epfl.dedis.ocs.LocalRosters.CONODE_1;
+import static ch.epfl.dedis.ocs.LocalRosters.ids;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
-    static ServerIdentity si = new ServerIdentity(LocalRosters.first);
-
-    @BeforeAll
-    static void initAll() throws Exception {
-    }
+    static ServerIdentity si = new ServerIdentity(CONODE_1, CONODE_PUB_1);
 
     @Test
     void testGetStatus() {
@@ -31,16 +29,15 @@ class ServerIdentityTest {
 
     @Test
     void testCreate() {
-        assertEquals("tcp://127.0.0.1:7002", si.Address);
-        assertEquals("127.0.0.1:7003", si.AddressWebSocket());
-        assertEquals("Conode_1", si.Description);
+        // TODO: there is not much value in this test
+        assertEquals(CONODE_1.toString(), si.getAddress().toString());
         assertNotEquals(null, si.Public);
     }
 
     @Test
     void testProto(){
         ServerIdentityProto.ServerIdentity si_proto = si.getProto();
-        byte[] id = DatatypeConverter.parseHexBinary(LocalRosters.ids[0]);
+        byte[] id = DatatypeConverter.parseHexBinary(ids[0]);
         assertArrayEquals(ByteString.copyFrom(id).toByteArray(), si_proto.getId().toByteArray());
     }
 }
