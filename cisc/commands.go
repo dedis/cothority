@@ -57,7 +57,8 @@ func init() {
 					},
 					cli.StringFlag{
 						Name:  "type,t",
-						Usage: "type of client authentication: PoP, PIN",
+						Usage: "type of client authentication: pop, public",
+						Value: "public",
 					},
 					cli.StringFlag{
 						Name:  "cred,credentials",

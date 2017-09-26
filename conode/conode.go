@@ -37,6 +37,7 @@ const (
 
 func main() {
 
+	log.Print("version 1.2")
 	cliApp := cli.NewApp()
 	cliApp.Name = "conode"
 	cliApp.Usage = "run a cothority server"

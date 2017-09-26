@@ -22,6 +22,9 @@ import (
 
 	"fmt"
 
+	"strconv"
+
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/qantik/qrgo"
@@ -93,36 +96,45 @@ func adminLink(c *cli.Context) error {
 	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
 	si := &network.ServerIdentity{Address: addr}
 
-	pin := c.Args().Get(1)
-
 	cfg := loadConfigAdminOrFail(c)
 
-	public := network.Suite.Point().Null()
-	var found = true
-	var kp *keyPair
-	if pin != "" {
-		kp, found = cfg.KeyPairs[string(addr)]
-		if !found {
-			ckp := config.NewKeyPair(network.Suite)
-			kp = &keyPair{}
-			kp.Public = ckp.Public
-			kp.Private = ckp.Secret
-		}
-		public = kp.Public
+	ckp := config.NewKeyPair(network.Suite)
+	kp := &keyPair{
+		Public:  ckp.Public,
+		Private: ckp.Secret,
 	}
-	client := onet.NewClient(identity.ServiceName)
-	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
-		if err.ErrorCode() == identity.ErrorWrongPIN && pin == "" {
-			log.Info("Please read PIN in server-log")
-			return nil
+
+	pinOrPrivate := c.Args().Get(1)
+	if _, err := strconv.Atoi(pinOrPrivate); err == nil {
+		pin := pinOrPrivate
+
+		if err := cfg.Identity.RequestLinkPIN(si, pin, kp.Public); err != nil {
+			if err.ErrorCode() == identity.ErrorWrongPIN && pin == "" {
+				log.Info("Please read PIN in server-log")
+				return nil
+			}
+			return err
 		}
-		return err
+		log.Info("Successfully linked with", addr)
+	} else if _, err := os.Stat(pinOrPrivate); err == nil {
+		hc := &app.CothorityConfig{}
+		_, err := toml.DecodeFile(pinOrPrivate, hc)
+		if err != nil {
+			return err
+		}
+		// Get the secret key
+		secret, err := crypto.StringHexToScalar(network.Suite, hc.Private)
+		if err != nil {
+			return err
+		}
+
+		if err := cfg.Identity.RequestLinkPrivate(si, secret, kp.Public); err != nil {
+			return err
+		}
 	}
-	log.Info("Successfully linked with", addr)
+
 	// storing keys only if successfully linked
-	if !found {
-		cfg.KeyPairs[string(addr)] = kp
-	}
+	cfg.KeyPairs[string(addr)] = kp
 	cfg.saveConfig(c)
 	return nil
 }
@@ -262,14 +274,15 @@ func idKeyPair(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Lvlf2("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
 	return nil
 }
 
 func idCreate(c *cli.Context) error {
+	cfg, hasConfig := loadConfig(c)
 	log.Info("Creating id")
-	if c.NArg() < 2 {
-		log.Fatal("Please give a group-definition and auth data")
+	if c.NArg() < 1 {
+		log.Fatal("Please give a group-definition and optionally an auth data")
 	}
 
 	group := getGroup(c)
@@ -278,8 +291,9 @@ func idCreate(c *cli.Context) error {
 	kp := &config.KeyPair{}
 
 	var typ identity.AuthType
-	switch t {
-	case "PoP":
+	var leader *network.ServerIdentity
+	switch strings.ToLower(t) {
+	case "pop":
 		typ = identity.PoPAuth
 		finalName := c.Args().Get(1)
 		buf, err := ioutil.ReadFile(finalName)
@@ -291,14 +305,31 @@ func idCreate(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-	case "Public":
+	case "public":
 		typ = identity.PublicAuth
-		priv := c.Args().Get(1)
-		var err error
-		kp.Secret, err = crypto.String64ToScalar(network.Suite, priv)
-		if err != nil {
-			log.Error("Couldn't parse private key")
-			return err
+		if c.NArg() > 1 {
+			priv := c.Args().Get(1)
+			var err error
+			kp.Secret, err = crypto.String64ToScalar(network.Suite, priv)
+			if err != nil {
+				log.Error("Couldn't parse private key")
+				return err
+			}
+		} else if !hasConfig {
+			log.Fatal("Please give a private key")
+		} else {
+			for _, si := range group.Roster.List {
+				if kpStored := cfg.KeyPairs[string(si.Address)]; kpStored != nil {
+					log.Lvl1("Found keypair for host", si)
+					kp.Secret = kpStored.Private
+					leader = si
+					break
+				}
+			}
+			if kp.Secret == nil {
+				log.Fatalf("Did not find a keypair for any host in %v in map of %+v",
+					group.Roster.List, cfg.KeyPairs)
+			}
 		}
 		kp.Public = network.Suite.Point().Mul(nil, kp.Secret)
 	default:
@@ -313,8 +344,8 @@ func idCreate(c *cli.Context) error {
 	log.Info("Creating new blockchain-identity for", name)
 
 	thr := c.Int("threshold")
-	cfg := newCiscConfig(identity.NewIdentity(group.Roster, thr, name, kp))
-	log.ErrFatal(cfg.CreateIdentity(typ, atts))
+	cfg.Identity = identity.NewIdentity(group.Roster, thr, name, kp)
+	log.ErrFatal(cfg.CreateIdentity(typ, atts, leader))
 	log.Infof("IC is %x", cfg.ID)
 	return cfg.saveConfig(c)
 }

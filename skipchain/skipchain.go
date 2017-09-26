@@ -25,6 +25,10 @@ const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
 
+// UnauthorizedAccess should be set to false to avoid rogue registrations of
+// new skipchains.
+var UnauthorizedAccess = true
+
 func init() {
 	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
 	network.RegisterMessage(&SkipBlockMap{})
@@ -78,6 +82,11 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 
 	if psbd.LatestID.IsNull() {
 		// A new chain is created
+		if !UnauthorizedAccess && psbd.Signature == nil {
+			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+				"cannot set up skipblocks without authentication")
+		}
+
 		prop.Index = 0
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)

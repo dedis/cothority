@@ -100,17 +100,17 @@ type authData struct {
  * API messages
  */
 
-// PinRequest will check PIN of admin or print it in case PIN is not provided
+// RequestLink will check PIN of admin or print it in case PIN is not provided
 // then save the admin's public key
-func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
-	log.Lvl3("PinRequest", s.ServerIdentity())
-	if req.PIN == "" {
+func (s *Service) PinRequest(req *RequestLink) (network.Message, onet.ClientError) {
+	log.Lvl3("RequestLink", s.ServerIdentity())
+	if *req.PIN == "" {
 		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
 		s.auth.pins[pin] = struct{}{}
 		log.Info("PIN:", pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
 	}
-	if _, ok := s.auth.pins[req.PIN]; !ok {
+	if _, ok := s.auth.pins[*req.PIN]; !ok {
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
 	}
 	s.auth.adminKeys = append(s.auth.adminKeys, req.Public)
@@ -193,7 +193,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 
 // Authenticate will create nonce and ctx and send it to user
 // It saves nonces in set
-// Replay attack is impossible, because after successful authentification nonce will
+// Replay attack is impossible, because after successful authentication nonce will
 // be deleted.
 func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
@@ -246,6 +246,12 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		}
 		found := false
 		for _, k := range s.auth.keys {
+			if k.Equal(ai.Public) {
+				found = true
+				break
+			}
+		}
+		for _, k := range s.auth.adminKeys {
 			if k.Equal(ai.Public) {
 				found = true
 				break

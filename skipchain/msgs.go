@@ -1,6 +1,9 @@
 package skipchain
 
-import "gopkg.in/dedis/onet.v1/network"
+import (
+	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/onet.v1/network"
+)
 
 func init() {
 	for _, m := range []interface{}{
@@ -43,9 +46,13 @@ func init() {
 // StoreSkipBlock - Requests a new skipblock to be appended to
 // the given SkipBlock. If the given SkipBlock has Index 0 (which
 // is invalid), a new SkipChain will be created.
+// For secure skipchain-creation and extension of the roster, the
+// Signature-field has to be non-null and have a valid signature for
+// all new nodes in the roster.
 type StoreSkipBlock struct {
-	LatestID SkipBlockID
-	NewBlock *SkipBlock
+	LatestID  SkipBlockID
+	NewBlock  *SkipBlock
+	Signature *[]crypto.SchnorrSig
 }
 
 // StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks

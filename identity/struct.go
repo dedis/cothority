@@ -199,10 +199,18 @@ func sortUniq(slice []string) []string {
 
 // Messages between the Client-API and the Service
 
-// PinRequest used for admin autentification
-type PinRequest struct {
-	PIN    string
+// RequestLink used for admin autentification
+type RequestLink struct {
+	// The public key to store at the conode
 	Public abstract.Point
+	// PIN can be "" to indicate either to print the PIN in the logs,
+	// or use the signature, if present.
+	PIN *string
+	// Nonce must come from a call to Authenticate
+	Nonce *[]byte
+	// Sig is a schnorr-signature using the private key of the conode
+	// on the message Nonce
+	Sig *crypto.SchnorrSig
 }
 
 // StoreKeys used for setting autentification
