@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 # Debug-level for app
-DBG_APP=3
-DBG_SRV=2
+DBG_APP=2
+DBG_SRV=0
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
 PACKAGE_POP="$GOPATH/src/$PACKAGE_POP_GO"
 pop=`basename $PACKAGE_POP`
 PACKAGE_IDEN="github.com/dedis/cothority/identity"
-#. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
-. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
+. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest
@@ -25,27 +24,27 @@ main(){
     createFinal 2
     createToken 2
 
-#    test Build
-#    test Link
+    test Build
+    test Link
     test LinkPrivate
-#    test Store
-#    test Add
-#    test ClientSetup
-#    test IdKeyPair
-#    test IdCreate
-#    test IdCreate2
-#    test ConfigList
-#    test ConfigVote
-#    test IdConnect
-#    test IdDel
-#    test KeyAdd
-#    test KeyAdd2
-#    test KeyDel
-#    test SSHAdd
-#    test SSHDel
-#    test Follow
-#    test SymLink
-#    test Revoke
+    test Store
+    test Add
+    test ClientSetup
+    test IdKeyPair
+    test IdCreate
+    test IdCreate2
+    test ConfigList
+    test ConfigVote
+    test IdConnect
+    test IdDel
+    test KeyAdd
+    test KeyAdd2
+    test KeyDel
+    test SSHAdd
+    test SSHDel
+    test Follow
+    test SymLink
+    test Revoke
     stopTest
 }
 
@@ -410,9 +409,9 @@ testLink(){
 
 testLinkPrivate(){
     runCoBG `seq 3`
-	runCl 1 admin link
-	testFail runCl 1 admin link ${addr[1]} co2/private.toml
-	testOK runCl 1 admin link ${addr[1]} co1/private.toml
+    runCl 1 admin link
+    testFail runCl 1 admin link ${addr[1]} co2/private.toml
+    testOK runCl 1 admin link ${addr[1]} co1/private.toml
     testOK runCl 1 id cr public.toml
 }
 
@@ -513,8 +512,8 @@ createFinal(){
     local pub_user1=$( grep Public $KP | sed -e "s/.* //")
     createPopDesc $1
 
-	rm -rf clpop{1,2}
-	mkdir clpop{1,2}
+    rm -rf clpop{1,2}
+    mkdir clpop{1,2}
     ./$pop -d 4 -c clpop1 org link ${addr[1]}
     local pin=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
     testOK ./$pop -c clpop1 org link ${addr[1]} $pin

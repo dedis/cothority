@@ -5,8 +5,6 @@ import (
 
 	"io/ioutil"
 
-	"math/rand"
-
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/anon"
 	"gopkg.in/dedis/crypto.v0/config"
@@ -229,8 +227,6 @@ func (i *Identity) CreateIdentity(auth AuthType, atts []abstract.Point, leader *
 	log.Lvl3("Creating identity", i)
 
 	// request for authentication
-	log.Print(i.Cothority.List)
-	rand.Seed(int64(random.Uint64(random.Stream)))
 	si := leader
 	if si == nil {
 		si = i.Cothority.RandomServerIdentity()

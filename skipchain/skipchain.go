@@ -82,9 +82,11 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 
 	if psbd.LatestID.IsNull() {
 		// A new chain is created
-		if !UnauthorizedAccess && psbd.Signature == nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-				"cannot set up skipblocks without authentication")
+		if !UnauthorizedAccess {
+			if psbd.Signature == nil {
+				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+					"cannot set up skipblocks without authentication")
+			}
 		}
 
 		prop.Index = 0

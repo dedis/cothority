@@ -1,7 +1,7 @@
 package skipchain
 
 import (
-	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
