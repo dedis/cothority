@@ -219,7 +219,7 @@ func orgPublic(c *cli.Context) error {
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
 	log.ErrFatal(err)
 	for _, k := range keys {
-		pub, err := crypto.String64ToPub(network.Suite, k)
+		pub, err := crypto.String64ToPoint(network.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -320,7 +320,7 @@ func attCreate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PubToString64(nil, pub)
+	pubStr, err := crypto.PointToString64(nil, pub)
 	if err != nil {
 		return err
 	}
