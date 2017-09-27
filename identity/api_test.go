@@ -366,7 +366,8 @@ func TestVerificationFunction(t *testing.T) {
 	// Gibberish signature
 	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
 	log.ErrFatal(err)
-	sig.Response.Add(sig.Response, network.Suite.Scalar().One())
+	// Change one bit in the signature
+	sig[len(sig)-1] ^= 1
 	data2.Votes["one1"] = &sig
 	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake signature!")
