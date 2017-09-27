@@ -2,8 +2,8 @@
 
 DBG_TEST=1
 # Debug-level for app
-DBG_APP=2
-DBG_SRV=0
+DBG_APP=3
+DBG_SRV=3
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
@@ -313,7 +313,6 @@ testIdCreate2(){
 
     testFail runCl 1 id cr -t Public public.toml $priv
     runAdd 3 $pubs
-    testFail runCl 1 id cr -t Public public.toml
     testOK runCl 1 id cr -t Public public.toml $priv
     testFile cl1/config.bin
     testGrep $(hostname) runCl 1 id cr -t Public public.toml $priv
@@ -387,8 +386,7 @@ testAdd(){
 runLink(){
     local KP
     local i
-    for (( i=1; i<=$1; i++ ))
-    do
+    for (( i=1; i<=$1; i++ )); do
         runCl 1 admin link ${addr[$i]}
         pin=$( grep PIN ${COLOG}$i.log | sed -e "s/.* //" )
         runCl 1 admin link ${addr[$i]} $pin

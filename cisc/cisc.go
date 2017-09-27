@@ -24,6 +24,8 @@ import (
 
 	"strconv"
 
+	"errors"
+
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
@@ -105,7 +107,8 @@ func adminLink(c *cli.Context) error {
 	}
 
 	pinOrPrivate := c.Args().Get(1)
-	if _, err := strconv.Atoi(pinOrPrivate); err == nil {
+	_, err = strconv.Atoi(pinOrPrivate)
+	if pinOrPrivate == "" || err == nil {
 		pin := pinOrPrivate
 
 		if err := cfg.Identity.RequestLinkPIN(si, pin, kp.Public); err != nil {
@@ -130,6 +133,8 @@ func adminLink(c *cli.Context) error {
 		if err := cfg.Identity.RequestLinkPrivate(si, secret, kp.Public); err != nil {
 			return err
 		}
+	} else {
+		return errors.New("not valid pin nor valid private-key file")
 	}
 
 	// storing keys only if successfully linked

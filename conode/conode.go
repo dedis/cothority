@@ -21,7 +21,6 @@ import (
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/service"
 	_ "github.com/dedis/cothority/identity"
-	"github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"gopkg.in/dedis/onet.v1/app"
@@ -114,7 +113,7 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// block creation of non-authorized skipchains
-	skipchain.UnauthorizedAccess = false
+	//skipchain.UnauthorizedAccess = false
 
 	// first check the options
 	config := ctx.String("config")
