@@ -107,4 +107,15 @@ class CryptoTest {
         Crypto.Scalar f = new Crypto.Scalar("77aca071106e70a4431f6e4084693281cae145bfb55f2f59dcea67a336b45c0b");
         assertArrayEquals(neg.reduce().getLittleEndian(), f.getLittleEndian());
     }
+
+    @Test
+    void storeLoad(){
+        Crypto.Scalar s = new Crypto.Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
+        Crypto.Point S = s.mul(null);
+
+        Crypto.Scalar sprime = new Crypto.Scalar(s.toBytes());
+        Crypto.Point Sprime = new Crypto.Point(S.toBytes());
+        assertTrue(s.equals(sprime));
+        assertTrue(S.equals(Sprime));
+    }
 }

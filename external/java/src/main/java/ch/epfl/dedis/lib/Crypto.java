@@ -185,6 +185,10 @@ public class Crypto {
             return ByteString.copyFrom(reduce().getLittleEndian());
         }
 
+        public byte[] toBytes(){
+            return reduce().getLittleEndian();
+        }
+
         public Scalar reduce() {
             return new Scalar(ed25519.getScalarOps().reduce(getLittleEndianFull()));
         }
