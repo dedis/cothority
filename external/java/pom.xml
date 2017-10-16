@@ -6,7 +6,7 @@
 
     <groupId>ch.epfl.dedis</groupId>
     <artifactId>ocs</artifactId>
-    <version>0.1</version>
+    <version>0.2-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -87,6 +87,14 @@
             <artifactId>toml4j</artifactId>
             <version>0.7.2</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- dependencies required for compilation -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
