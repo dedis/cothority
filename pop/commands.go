@@ -11,14 +11,15 @@ var commandOrg, commandAttendee, commandAuth cli.Command
 func init() {
 
 	commandOrg = cli.Command{
-		Name:  "org",
-		Usage: "Organising a PoParty",
+		Name:    "organizer",
+		Aliases: []string{"org"},
+		Usage:   "Organising a PoParty",
 		Subcommands: []cli.Command{
 			{
 				Name:      "link",
 				Aliases:   []string{"l"},
 				Usage:     "link to a cothority",
-				ArgsUsage: "IP-address:port",
+				ArgsUsage: "IP-address:port [PIN]",
 				Action:    orgLink,
 			},
 			{
@@ -31,8 +32,8 @@ func init() {
 			{
 				Name:      "public",
 				Aliases:   []string{"p"},
-				Usage:     "stores a public key during the party",
-				ArgsUsage: "party_hash",
+				Usage:     "stores one or more public keys during the party",
+				ArgsUsage: "key1,key2,key3 party_hash",
 				Action:    orgPublic,
 			},
 			{
@@ -53,8 +54,9 @@ func init() {
 	}
 
 	commandAttendee = cli.Command{
-		Name:  "attendee",
-		Usage: "attendee of a pop-party",
+		Name:    "attendee",
+		Aliases: []string{"att"},
+		Usage:   "attendee of a pop-party",
 		Subcommands: []cli.Command{
 			{
 				Name:    "create",
@@ -66,7 +68,7 @@ func init() {
 				Name:      "join",
 				Aliases:   []string{"j"},
 				Usage:     "join a poparty",
-				ArgsUsage: "party_hash",
+				ArgsUsage: "private_key party_hash",
 				Action:    attJoin,
 				Flags: []cli.Flag{
 					cli.BoolTFlag{
@@ -86,7 +88,7 @@ func init() {
 				Name:      "verify",
 				Aliases:   []string{"v"},
 				Usage:     "verifies a tag and a signature",
-				ArgsUsage: "message context tag signature party_hash",
+				ArgsUsage: "message context signature tag party_hash",
 				Action:    attVerify,
 			},
 		},
@@ -106,7 +108,7 @@ func init() {
 				Name:      "verify",
 				Aliases:   []string{"v"},
 				Usage:     "verifies a tag and a signature",
-				ArgsUsage: "message context tag signature party_hash",
+				ArgsUsage: "message context signature tag party_hash",
 				Action:    attVerify,
 			},
 		},
