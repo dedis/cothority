@@ -33,12 +33,8 @@ public class ConnectingWithTomlConfig {
     }
 
     public static URI getServerURIFromToml(Toml t) {
-        final String address = t.getString("Address");
-        final String host = address.replaceFirst("^tcp://", "").split(":")[0];
-        int port = 1 + Integer.valueOf(address.replaceFirst("^tcp://", "").split(":")[1]);
-
         try {
-            return new URI("ws", null, host, port, null, null, null);
+            return new URI(t.getString("Address"));
         }
         catch (URISyntaxException e) {
             throw new IllegalArgumentException("Toml server definition is broken", e);
