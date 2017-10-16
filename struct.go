@@ -7,8 +7,8 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"fmt"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/satori/go.uuid"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"

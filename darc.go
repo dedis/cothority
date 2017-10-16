@@ -1,7 +1,7 @@
 package ocs
 
 import (
-	"github.com/dedis/cothority/skipchain"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1/crypto"
 )

@@ -15,8 +15,8 @@ import (
 
 	"fmt"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onchain-secrets"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"

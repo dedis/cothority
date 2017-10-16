@@ -19,8 +19,8 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	_ "github.com/dedis/onchain-secrets/service"
-	"github.com/dedis/cothority/cosi/check"
-	_ "github.com/dedis/cothority/status/service"
+	"gopkg.in/dedis/cothority.v1/cosi/check"
+	_ "gopkg.in/dedis/cothority.v1/status/service"
 	"gopkg.in/dedis/onet.v1/app"
 )
 
