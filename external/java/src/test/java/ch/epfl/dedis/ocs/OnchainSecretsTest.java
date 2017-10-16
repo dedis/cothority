@@ -3,6 +3,7 @@ package ch.epfl.dedis.ocs;
 import ch.epfl.dedis.lib.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.lib.DecryptKey;
+import ch.epfl.dedis.proto.OCSProto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -90,6 +91,13 @@ class OnchainSecretsTest {
     }
 
     @Test
+    void getWrite() throws Exception{
+        publishDocument();
+        OCSProto.OCSWrite write = ocs.getWrite(docNew.id);
+        assertEquals(docNew.getWrite(ocs.X), write);
+    }
+
+    @Test
     void readDarc() throws Exception {
         ocs.addAccountToSkipchain(admin, admin);
         List<Darc> a = ocs.readDarc(admin.ID, false);
@@ -124,7 +132,8 @@ class OnchainSecretsTest {
         DecryptKey dk = ocs.decryptKey(readID);
         assertNotNull(dk);
         dk.X = ocs.X;
-        byte[] data = dk.decryptDocument(docNew.ocswrite, reader);
+        OCSProto.OCSWrite write = ocs.getWrite(docNew.id);
+        byte[] data = dk.decryptDocument(write, reader);
         assertArrayEquals(doc.data, data);
     }
 }

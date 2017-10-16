@@ -51,6 +51,17 @@ message WriteRequest {
     required bytes data = 4;
 }
 
+message DataOCS {
+    optional OCSWrite write = 1;
+    optional OCSRead read = 2;
+    optional Darc readers = 3;
+    optional Meta meta = 4;
+}
+
+message Meta {
+    required bytes data = 1;
+}
+
 message OCSWrite {
     // Encrypted data
     required bytes data = 1;
@@ -73,11 +84,6 @@ message OCSRead {
     required bytes public = 1;
     required bytes data_id = 2;
     required SchnorrSig signature = 3;
-}
-
-message SchnorrSig {
-    required bytes challenge = 1;
-    required bytes response = 2;
 }
 
 message ReadReply {

@@ -6073,6 +6073,1723 @@ public final class OCSProto {
 
   }
 
+  public interface DataOCSOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:DataOCS)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    boolean hasWrite();
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.OCSWrite getWrite();
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder getWriteOrBuilder();
+
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    boolean hasRead();
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.OCSRead getRead();
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder getReadOrBuilder();
+
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    boolean hasReaders();
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Darc getReaders();
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReadersOrBuilder();
+
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    boolean hasMeta();
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.Meta getMeta();
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    ch.epfl.dedis.proto.OCSProto.MetaOrBuilder getMetaOrBuilder();
+  }
+  /**
+   * Protobuf type {@code DataOCS}
+   */
+  public  static final class DataOCS extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:DataOCS)
+      DataOCSOrBuilder {
+    // Use DataOCS.newBuilder() to construct.
+    private DataOCS(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DataOCS() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DataOCS(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = write_.toBuilder();
+              }
+              write_ = input.readMessage(ch.epfl.dedis.proto.OCSProto.OCSWrite.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(write_);
+                write_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.OCSProto.OCSRead.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = read_.toBuilder();
+              }
+              read_ = input.readMessage(ch.epfl.dedis.proto.OCSProto.OCSRead.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(read_);
+                read_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.proto.DarcProto.Darc.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = readers_.toBuilder();
+              }
+              readers_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Darc.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(readers_);
+                readers_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+            case 34: {
+              ch.epfl.dedis.proto.OCSProto.Meta.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                subBuilder = meta_.toBuilder();
+              }
+              meta_ = input.readMessage(ch.epfl.dedis.proto.OCSProto.Meta.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(meta_);
+                meta_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OCSProto.internal_static_DataOCS_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OCSProto.internal_static_DataOCS_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OCSProto.DataOCS.class, ch.epfl.dedis.proto.OCSProto.DataOCS.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int WRITE_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.proto.OCSProto.OCSWrite write_;
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    public boolean hasWrite() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.OCSWrite getWrite() {
+      return write_ == null ? ch.epfl.dedis.proto.OCSProto.OCSWrite.getDefaultInstance() : write_;
+    }
+    /**
+     * <code>optional .OCSWrite write = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder getWriteOrBuilder() {
+      return write_ == null ? ch.epfl.dedis.proto.OCSProto.OCSWrite.getDefaultInstance() : write_;
+    }
+
+    public static final int READ_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.OCSProto.OCSRead read_;
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    public boolean hasRead() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.OCSRead getRead() {
+      return read_ == null ? ch.epfl.dedis.proto.OCSProto.OCSRead.getDefaultInstance() : read_;
+    }
+    /**
+     * <code>optional .OCSRead read = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder getReadOrBuilder() {
+      return read_ == null ? ch.epfl.dedis.proto.OCSProto.OCSRead.getDefaultInstance() : read_;
+    }
+
+    public static final int READERS_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.proto.DarcProto.Darc readers_;
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    public boolean hasReaders() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Darc getReaders() {
+      return readers_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : readers_;
+    }
+    /**
+     * <code>optional .Darc readers = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReadersOrBuilder() {
+      return readers_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : readers_;
+    }
+
+    public static final int META_FIELD_NUMBER = 4;
+    private ch.epfl.dedis.proto.OCSProto.Meta meta_;
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    public boolean hasMeta() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.Meta getMeta() {
+      return meta_ == null ? ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance() : meta_;
+    }
+    /**
+     * <code>optional .Meta meta = 4;</code>
+     */
+    public ch.epfl.dedis.proto.OCSProto.MetaOrBuilder getMetaOrBuilder() {
+      return meta_ == null ? ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance() : meta_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (hasWrite()) {
+        if (!getWrite().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasRead()) {
+        if (!getRead().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasReaders()) {
+        if (!getReaders().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasMeta()) {
+        if (!getMeta().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getWrite());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getRead());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getReaders());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, getMeta());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getWrite());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRead());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getReaders());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, getMeta());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OCSProto.DataOCS)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OCSProto.DataOCS other = (ch.epfl.dedis.proto.OCSProto.DataOCS) obj;
+
+      boolean result = true;
+      result = result && (hasWrite() == other.hasWrite());
+      if (hasWrite()) {
+        result = result && getWrite()
+            .equals(other.getWrite());
+      }
+      result = result && (hasRead() == other.hasRead());
+      if (hasRead()) {
+        result = result && getRead()
+            .equals(other.getRead());
+      }
+      result = result && (hasReaders() == other.hasReaders());
+      if (hasReaders()) {
+        result = result && getReaders()
+            .equals(other.getReaders());
+      }
+      result = result && (hasMeta() == other.hasMeta());
+      if (hasMeta()) {
+        result = result && getMeta()
+            .equals(other.getMeta());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasWrite()) {
+        hash = (37 * hash) + WRITE_FIELD_NUMBER;
+        hash = (53 * hash) + getWrite().hashCode();
+      }
+      if (hasRead()) {
+        hash = (37 * hash) + READ_FIELD_NUMBER;
+        hash = (53 * hash) + getRead().hashCode();
+      }
+      if (hasReaders()) {
+        hash = (37 * hash) + READERS_FIELD_NUMBER;
+        hash = (53 * hash) + getReaders().hashCode();
+      }
+      if (hasMeta()) {
+        hash = (37 * hash) + META_FIELD_NUMBER;
+        hash = (53 * hash) + getMeta().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.DataOCS prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code DataOCS}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:DataOCS)
+        ch.epfl.dedis.proto.OCSProto.DataOCSOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_DataOCS_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_DataOCS_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OCSProto.DataOCS.class, ch.epfl.dedis.proto.OCSProto.DataOCS.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OCSProto.DataOCS.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getWriteFieldBuilder();
+          getReadFieldBuilder();
+          getReadersFieldBuilder();
+          getMetaFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (writeBuilder_ == null) {
+          write_ = null;
+        } else {
+          writeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (readBuilder_ == null) {
+          read_ = null;
+        } else {
+          readBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (readersBuilder_ == null) {
+          readers_ = null;
+        } else {
+          readersBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (metaBuilder_ == null) {
+          meta_ = null;
+        } else {
+          metaBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_DataOCS_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.DataOCS getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OCSProto.DataOCS.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.DataOCS build() {
+        ch.epfl.dedis.proto.OCSProto.DataOCS result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.DataOCS buildPartial() {
+        ch.epfl.dedis.proto.OCSProto.DataOCS result = new ch.epfl.dedis.proto.OCSProto.DataOCS(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (writeBuilder_ == null) {
+          result.write_ = write_;
+        } else {
+          result.write_ = writeBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (readBuilder_ == null) {
+          result.read_ = read_;
+        } else {
+          result.read_ = readBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (readersBuilder_ == null) {
+          result.readers_ = readers_;
+        } else {
+          result.readers_ = readersBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (metaBuilder_ == null) {
+          result.meta_ = meta_;
+        } else {
+          result.meta_ = metaBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OCSProto.DataOCS) {
+          return mergeFrom((ch.epfl.dedis.proto.OCSProto.DataOCS)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OCSProto.DataOCS other) {
+        if (other == ch.epfl.dedis.proto.OCSProto.DataOCS.getDefaultInstance()) return this;
+        if (other.hasWrite()) {
+          mergeWrite(other.getWrite());
+        }
+        if (other.hasRead()) {
+          mergeRead(other.getRead());
+        }
+        if (other.hasReaders()) {
+          mergeReaders(other.getReaders());
+        }
+        if (other.hasMeta()) {
+          mergeMeta(other.getMeta());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (hasWrite()) {
+          if (!getWrite().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasRead()) {
+          if (!getRead().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasReaders()) {
+          if (!getReaders().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasMeta()) {
+          if (!getMeta().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OCSProto.DataOCS parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OCSProto.DataOCS) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.proto.OCSProto.OCSWrite write_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.OCSWrite, ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder, ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder> writeBuilder_;
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public boolean hasWrite() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSWrite getWrite() {
+        if (writeBuilder_ == null) {
+          return write_ == null ? ch.epfl.dedis.proto.OCSProto.OCSWrite.getDefaultInstance() : write_;
+        } else {
+          return writeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public Builder setWrite(ch.epfl.dedis.proto.OCSProto.OCSWrite value) {
+        if (writeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          write_ = value;
+          onChanged();
+        } else {
+          writeBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public Builder setWrite(
+          ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder builderForValue) {
+        if (writeBuilder_ == null) {
+          write_ = builderForValue.build();
+          onChanged();
+        } else {
+          writeBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public Builder mergeWrite(ch.epfl.dedis.proto.OCSProto.OCSWrite value) {
+        if (writeBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              write_ != null &&
+              write_ != ch.epfl.dedis.proto.OCSProto.OCSWrite.getDefaultInstance()) {
+            write_ =
+              ch.epfl.dedis.proto.OCSProto.OCSWrite.newBuilder(write_).mergeFrom(value).buildPartial();
+          } else {
+            write_ = value;
+          }
+          onChanged();
+        } else {
+          writeBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public Builder clearWrite() {
+        if (writeBuilder_ == null) {
+          write_ = null;
+          onChanged();
+        } else {
+          writeBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder getWriteBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getWriteFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder getWriteOrBuilder() {
+        if (writeBuilder_ != null) {
+          return writeBuilder_.getMessageOrBuilder();
+        } else {
+          return write_ == null ?
+              ch.epfl.dedis.proto.OCSProto.OCSWrite.getDefaultInstance() : write_;
+        }
+      }
+      /**
+       * <code>optional .OCSWrite write = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.OCSWrite, ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder, ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder> 
+          getWriteFieldBuilder() {
+        if (writeBuilder_ == null) {
+          writeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OCSProto.OCSWrite, ch.epfl.dedis.proto.OCSProto.OCSWrite.Builder, ch.epfl.dedis.proto.OCSProto.OCSWriteOrBuilder>(
+                  getWrite(),
+                  getParentForChildren(),
+                  isClean());
+          write_ = null;
+        }
+        return writeBuilder_;
+      }
+
+      private ch.epfl.dedis.proto.OCSProto.OCSRead read_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.OCSRead, ch.epfl.dedis.proto.OCSProto.OCSRead.Builder, ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder> readBuilder_;
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public boolean hasRead() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSRead getRead() {
+        if (readBuilder_ == null) {
+          return read_ == null ? ch.epfl.dedis.proto.OCSProto.OCSRead.getDefaultInstance() : read_;
+        } else {
+          return readBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public Builder setRead(ch.epfl.dedis.proto.OCSProto.OCSRead value) {
+        if (readBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          read_ = value;
+          onChanged();
+        } else {
+          readBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public Builder setRead(
+          ch.epfl.dedis.proto.OCSProto.OCSRead.Builder builderForValue) {
+        if (readBuilder_ == null) {
+          read_ = builderForValue.build();
+          onChanged();
+        } else {
+          readBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public Builder mergeRead(ch.epfl.dedis.proto.OCSProto.OCSRead value) {
+        if (readBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              read_ != null &&
+              read_ != ch.epfl.dedis.proto.OCSProto.OCSRead.getDefaultInstance()) {
+            read_ =
+              ch.epfl.dedis.proto.OCSProto.OCSRead.newBuilder(read_).mergeFrom(value).buildPartial();
+          } else {
+            read_ = value;
+          }
+          onChanged();
+        } else {
+          readBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public Builder clearRead() {
+        if (readBuilder_ == null) {
+          read_ = null;
+          onChanged();
+        } else {
+          readBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSRead.Builder getReadBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getReadFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder getReadOrBuilder() {
+        if (readBuilder_ != null) {
+          return readBuilder_.getMessageOrBuilder();
+        } else {
+          return read_ == null ?
+              ch.epfl.dedis.proto.OCSProto.OCSRead.getDefaultInstance() : read_;
+        }
+      }
+      /**
+       * <code>optional .OCSRead read = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.OCSRead, ch.epfl.dedis.proto.OCSProto.OCSRead.Builder, ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder> 
+          getReadFieldBuilder() {
+        if (readBuilder_ == null) {
+          readBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OCSProto.OCSRead, ch.epfl.dedis.proto.OCSProto.OCSRead.Builder, ch.epfl.dedis.proto.OCSProto.OCSReadOrBuilder>(
+                  getRead(),
+                  getParentForChildren(),
+                  isClean());
+          read_ = null;
+        }
+        return readBuilder_;
+      }
+
+      private ch.epfl.dedis.proto.DarcProto.Darc readers_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> readersBuilder_;
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public boolean hasReaders() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Darc getReaders() {
+        if (readersBuilder_ == null) {
+          return readers_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : readers_;
+        } else {
+          return readersBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public Builder setReaders(ch.epfl.dedis.proto.DarcProto.Darc value) {
+        if (readersBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          readers_ = value;
+          onChanged();
+        } else {
+          readersBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public Builder setReaders(
+          ch.epfl.dedis.proto.DarcProto.Darc.Builder builderForValue) {
+        if (readersBuilder_ == null) {
+          readers_ = builderForValue.build();
+          onChanged();
+        } else {
+          readersBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public Builder mergeReaders(ch.epfl.dedis.proto.DarcProto.Darc value) {
+        if (readersBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              readers_ != null &&
+              readers_ != ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance()) {
+            readers_ =
+              ch.epfl.dedis.proto.DarcProto.Darc.newBuilder(readers_).mergeFrom(value).buildPartial();
+          } else {
+            readers_ = value;
+          }
+          onChanged();
+        } else {
+          readersBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public Builder clearReaders() {
+        if (readersBuilder_ == null) {
+          readers_ = null;
+          onChanged();
+        } else {
+          readersBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Darc.Builder getReadersBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getReadersFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReadersOrBuilder() {
+        if (readersBuilder_ != null) {
+          return readersBuilder_.getMessageOrBuilder();
+        } else {
+          return readers_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : readers_;
+        }
+      }
+      /**
+       * <code>optional .Darc readers = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
+          getReadersFieldBuilder() {
+        if (readersBuilder_ == null) {
+          readersBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder>(
+                  getReaders(),
+                  getParentForChildren(),
+                  isClean());
+          readers_ = null;
+        }
+        return readersBuilder_;
+      }
+
+      private ch.epfl.dedis.proto.OCSProto.Meta meta_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.Meta, ch.epfl.dedis.proto.OCSProto.Meta.Builder, ch.epfl.dedis.proto.OCSProto.MetaOrBuilder> metaBuilder_;
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public boolean hasMeta() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.Meta getMeta() {
+        if (metaBuilder_ == null) {
+          return meta_ == null ? ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance() : meta_;
+        } else {
+          return metaBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public Builder setMeta(ch.epfl.dedis.proto.OCSProto.Meta value) {
+        if (metaBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          meta_ = value;
+          onChanged();
+        } else {
+          metaBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public Builder setMeta(
+          ch.epfl.dedis.proto.OCSProto.Meta.Builder builderForValue) {
+        if (metaBuilder_ == null) {
+          meta_ = builderForValue.build();
+          onChanged();
+        } else {
+          metaBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public Builder mergeMeta(ch.epfl.dedis.proto.OCSProto.Meta value) {
+        if (metaBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              meta_ != null &&
+              meta_ != ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance()) {
+            meta_ =
+              ch.epfl.dedis.proto.OCSProto.Meta.newBuilder(meta_).mergeFrom(value).buildPartial();
+          } else {
+            meta_ = value;
+          }
+          onChanged();
+        } else {
+          metaBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public Builder clearMeta() {
+        if (metaBuilder_ == null) {
+          meta_ = null;
+          onChanged();
+        } else {
+          metaBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.Meta.Builder getMetaBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getMetaFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      public ch.epfl.dedis.proto.OCSProto.MetaOrBuilder getMetaOrBuilder() {
+        if (metaBuilder_ != null) {
+          return metaBuilder_.getMessageOrBuilder();
+        } else {
+          return meta_ == null ?
+              ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance() : meta_;
+        }
+      }
+      /**
+       * <code>optional .Meta meta = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OCSProto.Meta, ch.epfl.dedis.proto.OCSProto.Meta.Builder, ch.epfl.dedis.proto.OCSProto.MetaOrBuilder> 
+          getMetaFieldBuilder() {
+        if (metaBuilder_ == null) {
+          metaBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OCSProto.Meta, ch.epfl.dedis.proto.OCSProto.Meta.Builder, ch.epfl.dedis.proto.OCSProto.MetaOrBuilder>(
+                  getMeta(),
+                  getParentForChildren(),
+                  isClean());
+          meta_ = null;
+        }
+        return metaBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:DataOCS)
+    }
+
+    // @@protoc_insertion_point(class_scope:DataOCS)
+    private static final ch.epfl.dedis.proto.OCSProto.DataOCS DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.DataOCS();
+    }
+
+    public static ch.epfl.dedis.proto.OCSProto.DataOCS getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DataOCS>
+        PARSER = new com.google.protobuf.AbstractParser<DataOCS>() {
+      public DataOCS parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new DataOCS(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DataOCS> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DataOCS> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OCSProto.DataOCS getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface MetaOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Meta)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes data = 1;</code>
+     */
+    boolean hasData();
+    /**
+     * <code>required bytes data = 1;</code>
+     */
+    com.google.protobuf.ByteString getData();
+  }
+  /**
+   * Protobuf type {@code Meta}
+   */
+  public  static final class Meta extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Meta)
+      MetaOrBuilder {
+    // Use Meta.newBuilder() to construct.
+    private Meta(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Meta() {
+      data_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Meta(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              data_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OCSProto.internal_static_Meta_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OCSProto.internal_static_Meta_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OCSProto.Meta.class, ch.epfl.dedis.proto.OCSProto.Meta.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int DATA_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString data_;
+    /**
+     * <code>required bytes data = 1;</code>
+     */
+    public boolean hasData() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes data = 1;</code>
+     */
+    public com.google.protobuf.ByteString getData() {
+      return data_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasData()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, data_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, data_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OCSProto.Meta)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OCSProto.Meta other = (ch.epfl.dedis.proto.OCSProto.Meta) obj;
+
+      boolean result = true;
+      result = result && (hasData() == other.hasData());
+      if (hasData()) {
+        result = result && getData()
+            .equals(other.getData());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasData()) {
+        hash = (37 * hash) + DATA_FIELD_NUMBER;
+        hash = (53 * hash) + getData().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OCSProto.Meta parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.Meta prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Meta}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Meta)
+        ch.epfl.dedis.proto.OCSProto.MetaOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_Meta_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_Meta_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OCSProto.Meta.class, ch.epfl.dedis.proto.OCSProto.Meta.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OCSProto.Meta.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        data_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OCSProto.internal_static_Meta_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.Meta getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.Meta build() {
+        ch.epfl.dedis.proto.OCSProto.Meta result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OCSProto.Meta buildPartial() {
+        ch.epfl.dedis.proto.OCSProto.Meta result = new ch.epfl.dedis.proto.OCSProto.Meta(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.data_ = data_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OCSProto.Meta) {
+          return mergeFrom((ch.epfl.dedis.proto.OCSProto.Meta)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OCSProto.Meta other) {
+        if (other == ch.epfl.dedis.proto.OCSProto.Meta.getDefaultInstance()) return this;
+        if (other.hasData()) {
+          setData(other.getData());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasData()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OCSProto.Meta parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OCSProto.Meta) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes data = 1;</code>
+       */
+      public boolean hasData() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes data = 1;</code>
+       */
+      public com.google.protobuf.ByteString getData() {
+        return data_;
+      }
+      /**
+       * <code>required bytes data = 1;</code>
+       */
+      public Builder setData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        data_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes data = 1;</code>
+       */
+      public Builder clearData() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        data_ = getDefaultInstance().getData();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Meta)
+    }
+
+    // @@protoc_insertion_point(class_scope:Meta)
+    private static final ch.epfl.dedis.proto.OCSProto.Meta DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.Meta();
+    }
+
+    public static ch.epfl.dedis.proto.OCSProto.Meta getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Meta>
+        PARSER = new com.google.protobuf.AbstractParser<Meta>() {
+      public Meta parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Meta(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Meta> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Meta> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OCSProto.Meta getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface OCSWriteOrBuilder extends
       // @@protoc_insertion_point(interface_extends:OCSWrite)
       com.google.protobuf.MessageOrBuilder {
@@ -8259,11 +9976,11 @@ public final class OCSProto {
     /**
      * <code>required .SchnorrSig signature = 3;</code>
      */
-    ch.epfl.dedis.proto.OCSProto.SchnorrSig getSignature();
+    ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature();
     /**
      * <code>required .SchnorrSig signature = 3;</code>
      */
-    ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder getSignatureOrBuilder();
+    ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder();
   }
   /**
    * Protobuf type {@code OCSRead}
@@ -8320,11 +10037,11 @@ public final class OCSProto {
               break;
             }
             case 26: {
-              ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder subBuilder = null;
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder subBuilder = null;
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = signature_.toBuilder();
               }
-              signature_ = input.readMessage(ch.epfl.dedis.proto.OCSProto.SchnorrSig.PARSER, extensionRegistry);
+              signature_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signature_);
                 signature_ = subBuilder.buildPartial();
@@ -8388,7 +10105,7 @@ public final class OCSProto {
     }
 
     public static final int SIGNATURE_FIELD_NUMBER = 3;
-    private ch.epfl.dedis.proto.OCSProto.SchnorrSig signature_;
+    private ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig signature_;
     /**
      * <code>required .SchnorrSig signature = 3;</code>
      */
@@ -8398,14 +10115,14 @@ public final class OCSProto {
     /**
      * <code>required .SchnorrSig signature = 3;</code>
      */
-    public ch.epfl.dedis.proto.OCSProto.SchnorrSig getSignature() {
-      return signature_ == null ? ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance() : signature_;
+    public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature() {
+      return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
     }
     /**
      * <code>required .SchnorrSig signature = 3;</code>
      */
-    public ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
-      return signature_ == null ? ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance() : signature_;
+    public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
+      return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -8861,9 +10578,9 @@ public final class OCSProto {
         return this;
       }
 
-      private ch.epfl.dedis.proto.OCSProto.SchnorrSig signature_ = null;
+      private ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig signature_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OCSProto.SchnorrSig, ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder, ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder> signatureBuilder_;
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder> signatureBuilder_;
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
@@ -8873,9 +10590,9 @@ public final class OCSProto {
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSig getSignature() {
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature() {
         if (signatureBuilder_ == null) {
-          return signature_ == null ? ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance() : signature_;
+          return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
         } else {
           return signatureBuilder_.getMessage();
         }
@@ -8883,7 +10600,7 @@ public final class OCSProto {
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
-      public Builder setSignature(ch.epfl.dedis.proto.OCSProto.SchnorrSig value) {
+      public Builder setSignature(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig value) {
         if (signatureBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -8900,7 +10617,7 @@ public final class OCSProto {
        * <code>required .SchnorrSig signature = 3;</code>
        */
       public Builder setSignature(
-          ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder builderForValue) {
         if (signatureBuilder_ == null) {
           signature_ = builderForValue.build();
           onChanged();
@@ -8913,13 +10630,13 @@ public final class OCSProto {
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
-      public Builder mergeSignature(ch.epfl.dedis.proto.OCSProto.SchnorrSig value) {
+      public Builder mergeSignature(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig value) {
         if (signatureBuilder_ == null) {
           if (((bitField0_ & 0x00000004) == 0x00000004) &&
               signature_ != null &&
-              signature_ != ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance()) {
+              signature_ != ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance()) {
             signature_ =
-              ch.epfl.dedis.proto.OCSProto.SchnorrSig.newBuilder(signature_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.newBuilder(signature_).mergeFrom(value).buildPartial();
           } else {
             signature_ = value;
           }
@@ -8946,7 +10663,7 @@ public final class OCSProto {
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder getSignatureBuilder() {
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000004;
         onChanged();
         return getSignatureFieldBuilder().getBuilder();
@@ -8954,23 +10671,23 @@ public final class OCSProto {
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
           return signatureBuilder_.getMessageOrBuilder();
         } else {
           return signature_ == null ?
-              ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance() : signature_;
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
         }
       }
       /**
        * <code>required .SchnorrSig signature = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OCSProto.SchnorrSig, ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder, ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder> 
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder> 
           getSignatureFieldBuilder() {
         if (signatureBuilder_ == null) {
           signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OCSProto.SchnorrSig, ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder, ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder>(
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder>(
                   getSignature(),
                   getParentForChildren(),
                   isClean());
@@ -9022,590 +10739,6 @@ public final class OCSProto {
     }
 
     public ch.epfl.dedis.proto.OCSProto.OCSRead getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface SchnorrSigOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SchnorrSig)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required bytes challenge = 1;</code>
-     */
-    boolean hasChallenge();
-    /**
-     * <code>required bytes challenge = 1;</code>
-     */
-    com.google.protobuf.ByteString getChallenge();
-
-    /**
-     * <code>required bytes response = 2;</code>
-     */
-    boolean hasResponse();
-    /**
-     * <code>required bytes response = 2;</code>
-     */
-    com.google.protobuf.ByteString getResponse();
-  }
-  /**
-   * Protobuf type {@code SchnorrSig}
-   */
-  public  static final class SchnorrSig extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SchnorrSig)
-      SchnorrSigOrBuilder {
-    // Use SchnorrSig.newBuilder() to construct.
-    private SchnorrSig(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private SchnorrSig() {
-      challenge_ = com.google.protobuf.ByteString.EMPTY;
-      response_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private SchnorrSig(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              challenge_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              response_ = input.readBytes();
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SchnorrSig_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SchnorrSig_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.OCSProto.SchnorrSig.class, ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int CHALLENGE_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString challenge_;
-    /**
-     * <code>required bytes challenge = 1;</code>
-     */
-    public boolean hasChallenge() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes challenge = 1;</code>
-     */
-    public com.google.protobuf.ByteString getChallenge() {
-      return challenge_;
-    }
-
-    public static final int RESPONSE_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString response_;
-    /**
-     * <code>required bytes response = 2;</code>
-     */
-    public boolean hasResponse() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes response = 2;</code>
-     */
-    public com.google.protobuf.ByteString getResponse() {
-      return response_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasChallenge()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasResponse()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, challenge_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, response_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, challenge_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, response_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.proto.OCSProto.SchnorrSig)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.proto.OCSProto.SchnorrSig other = (ch.epfl.dedis.proto.OCSProto.SchnorrSig) obj;
-
-      boolean result = true;
-      result = result && (hasChallenge() == other.hasChallenge());
-      if (hasChallenge()) {
-        result = result && getChallenge()
-            .equals(other.getChallenge());
-      }
-      result = result && (hasResponse() == other.hasResponse());
-      if (hasResponse()) {
-        result = result && getResponse()
-            .equals(other.getResponse());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasChallenge()) {
-        hash = (37 * hash) + CHALLENGE_FIELD_NUMBER;
-        hash = (53 * hash) + getChallenge().hashCode();
-      }
-      if (hasResponse()) {
-        hash = (37 * hash) + RESPONSE_FIELD_NUMBER;
-        hash = (53 * hash) + getResponse().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.SchnorrSig prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code SchnorrSig}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SchnorrSig)
-        ch.epfl.dedis.proto.OCSProto.SchnorrSigOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SchnorrSig_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SchnorrSig_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.OCSProto.SchnorrSig.class, ch.epfl.dedis.proto.OCSProto.SchnorrSig.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.proto.OCSProto.SchnorrSig.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      public Builder clear() {
-        super.clear();
-        challenge_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        response_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SchnorrSig_descriptor;
-      }
-
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSig getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance();
-      }
-
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSig build() {
-        ch.epfl.dedis.proto.OCSProto.SchnorrSig result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public ch.epfl.dedis.proto.OCSProto.SchnorrSig buildPartial() {
-        ch.epfl.dedis.proto.OCSProto.SchnorrSig result = new ch.epfl.dedis.proto.OCSProto.SchnorrSig(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.challenge_ = challenge_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.response_ = response_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.OCSProto.SchnorrSig) {
-          return mergeFrom((ch.epfl.dedis.proto.OCSProto.SchnorrSig)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.proto.OCSProto.SchnorrSig other) {
-        if (other == ch.epfl.dedis.proto.OCSProto.SchnorrSig.getDefaultInstance()) return this;
-        if (other.hasChallenge()) {
-          setChallenge(other.getChallenge());
-        }
-        if (other.hasResponse()) {
-          setResponse(other.getResponse());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        if (!hasChallenge()) {
-          return false;
-        }
-        if (!hasResponse()) {
-          return false;
-        }
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.proto.OCSProto.SchnorrSig parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.OCSProto.SchnorrSig) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString challenge_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes challenge = 1;</code>
-       */
-      public boolean hasChallenge() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes challenge = 1;</code>
-       */
-      public com.google.protobuf.ByteString getChallenge() {
-        return challenge_;
-      }
-      /**
-       * <code>required bytes challenge = 1;</code>
-       */
-      public Builder setChallenge(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        challenge_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes challenge = 1;</code>
-       */
-      public Builder clearChallenge() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        challenge_ = getDefaultInstance().getChallenge();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString response_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes response = 2;</code>
-       */
-      public boolean hasResponse() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes response = 2;</code>
-       */
-      public com.google.protobuf.ByteString getResponse() {
-        return response_;
-      }
-      /**
-       * <code>required bytes response = 2;</code>
-       */
-      public Builder setResponse(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        response_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes response = 2;</code>
-       */
-      public Builder clearResponse() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        response_ = getDefaultInstance().getResponse();
-        onChanged();
-        return this;
-      }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:SchnorrSig)
-    }
-
-    // @@protoc_insertion_point(class_scope:SchnorrSig)
-    private static final ch.epfl.dedis.proto.OCSProto.SchnorrSig DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.SchnorrSig();
-    }
-
-    public static ch.epfl.dedis.proto.OCSProto.SchnorrSig getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<SchnorrSig>
-        PARSER = new com.google.protobuf.AbstractParser<SchnorrSig>() {
-      public SchnorrSig parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SchnorrSig(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<SchnorrSig> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<SchnorrSig> getParserForType() {
-      return PARSER;
-    }
-
-    public ch.epfl.dedis.proto.OCSProto.SchnorrSig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -11485,6 +12618,16 @@ public final class OCSProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_WriteRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_DataOCS_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_DataOCS_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Meta_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Meta_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_OCSWrite_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -11504,11 +12647,6 @@ public final class OCSProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_OCSRead_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SchnorrSig_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SchnorrSig_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ReadReply_descriptor;
   private static final 
@@ -11546,18 +12684,19 @@ public final class OCSProto {
       "\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"Z" +
       "\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\030\n\005write\030\002 \002" +
       "(\0132\t.OCSWrite\022\025\n\006reader\030\003 \002(\0132\005.Darc\022\014\n\004" +
-      "data\030\004 \002(\014\"/\n\010OCSWrite\022\014\n\004data\030\001 \002(\014\022\t\n\001" +
-      "U\030\002 \002(\014\022\n\n\002Cs\030\003 \003(\014\"$\n\nWriteReply\022\026\n\002sb\030" +
-      "\001 \002(\0132\n.SkipBlock\"2\n\013ReadRequest\022\013\n\003ocs\030" +
-      "\001 \002(\014\022\026\n\004read\030\002 \002(\0132\010.OCSRead\"J\n\007OCSRead" +
-      "\022\016\n\006public\030\001 \002(\014\022\017\n\007data_id\030\002 \002(\014\022\036\n\tsig" +
-      "nature\030\003 \002(\0132\013.SchnorrSig\"1\n\nSchnorrSig\022" +
-      "\021\n\tchallenge\030\001 \002(\014\022\020\n\010response\030\002 \002(\014\"#\n\t",
-      "ReadReply\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"$\n\021Dec" +
-      "ryptKeyRequest\022\017\n\007read_id\030\001 \002(\014\"9\n\017Decry" +
-      "ptKeyReply\022\n\n\002Cs\030\001 \003(\014\022\017\n\007XhatEnc\030\002 \002(\014\022" +
-      "\t\n\001X\030\003 \002(\014B\037\n\023ch.epfl.dedis.protoB\010OCSPr" +
-      "oto"
+      "data\030\004 \002(\014\"h\n\007DataOCS\022\030\n\005write\030\001 \001(\0132\t.O" +
+      "CSWrite\022\026\n\004read\030\002 \001(\0132\010.OCSRead\022\026\n\007reade" +
+      "rs\030\003 \001(\0132\005.Darc\022\023\n\004meta\030\004 \001(\0132\005.Meta\"\024\n\004" +
+      "Meta\022\014\n\004data\030\001 \002(\014\"/\n\010OCSWrite\022\014\n\004data\030\001" +
+      " \002(\014\022\t\n\001U\030\002 \002(\014\022\n\n\002Cs\030\003 \003(\014\"$\n\nWriteRepl" +
+      "y\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"2\n\013ReadRequest" +
+      "\022\013\n\003ocs\030\001 \002(\014\022\026\n\004read\030\002 \002(\0132\010.OCSRead\"J\n",
+      "\007OCSRead\022\016\n\006public\030\001 \002(\014\022\017\n\007data_id\030\002 \002(" +
+      "\014\022\036\n\tsignature\030\003 \002(\0132\013.SchnorrSig\"#\n\tRea" +
+      "dReply\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"$\n\021Decryp" +
+      "tKeyRequest\022\017\n\007read_id\030\001 \002(\014\"9\n\017DecryptK" +
+      "eyReply\022\n\n\002Cs\030\001 \003(\014\022\017\n\007XhatEnc\030\002 \002(\014\022\t\n\001" +
+      "X\030\003 \002(\014B\037\n\023ch.epfl.dedis.protoB\010OCSProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11628,50 +12767,56 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_WriteRequest_descriptor,
         new java.lang.String[] { "Ocs", "Write", "Reader", "Data", });
-    internal_static_OCSWrite_descriptor =
+    internal_static_DataOCS_descriptor =
       getDescriptor().getMessageTypes().get(9);
+    internal_static_DataOCS_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_DataOCS_descriptor,
+        new java.lang.String[] { "Write", "Read", "Readers", "Meta", });
+    internal_static_Meta_descriptor =
+      getDescriptor().getMessageTypes().get(10);
+    internal_static_Meta_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Meta_descriptor,
+        new java.lang.String[] { "Data", });
+    internal_static_OCSWrite_descriptor =
+      getDescriptor().getMessageTypes().get(11);
     internal_static_OCSWrite_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_OCSWrite_descriptor,
         new java.lang.String[] { "Data", "U", "Cs", });
     internal_static_WriteReply_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_WriteReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_WriteReply_descriptor,
         new java.lang.String[] { "Sb", });
     internal_static_ReadRequest_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_ReadRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ReadRequest_descriptor,
         new java.lang.String[] { "Ocs", "Read", });
     internal_static_OCSRead_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_OCSRead_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_OCSRead_descriptor,
         new java.lang.String[] { "Public", "DataId", "Signature", });
-    internal_static_SchnorrSig_descriptor =
-      getDescriptor().getMessageTypes().get(13);
-    internal_static_SchnorrSig_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SchnorrSig_descriptor,
-        new java.lang.String[] { "Challenge", "Response", });
     internal_static_ReadReply_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_ReadReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_ReadReply_descriptor,
         new java.lang.String[] { "Sb", });
     internal_static_DecryptKeyRequest_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_DecryptKeyRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_DecryptKeyRequest_descriptor,
         new java.lang.String[] { "ReadId", });
     internal_static_DecryptKeyReply_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_DecryptKeyReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_DecryptKeyReply_descriptor,

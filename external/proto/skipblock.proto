@@ -26,3 +26,8 @@ message BlockLink {
     required bytes Hash = 1;
     required bytes Signature = 2;
 }
+
+message SchnorrSig {
+    required bytes challenge = 1;
+    required bytes response = 2;
+}

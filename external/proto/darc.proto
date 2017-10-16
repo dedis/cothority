@@ -3,6 +3,8 @@ syntax = "proto2";
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "DarcProto";
 
+import "skipblock.proto";
+
 message Darc {
     required bytes id = 1;
     repeated DarcLink accounts = 2;
@@ -20,5 +22,5 @@ message DarcLink {
 message DarcSig {
     required bytes id = 1;
     required int32 version = 2;
-    required bytes signature = 3;
+    optional SchnorrSig signature = 3;
 }

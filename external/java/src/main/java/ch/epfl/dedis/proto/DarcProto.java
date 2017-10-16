@@ -2035,13 +2035,17 @@ public final class DarcProto {
     int getVersion();
 
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional .SchnorrSig signature = 3;</code>
      */
     boolean hasSignature();
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional .SchnorrSig signature = 3;</code>
      */
-    com.google.protobuf.ByteString getSignature();
+    ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature();
+    /**
+     * <code>optional .SchnorrSig signature = 3;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder();
   }
   /**
    * Protobuf type {@code DarcSig}
@@ -2057,7 +2061,6 @@ public final class DarcProto {
     private DarcSig() {
       id_ = com.google.protobuf.ByteString.EMPTY;
       version_ = 0;
-      signature_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -2099,8 +2102,16 @@ public final class DarcProto {
               break;
             }
             case 26: {
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = signature_.toBuilder();
+              }
+              signature_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signature_);
+                signature_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000004;
-              signature_ = input.readBytes();
               break;
             }
           }
@@ -2159,18 +2170,24 @@ public final class DarcProto {
     }
 
     public static final int SIGNATURE_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString signature_;
+    private ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig signature_;
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional .SchnorrSig signature = 3;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional .SchnorrSig signature = 3;</code>
      */
-    public com.google.protobuf.ByteString getSignature() {
-      return signature_;
+    public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature() {
+      return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
+    }
+    /**
+     * <code>optional .SchnorrSig signature = 3;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
+      return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2187,9 +2204,11 @@ public final class DarcProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasSignature()) {
-        memoizedIsInitialized = 0;
-        return false;
+      if (hasSignature()) {
+        if (!getSignature().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -2204,7 +2223,7 @@ public final class DarcProto {
         output.writeInt32(2, version_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(3, signature_);
+        output.writeMessage(3, getSignature());
       }
       unknownFields.writeTo(output);
     }
@@ -2224,7 +2243,7 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, signature_);
+          .computeMessageSize(3, getSignature());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2406,6 +2425,7 @@ public final class DarcProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getSignatureFieldBuilder();
         }
       }
       public Builder clear() {
@@ -2414,7 +2434,11 @@ public final class DarcProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         version_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
-        signature_ = com.google.protobuf.ByteString.EMPTY;
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+        } else {
+          signatureBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
@@ -2451,7 +2475,11 @@ public final class DarcProto {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.signature_ = signature_;
+        if (signatureBuilder_ == null) {
+          result.signature_ = signature_;
+        } else {
+          result.signature_ = signatureBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2501,7 +2529,7 @@ public final class DarcProto {
           setVersion(other.getVersion());
         }
         if (other.hasSignature()) {
-          setSignature(other.getSignature());
+          mergeSignature(other.getSignature());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2515,8 +2543,10 @@ public final class DarcProto {
         if (!hasVersion()) {
           return false;
         }
-        if (!hasSignature()) {
-          return false;
+        if (hasSignature()) {
+          if (!getSignature().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -2607,39 +2637,122 @@ public final class DarcProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      private ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig signature_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder> signatureBuilder_;
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional .SchnorrSig signature = 3;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional .SchnorrSig signature = 3;</code>
        */
-      public com.google.protobuf.ByteString getSignature() {
-        return signature_;
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getSignature() {
+        if (signatureBuilder_ == null) {
+          return signature_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
+        } else {
+          return signatureBuilder_.getMessage();
+        }
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional .SchnorrSig signature = 3;</code>
        */
-      public Builder setSignature(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000004;
-        signature_ = value;
-        onChanged();
+      public Builder setSignature(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig value) {
+        if (signatureBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signature_ = value;
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
         return this;
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional .SchnorrSig signature = 3;</code>
+       */
+      public Builder setSignature(
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder builderForValue) {
+        if (signatureBuilder_ == null) {
+          signature_ = builderForValue.build();
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .SchnorrSig signature = 3;</code>
+       */
+      public Builder mergeSignature(ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig value) {
+        if (signatureBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              signature_ != null &&
+              signature_ != ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance()) {
+            signature_ =
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.newBuilder(signature_).mergeFrom(value).buildPartial();
+          } else {
+            signature_ = value;
+          }
+          onChanged();
+        } else {
+          signatureBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .SchnorrSig signature = 3;</code>
        */
       public Builder clearSignature() {
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+          onChanged();
+        } else {
+          signatureBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000004);
-        signature_ = getDefaultInstance().getSignature();
-        onChanged();
         return this;
+      }
+      /**
+       * <code>optional .SchnorrSig signature = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder getSignatureBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getSignatureFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .SchnorrSig signature = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder getSignatureOrBuilder() {
+        if (signatureBuilder_ != null) {
+          return signatureBuilder_.getMessageOrBuilder();
+        } else {
+          return signature_ == null ?
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.getDefaultInstance() : signature_;
+        }
+      }
+      /**
+       * <code>optional .SchnorrSig signature = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder> 
+          getSignatureFieldBuilder() {
+        if (signatureBuilder_ == null) {
+          signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig.Builder, ch.epfl.dedis.proto.SkipBlockProto.SchnorrSigOrBuilder>(
+                  getSignature(),
+                  getParentForChildren(),
+                  isClean());
+          signature_ = null;
+        }
+        return signatureBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -2714,13 +2827,14 @@ public final class DarcProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\ndarc.proto\"r\n\004Darc\022\n\n\002id\030\001 \002(\014\022\033\n\010acco" +
-      "unts\030\002 \003(\0132\t.DarcLink\022\023\n\013public_keys\030\003 \003" +
-      "(\014\022\017\n\007version\030\004 \002(\005\022\033\n\tsignature\030\005 \001(\0132\010" +
-      ".DarcSig\"9\n\010DarcLink\022\n\n\002id\030\001 \002(\014\022\016\n\006righ" +
-      "ts\030\002 \002(\005\022\021\n\tthreshold\030\003 \002(\005\"9\n\007DarcSig\022\n" +
-      "\n\002id\030\001 \002(\014\022\017\n\007version\030\002 \002(\005\022\021\n\tsignature" +
-      "\030\003 \002(\014B \n\023ch.epfl.dedis.protoB\tDarcProto"
+      "\n\ndarc.proto\032\017skipblock.proto\"r\n\004Darc\022\n\n" +
+      "\002id\030\001 \002(\014\022\033\n\010accounts\030\002 \003(\0132\t.DarcLink\022\023" +
+      "\n\013public_keys\030\003 \003(\014\022\017\n\007version\030\004 \002(\005\022\033\n\t" +
+      "signature\030\005 \001(\0132\010.DarcSig\"9\n\010DarcLink\022\n\n" +
+      "\002id\030\001 \002(\014\022\016\n\006rights\030\002 \002(\005\022\021\n\tthreshold\030\003" +
+      " \002(\005\"F\n\007DarcSig\022\n\n\002id\030\001 \002(\014\022\017\n\007version\030\002" +
+      " \002(\005\022\036\n\tsignature\030\003 \001(\0132\013.SchnorrSigB \n\023" +
+      "ch.epfl.dedis.protoB\tDarcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2733,6 +2847,7 @@ public final class DarcProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          ch.epfl.dedis.proto.SkipBlockProto.getDescriptor(),
         }, assigner);
     internal_static_Darc_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -2752,6 +2867,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_DarcSig_descriptor,
         new java.lang.String[] { "Id", "Version", "Signature", });
+    ch.epfl.dedis.proto.SkipBlockProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

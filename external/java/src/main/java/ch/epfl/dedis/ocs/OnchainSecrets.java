@@ -48,11 +48,10 @@ public class OnchainSecrets {
      * public key of the ocs-shard.
      *
      * @param roster - list of all cothority servers with public keys
-     * @param ocsID - the ID of the used skipchain
-     *
+     * @param ocsID  - the ID of the used skipchain
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-     OnchainSecrets(Roster roster, byte[] ocsID) throws CothorityCommunicationException {
+    OnchainSecrets(Roster roster, byte[] ocsID) throws CothorityCommunicationException {
         this.ocsID = ocsID;
         this.roster = roster;
         this.X = getSharedPublicKey();
@@ -183,7 +182,7 @@ public class OnchainSecrets {
      * The document will be encrypted, except for the id, the reader-list and
      * the extraData-field.
      *
-     * @param doc - the document to store on the skipchain
+     * @param doc       - the document to store on the skipchain
      * @param publisher - the publisher with the right to sell read-access to the document
      * @return
      * @throws CothorityCommunicationException in case of communication difficulties
@@ -219,7 +218,7 @@ public class OnchainSecrets {
      * again. The node will return the latest available darc, although there
      * is no proof that it is really the latest.
      *
-     * @param darcID - the ID of the requested darc.
+     * @param darcID    - the ID of the requested darc.
      * @param recursive - whether all included darcs should also be returned.
      * @return - a list of all darcs.
      * @throws CothorityCommunicationException in case of communication difficulties
@@ -250,9 +249,9 @@ public class OnchainSecrets {
      * This adds the consumer to the list of people allowed to make a read-request
      * to the document.
      *
-     * @param d - the document the reader should have access to
+     * @param d         - the document the reader should have access to
      * @param publisher - the owner of the document
-     * @param reader - he will have access to make a read-request
+     * @param reader    - he will have access to make a read-request
      * @throws CothorityCommunicationException in case of communication difficulties
      */
     //
@@ -287,7 +286,7 @@ public class OnchainSecrets {
      * read-request. A subsequent request can be made to get the re-encryption
      * key.
      *
-     * @param dID - the document the reader wants to access
+     * @param dID    - the document the reader wants to access
      * @param reader - he must have read-permissions for the document
      * @return - the read-request ID if the request was successful
      * @throws CothorityCommunicationException in case of communication difficulties
@@ -314,7 +313,7 @@ public class OnchainSecrets {
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
-      }
+    }
 
     /**
      * Requests a skipblock and returns it.
@@ -343,8 +342,34 @@ public class OnchainSecrets {
     }
 
     /**
-     * Requests the re-encryption key from the skipchain.
+     * Requests the skipblock representing the write-request 'id' and returns
+     * the corresponding OCSWrite-structure.
      *
+     * @param id - the id of the write-request
+     * @return [OCSProto.OCSWrite] - the write-request that can be used for
+     * decryption
+     * @throws CothorityCommunicationException in case of communication difficulties
+     */
+
+    public OCSProto.OCSWrite getWrite(byte[] id) throws CothorityCommunicationException {
+        SkipBlockProto.SkipBlock sb = getSkipblock(id);
+        logger.debug("Getting write-request from skipblock {}", id);
+        try {
+            // TODO: onchain-secrets still uses `network.Marshal` which prepends
+            // a 16-byte identifier for easy unmarshalling.
+            OCSProto.DataOCS data = OCSProto.DataOCS.parseFrom(sb.getData().substring(16));
+            if (!data.hasWrite()) {
+                throw new CothorityCommunicationException("This is not an ID from a write-request");
+            }
+            return data.getWrite();
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Requests the re-encryption key from the skipchain.
+     * <p>
      * TODO: depending on how we decide to implement the access-rights, this
      * might go away.
      *
