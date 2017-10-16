@@ -11,8 +11,8 @@ This part of the service runs on the client or the app.
 import (
 	"errors"
 
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onchain-secrets/protocol"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
