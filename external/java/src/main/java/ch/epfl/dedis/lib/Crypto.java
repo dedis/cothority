@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.ocs.Account;
 import ch.epfl.dedis.proto.OCSProto;
+import ch.epfl.dedis.proto.SkipBlockProto;
 import com.google.protobuf.ByteString;
 import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 import net.i2p.crypto.eddsa.EdDSAPublicKey;
@@ -279,9 +280,9 @@ public class Crypto {
             response = challenge;
         }
 
-        public OCSProto.SchnorrSig toProto() {
-            OCSProto.SchnorrSig.Builder ss =
-                    OCSProto.SchnorrSig.newBuilder();
+        public SkipBlockProto.SchnorrSig toProto() {
+            SkipBlockProto.SchnorrSig.Builder ss =
+                    SkipBlockProto.SchnorrSig.newBuilder();
             ss.setChallenge(challenge.toProto());
             ss.setResponse(response.toProto());
             return ss.build();

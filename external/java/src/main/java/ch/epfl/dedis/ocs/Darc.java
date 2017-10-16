@@ -3,6 +3,7 @@ package ch.epfl.dedis.ocs;
 import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.ocs.Account;
 import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.SkipBlockProto;
 import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
@@ -87,19 +88,20 @@ public class Darc {
     static public class DarcSig {
         public byte[] id;
         public int version;
-        public byte[] signature;
+        public SkipBlockProto.SchnorrSig signature;
 
         public DarcSig(DarcProto.DarcSig ds) {
             id = ds.getId().toByteArray();
             version = ds.getVersion();
-            signature = ds.getSignature().toByteArray();
+            signature = ds.getSignature();
         }
 
         public DarcProto.DarcSig getProto() {
             DarcProto.DarcSig.Builder ds = DarcProto.DarcSig.newBuilder();
             ds.setId(ByteString.copyFrom(id));
             ds.setVersion(version);
-            ds.setSignature(ByteString.copyFrom(signature));
+            // TODO: implement signature here
+//            ds.setSignature(signature);
 
             return ds.build();
         }
