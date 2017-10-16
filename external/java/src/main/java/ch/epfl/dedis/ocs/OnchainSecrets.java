@@ -325,7 +325,8 @@ public class OnchainSecrets {
      */
     public SkipBlockProto.SkipBlock getSkipblock(byte[] id) throws CothorityCommunicationException {
         SkipchainProto.GetSingleBlock request =
-                SkipchainProto.GetSingleBlock.newBuilder().build();
+                SkipchainProto.GetSingleBlock.newBuilder().setId(ByteString.copyFrom(id)).build();
+
         ByteString msg = roster.SendMessage("Skipchain/GetSingleBlock",
                 request);
 
