@@ -22,9 +22,9 @@ import (
 
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/protocol"
-	"gopkg.in/dedis/crypto.v0/share"
-	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/cothority.v1/messaging"
+	"gopkg.in/dedis/cothority.v1/skipchain"
+	"gopkg.in/dedis/crypto.v0/share"
 )
 
 // Used for tests
@@ -172,8 +172,6 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 		Write:   req.Write,
 		Readers: req.Readers,
 	}
-
-	log.Print()
 
 	i := 1
 	for {
