@@ -355,9 +355,7 @@ public class OnchainSecrets {
         SkipBlockProto.SkipBlock sb = getSkipblock(id);
         logger.debug("Getting write-request from skipblock {}", id);
         try {
-            // TODO: onchain-secrets still uses `network.Marshal` which prepends
-            // a 16-byte identifier for easy unmarshalling.
-            OCSProto.DataOCS data = OCSProto.DataOCS.parseFrom(sb.getData().substring(16));
+            OCSProto.DataOCS data = OCSProto.DataOCS.parseFrom(sb.getData());
             if (!data.hasWrite()) {
                 throw new CothorityCommunicationException("This is not an ID from a write-request");
             }

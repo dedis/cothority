@@ -217,12 +217,8 @@ func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encDa
 	if cerr != nil {
 		return nil, cerr
 	}
-	_, ocsDataI, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
-	ocsData, ok := ocsDataI.(*DataOCS)
-	if !ok || ocsData.Write == nil {
+	ocsData := NewDataOCS(sb.Data)
+	if ocsData == nil || ocsData.Write == nil {
 		return nil, onet.NewClientError(errors.New("not correct type of data"))
 	}
 	return ocsData.Write.Data, nil

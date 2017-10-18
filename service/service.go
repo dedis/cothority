@@ -22,6 +22,7 @@ import (
 
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/protocol"
+	"github.com/dedis/protobuf"
 	"gopkg.in/dedis/cothority.v1/messaging"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/share"
@@ -67,8 +68,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	reply = &ocs.CreateSkipchainsReply{}
 
 	log.Lvl2("Creating OCS-skipchain")
-	ocsData := &ocs.DataOCS{}
-	reply.OCS, cerr = c.CreateGenesis(req.Roster, 1, 1, ocs.VerificationOCS, ocsData, nil)
+	reply.OCS, cerr = c.CreateGenesis(req.Roster, 1, 1, ocs.VerificationOCS, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -117,12 +117,16 @@ func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
 	} else {
 		log.Lvl2("Adding new account")
 	}
-	data := &ocs.DataOCS{
+	dataOCS := &ocs.DataOCS{
 		Readers: req.Darc,
 	}
 	s.saveMutex.Lock()
 	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
 	s.saveMutex.Unlock()
+	data, err := protobuf.Encode(dataOCS)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
+	}
 	sb, cerr := s.BunchAddBlock(ocsBunch, ocsBunch.Latest.Roster, data)
 	if cerr != nil {
 		return
@@ -168,9 +172,13 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 		log.Error("not")
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
-	data := &ocs.DataOCS{
+	dataOCS := &ocs.DataOCS{
 		Write:   req.Write,
 		Readers: req.Readers,
+	}
+	data, err := protobuf.Encode(dataOCS)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
 	}
 
 	i := 1
@@ -220,8 +228,12 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	if block == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
-	data := &ocs.DataOCS{
+	dataOCS := &ocs.DataOCS{
 		Read: req.Read,
+	}
+	data, err := protobuf.Encode(dataOCS)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
 	}
 
 	i := 1
@@ -273,11 +285,10 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 		doc = current.Hash
 	}
 	for req.Count == 0 || len(reply.Documents) < req.Count {
-		// Search next read-request
-		_, docsi, err := network.Unmarshal(current.Data)
-		if err == nil && docsi != nil {
-			dataOCS, ok := docsi.(*ocs.DataOCS)
-			if !ok {
+		if current.Index > 0 {
+			// Search next read-request
+			dataOCS := ocs.NewDataOCS(current.Data)
+			if dataOCS == nil {
 				return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
 					"unknown block in ocs-skipchain")
 			}

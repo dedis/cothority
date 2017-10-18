@@ -15,6 +15,8 @@ import (
 
 	"fmt"
 
+	"errors"
+
 	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
@@ -276,11 +278,10 @@ func scread(c *cli.Context) error {
 	}
 	log.Printf("SkipblockID (Hash): %x", sb.Hash)
 	log.Printf("Index: %d", sb.Index)
-	_, data, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		return err
+	ocs := ocs.NewDataOCS(sb.Data)
+	if ocs == nil {
+		return errors.New("wrong data in skipblock")
 	}
-	ocs := data.(*ocs.DataOCS)
 	if ocs.Write != nil {
 		log.Printf("Writer: %#v", ocs.Write)
 	}

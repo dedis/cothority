@@ -7,6 +7,7 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"fmt"
 
+	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
@@ -87,17 +88,9 @@ type Meta struct {
 // the given data-slice. If the slice is not a valid DataOCS-structure,
 // nil is returned.
 func NewDataOCS(b []byte) *DataOCS {
-	_, dwi, err := network.Unmarshal(b)
+	dw := &DataOCS{}
+	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(network.Suite))
 	if err != nil {
-		log.Error(err)
-		return nil
-	}
-	if dwi == nil {
-		log.Error("dwi is nil")
-		return nil
-	}
-	dw, ok := dwi.(*DataOCS)
-	if !ok {
 		log.Error(err)
 		return nil
 	}
