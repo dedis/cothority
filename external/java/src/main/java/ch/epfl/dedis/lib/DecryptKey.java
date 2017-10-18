@@ -27,15 +27,14 @@ public class DecryptKey {
         Cs = new ArrayList<>();
     }
 
-    public DecryptKey(OCSProto.DecryptKeyReply reply) {
+    public DecryptKey(OCSProto.DecryptKeyReply reply, Crypto.Point X) {
         this();
         reply.getCsList().forEach(C -> Cs.add(new Crypto.Point(C)));
-        X = new Crypto.Point(reply.getX());
         XhatEnc = new Crypto.Point(reply.getXhatEnc());
+        this.X = X;
     }
 
-    public byte[] decryptDocument(OCSProto.OCSWrite write, Account reader) throws Exception {
-        byte[] dataEnc = write.getData().toByteArray();
+    public byte[] getKeyMaterial(OCSProto.OCSWrite write, Account reader) throws Exception {
         List<Crypto.Point> Cs = new ArrayList<>();
         write.getCsList().forEach(cs -> Cs.add(new Crypto.Point(cs)));
 
@@ -47,23 +46,21 @@ public class DecryptKey {
         Crypto.Point Xhat = XhatEnc.add(XhatDec);
         Crypto.Point XhatInv = Xhat.negate();
 
-        byte[] symmetricKey = "".getBytes();
+        byte[] keyMaterial = "".getBytes();
         for (Crypto.Point C : Cs) {
             Crypto.Point keyPointHat = C.add(XhatInv);
             try {
                 byte[] keyPart = keyPointHat.pubLoad();
-                int lastpos = symmetricKey.length;
-                symmetricKey = Arrays.copyOfRange(symmetricKey, 0, symmetricKey.length + keyPart.length);
-                System.arraycopy(keyPart, 0, symmetricKey, lastpos, keyPart.length);
+                int lastpos = keyMaterial.length;
+                keyMaterial = Arrays.copyOfRange(keyMaterial, 0, keyMaterial.length + keyPart.length);
+                System.arraycopy(keyPart, 0, keyMaterial, lastpos, keyPart.length);
             } catch (Crypto.CryptoException c) {
                 c.printStackTrace();
                 System.out.println("couldn't extract data! " + c.toString());
             }
         }
 
-        Cipher cipher = Cipher.getInstance(Crypto.algo);
-        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(symmetricKey, Crypto.algoKey));
-        return cipher.doFinal(dataEnc);
+        return keyMaterial;
     }
 
     public String toString() {

@@ -38,10 +38,6 @@ public class Crypto {
     public static Field field = curve.getField();
     public static Scalar prime_order = new Scalar("EDD3F55C1A631258D69CF7A2DEF9DE1400000000000000000000000000000010");
     public static Point base = new Point(Crypto.ed25519.getB());
-    // TODO: use CBC here and transmit the IV - or make sure that in this
-    // special case ECB is secure.
-    public static String algo = "AES/ECB/PKCS5Padding";
-    public static String algoKey = "AES";
 
 
     public static byte[] uuid4() {

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
@@ -20,6 +22,7 @@ class OnchainSecretsTest {
     static Account publisher;
     static Account reader;
     static Document doc;
+    static String docData;
     static Document docNew;
     static byte[] readID;
 
@@ -38,7 +41,8 @@ class OnchainSecretsTest {
         admin = new Account(Account.ADMIN);
         publisher = new Account(Account.WRITER);
         reader = new Account(Account.READER);
-        doc = new Document("https://dedis.ch/secret_document.osd", 16);
+        docData = "https://dedis.ch/secret_document.osd";
+        doc = new Document(docData, 16);
     }
 
     @Test
@@ -72,14 +76,30 @@ class OnchainSecretsTest {
     void testEncryption() throws Exception {
         byte[] orig = "My cool file".getBytes();
         byte[] symmetricKey = new byte[16];
-        new Random().nextBytes(symmetricKey);
-        Cipher cipher = Cipher.getInstance(Crypto.algo);
-        SecretKeySpec key = new SecretKeySpec(symmetricKey, Crypto.algoKey);
-        cipher.init(Cipher.ENCRYPT_MODE, key);
+        int ivSize = 16;
+        byte[] iv = new byte[ivSize];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+        random.nextBytes(symmetricKey);
+        Cipher cipher = Cipher.getInstance(Document.algo);
+        SecretKeySpec key = new SecretKeySpec(symmetricKey, Document.algoKey);
+        cipher.init(Cipher.ENCRYPT_MODE, key, ivParameterSpec);
         byte[] data_enc = cipher.doFinal(orig);
 
-        cipher.init(Cipher.DECRYPT_MODE, key);
+        cipher.init(Cipher.DECRYPT_MODE, key, ivParameterSpec);
         byte[] data = cipher.doFinal(data_enc);
+        assertArrayEquals(orig, data);
+    }
+
+    @Test
+    void testDocumentEncryption()throws Exception{
+        byte[] orig = "foo beats bar".getBytes();
+        byte[] keyMaterial = new byte[Document.ivLength + 16];
+        new SecureRandom().nextBytes(keyMaterial);
+
+        byte[] dataEnc = Document.encryptData(orig, keyMaterial);
+        byte[] data = Document.decryptData(dataEnc, keyMaterial);
         assertArrayEquals(orig, data);
     }
 
@@ -91,7 +111,7 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void getWrite() throws Exception{
+    void getWrite() throws Exception {
         publishDocument();
         OCSProto.OCSWrite write = ocs.getWrite(docNew.id);
         assertEquals(docNew.getWrite(ocs.X), write);
@@ -112,7 +132,7 @@ class OnchainSecretsTest {
         addAccountToSkipchain();
         docNew = ocs.publishDocument(doc, publisher);
         ocs.giveReadAccessToDocument(docNew, publisher, reader);
-        List<Darc> darcs = ocs.readDarc(docNew.readers.id, false);
+        List<Darc> darcs = ocs.readDarc(docNew.owner.id, false);
         Darc darc = darcs.get(0);
         assertEquals(1, darc.version);
         assertEquals(1, darc.points.size());
@@ -131,9 +151,9 @@ class OnchainSecretsTest {
         readRequest();
         DecryptKey dk = ocs.decryptKey(readID);
         assertNotNull(dk);
-        dk.X = ocs.X;
         OCSProto.OCSWrite write = ocs.getWrite(docNew.id);
-        byte[] data = dk.decryptDocument(write, reader);
-        assertArrayEquals(doc.data, data);
+        byte[] keyMaterial = dk.getKeyMaterial(write, reader);
+        byte[] data = Document.decryptData(write.getData(), keyMaterial);
+        assertArrayEquals(docData.getBytes(), data);
     }
 }

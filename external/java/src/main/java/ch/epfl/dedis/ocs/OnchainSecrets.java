@@ -34,7 +34,7 @@ public class OnchainSecrets {
     // runs on the ocs-skipchain, this ID must be initialized to the same
     // value as before.
     public byte[] ocsID;
-    // X is the public key of the ocs-shard that will re-encrypt the symmetric
+    // X is the public symmetricKey of the ocs-shard that will re-encrypt the symmetric
     // keys if they receive a valid re-encryption request.
     public Crypto.Point X;
 
@@ -45,7 +45,7 @@ public class OnchainSecrets {
      * If the skipchain is already initialised, this constructor will only
      * initialise the class. Once it is initialized, you can verify it with
      * the verify()-method. This constructor will search for the shared
-     * public key of the ocs-shard.
+     * public symmetricKey of the ocs-shard.
      *
      * @param roster - list of all cothority servers with public keys
      * @param ocsID  - the ID of the used skipchain
@@ -152,11 +152,11 @@ public class OnchainSecrets {
     }
 
     /**
-     * returns the shared key of the DKG that must be used to encrypt the
-     * symmetric encryption key. This will be the same as OnchainSecrets.X
+     * returns the shared symmetricKey of the DKG that must be used to encrypt the
+     * symmetric encryption symmetricKey. This will be the same as OnchainSecrets.X
      * stored when creating the skipchain.
      *
-     * @return the aggregate public key of the ocs-shard
+     * @return the aggregate public symmetricKey of the ocs-shard
      * @throws CothorityCommunicationException in case of communication difficulties
      */
     //
@@ -169,7 +169,7 @@ public class OnchainSecrets {
 
         try {
             OCSProto.SharedPublicReply reply = OCSProto.SharedPublicReply.parseFrom(msg);
-            logger.info("Got shared public key");
+            logger.info("Got shared public symmetricKey");
             return new Crypto.Point(reply.getX());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
@@ -178,7 +178,7 @@ public class OnchainSecrets {
 
     /**
      * Publishes a document on the skipchain. The publisher-account has the right
-     * to add readers to the document once the document is stored on the skipchain.
+     * to add owner to the document once the document is stored on the skipchain.
      * The document will be encrypted, except for the id, the reader-list and
      * the extraData-field.
      *
@@ -189,14 +189,14 @@ public class OnchainSecrets {
      */
     public Document publishDocument(Document doc, Account publisher) throws CothorityCommunicationException {
         Document docNew = new Document(doc);
-        docNew.readers = new Darc();
+        docNew.owner = new Darc();
         // TODO: in the future document owner will be introduced and read access will be not granted to owner
-        docNew.readers.accounts.add(new Darc.DarcLink(publisher));
+        docNew.owner.accounts.add(new Darc.DarcLink(publisher));
 
         OCSProto.WriteRequest.Builder request =
                 OCSProto.WriteRequest.newBuilder();
         request.setWrite(docNew.getWrite(X));
-        request.setReader(docNew.readers.getProto());
+        request.setReader(docNew.owner.getProto());
         request.setOcs(ByteString.copyFrom(ocsID));
         request.setData(ByteString.copyFrom(docNew.extraData));
 
@@ -256,12 +256,12 @@ public class OnchainSecrets {
      */
     //
     public void giveReadAccessToDocument(Document d, Account publisher, Account reader) throws CothorityCommunicationException {
-        List<Darc> darcs = readDarc(d.readers.id, false);
+        List<Darc> darcs = readDarc(d.owner.id, false);
         Darc darc = darcs.get(0);
         darc.version++;
         darc.points.add(reader.Point);
 
-        // TODO: sign this new Darc with the readers-account
+        // TODO: sign this new Darc with the owner-account
 
         OCSProto.EditDarcRequest.Builder request =
                 OCSProto.EditDarcRequest.newBuilder();
@@ -284,7 +284,7 @@ public class OnchainSecrets {
      * Create a read-request on the skipchain. The nodes will verify that the
      * reader actually has access to the document and log the successful
      * read-request. A subsequent request can be made to get the re-encryption
-     * key.
+     * symmetricKey.
      *
      * @param dID    - the document the reader wants to access
      * @param reader - he must have read-permissions for the document
@@ -368,7 +368,7 @@ public class OnchainSecrets {
     }
 
     /**
-     * Requests the re-encryption key from the skipchain.
+     * Requests the re-encryption symmetricKey from the skipchain.
      * <p>
      * TODO: depending on how we decide to implement the access-rights, this
      * might go away.
@@ -388,8 +388,8 @@ public class OnchainSecrets {
         try {
             OCSProto.DecryptKeyReply reply = OCSProto.DecryptKeyReply.parseFrom(msg);
 
-            logger.info("got decryption key");
-            return new DecryptKey(reply);
+            logger.info("got decryption symmetricKey");
+            return new DecryptKey(reply, X);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

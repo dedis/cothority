@@ -45,7 +45,7 @@ public class OcsFactory {
 
     /**
      * @param conode cothority server address (base address in tcp://127.0.0.0:7001 form)
-     * @param publicKey       server public key base64 encoded to a string
+     * @param publicKey       server public symmetricKey base64 encoded to a string
      *
      * @throws IllegalArgumentException when conode address is incorrect
      *
