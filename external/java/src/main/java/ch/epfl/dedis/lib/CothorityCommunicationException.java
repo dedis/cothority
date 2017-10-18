@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-public class CothorityCommunicationException extends Exception {
+public class CothorityCommunicationException extends CothorityException {
     public CothorityCommunicationException(String message) {
         super(message);
     }
