@@ -1,6 +1,7 @@
 package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.CothorityCommunicationException;
+import ch.epfl.dedis.lib.CothorityException;
 import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.lib.DecryptKey;
 import ch.epfl.dedis.lib.Roster;
@@ -11,9 +12,12 @@ import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 
 import javax.xml.bind.DatatypeConverter;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
@@ -394,5 +398,24 @@ public class OnchainSecrets {
 
     public String getGenesis() {
         return new String((Base64.getEncoder().encode(ocsID)));
+    }
+
+
+    /**
+     * Create user in skipchain system. Created user will have specified permissions.
+     * @param administrator administrator who is going to create a user - signature of administrator will be required
+     *                      to execute operation.
+     * @param newUserKey public key of new created user
+     * @param permissions initial permissions of a new user
+     *
+     * @throws CothorityCommunicationException in case of communication problems
+     * @throws CothorityPermissionException when administrator has no permission to create users in the system
+     *
+     * @return ID of a new user
+     */
+    public UUID createSkipchainUser(User administrator, PublicKey newUserKey, Set<EpflPermission> permissions) throws CothorityException {
+        // implementation work temporary blocked by #36
+        // bit mask form permission can be get in this way int perms =  EpflPermission.maskOf(permissions);
+        throw new IllegalStateException("Not implemented yet");
     }
 }
