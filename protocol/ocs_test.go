@@ -138,7 +138,6 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 	default:
 		return nil, errors.New("unknown protocol for this service")
 	}
-	return nil, nil
 }
 
 // starts a new service. No function needed.

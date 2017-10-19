@@ -86,7 +86,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	setupDKG := pi.(*protocol.SetupDKG)
 	setupDKG.Wait = true
 	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
-	//log.Print(s.ServerIdentity(), reply.OCS.Hash)
+	//log.Lvl2(s.ServerIdentity(), reply.OCS.Hash)
 	if err := pi.Start(); err != nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
@@ -320,7 +320,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 	return
 }
 
-// GetSharedPublic returns the shared public key of a skipchain.
+// SharedPublic returns the shared public key of a skipchain.
 func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedPublicReply, error onet.ClientError) {
 	log.Lvl2("Getting shared public key")
 	s.saveMutex.Lock()
@@ -364,7 +364,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
 	ocsProto.Xc = read.Read.Public
-	log.Printf("Public key is: %s", read.Read.Public)
+	log.Lvlf2("Public key is: %s", read.Read.Public)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
@@ -419,7 +419,7 @@ func (s *Service) BunchAddBlock(bunch *ocs.SkipBlockBunch, r *onet.Roster, data 
 
 // NewProtocol intercepts the DKG and OCS protocols to retrieve the values
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	//log.Print(s.ServerIdentity(), tn.ProtocolName(), conf)
+	//log.Lvl2(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
 	case protocol.NameDKG:
 		pi, err := protocol.NewSetupDKG(tn)
@@ -435,7 +435,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				return
 			}
 			log.Lvl3(s.ServerIdentity(), "Got shared", shared)
-			//log.Print(conf)
+			//log.Lvl2(conf)
 			s.saveMutex.Lock()
 			s.Storage.Shared[string(conf.Data)] = shared
 			s.saveMutex.Unlock()
@@ -465,7 +465,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func (s *Service) darcRecursive(storage map[string]*ocs.Darc, search ocs.DarcID) {
 	darc := s.Storage.Accounts[string(search)]
 	storage[string(search)] = darc
-	log.Printf("%+v", darc)
+	log.Lvlf2("%+v", darc)
 	for _, d := range darc.Accounts {
 		if _, exists := storage[string(d.ID)]; !exists {
 			s.darcRecursive(storage, d.ID)
@@ -554,7 +554,7 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	s.saveMutex.Lock()
 	s.Storage.OCSs.Store(sb)
 	if r := dataOCS.Readers; r != nil {
-		log.Print("Storing new readers", r.ID)
+		log.Lvl2("Storing new readers", r.ID)
 		s.Storage.Accounts[string(r.ID)] = r
 	}
 	s.saveMutex.Unlock()

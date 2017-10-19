@@ -31,7 +31,7 @@ type OCS struct {
 	Uis  []*share.PubShare // re-encrypted shares
 }
 
-// NewSetupDKG initialises the structure for use in one round
+// NewOCS initialises the structure for use in one round
 func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &OCS{
 		TreeNodeInstance: n,
@@ -59,7 +59,7 @@ func (o *OCS) Start() error {
 
 func (o *OCS) reencrypt(r structReencrypt) error {
 	log.Lvl3(o.Name())
-	ui, err := o.getUi(r.U, r.Xc)
+	ui, err := o.getUI(r.U, r.Xc)
 	if err != nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 func (o *OCS) reencryptReply(rr []structReencryptReply) error {
 	o.Uis = make([]*share.PubShare, len(o.List()))
 	var err error
-	o.Uis[0], err = o.getUi(o.U, o.Xc)
+	o.Uis[0], err = o.getUI(o.U, o.Xc)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (o *OCS) reencryptReply(rr []structReencryptReply) error {
 	return nil
 }
 
-func (o *OCS) getUi(U, Xc abstract.Point) (*share.PubShare, error) {
+func (o *OCS) getUI(U, Xc abstract.Point) (*share.PubShare, error) {
 	v := network.Suite.Point().Mul(U, o.Shared.V)
 	v.Add(v, network.Suite.Point().Mul(Xc, o.Shared.V))
 	return &share.PubShare{

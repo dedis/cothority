@@ -22,6 +22,7 @@ type Darc struct {
 	Signature *DarcSig
 }
 
+// NewDarc returns a new darc linked to the skipblock sc.
 func NewDarc(sc skipchain.SkipBlockID) *Darc {
 	return &Darc{
 		ID: []byte(sc),

@@ -77,11 +77,7 @@ type DataOCS struct {
 	Write   *DataOCSWrite
 	Read    *DataOCSRead
 	Readers *Darc
-	Meta    *Meta
-}
-
-type Meta struct {
-	Data []byte
+	Meta    *[]byte
 }
 
 // NewDataOCS returns a pointer to a DataOCS structure created from
@@ -113,9 +109,15 @@ func (dw *DataOCS) String() string {
 
 // DataOCSWrite stores the data and the encrypted secret
 type DataOCSWrite struct {
+	// Data should be encrypted by the symmetric key in U and Cs
 	Data []byte
-	U    abstract.Point
-	Cs   []abstract.Point
+	// U is the encrypted random value for the ElGamal encryption
+	U abstract.Point
+	// Cs are the ElGamal parts for the symmetric key material (might
+	// also contain an IV)
+	Cs []abstract.Point
+	// ExtraData is clear text and application-specific
+	ExtraData *[]byte
 }
 
 // DataOCSRead stores a read-request which is the secret encrypted under the
@@ -181,7 +183,6 @@ type WriteRequest struct {
 	OCS     skipchain.SkipBlockID
 	Write   *DataOCSWrite
 	Readers *Darc
-	Data    *[]byte
 }
 
 // WriteReply returns the created skipblock which is the write-id

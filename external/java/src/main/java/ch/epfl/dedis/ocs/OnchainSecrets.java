@@ -198,7 +198,6 @@ public class OnchainSecrets {
         request.setWrite(docNew.getWrite(X));
         request.setReader(docNew.owner.getProto());
         request.setOcs(ByteString.copyFrom(ocsID));
-        request.setData(ByteString.copyFrom(docNew.extraData));
 
         ByteString msg = roster.SendMessage("OnChainSecrets/WriteRequest",
                 request.build());

@@ -23,6 +23,7 @@ class OnchainSecretsTest {
     static Account reader;
     static Document doc;
     static String docData;
+    static String extraData;
     static Document docNew;
     static byte[] readID;
 
@@ -43,6 +44,8 @@ class OnchainSecretsTest {
         reader = new Account(Account.READER);
         docData = "https://dedis.ch/secret_document.osd";
         doc = new Document(docData, 16);
+        extraData = "created on Monday";
+        doc.extraData = extraData.getBytes();
     }
 
     @Test
@@ -115,6 +118,7 @@ class OnchainSecretsTest {
         publishDocument();
         OCSProto.OCSWrite write = ocs.getWrite(docNew.id);
         assertEquals(docNew.getWrite(ocs.X), write);
+        assertArrayEquals(extraData.getBytes(), write.getExtraData().toByteArray());
     }
 
     @Test

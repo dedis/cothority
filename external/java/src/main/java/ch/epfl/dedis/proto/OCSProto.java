@@ -5069,23 +5069,6 @@ public final class OCSProto {
      * <code>required .Darc reader = 3;</code>
      */
     ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReaderOrBuilder();
-
-    /**
-     * <pre>
-     * Extra data
-     * </pre>
-     *
-     * <code>required bytes data = 4;</code>
-     */
-    boolean hasData();
-    /**
-     * <pre>
-     * Extra data
-     * </pre>
-     *
-     * <code>required bytes data = 4;</code>
-     */
-    com.google.protobuf.ByteString getData();
   }
   /**
    * Protobuf type {@code WriteRequest}
@@ -5100,7 +5083,6 @@ public final class OCSProto {
     }
     private WriteRequest() {
       ocs_ = com.google.protobuf.ByteString.EMPTY;
-      data_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -5160,11 +5142,6 @@ public final class OCSProto {
                 reader_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000004;
-              break;
-            }
-            case 34: {
-              bitField0_ |= 0x00000008;
-              data_ = input.readBytes();
               break;
             }
           }
@@ -5249,29 +5226,6 @@ public final class OCSProto {
       return reader_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : reader_;
     }
 
-    public static final int DATA_FIELD_NUMBER = 4;
-    private com.google.protobuf.ByteString data_;
-    /**
-     * <pre>
-     * Extra data
-     * </pre>
-     *
-     * <code>required bytes data = 4;</code>
-     */
-    public boolean hasData() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
-    }
-    /**
-     * <pre>
-     * Extra data
-     * </pre>
-     *
-     * <code>required bytes data = 4;</code>
-     */
-    public com.google.protobuf.ByteString getData() {
-      return data_;
-    }
-
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -5287,10 +5241,6 @@ public final class OCSProto {
         return false;
       }
       if (!hasReader()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasData()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -5317,9 +5267,6 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, getReader());
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, data_);
-      }
       unknownFields.writeTo(output);
     }
 
@@ -5339,10 +5286,6 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getReader());
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, data_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5376,11 +5319,6 @@ public final class OCSProto {
         result = result && getReader()
             .equals(other.getReader());
       }
-      result = result && (hasData() == other.hasData());
-      if (hasData()) {
-        result = result && getData()
-            .equals(other.getData());
-      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -5403,10 +5341,6 @@ public final class OCSProto {
       if (hasReader()) {
         hash = (37 * hash) + READER_FIELD_NUMBER;
         hash = (53 * hash) + getReader().hashCode();
-      }
-      if (hasData()) {
-        hash = (37 * hash) + DATA_FIELD_NUMBER;
-        hash = (53 * hash) + getData().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5553,8 +5487,6 @@ public final class OCSProto {
           readerBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
-        data_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -5599,10 +5531,6 @@ public final class OCSProto {
         } else {
           result.reader_ = readerBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.data_ = data_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5654,9 +5582,6 @@ public final class OCSProto {
         if (other.hasReader()) {
           mergeReader(other.getReader());
         }
-        if (other.hasData()) {
-          setData(other.getData());
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -5670,9 +5595,6 @@ public final class OCSProto {
           return false;
         }
         if (!hasReader()) {
-          return false;
-        }
-        if (!hasData()) {
           return false;
         }
         if (!getWrite().isInitialized()) {
@@ -5972,57 +5894,6 @@ public final class OCSProto {
           reader_ = null;
         }
         return readerBuilder_;
-      }
-
-      private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * Extra data
-       * </pre>
-       *
-       * <code>required bytes data = 4;</code>
-       */
-      public boolean hasData() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <pre>
-       * Extra data
-       * </pre>
-       *
-       * <code>required bytes data = 4;</code>
-       */
-      public com.google.protobuf.ByteString getData() {
-        return data_;
-      }
-      /**
-       * <pre>
-       * Extra data
-       * </pre>
-       *
-       * <code>required bytes data = 4;</code>
-       */
-      public Builder setData(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000008;
-        data_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * Extra data
-       * </pre>
-       *
-       * <code>required bytes data = 4;</code>
-       */
-      public Builder clearData() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        data_ = getDefaultInstance().getData();
-        onChanged();
-        return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -7852,6 +7723,23 @@ public final class OCSProto {
      * <code>repeated bytes Cs = 3;</code>
      */
     com.google.protobuf.ByteString getCs(int index);
+
+    /**
+     * <pre>
+     * Extra data - application specific
+     * </pre>
+     *
+     * <code>optional bytes extra_data = 4;</code>
+     */
+    boolean hasExtraData();
+    /**
+     * <pre>
+     * Extra data - application specific
+     * </pre>
+     *
+     * <code>optional bytes extra_data = 4;</code>
+     */
+    com.google.protobuf.ByteString getExtraData();
   }
   /**
    * Protobuf type {@code OCSWrite}
@@ -7868,6 +7756,7 @@ public final class OCSProto {
       data_ = com.google.protobuf.ByteString.EMPTY;
       u_ = com.google.protobuf.ByteString.EMPTY;
       cs_ = java.util.Collections.emptyList();
+      extraData_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -7914,6 +7803,11 @@ public final class OCSProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               cs_.add(input.readBytes());
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000004;
+              extraData_ = input.readBytes();
               break;
             }
           }
@@ -8024,6 +7918,29 @@ public final class OCSProto {
       return cs_.get(index);
     }
 
+    public static final int EXTRA_DATA_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString extraData_;
+    /**
+     * <pre>
+     * Extra data - application specific
+     * </pre>
+     *
+     * <code>optional bytes extra_data = 4;</code>
+     */
+    public boolean hasExtraData() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Extra data - application specific
+     * </pre>
+     *
+     * <code>optional bytes extra_data = 4;</code>
+     */
+    public com.google.protobuf.ByteString getExtraData() {
+      return extraData_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -8053,6 +7970,9 @@ public final class OCSProto {
       for (int i = 0; i < cs_.size(); i++) {
         output.writeBytes(3, cs_.get(i));
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(4, extraData_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -8077,6 +7997,10 @@ public final class OCSProto {
         }
         size += dataSize;
         size += 1 * getCsList().size();
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, extraData_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8107,6 +8031,11 @@ public final class OCSProto {
       }
       result = result && getCsList()
           .equals(other.getCsList());
+      result = result && (hasExtraData() == other.hasExtraData());
+      if (hasExtraData()) {
+        result = result && getExtraData()
+            .equals(other.getExtraData());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -8129,6 +8058,10 @@ public final class OCSProto {
       if (getCsCount() > 0) {
         hash = (37 * hash) + CS_FIELD_NUMBER;
         hash = (53 * hash) + getCsList().hashCode();
+      }
+      if (hasExtraData()) {
+        hash = (37 * hash) + EXTRA_DATA_FIELD_NUMBER;
+        hash = (53 * hash) + getExtraData().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8265,6 +8198,8 @@ public final class OCSProto {
         bitField0_ = (bitField0_ & ~0x00000002);
         cs_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000004);
+        extraData_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -8302,6 +8237,10 @@ public final class OCSProto {
           bitField0_ = (bitField0_ & ~0x00000004);
         }
         result.cs_ = cs_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.extraData_ = extraData_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8359,6 +8298,9 @@ public final class OCSProto {
             cs_.addAll(other.cs_);
           }
           onChanged();
+        }
+        if (other.hasExtraData()) {
+          setExtraData(other.getExtraData());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -8592,6 +8534,57 @@ public final class OCSProto {
       public Builder clearCs() {
         cs_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString extraData_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Extra data - application specific
+       * </pre>
+       *
+       * <code>optional bytes extra_data = 4;</code>
+       */
+      public boolean hasExtraData() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Extra data - application specific
+       * </pre>
+       *
+       * <code>optional bytes extra_data = 4;</code>
+       */
+      public com.google.protobuf.ByteString getExtraData() {
+        return extraData_;
+      }
+      /**
+       * <pre>
+       * Extra data - application specific
+       * </pre>
+       *
+       * <code>optional bytes extra_data = 4;</code>
+       */
+      public Builder setExtraData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        extraData_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Extra data - application specific
+       * </pre>
+       *
+       * <code>optional bytes extra_data = 4;</code>
+       */
+      public Builder clearExtraData() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        extraData_ = getDefaultInstance().getExtraData();
         onChanged();
         return this;
       }
@@ -12681,22 +12674,23 @@ public final class OCSProto {
       "DarcRequest\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(\0132\005" +
       ".Darc\"\'\n\rEditDarcReply\022\026\n\002sb\030\001 \002(\0132\n.Ski" +
       "pBlock\"&\n\023SharedPublicRequest\022\017\n\007genesis",
-      "\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"Z" +
+      "\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"L" +
       "\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\030\n\005write\030\002 \002" +
-      "(\0132\t.OCSWrite\022\025\n\006reader\030\003 \002(\0132\005.Darc\022\014\n\004" +
-      "data\030\004 \002(\014\"h\n\007DataOCS\022\030\n\005write\030\001 \001(\0132\t.O" +
-      "CSWrite\022\026\n\004read\030\002 \001(\0132\010.OCSRead\022\026\n\007reade" +
-      "rs\030\003 \001(\0132\005.Darc\022\023\n\004meta\030\004 \001(\0132\005.Meta\"\024\n\004" +
-      "Meta\022\014\n\004data\030\001 \002(\014\"/\n\010OCSWrite\022\014\n\004data\030\001" +
-      " \002(\014\022\t\n\001U\030\002 \002(\014\022\n\n\002Cs\030\003 \003(\014\"$\n\nWriteRepl" +
-      "y\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"2\n\013ReadRequest" +
-      "\022\013\n\003ocs\030\001 \002(\014\022\026\n\004read\030\002 \002(\0132\010.OCSRead\"J\n",
-      "\007OCSRead\022\016\n\006public\030\001 \002(\014\022\017\n\007data_id\030\002 \002(" +
-      "\014\022\036\n\tsignature\030\003 \002(\0132\013.SchnorrSig\"#\n\tRea" +
-      "dReply\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"$\n\021Decryp" +
-      "tKeyRequest\022\017\n\007read_id\030\001 \002(\014\"9\n\017DecryptK" +
-      "eyReply\022\n\n\002Cs\030\001 \003(\014\022\017\n\007XhatEnc\030\002 \002(\014\022\t\n\001" +
-      "X\030\003 \002(\014B\037\n\023ch.epfl.dedis.protoB\010OCSProto"
+      "(\0132\t.OCSWrite\022\025\n\006reader\030\003 \002(\0132\005.Darc\"h\n\007" +
+      "DataOCS\022\030\n\005write\030\001 \001(\0132\t.OCSWrite\022\026\n\004rea" +
+      "d\030\002 \001(\0132\010.OCSRead\022\026\n\007readers\030\003 \001(\0132\005.Dar" +
+      "c\022\023\n\004meta\030\004 \001(\0132\005.Meta\"\024\n\004Meta\022\014\n\004data\030\001" +
+      " \002(\014\"C\n\010OCSWrite\022\014\n\004data\030\001 \002(\014\022\t\n\001U\030\002 \002(" +
+      "\014\022\n\n\002Cs\030\003 \003(\014\022\022\n\nextra_data\030\004 \001(\014\"$\n\nWri" +
+      "teReply\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"2\n\013ReadR" +
+      "equest\022\013\n\003ocs\030\001 \002(\014\022\026\n\004read\030\002 \002(\0132\010.OCSR",
+      "ead\"J\n\007OCSRead\022\016\n\006public\030\001 \002(\014\022\017\n\007data_i" +
+      "d\030\002 \002(\014\022\036\n\tsignature\030\003 \002(\0132\013.SchnorrSig\"" +
+      "#\n\tReadReply\022\026\n\002sb\030\001 \002(\0132\n.SkipBlock\"$\n\021" +
+      "DecryptKeyRequest\022\017\n\007read_id\030\001 \002(\014\"9\n\017De" +
+      "cryptKeyReply\022\n\n\002Cs\030\001 \003(\014\022\017\n\007XhatEnc\030\002 \002" +
+      "(\014\022\t\n\001X\030\003 \002(\014B\037\n\023ch.epfl.dedis.protoB\010OC" +
+      "SProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -12766,7 +12760,7 @@ public final class OCSProto {
     internal_static_WriteRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_WriteRequest_descriptor,
-        new java.lang.String[] { "Ocs", "Write", "Reader", "Data", });
+        new java.lang.String[] { "Ocs", "Write", "Reader", });
     internal_static_DataOCS_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_DataOCS_fieldAccessorTable = new
@@ -12784,7 +12778,7 @@ public final class OCSProto {
     internal_static_OCSWrite_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_OCSWrite_descriptor,
-        new java.lang.String[] { "Data", "U", "Cs", });
+        new java.lang.String[] { "Data", "U", "Cs", "ExtraData", });
     internal_static_WriteReply_descriptor =
       getDescriptor().getMessageTypes().get(12);
     internal_static_WriteReply_fieldAccessorTable = new

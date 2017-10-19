@@ -127,6 +127,7 @@ public class Document {
             return ocswrite;
         }
         OCSProto.OCSWrite.Builder write = OCSProto.OCSWrite.newBuilder();
+        write.setExtraData(ByteString.copyFrom(extraData));
 
         try {
             write.setData(ByteString.copyFrom(dataEnc));

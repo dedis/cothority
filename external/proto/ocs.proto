@@ -47,8 +47,6 @@ message WriteRequest {
     required bytes ocs = 1;
     required OCSWrite write = 2;
     required Darc reader = 3;
-    // Extra data
-    required bytes data = 4;
 }
 
 message DataOCS {
@@ -69,6 +67,8 @@ message OCSWrite {
     required bytes U = 2;
     // Encrypted symmetric key
     repeated bytes Cs = 3;
+    // Extra data - application specific
+    optional bytes extra_data = 4;
 }
 
 message WriteReply {

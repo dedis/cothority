@@ -18,17 +18,19 @@ func TestPriv(t *testing.T) {
 		kp := config.NewKeyPair(network.Suite)
 		priv := kp.Secret
 		privStr := priv.String()
-		log.Print("privStr:", privStr)
+		log.Lvlf2("privStr: %x", privStr)
 		privStr2, err := crypto.ScalarToStringHex(network.Suite, priv)
 		log.ErrFatal(err)
-		log.Print("scatostr:", privStr2)
+		log.Lvl2("scatostr:", privStr2)
 		privDec, err := crypto.StringHexToScalar(network.Suite, privStr)
-		log.ErrFatal(err)
-		log.Print("privDec:", privDec)
+		if err != nil {
+			log.Error("Scalar.String() is missing leading zeroes")
+		}
+		log.Lvl2("privDec:", privDec)
 		neg := network.Suite.Scalar().Neg(priv)
-		log.Print("Sum:", neg.Add(neg, priv))
-		log.Print("Sum:", neg.Add(priv, neg))
-		log.Print()
+		log.Lvl2("Sum:", neg.Add(neg, priv))
+		log.Lvl2("Sum:", neg.Add(priv, neg))
+		log.Lvl2()
 	}
 }
 
@@ -37,22 +39,22 @@ func TestEndian(t *testing.T) {
 	privStr := "77d8aa14f60a5e4c6d82769da56f536ccae145bfb55f2f59dcea67a336b45c7b"
 	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
 	log.ErrFatal(err)
-	log.Print("private:", priv)
+	log.Lvl2("private:", priv)
 	str, err := crypto.ScalarToStringHex(network.Suite, priv)
 	log.ErrFatal(err)
-	log.Print("private:", str)
+	log.Lvl2("private:", str)
 	pub := network.Suite.Point().Mul(nil, priv)
-	log.Print("public:", pub)
+	log.Lvl2("public:", pub)
 
 	priv.Add(priv, network.Suite.Scalar().One())
-	log.Print("private+1:", priv)
+	log.Lvl2("private+1:", priv)
 	pub.Add(pub, network.Suite.Point().Base())
-	log.Print("public+1:", pub)
+	log.Lvl2("public+1:", pub)
 
 	priv.Add(priv, network.Suite.Scalar().One())
-	log.Print("private+2:", priv)
+	log.Lvl2("private+2:", priv)
 	pub = network.Suite.Point().Mul(nil, priv)
-	log.Print("public+2:", pub)
+	log.Lvl2("public+2:", pub)
 }
 
 func TestNegate(t *testing.T) {
@@ -60,10 +62,10 @@ func TestNegate(t *testing.T) {
 	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
 	log.ErrFatal(err)
 
-	log.Print("Private:", priv)
+	log.Lvl2("Private:", priv)
 	neg := network.Suite.Scalar().Neg(priv)
-	log.Print("Negative:", neg)
+	log.Lvl2("Negative:", neg)
 	priv.Add(priv, network.Suite.Scalar().One())
 	sum := network.Suite.Scalar().Add(neg, priv)
-	log.Print("Sum:", sum)
+	log.Lvl2("Sum:", sum)
 }

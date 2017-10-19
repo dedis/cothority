@@ -61,7 +61,7 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 	return
 }
 
-// EditDarc creates a new account on the skipchain. If the account-ID already exists,
+// EditAccount creates a new account on the skipchain. If the account-ID already exists,
 // there must be a valid signature provided in the Darc-structure, and all elements
 // must be valid: Version_new = Version_old + 1, Threshold_new = Threshold_old and the
 // different Darc-changes must follow the rules.
