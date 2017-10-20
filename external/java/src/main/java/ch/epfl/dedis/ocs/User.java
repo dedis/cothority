@@ -10,11 +10,11 @@ import java.util.UUID;
  */
 public interface User {
     /**
-     * Return UUID which is immutable ID of skipchain user.
+     * Return immutable ID of skipchain user.
      * @return ID of user
      */
     @Nonnull
-    UUID getUserId();
+    UserId getUserId();
 
     /**
      * Sign request. Once user would like to authorize some operation in skipchain it is required to sign transaction

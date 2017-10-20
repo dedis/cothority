@@ -413,7 +413,7 @@ public class OnchainSecrets {
      *
      * @return ID of a new user
      */
-    public UUID createSkipchainUser(User administrator, PublicKey newUserKey, Set<EpflPermission> permissions) throws CothorityException {
+    public UserId createSkipchainUser(User administrator, PublicKey newUserKey, Set<EpflPermission> permissions) throws CothorityException {
         // implementation work temporary blocked by #36
         // bit mask form permission can be get in this way int perms =  EpflPermission.maskOf(permissions);
         throw new IllegalStateException("Not implemented yet");
