@@ -2,7 +2,8 @@
 
 DBG_TEST=1
 # Debug-level for app
-DBG_APP=2
+DBG_APP=3
+DBG_SRV=3
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
@@ -25,6 +26,7 @@ main(){
 
     test Build
     test Link
+    test LinkPrivate
     test Store
     test Add
     test ClientSetup
@@ -311,7 +313,6 @@ testIdCreate2(){
 
     testFail runCl 1 id cr -t Public public.toml $priv
     runAdd 3 $pubs
-    testFail runCl 1 id cr -t Public public.toml
     testOK runCl 1 id cr -t Public public.toml $priv
     testFile cl1/config.bin
     testGrep $(hostname) runCl 1 id cr -t Public public.toml $priv
@@ -385,8 +386,7 @@ testAdd(){
 runLink(){
     local KP
     local i
-    for (( i=1; i<=$1; i++ ))
-    do
+    for (( i=1; i<=$1; i++ )); do
         runCl 1 admin link ${addr[$i]}
         pin=$( grep PIN ${COLOG}$i.log | sed -e "s/.* //" )
         runCl 1 admin link ${addr[$i]} $pin
@@ -394,7 +394,7 @@ runLink(){
 }
 
 testLink(){
-    runCoBG `seq 1`
+    runCoBG `seq 3`
 
     testOK runCl 1 admin link ${addr[1]}
     testGrep PIN cat ${COLOG}1.log
@@ -402,6 +402,15 @@ testLink(){
     testFail runCl 1 admin link ${addr[1]} abcdefg
     testOK runCl 1 admin link ${addr[1]} $pin
     testFile cl1/config.bin
+    testOK runCl 1 id cr public.toml
+}
+
+testLinkPrivate(){
+    runCoBG `seq 3`
+    runCl 1 admin link
+    testFail runCl 1 admin link ${addr[1]} co2/private.toml
+    testOK runCl 1 admin link ${addr[1]} co1/private.toml
+    testOK runCl 1 id cr public.toml
 }
 
 testBuild(){
@@ -501,22 +510,24 @@ createFinal(){
     local pub_user1=$( grep Public $KP | sed -e "s/.* //")
     createPopDesc $1
 
-    ./$pop -c cl1 org link ${addr[1]}
+    rm -rf clpop{1,2}
+    mkdir clpop{1,2}
+    ./$pop -d 4 -c clpop1 org link ${addr[1]}
     local pin=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
-    testOK ./$pop -c cl1 org link ${addr[1]} $pin
+    testOK ./$pop -c clpop1 org link ${addr[1]} $pin
 
-    ./$pop -c cl2 org link ${addr[2]}
+    ./$pop -c clpop2 org link ${addr[2]}
     pin=$( grep PIN ${COLOG}2.log | sed -e "s/.* //" )
-    ./$pop -c cl2 org link ${addr[2]} $pin
+    ./$pop -c clpop2 org link ${addr[2]} $pin
 
-    ./$pop -c cl1 org config pop_desc.toml
-    ./$pop -c cl2 -d 2 org config pop_desc.toml > pop_hash_file
+    ./$pop -c clpop1 org config pop_desc.toml
+    ./$pop -c clpop2 -d 2 org config pop_desc.toml > pop_hash_file
     pop_hash=$(grep config: pop_hash_file | sed -e "s/.* //")
-    ./$pop -c cl1 org public $PUB_USER $pop_hash
-    ./$pop -c cl2 org public $PUB_USER $pop_hash
-    ./$pop -c cl1 org public $pub_user1 $pop_hash
-    ./$pop -c cl2 org public $pub_user1 $pop_hash
-    ./$pop -c cl1 org final $pop_hash
-    ./$pop -c cl2 -d 2 org final $pop_hash | tail -n +3> final.toml
+    ./$pop -c clpop1 org public $PUB_USER $pop_hash
+    ./$pop -c clpop2 org public $PUB_USER $pop_hash
+    ./$pop -c clpop1 org public $pub_user1 $pop_hash
+    ./$pop -c clpop2 org public $pub_user1 $pop_hash
+    ./$pop -c clpop1 org final $pop_hash
+    ./$pop -c clpop2 -d 2 org final $pop_hash | tail -n +3 | sed "\$ d" > final.toml
 }
 main

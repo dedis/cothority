@@ -112,6 +112,9 @@ func main() {
 }
 
 func runServer(ctx *cli.Context) {
+	// block creation of non-authorized skipchains
+	//skipchain.UnauthorizedAccess = false
+
 	// first check the options
 	config := ctx.String("config")
 

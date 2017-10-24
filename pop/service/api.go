@@ -51,7 +51,7 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(Name)}
 }
 
-// PinRequest takes a destination-address, a PIN and a public key as an argument.
+// RequestLink takes a destination-address, a PIN and a public key as an argument.
 // If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
 // If the PIN is given and is correct, the public key will be stored in the
 // service.

@@ -186,7 +186,7 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
+func (i *Identity) popAuth(au *AuthenticateReply, atts []abstract.Point) (*CreateIdentity, error) {
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -220,32 +220,37 @@ func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
 	return cr, nil
 }
 
-// CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.ClientError {
+// CreateIdentity asks the identityService to create a new Identity. It will
+// use the authentication auth and the ?? `atts`. If leader is nil,
+// a random leader will be chosen. Else the given leader will be used.
+func (i *Identity) CreateIdentity(auth AuthType, atts []abstract.Point, leader *network.ServerIdentity) onet.ClientError {
 	log.Lvl3("Creating identity", i)
 
 	// request for authentication
-	si := i.Cothority.RandomServerIdentity()
-	au := &Authenticate{[]byte{}, []byte{}}
-	cerr := i.Client.SendProtobuf(si, au, au)
+	si := leader
+	if si == nil {
+		si = i.Cothority.RandomServerIdentity()
+	}
+	reply := &AuthenticateReply{}
+	cerr := i.Client.SendProtobuf(si, &Authenticate{}, reply)
 	if cerr != nil {
 		return cerr
 	}
 
 	var cr *CreateIdentity
 	var err error
-	switch t {
+	switch auth {
 	case PoPAuth:
-		cr, err = i.popAuth(au, atts)
+		cr, err = i.popAuth(reply, atts)
 	case PublicAuth:
-		cr, err = i.publicAuth(au.Nonce)
+		cr, err = i.publicAuth(reply.Nonce)
 	default:
 		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
 	}
 	if err != nil {
 		return onet.NewClientError(err)
 	}
-	cr.Type = t
+	cr.Type = auth
 	air := &CreateIdentityReply{}
 	cerr = i.Client.SendProtobuf(si, cr, air)
 	if cerr != nil {
@@ -336,4 +341,35 @@ func (i *Identity) DataUpdate() onet.ClientError {
 	// TODO - verify new data
 	i.Data = cur.Data
 	return nil
+}
+
+// RequestLinkPIN tries to store a public key at the conode for it to
+// recognize further admin-requests. There are two link-types possible:
+// either by using a PIN that is read from the conode-logs, or by
+// using the private key of the conode.
+func (i *Identity) RequestLinkPIN(si *network.ServerIdentity, pin string, public abstract.Point) onet.ClientError {
+	return i.Client.SendProtobuf(si, &RequestLink{PIN: &pin, Public: public}, nil)
+}
+
+// RequestLinkPrivate tries to store a public key at the conode for it to
+// recognize further admin-requests. There are two link-types possible:
+// either by using a PIN that is read from the conode-logs, or by
+// using the private key of the conode.
+// The public key given will be stored in the conode and will be used to
+// verify any signatures for admin-requests. This public key should be
+// different from the conode's public key!
+func (i *Identity) RequestLinkPrivate(si *network.ServerIdentity, private abstract.Scalar, public abstract.Point) onet.ClientError {
+	if si.Public != nil && si.Public.Equal(public) {
+		return onet.NewClientErrorCode(ErrorAuthentication, "don't use conode's public key for authentication")
+	}
+	reply := &AuthenticateReply{}
+	if err := i.Client.SendProtobuf(si, &Authenticate{}, reply); err != nil {
+		return err
+	}
+	sig, err := crypto.SignSchnorr(network.Suite, private, reply.Nonce)
+	if err != nil {
+		return onet.NewClientErrorCode(ErrorAuthentication, "error while schnorr signing the nonce")
+	}
+
+	return i.Client.SendProtobuf(si, &RequestLink{Public: public, Nonce: &reply.Nonce, Sig: &sig}, nil)
 }

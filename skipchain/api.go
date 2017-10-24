@@ -74,7 +74,7 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 	}
 	host := latest.Roster.Get(0)
 	reply = &StoreSkipBlockReply{}
-	cerr = c.SendProtobuf(host, &StoreSkipBlock{latestID, newBlock}, reply)
+	cerr = c.SendProtobuf(host, &StoreSkipBlock{LatestID: latestID, NewBlock: newBlock}, reply)
 	if cerr != nil {
 		return nil, cerr
 	}

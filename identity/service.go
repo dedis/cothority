@@ -100,22 +100,29 @@ type authData struct {
  * API messages
  */
 
-// PinRequest will check PIN of admin or print it in case PIN is not provided
+// RequestLink will check PIN of admin or print it in case PIN is not provided
 // then save the admin's public key
-func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
-	log.Lvl3("PinRequest", s.ServerIdentity())
-	if req.PIN == "" {
-		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
-		s.auth.pins[pin] = struct{}{}
-		log.Info("PIN:", pin)
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
-	}
-	if _, ok := s.auth.pins[req.PIN]; !ok {
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+func (s *Service) RequestLink(req *RequestLink) (network.Message, onet.ClientError) {
+	log.Lvl3("RequestLink", s.ServerIdentity())
+	if req.PIN != nil {
+		if *req.PIN == "" {
+			pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+			s.auth.pins[pin] = struct{}{}
+			log.Info("PIN:", pin)
+			return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+		}
+		if _, ok := s.auth.pins[*req.PIN]; !ok {
+			return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+		}
+		log.Lvl1("Successfully registered PIN/Public", req.PIN, req.Public)
+	} else if req.Nonce != nil && req.Sig != nil {
+		if err := crypto.VerifySchnorr(network.Suite, s.ServerIdentity().Public, *req.Nonce, *req.Sig); err != nil {
+			return nil, onet.NewClientErrorCode(ErrorWrongPIN, "signature with wrong private key")
+		}
+		log.Lvl1("Successfully registered Nonce/Public", req.Public)
 	}
 	s.auth.adminKeys = append(s.auth.adminKeys, req.Public)
 	s.save()
-	log.Lvl1("Successfully registered PIN/Public", req.PIN, req.Public)
 	return nil, nil
 }
 
@@ -193,13 +200,15 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 
 // Authenticate will create nonce and ctx and send it to user
 // It saves nonces in set
-// Replay attack is impossible, because after successful authentification nonce will
+// Replay attack is impossible, because after successful authentication nonce will
 // be deleted.
 func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
-	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
-	ap.Nonce = random.Bytes(nonceSize, random.Stream)
-	s.auth.nonces[string(ap.Nonce)] = struct{}{}
-	return ap, nil
+	apr := &AuthenticateReply{
+		Ctx:   []byte(ServiceName + s.ServerIdentity().String()),
+		Nonce: random.Bytes(nonceSize, random.Stream),
+	}
+	s.auth.nonces[string(apr.Nonce)] = struct{}{}
+	return apr, nil
 }
 
 // CreateIdentity will register a new SkipChain and add it to our list of
@@ -246,6 +255,12 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 		}
 		found := false
 		for _, k := range s.auth.keys {
+			if k.Equal(ai.Public) {
+				found = true
+				break
+			}
+		}
+		for _, k := range s.auth.adminKeys {
 			if k.Equal(ai.Public) {
 				found = true
 				break
@@ -737,7 +752,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 		log.Error(err)
 	}
 	if err := s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
-		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate, s.PinRequest,
+		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate, s.RequestLink,
 		s.StoreKeys, s.Authenticate); err != nil {
 		log.Fatal("Registration error:", err)
 	}

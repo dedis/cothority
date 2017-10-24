@@ -31,14 +31,14 @@ func TestIdentity_PinRequest(t *testing.T) {
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
 	require.Equal(t, 0, len(srvc.auth.pins))
 	pub, _ := network.Suite.Point().Pick(nil, network.Suite.Cipher([]byte("test")))
-	_, cerr := srvc.PinRequest(&PinRequest{"", pub})
+	_, cerr := srvc.RequestLink(&RequestLink{"", pub})
 	require.NotNil(t, cerr)
 	require.NotEqual(t, 0, len(srvc.auth.pins))
 	pin := ""
 	for t, _ := range srvc.auth.pins {
 		pin = t
 	}
-	_, cerr = srvc.PinRequest(&PinRequest{pin, pub})
+	_, cerr = srvc.RequestLink(&RequestLink{pin, pub})
 	log.Error(cerr)
 	require.Equal(t, pub, srvc.auth.adminKeys[0])
 }
@@ -306,7 +306,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	defer c1.Client.Close()
 	defer c2.Client.Close()
 	defer c3.Client.Close()
-	log.ErrFatal(c1.CreateIdentity(PoPAuth, set))
+	log.ErrFatal(c1.CreateIdentity(PoPAuth, set, nil))
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	proposeUpVote(c1)
 	log.ErrFatal(c3.AttachToIdentity(c1.ID))
@@ -401,6 +401,6 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster,
 	}
 
 	c := NewTestIdentity(el, 50, name, l, keypair)
-	log.ErrFatal(c.CreateIdentity(PoPAuth, set))
+	log.ErrFatal(c.CreateIdentity(PoPAuth, set, nil))
 	return c
 }
