@@ -40,7 +40,7 @@ type Session struct {
 	nodes      int                // Total number of nodes (client and servers)
 	groups     int                // Number of groups
 	purpose    string             // Purpose of protocol run
-	time       time.Time          // Timestamp of protocol initiation
+	time       int64              // Timestamp of protocol initiation, as seconds from January 1, 1970 UTC
 	seed       []byte             // Client-chosen seed for sharding
 	clientKey  abstract.Point     // Client public key
 	servers    [][]*onet.TreeNode // Grouped servers
@@ -86,7 +86,7 @@ type Transcript struct {
 	Nodes      int                     // Total number of nodes (client + server)
 	Groups     int                     // Number of groups
 	Purpose    string                  // Purpose of protocol run
-	Time       time.Time               // Timestamp of protocol initiation
+	Time       int64                   // Timestamp of protocol initiation, as seconds since January 1, 1970 UTC
 	Seed       []byte                  // Client-chosen seed for sharding
 	Keys       []abstract.Point        // Public keys (client + server)
 	Thresholds []uint32                // Grouped secret sharing thresholds
@@ -118,7 +118,7 @@ func (rh *RandHound) Setup(nodes int, groups int, purpose string) error {
 	var err error
 
 	// Setup session information
-	if rh.Session, err = rh.newSession(nodes, groups, purpose, time.Now(), nil, rh.Public()); err != nil {
+	if rh.Session, err = rh.newSession(nodes, groups, purpose, time.Now().Unix(), nil, rh.Public()); err != nil {
 		return err
 	}
 

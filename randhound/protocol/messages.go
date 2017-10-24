@@ -1,8 +1,6 @@
 package protocol
 
 import (
-	"time"
-
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/network"
@@ -24,12 +22,12 @@ func init() {
 
 // I1 is the message sent by the client to the servers in step 1.
 type I1 struct {
-	Sig     []byte    // Schnorr signature
-	SID     []byte    // Session identifier
-	Groups  int       // Number of groups
-	Seed    []byte    // Sharding seed
-	Purpose string    // Purpose of protocol run
-	Time    time.Time // Timestamp of protocol initiation
+	Sig     []byte // Schnorr signature
+	SID     []byte // Session identifier
+	Groups  int    // Number of groups
+	Seed    []byte // Sharding seed
+	Purpose string // Purpose of protocol run
+	Time    int64  // Timestamp of protocol initiation, as seconds since January 1, 1970 UTC
 }
 
 // R1 is the reply sent by the servers to the client in step 2.

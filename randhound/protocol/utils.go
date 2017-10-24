@@ -16,15 +16,13 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp time.Time, seed []byte, clientKey abstract.Point) (*Session, error) {
+func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp int64, seed []byte, clientKey abstract.Point) (*Session, error) {
 
 	var err error
 
-	if timestamp.IsZero() {
-		timestamp = time.Now().UTC()
+	if timestamp == 0 {
+		timestamp = time.Now().UTC().Unix()
 	}
-
-	timestamp = timestamp.UTC() // convert to UTC
 
 	if seed == nil {
 		seed = random.Bytes(rh.Suite().Hash().Size(), random.Stream)
@@ -83,7 +81,7 @@ func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp
 	return session, nil
 }
 
-func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]abstract.Point, indices [][]int, purpose string, timestamp time.Time) ([]byte, error) {
+func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]abstract.Point, indices [][]int, purpose string, timestamp int64) ([]byte, error) {
 	// Setup some buffers
 	keyBuf := new(bytes.Buffer)
 	idxBuf := new(bytes.Buffer)
@@ -120,13 +118,7 @@ func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]ab
 	}
 
 	// Process time stamp
-	timestamp = timestamp.UTC()
-	t, err := timestamp.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := miscBuf.Write(t); err != nil {
+	if err := binary.Write(miscBuf, binary.LittleEndian, timestamp); err != nil {
 		return nil, err
 	}
 
