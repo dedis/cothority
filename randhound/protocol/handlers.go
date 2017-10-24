@@ -374,7 +374,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	if len(rh.commits) <= len(rh.r2s) {
 
 		var responses []abstract.Scalar
-		for src, _ := range rh.commits {
+		for src := range rh.commits {
 			responses = append(responses, rh.r2s[src].R)
 		}
 

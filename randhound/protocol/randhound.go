@@ -159,10 +159,7 @@ func (rh *RandHound) Start() error {
 	}
 
 	// Broadcast message to servers which process it as shown in handleI1(...).
-	if err := rh.Broadcast(rh.i1); err != nil {
-		return err
-	}
-	return nil
+	return rh.Broadcast(rh.i1)
 }
 
 // Shard uses the seed to produce a pseudorandom permutation of the numbers of
