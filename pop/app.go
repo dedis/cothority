@@ -643,8 +643,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 // TODO: Needs to be public in app package!!!
 // toServerIdentity converts this ServerToml struct to a ServerIdentity.
 func toServerIdentity(s *app.ServerToml, suite abstract.Suite) (*network.ServerIdentity, error) {
-	pubR := strings.NewReader(s.Public)
-	public, err := crypto.Read64Pub(suite, pubR)
+	public, err := crypto.String64ToPub(suite, s.Public)
 	if err != nil {
 		return nil, err
 	}

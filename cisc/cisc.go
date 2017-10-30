@@ -262,7 +262,7 @@ func idKeyPair(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf2("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
 	return nil
 }
 
