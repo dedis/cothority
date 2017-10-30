@@ -33,6 +33,7 @@ import (
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 	"gopkg.in/urfave/cli.v1"
+	"github.com/dedis/cothority/skipchain/libsc"
 )
 
 type config struct {
@@ -175,7 +176,7 @@ func create(c *cli.Context) error {
 		data = []byte(address)
 	}
 	sb, cerr := client.CreateGenesis(group.Roster, c.Int("base"), c.Int("height"),
-		skipchain.VerificationStandard, data, nil)
+		libsc.VerificationStandard, data, nil)
 	if cerr != nil {
 		log.Fatal("while creating the genesis-roster:", cerr)
 	}
@@ -471,7 +472,7 @@ type jsonBlockList struct {
 }
 
 // sbl is used to make a nice output with ordered list of geneis-skipblocks.
-type sbl []*skipchain.SkipBlock
+type sbl []*libsc.SkipBlock
 
 func (s sbl) Len() int {
 	return len(s)
@@ -567,7 +568,7 @@ func (cfg *config) save(c *cli.Context) error {
 	return ioutil.WriteFile(file, buf, 0660)
 }
 
-func (cfg *config) getSortedGenesis() []*skipchain.SkipBlock {
+func (cfg *config) getSortedGenesis() []*libsc.SkipBlock {
 	genesis := sbl{}
 	for _, sb := range cfg.Sbb.Bunches {
 		genesis = append(genesis, sb.GetByID(sb.GenesisID))
