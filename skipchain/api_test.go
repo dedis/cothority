@@ -15,6 +15,7 @@ import (
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority/skipchain/libsc"
 )
 
 func init() {
@@ -26,16 +27,16 @@ func TestClient_CreateGenesis(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := skipchain.NewClient()
-	_, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
+	_, cerr := c.CreateGenesis(roster, 1, 1, libsc.VerificationNone,
 		struct{ A int }{}, nil)
 	require.NotNil(t, cerr)
-	_, cerr = c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
+	_, cerr = c.CreateGenesis(roster, 1, 1, libsc.VerificationNone,
 		[]byte{1, 2, 3}, nil)
 	require.Nil(t, cerr)
-	_, cerr = c.CreateGenesis(roster, 1, 0, skipchain.VerificationNone,
+	_, cerr = c.CreateGenesis(roster, 1, 0, libsc.VerificationNone,
 		&testData{}, nil)
 	require.NotNil(t, cerr)
-	_, cerr = c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone,
+	_, cerr = c.CreateGenesis(roster, 1, 1, libsc.VerificationNone,
 		&testData{}, nil)
 	require.Nil(t, cerr)
 	time.Sleep(time.Second)
@@ -76,7 +77,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 
 	c := skipchain.NewClient()
 	log.Lvl1("Creating root chain")
-	genesisPropose := &skipchain.SkipBlock{
+	genesisPropose := &libsc.SkipBlock{
 		Roster:        r,
 		MaximumHeight: 0,
 		BaseHeight:    1,
@@ -107,7 +108,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
-	var updates []*skipchain.SkipBlock
+	var updates []*libsc.SkipBlock
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
 		updates, cerr = c.GetUpdateChain(genesis.Roster, genesis.Hash)
@@ -130,11 +131,11 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 
 	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	sb1, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
+	sb1, cerr := c.CreateGenesis(el, 1, 1, libsc.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	_, _, cerr = c.AddSkipBlock(sb1, el, nil)
 	log.ErrFatal(cerr)
-	sb2, cerr := c.CreateGenesis(el, 1, 1, skipchain.VerificationNone, nil, nil)
+	sb2, cerr := c.CreateGenesis(el, 1, 1, libsc.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	sb1id := sb1.SkipChainID()
 	sb2id := sb2.SkipChainID()
@@ -156,14 +157,14 @@ func TestClient_UpdateBunch(t *testing.T) {
 
 	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	genesis, cerr := c.CreateGenesis(ro, 1, 1, skipchain.VerificationNone, nil, nil)
+	genesis, cerr := c.CreateGenesis(ro, 1, 1, libsc.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	_, sb1, cerr := c.AddSkipBlock(genesis, ro, nil)
 	log.ErrFatal(cerr)
 	_, _, cerr = c.AddSkipBlock(sb1, ro, nil)
 	log.ErrFatal(cerr)
 
-	bunch := skipchain.NewSkipBlockBunch(genesis)
+	bunch := libsc.NewSkipBlockBunch(genesis)
 	cerr = c.BunchUpdate(bunch)
 	log.ErrFatal(cerr)
 	require.Equal(t, 2, bunch.Latest.Index)
@@ -177,7 +178,7 @@ func TestClient_GetBlocks(t *testing.T) {
 
 	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	genesis, cerr := c.CreateGenesis(ro, 1, 1, skipchain.VerificationNone, nil, nil)
+	genesis, cerr := c.CreateGenesis(ro, 1, 1, libsc.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	_, sb, cerr := c.AddSkipBlock(genesis, ro, nil)
 	log.ErrFatal(cerr)
@@ -186,7 +187,7 @@ func TestClient_GetBlocks(t *testing.T) {
 	require.NotNil(t, cerr)
 	blocks, cerr = c.GetBlocks(ro, nil, nil, 0)
 	require.NotNil(t, cerr)
-	blocks, cerr = c.GetBlocks(ro, skipchain.SkipBlockID{1}, nil, 0)
+	blocks, cerr = c.GetBlocks(ro, libsc.SkipBlockID{1}, nil, 0)
 	require.NotNil(t, cerr)
 	blocks, cerr = c.GetBlocks(ro, genesis.SkipChainID(), nil, 0)
 	require.Nil(t, cerr)
@@ -243,7 +244,7 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 
 	c := skipchain.NewClient()
 	log.Lvl1("Creating root and control chain")
-	sb1, cerr := c.CreateGenesis(roster, 1, 1, skipchain.VerificationNone, nil, nil)
+	sb1, cerr := c.CreateGenesis(roster, 1, 1, libsc.VerificationNone, nil, nil)
 	log.ErrFatal(cerr)
 	_, latest, cerr := c.AddSkipBlock(sb1, roster, nil)
 	log.ErrFatal(cerr)

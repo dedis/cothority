@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dedis/backup.cothority.170531/skipchain"
 	"github.com/dedis/cothority/skipchain/libsc"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+	"github.com/dedis/cothority/skipchain"
 )
 
 func TestSBBStorage_AddBunch(t *testing.T) {
