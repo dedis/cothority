@@ -1,4 +1,4 @@
-package com.byzgen.ocsimpl;
+package com.byzgen.ocsapi;
 
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;

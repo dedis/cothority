@@ -1,4 +1,4 @@
-package com.byzgen.ocsimpl;
+package com.byzgen.ocsapi;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;

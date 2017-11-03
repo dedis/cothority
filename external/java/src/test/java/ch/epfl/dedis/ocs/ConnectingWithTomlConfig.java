@@ -3,7 +3,7 @@ package ch.epfl.dedis.ocs;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
-import com.byzgen.ocsimpl.OcsFactory;
+import com.byzgen.ocsapi.OcsFactory;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URI;

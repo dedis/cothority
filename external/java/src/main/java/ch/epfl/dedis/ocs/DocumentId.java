@@ -1,6 +1,6 @@
 package ch.epfl.dedis.ocs;
 
-import com.byzgen.ocsimpl.HashId;
+import com.byzgen.ocsapi.HashId;
 
 import java.util.Arrays;
 

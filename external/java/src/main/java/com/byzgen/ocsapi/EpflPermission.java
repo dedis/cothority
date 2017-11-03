@@ -1,4 +1,4 @@
-package com.byzgen.ocsimpl;
+package com.byzgen.ocsapi;
 
 import java.util.Collections;
 import java.util.EnumSet;
