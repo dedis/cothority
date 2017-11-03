@@ -11,7 +11,6 @@ import (
 	"bytes"
 
 	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 
@@ -21,6 +20,7 @@ import (
 	"math/rand"
 
 	"github.com/dedis/onchain-secrets"
+	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onchain-secrets/protocol"
 	"github.com/dedis/protobuf"
 	"gopkg.in/dedis/cothority.v1/messaging"
@@ -55,7 +55,7 @@ type Service struct {
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
 	OCSs     *ocs.SBBStorage
-	Accounts map[string]*ocs.Darc
+	Accounts map[string]*darc.Darc
 	Shared   map[string]*protocol.SharedSecret
 }
 
@@ -68,11 +68,11 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	reply = &ocs.CreateSkipchainsReply{}
 
 	log.Lvl2("Creating OCS-skipchain")
-	reply.OCS, cerr = c.CreateGenesis(req.Roster, 1, 1, ocs.VerificationOCS, nil, nil)
+	reply.OCS, cerr = c.CreateGenesis(&req.Roster, 1, 1, ocs.VerificationOCS, nil, nil)
 	if cerr != nil {
 		return nil, cerr
 	}
-	replies, err := s.propagateOCS(req.Roster, reply.OCS, propagationTimeout)
+	replies, err := s.propagateOCS(&req.Roster, reply.OCS, propagationTimeout)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
@@ -109,16 +109,20 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	return
 }
 
-// EditDarc adds a new account or modifies an existing one.
-func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
+// UpdateDarc adds a new account or modifies an existing one.
+func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	cerr onet.ClientError) {
-	if _, exists := s.Storage.Accounts[string(req.Darc.ID)]; exists {
+	if _, exists := s.Storage.Accounts[string(req.Darc.GetID())]; exists {
 		log.Lvl2("Modifying existing account")
 	} else {
 		log.Lvl2("Adding new account")
 	}
-	dataOCS := &ocs.DataOCS{
-		Readers: req.Darc,
+	if err := req.Darc.Verify(); err != nil {
+		log.Lvl2("Error when checking signature:", err)
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+	}
+	dataOCS := &ocs.Transaction{
+		Darc: &req.Darc,
 	}
 	s.saveMutex.Lock()
 	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
@@ -129,30 +133,27 @@ func (s *Service) EditDarc(req *ocs.EditDarcRequest) (reply *ocs.EditDarcReply,
 	}
 	sb, cerr := s.BunchAddBlock(ocsBunch, ocsBunch.Latest.Roster, data)
 	if cerr != nil {
-		return
+		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
-	s.Storage.Accounts[string(req.Darc.ID)] = req.Darc
+	s.Storage.Accounts[string(req.Darc.GetID())] = &req.Darc
 	s.save()
-	return &ocs.EditDarcReply{SB: sb}, nil
+	return &ocs.UpdateDarcReply{SB: sb}, nil
 }
 
-// ReadDarc returns the latest valid Darc given its identity.
-func (s *Service) ReadDarc(req *ocs.ReadDarcRequest) (reply *ocs.ReadDarcReply,
+// GetDarcPath returns the latest valid Darc given its identity.
+func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Reading darc", req.DarcID, req.Recursive)
-	darc, exists := s.Storage.Accounts[string(req.DarcID)]
+	log.Lvlf2("Making darc path for %x %v %d", req.BaseDarcID, req.Identity, req.Role)
+	d, exists := s.Storage.Accounts[string(req.BaseDarcID)]
 	if !exists {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
 	}
-	darcs := map[string]*ocs.Darc{}
-	if req.Recursive {
-		s.darcRecursive(darcs, darc.ID)
-	}
-	delete(darcs, string(darc.ID))
-	reply = &ocs.ReadDarcReply{Darc: []*ocs.Darc{darc}}
-	for _, d := range darcs {
-		reply.Darc = append(reply.Darc, d)
-	}
+	darcs := map[string]*darc.Darc{}
+	delete(darcs, string(d.GetID()))
+	reply = &ocs.GetDarcPathReply{}
+	// for _, d := range darcs {
+	// reply.Darc = append(reply.Darc, d)
+	// }
 	return
 }
 
@@ -172,9 +173,9 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 		log.Error("not")
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
-	dataOCS := &ocs.DataOCS{
-		Write:   req.Write,
-		Readers: req.Readers,
+	dataOCS := &ocs.Transaction{
+		Write: &req.Write,
+		Darc:  req.Readers,
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
@@ -216,7 +217,7 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
 func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	cerr onet.ClientError) {
-	log.Lvl2("Requesting a file. Reader:", req.Read.Public)
+	log.Lvl2("Requesting a file. Reader:", req.Read.Reader)
 	reply = &ocs.ReadReply{}
 	s.saveMutex.Lock()
 	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
@@ -228,8 +229,8 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	if block == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
-	dataOCS := &ocs.DataOCS{
-		Read: req.Read,
+	dataOCS := &ocs.Transaction{
+		Read: &req.Read,
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
@@ -298,7 +299,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 					continue
 				}
 				doc := &ocs.ReadDoc{
-					Reader: dataOCS.Read.Public,
+					Reader: dataOCS.Read.Signature.SignaturePath.Signer,
 					ReadID: current.Hash,
 					DataID: dataOCS.Read.DataID,
 				}
@@ -363,8 +364,8 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
-	ocsProto.Xc = read.Read.Public
-	log.Lvlf2("Public key is: %s", read.Read.Public)
+	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
+	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
@@ -462,15 +463,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 // darcRecursive searches for all darcs given an id. It makes sure to avoid
 // recursive endless loops by verifying that all new calls are done with
 // not-yet-existing IDs.
-func (s *Service) darcRecursive(storage map[string]*ocs.Darc, search ocs.DarcID) {
-	darc := s.Storage.Accounts[string(search)]
-	storage[string(search)] = darc
-	log.Lvlf2("%+v", darc)
-	for _, d := range darc.Accounts {
-		if _, exists := storage[string(d.ID)]; !exists {
-			s.darcRecursive(storage, d.ID)
-		}
-	}
+func (s *Service) darcRecursive(storage map[string]*darc.Darc, search darc.ID) {
+	// darc := s.Storage.Accounts[string(search)]
+	// storage[string(search)] = darc
+	// log.Lvlf2("%+v", darc)
+	// for _, d := range darc.Accounts {
+	// 	if _, exists := storage[string(d.ID)]; !exists {
+	// 		s.darcRecursive(storage, d.ID)
+	// 	}
+	// }
 }
 
 func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
@@ -501,14 +502,14 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		// Read has to check that it's a valid reader
 		log.Lvl2("It's a read")
 		// Search file
-		var writeBlock *ocs.DataOCSWrite
-		var readersBlock *ocs.Darc
+		var writeBlock *ocs.Write
+		var readersBlock *darc.Darc
 		for _, sb := range s.Storage.OCSs.GetBunch(genesis.Hash).SkipBlocks {
 			wd := ocs.NewDataOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
 				if bytes.Compare(sb.Hash, read.DataID) == 0 {
 					writeBlock = wd.Write
-					readersBlock = wd.Readers
+					readersBlock = wd.Darc
 					break
 				}
 			}
@@ -521,19 +522,19 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			log.Error("Found empty readers-block")
 			return false
 		}
-		for _, pk := range readersBlock.Public {
-			err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
-			if err != nil {
-				log.Lvl2("Didn't find signature:", err)
-			} else {
-				log.Lvl2("Found valid signature from public key", pk)
-				return true
-			}
-		}
+		// for _, pk := range readersBlock.Public {
+		// 	err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
+		// 	if err != nil {
+		// 		log.Lvl2("Didn't find signature:", err)
+		// 	} else {
+		// 		log.Lvl2("Found valid signature from public key", pk)
+		// 		return true
+		// 	}
+		// }
 		log.Warn("Overriding reader-check!")
 		return true
 		//return false
-	} else if darc := dataOCS.Readers; darc != nil {
+	} else if darc := dataOCS.Darc; darc != nil {
 		log.Lvl2("Accepting all darc side")
 		return true
 	}
@@ -553,9 +554,9 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	}
 	s.saveMutex.Lock()
 	s.Storage.OCSs.Store(sb)
-	if r := dataOCS.Readers; r != nil {
-		log.Lvl2("Storing new readers", r.ID)
-		s.Storage.Accounts[string(r.ID)] = r
+	if r := dataOCS.Darc; r != nil {
+		log.Lvlf2("Storing new readers %x", r.GetID())
+		s.Storage.Accounts[string(r.GetID())] = r
 	}
 	s.saveMutex.Unlock()
 	if sb.Index == 0 {
@@ -602,7 +603,7 @@ func (s *Service) tryLoad() error {
 			s.Storage.Shared = map[string]*protocol.SharedSecret{}
 		}
 		if len(s.Storage.Accounts) == 0 {
-			s.Storage.Accounts = map[string]*ocs.Darc{}
+			s.Storage.Accounts = map[string]*darc.Darc{}
 		}
 	}()
 	s.saveMutex.Lock()
@@ -636,7 +637,7 @@ func newService(c *onet.Context) onet.Service {
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
-		s.GetBunches, s.EditDarc, s.ReadDarc); err != nil {
+		s.GetBunches, s.UpdateDarc, s.GetDarcPath); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)

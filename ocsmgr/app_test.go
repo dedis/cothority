@@ -3,10 +3,10 @@ package main
 import (
 	"testing"
 
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/network"
 	"gopkg.in/dedis/crypto.v0/config"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 func TestMain(m *testing.M) {

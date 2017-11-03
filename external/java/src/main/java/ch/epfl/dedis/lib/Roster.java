@@ -1,8 +1,13 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Ed25519;
+import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.RosterProto;
 import com.google.protobuf.ByteString;
+import com.moandjiezana.toml.Toml;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +23,7 @@ import java.util.List;
 
 public class Roster {
     private List<ServerIdentity> nodes = new ArrayList<>();
-    private Crypto.Point aggregate; // TODO: can we find better name for it? like aggregatePublicKey or aggregatedKey?
+    private Point aggregate; // TODO: can we find better name for it? like aggregatePublicKey or aggregatedKey?
 
     public Roster(List<ServerIdentity> servers) {
         nodes.addAll(servers);
@@ -27,11 +32,23 @@ public class Roster {
             if (aggregate == null) {
                 // TODO: it will be much better if there is some kind of 'zero' element for Point type. Is it possible to use just a new created Point
                 aggregate = serverIdentity.Public;
-            }
-            else {
+            } else {
                 aggregate = aggregate.add(serverIdentity.Public);
             }
         }
+    }
+
+    public static Roster FromToml(String groupToml) {
+        Toml toml = new Toml().read(groupToml);
+        List<ServerIdentity> cothority = new ArrayList<>();
+        List<Toml> servers = toml.getTables("servers");
+        for (Toml s : servers) {
+            try {
+                cothority.add(new ServerIdentity(s));
+            } catch (URISyntaxException e) {
+            }
+        }
+        return new Roster(cothority);
     }
 
     public List<ServerIdentity> getNodes() {
@@ -40,7 +57,7 @@ public class Roster {
 
     public RosterProto.Roster getProto() {
         RosterProto.Roster.Builder r = RosterProto.Roster.newBuilder();
-        r.setId(ByteString.copyFrom(Crypto.uuid4()));
+        r.setId(ByteString.copyFrom(Ed25519.uuid4()));
         nodes.forEach(n -> r.addList(n.getProto()));
         r.setAggregate(aggregate.toProto());
 

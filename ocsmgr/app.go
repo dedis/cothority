@@ -19,7 +19,6 @@ import (
 
 	"github.com/dedis/onchain-secrets"
 	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -204,17 +203,18 @@ func write(c *cli.Context) error {
 	log.ErrFatal(err)
 	cipher := network.Suite.Cipher(symKey)
 	encData := cipher.Seal(nil, data)
-	darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
-	darc.Public = []abstract.Point{}
-	for _, r := range c.Args().Tail() {
-		pub, err := crypto.StringHexToPub(network.Suite, r)
-		log.ErrFatal(err)
-		darc.Public = append(darc.Public, pub)
-	}
+	log.Print("TODO", cfg, encData)
+	// darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
+	// darc.Public = []abstract.Point{}
+	// for _, r := range c.Args().Tail() {
+	// pub, err := crypto.StringHexToPub(network.Suite, r)
+	// log.ErrFatal(err)
+	// darc.Public = append(darc.Public, pub)
+	// }
 
-	sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, darc)
-	log.ErrFatal(err)
-	log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
+	// sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, darc)
+	// log.ErrFatal(err)
+	// log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
 	return nil
 }
 
@@ -288,8 +288,8 @@ func scread(c *cli.Context) error {
 	if ocs.Read != nil {
 		log.Printf("Read: %#v", ocs.Read)
 	}
-	if ocs.Readers != nil {
-		log.Printf("Readers: %#v", ocs.Readers)
+	if ocs.Darc != nil {
+		log.Printf("Readers: %#v", ocs.Darc)
 	}
 	if len(sb.ForwardLink) > 0 {
 		log.Printf("Next block: %x", sb.ForwardLink[0].Hash)

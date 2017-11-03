@@ -1,5 +1,4 @@
 syntax = "proto2";
-
 import "skipblock.proto";
 import "darc.proto";
 import "roster.proto";
@@ -7,95 +6,177 @@ import "roster.proto";
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "OCSProto";
 
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// Transaction holds either:
+// - a read request
+// - a write
+// - a key-update
+// - a write and a key-update
+// additionally it can hold a slice of bytes with any data that the user wants to
+// add to bind to that transaction.
+message Transaction {
+  // 	 Write holds an eventual write-request with a document
+  optional Write write = 1;
+  // 	 Read holds an eventual read-request, which is approved, for a document
+  optional Read read = 2;
+  // 	 Darc defines either the readers allowed for this write-request
+  // 	 or is an update to an existing Darc
+  optional Darc darc = 3;
+  // 	 Meta is any free-form data in that skipblock
+  optional bytes meta = 4;
+}
+
+// Write stores the data and the encrypted secret
+message Write {
+  // 	 Data should be encrypted by the application under the symmetric key in U and Cs
+  required bytes data = 1;
+  // 	 U is the encrypted random value for the ElGamal encryption
+  required bytes u = 2;
+  // 	 Cs are the ElGamal parts for the symmetric key material (might
+  // 	 also contain an IV)
+  repeated bytes cs = 3;
+  // 	 ExtraData is clear text and application-specific
+  optional bytes extradata = 4;
+  // 	 Reader points to a darc where the reading-rights are stored
+  required Darc reader = 5;
+}
+
+// Read stores a read-request which is the secret encrypted under the
+// pseudonym's public key. The Data is the skipblock-id of the skipblock
+// holding the data.
+message Read {
+  // 	 Reader represents the reader that signed the request
+  required Darc reader = 1;
+  // 	 DataID is the document-id for the read request
+  required bytes dataid = 2;
+  // 	 Signature is a Schnorr-signature using the private key of the
+  // 	 reader on the message 'DataID'
+  required Signature signature = 3;
+}
+
+// ReadDoc represents one read-request by a reader.
+message ReadDoc {
+  required Identity reader = 1;
+  required bytes readid = 2;
+  required bytes dataid = 3;
+}
+
+// ***
+// Requests and replies to/from the service
+// ***
+
+// CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
 message CreateSkipchainsRequest {
-    required Roster roster = 1;
+  required Roster roster = 1;
+  required Darc writers = 2;
 }
 
+// CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
 message CreateSkipchainsReply {
-    required SkipBlock SB = 1;
-    required bytes X = 2;
+  optional SkipBlock ocs = 1;
+  required bytes x = 2;
 }
 
-message ReadDarcRequest {
-    required bytes ocs = 1;
-    required bytes darc_id = 2;
-    optional bool recursive = 3;
+// GetDarcPath returns the shortest path from the base darc to a darc
+// containing the identity.
+message GetDarcPath {
+  required bytes ocs = 1;
+  required bytes basedarcid = 2;
+  required Identity identity = 3;
+  required int32 role = 4;
 }
 
-message ReadDarcReply {
-    repeated Darc darc = 1;
+// GetDarcPathReply returns the shortest path to prove that the identity
+// can sign. If there is no such path, Path is nil.
+message GetDarcPathReply {
+  repeated Darc path = 1;
 }
 
-message EditDarcRequest {
-    required bytes ocs = 1;
-    required Darc darc = 2;
+// UpdateDarc allows to set up new accounts or edit existing
+// read-rights in documents.
+message UpdateDarc {
+  required bytes ocs = 1;
+  required Darc darc = 2;
 }
 
-message EditDarcReply {
-    required SkipBlock sb = 1;
+// UpdateDarcReply contains the skipblock with the account stored
+// in it. If the requested update is invalid, a nil skipblcok will
+// be returned.
+message UpdateDarcReply {
+  optional SkipBlock sb = 1;
 }
 
-message SharedPublicRequest {
-    required bytes genesis = 1;
-}
-
-message SharedPublicReply {
-    required bytes x = 1;
-}
-
+// WriteRequest asks the OCS-skipchain to store data on the skipchain.
+// Readers can be empty if Write points to a valid reader that is already
+// stored on the skipchain.
+// The identity of the signature has to be a valid Writer-identity and
+// must be the same as the publisher in the Write-request.
 message WriteRequest {
-    required bytes ocs = 1;
-    required OCSWrite write = 2;
-    required Darc reader = 3;
+  required bytes ocs = 1;
+  required Write write = 2;
+  required Signature signature = 3;
+  optional Darc readers = 4;
 }
 
-message DataOCS {
-    optional OCSWrite write = 1;
-    optional OCSRead read = 2;
-    optional Darc readers = 3;
-    optional Meta meta = 4;
-}
-
-message Meta {
-    required bytes data = 1;
-}
-
-message OCSWrite {
-    // Encrypted data
-    required bytes data = 1;
-    // Challenge
-    required bytes U = 2;
-    // Encrypted symmetric key
-    repeated bytes Cs = 3;
-    // Extra data - application specific
-    optional bytes extra_data = 4;
-}
-
+// WriteReply returns the created skipblock which is the write-id
 message WriteReply {
-    required SkipBlock sb = 1;
+  optional SkipBlock sb = 1;
 }
 
+// ReadRequest asks the OCS-skipchain to allow a reader to access a document.
 message ReadRequest {
-    required bytes ocs = 1;
-    required OCSRead read = 2;
+  required bytes ocs = 1;
+  required Read read = 2;
 }
 
-message OCSRead {
-    required bytes public = 1;
-    required bytes data_id = 2;
-    required SchnorrSig signature = 3;
-}
-
+// ReadReply is the added skipblock, if successful.
 message ReadReply {
-    required SkipBlock sb = 1;
+  optional SkipBlock sb = 1;
 }
 
+// SharedPublicRequest asks for the shared public key of the corresponding
+// skipchain-ID.
+message SharedPublicRequest {
+  required bytes genesis = 1;
+}
+
+// SharedPublicReply sends back the shared public key.
+message SharedPublicReply {
+  required bytes x = 1;
+}
+
+// DecryptKeyRequest is sent to the service with the read-request
 message DecryptKeyRequest {
-    required bytes read_id = 1;
+  required bytes read = 1;
 }
 
+// DecryptKeyReply is sent back to the api with the key encrypted under the
+// reader's public key.
 message DecryptKeyReply {
-    repeated bytes Cs = 1;
-    required bytes XhatEnc = 2;
-    required bytes X = 3;
+  repeated bytes cs = 1;
+  required bytes xhatenc = 2;
+  required bytes x = 3;
+}
+
+// GetReadRequests asks for a list of requests
+message GetReadRequests {
+  required bytes start = 1;
+  required int32 count = 2;
+}
+
+// GetReadRequestsReply returns the requests
+message GetReadRequestsReply {
+  repeated ReadDoc documents = 1;
+}
+
+// GetBunchRequest asks for a list of bunches
+message GetBunchRequest {
+}
+
+// GetBunchReply returns the genesis blocks of all registered OCS.
+message GetBunchReply {
+  repeated SkipBlock bunches = 1;
 }

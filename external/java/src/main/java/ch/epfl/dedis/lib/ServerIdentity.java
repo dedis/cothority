@@ -1,17 +1,21 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.ServerIdentityProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
+import com.moandjiezana.toml.Toml;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
-
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
 
 /**
  * dedis/lib
@@ -25,12 +29,17 @@ import org.java_websocket.handshake.ServerHandshake;
 
 public class ServerIdentity {
     private final URI conodeAddress;
-    public Crypto.Point Public;
+    public Point Public;
+    private final Logger logger = LoggerFactory.getLogger(ServerIdentity.class);
 
     public ServerIdentity(final URI serverWsAddress, final String publicKey) {
         this.conodeAddress = serverWsAddress;
         // TODO: It will be better to use some class for server key and move this conversion outside of this class
-        this.Public = new Crypto.Point(Base64.getDecoder().decode(publicKey));
+        this.Public = new Point(Base64.getDecoder().decode(publicKey));
+    }
+
+    public ServerIdentity(Toml siToml) throws URISyntaxException {
+        this(new URI(siToml.getString("Address")), siToml.getString("Point"));
     }
 
     public URI getAddress() {

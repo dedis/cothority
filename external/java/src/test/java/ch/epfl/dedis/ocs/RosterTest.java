@@ -1,8 +1,8 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.Crypto;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.proto.RosterProto;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ class RosterTest {
 
     //private static Roster r = ConnectingWithTomlConfig.constructRosterWithTomlConfig(LocalRosters.firstToml);
 
-    private static Crypto.Point agg = new Crypto.Point(LocalRosters.aggregate);
+    private static Point agg = new Point(LocalRosters.aggregate);
 
     @Test
     void testRoster() {
@@ -27,7 +27,7 @@ class RosterTest {
 
     @Test
     void testAggregate() {
-        Crypto.Point pub = r.getNodes().get(0).Public.add(r.getNodes().get(1).Public);
+        Point pub = r.getNodes().get(0).Public.add(r.getNodes().get(1).Public);
         pub = pub.add(r.getNodes().get(2).Public);
         assertTrue(pub.equals(agg));
     }

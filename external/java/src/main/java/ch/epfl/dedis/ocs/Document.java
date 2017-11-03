@@ -1,15 +1,19 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.CothorityCommunicationException;
-import ch.epfl.dedis.lib.Crypto;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.crypto.Ed25519;
+import ch.epfl.dedis.lib.crypto.Encryption;
+import ch.epfl.dedis.lib.crypto.KeyPair;
+import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.Scalar;
+import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OCSProto;
 import com.google.protobuf.ByteString;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.SecureRandom;
 import java.util.Arrays;
+
+import static ch.epfl.dedis.lib.crypto.Encryption.encryptData;
 
 /**
  * dedis/lib
@@ -40,12 +44,6 @@ public class Document {
     // multiple write-transactions per block.
     public byte[] id;
 
-    public static String algo = "AES/CBC/PKCS5Padding";
-    public static String algoKey = "AES";
-    public static int ivLength = 16;
-
-    public OCSProto.OCSWrite ocswrite;
-
     /**
      * Creates a new document - copies from an existing.
      *
@@ -70,12 +68,12 @@ public class Document {
      *               should be a safe guess for the moment.
      * @throws Exception in the case the encryption doesn't work
      */
-    public Document(byte[] data, int keylen) throws Exception {
-        keyIv key = new keyIv(keylen);
+    public Document(byte[] data, int keylen, Darc owner) throws Exception {
+        Encryption.keyIv key = new Encryption.keyIv(keylen);
         this.keyMaterial = key.getKeyMaterial();
         this.dataEnc = encryptData(data, key.getKeyMaterial());
 
-        owner = new Darc();
+        this.owner = owner;
 
         extraData = "".getBytes();
     }
@@ -87,8 +85,8 @@ public class Document {
      * @param data   - data for the document, will be encrypted
      * @param keylen - keylength - 16 is a good start.
      */
-    public Document(String data, int keylen) throws Exception {
-        this(data.getBytes(), keylen);
+    public Document(String data, int keylen, Darc owner) throws Exception {
+        this(data.getBytes(), keylen, owner);
     }
 
     /**
@@ -122,118 +120,34 @@ public class Document {
      * @return - OCSWrite to be sent to the cothority
      * @throws Exception
      */
-    public OCSProto.OCSWrite getWrite(Crypto.Point X) throws CothorityCommunicationException {
-        if (ocswrite != null) {
-            return ocswrite;
-        }
-        OCSProto.OCSWrite.Builder write = OCSProto.OCSWrite.newBuilder();
-        write.setExtraData(ByteString.copyFrom(extraData));
+    public OCSProto.Write getWrite(Point X) throws CothorityCommunicationException {
+        OCSProto.Write.Builder write = OCSProto.Write.newBuilder();
+        write.setExtradata(ByteString.copyFrom(extraData));
+        write.setReader(owner.ToProto());
 
         try {
             write.setData(ByteString.copyFrom(dataEnc));
 
-            Crypto.KeyPair randkp = new Crypto.KeyPair();
-            Crypto.Scalar r = randkp.Scalar;
-            Crypto.Point U = randkp.Point;
+            KeyPair randkp = new KeyPair();
+            Scalar r = randkp.Scalar;
+            Point U = randkp.Point;
             write.setU(U.toProto());
 
-            Crypto.Point C = X.scalarMult(r);
-            for (int from = 0; from < keyMaterial.length; from += Crypto.pubLen) {
-                int to = from + Crypto.pubLen;
+            Point C = X.scalarMult(r);
+            for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
+                int to = from + Ed25519.pubLen;
                 if (to > keyMaterial.length) {
                     to = keyMaterial.length;
                 }
-                Crypto.Point keyPoint = Crypto.Point.pubStore(Arrays.copyOfRange(keyMaterial, from, to));
-                Crypto.Point Cs = C.add(keyPoint);
+                Point keyPoint = Point.pubStore(Arrays.copyOfRange(keyMaterial, from, to));
+                Point Cs = C.add(keyPoint);
                 write.addCs(Cs.toProto());
             }
 
-            ocswrite = write.build();
             return write.build();
 
-        } catch (Crypto.CryptoException e) {
+        } catch (CothorityCryptoException e) {
             throw new CothorityCommunicationException("Encryption problem" + e.getMessage(), e);
         }
-    }
-
-    private static class keyIv{
-        public byte[] symmetricKey;
-        public byte[] iv;
-        public IvParameterSpec ivSpec;
-        public SecretKeySpec keySpec;
-
-        public keyIv(byte[] keyMaterial) throws Exception{
-            int symmetricLength = keyMaterial.length - ivLength;
-            if (symmetricLength <= 0){
-                throw new Exception("too short symmetricKey material");
-            }
-            iv = new byte[ivLength];
-            System.arraycopy(keyMaterial, 0, iv, 0, ivLength);
-            ivSpec = new IvParameterSpec(iv);
-            symmetricKey = new byte[keyMaterial.length - ivLength];
-            keySpec = new SecretKeySpec(symmetricKey, algoKey);
-        }
-
-        public keyIv(int keylength){
-            symmetricKey = new byte[keylength];
-            iv = new byte[ivLength];
-            new SecureRandom().nextBytes(symmetricKey);
-            new SecureRandom().nextBytes(iv);
-            ivSpec = new IvParameterSpec(iv);
-            keySpec = new SecretKeySpec(symmetricKey, algoKey);
-        }
-
-        public byte[] getKeyMaterial(){
-            byte[] keyMaterial = new byte[ivLength + symmetricKey.length];
-            System.arraycopy(iv, 0, keyMaterial, 0, ivLength);
-            System.arraycopy(symmetricKey, 0, keyMaterial, ivLength, symmetricKey.length);
-            return keyMaterial;
-        }
-    }
-
-    /**
-     * Encrypts the data using the document-specific encryption.
-     * @param data the data to encrypt
-     * @param keyMaterial random string of length ivLength + keylength.
-     *                    The first ivLength bytes are taken as iv, the
-     *                    rest is taken as the symmetric symmetricKey.
-     * @return a combined
-     * @throws Exception
-     */
-    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws Exception{
-        keyIv key = new keyIv(keyMaterial);
-
-        Cipher cipher = Cipher.getInstance(Document.algo);
-        SecretKeySpec secKey = new SecretKeySpec(key.symmetricKey, Document.algoKey);
-        cipher.init(Cipher.ENCRYPT_MODE, secKey, key.ivSpec);
-        return cipher.doFinal(data);
-    }
-
-    /**
-     * This method decrypts the data using the same encryption-method
-     * as is defined in the Document(data, keylen) constructor.
-     *
-     * @param dataEnc the encrypted data from the skipchain
-     * @param keyMaterial the decrypted keyMaterial
-     * @return decrypted data
-     * @throws Exception
-     */
-    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws Exception{
-        keyIv key = new keyIv(keyMaterial);
-        Cipher cipher = Cipher.getInstance(algo);
-        cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.ivSpec);
-        return cipher.doFinal(dataEnc);
-    }
-
-    /**
-     * Convenience method for use with googles-protobuf bytestring.
-     *
-     * @param dataEnc as google protobuf bytestring
-     * @param keyMaterial the decrypted keyMaterial
-     * @return decypted data
-     * @throws Exception
-     */
-    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws Exception{
-        return decryptData(dataEnc.toByteArray(), keyMaterial);
     }
 }

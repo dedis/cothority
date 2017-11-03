@@ -26,3 +26,7 @@ docker_run:
 	docker run -it --rm -p 7003:7003 -p 7005:7005 -p 7007:7007 --name ocs \
 	 -v $(pwd)/data:/root/.local/share/conode $(IMAGE_NAME)
 
+proto:
+	awk -f proto.awk struct.go > external/proto/ocs.proto
+	awk -f proto.awk darc/struct.go > external/proto/darc.proto
+	cd external; make

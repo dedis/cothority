@@ -3,12 +3,12 @@ package protocol
 import (
 	"errors"
 
-	"github.com/dedis/onet/crypto"
-	"github.com/dedis/onet/network"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/crypto.v0/share/dkg"
+	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/onet.v1/network"
 )
 
 // EncodeKey can be used by the writer to an onchain-secret skipchain

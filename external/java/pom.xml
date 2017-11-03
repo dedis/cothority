@@ -86,7 +86,13 @@
             <groupId>com.moandjiezana.toml</groupId>
             <artifactId>toml4j</artifactId>
             <version>0.7.2</version>
-            <scope>test</scope>
+            <!--<scope>test</scope>-->
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.58</version>
         </dependency>
 
         <!-- dependencies required for compilation -->
@@ -96,6 +102,7 @@
             <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <properties>

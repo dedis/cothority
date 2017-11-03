@@ -7,12 +7,12 @@ This holds the messages used to communicate with the service over the network.
 import (
 	"fmt"
 
+	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -20,7 +20,7 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, Darc{},
+		Transaction{}, Write{}, Read{},
 		CreateSkipchainsRequest{}, CreateSkipchainsReply{},
 		WriteRequest{}, WriteReply{},
 		ReadRequest{}, ReadReply{},
@@ -66,25 +66,11 @@ func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
 	}
 }
 
-// DataOCS holds either:
-// - a read request
-// - a write
-// - a key-update
-// - a write and a key-update
-// additionally it can hold a slice of bytes with any data that the user wants to
-// add to bind to that transaction.
-type DataOCS struct {
-	Write   *DataOCSWrite
-	Read    *DataOCSRead
-	Readers *Darc
-	Meta    *[]byte
-}
-
 // NewDataOCS returns a pointer to a DataOCS structure created from
 // the given data-slice. If the slice is not a valid DataOCS-structure,
 // nil is returned.
-func NewDataOCS(b []byte) *DataOCS {
-	dw := &DataOCS{}
+func NewDataOCS(b []byte) *Transaction {
+	dw := &Transaction{}
 	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(network.Suite))
 	if err != nil {
 		log.Error(err)
@@ -94,22 +80,53 @@ func NewDataOCS(b []byte) *DataOCS {
 }
 
 // String returns a nice string.
-func (dw *DataOCS) String() string {
+func (dw *Transaction) String() string {
 	if dw == nil {
 		return "nil-pointer"
 	}
 	if dw.Write != nil {
-		return fmt.Sprintf("Write: data-length of %d", len(dw.Write.Data))
+		return fmt.Sprintf("Write: data-length of %d\n", len(dw.Write.Data))
 	}
 	if dw.Read != nil {
-		return fmt.Sprintf("Read: %s read data %x", dw.Read.Public, dw.Read.DataID)
+		return fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Reader, dw.Read.DataID)
 	}
 	return "all nil DataOCS"
 }
 
-// DataOCSWrite stores the data and the encrypted secret
-type DataOCSWrite struct {
-	// Data should be encrypted by the symmetric key in U and Cs
+// PROTOSTART
+// import "skipblock.proto";
+// import "darc.proto";
+// import "roster.proto";
+//
+// option java_package = "ch.epfl.dedis.proto";
+// option java_outer_classname = "OCSProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// Transaction holds either:
+// - a read request
+// - a write
+// - a key-update
+// - a write and a key-update
+// additionally it can hold a slice of bytes with any data that the user wants to
+// add to bind to that transaction.
+type Transaction struct {
+	// Write holds an eventual write-request with a document
+	Write *Write
+	// Read holds an eventual read-request, which is approved, for a document
+	Read *Read
+	// Darc defines either the readers allowed for this write-request
+	// or is an update to an existing Darc
+	Darc *darc.Darc
+	// Meta is any free-form data in that skipblock
+	Meta *[]byte
+}
+
+// Write stores the data and the encrypted secret
+type Write struct {
+	// Data should be encrypted by the application under the symmetric key in U and Cs
 	Data []byte
 	// U is the encrypted random value for the ElGamal encryption
 	U abstract.Point
@@ -118,29 +135,38 @@ type DataOCSWrite struct {
 	Cs []abstract.Point
 	// ExtraData is clear text and application-specific
 	ExtraData *[]byte
+	// Reader points to a darc where the reading-rights are stored
+	Reader darc.Darc
 }
 
-// DataOCSRead stores a read-request which is the secret encrypted under the
+// Read stores a read-request which is the secret encrypted under the
 // pseudonym's public key. The Data is the skipblock-id of the skipblock
 // holding the data.
-type DataOCSRead struct {
-	Public    abstract.Point
-	DataID    skipchain.SkipBlockID
-	Signature *crypto.SchnorrSig
+type Read struct {
+	// Reader represents the reader that signed the request
+	Reader darc.Darc
+	// DataID is the document-id for the read request
+	DataID skipchain.SkipBlockID
+	// Signature is a Schnorr-signature using the private key of the
+	// reader on the message 'DataID'
+	Signature darc.Signature
 }
 
 // ReadDoc represents one read-request by a reader.
 type ReadDoc struct {
-	Reader abstract.Point
+	Reader darc.Identity
 	ReadID skipchain.SkipBlockID
 	DataID skipchain.SkipBlockID
 }
 
+// ***
 // Requests and replies to/from the service
+// ***
 
 // CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
 type CreateSkipchainsRequest struct {
-	Roster *onet.Roster
+	Roster  onet.Roster
+	Writers darc.Darc
 }
 
 // CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
@@ -149,40 +175,45 @@ type CreateSkipchainsReply struct {
 	X   abstract.Point
 }
 
-// ReadDarcRequest returns the latest Darc for that ID. If recursive is
-// true, it will search for all connected Darcs.
-type ReadDarcRequest struct {
-	OCS       skipchain.SkipBlockID
-	DarcID    []byte
-	Recursive bool
+// GetDarcPath returns the shortest path from the base darc to a darc
+// containing the identity.
+type GetDarcPath struct {
+	OCS        skipchain.SkipBlockID
+	BaseDarcID []byte
+	Identity   darc.Identity
+	Role       int
 }
 
-// ReadDarcReply returns all darcs that are attached to the requested
-// darc. If a recursive search has been requested, the first darc will be
-// the root-darc, but all other darcs will be in a random order.
-type ReadDarcReply struct {
-	Darc []*Darc
+// GetDarcPathReply returns the shortest path to prove that the identity
+// can sign. If there is no such path, Path is nil.
+type GetDarcPathReply struct {
+	Path *[]darc.Darc
 }
 
-// EditDarcRequest allows to set up new accounts or edit existing
+// UpdateDarc allows to set up new accounts or edit existing
 // read-rights in documents.
-type EditDarcRequest struct {
+type UpdateDarc struct {
 	OCS  skipchain.SkipBlockID
-	Darc *Darc
+	Darc darc.Darc
 }
 
-// EditDarcReply contains the skipblock with the account stored
-// in it.
-type EditDarcReply struct {
+// UpdateDarcReply contains the skipblock with the account stored
+// in it. If the requested update is invalid, a nil skipblcok will
+// be returned.
+type UpdateDarcReply struct {
 	SB *skipchain.SkipBlock
 }
 
 // WriteRequest asks the OCS-skipchain to store data on the skipchain.
-// Readers can be empty if Write points to a valid reader.
+// Readers can be empty if Write points to a valid reader that is already
+// stored on the skipchain.
+// The identity of the signature has to be a valid Writer-identity and
+// must be the same as the publisher in the Write-request.
 type WriteRequest struct {
-	OCS     skipchain.SkipBlockID
-	Write   *DataOCSWrite
-	Readers *Darc
+	OCS       skipchain.SkipBlockID
+	Write     Write
+	Signature darc.Signature
+	Readers   *darc.Darc
 }
 
 // WriteReply returns the created skipblock which is the write-id
@@ -193,7 +224,7 @@ type WriteReply struct {
 // ReadRequest asks the OCS-skipchain to allow a reader to access a document.
 type ReadRequest struct {
 	OCS  skipchain.SkipBlockID
-	Read *DataOCSRead
+	Read Read
 }
 
 // ReadReply is the added skipblock, if successful.

@@ -1,15 +1,21 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.CothorityCommunicationException;
-import ch.epfl.dedis.lib.CothorityException;
-import ch.epfl.dedis.lib.Crypto;
-import ch.epfl.dedis.lib.DecryptKey;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.*;
+import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.proto.DarcProto;
 import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.SkipBlockProto;
 import ch.epfl.dedis.proto.SkipchainProto;
+import com.byzgen.ocsimpl.EpflPermission;
+import com.byzgen.ocsimpl.User;
+import com.byzgen.ocsimpl.UserId;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.security.PublicKey;
@@ -17,11 +23,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * dedis/lib
@@ -40,7 +41,7 @@ public class OnchainSecrets {
     public byte[] ocsID;
     // X is the public symmetricKey of the ocs-shard that will re-encrypt the symmetric
     // keys if they receive a valid re-encryption request.
-    public Crypto.Point X;
+    public Point X;
 
     private Roster roster;
     private final Logger logger = LoggerFactory.getLogger(OnchainSecrets.class);
@@ -68,9 +69,9 @@ public class OnchainSecrets {
      * @param roster - list of all cothority servers with public keys
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    OnchainSecrets(Roster roster) throws CothorityCommunicationException {
+    OnchainSecrets(Roster roster, Darc writers) throws CothorityCommunicationException {
         this.roster = roster;
-        createSkipchains(); // this call internally set ocsID and X
+        createSkipchains(writers); // this call internally set ocsID and X
     }
 
     /**
@@ -100,53 +101,45 @@ public class OnchainSecrets {
      *
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public void createSkipchains() throws CothorityCommunicationException {
+    public void createSkipchains(Darc writers) throws CothorityCommunicationException {
         OCSProto.CreateSkipchainsRequest.Builder request =
                 OCSProto.CreateSkipchainsRequest.newBuilder();
         request.setRoster(roster.getProto());
+        request.setWriters(writers.ToProto());
 
         ByteString msg = roster.SendMessage("OnChainSecrets/CreateSkipchainsRequest",
                 request.build());
 
         try {
             OCSProto.CreateSkipchainsReply reply = OCSProto.CreateSkipchainsReply.parseFrom(msg);
-            X = new Crypto.Point(reply.getX());
+            X = new Point(reply.getX());
             logger.debug("Got reply: {}", reply.toString());
-            ocsID = reply.getSB().getHash().toByteArray();
-            logger.info("Initialised OCS: {}", ocsID);
+            ocsID = reply.getOcs().getHash().toByteArray();
+            logger.info("Initialised OCS: {}", DatatypeConverter.printHexBinary(ocsID));
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
 
     /**
-     * Adds a new account to the skipchain. This is mostly useful for accounts that
+     * Updates an existing account or adds a new account to the skipchain. This is mostly useful for accounts that
      * need more access-control than just READ_ACCESS for documents.
      * <p>
-     * In the current implementation, no account needs to be stored on the
-     * skipchain.
-     * <p>
-     * TODO: perhaps this should directly take Darcs instaed of accounts, or perhaps
-     * Account should incorporate all ALLOW_PUBLISH and other access-rights.
      *
-     * @param admin      - the admin account - not used for the moment
      * @param newAccount - the new account to be added to the skipchain.
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public void addAccountToSkipchain(Account admin, Account newAccount) throws CothorityCommunicationException {
-        Darc d = new Darc(newAccount.ID);
-        d.points.add(newAccount.Point);
-
-        OCSProto.EditDarcRequest.Builder request =
-                OCSProto.EditDarcRequest.newBuilder();
-        request.setDarc(d.getProto());
+    public void updateDarc(Darc newAccount) throws CothorityCommunicationException, Exception {
+        OCSProto.UpdateDarc.Builder request =
+                OCSProto.UpdateDarc.newBuilder();
         request.setOcs(ByteString.copyFrom(ocsID));
+        request.setDarc(newAccount.ToProto());
 
-        ByteString msg = roster.SendMessage("OnChainSecrets/EditDarcRequest",
+        ByteString msg = roster.SendMessage("OnChainSecrets/UpdateDarc",
                 request.build());
 
         try {
-            OCSProto.EditDarcReply reply = OCSProto.EditDarcReply.parseFrom(msg);
+            OCSProto.UpdateDarcReply reply = OCSProto.UpdateDarcReply.parseFrom(msg);
 
             logger.debug("received reply: {}", reply.toString());
             logger.info("Updated darc: {}", DatatypeConverter.printHexBinary(reply.getSb().getHash().toByteArray()));
@@ -164,7 +157,7 @@ public class OnchainSecrets {
      * @throws CothorityCommunicationException in case of communication difficulties
      */
     //
-    public Crypto.Point getSharedPublicKey() throws CothorityCommunicationException {
+    public Point getSharedPublicKey() throws CothorityCommunicationException {
         OCSProto.SharedPublicRequest.Builder request =
                 OCSProto.SharedPublicRequest.newBuilder();
         request.setGenesis(ByteString.copyFrom(ocsID));
@@ -174,7 +167,7 @@ public class OnchainSecrets {
         try {
             OCSProto.SharedPublicReply reply = OCSProto.SharedPublicReply.parseFrom(msg);
             logger.info("Got shared public symmetricKey");
-            return new Crypto.Point(reply.getX());
+            return new Point(reply.getX());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -184,24 +177,23 @@ public class OnchainSecrets {
      * Publishes a document on the skipchain. The publisher-account has the right
      * to add owner to the document once the document is stored on the skipchain.
      * The document will be encrypted, except for the id, the reader-list and
-     * the extraData-field.
+     * the extraData-fieldElement.
      *
      * @param doc       - the document to store on the skipchain
      * @param publisher - the publisher with the right to sell read-access to the document
      * @return
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public Document publishDocument(Document doc, Account publisher) throws CothorityCommunicationException {
+    public Document publishDocument(Document doc, Signer publisher) throws CothorityCommunicationException, Exception {
         Document docNew = new Document(doc);
-        docNew.owner = new Darc();
-        // TODO: in the future document owner will be introduced and read access will be not granted to owner
-        docNew.owner.accounts.add(new Darc.DarcLink(publisher));
 
         OCSProto.WriteRequest.Builder request =
                 OCSProto.WriteRequest.newBuilder();
         request.setWrite(docNew.getWrite(X));
-        request.setReader(docNew.owner.getProto());
+        request.setReaders(docNew.owner.ToProto());
         request.setOcs(ByteString.copyFrom(ocsID));
+        request.setSignature(new DarcSignature(doc.owner.ID(), doc.owner, publisher, SignaturePath.USER).ToProto());
+        // TODO: add correct signature here so that only writers can access the chain.
 
         ByteString msg = roster.SendMessage("OnChainSecrets/WriteRequest",
                 request.build());
@@ -217,70 +209,70 @@ public class OnchainSecrets {
     }
 
     /**
-     * Reads a Darc from the skipchain so that it can be updated and stored
-     * again. The node will return the latest available darc, although there
-     * is no proof that it is really the latest.
+     * Gets a darc-path starting from the base to the identity given. This darc-path
+     * is the shortest, most up-to-date path at the moment of reply. Of course an
+     * update might happen just before you actually use it, and your signature might
+     * be rejected then.
      *
-     * @param darcID    - the ID of the requested darc.
-     * @param recursive - whether all included darcs should also be returned.
-     * @return - a list of all darcs.
+     * @param base     where to start the path
+     * @param identity which identity to find
+     * @return a DarcPath
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public List<Darc> readDarc(byte[] darcID, Boolean recursive) throws CothorityCommunicationException {
-        OCSProto.ReadDarcRequest.Builder request =
-                OCSProto.ReadDarcRequest.newBuilder();
+    public SignaturePath getDarcPath(byte[] base, Identity identity, int role) throws CothorityCommunicationException {
+        OCSProto.GetDarcPath.Builder request =
+                OCSProto.GetDarcPath.newBuilder();
         request.setOcs(ByteString.copyFrom(ocsID));
-        request.setDarcId(ByteString.copyFrom(darcID));
-        request.setRecursive(recursive);
-        ByteString msg = roster.SendMessage("OnChainSecrets/ReadDarcRequest", request.build());
+        request.setBasedarcid(ByteString.copyFrom(base));
+        request.setIdentity(identity.ToProto());
+        request.setRole(role);
+        ByteString msg = roster.SendMessage("OnChainSecrets/GetDarcPath", request.build());
 
         try {
-            OCSProto.ReadDarcReply reply = OCSProto.ReadDarcReply.parseFrom(msg);
-
+            OCSProto.GetDarcPathReply reply = OCSProto.GetDarcPathReply.parseFrom(msg);
             List<Darc> darcs = new ArrayList<>();
-            reply.getDarcList().forEach(d -> darcs.add(new Darc(d)));
-            logger.debug("Got following darcs: {}", darcs);
-            logger.info("Read darcs");
-            return darcs;
-
+            for (DarcProto.Darc d :
+                    reply.getPathList()) {
+                darcs.add(new Darc(d));
+            }
+            return new SignaturePath(darcs, identity, role);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
+        } catch (Exception e) {
+            throw new CothorityCommunicationException(e.toString());
         }
     }
 
     /**
-     * This adds the consumer to the list of people allowed to make a read-request
-     * to the document.
+     * Convenience function that will add a new identity to a darc. The new darc
+     * will be stored on the skipchain if the signer has the right to evolve it.
      *
-     * @param d         - the document the reader should have access to
-     * @param publisher - the owner of the document
-     * @param reader    - he will have access to make a read-request
+     * @param d           the latest version of the darc that needs to be udpated
+     * @param newIdentity the identity to add to the darc
+     * @param signer      who is allowed to evolve the darc - one of the owners
+     * @return the new darc
      * @throws CothorityCommunicationException in case of communication difficulties
      */
     //
-    public void giveReadAccessToDocument(Document d, Account publisher, Account reader) throws CothorityCommunicationException {
-        List<Darc> darcs = readDarc(d.owner.id, false);
-        Darc darc = darcs.get(0);
-        darc.version++;
-        darc.points.add(reader.Point);
+    public Darc addIdentityToDarc(Darc d, Identity newIdentity, Signer signer) throws CothorityCommunicationException, Exception {
+        Darc newDarc = d.Copy();
+        newDarc.AddUser(newIdentity);
+        newDarc.SetEvolution(d, null, signer);
+        updateDarc(newDarc);
+        return newDarc;
+    }
 
-        // TODO: sign this new Darc with the owner-account
-
-        OCSProto.EditDarcRequest.Builder request =
-                OCSProto.EditDarcRequest.newBuilder();
-        request.setOcs(ByteString.copyFrom(ocsID));
-        request.setDarc(darc.getProto());
-
-        ByteString msg = roster.SendMessage("OnChainSecrets/EditDarcRequest",
-                request.build());
-
-        try {
-            OCSProto.EditDarcReply reply = OCSProto.EditDarcReply.parseFrom(msg);
-            logger.info("Read-access granted: {}", DatatypeConverter.printHexBinary(reply.getSb().getHash().toByteArray()));
-
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
-        }
+    /**
+     * Overloaded method for convenience.
+     * @param d
+     * @param newIdentity
+     * @param signer
+     * @return
+     * @throws Exception
+     */
+    public Darc addIdentityToDarc(Darc d, Signer newIdentity, Signer signer) throws Exception{
+        Identity newI = IdentityFactory.New(newIdentity);
+        return addIdentityToDarc(d, newI, signer);
     }
 
     /**
@@ -294,12 +286,14 @@ public class OnchainSecrets {
      * @return - the read-request ID if the request was successful
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public byte[] readRequest(byte[] dID, Account reader) throws CothorityCommunicationException {
-        OCSProto.OCSRead.Builder ocsRead =
-                OCSProto.OCSRead.newBuilder();
-        ocsRead.setPublic(reader.Point.toProto());
-        ocsRead.setDataId(ByteString.copyFrom(dID));
-        ocsRead.setSignature(new Crypto.SchnorrSig(dID, reader).toProto());
+    public byte[] readRequest(byte[] dID, Darc reader, Signer signer) throws CothorityCommunicationException, Exception {
+        SignaturePath path = getDarcPath(reader.ID(), IdentityFactory.New(signer), SignaturePath.USER);
+
+        OCSProto.Read.Builder ocsRead =
+                OCSProto.Read.newBuilder();
+        ocsRead.setReader(reader.ToProto());
+        ocsRead.setDataid(ByteString.copyFrom(dID));
+        ocsRead.setSignature(new DarcSignature(dID, path, signer).ToProto());
 
         OCSProto.ReadRequest.Builder request =
                 OCSProto.ReadRequest.newBuilder();
@@ -349,16 +343,16 @@ public class OnchainSecrets {
      * the corresponding OCSWrite-structure.
      *
      * @param id - the id of the write-request
-     * @return [OCSProto.OCSWrite] - the write-request that can be used for
+     * @return [OCSProto.Write] - the write-request that can be used for
      * decryption
      * @throws CothorityCommunicationException in case of communication difficulties
      */
 
-    public OCSProto.OCSWrite getWrite(byte[] id) throws CothorityCommunicationException {
+    public OCSProto.Write getWrite(byte[] id) throws CothorityCommunicationException {
         SkipBlockProto.SkipBlock sb = getSkipblock(id);
         logger.debug("Getting write-request from skipblock {}", id);
         try {
-            OCSProto.DataOCS data = OCSProto.DataOCS.parseFrom(sb.getData());
+            OCSProto.Transaction data = OCSProto.Transaction.parseFrom(sb.getData());
             if (!data.hasWrite()) {
                 throw new CothorityCommunicationException("This is not an ID from a write-request");
             }
@@ -381,7 +375,7 @@ public class OnchainSecrets {
     public DecryptKey decryptKey(byte[] id) throws CothorityCommunicationException {
         OCSProto.DecryptKeyRequest.Builder request =
                 OCSProto.DecryptKeyRequest.newBuilder();
-        request.setReadId(ByteString.copyFrom(id));
+        request.setRead(ByteString.copyFrom(id));
         ByteString msg = roster.SendMessage("OnChainSecrets/DecryptKeyRequest",
                 request.build());
 
@@ -403,15 +397,13 @@ public class OnchainSecrets {
 
     /**
      * Create user in skipchain system. Created user will have specified permissions.
+     *
      * @param administrator administrator who is going to create a user - signature of administrator will be required
      *                      to execute operation.
-     * @param newUserKey public key of new created user
-     * @param permissions initial permissions of a new user
-     *
-     * @throws CothorityCommunicationException in case of communication problems
-     * @throws CothorityPermissionException when administrator has no permission to create users in the system
-     *
+     * @param newUserKey    public key of new created user
+     * @param permissions   initial permissions of a new user
      * @return ID of a new user
+     * @throws CothorityCommunicationException in case of communication problems
      */
     public UserId createSkipchainUser(User administrator, PublicKey newUserKey, Set<EpflPermission> permissions) throws CothorityException {
         // implementation work temporary blocked by #36
