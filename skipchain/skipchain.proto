@@ -77,7 +77,6 @@ message Configuration {
 	required bool FillHeight = 3;
 }
 
-
 message ForwardLink {
     // Hash points to the block that has been validated.
     required bytes Hash = 1;
