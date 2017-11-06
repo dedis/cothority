@@ -4,48 +4,85 @@ package cothority;
 
 import "messages.proto";
 
-message BlockLink {
-    required bytes Hash = 1;
-    required bytes Signature = 2;
-}
-
 message SkipBlock {
-    optional sint32 Index = 1;
-    optional sint32 Height = 2;
-    optional sint32 MaximumHeight = 3;
-    optional sint32 BaseHeight = 4;
-    repeated bytes BackLinkIDs = 5;
-    repeated bytes VerifierIDs = 6;
-    optional bytes GenesisID = 7;
-    optional bytes Data = 8;
-    optional onet.Roster Roster = 9;
-    optional bytes Hash = 10;
-    repeated BlockLink ForwardLink = 11;
+	// Data holds the fixed part of the skipblock that will be
+	// hashed.
+    required SkipBlockData Data = 1;
+
+	// ForwardLinks will be calculated once future SkipBlocks are
+    // available
+    repeated ForwardLink ForwardLinks = 2;
 }
 
-message StoreSkipBlockRequest {
-    required SkipBlock NewBlock = 1;
+message SkipBlockData {
+	// Index of the block in the chain.
+	// Index == 0 -> genesis block.
+	required uint64 Index = 1;
+
+	// BackLinks is a slice of hashes of previous SkipBlockDatas. Each
+	// SkipBlock is linked to a number of previous blocks depending
+	// on its Index and the BaseHeight.
+	// More information about the links is in the ch.dedis.config
+    // transaction and the Chainiac paper.
+    repeated bytes BackLinks = 2;
+
+    // RosterID is the hash of the roster responsible for that block.
+    required bytes RosterID = 3;
+
+    // Transactions hold key/value pairs of data that is stored
+    // in a skipblock. If the same key occurs more than once in
+    // a skipchain, the last occurrences is the valid one.
+    repeated Transaction Transactions = 4;
+
+    // Roster can be used to update the responsible roster for that
+    // SkipBlock and all future SkipBlocks.
+    optional onet.Roster Roster = 5;
+
+    // Configuration must be present in the genesis-block and can not
+    // be present in any future block.
+    optional Configuration Configuration = 6;
+}
+
+message Transaction {
+	// KeyValues is the list of all key/value changes in this transaction
+	// that have to be applied atomically or not.
+	repeated KeyValue KeyValues = 1;
+
+	// Verification is the hash of the verification function that is
+    // used to verify this transaction is valid.
+    required bytes Verification = 2;
+}
+
+message KeyValue {
+	// Key is skipblock unique and will overwrite previous definitions.
+	required bytes Key = 1;
+
+	// Value is the actual value stored in that key. Most often it will
+	// be a protobuf encoded message.
+	required bytes Value = 2;
+}
+
+message Configuration {
+	// BaseHeight, MaximumHeight, and FillHeight define the structure
+	// of the back  and forward links.
+	required uint32 BaseHeight = 1;
+
+	// MaximumHeight indicates where to cut off the number of links
+	// created.
+	required uint32 MaximumHeight = 2;
+
+	// FillHeight indicates whether every block stores all backlinks
+	// and forward links up to MaximumHeight, even if it’s not this
+	// block’s direct link.
+	required bool FillHeight = 3;
 }
 
 
-message StoreSkipBlockResponse {
-    required SkipBlock Previous = 1;
-    required SkipBlock Latest = 2;
-}
+message ForwardLink {
+    // Hash points to the block that has been validated.
+    required bytes Hash = 1;
 
-message GetBlocksRequest{
-    required bytes Start = 1;
-    required bytes End = 2;
-    required sint32 MaxHeight = 3;
-}
-
-message GetBlocksResponse{
-    repeated SkipBlock Reply = 1;
-}
-
-message GetAllSkipchainsRequest{
-}
-
-message GetAllSkipchainsResponse{
-    repeated SkipBlock Last = 1;
+    // Signature is a CoSi signature on the Hash of the
+    // block.
+    required bytes Signature = 2;
 }
