@@ -72,9 +72,9 @@ public class Ed25519Signer implements Signer {
      * @return
      */
     public byte[] Serialize() throws IOException{
-        ByteArrayBuffer result = new ByteArrayBuffer(1 + priv.toBytes().length);
-        result.write(SignerFactory.IDEd25519);
-        result.write(priv.toBytes());
-        return result.getRawData();
+        byte[] result = new byte[1 + priv.toBytes().length];
+        result[0] = SignerFactory.IDEd25519;
+        System.arraycopy(priv.toBytes(), 0, result, 1, priv.toBytes().length);
+        return result;
     }
 }

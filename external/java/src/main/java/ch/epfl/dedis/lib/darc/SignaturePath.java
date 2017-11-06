@@ -83,11 +83,12 @@ public class SignaturePath {
         if (path.size() == 0){
             return new byte[0];
         }
-        ByteArrayBuffer pathMsg = new ByteArrayBuffer(path.size() * path.get(0).ID().length);
+        byte[] pathMsg = new byte[path.size() * path.get(0).ID().length];
+        int pos = 0;
         for (Darc d : path) {
-            pathMsg.write(d.ID());
+            System.arraycopy(d.ID(), 0, pathMsg, pos * 32, 32);
         }
-        return pathMsg.getRawData();
+        return pathMsg;
     }
 
     public List<byte[]> GetPathIDs() {

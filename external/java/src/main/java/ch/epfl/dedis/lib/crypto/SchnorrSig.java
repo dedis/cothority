@@ -1,9 +1,7 @@
 package ch.epfl.dedis.lib.crypto;
 
 import ch.epfl.dedis.proto.SkipBlockProto;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -37,14 +35,10 @@ public class SchnorrSig {
     }
 
     public byte[] toBytes() {
-        try {
-            ByteArrayBuffer buf = new ByteArrayBuffer(64);
-            buf.write(challenge.toBytes());
-            buf.write(response.toBytes());
-            return buf.getRawData();
-        } catch (IOException e) {
-            return null;
-        }
+        byte[] buf = new byte[64];
+        System.arraycopy(challenge.toBytes(), 0, buf, 0, 32);
+        System.arraycopy(response.toBytes(), 0, buf, 32, 32);
+        return buf;
     }
 
     public Scalar toHash(Point challenge, Point pub, byte[] msg) {
