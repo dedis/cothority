@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.proto.DarcProto;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -4,7 +4,6 @@ import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

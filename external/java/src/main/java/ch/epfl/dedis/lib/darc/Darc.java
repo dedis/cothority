@@ -2,12 +2,9 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
