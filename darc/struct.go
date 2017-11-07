@@ -37,10 +37,12 @@ type Darc struct {
 	// Identities who can perform actions (write/read) with data on a skipchain.
 	Users *[]*Identity
 	// Version should be monotonically increasing over the evolution of a Darc.
-	Version uint32
+	Version int
 	// Description is a free-form field that can hold any data as required by the user.
 	// Darc itself will never depend on any of the data in here.
 	Description *[]byte
+	// BaseID is the ID of the first darc of this Series
+	BaseID *ID
 	// Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
 	// and needs to be created by an Owner from the previous valid Darc.
 	Signature *Signature

@@ -5,8 +5,10 @@ import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.proto.DarcProto;
 import ch.epfl.dedis.proto.OCSProto;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ class OnchainSecretsTest {
     static Signer reader;
     static Signer reader2;
     static Darc adminDarc;
+    static Darc admin2Darc;
     static Darc publisherDarc;
     static Darc publisher2Darc;
     static Document doc;
@@ -33,27 +36,35 @@ class OnchainSecretsTest {
 
     private final static Logger logger = LoggerFactory.getLogger(OnchainSecretsTest.class);
 
-    @BeforeAll
-    static void initAll() throws Exception {
+    @BeforeEach
+    void initAll() throws Exception {
         admin = new Ed25519Signer();
         writer = new Ed25519Signer();
         publisher = new Ed25519Signer();
         reader = new Ed25519Signer();
         reader2 = new Ed25519Signer();
+
         adminDarc = new Darc(admin, null, null);
+        adminDarc.AddUser(writer);
+
         publisherDarc = new Darc(publisher, null, null);
         publisherDarc.AddUser(reader);
         logger.info("publisherDarc: " + DatatypeConverter.printHexBinary(publisherDarc.ID()));
         publisher2Darc = publisherDarc.Copy();
         publisher2Darc.AddUser(reader2);
         publisher2Darc.SetEvolution(publisherDarc, null, publisher);
-        adminDarc.AddUser(writer);
+
+        admin2Darc = adminDarc.Copy();
+        admin2Darc.AddUser(publisherDarc);
+        admin2Darc.SetEvolution(adminDarc, null, admin);
+
         docData = "https://dedis.ch/secret_document.osd";
         doc = new Document(docData, 16, publisherDarc);
         extraData = "created on Monday";
         doc.extraData = extraData.getBytes();
 
         try {
+            logger.info("Admin darc: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
             ocs = new OnchainSecrets(Roster.FromToml(LocalRosters.groupToml), adminDarc);
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
@@ -66,6 +77,33 @@ class OnchainSecretsTest {
     void verify() throws Exception {
         assertTrue(ocs.verify());
         assertNotNull(ocs.ocsID);
+    }
+
+    @Test
+    void darcID() throws Exception{
+        logger.info("Admin darc after: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
+        logger.info("Admin-darc prot: " +
+        DatatypeConverter.printHexBinary(adminDarc.ToProto().toByteArray()));
+    }
+
+    @Test
+    void updateDarc() throws Exception{
+        try {
+            logger.info("Admin darc after: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
+            ocs.updateDarc(adminDarc);
+            fail("should not allow to store adminDarc again");
+        } catch (Exception e){
+            logger.info("correctly failed at updating admin");
+        }
+        ocs.updateDarc(publisherDarc);
+        ocs.updateDarc(publisher2Darc);
+        publisher2Darc.AddUser(admin);
+        publisher2Darc.SetEvolution(publisherDarc, null, publisher);
+        try {
+            ocs.updateDarc(publisher2Darc);
+        } catch (Exception e){
+            logger.info("correctly failed at re-writing publisher darc");
+        }
     }
 
     @Test
@@ -107,7 +145,7 @@ class OnchainSecretsTest {
 
     @Test
     void publishDocument() throws Exception {
-        addAccountToSkipchain();
+        ocs.addIdentityToDarc(adminDarc, IdentityFactory.New(publisher), admin);
         docNew = ocs.publishDocument(doc, publisher);
         assertNotNull(docNew.id);
     }
@@ -122,17 +160,35 @@ class OnchainSecretsTest {
 
     @Test
     void giveReadAccessToDocument() throws Exception {
-        addAccountToSkipchain();
         docNew = ocs.publishDocument(doc, publisher);
         ocs.updateDarc(publisher2Darc);
     }
 
     @Test
     void readRequest() throws Exception {
-        giveReadAccessToDocument();
-        logger.info("pd: " + DatatypeConverter.printHexBinary(publisherDarc.ID()));
-        readID = ocs.readRequest(docNew.id, publisherDarc, reader);
+        docNew = ocs.publishDocument(doc, publisher);
+        try {
+            readID = ocs.readRequest(docNew.id, reader2);
+            fail("a wrong read-signature should not pass");
+        } catch (CothorityCommunicationException e){
+            logger.info("correctly failed with wrong signature");
+        }
+        logger.debug("publisherdarc.ic = " + DatatypeConverter.printHexBinary(publisherDarc.ID()));
+        logger.debug("publisherdarc.proto = " + publisherDarc.ToProto().toString());
+        readID = ocs.readRequest(docNew.id, reader);
         assertNotNull(readID);
+    }
+
+    @Test
+    void getDarcPath() throws Exception{
+        ocs.updateDarc(admin2Darc);
+        ocs.updateDarc(publisherDarc);
+        ocs.updateDarc(publisher2Darc);
+        SignaturePath path = ocs.getDarcPath(adminDarc.ID(), IdentityFactory.New(reader2), SignaturePath.USER);
+        assertNotNull(path);
+        for (Darc d: path.GetDarcs()){
+            logger.debug("Darc-list is: " + d.toString());
+        }
     }
 
     @Test
@@ -170,7 +226,7 @@ class OnchainSecretsTest {
         Darc resellerDarc2 = ocs.addIdentityToDarc(resellerD, reader, resellerS);
 
         // Get the document and decrypt it
-        byte[] readID = ocs.readRequest(docNew.id, resellerDarc2, reader);
+        byte[] readID = ocs.readRequest(docNew.id, reader);
         DecryptKey dk = ocs.decryptKey(readID);
         OCSProto.Write write = ocs.getWrite(docNew.id);
         byte[] keyMaterial = dk.getKeyMaterial(write, reader);

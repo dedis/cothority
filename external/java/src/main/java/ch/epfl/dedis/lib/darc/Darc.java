@@ -5,6 +5,7 @@ import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ public class Darc {
     private List<Identity> users;
     private byte[] data;
     private int version;
+    private byte[] baseid;
     private DarcSignature signature;
     private final Logger logger = LoggerFactory.getLogger(Darc.class);
 
@@ -72,7 +74,6 @@ public class Darc {
         version = 0;
         owners.add(IdentityFactory.New(owner));
         if (users != null) {
-            this.users = new ArrayList<>();
             for (Signer s : users) {
                 this.users.add(IdentityFactory.New(s));
             }
@@ -99,14 +100,17 @@ public class Darc {
             owners.add(IdentityFactory.New(owner));
         }
         for (DarcProto.Identity user : proto.getUsersList()) {
-            owners.add(IdentityFactory.New(user));
+            users.add(IdentityFactory.New(user));
         }
         version = proto.getVersion();
-        if (proto.hasDescription()){
+        if (proto.hasDescription()) {
             data = proto.getDescription().toByteArray();
         }
-        if (proto.hasSignature()){
+        if (proto.hasSignature()) {
             signature = new DarcSignature(proto.getSignature());
+        }
+        if (proto.hasBaseid()){
+            baseid = proto.getBaseid().toByteArray();
         }
     }
 
@@ -120,6 +124,7 @@ public class Darc {
     public Darc Copy() {
         Darc d = new Darc(owners, users, data);
         d.version = version;
+        d.baseid = baseid;
         return d;
     }
 
@@ -152,12 +157,27 @@ public class Darc {
      * @param path
      * @param previousOwner
      */
-    public void SetEvolution(Darc previous, SignaturePath path, Signer previousOwner) throws Exception{
+    public void SetEvolution(Darc previous, SignaturePath path, Signer previousOwner) throws Exception {
         version = previous.version + 1;
-        if (path == null){
+        if (path == null) {
             path = new SignaturePath(previous, previousOwner, SignaturePath.OWNER);
         }
+        baseid = previous.GetBaseID();
         signature = new DarcSignature(ID(), path, previousOwner);
+        logger.debug("Signature is: " + signature.ToProto().toString());
+    }
+
+    /**
+     * Returns the id of the darc with version == 0. If it's the darc with version
+     * 0, then it will return its own ID.
+     *
+     * @return id of first darc
+     */
+    public byte[] GetBaseID() {
+        if (baseid != null) {
+            return baseid;
+        }
+        return ID();
     }
 
     /**
@@ -166,8 +186,8 @@ public class Darc {
      * @param previous
      * @return
      */
-    public boolean VerifyEvolution(Darc previous) throws Exception{
-        if (signature == null){
+    public boolean VerifyEvolution(Darc previous) throws Exception {
+        if (signature == null) {
             return false;
         }
         return signature.Verify(ID(), previous);
@@ -193,6 +213,9 @@ public class Darc {
         if (data != null) {
             b.setDescription(ByteString.copyFrom(data));
         }
+        if (baseid != null) {
+            b.setBaseid(ByteString.copyFrom(baseid));
+        }
         return b.build();
     }
 
@@ -203,6 +226,15 @@ public class Darc {
      */
     public void AddUser(Identity identity) {
         users.add(identity);
+    }
+
+    /**
+     * Adds a user to the list of allowed signers.
+     *
+     * @param darc
+     */
+    public void AddUser(Darc darc) {
+        AddUser(IdentityFactory.New(darc));
     }
 
     /**
@@ -224,6 +256,15 @@ public class Darc {
     }
 
     /**
+     * Adds an owner to the list of allowed signers.
+     *
+     * @param darc
+     */
+    public void AddOwner(Darc darc) {
+        AddOwner(IdentityFactory.New(darc));
+    }
+
+    /**
      * Adds a owner to the list of allowed signers.
      *
      * @param signer
@@ -235,19 +276,34 @@ public class Darc {
     /**
      * Increments the version of this Darc by 1.
      */
-    public void IncVersion(){
+    public void IncVersion() {
         version++;
     }
 
     /**
      * Returns the current version
+     *
      * @return
      */
-    public int GetVersion(){
+    public int GetVersion() {
         return version;
     }
 
-    public boolean equals(Darc d){
+    public String toString(){
+        String ret = String.format("ID: %s\n", DatatypeConverter.printHexBinary(ID()));
+        if (baseid != null) {
+            ret += String.format("BaseID: %s\n", DatatypeConverter.printHexBinary(baseid));
+        }
+        for (Identity i: owners){
+            ret += String.format("owner: %s\n", i.toString());
+        }
+        for (Identity i: users){
+            ret += String.format("user: %s\n", i.toString());
+        }
+        return ret;
+    }
+
+    public boolean equals(Darc d) {
         return Arrays.equals(this.ID(), d.ID());
     }
 }

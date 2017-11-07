@@ -15,13 +15,15 @@ message Darc {
   // 	 Identities who can perform actions (write/read) with data on a skipchain.
   repeated Identity users = 2;
   // 	 Version should be monotonically increasing over the evolution of a Darc.
-  required uint32 version = 3;
+  required sint32 version = 3;
   // 	 Description is a free-form field that can hold any data as required by the user.
   // 	 Darc itself will never depend on any of the data in here.
   optional bytes description = 4;
+  // 	 BaseID is the ID of the first darc of this Series
+  optional bytes baseid = 5;
   // 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
   // 	 and needs to be created by an Owner from the previous valid Darc.
-  optional Signature signature = 5;
+  optional Signature signature = 6;
 }
 
 // Identity is a generic structure can be either an Ed25519 public key or a Darc
@@ -58,7 +60,7 @@ message SignaturePath {
   // 	 the Idenity (public key or another Darc) of the signer
   required Identity signer = 2;
   // 	 Is the signer Owner of a Darc or an user
-  required int32 role = 3;
+  required sint32 role = 3;
 }
 
 // Signer is a generic structure that can hold different types of signers

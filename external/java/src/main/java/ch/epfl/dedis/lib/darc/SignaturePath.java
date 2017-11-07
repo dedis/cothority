@@ -86,6 +86,7 @@ public class SignaturePath {
         int pos = 0;
         for (Darc d : path) {
             System.arraycopy(d.ID(), 0, pathMsg, pos * 32, 32);
+            pos++;
         }
         return pathMsg;
     }
@@ -97,6 +98,20 @@ public class SignaturePath {
             ids.add(d.ID());
         }
         return ids;
+    }
+
+    /**
+     * Returns a copy of the darc-list
+     * @return
+     */
+    public List<Darc> GetDarcs(){
+        List<Darc> darcs = new ArrayList<>();
+        for (Darc d :
+                path) {
+            darcs.add(d);
+        }
+        return darcs;
+
     }
 
     public Identity GetSigner() {

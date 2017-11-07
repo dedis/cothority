@@ -84,6 +84,8 @@ public class DarcSignature {
 
     private byte[] getHash(byte[] msg) throws NoSuchAlgorithmException, IOException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        logger.debug("path: " + DatatypeConverter.printHexBinary(path.GetPathMsg()));
+        logger.debug("msg: " + DatatypeConverter.printHexBinary(msg));
         digest.update(path.GetPathMsg());
         digest.update(msg);
         return digest.digest();

@@ -130,6 +130,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Transaction)
       TransactionOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Transaction.newBuilder() to construct.
     private Transaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -160,8 +161,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -431,7 +432,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -714,7 +714,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -727,12 +727,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -1490,6 +1490,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Write)
       WriteOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Write.newBuilder() to construct.
     private Write(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -1523,8 +1524,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -1813,7 +1814,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -2085,7 +2085,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -2098,12 +2098,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2728,6 +2728,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Read)
       ReadOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Read.newBuilder() to construct.
     private Read(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -2758,8 +2759,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -2978,7 +2979,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -3233,7 +3233,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -3246,12 +3246,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3779,6 +3779,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:ReadDoc)
       ReadDocOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use ReadDoc.newBuilder() to construct.
     private ReadDoc(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -3810,8 +3811,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -3977,7 +3978,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -4221,7 +4221,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -4234,12 +4234,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4579,6 +4579,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:CreateSkipchainsRequest)
       CreateSkipchainsRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use CreateSkipchainsRequest.newBuilder() to construct.
     private CreateSkipchainsRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -4608,8 +4609,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -4762,7 +4763,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -5000,7 +5000,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -5013,12 +5013,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5399,6 +5399,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:CreateSkipchainsReply)
       CreateSkipchainsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use CreateSkipchainsReply.newBuilder() to construct.
     private CreateSkipchainsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -5429,8 +5430,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -5563,7 +5564,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -5792,7 +5792,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -5805,12 +5805,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6103,11 +6103,11 @@ public final class OCSProto {
     ch.epfl.dedis.proto.DarcProto.IdentityOrBuilder getIdentityOrBuilder();
 
     /**
-     * <code>required int32 role = 4;</code>
+     * <code>required sint32 role = 4;</code>
      */
     boolean hasRole();
     /**
-     * <code>required int32 role = 4;</code>
+     * <code>required sint32 role = 4;</code>
      */
     int getRole();
   }
@@ -6123,6 +6123,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetDarcPath)
       GetDarcPathOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetDarcPath.newBuilder() to construct.
     private GetDarcPath(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -6155,8 +6156,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -6186,7 +6187,7 @@ public final class OCSProto {
             }
             case 32: {
               bitField0_ |= 0x00000008;
-              role_ = input.readInt32();
+              role_ = input.readSInt32();
               break;
             }
           }
@@ -6268,13 +6269,13 @@ public final class OCSProto {
     public static final int ROLE_FIELD_NUMBER = 4;
     private int role_;
     /**
-     * <code>required int32 role = 4;</code>
+     * <code>required sint32 role = 4;</code>
      */
     public boolean hasRole() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required int32 role = 4;</code>
+     * <code>required sint32 role = 4;</code>
      */
     public int getRole() {
       return role_;
@@ -6322,7 +6323,7 @@ public final class OCSProto {
         output.writeMessage(3, getIdentity());
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, role_);
+        output.writeSInt32(4, role_);
       }
       unknownFields.writeTo(output);
     }
@@ -6346,14 +6347,13 @@ public final class OCSProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, role_);
+          .computeSInt32Size(4, role_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -6613,7 +6613,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -6626,12 +6626,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6890,19 +6890,19 @@ public final class OCSProto {
 
       private int role_ ;
       /**
-       * <code>required int32 role = 4;</code>
+       * <code>required sint32 role = 4;</code>
        */
       public boolean hasRole() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required int32 role = 4;</code>
+       * <code>required sint32 role = 4;</code>
        */
       public int getRole() {
         return role_;
       }
       /**
-       * <code>required int32 role = 4;</code>
+       * <code>required sint32 role = 4;</code>
        */
       public Builder setRole(int value) {
         bitField0_ |= 0x00000008;
@@ -6911,7 +6911,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required int32 role = 4;</code>
+       * <code>required sint32 role = 4;</code>
        */
       public Builder clearRole() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -7008,6 +7008,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetDarcPathReply)
       GetDarcPathReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetDarcPathReply.newBuilder() to construct.
     private GetDarcPathReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -7038,8 +7039,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -7153,7 +7154,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -7364,7 +7364,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -7377,12 +7377,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7781,6 +7781,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:UpdateDarc)
       UpdateDarcOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use UpdateDarc.newBuilder() to construct.
     private UpdateDarc(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -7811,8 +7812,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -7947,7 +7948,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -8177,7 +8177,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -8190,12 +8190,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -8483,6 +8483,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:UpdateDarcReply)
       UpdateDarcReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use UpdateDarcReply.newBuilder() to construct.
     private UpdateDarcReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -8512,8 +8513,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -8615,7 +8616,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -8831,7 +8831,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -8844,12 +8844,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -9132,6 +9132,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:WriteRequest)
       WriteRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use WriteRequest.newBuilder() to construct.
     private WriteRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -9162,8 +9163,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -9394,7 +9395,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -9675,7 +9675,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -9688,12 +9688,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10232,6 +10232,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:WriteReply)
       WriteReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use WriteReply.newBuilder() to construct.
     private WriteReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -10261,8 +10262,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -10364,7 +10365,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -10578,7 +10578,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -10591,12 +10591,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -10849,6 +10849,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:ReadRequest)
       ReadRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use ReadRequest.newBuilder() to construct.
     private ReadRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -10879,8 +10880,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -11015,7 +11016,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -11244,7 +11244,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -11257,12 +11257,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -11548,6 +11548,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:ReadReply)
       ReadReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use ReadReply.newBuilder() to construct.
     private ReadReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -11577,8 +11578,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -11680,7 +11681,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -11894,7 +11894,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -11907,12 +11907,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12153,6 +12153,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:SharedPublicRequest)
       SharedPublicRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use SharedPublicRequest.newBuilder() to construct.
     private SharedPublicRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -12183,8 +12184,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -12270,7 +12271,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -12476,7 +12476,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -12489,12 +12489,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -12649,6 +12649,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:SharedPublicReply)
       SharedPublicReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use SharedPublicReply.newBuilder() to construct.
     private SharedPublicReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -12679,8 +12680,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -12766,7 +12767,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -12971,7 +12971,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -12984,12 +12984,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13144,6 +13144,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:DecryptKeyRequest)
       DecryptKeyRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use DecryptKeyRequest.newBuilder() to construct.
     private DecryptKeyRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -13174,8 +13175,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -13261,7 +13262,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -13466,7 +13466,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -13479,12 +13479,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -13662,6 +13662,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:DecryptKeyReply)
       DecryptKeyReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use DecryptKeyReply.newBuilder() to construct.
     private DecryptKeyReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -13694,8 +13695,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -13857,7 +13858,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -14091,7 +14091,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -14104,12 +14104,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -14377,11 +14377,11 @@ public final class OCSProto {
     com.google.protobuf.ByteString getStart();
 
     /**
-     * <code>required int32 count = 2;</code>
+     * <code>required sint32 count = 2;</code>
      */
     boolean hasCount();
     /**
-     * <code>required int32 count = 2;</code>
+     * <code>required sint32 count = 2;</code>
      */
     int getCount();
   }
@@ -14396,6 +14396,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetReadRequests)
       GetReadRequestsOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetReadRequests.newBuilder() to construct.
     private GetReadRequests(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -14427,8 +14428,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -14440,7 +14441,7 @@ public final class OCSProto {
             }
             case 16: {
               bitField0_ |= 0x00000002;
-              count_ = input.readInt32();
+              count_ = input.readSInt32();
               break;
             }
           }
@@ -14486,13 +14487,13 @@ public final class OCSProto {
     public static final int COUNT_FIELD_NUMBER = 2;
     private int count_;
     /**
-     * <code>required int32 count = 2;</code>
+     * <code>required sint32 count = 2;</code>
      */
     public boolean hasCount() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required int32 count = 2;</code>
+     * <code>required sint32 count = 2;</code>
      */
     public int getCount() {
       return count_;
@@ -14522,7 +14523,7 @@ public final class OCSProto {
         output.writeBytes(1, start_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, count_);
+        output.writeSInt32(2, count_);
       }
       unknownFields.writeTo(output);
     }
@@ -14538,14 +14539,13 @@ public final class OCSProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, count_);
+          .computeSInt32Size(2, count_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -14765,7 +14765,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -14778,12 +14778,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -14874,19 +14874,19 @@ public final class OCSProto {
 
       private int count_ ;
       /**
-       * <code>required int32 count = 2;</code>
+       * <code>required sint32 count = 2;</code>
        */
       public boolean hasCount() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required int32 count = 2;</code>
+       * <code>required sint32 count = 2;</code>
        */
       public int getCount() {
         return count_;
       }
       /**
-       * <code>required int32 count = 2;</code>
+       * <code>required sint32 count = 2;</code>
        */
       public Builder setCount(int value) {
         bitField0_ |= 0x00000002;
@@ -14895,7 +14895,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required int32 count = 2;</code>
+       * <code>required sint32 count = 2;</code>
        */
       public Builder clearCount() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -14991,6 +14991,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetReadRequestsReply)
       GetReadRequestsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetReadRequestsReply.newBuilder() to construct.
     private GetReadRequestsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -15021,8 +15022,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -15136,7 +15137,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -15346,7 +15346,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -15359,12 +15359,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -15740,6 +15740,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetBunchRequest)
       GetBunchRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetBunchRequest.newBuilder() to construct.
     private GetBunchRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -15768,8 +15769,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -15823,7 +15824,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -16010,7 +16010,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -16023,12 +16023,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -16156,6 +16156,7 @@ public final class OCSProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:GetBunchReply)
       GetBunchReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use GetBunchReply.newBuilder() to construct.
     private GetBunchReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -16186,8 +16187,8 @@ public final class OCSProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -16301,7 +16302,6 @@ public final class OCSProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -16511,7 +16511,7 @@ public final class OCSProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -16524,12 +16524,12 @@ public final class OCSProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -17024,7 +17024,7 @@ public final class OCSProto {
       "Reply\022\027\n\003ocs\030\001 \001(\0132\n.SkipBlock\022\t\n\001x\030\002 \002(" +
       "\014\"Y\n\013GetDarcPath\022\013\n\003ocs\030\001 \002(\014\022\022\n\nbasedar" +
       "cid\030\002 \002(\014\022\033\n\010identity\030\003 \002(\0132\t.Identity\022\014" +
-      "\n\004role\030\004 \002(\005\"\'\n\020GetDarcPathReply\022\023\n\004path" +
+      "\n\004role\030\004 \002(\021\"\'\n\020GetDarcPathReply\022\023\n\004path" +
       "\030\001 \003(\0132\005.Darc\".\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014" +
       "\022\023\n\004darc\030\002 \002(\0132\005.Darc\")\n\017UpdateDarcReply" +
       "\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"i\n\014WriteRequest" +
@@ -17038,7 +17038,7 @@ public final class OCSProto {
       "x\030\001 \002(\014\"!\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002" +
       "(\014\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xha" +
       "tenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadRequests" +
-      "\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\005\"3\n\024GetRea",
+      "\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetRea",
       "dRequestsReply\022\033\n\tdocuments\030\001 \003(\0132\010.Read" +
       "Doc\"\021\n\017GetBunchRequest\",\n\rGetBunchReply\022" +
       "\033\n\007bunches\030\001 \003(\0132\n.SkipBlockB\037\n\023ch.epfl." +

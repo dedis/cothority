@@ -42,7 +42,9 @@ function print_field( optional, typ, name, ind ){
 	sub(/^ID$/, "bytes", typ)
 	sub(/^SkipBlockID$/, "bytes", typ)
 	sub(/^Role$/, "int", typ)
-	sub(/^int$/, "int32", typ)
+	sub(/^int32$/, "sint32", typ)
+	sub(/^int64$/, "sint64", typ)
+	sub(/^int$/, "sint32", typ)
 	sub(/^\*/, "", typ)
 	print sprintf("  %s %s %s = %d;", optional, typ, tolower(name), ind )
 }

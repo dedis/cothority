@@ -42,6 +42,7 @@ func NewDarc(owners *[]*Identity, users *[]*Identity, desc []byte) *Darc {
 func (d *Darc) Copy() *Darc {
 	dCopy := &Darc{
 		Version: d.Version,
+		BaseID:  d.BaseID,
 	}
 	if d.Owners != nil {
 		owners := append([]*Identity{}, *d.Owners...)
@@ -94,6 +95,15 @@ func (d *Darc) GetID() ID {
 	}
 	hash := h.Sum(nil)
 	return ID(hash)
+}
+
+// GetBaseID returns the base ID or the ID of this darc if its the
+// first darc.
+func (d *Darc) GetBaseID() ID {
+	if d.BaseID == nil {
+		return d.GetID()
+	}
+	return *d.BaseID
 }
 
 // AddUser adds a given user to the list of Users in the Darc
@@ -154,6 +164,10 @@ func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) 
 	if pth == nil {
 		prevOwnerID := Identity{Ed25519: &IdentityEd25519{Point: prevOwner.Ed25519.Point}}
 		pth = NewSignaturePath([]*Darc{prevd}, prevOwnerID, Owner)
+	}
+	if prevd.BaseID == nil {
+		id := prevd.GetID()
+		d.BaseID = &id
 	}
 	sig, err := NewDarcSignature(d.GetID(), pth, prevOwner)
 	if err != nil {
@@ -244,7 +258,8 @@ func (ds *Signature) Verify(msg []byte, base *Darc) error {
 	if ds.SignaturePath.Darcs == nil || len(*ds.SignaturePath.Darcs) == 0 {
 		return errors.New("No path stored in signaturepath")
 	}
-	if bytes.Compare((*ds.SignaturePath.Darcs)[0].GetID(), base.GetID()) != 0 {
+	sigBase := (*ds.SignaturePath.Darcs)[0].GetID()
+	if !sigBase.Equal(base.GetID()) {
 		return errors.New("Base-darc is not at root of path")
 	}
 	hash, err := sigHash(&ds.SignaturePath, msg)
@@ -311,6 +326,7 @@ func (sigpath *SignaturePath) Verify(role Role) error {
 				return errors.New("found incorrect darc in chain")
 			}
 			if latest != nil {
+				log.Lvlf2("Verifying evolution from %x", d.GetID())
 				if err := d.Verify(); err != nil {
 					return errors.New("not correct evolution of darcs in path: " + err.Error())
 				}

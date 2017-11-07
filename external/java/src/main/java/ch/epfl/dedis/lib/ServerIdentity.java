@@ -53,7 +53,7 @@ public class ServerIdentity {
         if (msg.ok) {
             return StatusProto.Response.parseFrom(msg.response);
         } else {
-            System.out.println(msg.error);
+            logger.warn("error sending message: " + msg.error);
         }
 
         return null;
@@ -118,7 +118,7 @@ public class ServerIdentity {
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    System.out.println("closed connection: " + reason);
+                    logger.warn("closed connection: " + reason);
                     statusLatch.countDown();
                 }
 
@@ -141,7 +141,7 @@ public class ServerIdentity {
         public class ErrorSendMessage extends Exception {
             public ErrorSendMessage(String message) {
                 super(message);
-                System.out.println(message);
+                logger.warn("error while sending message: " + message);
             }
         }
 

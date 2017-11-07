@@ -66,10 +66,10 @@ func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
 	}
 }
 
-// NewDataOCS returns a pointer to a DataOCS structure created from
+// NewOCS returns a pointer to a DataOCS structure created from
 // the given data-slice. If the slice is not a valid DataOCS-structure,
 // nil is returned.
-func NewDataOCS(b []byte) *Transaction {
+func NewOCS(b []byte) *Transaction {
 	dw := &Transaction{}
 	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(network.Suite))
 	if err != nil {

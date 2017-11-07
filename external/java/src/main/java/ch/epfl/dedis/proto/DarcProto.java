@@ -111,7 +111,7 @@ public final class DarcProto {
      * 	 Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
-     * <code>required uint32 version = 3;</code>
+     * <code>required sint32 version = 3;</code>
      */
     boolean hasVersion();
     /**
@@ -119,7 +119,7 @@ public final class DarcProto {
      * 	 Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
-     * <code>required uint32 version = 3;</code>
+     * <code>required sint32 version = 3;</code>
      */
     int getVersion();
 
@@ -144,11 +144,28 @@ public final class DarcProto {
 
     /**
      * <pre>
+     * 	 BaseID is the ID of the first darc of this Series
+     * </pre>
+     *
+     * <code>optional bytes baseid = 5;</code>
+     */
+    boolean hasBaseid();
+    /**
+     * <pre>
+     * 	 BaseID is the ID of the first darc of this Series
+     * </pre>
+     *
+     * <code>optional bytes baseid = 5;</code>
+     */
+    com.google.protobuf.ByteString getBaseid();
+
+    /**
+     * <pre>
      * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     boolean hasSignature();
     /**
@@ -157,7 +174,7 @@ public final class DarcProto {
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     ch.epfl.dedis.proto.DarcProto.Signature getSignature();
     /**
@@ -166,7 +183,7 @@ public final class DarcProto {
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder();
   }
@@ -182,6 +199,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Darc)
       DarcOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Darc.newBuilder() to construct.
     private Darc(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -191,6 +209,7 @@ public final class DarcProto {
       users_ = java.util.Collections.emptyList();
       version_ = 0;
       description_ = com.google.protobuf.ByteString.EMPTY;
+      baseid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -215,8 +234,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -241,7 +260,7 @@ public final class DarcProto {
             }
             case 24: {
               bitField0_ |= 0x00000001;
-              version_ = input.readUInt32();
+              version_ = input.readSInt32();
               break;
             }
             case 34: {
@@ -250,8 +269,13 @@ public final class DarcProto {
               break;
             }
             case 42: {
+              bitField0_ |= 0x00000004;
+              baseid_ = input.readBytes();
+              break;
+            }
+            case 50: {
               ch.epfl.dedis.proto.DarcProto.Signature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = signature_.toBuilder();
               }
               signature_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signature.PARSER, extensionRegistry);
@@ -259,7 +283,7 @@ public final class DarcProto {
                 subBuilder.mergeFrom(signature_);
                 signature_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000004;
+              bitField0_ |= 0x00000008;
               break;
             }
           }
@@ -410,7 +434,7 @@ public final class DarcProto {
      * 	 Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
-     * <code>required uint32 version = 3;</code>
+     * <code>required sint32 version = 3;</code>
      */
     public boolean hasVersion() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -420,7 +444,7 @@ public final class DarcProto {
      * 	 Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
-     * <code>required uint32 version = 3;</code>
+     * <code>required sint32 version = 3;</code>
      */
     public int getVersion() {
       return version_;
@@ -451,7 +475,30 @@ public final class DarcProto {
       return description_;
     }
 
-    public static final int SIGNATURE_FIELD_NUMBER = 5;
+    public static final int BASEID_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString baseid_;
+    /**
+     * <pre>
+     * 	 BaseID is the ID of the first darc of this Series
+     * </pre>
+     *
+     * <code>optional bytes baseid = 5;</code>
+     */
+    public boolean hasBaseid() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * 	 BaseID is the ID of the first darc of this Series
+     * </pre>
+     *
+     * <code>optional bytes baseid = 5;</code>
+     */
+    public com.google.protobuf.ByteString getBaseid() {
+      return baseid_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 6;
     private ch.epfl.dedis.proto.DarcProto.Signature signature_;
     /**
      * <pre>
@@ -459,10 +506,10 @@ public final class DarcProto {
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     public boolean hasSignature() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <pre>
@@ -470,7 +517,7 @@ public final class DarcProto {
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
@@ -481,7 +528,7 @@ public final class DarcProto {
      * 	 and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 5;</code>
+     * <code>optional .Signature signature = 6;</code>
      */
     public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
@@ -528,13 +575,16 @@ public final class DarcProto {
         output.writeMessage(2, users_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeUInt32(3, version_);
+        output.writeSInt32(3, version_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(4, description_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeMessage(5, getSignature());
+        output.writeBytes(5, baseid_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(6, getSignature());
       }
       unknownFields.writeTo(output);
     }
@@ -554,7 +604,7 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(3, version_);
+          .computeSInt32Size(3, version_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -562,14 +612,17 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, getSignature());
+          .computeBytesSize(5, baseid_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, getSignature());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -594,6 +647,11 @@ public final class DarcProto {
       if (hasDescription()) {
         result = result && getDescription()
             .equals(other.getDescription());
+      }
+      result = result && (hasBaseid() == other.hasBaseid());
+      if (hasBaseid()) {
+        result = result && getBaseid()
+            .equals(other.getBaseid());
       }
       result = result && (hasSignature() == other.hasSignature());
       if (hasSignature()) {
@@ -626,6 +684,10 @@ public final class DarcProto {
       if (hasDescription()) {
         hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
         hash = (53 * hash) + getDescription().hashCode();
+      }
+      if (hasBaseid()) {
+        hash = (37 * hash) + BASEID_FIELD_NUMBER;
+        hash = (53 * hash) + getBaseid().hashCode();
       }
       if (hasSignature()) {
         hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
@@ -784,12 +846,14 @@ public final class DarcProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         description_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        baseid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         if (signatureBuilder_ == null) {
           signature_ = null;
         } else {
           signatureBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -843,6 +907,10 @@ public final class DarcProto {
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000004;
         }
+        result.baseid_ = baseid_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000008;
+        }
         if (signatureBuilder_ == null) {
           result.signature_ = signature_;
         } else {
@@ -858,7 +926,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -871,12 +939,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -947,6 +1015,9 @@ public final class DarcProto {
         }
         if (other.hasDescription()) {
           setDescription(other.getDescription());
+        }
+        if (other.hasBaseid()) {
+          setBaseid(other.getBaseid());
         }
         if (other.hasSignature()) {
           mergeSignature(other.getSignature());
@@ -1627,7 +1698,7 @@ public final class DarcProto {
        * 	 Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
-       * <code>required uint32 version = 3;</code>
+       * <code>required sint32 version = 3;</code>
        */
       public boolean hasVersion() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -1637,7 +1708,7 @@ public final class DarcProto {
        * 	 Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
-       * <code>required uint32 version = 3;</code>
+       * <code>required sint32 version = 3;</code>
        */
       public int getVersion() {
         return version_;
@@ -1647,7 +1718,7 @@ public final class DarcProto {
        * 	 Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
-       * <code>required uint32 version = 3;</code>
+       * <code>required sint32 version = 3;</code>
        */
       public Builder setVersion(int value) {
         bitField0_ |= 0x00000004;
@@ -1660,7 +1731,7 @@ public final class DarcProto {
        * 	 Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
-       * <code>required uint32 version = 3;</code>
+       * <code>required sint32 version = 3;</code>
        */
       public Builder clearVersion() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -1724,6 +1795,57 @@ public final class DarcProto {
         return this;
       }
 
+      private com.google.protobuf.ByteString baseid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 BaseID is the ID of the first darc of this Series
+       * </pre>
+       *
+       * <code>optional bytes baseid = 5;</code>
+       */
+      public boolean hasBaseid() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * 	 BaseID is the ID of the first darc of this Series
+       * </pre>
+       *
+       * <code>optional bytes baseid = 5;</code>
+       */
+      public com.google.protobuf.ByteString getBaseid() {
+        return baseid_;
+      }
+      /**
+       * <pre>
+       * 	 BaseID is the ID of the first darc of this Series
+       * </pre>
+       *
+       * <code>optional bytes baseid = 5;</code>
+       */
+      public Builder setBaseid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        baseid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 BaseID is the ID of the first darc of this Series
+       * </pre>
+       *
+       * <code>optional bytes baseid = 5;</code>
+       */
+      public Builder clearBaseid() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        baseid_ = getDefaultInstance().getBaseid();
+        onChanged();
+        return this;
+      }
+
       private ch.epfl.dedis.proto.DarcProto.Signature signature_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> signatureBuilder_;
@@ -1733,10 +1855,10 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public boolean hasSignature() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <pre>
@@ -1744,7 +1866,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -1759,7 +1881,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -1771,7 +1893,7 @@ public final class DarcProto {
         } else {
           signatureBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -1780,7 +1902,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcProto.Signature.Builder builderForValue) {
@@ -1790,7 +1912,7 @@ public final class DarcProto {
         } else {
           signatureBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -1799,11 +1921,11 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
         if (signatureBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000020) == 0x00000020) &&
               signature_ != null &&
               signature_ != ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance()) {
             signature_ =
@@ -1815,7 +1937,7 @@ public final class DarcProto {
         } else {
           signatureBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         return this;
       }
       /**
@@ -1824,7 +1946,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -1833,7 +1955,7 @@ public final class DarcProto {
         } else {
           signatureBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
       /**
@@ -1842,10 +1964,10 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.Signature.Builder getSignatureBuilder() {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         onChanged();
         return getSignatureFieldBuilder().getBuilder();
       }
@@ -1855,7 +1977,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -1871,7 +1993,7 @@ public final class DarcProto {
        * 	 and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 5;</code>
+       * <code>optional .Signature signature = 6;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> 
@@ -2000,6 +2122,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Identity)
       IdentityOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Identity.newBuilder() to construct.
     private Identity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -2029,8 +2152,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -2203,7 +2326,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -2441,7 +2563,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -2454,12 +2576,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -2897,6 +3019,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:IdentityEd25519)
       IdentityEd25519OrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use IdentityEd25519.newBuilder() to construct.
     private IdentityEd25519(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -2927,8 +3050,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -3014,7 +3137,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -3219,7 +3341,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -3232,12 +3354,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3392,6 +3514,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:IdentityDarc)
       IdentityDarcOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use IdentityDarc.newBuilder() to construct.
     private IdentityDarc(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -3422,8 +3545,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -3509,7 +3632,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -3714,7 +3836,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -3727,12 +3849,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -3921,6 +4043,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Signature)
       SignatureOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Signature.newBuilder() to construct.
     private Signature(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -3951,8 +4074,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -4107,7 +4230,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -4337,7 +4459,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -4350,12 +4472,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -4743,7 +4865,7 @@ public final class DarcProto {
      * 	 Is the signer Owner of a Darc or an user
      * </pre>
      *
-     * <code>required int32 role = 3;</code>
+     * <code>required sint32 role = 3;</code>
      */
     boolean hasRole();
     /**
@@ -4751,7 +4873,7 @@ public final class DarcProto {
      * 	 Is the signer Owner of a Darc or an user
      * </pre>
      *
-     * <code>required int32 role = 3;</code>
+     * <code>required sint32 role = 3;</code>
      */
     int getRole();
   }
@@ -4766,6 +4888,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:SignaturePath)
       SignaturePathOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use SignaturePath.newBuilder() to construct.
     private SignaturePath(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -4797,8 +4920,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -4827,7 +4950,7 @@ public final class DarcProto {
             }
             case 24: {
               bitField0_ |= 0x00000002;
-              role_ = input.readInt32();
+              role_ = input.readSInt32();
               break;
             }
           }
@@ -4953,7 +5076,7 @@ public final class DarcProto {
      * 	 Is the signer Owner of a Darc or an user
      * </pre>
      *
-     * <code>required int32 role = 3;</code>
+     * <code>required sint32 role = 3;</code>
      */
     public boolean hasRole() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
@@ -4963,7 +5086,7 @@ public final class DarcProto {
      * 	 Is the signer Owner of a Darc or an user
      * </pre>
      *
-     * <code>required int32 role = 3;</code>
+     * <code>required sint32 role = 3;</code>
      */
     public int getRole() {
       return role_;
@@ -5006,7 +5129,7 @@ public final class DarcProto {
         output.writeMessage(2, getSigner());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(3, role_);
+        output.writeSInt32(3, role_);
       }
       unknownFields.writeTo(output);
     }
@@ -5026,14 +5149,13 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, role_);
+          .computeSInt32Size(3, role_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -5284,7 +5406,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -5297,12 +5419,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -5862,7 +5984,7 @@ public final class DarcProto {
        * 	 Is the signer Owner of a Darc or an user
        * </pre>
        *
-       * <code>required int32 role = 3;</code>
+       * <code>required sint32 role = 3;</code>
        */
       public boolean hasRole() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -5872,7 +5994,7 @@ public final class DarcProto {
        * 	 Is the signer Owner of a Darc or an user
        * </pre>
        *
-       * <code>required int32 role = 3;</code>
+       * <code>required sint32 role = 3;</code>
        */
       public int getRole() {
         return role_;
@@ -5882,7 +6004,7 @@ public final class DarcProto {
        * 	 Is the signer Owner of a Darc or an user
        * </pre>
        *
-       * <code>required int32 role = 3;</code>
+       * <code>required sint32 role = 3;</code>
        */
       public Builder setRole(int value) {
         bitField0_ |= 0x00000004;
@@ -5895,7 +6017,7 @@ public final class DarcProto {
        * 	 Is the signer Owner of a Darc or an user
        * </pre>
        *
-       * <code>required int32 role = 3;</code>
+       * <code>required sint32 role = 3;</code>
        */
       public Builder clearRole() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -5981,6 +6103,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Signer)
       SignerOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Signer.newBuilder() to construct.
     private Signer(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -6010,8 +6133,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -6113,7 +6236,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -6328,7 +6450,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -6341,12 +6463,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -6595,6 +6717,7 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3 implements
       // @@protoc_insertion_point(message_implements:Ed25519Signer)
       Ed25519SignerOrBuilder {
+  private static final long serialVersionUID = 0L;
     // Use Ed25519Signer.newBuilder() to construct.
     private Ed25519Signer(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
@@ -6626,8 +6749,8 @@ public final class DarcProto {
               done = true;
               break;
             default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
               break;
@@ -6744,7 +6867,6 @@ public final class DarcProto {
       return size;
     }
 
-    private static final long serialVersionUID = 0L;
     @java.lang.Override
     public boolean equals(final java.lang.Object obj) {
       if (obj == this) {
@@ -6964,7 +7086,7 @@ public final class DarcProto {
       }
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
       public Builder clearField(
@@ -6977,12 +7099,12 @@ public final class DarcProto {
       }
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, Object value) {
+          int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
-          Object value) {
+          java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -7203,20 +7325,21 @@ public final class DarcProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\ndarc.proto\"\200\001\n\004Darc\022\031\n\006owners\030\001 \003(\0132\t." +
+      "\n\ndarc.proto\"\220\001\n\004Darc\022\031\n\006owners\030\001 \003(\0132\t." +
       "Identity\022\030\n\005users\030\002 \003(\0132\t.Identity\022\017\n\007ve" +
-      "rsion\030\003 \002(\r\022\023\n\013description\030\004 \001(\014\022\035\n\tsign" +
-      "ature\030\005 \001(\0132\n.Signature\"J\n\010Identity\022\033\n\004d" +
-      "arc\030\001 \001(\0132\r.IdentityDarc\022!\n\007ed25519\030\002 \001(" +
-      "\0132\020.IdentityEd25519\" \n\017IdentityEd25519\022\r" +
-      "\n\005point\030\001 \002(\014\"\032\n\014IdentityDarc\022\n\n\002id\030\001 \002(" +
-      "\014\"E\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022%\n\rsig" +
-      "naturepath\030\002 \002(\0132\016.SignaturePath\"N\n\rSign" +
-      "aturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n\006signe",
-      "r\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\005\")\n\006Sign" +
-      "er\022\037\n\007ed25519\030\001 \001(\0132\016.Ed25519Signer\".\n\rE" +
-      "d25519Signer\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 " +
-      "\002(\014B \n\023ch.epfl.dedis.protoB\tDarcProto"
+      "rsion\030\003 \002(\021\022\023\n\013description\030\004 \001(\014\022\016\n\006base" +
+      "id\030\005 \001(\014\022\035\n\tsignature\030\006 \001(\0132\n.Signature\"" +
+      "J\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityDarc" +
+      "\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\" \n\017I" +
+      "dentityEd25519\022\r\n\005point\030\001 \002(\014\"\032\n\014Identit" +
+      "yDarc\022\n\n\002id\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignat" +
+      "ure\030\001 \002(\014\022%\n\rsignaturepath\030\002 \002(\0132\016.Signa" +
+      "turePath\"N\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\013",
+      "2\005.Darc\022\031\n\006signer\030\002 \002(\0132\t.Identity\022\014\n\004ro" +
+      "le\030\003 \002(\021\")\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed" +
+      "25519Signer\".\n\rEd25519Signer\022\r\n\005point\030\001 " +
+      "\002(\014\022\016\n\006secret\030\002 \002(\014B \n\023ch.epfl.dedis.pro" +
+      "toB\tDarcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7235,7 +7358,7 @@ public final class DarcProto {
     internal_static_Darc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Darc_descriptor,
-        new java.lang.String[] { "Owners", "Users", "Version", "Description", "Signature", });
+        new java.lang.String[] { "Owners", "Users", "Version", "Description", "Baseid", "Signature", });
     internal_static_Identity_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_Identity_fieldAccessorTable = new

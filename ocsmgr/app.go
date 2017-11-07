@@ -278,7 +278,7 @@ func scread(c *cli.Context) error {
 	}
 	log.Printf("SkipblockID (Hash): %x", sb.Hash)
 	log.Printf("Index: %d", sb.Index)
-	ocs := ocs.NewDataOCS(sb.Data)
+	ocs := ocs.NewOCS(sb.Data)
 	if ocs == nil {
 		return errors.New("wrong data in skipblock")
 	}

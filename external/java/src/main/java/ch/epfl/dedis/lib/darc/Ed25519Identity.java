@@ -53,6 +53,10 @@ public class Ed25519Identity implements Identity {
         return bid.build();
     }
 
+    public String toString(){
+        return pub.toString();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == null) return false;

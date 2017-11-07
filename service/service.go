@@ -55,8 +55,13 @@ type Service struct {
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
 	OCSs     *ocs.SBBStorage
-	Accounts map[string]*darc.Darc
+	Accounts map[string]Darcs
 	Shared   map[string]*protocol.SharedSecret
+}
+
+// Darcs holds a series of darcs in increasing, succeeding version numbers.
+type Darcs struct {
+	Darcs []*darc.Darc
 }
 
 // CreateSkipchains sets up a new OCS-skipchain.
@@ -67,7 +72,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	c := skipchain.NewClient()
 	reply = &ocs.CreateSkipchainsReply{}
 
-	log.Lvl2("Creating OCS-skipchain")
+	log.Lvlf2("Creating OCS-skipchain with darc %x", req.Writers.GetID())
 	reply.OCS, cerr = c.CreateGenesis(&req.Roster, 1, 1, ocs.VerificationOCS, nil, nil)
 	if cerr != nil {
 		return nil, cerr
@@ -106,16 +111,19 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 			"dkg didn't finish in time")
 	}
 
+	s.addDarc(&req.Writers)
 	return
 }
 
 // UpdateDarc adds a new account or modifies an existing one.
 func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	cerr onet.ClientError) {
-	if _, exists := s.Storage.Accounts[string(req.Darc.GetID())]; exists {
-		log.Lvl2("Modifying existing account")
-	} else {
-		log.Lvl2("Adding new account")
+	if _, exists := s.getDarc(req.Darc.GetID()); exists {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "cannot store darc again")
+	}
+	latest := s.getLatestDarc(req.Darc.GetBaseID())
+	if latest != nil && latest.Version >= req.Darc.Version {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "cannot store darc with lower or equal version")
 	}
 	if err := req.Darc.Verify(); err != nil {
 		log.Lvl2("Error when checking signature:", err)
@@ -135,26 +143,126 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	if cerr != nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
-	s.Storage.Accounts[string(req.Darc.GetID())] = &req.Darc
+	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
+	s.addDarc(&req.Darc)
 	s.save()
 	return &ocs.UpdateDarcReply{SB: sb}, nil
+}
+
+func (s *Service) addDarc(d *darc.Darc) {
+	key := string(d.GetBaseID())
+	darcs := s.Storage.Accounts[key]
+	darcs.Darcs = append(darcs.Darcs, d)
+	s.Storage.Accounts[key] = darcs
+}
+
+func (s *Service) getDarc(id darc.ID) (*darc.Darc, bool) {
+	for _, darcs := range s.Storage.Accounts {
+		for _, d := range darcs.Darcs {
+			if d.GetID().Equal(id) {
+				return d, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func (s *Service) getLatestDarc(genesisID darc.ID) *darc.Darc {
+	darcs := s.Storage.Accounts[string(genesisID)]
+	if len(darcs.Darcs) == 0 {
+		return nil
+	}
+	return darcs.Darcs[len(darcs.Darcs)-1]
 }
 
 // GetDarcPath returns the latest valid Darc given its identity.
 func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
 	cerr onet.ClientError) {
-	log.Lvlf2("Making darc path for %x %v %d", req.BaseDarcID, req.Identity, req.Role)
-	d, exists := s.Storage.Accounts[string(req.BaseDarcID)]
+	d, exists := s.getDarc(req.BaseDarcID)
 	if !exists {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
 	}
-	darcs := map[string]*darc.Darc{}
-	delete(darcs, string(d.GetID()))
-	reply = &ocs.GetDarcPathReply{}
-	// for _, d := range darcs {
-	// reply.Darc = append(reply.Darc, d)
-	// }
-	return
+	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
+	log.Lvlf3("%#v", path)
+	if len(path) == 0 {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find a path to the given identity")
+	}
+	return &ocs.GetDarcPathReply{Path: &path}, nil
+}
+
+// printPath is a debugging function to print the
+// path of darcs.
+func (s *Service) printPath(path []darc.Darc) {
+	for i, d := range path {
+		log.Lvlf1("path[%d] = %x - %s", i, d.GetID(), (*d.Owners)[0].Ed25519.Point)
+		if d.BaseID != nil {
+			log.Lvlf1("baseid: %x", *d.BaseID)
+		}
+		if d.Owners != nil {
+			for ui, u := range *d.Owners {
+				if u.Ed25519 != nil {
+					log.Lvlf1("owner[%d] = %s", ui, u.Ed25519.Point)
+				}
+			}
+		}
+		if d.Users != nil {
+			for ui, u := range *d.Users {
+				if u.Ed25519 != nil {
+					log.Lvlf1("user[%d] = %s", ui, u.Ed25519.Point)
+				}
+			}
+		}
+	}
+}
+
+// searchPath does a breadth-first search of a path going from the last element
+// of path to the identity. It starts by first getting the latest darc-version,
+// then searching all sub-darcs.
+func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc.Role) []darc.Darc {
+	newpath := make([]darc.Darc, len(path))
+	copy(newpath, path)
+
+	// Any role deeper in the tree must be a user role.
+	if role == darc.Owner && len(path) > 1 {
+		role = darc.User
+	}
+	d := &path[len(path)-1]
+
+	// First get latest version
+	for _, di := range s.Storage.Accounts[string(d.GetBaseID())].Darcs {
+		if di.Version > d.Version {
+			newpath = append(newpath, *di)
+			d = di
+		}
+	}
+
+	// Then search for identity
+	ids := d.Users
+	if role == darc.Owner {
+		ids = d.Owners
+	}
+	// First search the identity
+	for _, id := range *ids {
+		if id.Ed25519 != nil {
+			if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
+				return newpath
+			}
+		}
+	}
+	// Then search sub-darcs
+	for _, id := range *ids {
+		if id.Darc != nil {
+			d, found := s.getDarc(id.Darc.ID)
+			if !found {
+				log.Lvlf1("Got unknown darc-id in path - ignoring: ", id.Darc.ID)
+			}
+			newpath = append(newpath, *d)
+			if np := s.searchPath(newpath, identity, role); np != nil {
+				return np
+			}
+		}
+	}
+	return nil
 }
 
 // WriteRequest adds a block the OCS-skipchain with a new file.
@@ -229,6 +337,17 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	if block == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
+	blockData := ocs.NewOCS(ocsBunch.GetByID(req.Read.DataID).Data)
+	if blockData == nil || blockData.Write == nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Not an ocs-write block")
+	}
+	log.Lvlf2("Document reader is %x", blockData.Write.Reader.GetID())
+	if err := req.Read.Signature.SignaturePath.Verify(darc.User); err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "signature by wrong identity: "+err.Error())
+	}
+	if err := req.Read.Signature.Verify(req.Read.DataID, &blockData.Write.Reader); err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature: "+err.Error())
+	}
 	dataOCS := &ocs.Transaction{
 		Read: &req.Read,
 	}
@@ -276,7 +395,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 	}
 	var doc skipchain.SkipBlockID
 	if req.Count == 0 {
-		dataOCS := ocs.NewDataOCS(current.Data)
+		dataOCS := ocs.NewOCS(current.Data)
 		if dataOCS == nil || dataOCS.Write == nil {
 			log.Error("Didn't find this writeID")
 			return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
@@ -288,7 +407,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 	for req.Count == 0 || len(reply.Documents) < req.Count {
 		if current.Index > 0 {
 			// Search next read-request
-			dataOCS := ocs.NewDataOCS(current.Data)
+			dataOCS := ocs.NewOCS(current.Data)
 			if dataOCS == nil {
 				return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
 					"unknown block in ocs-skipchain")
@@ -344,12 +463,12 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
 	readSB := s.Storage.OCSs.GetByID(req.Read)
-	read := ocs.NewDataOCS(readSB.Data)
+	read := ocs.NewOCS(readSB.Data)
 	if read == nil || read.Read == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "This is not a read-block")
 	}
 	fileSB := s.Storage.OCSs.GetByID(read.Read.DataID)
-	file := ocs.NewDataOCS(fileSB.Data)
+	file := ocs.NewOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Data-block is broken")
 	}
@@ -476,7 +595,7 @@ func (s *Service) darcRecursive(storage map[string]*darc.Darc, search darc.ID) {
 
 func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 	log.Lvl3(s.ServerIdentity(), "Verifying ocs")
-	dataOCS := ocs.NewDataOCS(sb.Data)
+	dataOCS := ocs.NewOCS(sb.Data)
 	if dataOCS == nil {
 		log.Lvl3("Didn't find ocs")
 		return false
@@ -488,7 +607,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		log.Lvl3("No genesis-block")
 		return false
 	}
-	ocsData := ocs.NewDataOCS(genesis.Data)
+	ocsData := ocs.NewOCS(genesis.Data)
 	if ocsData == nil {
 		log.Lvl3("No ocs-data in genesis-block")
 		return false
@@ -505,7 +624,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		var writeBlock *ocs.Write
 		var readersBlock *darc.Darc
 		for _, sb := range s.Storage.OCSs.GetBunch(genesis.Hash).SkipBlocks {
-			wd := ocs.NewDataOCS(sb.Data)
+			wd := ocs.NewOCS(sb.Data)
 			if wd != nil && wd.Write != nil {
 				if bytes.Compare(sb.Hash, read.DataID) == 0 {
 					writeBlock = wd.Write
@@ -547,7 +666,7 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 		log.Error("got something else than a skipblock")
 		return
 	}
-	dataOCS := ocs.NewDataOCS(sb.Data)
+	dataOCS := ocs.NewOCS(sb.Data)
 	if dataOCS == nil {
 		log.Error("Got a skipblock without dataOCS - not storing")
 		return
@@ -556,7 +675,7 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	s.Storage.OCSs.Store(sb)
 	if r := dataOCS.Darc; r != nil {
 		log.Lvlf2("Storing new readers %x", r.GetID())
-		s.Storage.Accounts[string(r.GetID())] = r
+		s.addDarc(r)
 	}
 	s.saveMutex.Unlock()
 	if sb.Index == 0 {
@@ -603,7 +722,7 @@ func (s *Service) tryLoad() error {
 			s.Storage.Shared = map[string]*protocol.SharedSecret{}
 		}
 		if len(s.Storage.Accounts) == 0 {
-			s.Storage.Accounts = map[string]*darc.Darc{}
+			s.Storage.Accounts = map[string]Darcs{}
 		}
 	}()
 	s.saveMutex.Lock()

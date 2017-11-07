@@ -6,10 +6,10 @@ public class IdentityFactory {
     /**
      * Returns an instantiated identity that is stored in proto.
      */
-    public static Identity New(DarcProto.Identity proto) throws Exception{
-        if (proto.hasEd25519()){
+    public static Identity New(DarcProto.Identity proto) throws Exception {
+        if (proto.hasEd25519()) {
             return new Ed25519Identity(proto.getEd25519());
-        } else if (proto.hasDarc()){
+        } else if (proto.hasDarc()) {
             return new DarcIdentity(proto.getDarc());
         } else {
             throw new Exception("No identity present");
@@ -21,11 +21,20 @@ public class IdentityFactory {
      *
      * @param signer
      */
-    public static Identity New(Signer signer) throws Exception{
-        if (Ed25519Signer.class.isInstance(signer)){
+    public static Identity New(Signer signer) throws Exception {
+        if (Ed25519Signer.class.isInstance(signer)) {
             return new Ed25519Identity(signer);
         } else {
             throw new Exception("Cannot make Identity out of " + signer.toString());
         }
+    }
+
+    /**
+     * Creates the corresponding identity to a darc.
+     *
+     * @param darc
+     */
+    public static Identity New(Darc darc) {
+        return new DarcIdentity(darc);
     }
 }

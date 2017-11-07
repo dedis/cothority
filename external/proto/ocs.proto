@@ -86,7 +86,7 @@ message GetDarcPath {
   required bytes ocs = 1;
   required bytes basedarcid = 2;
   required Identity identity = 3;
-  required int32 role = 4;
+  required sint32 role = 4;
 }
 
 // GetDarcPathReply returns the shortest path to prove that the identity
@@ -164,7 +164,7 @@ message DecryptKeyReply {
 // GetReadRequests asks for a list of requests
 message GetReadRequests {
   required bytes start = 1;
-  required int32 count = 2;
+  required sint32 count = 2;
 }
 
 // GetReadRequestsReply returns the requests
