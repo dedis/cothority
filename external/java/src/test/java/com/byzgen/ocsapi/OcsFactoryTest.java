@@ -80,7 +80,7 @@ class OcsFactoryTest {
         assertThat(exception.getMessage(), containsString("Genesis value is too short"));
     }
 
-    @Test
+//    @Test
     public void shouldInitialiseSkipChain() throws Exception {
         OcsFactory ocsFactory = new OcsFactory();
 
@@ -95,7 +95,7 @@ class OcsFactoryTest {
         assertThat(genesis, not(isEmptyOrNullString()));
     }
 
-    @Test
+//    @Test
     public void shouldCreateConnectionToExistingChain() throws Exception {
         // given
         final String genesis = createSkipChainForTest();
