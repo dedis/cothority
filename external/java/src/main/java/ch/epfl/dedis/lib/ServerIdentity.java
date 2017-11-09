@@ -133,6 +133,8 @@ public class ServerIdentity {
             ws.connect();
             // wait for error or message returned.
             statusLatch.await();
+            // close the connection.
+            ws.close();
             if (!ok) {
                 throw new ErrorSendMessage(error);
             }
