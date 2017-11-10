@@ -6,9 +6,7 @@ import (
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/crypto.v0/share/dkg"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 // EncodeKey can be used by the writer to an onchain-secret skipchain
@@ -57,7 +55,6 @@ func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.P
 func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
 	xc abstract.Scalar) (key []byte, err error) {
 	xcInv := suite.Scalar().Neg(xc)
-	sum := suite.Scalar().Add(xc, xcInv)
 	XhatDec := suite.Point().Mul(X, xcInv)
 	Xhat := suite.Point().Add(XhatEnc, XhatDec)
 	XhatInv := suite.Point().Neg(Xhat)
