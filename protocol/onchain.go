@@ -26,23 +26,16 @@ import (
 //   - U - the schnorr commit
 //   - Cs - encrypted key-slices
 func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.Point, Cs []abstract.Point) {
-	//r := suite.Scalar().Pick(random.Stream)
-	r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
-	log.ErrFatal(err)
+	r := suite.Scalar().Pick(random.Stream)
 	U = suite.Point().Mul(nil, r)
-	log.Lvl3("U is:", U.String())
 
 	rem := make([]byte, len(key))
 	copy(rem, key)
 	for len(rem) > 0 {
 		var kp abstract.Point
 		kp, rem = suite.Point().Pick(rem, random.Stream)
-		log.Lvl3("Keypoint:", kp.String())
 		C := suite.Point().Mul(X, r)
-		log.Lvl3("X:", X.String())
-		log.Lvl3("C:", C.String())
 		Cs = append(Cs, C.Add(C, kp))
-		log.Lvl3("Cs:", C.String())
 	}
 	return
 }
@@ -63,27 +56,16 @@ func EncodeKey(suite abstract.Suite, X abstract.Point, key []byte) (U abstract.P
 //   - err - an eventual error when trying to recover the data from the points
 func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
 	xc abstract.Scalar) (key []byte, err error) {
-	log.Lvl3("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
-	log.Lvl3("xcInv:", xcInv)
 	sum := suite.Scalar().Add(xc, xcInv)
-	log.Lvl3("xc + xcInv:", sum, "::", xc)
-	log.Lvl3("X:", X)
 	XhatDec := suite.Point().Mul(X, xcInv)
-	log.Lvl3("XhatDec:", XhatDec)
-	log.Lvl3("XhatEnc:", XhatEnc)
 	Xhat := suite.Point().Add(XhatEnc, XhatDec)
-	log.Lvl3("Xhat:", Xhat)
 	XhatInv := suite.Point().Neg(Xhat)
-	log.Lvl3("XhatInv:", XhatInv)
 
 	// Decrypt Cs to keyPointHat
 	for _, C := range Cs {
-		log.Lvl3("C:", C)
 		keyPointHat := suite.Point().Add(C, XhatInv)
-		log.Lvl3("keyPointHat:", keyPointHat)
 		keyPart, err := keyPointHat.Data()
-		log.Lvl3("keyPart:", keyPart)
 		if err != nil {
 			return nil, err
 		}
