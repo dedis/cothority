@@ -87,7 +87,9 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, el *onet.Roster, d network.Me
 //  - baseH is the base-height - the distance between two non-height-1 skipblocks
 //  - maxH is the maximum height, which must be <= baseH
 //  - ver is a slice of verifications to apply to that block
-//  - data can be nil or any data that will be network.Marshaled to the skipblock
+//  - data can be nil or any data that will be network.Marshaled to the skipblock,
+//    except if the data is of type []byte, in which case it will be stored
+//    as-is on the skipchain.
 //  - parent is the responsible parent-block, can be 'nil'
 //
 // This function returns the created skipblock or nil and an error.
@@ -100,12 +102,16 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 	genesis.BaseHeight = baseH
 	genesis.ParentBlockID = parent
 	if data != nil {
-		buf, err := network.Marshal(data)
-		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-				err.Error())
+		var ok bool
+		genesis.Data, ok = data.([]byte)
+		if !ok {
+			buf, err := network.Marshal(data)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+					"Couldn't marshal data: "+err.Error())
+			}
+			genesis.Data = buf
 		}
-		genesis.Data = buf
 	}
 	sb, cerr := c.StoreSkipBlock(genesis, nil, nil)
 	if cerr != nil {
