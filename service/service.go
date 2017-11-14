@@ -241,24 +241,26 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	if role == darc.Owner {
 		ids = d.Owners
 	}
-	// First search the identity
-	for _, id := range *ids {
-		if id.Ed25519 != nil {
-			if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
-				return newpath
+	if ids != nil {
+		// First search the identity
+		for _, id := range *ids {
+			if id.Ed25519 != nil {
+				if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
+					return newpath
+				}
 			}
 		}
-	}
-	// Then search sub-darcs
-	for _, id := range *ids {
-		if id.Darc != nil {
-			d, found := s.getDarc(id.Darc.ID)
-			if !found {
-				log.Lvlf1("Got unknown darc-id in path - ignoring: ", id.Darc.ID)
-			}
-			newpath = append(newpath, *d)
-			if np := s.searchPath(newpath, identity, role); np != nil {
-				return np
+		// Then search sub-darcs
+		for _, id := range *ids {
+			if id.Darc != nil {
+				d, found := s.getDarc(id.Darc.ID)
+				if !found {
+					log.Lvlf1("Got unknown darc-id in path - ignoring: ", id.Darc.ID)
+				}
+				newpath = append(newpath, *d)
+				if np := s.searchPath(newpath, identity, role); np != nil {
+					return np
+				}
 			}
 		}
 	}
