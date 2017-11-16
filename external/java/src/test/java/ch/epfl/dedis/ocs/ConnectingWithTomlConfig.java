@@ -1,5 +1,7 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
@@ -12,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConnectingWithTomlConfig {
-    public static OnchainSecretsRPC connectClusterWithTomlConfig(String groupToml) throws CothorityCommunicationException {
+    public static OnchainSecretsRPC connectClusterWithTomlConfig(String groupToml, Signer admin) throws CothorityCommunicationException {
         OcsFactory ocsFactory = new OcsFactory();
 
         Toml toml = new Toml().read(groupToml);
@@ -20,7 +22,9 @@ public class ConnectingWithTomlConfig {
         servers.stream().forEach(server -> ocsFactory.addConode(
                 getServerURIFromToml(server), getPublicKeyFromToml(server)));
 
-        ocsFactory.initialiseNewChain();
+        SkipblockId skipblockId = ocsFactory.initialiseNewSkipchain(admin);
+
+        ocsFactory.setGenesis(skipblockId);
         return ocsFactory.createConnection();
     }
 

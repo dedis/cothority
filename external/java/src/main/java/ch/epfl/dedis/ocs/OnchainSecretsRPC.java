@@ -404,11 +404,6 @@ public class OnchainSecretsRPC {
         return ocsID;
     }
 
-    @Deprecated
-    public String getGenesisIdBase64() {
-        return new String((Base64.getEncoder().encode(ocsID.getId())));
-    }
-
     public Darc getAdminDarc() throws CothorityCryptoException, CothorityCommunicationException {
         List<Darc> admins = getLatestDarc(adminDarc.getId());
         return admins.get(admins.size() - 1);

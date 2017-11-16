@@ -1,55 +1,36 @@
 package ch.epfl.dedis.byzgen;
 
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
-import ch.epfl.dedis.ocs.OnchainSecretsRPC;
+import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.darc.Darc;
+import ch.epfl.dedis.lib.darc.Signer;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
+import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Base64;
 
 public class OcsFactory {
-    private static final int MIN_ID_LEN = 32;
     private ArrayList<ServerIdentity> servers = new ArrayList<>();
-    private byte[] genesis;
-
-    private boolean initialiseNewChain = false;
-
-    /**
-     * Create a new chain.
-     *
-     * TODO: In the future initialisation of a chain will be secured and probably will be moved to different class
-     *
-     * For new initialised chain genesis is not required.
-     *
-     */
-    public OcsFactory initialiseNewChain() {
-        this.initialiseNewChain = true;
-        return this;
-    }
+    private SkipblockId genesis;
 
     /**
      * Set chain genesis (getId/hash of the fist block in the chain)
      *
-     * @param genesisBase64
+     * @param genesis
      * @throws IllegalStateException when genesis can not be decoded or is too short
      */
-    public OcsFactory setGenesis(final String genesisBase64) {
-        // TODO: I'd like to see this part as a small external class which will take care of IDs
-        this.genesis = Base64.getDecoder().decode(genesisBase64);
-        if ( this.genesis.length < MIN_ID_LEN) {
-            throw new IllegalArgumentException("Genesis value is too short");
-        }
+    public OcsFactory setGenesis(final SkipblockId genesis) {
+        this.genesis = genesis;
         return this;
     }
 
     /**
-     * @param conode cothority server address (base address in tcp://127.0.0.0:7001 form)
-     * @param publicKey       server public symmetricKey base64 encoded to a string
-     *
+     * @param conode    cothority server address (base address in tcp://127.0.0.0:7001 form)
+     * @param publicKey server public symmetricKey base64 encoded to a string
      * @throws IllegalArgumentException when conode address is incorrect
-     *
      */
     public OcsFactory addConode(final URI conode, final String publicKey) {
         if (!conode.getScheme().equals("tcp")) {
@@ -60,22 +41,48 @@ public class OcsFactory {
         return this;
     }
 
-    public OnchainSecretsRPC createConnection() throws CothorityCommunicationException {
-        if (servers.size() < 1) {
-            throw new IllegalStateException("Connection can not be established. No cothority server was specified.");
-        }
-
-        if (null == genesis && !initialiseNewChain) {
+    public OnchainSecrets createConnection() throws CothorityCommunicationException {
+        if (null == genesis) {
             throw new IllegalStateException("Connection can not be established. No genesis specified.");
         }
 
-        Roster roster = new Roster(servers);
-        if (initialiseNewChain) {
-            // TODO
-            throw new CothorityCommunicationException("Need to implement darc here");
-//            return new OnchainSecretsRPC(roster);
+        try {
+            return new OnchainSecrets(createRoster(), genesis);
+        } catch (CothorityCryptoException e) {
+            throw new CothorityCommunicationException("Unable to connect to cothority ", e);
         }
-//        return new OnchainSecretsRPC(roster, genesis);
-        return null;
+    }
+
+    /**
+     * Create a new skipchain. New skipchain will be created and ID of genesis block will be returned.
+     * To make other operations in the same skipchain you need to connect in normal way using skipblock ID.
+     *
+     * @return skipblock ID of a new genesis block
+     */
+    public SkipblockId initialiseNewSkipchain(@Nonnull Signer admin) throws CothorityCommunicationException {
+        try {
+            Roster roster = createRoster();
+
+            Darc adminDarc = createAdminDarc(admin);
+            OnchainSecrets ocs = new OnchainSecrets(roster, adminDarc);
+
+            return ocs.getGenesis();
+        } catch (CothorityCryptoException e) {
+            throw new CothorityCommunicationException("Unable to create a new skipchain", e);
+        }
+    }
+
+    private Roster createRoster() {
+        if (servers.size() < 1) {
+            throw new IllegalStateException("Connection can not be established. No cothority server was specified.");
+        }
+        return new Roster(servers);
+    }
+    private Darc createAdminDarc(@Nonnull Signer admin) throws CothorityCommunicationException {
+        try {
+            return new Darc(admin, null, null);
+        } catch (CothorityCryptoException e) {
+            throw new CothorityCommunicationException("Unable to create admin DARC for a new skipchain", e);
+        }
     }
 }
