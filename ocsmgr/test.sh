@@ -9,7 +9,7 @@ DBG_SRV=2
 NBR=3
 NBR_SERVERS_GROUP=3
 
-. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+. $(go env GOPATH)/src/gopkg.in/dedis/onet.v1/app/libtest.sh
 
 main(){
     startTest

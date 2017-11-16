@@ -51,7 +51,7 @@ class OnchainSecretsTest {
             ocs = new OnchainSecrets(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
-            logger.error("cd $GOPATH/github.com/dedis/onchain-secrets/conode");
+            logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
             logger.error("./run_conode.sh local 3 2");
         }
     }
