@@ -219,7 +219,7 @@ func orgPublic(c *cli.Context) error {
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
 	log.ErrFatal(err)
 	for _, k := range keys {
-		pub, err := crypto.String64ToPub(network.Suite, k)
+		pub, err := crypto.String64ToPoint(network.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -320,11 +320,11 @@ func attCreate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PubToString64(nil, pub)
+	pubStr, err := crypto.PointToString64(nil, pub)
 	if err != nil {
 		return err
 	}
-	log.Lvlf2("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
 	return nil
 }
 
@@ -643,8 +643,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 // TODO: Needs to be public in app package!!!
 // toServerIdentity converts this ServerToml struct to a ServerIdentity.
 func toServerIdentity(s *app.ServerToml, suite abstract.Suite) (*network.ServerIdentity, error) {
-	pubR := strings.NewReader(s.Public)
-	public, err := crypto.Read64Pub(suite, pubR)
+	public, err := crypto.String64ToPub(suite, s.Public)
 	if err != nil {
 		return nil, err
 	}

@@ -215,7 +215,7 @@ func adminAdd(c *cli.Context) error {
 	h := network.Suite.Hash()
 	pubs := make([]abstract.Point, len(keys))
 	for i, k := range keys {
-		pub, err := crypto.String64ToPub(network.Suite, k)
+		pub, err := crypto.String64ToPoint(network.Suite, k)
 		if err != nil {
 			log.Error("Couldn't parse public key:", k)
 			return err
@@ -258,11 +258,11 @@ func idKeyPair(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PubToString64(nil, pub)
+	pubStr, err := crypto.PointToString64(nil, pub)
 	if err != nil {
 		return err
 	}
-	log.Lvlf2("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
 	return nil
 }
 

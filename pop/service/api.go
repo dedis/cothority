@@ -163,7 +163,7 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 	}
 	atts := []abstract.Point{}
 	for _, p := range fsToml.Attendees {
-		pub, err := crypto.String64ToPub(network.Suite, p)
+		pub, err := crypto.String64ToPoint(network.Suite, p)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +265,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		if err != nil {
 			return nil, err
 		}
-		pub, err := crypto.String64ToPub(network.Suite, s[3])
+		pub, err := crypto.String64ToPoint(network.Suite, s[3])
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +288,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 			if err != nil {
 				return nil, err
 			}
-			pub, err := crypto.String64ToPub(network.Suite, s[3])
+			pub, err := crypto.String64ToPoint(network.Suite, s[3])
 			if err != nil {
 				return nil, err
 			}
@@ -332,7 +332,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	}
 	atts := make([]string, len(fs.Attendees))
 	for i, p := range fs.Attendees {
-		str, err := crypto.PubToString64(nil, p)
+		str, err := crypto.PointToString64(nil, p)
 		if err != nil {
 			return nil, err
 		}
@@ -476,7 +476,7 @@ func Equal(r1, r2 *onet.Roster) bool {
 func toToml(r *onet.Roster) ([][]string, error) {
 	rostr := make([][]string, len(r.List))
 	for i, si := range r.List {
-		str, err := crypto.PubToString64(nil, si.Public)
+		str, err := crypto.PointToString64(nil, si.Public)
 		if err != nil {
 			return nil, err
 		}
@@ -511,7 +511,7 @@ func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	token.Public, err = crypto.String64ToPub(network.Suite, t.Public)
+	token.Public, err = crypto.String64ToPoint(network.Suite, t.Public)
 	if err != nil {
 		return nil, err
 	}
