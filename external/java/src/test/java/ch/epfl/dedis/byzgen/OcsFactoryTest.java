@@ -1,9 +1,8 @@
-package com.byzgen.ocsapi;
+package ch.epfl.dedis.byzgen;
 
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.ocs.LocalRosters;
-import ch.epfl.dedis.ocs.OnchainSecrets;
-import com.byzgen.ocsapi.OcsFactory;
+import ch.epfl.dedis.LocalRosters;
+import ch.epfl.dedis.ocs.OnchainSecretsRPC;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -89,9 +88,9 @@ class OcsFactoryTest {
         ocsFactory.addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3);
 
         ocsFactory.initialiseNewChain();
-        OnchainSecrets conection = ocsFactory.createConnection();
+        OnchainSecretsRPC conection = ocsFactory.createConnection();
 
-        String genesis = conection.getGenesis();
+        String genesis = conection.getGenesisIdBase64();
         assertThat(genesis, not(isEmptyOrNullString()));
     }
 
@@ -105,7 +104,7 @@ class OcsFactoryTest {
         ocsFactory.setGenesis(genesis);
 
         // when
-        OnchainSecrets conection = ocsFactory.createConnection();
+        OnchainSecretsRPC conection = ocsFactory.createConnection();
 
         // then
         assertNotNull(conection);
@@ -117,6 +116,6 @@ class OcsFactoryTest {
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
                 .initialiseNewChain()
                 .createConnection()
-                .getGenesis();
+                .getGenesisIdBase64();
     }
 }

@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static ch.epfl.dedis.ocs.LocalRosters.CONODE_PUB_1;
-import static ch.epfl.dedis.ocs.LocalRosters.CONODE_1;
-import static ch.epfl.dedis.ocs.LocalRosters.ids;
+import static ch.epfl.dedis.LocalRosters.CONODE_PUB_1;
+import static ch.epfl.dedis.LocalRosters.CONODE_1;
+import static ch.epfl.dedis.LocalRosters.ids;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {

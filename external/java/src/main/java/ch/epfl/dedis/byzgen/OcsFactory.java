@@ -1,9 +1,9 @@
-package com.byzgen.ocsapi;
+package ch.epfl.dedis.byzgen;
 
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
-import ch.epfl.dedis.ocs.OnchainSecrets;
+import ch.epfl.dedis.ocs.OnchainSecretsRPC;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class OcsFactory {
     }
 
     /**
-     * Set chain genesis (ID/hash of the fist block in the chain)
+     * Set chain genesis (getId/hash of the fist block in the chain)
      *
      * @param genesisBase64
      * @throws IllegalStateException when genesis can not be decoded or is too short
@@ -60,7 +60,7 @@ public class OcsFactory {
         return this;
     }
 
-    public OnchainSecrets createConnection() throws CothorityCommunicationException {
+    public OnchainSecretsRPC createConnection() throws CothorityCommunicationException {
         if (servers.size() < 1) {
             throw new IllegalStateException("Connection can not be established. No cothority server was specified.");
         }
@@ -73,9 +73,9 @@ public class OcsFactory {
         if (initialiseNewChain) {
             // TODO
             throw new CothorityCommunicationException("Need to implement darc here");
-//            return new OnchainSecrets(roster);
+//            return new OnchainSecretsRPC(roster);
         }
-//        return new OnchainSecrets(roster, genesis);
+//        return new OnchainSecretsRPC(roster, genesis);
         return null;
     }
 }

@@ -15,9 +15,6 @@ import java.util.UUID;
  * Ed25519.java
  * Purpose: Getting the warm cozy feeling of having the power to add, subtract,
  * scalar multiply and do other fancy things with points and scalars.
- *
- * @author Linus Gasser <linus.gasser@epfl.ch>
- * @version 0.2 17/09/19
  */
 public class Ed25519 {
     private final static Logger logger = LoggerFactory.getLogger(Ed25519.class);

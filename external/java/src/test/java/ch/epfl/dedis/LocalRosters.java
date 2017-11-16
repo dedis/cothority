@@ -1,7 +1,13 @@
-package ch.epfl.dedis.ocs;
+package ch.epfl.dedis;
+
+import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
+import com.moandjiezana.toml.Toml;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LocalRosters {
     public static final String CONODE_PUB_1 = "2CmgeQ/6h5nku9G+6NoFB8kWa2ZWYLq6ct2GEPyifME=";
@@ -43,4 +49,17 @@ public class LocalRosters {
             "  Address = \"tcp://127.0.0.1:7002\"\n" +
             "  Point = \"2CmgeQ/6h5nku9G+6NoFB8kWa2ZWYLq6ct2GEPyifME=\"\n" +
             "  Description = \"Conode_1\"";
+
+    public static Roster FromToml(String groupToml) {
+        Toml toml = new Toml().read(groupToml);
+        List<ServerIdentity> cothority = new ArrayList<>();
+        List<Toml> servers = toml.getTables("servers");
+        for (Toml s : servers) {
+            try {
+                cothority.add(new ServerIdentity(s));
+            } catch (URISyntaxException e) {
+            }
+        }
+        return new Roster(cothority);
+    }
 }

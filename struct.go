@@ -88,7 +88,7 @@ func (dw *Transaction) String() string {
 		return fmt.Sprintf("Write: data-length of %d\n", len(dw.Write.Data))
 	}
 	if dw.Read != nil {
-		return fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Reader, dw.Read.DataID)
+		return fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Signature.SignaturePath.Signer, dw.Read.DataID)
 	}
 	return "all nil DataOCS"
 }
@@ -143,8 +143,6 @@ type Write struct {
 // pseudonym's public key. The Data is the skipblock-id of the skipblock
 // holding the data.
 type Read struct {
-	// Reader represents the reader that signed the request
-	Reader darc.Darc
 	// DataID is the document-id for the read request
 	DataID skipchain.SkipBlockID
 	// Signature is a Schnorr-signature using the private key of the
@@ -274,4 +272,18 @@ type GetBunchRequest struct {
 // GetBunchReply returns the genesis blocks of all registered OCS.
 type GetBunchReply struct {
 	Bunches []*skipchain.SkipBlock
+}
+
+// GetLatestDarc returns the path to the latest darc. DarcBaseID
+// can be nil if DarcID has version==0.
+type GetLatestDarc struct {
+	OCS    skipchain.SkipBlockID
+	DarcID []byte
+}
+
+// GetLatestDarcReply returns a list of all darcs, starting from
+// the one requested. If the darc has not been found, it
+// returns a nil list.
+type GetLatestDarcReply struct {
+	Darcs *[]*darc.Darc
 }

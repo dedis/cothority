@@ -142,9 +142,9 @@ class Ed25519Test {
         SchnorrSig sig = new SchnorrSig(sigBuf);
         Point pub = new Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
         Scalar s = new Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
-        assertTrue(sig.Verify(msg, pub));
-        assertFalse(sig.Verify(msg, pub.add(pub)));
-        assertFalse(sig.Verify("Hi Schnorr".getBytes(), pub));
+        assertTrue(sig.verify(msg, pub));
+        assertFalse(sig.verify(msg, pub.add(pub)));
+        assertFalse(sig.verify("Hi Schnorr".getBytes(), pub));
     }
 
     @Test
@@ -156,8 +156,8 @@ class Ed25519Test {
         KeyPair kp2 = new KeyPair();
         SchnorrSig sig = new SchnorrSig(msg, kp1.Scalar);
 
-        assertTrue(sig.Verify(msg, kp1.Point));
-        assertFalse(sig.Verify(msg, kp2.Point));
+        assertTrue(sig.verify(msg, kp1.Point));
+        assertFalse(sig.verify(msg, kp2.Point));
     }
 
     @Test

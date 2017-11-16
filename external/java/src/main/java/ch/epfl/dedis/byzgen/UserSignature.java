@@ -1,4 +1,4 @@
-package com.byzgen.ocsapi;
+package ch.epfl.dedis.byzgen;
 
 import javax.annotation.Nonnull;
 import java.security.PublicKey;

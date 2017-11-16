@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 import java.io.IOException;
 
@@ -14,28 +15,35 @@ public interface Signer {
      * @param msg
      * @return
      */
-    byte[] Sign(byte[] msg);
+    byte[] sign(byte[] msg);
 
     /**
      * Returns the private key of the signer, or throws a NoPrivateKey exception.
      *
      * @return
      */
-    Scalar GetPrivate();
+    Scalar getPrivate();
 
     /**
      * Returns the public key of the signer or throws a NoPublicKey exception.
      *
      * @return
      */
-    Point GetPublic();
+    Point getPublic();
+
+    /**
+     * Returns an identity of the signer.
+     *
+     * @return
+     */
+    Identity getIdentity() throws CothorityCryptoException;
 
     /**
      * Returns an array of bytes representing the signer. The first byte must indicate the type
      *
      * @return
      */
-    byte[] Serialize() throws IOException;
+    byte[] serialize() throws IOException;
 
     boolean equals(Object o);
 }

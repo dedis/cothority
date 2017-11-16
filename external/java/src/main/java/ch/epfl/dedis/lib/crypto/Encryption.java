@@ -1,11 +1,15 @@
 package ch.epfl.dedis.lib.crypto;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.SecureRandom;
+import java.security.*;
 
 public class Encryption {
     public static String algo = "AES/CBC/PKCS5Padding";
@@ -18,10 +22,10 @@ public class Encryption {
         public IvParameterSpec ivSpec;
         public SecretKeySpec keySpec;
 
-        public keyIv(byte[] keyMaterial) throws Exception{
+        public keyIv(byte[] keyMaterial) throws CothorityCryptoException{
             int symmetricLength = keyMaterial.length - ivLength;
             if (symmetricLength <= 0){
-                throw new Exception("too short symmetricKey material");
+                throw new CothorityCryptoException("too short symmetricKey material");
             }
             iv = new byte[ivLength];
             System.arraycopy(keyMaterial, 0, iv, 0, ivLength);
@@ -56,13 +60,27 @@ public class Encryption {
      * @return a combined
      * @throws Exception
      */
-    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws Exception{
+    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
 
-        Cipher cipher = Cipher.getInstance(Encryption.algo);
-        SecretKeySpec secKey = new SecretKeySpec(key.symmetricKey, Encryption.algoKey);
-        cipher.init(Cipher.ENCRYPT_MODE, secKey, key.ivSpec);
-        return cipher.doFinal(data);
+        try {
+            Cipher cipher = Cipher.getInstance(Encryption.algo);
+            SecretKeySpec secKey = new SecretKeySpec(key.symmetricKey, Encryption.algoKey);
+            cipher.init(Cipher.ENCRYPT_MODE, secKey, key.ivSpec);
+            return cipher.doFinal(data);
+        } catch (NoSuchAlgorithmException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (NoSuchPaddingException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (InvalidKeyException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (InvalidAlgorithmParameterException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (IllegalBlockSizeException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (BadPaddingException e){
+            throw new CothorityCryptoException(e.getMessage());
+        }
     }
 
     /**
@@ -74,11 +92,25 @@ public class Encryption {
      * @return decrypted data
      * @throws Exception
      */
-    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws Exception{
+    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
-        Cipher cipher = Cipher.getInstance(algo);
-        cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.ivSpec);
-        return cipher.doFinal(dataEnc);
+        try {
+            Cipher cipher = Cipher.getInstance(algo);
+            cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.ivSpec);
+            return cipher.doFinal(dataEnc);
+        } catch (NoSuchAlgorithmException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (NoSuchPaddingException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (InvalidKeyException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (InvalidAlgorithmParameterException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (IllegalBlockSizeException e){
+            throw new CothorityCryptoException(e.getMessage());
+        } catch (BadPaddingException e){
+            throw new CothorityCryptoException(e.getMessage());
+        }
     }
 
     /**
@@ -89,7 +121,7 @@ public class Encryption {
      * @return decypted data
      * @throws Exception
      */
-    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws Exception{
+    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         return decryptData(dataEnc.toByteArray(), keyMaterial);
     }
 

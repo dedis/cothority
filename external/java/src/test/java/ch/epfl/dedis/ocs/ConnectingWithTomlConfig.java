@@ -3,7 +3,7 @@ package ch.epfl.dedis.ocs;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
-import com.byzgen.ocsapi.OcsFactory;
+import ch.epfl.dedis.byzgen.OcsFactory;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URI;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConnectingWithTomlConfig {
-    public static OnchainSecrets connectClusterWithTomlConfig(String groupToml) throws CothorityCommunicationException {
+    public static OnchainSecretsRPC connectClusterWithTomlConfig(String groupToml) throws CothorityCommunicationException {
         OcsFactory ocsFactory = new OcsFactory();
 
         Toml toml = new Toml().read(groupToml);

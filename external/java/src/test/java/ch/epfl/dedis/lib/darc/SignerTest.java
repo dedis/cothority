@@ -12,11 +12,11 @@ public class SignerTest {
     @Test
     void instantiateSigner() throws IOException, Exception{
         Ed25519Signer signer = new Ed25519Signer();
-        Point pub = signer.GetPublic();
-        Scalar priv = signer.GetPrivate();
+        Point pub = signer.getPublic();
+        Scalar priv = signer.getPrivate();
 
         assertTrue(priv.scalarMult(null).equals(pub));
-        assertTrue(pub.equals(SignerFactory.New(signer.Serialize()).GetPublic()));
+        assertTrue(pub.equals(SignerFactory.New(signer.serialize()).getPublic()));
     }
 
     @Test
@@ -24,17 +24,17 @@ public class SignerTest {
         Ed25519Signer signer = new Ed25519Signer();
         byte[] msg = "document".getBytes();
 
-        byte[] sig = signer.Sign(msg);
-        assertTrue(IdentityFactory.New(signer).Verify(msg, sig));
+        byte[] sig = signer.sign(msg);
+        assertTrue(IdentityFactory.New(signer).verify(msg, sig));
     }
 
     @Test
     void serialize() throws Exception{
         Ed25519Signer signer = new Ed25519Signer();
-        byte[] buf = signer.Serialize();
+        byte[] buf = signer.serialize();
         Signer signer2 = SignerFactory.New(buf);
 
-        assertTrue(signer.GetPrivate().equals(signer2.GetPrivate()));
-        assertTrue(signer.GetPublic().equals(signer2.GetPublic()));
+        assertTrue(signer.getPrivate().equals(signer2.getPrivate()));
+        assertTrue(signer.getPublic().equals(signer2.getPublic()));
     }
 }

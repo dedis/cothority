@@ -1,12 +1,12 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -21,26 +21,26 @@ public class DarcSignature {
      * This will return a new DarcSignature by the signer on the message.
      * It will include all paths of the signer present in the signature.
      * The signed message is the sha-256 of the path concatenated with the msg:
-     * sha256( path.GetPathMsg() + msg )
+     * sha256( path.getPathMsg() + msg )
      *
      * @param msg
      * @param path
      * @param signer
      */
-    public DarcSignature(byte[] msg, SignaturePath path, Signer signer) throws Exception {
+    public DarcSignature(byte[] msg, SignaturePath path, Signer signer) throws CothorityCryptoException {
         this.path = path;
-        signature = signer.Sign(getHash(msg));
+        signature = signer.sign(getHash(msg));
     }
 
-    public DarcSignature(byte[] msg, Darc darc, Signer signer, int role) throws Exception {
+    public DarcSignature(byte[] msg, Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new SignaturePath(darc, signer, role);
-        signature = signer.Sign(getHash(msg));
+        signature = signer.sign(getHash(msg));
     }
 
     /**
      * Recreates a darc from a protobuf representation.
      */
-    public DarcSignature(DarcProto.Signature proto) throws Exception {
+    public DarcSignature(DarcProto.Signature proto) throws CothorityCryptoException{
         signature = proto.getSignature().toByteArray();
         path = new SignaturePath(proto.getSignaturepath());
     }
@@ -50,7 +50,7 @@ public class DarcSignature {
      *
      * @return
      */
-    public SignaturePath GetPath() {
+    public SignaturePath getPath() {
         return path;
     }
 
@@ -63,11 +63,11 @@ public class DarcSignature {
      * @param base
      * @return
      */
-    public boolean Verify(byte[] msg, Darc base) throws Exception {
-        if (!Arrays.equals(path.GetPathIDs().get(0), base.ID())) {
+    public boolean verify(byte[] msg, Darc base) throws CothorityCryptoException {
+        if (!path.getPathIDs().get(0).equals(base.getId())) {
             return false;
         }
-        return path.GetSigner().Verify(getHash(msg), signature);
+        return path.getSigner().verify(getHash(msg), signature);
     }
 
     /**
@@ -75,20 +75,24 @@ public class DarcSignature {
      *
      * @return
      */
-    public DarcProto.Signature ToProto() {
+    public DarcProto.Signature toProto() {
         DarcProto.Signature.Builder b = DarcProto.Signature.newBuilder();
         b.setSignature(ByteString.copyFrom(signature));
-        b.setSignaturepath(path.ToProto());
+        b.setSignaturepath(path.toProto());
         return b.build();
     }
 
-    private byte[] getHash(byte[] msg) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        logger.debug("path: " + DatatypeConverter.printHexBinary(path.GetPathMsg()));
-        logger.debug("msg: " + DatatypeConverter.printHexBinary(msg));
-        digest.update(path.GetPathMsg());
-        digest.update(msg);
-        return digest.digest();
+    private byte[] getHash(byte[] msg) throws CothorityCryptoException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            logger.debug("path: " + DatatypeConverter.printHexBinary(path.getPathMsg()));
+            logger.debug("msg: " + DatatypeConverter.printHexBinary(msg));
+            digest.update(path.getPathMsg());
+            digest.update(msg);
+            return digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new CothorityCryptoException("couldn't make hash: " + e.toString());
+        }
     }
 
     @Override

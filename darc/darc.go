@@ -27,8 +27,12 @@ import (
 // NewDarc initialises a darc-structure given its owners and users
 func NewDarc(owners *[]*Identity, users *[]*Identity, desc []byte) *Darc {
 	var ow, us []*Identity
-	ow = append(ow, *owners...)
-	us = append(us, *users...)
+	if owners != nil {
+		ow = append(ow, *owners...)
+	}
+	if users != nil {
+		us = append(us, *users...)
+	}
 	return &Darc{
 		Owners:      &ow,
 		Users:       &us,
@@ -100,7 +104,7 @@ func (d *Darc) GetID() ID {
 // GetBaseID returns the base ID or the ID of this darc if its the
 // first darc.
 func (d *Darc) GetBaseID() ID {
-	if d.BaseID == nil {
+	if d.Version == 0 {
 		return d.GetID()
 	}
 	return *d.BaseID
@@ -219,6 +223,28 @@ func (d Darc) GetLatest() (*Darc, error) {
 		return nil, errors.New("not clean evolution - version mismatch")
 	}
 	return prev, nil
+}
+
+func (d Darc) String() string {
+	ret := fmt.Sprintf("%x[%x]: %d", d.GetBaseID(), d.GetID(), d.Version)
+	if d.BaseID != nil {
+		ret += fmt.Sprintf("\nbaseid: %x", *d.BaseID)
+	}
+	if d.Owners != nil {
+		for ui, u := range *d.Owners {
+			if u.Ed25519 != nil {
+				ret += fmt.Sprintf("\nowner[%d] = %s", ui, u.Ed25519.Point)
+			}
+		}
+	}
+	if d.Users != nil {
+		for ui, u := range *d.Users {
+			if u.Ed25519 != nil {
+				ret += fmt.Sprintf("\nuser[%d] = %s", ui, u.Ed25519.Point)
+			}
+		}
+	}
+	return ret
 }
 
 // IsNull returns true if this DarcID is not initialised.

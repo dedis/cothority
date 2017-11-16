@@ -12,7 +12,7 @@ public class SignaturePathTest {
         Darc darc = new Darc(signer, null, null);
         SignaturePath path = new SignaturePath(darc, signer, SignaturePath.OWNER);
 
-        DarcProto.SignaturePath proto = path.ToProto();
+        DarcProto.SignaturePath proto = path.toProto();
         SignaturePath path2 = new SignaturePath(proto);
 
         assertTrue(path.equals(path2));

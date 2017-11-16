@@ -1,71 +1,54 @@
+
+
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.crypto.Encryption;
-import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.LocalRosters;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.*;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.OCSProto;
-import org.junit.jupiter.api.BeforeAll;
+import ch.epfl.dedis.proto.SkipBlockProto;
+import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class OnchainSecretsTest {
     static OnchainSecrets ocs;
     static Signer admin;
-    static Signer writer;
     static Signer publisher;
     static Signer reader;
-    static Signer reader2;
     static Darc adminDarc;
-    static Darc admin2Darc;
-    static Darc publisherDarc;
-    static Darc publisher2Darc;
+    static Darc readerDarc;
     static Document doc;
     static String docData;
     static String extraData;
-    static Document docNew;
-    static byte[] readID;
 
-    private final static Logger logger = LoggerFactory.getLogger(OnchainSecretsTest.class);
+    private final static Logger logger = LoggerFactory.getLogger(OnchainSecretsRPCTest.class);
 
     @BeforeEach
-    void initAll() throws Exception {
+    void initAll() throws CothorityException {
         admin = new Ed25519Signer();
-        writer = new Ed25519Signer();
         publisher = new Ed25519Signer();
         reader = new Ed25519Signer();
-        reader2 = new Ed25519Signer();
 
-        adminDarc = new Darc(admin, null, null);
-        adminDarc.AddUser(writer);
-
-        publisherDarc = new Darc(publisher, null, null);
-        publisherDarc.AddUser(reader);
-        logger.info("publisherDarc: " + DatatypeConverter.printHexBinary(publisherDarc.ID()));
-        publisher2Darc = publisherDarc.Copy();
-        publisher2Darc.AddUser(reader2);
-        publisher2Darc.SetEvolution(publisherDarc, null, publisher);
-
-        admin2Darc = adminDarc.Copy();
-        admin2Darc.AddUser(publisherDarc);
-        admin2Darc.SetEvolution(adminDarc, null, admin);
+        adminDarc = new Darc(admin, Arrays.asList(publisher), null);
+        readerDarc = new Darc(publisher, Arrays.asList(reader), null);
 
         docData = "https://dedis.ch/secret_document.osd";
-        doc = new Document(docData, 16, publisherDarc);
         extraData = "created on Monday";
-        doc.extraData = extraData.getBytes();
+        doc = new Document(docData.getBytes(), 16, readerDarc, extraData.getBytes());
 
         try {
-            logger.info("Admin darc: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
-            ocs = new OnchainSecrets(Roster.FromToml(LocalRosters.groupToml), adminDarc);
+            logger.info("Admin darc: " + adminDarc.getId().toString());
+            ocs = new OnchainSecrets(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $GOPATH/github.com/dedis/onchain-secrets/conode");
@@ -74,165 +57,68 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void verify() throws Exception {
-        assertTrue(ocs.verify());
-        assertNotNull(ocs.ocsID);
+    void addAccountToSkipchain() throws CothorityException {
+        Darc admin3Darc = ocs.addIdentityToDarc(adminDarc, IdentityFactory.New(publisher), admin, 0);
+        assertNotNull(admin3Darc);
     }
 
     @Test
-    void darcID() throws Exception{
-        logger.info("Admin darc after: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
-        logger.info("Admin-darc prot: " +
-        DatatypeConverter.printHexBinary(adminDarc.ToProto().toByteArray()));
+    void publishDocument() throws CothorityException{
+        ocs.publishDocument(doc, publisher);
     }
 
     @Test
-    void updateDarc() throws Exception{
-        try {
-            logger.info("Admin darc after: " + DatatypeConverter.printHexBinary(adminDarc.ID()));
-            ocs.updateDarc(adminDarc);
-            fail("should not allow to store adminDarc again");
-        } catch (Exception e){
-            logger.info("correctly failed at updating admin");
-        }
-        ocs.updateDarc(publisherDarc);
-        ocs.updateDarc(publisher2Darc);
-        publisher2Darc.AddUser(admin);
-        publisher2Darc.SetEvolution(publisherDarc, null, publisher);
-        try {
-            ocs.updateDarc(publisher2Darc);
-        } catch (Exception e){
-            logger.info("correctly failed at re-writing publisher darc");
-        }
-    }
-
-    @Test
-    void addAccountToSkipchain() throws Exception {
-        Signer admin2 = new Ed25519Signer();
-        Darc adminDarc2 = adminDarc.Copy();
-        adminDarc2.AddOwner(admin2);
-        adminDarc2.IncVersion();
-        try {
-            ocs.updateDarc(adminDarc2);
-            fail("Should not update darc without signature");
-        } catch (CothorityCommunicationException e){
-            logger.info("Correctly refused unsigned darc");
-        }
-        adminDarc2.SetEvolution(adminDarc, null, admin2);
-        try {
-            ocs.updateDarc(adminDarc2);
-            fail("Should refuse wrong signature");
-        } catch (CothorityCommunicationException e){
-            logger.info("Correctly refused wrong signature");
-        }
-        adminDarc2.SetEvolution(adminDarc, null, admin);
+    void giveReadAccessToDocument() throws CothorityException {
+        Signer reader2 = new Ed25519Signer();
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
         try{
-            ocs.updateDarc(adminDarc2);
-            logger.info("Accepted correct signature");
-        } catch (CothorityCommunicationException e){
-            fail("Should accept correct signature");
+            ocs.getDocument(wr.id, reader2);
+            fail("read-request of unauthorized reader should fail");
+        } catch (CothorityException e){
+            logger.info("correct refusal of invalid read-request");
         }
-        logger.info("Updating admin darc again");
-        ocs.addIdentityToDarc(adminDarc2, IdentityFactory.New(publisher), admin2);
+        ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
+        Document doc2 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc2));
+        // Inverse is not true, as doc2 now contains a writeId
+        assertFalse(doc2.equals(doc));
     }
 
     @Test
-    void getSharedPublicKey() throws Exception {
-        Point shared = ocs.getSharedPublicKey();
-        assertNotNull(shared);
-        assertTrue(ocs.X.equals(shared));
-    }
+    void reConnect() throws CothorityException{
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
 
-    @Test
-    void publishDocument() throws Exception {
-        ocs.addIdentityToDarc(adminDarc, IdentityFactory.New(publisher), admin);
-        docNew = ocs.publishDocument(doc, publisher);
-        assertNotNull(docNew.id);
-    }
-
-    @Test
-    void getWrite() throws Exception {
-        publishDocument();
-        OCSProto.Write write = ocs.getWrite(docNew.id);
-        assertEquals(docNew.getWrite(ocs.X).getData(), write.getData());
-        assertArrayEquals(extraData.getBytes(), write.getExtradata().toByteArray());
-    }
-
-    @Test
-    void giveReadAccessToDocument() throws Exception {
-        docNew = ocs.publishDocument(doc, publisher);
-        ocs.updateDarc(publisher2Darc);
-    }
-
-    @Test
-    void readRequest() throws Exception {
-        docNew = ocs.publishDocument(doc, publisher);
-        try {
-            readID = ocs.readRequest(docNew.id, reader2);
-            fail("a wrong read-signature should not pass");
-        } catch (CothorityCommunicationException e){
-            logger.info("correctly failed with wrong signature");
-        }
-        logger.debug("publisherdarc.ic = " + DatatypeConverter.printHexBinary(publisherDarc.ID()));
-        logger.debug("publisherdarc.proto = " + publisherDarc.ToProto().toString());
-        readID = ocs.readRequest(docNew.id, reader);
-        assertNotNull(readID);
-    }
-
-    @Test
-    void getDarcPath() throws Exception{
-        ocs.updateDarc(admin2Darc);
-        ocs.updateDarc(publisherDarc);
-        ocs.updateDarc(publisher2Darc);
-        SignaturePath path = ocs.getDarcPath(adminDarc.ID(), IdentityFactory.New(reader2), SignaturePath.USER);
-        assertNotNull(path);
-        for (Darc d: path.GetDarcs()){
-            logger.debug("Darc-list is: " + d.toString());
-        }
-    }
-
-    @Test
-    void readDocument() throws Exception {
-        readRequest();
-        DecryptKey dk = ocs.decryptKey(readID);
-        assertNotNull(dk);
-        OCSProto.Write write = ocs.getWrite(docNew.id);
-        byte[] keyMaterial = dk.getKeyMaterial(write, reader);
-        byte[] data = Encryption.decryptData(write.getData(), keyMaterial);
-        assertArrayEquals(docData.getBytes(), data);
-    }
-
-    @Test
-    void resellerTest() throws Exception{
-        // Publish document under publisher
-        Document doc = new Document(docData, 16, publisherDarc);
-        docNew = ocs.publishDocument(doc, publisher);
-
-        // Create reseller and store his darc on the skipchain
-        Signer resellerS = new Ed25519Signer();
-        Darc resellerD = new Darc(resellerS, null, null);
-        ocs.updateDarc(resellerD);
-
-        // Add the reseller to the document's darc and update it on the skipchain
-        // This is the manual way to do it
-        Darc publisherDarcNew = publisherDarc.Copy();
-        publisherDarcNew.AddUser(new DarcIdentity(resellerD));
-        publisherDarcNew.SetEvolution(publisherDarc, null, publisher);
-        ocs.updateDarc(publisherDarcNew);
-
-        // Finally add the reader to the reseller's darc
-        // This is the more automatic way to do it
+        // Dropping connection by re-creating an OCS. The following elements are needed:
+        // - roster
+        // - ocs-id
+        // - WriteRequest-id
+        // - reader-signer
+        // - publisher-signer
+        OnchainSecrets ocs2 = new OnchainSecrets(ocs.getRoster(), ocs.getID());
         Signer reader = new Ed25519Signer();
-        Darc resellerDarc2 = ocs.addIdentityToDarc(resellerD, reader, resellerS);
+        OCSProto.Write wr2 = ocs.getWrite(wr.id);
+        ocs2.addIdentityToDarc(new Darc(wr2.getReader()), reader, publisher, SignaturePath.USER);
+        Document doc2 = ocs2.getDocument(wr.id, reader);
+        assertTrue(doc.equals(doc2));
+        assertFalse(doc2.equals(doc));
+    }
 
-        // Get the document and decrypt it
-        byte[] readID = ocs.readRequest(docNew.id, reader);
-        DecryptKey dk = ocs.decryptKey(readID);
-        OCSProto.Write write = ocs.getWrite(docNew.id);
-        byte[] keyMaterial = dk.getKeyMaterial(write, reader);
-        byte[] data = Encryption.decryptData(write.getData(), keyMaterial);
-        logger.info(docData);
-        logger.info(DatatypeConverter.printHexBinary(data));
-        assertArrayEquals(docData.getBytes(), data);
+    @Test
+    void readDarcs() throws CothorityException, InvalidProtocolBufferException{
+        ocs.addIdentityToDarc(adminDarc, publisher, admin, SignaturePath.USER);
+        List<Darc> darcs = new ArrayList<>();
+        for (SkipblockId latest = ocs.getID();latest != null;){
+            SkipBlockProto.SkipBlock sb = ocs.getSkipblock(latest);
+            OCSProto.Transaction transaction = OCSProto.Transaction.parseFrom(sb.getData());
+            if (transaction.hasDarc()){
+                darcs.add(new Darc(transaction.getDarc()));
+            }
+            if (sb.getForwardCount() > 0) {
+                latest = new SkipblockId(sb.getForward(0).getHash().toByteArray());
+            } else {
+                latest = null;
+            }
+        }
+        assertEquals(2, darcs.size());
     }
 }

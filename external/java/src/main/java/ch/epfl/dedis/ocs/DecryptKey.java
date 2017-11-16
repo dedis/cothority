@@ -14,9 +14,6 @@ import java.util.List;
  * dedis/lib
  * DecryptKey.java
  * Purpose: Does the onchain-secrets algorithm to retrieve the symmetric from the cothority.
- *
- * @author Linus Gasser <linus.gasser@epfl.ch>
- * @version 0.2 17/09/19
  */
 
 public class DecryptKey {
@@ -35,13 +32,13 @@ public class DecryptKey {
         this.X = X;
     }
 
-    public byte[] getKeyMaterial(OCSProto.Write write, Signer reader) throws Exception {
+    public byte[] getKeyMaterial(OCSProto.Write write, Signer reader) throws CothorityCryptoException {
         List<Point> Cs = new ArrayList<>();
         write.getCsList().forEach(cs -> Cs.add(new Point(cs)));
 
         // Use our private key to decrypt the re-encryption key and use it
         // to recover the symmetric key.
-        Scalar xc = reader.GetPrivate().reduce();
+        Scalar xc = reader.getPrivate().reduce();
         Scalar xcInv = xc.negate();
         Point XhatDec = xcInv.scalarMult(X);
         Point Xhat = XhatEnc.add(XhatDec);
@@ -50,15 +47,10 @@ public class DecryptKey {
         byte[] keyMaterial = "".getBytes();
         for (Point C : Cs) {
             Point keyPointHat = C.add(XhatInv);
-            try {
-                byte[] keyPart = keyPointHat.pubLoad();
-                int lastpos = keyMaterial.length;
-                keyMaterial = Arrays.copyOfRange(keyMaterial, 0, keyMaterial.length + keyPart.length);
-                System.arraycopy(keyPart, 0, keyMaterial, lastpos, keyPart.length);
-            } catch (CothorityCryptoException c) {
-                c.printStackTrace();
-                System.out.println("couldn't extract data! " + c.toString());
-            }
+            byte[] keyPart = keyPointHat.pubLoad();
+            int lastpos = keyMaterial.length;
+            keyMaterial = Arrays.copyOfRange(keyMaterial, 0, keyMaterial.length + keyPart.length);
+            System.arraycopy(keyPart, 0, keyMaterial, lastpos, keyPart.length);
         }
 
         return keyMaterial;

@@ -4,6 +4,7 @@ import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ public class Ed25519Signer implements Signer {
      * @param msg
      * @return
      */
-    public byte[] Sign(byte[] msg) {
+    public byte[] sign(byte[] msg) {
         SchnorrSig sig = new SchnorrSig(msg, priv);
         return sig.toBytes();
     }
@@ -52,7 +53,7 @@ public class Ed25519Signer implements Signer {
      *
      * @return
      */
-    public Scalar GetPrivate() {
+    public Scalar getPrivate() {
         return priv;
     }
 
@@ -61,8 +62,18 @@ public class Ed25519Signer implements Signer {
      *
      * @return
      */
-    public Point GetPublic() {
+    public Point getPublic() {
         return pub;
+    }
+
+    /**
+     * Creates an identity of the signer.
+     *
+     * @return an identity
+     * @throws CothorityCryptoException
+     */
+    public Identity getIdentity() throws CothorityCryptoException{
+        return IdentityFactory.New(this);
     }
 
     /**
@@ -70,7 +81,7 @@ public class Ed25519Signer implements Signer {
      *
      * @return
      */
-    public byte[] Serialize() throws IOException{
+    public byte[] serialize() throws IOException{
         byte[] result = new byte[1 + priv.toBytes().length];
         result[0] = SignerFactory.IDEd25519;
         System.arraycopy(priv.toBytes(), 0, result, 1, priv.toBytes().length);

@@ -1,18 +1,19 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 
 public class IdentityFactory {
     /**
      * Returns an instantiated identity that is stored in proto.
      */
-    public static Identity New(DarcProto.Identity proto) throws Exception {
+    public static Identity New(DarcProto.Identity proto) throws CothorityCryptoException{
         if (proto.hasEd25519()) {
             return new Ed25519Identity(proto.getEd25519());
         } else if (proto.hasDarc()) {
             return new DarcIdentity(proto.getDarc());
         } else {
-            throw new Exception("No identity present");
+            throw new CothorityCryptoException("No identity present");
         }
     }
 
@@ -21,11 +22,11 @@ public class IdentityFactory {
      *
      * @param signer
      */
-    public static Identity New(Signer signer) throws Exception {
+    public static Identity New(Signer signer) throws CothorityCryptoException {
         if (Ed25519Signer.class.isInstance(signer)) {
             return new Ed25519Identity(signer);
         } else {
-            throw new Exception("Cannot make Identity out of " + signer.toString());
+            throw new CothorityCryptoException("Cannot make Identity out of " + signer.toString());
         }
     }
 
@@ -34,7 +35,7 @@ public class IdentityFactory {
      *
      * @param darc
      */
-    public static Identity New(Darc darc) {
+    public static Identity New(Darc darc) throws CothorityCryptoException {
         return new DarcIdentity(darc);
     }
 }

@@ -1,4 +1,4 @@
-package com.byzgen.ocsapi;
+package ch.epfl.dedis.byzgen;
 
 import java.util.Collections;
 import java.util.EnumSet;

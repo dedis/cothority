@@ -1,16 +1,16 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SignaturePath {
-    public static int OWNER = 0;
-    public static int USER = 1;
+    public static final int OWNER = 0;
+    public static final int USER = 1;
 
     private List<Darc> path;
     private Identity signer;
@@ -42,7 +42,7 @@ public class SignaturePath {
      * @param signer
      * @param role
      */
-    public SignaturePath(List<Darc> darcPath, Signer signer, int role) throws Exception {
+    public SignaturePath(List<Darc> darcPath, Signer signer, int role) throws CothorityCryptoException {
         this(darcPath, IdentityFactory.New(signer), role);
     }
 
@@ -53,14 +53,14 @@ public class SignaturePath {
      * @param role
      * @throws Exception
      */
-    public SignaturePath(Darc darc, Signer signer, int role) throws Exception {
+    public SignaturePath(Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new ArrayList<>();
         path.add(darc);
         this.signer = IdentityFactory.New(signer);
         this.role = role;
     }
 
-    public SignaturePath(DarcProto.SignaturePath proto) throws Exception{
+    public SignaturePath(DarcProto.SignaturePath proto) throws CothorityCryptoException{
         role = proto.getRole();
         signer = IdentityFactory.New(proto.getSigner());
         path = new ArrayList<>();
@@ -74,28 +74,31 @@ public class SignaturePath {
      * Returns the path as an array of bytes. For the example given
      * under the Signature-class, the following array would be returned
      * for an owner-signature.
-     * byte(0) | Reader.0.ID | Reader.1.ID | Publisher.0.ID | Publisher.1.ID
+     * byte(0) | Reader.0.getId | Reader.1.getId | Publisher.0.getId | Publisher.1.getId
      *
      * @return
      */
-    public byte[] GetPathMsg() throws IOException {
+    public byte[] getPathMsg() throws CothorityCryptoException {
         if (path.size() == 0){
             return new byte[0];
         }
-        byte[] pathMsg = new byte[path.size() * path.get(0).ID().length];
+        byte[] pathMsg = new byte[path.size() * path.get(0).getId().getId().length];
         int pos = 0;
         for (Darc d : path) {
-            System.arraycopy(d.ID(), 0, pathMsg, pos * 32, 32);
+            System.arraycopy(d.getId().getId(), 0, pathMsg, pos * 32, 32);
             pos++;
         }
         return pathMsg;
     }
 
-    public List<byte[]> GetPathIDs() {
-        List<byte[]> ids = new ArrayList<>();
+    public List<DarcId> getPathIDs() {
+        List<DarcId> ids = new ArrayList<>();
         for (Darc d :
                 path) {
-            ids.add(d.ID());
+            try {
+                ids.add(d.getId());
+            } catch (CothorityCryptoException e){
+            }
         }
         return ids;
     }
@@ -104,7 +107,7 @@ public class SignaturePath {
      * Returns a copy of the darc-list
      * @return
      */
-    public List<Darc> GetDarcs(){
+    public List<Darc> getDarcs(){
         List<Darc> darcs = new ArrayList<>();
         for (Darc d :
                 path) {
@@ -114,17 +117,25 @@ public class SignaturePath {
 
     }
 
-    public Identity GetSigner() {
+    /**
+     * Returns the signer of this signature.
+     * @return
+     */
+    public Identity getSigner() {
         return signer;
     }
 
-    public DarcProto.SignaturePath ToProto(){
+    /**
+     * Creates a protobuf representation of this signature.
+     * @return
+     */
+    public DarcProto.SignaturePath toProto(){
         DarcProto.SignaturePath.Builder b = DarcProto.SignaturePath.newBuilder();
         b.setRole(role);
-        b.setSigner(signer.ToProto());
+        b.setSigner(signer.toProto());
         for (Darc d :
                 path) {
-            b.addDarcs(d.ToProto());
+            b.addDarcs(d.toProto());
         }
         return b.build();
     }

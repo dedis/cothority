@@ -16,9 +16,6 @@ import java.util.List;
  * Roster.java
  * Purpose: A list of ServerIdentities make up a roster that can be used as a temporary
  * cothority.
- *
- * @author Linus Gasser <linus.gasser@epfl.ch>
- * @version 0.2 17/09/19
  */
 
 public class Roster {
@@ -38,19 +35,6 @@ public class Roster {
         }
     }
 
-    public static Roster FromToml(String groupToml) {
-        Toml toml = new Toml().read(groupToml);
-        List<ServerIdentity> cothority = new ArrayList<>();
-        List<Toml> servers = toml.getTables("servers");
-        for (Toml s : servers) {
-            try {
-                cothority.add(new ServerIdentity(s));
-            } catch (URISyntaxException e) {
-            }
-        }
-        return new Roster(cothority);
-    }
-
     public List<ServerIdentity> getNodes() {
         return nodes;
     }
@@ -64,7 +48,7 @@ public class Roster {
         return r.build();
     }
 
-    public ByteString SendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
+    public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
     }

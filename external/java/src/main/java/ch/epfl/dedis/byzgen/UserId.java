@@ -1,4 +1,4 @@
-package com.byzgen.ocsapi;
+package ch.epfl.dedis.byzgen;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ public final class UserId {
 
     public UserId(@Nonnull byte id[]) {
         if (id.length != 32) {
-            throw new IllegalArgumentException("Expected size of ID of user is 32 bytes");
+            throw new IllegalArgumentException("Expected size of getId of user is 32 bytes");
         }
         this.id = Arrays.copyOf(id, id.length);
     }

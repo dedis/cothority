@@ -73,7 +73,10 @@ func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.Ski
 		OCS:  ocs.Genesis,
 	}
 	reply := &UpdateDarcReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), req, reply)
+	cerr = c.SendProtobuf(ocs.Roster.List[0], req, reply)
+	if cerr != nil {
+		return
+	}
 	return reply.SB, nil
 }
 
@@ -148,7 +151,6 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 
 	request := &ReadRequest{
 		Read: Read{
-			Reader:    darc.Darc{},
 			DataID:    dataID,
 			Signature: darc.Signature{Signature: sig},
 		},
@@ -243,4 +245,20 @@ func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID,
 		return nil, cerr
 	}
 	return reply.Documents, nil
+}
+
+// GetLatestDarc looks for an update path to the latest valid
+// darc given either a genesis-darc and nil, or a later darc
+// and its base-darc.
+func (c *Client) GetLatestDarc(ocs *SkipChainURL, darcID darc.ID) (path *[]*darc.Darc, cerr onet.ClientError) {
+	request := &GetLatestDarc{
+		OCS:    ocs.Genesis,
+		DarcID: darcID,
+	}
+	reply := &GetLatestDarcReply{}
+	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if cerr != nil {
+		return
+	}
+	return reply.Darcs, nil
 }

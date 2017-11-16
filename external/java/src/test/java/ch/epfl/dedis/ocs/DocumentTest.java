@@ -8,6 +8,6 @@ class DocumentTest {
     @Test
     void getWrite() throws Exception{
         KeyPair kp = new KeyPair();
-        Document doc = new Document("This is a test message", 16, new Darc());
+        WriteRequest doc = new WriteRequest("This is a test message", 16, new Darc());
     }
 }

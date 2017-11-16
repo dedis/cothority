@@ -36,6 +36,15 @@ func TestOCS(t *testing.T) {
 	}
 }
 
+// Running small experiment
+func TestOCSExperiment(t *testing.T) {
+	nodes := []int{4, 25, 50, 75, 100}
+	for _, nbrNodes := range nodes {
+		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
+		ocs(t, nbrNodes, nbrNodes-1, 32)
+	}
+}
+
 func TestOCSKeyLengths(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Testing all keylengths takes some time...")
@@ -48,6 +57,7 @@ func TestOCSKeyLengths(t *testing.T) {
 
 func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	log.Lvl1("Running", nbrNodes, "nodes")
+	start := time.Now()
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	servers, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
@@ -63,6 +73,9 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 		log.ErrFatal(err)
 	}
 
+	log.Lvl1("Setting up DKG without network:", time.Now().Sub(start))
+	start = time.Now()
+
 	// Get the collective public key
 	dks, err := dkgs[0].DistKeyShare()
 	log.ErrFatal(err)
@@ -76,6 +89,9 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	// xc is the client's private/publick key pair
 	xc := config.NewKeyPair(network.Suite)
 
+	log.Lvl1("Encrypting key (no interaction):", time.Now().Sub(start))
+	start = time.Now()
+
 	// 4 - service - starts the protocol -
 	// as every node needs to have its own DKG, we
 	// use a service to give the corresponding DKGs to the nodes.
@@ -84,17 +100,19 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	protocol := pi.(*OCS)
 	protocol.U = U
 	protocol.Xc = xc.Public
-	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
+	// timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 	log.ErrFatal(protocol.Start())
 	select {
 	case <-protocol.Done:
 		log.Lvl2("root-node is done")
 		require.NotNil(t, protocol.Uis)
 		// Wait for other nodes
-		time.Sleep(time.Second)
-	case <-time.After(timeout):
+	case <-time.After(time.Hour):
 		t.Fatal("Didn't finish in time")
 	}
+
+	log.Lvl1("Running re-encryption:", time.Now().Sub(start))
+	start = time.Now()
 
 	// 5 - service - Lagrange interpolate the Uis - the reader will only
 	// get XhatEnc
@@ -104,6 +122,9 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	// 6 - reader - gets the resulting symmetric key, encrypted under Xc
 	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Secret)
 	log.ErrFatal(err)
+
+	log.Lvl1("Decrypting the key:", time.Now().Sub(start))
+
 	require.Equal(t, key, keyHat)
 }
 

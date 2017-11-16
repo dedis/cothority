@@ -1,15 +1,16 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Darc {
@@ -17,7 +18,7 @@ public class Darc {
     private List<Identity> users;
     private byte[] data;
     private int version;
-    private byte[] baseid;
+    private DarcId baseid;
     private DarcSignature signature;
     private final Logger logger = LoggerFactory.getLogger(Darc.class);
 
@@ -30,7 +31,7 @@ public class Darc {
      * @param owners defines who will be allowed to evolve that darc
      * @param users  defines who can sign on behalf of that darc
      */
-    public Darc(List<Identity> owners, List<Identity> users, byte[] data) {
+    public Darc(List<Identity> owners, List<Identity> users, byte[] data) throws CothorityCryptoException {
         this();
         version = 0;
         if (owners != null) {
@@ -39,7 +40,7 @@ public class Darc {
         if (users != null) {
             this.users = new ArrayList<>(users);
         }
-        this.data = data;
+        setDataAndInitBase(data);
     }
 
     /**
@@ -51,14 +52,14 @@ public class Darc {
      * @param owner defines who will be allowed to evolve that darc
      * @param users defines who can sign on behalf of that darc
      */
-    public Darc(Identity owner, List<Identity> users, byte[] data) {
+    public Darc(Identity owner, List<Identity> users, byte[] data) throws CothorityException {
         this();
         version = 0;
         owners.add(owner);
         if (users != null) {
             this.users = new ArrayList<>(users);
         }
-        this.data = data;
+        setDataAndInitBase(data);
     }
 
     /**
@@ -69,7 +70,7 @@ public class Darc {
      * @param users
      * @param data
      */
-    public Darc(Signer owner, Signer[] users, byte[] data) throws Exception {
+    public Darc(Signer owner, List<Signer> users, byte[] data) throws CothorityCryptoException {
         this();
         version = 0;
         owners.add(IdentityFactory.New(owner));
@@ -78,7 +79,7 @@ public class Darc {
                 this.users.add(IdentityFactory.New(s));
             }
         }
-        this.data = data;
+        setDataAndInitBase(data);
     }
 
     /**
@@ -90,11 +91,25 @@ public class Darc {
     }
 
     /**
+     * helper function to set data and initialise the baseid
+     *
+     * @param data what should be stored in the data-field
+     * @throws CothorityCryptoException
+     */
+    private void setDataAndInitBase(byte[] data) throws CothorityCryptoException {
+        this.data = data;
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[DarcId.length];
+        random.nextBytes(bytes);
+        this.baseid = new DarcId(bytes);
+    }
+
+    /**
      * Returns a darc from a protobuf representation.
      *
      * @param proto
      */
-    public Darc(DarcProto.Darc proto) throws Exception {
+    public Darc(DarcProto.Darc proto) throws CothorityCryptoException {
         this();
         for (DarcProto.Identity owner : proto.getOwnersList()) {
             owners.add(IdentityFactory.New(owner));
@@ -109,19 +124,19 @@ public class Darc {
         if (proto.hasSignature()) {
             signature = new DarcSignature(proto.getSignature());
         }
-        if (proto.hasBaseid()){
-            baseid = proto.getBaseid().toByteArray();
+        if (proto.hasBaseid()) {
+            baseid = new DarcId(proto.getBaseid().toByteArray());
         }
     }
 
     /**
      * Creates a copy of the current darc and increases the version-number
-     * by 1. Once the new darc is configured, SetEvolution has to be called
+     * by 1. Once the new darc is configured, setEvolution has to be called
      * last on the new darc.
      *
      * @return new darc
      */
-    public Darc Copy() {
+    public Darc copy() throws CothorityCryptoException {
         Darc d = new Darc(owners, users, data);
         d.version = version;
         d.baseid = baseid;
@@ -129,18 +144,18 @@ public class Darc {
     }
 
     /**
-     * Calculate the ID of the darc by calculating the sha-256 of the invariant
+     * Calculate the getId of the darc by calculating the sha-256 of the invariant
      * parts which excludes the delegation-signature.
      *
      * @return sha256
      */
-    public byte[] ID() {
-        Darc c = Copy();
-        DarcProto.Darc proto = c.ToProto();
+    public DarcId getId() throws CothorityCryptoException {
+        Darc c = copy();
+        DarcProto.Darc proto = c.toProto();
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(proto.toByteArray());
-            return hash;
+            return new DarcId(hash);
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
@@ -157,27 +172,27 @@ public class Darc {
      * @param path
      * @param previousOwner
      */
-    public void SetEvolution(Darc previous, SignaturePath path, Signer previousOwner) throws Exception {
+    public void setEvolution(Darc previous, SignaturePath path, Signer previousOwner) throws CothorityCryptoException {
         version = previous.version + 1;
         if (path == null) {
             path = new SignaturePath(previous, previousOwner, SignaturePath.OWNER);
         }
-        baseid = previous.GetBaseID();
-        signature = new DarcSignature(ID(), path, previousOwner);
-        logger.debug("Signature is: " + signature.ToProto().toString());
+        baseid = previous.getBaseId();
+        signature = new DarcSignature(getId().getId(), path, previousOwner);
+        logger.debug("Signature is: " + signature.toProto().toString());
     }
 
     /**
      * Returns the id of the darc with version == 0. If it's the darc with version
-     * 0, then it will return its own ID.
+     * 0, then it will return its own getId.
      *
      * @return id of first darc
      */
-    public byte[] GetBaseID() {
-        if (baseid != null) {
+    public DarcId getBaseId() throws CothorityCryptoException {
+        if (version > 0) {
             return baseid;
         }
-        return ID();
+        return getId();
     }
 
     /**
@@ -186,11 +201,11 @@ public class Darc {
      * @param previous
      * @return
      */
-    public boolean VerifyEvolution(Darc previous) throws Exception {
+    public boolean verifyEvolution(Darc previous) throws CothorityCryptoException {
         if (signature == null) {
             return false;
         }
-        return signature.Verify(ID(), previous);
+        return signature.verify(getId().getId(), previous);
     }
 
     /**
@@ -198,23 +213,23 @@ public class Darc {
      *
      * @return the protobuf representation of the darc.
      */
-    public DarcProto.Darc ToProto() {
+    public DarcProto.Darc toProto() {
         DarcProto.Darc.Builder b = DarcProto.Darc.newBuilder();
         for (Identity i : owners) {
-            b.addOwners(i.ToProto());
+            b.addOwners(i.toProto());
         }
         for (Identity i : users) {
-            b.addUsers(i.ToProto());
+            b.addUsers(i.toProto());
         }
         if (signature != null) {
-            b.setSignature(signature.ToProto());
+            b.setSignature(signature.toProto());
         }
         b.setVersion(version);
         if (data != null) {
             b.setDescription(ByteString.copyFrom(data));
         }
         if (baseid != null) {
-            b.setBaseid(ByteString.copyFrom(baseid));
+            b.setBaseid(ByteString.copyFrom(baseid.getId()));
         }
         return b.build();
     }
@@ -224,7 +239,7 @@ public class Darc {
      *
      * @param identity
      */
-    public void AddUser(Identity identity) {
+    public void addUser(Identity identity) {
         users.add(identity);
     }
 
@@ -233,8 +248,8 @@ public class Darc {
      *
      * @param darc
      */
-    public void AddUser(Darc darc) {
-        AddUser(IdentityFactory.New(darc));
+    public void addUser(Darc darc) throws CothorityCryptoException {
+        addUser(IdentityFactory.New(darc));
     }
 
     /**
@@ -242,8 +257,8 @@ public class Darc {
      *
      * @param signer
      */
-    public void AddUser(Signer signer) throws Exception {
-        AddUser(IdentityFactory.New(signer));
+    public void addUser(Signer signer) throws CothorityCryptoException {
+        addUser(IdentityFactory.New(signer));
     }
 
     /**
@@ -251,7 +266,7 @@ public class Darc {
      *
      * @param identity
      */
-    public void AddOwner(Identity identity) {
+    public void addOwner(Identity identity) {
         owners.add(identity);
     }
 
@@ -260,8 +275,8 @@ public class Darc {
      *
      * @param darc
      */
-    public void AddOwner(Darc darc) {
-        AddOwner(IdentityFactory.New(darc));
+    public void addOwner(Darc darc) throws CothorityCryptoException {
+        addOwner(IdentityFactory.New(darc));
     }
 
     /**
@@ -269,14 +284,14 @@ public class Darc {
      *
      * @param signer
      */
-    public void AddOwner(Signer signer) throws Exception {
-        AddOwner(IdentityFactory.New(signer));
+    public void addOwner(Signer signer) throws CothorityCryptoException {
+        addOwner(IdentityFactory.New(signer));
     }
 
     /**
      * Increments the version of this Darc by 1.
      */
-    public void IncVersion() {
+    public void incVersion() {
         version++;
     }
 
@@ -285,25 +300,33 @@ public class Darc {
      *
      * @return
      */
-    public int GetVersion() {
+    public int getVersion() {
         return version;
     }
 
-    public String toString(){
-        String ret = String.format("ID: %s\n", DatatypeConverter.printHexBinary(ID()));
-        if (baseid != null) {
-            ret += String.format("BaseID: %s\n", DatatypeConverter.printHexBinary(baseid));
+    public String toString() {
+        try {
+            String ret = String.format("getId: %s\n", getId().toString());
+            if (baseid != null) {
+                ret += String.format("BaseID: %s\n", baseid.toString());
+            }
+            for (Identity i : owners) {
+                ret += String.format("owner: %s\n", i.toString());
+            }
+            for (Identity i : users) {
+                ret += String.format("user: %s\n", i.toString());
+            }
+            return ret;
+        } catch (CothorityCryptoException e) {
+            return "Error when creating string: " + e.toString();
         }
-        for (Identity i: owners){
-            ret += String.format("owner: %s\n", i.toString());
-        }
-        for (Identity i: users){
-            ret += String.format("user: %s\n", i.toString());
-        }
-        return ret;
     }
 
     public boolean equals(Darc d) {
-        return Arrays.equals(this.ID(), d.ID());
+        try {
+            return this.getId().equals(d.getId());
+        } catch (CothorityCryptoException e) {
+            return false;
+        }
     }
 }

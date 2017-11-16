@@ -10,7 +10,7 @@ public interface Identity {
      * @param signature
      * @return
      */
-    boolean Verify(byte[] msg, byte[] signature);
+    boolean verify(byte[] msg, byte[] signature);
 
     /**
      * Creates a protobuf-representation of the implementation. The protobuf
@@ -18,7 +18,7 @@ public interface Identity {
      * identity implementations.
      * @return
      */
-    DarcProto.Identity ToProto();
+    DarcProto.Identity toProto();
 
     boolean equals(Object other);
 }

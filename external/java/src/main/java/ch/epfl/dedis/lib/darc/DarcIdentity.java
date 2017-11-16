@@ -1,18 +1,19 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 public class DarcIdentity implements Identity {
-    private byte[] darcID;
+    private DarcId darcID;
 
     /**
      * Instantiates a DarcIdentity given its protobuf representation.
      *
      * @param proto
      */
-    public DarcIdentity(DarcProto.IdentityDarc proto) {
-        darcID = proto.getId().toByteArray();
+    public DarcIdentity(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
+        darcID = new DarcId(proto.getId().toByteArray());
     }
 
     /**
@@ -20,7 +21,7 @@ public class DarcIdentity implements Identity {
      *
      * @param darcID
      */
-    public DarcIdentity(byte[] darcID) {
+    public DarcIdentity(DarcId darcID) {
         this.darcID = darcID;
     }
 
@@ -28,8 +29,8 @@ public class DarcIdentity implements Identity {
      * Instantiates a DarcIdentity given a darc.
      * @param darc
      */
-    public DarcIdentity(Darc darc){
-        this(darc.ID());
+    public DarcIdentity(Darc darc)throws CothorityCryptoException{
+        this(darc.getId());
     }
 
     /**
@@ -40,7 +41,7 @@ public class DarcIdentity implements Identity {
      * @param signature
      * @return
      */
-    public boolean Verify(byte[] msg, byte[] signature) {
+    public boolean verify(byte[] msg, byte[] signature) {
         return false;
     }
 
@@ -51,10 +52,10 @@ public class DarcIdentity implements Identity {
      *
      * @return
      */
-    public DarcProto.Identity ToProto() {
+    public DarcProto.Identity toProto() {
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
         DarcProto.IdentityDarc.Builder bdd = DarcProto.IdentityDarc.newBuilder();
-        bdd.setId(ByteString.copyFrom(darcID));
+        bdd.setId(ByteString.copyFrom(darcID.getId()));
         bid.setDarc(bdd);
         return bid.build();
     }

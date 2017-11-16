@@ -5,6 +5,7 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.ServerIdentityProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.moandjiezana.toml.Toml;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -22,9 +23,6 @@ import java.util.concurrent.CountDownLatch;
  * ServerIdentity.java
  * Purpose: The node-definition for a node in a cothority. It contains the IP-address
  * and a description.
- *
- * @author Linus Gasser <linus.gasser@epfl.ch>
- * @version 0.2 17/09/19
  */
 
 public class ServerIdentity {
@@ -46,14 +44,18 @@ public class ServerIdentity {
         return conodeAddress;
     }
 
-    public StatusProto.Response GetStatus() throws Exception {
+    public StatusProto.Response GetStatus() throws CothorityCommunicationException{
         StatusProto.Request request =
                 StatusProto.Request.newBuilder().build();
-        SyncSendMessage msg = new SyncSendMessage("Status/Request", request.toByteArray());
-        if (msg.ok) {
-            return StatusProto.Response.parseFrom(msg.response);
-        } else {
-            logger.warn("error sending message: " + msg.error);
+        try {
+            SyncSendMessage msg = new SyncSendMessage("Status/Request", request.toByteArray());
+            if (msg.ok) {
+                return StatusProto.Response.parseFrom(msg.response);
+            } else {
+                logger.warn("error sending message: " + msg.error);
+            }
+        } catch (InvalidProtocolBufferException e){
+            throw new CothorityCommunicationException(e.toString());
         }
 
         return null;
@@ -91,59 +93,57 @@ public class ServerIdentity {
         public Boolean ok = false;
         public String error;
 
-        public SyncSendMessage(String path, byte[] msg) throws Exception {
+        public SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
             final CountDownLatch statusLatch = new CountDownLatch(1);
-            WebSocketClient ws = new WebSocketClient(buildWebSocketAdddress(path)) {
-                @Override
-                public void onMessage(String msg) {
-                    error = "This should never happen:" + msg;
-                    statusLatch.countDown();
-                }
-
-                @Override
-                public void onMessage(ByteBuffer message) {
-                    try {
-                        ok = true;
-                        response = message;
-                    } catch (Exception e) {
-                        error = "Exception: " + e.toString();
+            try {
+                WebSocketClient ws = new WebSocketClient(buildWebSocketAdddress(path)) {
+                    @Override
+                    public void onMessage(String msg) {
+                        error = "This should never happen:" + msg;
+                        statusLatch.countDown();
                     }
-                    statusLatch.countDown();
-                }
 
-                @Override
-                public void onOpen(ServerHandshake handshake) {
-                    this.send(msg);
-                }
+                    @Override
+                    public void onMessage(ByteBuffer message) {
+                        try {
+                            ok = true;
+                            response = message;
+                        } catch (Exception e) {
+                            error = "Exception: " + e.toString();
+                        }
+                        close();
+                        statusLatch.countDown();
+                    }
 
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-                    logger.warn("closed connection: " + reason);
-                    statusLatch.countDown();
-                }
+                    @Override
+                    public void onOpen(ServerHandshake handshake) {
+                        this.send(msg);
+                    }
 
-                @Override
-                public void onError(Exception ex) {
-                    error = "Error: " + ex.toString();
-                    statusLatch.countDown();
-                }
-            };
+                    @Override
+                    public void onClose(int code, String reason, boolean remote) {
+                        logger.warn("closed connection: " + reason);
+                        statusLatch.countDown();
+                    }
 
-            // open websocket and send message.
-            ws.connect();
-            // wait for error or message returned.
-            statusLatch.await();
-            // close the connection.
-            ws.close();
-            if (!ok) {
-                throw new ErrorSendMessage(error);
+                    @Override
+                    public void onError(Exception ex) {
+                        error = "Error: " + ex.toString();
+                        statusLatch.countDown();
+                    }
+                };
+
+                // open websocket and send message.
+                ws.connect();
+                // wait for error or message returned.
+                statusLatch.await();
+            } catch (InterruptedException e) {
+                throw new CothorityCommunicationException(e.toString());
+            } catch (URISyntaxException e){
+                throw new CothorityCommunicationException(e.toString());
             }
-        }
-
-        public class ErrorSendMessage extends Exception {
-            public ErrorSendMessage(String message) {
-                super(message);
-                logger.warn("error while sending message: " + message);
+            if (!ok) {
+                throw new CothorityCommunicationException(error);
             }
         }
 

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.Point;

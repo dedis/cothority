@@ -26,7 +26,7 @@ public class SchnorrSig {
         response = new Scalar(Arrays.copyOfRange(data, 32, 64));
     }
 
-    public boolean Verify(byte[] msg, Point pub) {
+    public boolean verify(byte[] msg, Point pub) {
         Scalar hash = toHash(challenge, pub, msg);
         Point S = response.scalarMult(null);
         Point Ah = pub.scalarMult(hash);

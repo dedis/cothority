@@ -2,7 +2,14 @@ package darc
 
 import (
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/onet.v1/network"
 )
+
+func init() {
+	network.RegisterMessages(
+		Darc{}, Identity{}, Signature{},
+	)
+}
 
 // ID is the identity of a Darc - which is the sha256 of its protobuf representation
 // over invariant fields [Owners, Users, Version, Description]. Signature is excluded.

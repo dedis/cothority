@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
@@ -20,11 +21,11 @@ public class Ed25519Identity implements Identity {
      * Creates an Ed25519Identity from a Ed25519Signer.
      * @param signer
      */
-    public Ed25519Identity(Signer signer) throws Exception{
+    public Ed25519Identity(Signer signer) throws CothorityCryptoException{
         if (Ed25519Signer.class.isInstance(signer)) {
-            pub = new Point(signer.GetPublic());
+            pub = new Point(signer.getPublic());
         } else {
-            throw new Exception("Wrong signer type: " + signer.toString());
+            throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
         }
     }
 
@@ -35,8 +36,8 @@ public class Ed25519Identity implements Identity {
      * @param signature
      * @return
      */
-    public boolean Verify(byte[] msg, byte[] signature){
-        return new SchnorrSig(signature).Verify(msg, pub);
+    public boolean verify(byte[] msg, byte[] signature){
+        return new SchnorrSig(signature).verify(msg, pub);
     }
 
     /**
@@ -45,7 +46,7 @@ public class Ed25519Identity implements Identity {
      * identity implementations.
      * @return
      */
-    public DarcProto.Identity ToProto(){
+    public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
         DarcProto.IdentityEd25519.Builder bed = DarcProto.IdentityEd25519.newBuilder();
         bed.setPoint(ByteString.copyFrom(pub.toBytes()));
