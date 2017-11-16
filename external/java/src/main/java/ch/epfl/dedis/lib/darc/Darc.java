@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Darc {
@@ -302,6 +303,29 @@ public class Darc {
      */
     public int getVersion() {
         return version;
+    }
+
+    /**
+     * Retrun copy of current owners of DARC
+     * @return list of owners
+     */
+    public List<Identity> getOwners() {
+        return new ArrayList<>(owners);
+    }
+
+    /**
+     * Return copy of current users of DARC (users/dacs who can execute this DARC)
+     * @return list of users
+     */
+    public List<Identity> getUsers() {
+        return new ArrayList<>(users);
+    }
+
+    public byte[] getData() {
+        if (data==null) {
+            return null;
+        }
+        return Arrays.copyOf(data, data.length);
     }
 
     public String toString() {

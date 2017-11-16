@@ -400,6 +400,11 @@ public class OnchainSecretsRPC {
         }
     }
 
+    public SkipblockId getGenesis() {
+        return ocsID;
+    }
+
+    @Deprecated
     public String getGenesisIdBase64() {
         return new String((Base64.getEncoder().encode(ocsID.getId())));
     }

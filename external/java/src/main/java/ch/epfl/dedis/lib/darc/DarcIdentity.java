@@ -59,4 +59,12 @@ public class DarcIdentity implements Identity {
         bid.setDarc(bdd);
         return bid.build();
     }
+
+    /**
+     * Return ID of DARC
+     * @return ID of DARC
+     */
+    public DarcId getDarcId() {
+        return darcID;
+    }
 }

@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
+import javax.annotation.Nonnull;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
@@ -20,6 +21,7 @@ public class Sha256id implements HashId {
     }
 
     @Override
+    @Nonnull
     public byte[] getId() {
         return Arrays.copyOf(id, id.length);
     }
