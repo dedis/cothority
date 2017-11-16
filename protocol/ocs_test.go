@@ -36,15 +36,6 @@ func TestOCS(t *testing.T) {
 	}
 }
 
-// Running small experiment
-func TestOCSExperiment(t *testing.T) {
-	nodes := []int{4, 25, 50, 75, 100}
-	for _, nbrNodes := range nodes {
-		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
-		ocs(t, nbrNodes, nbrNodes-1, 32)
-	}
-}
-
 func TestOCSKeyLengths(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Testing all keylengths takes some time...")
