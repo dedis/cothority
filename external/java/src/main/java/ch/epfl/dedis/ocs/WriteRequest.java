@@ -158,7 +158,7 @@ public class WriteRequest {
      * @throws CothorityCommunicationException
      */
     public DarcSignature getSignature(OnchainSecretsRPC ocs, Signer publisher) throws CothorityCryptoException, CothorityCommunicationException {
-        SignaturePath path = ocs.getDarcPath(ocs.getAdminDarc().getId(),
+        SignaturePath path = ocs.getDarcPath(ocs.getAdminDarc().getBaseId(),
                 publisher.getIdentity(), SignaturePath.USER);
         return new DarcSignature(owner.getId().getId(),
                 path, publisher);
