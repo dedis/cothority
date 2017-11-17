@@ -65,6 +65,7 @@ public class OnchainSecretsRPC {
         try {
             OCSProto.Transaction transaction = getTransaction(ocsID);
             adminDarc = new Darc(transaction.getDarc());
+            logger.info("adminDarc is: " + adminDarc.toString());
         } catch (CothorityCryptoException e) {
             throw new CothorityCommunicationException(e.toString());
         }

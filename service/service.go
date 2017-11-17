@@ -35,6 +35,7 @@ const propagationTimeout = 10000
 
 func init() {
 	network.RegisterMessage(Storage{})
+	network.RegisterMessage(Darcs{})
 	var err error
 	templateID, err = onet.RegisterNewService(ocs.ServiceName, newService)
 	log.ErrFatal(err)
@@ -55,7 +56,7 @@ type Service struct {
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
 	OCSs     *ocs.SBBStorage
-	Accounts map[string]Darcs
+	Accounts map[string]*Darcs
 	Shared   map[string]*protocol.SharedSecret
 	Admins   map[string]*darc.Darc
 }
@@ -155,8 +156,16 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	}
 	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
 	log.Lvlf2("New darc is %d", req.Darc.Version)
-	s.addDarc(&req.Darc)
-	s.save()
+
+	replies, err := s.propagateOCS(ocsBunch.Latest.Roster, sb, propagationTimeout)
+	if err != nil {
+		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return
+	}
+	if replies != len(ocsBunch.Latest.Roster.List) {
+		log.Warn("Got only", replies, "replies for write-propagation")
+	}
+
 	return &ocs.UpdateDarcReply{SB: sb}, nil
 }
 
@@ -520,6 +529,9 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func (s *Service) addDarc(d *darc.Darc) {
 	key := string(d.GetBaseID())
 	darcs := s.Storage.Accounts[key]
+	if darcs == nil {
+		darcs = &Darcs{}
+	}
 	darcs.Darcs = append(darcs.Darcs, d)
 	s.Storage.Accounts[key] = darcs
 }
@@ -537,7 +549,7 @@ func (s *Service) getDarc(id darc.ID) (*darc.Darc, bool) {
 
 func (s *Service) getLatestDarc(genesisID darc.ID) *darc.Darc {
 	darcs := s.Storage.Accounts[string(genesisID)]
-	if len(darcs.Darcs) == 0 {
+	if darcs == nil || len(darcs.Darcs) == 0 {
 		return nil
 	}
 	return darcs.Darcs[len(darcs.Darcs)-1]
@@ -700,10 +712,11 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	s.saveMutex.Lock()
 	s.Storage.OCSs.Store(sb)
 	if r := dataOCS.Darc; r != nil {
-		log.Lvlf2("Storing new darc %x", r.GetID())
+		log.Lvlf2("Storing new darc %x - %x", r.GetID(), r.GetBaseID())
 		s.addDarc(r)
 	}
 	s.saveMutex.Unlock()
+	s.save()
 	if sb.Index == 0 {
 		return
 	}
@@ -718,7 +731,6 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 			s.saveMutex.Unlock()
 		}
 	}
-	s.save()
 }
 
 // saves the actual identity
@@ -748,7 +760,7 @@ func (s *Service) tryLoad() error {
 			s.Storage.Shared = map[string]*protocol.SharedSecret{}
 		}
 		if len(s.Storage.Accounts) == 0 {
-			s.Storage.Accounts = map[string]Darcs{}
+			s.Storage.Accounts = map[string]*Darcs{}
 		}
 		if len(s.Storage.Admins) == 0 {
 			s.Storage.Admins = map[string]*darc.Darc{}
@@ -768,7 +780,7 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
-	log.Lvl3("Successfully loaded")
+	log.Lvl2("Successfully loaded:", len(s.Storage.Accounts))
 	return nil
 }
 
