@@ -80,7 +80,7 @@ public class OnchainSecrets extends OnchainSecretsRPC {
                 newDarc.addUser(identity);
                 break;
             case SignaturePath.OWNER:
-                newDarc.addUser(identity);
+                newDarc.addOwner(identity);
                 break;
             default:
 
