@@ -147,7 +147,7 @@ public class GrantAccessTest {
 
     private static void grantSystemWriteAccess(OnchainSecrets ocs, Darc userDarc) throws Exception {
         Ed25519Signer admin = new Ed25519Signer(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
-        Darc latestSystemDarc = ocs.getAdminDarc();
-        ocs.addIdentityToDarc(latestSystemDarc, IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
+        ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.USER);
+        ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
     }
 }
