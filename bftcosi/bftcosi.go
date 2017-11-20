@@ -44,8 +44,9 @@ type ProtocolBFTCoSi struct {
 	// Challenge of the commit phase and will be used during the response of the
 	// commit phase to put an exception or to sign.
 	signRefusal bool
-	// threshold for how much exception
-	threshold int
+	// allowedExceptions for how much exception is allowed. If more than allowedExceptions number
+	// of conodes refuse to sign, no signature will be created.
+	allowedExceptions int
 	// our index in the Roster list
 	index int
 
@@ -115,6 +116,7 @@ type collectStructs struct {
 // NewBFTCoSiProtocol returns a new bftcosi struct
 func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
+	nodes := len(n.Tree().List())
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		collectStructs: collectStructs{
@@ -123,7 +125,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
-		threshold:            (len(n.Tree().List()) + 1) * 2 / 3,
+		allowedExceptions:    nodes - (nodes+1)*2/3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 	}
@@ -368,7 +370,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 	}
 
 	// Check if we have no more than threshold failed nodes
-	if len(ch.Signature.Exceptions) >= int(bft.threshold) {
+	if len(ch.Signature.Exceptions) > int(bft.allowedExceptions) {
 		log.Lvlf3("%s: More than threshold (%d/%d) refused to sign - aborting.",
 			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
 		bft.signRefusal = true
