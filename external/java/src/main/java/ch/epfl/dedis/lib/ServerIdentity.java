@@ -44,21 +44,15 @@ public class ServerIdentity {
         return conodeAddress;
     }
 
-    public StatusProto.Response GetStatus() throws CothorityCommunicationException{
+    public StatusProto.Response GetStatus() throws CothorityCommunicationException {
         StatusProto.Request request =
                 StatusProto.Request.newBuilder().build();
         try {
             SyncSendMessage msg = new SyncSendMessage("Status/Request", request.toByteArray());
-            if (msg.ok) {
-                return StatusProto.Response.parseFrom(msg.response);
-            } else {
-                logger.warn("error sending message: " + msg.error);
-            }
-        } catch (InvalidProtocolBufferException e){
+            return StatusProto.Response.parseFrom(msg.response);
+        } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e.toString());
         }
-
-        return null;
     }
 
     public ServerIdentityProto.ServerIdentity getProto() {
@@ -74,23 +68,11 @@ public class ServerIdentity {
     }
 
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
-        try {
-            ServerIdentity.SyncSendMessage msg =
-                    new ServerIdentity.SyncSendMessage(path, data);
-
-            if (msg.ok) {
-                return msg.response.array();
-            } else {
-                throw new CothorityCommunicationException("Error while sending message: " + msg.error);
-            }
-        } catch (Exception e) {
-            throw new CothorityCommunicationException("Cothority communication error: " + e.getMessage(), e);
-        }
+        return new SyncSendMessage(path, data).response.array();
     }
 
     public class SyncSendMessage {
         public ByteBuffer response;
-        public Boolean ok = false;
         public String error;
 
         public SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
@@ -105,12 +87,7 @@ public class ServerIdentity {
 
                     @Override
                     public void onMessage(ByteBuffer message) {
-                        try {
-                            ok = true;
-                            response = message;
-                        } catch (Exception e) {
-                            error = "Exception: " + e.toString();
-                        }
+                        response = message;
                         close();
                         statusLatch.countDown();
                     }
@@ -122,7 +99,9 @@ public class ServerIdentity {
 
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
-                        logger.warn("closed connection: " + reason);
+                        if (reason != "") {
+                            error = reason;
+                        }
                         statusLatch.countDown();
                     }
 
@@ -139,10 +118,10 @@ public class ServerIdentity {
                 statusLatch.await();
             } catch (InterruptedException e) {
                 throw new CothorityCommunicationException(e.toString());
-            } catch (URISyntaxException e){
+            } catch (URISyntaxException e) {
                 throw new CothorityCommunicationException(e.toString());
             }
-            if (!ok) {
+            if (error != null) {
                 throw new CothorityCommunicationException(error);
             }
         }

@@ -98,7 +98,7 @@ public class OnchainSecretsRPC {
             logger.info("Testing node {}", n.getAddress());
             try {
                 n.GetStatus();
-            } catch (Exception e) {
+            } catch (CothorityCommunicationException e) {
                 logger.warn("Failing node {}", n.getAddress());
                 ok = false;
             }
@@ -130,7 +130,7 @@ public class OnchainSecretsRPC {
             ocsID = new SkipblockId(reply.getOcs().getHash().toByteArray());
             logger.info("Initialised OCS: {}", ocsID.toString());
         } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
+            throw new CothorityCommunicationException(e.toString());
         } catch (CothorityCryptoException e) {
             throw new CothorityCommunicationException(e.toString());
         }

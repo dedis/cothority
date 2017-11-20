@@ -226,21 +226,16 @@ func (d Darc) GetLatest() (*Darc, error) {
 }
 
 func (d Darc) String() string {
-	ret := fmt.Sprintf("%x[%x]: %d", d.GetBaseID(), d.GetID(), d.Version)
-	if d.BaseID != nil {
-		ret += fmt.Sprintf("\nbaseid: %x", *d.BaseID)
-	}
-	if d.Owners != nil {
-		for ui, u := range *d.Owners {
-			if u.Ed25519 != nil {
-				ret += fmt.Sprintf("\nowner[%d] = %s", ui, u.Ed25519.Point)
-			}
-		}
-	}
-	if d.Users != nil {
-		for ui, u := range *d.Users {
-			if u.Ed25519 != nil {
-				ret += fmt.Sprintf("\nuser[%d] = %s", ui, u.Ed25519.Point)
+	ret := fmt.Sprintf("this[base]: %x[%x]\nVersion: %d", d.GetID(), d.GetBaseID(), d.Version)
+	for idStr, list := range map[string]*[]*Identity{"owner": d.Owners, "user": d.Users} {
+		if list != nil {
+			for ui, u := range *list {
+				if u.Ed25519 != nil {
+					ret += fmt.Sprintf("\n%sEd25519[%d] = %s", idStr, ui, u.Ed25519.Point)
+				}
+				if u.Darc != nil {
+					ret += fmt.Sprintf("\n%sDarc[%d] = %x", idStr, ui, u.Darc.ID)
+				}
 			}
 		}
 	}
@@ -393,13 +388,15 @@ func (sigpath *SignaturePath) Verify(role Role) error {
 	}
 	if role == User {
 		for _, id := range *previous.Users {
-			if id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
+			if id.Ed25519 != nil &&
+				id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
 				return nil
 			}
 		}
 	} else {
 		for _, id := range *previous.Owners {
-			if id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
+			if id.Ed25519 != nil &&
+				id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
 				return nil
 			}
 		}

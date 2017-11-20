@@ -2,3 +2,4 @@ build/
 *.iml
 .idea
 .DS_Store
+profile.cov

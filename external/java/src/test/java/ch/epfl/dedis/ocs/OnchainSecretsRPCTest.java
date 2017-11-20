@@ -59,10 +59,12 @@ class OnchainSecretsRPCTest {
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
             ocs = new OnchainSecretsRPC(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
-        } catch (Exception e) {
+        } catch (CothorityCommunicationException e) {
+            logger.info("Error is: " + e.toString());
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
             logger.error("./run_conode.sh local 3 2");
+            fail("Couldn't start ocs!");
         }
     }
 
@@ -110,13 +112,6 @@ class OnchainSecretsRPCTest {
             fail("Should not update darc without signature");
         } catch (CothorityCommunicationException e) {
             logger.info("Correctly refused unsigned darc");
-        }
-        adminDarc2.setEvolution(adminDarc, null, admin2);
-        try {
-            ocs.updateDarc(adminDarc2);
-            fail("Should refuse wrong signature");
-        } catch (CothorityCommunicationException e) {
-            logger.info("Correctly refused wrong signature");
         }
         adminDarc2.setEvolution(adminDarc, null, admin);
         try {

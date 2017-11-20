@@ -154,6 +154,7 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	if cerr != nil {
 		return nil, cerr
 	}
+	log.Lvl3("New darc is:", req.Darc.String())
 	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
 	log.Lvlf2("New darc is %d", req.Darc.Version)
 
@@ -176,6 +177,8 @@ func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply
 	if !exists {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
 	}
+	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
+		req.BaseDarcID)
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
 	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
@@ -568,6 +571,10 @@ func (s *Service) printPath(path []darc.Darc) {
 // then searching all sub-darcs.
 // If it doesn't find a matching path, it returns nil.
 func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc.Role) []darc.Darc {
+	if identity.Darc != nil {
+		log.Lvl2("Cannot search path to DarcIdentity")
+		return nil
+	}
 	newpath := make([]darc.Darc, len(path))
 	copy(newpath, path)
 
@@ -580,10 +587,16 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	// First get latest version
 	for _, di := range s.Storage.Accounts[string(d.GetBaseID())].Darcs {
 		if di.Version > d.Version {
+			log.Lvl3("Adding new version", di.Version)
 			newpath = append(newpath, *di)
 			d = di
 		}
 	}
+	log.Lvl3("role is:", role)
+	for i, p := range newpath {
+		log.Lvlf3("newpath[%d] = %x", i, p.GetID())
+	}
+	log.Lvl3("This darc is:", newpath[len(newpath)-1].String())
 
 	// Then search for identity
 	ids := d.Users
@@ -607,8 +620,7 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 					log.Lvlf1("Got unknown darc-id in path - ignoring: %x", id.Darc.ID)
 					continue
 				}
-				newpath = append(newpath, *d)
-				if np := s.searchPath(newpath, identity, role); np != nil {
+				if np := s.searchPath(append(newpath, *d), identity, role); np != nil {
 					return np
 				}
 			}
