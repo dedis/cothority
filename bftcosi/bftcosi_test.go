@@ -75,12 +75,12 @@ func TestThreshold(t *testing.T) {
 	local := onet.NewLocalTest()
 	defer local.CloseAll()
 	tests := []struct{ h, t int }{
-		{1, 1},
-		{2, 2},
-		{3, 2},
-		{4, 3},
-		{5, 4},
-		{6, 4},
+		{1, 0},
+		{2, 0},
+		{3, 1},
+		{4, 1},
+		{5, 1},
+		{6, 2},
 	}
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
@@ -92,7 +92,7 @@ func TestThreshold(t *testing.T) {
 		node, err := local.CreateProtocol(TestProtocolName, tree)
 		log.ErrFatal(err)
 		bc := node.(*ProtocolBFTCoSi)
-		assert.Equal(t, thr, bc.threshold, "hosts was %d", hosts)
+		assert.Equal(t, thr, bc.allowedExceptions, "hosts was %d", hosts)
 		local.CloseAll()
 	}
 }
@@ -123,7 +123,7 @@ func TestCheckRefuseMore(t *testing.T) {
 		for refuseCount := 1; refuseCount <= 3; refuseCount++ {
 			log.Lvl2("RefuseMore at", refuseCount)
 			runProtocolOnce(t, n, TestProtocolName,
-				refuseCount, refuseCount < (n+1)*2/3)
+				refuseCount, refuseCount <= n-(n+1)*2/3)
 		}
 	}
 }
@@ -184,7 +184,7 @@ func runProtocol(t *testing.T, name string, refuseCount int) {
 func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 	succeed bool) {
 	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed); err != nil {
-		t.Fatal(err)
+		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, name, refuseCount, succeed, err)
 	}
 }
 func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
