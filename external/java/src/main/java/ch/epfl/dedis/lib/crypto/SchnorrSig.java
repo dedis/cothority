@@ -12,8 +12,6 @@ public class SchnorrSig {
 
     public SchnorrSig(byte[] msg, Scalar priv) {
         KeyPair kp = new KeyPair();
-        kp.Scalar = new Scalar("983f5db380f69c1f58164fa8af1d478842559854989d9f559ad8ea544d12e8");
-        kp.Point = kp.Scalar.scalarMult(null);
         challenge = kp.Point;
 
         Point pub = priv.scalarMult(null);
