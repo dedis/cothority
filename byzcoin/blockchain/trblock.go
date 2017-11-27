@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"net"
 
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet/log"
 )
 
 type Block struct {

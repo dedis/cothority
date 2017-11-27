@@ -1,3 +1,5 @@
+// +build cosi
+
 package bftcosi
 
 /*
@@ -13,10 +15,10 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called
@@ -104,13 +106,13 @@ type collectStructs struct {
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []Exception
 	// temporary buffer of "prepare" commitments
-	tempPrepareCommit []abstract.Point
+	tempPrepareCommit []kyber.Point
 	// temporary buffer of "commit" commitments
-	tempCommitCommit []abstract.Point
+	tempCommitCommit []kyber.Point
 	// temporary buffer of "prepare" responses
-	tempPrepareResponse []abstract.Scalar
+	tempPrepareResponse []kyber.Scalar
 	// temporary buffer of "commit" responses
-	tempCommitResponse []abstract.Scalar
+	tempCommitResponse []kyber.Scalar
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -282,7 +284,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 			return nil
 		}
 
-		var commitment abstract.Point
+		var commitment kyber.Point
 		// store it and check if we have enough commitments
 		switch comm.TYPE {
 		case RoundPrepare:

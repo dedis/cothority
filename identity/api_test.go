@@ -9,13 +9,13 @@ import (
 	"github.com/dedis/cothority/pop/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest, kp *config.KeyPair) *Identity {
@@ -61,7 +61,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	final := &service.FinalStatement{}
 	final.Desc = popDesc
-	final.Attendees = make([]abstract.Point, 1)
+	final.Attendees = make([]kyber.Point, 1)
 	final.Attendees[0] = keypairUser.Public
 	hash, err := final.Hash()
 	log.ErrFatal(err)
@@ -97,7 +97,7 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 	keypairAdmin := config.NewKeyPair(network.Suite)
 
 	N := 5
-	pubs := make([]abstract.Point, N)
+	pubs := make([]kyber.Point, N)
 	h := network.Suite.Hash()
 	for i := 0; i < N; i++ {
 		kp := config.NewKeyPair(network.Suite)
@@ -293,7 +293,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	defer l.CloseAll()
 	keypair := config.NewKeyPair(network.Suite)
 	kp2 := config.NewKeyPair(network.Suite)
-	set := anon.Set([]abstract.Point{keypair.Public, kp2.Public})
+	set := anon.Set([]kyber.Point{keypair.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
 		log.Lvl3(s.Identities)
@@ -394,7 +394,7 @@ func proposeUpVote(i *Identity) {
 func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster, name string) *Identity {
 	keypair := config.NewKeyPair(network.Suite)
 	kp2 := config.NewKeyPair(network.Suite)
-	set := anon.Set([]abstract.Point{keypair.Public, kp2.Public})
+	set := anon.Set([]kyber.Point{keypair.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
 		s.auth.sets = append(s.auth.sets, set)

@@ -9,7 +9,8 @@ PACKAGE_POP_GO="github.com/dedis/cothority/pop"
 PACKAGE_POP="$GOPATH/src/$PACKAGE_POP_GO"
 pop=`basename $PACKAGE_POP`
 PACKAGE_IDEN="github.com/dedis/cothority/identity"
-. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+
+. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 main(){
     startTest

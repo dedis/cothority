@@ -4,10 +4,10 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -37,7 +37,7 @@ type RandHound struct {
 	server              [][]*onet.TreeNode // Grouped servers
 	group               [][]int            // Grouped server indices
 	threshold           []int              // Group thresholds
-	key                 [][]abstract.Point // Grouped server public keys
+	key                 [][]kyber.Point // Grouped server public keys
 	ServerIdxToGroupNum []int              // Mapping of gloabl server index to group number
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
@@ -46,7 +46,7 @@ type RandHound struct {
 	i2s          map[int]*I2              // I2 messages sent to servers (index: server)
 	r1s          map[int]*R1              // R1 messages received from servers (index: server)
 	r2s          map[int]*R2              // R2 messages received from servers (index: server)
-	polyCommit   map[int][]abstract.Point // Commitments of server polynomials (index: server)
+	polyCommit   map[int][]kyber.Point // Commitments of server polynomials (index: server)
 	secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
 	chosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
 
@@ -63,7 +63,7 @@ type Share struct {
 	Source int            // Source server index
 	Target int            // Target server index
 	Pos    int            // Share position
-	Val    abstract.Point // Share value
+	Val    kyber.Point // Share value
 	Proof  ProofCore      // ZK-verification proof
 }
 
@@ -76,9 +76,9 @@ type Transcript struct {
 	Purpose      string             // Purpose of protocol run
 	Time         time.Time          // Timestamp of initiation
 	CliRand      []byte             // Client-chosen randomness (for initial sharding)
-	CliKey       abstract.Point     // Client public key
+	CliKey       kyber.Point     // Client public key
 	Group        [][]int            // Grouped server indices
-	Key          [][]abstract.Point // Grouped server public keys
+	Key          [][]kyber.Point // Grouped server public keys
 	Threshold    []int              // Grouped secret sharing thresholds
 	ChosenSecret map[int][]int      // Chosen secrets that contribute to collective randomness
 	I1s          map[int]*I1        // I1 messages sent to servers
@@ -93,7 +93,7 @@ type I1 struct {
 	SID       []byte            // Session identifier
 	Threshold int               // Secret sharing threshold
 	Group     []uint32          // Group indices
-	Key       []abstract.Point  // Public keys of trustees
+	Key       []kyber.Point  // Public keys of trustees
 }
 
 // R1 is the reply sent by the servers to the client in step 2.
@@ -110,7 +110,7 @@ type I2 struct {
 	SID          []byte            // Session identifier
 	ChosenSecret []uint32          // Chosen secrets (flattened)
 	EncShare     []Share           // Encrypted shares
-	PolyCommit   []abstract.Point  // Polynomial commitments
+	PolyCommit   []kyber.Point  // Polynomial commitments
 }
 
 // R2 is the reply sent by the servers to the client in step 4.

@@ -8,27 +8,27 @@ import (
 
 	"reflect"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
-type PropagateMsg struct {
+type propagateMsg struct {
 	Data []byte
 }
 
 func init() {
-	network.RegisterMessage(PropagateMsg{})
+	network.RegisterMessage(propagateMsg{})
 }
 
 // Tests an n-node system
 func TestPropagate(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
-		local := onet.NewLocalTest()
+		local := onet.NewLocalTest(tSuite)
 		servers, el, _ := local.GenTree(nbrNodes, true)
 		var i int
 		var iMut sync.Mutex
-		msg := &PropagateMsg{[]byte("propagate")}
+		msg := &propagateMsg{[]byte("propagate")}
 		propFuncs := make([]PropagationFunc, nbrNodes)
 		var err error
 		for n, server := range servers {
@@ -36,7 +36,7 @@ func TestPropagate(t *testing.T) {
 			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
 				func(m network.Message) {
-					if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
+					if bytes.Equal(msg.Data, m.(*propagateMsg).Data) {
 						iMut.Lock()
 						i++
 						iMut.Unlock()

@@ -3,10 +3,10 @@ package jvss
 import (
 	"strings"
 
-	"gopkg.in/dedis/crypto.v0/poly"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber/poly"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func init() {

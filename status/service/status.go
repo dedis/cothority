@@ -1,9 +1,9 @@
 package status
 
 import (
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // This file contains all the code to run a Stat service. The Stat receives takes a
@@ -44,14 +44,14 @@ func (st *Stat) Request(req *Request) (network.Message, onet.ClientError) {
 }
 
 // newStatService creates a new service that is built for Status
-func newStatService(c *onet.Context) onet.Service {
+func newStatService(c *onet.Context) (onet.Service, error) {
 	s := &Stat{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {
-		log.ErrFatal(err, "Couldn't register message:")
+		return nil, err
 	}
 
-	return s
+	return s, nil
 }

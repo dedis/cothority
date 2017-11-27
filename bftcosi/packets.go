@@ -4,9 +4,9 @@ import (
 	"crypto/sha512"
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -48,7 +48,7 @@ type BFTSignature struct {
 // signature, so it can be verified by dedis/crypto/cosi.
 // publics is a slice of all public signatures, and the msg is the msg
 // being signed.
-func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error {
+func (bs *BFTSignature) Verify(s network.Suite, publics []kyber.Point) error {
 	if bs == nil || bs.Sig == nil || bs.Msg == nil {
 		return errors.New("Invalid signature")
 	}
@@ -90,9 +90,9 @@ func (bs *BFTSignature) Verify(s abstract.Suite, publics []abstract.Point) error
 	// only with C being the reduced version
 	k := s.Scalar().SetBytes(h.Sum(nil))
 	minusPublic := s.Point().Neg(aggReducedPublic)
-	ka := s.Point().Mul(minusPublic, k)
+	ka := s.Point().Mul(k, minusPublic)
 	r := s.Scalar().SetBytes(bs.Sig[pointLen:sigLen])
-	rb := s.Point().Mul(nil, r)
+	rb := s.Point().Mul(r, nil)
 	left := s.Point().Add(rb, ka)
 
 	right := s.Point().Sub(origCommit, aggExCommit)
@@ -120,7 +120,7 @@ type announceChan struct {
 // Commitment is the commitment packets that is sent for both rounds
 type Commitment struct {
 	TYPE       RoundType
-	Commitment abstract.Point
+	Commitment kyber.Point
 }
 
 // commitChan is the type of the channel that will be used to catch commitment
@@ -136,7 +136,7 @@ type commitChan struct {
 type ChallengePrepare struct {
 	Msg       []byte
 	Data      []byte
-	Challenge abstract.Scalar
+	Challenge kyber.Scalar
 }
 
 // ChallengeCommit  is the challenge used by BftCoSi during the "commit"
@@ -149,7 +149,7 @@ type ChallengePrepare struct {
 // otherwise the signature verification will be wrong.
 type ChallengeCommit struct {
 	// Challenge for the current round
-	Challenge abstract.Scalar
+	Challenge kyber.Scalar
 	// Signature is the signature response generated at the previous round (prepare)
 	Signature *BFTSignature
 }
@@ -170,7 +170,7 @@ type challengeCommitChan struct {
 // Response is the struct used by ByzCoin during the response. It
 // contains the response + the basic exception list.
 type Response struct {
-	Response   abstract.Scalar
+	Response   kyber.Scalar
 	Exceptions []Exception
 	TYPE       RoundType
 }
@@ -189,5 +189,5 @@ type responseChan struct {
 // correctly verify the signature
 type Exception struct {
 	Index      int
-	Commitment abstract.Point
+	Commitment kyber.Point
 }

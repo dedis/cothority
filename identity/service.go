@@ -22,14 +22,14 @@ import (
 
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -89,9 +89,9 @@ type authData struct {
 	// sets of public keys to verify linkable ring signatures
 	sets []anon.Set
 	// list of public keys to verify simple authentication with Schnorr sig
-	keys []abstract.Point
+	keys []kyber.Point
 	// list of adminKeys
-	adminKeys []abstract.Point
+	adminKeys []kyber.Point
 	// set of nonces
 	nonces map[string]struct{}
 }
@@ -172,7 +172,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 	// check Signature
 	valid := false
 	for _, key := range s.auth.adminKeys {
-		if crypto.VerifySchnorr(network.Suite, key, msg, req.Sig) == nil {
+		if schnorr.Verify(network.Suite, key, msg, req.Sig) == nil {
 			valid = true
 			break
 		}
@@ -255,7 +255,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			return nil, onet.NewClientErrorCode(ErrorAuthentication,
 				"No such key is stored")
 		}
-		if crypto.VerifySchnorr(network.Suite, ai.Public, ai.Nonce, ai.SchnSig) != nil {
+		if schnorr.Verify(network.Suite, ai.Public, ai.Nonce, ai.SchnSig) != nil {
 			valid = false
 		} else {
 			valid = true
@@ -410,13 +410,13 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if oldvote := sid.Proposed.Votes[v.Signer]; oldvote != nil {
 			// It can either be an update-vote (accepted), or a second
 			// vote (refused).
-			if crypto.VerifySchnorr(network.Suite, owner.Point, hash, *oldvote) == nil {
+			if schnorr.Verify(network.Suite, owner.Point, hash, oldvote) == nil {
 				return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
 			}
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
-			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+			err = schnorr.Verify(network.Suite, owner.Point, hash, v.Signature)
 			if err != nil {
 				return onet.NewClientErrorCode(ErrorVoteSignature, "Wrong signature: "+err.Error())
 			}
@@ -504,7 +504,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 		sigCnt := 0
 		for dev, sig := range data.Votes {
 			if pub := dataLatest.Device[dev]; pub != nil {
-				if err := crypto.VerifySchnorr(network.Suite, pub.Point, hash, *sig); err != nil {
+				if err := schnorr.Verify(network.Suite, pub.Point, hash, sig); err != nil {
 					return err
 				}
 				sigCnt++
@@ -566,14 +566,14 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 				log.Error("Couldn't hash proposed block:", err)
 				return
 			}
-			err = crypto.VerifySchnorr(network.Suite, d.Point, hash, *v.Signature)
+			err = schnorr.Verify(network.Suite, d.Point, hash, v.Signature)
 			if err != nil {
 				log.Error("Got invalid signature:", err)
 				return
 			}
 			if len(sid.Proposed.Votes) == 0 {
 				// Make sure the map is initialised
-				sid.Proposed.Votes = make(map[string]*crypto.SchnorrSig)
+				sid.Proposed.Votes = make(map[string][]byte)
 			}
 			sid.Proposed.Votes[v.Signer] = v.Signature
 		}
@@ -745,7 +745,7 @@ func newIdentityService(c *onet.Context) onet.Service {
 	s.auth.pins = make(map[string]struct{})
 	s.auth.nonces = make(map[string]struct{})
 	s.auth.sets = make([]anon.Set, 0)
-	s.auth.adminKeys = make([]abstract.Point, 0)
+	s.auth.adminKeys = make([]kyber.Point, 0)
 	s.tagsLimits = make(map[string]int8)
 	s.pointsLimits = make(map[string]int8)
 	return s

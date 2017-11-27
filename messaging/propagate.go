@@ -8,9 +8,9 @@ import (
 
 	"reflect"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -149,7 +149,7 @@ func (p *Propagate) Dispatch() error {
 			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Msec)
 			p.sd.Msec = msg.Msec
 			if p.onData != nil {
-				_, netMsg, err := network.Unmarshal(msg.Data)
+				_, netMsg, err := network.Unmarshal(msg.Data, p.Suite())
 				if err == nil {
 					p.onData(netMsg)
 				}
@@ -174,7 +174,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			}
 		case <-time.After(timeout):
-			_, a, err := network.Unmarshal(p.sd.Data)
+			_, a, err := network.Unmarshal(p.sd.Data, p.Suite())
 			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
 			process = false
 		}

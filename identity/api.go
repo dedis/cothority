@@ -5,14 +5,14 @@ import (
 
 	"io/ioutil"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 /*
@@ -79,9 +79,9 @@ type Identity struct {
 	// Client represents the connection to the service.
 	Client *onet.Client
 	// Private key for that device.
-	Private abstract.Scalar
+	Private kyber.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
-	Public abstract.Point
+	Public kyber.Point
 	// ID of the skipchain this device is tied to.
 	ID ID
 	// Data is the actual, valid data of the identity-skipchain.
@@ -98,10 +98,10 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *config.KeyPair) *Identity {
+func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *key.Pair) *Identity {
 	client := onet.NewClient(ServiceName)
 	if kp == nil {
-		kp = config.NewKeyPair(network.Suite)
+		kp = key.NewKeyPair(network.Suite)
 	}
 	return &Identity{
 		Client:     client,
@@ -186,7 +186,7 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 	return nil
 }
 
-func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
+func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentity, error) {
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -206,7 +206,7 @@ func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIden
 }
 
 func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, msg)
+	sig, err := schnorr.Sign(network.Suite, i.Private, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
 }
 
 // CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.ClientError {
+func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) onet.ClientError {
 	log.Lvl3("Creating identity", i)
 
 	// request for authentication
@@ -297,7 +297,7 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	if i.Private == nil {
 		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+	sig, err := schnorr.Sign(network.Suite, i.Private, hash)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}

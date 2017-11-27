@@ -5,7 +5,7 @@ DBG_APP=3
 NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
-. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+. $GOPATH/src/github.com/dedis/onet/app/libtest.sh
 
 MERGE_FILE=""
 main(){

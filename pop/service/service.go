@@ -36,12 +36,12 @@ import (
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -99,7 +99,7 @@ type saveData struct {
 	// Pin holds the randomly chosen pin
 	Pin string
 	// Public key of linked pop
-	Public abstract.Point
+	Public kyber.Point
 	// The final statements
 	// key of map is ID of party
 	Finals map[string]*FinalStatement
@@ -149,7 +149,7 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientErr
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
 	}
 	hash := req.Desc.Hash()
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, hash, req.Signature); err != nil {
+	if err := schnorr.Verify(network.Suite, s.data.Public, hash, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature"+err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
@@ -179,7 +179,7 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, hash, req.Signature); err != nil {
+	if err := schnorr.Verify(network.Suite, s.data.Public, hash, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature:"+err.Error())
 	}
 
@@ -194,7 +194,7 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 	}
 
 	// Contact all other nodes and ask them if they already have a config.
-	final.Attendees = make([]abstract.Point, len(req.Attendees))
+	final.Attendees = make([]kyber.Point, len(req.Attendees))
 	copy(final.Attendees, req.Attendees)
 	cc := &checkConfig{final.Desc.Hash(), req.Attendees}
 	for _, c := range final.Desc.Roster.List {
@@ -252,7 +252,7 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
 	}
 
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, req.ID, req.Signature); err != nil {
+	if err := schnorr.Verify(network.Suite, s.data.Public, req.ID, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature: err")
 	}
 
@@ -625,7 +625,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	// Merge fields
 	locs := make([]string, 0)
 	Roster := &onet.Roster{}
-	na := make([]abstract.Point, 0)
+	na := make([]kyber.Point, 0)
 	for _, f := range m.statementsMap {
 		// although there must not be any intersection
 		// in attendies list it's better to check it
@@ -822,7 +822,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 	// Unite the lists
 	locs := make([]string, 0)
 	Roster := &onet.Roster{}
-	na := make([]abstract.Point, 0)
+	na := make([]kyber.Point, 0)
 	for _, f := range m.statementsMap {
 		// although there must not be any intersection
 		// in attendies list it's better to check it
@@ -867,7 +867,7 @@ func (s *Service) tryLoad() error {
 }
 
 // Get intersection of attendees
-func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
+func intersectAttendees(atts1, atts2 []kyber.Point) []kyber.Point {
 	myMap := make(map[string]bool)
 
 	for _, p := range atts1 {
@@ -877,7 +877,7 @@ func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
 	if min < len(atts1) {
 		min = len(atts1)
 	}
-	na := make([]abstract.Point, 0, min)
+	na := make([]kyber.Point, 0, min)
 	for _, p := range atts2 {
 		if _, ok := myMap[p.String()]; ok {
 			na = append(na, p)
@@ -886,9 +886,9 @@ func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
 	return na
 }
 
-func unionAttendies(atts1, atts2 []abstract.Point) []abstract.Point {
+func unionAttendies(atts1, atts2 []kyber.Point) []kyber.Point {
 	myMap := make(map[string]bool)
-	na := make([]abstract.Point, 0, len(atts1)+len(atts2))
+	na := make([]kyber.Point, 0, len(atts1)+len(atts2))
 
 	na = append(na, atts1...)
 	for _, p := range atts1 {
@@ -968,7 +968,7 @@ func (p byIdentity) Less(i, j int) bool {
 	return p[i].String() < p[j].String()
 }
 
-type byPoint []abstract.Point
+type byPoint []kyber.Point
 
 func (p byPoint) Len() int      { return len(p) }
 func (p byPoint) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
@@ -976,7 +976,7 @@ func (p byPoint) Less(i, j int) bool {
 	return p[i].String() < p[j].String()
 }
 
-func sortAll(locs []string, roster []*network.ServerIdentity, atts []abstract.Point) {
+func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point) {
 	sort.Strings(locs)
 	sort.Sort(byIdentity(roster))
 	sort.Sort(byPoint(atts))

@@ -1,6 +1,6 @@
 package skipchain
 
-import "gopkg.in/dedis/onet.v1/log"
+import "github.com/dedis/onet/log"
 
 /*
 This file holds all verification-functions for the skipchain.

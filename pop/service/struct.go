@@ -5,9 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet/network"
 )
 
 // We need to register all messages so the network knows how to handle them.
@@ -36,7 +35,7 @@ const (
 // checkConfig asks whether the pop-config and the attendees are available.
 type checkConfig struct {
 	PopHash   []byte
-	Attendees []abstract.Point
+	Attendees []kyber.Point
 }
 
 // checkConfigReply sends back an integer for the Pop. 0 means no config yet,
@@ -46,7 +45,7 @@ type checkConfig struct {
 type checkConfigReply struct {
 	PopStatus int
 	PopHash   []byte
-	Attendees []abstract.Point
+	Attendees []kyber.Point
 }
 
 // mergeConfig asks if party is ready to merge
@@ -72,13 +71,13 @@ type mergeConfigReply struct {
 // public-key is stored as a reference to the allowed client.
 type PinRequest struct {
 	Pin    string
-	Public abstract.Point
+	Public kyber.Point
 }
 
 // storeConfig presents a config to store
 type storeConfig struct {
 	Desc      *PopDesc
-	Signature crypto.SchnorrSig
+	Signature []byte
 }
 
 // storeConfigReply gives back the hash.
@@ -91,8 +90,8 @@ type storeConfigReply struct {
 // finalizeRequest asks to finalize on the given descid-popconfig.
 type finalizeRequest struct {
 	DescID    []byte
-	Attendees []abstract.Point
-	Signature crypto.SchnorrSig
+	Attendees []kyber.Point
+	Signature []byte
 }
 
 func (fr *finalizeRequest) hash() ([]byte, error) {
@@ -129,5 +128,5 @@ type fetchRequest struct {
 // mergeRequest asks to start merging process for given Party
 type mergeRequest struct {
 	ID        []byte
-	Signature crypto.SchnorrSig
+	Signature []byte
 }

@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet/log"
 )
 
 func TestConfigNew(t *testing.T) {

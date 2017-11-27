@@ -3,7 +3,7 @@
 package main
 
 import (
-	"gopkg.in/dedis/onet.v1/simul"
+	"github.com/dedis/onet/simul"
 )
 
 func main() {

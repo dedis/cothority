@@ -5,23 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
-
-	// CoSi-protocol is not part of the cothority.
-	"math/rand"
-
-	"math"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/cosi/service"
-	"gopkg.in/dedis/crypto.v0/cosi"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/util/hash"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.
@@ -142,7 +139,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*service.SignatureResponse,
 	error) {
 	//publics := entityListToPublics(el)
 	client := service.NewClient()
-	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
+	msg, _ := hash.Stream(network.Suite.Hash(), read)
 
 	pchan := make(chan *service.SignatureResponse)
 	var err error

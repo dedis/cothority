@@ -15,10 +15,10 @@ import (
 	"github.com/dedis/cothority/byzcoin/blockchain"
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
 	"github.com/dedis/cothority/byzcoin/cosi"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/simul/monitor"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/simul/monitor"
 )
 
 // ByzCoin is the main struct for running the protocol
@@ -28,7 +28,7 @@ type ByzCoin struct {
 	// the suite we use
 	suite abstract.Suite
 	// aggregated public key of the peers
-	aggregatedPublic abstract.Point
+	aggregatedPublic kyber.Point
 	// prepare-round cosi
 	prepare *cosi.Cosi
 	// commit-round cosi

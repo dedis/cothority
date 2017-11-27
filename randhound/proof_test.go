@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/randhound"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/edwards"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/edwards"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/log"
 )
 
 func TestProof(t *testing.T) {
@@ -29,8 +29,8 @@ func TestProof(t *testing.T) {
 	y := suite.Scalar().Pick(random.Stream)
 
 	// Create proofs
-	g := []abstract.Point{g1, g2}
-	h := []abstract.Point{h1, h2}
+	g := []kyber.Point{g1, g2}
+	h := []kyber.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	log.ErrFatal(err)
 
@@ -69,8 +69,8 @@ func TestProofCollective(t *testing.T) {
 	y := suite.Scalar().Pick(random.Stream)
 
 	// Create proof
-	g := []abstract.Point{g1, g2}
-	h := []abstract.Point{h1, h2}
+	g := []kyber.Point{g1, g2}
+	h := []kyber.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	log.ErrFatal(err)
 
@@ -99,8 +99,8 @@ func TestPVSS(t *testing.T) {
 
 	n := 10
 	threshold := 2*n/3 + 1
-	x := make([]abstract.Scalar, n) // trustee private keys
-	X := make([]abstract.Point, n)  // trustee public keys
+	x := make([]kyber.Scalar, n) // trustee private keys
+	X := make([]kyber.Point, n)  // trustee public keys
 	index := make([]int, n)
 	for i := 0; i < n; i++ {
 		x[i] = suite.Scalar().Pick(random.Stream)
@@ -133,7 +133,7 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Decrypt shares
-	S := make([]abstract.Point, n)
+	S := make([]kyber.Point, n)
 	decProof := make([]randhound.ProofCore, n)
 	for i := 0; i < n; i++ {
 		s, d, err := pvss.Reveal(x[i], sX[i:i+1])
