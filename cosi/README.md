@@ -11,8 +11,8 @@ This package provides functionality to request and verify collective signatures 
 To use the code of this package you need to:
 
 - Install [Golang](https://golang.org/doc/install)
-- Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
-- Add `$GOPATH/bin` to `$PATH`
+- Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
+- Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
 To build and install the CoSi application, execute:
 
@@ -53,7 +53,7 @@ GLOBAL OPTIONS:
 To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](../dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
-export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
+export COTHORITY=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml 
 ```
 
 ### Usage
