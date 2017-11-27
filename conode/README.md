@@ -40,9 +40,9 @@ For more information, see [Docker.md]
 
 To use the code of this package you need to:
 
--  Install [Golang](https://golang.org/doc/install)
--  Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your Go workspace directory 
--  Add `$GOPATH/bin` to `$PATH` 
+- Install [Golang](https://golang.org/doc/install)
+- Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
+- Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
 To build and install the cothority server, execute:
 

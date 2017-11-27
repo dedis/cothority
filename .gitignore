@@ -15,3 +15,4 @@ config/
 build/
 cothority
 *.cov
+*~
