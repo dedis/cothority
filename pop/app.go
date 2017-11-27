@@ -22,15 +22,15 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -42,9 +42,9 @@ func init() {
 type Config struct {
 	// Public key of org. Used for linking and
 	// org authentication
-	OrgPublic abstract.Point
+	OrgPublic kyber.Point
 	// Private key of org. Used for authentication
-	OrgPrivate abstract.Scalar
+	OrgPrivate kyber.Scalar
 	// Address of the linked conode.
 	Address network.Address
 	// Map of Final statements of the parties.
@@ -58,10 +58,10 @@ type Config struct {
 type PartyConfig struct {
 	// Private key of attendee or organizer, depending on value
 	// of Index.
-	Private abstract.Scalar
+	Private kyber.Scalar
 	// Public key of attendee or organizer, depending on value of
 	// index.
-	Public abstract.Point
+	Public kyber.Point
 	// Index of the attendee in the final statement. If the index
 	// is -1, then this pop holds an organizer.
 	Index int
@@ -185,7 +185,7 @@ func orgConfig(c *cli.Context) error {
 			Index: -1,
 			Final: &service.FinalStatement{
 				Desc:      desc,
-				Attendees: []abstract.Point{},
+				Attendees: []kyber.Point{},
 				Signature: []byte{},
 			},
 			Public:  kp.Public,

@@ -12,13 +12,13 @@ import (
 
 	"github.com/dedis/cothority/cosi/check"
 	s "github.com/dedis/cothority/cosi/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -208,8 +208,8 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 	}
 	return nil
 }
-func entityListToPublics(r *onet.Roster) []abstract.Point {
-	publics := make([]abstract.Point, len(r.List))
+func entityListToPublics(r *onet.Roster) []kyber.Point {
+	publics := make([]kyber.Point, len(r.List))
 	for i, e := range r.List {
 		publics[i] = e.Public
 	}

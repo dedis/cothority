@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 
 	"github.com/dedis/cothority/byzcoin/blockchain/blkparser"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/suites"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/suites"
+	"github.com/dedis/onet/log"
 )
 
 type MessageType int
@@ -31,10 +31,10 @@ type BlockReply struct {
 	MerkleRoot    []byte          // root of the merkle tree
 	PrfLen        int             // Length of proof
 	Prf           Proof           // Merkle proof of value
-	Response      abstract.Scalar // Aggregate response
-	Challenge     abstract.Scalar // Aggregate challenge
-	AggCommit     abstract.Point  // Aggregate commitment key
-	AggPublic     abstract.Point  // Aggregate public key (use for easy troubleshooting)
+	Response      kyber.Scalar // Aggregate response
+	Challenge     kyber.Scalar // Aggregate challenge
+	AggCommit     kyber.Point  // Aggregate commitment key
+	AggPublic     kyber.Point  // Aggregate public key (use for easy troubleshooting)
 	SignatureInfo []byte          // All other elements necessary
 }
 
@@ -78,10 +78,10 @@ func (sr *BlockReply) UnmarshalJSON(dataJSON []byte) error {
 	}
 	aux := &struct {
 		SignatureInfo []byte
-		Response      abstract.Scalar
-		Challenge     abstract.Scalar
-		AggCommit     abstract.Point
-		AggPublic     abstract.Point
+		Response      kyber.Scalar
+		Challenge     kyber.Scalar
+		AggCommit     kyber.Point
+		AggPublic     kyber.Point
 		*Alias
 	}{
 		Response:  suite.Scalar(),

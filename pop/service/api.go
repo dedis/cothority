@@ -2,17 +2,18 @@ package service
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/eddsa"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/base64"
-	"gopkg.in/dedis/crypto.v0/eddsa"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 const (
@@ -55,15 +56,15 @@ func NewClient() *Client {
 // If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
 // If the PIN is given and is correct, the public key will be stored in the
 // service.
-func (c *Client) PinRequest(dst network.Address, pin string, pub abstract.Point) onet.ClientError {
+func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) onet.ClientError {
 	si := &network.ServerIdentity{Address: dst}
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
 // StoreConfig sends the configuration to the conode for later usage.
-func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv abstract.Scalar) onet.ClientError {
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) onet.ClientError {
 	si := &network.ServerIdentity{Address: dst}
-	sg, e := crypto.SignSchnorr(network.Suite, priv, p.Hash())
+	sg, e := schnorr.Sign(network.Suite, priv, p.Hash())
 	if e != nil {
 		return onet.NewClientError(e)
 	}
@@ -92,8 +93,8 @@ func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 // not in all the conodes will be stripped, and that new pop-description
 // collectively signed. The new pop-description and the final statement
 // will be returned.
-func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point,
-	priv abstract.Scalar) (*FinalStatement, onet.ClientError) {
+func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Point,
+	priv kyber.Scalar) (*FinalStatement, onet.ClientError) {
 	si := &network.ServerIdentity{Address: dst}
 	req := &finalizeRequest{}
 	req.DescID = p.Hash()
@@ -103,7 +104,7 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.
 		return nil, onet.NewClientError(err)
 	}
 	res := &finalizeResponse{}
-	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(network.Suite, priv, hash)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
@@ -118,12 +119,12 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.
 // Merge takes the address of the conode-server, pop-description and the
 // private key of organizer. It triggers merge process on nodes mentioned in
 // config
-func (c *Client) Merge(dst network.Address, p *PopDesc, priv abstract.Scalar) (
+func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 	*FinalStatement, onet.ClientError) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	hash := p.Hash()
-	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(network.Suite, priv, hash)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
@@ -141,7 +142,7 @@ type FinalStatement struct {
 	// Desc is the description of the pop-party.
 	Desc *PopDesc
 	// Attendees holds a slice of all public keys of the attendees.
-	Attendees []abstract.Point
+	Attendees []kyber.Point
 	// Signature is created by all conodes responsible for that pop-party
 	Signature []byte
 	// Flag indicates, that party was merged
@@ -161,9 +162,9 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 	if err != nil {
 		return nil, err
 	}
-	atts := []abstract.Point{}
+	atts := []kyber.Point{}
 	for _, p := range fsToml.Attendees {
-		pub, err := crypto.String64ToPoint(network.Suite, p)
+		pub, err := encoding.String64ToPoint(network.Suite, p)
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +266,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		if err != nil {
 			return nil, err
 		}
-		pub, err := crypto.String64ToPoint(network.Suite, s[3])
+		pub, err := encoding.String64ToPoint(network.Suite, s[3])
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +289,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 			if err != nil {
 				return nil, err
 			}
-			pub, err := crypto.String64ToPoint(network.Suite, s[3])
+			pub, err := encoding.String64ToPoint(network.Suite, s[3])
 			if err != nil {
 				return nil, err
 			}
@@ -332,7 +333,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	}
 	atts := make([]string, len(fs.Attendees))
 	for i, p := range fs.Attendees {
-		str, err := crypto.PointToString64(nil, p)
+		str, err := encoding.PointToString64(nil, p)
 		if err != nil {
 			return nil, err
 		}
@@ -476,7 +477,7 @@ func Equal(r1, r2 *onet.Roster) bool {
 func toToml(r *onet.Roster) ([][]string, error) {
 	rostr := make([][]string, len(r.List))
 	for i, si := range r.List {
-		str, err := crypto.PointToString64(nil, si.Public)
+		str, err := encoding.PointToString64(nil, si.Public)
 		if err != nil {
 			return nil, err
 		}
@@ -490,8 +491,8 @@ func toToml(r *onet.Roster) ([][]string, error) {
 // PopToken represents pop-token
 type PopToken struct {
 	Final   *FinalStatement
-	Private abstract.Scalar
-	Public  abstract.Point
+	Private kyber.Scalar
+	Public  kyber.Point
 }
 
 type popTokenToml struct {
@@ -507,11 +508,11 @@ func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	token.Private, err = crypto.String64ToScalar(network.Suite, t.Private)
+	token.Private, err = encoding.String64ToScalar(network.Suite, t.Private)
 	if err != nil {
 		return nil, err
 	}
-	token.Public, err = crypto.String64ToPoint(network.Suite, t.Public)
+	token.Public, err = encoding.String64ToPoint(network.Suite, t.Public)
 	if err != nil {
 		return nil, err
 	}

@@ -2,9 +2,9 @@ package main
 
 import (
 	p "github.com/dedis/cothority/cosi/protocol"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 /*
@@ -54,15 +54,15 @@ func NewCoSimul(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // Publics returns an array of public points for the signature- and
 // verification method
-func (c *CoSimul) Publics() []abstract.Point {
-	var publics []abstract.Point
+func (c *CoSimul) Publics() []kyber.Point {
+	var publics []kyber.Point
 	for _, e := range c.Tree().Roster.List {
 		publics = append(publics, e.Public)
 	}
 	return publics
 }
 
-func (c *CoSimul) getResponse(in []abstract.Scalar) {
+func (c *CoSimul) getResponse(in []kyber.Scalar) {
 	if c.IsLeaf() {
 		// This is the leaf-node and we can't verify it
 		return

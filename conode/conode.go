@@ -15,7 +15,7 @@ package main
 import (
 	"os"
 
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/dedis/cothority/cosi/check"
@@ -23,7 +23,7 @@ import (
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
-	"gopkg.in/dedis/onet.v1/app"
+	"github.com/dedis/onet/app"
 )
 
 const (

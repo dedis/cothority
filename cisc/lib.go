@@ -16,11 +16,11 @@ import (
 	"path/filepath"
 
 	"github.com/dedis/cothority/identity"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -30,8 +30,8 @@ func init() {
 }
 
 type keyPair struct {
-	Public  abstract.Point
-	Private abstract.Scalar
+	Public  kyber.Point
+	Private kyber.Scalar
 }
 
 type ciscConfig struct {

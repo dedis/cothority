@@ -17,11 +17,11 @@ import (
 	"strings"
 	"sync"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/poly"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/poly"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func init() {
@@ -47,7 +47,7 @@ type JVSS struct {
 	*onet.TreeNodeInstance                  // The onet TreeNode
 	keyPair                *config.KeyPair  // KeyPair of the host
 	nodeList               []*onet.TreeNode // List of TreeNodes in the JVSS group
-	pubKeys                []abstract.Point // List of public keys of the above TreeNodes
+	pubKeys                []kyber.Point // List of public keys of the above TreeNodes
 	info                   poly.Threshold   // JVSS thresholds
 	schnorr                *poly.Schnorr    // Long-term Schnorr struct to compute distributed signatures
 	secrets                *sharedSecrets   // Shared secrets (long- and short-term ones)
@@ -68,7 +68,7 @@ func NewJVSS(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 	kp := &config.KeyPair{Suite: node.Suite(), Public: node.Public(), Secret: node.Private()}
 	n := len(node.List())
-	pk := make([]abstract.Point, n)
+	pk := make([]kyber.Point, n)
 	var idx int
 	for i, tn := range node.List() {
 		if tn.ServerIdentity.Public.Equal(node.Public()) {

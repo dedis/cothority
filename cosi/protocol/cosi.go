@@ -1,13 +1,17 @@
 // Package cosi implements a round of a Collective Signing protocol.
+
+// +build cosi
+
 package cosi
 
 import (
 	"sync"
 
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
 )
 
 // Name can be used to reference the registered protocol.
@@ -46,11 +50,11 @@ type CoSi struct {
 	// the channel that indicates if we are finished or not
 	done chan bool
 	// temporary buffer of commitment messages
-	tempCommitment []abstract.Point
+	tempCommitment []kyber.Point
 	// lock associated
 	tempCommitLock *sync.Mutex
 	// temporary buffer of Response messages
-	tempResponse []abstract.Scalar
+	tempResponse []kyber.Scalar
 	// lock associated
 	tempResponseLock *sync.Mutex
 
@@ -68,15 +72,15 @@ type AnnouncementHook func() error
 
 // CommitmentHook allows for handling what should happen when all
 // commitments are received
-type CommitmentHook func(in []abstract.Point) error
+type CommitmentHook func(in []kyber.Point) error
 
 // ChallengeHook allows for handling what should happen when a
 // challenge is received
-type ChallengeHook func(ch abstract.Scalar) error
+type ChallengeHook func(ch kyber.Scalar) error
 
 // ResponseHook allows for handling what should happen when all
 // responses are received and our response is calculated
-type ResponseHook func(in []abstract.Scalar)
+type ResponseHook func(in []kyber.Scalar)
 
 // SignatureHook allows registering a handler when the signature is done
 type SignatureHook func(sig []byte)
@@ -95,7 +99,7 @@ func NewProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	var err error
 	// XXX just need to take care to take the global list of cosigners once we
 	// do the exception stuff
-	publics := make([]abstract.Point, len(node.Roster().List))
+	publics := make([]kyber.Point, len(node.Roster().List))
 	for i, e := range node.Roster().List {
 		publics[i] = e.Public
 	}
@@ -178,7 +182,7 @@ func (c *CoSi) Start() error {
 // correct signature for this message using the aggregated public key.
 // This is copied from cosi, so that you don't need to include both lib/cosi
 // and protocols/cosi
-func VerifySignature(suite abstract.Suite, publics []abstract.Point, msg, sig []byte) error {
+func VerifySignature(suite abstract.Suite, publics []kyber.Point, msg, sig []byte) error {
 	return cosi.VerifySignature(suite, publics, msg, sig)
 }
 
@@ -316,7 +320,7 @@ func (c *CoSi) handleResponse(in *Response) error {
 
 // VerifyResponses allows to check at each intermediate node whether the
 // responses are valid
-func (c *CoSi) VerifyResponses(agg abstract.Point) error {
+func (c *CoSi) VerifyResponses(agg kyber.Point) error {
 	return c.cosi.VerifyResponses(agg)
 }
 

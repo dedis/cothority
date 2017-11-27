@@ -6,7 +6,7 @@ package main
 import (
 	"os"
 
-	"gopkg.in/dedis/onet.v1/app"
+	"github.com/dedis/onet/app"
 
 	"fmt"
 	"io/ioutil"
@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority/skipchain"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 

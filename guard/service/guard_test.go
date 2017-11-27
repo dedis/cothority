@@ -3,11 +3,22 @@ package guard
 import (
 	"testing"
 
+	"github.com/dedis/kyber/group"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
+
+var tSuite network.Suite
+
+func init() {
+	var err error
+	tSuite, err = group.Suite("Ed25519")
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestMain(t *testing.M) {
 	log.MainTest(t)
@@ -18,7 +29,7 @@ func NewLocalTestClient(l *onet.LocalTest) *Client {
 }
 
 func TestServiceGuard(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	_, el, _ := local.GenTree(5, true)
 	defer local.CloseAll()
 
@@ -27,7 +38,7 @@ func TestServiceGuard(t *testing.T) {
 	log.Lvl1("Sending request to service...")
 	UID := []byte("USER")
 	Epoch := []byte("EPOCH")
-	msg := network.Suite.Point()
+	msg := tSuite.Point()
 
 	Hzi, _ := client.SendToGuard(el.List[0], UID, Epoch, msg)
 	// We send the message twice to see that the key did not change for the

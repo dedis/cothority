@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"fmt"
 	"time"
@@ -83,7 +83,7 @@ func TestService_CheckConfigMessage(t *testing.T) {
 	for _, s := range srvcs {
 		for _, desc := range descs {
 			hash := string(desc.Hash())
-			s.data.Finals[hash].Attendees = make([]abstract.Point, len(atts))
+			s.data.Finals[hash].Attendees = make([]kyber.Point, len(atts))
 			copy(s.data.Finals[hash].Attendees, atts)
 		}
 	}
@@ -117,7 +117,7 @@ func TestService_CheckConfigReply(t *testing.T) {
 	for _, desc := range descs {
 		hash := string(desc.Hash())
 		s0 := srvcs[0]
-		s0.data.Finals[hash].Attendees = make([]abstract.Point, len(atts))
+		s0.data.Finals[hash].Attendees = make([]kyber.Point, len(atts))
 		copy(s0.data.Finals[hash].Attendees, atts)
 
 		ccr := &checkConfigReply{0, desc.Hash(), atts}
@@ -406,7 +406,7 @@ func TestService_MergeRequest(t *testing.T) {
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
-	nprts int) ([]*PopDesc, []abstract.Point, []*Service, []abstract.Scalar) {
+	nprts int) ([]*PopDesc, []kyber.Point, []*Service, []kyber.Scalar) {
 	descs := make([]*PopDesc, nprts)
 	for i := range descs {
 		descs[i] = &PopDesc{
@@ -416,14 +416,14 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 			Roster:   onet.NewRoster(el.List),
 		}
 	}
-	atts := make([]abstract.Point, nbr)
+	atts := make([]kyber.Point, nbr)
 	for i := range atts {
 		kp := config.NewKeyPair(network.Suite)
 		atts[i] = kp.Public
 	}
 
-	pubs := make([]abstract.Point, len(srvcs))
-	privs := make([]abstract.Scalar, len(srvcs))
+	pubs := make([]kyber.Point, len(srvcs))
+	privs := make([]kyber.Scalar, len(srvcs))
 	for i, _ := range srvcs {
 		kp := config.NewKeyPair(network.Suite)
 		pubs[i], privs[i] = kp.Public, kp.Secret
@@ -446,7 +446,7 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 // Number of parties is assumed number of nodes / 2.
 // Number of nodes is assumed to be even
 func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
-	[]abstract.Point, []*Service, []abstract.Scalar) {
+	[]kyber.Point, []*Service, []kyber.Scalar) {
 	rosters := make([]*onet.Roster, len(el.List)/2)
 	for i := 0; i < len(el.List); i += 2 {
 		rosters[i/2] = onet.NewRoster(el.List[i : i+2])
@@ -468,15 +468,15 @@ func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
 	for _, desc := range descs {
 		desc.Parties = copy_descs
 	}
-	atts := make([]abstract.Point, nbr)
+	atts := make([]kyber.Point, nbr)
 
 	for i := range atts {
 		kp := config.NewKeyPair(network.Suite)
 		atts[i] = kp.Public
 	}
 
-	pubs := make([]abstract.Point, len(srvcs))
-	privs := make([]abstract.Scalar, len(srvcs))
+	pubs := make([]kyber.Point, len(srvcs))
+	privs := make([]kyber.Scalar, len(srvcs))
 	for i, _ := range srvcs {
 		kp := config.NewKeyPair(network.Suite)
 		pubs[i], privs[i] = kp.Public, kp.Secret

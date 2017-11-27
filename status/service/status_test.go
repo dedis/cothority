@@ -4,20 +4,24 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority/example/channels"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
 )
+
+var tSuite network.Suite
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
+
 func NewTestClient(l *onet.LocalTest) *Client {
 	return &Client{Client: l.NewClient(ServiceName)}
 }
 
 func TestServiceStatus(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	_, el, tr := local.GenTree(5, false)

@@ -2,33 +2,28 @@
 // series of guard servers that allow a client to further secure their passwords
 // from direct database compromises. The service is hash based and the passwords
 // never leave the main database, making the guard servers very lightweight. The
-// guard server's are used in both setting and authenticating passwords.
+// guard servers are used in both setting and authenticating passwords.
 
 package main
 
 import (
-	"os"
-
-	"errors"
-
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
-
+	"errors"
 	"io/ioutil"
+	"os"
 
 	s "github.com/SSSaaS/sssa-golang"
-	"gopkg.in/urfave/cli.v1"
-
-	"bytes"
-
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/guard/service"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber/util/hash"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
+	"gopkg.in/urfave/cli.v1"
 )
 
 // User is a representation of the Users data in the code, and is used to store
@@ -103,7 +98,7 @@ func main() {
 			return nil
 		}
 		log.ErrFatal(err, "The config.bin file threw an error")
-		_, msg, err := network.Unmarshal(b)
+		_, msg, err := network.Unmarshal(b, cothority.Suite)
 		log.ErrFatal(err, "UnmarshalRegistered messeed up")
 		var ok bool
 		db, ok = msg.(*Database)
@@ -122,7 +117,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +130,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 }
 
 func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []byte) {
+	suite := cothority.Suite
 	mastersalt := make([]byte, 12)
 	_, err := rand.Read(mastersalt)
 	log.ErrFatal(err)
@@ -151,36 +147,43 @@ func set(c *cli.Context, uid []byte, epoch []byte, password string, userdata []b
 	iv := make([]byte, 16)
 	_, err = rand.Read(iv)
 	log.ErrFatal(err)
+
 	// pwhash is the password hash that will be sent to the guard servers
 	// with Gu and bi.
-	pwhash := abstract.Sum(network.Suite, []byte(password), mastersalt)
-	GuHash := abstract.Sum(network.Suite, uid, epoch)
+	pwhash, err := hash.Bytes(suite.Hash(), []byte(password), mastersalt)
+	log.ErrFatal(err)
+	GuHash, err := hash.Bytes(suite.Hash(), uid, epoch)
+	log.ErrFatal(err)
+
 	// creating stream for Scalar.Pick from the hash.
 	blocky, err := aes.NewCipher(iv)
 	log.ErrFatal(err)
 	GuStream := cipher.NewCTR(blocky, iv)
-	gupoint := network.Suite.Point()
-	Gu, _ := gupoint.Pick(GuHash, GuStream)
+	gupoint := suite.Point()
+	if len(GuHash) > gupoint.EmbedLen() {
+		panic("too much data in GuHash")
+	}
+	Gu := gupoint.Embed(GuHash, GuStream)
 	responses := make([][]byte, len(db.Cothority.List))
 	keys := make([][]byte, len(db.Cothority.List))
 	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
 		// blankpoints needed to call the functions.
-		blankpoint := network.Suite.Point()
-		blankscalar := network.Suite.Scalar()
+		blankpoint := suite.Point()
+		blankscalar := suite.Scalar()
 		// Initializing the variables pwbytes and blindbytes, which are
 		// scalars with the values of pwhash and blinds[i].
-		pwbytes := network.Suite.Scalar()
+		pwbytes := suite.Scalar()
 		pwbytes.SetBytes(pwhash)
-		blindbytes := network.Suite.Scalar()
+		blindbytes := suite.Scalar()
 		blindbytes.SetBytes(blinds[i])
 		// this next part performs all necessary computations to create
 		// Xi, here called sendy.
 		blankscalar.Add(pwbytes, blindbytes).Bytes()
-		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
+		sendy := blankpoint.Mul(blankscalar.Mul(blindbytes, pwbytes), Gu)
 		rep, cerr := cl.SendToGuard(si, uid, epoch, sendy)
 		log.ErrFatal(cerr)
-		reply := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes))
+		reply := blankpoint.Mul(blankscalar.Inv(blindbytes), rep.Msg)
 		responses[i], err = reply.MarshalBinary()
 		log.ErrFatal(err)
 		block, err := aes.NewCipher(responses[i])
@@ -205,7 +208,7 @@ func saltgen(salt []byte, count int) [][]byte {
 	salts := make([][]byte, count)
 	for i := 0; i < count; i++ {
 		salts[i] = salt
-		salt = abstract.Sum(network.Suite, salt)
+		salt, _ = hash.Bytes(cothority.Suite.Hash(), salt)
 	}
 	return salts
 }
@@ -239,6 +242,7 @@ func getuser(UID []byte) *User {
 // getpass contacts the guard servers, then gets the passwords and
 // reconstructs the secret keys.
 func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
+	suite := cothority.Suite
 	if getuser(uid) == nil {
 		log.Fatal("Wrong username")
 	}
@@ -249,38 +253,45 @@ func getpass(c *cli.Context, uid []byte, epoch []byte, pass string) {
 	log.ErrFatal(err)
 	blinds := saltgen(blind, len(db.Cothority.List))
 	iv := getuser(uid).Iv
+
 	// pwhash is the password hash that will be sent to the guard servers
 	// with Gu and bi.
-	pwhash := abstract.Sum(network.Suite, []byte(pass), getuser(uid).Salt)
-	GuHash := abstract.Sum(network.Suite, uid, epoch)
+	pwhash, err := hash.Bytes(suite.Hash(), []byte(pass), getuser(uid).Salt)
+	log.ErrFatal(err)
+	GuHash, err := hash.Bytes(suite.Hash(), uid, epoch)
+	log.ErrFatal(err)
+
 	// creating stream for Scalar.Pick from the hash
 	blocky, err := aes.NewCipher(iv)
 	log.ErrFatal(err)
 	GuStream := cipher.NewCTR(blocky, iv)
-	gupoint := network.Suite.Point()
-	Gu, _ := gupoint.Pick(GuHash, GuStream)
+	gupoint := suite.Point()
+	if len(GuHash) > gupoint.EmbedLen() {
+		panic("GuHash is too big.")
+	}
+	Gu := gupoint.Embed(GuHash, GuStream)
 
 	for i, si := range db.Cothority.List {
 		cl := guard.NewClient()
 		// blankpoints needed for computations.
-		blankpoint := network.Suite.Point()
-		blankscalar := network.Suite.Scalar()
+		blankpoint := suite.Point()
+		blankscalar := suite.Scalar()
 		// pwbytes and blindbytes are actually scalars that are
 		// initialized to the values of the bytes.
-		pwbytes := network.Suite.Scalar()
+		pwbytes := suite.Scalar()
 		pwbytes.SetBytes(pwhash)
-		blindbytes := network.Suite.Scalar()
+		blindbytes := suite.Scalar()
 		blindbytes.SetBytes(blinds[i])
 		// The following sections of the code perform the computations
 		// to Create Xi, here called sendy.
 		blankscalar.Add(pwbytes, blindbytes).MarshalBinary()
-		_, err := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes)).MarshalBinary()
-		sendy := blankpoint.Mul(Gu, blankscalar.Mul(pwbytes, blindbytes))
+		_, err := blankpoint.Mul(blankscalar.Mul(blindbytes, pwbytes), Gu).MarshalBinary()
+		sendy := blankpoint.Mul(blankscalar.Mul(blindbytes, pwbytes), Gu)
 		rep, cerr := cl.SendToGuard(si, uid, epoch, sendy)
 		log.ErrFatal(cerr)
 		// This section of the program removes the blinding factor from
 		// the Zi for storage.
-		reply, err := blankpoint.Mul(rep.Msg, blankscalar.Inv(blindbytes)).MarshalBinary()
+		reply, err := blankpoint.Mul(blankscalar.Inv(blindbytes), rep.Msg).MarshalBinary()
 		log.ErrFatal(err)
 		// This section Xors the data with the response.
 		block, err := aes.NewCipher(reply)

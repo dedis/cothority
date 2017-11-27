@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet/log"
 )
 
 func TestMain(m *testing.M) {

@@ -1,11 +1,13 @@
+// +build cosi
+
 package cosi
 
 import (
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -120,17 +122,17 @@ type Announcement struct {
 
 // Commitment of all nodes, aggregated over all children.
 type Commitment struct {
-	Comm abstract.Point
+	Comm kyber.Point
 }
 
 // Challenge is the challenge against the aggregate commitment.
 type Challenge struct {
-	Chall abstract.Scalar
+	Chall kyber.Scalar
 }
 
 // Response of all nodes, aggregated over all children.
 type Response struct {
-	Resp abstract.Scalar
+	Resp kyber.Scalar
 }
 
 // Overlay-structures to retrieve the sending TreeNode.

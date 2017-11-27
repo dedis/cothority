@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/ntree"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func TestMain(m *testing.M) {

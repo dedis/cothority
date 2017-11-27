@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func TestMain(m *testing.M) {
@@ -26,7 +26,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 
 	kp := config.NewKeyPair(network.Suite)
 	kp2 := config.NewKeyPair(network.Suite)
-	set := anon.Set([]abstract.Point{kp.Public, kp2.Public})
+	set := anon.Set([]kyber.Point{kp.Public, kp2.Public})
 	service.auth.sets = append(service.auth.sets, set)
 
 	il := NewData(50, kp.Public, "one")

@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func TestMain(m *testing.M) {

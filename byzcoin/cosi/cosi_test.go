@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/ed25519"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/ed25519"
 )
 
 var testSuite = ed25519.NewAES128SHA256Ed25519(false)

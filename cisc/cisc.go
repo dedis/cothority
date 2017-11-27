@@ -25,14 +25,14 @@ import (
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/qantik/qrgo"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/crypto"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -213,7 +213,7 @@ func adminAdd(c *cli.Context) error {
 	keys := strings.Split(str, ",")
 
 	h := network.Suite.Hash()
-	pubs := make([]abstract.Point, len(keys))
+	pubs := make([]kyber.Point, len(keys))
 	for i, k := range keys {
 		pub, err := crypto.String64ToPoint(network.Suite, k)
 		if err != nil {
@@ -274,7 +274,7 @@ func idCreate(c *cli.Context) error {
 
 	group := getGroup(c)
 	t := c.String("type")
-	var atts []abstract.Point
+	var atts []kyber.Point
 	kp := &config.KeyPair{}
 
 	var typ identity.AuthType
