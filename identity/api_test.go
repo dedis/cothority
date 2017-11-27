@@ -5,32 +5,34 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/cothority/pop/service"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest, kp *config.KeyPair) *Identity {
+var tSuite = cothority.Suite
+
+func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest, kp *key.Pair) *Identity {
 	id := NewIdentity(cothority, majority, owner, kp)
 	id.Client = local.NewClient(ServiceName)
 	return id
 }
 
 func TestIdentity_PinRequest(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
 	require.Equal(t, 0, len(srvc.auth.pins))
-	pub, _ := network.Suite.Point().Pick(nil, network.Suite.Cipher([]byte("test")))
+	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
 	_, cerr := srvc.PinRequest(&PinRequest{"", pub})
 	require.NotNil(t, cerr)
 	require.NotEqual(t, 0, len(srvc.auth.pins))
@@ -44,13 +46,13 @@ func TestIdentity_PinRequest(t *testing.T) {
 }
 
 func TestIdentity_StoreKeys(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	el := local.GenRosterFromHost(servers...)
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
-	keypairAdmin := config.NewKeyPair(network.Suite)
-	keypairUser := config.NewKeyPair(network.Suite)
+	keypairAdmin := key.NewKeyPair(tSuite)
+	keypairUser := key.NewKeyPair(tSuite)
 
 	popDesc := &service.PopDesc{}
 	popDesc.Name = "test"
@@ -82,7 +84,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
 
-	sig, err := crypto.SignSchnorr(network.Suite, keypairAdmin.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, keypairAdmin.Secret, hash)
 	log.ErrFatal(err)
 	_, cerr := srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, cerr)
@@ -90,17 +92,17 @@ func TestIdentity_StoreKeys(t *testing.T) {
 }
 
 func TestIdentity_StoreKeys2(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
-	keypairAdmin := config.NewKeyPair(network.Suite)
+	keypairAdmin := key.NewKeyPair(tSuite)
 
 	N := 5
 	pubs := make([]kyber.Point, N)
-	h := network.Suite.Hash()
+	h := tSuite.Hash()
 	for i := 0; i < N; i++ {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(tSuite)
 		pubs[i] = kp.Public
 		b, err := kp.Public.MarshalBinary()
 		log.ErrFatal(err)
@@ -110,7 +112,7 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 	hash := h.Sum(nil)
 
 	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
-	sig, err := crypto.SignSchnorr(network.Suite, keypairAdmin.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, keypairAdmin.Secret, hash)
 	log.ErrFatal(err)
 	_, cerr := srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
 	require.Nil(t, cerr)
@@ -118,7 +120,7 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 }
 
 func TestIdentity_DataNewCheck(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
@@ -126,7 +128,7 @@ func TestIdentity_DataNewCheck(t *testing.T) {
 	c1 := createIdentity(l, services, el, "one")
 
 	data2 := c1.Data.Copy()
-	kp2 := config.NewKeyPair(network.Suite)
+	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two"] = &Device{kp2.Public}
 	data2.Storage["two"] = "public2"
 	log.ErrFatal(c1.ProposeSend(data2))
@@ -144,7 +146,7 @@ func TestIdentity_DataNewCheck(t *testing.T) {
 }
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	for _, s := range services {
@@ -167,7 +169,7 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 }
 
 func TestIdentity_DataUpdate(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
@@ -186,7 +188,7 @@ func TestIdentity_DataUpdate(t *testing.T) {
 }
 
 func TestIdentity_Authenticate(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, _, _ := l.GenTree(1, true)
 	services := l.GetServices(hosts, identityService)
 	s := services[0].(*Service)
@@ -197,7 +199,7 @@ func TestIdentity_Authenticate(t *testing.T) {
 }
 
 func TestIdentity_CreateIdentity(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(3, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
@@ -207,7 +209,7 @@ func TestIdentity_CreateIdentity(t *testing.T) {
 }
 
 func TestIdentity_DataNewPropose(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
@@ -215,7 +217,7 @@ func TestIdentity_DataNewPropose(t *testing.T) {
 	c1 := createIdentity(l, services, el, "onet")
 
 	data2 := c1.Data.Copy()
-	kp2 := config.NewKeyPair(network.Suite)
+	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two"] = &Device{kp2.Public}
 	log.ErrFatal(c1.ProposeSend(data2))
 
@@ -235,7 +237,7 @@ func TestIdentity_DataNewPropose(t *testing.T) {
 }
 
 func TestIdentity_ProposeVote(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
@@ -245,7 +247,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 
 	c1 := createIdentity(l, services, el, "one1")
 	data2 := c1.Data.Copy()
-	kp2 := config.NewKeyPair(network.Suite)
+	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two2"] = &Device{kp2.Public}
 	data2.Storage["two2"] = "public2"
 	log.ErrFatal(c1.ProposeSend(data2))
@@ -258,7 +260,7 @@ func TestIdentity_ProposeVote(t *testing.T) {
 }
 
 func TestIdentity_SaveToStream(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 	id := NewIdentity(el, 50, "one1", nil)
@@ -287,12 +289,12 @@ func TestIdentity_SaveToStream(t *testing.T) {
 }
 
 func TestCrashAfterRevocation(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
-	keypair := config.NewKeyPair(network.Suite)
-	kp2 := config.NewKeyPair(network.Suite)
+	keypair := key.NewKeyPair(tSuite)
+	kp2 := key.NewKeyPair(tSuite)
 	set := anon.Set([]kyber.Point{keypair.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
@@ -334,7 +336,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 }
 
 func TestVerificationFunction(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	hosts, el, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	s0 := services[0].(*Service)
@@ -349,34 +351,34 @@ func TestVerificationFunction(t *testing.T) {
 	// and send it directly to the skipblock. Without a proper
 	// verification-function, this would pass.
 	data2 := c1.Data.Copy()
-	kp2 := config.NewKeyPair(network.Suite)
+	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two2"] = &Device{kp2.Public}
 	data2.Storage["two2"] = "public2"
-	hash, err := data2.Hash()
+	hash, err := data2.Hash(tSuite)
 	log.ErrFatal(err)
-	sig, err := crypto.SignSchnorr(network.Suite, kp2.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, kp2.Secret, hash)
 	log.ErrFatal(err)
-	data2.Votes["one1"] = &sig
-	data2.Votes["two2"] = &sig
+	data2.Votes["one1"] = sig
+	data2.Votes["two2"] = sig
 	id := s0.getIdentityStorage(c1.ID)
 	require.NotNil(t, id, "Didn't find identity")
 	_, cerr := s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
 
 	// Gibberish signature
-	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
+	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
 	log.ErrFatal(err)
 	// Change one bit in the signature
 	sig[len(sig)-1] ^= 1
-	data2.Votes["one1"] = &sig
+	data2.Votes["one1"] = sig
 	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	require.NotNil(t, cerr, "Skipchain accepted our fake signature!")
 
 	// Unhack: verify that the correct way of doing it works, even if
 	// we bypass the identity.
-	sig, err = crypto.SignSchnorr(network.Suite, c1.Private, hash)
+	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
 	log.ErrFatal(err)
-	data2.Votes["one1"] = &sig
+	data2.Votes["one1"] = sig
 	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	log.ErrFatal(err)
 	log.ErrFatal(c1.DataUpdate())
@@ -392,8 +394,8 @@ func proposeUpVote(i *Identity) {
 }
 
 func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster, name string) *Identity {
-	keypair := config.NewKeyPair(network.Suite)
-	kp2 := config.NewKeyPair(network.Suite)
+	keypair := key.NewKeyPair(tSuite)
+	kp2 := key.NewKeyPair(tSuite)
 	set := anon.Set([]kyber.Point{keypair.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
@@ -401,6 +403,8 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster,
 	}
 
 	c := NewTestIdentity(el, 50, name, l, keypair)
+	log.Error("popauth", PoPAuth)
+	log.Error("set", set)
 	log.ErrFatal(c.CreateIdentity(PoPAuth, set))
 	return c
 }

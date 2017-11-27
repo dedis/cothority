@@ -1,3 +1,5 @@
+// +build cosi
+
 package main
 
 import (
@@ -6,8 +8,8 @@ import (
 
 	"os"
 
-	"github.com/stretchr/testify/require"
 	"github.com/dedis/onet/log"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfigNew(t *testing.T) {

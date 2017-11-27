@@ -2,11 +2,11 @@ package identity
 
 import (
 	"encoding/binary"
-	"sort"
-
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
@@ -56,7 +56,7 @@ func (d *Data) Copy() *Data {
 		log.Error("Couldn't marshal Data:", err)
 		return nil
 	}
-	_, msg, err := network.Unmarshal(b)
+	_, msg, err := network.Unmarshal(b, cothority.Suite)
 	if err != nil {
 		log.Error("Couldn't unmarshal Data:", err)
 	}
@@ -71,8 +71,8 @@ func (d *Data) Copy() *Data {
 
 // Hash makes a cryptographic hash of the data-file - this
 // can be used as an ID. The vote of the devices is not included in the hash!
-func (d *Data) Hash() ([]byte, error) {
-	hash := network.Suite.Hash()
+func (d *Data) Hash(suite kyber.HashFactory) ([]byte, error) {
+	hash := suite.Hash()
 	err := binary.Write(hash, binary.LittleEndian, int32(d.Threshold))
 	if err != nil {
 		return nil, err
@@ -219,9 +219,10 @@ type CreateIdentity struct {
 	// list of conodes on which skipchain is created
 	Roster *onet.Roster
 	Type   AuthType
-	// authentication via Public key
-	Public  kyber.Point
-	SchnSig []byte
+	// Authentication via Public key. Can be left unset if SchnSig is set.
+	Public kyber.Point
+	// SchnSig is optional; one of Public or SchnSig must be set.
+	SchnSig *[]byte
 	// authentication via Linkable Ring Signature
 	Sig []byte
 	// Nonce plays in this case message of authentication

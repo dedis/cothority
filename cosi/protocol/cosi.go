@@ -1,17 +1,13 @@
 // Package cosi implements a round of a Collective Signing protocol.
-
-// +build cosi
-
 package cosi
 
 import (
 	"sync"
 
+	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // Name can be used to reference the registered protocol.
@@ -36,7 +32,7 @@ type CoSi struct {
 	treeNodeID onet.TreeNodeID
 	// the cosi struct we use (since it is a cosi protocol)
 	// Public because we will need it from other protocols.
-	cosi *cosi.CoSi
+	cosi *crypto.CoSi
 	// the message we want to sign typically given by the Root
 	Message []byte
 	// The channel waiting for Announcement message
@@ -105,7 +101,7 @@ func NewProtocol(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	}
 
 	c := &CoSi{
-		cosi:             cosi.NewCosi(node.Suite(), node.Private(), publics),
+		cosi:             crypto.NewCosi(node.Suite(), node.Private(), publics),
 		TreeNodeInstance: node,
 		done:             make(chan bool),
 		tempCommitLock:   new(sync.Mutex),
@@ -182,8 +178,8 @@ func (c *CoSi) Start() error {
 // correct signature for this message using the aggregated public key.
 // This is copied from cosi, so that you don't need to include both lib/cosi
 // and protocols/cosi
-func VerifySignature(suite abstract.Suite, publics []kyber.Point, msg, sig []byte) error {
-	return cosi.VerifySignature(suite, publics, msg, sig)
+func VerifySignature(suite kyber.Group, publics []kyber.Point, msg, sig []byte) error {
+	return crypto.VerifySignature(suite, publics, msg, sig)
 }
 
 // handleAnnouncement will pass the message to the round and send back the

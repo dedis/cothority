@@ -4,6 +4,10 @@
 
 # Cothority
 
+WARNING: The master branch is currently unstable, as it is in development phase. If you are
+starting new work with this repository, use gopkg.in/dedis/cothority.v1 instead.
+The source code for this stable branch is [here](https://github.com/dedis/cothority/tree/v1.2).
+
 The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
 
 ## Table of Contents

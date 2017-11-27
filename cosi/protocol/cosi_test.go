@@ -4,11 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 )
+
+var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -17,9 +19,9 @@ func TestMain(m *testing.M) {
 func TestCosi(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
 		log.Lvl2("Running cosi with", nbrHosts, "hosts")
-		local := onet.NewLocalTest()
+		local := onet.NewLocalTest(tSuite)
 		hosts, el, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
-		aggPublic := network.Suite.Point().Null()
+		aggPublic := tSuite.Point().Null()
 		for _, e := range el.List {
 			aggPublic = aggPublic.Add(aggPublic, e.Public)
 		}

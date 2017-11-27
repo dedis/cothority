@@ -24,7 +24,6 @@ import (
 
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
-	"github.com/qantik/qrgo"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/config"
 	"github.com/dedis/kyber/util/random"
@@ -33,6 +32,7 @@ import (
 	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/qantik/qrgo"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -49,7 +50,7 @@ type Client struct {
 
 // NewClient instantiates a new Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(Name)}
+	return &Client{Client: onet.NewClient(Name, cothority.Suite)}
 }
 
 // PinRequest takes a destination-address, a PIN and a public key as an argument.
@@ -64,7 +65,7 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) on
 // StoreConfig sends the configuration to the conode for later usage.
 func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) onet.ClientError {
 	si := &network.ServerIdentity{Address: dst}
-	sg, e := schnorr.Sign(network.Suite, priv, p.Hash())
+	sg, e := schnorr.Sign(cothority.Suite, priv, p.Hash())
 	if e != nil {
 		return onet.NewClientError(e)
 	}
@@ -104,7 +105,7 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Poi
 		return nil, onet.NewClientError(err)
 	}
 	res := &finalizeResponse{}
-	sg, err := schnorr.Sign(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
@@ -124,7 +125,7 @@ func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	hash := p.Hash()
-	sg, err := schnorr.Sign(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
@@ -164,7 +165,7 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 	}
 	atts := []kyber.Point{}
 	for _, p := range fsToml.Attendees {
-		pub, err := encoding.String64ToPoint(network.Suite, p)
+		pub, err := encoding.String64ToPoint(cothority.Suite, p)
 		if err != nil {
 			return nil, err
 		}
@@ -266,7 +267,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		if err != nil {
 			return nil, err
 		}
-		pub, err := encoding.String64ToPoint(network.Suite, s[3])
+		pub, err := encoding.String64ToPoint(cothority.Suite, s[3])
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +290,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 			if err != nil {
 				return nil, err
 			}
-			pub, err := encoding.String64ToPoint(network.Suite, s[3])
+			pub, err := encoding.String64ToPoint(cothority.Suite, s[3])
 			if err != nil {
 				return nil, err
 			}
@@ -365,7 +366,7 @@ func (fs *FinalStatement) ToToml() ([]byte, error) {
 // Hash returns the hash of the popdesc and the attendees. In case of an error
 // in the hashing it will return a nil-slice and the error.
 func (fs *FinalStatement) Hash() ([]byte, error) {
-	h := network.Suite.Hash()
+	h := cothority.Suite.Hash()
 	_, err := h.Write(fs.Desc.Hash())
 	if err != nil {
 		return nil, err
@@ -431,7 +432,7 @@ type shortDescToml struct {
 
 // Hash of this structure - calculated by hand instead of using network.Marshal.
 func (desc *PopDesc) Hash() []byte {
-	hash := network.Suite.Hash()
+	hash := cothority.Suite.Hash()
 	hash.Write([]byte(desc.Name))
 	hash.Write([]byte(desc.DateTime))
 	hash.Write([]byte(desc.Location))
@@ -508,11 +509,11 @@ func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	token.Private, err = encoding.String64ToScalar(network.Suite, t.Private)
+	token.Private, err = encoding.String64ToScalar(cothority.Suite, t.Private)
 	if err != nil {
 		return nil, err
 	}
-	token.Public, err = encoding.String64ToPoint(network.Suite, t.Public)
+	token.Public, err = encoding.String64ToPoint(cothority.Suite, t.Public)
 	if err != nil {
 		return nil, err
 	}

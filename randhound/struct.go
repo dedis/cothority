@@ -37,18 +37,18 @@ type RandHound struct {
 	server              [][]*onet.TreeNode // Grouped servers
 	group               [][]int            // Grouped server indices
 	threshold           []int              // Group thresholds
-	key                 [][]kyber.Point // Grouped server public keys
+	key                 [][]kyber.Point    // Grouped server public keys
 	ServerIdxToGroupNum []int              // Mapping of gloabl server index to group number
 	ServerIdxToGroupIdx []int              // Mapping of global server index to group server index
 
 	// Message information
-	i1s          map[int]*I1              // I1 messages sent to servers (index: group)
-	i2s          map[int]*I2              // I2 messages sent to servers (index: server)
-	r1s          map[int]*R1              // R1 messages received from servers (index: server)
-	r2s          map[int]*R2              // R2 messages received from servers (index: server)
+	i1s          map[int]*I1           // I1 messages sent to servers (index: group)
+	i2s          map[int]*I2           // I2 messages sent to servers (index: server)
+	r1s          map[int]*R1           // R1 messages received from servers (index: server)
+	r2s          map[int]*R2           // R2 messages received from servers (index: server)
 	polyCommit   map[int][]kyber.Point // Commitments of server polynomials (index: server)
-	secret       map[int][]int            // Valid shares per secret/server (source server index -> list of target server indices)
-	chosenSecret map[int][]int            // Chosen secrets contributing to collective randomness
+	secret       map[int][]int         // Valid shares per secret/server (source server index -> list of target server indices)
+	chosenSecret map[int][]int         // Chosen secrets contributing to collective randomness
 
 	// Misc
 	Done        chan bool // Channel to signal the end of a protocol run
@@ -60,31 +60,31 @@ type RandHound struct {
 // Share encapsulates all information for encrypted or decrypted shares and the
 // respective consistency proofs.
 type Share struct {
-	Source int            // Source server index
-	Target int            // Target server index
-	Pos    int            // Share position
+	Source int         // Source server index
+	Target int         // Target server index
+	Pos    int         // Share position
 	Val    kyber.Point // Share value
-	Proof  ProofCore      // ZK-verification proof
+	Proof  ProofCore   // ZK-verification proof
 }
 
 // Transcript represents the record of a protocol run created by the client.
 type Transcript struct {
-	SID          []byte             // Session identifier
-	Nodes        int                // Total number of nodes (client + server)
-	Groups       int                // Number of groups
-	Faulty       int                // Maximum number of Byzantine servers
-	Purpose      string             // Purpose of protocol run
-	Time         time.Time          // Timestamp of initiation
-	CliRand      []byte             // Client-chosen randomness (for initial sharding)
+	SID          []byte          // Session identifier
+	Nodes        int             // Total number of nodes (client + server)
+	Groups       int             // Number of groups
+	Faulty       int             // Maximum number of Byzantine servers
+	Purpose      string          // Purpose of protocol run
+	Time         time.Time       // Timestamp of initiation
+	CliRand      []byte          // Client-chosen randomness (for initial sharding)
 	CliKey       kyber.Point     // Client public key
-	Group        [][]int            // Grouped server indices
+	Group        [][]int         // Grouped server indices
 	Key          [][]kyber.Point // Grouped server public keys
-	Threshold    []int              // Grouped secret sharing thresholds
-	ChosenSecret map[int][]int      // Chosen secrets that contribute to collective randomness
-	I1s          map[int]*I1        // I1 messages sent to servers
-	I2s          map[int]*I2        // I2 messages sent to servers
-	R1s          map[int]*R1        // R1 messages received from servers
-	R2s          map[int]*R2        // R2 messages received from servers
+	Threshold    []int           // Grouped secret sharing thresholds
+	ChosenSecret map[int][]int   // Chosen secrets that contribute to collective randomness
+	I1s          map[int]*I1     // I1 messages sent to servers
+	I2s          map[int]*I2     // I2 messages sent to servers
+	R1s          map[int]*R1     // R1 messages received from servers
+	R2s          map[int]*R2     // R2 messages received from servers
 }
 
 // I1 is the message sent by the client to the servers in step 1.
@@ -93,7 +93,7 @@ type I1 struct {
 	SID       []byte            // Session identifier
 	Threshold int               // Secret sharing threshold
 	Group     []uint32          // Group indices
-	Key       []kyber.Point  // Public keys of trustees
+	Key       []kyber.Point     // Public keys of trustees
 }
 
 // R1 is the reply sent by the servers to the client in step 2.
@@ -110,7 +110,7 @@ type I2 struct {
 	SID          []byte            // Session identifier
 	ChosenSecret []uint32          // Chosen secrets (flattened)
 	EncShare     []Share           // Encrypted shares
-	PolyCommit   []kyber.Point  // Polynomial commitments
+	PolyCommit   []kyber.Point     // Polynomial commitments
 }
 
 // R2 is the reply sent by the servers to the client in step 4.

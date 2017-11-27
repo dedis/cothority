@@ -1,5 +1,3 @@
-// +build cosi
-
 package bftcosi
 
 import (
@@ -13,6 +11,7 @@ import (
 
 	"fmt"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
@@ -66,6 +65,8 @@ func TestBftCoSi(t *testing.T) {
 	runProtocol(t, TestProtocolName, 0)
 }
 
+var tSuite = cothority.Suite
+
 func TestThreshold(t *testing.T) {
 	const TestProtocolName = "DummyBFTCoSiThr"
 
@@ -74,7 +75,7 @@ func TestThreshold(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	local := onet.NewLocalTest()
+	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	tests := []struct{ h, t int }{
 		{1, 0},
@@ -192,7 +193,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
 func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 	succeed bool) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
-	local := onet.NewLocalTest()
+	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true)
 	log.Lvl3("Tree is:", tree.Dump())
