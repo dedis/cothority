@@ -1,34 +1,32 @@
+// +build cosi
+
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net"
 	"os"
 	"path"
+	"strings"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/protocol"
 	_ "github.com/dedis/cothority/cosi/service"
-
-	"fmt"
-	"io/ioutil"
-
-	"net"
-
-	"strings"
-
-	"bufio"
-	"bytes"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/kyber/config"
+	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -180,7 +178,7 @@ func orgConfig(c *cli.Context) error {
 	log.Lvlf2("Hash of config: %s", hash)
 	log.ErrFatal(client.StoreConfig(cfg.Address, desc, cfg.OrgPrivate))
 	if val, ok := cfg.Parties[hash]; !ok {
-		kp := config.NewKeyPair(network.Suite)
+		kp := keys.NewKeyPair(cothority.Suite)
 		cfg.Parties[hash] = &PartyConfig{
 			Index: -1,
 			Final: &service.FinalStatement{
@@ -219,7 +217,7 @@ func orgPublic(c *cli.Context) error {
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
 	log.ErrFatal(err)
 	for _, k := range keys {
-		pub, err := crypto.String64ToPoint(network.Suite, k)
+		pub, err := encoding.String64ToPoint(network.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -524,7 +522,7 @@ func getConfigClient(c *cli.Context) (*Config, *service.Client) {
 func newConfig(fileConfig string) (*Config, error) {
 	name := app.TildeToHome(fileConfig)
 	if _, err := os.Stat(name); err != nil {
-		kp := config.NewKeyPair(network.Suite)
+		kp := keys.NewKeyPair(network.Suite)
 		return &Config{
 			OrgPublic:  kp.Public,
 			OrgPrivate: kp.Secret,

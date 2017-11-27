@@ -3,18 +3,21 @@ package service
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/config"
 	"github.com/dedis/kyber/sign/eddsa"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/stretchr/testify/require"
 )
 
+var tSuite = cothority.Suite
+
 func TestFinalStatement_ToToml(t *testing.T) {
-	pk := config.NewKeyPair(network.Suite)
+	pk := key.NewKeyPair(tSuite)
 	si := network.NewServerIdentity(pk.Public, network.NewAddress(network.PlainTCP, "0:2000"))
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{

@@ -149,7 +149,7 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientErr
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
 	}
 	hash := req.Desc.Hash()
-	if err := schnorr.Verify(network.Suite, s.data.Public, hash, req.Signature); err != nil {
+	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature"+err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
@@ -179,7 +179,7 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
-	if err := schnorr.Verify(network.Suite, s.data.Public, hash, req.Signature); err != nil {
+	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature:"+err.Error())
 	}
 
@@ -252,7 +252,7 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
 	}
 
-	if err := schnorr.Verify(network.Suite, s.data.Public, req.ID, req.Signature); err != nil {
+	if err := schnorr.Verify(s.Suite(), s.data.Public, req.ID, req.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature: err")
 	}
 
@@ -920,7 +920,7 @@ func unionRoster(r1, r2 *onet.Roster) *onet.Roster {
 }
 
 // newService registers the request-methods.
-func newService(c *onet.Context) onet.Service {
+func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
@@ -928,7 +928,7 @@ func newService(c *onet.Context) onet.Service {
 	log.ErrFatal(s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest), "Couldn't register messages")
 	if err := s.tryLoad(); err != nil {
-		log.Error(err)
+		return nil, err
 	}
 	if s.data.Finals == nil {
 		s.data.Finals = make(map[string]*FinalStatement)
@@ -939,7 +939,10 @@ func newService(c *onet.Context) onet.Service {
 	s.syncs = make(map[string]*sync)
 	var err error
 	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal)
-	log.ErrFatal(err)
+	if err != nil {
+		return nil, err
+	}
+
 	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
@@ -950,7 +953,7 @@ func newService(c *onet.Context) onet.Service {
 	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
 	})
-	return s
+	return s, nil
 }
 
 func newMerge() *merge {

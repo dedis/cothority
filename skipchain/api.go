@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -36,7 +37,7 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Skipchain")}
+	return &Client{Client: onet.NewClient("Skipchain", cothority.Suite)}
 }
 
 // StoreSkipBlock asks the cothority to store the new skipblock, and eventually

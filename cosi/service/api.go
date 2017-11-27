@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -15,7 +16,7 @@ type Client struct {
 
 // NewClient instantiates a new cosi.Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(ServiceName)}
+	return &Client{Client: onet.NewClient(ServiceName, cothority.Suite)}
 }
 
 // SignatureRequest sends a CoSi sign request to the Cothority defined by the given

@@ -1,5 +1,3 @@
-// +build cosi
-
 package cosi
 
 import (

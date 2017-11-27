@@ -1,5 +1,3 @@
-// +build cosi
-
 package bftcosi
 
 /*
@@ -15,10 +13,10 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/cothority/cosi/crypto"
+	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called
@@ -92,9 +90,9 @@ type ProtocolBFTCoSi struct {
 // messages
 type collectStructs struct {
 	// prepare-round cosi
-	prepare *cosi.CoSi
+	prepare *crypto.CoSi
 	// commit-round cosi
-	commit *cosi.CoSi
+	commit *crypto.CoSi
 
 	// prepareSignature is the signature generated during the prepare phase
 	// This signature is adapted according to the exceptions that occured during
@@ -122,8 +120,8 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		collectStructs: collectStructs{
-			prepare: cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
-			commit:  cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			prepare: crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			commit:  crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
@@ -635,7 +633,7 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	return true
 }
 
-func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
+func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *crypto.CoSi {
 	if t == RoundPrepare {
 		return bft.prepare
 	}

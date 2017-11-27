@@ -8,10 +8,11 @@ import (
 type suite interface {
 	kyber.Group
 	kyber.HashFactory
+	kyber.XOFFactory
 }
 
-// This is a temporary hack until we decide the right way to
-// set the suite in repo cothority.
+// Suite is a temporary hack until we decide the right way to set the
+// suite in repo cothority.
 var Suite suite
 
 func init() {

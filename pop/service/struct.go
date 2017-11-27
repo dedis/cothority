@@ -5,6 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
 )
@@ -95,7 +96,7 @@ type finalizeRequest struct {
 }
 
 func (fr *finalizeRequest) hash() ([]byte, error) {
-	h := network.Suite.Hash()
+	h := cothority.Suite.Hash()
 	_, err := h.Write(fr.DescID)
 	if err != nil {
 		return nil, err

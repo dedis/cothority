@@ -5,6 +5,7 @@ import (
 
 	"io/ioutil"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -98,10 +99,10 @@ type Identity struct {
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *key.Pair) *Identity {
-	client := onet.NewClient(ServiceName)
+func NewIdentity(r *onet.Roster, threshold int, owner string, kp *key.Pair) *Identity {
+	client := onet.NewClient(ServiceName, cothority.Suite)
 	if kp == nil {
-		kp = key.NewKeyPair(network.Suite)
+		kp = key.NewKeyPair(cothority.Suite)
 	}
 	return &Identity{
 		Client:     client,
@@ -109,14 +110,14 @@ func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *key.Pa
 		Public:     kp.Public,
 		Data:       NewData(threshold, kp.Public, owner),
 		DeviceName: owner,
-		Cothority:  cothority,
+		Cothority:  r,
 	}
 }
 
 // NewIdentityFromCothority searches for a given cothority
 func NewIdentityFromCothority(el *onet.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
-		Client:    onet.NewClient(ServiceName),
+		Client:    onet.NewClient(ServiceName, cothority.Suite),
 		Cothority: el,
 		ID:        id,
 	}
@@ -134,12 +135,12 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, idInt, err := network.Unmarshal(idBuf)
+	_, idInt, err := network.Unmarshal(idBuf, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
 	id := idInt.(*Identity)
-	id.Client = onet.NewClient(ServiceName)
+	id.Client = onet.NewClient(ServiceName, cothority.Suite)
 	return id, nil
 }
 
@@ -195,7 +196,7 @@ func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentit
 			break
 		}
 	}
-	sigtag := anon.Sign(network.Suite, random.Stream, au.Nonce,
+	sigtag := anon.Sign(i.Client.Suite().(anon.Suite), random.Stream, au.Nonce,
 		anon.Set(atts), au.Ctx, index, i.Private)
 	cr := &CreateIdentity{}
 	cr.Data = i.Data
@@ -206,7 +207,7 @@ func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentit
 }
 
 func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
-	sig, err := schnorr.Sign(network.Suite, i.Private, msg)
+	sig, err := schnorr.Sign(i.Client.Suite(), i.Private, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +216,7 @@ func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
 	cr.Sig = []byte{}
 	cr.Roster = i.Cothority
 	cr.Public = i.Public
-	cr.SchnSig = sig
+	cr.SchnSig = &sig
 	cr.Nonce = msg
 	return cr, nil
 }
@@ -290,14 +291,14 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	if !accept {
 		return nil
 	}
-	hash, err := i.Proposed.Hash()
+	hash, err := i.Proposed.Hash(i.Client.Suite().(kyber.HashFactory))
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	if i.Private == nil {
 		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
 	}
-	sig, err := schnorr.Sign(network.Suite, i.Private, hash)
+	sig, err := schnorr.Sign(i.Client.Suite(), i.Private, hash)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
@@ -305,7 +306,7 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
-		Signature: &sig,
+		Signature: sig,
 	}, pvr)
 	if cerr != nil {
 		return cerr

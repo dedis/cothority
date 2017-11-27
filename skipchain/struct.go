@@ -14,12 +14,12 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/satori/go.uuid"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
+	"github.com/satori/go.uuid"
 )
 
 // How many msec to wait before a timeout is generated in the propagation.
@@ -198,7 +198,7 @@ type SkipBlockDataEntry struct {
 
 // CalculateHash hashes all fixed fields of the skipblock.
 func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
-	hash := network.Suite.Hash()
+	hash := cothority.Suite.Hash()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
 		sbf.BaseHeight} {
 		binary.Write(hash, binary.LittleEndian, i)
@@ -358,7 +358,7 @@ func (bl *BlockLink) VerifySignature(publics []kyber.Point) error {
 	if len(bl.Signature) == 0 {
 		return errors.New("No signature present" + log.Stack())
 	}
-	return cosi.VerifySignature(network.Suite, publics, bl.Hash, bl.Signature)
+	return crypto.VerifySignature(cothority.Suite, publics, bl.Hash, bl.Signature)
 }
 
 // SkipBlockMap holds the map to the skipblocks. This is used for verification,

@@ -166,7 +166,7 @@ func (p *Proof) Verify(xG []kyber.Point, xH []kyber.Point) ([]int, []int, error)
 // PVSS implements public verifiable secret sharing.
 type PVSS struct {
 	suite abstract.Suite // Suite
-	h     kyber.Point // Base point for polynomial commits
+	h     kyber.Point    // Base point for polynomial commits
 	t     int            // Secret sharing threshold
 }
 
