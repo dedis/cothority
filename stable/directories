@@ -12,7 +12,9 @@ messaging
 pop
 pop/service
 randhound
-randhound/simulation
+randhound/protocol
+randhound/pulsar
+randhound/service
 scmgr
 skipchain
 status

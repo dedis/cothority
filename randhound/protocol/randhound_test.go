@@ -1,40 +1,35 @@
-package randhound_test
+package protocol
 
 import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/randhound"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 )
 
-func TestRandHound(t *testing.T) {
+func TestRandHound(test *testing.T) {
 
-	var name = "RandHound"
-	var nodes int = 28
-	var faulty int = 2
-	var groups int = 4
-	var purpose string = "RandHound test run"
+	name := "RandHound"
+	nodes := 11
+	groups := 2
+	purpose := "RandHound test run"
 
 	local := onet.NewLocalTest()
 	_, _, tree := local.GenTree(int(nodes), true)
 	defer local.CloseAll()
 
-	// Setup and start RandHound
-
 	log.Lvlf1("RandHound - starting")
 	protocol, err := local.CreateProtocol(name, tree)
 	if err != nil {
-		t.Fatal("Couldn't initialise RandHound protocol:", err)
+		test.Fatal("RandHound - couldn't initialise protocol:", err)
 	}
-	rh := protocol.(*randhound.RandHound)
-	err = rh.Setup(nodes, faulty, groups, purpose)
-	if err != nil {
-		t.Fatal("Couldn't initialise RandHound protocol:", err)
+	rh := protocol.(*RandHound)
+	if err := rh.Setup(nodes, groups, purpose); err != nil {
+		test.Fatal("RandHound - couldn't initialise protocol:", err)
 	}
-	if err := protocol.Start(); err != nil {
-		t.Fatal(err)
+	if err := rh.Start(); err != nil {
+		test.Fatal(err)
 	}
 
 	select {
@@ -43,20 +38,20 @@ func TestRandHound(t *testing.T) {
 
 		random, transcript, err := rh.Random()
 		if err != nil {
-			t.Fatal(err)
+			test.Fatal(err)
 		}
 		log.Lvlf1("RandHound - collective randomness: ok")
 
 		//log.Lvlf1("RandHound - collective randomness: %v", random)
+		//_ = transcript
 
-		err = rh.Verify(rh.Suite(), random, transcript)
+		err = Verify(rh.Suite(), random, transcript)
 		if err != nil {
-			t.Fatal(err)
+			test.Fatal(err)
 		}
 		log.Lvlf1("RandHound - verification: ok")
 
 	case <-time.After(time.Second * time.Duration(nodes) * 2):
-		t.Fatal("RandHound – time out")
+		test.Fatal("RandHound – time out")
 	}
-
 }
