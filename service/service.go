@@ -96,7 +96,12 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	}
 
 	// Do DKG on the nodes
-	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
+	roster := onet.NewRoster(req.Roster.List)
+	me, _ := roster.Search(s.ServerIdentity().ID)
+	if me > 0 {
+		roster.List[0], roster.List[me] = roster.List[me], roster.List[0]
+	}
+	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameDKG, tree)
 	setupDKG := pi.(*protocol.SetupDKG)
 	setupDKG.Wait = true
