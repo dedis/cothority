@@ -2,6 +2,9 @@
 // strings in an unbiasable and verifiable way given that a threshold of
 // participants is honest. The protocol is driven by the client which scavenges
 // the public randomness from the servers over the course of two round-trips.
+
+// +build poly
+
 package randhound
 
 import (
@@ -13,9 +16,10 @@ import (
 	"time"
 
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/hash"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
@@ -480,13 +484,13 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	msg := &i1.I1
 
 	// Compute hash of the client's message
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msg.Sig = []byte{} // XXX: hack
 	i1b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	hi1, err := crypto.HashBytes(rh.Suite().Hash(), i1b)
+	hi1, err := hash.Bytes(rh.Suite().Hash(), i1b)
 	if err != nil {
 		return err
 	}
@@ -667,7 +671,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				}
 
 				i2 := &I2{
-					Sig:          crypto.SchnorrSig{},
+					Sig:          []byte{},
 					SID:          rh.sid,
 					ChosenSecret: chosenSecret,
 					EncShare:     encShare,
@@ -695,13 +699,13 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	msg := &i2.I2
 
 	// Compute hash of the client's message
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msg.Sig = []byte{} // XXX: hack
 	i2b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	hi2, err := crypto.HashBytes(rh.Suite().Hash(), i2b)
+	hi2, err := hash.Bytes(rh.Suite().Hash(), i2b)
 	if err != nil {
 		return err
 	}
@@ -910,13 +914,13 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 		}
 	}
 
-	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
+	return hash.Bytes(rh.Suite().Hash(), buf.Bytes())
 }
 
 func signSchnorr(suite abstract.Suite, key kyber.Scalar, m interface{}) error {
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal message
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -925,7 +929,7 @@ func signSchnorr(suite abstract.Suite, key kyber.Scalar, m interface{}) error {
 	}
 
 	// Sign message
-	sig, err := crypto.SignSchnorr(suite, key, mb)
+	sig, err := schnorr.Sign(suite, key, mb)
 	if err != nil {
 		return err
 	}
@@ -944,7 +948,7 @@ func verifySchnorr(suite abstract.Suite, key kyber.Point, m interface{}) error {
 	sig.Set(x)
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal message
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -955,7 +959,7 @@ func verifySchnorr(suite abstract.Suite, key kyber.Point, m interface{}) error {
 	// Copy back original signature
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(sig) // XXX: hack
 
-	return crypto.VerifySchnorr(suite, key, mb, sig.Interface().(crypto.SchnorrSig))
+	return schnorr.Verify(suite, key, mb, sig.Interface().([]byte))
 }
 
 func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
@@ -966,7 +970,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	sig.Set(x)
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal ...
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -975,7 +979,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	}
 
 	// ... and hash message
-	hash2, err := crypto.HashBytes(suite.Hash(), mb)
+	hash2, err := hash.Bytes(suite.Hash(), mb)
 	if err != nil {
 		return err
 	}

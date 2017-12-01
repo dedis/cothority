@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
 )
 
@@ -71,8 +70,7 @@ func (cs *Simulation) Run(config *onet.SimulationConfig) error {
 		fn := func(sig []byte) {
 			roundM.Record()
 			publics := proto.Publics()
-			if err := cosi.VerifySignature(network.Suite, publics,
-				msg, sig); err != nil {
+			if err := crypto.VerifySignature(proto.Suite(), publics, msg, sig); err != nil {
 				log.Lvl1("Round", round, " => fail verification")
 			} else {
 				log.Lvl2("Round", round, " => success")

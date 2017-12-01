@@ -1,9 +1,8 @@
 package main
 
 import (
-	"testing"
-
 	"os"
+	"testing"
 )
 
 func TestSimulation(t *testing.T) {

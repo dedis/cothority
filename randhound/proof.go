@@ -1,3 +1,5 @@
+// +build poly
+
 package randhound
 
 import (

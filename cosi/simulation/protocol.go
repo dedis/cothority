@@ -79,7 +79,7 @@ func (c *CoSimul) getResponse(in []kyber.Scalar) {
 	}
 
 	if verify {
-		err := c.VerifyResponses(c.TreeNode().AggregatePublic())
+		err := c.VerifyResponses(c.TreeNode().AggregatePublic(c.Suite()))
 		if err != nil {
 			log.Error("Couldn't verify responses at our level", c.Name(), err.Error())
 		} else {

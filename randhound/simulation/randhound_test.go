@@ -1,4 +1,6 @@
-package main_test
+// +build poly
+
+package main
 
 import (
 	"testing"

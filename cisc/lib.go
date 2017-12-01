@@ -15,6 +15,7 @@ import (
 
 	"path/filepath"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -62,12 +63,12 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 		}
 		log.ErrFatal(err)
 	}
-	_, msg, err := network.Unmarshal(buf)
+	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
-	cfg.Identity.Client = onet.NewClient(identity.ServiceName)
+	cfg.Identity.Client = onet.NewClient(identity.ServiceName, cothority.Suite)
 	for _, f := range cfg.Follow {
-		f.Client = onet.NewClient(identity.ServiceName)
+		f.Client = onet.NewClient(identity.ServiceName, cothority.Suite)
 	}
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
@@ -207,7 +208,7 @@ func getGroup(c *cli.Context) *app.Group {
 	gr, err := os.Open(gfile)
 	log.ErrFatal(err)
 	defer gr.Close()
-	groups, err := app.ReadGroupDescToml(gr)
+	groups, err := app.ReadGroupDescToml(gr, cothority.Suite)
 	log.ErrFatal(err)
 	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
 		log.Fatal("No servers found in roster from", gfile)
