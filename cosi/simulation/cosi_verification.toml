@@ -3,6 +3,7 @@ Simulation = "CoSimul"
 Rounds = 5
 Depth = 2
 BF = 4
+Suite = "Ed25519"
 
 Checking
 0

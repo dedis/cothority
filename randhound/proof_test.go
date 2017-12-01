@@ -5,28 +5,26 @@ import (
 
 	"github.com/dedis/cothority/randhound"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/edwards"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/log"
 )
 
+var tSuite = ed25519.NewBlakeSHA256Ed25519()
+
 func TestProof(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
 	// 1st set of base points
-	g1, _ := suite.Point().Pick([]byte("G1"), random.Stream)
-	h1, _ := suite.Point().Pick([]byte("H1"), random.Stream)
+	g1, _ := tSuite.Point().Pick([]byte("G1"), random.Stream)
+	h1, _ := tSuite.Point().Pick([]byte("H1"), random.Stream)
 
 	// 1st secret value
-	x := suite.Scalar().Pick(random.Stream)
+	x := tSuite.Scalar().Pick(random.Stream)
 
 	// 2nd set of base points
-	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
-	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
+	g2, _ := tSuite.Point().Pick([]byte("G2"), random.Stream)
+	h2, _ := tSuite.Point().Pick([]byte("H2"), random.Stream)
 
 	// 2nd secret value
-	y := suite.Scalar().Pick(random.Stream)
+	y := tSuite.Scalar().Pick(random.Stream)
 
 	// Create proofs
 	g := []kyber.Point{g1, g2}
@@ -47,26 +45,22 @@ func TestProof(t *testing.T) {
 	if len(bad) != 0 {
 		log.Fatalf("Some proofs failed: %v", bad)
 	}
-
 }
 
 func TestProofCollective(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
 	// 1st set of base points
-	g1, _ := suite.Point().Pick([]byte("G1"), random.Stream)
-	h1, _ := suite.Point().Pick([]byte("H1"), random.Stream)
+	g1, _ := tSuite.Point().Pick([]byte("G1"), random.Stream)
+	h1, _ := tSuite.Point().Pick([]byte("H1"), random.Stream)
 
 	// 1st secret value
-	x := suite.Scalar().Pick(random.Stream)
+	x := tSuite.Scalar().Pick(random.Stream)
 
 	// 2nd set of base points
-	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
-	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
+	g2, _ := tSuite.Point().Pick([]byte("G2"), random.Stream)
+	h2, _ := tSuite.Point().Pick([]byte("H2"), random.Stream)
 
 	// 2nd secret value
-	y := suite.Scalar().Pick(random.Stream)
+	y := tSuite.Scalar().Pick(random.Stream)
 
 	// Create proof
 	g := []kyber.Point{g1, g2}
@@ -91,11 +85,8 @@ func TestProofCollective(t *testing.T) {
 }
 
 func TestPVSS(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
-	G := suite.Point().Base()
-	H, _ := suite.Point().Pick(nil, suite.Cipher([]byte("H")))
+	G := tSuite.Point().Base()
+	H, _ := tSuite.Point().Pick(nil, tSuite.Cipher([]byte("H")))
 
 	n := 10
 	threshold := 2*n/3 + 1
@@ -103,13 +94,13 @@ func TestPVSS(t *testing.T) {
 	X := make([]kyber.Point, n)  // trustee public keys
 	index := make([]int, n)
 	for i := 0; i < n; i++ {
-		x[i] = suite.Scalar().Pick(random.Stream)
-		X[i] = suite.Point().Mul(nil, x[i])
+		x[i] = tSuite.Scalar().Pick(random.Stream)
+		X[i] = tSuite.Point().Mul(nil, x[i])
 		index[i] = i
 	}
 
 	// Scalar of shared secret
-	secret := suite.Scalar().Pick(random.Stream)
+	secret := tSuite.Scalar().Pick(random.Stream)
 
 	// (1) Share-Distribution (Dealer)
 	pvss := randhound.NewPVSS(suite, H, threshold)
@@ -155,7 +146,7 @@ func TestPVSS(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Verify recovered secret
-	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
+	if !(tSuite.Point().Mul(nil, secret).Equal(recovered)) {
 		log.Fatalf("Recovered incorrect shared secret")
 	}
 }

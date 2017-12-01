@@ -1,3 +1,5 @@
+// +build poly
+
 package randhound
 
 import (
@@ -6,7 +8,6 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/network"
 )
 
@@ -89,35 +90,35 @@ type Transcript struct {
 
 // I1 is the message sent by the client to the servers in step 1.
 type I1 struct {
-	Sig       crypto.SchnorrSig // Schnorr signature
-	SID       []byte            // Session identifier
-	Threshold int               // Secret sharing threshold
-	Group     []uint32          // Group indices
-	Key       []kyber.Point     // Public keys of trustees
+	Sig       []byte        // Schnorr signature
+	SID       []byte        // Session identifier
+	Threshold int           // Secret sharing threshold
+	Group     []uint32      // Group indices
+	Key       []kyber.Point // Public keys of trustees
 }
 
 // R1 is the reply sent by the servers to the client in step 2.
 type R1 struct {
-	Sig        crypto.SchnorrSig // Schnorr signature
-	HI1        []byte            // Hash of I1
-	EncShare   []Share           // Encrypted shares
-	CommitPoly []byte            // Marshalled commitment polynomial
+	Sig        []byte  // Schnorr signature
+	HI1        []byte  // Hash of I1
+	EncShare   []Share // Encrypted shares
+	CommitPoly []byte  // Marshalled commitment polynomial
 }
 
 // I2 is the message sent by the client to the servers in step 3.
 type I2 struct {
-	Sig          crypto.SchnorrSig // Schnorr signature
-	SID          []byte            // Session identifier
-	ChosenSecret []uint32          // Chosen secrets (flattened)
-	EncShare     []Share           // Encrypted shares
-	PolyCommit   []kyber.Point     // Polynomial commitments
+	Sig          []byte        // Schnorr signature
+	SID          []byte        // Session identifier
+	ChosenSecret []uint32      // Chosen secrets (flattened)
+	EncShare     []Share       // Encrypted shares
+	PolyCommit   []kyber.Point // Polynomial commitments
 }
 
 // R2 is the reply sent by the servers to the client in step 4.
 type R2 struct {
-	Sig      crypto.SchnorrSig // Schnorr signature
-	HI2      []byte            // Hash of I2
-	DecShare []Share           // Decrypted shares
+	Sig      []byte  // Schnorr signature
+	HI2      []byte  // Hash of I2
+	DecShare []Share // Decrypted shares
 }
 
 // WI1 is a onet-wrapper around I1.

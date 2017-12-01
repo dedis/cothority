@@ -8,28 +8,24 @@ holds the skipchain and answers to requests from the cisc-binary.
 package main
 
 import (
-	"os"
-
+	"bytes"
 	"encoding/hex"
-
-	"path"
-
+	"fmt"
 	"io/ioutil"
+	"net"
+	"os"
+	"path"
 	"strings"
 
-	"bytes"
-	"net"
-
-	"fmt"
-
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/config"
-	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/crypto"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/qantik/qrgo"
@@ -97,20 +93,20 @@ func adminLink(c *cli.Context) error {
 
 	cfg := loadConfigAdminOrFail(c)
 
-	public := network.Suite.Point().Null()
+	public := cothority.Suite.Point().Null()
 	var found = true
 	var kp *keyPair
 	if pin != "" {
 		kp, found = cfg.KeyPairs[string(addr)]
 		if !found {
-			ckp := config.NewKeyPair(network.Suite)
+			ckp := key.NewKeyPair(cothority.Suite)
 			kp = &keyPair{}
 			kp.Public = ckp.Public
 			kp.Private = ckp.Secret
 		}
 		public = kp.Public
 	}
-	client := onet.NewClient(identity.ServiceName)
+	client := onet.NewClient(identity.ServiceName, cothority.Suite)
 	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
 		if err.ErrorCode() == identity.ErrorWrongPIN && pin == "" {
 			log.Info("Please read PIN in server-log")
@@ -148,7 +144,7 @@ func adminStore(c *cli.Context) error {
 		log.Fatal("not linked")
 	}
 
-	client := onet.NewClient(identity.ServiceName)
+	client := onet.NewClient(identity.ServiceName, cothority.Suite)
 
 	finalName := c.Args().First()
 	buf, err := ioutil.ReadFile(finalName)
@@ -164,7 +160,7 @@ func adminStore(c *cli.Context) error {
 		log.Error("error while Hashing")
 		return err
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+	sig, err := schnorr.Sign(cothority.Suite, kp.Private, hash)
 	if err != nil {
 		return err
 	}
@@ -198,7 +194,7 @@ func adminAdd(c *cli.Context) error {
 		log.Fatal("not linked")
 	}
 
-	client := onet.NewClient(identity.ServiceName)
+	client := onet.NewClient(identity.ServiceName, cothority.Suite)
 
 	// keys processing
 	str := c.Args().First()
@@ -212,10 +208,10 @@ func adminAdd(c *cli.Context) error {
 	log.Lvl3("Niceified public keys are:\n", str)
 	keys := strings.Split(str, ",")
 
-	h := network.Suite.Hash()
+	h := cothority.Suite.Hash()
 	pubs := make([]kyber.Point, len(keys))
 	for i, k := range keys {
-		pub, err := crypto.String64ToPoint(network.Suite, k)
+		pub, err := encoding.String64ToPoint(cothority.Suite, k)
 		if err != nil {
 			log.Error("Couldn't parse public key:", k)
 			return err
@@ -234,7 +230,7 @@ func adminAdd(c *cli.Context) error {
 	}
 	hash := h.Sum(nil)
 
-	sig, err := crypto.SignSchnorr(network.Suite, kp.Private, hash)
+	sig, err := schnorr.Sign(cothority.Suite, kp.Private, hash)
 	if err != nil {
 		return err
 	}
@@ -252,17 +248,17 @@ func adminAdd(c *cli.Context) error {
  */
 
 func idKeyPair(c *cli.Context) error {
-	priv := network.Suite.NewKey(random.Stream)
-	pub := network.Suite.Point().Mul(nil, priv)
-	privStr, err := crypto.ScalarToString64(nil, priv)
+	kp := key.NewKeyPair(cothority.Suite)
+
+	secStr, err := encoding.ScalarToString64(nil, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PointToString64(nil, pub)
+	pubStr, err := encoding.PointToString64(nil, kp.Public)
 	if err != nil {
 		return err
 	}
-	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", secStr, pubStr)
 	return nil
 }
 
@@ -275,7 +271,7 @@ func idCreate(c *cli.Context) error {
 	group := getGroup(c)
 	t := c.String("type")
 	var atts []kyber.Point
-	kp := &config.KeyPair{}
+	kp := &key.Pair{}
 
 	var typ identity.AuthType
 	switch t {
@@ -295,12 +291,12 @@ func idCreate(c *cli.Context) error {
 		typ = identity.PublicAuth
 		priv := c.Args().Get(1)
 		var err error
-		kp.Secret, err = crypto.String64ToScalar(network.Suite, priv)
+		kp.Secret, err = encoding.String64ToScalar(cothority.Suite, priv)
 		if err != nil {
 			log.Error("Couldn't parse private key")
 			return err
 		}
-		kp.Public = network.Suite.Point().Mul(nil, kp.Secret)
+		kp.Public = cothority.Suite.Point().Mul(kp.Secret, nil)
 	default:
 		log.Fatal("no such auth method")
 	}

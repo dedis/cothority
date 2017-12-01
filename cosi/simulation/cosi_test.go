@@ -4,10 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/cothority/cosi/crypto"
+	"github.com/dedis/kyber/group"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
+
+var tSuite = group.MustSuite("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -17,7 +20,7 @@ func TestCoSimul(t *testing.T) {
 	for v := 0; v < 3; v++ {
 		for _, nbrHosts := range []int{1, 3, 13} {
 			log.Lvl2("Running cosi with", nbrHosts, "hosts")
-			local := onet.NewLocalTest()
+			local := onet.NewLocalTest(tSuite)
 
 			hosts, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
 			log.Lvl2(tree.Dump())
@@ -31,8 +34,7 @@ func TestCoSimul(t *testing.T) {
 			// function that will be called when protocol is finished by the root
 			doneFunc := func(sig []byte) {
 				suite := hosts[0].Suite()
-				if err := cosi.VerifySignature(suite, root.Publics(),
-					msg, sig); err != nil {
+				if err := crypto.VerifySignature(suite, root.Publics(), msg, sig); err != nil {
 					t.Fatal("error verifying signature:", err)
 				} else {
 					log.Lvl1("Verification OK")

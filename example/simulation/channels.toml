@@ -3,6 +3,7 @@ Simulation = "ExampleChannels"
 BF = 2
 Rounds = 10
 #SingleHost = true
+Suite = "Ed25519"
 
 Hosts
 3

@@ -2,6 +2,7 @@ Simulation = "NaiveTree"
 Servers = 16
 Bf = 3
 Rounds = 10
+Suite = "Ed25519"
 
 Depth, VerifySignature
 1, 0

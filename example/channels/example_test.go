@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/example/channels"
+	"github.com/dedis/kyber/group"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -16,7 +17,8 @@ func TestMain(m *testing.M) {
 
 // Tests a 2-node system
 func TestNode(t *testing.T) {
-	local := onet.NewLocalTest()
+	suite := group.MustSuite("Ed25519")
+	local := onet.NewLocalTest(suite)
 	nbrNodes := 2
 	_, _, tree := local.GenTree(nbrNodes, true)
 	defer local.CloseAll()
