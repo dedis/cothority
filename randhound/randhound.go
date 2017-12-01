@@ -3,7 +3,7 @@
 // participants is honest. The protocol is driven by the client which scavenges
 // the public randomness from the servers over the course of two round-trips.
 
-// +build poly
+// +build experimental
 
 package randhound
 

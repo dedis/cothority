@@ -1,3 +1,5 @@
+// +build experimental
+
 package randhound_test
 
 import (
