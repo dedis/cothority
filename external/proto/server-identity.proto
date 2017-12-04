@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "ServerIdentityProto";
+
+message ServerIdentity{
+    required bytes public = 1;
+    required bytes id = 2;
+    required string address = 3;
+    required string description = 4;
+}
+
+

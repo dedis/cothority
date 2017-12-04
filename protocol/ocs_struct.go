@@ -11,13 +11,14 @@ import (
 	"gopkg.in/dedis/onet.v1/network"
 )
 
-// NameDKG can be used from other packages to refer to this protocol.
+// NameOCS can be used from other packages to refer to this protocol.
 const NameOCS = "OCS"
 
 func init() {
 	network.RegisterMessages(&Reencrypt{}, &ReencryptReply{})
 }
 
+// Reencrypt asks for a re-encryption share from a node
 type Reencrypt struct {
 	U  abstract.Point
 	Xc abstract.Point
@@ -28,8 +29,11 @@ type structReencrypt struct {
 	Reencrypt
 }
 
+// ReencryptReply returns the share to re-encrypt from one node
 type ReencryptReply struct {
 	Ui *share.PubShare
+	Ei abstract.Scalar
+	Fi abstract.Scalar
 }
 
 type structReencryptReply struct {

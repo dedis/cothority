@@ -1,0 +1,25 @@
+171114 - 0.3
+  - external/java
+    - new directory structure:
+      - lib: re-usable parts for other java implementations
+        - crypto: beginning to port dedis/kyber to java
+        - darc: first shot at identity management
+        - exception: CothorityExceptions
+      - proto: protobuf classes
+      - ocs: main classes for onchain-secrets
+      - byzgen: common classes for linking ocs to byzgen code
+    - most important changes in classes:
+      - OnchainSecretsRPC: handles the low-level messaging
+      - OnchainSecrets: adds convenience methods to OCS
+      - WriteRequest, ReadRequest: represent the data
+      - Document: remove encyrption/decryption part
+    - put all methods with lowercase-letter first
+    - added verification of signature in write-request
+      - WriteRequest.getSignature to create automatically a valid write-signature
+    - made it possible for multiple darcs to
+    co-exist even if they have the same identities
+    - cleaning up:
+      - Exceptions only use CothorityException
+      - tests to use minimal set of darcs
+  - conodes
+    - error-handling

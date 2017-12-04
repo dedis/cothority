@@ -11,11 +11,12 @@ This part of the service runs on the client or the app.
 import (
 	"errors"
 
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onchain-secrets/protocol"
+	"github.com/dedis/onchain-secrets/darc"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/crypto"
+	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
 
@@ -49,7 +50,7 @@ func NewClient() *Client {
 func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 	cerr onet.ClientError) {
 	req := &CreateSkipchainsRequest{
-		Roster: r,
+		Roster: *r,
 	}
 	reply := &CreateSkipchainsReply{}
 	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
@@ -58,6 +59,24 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 	}
 	ocs = NewSkipChainURL(reply.OCS)
 	return
+}
+
+// EditAccount creates a new account on the skipchain. If the account-ID already exists,
+// there must be a valid signature provided in the Darc-structure, and all elements
+// must be valid: Version_new = Version_old + 1, Threshold_new = Threshold_old and the
+// different Darc-changes must follow the rules.
+func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.SkipBlock,
+	cerr onet.ClientError) {
+	req := &UpdateDarc{
+		Darc: *d,
+		OCS:  ocs.Genesis,
+	}
+	reply := &UpdateDarcReply{}
+	cerr = c.SendProtobuf(ocs.Roster.List[0], req, reply)
+	if cerr != nil {
+		return
+	}
+	return reply.SB, nil
 }
 
 // WriteRequest contacts the ocs-service and requests the addition of a new write-
@@ -70,14 +89,14 @@ func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //  - encData [[]byte] - the data - already encrypted using symKey
 //  - symKey [[]byte] - the symmetric key - it will be encrypted using the shared public key
-//  - readList [[]abstract.point] - a list of public key that can request a re-encryption
-//    of the symmetric encryption key
+//  - acl [Darc] - the access control list of public keys that are allowed to access
+//    that resource
 //
 // Output:
 //  - sb [*skipchain.SkipBlock] - the actual block written in the skipchain. The
 //    Data-field of the block contains the actual write request.
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, readList []abstract.Point) (sb *skipchain.SkipBlock,
+func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, acl *darc.Darc) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(encData) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store data bigger than 10MB")
@@ -90,19 +109,12 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 		return
 	}
 
-	U, Cs := protocol.EncodeKey(network.Suite, shared.X, symKey)
+	write := NewWrite(network.Suite, ocs.Genesis, shared.X, acl, symKey)
+	write.Data = encData
 	wr := &WriteRequest{
-		Write: &DataOCSWrite{
-			Data:    encData,
-			U:       U,
-			Cs:      Cs,
-			Readers: []byte{},
-		},
-		Readers: &DataOCSReaders{
-			ID:      []byte{},
-			Readers: readList,
-		},
-		OCS: ocs.Genesis,
+		Write:   *write,
+		Readers: acl,
+		OCS:     ocs.Genesis,
 	}
 	reply := &WriteReply{}
 	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
@@ -134,10 +146,9 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 	}
 
 	request := &ReadRequest{
-		Read: &DataOCSRead{
-			Public:    network.Suite.Point().Mul(nil, reader),
+		Read: Read{
 			DataID:    dataID,
-			Signature: &sig,
+			Signature: darc.Signature{Signature: sig},
 		},
 		OCS: ocs.Genesis,
 	}
@@ -174,8 +185,9 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 		return
 	}
 
+	log.LLvl2("Got decryption key")
 	var err error
-	sym, err = protocol.DecodeKey(network.Suite, reply.X,
+	sym, err = DecodeKey(network.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, reader)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
@@ -204,12 +216,8 @@ func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encDa
 	if cerr != nil {
 		return nil, cerr
 	}
-	_, ocsDataI, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		return nil, onet.NewClientError(err)
-	}
-	ocsData, ok := ocsDataI.(*DataOCS)
-	if !ok || ocsData.Write == nil {
+	ocsData := NewOCS(sb.Data)
+	if ocsData == nil || ocsData.Write == nil {
 		return nil, onet.NewClientError(errors.New("not correct type of data"))
 	}
 	return ocsData.Write.Data, nil
@@ -233,4 +241,20 @@ func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID,
 		return nil, cerr
 	}
 	return reply.Documents, nil
+}
+
+// GetLatestDarc looks for an update path to the latest valid
+// darc given either a genesis-darc and nil, or a later darc
+// and its base-darc.
+func (c *Client) GetLatestDarc(ocs *SkipChainURL, darcID darc.ID) (path *[]*darc.Darc, cerr onet.ClientError) {
+	request := &GetLatestDarc{
+		OCS:    ocs.Genesis,
+		DarcID: darcID,
+	}
+	reply := &GetLatestDarcReply{}
+	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if cerr != nil {
+		return
+	}
+	return reply.Darcs, nil
 }

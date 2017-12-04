@@ -37,8 +37,8 @@ for services. Different services are available, but for now we only care about
 the ocs-service.
 
 ```bash
-go get github.com/dedis/onchain-secrets/conode
-$GOPATH/src/github.com/dedis/onchain-secrets/conode/run_conode.sh local 3
+go get -u -v github.com/dedis/onchain-secrets/conode
+$(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode/run_conode.sh local 3
 ```
 
 This starts 3 conodes locally on your computer and writes a `public.toml`-file

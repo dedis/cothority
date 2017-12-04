@@ -15,11 +15,10 @@ import (
 
 	"fmt"
 
+	"errors"
+
 	"github.com/dedis/onchain-secrets"
-	"github.com/dedis/cothority/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -60,7 +59,7 @@ func main() {
 					ArgsUsage: "group ocs-skipchain-id [private_key]",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "overwrite, o",
+							Name:  "force, f",
 							Usage: "overwrite existing config",
 						},
 					},
@@ -155,7 +154,7 @@ func mngJoin(c *cli.Context) error {
 		log.Fatal("Please give: group ocs-skipchain-id")
 	}
 	cfg, loaded := loadConfig(c)
-	if loaded && !c.Bool("overwrite") {
+	if loaded && !c.Bool("force") {
 		log.Fatal("Config is present but overwrite-flag not given")
 	}
 	cfg = &ocsConfig{}
@@ -171,12 +170,17 @@ func mngJoin(c *cli.Context) error {
 }
 
 func keypair(c *cli.Context) error {
-	kp := config.NewKeyPair(network.Suite)
-	privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
+	//kp := config.NewKeyPair(network.Suite)
+	r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	privStr, err := crypto.ScalarToStringHex(network.Suite, r)
+	//privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
+	log.ErrFatal(err)
+	pub := network.Suite.Point().Mul(nil, r)
+	pubStr, err := crypto.PubToStringHex(network.Suite, pub)
+	//pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
 	if err != nil {
 		return err
 	}
@@ -190,23 +194,27 @@ func write(c *cli.Context) error {
 	}
 	cfg := loadConfigOrFail(c)
 	file := c.Args().Get(0)
-	var readers []abstract.Point
-	for _, r := range c.Args().Tail() {
-		pub, err := crypto.String64ToPub(network.Suite, r)
-		log.ErrFatal(err)
-		readers = append(readers, pub)
-	}
 
 	log.Info("Going to write file to skipchain")
 	data, err := ioutil.ReadFile(file)
 	log.ErrFatal(err)
-	symKey := random.Bytes(32, random.Stream)
+	//symKey := random.Bytes(32, random.Stream)
+	symKey, err := hex.DecodeString("294AEDA9694E0391EEC2D8C133BEBBFF")
+	log.ErrFatal(err)
 	cipher := network.Suite.Cipher(symKey)
 	encData := cipher.Seal(nil, data)
+	log.Print("TODO", cfg, encData)
+	// darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
+	// darc.Public = []abstract.Point{}
+	// for _, r := range c.Args().Tail() {
+	// pub, err := crypto.StringHexToPub(network.Suite, r)
+	// log.ErrFatal(err)
+	// darc.Public = append(darc.Public, pub)
+	// }
 
-	sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, readers)
-	log.ErrFatal(err)
-	log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
+	// sb, err := ocs.NewClient().WriteRequest(cfg.SkipChainURL, encData, symKey, darc)
+	// log.ErrFatal(err)
+	// log.Infof("Stored file %s in skipblock:\t%x", file, sb.Hash)
 	return nil
 }
 
@@ -223,8 +231,10 @@ func read(c *cli.Context) error {
 	fileID, err := hex.DecodeString(c.Args().Get(0))
 	log.ErrFatal(err)
 	log.Infof("Requesting read-access to file %x", fileID)
-	priv, err := crypto.String64ToScalar(network.Suite, c.Args().Get(1))
+	priv, err := crypto.StringHexToScalar(network.Suite, c.Args().Get(1))
 	log.ErrFatal(err)
+	pub := network.Suite.Point().Mul(nil, priv)
+	log.Printf("Private: %s\nPublic: %s", priv, pub)
 	cl := ocs.NewClient()
 	sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
 	log.ErrFatal(cerr)
@@ -268,19 +278,18 @@ func scread(c *cli.Context) error {
 	}
 	log.Printf("SkipblockID (Hash): %x", sb.Hash)
 	log.Printf("Index: %d", sb.Index)
-	_, data, err := network.Unmarshal(sb.Data)
-	if err != nil {
-		return err
+	ocs := ocs.NewOCS(sb.Data)
+	if ocs == nil {
+		return errors.New("wrong data in skipblock")
 	}
-	ocs := data.(*ocs.DataOCS)
 	if ocs.Write != nil {
 		log.Printf("Writer: %#v", ocs.Write)
 	}
 	if ocs.Read != nil {
 		log.Printf("Read: %#v", ocs.Read)
 	}
-	if ocs.Readers != nil {
-		log.Printf("Readers: %#v", ocs.Readers)
+	if ocs.Darc != nil {
+		log.Printf("Readers: %#v", ocs.Darc)
 	}
 	if len(sb.ForwardLink) > 0 {
 		log.Printf("Next block: %x", sb.ForwardLink[0].Hash)

@@ -3,161 +3,58 @@ package ocs_test
 import (
 	"testing"
 
-	// We need to include the service so it is started.
 	"github.com/dedis/onchain-secrets"
+	"github.com/dedis/onchain-secrets/darc"
 	_ "github.com/dedis/onchain-secrets/service"
 	"github.com/stretchr/testify/require"
-	"github.com/dedis/cothority/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func TestClient_CreateSkipchain(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
+func TestUpdateDarc(t *testing.T) {
+	owner := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
+	ownerID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(owner.Ed25519.Point))
+	require.Nil(t, err)
+	user1 := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
+	user1ID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(user1.Ed25519.Point))
+	user2 := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
+	user2ID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(user2.Ed25519.Point))
+	owners := []*darc.Identity{ownerID}
 
-	createSkipchain(t, test)
-}
+	darc0 := darc.NewDarc(&owners, nil, []byte("desc"))
+	darc1 := darc0.Copy()
+	darc1.AddUser(user1ID)
+	darc1.SetEvolution(darc0, nil, owner)
+	darc2 := darc1.Copy()
+	darc2.AddUser(user2ID)
+	darc2.SetEvolution(darc1, nil, owner)
 
-func createSkipchain(t *testing.T, test *testStruct) {
-	var cerr onet.ClientError
-	test.scurl, cerr = test.cl.CreateSkipchain(test.roster)
-	log.ErrFatal(cerr)
-}
+	local := onet.NewTCPTest()
+	// generate 5 hosts, they don't connect, they process messages, and they
+	// don't register the tree or entitylist
+	_, roster, _ := local.GenTree(3, true)
+	defer local.CloseAll()
+	cl := ocs.NewClient()
+	ocs, cerr := cl.CreateSkipchain(roster)
+	require.Nil(t, cerr)
+	log.Printf("%#v", *ocs)
+	_, cerr = cl.EditAccount(ocs, darc0)
+	require.Nil(t, cerr)
+	_, cerr = cl.EditAccount(ocs, darc1)
+	require.Nil(t, cerr)
+	_, cerr = cl.EditAccount(ocs, darc2)
+	require.Nil(t, cerr)
 
-func TestClient_WriteRequest(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
-
-	createSkipchain(t, test)
-	writeData(t, test)
-}
-
-func writeData(t *testing.T, test *testStruct) {
-	var cerr onet.ClientError
-	test.data = []byte("Very secret document")
-
-	var enc []byte
-	enc, test.sym = encryptDocument(test.data)
-	test.reader = config.NewKeyPair(network.Suite)
-	test.write, cerr = test.cl.WriteRequest(test.scurl, enc, test.sym, []abstract.Point{test.reader.Public})
-	log.ErrFatal(cerr)
-
-	dataOCS := ocs.NewDataOCS(test.write.Data)
-	require.NotNil(t, dataOCS)
-	require.NotNil(t, dataOCS.Write)
-}
-
-func TestClient_ReadRequest(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
-
-	createSkipchain(t, test)
-	writeData(t, test)
-	readData(t, test)
-}
-
-func readData(t *testing.T, test *testStruct) {
-	var cerr onet.ClientError
-	test.read, cerr = test.cl.ReadRequest(test.scurl, test.write.Hash, test.reader.Secret)
-	log.ErrFatal(cerr)
-}
-
-func TestClient_DecryptKeyRequest(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
-
-	createSkipchain(t, test)
-	writeData(t, test)
-	readData(t, test)
-	decryptKey(t, test)
-}
-
-func decryptKey(t *testing.T, test *testStruct) {
-	var cerr onet.ClientError
-
-	sym, cerr := test.cl.DecryptKeyRequest(test.scurl, test.read.Hash, test.reader.Secret)
-	log.ErrFatal(cerr)
-	require.Equal(t, test.sym, sym)
-}
-
-func TestClient_GetData(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
-
-	createSkipchain(t, test)
-	writeData(t, test)
-	readData(t, test)
-	decryptKey(t, test)
-	getData(t, test)
-}
-
-func getData(t *testing.T, test *testStruct) {
-	encData, cerr := test.cl.GetData(test.scurl, test.write.Hash)
-	log.ErrFatal(cerr)
-
-	cipher := network.Suite.Cipher(test.sym)
-	data, err := cipher.Open(nil, encData)
-	log.ErrFatal(err)
-
-	require.Equal(t, test.data, data)
-}
-
-func TestClient_GetReadRequests(t *testing.T) {
-	test := newTestStruct()
-	defer test.local.CloseAll()
-
-	createSkipchain(t, test)
-	writeData(t, test)
-	readData(t, test)
-	decryptKey(t, test)
-	getData(t, test)
-	getReadRequests(t, test)
-}
-
-func getReadRequests(t *testing.T, test *testStruct) {
-	docs, cerr := test.cl.GetReadRequests(test.scurl, test.write.Hash, 0)
-	log.ErrFatal(cerr)
-	require.Equal(t, 1, len(docs))
-	require.Equal(t, test.write.Hash, docs[0].DataID)
-}
-
-type testStruct struct {
-	local  *onet.LocalTest
-	roster *onet.Roster
-	cl     *ocs.Client
-	data   []byte
-	reader *config.KeyPair
-	sym    []byte
-	scurl  *ocs.SkipChainURL
-	write  *skipchain.SkipBlock
-	read   *skipchain.SkipBlock
-}
-
-func newTestStruct() *testStruct {
-	test := &testStruct{
-		local: onet.NewTCPTest(),
-		cl:    ocs.NewClient(),
-	}
-	_, test.roster, _ = test.local.GenTree(3, true)
-
-	return test
-}
-
-// EncryptDocument takes data and a credential, then it creates a new
-// symmetric encryption key, encrypts the document, and stores the document and
-// the encryption key on the blockchain.
-func encryptDocument(data []byte) (encData, key []byte) {
-	key = random.Bytes(128, random.Stream)
-	cipher := network.Suite.Cipher(key)
-	encData = cipher.Seal(nil, data)
-	return
+	path, cerr := cl.GetLatestDarc(ocs, darc2.GetID())
+	require.Nil(t, cerr)
+	require.NotNil(t, path)
+	require.Equal(t, 1, len(*path))
+	path, cerr = cl.GetLatestDarc(ocs, darc0.GetID())
+	require.Nil(t, cerr)
+	require.NotNil(t, path)
+	require.Equal(t, 3, len(*path))
 }

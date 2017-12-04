@@ -5,13 +5,17 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"crypto/sha256"
+	"errors"
 	"fmt"
 
+	"github.com/dedis/onchain-secrets/darc"
+	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"github.com/dedis/cothority/skipchain"
+	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
 )
@@ -19,7 +23,7 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		DataOCS{}, DataOCSWrite{}, DataOCSRead{}, DataOCSReaders{},
+		Transaction{}, Write{}, Read{},
 		CreateSkipchainsRequest{}, CreateSkipchainsReply{},
 		WriteRequest{}, WriteReply{},
 		ReadRequest{}, ReadReply{},
@@ -65,32 +69,13 @@ func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
 	}
 }
 
-// DataOCS holds eihter:
-// - a read request
-// - a write
-// - a key-update
-// - a write and a key-update
-type DataOCS struct {
-	Write   *DataOCSWrite
-	Read    *DataOCSRead
-	Readers *DataOCSReaders
-}
-
-// NewDataOCS returns a pointer to a DataOCS structure created from
+// NewOCS returns a pointer to a DataOCS structure created from
 // the given data-slice. If the slice is not a valid DataOCS-structure,
 // nil is returned.
-func NewDataOCS(b []byte) *DataOCS {
-	_, dwi, err := network.Unmarshal(b)
+func NewOCS(b []byte) *Transaction {
+	dw := &Transaction{}
+	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(network.Suite))
 	if err != nil {
-		log.Error(err)
-		return nil
-	}
-	if dwi == nil {
-		log.Error("dwi is nil")
-		return nil
-	}
-	dw, ok := dwi.(*DataOCS)
-	if !ok {
 		log.Error(err)
 		return nil
 	}
@@ -98,62 +83,228 @@ func NewDataOCS(b []byte) *DataOCS {
 }
 
 // String returns a nice string.
-func (dw *DataOCS) String() string {
+func (dw *Transaction) String() string {
 	if dw == nil {
 		return "nil-pointer"
 	}
 	if dw.Write != nil {
-		return fmt.Sprintf("Write: data-length of %d", len(dw.Write.Data))
+		return fmt.Sprintf("Write: data-length of %d\n", len(dw.Write.Data))
 	}
 	if dw.Read != nil {
-		return fmt.Sprintf("Read: %s read data %x", dw.Read.Public, dw.Read.DataID)
+		return fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Signature.SignaturePath.Signer, dw.Read.DataID)
 	}
 	return "all nil DataOCS"
 }
 
-// DataOCSWrite stores the data and the encrypted secret
-type DataOCSWrite struct {
+// NewWrite is used by the writer to an onchain-secret skipchain
+// to encode his symmetric key under the collective public key created
+// by the DKG.
+// As this method uses `Pick` to encode the key, depending on the key-length
+// more than one point is needed to encode the data.
+//
+// Input:
+//   - suite - the cryptographic suite to use
+//   - scid - the id of the skipchain - used to create the second generator
+//   - X - the aggregate public key of the DKG
+//   - reader - the darc that points to valid readers
+//   - key - the symmetric key for the document
+//
+// Output:
+//   - write - structure containing the encrypted key U, Cs and the NIZKP of
+//   it containing the reader-darc.
+func NewWrite(suite abstract.Suite, scid skipchain.SkipBlockID, X abstract.Point, reader *darc.Darc, key []byte) *Write {
+	wr := &Write{
+		Reader: *reader,
+	}
+	r := suite.Scalar().Pick(random.Stream)
+	// r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	// log.ErrFatal(err)
+	wr.U = suite.Point().Mul(nil, r)
+
+	// Create proof
+	rem := make([]byte, len(key))
+	copy(rem, key)
+	for len(rem) > 0 {
+		var kp abstract.Point
+		kp, rem = suite.Point().Pick(rem, random.Stream)
+		C := suite.Point().Mul(X, r)
+		wr.Cs = append(wr.Cs, C.Add(C, kp))
+	}
+
+	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
+	wr.Ubar = suite.Point().Mul(gBar, r)
+	s := suite.Scalar().Pick(random.Stream)
+	w := suite.Point().Mul(nil, s)
+	wBar := suite.Point().Mul(gBar, s)
+	hash := sha256.New()
+	for _, c := range wr.Cs {
+		c.MarshalTo(hash)
+	}
+	wr.U.MarshalTo(hash)
+	wr.Ubar.MarshalTo(hash)
+	w.MarshalTo(hash)
+	wBar.MarshalTo(hash)
+	hash.Write(wr.Reader.GetID())
+	wr.E = suite.Scalar().SetBytes(hash.Sum(nil))
+	wr.F = suite.Scalar().Add(s, suite.Scalar().Mul(wr.E, r))
+	return wr
+}
+
+// CheckProof verifies that the write-request has actually been created with
+// somebody having access to the secret key.
+func (wr *Write) CheckProof(suite abstract.Suite, scid skipchain.SkipBlockID) error {
+	gf := suite.Point().Mul(nil, wr.F)
+	ue := suite.Point().Mul(wr.U, suite.Scalar().Neg(wr.E))
+	w := suite.Point().Add(gf, ue)
+
+	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
+	gfBar := suite.Point().Mul(gBar, wr.F)
+	ueBar := suite.Point().Mul(wr.Ubar, suite.Scalar().Neg(wr.E))
+	wBar := suite.Point().Add(gfBar, ueBar)
+
+	hash := sha256.New()
+	for _, c := range wr.Cs {
+		c.MarshalTo(hash)
+	}
+	wr.U.MarshalTo(hash)
+	wr.Ubar.MarshalTo(hash)
+	w.MarshalTo(hash)
+	wBar.MarshalTo(hash)
+	hash.Write(wr.Reader.GetID())
+	e := suite.Scalar().SetBytes(hash.Sum(nil))
+	if e.Equal(wr.E) {
+		return nil
+	}
+	return errors.New("recreated proof is not equal to stored proof")
+}
+
+// DecodeKey can be used by the reader of an onchain-secret to convert the
+// re-encrypted secret back to a symmetric key that can be used later to
+// decode the document.
+//
+// Input:
+//   - suite - the cryptographic suite to use
+//   - X - the aggregate public key of the DKG
+//   - Cs - the encrypted key-slices
+//   - XhatEnc - the re-encrypted schnorr-commit
+//   - xc - the private key of the reader
+//
+// Output:
+//   - key - the re-assembled key
+//   - err - an eventual error when trying to recover the data from the points
+func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
+	xc abstract.Scalar) (key []byte, err error) {
+	log.Lvl3("xc:", xc)
+	xcInv := suite.Scalar().Neg(xc)
+	log.Lvl3("xcInv:", xcInv)
+	sum := suite.Scalar().Add(xc, xcInv)
+	log.Lvl3("xc + xcInv:", sum, "::", xc)
+	log.Lvl3("X:", X)
+	XhatDec := suite.Point().Mul(X, xcInv)
+	log.Lvl3("XhatDec:", XhatDec)
+	log.Lvl3("XhatEnc:", XhatEnc)
+	Xhat := suite.Point().Add(XhatEnc, XhatDec)
+	log.Lvl3("Xhat:", Xhat)
+	XhatInv := suite.Point().Neg(Xhat)
+	log.Lvl3("XhatInv:", XhatInv)
+
+	// Decrypt Cs to keyPointHat
+	for _, C := range Cs {
+		log.Lvl3("C:", C)
+		keyPointHat := suite.Point().Add(C, XhatInv)
+		log.Lvl3("keyPointHat:", keyPointHat)
+		keyPart, err := keyPointHat.Data()
+		log.Lvl3("keyPart:", keyPart)
+		if err != nil {
+			return nil, err
+		}
+		key = append(key, keyPart...)
+	}
+	return
+}
+
+// PROTOSTART
+// import "skipblock.proto";
+// import "darc.proto";
+// import "roster.proto";
+//
+// option java_package = "ch.epfl.dedis.proto";
+// option java_outer_classname = "OCSProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// Transaction holds either:
+// - a read request
+// - a write
+// - a key-update
+// - a write and a key-update
+// additionally it can hold a slice of bytes with any data that the user wants to
+// add to bind to that transaction.
+type Transaction struct {
+	// Write holds an eventual write-request with a document
+	Write *Write
+	// Read holds an eventual read-request, which is approved, for a document
+	Read *Read
+	// Darc defines either the readers allowed for this write-request
+	// or is an update to an existing Darc
+	Darc *darc.Darc
+	// Meta is any free-form data in that skipblock
+	Meta *[]byte
+}
+
+// Write stores the data and the encrypted secret
+type Write struct {
+	// Data should be encrypted by the application under the symmetric key in U and Cs
 	Data []byte
-	U    abstract.Point
-	Cs   []abstract.Point
-	// Readers is the ID of the DataOCSReaders block. If it is nil, then the
-	// DataOCSReaders must be present in the same DataOCS as this DataOCSWrite.
-	Readers []byte
+	// U is the encrypted random value for the ElGamal encryption
+	U abstract.Point
+	// Ubar, E and f will be used by the server to verify the writer did
+	// correctly encrypt the key. It binds the policy (the darc) with the
+	// cyphertext.
+	// Ubar is used for the log-equality proof
+	Ubar abstract.Point
+	// E is the non-interactive challenge as scalar
+	E abstract.Scalar
+	// f is the proof - written in uppercase here so it is an exported field,
+	// but in the OCS-paper it's lowercase.
+	F abstract.Scalar
+	// Cs are the ElGamal parts for the symmetric key material (might
+	// also contain an IV)
+	Cs []abstract.Point
+	// ExtraData is clear text and application-specific
+	ExtraData *[]byte
+	// Reader points to a darc where the reading-rights are stored
+	Reader darc.Darc
 }
 
-// DataOCSReaders stores a new configuration for keys. If the same ID is already
-// on the blockchain, it needs to be signed by a threshold of admins in the
-// last block. If Admins is nil, no other block with the same ID can be stored.
-// If ID is nil, this is a unique block for a single DataOCSWrite.
-type DataOCSReaders struct {
-	ID        []byte
-	Readers   []abstract.Point
-	Admins    []abstract.Point
-	Threshold int
-	Signature *crypto.SchnorrSig
-}
-
-// DataOCSRead stores a read-request which is the secret encrypted under the
+// Read stores a read-request which is the secret encrypted under the
 // pseudonym's public key. The Data is the skipblock-id of the skipblock
 // holding the data.
-type DataOCSRead struct {
-	Public    abstract.Point
-	DataID    skipchain.SkipBlockID
-	Signature *crypto.SchnorrSig
+type Read struct {
+	// DataID is the document-id for the read request
+	DataID skipchain.SkipBlockID
+	// Signature is a Schnorr-signature using the private key of the
+	// reader on the message 'DataID'
+	Signature darc.Signature
 }
 
 // ReadDoc represents one read-request by a reader.
 type ReadDoc struct {
-	Reader abstract.Point
+	Reader darc.Identity
 	ReadID skipchain.SkipBlockID
 	DataID skipchain.SkipBlockID
 }
 
+// ***
 // Requests and replies to/from the service
+// ***
 
 // CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
 type CreateSkipchainsRequest struct {
-	Roster *onet.Roster
+	Roster  onet.Roster
+	Writers darc.Darc
 }
 
 // CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
@@ -162,12 +313,45 @@ type CreateSkipchainsReply struct {
 	X   abstract.Point
 }
 
+// GetDarcPath returns the shortest path from the base darc to a darc
+// containing the identity.
+type GetDarcPath struct {
+	OCS        skipchain.SkipBlockID
+	BaseDarcID []byte
+	Identity   darc.Identity
+	Role       int
+}
+
+// GetDarcPathReply returns the shortest path to prove that the identity
+// can sign. If there is no such path, Path is nil.
+type GetDarcPathReply struct {
+	Path *[]darc.Darc
+}
+
+// UpdateDarc allows to set up new accounts or edit existing
+// read-rights in documents.
+type UpdateDarc struct {
+	OCS  skipchain.SkipBlockID
+	Darc darc.Darc
+}
+
+// UpdateDarcReply contains the skipblock with the account stored
+// in it. If the requested update is invalid, a nil skipblcok will
+// be returned.
+type UpdateDarcReply struct {
+	SB *skipchain.SkipBlock
+}
+
 // WriteRequest asks the OCS-skipchain to store data on the skipchain.
-// Readers can be empty if Write points to a valid reader.
+// Readers can be empty if Write points to a valid reader that is already
+// stored on the skipchain.
+// The identity of the signature has to be a valid Writer-identity and
+// must be the same as the publisher in the Write-request.
 type WriteRequest struct {
-	Write   *DataOCSWrite
-	Readers *DataOCSReaders
-	OCS     skipchain.SkipBlockID
+	OCS       skipchain.SkipBlockID
+	Write     Write
+	Signature darc.Signature
+	Readers   *darc.Darc
 }
 
 // WriteReply returns the created skipblock which is the write-id
@@ -177,8 +361,8 @@ type WriteReply struct {
 
 // ReadRequest asks the OCS-skipchain to allow a reader to access a document.
 type ReadRequest struct {
-	Read *DataOCSRead
 	OCS  skipchain.SkipBlockID
+	Read Read
 }
 
 // ReadReply is the added skipblock, if successful.
@@ -228,4 +412,18 @@ type GetBunchRequest struct {
 // GetBunchReply returns the genesis blocks of all registered OCS.
 type GetBunchReply struct {
 	Bunches []*skipchain.SkipBlock
+}
+
+// GetLatestDarc returns the path to the latest darc. DarcBaseID
+// can be nil if DarcID has version==0.
+type GetLatestDarc struct {
+	OCS    skipchain.SkipBlockID
+	DarcID []byte
+}
+
+// GetLatestDarcReply returns a list of all darcs, starting from
+// the one requested. If the darc has not been found, it
+// returns a nil list.
+type GetLatestDarcReply struct {
+	Darcs *[]*darc.Darc
 }
