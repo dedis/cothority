@@ -1,5 +1,6 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcSignature;
@@ -9,8 +10,14 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OCSProto;
 import com.google.protobuf.ByteString;
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
+import javax.xml.bind.DatatypeConverter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static ch.epfl.dedis.lib.crypto.Encryption.encryptData;
 
@@ -116,7 +123,7 @@ public class WriteRequest {
      * @return - OCSWrite to be sent to the cothority
      * @throws Exception
      */
-    public OCSProto.Write toProto(Point X) throws CothorityCommunicationException {
+    public OCSProto.Write toProto(Point X, SkipblockId scid) throws CothorityCommunicationException {
         OCSProto.Write.Builder write = OCSProto.Write.newBuilder();
         write.setExtradata(ByteString.copyFrom(extraData));
         write.setReader(owner.toProto());
@@ -130,20 +137,46 @@ public class WriteRequest {
             write.setU(U.toProto());
 
             Point C = X.scalarMult(r);
+            List<Point> Cs = new ArrayList<>();
             for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
                 int to = from + Ed25519.pubLen;
                 if (to > keyMaterial.length) {
                     to = keyMaterial.length;
                 }
                 Point keyPoint = Point.pubStore(Arrays.copyOfRange(keyMaterial, from, to));
-                Point Cs = C.add(keyPoint);
-                write.addCs(Cs.toProto());
+                Point Ckey = C.add(keyPoint);
+                Cs.add(Ckey);
+                write.addCs(Ckey.toProto());
             }
+
+            Point gBar = Point.pubStore(Arrays.copyOfRange(scid.getId(), 0, Ed25519.pubLen));
+            Point Ubar = r.scalarMult(gBar);
+            write.setUbar(Ubar.toProto());
+            KeyPair skp = new KeyPair();
+            Scalar s = skp.Scalar;
+            Point w = skp.Point;
+            Point wBar = s.scalarMult(gBar);
+
+            MessageDigest hash = MessageDigest.getInstance("SHA-256");
+            for (Point c: Cs) {
+                hash.update(c.toBytes());
+            }
+            hash.update(U.toBytes());
+            hash.update(Ubar.toBytes());
+            hash.update(w.toBytes());
+            hash.update(wBar.toBytes());
+            hash.update(owner.getId().getId());
+            Scalar E = new Scalar(hash.digest());
+            write.setE(E.toProto());
+            Scalar F = s.add(E.mul(r));
+            write.setF(F.toProto());
 
             return write.build();
 
         } catch (CothorityCryptoException e) {
             throw new CothorityCommunicationException("Encryption problem" + e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e){
+            throw new CothorityCommunicationException("Hashing-error");
         }
     }
 

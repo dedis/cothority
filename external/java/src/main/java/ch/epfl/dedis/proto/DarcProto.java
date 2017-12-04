@@ -144,7 +144,7 @@ public final class DarcProto {
 
     /**
      * <pre>
-     * 	 BaseID is the getId of the first darc of this Series
+     * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -152,7 +152,7 @@ public final class DarcProto {
     boolean hasBaseid();
     /**
      * <pre>
-     * 	 BaseID is the getId of the first darc of this Series
+     * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -479,7 +479,7 @@ public final class DarcProto {
     private com.google.protobuf.ByteString baseid_;
     /**
      * <pre>
-     * 	 BaseID is the getId of the first darc of this Series
+     * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -489,7 +489,7 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * 	 BaseID is the getId of the first darc of this Series
+     * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -1798,7 +1798,7 @@ public final class DarcProto {
       private com.google.protobuf.ByteString baseid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 BaseID is the getId of the first darc of this Series
+       * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1808,7 +1808,7 @@ public final class DarcProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the getId of the first darc of this Series
+       * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1818,7 +1818,7 @@ public final class DarcProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the getId of the first darc of this Series
+       * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1834,7 +1834,7 @@ public final class DarcProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the getId of the first darc of this Series
+       * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>

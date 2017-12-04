@@ -33,6 +33,9 @@ func NewDarc(owners *[]*Identity, users *[]*Identity, desc []byte) *Darc {
 	if users != nil {
 		us = append(us, *users...)
 	}
+	if desc == nil {
+		desc = []byte{}
+	}
 	return &Darc{
 		Owners:      &ow,
 		Users:       &us,

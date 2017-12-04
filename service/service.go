@@ -58,6 +58,7 @@ type Storage struct {
 	OCSs     *ocs.SBBStorage
 	Accounts map[string]*Darcs
 	Shared   map[string]*protocol.SharedSecret
+	Polys    map[string]*share.PubPoly
 	Admins   map[string]*darc.Darc
 }
 
@@ -96,12 +97,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	}
 
 	// Do DKG on the nodes
-	roster := onet.NewRoster(req.Roster.List)
-	me, _ := roster.Search(s.ServerIdentity().ID)
-	if me > 0 {
-		roster.List[0], roster.List[me] = roster.List[me], roster.List[0]
-	}
-	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), s.ServerIdentity())
+	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameDKG, tree)
 	setupDKG := pi.(*protocol.SetupDKG)
 	setupDKG.Wait = true
@@ -119,6 +115,12 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 		}
 		s.saveMutex.Lock()
 		s.Storage.Shared[string(reply.OCS.Hash)] = shared
+		dks, err := setupDKG.DKG.DistKeyShare()
+		if err != nil {
+			s.saveMutex.Unlock()
+			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		}
+		s.Storage.Polys[string(reply.OCS.Hash)] = share.NewPubPoly(network.Suite, network.Suite.Point().Base(), dks.Commits)
 		s.saveMutex.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout * time.Millisecond):
@@ -441,6 +443,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
+	ocsProto.Poly = s.Storage.Polys[string(fileSB.GenesisID)]
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
 	if err != nil {
@@ -670,7 +673,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 
 	if write := dataOCS.Write; write != nil {
 		// Write has to check if the signature comes from a valid writer.
-		log.Lvl2("No writing-checking yet")
+		log.Lvl2("Checking the proof of the writer knowing r.")
 		return true
 	} else if read := dataOCS.Read; read != nil {
 		// Read has to check that it's a valid reader
@@ -696,16 +699,10 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 			log.Error("Found empty readers-block")
 			return false
 		}
-		// for _, pk := range readersBlock.Public {
-		// 	err := crypto.VerifySchnorr(network.Suite, pk, read.DataID, *read.Signature)
-		// 	if err != nil {
-		// 		log.Lvl2("Didn't find signature:", err)
-		// 	} else {
-		// 		log.Lvl2("Found valid signature from public key", pk)
-		// 		return true
-		// 	}
-		// }
-		log.Warn("Overriding reader-check!")
+		if err := readersBlock.Verify(); err != nil {
+			log.Error("wrong reader verification:" + err.Error())
+			return false
+		}
 		return true
 		//return false
 	} else if darc := dataOCS.Darc; darc != nil {
@@ -775,6 +772,9 @@ func (s *Service) tryLoad() error {
 	defer func() {
 		if len(s.Storage.Shared) == 0 {
 			s.Storage.Shared = map[string]*protocol.SharedSecret{}
+		}
+		if len(s.Storage.Polys) == 0 {
+			s.Storage.Polys = map[string]*share.PubPoly{}
 		}
 		if len(s.Storage.Accounts) == 0 {
 			s.Storage.Accounts = map[string]*Darcs{}

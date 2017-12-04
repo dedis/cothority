@@ -203,7 +203,7 @@ public class OnchainSecretsRPC {
         OCSProto.WriteRequest.Builder request =
                 OCSProto.WriteRequest.newBuilder();
         request.setOcs(ByteString.copyFrom(ocsID.getId()));
-        request.setWrite(wr.toProto(X));
+        request.setWrite(wr.toProto(X, ocsID));
         request.setReaders(wr.owner.toProto());
         request.setSignature(signature.toProto());
 

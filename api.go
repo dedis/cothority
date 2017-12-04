@@ -12,7 +12,6 @@ import (
 	"errors"
 
 	"github.com/dedis/onchain-secrets/darc"
-	"github.com/dedis/onchain-secrets/protocol"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
 	"gopkg.in/dedis/onet.v1"
@@ -110,13 +109,10 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 		return
 	}
 
-	U, Cs := protocol.EncodeKey(network.Suite, shared.X, symKey)
+	write := NewWrite(network.Suite, ocs.Genesis, shared.X, acl, symKey)
+	write.Data = encData
 	wr := &WriteRequest{
-		Write: Write{
-			Data: encData,
-			U:    U,
-			Cs:   Cs,
-		},
+		Write:   *write,
 		Readers: acl,
 		OCS:     ocs.Genesis,
 	}
@@ -191,7 +187,7 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 
 	log.LLvl2("Got decryption key")
 	var err error
-	sym, err = protocol.DecodeKey(network.Suite, reply.X,
+	sym, err = DecodeKey(network.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, reader)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())

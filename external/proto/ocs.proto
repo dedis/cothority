@@ -35,13 +35,22 @@ message Write {
   required bytes data = 1;
   // 	 U is the encrypted random value for the ElGamal encryption
   required bytes u = 2;
+  // 	 Ubar, E and f will be used by the server to verify the writer did
+  // 	 correctly encrypt the key. It binds the policy (the darc) with the
+  // 	 cyphertext.
+  // 	 Ubar is used for the log-equality proof
+  required bytes ubar = 3;
+  // 	 E is the non-interactive challenge
+  required bytes e = 4;
+  // 	 f is the proof
+  required bytes f = 5;
   // 	 Cs are the ElGamal parts for the symmetric key material (might
   // 	 also contain an IV)
-  repeated bytes cs = 3;
+  repeated bytes cs = 6;
   // 	 ExtraData is clear text and application-specific
-  optional bytes extradata = 4;
+  optional bytes extradata = 7;
   // 	 Reader points to a darc where the reading-rights are stored
-  required Darc reader = 5;
+  required Darc reader = 8;
 }
 
 // Read stores a read-request which is the secret encrypted under the

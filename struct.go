@@ -5,6 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"crypto/sha256"
+	"errors"
 	"fmt"
 
 	"github.com/dedis/onchain-secrets/darc"
@@ -12,6 +14,7 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
+	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
@@ -93,6 +96,133 @@ func (dw *Transaction) String() string {
 	return "all nil DataOCS"
 }
 
+// NewWrite is used by the writer to an onchain-secret skipchain
+// to encode his symmetric key under the collective public key created
+// by the DKG.
+// As this method uses `Pick` to encode the key, depending on the key-length
+// more than one point is needed to encode the data.
+//
+// Input:
+//   - suite - the cryptographic suite to use
+//   - scid - the id of the skipchain - used to create the second generator
+//   - X - the aggregate public key of the DKG
+//   - reader - the darc that points to valid readers
+//   - key - the symmetric key for the document
+//
+// Output:
+//   - write - structure containing the encrypted key U, Cs and the NIZKP of
+//   it containing the reader-darc.
+func NewWrite(suite abstract.Suite, scid skipchain.SkipBlockID, X abstract.Point, reader *darc.Darc, key []byte) *Write {
+	wr := &Write{
+		Reader: *reader,
+	}
+	r := suite.Scalar().Pick(random.Stream)
+	// r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	// log.ErrFatal(err)
+	wr.U = suite.Point().Mul(nil, r)
+
+	// Create proof
+	rem := make([]byte, len(key))
+	copy(rem, key)
+	for len(rem) > 0 {
+		var kp abstract.Point
+		kp, rem = suite.Point().Pick(rem, random.Stream)
+		C := suite.Point().Mul(X, r)
+		wr.Cs = append(wr.Cs, C.Add(C, kp))
+	}
+
+	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
+	wr.Ubar = suite.Point().Mul(gBar, r)
+	s := suite.Scalar().Pick(random.Stream)
+	w := suite.Point().Mul(nil, s)
+	wBar := suite.Point().Mul(gBar, s)
+	hash := sha256.New()
+	for _, c := range wr.Cs {
+		c.MarshalTo(hash)
+	}
+	wr.U.MarshalTo(hash)
+	wr.Ubar.MarshalTo(hash)
+	w.MarshalTo(hash)
+	wBar.MarshalTo(hash)
+	hash.Write(wr.Reader.GetID())
+	wr.E = suite.Scalar().SetBytes(hash.Sum(nil))
+	wr.F = suite.Scalar().Add(s, suite.Scalar().Mul(wr.E, r))
+	return wr
+}
+
+// CheckProof verifies that the write-request has actually been created with
+// somebody having access to the secret key.
+func (wr *Write) CheckProof(suite abstract.Suite, scid skipchain.SkipBlockID) error {
+	gf := suite.Point().Mul(nil, wr.F)
+	ue := suite.Point().Mul(wr.U, suite.Scalar().Neg(wr.E))
+	w := suite.Point().Add(gf, ue)
+
+	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
+	gfBar := suite.Point().Mul(gBar, wr.F)
+	ueBar := suite.Point().Mul(wr.Ubar, suite.Scalar().Neg(wr.E))
+	wBar := suite.Point().Add(gfBar, ueBar)
+
+	hash := sha256.New()
+	for _, c := range wr.Cs {
+		c.MarshalTo(hash)
+	}
+	wr.U.MarshalTo(hash)
+	wr.Ubar.MarshalTo(hash)
+	w.MarshalTo(hash)
+	wBar.MarshalTo(hash)
+	hash.Write(wr.Reader.GetID())
+	e := suite.Scalar().SetBytes(hash.Sum(nil))
+	if e.Equal(wr.E) {
+		return nil
+	}
+	return errors.New("recreated proof is not equal to stored proof")
+}
+
+// DecodeKey can be used by the reader of an onchain-secret to convert the
+// re-encrypted secret back to a symmetric key that can be used later to
+// decode the document.
+//
+// Input:
+//   - suite - the cryptographic suite to use
+//   - X - the aggregate public key of the DKG
+//   - Cs - the encrypted key-slices
+//   - XhatEnc - the re-encrypted schnorr-commit
+//   - xc - the private key of the reader
+//
+// Output:
+//   - key - the re-assembled key
+//   - err - an eventual error when trying to recover the data from the points
+func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
+	xc abstract.Scalar) (key []byte, err error) {
+	log.Lvl3("xc:", xc)
+	xcInv := suite.Scalar().Neg(xc)
+	log.Lvl3("xcInv:", xcInv)
+	sum := suite.Scalar().Add(xc, xcInv)
+	log.Lvl3("xc + xcInv:", sum, "::", xc)
+	log.Lvl3("X:", X)
+	XhatDec := suite.Point().Mul(X, xcInv)
+	log.Lvl3("XhatDec:", XhatDec)
+	log.Lvl3("XhatEnc:", XhatEnc)
+	Xhat := suite.Point().Add(XhatEnc, XhatDec)
+	log.Lvl3("Xhat:", Xhat)
+	XhatInv := suite.Point().Neg(Xhat)
+	log.Lvl3("XhatInv:", XhatInv)
+
+	// Decrypt Cs to keyPointHat
+	for _, C := range Cs {
+		log.Lvl3("C:", C)
+		keyPointHat := suite.Point().Add(C, XhatInv)
+		log.Lvl3("keyPointHat:", keyPointHat)
+		keyPart, err := keyPointHat.Data()
+		log.Lvl3("keyPart:", keyPart)
+		if err != nil {
+			return nil, err
+		}
+		key = append(key, keyPart...)
+	}
+	return
+}
+
 // PROTOSTART
 // import "skipblock.proto";
 // import "darc.proto";
@@ -130,6 +260,16 @@ type Write struct {
 	Data []byte
 	// U is the encrypted random value for the ElGamal encryption
 	U abstract.Point
+	// Ubar, E and f will be used by the server to verify the writer did
+	// correctly encrypt the key. It binds the policy (the darc) with the
+	// cyphertext.
+	// Ubar is used for the log-equality proof
+	Ubar abstract.Point
+	// E is the non-interactive challenge as scalar
+	E abstract.Scalar
+	// f is the proof - written in uppercase here so it is an exported field,
+	// but in the OCS-paper it's lowercase.
+	F abstract.Scalar
 	// Cs are the ElGamal parts for the symmetric key material (might
 	// also contain an IV)
 	Cs []abstract.Point

@@ -1411,11 +1411,68 @@ public final class OCSProto {
 
     /**
      * <pre>
+     * 	 Ubar, E and f will be used by the server to verify the writer did
+     * 	 correctly encrypt the key. It binds the policy (the darc) with the
+     * 	 cyphertext.
+     * 	 Ubar is used for the log-equality proof
+     * </pre>
+     *
+     * <code>required bytes ubar = 3;</code>
+     */
+    boolean hasUbar();
+    /**
+     * <pre>
+     * 	 Ubar, E and f will be used by the server to verify the writer did
+     * 	 correctly encrypt the key. It binds the policy (the darc) with the
+     * 	 cyphertext.
+     * 	 Ubar is used for the log-equality proof
+     * </pre>
+     *
+     * <code>required bytes ubar = 3;</code>
+     */
+    com.google.protobuf.ByteString getUbar();
+
+    /**
+     * <pre>
+     * 	 E is the non-interactive challenge
+     * </pre>
+     *
+     * <code>required bytes e = 4;</code>
+     */
+    boolean hasE();
+    /**
+     * <pre>
+     * 	 E is the non-interactive challenge
+     * </pre>
+     *
+     * <code>required bytes e = 4;</code>
+     */
+    com.google.protobuf.ByteString getE();
+
+    /**
+     * <pre>
+     * 	 f is the proof
+     * </pre>
+     *
+     * <code>required bytes f = 5;</code>
+     */
+    boolean hasF();
+    /**
+     * <pre>
+     * 	 f is the proof
+     * </pre>
+     *
+     * <code>required bytes f = 5;</code>
+     */
+    com.google.protobuf.ByteString getF();
+
+    /**
+     * <pre>
      * 	 Cs are the ElGamal parts for the symmetric key material (might
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     java.util.List<com.google.protobuf.ByteString> getCsList();
     /**
@@ -1424,7 +1481,7 @@ public final class OCSProto {
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     int getCsCount();
     /**
@@ -1433,7 +1490,7 @@ public final class OCSProto {
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     com.google.protobuf.ByteString getCs(int index);
 
@@ -1442,7 +1499,7 @@ public final class OCSProto {
      * 	 ExtraData is clear text and application-specific
      * </pre>
      *
-     * <code>optional bytes extradata = 4;</code>
+     * <code>optional bytes extradata = 7;</code>
      */
     boolean hasExtradata();
     /**
@@ -1450,7 +1507,7 @@ public final class OCSProto {
      * 	 ExtraData is clear text and application-specific
      * </pre>
      *
-     * <code>optional bytes extradata = 4;</code>
+     * <code>optional bytes extradata = 7;</code>
      */
     com.google.protobuf.ByteString getExtradata();
 
@@ -1459,7 +1516,7 @@ public final class OCSProto {
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     boolean hasReader();
     /**
@@ -1467,7 +1524,7 @@ public final class OCSProto {
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     ch.epfl.dedis.proto.DarcProto.Darc getReader();
     /**
@@ -1475,7 +1532,7 @@ public final class OCSProto {
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReaderOrBuilder();
   }
@@ -1498,6 +1555,9 @@ public final class OCSProto {
     private Write() {
       data_ = com.google.protobuf.ByteString.EMPTY;
       u_ = com.google.protobuf.ByteString.EMPTY;
+      ubar_ = com.google.protobuf.ByteString.EMPTY;
+      e_ = com.google.protobuf.ByteString.EMPTY;
+      f_ = com.google.protobuf.ByteString.EMPTY;
       cs_ = java.util.Collections.emptyList();
       extradata_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -1541,21 +1601,36 @@ public final class OCSProto {
               break;
             }
             case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              bitField0_ |= 0x00000004;
+              ubar_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              e_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              f_ = input.readBytes();
+              break;
+            }
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
                 cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000020;
               }
               cs_.add(input.readBytes());
               break;
             }
-            case 34: {
-              bitField0_ |= 0x00000004;
+            case 58: {
+              bitField0_ |= 0x00000020;
               extradata_ = input.readBytes();
               break;
             }
-            case 42: {
+            case 66: {
               ch.epfl.dedis.proto.DarcProto.Darc.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 subBuilder = reader_.toBuilder();
               }
               reader_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Darc.PARSER, extensionRegistry);
@@ -1563,7 +1638,7 @@ public final class OCSProto {
                 subBuilder.mergeFrom(reader_);
                 reader_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000040;
               break;
             }
           }
@@ -1574,7 +1649,7 @@ public final class OCSProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           cs_ = java.util.Collections.unmodifiableList(cs_);
         }
         this.unknownFields = unknownFields.build();
@@ -1640,7 +1715,82 @@ public final class OCSProto {
       return u_;
     }
 
-    public static final int CS_FIELD_NUMBER = 3;
+    public static final int UBAR_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString ubar_;
+    /**
+     * <pre>
+     * 	 Ubar, E and f will be used by the server to verify the writer did
+     * 	 correctly encrypt the key. It binds the policy (the darc) with the
+     * 	 cyphertext.
+     * 	 Ubar is used for the log-equality proof
+     * </pre>
+     *
+     * <code>required bytes ubar = 3;</code>
+     */
+    public boolean hasUbar() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * 	 Ubar, E and f will be used by the server to verify the writer did
+     * 	 correctly encrypt the key. It binds the policy (the darc) with the
+     * 	 cyphertext.
+     * 	 Ubar is used for the log-equality proof
+     * </pre>
+     *
+     * <code>required bytes ubar = 3;</code>
+     */
+    public com.google.protobuf.ByteString getUbar() {
+      return ubar_;
+    }
+
+    public static final int E_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString e_;
+    /**
+     * <pre>
+     * 	 E is the non-interactive challenge
+     * </pre>
+     *
+     * <code>required bytes e = 4;</code>
+     */
+    public boolean hasE() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * 	 E is the non-interactive challenge
+     * </pre>
+     *
+     * <code>required bytes e = 4;</code>
+     */
+    public com.google.protobuf.ByteString getE() {
+      return e_;
+    }
+
+    public static final int F_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString f_;
+    /**
+     * <pre>
+     * 	 f is the proof
+     * </pre>
+     *
+     * <code>required bytes f = 5;</code>
+     */
+    public boolean hasF() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * 	 f is the proof
+     * </pre>
+     *
+     * <code>required bytes f = 5;</code>
+     */
+    public com.google.protobuf.ByteString getF() {
+      return f_;
+    }
+
+    public static final int CS_FIELD_NUMBER = 6;
     private java.util.List<com.google.protobuf.ByteString> cs_;
     /**
      * <pre>
@@ -1648,7 +1798,7 @@ public final class OCSProto {
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     public java.util.List<com.google.protobuf.ByteString>
         getCsList() {
@@ -1660,7 +1810,7 @@ public final class OCSProto {
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     public int getCsCount() {
       return cs_.size();
@@ -1671,53 +1821,53 @@ public final class OCSProto {
      * 	 also contain an IV)
      * </pre>
      *
-     * <code>repeated bytes cs = 3;</code>
+     * <code>repeated bytes cs = 6;</code>
      */
     public com.google.protobuf.ByteString getCs(int index) {
       return cs_.get(index);
     }
 
-    public static final int EXTRADATA_FIELD_NUMBER = 4;
+    public static final int EXTRADATA_FIELD_NUMBER = 7;
     private com.google.protobuf.ByteString extradata_;
     /**
      * <pre>
      * 	 ExtraData is clear text and application-specific
      * </pre>
      *
-     * <code>optional bytes extradata = 4;</code>
+     * <code>optional bytes extradata = 7;</code>
      */
     public boolean hasExtradata() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <pre>
      * 	 ExtraData is clear text and application-specific
      * </pre>
      *
-     * <code>optional bytes extradata = 4;</code>
+     * <code>optional bytes extradata = 7;</code>
      */
     public com.google.protobuf.ByteString getExtradata() {
       return extradata_;
     }
 
-    public static final int READER_FIELD_NUMBER = 5;
+    public static final int READER_FIELD_NUMBER = 8;
     private ch.epfl.dedis.proto.DarcProto.Darc reader_;
     /**
      * <pre>
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     public boolean hasReader() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <pre>
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     public ch.epfl.dedis.proto.DarcProto.Darc getReader() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : reader_;
@@ -1727,7 +1877,7 @@ public final class OCSProto {
      * 	 Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 5;</code>
+     * <code>required .Darc reader = 8;</code>
      */
     public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReaderOrBuilder() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : reader_;
@@ -1744,6 +1894,18 @@ public final class OCSProto {
         return false;
       }
       if (!hasU()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasUbar()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasE()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasF()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1767,14 +1929,23 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, u_);
       }
-      for (int i = 0; i < cs_.size(); i++) {
-        output.writeBytes(3, cs_.get(i));
-      }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeBytes(4, extradata_);
+        output.writeBytes(3, ubar_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(5, getReader());
+        output.writeBytes(4, e_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, f_);
+      }
+      for (int i = 0; i < cs_.size(); i++) {
+        output.writeBytes(6, cs_.get(i));
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(7, extradata_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeMessage(8, getReader());
       }
       unknownFields.writeTo(output);
     }
@@ -1792,6 +1963,18 @@ public final class OCSProto {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, u_);
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, ubar_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, e_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, f_);
+      }
       {
         int dataSize = 0;
         for (int i = 0; i < cs_.size(); i++) {
@@ -1801,13 +1984,13 @@ public final class OCSProto {
         size += dataSize;
         size += 1 * getCsList().size();
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, extradata_);
+          .computeBytesSize(7, extradata_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(5, getReader());
+          .computeMessageSize(8, getReader());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1834,6 +2017,21 @@ public final class OCSProto {
       if (hasU()) {
         result = result && getU()
             .equals(other.getU());
+      }
+      result = result && (hasUbar() == other.hasUbar());
+      if (hasUbar()) {
+        result = result && getUbar()
+            .equals(other.getUbar());
+      }
+      result = result && (hasE() == other.hasE());
+      if (hasE()) {
+        result = result && getE()
+            .equals(other.getE());
+      }
+      result = result && (hasF() == other.hasF());
+      if (hasF()) {
+        result = result && getF()
+            .equals(other.getF());
       }
       result = result && getCsList()
           .equals(other.getCsList());
@@ -1865,6 +2063,18 @@ public final class OCSProto {
       if (hasU()) {
         hash = (37 * hash) + U_FIELD_NUMBER;
         hash = (53 * hash) + getU().hashCode();
+      }
+      if (hasUbar()) {
+        hash = (37 * hash) + UBAR_FIELD_NUMBER;
+        hash = (53 * hash) + getUbar().hashCode();
+      }
+      if (hasE()) {
+        hash = (37 * hash) + E_FIELD_NUMBER;
+        hash = (53 * hash) + getE().hashCode();
+      }
+      if (hasF()) {
+        hash = (37 * hash) + F_FIELD_NUMBER;
+        hash = (53 * hash) + getF().hashCode();
       }
       if (getCsCount() > 0) {
         hash = (37 * hash) + CS_FIELD_NUMBER;
@@ -2016,16 +2226,22 @@ public final class OCSProto {
         bitField0_ = (bitField0_ & ~0x00000001);
         u_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
-        cs_ = java.util.Collections.emptyList();
+        ubar_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
-        extradata_ = com.google.protobuf.ByteString.EMPTY;
+        e_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        f_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        cs_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        extradata_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000040);
         if (readerBuilder_ == null) {
           reader_ = null;
         } else {
           readerBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
@@ -2058,17 +2274,29 @@ public final class OCSProto {
           to_bitField0_ |= 0x00000002;
         }
         result.u_ = u_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
-          cs_ = java.util.Collections.unmodifiableList(cs_);
-          bitField0_ = (bitField0_ & ~0x00000004);
-        }
-        result.cs_ = cs_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.extradata_ = extradata_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        result.ubar_ = ubar_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
+        }
+        result.e_ = e_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.f_ = f_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          cs_ = java.util.Collections.unmodifiableList(cs_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.cs_ = cs_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.extradata_ = extradata_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
         }
         if (readerBuilder_ == null) {
           result.reader_ = reader_;
@@ -2123,10 +2351,19 @@ public final class OCSProto {
         if (other.hasU()) {
           setU(other.getU());
         }
+        if (other.hasUbar()) {
+          setUbar(other.getUbar());
+        }
+        if (other.hasE()) {
+          setE(other.getE());
+        }
+        if (other.hasF()) {
+          setF(other.getF());
+        }
         if (!other.cs_.isEmpty()) {
           if (cs_.isEmpty()) {
             cs_ = other.cs_;
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000020);
           } else {
             ensureCsIsMutable();
             cs_.addAll(other.cs_);
@@ -2149,6 +2386,15 @@ public final class OCSProto {
           return false;
         }
         if (!hasU()) {
+          return false;
+        }
+        if (!hasUbar()) {
+          return false;
+        }
+        if (!hasE()) {
+          return false;
+        }
+        if (!hasF()) {
           return false;
         }
         if (!hasReader()) {
@@ -2281,11 +2527,176 @@ public final class OCSProto {
         return this;
       }
 
+      private com.google.protobuf.ByteString ubar_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 Ubar, E and f will be used by the server to verify the writer did
+       * 	 correctly encrypt the key. It binds the policy (the darc) with the
+       * 	 cyphertext.
+       * 	 Ubar is used for the log-equality proof
+       * </pre>
+       *
+       * <code>required bytes ubar = 3;</code>
+       */
+      public boolean hasUbar() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * 	 Ubar, E and f will be used by the server to verify the writer did
+       * 	 correctly encrypt the key. It binds the policy (the darc) with the
+       * 	 cyphertext.
+       * 	 Ubar is used for the log-equality proof
+       * </pre>
+       *
+       * <code>required bytes ubar = 3;</code>
+       */
+      public com.google.protobuf.ByteString getUbar() {
+        return ubar_;
+      }
+      /**
+       * <pre>
+       * 	 Ubar, E and f will be used by the server to verify the writer did
+       * 	 correctly encrypt the key. It binds the policy (the darc) with the
+       * 	 cyphertext.
+       * 	 Ubar is used for the log-equality proof
+       * </pre>
+       *
+       * <code>required bytes ubar = 3;</code>
+       */
+      public Builder setUbar(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        ubar_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Ubar, E and f will be used by the server to verify the writer did
+       * 	 correctly encrypt the key. It binds the policy (the darc) with the
+       * 	 cyphertext.
+       * 	 Ubar is used for the log-equality proof
+       * </pre>
+       *
+       * <code>required bytes ubar = 3;</code>
+       */
+      public Builder clearUbar() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        ubar_ = getDefaultInstance().getUbar();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString e_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 E is the non-interactive challenge
+       * </pre>
+       *
+       * <code>required bytes e = 4;</code>
+       */
+      public boolean hasE() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * 	 E is the non-interactive challenge
+       * </pre>
+       *
+       * <code>required bytes e = 4;</code>
+       */
+      public com.google.protobuf.ByteString getE() {
+        return e_;
+      }
+      /**
+       * <pre>
+       * 	 E is the non-interactive challenge
+       * </pre>
+       *
+       * <code>required bytes e = 4;</code>
+       */
+      public Builder setE(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        e_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 E is the non-interactive challenge
+       * </pre>
+       *
+       * <code>required bytes e = 4;</code>
+       */
+      public Builder clearE() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        e_ = getDefaultInstance().getE();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString f_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 f is the proof
+       * </pre>
+       *
+       * <code>required bytes f = 5;</code>
+       */
+      public boolean hasF() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * 	 f is the proof
+       * </pre>
+       *
+       * <code>required bytes f = 5;</code>
+       */
+      public com.google.protobuf.ByteString getF() {
+        return f_;
+      }
+      /**
+       * <pre>
+       * 	 f is the proof
+       * </pre>
+       *
+       * <code>required bytes f = 5;</code>
+       */
+      public Builder setF(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        f_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 f is the proof
+       * </pre>
+       *
+       * <code>required bytes f = 5;</code>
+       */
+      public Builder clearF() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        f_ = getDefaultInstance().getF();
+        onChanged();
+        return this;
+      }
+
       private java.util.List<com.google.protobuf.ByteString> cs_ = java.util.Collections.emptyList();
       private void ensureCsIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
           cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(cs_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000020;
          }
       }
       /**
@@ -2294,7 +2705,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public java.util.List<com.google.protobuf.ByteString>
           getCsList() {
@@ -2306,7 +2717,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public int getCsCount() {
         return cs_.size();
@@ -2317,7 +2728,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public com.google.protobuf.ByteString getCs(int index) {
         return cs_.get(index);
@@ -2328,7 +2739,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public Builder setCs(
           int index, com.google.protobuf.ByteString value) {
@@ -2346,7 +2757,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public Builder addCs(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -2363,7 +2774,7 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public Builder addAllCs(
           java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
@@ -2379,11 +2790,11 @@ public final class OCSProto {
        * 	 also contain an IV)
        * </pre>
        *
-       * <code>repeated bytes cs = 3;</code>
+       * <code>repeated bytes cs = 6;</code>
        */
       public Builder clearCs() {
         cs_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000020);
         onChanged();
         return this;
       }
@@ -2394,17 +2805,17 @@ public final class OCSProto {
        * 	 ExtraData is clear text and application-specific
        * </pre>
        *
-       * <code>optional bytes extradata = 4;</code>
+       * <code>optional bytes extradata = 7;</code>
        */
       public boolean hasExtradata() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <pre>
        * 	 ExtraData is clear text and application-specific
        * </pre>
        *
-       * <code>optional bytes extradata = 4;</code>
+       * <code>optional bytes extradata = 7;</code>
        */
       public com.google.protobuf.ByteString getExtradata() {
         return extradata_;
@@ -2414,13 +2825,13 @@ public final class OCSProto {
        * 	 ExtraData is clear text and application-specific
        * </pre>
        *
-       * <code>optional bytes extradata = 4;</code>
+       * <code>optional bytes extradata = 7;</code>
        */
       public Builder setExtradata(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000040;
         extradata_ = value;
         onChanged();
         return this;
@@ -2430,10 +2841,10 @@ public final class OCSProto {
        * 	 ExtraData is clear text and application-specific
        * </pre>
        *
-       * <code>optional bytes extradata = 4;</code>
+       * <code>optional bytes extradata = 7;</code>
        */
       public Builder clearExtradata() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000040);
         extradata_ = getDefaultInstance().getExtradata();
         onChanged();
         return this;
@@ -2447,17 +2858,17 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public boolean hasReader() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <pre>
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.Darc getReader() {
         if (readerBuilder_ == null) {
@@ -2471,7 +2882,7 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public Builder setReader(ch.epfl.dedis.proto.DarcProto.Darc value) {
         if (readerBuilder_ == null) {
@@ -2483,7 +2894,7 @@ public final class OCSProto {
         } else {
           readerBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2491,7 +2902,7 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public Builder setReader(
           ch.epfl.dedis.proto.DarcProto.Darc.Builder builderForValue) {
@@ -2501,7 +2912,7 @@ public final class OCSProto {
         } else {
           readerBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2509,11 +2920,11 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public Builder mergeReader(ch.epfl.dedis.proto.DarcProto.Darc value) {
         if (readerBuilder_ == null) {
-          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+          if (((bitField0_ & 0x00000080) == 0x00000080) &&
               reader_ != null &&
               reader_ != ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance()) {
             reader_ =
@@ -2525,7 +2936,7 @@ public final class OCSProto {
         } else {
           readerBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000080;
         return this;
       }
       /**
@@ -2533,7 +2944,7 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public Builder clearReader() {
         if (readerBuilder_ == null) {
@@ -2542,7 +2953,7 @@ public final class OCSProto {
         } else {
           readerBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
       /**
@@ -2550,10 +2961,10 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.Darc.Builder getReaderBuilder() {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000080;
         onChanged();
         return getReaderFieldBuilder().getBuilder();
       }
@@ -2562,7 +2973,7 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReaderOrBuilder() {
         if (readerBuilder_ != null) {
@@ -2577,7 +2988,7 @@ public final class OCSProto {
        * 	 Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 5;</code>
+       * <code>required .Darc reader = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
@@ -11871,7 +12282,7 @@ public final class OCSProto {
   /**
    * <pre>
    * SharedPublicRequest asks for the shared public key of the corresponding
-   * skipchain-getId.
+   * skipchain-ID.
    * </pre>
    *
    * Protobuf type {@code SharedPublicRequest}
@@ -12125,7 +12536,7 @@ public final class OCSProto {
     /**
      * <pre>
      * SharedPublicRequest asks for the shared public key of the corresponding
-     * skipchain-getId.
+     * skipchain-ID.
      * </pre>
      *
      * Protobuf type {@code SharedPublicRequest}
@@ -18120,39 +18531,40 @@ public final class OCSProto {
       "\n\tocs.proto\032\017skipblock.proto\032\ndarc.proto" +
       "\032\014roster.proto\"\\\n\013Transaction\022\025\n\005write\030\001" +
       " \001(\0132\006.Write\022\023\n\004read\030\002 \001(\0132\005.Read\022\023\n\004dar" +
-      "c\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\"V\n\005Write\022\014\n" +
-      "\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\n\n\002cs\030\003 \003(\014\022\021\n\tex" +
-      "tradata\030\004 \001(\014\022\025\n\006reader\030\005 \002(\0132\005.Darc\"5\n\004" +
-      "Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\tsignature\030\002 \002(\0132" +
-      "\n.Signature\"D\n\007ReadDoc\022\031\n\006reader\030\001 \002(\0132\t" +
-      ".Identity\022\016\n\006readid\030\002 \002(\014\022\016\n\006dataid\030\003 \002(" +
-      "\014\"J\n\027CreateSkipchainsRequest\022\027\n\006roster\030\001",
-      " \002(\0132\007.Roster\022\026\n\007writers\030\002 \002(\0132\005.Darc\";\n" +
-      "\025CreateSkipchainsReply\022\027\n\003ocs\030\001 \001(\0132\n.Sk" +
-      "ipBlock\022\t\n\001x\030\002 \002(\014\"Y\n\013GetDarcPath\022\013\n\003ocs" +
-      "\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(\014\022\033\n\010identity\030\003" +
-      " \002(\0132\t.Identity\022\014\n\004role\030\004 \002(\021\"\'\n\020GetDarc" +
-      "PathReply\022\023\n\004path\030\001 \003(\0132\005.Darc\".\n\nUpdate" +
-      "Darc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(\0132\005.Darc\")" +
-      "\n\017UpdateDarcReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBloc" +
-      "k\"i\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\025\n\005write\030" +
-      "\002 \002(\0132\006.Write\022\035\n\tsignature\030\003 \002(\0132\n.Signa",
-      "ture\022\026\n\007readers\030\004 \001(\0132\005.Darc\"$\n\nWriteRep" +
-      "ly\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"/\n\013ReadReques" +
-      "t\022\013\n\003ocs\030\001 \002(\014\022\023\n\004read\030\002 \002(\0132\005.Read\"#\n\tR" +
-      "eadReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"&\n\023Shar" +
-      "edPublicRequest\022\017\n\007genesis\030\001 \002(\014\"\036\n\021Shar" +
-      "edPublicReply\022\t\n\001x\030\001 \002(\014\"!\n\021DecryptKeyRe" +
-      "quest\022\014\n\004read\030\001 \002(\014\"9\n\017DecryptKeyReply\022\n" +
-      "\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/" +
-      "\n\017GetReadRequests\022\r\n\005start\030\001 \002(\014\022\r\n\005coun" +
-      "t\030\002 \002(\021\"3\n\024GetReadRequestsReply\022\033\n\tdocum",
-      "ents\030\001 \003(\0132\010.ReadDoc\"\021\n\017GetBunchRequest\"" +
-      ",\n\rGetBunchReply\022\033\n\007bunches\030\001 \003(\0132\n.Skip" +
-      "Block\",\n\rGetLatestDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006d" +
-      "arcid\030\002 \002(\014\"*\n\022GetLatestDarcReply\022\024\n\005dar" +
-      "cs\030\001 \003(\0132\005.DarcB\037\n\023ch.epfl.dedis.protoB\010" +
-      "OCSProto"
+      "c\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\"z\n\005Write\022\014\n" +
+      "\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001" +
+      "e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textrad" +
+      "ata\030\007 \001(\014\022\025\n\006reader\030\010 \002(\0132\005.Darc\"5\n\004Read" +
+      "\022\016\n\006dataid\030\001 \002(\014\022\035\n\tsignature\030\002 \002(\0132\n.Si" +
+      "gnature\"D\n\007ReadDoc\022\031\n\006reader\030\001 \002(\0132\t.Ide" +
+      "ntity\022\016\n\006readid\030\002 \002(\014\022\016\n\006dataid\030\003 \002(\014\"J\n",
+      "\027CreateSkipchainsRequest\022\027\n\006roster\030\001 \002(\013" +
+      "2\007.Roster\022\026\n\007writers\030\002 \002(\0132\005.Darc\";\n\025Cre" +
+      "ateSkipchainsReply\022\027\n\003ocs\030\001 \001(\0132\n.SkipBl" +
+      "ock\022\t\n\001x\030\002 \002(\014\"Y\n\013GetDarcPath\022\013\n\003ocs\030\001 \002" +
+      "(\014\022\022\n\nbasedarcid\030\002 \002(\014\022\033\n\010identity\030\003 \002(\013" +
+      "2\t.Identity\022\014\n\004role\030\004 \002(\021\"\'\n\020GetDarcPath" +
+      "Reply\022\023\n\004path\030\001 \003(\0132\005.Darc\".\n\nUpdateDarc" +
+      "\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(\0132\005.Darc\")\n\017Up" +
+      "dateDarcReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"i\n" +
+      "\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\025\n\005write\030\002 \002(",
+      "\0132\006.Write\022\035\n\tsignature\030\003 \002(\0132\n.Signature" +
+      "\022\026\n\007readers\030\004 \001(\0132\005.Darc\"$\n\nWriteReply\022\026" +
+      "\n\002sb\030\001 \001(\0132\n.SkipBlock\"/\n\013ReadRequest\022\013\n" +
+      "\003ocs\030\001 \002(\014\022\023\n\004read\030\002 \002(\0132\005.Read\"#\n\tReadR" +
+      "eply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"&\n\023SharedPu" +
+      "blicRequest\022\017\n\007genesis\030\001 \002(\014\"\036\n\021SharedPu" +
+      "blicReply\022\t\n\001x\030\001 \002(\014\"!\n\021DecryptKeyReques" +
+      "t\022\014\n\004read\030\001 \002(\014\"9\n\017DecryptKeyReply\022\n\n\002cs" +
+      "\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017Ge" +
+      "tReadRequests\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 ",
+      "\002(\021\"3\n\024GetReadRequestsReply\022\033\n\tdocuments" +
+      "\030\001 \003(\0132\010.ReadDoc\"\021\n\017GetBunchRequest\",\n\rG" +
+      "etBunchReply\022\033\n\007bunches\030\001 \003(\0132\n.SkipBloc" +
+      "k\",\n\rGetLatestDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darci" +
+      "d\030\002 \002(\014\"*\n\022GetLatestDarcReply\022\024\n\005darcs\030\001" +
+      " \003(\0132\005.DarcB\037\n\023ch.epfl.dedis.protoB\010OCSP" +
+      "roto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18180,7 +18592,7 @@ public final class OCSProto {
     internal_static_Write_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Write_descriptor,
-        new java.lang.String[] { "Data", "U", "Cs", "Extradata", "Reader", });
+        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "Cs", "Extradata", "Reader", });
     internal_static_Read_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Read_fieldAccessorTable = new

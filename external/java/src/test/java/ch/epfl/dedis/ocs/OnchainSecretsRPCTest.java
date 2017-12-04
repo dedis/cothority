@@ -141,7 +141,7 @@ class OnchainSecretsRPCTest {
     void getWrite() throws Exception {
         publishDocument();
         OCSProto.Write write = ocs.getWrite(writeRequest2.id);
-        assertEquals(writeRequest2.toProto(ocs.getX()).getData(), write.getData());
+        assertEquals(writeRequest2.toProto(ocs.getX(), ocs.ocsID).getData(), write.getData());
         assertArrayEquals(extraData.getBytes(), write.getExtradata().toByteArray());
     }
 

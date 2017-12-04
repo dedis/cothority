@@ -30,9 +30,10 @@ func init() {
 // SharedSecret represents the needed information to do shared encryption
 // and decryption.
 type SharedSecret struct {
-	Index int
-	V     abstract.Scalar
-	X     abstract.Point
+	Index   int
+	V       abstract.Scalar
+	X       abstract.Point
+	Commits []abstract.Point
 }
 
 // NewSharedSecret takes an initialized DistKeyGenerator and returns the
@@ -49,9 +50,10 @@ func NewSharedSecret(dkg *dkg.DistKeyGenerator) (*SharedSecret, error) {
 		return nil, err
 	}
 	return &SharedSecret{
-		Index: dkg.Index(),
-		V:     dks.Share.V,
-		X:     dks.Public(),
+		Index:   dkg.Index(),
+		V:       dks.Share.V,
+		X:       dks.Public(),
+		Commits: dks.Commits,
 	}, nil
 }
 

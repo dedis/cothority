@@ -32,6 +32,8 @@ type structReencrypt struct {
 // ReencryptReply returns the share to re-encrypt from one node
 type ReencryptReply struct {
 	Ui *share.PubShare
+	Ei abstract.Scalar
+	Fi abstract.Scalar
 }
 
 type structReencryptReply struct {
