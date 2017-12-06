@@ -30,7 +30,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID, tSuite)
 	service := genService.(*Service)
-	service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
+	// service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -78,7 +78,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	assert.NotEqual(t, 0, latest2.BackLinkIDs)
 
 	// We've added 2 blocks, + root block = 3
-	assert.Equal(t, 3, service.Sbm.Length())
+	assert.Equal(t, 3, service.db.Length())
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -520,7 +520,7 @@ func TestService_Propagation(t *testing.T) {
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
-	genesis := service.Sbm.GetByID(root.Hash)
+	genesis := service.db.GetByID(root.Hash)
 	if genesis == nil {
 		return errors.New("Didn't find genesis-block in service")
 	}

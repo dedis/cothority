@@ -4,29 +4,22 @@
 package main
 
 import (
-	"os"
-
-	"github.com/dedis/cothority"
-	"github.com/dedis/onet/app"
-
+	"bytes"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-
-	"errors"
-
-	"encoding/hex"
-
+	"os"
 	"path"
-
-	"bytes"
-	"sort"
-
-	"encoding/json"
 	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"

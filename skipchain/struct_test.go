@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"crypto/sha512"
@@ -190,4 +191,7 @@ func TestDB(t *testing.T) {
 	sb2, err := db.dbget(sb.Hash)
 	require.Nil(t, err)
 	require.True(t, sb.Equal(sb2))
+
+	err = os.Remove(tmpFile.Name())
+	require.Nil(t, err)
 }

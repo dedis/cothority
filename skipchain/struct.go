@@ -406,13 +406,13 @@ func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
 	return sbm.SkipBlocks[string(sbID)].Copy()
 }
 
-// GetByID is...
+// GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	sb, err := db.dbget(sbID)
 	if err != nil {
 		log.Error(err.Error())
 	}
-	return sb
+	return sb.Copy() // TODO copy needed?
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -442,7 +442,12 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 
 // Store is...
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	if sbOld, err := db.dbget(sb.Hash); err != nil {
+	sbOld, err := db.dbget(sb.Hash)
+	if err != nil {
+		log.Error(err.Error())
+		return nil
+	}
+	if sbOld != nil {
 		// If this skipblock already exists, only copy forward-links and
 		// new children.
 		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
@@ -756,4 +761,26 @@ func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
 		return nil
 	})
 	return sb, err
+}
+
+func (db *SkipBlockDB) dbDump() (map[string]*SkipBlock, error) {
+	chains := map[string]*SkipBlock{}
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(skipchainBucket))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			if err != nil {
+				return err
+			}
+
+			sb := sbMsg.(*SkipBlock)
+			chains[string(sb.SkipChainID())] = sb
+			return nil
+		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return chains, nil
 }
