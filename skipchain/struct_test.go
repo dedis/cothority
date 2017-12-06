@@ -1,6 +1,7 @@
 package skipchain
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"crypto/sha512"
@@ -172,4 +173,21 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
+}
+
+func TestDB(t *testing.T) {
+	tmpFile, err := ioutil.TempFile("", "skipchain-db-test")
+	require.Nil(t, err)
+	db, err := NewSkipBlockDB(tmpFile.Name())
+	require.Nil(t, err)
+
+	sb := NewSkipBlock()
+	sb.Data = []byte("hello")
+	sb.Hash = sb.CalculateHash()
+	err = db.dbstore(sb)
+	require.Nil(t, err)
+
+	sb2, err := db.dbget(sb.Hash)
+	require.Nil(t, err)
+	require.True(t, sb.Equal(sb2))
 }

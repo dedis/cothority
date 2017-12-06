@@ -2,23 +2,20 @@ package skipchain
 
 import (
 	"bytes"
-
+	"encoding/binary"
+	"encoding/hex"
+	"errors"
 	"fmt"
-
+	"strings"
 	"sync"
 
-	"errors"
-
-	"encoding/binary"
-
-	"encoding/hex"
-	"strings"
-
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
 )
 
@@ -368,9 +365,38 @@ type SkipBlockMap struct {
 	sync.Mutex
 }
 
+// SkipBlockDB is...
+type SkipBlockDB struct {
+	*bolt.DB
+}
+
 // NewSkipBlockMap returns a pre-initialised SkipBlockMap.
 func NewSkipBlockMap() *SkipBlockMap {
 	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
+}
+
+const skipchainBucket = "skipchainBucket"
+
+// NewSkipBlockDB is...
+func NewSkipBlockDB(fname string) (*SkipBlockDB, error) {
+	db, err := bolt.Open(fname, 0600, nil)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(skipchainBucket))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	return &SkipBlockDB{db}, nil
 }
 
 // GetByID returns the skip-block or nil if it doesn't exist
@@ -378,6 +404,15 @@ func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
 	sbm.Lock()
 	defer sbm.Unlock()
 	return sbm.SkipBlocks[string(sbID)].Copy()
+}
+
+// GetByID is...
+func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
+	sb, err := db.dbget(sbID)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	return sb
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -405,11 +440,52 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 	return sb.Hash
 }
 
+// Store is...
+func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
+	if sbOld, err := db.dbget(sb.Hash); err != nil {
+		// If this skipblock already exists, only copy forward-links and
+		// new children.
+		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
+				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+					log.Error("Got a known block with wrong signature in forward-link")
+					return nil
+				}
+				sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+			}
+		}
+		if len(sb.ChildSL) > len(sbOld.ChildSL) {
+			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
+		}
+		err := db.dbstore(sbOld)
+		if err != nil {
+			log.Error(err.Error())
+		}
+	} else {
+		err := db.dbstore(sb)
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}
+	return sb.Hash
+}
+
 // Length returns the actual length using mutexes
 func (sbm *SkipBlockMap) Length() int {
 	sbm.Lock()
 	defer sbm.Unlock()
 	return len(sbm.SkipBlocks)
+}
+
+// Length returns the actual length using mutexes
+func (db *SkipBlockDB) Length() int {
+	var i int
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(skipchainBucket))
+		i = b.Stats().KeyN
+		return nil
+	})
+	return i
 }
 
 // GetResponsible searches for the block that is responsible for sb
@@ -436,6 +512,36 @@ func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 		return nil, errors.New("Invalid block: no backlink")
 	}
 	prev := sbm.GetByID(sb.BackLinkIDs[0])
+	if prev == nil {
+		return nil, errors.New("Didn't find responsible")
+	}
+	return prev, nil
+}
+
+// GetResponsible searches for the block that is responsible for sb
+// - Root_Genesis - himself
+// - *_Gensis - it's his parent
+// - else - it's the previous block
+func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
+	if sb == nil {
+		log.Panic(log.Stack())
+	}
+	if sb.Index == 0 {
+		// Genesis-block
+		if sb.ParentBlockID.IsNull() {
+			// Root-skipchain, no other parent
+			return sb, nil
+		}
+		ret := db.GetByID(sb.ParentBlockID)
+		if ret == nil {
+			return nil, errors.New("No Roster and no parent")
+		}
+		return ret, nil
+	}
+	if len(sb.BackLinkIDs) == 0 {
+		return nil, errors.New("Invalid block: no backlink")
+	}
+	prev := db.GetByID(sb.BackLinkIDs[0])
 	if prev == nil {
 		return nil, errors.New("Didn't find responsible")
 	}
@@ -497,11 +603,79 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 	return nil
 }
 
+// VerifyLinks makes sure that all forward- and backward-links are correct.
+// It takes a skipblock to verify and returns nil in case of success.
+func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
+	if len(sb.BackLinkIDs) == 0 {
+		return errors.New("need at least one backlink")
+	}
+
+	if err := sb.VerifyForwardSignatures(); err != nil {
+		return errors.New("Wrong signatures: " + err.Error())
+	}
+
+	// Verify if we're in the responsible-list
+	if !sb.ParentBlockID.IsNull() {
+		parent := db.GetByID(sb.ParentBlockID)
+		if parent == nil {
+			return errors.New("Didn't find parent")
+		}
+		if err := parent.VerifyForwardSignatures(); err != nil {
+			return err
+		}
+		found := false
+		for _, child := range parent.ChildSL {
+			if child.Equal(sb.Hash) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("parent doesn't know about us")
+		}
+	}
+
+	// We don't check backward-links for genesis-blocks
+	if sb.Index == 0 {
+		return nil
+	}
+
+	// Verify we're referenced by our previous block
+	sbBack := db.GetByID(sb.BackLinkIDs[0])
+	if sbBack == nil {
+		if sb.GetForwardLen() > 0 {
+			log.Lvl3("Didn't find back-link, but have a good forward-link")
+			return nil
+		}
+		return errors.New("Didn't find height-0 skipblock in db")
+	}
+	if err := sbBack.VerifyForwardSignatures(); err != nil {
+		return err
+	}
+	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
+		return errors.New("didn't find our block in forward-links")
+	}
+	return nil
+}
+
 // GetLatest searches for the latest available block for that skipblock.
 func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
 	for latest.GetForwardLen() > 0 {
 		latest = sbm.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
+		if latest == nil {
+			return nil, errors.New("missing block")
+		}
+	}
+	return latest, nil
+}
+
+// GetLatest searches for the latest available block for that skipblock.
+func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	latest := sb
+	// TODO this can be optimised by using multiple bucket.Get in a single transaction
+	for latest.GetForwardLen() > 0 {
+		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
 		if latest == nil {
 			return nil, errors.New("missing block")
 		}
@@ -534,4 +708,52 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 		}
 	}
 	return nil
+}
+
+// GetFuzzy searches for a block that resembles the given ID, if ID is not full.
+// If there are multiple matching skipblocks, the first one is chosen. If none
+// match, nil will be returned.
+//
+// The search is done in the following order:
+//  1. as prefix - if none is found
+//  2. as suffix - if none is found
+//  3. anywhere
+// TODO a wrapper around db.GetByID for now
+func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
+	sbID, err := hex.DecodeString(id)
+	if err != nil {
+		log.Error(err.Error())
+		return nil
+	}
+	return db.GetByID(sbID)
+}
+
+func (db *SkipBlockDB) dbstore(sb *SkipBlock) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(skipchainBucket))
+		key := sb.Hash
+		val, err := network.Marshal(sb)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(key, val)
+	})
+}
+
+func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
+	var sb *SkipBlock
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(skipchainBucket))
+
+		val := b.Get(sbID)
+		_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
+		if err != nil {
+			return err
+		}
+
+		sb = sbMsg.(*SkipBlock)
+		return nil
+	})
+	return sb, err
 }

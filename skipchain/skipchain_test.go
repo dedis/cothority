@@ -500,11 +500,11 @@ func TestService_ParallelStore(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
-	nbr_nodes := 100
+	nbrNodes := 100
 	local := onet.NewLocalTest(tSuite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeHELS(nbr_nodes, skipchainSID, tSuite)
+	servers, ro, genService := local.MakeHELS(nbrNodes, skipchainSID, tSuite)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
