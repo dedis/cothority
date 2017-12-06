@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"testing"
@@ -20,7 +21,7 @@ import (
 var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
@@ -31,6 +32,12 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	_, el, genService := local.MakeHELS(5, skipchainSID, tSuite)
 	service := genService.(*Service)
 	// service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
+
+	// TODO the test sets up db too?
+	defer func() {
+		service.db.Close()
+		os.Remove(service.db.filename)
+	}()
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -91,6 +98,13 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbCount := conodes - 1
 	servers, el, gs := local.MakeHELS(conodes, skipchainSID, tSuite)
 	s := gs.(*Service)
+
+	// TODO the test sets up db too?
+	defer func() {
+		s.db.Close()
+		os.Remove(s.db.filename)
+	}()
+
 	sbs := make([]*SkipBlock, sbCount)
 	var err error
 	sbs[0], err = makeGenesisRoster(s, onet.NewRoster(el.List[0:2]))
@@ -153,6 +167,12 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID, tSuite)
 	service := genService.(*Service)
+
+	// TODO the test sets up db too?
+	defer func() {
+		service.db.Close()
+		os.Remove(service.db.filename)
+	}()
 
 	// Setting up two chains and linking one to the other
 	sbRoot, err := makeGenesisRoster(service, el)

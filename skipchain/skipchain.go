@@ -2,14 +2,10 @@ package skipchain
 
 import (
 	"errors"
-
-	"strconv"
-
-	"time"
-
 	"fmt"
-
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"

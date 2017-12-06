@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -368,6 +369,7 @@ type SkipBlockMap struct {
 // SkipBlockDB is...
 type SkipBlockDB struct {
 	*bolt.DB
+	filename string
 }
 
 // NewSkipBlockMap returns a pre-initialised SkipBlockMap.
@@ -378,10 +380,10 @@ func NewSkipBlockMap() *SkipBlockMap {
 const skipchainBucket = "skipchainBucket"
 
 // NewSkipBlockDB is...
-func NewSkipBlockDB(fname string) (*SkipBlockDB, error) {
+func NewSkipBlockDB(dirname string) (*SkipBlockDB, error) {
+	fname := filepath.Join(dirname, "bolt.db")
 	db, err := bolt.Open(fname, 0600, nil)
 	if err != nil {
-		db.Close()
 		return nil, err
 	}
 
@@ -396,7 +398,7 @@ func NewSkipBlockDB(fname string) (*SkipBlockDB, error) {
 		db.Close()
 		return nil, err
 	}
-	return &SkipBlockDB{db}, nil
+	return &SkipBlockDB{db, fname}, nil
 }
 
 // GetByID returns the skip-block or nil if it doesn't exist
@@ -440,11 +442,11 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 	return sb.Hash
 }
 
-// Store is...
+// Store stores the given SkipBlock in the service-list
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	sbOld, err := db.dbget(sb.Hash)
 	if err != nil {
-		log.Error(err.Error())
+		log.Error("failed to get skipblock with error: " + err.Error())
 		return nil
 	}
 	if sbOld != nil {
@@ -752,6 +754,11 @@ func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
 		b := tx.Bucket([]byte(skipchainBucket))
 
 		val := b.Get(sbID)
+		if val == nil {
+			sb = nil
+			return nil
+		}
+
 		_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
 		if err != nil {
 			return err

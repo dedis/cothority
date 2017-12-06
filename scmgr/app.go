@@ -26,6 +26,7 @@ import (
 )
 
 type config struct {
+	// TODO keep this?
 	Sbm *skipchain.SkipBlockMap
 }
 
@@ -82,7 +83,7 @@ func main() {
 		{
 			Name:      "addWeb",
 			Usage:     "add a web-site to a skipchain",
-			Aliases:   []string{"a"},
+			Aliases:   []string{"w"},
 			ArgsUsage: "skipchain-id page.html",
 			Action:    addWeb,
 		},
