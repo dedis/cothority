@@ -1,6 +1,6 @@
 package skipchain
 
-import "gopkg.in/dedis/onet.v1/network"
+import "github.com/dedis/onet/network"
 
 func init() {
 	for _, m := range []interface{}{

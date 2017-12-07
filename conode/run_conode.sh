@@ -8,9 +8,9 @@ set -e
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
-DEDIS_PATH=$GOPATH/src/github.com/dedis
+DEDIS_PATH=$(go env GOPATH)/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/cothority
-ONET_PATH=$GOPATH/src/gopkg.in/dedis/onet.v1
+ONET_PATH=$(go env GOPATH)/src/github.com/dedis/onet
 CONODE_PATH=$COTHORITY_PATH/conode
 CONODE_GO=github.com/dedis/cothority/conode
 VERSION_SUB="1"
@@ -26,14 +26,19 @@ main(){
 		showHelp
 		exit 1
 	fi
-	if [ ! "$GOPATH" ]; then
-		echo "'$GOPATH' not found"
+
+	go env GOPATH > /dev/null
+	if [ $? != 0 ]; then
+		echo "Could not find GOPATH."
 		echo "Please install go: https://golang.org/doc/install"
 		exit 1
 	fi
-	if ! echo $PATH | grep -q $GOPATH/bin; then
-		echo "Please add '$GOPATH/bin' to your '$PATH'"
-		PATH=$PATH:$GOPATH/bin
+	gopath=`go env GOPATH`
+	
+	if ! echo $PATH | grep -q $gopath/bin; then
+		echo "Please add '$gopath/bin' to your '$PATH'"
+		PATH=$PATH:$gopath/bin
+		export PATH
 	fi
 	case $( uname ) in
 	Darwin)
@@ -281,7 +286,7 @@ EOF
 }
 
 test(){
-	. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+	. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
 	if [ "$1" != "-update_rec" ]; then
 		testUpdate

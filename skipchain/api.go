@@ -1,10 +1,11 @@
 package skipchain
 
 import (
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 const (
@@ -36,7 +37,7 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Skipchain")}
+	return &Client{Client: onet.NewClient("Skipchain", cothority.Suite)}
 }
 
 // StoreSkipBlock asks the cothority to store the new skipblock, and eventually
@@ -129,7 +130,7 @@ func (c *Client) CreateGenesis(el *onet.Roster, baseH, maxH int, ver []VerifierI
 // A slice of verification-functions is given for the root and the control
 // skipchain.
 func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
-	keys []abstract.Point, baseHeight,
+	keys []kyber.Point, baseHeight,
 	maxHRoot, maxHControl int) (root, control *SkipBlock, cerr onet.ClientError) {
 	log.Lvl2("Creating root roster", elRoot)
 	root, cerr = c.CreateGenesis(elRoot, baseHeight, maxHRoot,

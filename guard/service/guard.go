@@ -3,10 +3,10 @@ package guard
 import (
 	"crypto/rand"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // This file contains all the code to run a Guard service. The Guard receives takes a
@@ -22,8 +22,6 @@ func init() {
 	network.RegisterMessage(&Response{})
 }
 
-//This is the area where Z is generated for a server, it creates z, which is a bytestring of length n for each guard.
-
 // Guard is a structure that stores the guards secret key, z, to be used later in the process of hashing the clients requests.
 type Guard struct {
 	*onet.ServiceProcessor
@@ -34,34 +32,34 @@ type Guard struct {
 type Request struct {
 	UID   []byte
 	Epoch []byte
-	Msg   abstract.Point
+	Msg   kyber.Point
 }
 
 // Response is what the Guard service will reply to clients.
 type Response struct {
-	Msg abstract.Point
+	Msg kyber.Point
 }
 
 // Request treats external request to this service.
 func (st *Guard) Request(req *Request) (network.Message, onet.ClientError) {
 	//hashy computes the hash that should be sent back to the main server H(pwhash, x, UID, Epoch)
-	blankpoint := network.Suite.Point()
-	zbytes := network.Suite.Scalar()
+	blankpoint := st.Suite().Point()
+	zbytes := st.Suite().Scalar()
 	zbytes.SetBytes(st.Z)
 	//need to change this impementation, the setbytes will not work
 
-	sendy := blankpoint.Mul(req.Msg, zbytes)
+	sendy := blankpoint.Mul(zbytes, req.Msg)
 	return &Response{sendy}, nil
 }
 
 // newGuardService creates a new service that is built for Guard.
-func newGuardService(c *onet.Context) onet.Service {
+func newGuardService(c *onet.Context) (onet.Service, error) {
 	s := &Guard{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {
-		log.ErrFatal(err, "Couldn't register message:")
+		return nil, err
 	}
 
 	//This is the area where Z is generated for a server
@@ -71,5 +69,5 @@ func newGuardService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	s.Z = lel
 
-	return s
+	return s, nil
 }

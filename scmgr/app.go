@@ -6,7 +6,8 @@ package main
 import (
 	"os"
 
-	"gopkg.in/dedis/onet.v1/app"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet/app"
 
 	"fmt"
 	"io/ioutil"
@@ -25,9 +26,9 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority/skipchain"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -488,7 +489,7 @@ func readGroup(c *cli.Context, pos int) *app.Group {
 	name := c.Args().Get(pos)
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := app.ReadGroupDescToml(f)
+	group, err := app.ReadGroupDescToml(f, cothority.Suite)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
@@ -516,7 +517,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, cfg, err := network.Unmarshal(f)
+	_, cfg, err := network.Unmarshal(f, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}

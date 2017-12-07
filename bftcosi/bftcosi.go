@@ -13,10 +13,10 @@ import (
 	"errors"
 	"sync"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/cothority/cosi/crypto"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 // VerificationFunction can be passes to each protocol node. It will be called
@@ -90,9 +90,9 @@ type ProtocolBFTCoSi struct {
 // messages
 type collectStructs struct {
 	// prepare-round cosi
-	prepare *cosi.CoSi
+	prepare *crypto.CoSi
 	// commit-round cosi
-	commit *cosi.CoSi
+	commit *crypto.CoSi
 
 	// prepareSignature is the signature generated during the prepare phase
 	// This signature is adapted according to the exceptions that occured during
@@ -104,13 +104,13 @@ type collectStructs struct {
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []Exception
 	// temporary buffer of "prepare" commitments
-	tempPrepareCommit []abstract.Point
+	tempPrepareCommit []kyber.Point
 	// temporary buffer of "commit" commitments
-	tempCommitCommit []abstract.Point
+	tempCommitCommit []kyber.Point
 	// temporary buffer of "prepare" responses
-	tempPrepareResponse []abstract.Scalar
+	tempPrepareResponse []kyber.Scalar
 	// temporary buffer of "commit" responses
-	tempCommitResponse []abstract.Scalar
+	tempCommitResponse []kyber.Scalar
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
@@ -120,8 +120,8 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		collectStructs: collectStructs{
-			prepare: cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
-			commit:  cosi.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			prepare: crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			commit:  crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
@@ -282,7 +282,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 			return nil
 		}
 
-		var commitment abstract.Point
+		var commitment kyber.Point
 		// store it and check if we have enough commitments
 		switch comm.TYPE {
 		case RoundPrepare:
@@ -633,7 +633,7 @@ func (bft *ProtocolBFTCoSi) nodeDone() bool {
 	return true
 }
 
-func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *cosi.CoSi {
+func (bft *ProtocolBFTCoSi) getCosi(t RoundType) *crypto.CoSi {
 	if t == RoundPrepare {
 		return bft.prepare
 	}

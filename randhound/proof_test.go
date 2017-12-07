@@ -1,36 +1,36 @@
+// +build experimental
+
 package randhound_test
 
 import (
 	"testing"
 
 	"github.com/dedis/cothority/randhound"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/edwards"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/log"
 )
 
+var tSuite = ed25519.NewBlakeSHA256Ed25519()
+
 func TestProof(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
 	// 1st set of base points
-	g1, _ := suite.Point().Pick([]byte("G1"), random.Stream)
-	h1, _ := suite.Point().Pick([]byte("H1"), random.Stream)
+	g1, _ := tSuite.Point().Pick([]byte("G1"), random.Stream)
+	h1, _ := tSuite.Point().Pick([]byte("H1"), random.Stream)
 
 	// 1st secret value
-	x := suite.Scalar().Pick(random.Stream)
+	x := tSuite.Scalar().Pick(random.Stream)
 
 	// 2nd set of base points
-	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
-	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
+	g2, _ := tSuite.Point().Pick([]byte("G2"), random.Stream)
+	h2, _ := tSuite.Point().Pick([]byte("H2"), random.Stream)
 
 	// 2nd secret value
-	y := suite.Scalar().Pick(random.Stream)
+	y := tSuite.Scalar().Pick(random.Stream)
 
 	// Create proofs
-	g := []abstract.Point{g1, g2}
-	h := []abstract.Point{h1, h2}
+	g := []kyber.Point{g1, g2}
+	h := []kyber.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	log.ErrFatal(err)
 
@@ -47,30 +47,26 @@ func TestProof(t *testing.T) {
 	if len(bad) != 0 {
 		log.Fatalf("Some proofs failed: %v", bad)
 	}
-
 }
 
 func TestProofCollective(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
 	// 1st set of base points
-	g1, _ := suite.Point().Pick([]byte("G1"), random.Stream)
-	h1, _ := suite.Point().Pick([]byte("H1"), random.Stream)
+	g1, _ := tSuite.Point().Pick([]byte("G1"), random.Stream)
+	h1, _ := tSuite.Point().Pick([]byte("H1"), random.Stream)
 
 	// 1st secret value
-	x := suite.Scalar().Pick(random.Stream)
+	x := tSuite.Scalar().Pick(random.Stream)
 
 	// 2nd set of base points
-	g2, _ := suite.Point().Pick([]byte("G2"), random.Stream)
-	h2, _ := suite.Point().Pick([]byte("H2"), random.Stream)
+	g2, _ := tSuite.Point().Pick([]byte("G2"), random.Stream)
+	h2, _ := tSuite.Point().Pick([]byte("H2"), random.Stream)
 
 	// 2nd secret value
-	y := suite.Scalar().Pick(random.Stream)
+	y := tSuite.Scalar().Pick(random.Stream)
 
 	// Create proof
-	g := []abstract.Point{g1, g2}
-	h := []abstract.Point{h1, h2}
+	g := []kyber.Point{g1, g2}
+	h := []kyber.Point{h1, h2}
 	p, err := randhound.NewProof(suite, g, h, nil)
 	log.ErrFatal(err)
 
@@ -91,25 +87,22 @@ func TestProofCollective(t *testing.T) {
 }
 
 func TestPVSS(t *testing.T) {
-
-	suite := edwards.NewAES128SHA256Ed25519(false)
-
-	G := suite.Point().Base()
-	H, _ := suite.Point().Pick(nil, suite.Cipher([]byte("H")))
+	G := tSuite.Point().Base()
+	H, _ := tSuite.Point().Pick(nil, tSuite.Cipher([]byte("H")))
 
 	n := 10
 	threshold := 2*n/3 + 1
-	x := make([]abstract.Scalar, n) // trustee private keys
-	X := make([]abstract.Point, n)  // trustee public keys
+	x := make([]kyber.Scalar, n) // trustee private keys
+	X := make([]kyber.Point, n)  // trustee public keys
 	index := make([]int, n)
 	for i := 0; i < n; i++ {
-		x[i] = suite.Scalar().Pick(random.Stream)
-		X[i] = suite.Point().Mul(nil, x[i])
+		x[i] = tSuite.Scalar().Pick(random.Stream)
+		X[i] = tSuite.Point().Mul(nil, x[i])
 		index[i] = i
 	}
 
 	// Scalar of shared secret
-	secret := suite.Scalar().Pick(random.Stream)
+	secret := tSuite.Scalar().Pick(random.Stream)
 
 	// (1) Share-Distribution (Dealer)
 	pvss := randhound.NewPVSS(suite, H, threshold)
@@ -133,7 +126,7 @@ func TestPVSS(t *testing.T) {
 	}
 
 	// Decrypt shares
-	S := make([]abstract.Point, n)
+	S := make([]kyber.Point, n)
 	decProof := make([]randhound.ProofCore, n)
 	for i := 0; i < n; i++ {
 		s, d, err := pvss.Reveal(x[i], sX[i:i+1])
@@ -155,7 +148,7 @@ func TestPVSS(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Verify recovered secret
-	if !(suite.Point().Mul(nil, secret).Equal(recovered)) {
+	if !(tSuite.Point().Mul(nil, secret).Equal(recovered)) {
 		log.Fatalf("Recovered incorrect shared secret")
 	}
 }

@@ -13,11 +13,11 @@ import (
 
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -390,7 +390,7 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 // is valid.
 func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 	err := func() error {
-		_, fsInt, err := network.Unmarshal(data)
+		_, fsInt, err := network.Unmarshal(data, s.Suite())
 		if err != nil {
 			return err
 		}
@@ -444,7 +444,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		log.Error("Didn't find src-skipblock")
 		return false
 	}
-	_, newSBi, err := network.Unmarshal(data[32:])
+	_, newSBi, err := network.Unmarshal(data[32:], s.Suite())
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
@@ -696,7 +696,7 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
-func newSkipchainService(c *onet.Context) onet.Service {
+func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Sbm:              NewSkipBlockMap(),
@@ -706,6 +706,7 @@ func newSkipchainService(c *onet.Context) onet.Service {
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
+		return nil, err
 	}
 	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
@@ -722,12 +723,15 @@ func newSkipchainService(c *onet.Context) onet.Service {
 
 	var err error
 	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)
-	log.ErrFatal(err)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
 	s.ProtocolRegister(bftNewBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyNewBlock)
 	})
 	s.ProtocolRegister(bftFollowBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFollowBlock)
 	})
-	return s
+	return s, nil
 }

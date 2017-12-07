@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

@@ -1,9 +1,11 @@
-package main_test
+// +build experimental
+
+package main
 
 import (
 	"testing"
 
-	"gopkg.in/dedis/onet.v1/simul"
+	"github.com/dedis/onet/simul"
 )
 
 func TestSimulation(t *testing.T) {

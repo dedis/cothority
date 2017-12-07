@@ -1,12 +1,14 @@
+// +build experimental
+
 package randhound
 
 import (
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/poly"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1/crypto"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/poly"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/crypto"
 )
 
 // Package proof provides functionality to create and verify non-interactive
@@ -21,20 +23,20 @@ type Proof struct {
 
 // ProofBase contains the base points against which the core proof is created.
 type ProofBase struct {
-	g abstract.Point
-	h abstract.Point
+	g kyber.Point
+	h kyber.Point
 }
 
 // ProofCore contains the core elements of the NIZK dlog-equality proof.
 type ProofCore struct {
-	C  abstract.Scalar // challenge
-	R  abstract.Scalar // response
-	VG abstract.Point  // public commitment with respect to base point G
-	VH abstract.Point  // public commitment with respect to base point H
+	C  kyber.Scalar // challenge
+	R  kyber.Scalar // response
+	VG kyber.Point  // public commitment with respect to base point G
+	VH kyber.Point  // public commitment with respect to base point H
 }
 
 // NewProof creates a new NIZK dlog-equality proof.
-func NewProof(suite abstract.Suite, g []abstract.Point, h []abstract.Point, core []ProofCore) (*Proof, error) {
+func NewProof(suite abstract.Suite, g []kyber.Point, h []kyber.Point, core []ProofCore) (*Proof, error) {
 
 	if len(g) != len(h) {
 		return nil, errors.New("Received non-matching number of points")
@@ -51,7 +53,7 @@ func NewProof(suite abstract.Suite, g []abstract.Point, h []abstract.Point, core
 
 // Setup initializes the proof by randomly selecting a commitment v,
 // determining the challenge c = H(xG,xH,vG,vH) and the response r = v - cx.
-func (p *Proof) Setup(scalar ...abstract.Scalar) ([]abstract.Point, []abstract.Point, error) {
+func (p *Proof) Setup(scalar ...kyber.Scalar) ([]kyber.Point, []kyber.Point, error) {
 
 	if len(scalar) != len(p.Base) {
 		return nil, nil, errors.New("Received unexpected number of scalars")
@@ -59,8 +61,8 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) ([]abstract.Point, []abstract.P
 
 	n := len(scalar)
 	p.Core = make([]ProofCore, n)
-	xG := make([]abstract.Point, n)
-	xH := make([]abstract.Point, n)
+	xG := make([]kyber.Point, n)
+	xH := make([]kyber.Point, n)
 	for i, x := range scalar {
 
 		xG[i] = p.suite.Point().Mul(p.Base[i].g, x)
@@ -90,7 +92,7 @@ func (p *Proof) Setup(scalar ...abstract.Scalar) ([]abstract.Point, []abstract.P
 
 // SetupCollective is similar to Setup with the difference that the challenge
 // is computed as the hash over all base points and commitments.
-func (p *Proof) SetupCollective(scalar ...abstract.Scalar) ([]abstract.Point, []abstract.Point, error) {
+func (p *Proof) SetupCollective(scalar ...kyber.Scalar) ([]kyber.Point, []kyber.Point, error) {
 
 	if len(scalar) != len(p.Base) {
 		return nil, nil, errors.New("Received unexpected number of scalars")
@@ -98,11 +100,11 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) ([]abstract.Point, []
 
 	n := len(scalar)
 	p.Core = make([]ProofCore, n)
-	v := make([]abstract.Scalar, n)
-	xG := make([]abstract.Point, n)
-	xH := make([]abstract.Point, n)
-	vG := make([]abstract.Point, n)
-	vH := make([]abstract.Point, n)
+	v := make([]kyber.Scalar, n)
+	xG := make([]kyber.Point, n)
+	xH := make([]kyber.Point, n)
+	vG := make([]kyber.Point, n)
+	vH := make([]kyber.Point, n)
 	for i, x := range scalar {
 
 		xG[i] = p.suite.Point().Mul(p.Base[i].g, x)
@@ -134,7 +136,7 @@ func (p *Proof) SetupCollective(scalar ...abstract.Scalar) ([]abstract.Point, []
 // Verify validates the proof(s) against the given input by checking that vG ==
 // rG + c(xG) and vH == rH + c(xH) and returns the indices of those proofs that
 // are valid (good) and non-valid (bad), respectively.
-func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, []int, error) {
+func (p *Proof) Verify(xG []kyber.Point, xH []kyber.Point) ([]int, []int, error) {
 
 	if len(xG) != len(xH) {
 		return nil, nil, errors.New("Received unexpected number of points")
@@ -166,19 +168,19 @@ func (p *Proof) Verify(xG []abstract.Point, xH []abstract.Point) ([]int, []int, 
 // PVSS implements public verifiable secret sharing.
 type PVSS struct {
 	suite abstract.Suite // Suite
-	h     abstract.Point // Base point for polynomial commits
+	h     kyber.Point    // Base point for polynomial commits
 	t     int            // Secret sharing threshold
 }
 
 // NewPVSS creates a new PVSS struct using the given suite, base point, and
 // secret sharing threshold.
-func NewPVSS(s abstract.Suite, h abstract.Point, t int) *PVSS {
+func NewPVSS(s abstract.Suite, h kyber.Point, t int) *PVSS {
 	return &PVSS{suite: s, h: h, t: t}
 }
 
 // Split creates PVSS shares encrypted by the public keys in X and
 // provides a NIZK encryption consistency proof for each share.
-func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abstract.Point, []ProofCore, []byte, error) {
+func (pv *PVSS) Split(X []kyber.Point, secret kyber.Scalar) ([]int, []kyber.Point, []ProofCore, []byte, error) {
 
 	n := len(X)
 
@@ -192,8 +194,8 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abst
 	pubPoly := new(poly.PubPoly).Commit(priPoly, pv.h)
 
 	// Prepare data for encryption consistency proofs ...
-	share := make([]abstract.Scalar, n)
-	H := make([]abstract.Point, n)
+	share := make([]kyber.Scalar, n)
+	H := make([]kyber.Point, n)
 	idx := make([]int, n)
 	for i := range idx {
 		idx[i] = i
@@ -222,10 +224,10 @@ func (pv *PVSS) Split(X []abstract.Point, secret abstract.Scalar) ([]int, []abst
 // Verify checks that log_H(sH) == log_X(sX) using the given proof(s) and
 // returns the indices of those proofs that are valid (good) and non-valid
 // (bad), respectively.
-func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) (good, bad []int, err error) {
+func (pv *PVSS) Verify(H kyber.Point, X []kyber.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) (good, bad []int, err error) {
 
 	n := len(X)
-	Y := make([]abstract.Point, n)
+	Y := make([]kyber.Point, n)
 	for i := 0; i < n; i++ {
 		Y[i] = H
 	}
@@ -237,14 +239,14 @@ func (pv *PVSS) Verify(H abstract.Point, X []abstract.Point, sH []abstract.Point
 }
 
 // Commits reconstructs a list of commits from the given polynomials and indices.
-func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]abstract.Point, error) {
+func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]kyber.Point, error) {
 
 	if len(polyBin) != len(index) {
 		return nil, errors.New("Inputs have different lengths")
 	}
 
 	n := len(polyBin)
-	sH := make([]abstract.Point, n)
+	sH := make([]kyber.Point, n)
 	for i := range sH {
 		P := new(poly.PubPoly)
 		P.Init(pv.suite, pv.t, pv.h)
@@ -258,12 +260,12 @@ func (pv *PVSS) Commits(polyBin [][]byte, index []int) ([]abstract.Point, error)
 
 // Reveal decrypts the shares in xS using the secret key x and creates an NIZK
 // decryption consistency proof for each share.
-func (pv *PVSS) Reveal(x abstract.Scalar, xS []abstract.Point) ([]abstract.Point, []ProofCore, error) {
+func (pv *PVSS) Reveal(x kyber.Scalar, xS []kyber.Point) ([]kyber.Point, []ProofCore, error) {
 
 	// Decrypt shares
-	S := make([]abstract.Point, len(xS))
-	G := make([]abstract.Point, len(xS))
-	y := make([]abstract.Scalar, len(xS))
+	S := make([]kyber.Point, len(xS))
+	G := make([]kyber.Point, len(xS))
+	y := make([]kyber.Scalar, len(xS))
 	for i := range xS {
 		S[i] = pv.suite.Point().Mul(xS[i], pv.suite.Scalar().Inv(x))
 		G[i] = pv.suite.Point().Base()
@@ -281,7 +283,7 @@ func (pv *PVSS) Reveal(x abstract.Scalar, xS []abstract.Point) ([]abstract.Point
 }
 
 // Recover recreates the PVSS secret from the given shares.
-func (pv *PVSS) Recover(pos []int, S []abstract.Point, n int) (abstract.Point, error) {
+func (pv *PVSS) Recover(pos []int, S []kyber.Point, n int) (kyber.Point, error) {
 
 	if len(S) < pv.t {
 		return nil, errors.New("Not enough shares to recover secret")

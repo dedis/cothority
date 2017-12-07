@@ -2,6 +2,7 @@
 
 BASE=cothority:latest
 NETWORK=192.168.77
+gopath=`go env GOPATH`
 
 main(){
   setupDocker
@@ -36,7 +37,7 @@ createGroupToml(){
 
 bindLocalGo(){
   echo "Binding local go-directory"
-  MOUNT="-v $GOPATH/src:/home/dedis/go/src"
+  MOUNT="-v $gopath/src:/home/dedis/go/src"
   createDocker 10 hpets
 
   echo "Updating go-binaries"

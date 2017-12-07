@@ -5,14 +5,15 @@ import (
 
 	// Empty imports to have the init-functions called which should
 	// register the protocol
+	"github.com/dedis/cothority"
 	_ "github.com/dedis/cothority/cosi/protocol"
 	_ "github.com/dedis/cothority/cosi/service"
-	"gopkg.in/dedis/onet.v1/app"
+	"github.com/dedis/onet/app"
 )
 
 func runServer(ctx *cli.Context) {
 	// first check the options
 	config := ctx.String("config")
 
-	app.RunServer(config)
+	app.RunServer(config, cothority.Suite)
 }

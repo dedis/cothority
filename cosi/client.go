@@ -10,15 +10,15 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/check"
+	"github.com/dedis/cothority/cosi/crypto"
 	s "github.com/dedis/cothority/cosi/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/hash"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -97,7 +97,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	error) {
 	publics := entityListToPublics(el)
 	client := s.NewClient()
-	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
+	msg, _ := hash.Stream(client.Suite().(kyber.HashFactory).Hash(), read)
 
 	pchan := make(chan *s.SignatureResponse)
 	var err error
@@ -141,7 +141,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 			return nil, errors.New("received an invalid repsonse")
 		}
 
-		err = cosi.VerifySignature(network.Suite, publics, msg, response.Signature)
+		err = crypto.VerifySignature(client.Suite(), publics, msg, response.Signature)
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +183,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 	log.Lvl4("Reading group definition")
-	el, err := app.ReadGroupToml(fGroup)
+	el, err := app.ReadGroupToml(fGroup, cothority.Suite)
 	if err != nil {
 		return err
 	}
@@ -193,23 +193,25 @@ func verify(fileName, sigFileName, groupToml string) error {
 }
 
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) error {
+	localSuite := cothority.Suite.(kyber.HashFactory)
+
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	publics := entityListToPublics(el)
-	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
-	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
+	fHash, _ := hash.Bytes(localSuite.Hash(), b)
+	hashHash, _ := hash.Bytes(localSuite.Hash(), fHash)
 	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	if err := cosi.VerifySignature(network.Suite, publics, fHash, sig.Signature); err != nil {
+	if err := crypto.VerifySignature(cothority.Suite, publics, fHash, sig.Signature); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
 }
-func entityListToPublics(r *onet.Roster) []abstract.Point {
-	publics := make([]abstract.Point, len(r.List))
+func entityListToPublics(r *onet.Roster) []kyber.Point {
+	publics := make([]kyber.Point, len(r.List))
 	for i, e := range r.List {
 		publics[i] = e.Public
 	}

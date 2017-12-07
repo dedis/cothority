@@ -4,6 +4,10 @@
 
 # Cothority
 
+WARNING: The master branch is currently unstable, as it is in development phase. If you are
+starting new work with this repository, use gopkg.in/dedis/cothority.v1 instead.
+The source code for this stable branch is [here](https://github.com/dedis/cothority/tree/v1.2).
+
 The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a *collective authority* or *cothority*. Individual servers are called *cothority servers* or *conodes*. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at [EPFL](https://epfl.ch). 
 
 ## Table of Contents
@@ -42,8 +46,8 @@ Name | Description
 To use the code of this repository you need to:
 
 - Install [Golang](https://golang.org/doc/install)
-- Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
-- Add `$GOPATH/bin` to `$PATH`
+- Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
+- Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
 
 ### Cothority Client - CoSi
 
@@ -62,7 +66,7 @@ go get -u github.com/dedis/cothority/cosi
 To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
 
 ```
-export COTHORITY=$GOPATH/src/github.com/dedis/cothority/dedis-cothority.toml 
+export COTHORITY=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml 
 ```
 
 #### Usage

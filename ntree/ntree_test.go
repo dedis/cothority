@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/ntree"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/kyber/group"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
+
+var tSuite = group.MustSuite("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -16,7 +19,7 @@ func TestMain(m *testing.M) {
 func TestNtree(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
 		log.Lvl2("Running ntree with", nbrHosts, "hosts")
-		local := onet.NewLocalTest()
+		local := onet.NewLocalTest(tSuite)
 
 		_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
 

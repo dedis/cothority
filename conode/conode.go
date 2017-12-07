@@ -15,7 +15,9 @@ package main
 import (
 	"os"
 
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/dedis/cothority/cosi/check"
@@ -23,7 +25,6 @@ import (
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
-	"gopkg.in/dedis/onet.v1/app"
 )
 
 const (
@@ -115,7 +116,7 @@ func runServer(ctx *cli.Context) {
 	// first check the options
 	config := ctx.String("config")
 
-	app.RunServer(config)
+	app.RunServer(config, cothority.Suite)
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid

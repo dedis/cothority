@@ -22,14 +22,14 @@ import (
 
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 // ServiceName can be used to refer to the name of this service
@@ -89,9 +89,9 @@ type authData struct {
 	// sets of public keys to verify linkable ring signatures
 	sets []anon.Set
 	// list of public keys to verify simple authentication with Schnorr sig
-	keys []abstract.Point
+	keys []kyber.Point
 	// list of adminKeys
-	adminKeys []abstract.Point
+	adminKeys []kyber.Point
 	// set of nonces
 	nonces map[string]struct{}
 }
@@ -148,7 +148,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 				"Invalid request")
 		}
 
-		h := network.Suite.Hash()
+		h := s.Suite().(kyber.HashFactory).Hash()
 
 		for _, k := range req.Publics {
 			b, err := k.MarshalBinary()
@@ -172,7 +172,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 	// check Signature
 	valid := false
 	for _, key := range s.auth.adminKeys {
-		if crypto.VerifySchnorr(network.Suite, key, msg, req.Sig) == nil {
+		if schnorr.Verify(s.Suite(), key, msg, req.Sig) == nil {
 			valid = true
 			break
 		}
@@ -220,7 +220,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			ai.Public = nil
 		}
 		for _, set := range s.auth.sets {
-			t, err := anon.Verify(network.Suite, ai.Nonce, set, ctx, ai.Sig)
+			t, err := anon.Verify(s.Suite().(anon.Suite), ai.Nonce, set, ctx, ai.Sig)
 			if err == nil {
 				tag = string(t)
 				valid = true
@@ -255,7 +255,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			return nil, onet.NewClientErrorCode(ErrorAuthentication,
 				"No such key is stored")
 		}
-		if crypto.VerifySchnorr(network.Suite, ai.Public, ai.Nonce, ai.SchnSig) != nil {
+		if schnorr.Verify(s.Suite(), ai.Public, ai.Nonce, *ai.SchnSig) != nil {
 			valid = false
 		} else {
 			valid = true
@@ -330,7 +330,7 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 		log.Lvl3("Got new data")
 		// TODO: check that update-chain has correct forward-links and fits into existing blocks
 		sid.SCData = reply.Update[len(reply.Update)-1]
-		_, dataInt, err := network.Unmarshal(sid.SCData.Data)
+		_, dataInt, err := network.Unmarshal(sid.SCData.Data, s.Suite())
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorDataMissing, err.Error())
 		}
@@ -403,20 +403,20 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 			return onet.NewClientErrorCode(ErrorDataMissing, "No proposed block")
 		}
 		log.Lvl3("Voting on", sid.Proposed.Device)
-		hash, err := sid.Proposed.Hash()
+		hash, err := sid.Proposed.Hash(s.Suite().(kyber.HashFactory))
 		if err != nil {
 			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
 		}
 		if oldvote := sid.Proposed.Votes[v.Signer]; oldvote != nil {
 			// It can either be an update-vote (accepted), or a second
 			// vote (refused).
-			if crypto.VerifySchnorr(network.Suite, owner.Point, hash, *oldvote) == nil {
+			if schnorr.Verify(s.Suite(), owner.Point, hash, oldvote) == nil {
 				return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
 			}
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
-			err = crypto.VerifySchnorr(network.Suite, owner.Point, hash, *v.Signature)
+			err = schnorr.Verify(s.Suite(), owner.Point, hash, v.Signature)
 			if err != nil {
 				return onet.NewClientErrorCode(ErrorVoteSignature, "Wrong signature: "+err.Error())
 			}
@@ -445,7 +445,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		if cerr != nil {
 			return nil, cerr
 		}
-		_, msg, _ := network.Unmarshal(reply.Latest.Data)
+		_, msg, _ := network.Unmarshal(reply.Latest.Data, s.Suite())
 		log.Lvl3("SB signed is", msg.(*Data).Device)
 		usb := &UpdateSkipBlock{
 			ID:     v.ID,
@@ -469,7 +469,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 			log.Lvl4("Always accepting genesis-block")
 			return nil
 		}
-		_, dataInt, err := network.Unmarshal(sb.Data)
+		_, dataInt, err := network.Unmarshal(sb.Data, s.Suite())
 		if err != nil {
 			return errors.New("got unknown packet")
 		}
@@ -477,7 +477,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 		if !ok {
 			return fmt.Errorf("got packet-type %s", reflect.TypeOf(dataInt))
 		}
-		hash, err := data.Hash()
+		hash, err := data.Hash(s.Suite().(kyber.HashFactory))
 		if err != nil {
 			return err
 		}
@@ -496,7 +496,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 		if latest == nil {
 			return errors.New("Backlink was not our latest block")
 		}
-		_, dataInt, err = network.Unmarshal(latest.Data)
+		_, dataInt, err = network.Unmarshal(latest.Data, s.Suite())
 		if err != nil {
 			return err
 		}
@@ -504,7 +504,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 		sigCnt := 0
 		for dev, sig := range data.Votes {
 			if pub := dataLatest.Device[dev]; pub != nil {
-				if err := crypto.VerifySchnorr(network.Suite, pub.Point, hash, *sig); err != nil {
+				if err := schnorr.Verify(s.Suite(), pub.Point, hash, sig); err != nil {
 					return err
 				}
 				sigCnt++
@@ -561,19 +561,19 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 				log.Error("Got signature from unknown device", v.Signer)
 				return
 			}
-			hash, err := sid.Proposed.Hash()
+			hash, err := sid.Proposed.Hash(s.Suite().(kyber.HashFactory))
 			if err != nil {
 				log.Error("Couldn't hash proposed block:", err)
 				return
 			}
-			err = crypto.VerifySchnorr(network.Suite, d.Point, hash, *v.Signature)
+			err = schnorr.Verify(s.Suite(), d.Point, hash, v.Signature)
 			if err != nil {
 				log.Error("Got invalid signature:", err)
 				return
 			}
 			if len(sid.Proposed.Votes) == 0 {
 				// Make sure the map is initialised
-				sid.Proposed.Votes = make(map[string]*crypto.SchnorrSig)
+				sid.Proposed.Votes = make(map[string][]byte)
 			}
 			sid.Proposed.Votes[v.Signer] = v.Signature
 		}
@@ -597,7 +597,7 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 	sid.Lock()
 	defer sid.Unlock()
 	skipblock := msg.(*UpdateSkipBlock).Latest
-	_, msgLatest, err := network.Unmarshal(skipblock.Data)
+	_, msgLatest, err := network.Unmarshal(skipblock.Data, s.Suite())
 	if err != nil {
 		log.Error(err)
 		return
@@ -711,7 +711,7 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
-func newIdentityService(c *onet.Context) onet.Service {
+func newIdentityService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
@@ -721,32 +721,34 @@ func newIdentityService(c *onet.Context) onet.Service {
 	s.propagateIdentity, err =
 		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	s.propagateSkipBlock, err =
 		messaging.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	s.propagateData, err =
 		messaging.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateDataHandler)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
+		return nil, err
 	}
 	if err := s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate, s.PinRequest,
 		s.StoreKeys, s.Authenticate); err != nil {
-		log.Fatal("Registration error:", err)
+		log.Error("Registration error:", err)
+		return nil, err
 	}
 	skipchain.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
 	s.auth.pins = make(map[string]struct{})
 	s.auth.nonces = make(map[string]struct{})
 	s.auth.sets = make([]anon.Set, 0)
-	s.auth.adminKeys = make([]abstract.Point, 0)
+	s.auth.adminKeys = make([]kyber.Point, 0)
 	s.tagsLimits = make(map[string]int8)
 	s.pointsLimits = make(map[string]int8)
-	return s
+	return s, nil
 }

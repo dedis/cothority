@@ -9,9 +9,9 @@ import (
 
 	"sync"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -19,7 +19,7 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
@@ -37,7 +37,7 @@ func TestClient_CreateGenesis(t *testing.T) {
 }
 
 func TestClient_CreateRootControl(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
@@ -49,7 +49,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Long run not good for Travis")
 	}
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -73,7 +73,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 }
 
 func TestClient_CreateRootInter(t *testing.T) {
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, el, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -98,7 +98,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 func TestClient_StoreSkipBlock(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -144,7 +144,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 
 func TestClient_GetAllSkipchains(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, el, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -170,7 +170,7 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest()
+	l := onet.NewTCPTest(tSuite)
 	_, roster, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 

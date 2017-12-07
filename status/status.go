@@ -7,10 +7,11 @@ import (
 
 	"errors"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/status/service"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 
 	"sort"
 	"strings"
@@ -67,7 +68,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	el, err := app.ReadGroupToml(f, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}

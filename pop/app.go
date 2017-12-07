@@ -1,36 +1,33 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net"
 	"os"
 	"path"
+	"strings"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/protocol"
 	_ "github.com/dedis/cothority/cosi/service"
 
-	"fmt"
-	"io/ioutil"
-
-	"net"
-
-	"strings"
-
-	"bufio"
-	"bytes"
-
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -42,9 +39,9 @@ func init() {
 type Config struct {
 	// Public key of org. Used for linking and
 	// org authentication
-	OrgPublic abstract.Point
+	OrgPublic kyber.Point
 	// Private key of org. Used for authentication
-	OrgPrivate abstract.Scalar
+	OrgPrivate kyber.Scalar
 	// Address of the linked conode.
 	Address network.Address
 	// Map of Final statements of the parties.
@@ -58,10 +55,10 @@ type Config struct {
 type PartyConfig struct {
 	// Private key of attendee or organizer, depending on value
 	// of Index.
-	Private abstract.Scalar
+	Private kyber.Scalar
 	// Public key of attendee or organizer, depending on value of
 	// index.
-	Public abstract.Point
+	Public kyber.Point
 	// Index of the attendee in the final statement. If the index
 	// is -1, then this pop holds an organizer.
 	Index int
@@ -180,12 +177,12 @@ func orgConfig(c *cli.Context) error {
 	log.Lvlf2("Hash of config: %s", hash)
 	log.ErrFatal(client.StoreConfig(cfg.Address, desc, cfg.OrgPrivate))
 	if val, ok := cfg.Parties[hash]; !ok {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		cfg.Parties[hash] = &PartyConfig{
 			Index: -1,
 			Final: &service.FinalStatement{
 				Desc:      desc,
-				Attendees: []abstract.Point{},
+				Attendees: []kyber.Point{},
 				Signature: []byte{},
 			},
 			Public:  kp.Public,
@@ -219,7 +216,7 @@ func orgPublic(c *cli.Context) error {
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
 	log.ErrFatal(err)
 	for _, k := range keys {
-		pub, err := crypto.String64ToPoint(network.Suite, k)
+		pub, err := encoding.String64ToPoint(cothority.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -314,17 +311,16 @@ func orgMerge(c *cli.Context) error {
 
 // creates a new private/public pair
 func attCreate(c *cli.Context) error {
-	priv := network.Suite.NewKey(random.Stream)
-	pub := network.Suite.Point().Mul(nil, priv)
-	privStr, err := crypto.ScalarToString64(nil, priv)
+	kp := key.NewKeyPair(cothority.Suite)
+	secStr, err := encoding.ScalarToString64(nil, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PointToString64(nil, pub)
+	pubStr, err := encoding.PointToString64(nil, kp.Public)
 	if err != nil {
 		return err
 	}
-	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Printf("Private: %s\nPublic: %s", secStr, pubStr)
 	return nil
 }
 
@@ -337,7 +333,7 @@ func attJoin(c *cli.Context) error {
 	privStr := c.Args().First()
 	privBuf, err := base64.StdEncoding.DecodeString(privStr)
 	log.ErrFatal(err)
-	priv := network.Suite.Scalar()
+	priv := cothority.Suite.Scalar()
 	log.ErrFatal(priv.UnmarshalBinary(privBuf))
 	cfg, client := getConfigClient(c)
 
@@ -385,7 +381,7 @@ func attJoin(c *cli.Context) error {
 	party := &PartyConfig{}
 	party.Final = final
 	party.Private = priv
-	party.Public = network.Suite.Point().Mul(nil, priv)
+	party.Public = cothority.Suite.Point().Mul(priv, nil)
 	index := -1
 	for i, p := range party.Final.Attendees {
 		if p.Equal(party.Public) {
@@ -432,7 +428,7 @@ func attSign(c *cli.Context) error {
 	log.ErrFatal(err)
 
 	if party.Index == -1 || party.Private == nil || party.Public == nil ||
-		!network.Suite.Point().Mul(nil, party.Private).Equal(party.Public) {
+		!cothority.Suite.Point().Mul(party.Private, nil).Equal(party.Public) {
 		log.Fatal("No public key stored. Please join a party")
 	}
 
@@ -443,7 +439,7 @@ func attSign(c *cli.Context) error {
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
 	Set := anon.Set(party.Final.Attendees)
-	sigtag := anon.Sign(network.Suite, random.Stream, msg,
+	sigtag := anon.Sign(cothority.Suite.(anon.Suite), random.Stream, msg,
 		Set, ctx, party.Index, party.Private)
 	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
 	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]
@@ -473,7 +469,7 @@ func attVerify(c *cli.Context) error {
 	tag, err := base64.StdEncoding.DecodeString(c.Args().Get(3))
 	log.ErrFatal(err)
 	sigtag := append(sig, tag...)
-	ctag, err := anon.Verify(network.Suite, msg,
+	ctag, err := anon.Verify(cothority.Suite.(anon.Suite), msg,
 		anon.Set(party.Final.Attendees), ctx, sigtag)
 	log.ErrFatal(err)
 	if !bytes.Equal(tag, ctag) {
@@ -524,7 +520,7 @@ func getConfigClient(c *cli.Context) (*Config, *service.Client) {
 func newConfig(fileConfig string) (*Config, error) {
 	name := app.TildeToHome(fileConfig)
 	if _, err := os.Stat(name); err != nil {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		return &Config{
 			OrgPublic:  kp.Public,
 			OrgPrivate: kp.Secret,
@@ -537,7 +533,7 @@ func newConfig(fileConfig string) (*Config, error) {
 		return nil, fmt.Errorf("couldn't read %s: %s - please remove it",
 			name, err)
 	}
-	_, msg, err := network.Unmarshal(buf)
+	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading file %s: %s",
 			name, err)
@@ -571,7 +567,7 @@ func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
 func readGroup(name string) *onet.Roster {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	roster, err := app.ReadGroupToml(f)
+	roster, err := app.ReadGroupToml(f, cothority.Suite)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
@@ -599,7 +595,7 @@ func decodePopDesc(buf string, desc *service.PopDesc) error {
 	desc.Location = descGroup.Location
 	entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 	for i, s := range descGroup.Servers {
-		en, err := toServerIdentity(s, network.Suite)
+		en, err := toServerIdentity(s, cothority.Suite)
 		if err != nil {
 			return err
 		}
@@ -628,7 +624,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 		desc.Location = descGroup.Location
 		entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 		for j, s := range descGroup.Servers {
-			en, err := toServerIdentity(s, network.Suite)
+			en, err := toServerIdentity(s, cothority.Suite)
 			if err != nil {
 				return []*service.ShortDesc{}, err
 			}
@@ -642,8 +638,8 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 
 // TODO: Needs to be public in app package!!!
 // toServerIdentity converts this ServerToml struct to a ServerIdentity.
-func toServerIdentity(s *app.ServerToml, suite abstract.Suite) (*network.ServerIdentity, error) {
-	public, err := crypto.String64ToPub(suite, s.Public)
+func toServerIdentity(s *app.ServerToml, suite kyber.Group) (*network.ServerIdentity, error) {
+	public, err := encoding.String64ToPoint(suite, s.Public)
 	if err != nil {
 		return nil, err
 	}
