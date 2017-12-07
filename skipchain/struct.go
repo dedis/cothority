@@ -414,7 +414,7 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	if err != nil {
 		log.Error(err.Error())
 	}
-	return sb.Copy() // TODO copy needed?
+	return sb
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -764,7 +764,7 @@ func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
 			return err
 		}
 
-		sb = sbMsg.(*SkipBlock)
+		sb = sbMsg.(*SkipBlock).Copy()
 		return nil
 	})
 	return sb, err

@@ -176,14 +176,15 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
 }
 
-func TestDB(t *testing.T) {
-	tmpFile, err := ioutil.TempFile("", "skipchain-db-test")
+func TestSkipBlock_DB(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "skipchain-db-test")
 	require.Nil(t, err)
-	db, err := NewSkipBlockDB(tmpFile.Name())
+	db, err := NewSkipBlockDB(tmpDir)
 	require.Nil(t, err)
 
 	sb := NewSkipBlock()
 	sb.Data = []byte("hello")
+	sb.AddForward(&BlockLink{[]byte("hash"), []byte("signature")})
 	sb.Hash = sb.CalculateHash()
 	err = db.dbstore(sb)
 	require.Nil(t, err)
@@ -191,7 +192,11 @@ func TestDB(t *testing.T) {
 	sb2, err := db.dbget(sb.Hash)
 	require.Nil(t, err)
 	require.True(t, sb.Equal(sb2))
+	for i := range sb2.ForwardLink {
+		require.True(t, bytes.Equal(sb2.ForwardLink[i].Hash, sb.ForwardLink[i].Hash))
+		require.True(t, bytes.Equal(sb2.ForwardLink[i].Signature, sb.ForwardLink[i].Signature))
+	}
 
-	err = os.Remove(tmpFile.Name())
+	err = os.RemoveAll(tmpDir)
 	require.Nil(t, err)
 }

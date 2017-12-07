@@ -31,13 +31,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID, tSuite)
 	service := genService.(*Service)
+	// TODO needed?
 	// service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
-
-	// TODO the test sets up db too?
-	defer func() {
-		service.db.Close()
-		os.Remove(service.db.filename)
-	}()
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -98,12 +93,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbCount := conodes - 1
 	servers, el, gs := local.MakeHELS(conodes, skipchainSID, tSuite)
 	s := gs.(*Service)
-
-	// TODO the test sets up db too?
-	defer func() {
-		s.db.Close()
-		os.Remove(s.db.filename)
-	}()
 
 	sbs := make([]*SkipBlock, sbCount)
 	var err error
