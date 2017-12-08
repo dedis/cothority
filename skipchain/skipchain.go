@@ -68,6 +68,11 @@ func (s *Service) InitSkipBlockDB() error {
 	return nil
 }
 
+// Close closes the database, it's overrides the default Close in ServiceProcessor
+func (s *Service) Close() error {
+	return s.CloseDatabase()
+}
+
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
 // genesis-skipblock, that will create a new skipchain, or a new skipblock,
 // that will be added to an existing chain.
