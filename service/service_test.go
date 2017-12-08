@@ -78,4 +78,12 @@ func TestService_proof(t *testing.T) {
 	sym, err2 := ocs.DecodeKey(cothority.Suite, sc.X, write.Cs, symEnc.XhatEnc, writer.Secret)
 	log.ErrFatal(err2)
 	require.Equal(t, encKey, sym)
+
+	// GetReadRequests
+	requests, err := service.GetReadRequests(&ocs.GetReadRequests{
+		Start: wr.SB.Hash,
+		Count: 0,
+	})
+	log.ErrFatal(err)
+	require.Equal(t, 1, len(requests.Documents))
 }

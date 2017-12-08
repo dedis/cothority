@@ -377,17 +377,15 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 					"unknown block in ocs-skipchain")
 			}
 			if dataOCS.Read != nil {
-				if req.Count == 0 && !dataOCS.Read.DataID.Equal(doc) {
-					log.Lvl3("count == 0 and not interesting read found")
-					continue
+				if req.Count > 0 || dataOCS.Read.DataID.Equal(doc) {
+					doc := &ocs.ReadDoc{
+						Reader: dataOCS.Read.Signature.SignaturePath.Signer,
+						ReadID: current.Hash,
+						DataID: dataOCS.Read.DataID,
+					}
+					log.Lvl2("Found read-request from", doc.Reader)
+					reply.Documents = append(reply.Documents, doc)
 				}
-				doc := &ocs.ReadDoc{
-					Reader: dataOCS.Read.Signature.SignaturePath.Signer,
-					ReadID: current.Hash,
-					DataID: dataOCS.Read.DataID,
-				}
-				log.Lvl2("Found read-request from", doc.Reader)
-				reply.Documents = append(reply.Documents, doc)
 			}
 		}
 		if len(current.ForwardLink) > 0 {
