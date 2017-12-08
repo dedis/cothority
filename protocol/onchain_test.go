@@ -10,16 +10,16 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/group"
 	"github.com/dedis/kyber/share"
 	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
-var suite = group.MustSuite("Ed25519")
+var suite = suites.MustFind("Ed25519")
 
 func TestOnchain(t *testing.T) {
 	// 1 - share generation
@@ -35,13 +35,14 @@ func TestOnchain(t *testing.T) {
 
 	// 5.1.2 - Encryption
 	data := []byte("Very secret Message to be encrypted")
-	k := random.Bytes(16, random.Stream)
+	var k [16]byte
+	random.Bytes(k[:], random.New())
 
-	encData, err := aeadSeal(k, data)
+	encData, err := aeadSeal(k[:], data)
 	if err != nil {
 		t.Fatal(err)
 	}
-	U, Cs := EncodeKey(suite, X, k)
+	U, Cs := EncodeKey(suite, X, k[:])
 	// U and Cs is shared with everybody
 
 	// Reader's keypair
@@ -96,14 +97,14 @@ func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGe
 	points := make([]kyber.Point, nbrNodes)
 	// 1a - initialisation
 	for i := range scalars {
-		scalars[i] = suite.Scalar().Pick(random.Stream)
+		scalars[i] = suite.Scalar().Pick(suite.RandomStream())
 		points[i] = suite.Point().Mul(scalars[i], nil)
 	}
 
 	// 1b - key-sharing
 	for i := range dkgs {
 		dkgs[i], err = dkg.NewDistKeyGenerator(suite,
-			scalars[i], points, random.Stream, threshold)
+			scalars[i], points, threshold)
 		if err != nil {
 			return
 		}

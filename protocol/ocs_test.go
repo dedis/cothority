@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -74,7 +75,8 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	X := dks.Public()
 
 	// 2 - writer - Encrypt a symmetric key and publish U, Cs
-	k := random.Bytes(keylen, random.Stream)
+	k := make([]byte, keylen)
+	random.Bytes(k, random.New())
 	U, Cs := EncodeKey(tSuite, X, k)
 
 	// 3 - reader - Makes a request to U by giving his public key Xc
@@ -170,8 +172,8 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 // Output:
 //   - U - the schnorr commit
 //   - Cs - encrypted key-slices
-func EncodeKey(suite kyber.Group, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
-	r := suite.Scalar().Pick(random.Stream)
+func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
+	r := suite.Scalar().Pick(suite.RandomStream())
 	C := suite.Point().Mul(r, X)
 	log.Lvl3("C:", C.String())
 	U = suite.Point().Mul(r, nil)
@@ -179,7 +181,7 @@ func EncodeKey(suite kyber.Group, X kyber.Point, key []byte) (U kyber.Point, Cs 
 
 	for len(key) > 0 {
 		var kp kyber.Point
-		kp = suite.Point().Embed(key, random.Stream)
+		kp = suite.Point().Embed(key, suite.RandomStream())
 		log.Lvl3("Keypoint:", kp.String())
 		log.Lvl3("X:", X.String())
 		Cs = append(Cs, suite.Point().Add(C, kp))

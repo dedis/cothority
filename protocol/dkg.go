@@ -12,7 +12,6 @@ import (
 	"github.com/dedis/kyber"
 	dkg "github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -158,7 +157,7 @@ func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
 	o.DKG, err = dkg.NewDistKeyGenerator(cothority.Suite, o.keypair.Secret,
-		ssd.Publics, random.Stream, int(ssd.Threshold))
+		ssd.Publics, int(ssd.Threshold))
 	if err != nil {
 		return err
 	}
