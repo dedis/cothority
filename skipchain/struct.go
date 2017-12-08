@@ -308,11 +308,13 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		b.ForwardLink[i] = fl.Copy()
 	}
 	for i, child := range sb.ChildSL {
+		b.ChildSL[i] = make(SkipBlockID, len(child))
 		copy(b.ChildSL[i], child)
 	}
 	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
+
 	return b
 }
 
@@ -424,7 +426,7 @@ func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
-	sb, err := db.dbGet(sbID)
+	sb, err := db.get(sbID)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -458,7 +460,7 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 
 // Store stores the given SkipBlock in the service-list
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	sbOld, err := db.dbGet(sb.Hash)
+	sbOld, err := db.get(sb.Hash)
 	if err != nil {
 		log.Error("failed to get skipblock with error: " + err.Error())
 		return nil
@@ -478,12 +480,12 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 		if len(sb.ChildSL) > len(sbOld.ChildSL) {
 			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
 		}
-		err := db.dbStore(sbOld)
+		err := db.store(sbOld)
 		if err != nil {
 			log.Error(err.Error())
 		}
 	} else {
-		err := db.dbStore(sb)
+		err := db.store(sb)
 		if err != nil {
 			log.Error(err.Error())
 		}
@@ -749,7 +751,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 	return db.GetByID(sbID)
 }
 
-func (db *SkipBlockDB) dbStore(sb *SkipBlock) error {
+func (db *SkipBlockDB) store(sb *SkipBlock) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(skipblocksBucket))
 		key := sb.Hash
@@ -762,7 +764,7 @@ func (db *SkipBlockDB) dbStore(sb *SkipBlock) error {
 	})
 }
 
-func (db *SkipBlockDB) dbGet(sbID SkipBlockID) (*SkipBlock, error) {
+func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
 	var sb *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(skipblocksBucket))
@@ -785,7 +787,7 @@ func (db *SkipBlockDB) dbGet(sbID SkipBlockID) (*SkipBlock, error) {
 	return sb, err
 }
 
-func (db *SkipBlockDB) dbDump() (map[string]*SkipBlock, error) {
+func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
 	chains := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(skipblocksBucket))

@@ -129,6 +129,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			}
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
+
 		}
 		changed = append(changed, prop)
 
@@ -293,7 +294,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 // GetAllSkipchains returns a list of all known skipchains
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
 	// Write all known skipblocks to a map, thus removing double blocks.
-	chains, err := s.db.dbDump()
+	chains, err := s.db.dump()
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
