@@ -3,20 +3,23 @@ package service
 import (
 	"testing"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/group"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
+
+var tSuite = group.MustSuite("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m, 2)
 }
 
 func TestService_proof(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, roster, _ := local.GenTree(5, true)
@@ -41,7 +44,7 @@ func TestService_proof(t *testing.T) {
 
 	// Creating a write request
 	encKey := []byte{1, 2, 3}
-	write := ocs.NewWrite(network.Suite, sc.OCS.Hash, sc.X, readers, encKey)
+	write := ocs.NewWrite(cothority.Suite, sc.OCS.Hash, sc.X, readers, encKey)
 	write.Data = []byte{}
 	sigPath := darc.NewSignaturePath([]*darc.Darc{readers}, *writerI, darc.User)
 	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, writerS)
@@ -72,7 +75,7 @@ func TestService_proof(t *testing.T) {
 		Read: rr.SB.Hash,
 	})
 	log.ErrFatal(err)
-	sym, err2 := ocs.DecodeKey(network.Suite, sc.X, write.Cs, symEnc.XhatEnc, writer.Secret)
+	sym, err2 := ocs.DecodeKey(cothority.Suite, sc.X, write.Cs, symEnc.XhatEnc, writer.Secret)
 	log.ErrFatal(err2)
 	require.Equal(t, encKey, sym)
 }

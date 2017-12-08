@@ -9,12 +9,12 @@ import (
 	"crypto/sha256"
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func init() {
@@ -27,8 +27,8 @@ type OCS struct {
 	*onet.TreeNodeInstance
 	Shared *SharedSecret  // Shared represents the private key
 	Poly   *share.PubPoly // Represents all public keys
-	U      abstract.Point // U is the encrypted secret
-	Xc     abstract.Point // The client's public key
+	U      kyber.Point    // U is the encrypted secret
+	Xc     kyber.Point    // The client's public key
 	// Done receives a 'true'-value when the protocol finished successfully.
 	Done chan bool
 	Uis  []*share.PubShare // re-encrypted shares
@@ -70,19 +70,19 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	}
 
 	// Calculating proofs
-	si := network.Suite.Scalar().Pick(random.Stream)
-	uiHat := network.Suite.Point().Mul(network.Suite.Point().Add(r.U, r.Xc), si)
-	hiHat := network.Suite.Point().Mul(nil, si)
+	si := cothority.Suite.Scalar().Pick(random.Stream)
+	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(r.U, r.Xc))
+	hiHat := cothority.Suite.Point().Mul(si, nil)
 	hash := sha256.New()
 	ui.V.MarshalTo(hash)
 	uiHat.MarshalTo(hash)
 	hiHat.MarshalTo(hash)
-	ei := network.Suite.Scalar().SetBytes(hash.Sum(nil))
+	ei := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 
 	return o.SendToParent(&ReencryptReply{
 		Ui: ui,
 		Ei: ei,
-		Fi: network.Suite.Scalar().Add(si, network.Suite.Scalar().Mul(o.Shared.V, ei)),
+		Fi: cothority.Suite.Scalar().Add(si, cothority.Suite.Scalar().Mul(ei, o.Shared.V)),
 	})
 }
 
@@ -97,19 +97,19 @@ func (o *OCS) reencryptReply(rr []structReencryptReply) error {
 	}
 	for _, r := range rr {
 		// Verify proofs
-		ufi := network.Suite.Point().Mul(network.Suite.Point().Add(o.U, o.Xc), r.Fi)
-		uiei := network.Suite.Point().Mul(r.Ui.V, network.Suite.Scalar().Neg(r.Ei))
-		uiHat := network.Suite.Point().Add(ufi, uiei)
+		ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, o.Xc))
+		uiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), r.Ui.V)
+		uiHat := cothority.Suite.Point().Add(ufi, uiei)
 
-		gfi := network.Suite.Point().Mul(nil, r.Fi)
+		gfi := cothority.Suite.Point().Mul(r.Fi, nil)
 		gxi := o.Poly.Eval(r.Ui.I).V
-		hiei := network.Suite.Point().Mul(gxi, network.Suite.Scalar().Neg(r.Ei))
-		hiHat := network.Suite.Point().Add(gfi, hiei)
+		hiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), gxi)
+		hiHat := cothority.Suite.Point().Add(gfi, hiei)
 		hash := sha256.New()
 		r.Ui.V.MarshalTo(hash)
 		uiHat.MarshalTo(hash)
 		hiHat.MarshalTo(hash)
-		e := network.Suite.Scalar().SetBytes(hash.Sum(nil))
+		e := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
 		if e.Equal(r.Ei) {
 			o.Uis[r.Ui.I] = r.Ui
 		} else {
@@ -120,9 +120,9 @@ func (o *OCS) reencryptReply(rr []structReencryptReply) error {
 	return nil
 }
 
-func (o *OCS) getUI(U, Xc abstract.Point) (*share.PubShare, error) {
-	v := network.Suite.Point().Mul(U, o.Shared.V)
-	v.Add(v, network.Suite.Point().Mul(Xc, o.Shared.V))
+func (o *OCS) getUI(U, Xc kyber.Point) (*share.PubShare, error) {
+	v := cothority.Suite.Point().Mul(o.Shared.V, U)
+	v.Add(v, cothority.Suite.Point().Mul(o.Shared.V, Xc))
 	return &share.PubShare{
 		I: o.Shared.Index,
 		V: v,

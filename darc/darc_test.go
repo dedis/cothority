@@ -3,9 +3,9 @@ package darc
 import (
 	"testing"
 
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v1/log"
 )
 
 func TestNewDarc(t *testing.T) {

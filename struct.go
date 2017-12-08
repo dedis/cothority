@@ -9,16 +9,22 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onchain-secrets/darc"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/satori/go.uuid"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
+
+type suite interface {
+	kyber.Group
+	kyber.XOFFactory
+}
 
 // We need to register all messages so the network knows how to handle them.
 func init() {
@@ -74,7 +80,7 @@ func NewSkipChainURL(sb *skipchain.SkipBlock) *SkipChainURL {
 // nil is returned.
 func NewOCS(b []byte) *Transaction {
 	dw := &Transaction{}
-	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(network.Suite))
+	err := protobuf.DecodeWithConstructors(b, dw, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -99,7 +105,7 @@ func (dw *Transaction) String() string {
 // NewWrite is used by the writer to an onchain-secret skipchain
 // to encode his symmetric key under the collective public key created
 // by the DKG.
-// As this method uses `Pick` to encode the key, depending on the key-length
+// As this method uses `Embed` to encode the key, depending on the key-length
 // more than one point is needed to encode the data.
 //
 // Input:
@@ -112,30 +118,26 @@ func (dw *Transaction) String() string {
 // Output:
 //   - write - structure containing the encrypted key U, Cs and the NIZKP of
 //   it containing the reader-darc.
-func NewWrite(suite abstract.Suite, scid skipchain.SkipBlockID, X abstract.Point, reader *darc.Darc, key []byte) *Write {
+func NewWrite(suite suite, scid skipchain.SkipBlockID, X kyber.Point, reader *darc.Darc, key []byte) *Write {
 	wr := &Write{
 		Reader: *reader,
 	}
 	r := suite.Scalar().Pick(random.Stream)
-	// r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
-	// log.ErrFatal(err)
-	wr.U = suite.Point().Mul(nil, r)
+	C := suite.Point().Mul(r, X)
+	wr.U = suite.Point().Mul(r, nil)
 
 	// Create proof
-	rem := make([]byte, len(key))
-	copy(rem, key)
-	for len(rem) > 0 {
-		var kp abstract.Point
-		kp, rem = suite.Point().Pick(rem, random.Stream)
-		C := suite.Point().Mul(X, r)
-		wr.Cs = append(wr.Cs, C.Add(C, kp))
+	for len(key) > 0 {
+		kp := suite.Point().Embed(key, random.Stream)
+		wr.Cs = append(wr.Cs, suite.Point().Add(C, kp))
+		key = key[min(len(key), kp.EmbedLen()):]
 	}
 
-	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
-	wr.Ubar = suite.Point().Mul(gBar, r)
+	gBar := suite.Point().Pick(suite.XOF(scid))
+	wr.Ubar = suite.Point().Mul(r, gBar)
 	s := suite.Scalar().Pick(random.Stream)
-	w := suite.Point().Mul(nil, s)
-	wBar := suite.Point().Mul(gBar, s)
+	w := suite.Point().Mul(s, nil)
+	wBar := suite.Point().Mul(s, gBar)
 	hash := sha256.New()
 	for _, c := range wr.Cs {
 		c.MarshalTo(hash)
@@ -150,16 +152,23 @@ func NewWrite(suite abstract.Suite, scid skipchain.SkipBlockID, X abstract.Point
 	return wr
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // CheckProof verifies that the write-request has actually been created with
 // somebody having access to the secret key.
-func (wr *Write) CheckProof(suite abstract.Suite, scid skipchain.SkipBlockID) error {
-	gf := suite.Point().Mul(nil, wr.F)
-	ue := suite.Point().Mul(wr.U, suite.Scalar().Neg(wr.E))
+func (wr *Write) CheckProof(suite suite, scid skipchain.SkipBlockID) error {
+	gf := suite.Point().Mul(wr.F, nil)
+	ue := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.U)
 	w := suite.Point().Add(gf, ue)
 
-	gBar, _ := suite.Point().Pick(nil, suite.Cipher(scid))
-	gfBar := suite.Point().Mul(gBar, wr.F)
-	ueBar := suite.Point().Mul(wr.Ubar, suite.Scalar().Neg(wr.E))
+	gBar := suite.Point().Pick(suite.XOF(scid))
+	gfBar := suite.Point().Mul(wr.F, gBar)
+	ueBar := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.Ubar)
 	wBar := suite.Point().Add(gfBar, ueBar)
 
 	hash := sha256.New()
@@ -192,15 +201,15 @@ func (wr *Write) CheckProof(suite abstract.Suite, scid skipchain.SkipBlockID) er
 // Output:
 //   - key - the re-assembled key
 //   - err - an eventual error when trying to recover the data from the points
-func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, XhatEnc abstract.Point,
-	xc abstract.Scalar) (key []byte, err error) {
+func DecodeKey(suite suite, X kyber.Point, Cs []kyber.Point, XhatEnc kyber.Point,
+	xc kyber.Scalar) (key []byte, err error) {
 	log.Lvl3("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
 	log.Lvl3("xcInv:", xcInv)
 	sum := suite.Scalar().Add(xc, xcInv)
 	log.Lvl3("xc + xcInv:", sum, "::", xc)
 	log.Lvl3("X:", X)
-	XhatDec := suite.Point().Mul(X, xcInv)
+	XhatDec := suite.Point().Mul(xcInv, X)
 	log.Lvl3("XhatDec:", XhatDec)
 	log.Lvl3("XhatEnc:", XhatEnc)
 	Xhat := suite.Point().Add(XhatEnc, XhatDec)
@@ -240,8 +249,9 @@ func DecodeKey(suite abstract.Suite, X abstract.Point, Cs []abstract.Point, Xhat
 // - a write
 // - a key-update
 // - a write and a key-update
-// additionally it can hold a slice of bytes with any data that the user wants to
+// Additionally, it can hold a slice of bytes with any data that the user wants to
 // add to bind to that transaction.
+// Every Transaction must have a Unix timestamp.
 type Transaction struct {
 	// Write holds an eventual write-request with a document
 	Write *Write
@@ -252,6 +262,8 @@ type Transaction struct {
 	Darc *darc.Darc
 	// Meta is any free-form data in that skipblock
 	Meta *[]byte
+	// Unix timestamp to record the transaction creation time
+	Timestamp int64
 }
 
 // Write stores the data and the encrypted secret
@@ -259,20 +271,20 @@ type Write struct {
 	// Data should be encrypted by the application under the symmetric key in U and Cs
 	Data []byte
 	// U is the encrypted random value for the ElGamal encryption
-	U abstract.Point
+	U kyber.Point
 	// Ubar, E and f will be used by the server to verify the writer did
 	// correctly encrypt the key. It binds the policy (the darc) with the
 	// cyphertext.
 	// Ubar is used for the log-equality proof
-	Ubar abstract.Point
+	Ubar kyber.Point
 	// E is the non-interactive challenge as scalar
-	E abstract.Scalar
+	E kyber.Scalar
 	// f is the proof - written in uppercase here so it is an exported field,
 	// but in the OCS-paper it's lowercase.
-	F abstract.Scalar
+	F kyber.Scalar
 	// Cs are the ElGamal parts for the symmetric key material (might
 	// also contain an IV)
-	Cs []abstract.Point
+	Cs []kyber.Point
 	// ExtraData is clear text and application-specific
 	ExtraData *[]byte
 	// Reader points to a darc where the reading-rights are stored
@@ -310,7 +322,7 @@ type CreateSkipchainsRequest struct {
 // CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
 type CreateSkipchainsReply struct {
 	OCS *skipchain.SkipBlock
-	X   abstract.Point
+	X   kyber.Point
 }
 
 // GetDarcPath returns the shortest path from the base darc to a darc
@@ -378,7 +390,7 @@ type SharedPublicRequest struct {
 
 // SharedPublicReply sends back the shared public key.
 type SharedPublicReply struct {
-	X abstract.Point
+	X kyber.Point
 }
 
 // DecryptKeyRequest is sent to the service with the read-request
@@ -389,9 +401,9 @@ type DecryptKeyRequest struct {
 // DecryptKeyReply is sent back to the api with the key encrypted under the
 // reader's public key.
 type DecryptKeyReply struct {
-	Cs      []abstract.Point
-	XhatEnc abstract.Point
-	X       abstract.Point
+	Cs      []kyber.Point
+	XhatEnc kyber.Point
+	X       kyber.Point
 }
 
 // GetReadRequests asks for a list of requests

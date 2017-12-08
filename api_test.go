@@ -3,13 +3,16 @@ package ocs_test
 import (
 	"testing"
 
+	"github.com/dedis/kyber/group"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	_ "github.com/dedis/onchain-secrets/service"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
 )
+
+var tSuite = group.MustSuite("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -33,7 +36,7 @@ func TestUpdateDarc(t *testing.T) {
 	darc2.AddUser(user2ID)
 	darc2.SetEvolution(darc1, nil, owner)
 
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	_, roster, _ := local.GenTree(3, true)

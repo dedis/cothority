@@ -5,23 +5,18 @@
 package main
 
 import (
+	"encoding/hex"
+	"errors"
+	"fmt"
 	"os"
 
-	"gopkg.in/dedis/onet.v1/app"
-
-	"encoding/hex"
-
-	"io/ioutil"
-
-	"fmt"
-
-	"errors"
-
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onchain-secrets"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -170,17 +165,14 @@ func mngJoin(c *cli.Context) error {
 }
 
 func keypair(c *cli.Context) error {
-	//kp := config.NewKeyPair(network.Suite)
-	r, err := crypto.StringHexToScalar(network.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
-	privStr, err := crypto.ScalarToStringHex(network.Suite, r)
-	//privStr, err := crypto.ScalarToString64(network.Suite, kp.Secret)
+	r, err := encoding.StringHexToScalar(cothority.Suite, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156")
+	privStr, err := encoding.ScalarToStringHex(cothority.Suite, r)
 	if err != nil {
 		return err
 	}
 	log.ErrFatal(err)
-	pub := network.Suite.Point().Mul(nil, r)
-	pubStr, err := crypto.PubToStringHex(network.Suite, pub)
-	//pubStr, err := crypto.PubToString64(network.Suite, kp.Public)
+	pub := cothority.Suite.Point().Mul(r, nil)
+	pubStr, err := encoding.PointToStringHex(cothority.Suite, pub)
 	if err != nil {
 		return err
 	}
@@ -189,25 +181,28 @@ func keypair(c *cli.Context) error {
 }
 
 func write(c *cli.Context) error {
-	if c.NArg() < 2 {
-		log.Fatal("Please give the following: file reader1[,reader2,...]")
-	}
-	cfg := loadConfigOrFail(c)
-	file := c.Args().Get(0)
+	log.Fatal("Not implemented yet (anymore).")
 
-	log.Info("Going to write file to skipchain")
-	data, err := ioutil.ReadFile(file)
-	log.ErrFatal(err)
-	//symKey := random.Bytes(32, random.Stream)
-	symKey, err := hex.DecodeString("294AEDA9694E0391EEC2D8C133BEBBFF")
-	log.ErrFatal(err)
-	cipher := network.Suite.Cipher(symKey)
-	encData := cipher.Seal(nil, data)
-	log.Print("TODO", cfg, encData)
+	// if c.NArg() < 2 {
+	// 	log.Fatal("Please give the following: file reader1[,reader2,...]")
+	// }
+	// cfg := loadConfigOrFail(c)
+	// file := c.Args().Get(0)
+
+	// log.Info("Going to write file to skipchain")
+	// data, err := ioutil.ReadFile(file)
+	// log.ErrFatal(err)
+
+	// symKey, err := hex.DecodeString("294AEDA9694E0391EEC2D8C133BEBBFF")
+	// log.ErrFatal(err)
+
+	// encData, err := aeadSeal(symKey, data)
+	// log.ErrFatal(err)
+
 	// darc := ocs.NewDarc(cfg.SkipChainURL.Genesis)
-	// darc.Public = []abstract.Point{}
+	// darc.Public = []kyber.Point{}
 	// for _, r := range c.Args().Tail() {
-	// pub, err := crypto.StringHexToPub(network.Suite, r)
+	// pub, err := encoding.StringHexToPub(cothority.Suite, r)
 	// log.ErrFatal(err)
 	// darc.Public = append(darc.Public, pub)
 	// }
@@ -224,38 +219,40 @@ func list(c *cli.Context) error {
 }
 
 func read(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 2 {
-		log.Fatal("Please give the following: fileID private_key")
-	}
-	fileID, err := hex.DecodeString(c.Args().Get(0))
-	log.ErrFatal(err)
-	log.Infof("Requesting read-access to file %x", fileID)
-	priv, err := crypto.StringHexToScalar(network.Suite, c.Args().Get(1))
-	log.ErrFatal(err)
-	pub := network.Suite.Point().Mul(nil, priv)
-	log.Printf("Private: %s\nPublic: %s", priv, pub)
-	cl := ocs.NewClient()
-	sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
-	log.ErrFatal(cerr)
-	if sb == nil {
-		log.Fatal("Got empty skipblock - read refused")
-	}
+	log.Fatal("Not implemented yet (anymore).")
 
-	log.Info("Asking to re-encrypt the symmetric key")
-	key, cerr := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
-	log.ErrFatal(cerr)
-	fileEnc, cerr := cl.GetData(cfg.SkipChainURL, fileID)
-	log.ErrFatal(cerr)
-	cipher := network.Suite.Cipher(key)
-	file, err := cipher.Open(nil, fileEnc)
-	log.ErrFatal(err)
+	// cfg := loadConfigOrFail(c)
+	// if c.NArg() < 2 {
+	// 	log.Fatal("Please give the following: fileID private_key")
+	// }
+	// fileID, err := hex.DecodeString(c.Args().Get(0))
+	// log.ErrFatal(err)
+	// log.Infof("Requesting read-access to file %x", fileID)
+	// priv, err := encoding.StringHexToScalar(cothority.Suite, c.Args().Get(1))
+	// log.ErrFatal(err)
+	// pub := cothority.Suite.Point().Mul(priv, nil)
+	// log.Printf("Private: %s\nPublic: %s", priv, pub)
+	// cl := ocs.NewClient()
+	// sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
+	// log.ErrFatal(cerr)
+	// if sb == nil {
+	// 	log.Fatal("Got empty skipblock - read refused")
+	// }
 
-	log.Info("Outputting file")
-	if out := c.String("o"); out != "" {
-		return ioutil.WriteFile(out, file, 0660)
-	}
-	fmt.Println(file)
+	// log.Info("Asking to re-encrypt the symmetric key")
+	// key, cerr := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
+	// log.ErrFatal(cerr)
+	// fileEnc, cerr := cl.GetData(cfg.SkipChainURL, fileID)
+	// log.ErrFatal(cerr)
+
+	// file, err := aeadOpen(key, fileEnc)
+	// log.ErrFatal(err)
+
+	// log.Info("Outputting file")
+	// if out := c.String("o"); out != "" {
+	// 	return ioutil.WriteFile(out, file, 0660)
+	// }
+	// fmt.Println(file)
 	return nil
 }
 

@@ -3,10 +3,10 @@ package ocs
 import (
 	"testing"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 func TestWriteProof(t *testing.T) {
@@ -15,12 +15,12 @@ func TestWriteProof(t *testing.T) {
 	scid := []byte{4, 5, 6}
 	reader := darc.NewDarc(nil, nil, nil)
 	reader.Description = &[]byte{7, 8, 9}
-	kp := config.NewKeyPair(network.Suite)
-	wr := NewWrite(network.Suite, scid, kp.Public, reader, encryptionKey)
+	kp := key.NewKeyPair(cothority.Suite)
+	wr := NewWrite(cothority.Suite, scid, kp.Public, reader, encryptionKey)
 	wr.Data = encryptedData
-	require.Nil(t, wr.CheckProof(network.Suite, scid))
+	require.Nil(t, wr.CheckProof(cothority.Suite, scid))
 	reader = darc.NewDarc(nil, nil, nil)
 	reader.Description = &[]byte{10, 11, 12}
 	wr.Reader = *reader
-	require.NotNil(t, wr.CheckProof(network.Suite, scid))
+	require.NotNil(t, wr.CheckProof(cothority.Suite, scid))
 }

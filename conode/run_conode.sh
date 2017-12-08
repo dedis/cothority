@@ -11,7 +11,7 @@ MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
 DEDIS_PATH=$gopath/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/onchain-secrets
-ONET_PATH=$gopath/src/gopkg.in/dedis/onet.v1
+ONET_PATH=$gopath/src/github.com/dedis/onet
 CONODE_PATH=$COTHORITY_PATH/conode
 CONODE_GO=github.com/dedis/onchain-secrets/conode
 VERSION_SUB="1"
@@ -276,7 +276,7 @@ EOF
 }
 
 test(){
-	. $gopath/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+	. $ONET_PATH/app/libtest.sh
 
 	if [ "$1" != "-update_rec" ]; then
 		testUpdate

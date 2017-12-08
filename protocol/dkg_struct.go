@@ -10,10 +10,10 @@ so that it can find out who sent the message.
 import (
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/share/dkg"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
 // NameDKG can be used from other packages to refer to this protocol.
@@ -31,9 +31,9 @@ func init() {
 // and decryption.
 type SharedSecret struct {
 	Index   int
-	V       abstract.Scalar
-	X       abstract.Point
-	Commits []abstract.Point
+	V       kyber.Scalar
+	X       kyber.Point
+	Commits []kyber.Point
 }
 
 // NewSharedSecret takes an initialized DistKeyGenerator and returns the
@@ -50,7 +50,7 @@ func NewSharedSecret(dkg *dkg.DistKeyGenerator) (*SharedSecret, error) {
 		return nil, err
 	}
 	return &SharedSecret{
-		Index:   dkg.Index(),
+		Index:   dks.Share.I,
 		V:       dks.Share.V,
 		X:       dks.Public(),
 		Commits: dks.Commits,
@@ -71,7 +71,7 @@ type structInit struct {
 
 // InitReply returns the public key of that node.
 type InitReply struct {
-	Public abstract.Point
+	Public kyber.Point
 }
 
 type structInitReply struct {
@@ -81,7 +81,7 @@ type structInitReply struct {
 
 // StartDeal is used by the leader to initiate the Deals.
 type StartDeal struct {
-	Publics   []abstract.Point
+	Publics   []kyber.Point
 	Threshold uint32
 }
 
@@ -133,7 +133,7 @@ type structVerification struct {
 // VerificationReply contains the public key or nil if the
 // verification failed
 type VerificationReply struct {
-	Public abstract.Point
+	Public kyber.Point
 }
 
 type structVerificationReply struct {

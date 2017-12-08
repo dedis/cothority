@@ -10,9 +10,7 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OCSProto;
 import com.google.protobuf.ByteString;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;

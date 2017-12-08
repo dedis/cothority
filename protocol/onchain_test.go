@@ -1,26 +1,31 @@
 package protocol
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"errors"
+	"io"
 	"testing"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/group"
+	"github.com/dedis/kyber/share"
+	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share"
-	"gopkg.in/dedis/crypto.v0/share/dkg"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
-var suite = network.Suite
+var suite = group.MustSuite("Ed25519")
 
 func TestOnchain(t *testing.T) {
 	// 1 - share generation
 	nbrPeers := 5
 	threshold := 3
-	dkgs, err := CreateDKGs(suite, nbrPeers, threshold)
+	dkgs, err := CreateDKGs(suite.(dkg.Suite), nbrPeers, threshold)
 	log.ErrFatal(err)
 
 	// Get aggregate public share
@@ -30,24 +35,25 @@ func TestOnchain(t *testing.T) {
 
 	// 5.1.2 - Encryption
 	data := []byte("Very secret Message to be encrypted")
-	key := random.Bytes(16, random.Stream)
+	k := random.Bytes(16, random.Stream)
 
-	cipher := suite.Cipher(key)
-	encData := cipher.Seal(nil, data)
-
-	U, Cs := EncodeKey(suite, X, key)
+	encData, err := aeadSeal(k, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	U, Cs := EncodeKey(suite, X, k)
 	// U and Cs is shared with everybody
 
 	// Reader's keypair
-	xc := config.NewKeyPair(network.Suite)
+	xc := key.NewKeyPair(cothority.Suite)
 
 	// Decryption
 	Ui := make([]*share.PubShare, nbrPeers)
 	for i := range Ui {
 		dks, err := dkgs[i].DistKeyShare()
 		log.ErrFatal(err)
-		v := suite.Point().Mul(U, dks.Share.V)
-		v.Add(v, suite.Point().Mul(xc.Public, dks.Share.V))
+		v := suite.Point().Mul(dks.Share.V, U)
+		v.Add(v, suite.Point().Mul(dks.Share.V, xc.Public))
 		Ui[i] = &share.PubShare{
 			I: i,
 			V: v,
@@ -63,10 +69,11 @@ func TestOnchain(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Extract the message - keyHat is the recovered key
-	cipherHat := suite.Cipher(keyHat)
 	log.Lvl2(encData)
-	dataHat, err := cipherHat.Open(nil, encData)
-	log.ErrFatal(err)
+	dataHat, err := aeadOpen(keyHat, encData)
+	if err != nil {
+		t.Fatal(err)
+	}
 	require.Equal(t, data, dataHat)
 	log.Lvl1("Original data", string(data))
 	log.Lvl1("Recovered data", string(dataHat))
@@ -82,15 +89,15 @@ func TestOnchain(t *testing.T) {
 // Output:
 //   - dkgs - a slice of dkg-structures
 //   - err - an eventual error
-func CreateDKGs(suite abstract.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGenerator, err error) {
+func CreateDKGs(suite dkg.Suite, nbrNodes, threshold int) (dkgs []*dkg.DistKeyGenerator, err error) {
 	// 1 - share generation
 	dkgs = make([]*dkg.DistKeyGenerator, nbrNodes)
-	scalars := make([]abstract.Scalar, nbrNodes)
-	points := make([]abstract.Point, nbrNodes)
+	scalars := make([]kyber.Scalar, nbrNodes)
+	points := make([]kyber.Point, nbrNodes)
 	// 1a - initialisation
 	for i := range scalars {
 		scalars[i] = suite.Scalar().Pick(random.Stream)
-		points[i] = suite.Point().Mul(nil, scalars[i])
+		points[i] = suite.Point().Mul(scalars[i], nil)
 	}
 
 	// 1b - key-sharing
@@ -158,4 +165,56 @@ func CreateDKGs(suite abstract.Suite, nbrNodes, threshold int) (dkgs []*dkg.Dist
 		}
 	}
 	return
+}
+
+// These functions encapsulate the kind-of messy-to-use
+// Go stdlib AEAD functions. We used to use the AEAD from crypto.v0,
+// but it has been removed in preference to the standard one for now.
+//
+// If we want to use it in more places, it should be cleaned up,
+// and moved to a permanent home.
+
+// This suggested length is from https://godoc.org/crypto/cipher#NewGCM example
+const nonceLen = 12
+
+func aeadSeal(symKey, data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(symKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Never use more than 2^32 random nonces with a given key because of the risk of a repeat.
+	nonce := make([]byte, nonceLen)
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	encData := aesgcm.Seal(nil, nonce, data, nil)
+	encData = append(encData, nonce...)
+	return encData, nil
+}
+
+func aeadOpen(key, ciphertext []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	log.ErrFatal(err)
+
+	if len(ciphertext) < 12 {
+		return nil, errors.New("ciphertext too short")
+	}
+	nonce := ciphertext[len(ciphertext)-nonceLen:]
+	out, err := aesgcm.Open(nil, nonce, ciphertext[0:len(ciphertext)-nonceLen], nil)
+	return out, err
 }

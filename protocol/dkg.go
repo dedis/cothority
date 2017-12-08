@@ -6,17 +6,15 @@ paper-draft about onchain-secrets (called BlockMage).
 */
 
 import (
-	"fmt"
-
 	"errors"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share/dkg"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func init() {
@@ -30,8 +28,8 @@ type SetupDKG struct {
 	Threshold uint32
 
 	nodes   []*onet.TreeNode
-	keypair *config.KeyPair
-	publics []abstract.Point
+	keypair *key.Pair
+	publics []kyber.Point
 	// Whether we started the `DKG.SecretCommits`
 	commit bool
 	Wait   bool
@@ -50,7 +48,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &SetupDKG{
 		TreeNodeInstance: n,
 		Threshold:        2,
-		keypair:          config.NewKeyPair(network.Suite),
+		keypair:          key.NewKeyPair(cothority.Suite),
 		Done:             make(chan bool, 1),
 		nodes:            n.List(),
 	}
@@ -64,7 +62,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	o.publics = make([]abstract.Point, len(o.nodes))
+	o.publics = make([]kyber.Point, len(o.nodes))
 	return o, nil
 }
 
@@ -77,16 +75,30 @@ func (o *SetupDKG) Start() error {
 
 // Dispatch takes care for channel-messages that need to be treated in the correct order.
 func (o *SetupDKG) Dispatch() error {
-	o.allStartDeal(<-o.structStartDeal)
+	err := o.allStartDeal(<-o.structStartDeal)
+	if err != nil {
+		return err
+	}
 	for _ = range o.publics[1:] {
-		o.allDeal(<-o.structDeal)
+		err := o.allDeal(<-o.structDeal)
+		if err != nil {
+			return err
+		}
 	}
 	l := len(o.publics)
 	for i := 0; i < l*(l-1); i++ {
-		o.allResponse(<-o.structResponse)
+		// This is expected to return some errors, so do not stop on them.
+		err := o.allResponse(<-o.structResponse)
+		if err != nil && err.Error() != "vss: already existing response from same origin" &&
+			err.Error() != "dkg: can't give SecretCommits if deal not certified" {
+			return err
+		}
 	}
 	for i := 0; i < l; i++ {
-		o.allSecretCommit(<-o.structSecretCommit)
+		err := o.allSecretCommit(<-o.structSecretCommit)
+		if err != nil {
+			return err
+		}
 	}
 
 	if o.Wait {
@@ -101,10 +113,11 @@ func (o *SetupDKG) Dispatch() error {
 
 	if o.DKG.Finished() {
 		o.Done <- true
-	} else {
-		log.Error("protocol is finished but dkg is not!")
+		return nil
 	}
-	return nil
+	err = errors.New("protocol is finished but dkg is not")
+	log.Error(err)
+	return err
 }
 
 // SharedSecret returns the necessary information for doing shared
@@ -144,12 +157,12 @@ func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
-	o.DKG, err = dkg.NewDistKeyGenerator(network.Suite, o.keypair.Secret,
+	o.DKG, err = dkg.NewDistKeyGenerator(cothority.Suite, o.keypair.Secret,
 		ssd.Publics, random.Stream, int(ssd.Threshold))
-	o.publics = ssd.Publics
 	if err != nil {
 		return err
 	}
+	o.publics = ssd.Publics
 	deals, err := o.DKG.Deals()
 	if err != nil {
 		return err
@@ -180,7 +193,8 @@ func (o *SetupDKG) allResponse(resp structResponse) error {
 		return err
 	}
 	if just != nil {
-		return fmt.Errorf("Got a justification: %v", just)
+		log.Warn(o.Name(), "Got a justification: ", just)
+		return nil
 	}
 
 	commit, err := o.DKG.SecretCommits()
@@ -188,17 +202,18 @@ func (o *SetupDKG) allResponse(resp structResponse) error {
 		o.commit = true
 		return o.fullBroadcast(&SecretCommit{commit})
 	}
-	return errors.New("not enough responses yet")
+	return err
 }
 
 func (o *SetupDKG) allSecretCommit(comm structSecretCommit) error {
 	log.Lvl3(o.Name(), comm)
 	compl, err := o.DKG.ProcessSecretCommits(comm.SecretCommit.SecretCommit)
 	if err != nil {
+		log.Error(o.Name(), err)
 		return err
 	}
 	if compl != nil {
-		return fmt.Errorf("got a complaint: %v", compl)
+		log.Warn("got a complaint: ", compl)
 	}
 	return nil
 }

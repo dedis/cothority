@@ -1,8 +1,8 @@
 package darc
 
 import (
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet/network"
 )
 
 func init() {
@@ -65,7 +65,7 @@ type Identity struct {
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
 type IdentityEd25519 struct {
-	Point abstract.Point
+	Point kyber.Point
 }
 
 // IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
@@ -100,6 +100,6 @@ type Signer struct {
 
 // Ed25519Signer holds a public and private keys necessary to sign Darcs
 type Ed25519Signer struct {
-	Point  abstract.Point
-	Secret abstract.Scalar
+	Point  kyber.Point
+	Secret kyber.Scalar
 }

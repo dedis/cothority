@@ -11,13 +11,13 @@ This part of the service runs on the client or the app.
 import (
 	"errors"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onchain-secrets/darc"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 // Client is a structure to communicate with the OCS service
@@ -32,7 +32,7 @@ type Client struct {
 // NewClient instantiates a new ocs.Client
 func NewClient() *Client {
 	return &Client{
-		Client: onet.NewClient(ServiceName),
+		Client: onet.NewClient(ServiceName, cothority.Suite),
 		sbc:    skipchain.NewClient(),
 	}
 }
@@ -109,7 +109,7 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 		return
 	}
 
-	write := NewWrite(network.Suite, ocs.Genesis, shared.X, acl, symKey)
+	write := NewWrite(cothority.Suite, ocs.Genesis, shared.X, acl, symKey)
 	write.Data = encData
 	wr := &WriteRequest{
 		Write:   *write,
@@ -131,7 +131,7 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //  - data [skipchain.SkipBlockID] - the hash of the write-request where the
 //    data is stored
-//  - reader [abstract.Scalar] - the private key of the reader. It is used to
+//  - reader [kyber.Scalar] - the private key of the reader. It is used to
 //    sign the request to authenticate to the skipchain.
 //
 // Output:
@@ -139,8 +139,8 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 //    skipchain if it accepted the signature.
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
 func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
-	reader abstract.Scalar) (sb *skipchain.SkipBlock, cerr onet.ClientError) {
-	sig, err := crypto.SignSchnorr(network.Suite, reader, dataID)
+	reader kyber.Scalar) (sb *skipchain.SkipBlock, cerr onet.ClientError) {
+	sig, err := schnorr.Sign(cothority.Suite, reader, dataID)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
 	}
@@ -168,13 +168,13 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 // Input:
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //  - readID [skipchain.SkipBlockID] - the ID of the successful read-request
-//  - reader [abstract.Scalar] - the private key of the reader. It will be used to
+//  - reader [kyber.Scalar] - the private key of the reader. It will be used to
 //    decrypt the symmetric key.
 //
 // Output:
 //  - sym [[]byte] - the decrypted symmetric key
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlockID, reader abstract.Scalar) (sym []byte,
+func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlockID, reader kyber.Scalar) (sym []byte,
 	cerr onet.ClientError) {
 	request := &DecryptKeyRequest{
 		Read: readID,
@@ -187,7 +187,7 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 
 	log.LLvl2("Got decryption key")
 	var err error
-	sym, err = DecodeKey(network.Suite, reply.X,
+	sym, err = DecodeKey(cothority.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, reader)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
@@ -199,7 +199,7 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 // the data from the skipchain. To decode the data, the caller has to have a
 // decrypted symmetric key, then he can decrypt the data with:
 //
-//   cipher := network.Suite.Cipher(key)
+//   cipher := cothority.Suite.Cipher(key)
 //   data, err := cipher.Open(nil, encData)
 //
 // Input:

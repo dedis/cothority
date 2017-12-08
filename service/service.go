@@ -10,28 +10,31 @@ import (
 
 	"bytes"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"sync"
 	"time"
 
 	"math/rand"
 
+	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/share"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onchain-secrets/protocol"
 	"github.com/dedis/protobuf"
-	"gopkg.in/dedis/cothority.v1/messaging"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/share"
 )
 
 // Used for tests
 var templateID onet.ServiceID
 
 const propagationTimeout = 10000
+
+const timestampRange = 60
 
 func init() {
 	network.RegisterMessage(Storage{})
@@ -77,7 +80,8 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 
 	log.Lvlf2("Creating OCS-skipchain with darc %x", req.Writers.GetID())
 	genesis := &ocs.Transaction{
-		Darc: &req.Writers,
+		Darc:      &req.Writers,
+		Timestamp: time.Now().Unix(),
 	}
 	genesisBuf, err := protobuf.Encode(genesis)
 	if err != nil {
@@ -120,7 +124,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 			s.saveMutex.Unlock()
 			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		}
-		s.Storage.Polys[string(reply.OCS.Hash)] = share.NewPubPoly(network.Suite, network.Suite.Point().Base(), dks.Commits)
+		s.Storage.Polys[string(reply.OCS.Hash)] = share.NewPubPoly(cothority.Suite, cothority.Suite.Point().Base(), dks.Commits)
 		s.saveMutex.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout * time.Millisecond):
@@ -148,7 +152,8 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
 	dataOCS := &ocs.Transaction{
-		Darc: &req.Darc,
+		Darc:      &req.Darc,
+		Timestamp: time.Now().Unix(),
 	}
 	s.saveMutex.Lock()
 	ocsBunch := s.Storage.OCSs.GetBunch(req.OCS)
@@ -230,8 +235,9 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Didn't find block-skipchain")
 	}
 	dataOCS := &ocs.Transaction{
-		Write: &req.Write,
-		Darc:  req.Readers,
+		Write:     &req.Write,
+		Darc:      req.Readers,
+		Timestamp: time.Now().Unix(),
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
@@ -306,7 +312,8 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature: "+err.Error())
 	}
 	dataOCS := &ocs.Transaction{
-		Read: &req.Read,
+		Read:      &req.Read,
+		Timestamp: time.Now().Unix(),
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
@@ -451,7 +458,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	}
 	log.Lvl3("Waiting for end of ocs-protocol")
 	<-ocsProto.Done
-	reply.XhatEnc, err = share.RecoverCommit(network.Suite, ocsProto.Uis,
+	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		nodes-1, nodes)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
@@ -671,6 +678,17 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		return false
 	}
 
+	unixNow := time.Now().Unix()
+	unixDifference := unixNow - dataOCS.Timestamp
+	if unixDifference < 0 {
+		unixDifference = -unixDifference
+	}
+	if unixDifference > timestampRange {
+		log.Lvl3("Difference in time is too high - now: %v, timestamp: %v",
+			unixNow, dataOCS.Timestamp)
+		return false
+	}
+
 	if write := dataOCS.Write; write != nil {
 		// Write has to check if the signature comes from a valid writer.
 		log.Lvl2("Checking the proof of the writer knowing r.")
@@ -804,7 +822,7 @@ func (s *Service) tryLoad() error {
 // newTemplate receives the context and a path where it can write its
 // configuration, if desired. As we don't know when the service will exit,
 // we need to save the configuration on our own from time to time.
-func newService(c *onet.Context) onet.Service {
+func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
@@ -817,7 +835,8 @@ func newService(c *onet.Context) onet.Service {
 		s.DecryptKeyRequest, s.SharedPublic,
 		s.GetBunches, s.UpdateDarc, s.GetDarcPath,
 		s.GetLatestDarc); err != nil {
-		log.ErrFatal(err, "Couldn't register messages")
+		log.Error("Couldn't register messages", err)
+		return nil, err
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)
 	var err error
@@ -825,6 +844,7 @@ func newService(c *onet.Context) onet.Service {
 	log.ErrFatal(err)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
+		return nil, err
 	}
-	return s
+	return s, nil
 }

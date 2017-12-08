@@ -5,10 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onchain-secrets"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -36,7 +37,7 @@ func loadConfig(c *cli.Context) (cfg *ocsConfig, loaded bool) {
 		}
 		log.ErrFatal(err)
 	}
-	_, msg, err := network.Unmarshal(buf)
+	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ocsConfig)
 	if !loaded {
@@ -87,7 +88,7 @@ func getGroup(c *cli.Context) *app.Group {
 	gr, err := os.Open(gfile)
 	log.ErrFatal(err)
 	defer gr.Close()
-	groups, err := app.ReadGroupDescToml(gr)
+	groups, err := app.ReadGroupDescToml(gr, cothority.Suite)
 	log.ErrFatal(err)
 	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
 		log.Fatal("No servers found in roster from", gfile)

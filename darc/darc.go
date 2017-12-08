@@ -9,19 +9,17 @@ description of who is allowed or not to access a certain resource.
 package darc
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 
-	"bytes"
-	"crypto/sha256"
-
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/ed25519"
-	"gopkg.in/dedis/crypto.v0/sign"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
 )
 
 // NewDarc initialises a darc-structure given its owners and users
@@ -292,7 +290,7 @@ func (ds *Signature) Verify(msg []byte, base *Darc) error {
 	}
 	// TODO: use correct signer interface
 	pub := ds.SignaturePath.Signer.Ed25519.Point
-	return sign.VerifySchnorr(network.Suite, pub, hash, ds.Signature)
+	return schnorr.Verify(cothority.Suite, pub, hash, ds.Signature)
 }
 
 // sigHash returns the hash needed to create or verify a DarcSignature.
@@ -417,13 +415,13 @@ func (s *Signer) Sign(msg []byte) ([]byte, error) {
 		if err != nil {
 			return nil, errors.New("could not retrieve a private key")
 		}
-		return sign.Schnorr(ed25519.NewAES128SHA256Ed25519(false), key, msg)
+		return schnorr.Sign(cothority.Suite, key, msg)
 	}
 	return nil, errors.New("signer is of unknown type")
 }
 
 // GetPrivate returns the private key, if one exists.
-func (s *Signer) GetPrivate() (abstract.Scalar, error) {
+func (s *Signer) GetPrivate() (kyber.Scalar, error) {
 	if s.Ed25519 != nil {
 		if s.Ed25519.Secret != nil {
 			return s.Ed25519.Secret, nil
@@ -457,7 +455,7 @@ func NewDarcIdentity(id ID) *IdentityDarc {
 }
 
 // NewEd25519Identity creates a new ed25519 identity given a public-key point
-func NewEd25519Identity(point abstract.Point) *IdentityEd25519 {
+func NewEd25519Identity(point kyber.Point) *IdentityEd25519 {
 	return &IdentityEd25519{
 		Point: point,
 	}
@@ -465,9 +463,9 @@ func NewEd25519Identity(point abstract.Point) *IdentityEd25519 {
 
 // NewEd25519Signer initializes a new Ed25519Signer given a public and private keys.
 // If any of the given values is nil or both are nil, then a new key pair is generated.
-func NewEd25519Signer(point abstract.Point, secret abstract.Scalar) *Ed25519Signer {
+func NewEd25519Signer(point kyber.Point, secret kyber.Scalar) *Ed25519Signer {
 	if point == nil || secret == nil {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		point, secret = kp.Public, kp.Secret
 	}
 	return &Ed25519Signer{

@@ -13,10 +13,13 @@ import (
 
 	"time"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber/group"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
+
+var tSuite = group.MustSuite("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -33,7 +36,7 @@ func TestSetupDKG(t *testing.T) {
 
 func setupDKG(t *testing.T, nbrNodes int) {
 	log.Lvl1("Running", nbrNodes, "nodes")
-	local := onet.NewLocalTest()
+	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	log.Lvl3(tree.Dump())

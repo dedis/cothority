@@ -3,10 +3,10 @@ package main
 import (
 	"testing"
 
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/onet/log"
 )
 
 func TestMain(m *testing.M) {
@@ -15,19 +15,28 @@ func TestMain(m *testing.M) {
 
 func TestPriv(t *testing.T) {
 	for i := 0; i < 10; i++ {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		priv := kp.Secret
+		b, _ := priv.MarshalBinary()
+		if len(b) != 32 {
+			t.Fatal("wrong marshal len", len(b))
+		}
 		privStr := priv.String()
+		if len(privStr) != 64 {
+			t.Fatal("privStr is too short: ", len(privStr))
+		}
 		log.Lvlf2("privStr: %x", privStr)
-		privStr2, err := crypto.ScalarToStringHex(network.Suite, priv)
+
+		privStr2, err := encoding.ScalarToStringHex(cothority.Suite, priv)
 		log.ErrFatal(err)
-		log.Lvl2("scatostr:", privStr2)
-		privDec, err := crypto.StringHexToScalar(network.Suite, privStr)
+
+		log.Lvl2("scatostr:", privStr2, len(privStr2))
+		privDec, err := encoding.StringHexToScalar(cothority.Suite, privStr)
 		if err != nil {
-			log.Error("Scalar.String() is missing leading zeroes")
+			t.Fatal("StringHexToScalar failed: ", err)
 		}
 		log.Lvl2("privDec:", privDec)
-		neg := network.Suite.Scalar().Neg(priv)
+		neg := cothority.Suite.Scalar().Neg(priv)
 		log.Lvl2("Sum:", neg.Add(neg, priv))
 		log.Lvl2("Sum:", neg.Add(priv, neg))
 		log.Lvl2()
@@ -35,37 +44,36 @@ func TestPriv(t *testing.T) {
 }
 
 func TestEndian(t *testing.T) {
-	//privStr := "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F156"
 	privStr := "77d8aa14f60a5e4c6d82769da56f536ccae145bfb55f2f59dcea67a336b45c7b"
-	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
+	priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
 	log.ErrFatal(err)
 	log.Lvl2("private:", priv)
-	str, err := crypto.ScalarToStringHex(network.Suite, priv)
+	str, err := encoding.ScalarToStringHex(cothority.Suite, priv)
 	log.ErrFatal(err)
 	log.Lvl2("private:", str)
-	pub := network.Suite.Point().Mul(nil, priv)
+	pub := cothority.Suite.Point().Mul(priv, nil)
 	log.Lvl2("public:", pub)
 
-	priv.Add(priv, network.Suite.Scalar().One())
+	priv.Add(priv, cothority.Suite.Scalar().One())
 	log.Lvl2("private+1:", priv)
-	pub.Add(pub, network.Suite.Point().Base())
+	pub.Add(pub, cothority.Suite.Point().Base())
 	log.Lvl2("public+1:", pub)
 
-	priv.Add(priv, network.Suite.Scalar().One())
+	priv.Add(priv, cothority.Suite.Scalar().One())
 	log.Lvl2("private+2:", priv)
-	pub = network.Suite.Point().Mul(nil, priv)
+	pub = cothority.Suite.Point().Mul(priv, nil)
 	log.Lvl2("public+2:", pub)
 }
 
 func TestNegate(t *testing.T) {
 	privStr := "762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304"
-	priv, err := crypto.StringHexToScalar(network.Suite, privStr)
+	priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
 	log.ErrFatal(err)
 
 	log.Lvl2("Private:", priv)
-	neg := network.Suite.Scalar().Neg(priv)
+	neg := cothority.Suite.Scalar().Neg(priv)
 	log.Lvl2("Negative:", neg)
-	priv.Add(priv, network.Suite.Scalar().One())
-	sum := network.Suite.Scalar().Add(neg, priv)
+	priv.Add(priv, cothority.Suite.Scalar().One())
+	sum := cothority.Suite.Scalar().Add(neg, priv)
 	log.Lvl2("Sum:", sum)
 }

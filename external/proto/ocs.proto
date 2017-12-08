@@ -15,8 +15,9 @@ option java_outer_classname = "OCSProto";
 // - a write
 // - a key-update
 // - a write and a key-update
-// additionally it can hold a slice of bytes with any data that the user wants to
+// Additionally, it can hold a slice of bytes with any data that the user wants to
 // add to bind to that transaction.
+// Every Transaction must have a Unix timestamp.
 message Transaction {
   // 	 Write holds an eventual write-request with a document
   optional Write write = 1;
@@ -27,6 +28,8 @@ message Transaction {
   optional Darc darc = 3;
   // 	 Meta is any free-form data in that skipblock
   optional bytes meta = 4;
+  // 	 Unix timestamp to record the transaction creation time
+  required sint64 timestamp = 5;
 }
 
 // Write stores the data and the encrypted secret
@@ -40,9 +43,10 @@ message Write {
   // 	 cyphertext.
   // 	 Ubar is used for the log-equality proof
   required bytes ubar = 3;
-  // 	 E is the non-interactive challenge
+  // 	 E is the non-interactive challenge as scalar
   required bytes e = 4;
-  // 	 f is the proof
+  // 	 f is the proof - written in uppercase here so it is an exported field,
+  // 	 but in the OCS-paper it's lowercase.
   required bytes f = 5;
   // 	 Cs are the ElGamal parts for the symmetric key material (might
   // 	 also contain an IV)

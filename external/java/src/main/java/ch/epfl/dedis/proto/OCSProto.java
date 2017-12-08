@@ -112,6 +112,23 @@ public final class OCSProto {
      * <code>optional bytes meta = 4;</code>
      */
     com.google.protobuf.ByteString getMeta();
+
+    /**
+     * <pre>
+     * 	 Unix timestamp to record the transaction creation time
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 5;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <pre>
+     * 	 Unix timestamp to record the transaction creation time
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 5;</code>
+     */
+    long getTimestamp();
   }
   /**
    * <pre>
@@ -120,8 +137,9 @@ public final class OCSProto {
    * - a write
    * - a key-update
    * - a write and a key-update
-   * additionally it can hold a slice of bytes with any data that the user wants to
+   * Additionally, it can hold a slice of bytes with any data that the user wants to
    * add to bind to that transaction.
+   * Every Transaction must have a Unix timestamp.
    * </pre>
    *
    * Protobuf type {@code Transaction}
@@ -137,6 +155,7 @@ public final class OCSProto {
     }
     private Transaction() {
       meta_ = com.google.protobuf.ByteString.EMPTY;
+      timestamp_ = 0L;
     }
 
     @java.lang.Override
@@ -209,6 +228,11 @@ public final class OCSProto {
             case 34: {
               bitField0_ |= 0x00000008;
               meta_ = input.readBytes();
+              break;
+            }
+            case 40: {
+              bitField0_ |= 0x00000010;
+              timestamp_ = input.readSInt64();
               break;
             }
           }
@@ -361,12 +385,39 @@ public final class OCSProto {
       return meta_;
     }
 
+    public static final int TIMESTAMP_FIELD_NUMBER = 5;
+    private long timestamp_;
+    /**
+     * <pre>
+     * 	 Unix timestamp to record the transaction creation time
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 5;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * 	 Unix timestamp to record the transaction creation time
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 5;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (!hasTimestamp()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (hasWrite()) {
         if (!getWrite().isInitialized()) {
           memoizedIsInitialized = 0;
@@ -403,6 +454,9 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, meta_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeSInt64(5, timestamp_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -426,6 +480,10 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, meta_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(5, timestamp_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -463,6 +521,11 @@ public final class OCSProto {
         result = result && getMeta()
             .equals(other.getMeta());
       }
+      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp()) {
+        result = result && (getTimestamp()
+            == other.getTimestamp());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -489,6 +552,11 @@ public final class OCSProto {
       if (hasMeta()) {
         hash = (37 * hash) + META_FIELD_NUMBER;
         hash = (53 * hash) + getMeta().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTimestamp());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -590,8 +658,9 @@ public final class OCSProto {
      * - a write
      * - a key-update
      * - a write and a key-update
-     * additionally it can hold a slice of bytes with any data that the user wants to
+     * Additionally, it can hold a slice of bytes with any data that the user wants to
      * add to bind to that transaction.
+     * Every Transaction must have a Unix timestamp.
      * </pre>
      *
      * Protobuf type {@code Transaction}
@@ -652,6 +721,8 @@ public final class OCSProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         meta_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -704,6 +775,10 @@ public final class OCSProto {
           to_bitField0_ |= 0x00000008;
         }
         result.meta_ = meta_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.timestamp_ = timestamp_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -758,12 +833,18 @@ public final class OCSProto {
         if (other.hasMeta()) {
           setMeta(other.getMeta());
         }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
       }
 
       public final boolean isInitialized() {
+        if (!hasTimestamp()) {
+          return false;
+        }
         if (hasWrite()) {
           if (!getWrite().isInitialized()) {
             return false;
@@ -1322,6 +1403,54 @@ public final class OCSProto {
         onChanged();
         return this;
       }
+
+      private long timestamp_ ;
+      /**
+       * <pre>
+       * 	 Unix timestamp to record the transaction creation time
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 5;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * 	 Unix timestamp to record the transaction creation time
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 5;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <pre>
+       * 	 Unix timestamp to record the transaction creation time
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 5;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000010;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Unix timestamp to record the transaction creation time
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 5;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -1434,7 +1563,7 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 E is the non-interactive challenge
+     * 	 E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1442,7 +1571,7 @@ public final class OCSProto {
     boolean hasE();
     /**
      * <pre>
-     * 	 E is the non-interactive challenge
+     * 	 E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1451,7 +1580,8 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 f is the proof
+     * 	 f is the proof - written in uppercase here so it is an exported field,
+     * 	 but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1459,7 +1589,8 @@ public final class OCSProto {
     boolean hasF();
     /**
      * <pre>
-     * 	 f is the proof
+     * 	 f is the proof - written in uppercase here so it is an exported field,
+     * 	 but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1748,7 +1879,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString e_;
     /**
      * <pre>
-     * 	 E is the non-interactive challenge
+     * 	 E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1758,7 +1889,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 E is the non-interactive challenge
+     * 	 E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1771,7 +1902,8 @@ public final class OCSProto {
     private com.google.protobuf.ByteString f_;
     /**
      * <pre>
-     * 	 f is the proof
+     * 	 f is the proof - written in uppercase here so it is an exported field,
+     * 	 but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1781,7 +1913,8 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 f is the proof
+     * 	 f is the proof - written in uppercase here so it is an exported field,
+     * 	 but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -2593,7 +2726,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString e_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 E is the non-interactive challenge
+       * 	 E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2603,7 +2736,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge
+       * 	 E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2613,7 +2746,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge
+       * 	 E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2629,7 +2762,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge
+       * 	 E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2644,7 +2777,8 @@ public final class OCSProto {
       private com.google.protobuf.ByteString f_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 f is the proof
+       * 	 f is the proof - written in uppercase here so it is an exported field,
+       * 	 but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2654,7 +2788,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof
+       * 	 f is the proof - written in uppercase here so it is an exported field,
+       * 	 but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2664,7 +2799,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof
+       * 	 f is the proof - written in uppercase here so it is an exported field,
+       * 	 but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2680,7 +2816,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof
+       * 	 f is the proof - written in uppercase here so it is an exported field,
+       * 	 but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -18529,42 +18666,42 @@ public final class OCSProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\tocs.proto\032\017skipblock.proto\032\ndarc.proto" +
-      "\032\014roster.proto\"\\\n\013Transaction\022\025\n\005write\030\001" +
+      "\032\014roster.proto\"o\n\013Transaction\022\025\n\005write\030\001" +
       " \001(\0132\006.Write\022\023\n\004read\030\002 \001(\0132\005.Read\022\023\n\004dar" +
-      "c\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\"z\n\005Write\022\014\n" +
-      "\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001" +
-      "e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textrad" +
-      "ata\030\007 \001(\014\022\025\n\006reader\030\010 \002(\0132\005.Darc\"5\n\004Read" +
-      "\022\016\n\006dataid\030\001 \002(\014\022\035\n\tsignature\030\002 \002(\0132\n.Si" +
-      "gnature\"D\n\007ReadDoc\022\031\n\006reader\030\001 \002(\0132\t.Ide" +
-      "ntity\022\016\n\006readid\030\002 \002(\014\022\016\n\006dataid\030\003 \002(\014\"J\n",
-      "\027CreateSkipchainsRequest\022\027\n\006roster\030\001 \002(\013" +
-      "2\007.Roster\022\026\n\007writers\030\002 \002(\0132\005.Darc\";\n\025Cre" +
-      "ateSkipchainsReply\022\027\n\003ocs\030\001 \001(\0132\n.SkipBl" +
-      "ock\022\t\n\001x\030\002 \002(\014\"Y\n\013GetDarcPath\022\013\n\003ocs\030\001 \002" +
-      "(\014\022\022\n\nbasedarcid\030\002 \002(\014\022\033\n\010identity\030\003 \002(\013" +
-      "2\t.Identity\022\014\n\004role\030\004 \002(\021\"\'\n\020GetDarcPath" +
-      "Reply\022\023\n\004path\030\001 \003(\0132\005.Darc\".\n\nUpdateDarc" +
-      "\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(\0132\005.Darc\")\n\017Up" +
-      "dateDarcReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"i\n" +
-      "\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\025\n\005write\030\002 \002(",
-      "\0132\006.Write\022\035\n\tsignature\030\003 \002(\0132\n.Signature" +
-      "\022\026\n\007readers\030\004 \001(\0132\005.Darc\"$\n\nWriteReply\022\026" +
-      "\n\002sb\030\001 \001(\0132\n.SkipBlock\"/\n\013ReadRequest\022\013\n" +
-      "\003ocs\030\001 \002(\014\022\023\n\004read\030\002 \002(\0132\005.Read\"#\n\tReadR" +
-      "eply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"&\n\023SharedPu" +
-      "blicRequest\022\017\n\007genesis\030\001 \002(\014\"\036\n\021SharedPu" +
-      "blicReply\022\t\n\001x\030\001 \002(\014\"!\n\021DecryptKeyReques" +
-      "t\022\014\n\004read\030\001 \002(\014\"9\n\017DecryptKeyReply\022\n\n\002cs" +
-      "\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017Ge" +
-      "tReadRequests\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 ",
-      "\002(\021\"3\n\024GetReadRequestsReply\022\033\n\tdocuments" +
-      "\030\001 \003(\0132\010.ReadDoc\"\021\n\017GetBunchRequest\",\n\rG" +
-      "etBunchReply\022\033\n\007bunches\030\001 \003(\0132\n.SkipBloc" +
-      "k\",\n\rGetLatestDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darci" +
-      "d\030\002 \002(\014\"*\n\022GetLatestDarcReply\022\024\n\005darcs\030\001" +
-      " \003(\0132\005.DarcB\037\n\023ch.epfl.dedis.protoB\010OCSP" +
-      "roto"
+      "c\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\022\021\n\ttimestam" +
+      "p\030\005 \002(\022\"z\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(" +
+      "\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n" +
+      "\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\025\n\006reader\030\010" +
+      " \002(\0132\005.Darc\"5\n\004Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\ts" +
+      "ignature\030\002 \002(\0132\n.Signature\"D\n\007ReadDoc\022\031\n" +
+      "\006reader\030\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014",
+      "\022\016\n\006dataid\030\003 \002(\014\"J\n\027CreateSkipchainsRequ" +
+      "est\022\027\n\006roster\030\001 \002(\0132\007.Roster\022\026\n\007writers\030" +
+      "\002 \002(\0132\005.Darc\";\n\025CreateSkipchainsReply\022\027\n" +
+      "\003ocs\030\001 \001(\0132\n.SkipBlock\022\t\n\001x\030\002 \002(\014\"Y\n\013Get" +
+      "DarcPath\022\013\n\003ocs\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(" +
+      "\014\022\033\n\010identity\030\003 \002(\0132\t.Identity\022\014\n\004role\030\004" +
+      " \002(\021\"\'\n\020GetDarcPathReply\022\023\n\004path\030\001 \003(\0132\005" +
+      ".Darc\".\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc" +
+      "\030\002 \002(\0132\005.Darc\")\n\017UpdateDarcReply\022\026\n\002sb\030\001" +
+      " \001(\0132\n.SkipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030",
+      "\001 \002(\014\022\025\n\005write\030\002 \002(\0132\006.Write\022\035\n\tsignatur" +
+      "e\030\003 \002(\0132\n.Signature\022\026\n\007readers\030\004 \001(\0132\005.D" +
+      "arc\"$\n\nWriteReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBloc" +
+      "k\"/\n\013ReadRequest\022\013\n\003ocs\030\001 \002(\014\022\023\n\004read\030\002 " +
+      "\002(\0132\005.Read\"#\n\tReadReply\022\026\n\002sb\030\001 \001(\0132\n.Sk" +
+      "ipBlock\"&\n\023SharedPublicRequest\022\017\n\007genesi" +
+      "s\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"" +
+      "!\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002(\014\"9\n\017De" +
+      "cryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002" +
+      "(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadRequests\022\r\n\005star",
+      "t\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetReadRequest" +
+      "sReply\022\033\n\tdocuments\030\001 \003(\0132\010.ReadDoc\"\021\n\017G" +
+      "etBunchRequest\",\n\rGetBunchReply\022\033\n\007bunch" +
+      "es\030\001 \003(\0132\n.SkipBlock\",\n\rGetLatestDarc\022\013\n" +
+      "\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022GetLatestD" +
+      "arcReply\022\024\n\005darcs\030\001 \003(\0132\005.DarcB\037\n\023ch.epf" +
+      "l.dedis.protoB\010OCSProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18586,7 +18723,7 @@ public final class OCSProto {
     internal_static_Transaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Transaction_descriptor,
-        new java.lang.String[] { "Write", "Read", "Darc", "Meta", });
+        new java.lang.String[] { "Write", "Read", "Darc", "Meta", "Timestamp", });
     internal_static_Write_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_Write_fieldAccessorTable = new
