@@ -186,10 +186,10 @@ func TestSkipBlock_DB(t *testing.T) {
 	sb.Data = []byte("hello")
 	sb.AddForward(&BlockLink{[]byte("hash"), []byte("signature")})
 	sb.Hash = sb.CalculateHash()
-	err = db.dbstore(sb)
+	err = db.dbStore(sb)
 	require.Nil(t, err)
 
-	sb2, err := db.dbget(sb.Hash)
+	sb2, err := db.dbGet(sb.Hash)
 	require.Nil(t, err)
 	require.True(t, sb.Equal(sb2))
 	for i := range sb2.ForwardLink {

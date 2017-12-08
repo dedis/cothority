@@ -21,7 +21,7 @@ import (
 var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {

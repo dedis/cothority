@@ -266,6 +266,19 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		return nil
 	}
 	sbf := *sb.SkipBlockFix
+	sbf.BackLinkIDs = make([]SkipBlockID, len(sb.SkipBlockFix.BackLinkIDs))
+	for i := range sbf.BackLinkIDs {
+		sbf.BackLinkIDs[i] = make(SkipBlockID, len(sb.SkipBlockFix.BackLinkIDs[i]))
+		copy(sbf.BackLinkIDs[i], sb.SkipBlockFix.BackLinkIDs[i])
+	}
+	sbf.VerifierIDs = make([]VerifierID, len(sb.SkipBlockFix.VerifierIDs))
+	for i := range sbf.VerifierIDs {
+		sbf.VerifierIDs[i] = sb.SkipBlockFix.VerifierIDs[i]
+	}
+
+	sbf.Data = make([]byte, len(sb.SkipBlockFix.Data))
+	copy(sbf.Data, sb.SkipBlockFix.Data)
+
 	b := &SkipBlock{
 		SkipBlockFix: &sbf,
 		Hash:         make([]byte, len(sb.Hash)),
@@ -344,8 +357,10 @@ type BlockLink struct {
 func (bl *BlockLink) Copy() *BlockLink {
 	sigCopy := make([]byte, len(bl.Signature))
 	copy(sigCopy, bl.Signature)
+	hashCopy := make([]byte, len(bl.Hash))
+	copy(hashCopy, bl.Hash)
 	return &BlockLink{
-		Hash:      bl.Hash,
+		Hash:      hashCopy,
 		Signature: sigCopy,
 	}
 }
@@ -410,7 +425,7 @@ func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
-	sb, err := db.dbget(sbID)
+	sb, err := db.dbGet(sbID)
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -444,7 +459,7 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 
 // Store stores the given SkipBlock in the service-list
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	sbOld, err := db.dbget(sb.Hash)
+	sbOld, err := db.dbGet(sb.Hash)
 	if err != nil {
 		log.Error("failed to get skipblock with error: " + err.Error())
 		return nil
@@ -464,12 +479,12 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 		if len(sb.ChildSL) > len(sbOld.ChildSL) {
 			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
 		}
-		err := db.dbstore(sbOld)
+		err := db.dbStore(sbOld)
 		if err != nil {
 			log.Error(err.Error())
 		}
 	} else {
-		err := db.dbstore(sb)
+		err := db.dbStore(sb)
 		if err != nil {
 			log.Error(err.Error())
 		}
@@ -735,7 +750,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 	return db.GetByID(sbID)
 }
 
-func (db *SkipBlockDB) dbstore(sb *SkipBlock) error {
+func (db *SkipBlockDB) dbStore(sb *SkipBlock) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(skipchainBucket))
 		key := sb.Hash
@@ -748,7 +763,7 @@ func (db *SkipBlockDB) dbstore(sb *SkipBlock) error {
 	})
 }
 
-func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
+func (db *SkipBlockDB) dbGet(sbID SkipBlockID) (*SkipBlock, error) {
 	var sb *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(skipchainBucket))
@@ -767,6 +782,7 @@ func (db *SkipBlockDB) dbget(sbID SkipBlockID) (*SkipBlock, error) {
 		sb = sbMsg.(*SkipBlock).Copy()
 		return nil
 	})
+
 	return sb, err
 }
 
