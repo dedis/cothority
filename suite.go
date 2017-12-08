@@ -1,20 +1,7 @@
 package cothority
 
-import (
-	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/group"
-)
+import "github.com/dedis/kyber/suites"
 
-type suite interface {
-	kyber.Group
-	kyber.HashFactory
-	kyber.XOFFactory
-}
-
-// Suite is a temporary hack until we decide the right way to set the
+// Suite is a convenience. It might go away when we decide the a better way to set the
 // suite in repo cothority.
-var Suite suite
-
-func init() {
-	Suite = group.MustSuite("Ed25519").(suite)
-}
+var Suite = suites.MustFind("Ed25519")

@@ -10,7 +10,6 @@ import (
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -196,7 +195,7 @@ func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentit
 			break
 		}
 	}
-	sigtag := anon.Sign(i.Client.Suite().(anon.Suite), random.Stream, au.Nonce,
+	sigtag := anon.Sign(i.Client.Suite().(anon.Suite), i.Client.Suite().RandomStream(), au.Nonce,
 		anon.Set(atts), au.Ctx, index, i.Private)
 	cr := &CreateIdentity{}
 	cr.Data = i.Data

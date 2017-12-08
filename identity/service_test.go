@@ -33,11 +33,12 @@ func TestService_CreateIdentity2(t *testing.T) {
 	ci.Type = PoPAuth
 	ci.Data = il
 	ci.Roster = el
-	ci.Nonce = random.Bytes(nonceSize, random.Stream)
+	ci.Nonce = make([]byte, nonceSize)
+	random.Bytes(ci.Nonce, random.New())
 	service.auth.nonces[string(ci.Nonce)] = struct{}{}
 	ctx := []byte(ServiceName + service.ServerIdentity().String())
 
-	ci.Sig = anon.Sign(tSuite.(anon.Suite), random.Stream, ci.Nonce,
+	ci.Sig = anon.Sign(tSuite, tSuite.RandomStream(), ci.Nonce,
 		set, ctx, 0, kp.Secret)
 	msg, cerr := service.CreateIdentity(ci)
 	log.ErrFatal(cerr)
@@ -64,7 +65,8 @@ func TestService_CreateIdentity3(t *testing.T) {
 	ci.Data = il
 	ci.Roster = el
 	ci.Public = kp.Public
-	ci.Nonce = random.Bytes(nonceSize, random.Stream)
+	ci.Nonce = make([]byte, nonceSize)
+	random.Bytes(ci.Nonce, tSuite.RandomStream())
 	service.auth.nonces[string(ci.Nonce)] = struct{}{}
 	var err error
 	ssig, err := schnorr.Sign(tSuite, kp.Secret, ci.Nonce)

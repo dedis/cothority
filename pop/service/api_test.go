@@ -40,7 +40,7 @@ func TestFinalStatement_ToToml(t *testing.T) {
 }
 
 func TestFinalStatement_Verify(t *testing.T) {
-	eddsa := eddsa.NewEdDSA(random.Stream)
+	eddsa := eddsa.NewEdDSA(random.New())
 	si := network.NewServerIdentity(eddsa.Public, network.NewAddress(network.PlainTCP, "0:2000"))
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{

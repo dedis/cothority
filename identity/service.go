@@ -105,7 +105,7 @@ type authData struct {
 func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
 	log.Lvl3("PinRequest", s.ServerIdentity())
 	if req.PIN == "" {
-		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		s.auth.pins[pin] = struct{}{}
 		log.Info("PIN:", pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
@@ -197,7 +197,8 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 // be deleted.
 func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
-	ap.Nonce = random.Bytes(nonceSize, random.Stream)
+	ap.Nonce = make([]byte, nonceSize)
+	random.Bytes(ap.Nonce, s.Suite().RandomStream())
 	s.auth.nonces[string(ap.Nonce)] = struct{}{}
 	return ap, nil
 }

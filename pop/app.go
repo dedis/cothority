@@ -439,7 +439,7 @@ func attSign(c *cli.Context) error {
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
 	Set := anon.Set(party.Final.Attendees)
-	sigtag := anon.Sign(cothority.Suite.(anon.Suite), random.Stream, msg,
+	sigtag := anon.Sign(cothority.Suite.(anon.Suite), random.New(), msg,
 		Set, ctx, party.Index, party.Private)
 	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
 	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]

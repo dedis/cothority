@@ -42,7 +42,6 @@ import (
 	"fmt"
 
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/random"
 )
 
 // CoSi is the struct that implements one round of a CoSi protocol.
@@ -297,11 +296,10 @@ func (c *CoSi) GetResponse() kyber.Scalar {
 // genCommit generates a random scalar vi and computes its individual commit
 // Vi = G^vi
 func (c *CoSi) genCommit(s cipher.Stream) {
-	var stream = s
 	if s == nil {
-		stream = random.Stream
+		panic("s is required")
 	}
-	c.random = c.suite.Scalar().Pick(stream)
+	c.random = c.suite.Scalar().Pick(s)
 	c.commitment = c.suite.Point().Mul(c.random, nil)
 	c.aggregateCommitment = c.commitment
 }
