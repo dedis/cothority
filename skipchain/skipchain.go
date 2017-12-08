@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/bbolt"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber/util/random"
@@ -32,6 +33,9 @@ var skipchainSID onet.ServiceID
 // Name used to store skipblocks
 const skipblocksID = "skipblocks"
 
+// Name for the database bucket
+const skipblocksBucket = "skipblocksBucket"
+
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
@@ -43,6 +47,25 @@ type Service struct {
 	lastSave           time.Time
 	newBlocksMutex     sync.Mutex
 	newBlocks          map[string]bool
+}
+
+// InitSkipBlockDB asks the context for the database handler and creates a bucket
+func (s *Service) InitSkipBlockDB() error {
+	db, err := s.NewDatabase()
+	if err != nil {
+		return err
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(skipblocksBucket))
+		return err
+	})
+	if err != nil {
+		return err
+	}
+
+	s.db = &SkipBlockDB{db}
+	return nil
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -654,35 +677,17 @@ func (s *Service) newBlockEnd(sb *SkipBlock) bool {
 	return true
 }
 
-// saves all skipblocks.
-/*
-func (s *Service) save() {
-	s.Sbm.Lock()
-	defer s.Sbm.Unlock()
-	if time.Now().Sub(s.lastSave) < time.Second*timeBetweenSave {
-		return
-	}
-	s.lastSave = time.Now()
-	log.Lvl3("Saving service")
-	err := s.Save(skipblocksID, s.Sbm)
-	if err != nil {
-		log.Error("Couldn't save file:", err)
-	}
-}
-*/
-
 func newSkipchainService(c *onet.Context) (onet.Service, error) {
-	db, err := NewSkipBlockDB(c.AbsDirectory(skipblocksID))
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		db:               db,
+		db:               nil,
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		blockRequests:    make(map[string]chan *SkipBlock),
 		newBlocks:        make(map[string]bool),
+	}
+	err := s.InitSkipBlockDB()
+	if err != nil {
+		return nil, err
 	}
 
 	s.lastSave = time.Now()

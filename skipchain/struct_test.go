@@ -1,8 +1,6 @@
 package skipchain
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 
 	"crypto/sha512"
@@ -174,29 +172,4 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
-}
-
-func TestSkipBlock_DB(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "skipchain-db-test")
-	require.Nil(t, err)
-	db, err := NewSkipBlockDB(tmpDir)
-	require.Nil(t, err)
-
-	sb := NewSkipBlock()
-	sb.Data = []byte("hello")
-	sb.AddForward(&BlockLink{[]byte("hash"), []byte("signature")})
-	sb.Hash = sb.CalculateHash()
-	err = db.dbStore(sb)
-	require.Nil(t, err)
-
-	sb2, err := db.dbGet(sb.Hash)
-	require.Nil(t, err)
-	require.True(t, sb.Equal(sb2))
-	for i := range sb2.ForwardLink {
-		require.True(t, bytes.Equal(sb2.ForwardLink[i].Hash, sb.ForwardLink[i].Hash))
-		require.True(t, bytes.Equal(sb2.ForwardLink[i].Signature, sb.ForwardLink[i].Signature))
-	}
-
-	err = os.RemoveAll(tmpDir)
-	require.Nil(t, err)
 }

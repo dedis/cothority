@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 	"testing"
@@ -156,12 +155,6 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID, tSuite)
 	service := genService.(*Service)
-
-	// TODO the test sets up db too?
-	defer func() {
-		service.db.Close()
-		os.Remove(service.db.filename)
-	}()
 
 	// Setting up two chains and linking one to the other
 	sbRoot, err := makeGenesisRoster(service, el)

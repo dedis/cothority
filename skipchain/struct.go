@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -381,39 +380,16 @@ type SkipBlockMap struct {
 	sync.Mutex
 }
 
-// SkipBlockDB is...
+// SkipBlockDB holds the database to the skipblocks.
+// This is used for verification, so that all links can be followed.
+// It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
 	*bolt.DB
-	filename string
 }
 
 // NewSkipBlockMap returns a pre-initialised SkipBlockMap.
 func NewSkipBlockMap() *SkipBlockMap {
 	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
-}
-
-const skipchainBucket = "skipchainBucket"
-
-// NewSkipBlockDB is...
-func NewSkipBlockDB(dirname string) (*SkipBlockDB, error) {
-	fname := filepath.Join(dirname, "bolt.db")
-	db, err := bolt.Open(fname, 0600, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(skipchainBucket))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
-	if err != nil {
-		db.Close()
-		return nil, err
-	}
-	return &SkipBlockDB{db, fname}, nil
 }
 
 // GetByID returns the skip-block or nil if it doesn't exist
@@ -503,7 +479,7 @@ func (sbm *SkipBlockMap) Length() int {
 func (db *SkipBlockDB) Length() int {
 	var i int
 	db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipchainBucket))
+		b := tx.Bucket([]byte(skipblocksBucket))
 		i = b.Stats().KeyN
 		return nil
 	})
@@ -752,7 +728,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 
 func (db *SkipBlockDB) dbStore(sb *SkipBlock) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipchainBucket))
+		b := tx.Bucket([]byte(skipblocksBucket))
 		key := sb.Hash
 		val, err := network.Marshal(sb)
 		if err != nil {
@@ -766,7 +742,7 @@ func (db *SkipBlockDB) dbStore(sb *SkipBlock) error {
 func (db *SkipBlockDB) dbGet(sbID SkipBlockID) (*SkipBlock, error) {
 	var sb *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipchainBucket))
+		b := tx.Bucket([]byte(skipblocksBucket))
 
 		val := b.Get(sbID)
 		if val == nil {
@@ -789,7 +765,7 @@ func (db *SkipBlockDB) dbGet(sbID SkipBlockID) (*SkipBlock, error) {
 func (db *SkipBlockDB) dbDump() (map[string]*SkipBlock, error) {
 	chains := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipchainBucket))
+		b := tx.Bucket([]byte(skipblocksBucket))
 		return b.ForEach(func(k, v []byte) error {
 			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
 			if err != nil {
