@@ -158,6 +158,40 @@ type SkipBlockFix struct {
 	Roster *onet.Roster
 }
 
+// Copy returns a deep copy of SkipBlockFix
+func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
+	backLinkIDs := make([]SkipBlockID, len(sbf.BackLinkIDs))
+	for i := range backLinkIDs {
+		backLinkIDs[i] = make(SkipBlockID, len(sbf.BackLinkIDs[i]))
+		copy(backLinkIDs[i], sbf.BackLinkIDs[i])
+	}
+
+	verifierIDs := make([]VerifierID, len(sbf.VerifierIDs))
+	copy(verifierIDs, sbf.VerifierIDs)
+
+	parentBlockID := make(SkipBlockID, len(sbf.ParentBlockID))
+	copy(parentBlockID, sbf.ParentBlockID)
+
+	genesisID := make(SkipBlockID, len(sbf.GenesisID))
+	copy(genesisID, sbf.GenesisID)
+
+	data := make([]byte, len(sbf.Data))
+	copy(data, sbf.Data)
+
+	return &SkipBlockFix{
+		Index:         sbf.Index,
+		Height:        sbf.Height,
+		MaximumHeight: sbf.MaximumHeight,
+		BaseHeight:    sbf.BaseHeight,
+		BackLinkIDs:   backLinkIDs,
+		VerifierIDs:   verifierIDs,
+		ParentBlockID: parentBlockID,
+		GenesisID:     genesisID,
+		Data:          data,
+		Roster:        sbf.Roster,
+	}
+}
+
 // SkipBlockData represents all entries - as maps are not ordered and thus
 // difficult to hash, this is as a slice to {key,data}-pairs.
 type SkipBlockData struct {
@@ -264,22 +298,8 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	if sb == nil {
 		return nil
 	}
-	sbf := *sb.SkipBlockFix
-	sbf.BackLinkIDs = make([]SkipBlockID, len(sb.SkipBlockFix.BackLinkIDs))
-	for i := range sbf.BackLinkIDs {
-		sbf.BackLinkIDs[i] = make(SkipBlockID, len(sb.SkipBlockFix.BackLinkIDs[i]))
-		copy(sbf.BackLinkIDs[i], sb.SkipBlockFix.BackLinkIDs[i])
-	}
-	sbf.VerifierIDs = make([]VerifierID, len(sb.SkipBlockFix.VerifierIDs))
-	for i := range sbf.VerifierIDs {
-		sbf.VerifierIDs[i] = sb.SkipBlockFix.VerifierIDs[i]
-	}
-
-	sbf.Data = make([]byte, len(sb.SkipBlockFix.Data))
-	copy(sbf.Data, sb.SkipBlockFix.Data)
-
 	b := &SkipBlock{
-		SkipBlockFix: &sbf,
+		SkipBlockFix: sb.SkipBlockFix.Copy(),
 		Hash:         make([]byte, len(sb.Hash)),
 		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
 		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
@@ -287,7 +307,9 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
-	copy(b.ChildSL, sb.ChildSL)
+	for i, child := range sb.ChildSL {
+		copy(b.ChildSL[i], child)
+	}
 	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
@@ -356,8 +378,9 @@ type BlockLink struct {
 func (bl *BlockLink) Copy() *BlockLink {
 	sigCopy := make([]byte, len(bl.Signature))
 	copy(sigCopy, bl.Signature)
-	hashCopy := make([]byte, len(bl.Hash))
+	hashCopy := make(SkipBlockID, len(bl.Hash))
 	copy(hashCopy, bl.Hash)
+
 	return &BlockLink{
 		Hash:      hashCopy,
 		Signature: sigCopy,
