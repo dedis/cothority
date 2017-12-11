@@ -38,7 +38,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	service.auth.nonces[string(ci.Nonce)] = struct{}{}
 	ctx := []byte(ServiceName + service.ServerIdentity().String())
 
-	ci.Sig = anon.Sign(tSuite, tSuite.RandomStream(), ci.Nonce,
+	ci.Sig = anon.Sign(tSuite, ci.Nonce,
 		set, ctx, 0, kp.Secret)
 	msg, cerr := service.CreateIdentity(ci)
 	log.ErrFatal(cerr)
