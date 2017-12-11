@@ -57,6 +57,7 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	*StorageMap
+	anonSuite          anon.Suite
 	propagateIdentity  messaging.PropagationFunc
 	propagateSkipBlock messaging.PropagationFunc
 	propagateData      messaging.PropagationFunc
@@ -221,7 +222,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			ai.Public = nil
 		}
 		for _, set := range s.auth.sets {
-			t, err := anon.Verify(s.Suite().(anon.Suite), ai.Nonce, set, ctx, ai.Sig)
+			t, err := anon.Verify(s.anonSuite, ai.Nonce, set, ctx, ai.Sig)
 			if err == nil {
 				tag = string(t)
 				valid = true
@@ -718,6 +719,12 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 	}
+	if as, ok := c.Suite().(anon.Suite); ok {
+		s.anonSuite = as
+	} else {
+		return nil, errors.New("suite does not implement anon.Suite")
+	}
+
 	var err error
 	s.propagateIdentity, err =
 		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
