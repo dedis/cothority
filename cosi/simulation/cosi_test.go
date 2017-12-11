@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/kyber/group"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
 
-var tSuite = group.MustSuite("Ed25519")
+var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)

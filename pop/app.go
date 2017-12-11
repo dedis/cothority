@@ -23,7 +23,6 @@ import (
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -439,7 +438,7 @@ func attSign(c *cli.Context) error {
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
 	Set := anon.Set(party.Final.Attendees)
-	sigtag := anon.Sign(cothority.Suite.(anon.Suite), random.Stream, msg,
+	sigtag := anon.Sign(cothority.Suite.(anon.Suite), msg,
 		Set, ctx, party.Index, party.Private)
 	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
 	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]

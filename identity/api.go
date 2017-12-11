@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"errors"
 	"io"
 
 	"io/ioutil"
@@ -10,7 +11,6 @@ import (
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -188,6 +188,13 @@ func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
 }
 
 func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentity, error) {
+	var as anon.Suite
+	var ok bool
+
+	if as, ok = i.Client.Suite().(anon.Suite); !ok {
+		return nil, errors.New("suite does not implement anon.Suite")
+	}
+
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -196,8 +203,7 @@ func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point) (*CreateIdentit
 			break
 		}
 	}
-	sigtag := anon.Sign(i.Client.Suite().(anon.Suite), random.Stream, au.Nonce,
-		anon.Set(atts), au.Ctx, index, i.Private)
+	sigtag := anon.Sign(as, au.Nonce, anon.Set(atts), au.Ctx, index, i.Private)
 	cr := &CreateIdentity{}
 	cr.Data = i.Data
 	cr.Roster = i.Cothority

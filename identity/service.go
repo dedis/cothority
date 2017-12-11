@@ -57,6 +57,7 @@ func init() {
 type Service struct {
 	*onet.ServiceProcessor
 	*StorageMap
+	anonSuite          anon.Suite
 	propagateIdentity  messaging.PropagationFunc
 	propagateSkipBlock messaging.PropagationFunc
 	propagateData      messaging.PropagationFunc
@@ -105,7 +106,7 @@ type authData struct {
 func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
 	log.Lvl3("PinRequest", s.ServerIdentity())
 	if req.PIN == "" {
-		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		s.auth.pins[pin] = struct{}{}
 		log.Info("PIN:", pin)
 		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
@@ -197,7 +198,8 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 // be deleted.
 func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
-	ap.Nonce = random.Bytes(nonceSize, random.Stream)
+	ap.Nonce = make([]byte, nonceSize)
+	random.Bytes(ap.Nonce, s.Suite().RandomStream())
 	s.auth.nonces[string(ap.Nonce)] = struct{}{}
 	return ap, nil
 }
@@ -220,7 +222,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			ai.Public = nil
 		}
 		for _, set := range s.auth.sets {
-			t, err := anon.Verify(s.Suite().(anon.Suite), ai.Nonce, set, ctx, ai.Sig)
+			t, err := anon.Verify(s.anonSuite, ai.Nonce, set, ctx, ai.Sig)
 			if err == nil {
 				tag = string(t)
 				valid = true
@@ -717,6 +719,12 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 		StorageMap:       &StorageMap{make(map[string]*Storage)},
 		skipchain:        skipchain.NewClient(),
 	}
+	if as, ok := c.Suite().(anon.Suite); ok {
+		s.anonSuite = as
+	} else {
+		return nil, errors.New("suite does not implement anon.Suite")
+	}
+
 	var err error
 	s.propagateIdentity, err =
 		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)

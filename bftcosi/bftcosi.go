@@ -290,7 +290,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 			if len(bft.tempPrepareCommit) < len(bft.Children()) {
 				continue
 			}
-			commitment = bft.prepare.Commit(nil, bft.tempPrepareCommit)
+			commitment = bft.prepare.Commit(bft.Suite().RandomStream(), bft.tempPrepareCommit)
 			if bft.IsRoot() {
 				if err := bft.startChallenge(RoundPrepare); err != nil {
 					return nil
@@ -302,7 +302,7 @@ func (bft *ProtocolBFTCoSi) handleCommitment(msgs []commitChan) error {
 			if len(bft.tempCommitCommit) < len(bft.Children()) {
 				continue
 			}
-			commitment = bft.commit.Commit(nil, bft.tempCommitCommit)
+			commitment = bft.commit.Commit(bft.Suite().RandomStream(), bft.tempCommitCommit)
 			if bft.IsRoot() {
 				// do nothing:
 				// stop the processing of the round, wait the end of
@@ -418,7 +418,7 @@ func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
 
 // startCommitment sends the first commitment to the parent node
 func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
-	cm := bft.getCosi(t).CreateCommitment(nil)
+	cm := bft.getCosi(t).CreateCommitment(bft.Suite().RandomStream())
 	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
 }
 

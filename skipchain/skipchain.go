@@ -82,8 +82,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
 		// genesis block has a random back-link:
-		bl := random.Bytes(32, random.Stream)
-		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl)}
+		var bl [32]byte
+		random.Bytes(bl[:], random.New())
+		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl[:])}
 		prop.GenesisID = nil
 		prop.updateHash()
 		err := s.verifyBlock(prop)

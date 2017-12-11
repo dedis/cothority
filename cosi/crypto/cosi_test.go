@@ -7,12 +7,13 @@ import (
 	xEd25519 "github.com/bford/golang-x-crypto/ed25519"
 	"github.com/bford/golang-x-crypto/ed25519/cosi"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/group"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
 	"github.com/stretchr/testify/assert"
 )
 
-var testSuite = group.MustSuite("Ed25519")
+var testSuite = suites.MustFind("Ed25519")
 
 // TestCosiCommitment test if the commitment generation is correct
 func TestCosiCommitment(t *testing.T) {
@@ -21,7 +22,7 @@ func TestCosiCommitment(t *testing.T) {
 	// gen commitments from children
 	commitments := genCommitments(cosis[1:])
 	root := cosis[0]
-	root.Commit(nil, commitments)
+	root.Commit(testSuite.RandomStream(), commitments)
 	// compute the aggregate commitment ourself...
 	aggCommit := testSuite.Point().Null()
 	// add commitment of children
@@ -185,7 +186,7 @@ func genCosisFailing(nb int, failing int) (cosis []*CoSi, allPublics []kyber.Poi
 func genCommitments(cosis []*CoSi) []kyber.Point {
 	commitments := make([]kyber.Point, len(cosis))
 	for i := range cosis {
-		commitments[i] = cosis[i].CreateCommitment(nil)
+		commitments[i] = cosis[i].CreateCommitment(random.New())
 	}
 	return commitments
 }
@@ -195,7 +196,7 @@ func genCommitments(cosis []*CoSi) []kyber.Point {
 func genPostCommitmentPhaseCosi(cosis []*CoSi) {
 	commitments := genCommitments(cosis[1:])
 	root := cosis[0]
-	root.Commit(nil, commitments)
+	root.Commit(random.New(), commitments)
 }
 
 func genPostChallengePhaseCosi(cosis []*CoSi, msg []byte) {

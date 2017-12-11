@@ -221,7 +221,7 @@ func (c *CoSi) handleCommitment(in *Commitment) error {
 	}
 
 	// go to Commit()
-	out := c.cosi.Commit(nil, c.tempCommitment)
+	out := c.cosi.Commit(c.Suite().RandomStream(), c.tempCommitment)
 
 	// if we are the root, we need to start the Challenge
 	if c.IsRoot() {
