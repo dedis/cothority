@@ -26,7 +26,6 @@ import (
 )
 
 type config struct {
-	// TODO keep this?
 	Sbm *skipchain.SkipBlockMap
 }
 

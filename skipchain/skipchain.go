@@ -208,7 +208,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		return nil, onet.NewClientErrorCode(ErrorVerification,
 			"Couldn't propagate new blocks: "+err.Error())
 	}
-	// s.save()
 	reply := &StoreSkipBlockReply{
 		Previous: prev,
 		Latest:   prop,
@@ -401,7 +400,6 @@ func (s *Service) getBlockReply(env *network.Envelope) {
 		log.Error("Received invalid skipblock: " + err.Error())
 	}
 	id := s.db.Store(gbr.SkipBlock)
-	// s.save()
 	log.Lvl3("Sending block to channel")
 	s.blockRequestsMutex.Lock()
 	s.blockRequests[string(id)] <- gbr.SkipBlock
@@ -513,7 +511,6 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			return
 		}
 		s.db.Store(sb)
-		// s.save()
 	}
 }
 

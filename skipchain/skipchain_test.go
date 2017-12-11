@@ -487,7 +487,7 @@ func TestService_ParallelStore(t *testing.T) {
 					log.Fatal(cerr)
 				}
 				for {
-					time.Sleep(10 * time.Millisecond)
+					time.Sleep(100 * time.Millisecond)
 					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
 					if cerr == nil {
 						latest = update.Update[len(update.Update)-1]
@@ -495,7 +495,6 @@ func TestService_ParallelStore(t *testing.T) {
 					}
 				}
 			}
-
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
