@@ -22,9 +22,6 @@ import (
 // How many msec to wait before a timeout is generated in the propagation.
 const propagateTimeout = 10000
 
-// How often we save the skipchains - in seconds.
-const timeBetweenSave = 0
-
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
 
@@ -410,6 +407,7 @@ type SkipBlockMap struct {
 // It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
 	*bolt.DB
+	bucketName string
 }
 
 // NewSkipBlockMap returns a pre-initialised SkipBlockMap.
@@ -504,7 +502,7 @@ func (sbm *SkipBlockMap) Length() int {
 func (db *SkipBlockDB) Length() int {
 	var i int
 	db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipblocksBucket))
+		b := tx.Bucket([]byte(db.bucketName))
 		i = b.Stats().KeyN
 		return nil
 	})
@@ -753,7 +751,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 
 func (db *SkipBlockDB) store(sb *SkipBlock) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipblocksBucket))
+		b := tx.Bucket([]byte(db.bucketName))
 		key := sb.Hash
 		val, err := network.Marshal(sb)
 		if err != nil {
@@ -767,7 +765,7 @@ func (db *SkipBlockDB) store(sb *SkipBlock) error {
 func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
 	var sb *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipblocksBucket))
+		b := tx.Bucket([]byte(db.bucketName))
 
 		val := b.Get(sbID)
 		if val == nil {
@@ -790,7 +788,7 @@ func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
 func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
 	chains := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(skipblocksBucket))
+		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
 			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
 			if err != nil {

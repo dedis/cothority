@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/bbolt"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber/util/random"
@@ -30,12 +29,6 @@ func init() {
 // Only used in tests
 var skipchainSID onet.ServiceID
 
-// Name used to store skipblocks
-const skipblocksID = "skipblocks"
-
-// Name for the database bucket
-const skipblocksBucket = "skipblocksBucket"
-
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
@@ -47,30 +40,6 @@ type Service struct {
 	lastSave           time.Time
 	newBlocksMutex     sync.Mutex
 	newBlocks          map[string]bool
-}
-
-// InitSkipBlockDB asks the context for the database handler and creates a bucket
-func (s *Service) InitSkipBlockDB() error {
-	db, err := s.NewDatabase()
-	if err != nil {
-		return err
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(skipblocksBucket))
-		return err
-	})
-	if err != nil {
-		return err
-	}
-
-	s.db = &SkipBlockDB{db}
-	return nil
-}
-
-// Close closes the database, it's overrides the default Close in ServiceProcessor
-func (s *Service) Close() error {
-	return s.CloseDatabase()
 }
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
@@ -681,16 +650,13 @@ func (s *Service) newBlockEnd(sb *SkipBlock) bool {
 }
 
 func newSkipchainService(c *onet.Context) (onet.Service, error) {
+	db, bucket := c.GetDbAndBucket()
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		db:               nil,
+		db:               &SkipBlockDB{db, bucket},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		blockRequests:    make(map[string]chan *SkipBlock),
 		newBlocks:        make(map[string]bool),
-	}
-	err := s.InitSkipBlockDB()
-	if err != nil {
-		return nil, err
 	}
 
 	s.lastSave = time.Now()
@@ -706,6 +672,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	log.ErrFatal(s.registerVerification(VerifyControl, s.verifyFuncControl))
 	log.ErrFatal(s.registerVerification(VerifyData, s.verifyFuncData))
 
+	var err error
 	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)
 	if err != nil {
 		log.Error(err)
