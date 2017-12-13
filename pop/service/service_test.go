@@ -345,7 +345,7 @@ func TestService_MergeRequest(t *testing.T) {
 	require.NotNil(t, err)
 
 	// finish parties
-	for i, _ := range descs {
+	for i := range descs {
 
 		fr := &finalizeRequest{}
 		fr.DescID = []byte(hash[i])
@@ -424,7 +424,7 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 
 	pubs := make([]kyber.Point, len(srvcs))
 	privs := make([]kyber.Scalar, len(srvcs))
-	for i, _ := range srvcs {
+	for i := range srvcs {
 		kp := key.NewKeyPair(tSuite)
 		pubs[i], privs[i] = kp.Public, kp.Secret
 	}
@@ -477,7 +477,7 @@ func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
 
 	pubs := make([]kyber.Point, len(srvcs))
 	privs := make([]kyber.Scalar, len(srvcs))
-	for i, _ := range srvcs {
+	for i := range srvcs {
 		kp := key.NewKeyPair(tSuite)
 		pubs[i], privs[i] = kp.Public, kp.Secret
 	}

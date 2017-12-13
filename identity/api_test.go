@@ -37,7 +37,7 @@ func TestIdentity_PinRequest(t *testing.T) {
 	require.NotNil(t, cerr)
 	require.NotEqual(t, 0, len(srvc.auth.pins))
 	pin := ""
-	for t, _ := range srvc.auth.pins {
+	for t := range srvc.auth.pins {
 		pin = t
 	}
 	_, cerr = srvc.PinRequest(&PinRequest{pin, pub})
