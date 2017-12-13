@@ -98,7 +98,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			}
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
-
 		}
 		changed = append(changed, prop)
 
@@ -327,7 +326,6 @@ func (s *Service) forwardSignature(fs *ForwardSignature) error {
 	if err != nil {
 		return errors.New("Couldn't get signature")
 	}
-	// TODO
 	log.Lvl1("Adding forward-link to", target.Index)
 	target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
 	s.startPropagation([]*SkipBlock{target})

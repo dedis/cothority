@@ -1,12 +1,13 @@
 package skipchain
 
 import (
+	"bytes"
+	"crypto/sha512"
+	"io/ioutil"
+	"os"
 	"testing"
 
-	"crypto/sha512"
-
-	"bytes"
-
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -18,7 +19,11 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
-	sbm := NewSkipBlockMap()
+
+	sbm, fname := setupSkipBlockDB(t)
+	defer sbm.Close()
+	defer os.Remove(fname)
+
 	root0 := NewSkipBlock()
 	root0.Roster = roster
 	root0.Hash = root0.CalculateHash()
@@ -58,7 +63,11 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
-	sbm := NewSkipBlockMap()
+
+	sbm, fname := setupSkipBlockDB(t)
+	defer sbm.Close()
+	defer os.Remove(fname)
+
 	root := NewSkipBlock()
 	root.Roster = roster2
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
@@ -172,4 +181,24 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
+}
+
+// setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
+// The caller is responsible to close and remove the database file after using it.
+func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
+	f, err := ioutil.TempFile("", "skipblock-test")
+	require.Nil(t, err)
+	fname := f.Name()
+	require.Nil(t, f.Close())
+
+	db, err := bolt.Open(fname, 0600, nil)
+	require.Nil(t, err)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket([]byte("skipblock-test"))
+		return err
+	})
+	require.Nil(t, err)
+
+	return &SkipBlockDB{db, "skipblock-test"}, fname
 }

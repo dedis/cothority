@@ -415,13 +415,6 @@ func NewSkipBlockMap() *SkipBlockMap {
 	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
 }
 
-// GetByID returns the skip-block or nil if it doesn't exist
-func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
-	sbm.Lock()
-	defer sbm.Unlock()
-	return sbm.SkipBlocks[string(sbID)].Copy()
-}
-
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	sb, err := db.get(sbID)
@@ -513,36 +506,6 @@ func (db *SkipBlockDB) Length() int {
 // - Root_Genesis - himself
 // - *_Gensis - it's his parent
 // - else - it's the previous block
-func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
-	if sb == nil {
-		log.Panic(log.Stack())
-	}
-	if sb.Index == 0 {
-		// Genesis-block
-		if sb.ParentBlockID.IsNull() {
-			// Root-skipchain, no other parent
-			return sb, nil
-		}
-		ret := sbm.GetByID(sb.ParentBlockID)
-		if ret == nil {
-			return nil, errors.New("No Roster and no parent")
-		}
-		return ret, nil
-	}
-	if len(sb.BackLinkIDs) == 0 {
-		return nil, errors.New("Invalid block: no backlink")
-	}
-	prev := sbm.GetByID(sb.BackLinkIDs[0])
-	if prev == nil {
-		return nil, errors.New("Didn't find responsible")
-	}
-	return prev, nil
-}
-
-// GetResponsible searches for the block that is responsible for sb
-// - Root_Genesis - himself
-// - *_Gensis - it's his parent
-// - else - it's the previous block
 func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
 		log.Panic(log.Stack())
@@ -567,61 +530,6 @@ func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 		return nil, errors.New("Didn't find responsible")
 	}
 	return prev, nil
-}
-
-// VerifyLinks makes sure that all forward- and backward-links are correct.
-// It takes a skipblock to verify and returns nil in case of success.
-func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
-	if len(sb.BackLinkIDs) == 0 {
-		return errors.New("need at least one backlink")
-	}
-
-	if err := sb.VerifyForwardSignatures(); err != nil {
-		return errors.New("Wrong signatures: " + err.Error())
-	}
-
-	// Verify if we're in the responsible-list
-	if !sb.ParentBlockID.IsNull() {
-		parent := sbm.GetByID(sb.ParentBlockID)
-		if parent == nil {
-			return errors.New("Didn't find parent")
-		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
-			return err
-		}
-		found := false
-		for _, child := range parent.ChildSL {
-			if child.Equal(sb.Hash) {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.New("parent doesn't know about us")
-		}
-	}
-
-	// We don't check backward-links for genesis-blocks
-	if sb.Index == 0 {
-		return nil
-	}
-
-	// Verify we're referenced by our previous block
-	sbBack := sbm.GetByID(sb.BackLinkIDs[0])
-	if sbBack == nil {
-		if sb.GetForwardLen() > 0 {
-			log.Lvl3("Didn't find back-link, but have a good forward-link")
-			return nil
-		}
-		return errors.New("Didn't find height-0 skipblock in sbm")
-	}
-	if err := sbBack.VerifyForwardSignatures(); err != nil {
-		return err
-	}
-	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
-		return errors.New("didn't find our block in forward-links")
-	}
-	return nil
 }
 
 // VerifyLinks makes sure that all forward- and backward-links are correct.
@@ -680,18 +588,6 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 }
 
 // GetLatest searches for the latest available block for that skipblock.
-func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
-	latest := sb
-	for latest.GetForwardLen() > 0 {
-		latest = sbm.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
-		if latest == nil {
-			return nil, errors.New("missing block")
-		}
-	}
-	return latest, nil
-}
-
-// GetLatest searches for the latest available block for that skipblock.
 func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
@@ -729,24 +625,6 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 		}
 	}
 	return nil
-}
-
-// GetFuzzy searches for a block that resembles the given ID, if ID is not full.
-// If there are multiple matching skipblocks, the first one is chosen. If none
-// match, nil will be returned.
-//
-// The search is done in the following order:
-//  1. as prefix - if none is found
-//  2. as suffix - if none is found
-//  3. anywhere
-// TODO a wrapper around db.GetByID for now
-func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
-	sbID, err := hex.DecodeString(id)
-	if err != nil {
-		log.Error(err.Error())
-		return nil
-	}
-	return db.GetByID(sbID)
 }
 
 func (db *SkipBlockDB) store(sb *SkipBlock) error {
