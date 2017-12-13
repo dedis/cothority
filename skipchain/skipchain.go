@@ -682,12 +682,12 @@ func (s *Service) save() {
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	if !s.DataAvailable(skipblocksID) {
-		return nil
-	}
 	msg, err := s.Load(skipblocksID)
 	if err != nil {
 		return err
+	}
+	if msg == nil {
+		return nil
 	}
 	var ok bool
 	s.Sbm, ok = msg.(*SkipBlockMap)
