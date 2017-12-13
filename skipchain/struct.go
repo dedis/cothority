@@ -627,25 +627,27 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 	return nil
 }
 
+// store stores the skipblock into the database.
+// an error is returned on failure.
 func (db *SkipBlockDB) store(sb *SkipBlock) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(db.bucketName))
 		key := sb.Hash
 		val, err := network.Marshal(sb)
 		if err != nil {
 			return err
 		}
 
-		return b.Put(key, val)
+		return tx.Bucket([]byte(db.bucketName)).Put(key, val)
 	})
 }
 
+// get returns the skipblock identified by sbID.
+// nil is returned if the key does not exist.
+// An error is thrown if marshalling fails.
 func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
 	var sb *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(db.bucketName))
-
-		val := b.Get(sbID)
+		val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
 		if val == nil {
 			sb = nil
 			return nil
@@ -663,8 +665,9 @@ func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
 	return sb, err
 }
 
+// dump returns all the data in the database as a map
 func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
-	chains := map[string]*SkipBlock{}
+	data := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
 		return b.ForEach(func(k, v []byte) error {
@@ -674,7 +677,7 @@ func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
 			}
 
 			sb := sbMsg.(*SkipBlock)
-			chains[string(sb.SkipChainID())] = sb
+			data[string(sb.SkipChainID())] = sb
 			return nil
 		})
 	})
@@ -682,5 +685,5 @@ func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	return chains, nil
+	return data, nil
 }

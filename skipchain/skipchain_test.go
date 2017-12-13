@@ -30,8 +30,6 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID, tSuite)
 	service := genService.(*Service)
-	// TODO needed?
-	// service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -487,7 +485,7 @@ func TestService_ParallelStore(t *testing.T) {
 					log.Fatal(cerr)
 				}
 				for {
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
 					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
 					if cerr == nil {
 						latest = update.Update[len(update.Update)-1]
