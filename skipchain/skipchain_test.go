@@ -30,7 +30,6 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	defer local.CloseAll()
 	_, el, genService := local.MakeHELS(5, skipchainSID, tSuite)
 	service := genService.(*Service)
-	service.Sbm.SkipBlocks = make(map[string]*SkipBlock)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -78,7 +77,7 @@ func TestService_StoreSkipBlock(t *testing.T) {
 	assert.NotEqual(t, 0, latest2.BackLinkIDs)
 
 	// We've added 2 blocks, + root block = 3
-	assert.Equal(t, 3, service.Sbm.Length())
+	assert.Equal(t, 3, service.db.Length())
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -91,6 +90,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbCount := conodes - 1
 	servers, el, gs := local.MakeHELS(conodes, skipchainSID, tSuite)
 	s := gs.(*Service)
+
 	sbs := make([]*SkipBlock, sbCount)
 	var err error
 	sbs[0], err = makeGenesisRoster(s, onet.NewRoster(el.List[0:2]))
@@ -485,7 +485,7 @@ func TestService_ParallelStore(t *testing.T) {
 					log.Fatal(cerr)
 				}
 				for {
-					time.Sleep(10 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
 					update, cerr := cl.GetUpdateChain(latest.Roster, latest.Hash)
 					if cerr == nil {
 						latest = update.Update[len(update.Update)-1]
@@ -493,18 +493,17 @@ func TestService_ParallelStore(t *testing.T) {
 					}
 				}
 			}
-
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
 }
 
 func TestService_Propagation(t *testing.T) {
-	nbr_nodes := 100
+	nbrNodes := 100
 	local := onet.NewLocalTest(tSuite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeHELS(nbr_nodes, skipchainSID, tSuite)
+	servers, ro, genService := local.MakeHELS(nbrNodes, skipchainSID, tSuite)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -520,7 +519,7 @@ func TestService_Propagation(t *testing.T) {
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {
-	genesis := service.Sbm.GetByID(root.Hash)
+	genesis := service.db.GetByID(root.Hash)
 	if genesis == nil {
 		return errors.New("Didn't find genesis-block in service")
 	}

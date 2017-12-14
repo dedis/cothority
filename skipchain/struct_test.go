@@ -1,12 +1,13 @@
 package skipchain
 
 import (
+	"bytes"
+	"crypto/sha512"
+	"io/ioutil"
+	"os"
 	"testing"
 
-	"crypto/sha512"
-
-	"bytes"
-
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -18,37 +19,41 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
-	sbm := NewSkipBlockMap()
+
+	db, fname := setupSkipBlockDB(t)
+	defer db.Close()
+	defer os.Remove(fname)
+
 	root0 := NewSkipBlock()
 	root0.Roster = roster
 	root0.Hash = root0.CalculateHash()
 	root0.BackLinkIDs = []SkipBlockID{root0.Hash}
-	sbm.Store(root0)
+	db.Store(root0)
 	root1 := root0.Copy()
 	root1.Index++
-	sbm.Store(root1)
+	db.Store(root1)
 	inter0 := NewSkipBlock()
 	inter0.ParentBlockID = root1.Hash
 	inter0.Roster = roster
 	inter0.Hash = inter0.CalculateHash()
-	sbm.Store(inter0)
+	db.Store(inter0)
 	inter1 := inter0.Copy()
 	inter1.Index++
 	inter1.BackLinkIDs = []SkipBlockID{inter0.Hash}
 
-	b, err := sbm.GetResponsible(root0)
+	b, err := db.GetResponsible(root0)
 	log.ErrFatal(err)
 	assert.True(t, root0.Equal(b))
 
-	b, err = sbm.GetResponsible(root1)
+	b, err = db.GetResponsible(root1)
 	log.ErrFatal(err)
 	assert.True(t, root0.Equal(b))
 
-	b, err = sbm.GetResponsible(inter0)
+	b, err = db.GetResponsible(inter0)
 	log.ErrFatal(err)
 	assert.Equal(t, root1.Hash, b.Hash)
 
-	b, err = sbm.GetResponsible(inter1)
+	b, err = db.GetResponsible(inter1)
 	log.ErrFatal(err)
 	assert.True(t, inter0.Equal(b))
 }
@@ -58,21 +63,25 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
-	sbm := NewSkipBlockMap()
+
+	db, fname := setupSkipBlockDB(t)
+	defer db.Close()
+	defer os.Remove(fname)
+
 	root := NewSkipBlock()
 	root.Roster = roster2
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
 	root.Hash = root.CalculateHash()
-	sbm.Store(root)
+	db.Store(root)
 	log.ErrFatal(root.VerifyForwardSignatures())
-	log.ErrFatal(sbm.VerifyLinks(root))
+	log.ErrFatal(db.VerifyLinks(root))
 
 	block1 := root.Copy()
 	block1.BackLinkIDs = append(block1.BackLinkIDs, root.Hash)
 	block1.Index++
-	sbm.Store(block1)
+	db.Store(block1)
 	require.Nil(t, block1.VerifyForwardSignatures())
-	require.NotNil(t, sbm.VerifyLinks(block1))
+	require.NotNil(t, db.VerifyLinks(block1))
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
@@ -172,4 +181,24 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
+}
+
+// setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
+// The caller is responsible to close and remove the database file after using it.
+func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
+	f, err := ioutil.TempFile("", "skipblock-test")
+	require.Nil(t, err)
+	fname := f.Name()
+	require.Nil(t, f.Close())
+
+	db, err := bolt.Open(fname, 0600, nil)
+	require.Nil(t, err)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket([]byte("skipblock-test"))
+		return err
+	})
+	require.Nil(t, err)
+
+	return &SkipBlockDB{db, "skipblock-test"}, fname
 }

@@ -2,31 +2,25 @@ package skipchain
 
 import (
 	"bytes"
-
+	"encoding/binary"
+	"encoding/hex"
+	"errors"
 	"fmt"
-
+	"strings"
 	"sync"
 
-	"errors"
-
-	"encoding/binary"
-
-	"encoding/hex"
-	"strings"
-
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/satori/go.uuid"
 )
 
 // How many msec to wait before a timeout is generated in the propagation.
 const propagateTimeout = 10000
-
-// How often we save the skipchains - in seconds.
-const timeBetweenSave = 0
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -161,6 +155,40 @@ type SkipBlockFix struct {
 	Roster *onet.Roster
 }
 
+// Copy returns a deep copy of SkipBlockFix
+func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
+	backLinkIDs := make([]SkipBlockID, len(sbf.BackLinkIDs))
+	for i := range backLinkIDs {
+		backLinkIDs[i] = make(SkipBlockID, len(sbf.BackLinkIDs[i]))
+		copy(backLinkIDs[i], sbf.BackLinkIDs[i])
+	}
+
+	verifierIDs := make([]VerifierID, len(sbf.VerifierIDs))
+	copy(verifierIDs, sbf.VerifierIDs)
+
+	parentBlockID := make(SkipBlockID, len(sbf.ParentBlockID))
+	copy(parentBlockID, sbf.ParentBlockID)
+
+	genesisID := make(SkipBlockID, len(sbf.GenesisID))
+	copy(genesisID, sbf.GenesisID)
+
+	data := make([]byte, len(sbf.Data))
+	copy(data, sbf.Data)
+
+	return &SkipBlockFix{
+		Index:         sbf.Index,
+		Height:        sbf.Height,
+		MaximumHeight: sbf.MaximumHeight,
+		BaseHeight:    sbf.BaseHeight,
+		BackLinkIDs:   backLinkIDs,
+		VerifierIDs:   verifierIDs,
+		ParentBlockID: parentBlockID,
+		GenesisID:     genesisID,
+		Data:          data,
+		Roster:        sbf.Roster,
+	}
+}
+
 // SkipBlockData represents all entries - as maps are not ordered and thus
 // difficult to hash, this is as a slice to {key,data}-pairs.
 type SkipBlockData struct {
@@ -267,9 +295,8 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	if sb == nil {
 		return nil
 	}
-	sbf := *sb.SkipBlockFix
 	b := &SkipBlock{
-		SkipBlockFix: &sbf,
+		SkipBlockFix: sb.SkipBlockFix.Copy(),
 		Hash:         make([]byte, len(sb.Hash)),
 		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
 		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
@@ -277,10 +304,14 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	for i, fl := range sb.ForwardLink {
 		b.ForwardLink[i] = fl.Copy()
 	}
-	copy(b.ChildSL, sb.ChildSL)
+	for i, child := range sb.ChildSL {
+		b.ChildSL[i] = make(SkipBlockID, len(child))
+		copy(b.ChildSL[i], child)
+	}
 	copy(b.Hash, sb.Hash)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
+
 	return b
 }
 
@@ -346,8 +377,11 @@ type BlockLink struct {
 func (bl *BlockLink) Copy() *BlockLink {
 	sigCopy := make([]byte, len(bl.Signature))
 	copy(sigCopy, bl.Signature)
+	hashCopy := make(SkipBlockID, len(bl.Hash))
+	copy(hashCopy, bl.Hash)
+
 	return &BlockLink{
-		Hash:      bl.Hash,
+		Hash:      hashCopy,
 		Signature: sigCopy,
 	}
 }
@@ -363,9 +397,18 @@ func (bl *BlockLink) VerifySignature(publics []kyber.Point) error {
 
 // SkipBlockMap holds the map to the skipblocks. This is used for verification,
 // so that all links can be followed.
+// TODO remove when scmgr is updated
 type SkipBlockMap struct {
 	SkipBlocks map[string]*SkipBlock
 	sync.Mutex
+}
+
+// SkipBlockDB holds the database to the skipblocks.
+// This is used for verification, so that all links can be followed.
+// It is a wrapper to embed bolt.DB.
+type SkipBlockDB struct {
+	*bolt.DB
+	bucketName string
 }
 
 // NewSkipBlockMap returns a pre-initialised SkipBlockMap.
@@ -373,11 +416,22 @@ func NewSkipBlockMap() *SkipBlockMap {
 	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
 }
 
-// GetByID returns the skip-block or nil if it doesn't exist
-func (sbm *SkipBlockMap) GetByID(sbID SkipBlockID) *SkipBlock {
-	sbm.Lock()
-	defer sbm.Unlock()
-	return sbm.SkipBlocks[string(sbID)].Copy()
+// GetByID returns a new copy of the skip-block or nil if it doesn't exist
+func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
+	var result *SkipBlock
+	err := db.View(func(tx *bolt.Tx) error {
+		sb, err := db.getFromTx(tx, sbID)
+		if err != nil {
+			return err
+		}
+		result = sb
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err.Error())
+	}
+	return result
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -405,6 +459,49 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 	return sb.Hash
 }
 
+// Store stores the given SkipBlock in the service-list
+func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
+	var result SkipBlockID
+	err := db.Update(func(tx *bolt.Tx) error {
+		sbOld, err := db.getFromTx(tx, sb.Hash)
+		if err != nil {
+			return errors.New("failed to get skipblock with error: " + err.Error())
+		}
+		if sbOld != nil {
+			// If this skipblock already exists, only copy forward-links and
+			// new children.
+			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+				for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
+					if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+						return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
+					}
+					sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+				}
+			}
+			if len(sb.ChildSL) > len(sbOld.ChildSL) {
+				sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
+			}
+			err := db.storeToTx(tx, sbOld)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := db.storeToTx(tx, sb)
+			if err != nil {
+				return err
+			}
+		}
+		result = sb.Hash
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err.Error())
+		return nil
+	}
+	return result
+}
+
 // Length returns the actual length using mutexes
 func (sbm *SkipBlockMap) Length() int {
 	sbm.Lock()
@@ -412,11 +509,22 @@ func (sbm *SkipBlockMap) Length() int {
 	return len(sbm.SkipBlocks)
 }
 
+// Length returns the actual length using mutexes
+func (db *SkipBlockDB) Length() int {
+	var i int
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		i = b.Stats().KeyN
+		return nil
+	})
+	return i
+}
+
 // GetResponsible searches for the block that is responsible for sb
 // - Root_Genesis - himself
 // - *_Gensis - it's his parent
 // - else - it's the previous block
-func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
+func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if sb == nil {
 		log.Panic(log.Stack())
 	}
@@ -426,7 +534,7 @@ func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 			// Root-skipchain, no other parent
 			return sb, nil
 		}
-		ret := sbm.GetByID(sb.ParentBlockID)
+		ret := db.GetByID(sb.ParentBlockID)
 		if ret == nil {
 			return nil, errors.New("No Roster and no parent")
 		}
@@ -435,7 +543,7 @@ func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 	if len(sb.BackLinkIDs) == 0 {
 		return nil, errors.New("Invalid block: no backlink")
 	}
-	prev := sbm.GetByID(sb.BackLinkIDs[0])
+	prev := db.GetByID(sb.BackLinkIDs[0])
 	if prev == nil {
 		return nil, errors.New("Didn't find responsible")
 	}
@@ -444,7 +552,7 @@ func (sbm *SkipBlockMap) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 
 // VerifyLinks makes sure that all forward- and backward-links are correct.
 // It takes a skipblock to verify and returns nil in case of success.
-func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
+func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 	if len(sb.BackLinkIDs) == 0 {
 		return errors.New("need at least one backlink")
 	}
@@ -455,7 +563,7 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 
 	// Verify if we're in the responsible-list
 	if !sb.ParentBlockID.IsNull() {
-		parent := sbm.GetByID(sb.ParentBlockID)
+		parent := db.GetByID(sb.ParentBlockID)
 		if parent == nil {
 			return errors.New("Didn't find parent")
 		}
@@ -480,13 +588,13 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 	}
 
 	// Verify we're referenced by our previous block
-	sbBack := sbm.GetByID(sb.BackLinkIDs[0])
+	sbBack := db.GetByID(sb.BackLinkIDs[0])
 	if sbBack == nil {
 		if sb.GetForwardLen() > 0 {
 			log.Lvl3("Didn't find back-link, but have a good forward-link")
 			return nil
 		}
-		return errors.New("Didn't find height-0 skipblock in sbm")
+		return errors.New("Didn't find height-0 skipblock in db")
 	}
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
@@ -498,10 +606,11 @@ func (sbm *SkipBlockMap) VerifyLinks(sb *SkipBlock) error {
 }
 
 // GetLatest searches for the latest available block for that skipblock.
-func (sbm *SkipBlockMap) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
+	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		latest = sbm.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
+		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
 		if latest == nil {
 			return nil, errors.New("missing block")
 		}
@@ -534,4 +643,60 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 		}
 	}
 	return nil
+}
+
+// storeToTx stores the skipblock into the database.
+// An error is returned on failure.
+// The caller must ensure that this function is called from within a valid transaction.
+func (db *SkipBlockDB) storeToTx(tx *bolt.Tx, sb *SkipBlock) error {
+	key := sb.Hash
+	val, err := network.Marshal(sb)
+	if err != nil {
+		return err
+	}
+
+	return tx.Bucket([]byte(db.bucketName)).Put(key, val)
+}
+
+// getFromTx returns the skipblock identified by sbID.
+// nil is returned if the key does not exist.
+// An error is thrown if marshalling fails.
+// The caller must ensure that this function is called from within a valid transaction.
+func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
+	val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
+	if val == nil {
+		return nil, nil
+	}
+
+	_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
+	if err != nil {
+		return nil, err
+	}
+
+	return sbMsg.(*SkipBlock).Copy(), nil
+}
+
+// getAll returns all the data in the database as a map
+// This function performs a single transaction,
+// the caller should not perform operations that may requires a view of the
+// database that is consistent at the time of the function call.
+func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
+	data := map[string]*SkipBlock{}
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			if err != nil {
+				return err
+			}
+			sb := sbMsg.(*SkipBlock)
+			data[string(sb.SkipChainID())] = sb
+			return nil
+		})
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
