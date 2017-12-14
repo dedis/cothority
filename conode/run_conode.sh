@@ -5,16 +5,19 @@ set -e
 # run_conode.sh public # Launch a public conode - supposes it's already configured
 # run_conode.sh local 3 # Launches 3 conodes locally.
 
-gopath=$(go env GOPATH)
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
-DEDIS_PATH=$gopath/src/github.com/dedis
-COTHORITY_PATH=$DEDIS_PATH/onchain-secrets
-ONET_PATH=$gopath/src/github.com/dedis/onet
+DEDIS_PATH=$(go env GOPATH)/src/github.com/dedis
+COTHORITY_PATH=$DEDIS_PATH/cothority
+ONET_PATH=$(go env GOPATH)/src/github.com/dedis/onet
 CONODE_PATH=$COTHORITY_PATH/conode
-CONODE_GO=github.com/dedis/onchain-secrets/conode
+CONODE_GO=github.com/dedis/cothority/conode
+# increment version sub if there's something about cothority that changes
+# and requires a migration, but onet does not change.
 VERSION_SUB="1"
+# increment version in onet if there's something that changes that needs
+# migration.
 VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\"/\1/g" )
 VERSION="$VERSION_ONET-$VERSION_SUB"
 RUN_CONODE=$0
@@ -27,21 +30,26 @@ main(){
 		showHelp
 		exit 1
 	fi
-	if [ ! "$gopath" ]; then
-		echo "'$gopath' not found"
+
+	go env GOPATH > /dev/null
+	if [ $? != 0 ]; then
+		echo "Could not find GOPATH."
 		echo "Please install go: https://golang.org/doc/install"
 		exit 1
 	fi
+	gopath=`go env GOPATH`
+	
 	if ! echo $PATH | grep -q $gopath/bin; then
 		echo "Please add '$gopath/bin' to your '$PATH'"
 		PATH=$PATH:$gopath/bin
+		export PATH
 	fi
 	case $( uname ) in
 	Darwin)
-		PATH_CO=~/Library/
+		PATH_CO=~/Library
 		;;
 	*)
-		PATH_CO=~/.config/
+		PATH_CO=~/.config
 		;;
 	esac
 
@@ -107,26 +115,29 @@ runLocal(){
 		shift
 	done
 
-	if [ "$( which killall )" ]; then
-		echo Stopping old conodes
-		killall -9 $CONODE_BIN || true
-		go install $CONODE_GO
-	fi
+	killall -9 $CONODE_BIN || true
+	go install $CONODE_GO
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do
 		co=co$n
 		if [ -f $co/public.toml ]; then
-			if ! grep -q Description $co/public.toml; then
-				echo "Detected old files - deleting"
-				rm -rf $co
-			fi
+		    if ! grep -q Description $co/public.toml; then
+			echo "Detected old files - deleting"
+			rm -rf $co
+		    fi
+		    grep 'Public =' $co/public.toml|grep -q =\"
+		    if [ "$?" = 0 ]; then
+			echo "Detected base64 public key for $co: converting"
+			mv $co/public.toml $co/public.toml.bak
+			$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
+		    fi
 		fi
 
 		if [ ! -d $co ]; then
 			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | $CONODE_BIN setup
 		fi
-		$CONODE_BIN -c $co/private.toml -d $DEBUG &
+		$CONODE_BIN server -c $co/private.toml -d $DEBUG &
 		cat $co/public.toml >> public.toml
 	done
 	sleep 1
@@ -188,23 +199,29 @@ runPublic(){
 		esac
 		shift
 	done
-	migrate
-	if [ ! -f $PATH_CONODE/private.toml ]; then
-		echo "Didn't fine private.toml in $PATH_CONODE, please set up conode first"
-		echo "Using 'conode setup'"
-		exit 1
-	fi
 	if [ "$UPDATE" ]; then
 		update
 	else
 		go install $CONODE_GO
 	fi
+	migrate
+	if [ ! -f $PATH_CONODE/private.toml ]; then
+		echo "Didn't find private.toml in $PATH_CONODE - setting up conode"
+		if $CONODE_BIN setup; then
+		    echo "Successfully setup conode."
+		    exit 0
+		else
+		    echo "Something went wrong during the setup"
+		    exit 1
+		fi
+	fi
+
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
 	if [ "$MEMLIMIT" ]; then
 		ulimit -Sv $(( MEMLIMIT * 1024 ))
 	fi
-	$CONODE_BIN -d $DEBUG $ARGS | tee $LOG
+	$CONODE_BIN server -d $DEBUG $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
 		echo "Waiting one minute before launching conode again"
@@ -227,6 +244,11 @@ migrate(){
 		echo 0.9 > $PATH_VERSION
 	fi
 	PATH_CONODE=$PATH_CO/conode
+	if [ ! -f $PATH_VERSION ]; then
+	    mkdir -p $PATH_CONODE
+	    echo $VERSION > $PATH_VERSION
+	    return
+	fi
 
 	while [ "$( cat $PATH_VERSION )" != $VERSION ]; do
 		case $( cat $PATH_VERSION ) in
@@ -243,7 +265,15 @@ migrate(){
 				echo "Adding description"
 				grep Description $PATH_CONODE/public.toml >> $PATH_CONODE/private.toml
 			fi
-			echo 1.0-1 > $PATH_VERSION
+			echo $VERSION > $PATH_VERSION
+			;;
+		1.2-1)
+		        co="$PATH_CONODE"
+			echo "Converting base64 public key in $co"
+		        mv $co/public.toml $co/public.toml.bak
+			$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
+			echo $VERSION > $PATH_VERSION
+			echo "Migration to $VERSION complete"
 			;;
 		$VERSION)
 			echo No migration necessary
@@ -276,7 +306,7 @@ EOF
 }
 
 test(){
-	. $ONET_PATH/app/libtest.sh
+	. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
 	if [ "$1" != "-update_rec" ]; then
 		testUpdate
