@@ -13,7 +13,12 @@
 package main
 
 import (
+	"bufio"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet/app"
@@ -96,15 +101,15 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "convert64",
+			Usage:  "convert a base64 toml file to a hex toml file",
+			Action: convert64,
+		},
 	}
 	cliApp.Flags = serverFlags
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
-		return nil
-	}
-	// default action
-	cliApp.Action = func(c *cli.Context) error {
-		runServer(c)
 		return nil
 	}
 
@@ -127,4 +132,30 @@ func checkConfig(c *cli.Context) error {
 		tomlFileName = c.Args().First()
 	}
 	return check.Config(tomlFileName, c.Bool("detail"))
+}
+
+// Convert toml files from base64-encoded kyes to hex-encoded keys
+func convert64(c *cli.Context) error {
+	scanner := bufio.NewScanner(os.Stdin)
+	lineNo := 0
+	for scanner.Scan() {
+		lineNo++
+		line := scanner.Text()
+		if strings.HasPrefix(line, "  Public = \"") {
+			pub := line[12:]
+			if pub[len(pub)-1] != '"' {
+				// does not end in quote? error.
+				log.Fatal("Expected line to end in quote, but it does not: ", line)
+			}
+			pub = pub[:len(pub)-1]
+			data, err := base64.StdEncoding.DecodeString(pub)
+			if err != nil {
+				log.Fatal("line", lineNo, "error:", err)
+			}
+			fmt.Printf("  Public = \"%v\"\n", hex.EncodeToString(data))
+		} else {
+			fmt.Println(line)
+		}
+	}
+	return nil
 }

@@ -165,7 +165,7 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 	}
 	atts := []kyber.Point{}
 	for _, p := range fsToml.Attendees {
-		pub, err := encoding.String64ToPoint(cothority.Suite, p)
+		pub, err := encoding.StringHexToPoint(cothority.Suite, p)
 		if err != nil {
 			return nil, err
 		}
@@ -267,7 +267,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 		if err != nil {
 			return nil, err
 		}
-		pub, err := encoding.String64ToPoint(cothority.Suite, s[3])
+		pub, err := encoding.StringHexToPoint(cothority.Suite, s[3])
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +290,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 			if err != nil {
 				return nil, err
 			}
-			pub, err := encoding.String64ToPoint(cothority.Suite, s[3])
+			pub, err := encoding.StringHexToPoint(cothority.Suite, s[3])
 			if err != nil {
 				return nil, err
 			}
@@ -334,7 +334,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	}
 	atts := make([]string, len(fs.Attendees))
 	for i, p := range fs.Attendees {
-		str, err := encoding.PointToString64(nil, p)
+		str, err := encoding.PointToStringHex(nil, p)
 		if err != nil {
 			return nil, err
 		}
@@ -478,7 +478,7 @@ func Equal(r1, r2 *onet.Roster) bool {
 func toToml(r *onet.Roster) ([][]string, error) {
 	rostr := make([][]string, len(r.List))
 	for i, si := range r.List {
-		str, err := encoding.PointToString64(nil, si.Public)
+		str, err := encoding.PointToStringHex(nil, si.Public)
 		if err != nil {
 			return nil, err
 		}
@@ -509,11 +509,11 @@ func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	token.Private, err = encoding.String64ToScalar(cothority.Suite, t.Private)
+	token.Private, err = encoding.StringHexToScalar(cothority.Suite, t.Private)
 	if err != nil {
 		return nil, err
 	}
-	token.Public, err = encoding.String64ToPoint(cothority.Suite, t.Public)
+	token.Public, err = encoding.StringHexToPoint(cothority.Suite, t.Public)
 	if err != nil {
 		return nil, err
 	}

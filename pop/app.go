@@ -215,7 +215,7 @@ func orgPublic(c *cli.Context) error {
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
 	log.ErrFatal(err)
 	for _, k := range keys {
-		pub, err := encoding.String64ToPoint(cothority.Suite, k)
+		pub, err := encoding.StringHexToPoint(cothority.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -311,11 +311,11 @@ func orgMerge(c *cli.Context) error {
 // creates a new private/public pair
 func attCreate(c *cli.Context) error {
 	kp := key.NewKeyPair(cothority.Suite)
-	secStr, err := encoding.ScalarToString64(nil, kp.Secret)
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := encoding.PointToString64(nil, kp.Public)
+	pubStr, err := encoding.PointToStringHex(nil, kp.Public)
 	if err != nil {
 		return err
 	}
@@ -638,7 +638,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 // TODO: Needs to be public in app package!!!
 // toServerIdentity converts this ServerToml struct to a ServerIdentity.
 func toServerIdentity(s *app.ServerToml, suite kyber.Group) (*network.ServerIdentity, error) {
-	public, err := encoding.String64ToPoint(suite, s.Public)
+	public, err := encoding.StringHexToPoint(suite, s.Public)
 	if err != nil {
 		return nil, err
 	}

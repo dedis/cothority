@@ -211,7 +211,7 @@ func adminAdd(c *cli.Context) error {
 	h := cothority.Suite.Hash()
 	pubs := make([]kyber.Point, len(keys))
 	for i, k := range keys {
-		pub, err := encoding.String64ToPoint(cothority.Suite, k)
+		pub, err := encoding.StringHexToPoint(cothority.Suite, k)
 		if err != nil {
 			log.Error("Couldn't parse public key:", k)
 			return err
@@ -250,11 +250,11 @@ func adminAdd(c *cli.Context) error {
 func idKeyPair(c *cli.Context) error {
 	kp := key.NewKeyPair(cothority.Suite)
 
-	secStr, err := encoding.ScalarToString64(nil, kp.Secret)
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Secret)
 	if err != nil {
 		return err
 	}
-	pubStr, err := encoding.PointToString64(nil, kp.Public)
+	pubStr, err := encoding.PointToStringHex(nil, kp.Public)
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func idCreate(c *cli.Context) error {
 		typ = identity.PublicAuth
 		priv := c.Args().Get(1)
 		var err error
-		kp.Secret, err = encoding.String64ToScalar(cothority.Suite, priv)
+		kp.Secret, err = encoding.StringHexToScalar(cothority.Suite, priv)
 		if err != nil {
 			log.Error("Couldn't parse private key")
 			return err
