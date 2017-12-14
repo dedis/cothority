@@ -677,8 +677,11 @@ func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, err
 	return sbMsg.(*SkipBlock).Copy(), nil
 }
 
-// dump returns all the data in the database as a map
-func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
+// getAll returns all the data in the database as a map
+// This function performs a single transaction,
+// the caller should not perform operations that may requires a view of the
+// database that is consistent at the time of the function call.
+func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	data := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))

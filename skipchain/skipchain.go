@@ -261,7 +261,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 // GetAllSkipchains returns a list of all known skipchains
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
 	// Write all known skipblocks to a map, thus removing double blocks.
-	chains, err := s.db.dump()
+	chains, err := s.db.getAll()
 	if err != nil {
 		return nil, onet.NewClientError(err)
 	}
