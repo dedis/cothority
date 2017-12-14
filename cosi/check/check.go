@@ -20,7 +20,6 @@ import (
 
 	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/cothority/cosi/service"
-	"github.com/dedis/kyber/util/hash"
 )
 
 // RequestTimeOut is how long we're willing to wait for a signature.
@@ -138,10 +137,12 @@ func checkList(list *onet.Roster, descs []string, detail bool) error {
 // (pass an io.File or use an strings.NewReader for strings). It uses
 // the roster el to create the collective signature.
 // In case the signature fails, an error is returned.
-func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*service.SignatureResponse,
-	error) {
+func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*service.SignatureResponse, error) {
 	suite := client.Suite().(kyber.HashFactory)
-	msg, _ := hash.Stream(suite.Hash(), read)
+
+	h := suite.Hash()
+	io.Copy(h, read)
+	msg := h.Sum(nil)
 
 	pchan := make(chan *service.SignatureResponse)
 	var err error
@@ -178,8 +179,13 @@ func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*se
 func verifySignatureHash(suite network.Suite, b []byte, sig *service.SignatureResponse, el *onet.Roster) error {
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
-	fHash, _ := hash.Bytes(suite.(kyber.HashFactory).Hash(), b)
-	hashHash, _ := hash.Bytes(suite.(kyber.HashFactory).Hash(), fHash)
+	h := suite.(kyber.HashFactory).Hash()
+	h.Write(b)
+	fHash := h.Sum(nil)
+	h.Reset()
+	h.Write(fHash)
+	hashHash := h.Sum(nil)
+
 	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
