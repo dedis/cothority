@@ -418,11 +418,20 @@ func NewSkipBlockMap() *SkipBlockMap {
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
-	sb, err := db.get(sbID)
+	var result *SkipBlock
+	err := db.View(func(tx *bolt.Tx) error {
+		sb, err := db.getFromTx(tx, sbID)
+		if err != nil {
+			return err
+		}
+		result = sb
+		return nil
+	})
+
 	if err != nil {
 		log.Error(err.Error())
 	}
-	return sb
+	return result
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -452,37 +461,46 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 
 // Store stores the given SkipBlock in the service-list
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	sbOld, err := db.get(sb.Hash)
-	if err != nil {
-		log.Error("failed to get skipblock with error: " + err.Error())
-		return nil
-	}
-	if sbOld != nil {
-		// If this skipblock already exists, only copy forward-links and
-		// new children.
-		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
-					log.Error("Got a known block with wrong signature in forward-link")
-					return nil
+	var hash SkipBlockID
+	err := db.Update(func(tx *bolt.Tx) error {
+		sbOld, err := db.getFromTx(tx, sb.Hash)
+		if err != nil {
+			log.Error("failed to get skipblock with error: " + err.Error())
+			return nil
+		}
+		if sbOld != nil {
+			// If this skipblock already exists, only copy forward-links and
+			// new children.
+			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+				for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
+					if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+						log.Error("Got a known block with wrong signature in forward-link")
+						return nil
+					}
+					sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
 				}
-				sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+			}
+			if len(sb.ChildSL) > len(sbOld.ChildSL) {
+				sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
+			}
+			err := db.storeToTx(tx, sbOld)
+			if err != nil {
+				log.Error(err.Error())
+			}
+		} else {
+			err := db.storeToTx(tx, sb)
+			if err != nil {
+				log.Error(err.Error())
 			}
 		}
-		if len(sb.ChildSL) > len(sbOld.ChildSL) {
-			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
-		}
-		err := db.store(sbOld)
-		if err != nil {
-			log.Error(err.Error())
-		}
-	} else {
-		err := db.store(sb)
-		if err != nil {
-			log.Error(err.Error())
-		}
+		hash = sb.Hash
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err.Error())
 	}
-	return sb.Hash
+	return hash
 }
 
 // Length returns the actual length using mutexes
@@ -628,42 +646,35 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 	return nil
 }
 
-// store stores the skipblock into the database.
-// an error is returned on failure.
-func (db *SkipBlockDB) store(sb *SkipBlock) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		key := sb.Hash
-		val, err := network.Marshal(sb)
-		if err != nil {
-			return err
-		}
+// storeToTx stores the skipblock into the database.
+// An error is returned on failure.
+// The caller must ensure that this function is called from within a valid transaction.
+func (db *SkipBlockDB) storeToTx(tx *bolt.Tx, sb *SkipBlock) error {
+	key := sb.Hash
+	val, err := network.Marshal(sb)
+	if err != nil {
+		return err
+	}
 
-		return tx.Bucket([]byte(db.bucketName)).Put(key, val)
-	})
+	return tx.Bucket([]byte(db.bucketName)).Put(key, val)
 }
 
-// get returns the skipblock identified by sbID.
+// getFromTx returns the skipblock identified by sbID.
 // nil is returned if the key does not exist.
 // An error is thrown if marshalling fails.
-func (db *SkipBlockDB) get(sbID SkipBlockID) (*SkipBlock, error) {
-	var sb *SkipBlock
-	err := db.View(func(tx *bolt.Tx) error {
-		val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
-		if val == nil {
-			sb = nil
-			return nil
-		}
+// The caller must ensure that this function is called from within a valid transaction.
+func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, error) {
+	val := tx.Bucket([]byte(db.bucketName)).Get(sbID)
+	if val == nil {
+		return nil, nil
+	}
 
-		_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
-		if err != nil {
-			return err
-		}
+	_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
+	if err != nil {
+		return nil, err
+	}
 
-		sb = sbMsg.(*SkipBlock).Copy()
-		return nil
-	})
-
-	return sb, err
+	return sbMsg.(*SkipBlock).Copy(), nil
 }
 
 // dump returns all the data in the database as a map
@@ -676,7 +687,6 @@ func (db *SkipBlockDB) dump() (map[string]*SkipBlock, error) {
 			if err != nil {
 				return err
 			}
-
 			sb := sbMsg.(*SkipBlock)
 			data[string(sb.SkipChainID())] = sb
 			return nil
