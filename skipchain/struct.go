@@ -397,6 +397,7 @@ func (bl *BlockLink) VerifySignature(publics []kyber.Point) error {
 
 // SkipBlockMap holds the map to the skipblocks. This is used for verification,
 // so that all links can be followed.
+// TODO remove when scmgr is updated
 type SkipBlockMap struct {
 	SkipBlocks map[string]*SkipBlock
 	sync.Mutex
