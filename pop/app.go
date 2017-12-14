@@ -101,7 +101,7 @@ func main() {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
 	}
-	appCli.Run(os.Args)
+	log.ErrFatal(appCli.Run(os.Args))
 }
 
 // links this pop to a cothority
@@ -127,10 +127,11 @@ func orgLink(c *cli.Context) error {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
+		log.Print()
 		return err
 	}
 	cfg.Address = addr
-	log.Lvl3("Successfully linked with", addr)
+	log.Info("Successfully linked with", addr)
 	cfg.write()
 	return nil
 }
