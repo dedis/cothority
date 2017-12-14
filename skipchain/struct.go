@@ -461,12 +461,11 @@ func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
 
 // Store stores the given SkipBlock in the service-list
 func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	var hash SkipBlockID
+	var result SkipBlockID
 	err := db.Update(func(tx *bolt.Tx) error {
 		sbOld, err := db.getFromTx(tx, sb.Hash)
 		if err != nil {
-			log.Error("failed to get skipblock with error: " + err.Error())
-			return nil
+			return errors.New("failed to get skipblock with error: " + err.Error())
 		}
 		if sbOld != nil {
 			// If this skipblock already exists, only copy forward-links and
@@ -474,8 +473,7 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
 				for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
 					if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
-						log.Error("Got a known block with wrong signature in forward-link")
-						return nil
+						return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
 					}
 					sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
 				}
@@ -485,22 +483,23 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			}
 			err := db.storeToTx(tx, sbOld)
 			if err != nil {
-				log.Error(err.Error())
+				return err
 			}
 		} else {
 			err := db.storeToTx(tx, sb)
 			if err != nil {
-				log.Error(err.Error())
+				return err
 			}
 		}
-		hash = sb.Hash
+		result = sb.Hash
 		return nil
 	})
 
 	if err != nil {
 		log.Error(err.Error())
+		return nil
 	}
-	return hash
+	return result
 }
 
 // Length returns the actual length using mutexes
