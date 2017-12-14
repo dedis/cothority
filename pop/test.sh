@@ -475,11 +475,8 @@ runCl(){
 runDbgCl(){
 	local DBG=$1
 	local CFG=cl$2
-	local COLOR=$DEBUG_COLOR
-	export DEBUG_COLOR=""
 	shift 2
-	./$APP -d $DBG -c $CFG $@
-	export DEBUG_COLOR=$COLOR
+	DEBUG_COLOR="" ./$APP -d $DBG -c $CFG $@
 }
 
 main
