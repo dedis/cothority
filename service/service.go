@@ -801,12 +801,12 @@ func (s *Service) tryLoad() error {
 	}()
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
-	if !s.DataAvailable("storage") {
-		return nil
-	}
 	msg, err := s.Load("storage")
 	if err != nil {
 		return err
+	}
+	if msg == nil {
+		return nil
 	}
 	var ok bool
 	s.Storage, ok = msg.(*Storage)
