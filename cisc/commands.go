@@ -166,6 +166,19 @@ func init() {
 				Action:    kvAdd,
 			},
 			{
+				Name:      "addWeb",
+				Usage:     "add a web-site to a skipchain",
+				Aliases:   []string{"a"},
+				ArgsUsage: "path/page.html",
+				Action:    kvAddWeb,
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "inline",
+						Usage: "inline all images, css and scripts",
+					},
+				},
+			},
+			{
 				Name:      "del",
 				Aliases:   []string{"rm"},
 				Usage:     "delete a value",

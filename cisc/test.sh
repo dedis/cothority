@@ -3,10 +3,11 @@
 DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
+# DBG_SRV=2
 # Needs 4 clients
 NBR=4
 PACKAGE_POP_GO="github.com/dedis/cothority/pop"
-PACKAGE_POP=$(go env GOPATH)/src/$PACKAGE_POP_GO"
+PACKAGE_POP="$(go env GOPATH)/src/$PACKAGE_POP_GO"
 pop=`basename $PACKAGE_POP`
 PACKAGE_IDEN="github.com/dedis/cothority/identity"
 
@@ -21,7 +22,7 @@ main(){
     buildKeys
     buildConode github.com/dedis/cothority/cosi/service $PACKAGE_IDEN $PACKAGE_POP_GO/service
     build $PACKAGE_POP
-    createFinal 2
+    createFinal 2 > /dev/null
     createToken 2
 
     test Build
@@ -38,6 +39,7 @@ main(){
     test IdDel
     test KeyAdd
     test KeyAdd2
+    test KeyAddWeb
     test KeyDel
     test SSHAdd
     test SSHDel
@@ -154,6 +156,17 @@ testKeyDel(){
     testNGrep key2 runCl 2 kv ls
     testOK runCl 1 config update
     testNGrep key2 runCl 2 kv ls
+}
+
+testKeyAddWeb(){
+  clientSetup 2
+  mkdir dedis
+  echo "<html>DEDIS rocks</html>" > dedis/index.html
+  testOK runCl 1 kv addWeb dedis/index.html
+  testOK runCl 2 config vote y
+  testGrep "html:dedis:index.html" runCl 1 kv list
+  testGrep "DEDIS rocks" runCl 1 kv value "html:dedis:index.html"
+  rm -rf dedis/index.html
 }
 
 testKeyAdd2(){
@@ -518,6 +531,6 @@ createFinal(){
     ./$pop -c cl1 org public $pub_user1 $pop_hash
     ./$pop -c cl2 org public $pub_user1 $pop_hash
     ./$pop -c cl1 org final $pop_hash
-    ./$pop -c cl2 -d 2 org final $pop_hash | tail -n +3> final.toml
+    DEBUG_COLOR="" ./$pop -c cl2 -d 2 org final $pop_hash | tail -n +3> final.toml
 }
 main

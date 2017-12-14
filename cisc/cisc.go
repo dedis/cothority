@@ -10,6 +10,7 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -66,7 +67,7 @@ func main() {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
 	}
-	app.Run(os.Args)
+	log.ErrFatal(app.Run(os.Args))
 }
 
 /*
@@ -443,7 +444,16 @@ func kvList(c *cli.Context) error {
 	return nil
 }
 func kvValue(c *cli.Context) error {
-	log.Fatal("Not yet implemented")
+	if c.NArg() < 1 {
+		return errors.New("please give key to search")
+	}
+	cfg := loadConfigOrFail(c)
+	value, ok := cfg.Data.Storage[c.Args().First()]
+	if ok {
+		log.Info("Data[%s] = %s", c.Args().First(), value)
+	} else {
+		log.Info("Key '%s' does not exist")
+	}
 	return nil
 }
 func kvAdd(c *cli.Context) error {
@@ -469,6 +479,26 @@ func kvDel(c *cli.Context) error {
 		log.Fatal("Didn't find key", key, "in the config")
 	}
 	delete(prop.Storage, key)
+	cfg.proposeSendVoteUpdate(prop)
+	return cfg.saveConfig(c)
+}
+func kvAddWeb(c *cli.Context) error {
+	if c.NArg() < 1 {
+		return errors.New("Please give an html file to add")
+	}
+	if c.Bool("inline") {
+		return errors.New("Not implemented yet")
+		// https://github.com/remy/inliner
+	}
+	cfg := loadConfigOrFail(c)
+	name := c.Args().First()
+	log.Info("Reading file", name)
+	data, err := ioutil.ReadFile(name)
+	if err != nil {
+		return nil
+	}
+	prop := cfg.GetProposed()
+	prop.Storage["html:"+path.Dir(name)+":"+path.Base(name)] = string(data)
 	cfg.proposeSendVoteUpdate(prop)
 	return cfg.saveConfig(c)
 }
