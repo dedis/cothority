@@ -12,7 +12,6 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -70,7 +69,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	}
 
 	// Calculating proofs
-	si := cothority.Suite.Scalar().Pick(random.Stream)
+	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
 	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(r.U, r.Xc))
 	hiHat := cothority.Suite.Point().Mul(si, nil)
 	hash := sha256.New()

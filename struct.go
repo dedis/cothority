@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -118,24 +118,24 @@ func (dw *Transaction) String() string {
 // Output:
 //   - write - structure containing the encrypted key U, Cs and the NIZKP of
 //   it containing the reader-darc.
-func NewWrite(suite suite, scid skipchain.SkipBlockID, X kyber.Point, reader *darc.Darc, key []byte) *Write {
+func NewWrite(suite suites.Suite, scid skipchain.SkipBlockID, X kyber.Point, reader *darc.Darc, key []byte) *Write {
 	wr := &Write{
 		Reader: *reader,
 	}
-	r := suite.Scalar().Pick(random.Stream)
+	r := suite.Scalar().Pick(suite.RandomStream())
 	C := suite.Point().Mul(r, X)
 	wr.U = suite.Point().Mul(r, nil)
 
 	// Create proof
 	for len(key) > 0 {
-		kp := suite.Point().Embed(key, random.Stream)
+		kp := suite.Point().Embed(key, suite.RandomStream())
 		wr.Cs = append(wr.Cs, suite.Point().Add(C, kp))
 		key = key[min(len(key), kp.EmbedLen()):]
 	}
 
 	gBar := suite.Point().Pick(suite.XOF(scid))
 	wr.Ubar = suite.Point().Mul(r, gBar)
-	s := suite.Scalar().Pick(random.Stream)
+	s := suite.Scalar().Pick(suite.RandomStream())
 	w := suite.Point().Mul(s, nil)
 	wBar := suite.Point().Mul(s, gBar)
 	hash := sha256.New()

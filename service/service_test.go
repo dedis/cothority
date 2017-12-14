@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber/group"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var tSuite = group.MustSuite("Ed25519")
+var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m, 2)
