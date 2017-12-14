@@ -402,7 +402,7 @@ func (s Service) MergeConfigReply(req *network.Envelope) {
 				return nil
 			}
 			if mcrVal.PopStatus < PopStatusOK {
-				log.Error("Wrong pop-status:", mcrVal.PopStatus)
+				log.Lvl2("Wrong pop-status:", mcrVal.PopStatus)
 				return mcrVal
 			}
 			if mcrVal.Final == nil {
@@ -545,7 +545,7 @@ func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
 	var ok bool
 
 	if fs, ok = s.data.Finals[string(final.Desc.Hash())]; !ok {
-		log.Error("final Statement not found")
+		log.Error(s.ServerIdentity(), "final Statement not found")
 		return false
 	}
 

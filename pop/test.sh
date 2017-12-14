@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 DBG_TEST=1
-DBG_APP=3
+DBG_APP=2
+# DBG_SRV=2
+
 NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
@@ -226,7 +228,6 @@ testAtJoin(){
 	runDbgCl 2 3 org final  ${pop_hash[2]} | tail > final2.toml
 	runCl 3 org final  ${pop_hash[3]}
 	runDbgCl 2 1 org final  ${pop_hash[3]} | tail > final3.toml
-	cat final1.toml
 
 	testFail runCl 1 attendee join -y
 	testFail runCl 1 attendee join -y ${priv[1]}
@@ -388,7 +389,7 @@ mkPopConfig(){
 	local n
 	for (( n=1; n<=$1; n++ ))
 	do
-		rm pop_desc$n.toml
+		rm -f pop_desc$n.toml
 		cat << EOF > pop_desc$n.toml
 Name = "Proof-of-Personhood Party"
 DateTime = "2017-08-08 15:00 UTC"
@@ -404,7 +405,7 @@ EOF
 			sed -n "$((4*$m-3)),$((4*$m))p" public.toml >> pop_desc$n.toml
 		fi
 	done
-	rm pop_merge.toml
+	rm -f pop_merge.toml
 	for (( n=1; n<=$2; n++ ))
 	do
 		cat << EOF >> pop_merge.toml
@@ -474,8 +475,11 @@ runCl(){
 runDbgCl(){
 	local DBG=$1
 	local CFG=cl$2
+	local COLOR=$DEBUG_COLOR
+	export DEBUG_COLOR=""
 	shift 2
 	./$APP -d $DBG -c $CFG $@
+	export DEBUG_COLOR=$COLOR
 }
 
 main
