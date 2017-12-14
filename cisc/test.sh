@@ -22,9 +22,7 @@ main(){
     buildKeys
     buildConode github.com/dedis/cothority/cosi/service $PACKAGE_IDEN $PACKAGE_POP_GO/service
     build $PACKAGE_POP
-    testOut Creating final statement
     createFinal 2 > /dev/null
-    testOut Creating token
     createToken 2
 
     test Build
