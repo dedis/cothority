@@ -206,6 +206,7 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 		return nil
 	})
 
+	require.Nil(t, db.GetFuzzy(""))
 	require.Nil(t, db.GetFuzzy("1234abcd"))
 	require.NotNil(t, db.GetFuzzy(hexID))
 	require.NotNil(t, db.GetFuzzy(hexID[:8]))

@@ -659,6 +659,10 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 		log.Error("Failed to decode " + id)
 		return nil
 	}
+	if len(match) == 0 {
+		log.Error("id is empty")
+		return nil
+	}
 
 	var sb *SkipBlock
 	db.View(func(tx *bolt.Tx) error {
