@@ -8,9 +8,9 @@ set -e
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
-DEDIS_PATH=$(go env GOPATH)/src/github.com/dedis
+DEDIS_PATH="$(go env GOPATH)/src/github.com/dedis"
 COTHORITY_PATH=$DEDIS_PATH/onchain-secrets
-ONET_PATH=$(go env GOPATH)/src/github.com/dedis/onet
+ONET_PATH="$(go env GOPATH)/src/github.com/dedis/onet"
 CONODE_PATH=$COTHORITY_PATH/conode
 CONODE_GO=github.com/dedis/onchain-secrets/conode
 # increment version sub if there's something about cothority that changes
@@ -31,13 +31,12 @@ main(){
 		exit 1
 	fi
 
-	go env GOPATH > /dev/null
-	if [ $? != 0 ]; then
+	if ! go env GOPATH > /dev/null; then
 		echo "Could not find GOPATH."
 		echo "Please install go: https://golang.org/doc/install"
 		exit 1
 	fi
-	gopath=`go env GOPATH`
+	gopath="$(go env GOPATH)"
 	
 	if ! echo $PATH | grep -q $gopath/bin; then
 		echo "Please add '$gopath/bin' to your '$PATH'"
@@ -305,7 +304,7 @@ EOF
 }
 
 test(){
-	. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+	. "$(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh"
 
 	if [ "$1" != "-update_rec" ]; then
 		testUpdate

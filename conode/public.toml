@@ -1,15 +1,12 @@
 [[servers]]
   Address = "tcp://127.0.0.1:7002"
-  Public = "2CmgeQ/6h5nku9G+6NoFB8kWa2ZWYLq6ct2GEPyifME="
+  Public = "4310b2f23c95ca7050b44e26437700758591e30d0b6a50ef76452d9a1ae3cda8"
   Description = "Conode_1"
-
 [[servers]]
   Address = "tcp://127.0.0.1:7004"
-  Public = "11CjDapEcT0aS0TKTvMRQrO1PAw2pVjA1hDMQQi7Tss="
+  Public = "8b5bbe84099a0ff4a153804c7d9af3231d07d050614b44e4e4717ef9d5629251"
   Description = "Conode_2"
-
 [[servers]]
   Address = "tcp://127.0.0.1:7006"
-  Public = "f0fzMITD7MIz+LBbj0CLvRwuShKarhJvkr7KzHNXa8c="
+  Public = "f6771a314d84ad04f2a1f778ad1f04c58174ccfc376a6a132cc41b0068050167"
   Description = "Conode_3"
-
