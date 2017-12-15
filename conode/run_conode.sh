@@ -8,11 +8,11 @@ set -e
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
-DEDIS_PATH=$(go env GOPATH)/src/github.com/dedis
-COTHORITY_PATH=$DEDIS_PATH/cothority
-ONET_PATH=$(go env GOPATH)/src/github.com/dedis/onet
+DEDIS_PATH="$(go env GOPATH)/src/github.com/dedis"
+COTHORITY_PATH=$DEDIS_PATH/onchain-secrets
+ONET_PATH="$(go env GOPATH)/src/github.com/dedis/onet"
 CONODE_PATH=$COTHORITY_PATH/conode
-CONODE_GO=github.com/dedis/cothority/conode
+CONODE_GO=github.com/dedis/onchain-secrets/conode
 # increment version sub if there's something about cothority that changes
 # and requires a migration, but onet does not change.
 VERSION_SUB="1"
