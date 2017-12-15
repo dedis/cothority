@@ -267,7 +267,7 @@ migrate(){
 			fi
 			echo $VERSION > $PATH_VERSION
 			;;
-		2.0-1)
+		1.2-1)
 		        co="$PATH_CONODE"
 			echo "Converting base64 public key in $co"
 		        mv $co/public.toml $co/public.toml.bak
