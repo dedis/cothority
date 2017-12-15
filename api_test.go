@@ -3,7 +3,7 @@ package ocs_test
 import (
 	"testing"
 
-	"github.com/dedis/kyber/group"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	_ "github.com/dedis/onchain-secrets/service"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var tSuite = group.MustSuite("Ed25519")
+var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
