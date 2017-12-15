@@ -7,7 +7,6 @@ import (
 
 	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/hash"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -69,10 +68,8 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.CoSi)
 	pcosi.SigningMessage(req.Message)
-	h, err := hash.Bytes(suite.Hash(), req.Message)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(4101, "Couldn't hash message: "+err.Error())
-	}
+	h := suite.Hash()
+	h.Write(req.Message)
 	response := make(chan []byte)
 	pcosi.RegisterSignatureHook(func(sig []byte) {
 		response <- sig
@@ -85,7 +82,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
 	return &SignatureResponse{
-		Hash:      h,
+		Hash:      h.Sum(nil),
 		Signature: sig,
 	}, nil
 }

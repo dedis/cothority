@@ -15,7 +15,6 @@ import (
 	"github.com/dedis/cothority/cosi/crypto"
 	s "github.com/dedis/cothority/cosi/service"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/util/hash"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -119,7 +118,10 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	error) {
 	publics := entityListToPublics(el)
 	client := s.NewClient()
-	msg, _ := hash.Stream(client.Suite().(kyber.HashFactory).Hash(), read)
+
+	h := client.Suite().(kyber.HashFactory).Hash()
+	io.Copy(h, read)
+	msg := h.Sum(nil)
 
 	pchan := make(chan *s.SignatureResponse)
 	var err error
@@ -198,8 +200,12 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	publics := entityListToPublics(el)
-	fHash, _ := hash.Bytes(localSuite.Hash(), b)
-	hashHash, _ := hash.Bytes(localSuite.Hash(), fHash)
+	h := localSuite.Hash()
+	h.Write(b)
+	fHash := h.Sum(nil)
+	h.Reset()
+	h.Write(fHash)
+	hashHash := h.Sum(nil)
 	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
