@@ -8,9 +8,9 @@ set -e
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
 CONODE_BIN=conode
-DEDIS_PATH="$(go env GOPATH)/src/github.com/dedis"
+DEDIS_PATH=$(go env GOPATH)/src/github.com/dedis
 COTHORITY_PATH=$DEDIS_PATH/onchain-secrets
-ONET_PATH="$(go env GOPATH)/src/github.com/dedis/onet"
+ONET_PATH=$(go env GOPATH)/src/github.com/dedis/onet
 CONODE_PATH=$COTHORITY_PATH/conode
 CONODE_GO=github.com/dedis/onchain-secrets/conode
 # increment version sub if there's something about cothority that changes
@@ -75,15 +75,15 @@ showHelp(){
 		cat - <<EOF
 Syntax is $0: (public|local)
 
-public			  	# runs a public conode - supposes it's already configured
+public				# runs a public conode - supposes it's already configured
 	-update			# will automatically update the repositories
 	-mail			# every time the cothority restarts, the last 200 lines get sent
 					# to $MAILADDR
-	-debug 3 		# Set the debug-level for the conode-run
+	-debug 3		# Set the debug-level for the conode-run
 	-memory 500		# Restarts the process if it exceeds 500MBytes
 
 local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
-			      	# argument: 1-sparse..5-flood.
+					# argument: 1-sparse..5-flood.
 EOF
 }
 
@@ -122,22 +122,21 @@ runLocal(){
 	for n in $( seq $NBR ); do
 		co=co$n
 		if [ -f $co/public.toml ]; then
-		    if ! grep -q Description $co/public.toml; then
-			echo "Detected old files - deleting"
-			rm -rf $co
-		    fi
-		    grep 'Public =' $co/public.toml|grep -q =\"
-		    if [ "$?" = 0 ]; then
-			echo "Detected base64 public key for $co: converting"
-			mv $co/public.toml $co/public.toml.bak
-			$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
-		    fi
+			if ! grep -q Description $co/public.toml; then
+				echo "Detected old files - deleting"
+				rm -rf $co
+			fi
+			if grep 'Public =' $co/public.toml|grep -q =\"; then
+				echo "Detected base64 public key for $co: converting"
+				mv $co/public.toml $co/public.toml.bak
+				$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
+			fi
 		fi
 
 		if [ ! -d $co ]; then
 			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | $CONODE_BIN setup
 		fi
-		$CONODE_BIN server -c $co/private.toml -d $DEBUG &
+		$CONODE_BIN -d $DEBUG server -c $co/private.toml &
 		cat $co/public.toml >> public.toml
 	done
 	sleep 1
@@ -208,11 +207,11 @@ runPublic(){
 	if [ ! -f $PATH_CONODE/private.toml ]; then
 		echo "Didn't find private.toml in $PATH_CONODE - setting up conode"
 		if $CONODE_BIN setup; then
-		    echo "Successfully setup conode."
-		    exit 0
+			echo "Successfully setup conode."
+			exit 0
 		else
-		    echo "Something went wrong during the setup"
-		    exit 1
+			echo "Something went wrong during the setup"
+			exit 1
 		fi
 	fi
 
@@ -221,7 +220,7 @@ runPublic(){
 	if [ "$MEMLIMIT" ]; then
 		ulimit -Sv $(( MEMLIMIT * 1024 ))
 	fi
-	$CONODE_BIN server -d $DEBUG $ARGS | tee $LOG
+	$CONODE_BIN -d $DEBUG server $ARGS | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
 		echo "Waiting one minute before launching conode again"
@@ -245,9 +244,9 @@ migrate(){
 	fi
 	PATH_CONODE=$PATH_CO/conode
 	if [ ! -f $PATH_VERSION ]; then
-	    mkdir -p $PATH_CONODE
-	    echo $VERSION > $PATH_VERSION
-	    return
+		mkdir -p $PATH_CONODE
+		echo $VERSION > $PATH_VERSION
+		return
 	fi
 
 	while [ "$( cat $PATH_VERSION )" != $VERSION ]; do
@@ -268,9 +267,9 @@ migrate(){
 			echo $VERSION > $PATH_VERSION
 			;;
 		1.2-1)
-		        co="$PATH_CONODE"
+				co="$PATH_CONODE"
 			echo "Converting base64 public key in $co"
-		        mv $co/public.toml $co/public.toml.bak
+				mv $co/public.toml $co/public.toml.bak
 			$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
 			echo $VERSION > $PATH_VERSION
 			echo "Migration to $VERSION complete"
@@ -278,15 +277,15 @@ migrate(){
 		$VERSION)
 			echo No migration necessary
 			;;
-        *)
-            echo Found wrong version $PATH_VERSION - trying to fix
-            if [ -d $PATH_CO/conode ]; then
-            	echo $VERSION > $PATH_CO/conode/version
-            fi
-            echo "Check $PATH_CO to verify configuration is OK and re-run $0"
-            exit 1
-            ;;
-        esac
+		*)
+			echo Found wrong version $PATH_VERSION - trying to fix
+			if [ -d $PATH_CO/conode ]; then
+				echo $VERSION > $PATH_CO/conode/version
+			fi
+			echo "Check $PATH_CO to verify configuration is OK and re-run $0"
+			exit 1
+			;;
+		esac
 	done
 }
 
