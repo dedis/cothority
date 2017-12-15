@@ -645,6 +645,41 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 	return nil
 }
 
+// GetFuzzy searches for a block that resembles the given ID.
+// If there are multiple matching skipblocks, the first one is chosen. If none
+// match, nil will be returned.
+//
+// For every entry, the search is done in the following order:
+//  1. as prefix - if none is found
+//  2. as suffix - if none is found
+//  3. anywhere
+func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
+	match, err := hex.DecodeString(id)
+	if err != nil {
+		log.Error("Failed to decode " + id)
+		return nil
+	}
+
+	var sb *SkipBlock
+	db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket([]byte(db.bucketName)).Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if bytes.HasPrefix(k, match) || bytes.HasSuffix(k, match) || bytes.Contains(k, match) {
+				_, msg, err := network.Unmarshal(v, cothority.Suite)
+				if err != nil {
+					log.Error("Unmarshal failed")
+					return err
+				}
+				sb = msg.(*SkipBlock).Copy()
+				return nil
+			}
+		}
+		log.Info("Cannot find key that matches " + id)
+		return nil
+	})
+	return sb
+}
+
 // storeToTx stores the skipblock into the database.
 // An error is returned on failure.
 // The caller must ensure that this function is called from within a valid transaction.

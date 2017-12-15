@@ -3,6 +3,7 @@ package skipchain
 import (
 	"bytes"
 	"crypto/sha512"
+	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -181,6 +182,35 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	copy(sig[:], sigC)
 	copy(sig[32:64], sigR)
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
+}
+
+func TestSkipBlock_GetFuzzy(t *testing.T) {
+	db, fname := setupSkipBlockDB(t)
+	defer db.Close()
+	defer os.Remove(fname)
+
+	sb := NewSkipBlock()
+	sb.Data = []byte("hello world")
+	sb.updateHash()
+
+	// store the skipblock and check it's ok
+	var hexID string
+	db.Update(func(tx *bolt.Tx) error {
+		err := db.storeToTx(tx, sb)
+		require.Nil(t, err)
+
+		sb2, err := db.getFromTx(tx, sb.Hash)
+		require.Nil(t, err)
+		require.True(t, sb.Equal(sb2))
+		hexID = hex.EncodeToString(sb.Hash)
+		return nil
+	})
+
+	require.Nil(t, db.GetFuzzy("1234abcd"))
+	require.NotNil(t, db.GetFuzzy(hexID))
+	require.NotNil(t, db.GetFuzzy(hexID[:8]))
+	require.NotNil(t, db.GetFuzzy(hexID[len(hexID)-8:]))
+	require.NotNil(t, db.GetFuzzy(hexID[8:len(hexID)-8]))
 }
 
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
