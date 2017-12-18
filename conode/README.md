@@ -70,7 +70,7 @@ COMMANDS:
      help, h   Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config value, -c value  configuration file of the server (default: "/Users/cosh/Library/conode/private.toml")
+   --config value, -c value  configuration file of the server (default: "/Users/cosh/Library/Conode/private.toml")
    --debug value, -d value   debug-level: 1 for terse, 5 for maximal (default: 0)
    --help, -h                show help
    --version, -v             print the version
@@ -88,15 +88,15 @@ conode setup
 
 and follow the instructions of the dialog. After a successful setup there should be two configuration files:
 
-- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority. 
+- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority.
 - The *private configuration file* of your cothoriy server is located at `$HOME/.config/conode/private.toml`.
 
 **Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
 
-**Note:** 
+**Note:**
 
 - The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
-- On macOS the configuration files are located at `$HOME/Library/cosi/{public,private}.toml`.
+- On macOS the configuration files are located at `$HOME/Library/Conode/{public,private}.toml`.
 
 #### Usage
 
@@ -120,7 +120,7 @@ You can run it with all extras like so:
 `./run_conode.sh -mail -update`
 
 It will send an email to DEDIS with the last 200 lines of log-output every time conode restarts.
-You can change the MAILADDR-variable at the top of the script to change the address 
+You can change the MAILADDR-variable at the top of the script to change the address
 
 ## Further Information
 
