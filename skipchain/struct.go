@@ -649,7 +649,7 @@ func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
 // If there are multiple matching skipblocks, the first one is chosen. If none
 // match, nil will be returned.
 //
-// For every entry, the search is done in the following order:
+// The search is done in the following order:
 //  1. as prefix - if none is found
 //  2. as suffix - if none is found
 //  3. anywhere
@@ -668,10 +668,21 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 	db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(db.bucketName)).Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			if bytes.HasPrefix(k, match) || bytes.HasSuffix(k, match) || bytes.Contains(k, match) {
+			if bytes.HasPrefix(k, match) {
 				_, msg, err := network.Unmarshal(v, cothority.Suite)
 				if err != nil {
-					log.Error("Unmarshal failed")
+					log.Error("Unmarshal failed with error: " + err.Error())
+					return err
+				}
+				sb = msg.(*SkipBlock).Copy()
+				return nil
+			}
+		}
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if bytes.HasSuffix(k, match) {
+				_, msg, err := network.Unmarshal(v, cothority.Suite)
+				if err != nil {
+					log.Error("Unmarshal failed with error: " + err.Error())
 					return err
 				}
 				sb = msg.(*SkipBlock).Copy()

@@ -3,7 +3,6 @@ package skipchain
 import (
 	"bytes"
 	"crypto/sha512"
-	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -189,29 +188,49 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 	defer db.Close()
 	defer os.Remove(fname)
 
-	sb := NewSkipBlock()
-	sb.Data = []byte("hello world")
-	sb.updateHash()
+	sb0 := NewSkipBlock()
+	sb0.Data = []byte{0}
+	sb0.Hash = []byte{1, 2, 3, 6, 5}
 
-	// store the skipblock and check it's ok
-	var hexID string
+	sb1 := NewSkipBlock()
+	sb1.Data = []byte{1}
+	sb1.Hash = []byte{2, 3, 4, 1, 5}
+
 	db.Update(func(tx *bolt.Tx) error {
-		err := db.storeToTx(tx, sb)
+		err := db.storeToTx(tx, sb0)
 		require.Nil(t, err)
 
-		sb2, err := db.getFromTx(tx, sb.Hash)
+		err = db.storeToTx(tx, sb1)
 		require.Nil(t, err)
-		require.True(t, sb.Equal(sb2))
-		hexID = hex.EncodeToString(sb.Hash)
 		return nil
 	})
 
 	require.Nil(t, db.GetFuzzy(""))
-	require.Nil(t, db.GetFuzzy("1234abcd"))
-	require.NotNil(t, db.GetFuzzy(hexID))
-	require.NotNil(t, db.GetFuzzy(hexID[:8]))
-	require.NotNil(t, db.GetFuzzy(hexID[len(hexID)-8:]))
-	require.NotNil(t, db.GetFuzzy(hexID[8:len(hexID)-8]))
+
+	sb := db.GetFuzzy("01")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
+
+	sb = db.GetFuzzy("02")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb1.Data[0])
+
+	sb = db.GetFuzzy("03")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("04")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("05")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
+
+	sb = db.GetFuzzy("06")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("0102030605")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
 }
 
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
