@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
-#DBG_SRV=3
+# DBG_SRV=2
 
 . $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
@@ -17,30 +17,134 @@ main(){
 	test Join
 	test Add
 	test Index
-	test Html
 	test Fetch
+	test Link
+	test Unlink
+	test Follow
+	test NewChain
 	stopTest
+}
+
+testNewChain(){
+	for t in none strict any; do
+	  setupThree
+		testOut "Starting testFollow_$t"
+		testNewChain_$t
+		cleanup
+	done
+}
+
+testNewChain_none(){
+	testFollow_id
+
+	setupGenesis group1.toml
+	testFail runSc skipchain add $ID group12.toml
+}
+
+testNewChain_strict(){
+	setupGenesis group1.toml
+	testOK runSc admin follow -lookup ${host[1]}:$ID ${host[2]}
+
+	setupGenesis group1.toml
+	testFail runSc skipchain add $ID group123.toml
+}
+
+testNewChain_any(){
+	setupGenesis group1.toml
+	testOK runSc admin follow -lookup ${host[1]}:$ID -any ${host[2]}
+
+	setupGenesis group1.toml
+	testOK runSc skipchain add $ID group123.toml
+}
+
+testFollow(){
+	for t in id search lookup list delete; do
+		setupThree
+		testOut "Starting testFollow_$t"
+		testFollow_$t
+		cleanup
+	done
+}
+
+setupThree(){
+	startCl
+	runCoBG 3
+	cat co1/public.toml > group1.toml
+	cat co[12]/public.toml > group12.toml
+	cat co[123]/public.toml > group123.toml
+	hosts=()
+	for h in 1 2 3; do
+		host[$h]="localhost:$(( 2000 + 2 * h ))"
+		runSc admin link -priv co$h/private.toml
+	done
+}
+
+testFollow_id(){
+	setupGenesis group1.toml
+	runSc admin follow -id 00 ${host[2]}
+	testFail runSc skipchain add $ID group12.toml
+	testOK runSc admin follow -id $ID ${host[2]}
+	testOK runSc skipchain add $ID group12.toml
+}
+
+testFollow_search(){
+	setupGenesis group1.toml
+	runSc admin follow -id $ID ${host[2]}
+	runSc skipchain add $ID group12.toml
+
+	setupGenesis group1.toml
+	testOK runSc admin follow -search $ID ${host[2]}
+	testOK runSc skipchain add $ID group12.toml
+}
+
+testFollow_lookup(){
+	setupGenesis group1.toml
+	testOK runSc admin follow -lookup ${host[1]}:$ID ${host[2]}
+	testOK runSc skipchain add $ID group12.toml
+}
+
+testFollow_list(){
+	setupGenesis group1.toml
+	runSc admin follow -lookup ${host[1]}:$ID ${host[2]}
+	testGrep $ID runSc admin list ${host[2]}
+}
+
+testFollow_delete(){
+	testFollow_list
+	testFail runSc admin delfollow 00 ${host[2]}
+	testOK runSc admin delfollow $ID ${host[2]}
+	testNGrep $ID runSc admin list ${host[2]}
+}
+
+testLink(){
+	startCl
+	setupGenesis
+	testOK [ -n "$ID" ]
+	ID=""
+	testFail [ -n "$ID" ]
+	testOK runSc admin link -priv co1/private.toml
+	testOK runSc admin follow -id 00 127.0.0.1:2002
+	testFail runSc admin follow -id 00 127.0.0.1:2004
+	setupGenesis
+	testOK [ -n "$ID" ]
+}
+
+testUnlink(){
+	startCl
+	testOK runSc admin link -priv co1/private.toml
+	testFail runSc admin unlink localhost:2004
+	testOK runSc admin unlink localhost:2002
+	testFail runSc admin unlink localhost:2002
 }
 
 testFetch(){
 	startCl
 	setupGenesis
-	rm $CFG
+	rm -f $CFG
 	testFail runSc list fetch
 	testOK runSc list fetch public.toml
 	testGrep 2002 runSc list known
 	testGrep 2004 runSc list known
-}
-
-testHtml(){
-	startCl
-	testOK runSc create -html http://dedis.ch public.toml
-	ID=$( runSc list known | head -n 1 | sed -e "s/.*block \(.*\) with.*/\1/" )
-	html=$(mktemp)
-	echo "TestWeb" > $html
-	echo $ID - $html
-	testOK runSc addWeb $ID $html
-	rm $html
 }
 
 testRestart(){
@@ -48,42 +152,42 @@ testRestart(){
 	setupGenesis
 	pkill -9 conode 2> /dev/null
 	runCoBG 1 2
-	testOK runSc add $ID public.toml
+	testOK runSc sc add $ID public.toml
 }
 
 testAdd(){
 	startCl
 	setupGenesis
-	testFail runSc add 1234 public.toml
-	testOK runSc add $ID public.toml
+	testFail runSc sc add 1234 public.toml
+	testOK runSc sc add $ID public.toml
 	runCoBG 3
-	runGrepSed "Latest block of" "s/.* //" runSc update $ID
+	runGrepSed "Latest block of" "s/.* //" runSc sc update $ID
 	LATEST=$SED
-	testOK runSc add $LATEST public.toml
+	testOK runSc sc add $LATEST public.toml
 }
 
 setupGenesis(){
-	runGrepSed "Created new" "s/.* //" runSc create public.toml
+	runGrepSed "Created new" "s/.* //" runSc sc create ${1:-public.toml}
 	ID=$SED
 }
 
 testJoin(){
 	startCl
-	runGrepSed "Created new" "s/.* //" runSc create public.toml
+	runGrepSed "Created new" "s/.* //" runSc sc create public.toml
 	ID=$SED
-	rm $CFG
+	rm -f $CFG
 	testGrep "Didn't find any" runSc list known
-	testFail runSc join public.toml 1234
+	testFail runSc list join public.toml 1234
 	testGrep "Didn't find any" runSc list known
-	testOK runSc join public.toml $ID
+	testOK runSc list join public.toml $ID
 	testGrep $ID runSc list known -l
 }
 
 testCreate(){
 	startCl
 	testGrep "Didn't find any" runSc list known -l
-	testFail runSc create
-	testOK runSc create public.toml
+	testFail runSc sc create
+	testOK runSc sc create public.toml
 	testGrep "Genesis-block" runSc list known -l
 }
 
@@ -108,8 +212,8 @@ testConfig(){
 	CFG=$CFGDIR/config.bin
 	rmdir $CFGDIR
 	head -n 4 public.toml > one.toml
-	testOK runSc create one.toml
-	testOK runSc create public.toml
+	testOK runSc sc create one.toml
+	testOK runSc sc create public.toml
 	rm -rf $CFGDIR
 	CFG=$OLDCFG
 }
@@ -119,7 +223,7 @@ runSc(){
 }
 
 startCl(){
-	rm $CFG
+	rm -f $CFG
 	runCoBG 1 2
 }
 
