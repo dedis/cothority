@@ -2,12 +2,12 @@ package skipchain
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
-	"sync"
+	"time"
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
@@ -69,6 +69,116 @@ func (vId VerifierID) IsNil() bool {
 //   newID is the hash of the new block that will be signed
 //   newSB is the new block
 type SkipBlockVerifier func(newID []byte, newSB *SkipBlock) bool
+
+// PolicyNewChain defines how new chains from a followed chain are treated.
+type PolicyNewChain int
+
+const (
+	// NewChainNone doesn't allow any new chains from any node from this skipchain.
+	NewChainNone = PolicyNewChain(iota)
+	// NewChainStrictNodes allows new chains only if all nodes of the new chain
+	// are present in the followed chain.
+	NewChainStrictNodes
+	// NewChainAnyNode allows new chains if any node from the new chain (excluded
+	// ourselves) is present in this chain.
+	NewChainAnyNode
+)
+
+// FollowType defines how a followed skipchain is stored
+type FollowType int
+
+const (
+	// FollowID will store this skipchain-id and only allow evolution of
+	// this skipchain. PolicyNewChain is supposed to be NewChainNone.
+	FollowID = FollowType(iota)
+	// FollowSearch asks all stored skipchains if it knows that skipchain. All
+	// PolicyNewChain are allowed.
+	FollowSearch
+	// FollowLookup takes a ip:port where the skipchain can be found. All
+	// PolicyNewChain are allowed.
+	FollowLookup
+)
+
+// FollowChainType describes if nodes of a followed chain are allowed to add new
+// skipchains.
+type FollowChainType struct {
+	Block    *SkipBlock
+	NewChain PolicyNewChain
+}
+
+type cp interface {
+	CreateProtocol(string, *onet.Tree) (onet.ProtocolInstance, error)
+}
+
+// GetLatest searches for the latest version of the block by querying a
+// remote node for an update.
+func (fct *FollowChainType) GetLatest(us *network.ServerIdentity, p cp) error {
+	log.Lvlf3("%s: fetching latest block of index %d: %x", us, fct.Block.Index, fct.Block.SkipChainID())
+	t := onet.NewRoster([]*network.ServerIdentity{us, fct.Block.Roster.List[0]}).GenerateBinaryTree()
+	pi, err := p.CreateProtocol(ProtocolGetUpdate, t)
+	if err != nil {
+		return err
+	}
+	pisc := pi.(*GetUpdate)
+	pisc.GetUpdate = &ProtoGetUpdate{SBID: fct.Block.Hash}
+	if err := pi.Start(); err != nil {
+		return err
+	}
+	select {
+	case sbNew := <-pisc.GetUpdateReply:
+		if sbNew != nil {
+			log.Lvlf3("%s: found new block with index %d", us, sbNew.Index)
+			fct.Block = sbNew
+		}
+	case <-time.After(time.Second):
+		return errors.New("timeout while fetching latest block")
+	}
+	return nil
+}
+
+// AcceptNew loops through all followed chains and verifies if the new skipblock
+// sb is acceptable, taking into account our identity 'us'.
+func (fct *FollowChainType) AcceptNew(sb *SkipBlock, us *network.ServerIdentity) bool {
+	// Fetch latest block of this skipchain
+	switch fct.NewChain {
+	case NewChainNone:
+		return false
+	case NewChainAnyNode:
+		// Accept if any node of the new roster is in this roster, but exclude
+		// ourselves (else it would always be true).
+		for _, si1 := range sb.Roster.List {
+			if us == nil || !si1.Equal(us) {
+				for _, si2 := range fct.Block.Roster.List {
+					if si1.Equal(si2) {
+						return true
+					}
+				}
+			}
+		}
+	case NewChainStrictNodes:
+		for _, si1 := range sb.Roster.List {
+			found := false
+			if us != nil && si1.Equal(us) {
+				continue
+			}
+			for _, si2 := range fct.Block.Roster.List {
+				if si1.Equal(si2) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				log.Lvlf2("%s: Not all nodes are in followed skipchains: NewBlock[%s] - Following[%s]",
+					us, sb.Roster.List, fct.Block.Roster.List)
+				return false
+			}
+		}
+		return true
+	default:
+		log.Error("unknown AuthSkipchain type")
+	}
+	return false
+}
 
 // GetService makes it possible to give either an `onet.Context` or
 // `onet.Server` to `RegisterVerification`.
@@ -226,7 +336,7 @@ type SkipBlockDataEntry struct {
 
 // CalculateHash hashes all fixed fields of the skipblock.
 func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
-	hash := cothority.Suite.Hash()
+	hash := sha256.New()
 	for _, i := range []int{sbf.Index, sbf.Height, sbf.MaximumHeight,
 		sbf.BaseHeight} {
 		binary.Write(hash, binary.LittleEndian, i)
@@ -392,15 +502,7 @@ func (bl *BlockLink) VerifySignature(publics []kyber.Point) error {
 	if len(bl.Signature) == 0 {
 		return errors.New("No signature present" + log.Stack())
 	}
-	return crypto.VerifySignature(cothority.Suite, publics, bl.Hash, bl.Signature)
-}
-
-// SkipBlockMap holds the map to the skipblocks. This is used for verification,
-// so that all links can be followed.
-// TODO remove when scmgr is updated
-type SkipBlockMap struct {
-	SkipBlocks map[string]*SkipBlock
-	sync.Mutex
+	return crypto.VerifySignature(Suite, publics, bl.Hash, bl.Signature)
 }
 
 // SkipBlockDB holds the database to the skipblocks.
@@ -411,9 +513,12 @@ type SkipBlockDB struct {
 	bucketName string
 }
 
-// NewSkipBlockMap returns a pre-initialised SkipBlockMap.
-func NewSkipBlockMap() *SkipBlockMap {
-	return &SkipBlockMap{SkipBlocks: make(map[string]*SkipBlock)}
+// NewSkipBlockDB returns an initialized SkipBlockDB structure.
+func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
+	return &SkipBlockDB{
+		DB:         db,
+		bucketName: bn,
+	}
 }
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
@@ -432,31 +537,6 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 		log.Error(err.Error())
 	}
 	return result
-}
-
-// Store stores the given SkipBlock in the service-list
-func (sbm *SkipBlockMap) Store(sb *SkipBlock) SkipBlockID {
-	sbm.Lock()
-	defer sbm.Unlock()
-	if sbOld, exists := sbm.SkipBlocks[string(sb.Hash)]; exists {
-		// If this skipblock already exists, only copy forward-links and
-		// new children.
-		if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
-					log.Error("Got a known block with wrong signature in forward-link")
-					return nil
-				}
-				sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
-			}
-		}
-		if len(sb.ChildSL) > len(sbOld.ChildSL) {
-			sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
-		}
-	} else {
-		sbm.SkipBlocks[string(sb.Hash)] = sb
-	}
-	return sb.Hash
 }
 
 // Store stores the given SkipBlock in the service-list
@@ -499,14 +579,8 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 		log.Error(err.Error())
 		return nil
 	}
-	return result
-}
 
-// Length returns the actual length using mutexes
-func (sbm *SkipBlockMap) Length() int {
-	sbm.Lock()
-	defer sbm.Unlock()
-	return len(sbm.SkipBlocks)
+	return result
 }
 
 // Length returns the actual length using mutexes
@@ -618,33 +692,6 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	return latest, nil
 }
 
-// GetFuzzy searches for a block that resembles the given ID, if ID is not full.
-// If there are multiple matching skipblocks, the first one is chosen. If none
-// match, nil will be returned.
-//
-// The search is done in the following order:
-//  1. as prefix - if none is found
-//  2. as suffix - if none is found
-//  3. anywhere
-func (sbm *SkipBlockMap) GetFuzzy(id string) *SkipBlock {
-	for _, sb := range sbm.SkipBlocks {
-		if strings.HasPrefix(hex.EncodeToString(sb.Hash), id) {
-			return sb
-		}
-	}
-	for _, sb := range sbm.SkipBlocks {
-		if strings.HasSuffix(hex.EncodeToString(sb.Hash), id) {
-			return sb
-		}
-	}
-	for _, sb := range sbm.SkipBlocks {
-		if strings.Contains(hex.EncodeToString(sb.Hash), id) {
-			return sb
-		}
-	}
-	return nil
-}
-
 // GetFuzzy searches for a block that resembles the given ID.
 // If there are multiple matching skipblocks, the first one is chosen. If none
 // match, nil will be returned.
@@ -695,6 +742,11 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 	return sb
 }
 
+// GetSkipchains returns all latest skipblocks from all skipchains.
+func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
+	return db.getAll()
+}
+
 // storeToTx stores the skipblock into the database.
 // An error is returned on failure.
 // The caller must ensure that this function is called from within a valid transaction.
@@ -739,8 +791,10 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 			if err != nil {
 				return err
 			}
-			sb := sbMsg.(*SkipBlock)
-			data[string(sb.SkipChainID())] = sb
+			sb, ok := sbMsg.(*SkipBlock)
+			if ok {
+				data[string(sb.Hash)] = sb
+			}
 			return nil
 		})
 	})
