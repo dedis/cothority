@@ -219,7 +219,7 @@ runPublic(){
 	if [ "$MEMLIMIT" ]; then
 		ulimit -Sv $(( MEMLIMIT * 1024 ))
 	fi
-	$CONODE_BIN -d $DEBUG server $ARGS | tee $LOG
+	$CONODE_BIN -d $DEBUG $ARGS server | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
 		echo "Waiting one minute before launching conode again"
