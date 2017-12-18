@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OcsFactoryTest {
     public static final String SAMPLE_GENESIS_ID = "8dd9d04e027040e6815d58b5ccccb1fa13df771198d52f3e035cabdffc34551a";
-    public static final String PUBLIC_KEY_WITH_SPACE = "base64WithSpace TvMRQrO1PAw2pVjA1hDMQQi7Tss=";
+    public static final String PUBLIC_KEY_WITH_SPACE = "hex with spaces TvMRQrO1PAw2pVjA1hDMQQi7Tss=";
     public static final String CONODE_ADDRESS_INCORRECT = "http://127.0.0.1:7002";
 
     @Test
@@ -37,7 +37,7 @@ class OcsFactoryTest {
         Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
             ocsFactory.addConode(LocalRosters.CONODE_1, PUBLIC_KEY_WITH_SPACE);
         });
-        assertThat(exception.getMessage(), containsString("Illegal base64 character"));
+        assertThat(exception.getMessage(), containsString("contains illegal character for hexBinary"));
     }
 
     @Test

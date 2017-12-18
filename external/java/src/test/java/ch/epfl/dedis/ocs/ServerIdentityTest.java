@@ -10,7 +10,6 @@ import javax.xml.bind.DatatypeConverter;
 
 import static ch.epfl.dedis.LocalRosters.CONODE_PUB_1;
 import static ch.epfl.dedis.LocalRosters.CONODE_1;
-import static ch.epfl.dedis.LocalRosters.ids;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
@@ -37,7 +36,8 @@ class ServerIdentityTest {
     @Test
     void testProto(){
         ServerIdentityProto.ServerIdentity si_proto = si.getProto();
-        byte[] id = DatatypeConverter.parseHexBinary(ids[0]);
+        byte[] id = DatatypeConverter.parseHexBinary("482FB9CFC2B55AB68C5F811C1D47B9E1");
+        System.out.println(DatatypeConverter.printHexBinary(si_proto.getId().toByteArray()));
         assertArrayEquals(ByteString.copyFrom(id).toByteArray(), si_proto.getId().toByteArray());
     }
 }
