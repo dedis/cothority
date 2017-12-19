@@ -6,7 +6,7 @@ import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.ocs.WriteRequestId;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.lang.UnsupportedOperationException;
 
 public class OnchainSecrets extends ch.epfl.dedis.ocs.OnchainSecrets {
     /**
@@ -37,7 +37,7 @@ public class OnchainSecrets extends ch.epfl.dedis.ocs.OnchainSecrets {
      * @return
      */
     public Darc getLatestReaders(WriteRequestId id) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 }
 
