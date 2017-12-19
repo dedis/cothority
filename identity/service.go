@@ -44,8 +44,10 @@ const defaultNumberSkipchains = 5
 var identityService onet.ServiceID
 
 // VerificationIdentity gives a combined VerifyBase + verifyIdentity.
-var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, verifyIdentity}
-var verifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
+var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, VerifyIdentity}
+
+// VerifyIdentity makes sure that each new block is signed by a threshold of devices.
+var VerifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
 
 func init() {
 	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
@@ -751,7 +753,7 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 		log.Error("Registration error:", err)
 		return nil, err
 	}
-	skipchain.RegisterVerification(c, verifyIdentity, s.VerifyBlock)
+	skipchain.RegisterVerification(c, VerifyIdentity, s.VerifyBlock)
 	s.auth.pins = make(map[string]struct{})
 	s.auth.nonces = make(map[string]struct{})
 	s.auth.sets = make([]anon.Set, 0)

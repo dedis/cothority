@@ -20,6 +20,7 @@ import (
 	"github.com/BurntSushi/toml"
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/util/encoding"
@@ -358,10 +359,23 @@ func scPrint(c *cli.Context) error {
 	}
 	log.Infof("Data: %x", sb.Data)
 	for i, vf := range sb.VerifierIDs {
-		log.Infof("Verification[%d] = %x", i, vf)
+		vfStr := vf.String()
+		switch vf {
+		case skipchain.VerifyBase:
+			vfStr = "skipchain.VerifyBase"
+		case skipchain.VerifyRoot:
+			vfStr = "skipchain.VerifyRoot"
+		case skipchain.VerifyControl:
+			vfStr = "skipchain.VerifyControl"
+		case skipchain.VerifyData:
+			vfStr = "skipchain.VerifyData"
+		case identity.VerifyIdentity:
+			vfStr = "identity.VerifyIdentity"
+		}
+		log.Infof("Verification[%d] = %s", i, vfStr)
 	}
 	log.Infof("SkipchainID: %x", sb.SkipChainID())
-	log.Infof("Hash: %x", sb.Hash)
+	log.Infof("Hash/SkipblockID: %x", sb.Hash)
 	return nil
 }
 

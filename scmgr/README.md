@@ -50,7 +50,7 @@ you should have three directories, `co1`, `co2` and `co3` where you run the
 So for the testing system, the command is:
 
 ```bash
-scmgr admin link co1/private.toml
+scmgr link add co1/private.toml
 ```
 
 That command will create a new private/public keypair for your client and register
@@ -91,10 +91,10 @@ For our example, we will tell _co2_ and _co3_ to follow the skipchain created
 above and to accept any new block added to that skipchain:
 
 ```bash
-scmgr admin link co2/private.toml
-scmgr admin link co3/private.toml
-scmgr admin follow -id SKIPCHAIN_ID 127.0.0.1:2004
-scmgr admin follow -id SKIPCHAIN_ID 127.0.0.1:2006
+scmgr link add co2/private.toml
+scmgr link add co3/private.toml
+scmgr follow add single SKIPCHAIN_ID 127.0.0.1:7004
+scmgr follow add single SKIPCHAIN_ID 127.0.0.1:7006
 ```
 
 Where _SKIPCHAIN_ID_ has to be replaced by the ID of the skipchain returned from
@@ -104,7 +104,12 @@ Now you can ask your first node to extend the nodes that participate in the
 skipchain to all nodes:
 
 ```bash
-scmgr skipchain add SKIPCHAIN_ID public.toml
+scmgr skipchain block add -roster public.toml SKIPCHAIN_ID
 ```
 
-Now you have a skipchain that includes all testing-nodes.
+Now you have a skipchain that includes all testing-nodes. To see the block that
+you just created, you can use
+
+```bash
+scmgr skipchain block print SKIPBLOCK_ID
+```
