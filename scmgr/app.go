@@ -439,7 +439,7 @@ func dnsList(c *cli.Context) error {
 	return nil
 }
 
-// lsIndex writes one index-file for every known skipchain and an index.html
+// lsIndex writes one index-file for every known skipchain and an index.js
 // for all skiplchains.
 func dnsIndex(c *cli.Context) error {
 	output := c.Args().First()
@@ -447,7 +447,7 @@ func dnsIndex(c *cli.Context) error {
 		return errors.New("Missing output path")
 	}
 
-	cleanHTMLFiles(output)
+	cleanJSFiles(output)
 
 	cfg, err := loadConfig(c)
 	if err != nil {
@@ -473,8 +473,8 @@ func dnsIndex(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		log.Infof("Writing %s.html", block.GenesisID)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
+		log.Infof("Writing %s.js", block.GenesisID)
+		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".js"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -486,9 +486,9 @@ func dnsIndex(c *cli.Context) error {
 		log.Info("Cannot convert to json")
 	}
 
-	// Write the json into the index.html
-	log.Infof("Storing an index of all blocks to index.html")
-	err = ioutil.WriteFile(filepath.Join(output, "index.html"), content, 0644)
+	// Write the json into the index.js
+	log.Infof("Storing an index of all blocks to index.js")
+	err = ioutil.WriteFile(filepath.Join(output, "index.js"), content, 0644)
 	if err != nil {
 		log.Info("Cannot write in the file")
 	}
@@ -553,15 +553,15 @@ func dnsUpdate(c *cli.Context) error {
 	return cfg.save(c)
 }
 
-// Remove every file matching *.html in the given directory
-func cleanHTMLFiles(dir string) error {
+// Remove every file matching *.js in the given directory
+func cleanJSFiles(dir string) error {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), ".html") {
+		if strings.HasSuffix(f.Name(), ".js") {
 			err := os.Remove(filepath.Join(dir, f.Name()))
 			if err != nil {
 				return err
@@ -572,14 +572,14 @@ func cleanHTMLFiles(dir string) error {
 	return nil
 }
 
-// JSON skipblock element to be written in the index.html file
+// JSON skipblock element to be written in the index.js file
 type jsonBlock struct {
 	GenesisID string
 	Servers   []string
 	Data      []byte
 }
 
-// JSON list of skipblocks element to be written in the index.html file
+// JSON list of skipblocks element to be written in the index.js file
 type jsonBlockList struct {
 	Blocks []jsonBlock
 }
