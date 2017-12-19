@@ -2,81 +2,100 @@ package main
 
 import cli "gopkg.in/urfave/cli.v1"
 
-func getCommands() []cli.Command {
+func getCommands() cli.Commands {
 	groupsDef := "[group-definition]"
-	return []cli.Command{
+	return cli.Commands{
 		{
-			Name:  "admin",
-			Usage: "administer the skipchain-service",
-			Subcommands: []cli.Command{
+			Name:    "link",
+			Usage:   "create a secure link to a conode",
+			Aliases: []string{"l"},
+			Subcommands: cli.Commands{
 				{
-					Name:    "link",
-					Usage:   "link with a skipchain-service",
-					Aliases: []string{"l"},
-					Action:  adminLink,
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "pin, p",
-							Value: "",
-							Usage: "give ip:port:pin of skipchain-service",
-						},
-						cli.StringFlag{
-							Name:  "private, priv",
-							Value: "",
-							Usage: "give private.toml of skipchain-service",
-						},
-					},
+					Name:      "add",
+					Usage:     "create a secure link to a conode",
+					ArgsUsage: "private.toml",
+					Aliases:   []string{"a"},
+					Action:    linkAdd,
 				},
 				{
-					Name:    "unlink",
-					Usage:   "unlink ip:port - unlink with a skipchain service",
-					Aliases: []string{"ul"},
-					Action:  adminUnlink,
-				},
-				{
-					Name:      "follow",
-					Usage:     "follow a skipchain and allow its conodes to set up new skipchains",
-					Aliases:   []string{"f"},
-					ArgsUsage: "skipchain-id",
-					Action:    adminFollow,
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "id",
-							Usage: "ID - only allow that chain to add blocks",
-						},
-						cli.StringFlag{
-							Name:  "search, s",
-							Usage: "ID - search for that chain in known rosters",
-						},
-						cli.StringFlag{
-							Name:  "lookup, l",
-							Usage: "IP:Port:ID - where to find the chain",
-						},
-						cli.BoolFlag{
-							Name:  "any, a",
-							Usage: "Allow new chain if any of the nodes is present",
-						},
-					},
-				},
-				{
-					Name:      "delfollow",
-					Usage:     "delete a skipchain from the list of followed skipchains",
-					Aliases:   []string{"d"},
-					ArgsUsage: "skipchain-id",
-					Action:    adminDelfollow,
+					Name:      "del",
+					Usage:     "remove a secure link to a conode",
+					ArgsUsage: "ip:port",
+					Aliases:   []string{"d", "rm"},
+					Action:    linkDel,
 				},
 				{
 					Name:    "list",
-					Usage:   "list all skipchains we follow",
+					Usage:   "show all secure links stored in scmgr",
 					Aliases: []string{"ls"},
-					Action:  adminList,
+					Action:  linkList,
+				},
+				{
+					Name:      "query",
+					Usage:     "request list of secure links in conode",
+					ArgsUsage: "ip:port",
+					Aliases:   []string{"q"},
+					Action:    linkQuery,
 				},
 			},
 		},
+
+		{
+			Name:    "follow",
+			Usage:   "allow conode to be included in skipchain",
+			Aliases: []string{"f"},
+			Subcommands: cli.Commands{
+				{
+					Name:      "add",
+					Usage:     "allow inclusion of conode in skipchain",
+					ArgsUsage: "skipchain-id",
+					Aliases:   []string{"a"},
+					Subcommands: cli.Commands{
+						{
+							Name:      "single",
+							Usage:     "only allow inclusion in this specific chain",
+							ArgsUsage: "skipchain-id ip:port",
+							Action:    followAddId,
+						},
+						{
+							Name:      "roster",
+							Usage:     "allow inclusion of conode in new skipchains from roster of specified skipchain",
+							ArgsUsage: "skipchain-id ip:port",
+							Action:    followAddRoster,
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "lookup, l",
+									Usage: "IP:Port - conode that has a copy of the skipchain",
+								},
+								cli.BoolFlag{
+									Name:  "any, a",
+									Usage: "Allow new chain if any of the nodes is present",
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:      "delete",
+					Usage:     "remove authorization for inclusion in skipchain",
+					Aliases:   []string{"del", "rm", "d"},
+					ArgsUsage: "skipchain-id ip:port",
+					Action:    followDel,
+				},
+				{
+					Name:      "list",
+					Usage:     "list all skipchains a conode follows",
+					ArgsUsage: "ip:port",
+					Aliases:   []string{"ls"},
+					Action:    followList,
+				},
+			},
+		},
+
 		{
 			Name:    "skipchain",
-			Usage:   "handle skipchains",
-			Aliases: []string{"sc"},
+			Usage:   "work with skipchains in cothority",
+			Aliases: []string{"s"},
 			Subcommands: cli.Commands{
 				{
 					Name:      "create",
@@ -98,61 +117,80 @@ func getCommands() []cli.Command {
 					},
 				},
 				{
-					Name:      "add",
-					Usage:     "add a new roster to a skipchain",
-					Aliases:   []string{"a"},
-					ArgsUsage: "skipchain-id " + groupsDef,
-					Action:    scAdd,
-				},
-				{
-					Name:      "update",
-					Usage:     "get latest valid block",
-					Aliases:   []string{"u"},
-					ArgsUsage: "skipchain-id",
-					Action:    scUpdate,
+					Name:  "block",
+					Usage: "work on blocks of an existing skipchain",
+					Subcommands: cli.Commands{
+						{
+							Name:      "add",
+							Usage:     "create a new block",
+							Aliases:   []string{"a"},
+							ArgsUsage: "skipchain-id",
+							Action:    scAdd,
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "roster, r",
+									Value: "",
+									Usage: "file containing new roster",
+								},
+							},
+						},
+						{
+							Name:      "print",
+							Usage:     "show the content of a block",
+							Aliases:   []string{"p"},
+							ArgsUsage: "skipblock-id",
+							Action:    scPrint,
+						},
+					},
 				},
 			},
 		},
+
 		{
-			Name:  "list",
-			Usage: "handle list of skipblocks",
+			Name:    "scdns",
+			Usage:   "skipchain dns handling for web frontend",
+			Aliases: []string{"d"},
 			Subcommands: []cli.Command{
 				{
-					Name:      "join",
-					Usage:     "join a skipchain and store it locally",
-					Aliases:   []string{"j"},
+					Name:      "fetch",
+					Usage:     "request a skipchain and store it locally",
+					Aliases:   []string{"f"},
 					ArgsUsage: groupsDef + " skipchain-id",
-					Action:    lsJoin,
+					Action:    dnsFetch,
 				},
 				{
-					Name:    "known",
-					Aliases: []string{"k"},
-					Usage:   "lists all known skipblocks",
+					Name:    "list",
+					Aliases: []string{"l"},
+					Usage:   "lists all locally stored skipchains",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "long, l",
 							Usage: "give long id of blocks",
 						},
 					},
-					Action: lsKnown,
+					Action: dnsList,
 				},
 				{
 					Name:      "index",
+					Aliases:   []string{"i"},
 					Usage:     "create index-files for all known skipchains",
-					ArgsUsage: "output path",
-					Action:    lsIndex,
+					ArgsUsage: "output_path",
+					Action:    dnsIndex,
 				},
 				{
-					Name:      "fetch",
-					Usage:     "ask all known conodes for skipchains",
-					ArgsUsage: "[group-file]",
+					Name:  "update",
+					Usage: "update all locally stored skipchains",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "recursive, r",
-							Usage: "recurse into other conodes",
+							Name:  "new, n",
+							Usage: "fetch new skipchains from conodes",
+						},
+						cli.StringFlag{
+							Name:  "roster, r",
+							Usage: "add skipchains from conodes of this roster",
 						},
 					},
-					Action: lsFetch,
+					Action: dnsUpdate,
 				},
 			},
 		},

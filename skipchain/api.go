@@ -253,7 +253,8 @@ func (c *Client) CreateLinkPrivate(si *network.ServerIdentity, conodePriv kyber.
 // only if you have the private key can you request to remove the public
 // counterpart on the server.
 func (c *Client) Unlink(si *network.ServerIdentity, priv kyber.Scalar) onet.ClientError {
-	msg, err := si.Public.MarshalBinary()
+	public := Suite.Point().Mul(priv, nil)
+	msg, err := public.MarshalBinary()
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
@@ -262,11 +263,22 @@ func (c *Client) Unlink(si *network.ServerIdentity, priv kyber.Scalar) onet.Clie
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
-	public := Suite.Point().Mul(priv, nil)
 	return c.SendProtobuf(si, &Unlink{
 		Public:    public,
 		Signature: sig,
 	}, &EmptyReply{})
+}
+
+// Listlink returns all public keys that are allowed to contact
+// this conode securely. It can return an empty list which means
+// that this conode is not secured.
+func (c *Client) Listlink(si *network.ServerIdentity) ([]kyber.Point, onet.ClientError) {
+	reply := &ListlinkReply{}
+	cerr := c.SendProtobuf(si, &Listlink{}, reply)
+	if cerr != nil {
+		return nil, cerr
+	}
+	return reply.Publics, nil
 }
 
 // AddFollow gives a skipchain-id to the conode that should be used to allow/disallow

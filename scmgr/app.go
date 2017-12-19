@@ -23,6 +23,7 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -69,14 +70,14 @@ func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
-// adminLink tries to store our public key in the conode
-func adminLink(c *cli.Context) error {
-	if pin := c.String("pin"); pin != "" {
-		return errors.New("pin entry not implemented yet")
+// linkAdd tries to store our public key in the conode
+func linkAdd(c *cli.Context) error {
+	if c.NArg() != 1 {
+		return errors.New("please give private.toml file")
 	}
-	private := c.String("private")
+	private := c.Args().First()
 	if private == "" {
-		return errors.New("give either pin or private.toml of conode")
+		return errors.New("got empty private.toml file")
 	}
 	var remote struct {
 		Private string
@@ -87,32 +88,35 @@ func adminLink(c *cli.Context) error {
 	if err != nil {
 		return errors.New("error while reading private.toml: " + err.Error())
 	}
-	pkey, err := encoding.StringHexToScalar(skipchain.Suite, remote.Private)
+	conodePriv, err := encoding.StringHexToScalar(skipchain.Suite, remote.Private)
 	if err != nil {
 		return errors.New("couldn't decode private key: " + err.Error())
 	}
-	pubkey, err := encoding.StringHexToPoint(skipchain.Suite, remote.Public)
+	conodePub, err := encoding.StringHexToPoint(skipchain.Suite, remote.Public)
 	if err != nil {
 		return errors.New("couldn't decode public key: " + err.Error())
 	}
 	cfg := getConfigOrFail(c)
-	si := network.NewServerIdentity(pubkey, remote.Address)
+	kp := key.NewKeyPair(skipchain.Suite)
+	si := network.NewServerIdentity(conodePub, remote.Address)
 	cfg.Values.Link[si.Public.String()] = &link{
-		Private: pkey,
+		Private: kp.Secret,
 		Address: remote.Address,
 		Conode:  si,
 	}
-	cerr := skipchain.NewClient().CreateLinkPrivate(si, pkey, skipchain.Suite.Point().Mul(pkey, nil))
+	log.Infof("Connecting to %s and creating link", remote.Address)
+	cerr := skipchain.NewClient().CreateLinkPrivate(si, conodePriv, kp.Public)
 	if cerr != nil {
 		log.Error(cerr)
 		return cerr
 	}
-	log.Lvl1("Correctly linked with", remote.Address)
+	log.Info("Correctly linked with", remote.Address)
 	return cfg.save(c)
 }
-func adminUnlink(c *cli.Context) error {
-	if c.NArg() < 1 {
-		return errors.New("please give IP:Port of the service to unlink")
+
+func linkDel(c *cli.Context) error {
+	if c.NArg() != 1 {
+		return errors.New("please give IP:Port of the conode to unlink")
 	}
 	cfg := getConfigOrFail(c)
 	link, err := findLinkFromAddress(cfg, c.Args().First())
@@ -126,67 +130,93 @@ func adminUnlink(c *cli.Context) error {
 	log.Info("Successfull unlinked with", link.Conode)
 	return nil
 }
-func adminFollow(c *cli.Context) error {
+func linkList(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
-	if c.NArg() == 0 {
-		return errors.New("please give one of the following: (-id ID|-search ID [-any]|-lookup IP:Port:ID [-any]) conode")
+	for _, link := range cfg.Values.Link {
+		log.Infof("Linked public key for conode %s: %s", link.Address,
+			skipchain.Suite.Point().Mul(link.Private, nil))
 	}
-	link, err := findLinkFromAddress(cfg, c.Args().First())
+	return nil
+}
+func linkQuery(c *cli.Context) error {
+	if c.NArg() != 1 {
+		return errors.New("please give ip:port of conode to query")
+	}
+	si := network.NewServerIdentity(nil, network.NewAddress(network.PlainTCP, c.Args().First()))
+	log.Infof("Contacting node %s to list client public keys",
+		si.Address)
+	keys, cerr := skipchain.NewClient().Listlink(si)
+	if cerr != nil {
+		return cerr
+	}
+	if len(keys) == 0 {
+		log.Infof("Node %s does not have any public keys stored", si.Address)
+	} else {
+		log.Infof("Node %s is secured and has the following public keys stored:", si.Address)
+		for _, pub := range keys {
+			log.Infof("Public-key: %s", pub)
+		}
+	}
+	return errors.New("not yet implemented")
+}
+
+func followAddId(c *cli.Context) error {
+	cfg := getConfigOrFail(c)
+	if c.NArg() != 2 {
+		return errors.New("please give: skipchain_id ip:port")
+	}
+	scid, err := hex.DecodeString(c.Args().First())
+	if err != nil {
+		return errors.New("invalid skipchain-id: " + err.Error())
+	}
+	link, err := findLinkFromAddress(cfg, c.Args().Get(1))
 	if err != nil {
 		return errors.New("couldn't parse node-address or not linked yet: " + err.Error())
 	}
-	client := skipchain.NewClient()
-	if idStr := c.String("id"); idStr != "" {
-		scid, err := hex.DecodeString(idStr)
-		if err != nil {
-			return errors.New("invalid skipchain-id: " + err.Error())
-		}
-		cerr := client.AddFollow(link.Conode, link.Private, scid, skipchain.FollowID,
-			skipchain.NewChainNone, "")
-		if cerr != nil {
-			return errors.New("couldn't add this block as chain-follower: " + cerr.Error())
-		}
-	} else if idStr := c.String("search"); idStr != "" {
-		scid, err := hex.DecodeString(idStr)
-		if err != nil {
-			return errors.New("invalid skipchain-id: " + err.Error())
-		}
-		nc := skipchain.NewChainStrictNodes
-		if c.Bool("any") {
-			nc = skipchain.NewChainAnyNode
-		}
-		cerr := client.AddFollow(link.Conode, link.Private, scid, skipchain.FollowSearch,
-			nc, "")
-		if cerr != nil {
-			return errors.New("couldn't find this block in search: " + cerr.Error())
-		}
-	} else if scURL := c.String("lookup"); scURL != "" {
-		addr := strings.Split(scURL, ":")
-		if len(addr) != 3 {
-			return errors.New("please give conodeIP:conodePort:skipchain-id")
-		}
-		scid, err := hex.DecodeString(addr[2])
-		if err != nil {
-			return errors.New("invalid skipchain-id: " + err.Error())
-		}
-		nc := skipchain.NewChainStrictNodes
-		if c.Bool("any") {
-			nc = skipchain.NewChainAnyNode
-		}
-		cerr := client.AddFollow(link.Conode, link.Private, scid, skipchain.FollowLookup,
-			nc, addr[0]+":"+addr[1])
-		if cerr != nil {
-			return errors.New("couldn't lookup this block: " + cerr.Error())
-		}
-	} else {
-		return errors.New("please give one of (id|serach|lookup) as flag")
+	log.Infof("Adding skipchain %x to conode %s", scid, link.Address)
+	cerr := skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, skipchain.FollowID,
+		skipchain.NewChainNone, "")
+	if cerr != nil {
+		return errors.New("couldn't add this block as chain-follower: " + cerr.Error())
 	}
-
 	return nil
 }
+func followAddRoster(c *cli.Context) error {
+	cfg := getConfigOrFail(c)
+	if c.NArg() != 2 {
+		return errors.New("please give the following: [-lookup ip:port] [-any] ID ip:port")
+	}
+	scid, err := hex.DecodeString(c.Args().First())
+	if err != nil {
+		return errors.New("invalid skipchain-id: " + err.Error())
+	}
+	link, err := findLinkFromAddress(cfg, c.Args().Get(1))
+	if err != nil {
+		return errors.New("couldn't parse node-address or not linked yet: " + err.Error())
+	}
+	scURL := c.String("lookup")
 
-func adminDelfollow(c *cli.Context) error {
-	if c.NArg() < 2 {
+	log.Infof("Allowing conode %s to be used as node in roster of skipchain %x", link.Conode.Address,
+		scid)
+	nc := skipchain.NewChainStrictNodes
+	if c.Bool("any") {
+		log.Info("Allowing use of conode if _any_ node matches the roster.")
+		nc = skipchain.NewChainAnyNode
+	}
+	ft := skipchain.FollowSearch
+	if scURL != "" {
+		log.Infof("Will try to lookup the skipchain on conode %s", scURL)
+		ft = skipchain.FollowLookup
+	}
+	cerr := skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, ft,
+		nc, scURL)
+	if cerr != nil {
+		return errors.New("couldn't find this block in search: " + cerr.Error())
+	}
+	return nil
+}
+func followDel(c *cli.Context) error {
+	if c.NArg() != 2 {
 		return errors.New("please give skipchain-id and ip:port to delete")
 	}
 	cfg := getConfigOrFail(c)
@@ -198,16 +228,16 @@ func adminDelfollow(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Infof("Deleting following of skipchain %x in conode %s", scid, link.Conode.Address)
 	cerr := skipchain.NewClient().DelFollow(link.Conode, link.Private, scid)
 	if cerr != nil {
 		return cerr
 	}
-	log.Infof("Successfully deleted following %x on %s", scid, link.Conode)
+	log.Infof("Successfully deleted following of skipchain", scid, link.Conode)
 	return nil
 }
-
-func adminList(c *cli.Context) error {
-	if c.NArg() < 1 {
+func followList(c *cli.Context) error {
+	if c.NArg() != 1 {
 		return errors.New("please give ip:port of the host to list")
 	}
 	cfg := getConfigOrFail(c)
@@ -232,24 +262,30 @@ func adminList(c *cli.Context) error {
 			log.Infof("Following '%s' for: %x", follow, fct.Block.SkipChainID())
 		}
 	}
+	if list.FollowIDs != nil && list.Follow != nil {
+		log.Infof("Conode %s doesn't follow any skipchain and allows everything.")
+	}
 	return nil
 }
 
 // Creates a new skipchain with the given roster
 func scCreate(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
-	log.Info("Create skipchain")
-	group := readGroup(c, 0)
-	client := skipchain.NewClient()
+	group := readGroupArgs(c, 0)
 	var priv kyber.Scalar
 	remote, found := cfg.Values.Link[group.Roster.List[0].Public.String()]
 	if found {
+		log.Infof("Found link for %s and using signed request", remote.Address)
 		priv = remote.Private
+	} else {
+		log.Infof("Trying to connect without signature to %s", group.Roster.List[0].Address)
 	}
-	sb, cerr := client.CreateGenesisSignature(group.Roster, c.Int("base"), c.Int("height"),
+	log.Infof("Creating new skipchain with leader %s and roster %s.", group.Roster.List[0], group.Roster)
+	log.Infof("Base-height: %d; Maximum-height: %d", c.Int("base"), c.Int("height"))
+	sb, cerr := skipchain.NewClient().CreateGenesisSignature(group.Roster, c.Int("base"), c.Int("height"),
 		skipchain.VerificationStandard, nil, nil, priv)
 	if cerr != nil {
-		log.Fatal("while creating the genesis-roster:", cerr)
+		return errors.New("while creating the genesis-roster: " + cerr.Error())
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg.Db.Store(sb)
@@ -257,60 +293,42 @@ func scCreate(c *cli.Context) error {
 	return nil
 }
 
-// Joins a given skipchain
-func lsJoin(c *cli.Context) error {
-	log.Info("Joining skipchain")
-	if c.NArg() < 2 {
-		return errors.New("Please give group-file and id of known block")
-	}
-	group := readGroup(c, 0)
-	client := skipchain.NewClient()
-	hash, err := hex.DecodeString(c.Args().Get(1))
-	if err != nil {
-		return err
-	}
-	gcr, cerr := client.GetUpdateChain(group.Roster, hash)
-	if cerr != nil {
-		log.Error(cerr)
-		return cerr
-	}
-	latest := gcr.Update[len(gcr.Update)-1]
-	genesis := latest.GenesisID
-	if genesis == nil {
-		genesis = latest.Hash
-	}
-	log.Infof("Joined skipchain %x", genesis)
-	cfg := getConfigOrFail(c)
-	cfg.Db.Store(latest)
-	log.ErrFatal(cfg.save(c))
-	return nil
-}
-
 // Proposes a new block to the leader for appending to the skipchain.
 func scAdd(c *cli.Context) error {
-	log.Info("Adding a block with a new group")
-	if c.NArg() < 2 {
-		return errors.New("Please give group-file and id to add")
+	if c.NArg() != 1 {
+		return errors.New("Please give a skipchain-id")
 	}
-	group := readGroup(c, 1)
+	var roster *onet.Roster
+	if rosterFile := c.String("roster"); rosterFile != "" {
+		group := readGroup(rosterFile)
+		if group == nil {
+			return errors.New("Error while reading group definition file: " + rosterFile)
+		}
+		if len(group.Roster.List) == 0 {
+			return errors.New("Empty entity or invalid group defintion in: " +
+				rosterFile)
+		}
+		roster = group.Roster
+	}
 	cfg := getConfigOrFail(c)
 	sb := cfg.Db.GetFuzzy(c.Args().First())
 	if sb == nil {
-		return errors.New("didn't find latest block - update first")
+		return errors.New("didn't find this skipchain")
 	}
-	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	log.Info("Updating the skipchain to know where to add a new block.")
+	guc, cerr := skipchain.NewClient().GetUpdateChain(sb.Roster, sb.Hash)
 	if cerr != nil {
 		return cerr
 	}
 	latest := guc.Update[len(guc.Update)-1]
 	var priv kyber.Scalar
-	link := cfg.Values.Link[group.Roster.List[0].Public.String()]
+	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
-		log.Lvl1("Found link-entry for", group.Roster.List[0].Address)
+		log.Lvl1("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
-	ssbr, cerr := client.StoreSkipBlockSignature(latest, group.Roster, nil, priv)
+	log.Info("Adding new block to skipchain.")
+	ssbr, cerr := skipchain.NewClient().StoreSkipBlockSignature(latest, roster, nil, priv)
 	if cerr != nil {
 		return errors.New("while storing block: " + cerr.Error())
 	}
@@ -320,39 +338,63 @@ func scAdd(c *cli.Context) error {
 	return nil
 }
 
-// Updates a block to the latest block
-func scUpdate(c *cli.Context) error {
-	log.Info("Updating block")
-	if c.NArg() < 1 {
-		return errors.New("please give block-id to update")
+// Prints details about a SkipBlock
+func scPrint(c *cli.Context) error {
+	if c.NArg() != 1 {
+		return errors.New("Please give a skipchain-id")
 	}
 	cfg := getConfigOrFail(c)
-
 	sb := cfg.Db.GetFuzzy(c.Args().First())
 	if sb == nil {
-		return errors.New("didn't find latest block in local store")
+		return errors.New("didn't find this skipblock")
 	}
-	client := skipchain.NewClient()
-	guc, cerr := client.GetUpdateChain(sb.Roster, sb.Hash)
+	log.Info("Content of skipblock:")
+	log.Infof("Index: %d", sb.Index)
+	for i, bl := range sb.BackLinkIDs {
+		log.Infof("BackwardLink[%d] = %x", i, bl)
+	}
+	for i, fl := range sb.ForwardLink {
+		log.Infof("ForwardLink[%d] = %x", i, fl)
+	}
+	log.Infof("Data: %x", sb.Data)
+	for i, vf := range sb.VerifierIDs {
+		log.Infof("Verification[%d] = %x", i, vf)
+	}
+	log.Infof("SkipchainID: %x", sb.SkipChainID())
+	log.Infof("Hash: %x", sb.Hash)
+	return nil
+}
+
+// Joins a given skipchain
+func dnsFetch(c *cli.Context) error {
+	if c.NArg() != 2 {
+		return errors.New("Please give group-file and id of skipchain")
+	}
+	group := readGroupArgs(c, 0)
+	sbid, err := hex.DecodeString(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	log.Infof("Requesting latest block attached to %x", sbid)
+	gcr, cerr := skipchain.NewClient().GetUpdateChain(group.Roster, sbid)
 	if cerr != nil {
-		return errors.New("while updating chain: " + cerr.Error())
+		log.Error(cerr)
+		return cerr
 	}
-	if len(guc.Update) == 1 {
-		log.Info("No new block available")
-	} else {
-		for _, b := range guc.Update[1:] {
-			log.Infof("Adding new block %x to chain %x", b.Hash, b.GenesisID)
-			cfg.Db.Store(b)
-		}
+	latest := gcr.Update[len(gcr.Update)-1]
+	genesis := latest.GenesisID
+	if genesis == nil {
+		genesis = latest.Hash
 	}
-	latest := guc.Update[len(guc.Update)-1]
-	log.Infof("Latest block of %x is %x", latest.GenesisID, latest.Hash)
+	log.Infof("Fetched skipchain with id: %x", genesis)
+	cfg := getConfigOrFail(c)
+	cfg.Db.Store(latest)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
 
 // lsKnown shows all known skipblocks
-func lsKnown(c *cli.Context) error {
+func dnsList(c *cli.Context) error {
 	cfg, err := loadConfig(c)
 	if err != nil {
 		return errors.New("couldn't read config: " + err.Error())
@@ -361,6 +403,7 @@ func lsKnown(c *cli.Context) error {
 		log.Info("Didn't find any blocks yet")
 		return nil
 	}
+	log.Info("List of all stored skipchains:")
 	for _, g := range cfg.getSortedGenesis() {
 		short := !c.Bool("long")
 		log.Info(g.Sprint(short))
@@ -384,7 +427,7 @@ func lsKnown(c *cli.Context) error {
 
 // lsIndex writes one index-file for every known skipchain and an index.html
 // for all skiplchains.
-func lsIndex(c *cli.Context) error {
+func dnsIndex(c *cli.Context) error {
 	output := c.Args().First()
 	if len(output) == 0 {
 		return errors.New("Missing output path")
@@ -403,6 +446,7 @@ func lsIndex(c *cli.Context) error {
 	// Build the json structure
 	blocks := jsonBlockList{}
 	blocks.Blocks = make([]jsonBlock, len(genesis))
+	log.Info("Going through all skipchain-ids and writing the genesis-block")
 	for i, g := range genesis {
 		block := &blocks.Blocks[i]
 		block.GenesisID = hex.EncodeToString(g.Hash)
@@ -415,6 +459,7 @@ func lsIndex(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
+		log.Infof("Writing %s.html", block.GenesisID)
 		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".html"), content, 0644)
 
 		if err != nil {
@@ -428,6 +473,7 @@ func lsIndex(c *cli.Context) error {
 	}
 
 	// Write the json into the index.html
+	log.Infof("Storing an index of all blocks to index.html")
 	err = ioutil.WriteFile(filepath.Join(output, "index.html"), content, 0644)
 	if err != nil {
 		log.Info("Cannot write in the file")
@@ -435,12 +481,18 @@ func lsIndex(c *cli.Context) error {
 
 	return nil
 }
-
-func lsFetch(c *cli.Context) error {
+func dnsUpdate(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
-	rec := c.Bool("recursive")
+	fetchNew := c.Bool("new")
 	sisAll := map[network.ServerIdentityID]*network.ServerIdentity{}
-	group := readGroup(c, 0)
+	var roster *onet.Roster
+	if groupFile := c.String("roster"); groupFile != "" {
+		group := readGroup(groupFile)
+		if group == nil {
+			return errors.New("invalid group-file: " + groupFile)
+		}
+		roster = group.Roster
+	}
 	var sisNew []*network.ServerIdentity
 
 	// Get ServerIdentities from all skipblocks
@@ -453,7 +505,7 @@ func lsFetch(c *cli.Context) error {
 	}
 
 	// Get ServerIdentities from the given group-file
-	sisNew = updateNewSIs(group.Roster, sisNew, sisAll)
+	sisNew = updateNewSIs(roster, sisNew, sisAll)
 
 	log.Info("The following ips will be searched:")
 	for _, si := range sisNew {
@@ -478,7 +530,7 @@ func lsFetch(c *cli.Context) error {
 		for _, sb := range gasr.SkipChains {
 			log.Infof("Found skipchain %x", sb.SkipChainID())
 			cfg.Db.Store(sb)
-			if rec {
+			if fetchNew {
 				log.Info("Recursive fetch")
 				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
 			}
@@ -545,11 +597,14 @@ func (s sbli) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func readGroup(c *cli.Context, pos int) *app.Group {
+func readGroupArgs(c *cli.Context, pos int) *app.Group {
 	if c.NArg() <= pos {
 		log.Fatal("Please give the group-file as argument")
 	}
 	name := c.Args().Get(pos)
+	return readGroup(name)
+}
+func readGroup(name string) *app.Group {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
 	group, err := app.ReadGroupDescToml(f, cothority.Suite)
@@ -669,6 +724,9 @@ func (cfg *config) getSortedGenesis() []*skipchain.SkipBlock {
 
 func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
 	sisAll map[network.ServerIdentityID]*network.ServerIdentity) []*network.ServerIdentity {
+	if roster == nil {
+		return sisNew
+	}
 	for _, si := range roster.List {
 		if _, exists := sisAll[si.ID]; !exists {
 			log.Info("Adding", si)

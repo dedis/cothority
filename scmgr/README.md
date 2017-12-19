@@ -4,9 +4,14 @@ Using the skipchain-manager, you can set up, modify and query skipchains.
 For an actual application using the skipchains, refer
 to [https://github.com/dedis/cothority/cisc].
 
-For it to work, you need the `public.toml` of a running cothority where
-you have the right to create a skipchain or add new blocks. If you want only
-to test how it works, the simplest way to get up and started is:
+The `scmgr` will be running on your local machine and it will communicate with
+one or more remote conodes. For it to work, you need the `public.toml` of a
+running cothority where you have the right to create a skipchain or add new
+blocks.
+
+If you want only to test how it works, you can have the conodes and the `scmgr`
+on your local mmachine for testing. Then the simplest way to get up and
+running is:
 
 ```bash
 cd cothority/conode
@@ -15,8 +20,8 @@ cd cothority/conode
 
 This will start three conodes locally and create a new `public.toml` that
 you can use with scmgr. In the following examples, we suppose that the
-`public.toml` file is in the current directory and that you installed `scmgr`
-using
+`public.toml` file and the `co1`, `co2`, and `co3` directories are in the current
+directory and that you installed `scmgr` using
 
 ```bash
 go get github.com/dedis/cothority/scmgr
@@ -32,14 +37,74 @@ then remove the possibility for 3rd parties to create a new skipchain on your
 conode. In a later step we'll let them access your conode for a restricted set
 of tasks.
 
-There are two ways to link with your conode: either you have access to the
-`private.toml` file of your conode, or you can read its log-files and recover
-a PIN.
+To link your conode and your client, you need to have access to the
+`private.toml` file of your conode.
 
 ### Link using private.toml
 
-The `private.toml`-file is in 
+The `private.toml`-file is in `~/.config/conode` for Linux-systems and in
+`~/Library/Conode` for MacOSX-systems. If you started a local cothority for testing,
+you should have three directories, `co1`, `co2` and `co3` where you run the
+`run_conode.sh`-command.
+
+So for the testing system, the command is:
+
+```bash
+scmgr admin link co1/private.toml
+```
+
+That command will create a new private/public keypair for your client and register
+it with one of your conodes.
 
 ## Creating a new skipchain
 
-To create a new
+Now that you linked to your conode, you can create a new skipchain on it, with its
+only participant being _co1_:
+
+```bash
+scmgr skipchain create -b 10 -he 10 co1/public.toml
+```
+
+This will ask the first node in the `public.toml` file to be the leader and to
+create a new skipchain with `baseheight = 10` and `maximumheight = 10`.
+Refer to the Chainiac-paper on description of those heights. TLDR: the bigger
+the _baseheight_, the longer the links between the blocks get. The bigger the
+_maximumheight_, the longer the longest link gets.
+
+Once the skipchain is created, `scmgr` will print out the ID of the new
+skipchain. For the _following_ examples, you can also create a skipchain using
+`cisc` and enter its ID.
+
+## Following a skipchain
+
+Now that the skipchain is created, you can open up your security a bit and decide
+that this skipchain is trustworthy and that all nodes participating in it are
+also trustworthy. There are three different levels of trust that you can chose:
+
+* ID - only this very skipchain is allowed to use your node to store new blocks
+* Restricted - your block will also accept new skipchains, as long as no other
+than a subset of nodes of the given skipchain participate in it
+* Any - your block will also accept new skipchains, as long as _any_ node of the
+given skipchain participates
+
+For our example, we will tell _co2_ and _co3_ to follow the skipchain created
+above and to accept any new block added to that skipchain:
+
+```bash
+scmgr admin link co2/private.toml
+scmgr admin link co3/private.toml
+scmgr admin follow -id SKIPCHAIN_ID 127.0.0.1:2004
+scmgr admin follow -id SKIPCHAIN_ID 127.0.0.1:2006
+```
+
+Where _SKIPCHAIN_ID_ has to be replaced by the ID of the skipchain returned from
+the `scmgr skipchain create` command above.
+
+Now you can ask your first node to extend the nodes that participate in the
+skipchain to all nodes:
+
+```bash
+scmgr skipchain add SKIPCHAIN_ID public.toml
+```
+
+Now you have a skipchain that includes all testing-nodes.

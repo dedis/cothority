@@ -24,6 +24,10 @@ func init() {
 		&CreateLinkPrivate{},
 		// Unlink a client
 		&Unlink{},
+		// List all client keys
+		&Listlink{},
+		// Returns a list of public keys
+		&ListlinkReply{},
 		// Setting authentication
 		&SettingAuthentication{},
 		// Adding a skipchain to follow
@@ -225,6 +229,17 @@ type CreateLinkPrivate struct {
 type Unlink struct {
 	Public    kyber.Point
 	Signature []byte
+}
+
+// Listlink requests a list of all public keys stored in this
+// conode and allowed to request administrative tasks.
+type Listlink struct{}
+
+// ListlinkReply returns the list of public keys allowed to
+// do administrative tasks on this conode. If the list is empty,
+// then this node is not secured.
+type ListlinkReply struct {
+	Publics []kyber.Point
 }
 
 // EmptyReply is an empty reply. If there was an error in the

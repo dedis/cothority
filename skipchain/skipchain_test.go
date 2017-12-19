@@ -622,7 +622,10 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 	server := servers[0]
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 	require.Equal(t, 0, len(service.Storage.Clients))
-	_, cerr := service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: []byte{}})
+	links, cerr := service.Listlink(&Listlink{})
+	log.ErrFatal(cerr)
+	require.Equal(t, 0, len(links.Publics))
+	_, cerr = service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: []byte{}})
 	require.NotNil(t, cerr)
 	msg, err := server.ServerIdentity.Public.MarshalBinary()
 	require.Nil(t, err)
@@ -630,6 +633,10 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 	log.ErrFatal(err)
 	_, cerr = service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: sig})
 	log.ErrFatal(cerr)
+
+	links, cerr = service.Listlink(&Listlink{})
+	log.ErrFatal(cerr)
+	require.Equal(t, 1, len(links.Publics))
 }
 
 func TestService_Unlink(t *testing.T) {

@@ -357,6 +357,16 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
 		return &EmptyReply{}, onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	msg = append([]byte("unlink:"), msg...)
+	found := false
+	for _, pub := range s.Storage.Clients {
+		if pub.Equal(unlink.Public) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "didn't find public key in clients")
+	}
 	err = schnorr.Verify(s.Suite(), unlink.Public, msg, unlink.Signature)
 	if err != nil {
 		return &EmptyReply{}, onet.NewClientErrorCode(ErrorOnet, err.Error())
@@ -374,6 +384,17 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
 	s.Storage.Clients = append(s.Storage.Clients[:client], s.Storage.Clients[client+1:]...)
 	s.save()
 	return &EmptyReply{}, nil
+}
+
+// Listlink returns a list of all public keys that are linked
+// with this conode and are allowed to do administrative
+// tasks.
+func (s *Service) Listlink(list *Listlink) (*ListlinkReply, onet.ClientError) {
+	reply := &ListlinkReply{}
+	for _, pub := range s.Storage.Clients {
+		reply.Publics = append(reply.Publics, pub)
+	}
+	return reply, nil
 }
 
 // AddFollow adds a new skipchain to be followed
