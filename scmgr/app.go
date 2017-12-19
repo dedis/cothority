@@ -161,7 +161,7 @@ func linkQuery(c *cli.Context) error {
 	return errors.New("not yet implemented")
 }
 
-func followAddId(c *cli.Context) error {
+func followAddID(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
 	if c.NArg() != 2 {
 		return errors.New("please give: skipchain_id ip:port")

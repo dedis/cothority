@@ -55,7 +55,7 @@ func getCommands() cli.Commands {
 							Name:      "single",
 							Usage:     "only allow inclusion in this specific chain",
 							ArgsUsage: "skipchain-id ip:port",
-							Action:    followAddId,
+							Action:    followAddID,
 						},
 						{
 							Name:      "roster",
