@@ -16,7 +16,7 @@ import (
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
-	l := onet.NewTCPTest(tSuite)
+	l := onet.NewTCPTest(Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
@@ -59,7 +59,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 }
 
 func TestSkipBlock_VerifySignatures(t *testing.T) {
-	l := onet.NewTCPTest(tSuite)
+	l := onet.NewTCPTest(Suite)
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
@@ -99,7 +99,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 }
 
 func TestSkipBlock_Hash2(t *testing.T) {
-	local := onet.NewLocalTest(tSuite)
+	local := onet.NewLocalTest(Suite)
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
@@ -141,26 +141,26 @@ func TestBlockLink_Copy(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	l := onet.NewTCPTest(tSuite)
+	l := onet.NewTCPTest(Suite)
 	servers, roster, _ := l.GenTree(10, true)
 	msg := sha512.New().Sum(nil)
 	sig, err := sign(msg, servers, l)
 	log.ErrFatal(err)
-	log.ErrFatal(sig.Verify(tSuite, roster.Publics()))
+	log.ErrFatal(sig.Verify(Suite, roster.Publics()))
 	sig.Msg = sha512.New().Sum([]byte{1})
-	require.NotNil(t, sig.Verify(tSuite, roster.Publics()))
+	require.NotNil(t, sig.Verify(Suite, roster.Publics()))
 	defer l.CloseAll()
 }
 
 func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {
-	aggScalar := tSuite.Scalar().Zero()
-	aggPoint := tSuite.Point().Null()
+	aggScalar := Suite.Scalar().Zero()
+	aggPoint := Suite.Point().Null()
 	for _, s := range servers {
 		aggScalar.Add(aggScalar, l.GetPrivate(s))
 		aggPoint.Add(aggPoint, s.ServerIdentity.Public)
 	}
-	rand := tSuite.Scalar().Pick(tSuite.RandomStream())
-	comm := tSuite.Point().Mul(rand, nil)
+	rand := Suite.Scalar().Pick(Suite.RandomStream())
+	comm := Suite.Point().Mul(rand, nil)
 	sigC, err := comm.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -170,8 +170,8 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	aggPoint.MarshalTo(hash)
 	hash.Write(msg)
 	challBuff := hash.Sum(nil)
-	chall := tSuite.Scalar().SetBytes(challBuff)
-	resp := tSuite.Scalar().Mul(aggScalar, chall)
+	chall := Suite.Scalar().SetBytes(challBuff)
+	resp := Suite.Scalar().Mul(aggScalar, chall)
 	resp = resp.Add(rand, resp)
 	sigR, err := resp.MarshalBinary()
 	if err != nil {
