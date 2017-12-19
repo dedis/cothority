@@ -183,6 +183,56 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
 }
 
+func TestSkipBlock_GetFuzzy(t *testing.T) {
+	db, fname := setupSkipBlockDB(t)
+	defer db.Close()
+	defer os.Remove(fname)
+
+	sb0 := NewSkipBlock()
+	sb0.Data = []byte{0}
+	sb0.Hash = []byte{1, 2, 3, 6, 5}
+
+	sb1 := NewSkipBlock()
+	sb1.Data = []byte{1}
+	sb1.Hash = []byte{2, 3, 4, 1, 5}
+
+	db.Update(func(tx *bolt.Tx) error {
+		err := db.storeToTx(tx, sb0)
+		require.Nil(t, err)
+
+		err = db.storeToTx(tx, sb1)
+		require.Nil(t, err)
+		return nil
+	})
+
+	require.Nil(t, db.GetFuzzy(""))
+
+	sb := db.GetFuzzy("01")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
+
+	sb = db.GetFuzzy("02")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb1.Data[0])
+
+	sb = db.GetFuzzy("03")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("04")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("05")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
+
+	sb = db.GetFuzzy("06")
+	require.Nil(t, sb)
+
+	sb = db.GetFuzzy("0102030605")
+	require.NotNil(t, sb)
+	require.Equal(t, sb.Data[0], sb0.Data[0])
+}
+
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
 // The caller is responsible to close and remove the database file after using it.
 func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {

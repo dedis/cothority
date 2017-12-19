@@ -648,7 +648,7 @@ func (s *Service) newBlockEnd(sb *SkipBlock) bool {
 }
 
 func newSkipchainService(c *onet.Context) (onet.Service, error) {
-	db, bucket := c.GetDbAndBucket()
+	db, bucket := c.GetAdditionalBucket("skipblocks")
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		db:               &SkipBlockDB{db, bucket},
