@@ -249,7 +249,7 @@ func TestService_MultiLevel(t *testing.T) {
 								bl.ForwardLink[n].Hash.Equal(sb.Hash) {
 								break
 							}
-							time.Sleep(10 * time.Millisecond)
+							time.Sleep(200 * time.Millisecond)
 						}
 					}
 				}

@@ -37,7 +37,7 @@ main(){
 		exit 1
 	fi
 	gopath="$(go env GOPATH)"
-	
+
 	if ! echo $PATH | grep -q $gopath/bin; then
 		echo "Please add '$gopath/bin' to your '$PATH'"
 		PATH=$PATH:$gopath/bin
@@ -135,7 +135,7 @@ runLocal(){
 		if [ ! -d $co ]; then
 			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | $CONODE_BIN setup
 		fi
-		$CONODE_BIN -d $DEBUG server -c $co/private.toml &
+		$CONODE_BIN -d $DEBUG -c $co/private.toml server &
 		cat $co/public.toml >> public.toml
 	done
 	sleep 1
@@ -219,7 +219,7 @@ runPublic(){
 	if [ "$MEMLIMIT" ]; then
 		ulimit -Sv $(( MEMLIMIT * 1024 ))
 	fi
-	$CONODE_BIN -d $DEBUG server $ARGS | tee $LOG
+	$CONODE_BIN -d $DEBUG $ARGS server | tee $LOG
 	if [ "$MAIL" ]; then
 		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
 		echo "Waiting one minute before launching conode again"
