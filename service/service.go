@@ -11,6 +11,7 @@ import (
 	"bytes"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -56,12 +57,18 @@ type Service struct {
 	saveMutex sync.Mutex
 }
 
+// pubPoly is a serializaable version of share.PubPoly
+type pubPoly struct {
+	B       kyber.Point
+	Commits []kyber.Point
+}
+
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
 	OCSs     *ocs.SBBStorage
 	Accounts map[string]*Darcs
 	Shared   map[string]*protocol.SharedSecret
-	Polys    map[string]*share.PubPoly
+	Polys    map[string]*pubPoly
 	Admins   map[string]*darc.Darc
 }
 
@@ -124,7 +131,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 			s.saveMutex.Unlock()
 			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		}
-		s.Storage.Polys[string(reply.OCS.Hash)] = share.NewPubPoly(cothority.Suite, cothority.Suite.Point().Base(), dks.Commits)
+		s.Storage.Polys[string(reply.OCS.Hash)] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.saveMutex.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout * time.Millisecond):
@@ -448,7 +455,8 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
-	ocsProto.Poly = s.Storage.Polys[string(fileSB.GenesisID)]
+	pp := s.Storage.Polys[string(fileSB.GenesisID)]
+	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B, pp.Commits)
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
 	if err != nil {
@@ -790,7 +798,7 @@ func (s *Service) tryLoad() error {
 			s.Storage.Shared = map[string]*protocol.SharedSecret{}
 		}
 		if len(s.Storage.Polys) == 0 {
-			s.Storage.Polys = map[string]*share.PubPoly{}
+			s.Storage.Polys = map[string]*pubPoly{}
 		}
 		if len(s.Storage.Accounts) == 0 {
 			s.Storage.Accounts = map[string]*Darcs{}
