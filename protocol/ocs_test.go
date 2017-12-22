@@ -115,7 +115,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	log.ErrFatal(err)
 
 	// 6 - reader - gets the resulting symmetric key, encrypted under Xc
-	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Secret)
+	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
 	log.ErrFatal(err)
 
 	log.Lvl1("Decrypting the key:", time.Now().Sub(start))
