@@ -66,7 +66,7 @@ func TestOnchain(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Decrypt XhatEnc
-	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Secret)
+	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
 	log.ErrFatal(err)
 
 	// Extract the message - keyHat is the recovered key

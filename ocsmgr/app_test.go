@@ -16,7 +16,7 @@ func TestMain(m *testing.M) {
 func TestPriv(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		kp := key.NewKeyPair(cothority.Suite)
-		priv := kp.Secret
+		priv := kp.Private
 		b, _ := priv.MarshalBinary()
 		if len(b) != 32 {
 			t.Fatal("wrong marshal len", len(b))
