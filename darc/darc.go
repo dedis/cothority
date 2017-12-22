@@ -466,7 +466,7 @@ func NewEd25519Identity(point kyber.Point) *IdentityEd25519 {
 func NewEd25519Signer(point kyber.Point, secret kyber.Scalar) *Ed25519Signer {
 	if point == nil || secret == nil {
 		kp := key.NewKeyPair(cothority.Suite)
-		point, secret = kp.Public, kp.Secret
+		point, secret = kp.Public, kp.Private
 	}
 	return &Ed25519Signer{
 		Point:  point,
