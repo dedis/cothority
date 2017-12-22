@@ -12,10 +12,10 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.Base64;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -33,11 +33,11 @@ public class ServerIdentity {
     public ServerIdentity(final URI serverWsAddress, final String publicKey) {
         this.conodeAddress = serverWsAddress;
         // TODO: It will be better to use some class for server key and move this conversion outside of this class
-        this.Public = new Point(Base64.getDecoder().decode(publicKey));
+        this.Public = new Point(DatatypeConverter.parseHexBinary(publicKey));
     }
 
     public ServerIdentity(Toml siToml) throws URISyntaxException {
-        this(new URI(siToml.getString("Address")), siToml.getString("Point"));
+        this(new URI(siToml.getString("Address")), siToml.getString("Public"));
     }
 
     public URI getAddress() {
