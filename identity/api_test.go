@@ -84,7 +84,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
 
-	sig, err := schnorr.Sign(tSuite, keypairAdmin.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	log.ErrFatal(err)
 	_, cerr := srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, cerr)
@@ -112,7 +112,7 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 	hash := h.Sum(nil)
 
 	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
-	sig, err := schnorr.Sign(tSuite, keypairAdmin.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	log.ErrFatal(err)
 	_, cerr := srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
 	require.Nil(t, cerr)
@@ -356,7 +356,7 @@ func TestVerificationFunction(t *testing.T) {
 	data2.Storage["two2"] = "public2"
 	hash, err := data2.Hash(tSuite)
 	log.ErrFatal(err)
-	sig, err := schnorr.Sign(tSuite, kp2.Secret, hash)
+	sig, err := schnorr.Sign(tSuite, kp2.Private, hash)
 	log.ErrFatal(err)
 	data2.Votes["one1"] = sig
 	data2.Votes["two2"] = sig

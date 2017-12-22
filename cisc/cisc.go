@@ -103,7 +103,7 @@ func adminLink(c *cli.Context) error {
 			ckp := key.NewKeyPair(cothority.Suite)
 			kp = &keyPair{}
 			kp.Public = ckp.Public
-			kp.Private = ckp.Secret
+			kp.Private = ckp.Private
 		}
 		public = kp.Public
 	}
@@ -251,7 +251,7 @@ func adminAdd(c *cli.Context) error {
 func idKeyPair(c *cli.Context) error {
 	kp := key.NewKeyPair(cothority.Suite)
 
-	secStr, err := encoding.ScalarToStringHex(nil, kp.Secret)
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Private)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func idCreate(c *cli.Context) error {
 		log.ErrFatal(err)
 		token, err := service.NewPopTokenFromToml(buf)
 		kp.Public = token.Public
-		kp.Secret = token.Private
+		kp.Private = token.Private
 		atts = token.Final.Attendees
 		if err != nil {
 			return err
@@ -292,12 +292,12 @@ func idCreate(c *cli.Context) error {
 		typ = identity.PublicAuth
 		priv := c.Args().Get(1)
 		var err error
-		kp.Secret, err = encoding.StringHexToScalar(cothority.Suite, priv)
+		kp.Private, err = encoding.StringHexToScalar(cothority.Suite, priv)
 		if err != nil {
 			log.Error("Couldn't parse private key")
 			return err
 		}
-		kp.Public = cothority.Suite.Point().Mul(kp.Secret, nil)
+		kp.Public = cothority.Suite.Point().Mul(kp.Private, nil)
 	default:
 		log.Fatal("no such auth method")
 	}

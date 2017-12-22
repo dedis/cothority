@@ -39,7 +39,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	ctx := []byte(ServiceName + service.ServerIdentity().String())
 
 	ci.Sig = anon.Sign(tSuite, ci.Nonce,
-		set, ctx, 0, kp.Secret)
+		set, ctx, 0, kp.Private)
 	msg, cerr := service.CreateIdentity(ci)
 	log.ErrFatal(cerr)
 	air := msg.(*CreateIdentityReply)
@@ -69,7 +69,7 @@ func TestService_CreateIdentity3(t *testing.T) {
 	random.Bytes(ci.Nonce, tSuite.RandomStream())
 	service.auth.nonces[string(ci.Nonce)] = struct{}{}
 	var err error
-	ssig, err := schnorr.Sign(tSuite, kp.Secret, ci.Nonce)
+	ssig, err := schnorr.Sign(tSuite, kp.Private, ci.Nonce)
 	ci.SchnSig = &ssig
 	log.ErrFatal(err)
 	msg, cerr := service.CreateIdentity(ci)

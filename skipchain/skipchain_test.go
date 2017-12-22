@@ -688,7 +688,7 @@ func TestService_Unlink(t *testing.T) {
 	// Correct signautre and existing public key
 	msg, _ = kp.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
-	sig, err = schnorr.Sign(Suite, kp.Secret, msg)
+	sig, err = schnorr.Sign(Suite, kp.Private, msg)
 	_, cerr = service.Unlink(&Unlink{
 		Public:    kp.Public,
 		Signature: sig,
@@ -704,7 +704,7 @@ func TestService_DelFollow(t *testing.T) {
 	servers, _, _ := local.MakeHELS(3, skipchainSID, Suite)
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
-	privWrong := key.NewKeyPair(Suite).Secret
+	privWrong := key.NewKeyPair(Suite).Private
 	priv := setupFollow(service)
 	iddel := []byte{0}
 	msg := append([]byte("delfollow:"), iddel...)
@@ -769,7 +769,7 @@ func setupFollow(s *Service) kyber.Scalar {
 		{Block: &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{2}}},
 		{Block: &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{3}}},
 	}
-	return kp.Secret
+	return kp.Private
 }
 
 func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int) error {

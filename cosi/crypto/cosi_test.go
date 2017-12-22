@@ -164,7 +164,7 @@ func genCosis(nb int) []*CoSi {
 	kps, publics := genKeyPair(nb)
 	var cosis []*CoSi
 	for _, kp := range kps {
-		cosis = append(cosis, NewCosi(testSuite, kp.Secret, publics))
+		cosis = append(cosis, NewCosi(testSuite, kp.Private, publics))
 	}
 	return cosis
 }
@@ -173,7 +173,7 @@ func genCosisFailing(nb int, failing int) (cosis []*CoSi, allPublics []kyber.Poi
 	kps, publics := genKeyPair(nb)
 	allPublics = publics
 	for i := 0; i < nb-failing; i++ {
-		cosis = append(cosis, NewCosi(testSuite, kps[i].Secret, allPublics))
+		cosis = append(cosis, NewCosi(testSuite, kps[i].Private, allPublics))
 	}
 	for i := range cosis {
 		for j := nb - failing; j < nb; j++ {

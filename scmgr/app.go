@@ -101,7 +101,7 @@ func linkAdd(c *cli.Context) error {
 	kp := key.NewKeyPair(skipchain.Suite)
 	si := network.NewServerIdentity(conodePub, remote.Address)
 	cfg.Values.Link[si.Public.String()] = &link{
-		Private: kp.Secret,
+		Private: kp.Private,
 		Address: remote.Address,
 		Conode:  si,
 	}
