@@ -156,7 +156,7 @@ func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
-	o.DKG, err = dkg.NewDistKeyGenerator(cothority.Suite, o.keypair.Secret,
+	o.DKG, err = dkg.NewDistKeyGenerator(cothority.Suite, o.keypair.Private,
 		ssd.Publics, int(ssd.Threshold))
 	if err != nil {
 		return err
