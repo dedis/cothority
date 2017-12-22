@@ -106,7 +106,7 @@ func NewIdentity(r *onet.Roster, threshold int, owner string, kp *key.Pair) *Ide
 	}
 	return &Identity{
 		Client:     client,
-		Private:    kp.Secret,
+		Private:    kp.Private,
 		Public:     kp.Public,
 		Data:       NewData(threshold, kp.Public, owner),
 		DeviceName: owner,

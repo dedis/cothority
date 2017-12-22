@@ -331,7 +331,7 @@ func linked(nbr int) *linkStruct {
 	kp := key.NewKeyPair(Suite)
 	ls := &linkStruct{
 		local: onet.NewTCPTest(Suite),
-		priv:  kp.Secret,
+		priv:  kp.Private,
 		pub:   kp.Public,
 	}
 	ls.servers, ls.roster, _ = ls.local.GenTree(nbr, true)

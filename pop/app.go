@@ -186,7 +186,7 @@ func orgConfig(c *cli.Context) error {
 				Signature: []byte{},
 			},
 			Public:  kp.Public,
-			Private: kp.Secret,
+			Private: kp.Private,
 		}
 	} else {
 		val.Final.Desc = desc
@@ -312,7 +312,7 @@ func orgMerge(c *cli.Context) error {
 // creates a new private/public pair
 func attCreate(c *cli.Context) error {
 	kp := key.NewKeyPair(cothority.Suite)
-	secStr, err := encoding.ScalarToStringHex(nil, kp.Secret)
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Private)
 	if err != nil {
 		return err
 	}
@@ -523,7 +523,7 @@ func newConfig(fileConfig string) (*Config, error) {
 		kp := key.NewKeyPair(cothority.Suite)
 		return &Config{
 			OrgPublic:  kp.Public,
-			OrgPrivate: kp.Secret,
+			OrgPrivate: kp.Private,
 			Parties:    make(map[string]*PartyConfig),
 			name:       name,
 		}, nil

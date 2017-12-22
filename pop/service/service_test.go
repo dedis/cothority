@@ -65,7 +65,7 @@ func TestService_StoreConfig(t *testing.T) {
 
 	service.data.Public = kp.Public
 	hash := desc.Hash()
-	sg, err := schnorr.Sign(tSuite, kp.Secret, hash)
+	sg, err := schnorr.Sign(tSuite, kp.Private, hash)
 	log.ErrFatal(err)
 	msg, cerr := service.StoreConfig(&storeConfig{desc, sg})
 	log.ErrFatal(cerr)
@@ -426,7 +426,7 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 	privs := make([]kyber.Scalar, len(srvcs))
 	for i := range srvcs {
 		kp := key.NewKeyPair(tSuite)
-		pubs[i], privs[i] = kp.Public, kp.Secret
+		pubs[i], privs[i] = kp.Public, kp.Private
 	}
 
 	sret := []*Service{}
@@ -479,7 +479,7 @@ func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
 	privs := make([]kyber.Scalar, len(srvcs))
 	for i := range srvcs {
 		kp := key.NewKeyPair(tSuite)
-		pubs[i], privs[i] = kp.Public, kp.Secret
+		pubs[i], privs[i] = kp.Public, kp.Private
 	}
 	sret := []*Service{}
 	for i, s := range srvcs {
