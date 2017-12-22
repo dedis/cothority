@@ -45,18 +45,6 @@ func main() {
 	cliApp.Name = "conode"
 	cliApp.Usage = "run a cothority server"
 	cliApp.Version = Version
-	serverFlags := []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: app.GetDefaultConfigFile(DefaultName),
-			Usage: "configuration file of the server",
-		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 0,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-	}
 
 	cliApp.Commands = []cli.Command{
 		{
@@ -80,7 +68,6 @@ func main() {
 			Action: func(c *cli.Context) {
 				runServer(c)
 			},
-			Flags: serverFlags,
 		},
 		{
 			Name:      "check",
@@ -105,7 +92,10 @@ func main() {
 			Action: convert64,
 		},
 	}
-	cliApp.Flags = serverFlags
+	cliApp.Flags = []cli.Flag{
+		app.FlagDebug,
+		app.FlagConfig,
+	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
@@ -117,7 +107,7 @@ func main() {
 
 func runServer(ctx *cli.Context) {
 	// first check the options
-	config := ctx.String("config")
+	config := ctx.GlobalString("config")
 
 	app.RunServer(config, cothority.Suite)
 }
