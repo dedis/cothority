@@ -231,11 +231,15 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	root.RegisterOnDone(func() {
 		done <- true
 	})
-	for i := 0; i < min(killCount, len(servers)); i++ {
+
+	// kill the leafs first
+	killCount = min(killCount, len(servers))
+	for i := len(servers) - 1; i > len(servers)-killCount-1; i-- {
 		if e := servers[i].Stop(); e != nil {
 			return e
 		}
 	}
+
 	go root.Start()
 	log.Lvl1("Launched protocol")
 	// are we done yet?
