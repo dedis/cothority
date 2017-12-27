@@ -220,8 +220,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 				// This is not a critical failure - we have at least
 				// one forward-link
 				log.Error("Couldn't get old block to sign: " + err.Error())
-			} else {
-				changed = append(changed, back)
 			}
 		}
 	}
