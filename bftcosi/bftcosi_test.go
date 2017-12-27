@@ -122,8 +122,7 @@ func TestCheckRefuseMore(t *testing.T) {
 	for _, n := range []int{3, 4, 13} {
 		for refuseCount := 1; refuseCount <= 3; refuseCount++ {
 			log.Lvl2("RefuseMore at", refuseCount)
-			runProtocolOnce(t, n, TestProtocolName,
-				refuseCount, refuseCount <= n-(n+1)*2/3, 0)
+			runProtocolOnce(t, n, TestProtocolName, refuseCount, refuseCount <= n-(n+1)*2/3)
 		}
 	}
 }
@@ -142,8 +141,7 @@ func TestCheckRefuseBit(t *testing.T) {
 			wg.Add(1)
 			go func(n, fc int) {
 				log.Lvl1("RefuseBit at", n, fc)
-				log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
-					fc, bitCount(fc) < (n+1)*2/3, 0))
+				runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
 				log.Lvl3("Done with", n, fc)
 				wg.Done()
 			}(n, refuseCount)
@@ -166,8 +164,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 	for fc := 0; fc < 8; fc++ {
 		wg.Add(1)
 		go func(fc int) {
-			log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
-				fc, bitCount(fc) < (n+1)*2/3, 0))
+			runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
 			log.Lvl3("Done with", n, fc)
 			wg.Done()
 		}(fc)
@@ -184,26 +181,31 @@ func TestNodeFailure(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	runProtocolOnce(t, 5, TestProtocolName, 0, true, 1)
+	const nbrHosts = 5
+	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
+		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
+	}
 }
 
 func runProtocol(t *testing.T, name string, refuseCount int) {
 	for _, nbrHosts := range []int{3, 4, 13} {
-		runProtocolOnce(t, nbrHosts, name, refuseCount, true, 0)
+		runProtocolOnce(t, nbrHosts, name, refuseCount, true)
 	}
 }
 
-func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool, killCount int) {
-	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, killCount); err != nil {
+func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool) {
+	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, 0, 2); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, name, refuseCount, succeed, err)
 	}
 }
 
-func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool, killCount int) error {
+func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool, killCount int, bf int) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
-	servers, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true)
+
+	// we set the branching factor to nbrHosts - 1 to have the root broadcast messages
+	servers, _, tree := local.GenBigTree(nbrHosts, nbrHosts, bf, true)
 	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
@@ -235,6 +237,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	// kill the leafs first
 	killCount = min(killCount, len(servers))
 	for i := len(servers) - 1; i > len(servers)-killCount-1; i-- {
+		log.Lvl3("Stopping server:", servers[i].ServerIdentity.Public, servers[i].Address())
 		if e := servers[i].Stop(); e != nil {
 			return e
 		}
