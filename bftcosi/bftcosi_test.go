@@ -181,8 +181,8 @@ func TestNodeFailure(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	const nbrHosts = 5
-	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
+	const nbrHosts = 4
+	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 0, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 	}
 }
@@ -246,7 +246,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	go root.Start()
 	log.Lvl1("Launched protocol")
 	// are we done yet?
-	wait := time.Second * 60
+	wait := time.Second * 5
 	select {
 	case <-done:
 		counter.Lock()
