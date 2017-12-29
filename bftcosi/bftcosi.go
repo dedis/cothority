@@ -513,10 +513,6 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(r *Response) error {
 		Exceptions: bft.tempExceptions,
 	}
 
-	aggCommit := bft.Suite().Point().Null()
-	for _, c := range bft.tempPrepareCommit {
-		aggCommit.Add(aggCommit, c)
-	}
 	if err := sig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
 		log.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
