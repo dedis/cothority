@@ -182,7 +182,7 @@ func TestNodeFailure(t *testing.T) {
 	})
 
 	const nbrHosts = 5
-	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 0, nbrHosts-1); err != nil {
+	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 	}
 }
@@ -194,7 +194,7 @@ func runProtocol(t *testing.T, name string, refuseCount int) {
 }
 
 func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool) {
-	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, 0, 2); err != nil {
+	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, 0, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, name, refuseCount, succeed, err)
 	}
 }
@@ -246,11 +246,11 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	go root.Start()
 	log.Lvl1("Launched protocol")
 	// are we done yet?
-	wait := time.Second * 5
+	wait := time.Second * 10
 	select {
 	case <-done:
 		counter.Lock()
-		if counter.veriCount != nbrHosts {
+		if counter.veriCount != nbrHosts-killCount {
 			return errors.New("each host should have called verification")
 		}
 		// if assert refuses we don't care for unlocking (t.Refuse)
