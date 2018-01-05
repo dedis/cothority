@@ -181,7 +181,7 @@ func TestNodeFailure(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	const nbrHosts = 4
+	const nbrHosts = 5
 	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 0, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 	}
