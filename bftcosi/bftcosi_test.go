@@ -47,7 +47,7 @@ var counters = &Counters{}
 var cMux sync.Mutex
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -85,7 +85,7 @@ func TestThreshold(t *testing.T) {
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
-		_, _, tree := local.GenBigTree(hosts, hosts, 2, true)
+		_, _, tree := local.GenBigTree(hosts, hosts, min(2, hosts-1), true)
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
@@ -181,9 +181,11 @@ func TestNodeFailure(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	const nbrHosts = 5
-	if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
-		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
+	nbrHostsArr := []int{5, 7, 10}
+	for _, nbrHosts := range nbrHostsArr {
+		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
+			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
+		}
 	}
 }
 
@@ -246,7 +248,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	go root.Start()
 	log.Lvl1("Launched protocol")
 	// are we done yet?
-	wait := time.Second * 10
+	wait := time.Second * 60
 	select {
 	case <-done:
 		counter.Lock()

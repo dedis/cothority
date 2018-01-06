@@ -10,6 +10,7 @@ the first round.
 
 import (
 	"crypto/sha512"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -241,12 +242,23 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 	bftSig := &BFTSignature{
 		Sig:        bft.commit.Signature(),
 		Msg:        bft.Msg,
-		Exceptions: bft.tempExceptions,
+		Exceptions: nil,
 	}
 	if bft.signRefusal {
 		bftSig.Sig = nil
 		bftSig.Exceptions = bft.tempExceptions
 	}
+
+	// NOTE a hack to include exceptions which are the result of offline node
+	// rather than refusal to sign
+	if bftSig.Exceptions == nil {
+		for _, ex := range bft.tempExceptions {
+			if ex.Commitment.Equal(bft.Suite().Point().Null()) {
+				bftSig.Exceptions = append(bftSig.Exceptions, ex)
+			}
+		}
+	}
+
 	return bftSig
 }
 
@@ -299,7 +311,9 @@ func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 
 	// wait until we have enough RoundPrepare commitments or timeout
 	// should do nothing if `c` is closed
-	bft.readCommitChan(c, RoundPrepare)
+	if err := bft.readCommitChan(c, RoundPrepare); err != nil {
+		return err
+	}
 
 	// TODO this will not work for non-star graphs
 	if len(bft.tempPrepareCommit) < len(bft.Children())-bft.allowedExceptions {
@@ -416,7 +430,9 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 
 	// wait until we have enough RoundPrepare responses or timeout
 	// does nothing if channel is closed
-	bft.readResponseChan(c, RoundPrepare)
+	if err := bft.readResponseChan(c, RoundPrepare); err != nil {
+		return err
+	}
 
 	// TODO this will only work for star-graphs
 	// check if we have enough messages
@@ -532,18 +548,17 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 }
 
 // readCommitChan reads until all commit messages are received or a timeout for message type `t`
-func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) {
+func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error {
 	for {
 		if bft.isClosing() {
-			log.Info("Closing")
-			return
+			return errors.New("Closing")
 		}
 
 		select {
 		case msg, ok := <-c:
 			if !ok {
 				log.Lvl3("Channel closed")
-				return
+				return nil
 			}
 
 			comm := msg.Commitment
@@ -552,36 +567,35 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) {
 			case RoundPrepare:
 				bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
 				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children()) {
-					return
+					return nil
 				}
 			case RoundCommit:
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
 				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children()) {
-					return
+					return nil
 				}
 			}
 		case <-time.After(time.Second * timeout):
 			// in some cases this might be ok because we accept a certain number of faults
 			// the caller is responsible for checking if enough messages are received
 			log.Info("timeout while trying to read commit messages")
-			return
+			return nil
 		}
 	}
 }
 
 // should do nothing if the channel is closed
-func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) {
+func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) error {
 	for {
 		if bft.isClosing() {
-			log.Lvl3("Closing")
-			return
+			return errors.New("Closing")
 		}
 
 		select {
 		case msg, ok := <-c:
 			if !ok {
 				log.Lvl3("Channel closed")
-				return
+				return nil
 			}
 			from := msg.ServerIdentity.Public
 			r := msg.Response
@@ -592,17 +606,17 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) {
 				bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
 				bft.tempPrepareResponsePublics = append(bft.tempPrepareResponsePublics, from)
 				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.Children()) {
-					return
+					return nil
 				}
 			case RoundCommit:
 				bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
 				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.Children()) {
-					return
+					return nil
 				}
 			}
 		case <-time.After(time.Second * timeout):
 			log.Info("Read response timed out")
-			return
+			return nil
 		}
 	}
 }
