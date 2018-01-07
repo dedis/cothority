@@ -113,7 +113,7 @@ type collectStructs struct {
 	tempCommitCommit []kyber.Point
 	// temporary buffer of "prepare" responses
 	tempPrepareResponse []kyber.Scalar
-	//
+	// temporary buffer of the public keys for nodes that responded
 	tempPrepareResponsePublics []kyber.Point
 	// temporary buffer of "commit" responses
 	tempCommitResponse []kyber.Scalar
@@ -249,8 +249,8 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 		bftSig.Exceptions = bft.tempExceptions
 	}
 
-	// NOTE a hack to include exceptions which are the result of offline node
-	// rather than refusal to sign
+	// This is a hack to include exceptions which are the result of offline
+	// nodes rather than nodes that refused to sign.
 	if bftSig.Exceptions == nil {
 		for _, ex := range bft.tempExceptions {
 			if ex.Commitment.Equal(bft.Suite().Point().Null()) {
@@ -304,7 +304,10 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	return bft.sendToChildren(&ann)
 }
 
-// handleCommitmentPrepare
+// handleCommitmentPrepare handles incoming commit messages in the prepare phase
+// and then computes the aggregate commit when enough messages arrive.
+// The aggregate is sent to the parent if the node is not a root otherwise it
+// starts the challenge.
 func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock() // NOTE potentially locked for the whole timeout
@@ -315,7 +318,7 @@ func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 		return err
 	}
 
-	// TODO this will not work for non-star graphs
+	// TODO this will not always work for non-star graphs
 	if len(bft.tempPrepareCommit) < len(bft.Children())-bft.allowedExceptions {
 		bft.signRefusal = true
 		log.Error("not enough prepare commitment messages")
@@ -331,7 +334,8 @@ func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 	})
 }
 
-// handleCommitmentCommit
+// handleCommitmentCommit is similar to handleCommitmentPrepare except it is for
+// the commit phase.
 func (bft *ProtocolBFTCoSi) handleCommitmentCommit(c chan commitChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock() // NOTE potentially locked for the whole timeout
@@ -340,7 +344,7 @@ func (bft *ProtocolBFTCoSi) handleCommitmentCommit(c chan commitChan) error {
 	// should do nothing if `c` is closed
 	bft.readCommitChan(c, RoundCommit)
 
-	// TODO this will not work for non-star graphs
+	// TODO this will not always work for non-star graphs
 	if len(bft.tempCommitCommit) < len(bft.Children())-bft.allowedExceptions {
 		bft.signRefusal = true
 		log.Error("not enough commit commitment messages")
@@ -375,7 +379,6 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 	go func() {
 		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
 	}()
-	// go to response if leaf
 	if bft.IsLeaf() {
 		return bft.startResponse(RoundPrepare)
 	}
@@ -388,7 +391,6 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 	if bft.isClosing() {
 		return nil
 	}
-
 	ch := msg.ChallengeCommit
 	if !bft.IsRoot() {
 		bft.commit.Challenge(ch.Challenge)
@@ -406,7 +408,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		bft.signRefusal = true
 	}
 
-	// Check if we have no more than threshold failed nodes
+	// check if we have no more than threshold failed nodes
 	if len(ch.Signature.Exceptions) > int(bft.allowedExceptions) {
 		log.Errorf("%s: More than threshold (%d/%d) refused to sign - aborting.",
 			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
@@ -423,7 +425,9 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 	return bft.sendToChildren(&ch)
 }
 
-// handleResponsePrepare
+// handleResponsePrepare handles response messages in the prepare phase.
+// If the node is not the root, it'll aggregate the response and forward to
+// the parent. Otherwise it verifies the response.
 func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock() // NOTE potentially locked for the whole timeout
@@ -490,6 +494,9 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	return nil
 }
 
+// handleResponseCommit is similar to `handleResponsePrepare` except it is for
+// the commit phase. A key distinction is that the protocol ends at the end of
+// this function and final signature is generated if it is called by the root.
 func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock()
@@ -726,8 +733,10 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	}
 	for _, tn := range bft.Children() {
 		if !publicsMap[tn.ServerIdentity.Public] {
-			// we assume the server was also not available for the commitment
-			// so no need to subtract the commitment
+			// We assume the server was also not available for the commitment
+			// so no need to subtract the commitment.
+			// Conversely, we cannot handle nodes which fail right
+			// after making a commitment at the moment.
 			bft.tempExceptions = append(bft.tempExceptions, Exception{
 				Index:      tn.RosterIndex,
 				Commitment: bft.Suite().Point().Null(),
