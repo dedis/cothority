@@ -11,6 +11,7 @@ the first round.
 import (
 	"crypto/sha512"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/dedis/cothority/cosi/crypto"
@@ -268,7 +269,7 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	if bft.IsLeaf() {
 		return bft.startCommitment(ann.TYPE)
 	}
-	return bft.SendToChildrenInParallel(&ann)
+	return bft.sendToChildren(&ann)
 }
 
 // handleCommitment collects all commitments from children and passes them
@@ -342,7 +343,7 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 	if bft.IsLeaf() {
 		return bft.startResponse(RoundPrepare)
 	}
-	return bft.SendToChildrenInParallel(&ch)
+	return bft.sendToChildren(&ch)
 }
 
 // handleChallengeCommit verifies the signature and checks if not more than
@@ -383,7 +384,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		return bft.handleResponseCommit(nil)
 	}
 
-	return bft.SendToChildrenInParallel(&ch)
+	return bft.sendToChildren(&ch)
 }
 
 // handleResponse is called when a response message arrives.
@@ -646,4 +647,12 @@ func (bft *ProtocolBFTCoSi) setClosing() {
 	bft.closingMutex.Lock()
 	bft.closing = true
 	bft.closingMutex.Unlock()
+}
+
+func (bft *ProtocolBFTCoSi) sendToChildren(msg interface{}) error {
+	errs := bft.SendToChildrenInParallel(msg)
+	if len(errs) != 0 {
+		return fmt.Errorf("sendToChildren failed with errors: %v", errs)
+	}
+	return nil
 }
