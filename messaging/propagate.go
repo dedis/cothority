@@ -2,11 +2,9 @@ package messaging
 
 import (
 	"errors"
-	"sync"
-
-	"time"
-
 	"reflect"
+	"sync"
+	"time"
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -37,8 +35,9 @@ type Propagate struct {
 		PropagateReply
 	}
 
-	received     int
-	subtreeCount int
+	received        int
+	subtreeCount    int
+	allowedFailures int
 	sync.Mutex
 }
 
@@ -56,8 +55,8 @@ type PropagateReply struct {
 	Level int
 }
 
-// PropagationFunc starts the propagation protocol and blocks until
-// all children stored the new value or the timeout has been reached.
+// PropagationFunc starts the propagation protocol and blocks until all children
+// minus the exception stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
 type PropagationFunc func(el *onet.Roster, msg network.Message, msec int) (int, error)
@@ -74,7 +73,8 @@ type propagationContext interface {
 
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (PropagationFunc, error) {
+// The protocol will fail if larger over t nodes per subtree fail to respond.
+func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
@@ -82,6 +82,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore) (
 			received:         0,
 			subtreeCount:     n.TreeNode().SubtreeCount(),
 			onData:           f,
+			allowedFailures:  t,
 		}
 		for _, h := range []interface{}{&p.ChannelSD, &p.ChannelReply} {
 			if err := p.RegisterChannel(h); err != nil {
@@ -170,7 +171,7 @@ func (p *Propagate) Dispatch() error {
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
-			if p.received == p.subtreeCount {
+			if p.received == p.subtreeCount-p.allowedFailures {
 				process = false
 			}
 		case <-time.After(timeout):

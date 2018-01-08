@@ -938,7 +938,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	s.syncs = make(map[string]*sync)
 	var err error
-	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal)
+	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
 	if err != nil {
 		return nil, err
 	}

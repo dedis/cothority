@@ -21,20 +21,32 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 2)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
+	storeSkipBlock(t, false)
+}
+
+func storeSkipBlock(t *testing.T, fail bool) {
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, genService := local.MakeHELS(5, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(5, skipchainSID, Suite)
 	service := genService.(*Service)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
+
+	// kill one node and it should still work
+	go func() {
+		if fail {
+			err = servers[len(servers)-1].Close()
+			log.ErrFatal(err)
+		}
+	}()
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
