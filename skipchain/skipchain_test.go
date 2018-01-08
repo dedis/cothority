@@ -1,18 +1,13 @@
 package skipchain
 
 import (
-	"testing"
-
 	"bytes"
-
-	"strconv"
-
 	"errors"
 	"fmt"
-
-	"time"
-
+	"strconv"
 	"sync"
+	"testing"
+	"time"
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -20,9 +15,9 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"gopkg.in/satori/go.uuid.v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/satori/go.uuid.v1"
 )
 
 func TestMain(m *testing.M) {
