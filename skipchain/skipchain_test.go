@@ -1,18 +1,13 @@
 package skipchain
 
 import (
-	"testing"
-
 	"bytes"
-
-	"strconv"
-
 	"errors"
 	"fmt"
-
-	"time"
-
+	"strconv"
 	"sync"
+	"testing"
+	"time"
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -20,26 +15,38 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/satori/go.uuid.v1"
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 2)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
+	storeSkipBlock(t, false)
+}
+
+func storeSkipBlock(t *testing.T, fail bool) {
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, genService := local.MakeHELS(5, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(5, skipchainSID, Suite)
 	service := genService.(*Service)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
+
+	// kill one node and it should still work
+	go func() {
+		if fail {
+			err = servers[len(servers)-1].Close()
+			log.ErrFatal(err)
+		}
+	}()
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
