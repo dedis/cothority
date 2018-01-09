@@ -73,7 +73,7 @@ type propagationContext interface {
 
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-// The protocol will fail if larger over t nodes per subtree fail to respond.
+// The protocol will fail if more than t nodes per subtree fail to respond.
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		p := &Propagate{
@@ -140,7 +140,7 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
-	log.Lvl4(p.ServerIdentity())
+	log.Lvl4(p.ServerIdentity(), "Start dispatch")
 	for process {
 		p.Lock()
 		timeout := time.Millisecond * time.Duration(p.sd.Msec)
@@ -163,7 +163,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			} else {
 				log.Lvl3(p.ServerIdentity(), "Sending to children")
-				p.SendToChildren(&msg.PropagateSendData)
+				p.SendToChildrenInParallel(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++

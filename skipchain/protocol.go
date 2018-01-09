@@ -11,6 +11,8 @@ node will only use the `Handle`-methods, and not call `Start` again.
 */
 
 import (
+	"fmt"
+
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -40,6 +42,9 @@ type ExtendRoster struct {
 	FollowerIDs       []SkipBlockID
 	DB                *SkipBlockDB
 	SaveCallback      func()
+	tempSigs          []ProtoExtendSignature
+	allowedFailures   int
+	nbrFailures       int
 }
 
 // GetUpdate needs to be configured by the service to hold the database
@@ -58,6 +63,8 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 	t := &ExtendRoster{
 		TreeNodeInstance:  n,
 		ExtendRosterReply: make(chan []ProtoExtendSignature),
+		// it's hardcoded at the moment, maybe the caller can specify
+		allowedFailures: (len(n.Children()) - 1) / 3,
 	}
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
 }
@@ -74,7 +81,11 @@ func NewProtocolGetUpdate(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 // Start sends the Announce-message to all children
 func (p *ExtendRoster) Start() error {
 	log.Lvl3("Starting Protocol ExtendRoster")
-	return p.SendToChildren(p.ExtendRoster)
+	errs := p.SendToChildrenInParallel(p.ExtendRoster)
+	if len(errs) > p.allowedFailures {
+		return fmt.Errorf("Send to children failed: %v", errs)
+	}
+	return nil
 }
 
 // Start sends the Announce-message to all children
@@ -148,23 +159,30 @@ func (p *ExtendRoster) isBlockAccepted(sender *network.ServerIdentity, block *Sk
 	return len(p.FollowerIDs) == 0
 }
 
-// HandleExtendRosterReply checks if all nodes are OK to hold this new block.
-func (p *ExtendRoster) HandleExtendRosterReply(reply []ProtoStructExtendRosterReply) error {
-	defer p.Done()
-
-	var sigs []ProtoExtendSignature
-	for _, r := range reply {
+// HandleExtendRosterReply checks if enough nodes are OK to hold the new block.
+func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) error {
+	ok := func() bool {
 		if r.Signature == nil {
-			sigs = []ProtoExtendSignature{}
-			break
+			log.Lvl3("Empty signature")
+			return false
 		}
 		if schnorr.Verify(Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {
-			sigs = []ProtoExtendSignature{}
-			break
+			log.Lvl3("Signature verification failed")
+			return false
 		}
-		sigs = append(sigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
+		p.tempSigs = append(p.tempSigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
+		return true
+	}()
+	if !ok {
+		p.ExtendRosterReply <- []ProtoExtendSignature{}
+		p.Done()
+	} else {
+		// TODO we should also consider the case when all nodes reply
+		if len(p.tempSigs) >= len(p.Children())-p.allowedFailures {
+			p.ExtendRosterReply <- p.tempSigs
+			p.Done()
+		}
 	}
-	p.ExtendRosterReply <- sigs
 	return nil
 }
 

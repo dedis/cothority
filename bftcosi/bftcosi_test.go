@@ -239,8 +239,8 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	// kill the leafs first
 	killCount = min(killCount, len(servers))
 	for i := len(servers) - 1; i > len(servers)-killCount-1; i-- {
-		log.Lvl3("Stopping server:", servers[i].ServerIdentity.Public, servers[i].Address())
-		if e := servers[i].Stop(); e != nil {
+		log.Lvl3("Closing server:", servers[i].ServerIdentity.Public, servers[i].Address())
+		if e := servers[i].Close(); e != nil {
 			return e
 		}
 	}

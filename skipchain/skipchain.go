@@ -857,7 +857,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 
 // startBFT starts a BFT-protocol with the given parameters.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.BFTSignature, error) {
-	tree := roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	tree := roster.GenerateNaryTreeWithRoot(len(roster.List)-1, s.ServerIdentity())
 	if tree == nil {
 		return nil, errors.New("couldn't form tree")
 	}
@@ -1048,7 +1048,7 @@ func (s *Service) willNodesAcceptBlock(block *SkipBlock) bool {
 	pisc.Start()
 	sigs := <-pisc.ExtendRosterReply
 	// TODO: store the sigs in the skipblock to prove the other node was OK
-	return len(sigs) == len(block.Roster.List)-1
+	return len(sigs) >= ((len(block.Roster.List)-1)-1)/3
 }
 
 // saves all skipblocks.
@@ -1117,7 +1117,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, 0)
+	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, 1)
 	if err != nil {
 		return nil, err
 	}

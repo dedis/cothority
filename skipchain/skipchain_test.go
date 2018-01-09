@@ -21,7 +21,11 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
+}
+
+func TestService_StoreSkipBlock_Failure(t *testing.T) {
+	storeSkipBlock(t, true)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
@@ -41,12 +45,11 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	log.ErrFatal(err)
 
 	// kill one node and it should still work
-	go func() {
-		if fail {
-			err = servers[len(servers)-1].Close()
-			log.ErrFatal(err)
-		}
-	}()
+	if fail {
+		log.Lvl3("Closing server", servers[len(servers)-1].Address())
+		err = servers[len(servers)-1].Close()
+		log.ErrFatal(err)
+	}
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
