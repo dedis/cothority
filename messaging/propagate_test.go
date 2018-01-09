@@ -1,12 +1,10 @@
 package messaging
 
 import (
+	"bytes"
+	"reflect"
 	"sync"
 	"testing"
-
-	"bytes"
-
-	"reflect"
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -21,15 +19,23 @@ func init() {
 	network.RegisterMessage(propagateMsg{})
 }
 
+func TestPropagation(t *testing.T) {
+	propagate(t,
+		[]int{3, 10, 14, 4, 8, 8},
+		[]int{0, 0, 0, 1, 3, 6})
+}
+
 // Tests an n-node system
-func TestPropagate(t *testing.T) {
-	for _, nbrNodes := range []int{3, 10, 14} {
+func propagate(t *testing.T, nbrNodes []int, nbrFailures []int) {
+	for i, n := range nbrNodes {
 		local := onet.NewLocalTest(tSuite)
-		servers, el, _ := local.GenTree(nbrNodes, true)
-		var i int
+		servers, el, _ := local.GenTree(n, true)
+		var recvCount int
 		var iMut sync.Mutex
 		msg := &propagateMsg{[]byte("propagate")}
-		propFuncs := make([]PropagationFunc, nbrNodes)
+		propFuncs := make([]PropagationFunc, n)
+
+		// setup the servers
 		var err error
 		for n, server := range servers {
 			pc := &PC{server, local.Overlays[server.ServerIdentity.ID]}
@@ -38,24 +44,32 @@ func TestPropagate(t *testing.T) {
 				func(m network.Message) {
 					if bytes.Equal(msg.Data, m.(*propagateMsg).Data) {
 						iMut.Lock()
-						i++
+						recvCount++
 						iMut.Unlock()
 					} else {
 						t.Error("Didn't receive correct data")
 					}
-				})
+				}, nbrFailures[i])
 			log.ErrFatal(err)
 		}
+
+		// shut down some servers to simulate failure
+		for k := 0; k < nbrFailures[i]; k++ {
+			err = servers[len(servers)-1-k].Close()
+			log.ErrFatal(err)
+		}
+
+		// start the propagation
 		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
 		children, err := propFuncs[0](el, msg, 1000)
 		log.ErrFatal(err)
-
-		if i != nbrNodes {
+		if recvCount+nbrFailures[i] != n {
 			t.Fatal("Didn't get data-request")
 		}
-		if children != nbrNodes {
+		if children+nbrFailures[i] != n {
 			t.Fatal("Not all nodes replied")
 		}
+
 		local.CloseAll()
 		log.AfterTest(t)
 	}

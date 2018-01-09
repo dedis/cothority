@@ -231,7 +231,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 	case <-done:
 		counter.Lock()
 		if counter.veriCount != nbrHosts {
-			return errors.New("Each host should have called verification.")
+			return errors.New("each host should have called verification")
 		}
 		// if assert refuses we don't care for unlocking (t.Refuse)
 		counter.Unlock()

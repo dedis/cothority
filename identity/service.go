@@ -729,17 +729,17 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 
 	var err error
 	s.propagateIdentity, err =
-		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateID", s.propagateIdentityHandler, 0)
 	if err != nil {
 		return nil, err
 	}
 	s.propagateSkipBlock, err =
-		messaging.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateSB", s.propagateSkipBlockHandler, 0)
 	if err != nil {
 		return nil, err
 	}
 	s.propagateData, err =
-		messaging.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateDataHandler)
+		messaging.NewPropagationFunc(c, "IdentityPropagateConf", s.propagateDataHandler, 0)
 	if err != nil {
 		return nil, err
 	}

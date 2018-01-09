@@ -1117,7 +1117,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock)
+	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, 0)
 	if err != nil {
 		return nil, err
 	}
