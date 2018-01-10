@@ -40,7 +40,7 @@ testNewChain_none(){
 	setupGenesis group1.toml
 	if [ -z "$ID" ]; then
 	    echo "id is empty"
-	    exit
+	    exit 1
 	fi
 	     
 	testFail runSc skipchain block add -roster group12.toml $ID
