@@ -7,9 +7,6 @@ install:
   - go get github.com/dedis/goveralls
 
 script:
-  - go test -p=1 -short ./...
-  - ( cd conode && ./test.sh )
-  - ( cd scmgr && ./test.sh )
   - make test
 
 notifications:
