@@ -88,7 +88,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 		}}
 	}
 	sigs = ts.CallER(tree, sb)
-	require.Equal(t, nbrNodes-1, len(sigs))
+	require.True(t, len(sigs)+(nbrNodes-1)/3 >= nbrNodes-1)
 
 	for _, s := range sigs {
 		_, si := roster.Search(s.SI)
@@ -96,9 +96,10 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 		require.Nil(t, schnorr.Verify(tSuite, si.Public, sb.SkipChainID(), s.Signature))
 	}
 
-	// Have only one node refuse
-	if nbrNodes > 2 {
-		for i := 2; i < nbrNodes; i++ {
+	// When only one node refuse,
+	// we should be able to proceed because skipchain is fault tolerant
+	if nbrNodes > 4 {
+		for i := 3; i < nbrNodes; i++ {
 			log.Lvl2("Checking failing signature at", i)
 			tss[i].(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
 			tss[i].(*testService).Followers = []skipchain.FollowChainType{}

@@ -19,7 +19,7 @@ import (
 )
 
 // How many msec to wait before a timeout is generated in the propagation.
-const propagateTimeout = 10000
+const propagateTimeout = 1000
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte

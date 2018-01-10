@@ -12,6 +12,8 @@ node will only use the `Handle`-methods, and not call `Start` again.
 
 import (
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
@@ -43,8 +45,10 @@ type ExtendRoster struct {
 	DB                *SkipBlockDB
 	SaveCallback      func()
 	tempSigs          []ProtoExtendSignature
+	tempSigsMutex     sync.Mutex
 	allowedFailures   int
 	nbrFailures       int
+	doneChan          chan int
 }
 
 // GetUpdate needs to be configured by the service to hold the database
@@ -65,6 +69,7 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 		ExtendRosterReply: make(chan []ProtoExtendSignature),
 		// it's hardcoded at the moment, maybe the caller can specify
 		allowedFailures: (len(n.Children()) - 1) / 3,
+		doneChan:        make(chan int, 0),
 	}
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
 }
@@ -161,6 +166,29 @@ func (p *ExtendRoster) isBlockAccepted(sender *network.ServerIdentity, block *Sk
 
 // HandleExtendRosterReply checks if enough nodes are OK to hold the new block.
 func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) error {
+	// HORRIBLE HACK to give handler a timeout behaviour
+	// only the first call to HandleExtendRosterReply will have empty tempSigs
+	if len(p.tempSigs) == 0 {
+		go func() {
+			select {
+			case <-p.doneChan:
+				return
+			case <-time.After(time.Second):
+				p.tempSigsMutex.Lock()
+				defer p.tempSigsMutex.Unlock()
+
+				if len(p.tempSigs) >= len(p.Children())-p.allowedFailures {
+					p.ExtendRosterReply <- p.tempSigs
+				} else {
+					p.ExtendRosterReply <- []ProtoExtendSignature{}
+				}
+				p.Done()
+			}
+		}()
+	}
+
+	p.tempSigsMutex.Lock()
+	defer p.tempSigsMutex.Unlock()
 	ok := func() bool {
 		if r.Signature == nil {
 			log.Lvl3("Empty signature")
@@ -173,13 +201,16 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 		p.tempSigs = append(p.tempSigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
 		return true
 	}()
+	// if a single node disagrees, we fail
 	if !ok {
 		p.ExtendRosterReply <- []ProtoExtendSignature{}
+		p.doneChan <- 1
 		p.Done()
 	} else {
-		// TODO we should also consider the case when all nodes reply
-		if len(p.tempSigs) >= len(p.Children())-p.allowedFailures {
+		// ideally we collect all the signatures
+		if len(p.tempSigs) == len(p.Children()) {
 			p.ExtendRosterReply <- p.tempSigs
+			p.doneChan <- 1
 			p.Done()
 		}
 	}

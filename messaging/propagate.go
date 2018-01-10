@@ -76,6 +76,12 @@ type propagationContext interface {
 // The protocol will fail if more than t nodes per subtree fail to respond.
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		if t == -1 {
+			// automatically compute t
+			// -2 because that's the number of children,
+			// we do not allow the root to fail
+			t = (len(n.Roster().List) - 2) / 3
+		}
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
 			TreeNodeInstance: n,
@@ -171,12 +177,15 @@ func (p *Propagate) Dispatch() error {
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
-			if p.received == p.subtreeCount-p.allowedFailures {
+			// propagate to as many as we can
+			if p.received == p.subtreeCount {
 				process = false
 			}
 		case <-time.After(timeout):
-			_, a, err := network.Unmarshal(p.sd.Data, p.Suite())
-			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+			if p.received < p.subtreeCount-p.allowedFailures {
+				_, a, err := network.Unmarshal(p.sd.Data, p.Suite())
+				log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+			}
 			process = false
 		}
 	}

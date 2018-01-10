@@ -848,8 +848,8 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 	fwd := &BlockLink{*sig}
 
 	// sanity check
-	if !fwd.Hash().Equal(dst.Hash) {
-		panic("unequal hash")
+	if !dst.Hash.Equal(fwd.Hash()) {
+		panic("invalid message in signature")
 	}
 
 	fwl := s.db.GetByID(src.Hash).ForwardLink
@@ -1127,7 +1127,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, 1)
+	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, -1)
 	if err != nil {
 		return nil, err
 	}
