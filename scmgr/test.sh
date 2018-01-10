@@ -155,7 +155,7 @@ testFetch(){
 testRestart(){
 	startCl
 	setupGenesis
-	pkill -l conode
+	pkill conode
 	sleep .1
 	runCoBG 1 2
 	testOK runSc skipchain block add --roster public.toml $ID
