@@ -8,8 +8,8 @@ install:
 
 script:
   - go test -p=1 -short ./...
-  - cd conode && ./test.sh
-  - cd scmgr && ./test.sh
+  - ( cd conode && ./test.sh )
+  - ( cd scmgr && ./test.sh )
   - make test
 
 notifications:
