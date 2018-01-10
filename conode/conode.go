@@ -93,8 +93,16 @@ func main() {
 		},
 	}
 	cliApp.Flags = []cli.Flag{
-		app.FlagDebug,
-		app.FlagConfig,
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 0,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: app.GetDefaultConfigFile("cothority"),
+			Usage: "Configuration file of the server",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
