@@ -18,8 +18,8 @@ main(){
     test Build
     test Create
     test ManageJoin
-    test Write
-    test Read
+    #test Write
+    #test Read
     test SCRead
     stopTest
 }

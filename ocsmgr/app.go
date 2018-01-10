@@ -14,7 +14,6 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onchain-secrets"
-	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -103,7 +102,11 @@ func main() {
 		},
 	}
 	cliApp.Flags = []cli.Flag{
-		app.FlagDebug,
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 0,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
 		cli.StringFlag{
 			Name:  "config, c",
 			Value: "~/.config/ocs",
