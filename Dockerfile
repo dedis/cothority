@@ -4,6 +4,12 @@ WORKDIR /go/src/github.com/dedis/onchain-secrets
 COPY . .
 
 RUN go get -d -v ./conode
+
+RUN git --git-dir=/go/src/github.com/dedis/onet/.git log -1  --format=oneline 
+RUN git --git-dir=/go/src/github.com/dedis/cothority/.git log -1 --format=oneline 
+RUN git --git-dir=/go/src/github.com/dedis/onchain-secrets/.git log -1 --format=oneline 
+RUN git --git-dir=/go/src/github.com/dedis/kyber/.git log -1 --format=oneline 
+
 RUN go install -v ./conode
 RUN echo $PATH
 RUN which conode
