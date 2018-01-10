@@ -585,7 +585,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 		case <-time.After(time.Second * timeout):
 			// in some cases this might be ok because we accept a certain number of faults
 			// the caller is responsible for checking if enough messages are received
-			log.Info("timeout while trying to read commit messages")
+			log.Error("timeout while trying to read commit messages")
 			return nil
 		}
 	}
@@ -622,7 +622,7 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 				}
 			}
 		case <-time.After(time.Second * timeout):
-			log.Info("Read response timed out")
+			log.Error("timeout while trying to read response messages")
 			return nil
 		}
 	}

@@ -3,6 +3,7 @@ package skipchain_test
 import (
 	"testing"
 
+	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
@@ -37,7 +38,7 @@ func TestGU(t *testing.T) {
 	sb1 := skipchain.NewSkipBlock()
 	sb1.BackLinkIDs = []skipchain.SkipBlockID{sb0.Hash}
 	sb1.Hash = sb1.CalculateHash()
-	bl := &skipchain.BlockLink{Hash: sb1.Hash, Signature: []byte{}}
+	bl := &skipchain.BlockLink{BFTSignature: bftcosi.BFTSignature{Msg: sb1.Hash, Sig: []byte{}}}
 	sb0.ForwardLink = []*skipchain.BlockLink{bl}
 	db, bucket := ts0.GetAdditionalBucket("skipblocks")
 	ts0.Db = skipchain.NewSkipBlockDB(db, bucket)

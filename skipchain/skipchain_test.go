@@ -150,7 +150,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sb1.ForwardLink[height-1].Hash,
+				if !bytes.Equal(sb1.ForwardLink[height-1].Hash(),
 					sb2.Hash) {
 					t.Fatal("Forward-pointer of", up,
 						"is different of hash in", up+1)
@@ -256,7 +256,7 @@ func TestService_MultiLevel(t *testing.T) {
 							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
 							log.ErrFatal(err)
 							if len(bl.ForwardLink) == n+1 &&
-								bl.ForwardLink[n].Hash.Equal(sb.Hash) {
+								bl.ForwardLink[n].Hash().Equal(sb.Hash) {
 								break
 							}
 							time.Sleep(200 * time.Millisecond)
@@ -621,7 +621,7 @@ func TestService_AddFollow(t *testing.T) {
 	}
 	master2, cerr := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(cerr)
-	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash.Equal(master2.Latest.Hash))
+	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {

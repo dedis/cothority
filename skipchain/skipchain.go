@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/cothority/messaging"
@@ -251,11 +252,11 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
 	for block.GetForwardLen() > 0 {
 		link := block.ForwardLink[block.GetForwardLen()-1]
-		next := s.db.GetByID(link.Hash)
+		next := s.db.GetByID(link.Hash())
 		if next == nil {
 			log.Lvl3("Didn't find next block, updating block")
 			var err error
-			next, err = s.callGetBlock(block, link.Hash)
+			next, err = s.callGetBlock(block, link.Hash())
 			if err != nil {
 				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 					err.Error())
@@ -264,7 +265,7 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
 				log.Lvl3("We're not responsible for", next, "- asking for update")
 				var err error
-				next, err = s.callGetBlock(next, link.Hash)
+				next, err = s.callGetBlock(next, link.Hash())
 				if err != nil {
 					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 						err.Error())
@@ -303,7 +304,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 		return sb, nil
 	}
 	for len(sb.ForwardLink) > 0 {
-		sb = s.db.GetByID(sb.ForwardLink[0].Hash)
+		sb = s.db.GetByID(sb.ForwardLink[0].Hash())
 		if sb.Index == id.Index {
 			return sb, nil
 		}
@@ -615,12 +616,18 @@ func (s *Service) forwardSignature(fs *ForwardSignature) error {
 		return err
 	}
 	// TODO: is this really signed by target.roster?
-	sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash, data)
+	sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash(), data)
 	if err != nil {
 		return errors.New("Couldn't get signature: " + err.Error())
 	}
 	log.Lvl1("Adding forward-link to", target.Index)
-	target.AddForward(&BlockLink{fs.ForwardLink.Hash, sig.Sig})
+
+	// sanity check
+	if !fs.ForwardLink.Hash().Equal(sig.Msg) {
+		panic("invalid message in signature")
+	}
+
+	target.AddForward(&BlockLink{BFTSignature: *sig})
 	s.startPropagation([]*SkipBlock{target})
 	return nil
 }
@@ -686,10 +693,10 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if len(newest.BackLinkIDs) <= fs.TargetHeight {
 			return errors.New("Asked for signing too high a backlink")
 		}
-		if err := fs.ForwardLink.VerifySignature(previous.Roster.Publics()); err != nil {
+		if err := fs.ForwardLink.Verify(cothority.Suite, previous.Roster.Publics()); err != nil {
 			return errors.New("Wrong forward-link signature: " + err.Error())
 		}
-		if !fs.ForwardLink.Hash.Equal(newest.Hash) {
+		if !fs.ForwardLink.Hash().Equal(newest.Hash) {
 			return errors.New("No forward-link from previous to newest")
 		}
 		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
@@ -838,10 +845,13 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 		return err
 	}
 
-	fwd := &BlockLink{
-		Hash:      dst.Hash,
-		Signature: sig.Sig,
+	fwd := &BlockLink{*sig}
+
+	// sanity check
+	if !fwd.Hash().Equal(dst.Hash) {
+		panic("unequal hash")
 	}
+
 	fwl := s.db.GetByID(src.Hash).ForwardLink
 	log.Lvlf3("%s adds forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
 		roster.List, src.Index, dst.Index, fwl)

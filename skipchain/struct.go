@@ -11,7 +11,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
+	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -387,7 +387,7 @@ func NewSkipBlock() *SkipBlock {
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
 	for _, fl := range sb.ForwardLink {
-		if err := fl.VerifySignature(sb.Roster.Publics()); err != nil {
+		if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
 	}
@@ -478,32 +478,32 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 
 // BlockLink has the hash and a signature of a block
 type BlockLink struct {
-	Hash      SkipBlockID
-	Signature []byte
+	bftcosi.BFTSignature
+}
+
+// Hash is equivalent to the Msg field
+func (bl *BlockLink) Hash() SkipBlockID {
+	return bl.Msg
 }
 
 // Copy makes a deep copy of a blocklink
 func (bl *BlockLink) Copy() *BlockLink {
-	sigCopy := make([]byte, len(bl.Signature))
-	copy(sigCopy, bl.Signature)
-	hashCopy := make(SkipBlockID, len(bl.Hash))
-	copy(hashCopy, bl.Hash)
+	sigCopy := make([]byte, len(bl.Sig))
+	copy(sigCopy, bl.Sig)
+
+	msgCopy := make([]byte, len(bl.Msg))
+	copy(msgCopy, bl.Msg)
+
+	exsCopy := make([]bftcosi.Exception, len(bl.Exceptions))
+	copy(exsCopy, bl.Exceptions)
 
 	return &BlockLink{
-		Hash:      hashCopy,
-		Signature: sigCopy,
+		bftcosi.BFTSignature{
+			Sig:        sigCopy,
+			Msg:        msgCopy,
+			Exceptions: exsCopy,
+		},
 	}
-}
-
-// VerifySignature returns whether the BlockLink has been signed
-// correctly using the given list of public keys.
-func (bl *BlockLink) VerifySignature(publics []kyber.Point) error {
-	if len(bl.Signature) == 0 {
-		return errors.New("No signature present" + log.Stack())
-	}
-	// TODO fix signature verification
-	// return crypto.VerifySignature(Suite, publics, bl.Hash, bl.Signature)
-	return nil
 }
 
 // SkipBlockDB holds the database to the skipblocks.
@@ -553,7 +553,7 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			// new children.
 			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
 				for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-					if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+					if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
 						return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
 					}
 					sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
@@ -674,7 +674,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
+	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
@@ -685,7 +685,7 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash)
+		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
 		if latest == nil {
 			return nil, errors.New("missing block")
 		}
