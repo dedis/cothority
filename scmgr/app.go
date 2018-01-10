@@ -57,7 +57,11 @@ func main() {
 	cliApp.Version = "0.2"
 	cliApp.Commands = getCommands()
 	cliApp.Flags = []cli.Flag{
-		app.FlagDebug,
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 0,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
 		cli.StringFlag{
 			Name:  "config, c",
 			Value: "~/.config/scmgr/config.bin",
@@ -185,7 +189,7 @@ func followAddID(c *cli.Context) error {
 func followAddRoster(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
 	if c.NArg() != 2 {
-		return errors.New("please give the following: [-lookup ip:port] [-any] ID ip:port")
+		return errors.New("please give the following: [--lookup ip:port] [--any] ID ip:port")
 	}
 	scid, err := hex.DecodeString(c.Args().First())
 	if err != nil {
