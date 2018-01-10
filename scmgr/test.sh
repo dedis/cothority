@@ -3,7 +3,7 @@
 DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
-# DBG_SRV=2
+DBG_SRV=2
 
 . $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
@@ -38,6 +38,11 @@ testNewChain_none(){
 	testFollow_id
 
 	setupGenesis group1.toml
+	if [ -z "$ID" ]; then
+	    echo "id is empty"
+	    exit
+	fi
+	     
 	testFail runSc skipchain block add -roster group12.toml $ID
 }
 
@@ -82,25 +87,25 @@ setupThree(){
 testFollow_id(){
 	setupGenesis group1.toml
 	runSc follow add single 00 ${host[2]}
-	testFail runSc skipchain block add -roster group12.toml $ID
+	testFail runSc skipchain block add --roster group12.toml $ID
 	testOK runSc follow add single $ID ${host[2]}
-	testOK runSc skipchain block add -roster group12.toml $ID
+	testOK runSc skipchain block add --roster group12.toml $ID
 }
 
 testFollow_search(){
 	setupGenesis group1.toml
 	runSc follow add single $ID ${host[2]}
-	runSc skipchain block add -roster group12.toml $ID
+	runSc skipchain block add --roster group12.toml $ID
 
 	setupGenesis group1.toml
 	testOK runSc follow add roster $ID ${host[2]}
-	testOK runSc skipchain block add -roster group12.toml $ID
+	testOK runSc skipchain block add --roster group12.toml $ID
 }
 
 testFollow_lookup(){
 	setupGenesis group1.toml
 	testOK runSc follow add roster -lookup ${host[1]} $ID ${host[2]}
-	testOK runSc skipchain block add -roster group12.toml $ID
+	testOK runSc skipchain block add --roster group12.toml $ID
 }
 
 testFollow_list(){
@@ -150,18 +155,19 @@ testFetch(){
 testRestart(){
 	startCl
 	setupGenesis
-	pkill -9 conode 2> /dev/null
+	pkill -l conode
+	sleep .1
 	runCoBG 1 2
-	testOK runSc skipchain block add -roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
 }
 
 testAdd(){
 	startCl
 	setupGenesis
-	testFail runSc skipchain block add -roster public.toml 1234
-	testOK runSc skipchain block add -roster public.toml $ID
+	testFail runSc skipchain block add --roster public.toml 1234
+	testOK runSc skipchain block add --roster public.toml $ID
 	runCoBG 3
-	testOK runSc skipchain block add -roster public.toml $ID
+	testOK runSc skipchain block add --roster public.toml $ID
 }
 
 setupGenesis(){
@@ -192,15 +198,15 @@ testCreate(){
 testIndex(){
 	startCl
 	setupGenesis
-	touch random.html
+	touch random.js
 
 	testFail runSc scdns index
 	testOK runSc scdns index $PWD
-	testGrep "$ID" cat index.html
-	testGrep "127.0.0.1" cat index.html
-	testGrep "$ID" cat "$ID.html"
-	testGrep "127.0.0.1" cat "$ID.html"
-	testNFile random.html
+	testGrep "$ID" cat index.js
+	testGrep "127.0.0.1" cat index.js
+	testGrep "$ID" cat "$ID.js"
+	testGrep "127.0.0.1" cat "$ID.js"
+	testNFile random.js
 	dbgOut ""
 }
 

@@ -6,7 +6,7 @@ DBG_TEST=1
 
 main(){
     startTest
-	setupConode
+    setupConode
     test Build
     test Conode
     stopTest
