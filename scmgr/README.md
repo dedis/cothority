@@ -75,6 +75,7 @@ Once the skipchain is created, `scmgr` will print out the ID of the new
 skipchain. For the _following_ examples, you can also create a skipchain using
 `cisc` and enter its ID.
 
+
 ## Following a skipchain
 
 Now that the skipchain is created, you can open up your security a bit and decide
@@ -99,6 +100,8 @@ scmgr follow add single SKIPCHAIN_ID 127.0.0.1:7006
 
 Where _SKIPCHAIN_ID_ has to be replaced by the ID of the skipchain returned from
 the `scmgr skipchain create` command above.
+127.0.0.1:7004 and 127.0.0.1:7006 are the IP addresses and port number of _co2_
+and _co3_ respectively.
 
 Now you can ask your first node to extend the nodes that participate in the
 skipchain to all nodes:

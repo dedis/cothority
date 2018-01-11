@@ -117,8 +117,9 @@ func getCommands() cli.Commands {
 					},
 				},
 				{
-					Name:  "block",
-					Usage: "work on blocks of an existing skipchain",
+					Name:    "block",
+					Usage:   "work on blocks of an existing skipchain",
+					Aliases: []string{"b"},
 					Subcommands: cli.Commands{
 						{
 							Name:      "add",

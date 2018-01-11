@@ -546,7 +546,7 @@ func TestService_AddFollow(t *testing.T) {
 	}
 	service := services[0]
 	sb := NewSkipBlock()
-	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0]})
+	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0]}) // only one in roster
 	sb.MaximumHeight = 2
 	sb.BaseHeight = 2
 	sb.Data = []byte{}
@@ -574,12 +574,12 @@ func TestService_AddFollow(t *testing.T) {
 	log.ErrFatal(cerr)
 
 	// Not fully authenticated roster
-	log.Lvl2("2nd roster is not registered")
+	log.LLvl2("2nd roster is not registered")
 	services[1].Storage.FollowIDs = []SkipBlockID{[]byte{0}}
 	ssb.LatestID = master0.Latest.Hash
 	sb = sb.Copy()
 	ssb.NewBlock = sb
-	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]})
+	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
 	sig, err = schnorr.Sign(Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig

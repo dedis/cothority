@@ -77,10 +77,7 @@ type propagationContext interface {
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		if t == -1 {
-			// automatically compute t
-			// -2 because that's the number of children,
-			// we do not allow the root to fail
-			t = (len(n.Roster().List) - 2) / 3
+			t = (len(n.Roster().List) - 1) / 3
 		}
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
@@ -183,8 +180,9 @@ func (p *Propagate) Dispatch() error {
 			}
 		case <-time.After(timeout):
 			if p.received < p.subtreeCount-p.allowedFailures {
-				_, a, err := network.Unmarshal(p.sd.Data, p.Suite())
-				log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
+				log.Fatalf("Timeout of %s reached, got %v but need %v, err: %s",
+					timeout, p.received, p.subtreeCount-p.allowedFailures, err)
 			}
 			process = false
 		}

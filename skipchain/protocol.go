@@ -68,7 +68,7 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 		TreeNodeInstance:  n,
 		ExtendRosterReply: make(chan []ProtoExtendSignature),
 		// it's hardcoded at the moment, maybe the caller can specify
-		allowedFailures: (len(n.Children()) - 1) / 3,
+		allowedFailures: (len(n.Roster().List) - 1) / 3,
 		doneChan:        make(chan int, 0),
 	}
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
@@ -191,7 +191,6 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 	defer p.tempSigsMutex.Unlock()
 	ok := func() bool {
 		if r.Signature == nil {
-			log.Lvl3("Empty signature")
 			return false
 		}
 		if schnorr.Verify(Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {

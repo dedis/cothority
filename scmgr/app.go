@@ -684,6 +684,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	}
 	db, err := bolt.Open(cfgPath, 0600, nil)
 	if err != nil {
+		log.Print("xxx", cfgPath, err)
 		return nil, err
 	}
 	cfg.Db = skipchain.NewSkipBlockDB(db, "skipblocks")
