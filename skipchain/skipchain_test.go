@@ -21,7 +21,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m, 2)
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
@@ -37,19 +37,12 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(5, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(4, skipchainSID, Suite)
 	service := genService.(*Service)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
-
-	// kill one node and it should still work
-	if fail {
-		log.Lvl3("Closing server", servers[len(servers)-1].Address())
-		err = servers[len(servers)-1].Close()
-		log.ErrFatal(err)
-	}
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -69,6 +62,13 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	assert.Equal(t, 1, len(latest.BackLinkIDs))
 	assert.NotEqual(t, 0, latest.BackLinkIDs)
 
+	// kill one node and it should still work
+	if fail {
+		log.Lvl3("Closing server", servers[len(servers)-1].Address())
+		err = servers[len(servers)-1].Close()
+		log.ErrFatal(err)
+	}
+
 	next := NewSkipBlock()
 	next.Data = []byte("And the earth was without form, and void; " +
 		"and darkness was upon the face of the deep. " +
@@ -80,9 +80,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: next})
 	assert.Nil(t, err)
 	log.Lvl2(psbr2)
-	if psbr2 == nil {
-		t.Fatal("Didn't get anything in return")
-	}
 	assert.NotNil(t, psbr2)
 	assert.NotNil(t, psbr2.Latest)
 	latest2 := psbr2.Latest
@@ -94,6 +91,24 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	// We've added 2 blocks, + root block = 3
 	assert.Equal(t, 3, service.db.Length())
+
+	//// bring the node back up and it should find the block which it missed
+	//if fail {
+	//go servers[len(servers)-1].Start() // TODO doesn't seem to start correctly
+	//time.Sleep(100 * time.Millisecond) // wait for server to start
+	//log.Print(servers[len(servers)-1].Closed())
+	//third := NewSkipBlock()
+	//third.Data = []byte("It is not in the stars to hold our destiny but in ourselves.")
+	//third.MaximumHeight = 2
+	//third.ParentBlockID = next.Hash
+	//third.Roster = next.Roster
+	//id = psbr2.Latest.Hash
+	//psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: third})
+	//assert.Nil(t, err)
+	//log.Lvl2(psbr3)
+	//assert.NotNil(t, psbr3)
+	//assert.NotNil(t, psbr3.Latest)
+	//}
 }
 
 func TestService_GetUpdateChain(t *testing.T) {
@@ -574,7 +589,7 @@ func TestService_AddFollow(t *testing.T) {
 	log.ErrFatal(cerr)
 
 	// Not fully authenticated roster
-	log.LLvl2("2nd roster is not registered")
+	log.Lvl2("2nd roster is not registered")
 	services[1].Storage.FollowIDs = []SkipBlockID{[]byte{0}}
 	ssb.LatestID = master0.Latest.Hash
 	sb = sb.Copy()
