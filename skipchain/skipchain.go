@@ -2,22 +2,18 @@ package skipchain
 
 import (
 	"errors"
-
+	"fmt"
 	"strconv"
-
+	"sync"
 	"time"
 
-	"fmt"
-
-	"sync"
-
-	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/bftcosi"
 	"gopkg.in/dedis/cothority.v1/messaging"
 	"gopkg.in/dedis/crypto.v0/random"
 	"gopkg.in/dedis/onet.v1"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/satori/go.uuid.v1"
 )
 
 // ServiceName can be used to refer to the name of this service

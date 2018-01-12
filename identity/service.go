@@ -12,15 +12,12 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
+	"errors"
+	"fmt"
+	"math/big"
 	"reflect"
 	"sync"
 
-	"errors"
-
-	"fmt"
-	"math/big"
-
-	"github.com/satori/go.uuid"
 	"gopkg.in/dedis/cothority.v1/messaging"
 	"gopkg.in/dedis/cothority.v1/skipchain"
 	"gopkg.in/dedis/crypto.v0/abstract"
@@ -30,6 +27,7 @@ import (
 	"gopkg.in/dedis/onet.v1/crypto"
 	"gopkg.in/dedis/onet.v1/log"
 	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/satori/go.uuid.v1"
 )
 
 // ServiceName can be used to refer to the name of this service
