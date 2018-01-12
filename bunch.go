@@ -3,11 +3,10 @@ package ocs
 import (
 	"encoding/hex"
 	"errors"
-	"strings"
-	"sync"
-
 	"fmt"
 	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/log"
@@ -33,17 +32,19 @@ type SkipBlockBunch struct {
 	Latest     *skipchain.SkipBlock
 	SkipBlocks map[string]*skipchain.SkipBlock
 	Parents    map[string]*SkipBlockBunch
+	suite      network.Suite
 	sync.Mutex
 }
 
 // NewSkipBlockBunch returns a pre-initialised SkipBlockBunch. It takes
 // a skipblock as an argument, which doesn't have to be the genesis-skipblock.
-func NewSkipBlockBunch(sb *skipchain.SkipBlock) *SkipBlockBunch {
+func NewSkipBlockBunch(suite network.Suite, sb *skipchain.SkipBlock) *SkipBlockBunch {
 	return &SkipBlockBunch{
 		GenesisID:  sb.SkipChainID(),
 		Latest:     sb,
 		SkipBlocks: map[string]*skipchain.SkipBlock{string(sb.Hash): sb},
 		Parents:    make(map[string]*SkipBlockBunch),
+		suite:      suite,
 	}
 }
 
@@ -64,7 +65,7 @@ func (sbb *SkipBlockBunch) Store(sb *skipchain.SkipBlock) skipchain.SkipBlockID 
 		// new children.
 		if sb.GetForwardLen() > sbOld.GetForwardLen() {
 			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+				if err := fl.Verify(sbb.suite, sbOld.Roster.Publics()); err != nil {
 					log.Error("Got a known block with wrong signature in forward-link")
 					return nil
 				}
@@ -169,7 +170,7 @@ func (sbb *SkipBlockBunch) VerifyLinks(sb *skipchain.SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
+	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
@@ -210,12 +211,14 @@ type SBBStorage struct {
 	sync.Mutex
 	// Stores a bunch for each skipchain
 	Bunches map[string]*SkipBlockBunch
+	suite   network.Suite
 }
 
 // NewSBBStorage returns a pre-initialized structure.
-func NewSBBStorage() *SBBStorage {
+func NewSBBStorage(suite network.Suite) *SBBStorage {
 	return &SBBStorage{
 		Bunches: map[string]*SkipBlockBunch{},
+		suite:   suite,
 	}
 }
 
@@ -231,7 +234,7 @@ func (s *SBBStorage) AddBunch(sb *skipchain.SkipBlock) *SkipBlockBunch {
 		log.Error("That bunch already exists")
 		return nil
 	}
-	bunch := NewSkipBlockBunch(sb)
+	bunch := NewSkipBlockBunch(s.suite, sb)
 	s.Bunches[string(sb.SkipChainID())] = bunch
 	return bunch
 }
@@ -243,7 +246,7 @@ func (s *SBBStorage) Store(sb *skipchain.SkipBlock) {
 	defer s.Unlock()
 	bunch, ok := s.Bunches[string(sb.SkipChainID())]
 	if !ok {
-		bunch = NewSkipBlockBunch(sb)
+		bunch = NewSkipBlockBunch(s.suite, sb)
 		s.Bunches[string(sb.SkipChainID())] = bunch
 	}
 	bunch.Store(sb)

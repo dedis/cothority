@@ -398,7 +398,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 		if len(current.ForwardLink) > 0 {
 			s.saveMutex.Lock()
 			current = s.Storage.OCSs.GetFromGenesisByID(current.SkipChainID(),
-				current.ForwardLink[0].Hash)
+				current.ForwardLink[0].Hash())
 			s.saveMutex.Unlock()
 		} else {
 			log.Lvl3("No forward-links, stopping")
@@ -832,10 +832,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
-			OCSs:   ocs.NewSBBStorage(),
+			OCSs:   nil,
 			Admins: make(map[string]*darc.Darc),
 		},
 	}
+	s.Storage.OCSs = ocs.NewSBBStorage(s.Suite())
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
