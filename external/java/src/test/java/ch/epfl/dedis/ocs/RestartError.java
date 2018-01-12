@@ -50,7 +50,7 @@ public class RestartError {
             if (sb.getForwardCount() == 0){
                 break;
             }
-            SkipblockId next = new SkipblockId(sb.getForward(0).getHash().toByteArray());
+            SkipblockId next = new SkipblockId(sb.getForward(0).getMsg().toByteArray());
             sb = ocs.getSkipblock(next);
         }
     }

@@ -214,6 +214,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2419,7 +2422,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SkipBlock(input, extensionRegistry);
+        return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -2443,22 +2446,46 @@ public final class SkipBlockProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes Hash = 1;</code>
+     * <code>required bytes sig = 1;</code>
      */
-    boolean hasHash();
+    boolean hasSig();
     /**
-     * <code>required bytes Hash = 1;</code>
+     * <code>required bytes sig = 1;</code>
      */
-    com.google.protobuf.ByteString getHash();
+    com.google.protobuf.ByteString getSig();
 
     /**
-     * <code>required bytes Signature = 2;</code>
+     * <code>required bytes msg = 2;</code>
      */
-    boolean hasSignature();
+    boolean hasMsg();
     /**
-     * <code>required bytes Signature = 2;</code>
+     * <code>required bytes msg = 2;</code>
      */
-    com.google.protobuf.ByteString getSignature();
+    com.google.protobuf.ByteString getMsg();
+
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception> 
+        getExceptionsList();
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.Exception getExceptions(int index);
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    int getExceptionsCount();
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder> 
+        getExceptionsOrBuilderList();
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder getExceptionsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code BlockLink}
@@ -2473,8 +2500,9 @@ public final class SkipBlockProto {
       super(builder);
     }
     private BlockLink() {
-      hash_ = com.google.protobuf.ByteString.EMPTY;
-      signature_ = com.google.protobuf.ByteString.EMPTY;
+      sig_ = com.google.protobuf.ByteString.EMPTY;
+      msg_ = com.google.protobuf.ByteString.EMPTY;
+      exceptions_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -2487,6 +2515,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2507,12 +2538,21 @@ public final class SkipBlockProto {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              hash_ = input.readBytes();
+              sig_ = input.readBytes();
               break;
             }
             case 18: {
               bitField0_ |= 0x00000002;
-              signature_ = input.readBytes();
+              msg_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                exceptions_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.Exception>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              exceptions_.add(
+                  input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.Exception.PARSER, extensionRegistry));
               break;
             }
           }
@@ -2523,6 +2563,9 @@ public final class SkipBlockProto {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          exceptions_ = java.util.Collections.unmodifiableList(exceptions_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -2540,34 +2583,69 @@ public final class SkipBlockProto {
     }
 
     private int bitField0_;
-    public static final int HASH_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString hash_;
+    public static final int SIG_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString sig_;
     /**
-     * <code>required bytes Hash = 1;</code>
+     * <code>required bytes sig = 1;</code>
      */
-    public boolean hasHash() {
+    public boolean hasSig() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes Hash = 1;</code>
+     * <code>required bytes sig = 1;</code>
      */
-    public com.google.protobuf.ByteString getHash() {
-      return hash_;
+    public com.google.protobuf.ByteString getSig() {
+      return sig_;
     }
 
-    public static final int SIGNATURE_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString signature_;
+    public static final int MSG_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString msg_;
     /**
-     * <code>required bytes Signature = 2;</code>
+     * <code>required bytes msg = 2;</code>
      */
-    public boolean hasSignature() {
+    public boolean hasMsg() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes Signature = 2;</code>
+     * <code>required bytes msg = 2;</code>
      */
-    public com.google.protobuf.ByteString getSignature() {
-      return signature_;
+    public com.google.protobuf.ByteString getMsg() {
+      return msg_;
+    }
+
+    public static final int EXCEPTIONS_FIELD_NUMBER = 3;
+    private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception> exceptions_;
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception> getExceptionsList() {
+      return exceptions_;
+    }
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder> 
+        getExceptionsOrBuilderList() {
+      return exceptions_;
+    }
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    public int getExceptionsCount() {
+      return exceptions_.size();
+    }
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.Exception getExceptions(int index) {
+      return exceptions_.get(index);
+    }
+    /**
+     * <code>repeated .Exception exceptions = 3;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder getExceptionsOrBuilder(
+        int index) {
+      return exceptions_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2576,13 +2654,19 @@ public final class SkipBlockProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasHash()) {
+      if (!hasSig()) {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasSignature()) {
+      if (!hasMsg()) {
         memoizedIsInitialized = 0;
         return false;
+      }
+      for (int i = 0; i < getExceptionsCount(); i++) {
+        if (!getExceptions(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -2591,10 +2675,13 @@ public final class SkipBlockProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, hash_);
+        output.writeBytes(1, sig_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, signature_);
+        output.writeBytes(2, msg_);
+      }
+      for (int i = 0; i < exceptions_.size(); i++) {
+        output.writeMessage(3, exceptions_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -2606,11 +2693,15 @@ public final class SkipBlockProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, hash_);
+          .computeBytesSize(1, sig_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, signature_);
+          .computeBytesSize(2, msg_);
+      }
+      for (int i = 0; i < exceptions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, exceptions_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2628,16 +2719,18 @@ public final class SkipBlockProto {
       ch.epfl.dedis.proto.SkipBlockProto.BlockLink other = (ch.epfl.dedis.proto.SkipBlockProto.BlockLink) obj;
 
       boolean result = true;
-      result = result && (hasHash() == other.hasHash());
-      if (hasHash()) {
-        result = result && getHash()
-            .equals(other.getHash());
+      result = result && (hasSig() == other.hasSig());
+      if (hasSig()) {
+        result = result && getSig()
+            .equals(other.getSig());
       }
-      result = result && (hasSignature() == other.hasSignature());
-      if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
+      result = result && (hasMsg() == other.hasMsg());
+      if (hasMsg()) {
+        result = result && getMsg()
+            .equals(other.getMsg());
       }
+      result = result && getExceptionsList()
+          .equals(other.getExceptionsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2649,13 +2742,17 @@ public final class SkipBlockProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasHash()) {
-        hash = (37 * hash) + HASH_FIELD_NUMBER;
-        hash = (53 * hash) + getHash().hashCode();
+      if (hasSig()) {
+        hash = (37 * hash) + SIG_FIELD_NUMBER;
+        hash = (53 * hash) + getSig().hashCode();
       }
-      if (hasSignature()) {
-        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
-        hash = (53 * hash) + getSignature().hashCode();
+      if (hasMsg()) {
+        hash = (37 * hash) + MSG_FIELD_NUMBER;
+        hash = (53 * hash) + getMsg().hashCode();
+      }
+      if (getExceptionsCount() > 0) {
+        hash = (37 * hash) + EXCEPTIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getExceptionsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2782,14 +2879,21 @@ public final class SkipBlockProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getExceptionsFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        hash_ = com.google.protobuf.ByteString.EMPTY;
+        sig_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        signature_ = com.google.protobuf.ByteString.EMPTY;
+        msg_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (exceptionsBuilder_ == null) {
+          exceptions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          exceptionsBuilder_.clear();
+        }
         return this;
       }
 
@@ -2817,11 +2921,20 @@ public final class SkipBlockProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.hash_ = hash_;
+        result.sig_ = sig_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.signature_ = signature_;
+        result.msg_ = msg_;
+        if (exceptionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            exceptions_ = java.util.Collections.unmodifiableList(exceptions_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.exceptions_ = exceptions_;
+        } else {
+          result.exceptions_ = exceptionsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2864,11 +2977,37 @@ public final class SkipBlockProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.SkipBlockProto.BlockLink other) {
         if (other == ch.epfl.dedis.proto.SkipBlockProto.BlockLink.getDefaultInstance()) return this;
-        if (other.hasHash()) {
-          setHash(other.getHash());
+        if (other.hasSig()) {
+          setSig(other.getSig());
         }
-        if (other.hasSignature()) {
-          setSignature(other.getSignature());
+        if (other.hasMsg()) {
+          setMsg(other.getMsg());
+        }
+        if (exceptionsBuilder_ == null) {
+          if (!other.exceptions_.isEmpty()) {
+            if (exceptions_.isEmpty()) {
+              exceptions_ = other.exceptions_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureExceptionsIsMutable();
+              exceptions_.addAll(other.exceptions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.exceptions_.isEmpty()) {
+            if (exceptionsBuilder_.isEmpty()) {
+              exceptionsBuilder_.dispose();
+              exceptionsBuilder_ = null;
+              exceptions_ = other.exceptions_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              exceptionsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getExceptionsFieldBuilder() : null;
+            } else {
+              exceptionsBuilder_.addAllMessages(other.exceptions_);
+            }
+          }
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2876,11 +3015,16 @@ public final class SkipBlockProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasHash()) {
+        if (!hasSig()) {
           return false;
         }
-        if (!hasSignature()) {
+        if (!hasMsg()) {
           return false;
+        }
+        for (int i = 0; i < getExceptionsCount(); i++) {
+          if (!getExceptions(i).isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -2904,74 +3048,314 @@ public final class SkipBlockProto {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString hash_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString sig_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes Hash = 1;</code>
+       * <code>required bytes sig = 1;</code>
        */
-      public boolean hasHash() {
+      public boolean hasSig() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required bytes Hash = 1;</code>
+       * <code>required bytes sig = 1;</code>
        */
-      public com.google.protobuf.ByteString getHash() {
-        return hash_;
+      public com.google.protobuf.ByteString getSig() {
+        return sig_;
       }
       /**
-       * <code>required bytes Hash = 1;</code>
+       * <code>required bytes sig = 1;</code>
        */
-      public Builder setHash(com.google.protobuf.ByteString value) {
+      public Builder setSig(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        hash_ = value;
+        sig_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes Hash = 1;</code>
+       * <code>required bytes sig = 1;</code>
        */
-      public Builder clearHash() {
+      public Builder clearSig() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        hash_ = getDefaultInstance().getHash();
+        sig_ = getDefaultInstance().getSig();
         onChanged();
         return this;
       }
 
-      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString msg_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes Signature = 2;</code>
+       * <code>required bytes msg = 2;</code>
        */
-      public boolean hasSignature() {
+      public boolean hasMsg() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes Signature = 2;</code>
+       * <code>required bytes msg = 2;</code>
        */
-      public com.google.protobuf.ByteString getSignature() {
-        return signature_;
+      public com.google.protobuf.ByteString getMsg() {
+        return msg_;
       }
       /**
-       * <code>required bytes Signature = 2;</code>
+       * <code>required bytes msg = 2;</code>
        */
-      public Builder setSignature(com.google.protobuf.ByteString value) {
+      public Builder setMsg(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000002;
-        signature_ = value;
+        msg_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes Signature = 2;</code>
+       * <code>required bytes msg = 2;</code>
        */
-      public Builder clearSignature() {
+      public Builder clearMsg() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        signature_ = getDefaultInstance().getSignature();
+        msg_ = getDefaultInstance().getMsg();
         onChanged();
         return this;
+      }
+
+      private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception> exceptions_ =
+        java.util.Collections.emptyList();
+      private void ensureExceptionsIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          exceptions_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.Exception>(exceptions_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.Exception, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder, ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder> exceptionsBuilder_;
+
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception> getExceptionsList() {
+        if (exceptionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(exceptions_);
+        } else {
+          return exceptionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public int getExceptionsCount() {
+        if (exceptionsBuilder_ == null) {
+          return exceptions_.size();
+        } else {
+          return exceptionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception getExceptions(int index) {
+        if (exceptionsBuilder_ == null) {
+          return exceptions_.get(index);
+        } else {
+          return exceptionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder setExceptions(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.Exception value) {
+        if (exceptionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureExceptionsIsMutable();
+          exceptions_.set(index, value);
+          onChanged();
+        } else {
+          exceptionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder setExceptions(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder builderForValue) {
+        if (exceptionsBuilder_ == null) {
+          ensureExceptionsIsMutable();
+          exceptions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          exceptionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder addExceptions(ch.epfl.dedis.proto.SkipBlockProto.Exception value) {
+        if (exceptionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureExceptionsIsMutable();
+          exceptions_.add(value);
+          onChanged();
+        } else {
+          exceptionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder addExceptions(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.Exception value) {
+        if (exceptionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureExceptionsIsMutable();
+          exceptions_.add(index, value);
+          onChanged();
+        } else {
+          exceptionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder addExceptions(
+          ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder builderForValue) {
+        if (exceptionsBuilder_ == null) {
+          ensureExceptionsIsMutable();
+          exceptions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          exceptionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder addExceptions(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder builderForValue) {
+        if (exceptionsBuilder_ == null) {
+          ensureExceptionsIsMutable();
+          exceptions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          exceptionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder addAllExceptions(
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.SkipBlockProto.Exception> values) {
+        if (exceptionsBuilder_ == null) {
+          ensureExceptionsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, exceptions_);
+          onChanged();
+        } else {
+          exceptionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder clearExceptions() {
+        if (exceptionsBuilder_ == null) {
+          exceptions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          exceptionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public Builder removeExceptions(int index) {
+        if (exceptionsBuilder_ == null) {
+          ensureExceptionsIsMutable();
+          exceptions_.remove(index);
+          onChanged();
+        } else {
+          exceptionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder getExceptionsBuilder(
+          int index) {
+        return getExceptionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder getExceptionsOrBuilder(
+          int index) {
+        if (exceptionsBuilder_ == null) {
+          return exceptions_.get(index);  } else {
+          return exceptionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder> 
+           getExceptionsOrBuilderList() {
+        if (exceptionsBuilder_ != null) {
+          return exceptionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(exceptions_);
+        }
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder addExceptionsBuilder() {
+        return getExceptionsFieldBuilder().addBuilder(
+            ch.epfl.dedis.proto.SkipBlockProto.Exception.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder addExceptionsBuilder(
+          int index) {
+        return getExceptionsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.proto.SkipBlockProto.Exception.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .Exception exceptions = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder> 
+           getExceptionsBuilderList() {
+        return getExceptionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.Exception, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder, ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder> 
+          getExceptionsFieldBuilder() {
+        if (exceptionsBuilder_ == null) {
+          exceptionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.proto.SkipBlockProto.Exception, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder, ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder>(
+                  exceptions_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          exceptions_ = null;
+        }
+        return exceptionsBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3003,7 +3387,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new BlockLink(input, extensionRegistry);
+        return new BlockLink(input, extensionRegistry);
       }
     };
 
@@ -3071,6 +3455,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3587,7 +3974,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SchnorrSig(input, extensionRegistry);
+        return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -3601,6 +3988,590 @@ public final class SkipBlockProto {
     }
 
     public ch.epfl.dedis.proto.SkipBlockProto.SchnorrSig getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ExceptionOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Exception)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    boolean hasIndex();
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    int getIndex();
+
+    /**
+     * <code>required bytes commitment = 2;</code>
+     */
+    boolean hasCommitment();
+    /**
+     * <code>required bytes commitment = 2;</code>
+     */
+    com.google.protobuf.ByteString getCommitment();
+  }
+  /**
+   * Protobuf type {@code Exception}
+   */
+  public  static final class Exception extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Exception)
+      ExceptionOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Exception.newBuilder() to construct.
+    private Exception(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Exception() {
+      index_ = 0;
+      commitment_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Exception(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              index_ = input.readInt32();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              commitment_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.SkipBlockProto.internal_static_Exception_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.SkipBlockProto.internal_static_Exception_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.SkipBlockProto.Exception.class, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int INDEX_FIELD_NUMBER = 1;
+    private int index_;
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    public boolean hasIndex() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    public int getIndex() {
+      return index_;
+    }
+
+    public static final int COMMITMENT_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString commitment_;
+    /**
+     * <code>required bytes commitment = 2;</code>
+     */
+    public boolean hasCommitment() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes commitment = 2;</code>
+     */
+    public com.google.protobuf.ByteString getCommitment() {
+      return commitment_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasIndex()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCommitment()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, index_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, commitment_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, index_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, commitment_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.SkipBlockProto.Exception)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.SkipBlockProto.Exception other = (ch.epfl.dedis.proto.SkipBlockProto.Exception) obj;
+
+      boolean result = true;
+      result = result && (hasIndex() == other.hasIndex());
+      if (hasIndex()) {
+        result = result && (getIndex()
+            == other.getIndex());
+      }
+      result = result && (hasCommitment() == other.hasCommitment());
+      if (hasCommitment()) {
+        result = result && getCommitment()
+            .equals(other.getCommitment());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasIndex()) {
+        hash = (37 * hash) + INDEX_FIELD_NUMBER;
+        hash = (53 * hash) + getIndex();
+      }
+      if (hasCommitment()) {
+        hash = (37 * hash) + COMMITMENT_FIELD_NUMBER;
+        hash = (53 * hash) + getCommitment().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.SkipBlockProto.Exception prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code Exception}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Exception)
+        ch.epfl.dedis.proto.SkipBlockProto.ExceptionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.SkipBlockProto.internal_static_Exception_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.SkipBlockProto.internal_static_Exception_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.SkipBlockProto.Exception.class, ch.epfl.dedis.proto.SkipBlockProto.Exception.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.SkipBlockProto.Exception.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        index_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        commitment_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.SkipBlockProto.internal_static_Exception_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.SkipBlockProto.Exception.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception build() {
+        ch.epfl.dedis.proto.SkipBlockProto.Exception result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.SkipBlockProto.Exception buildPartial() {
+        ch.epfl.dedis.proto.SkipBlockProto.Exception result = new ch.epfl.dedis.proto.SkipBlockProto.Exception(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.index_ = index_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.commitment_ = commitment_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.SkipBlockProto.Exception) {
+          return mergeFrom((ch.epfl.dedis.proto.SkipBlockProto.Exception)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.SkipBlockProto.Exception other) {
+        if (other == ch.epfl.dedis.proto.SkipBlockProto.Exception.getDefaultInstance()) return this;
+        if (other.hasIndex()) {
+          setIndex(other.getIndex());
+        }
+        if (other.hasCommitment()) {
+          setCommitment(other.getCommitment());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasIndex()) {
+          return false;
+        }
+        if (!hasCommitment()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.SkipBlockProto.Exception parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.SkipBlockProto.Exception) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int index_ ;
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public boolean hasIndex() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public int getIndex() {
+        return index_;
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public Builder setIndex(int value) {
+        bitField0_ |= 0x00000001;
+        index_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public Builder clearIndex() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        index_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString commitment_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes commitment = 2;</code>
+       */
+      public boolean hasCommitment() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes commitment = 2;</code>
+       */
+      public com.google.protobuf.ByteString getCommitment() {
+        return commitment_;
+      }
+      /**
+       * <code>required bytes commitment = 2;</code>
+       */
+      public Builder setCommitment(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        commitment_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes commitment = 2;</code>
+       */
+      public Builder clearCommitment() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        commitment_ = getDefaultInstance().getCommitment();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Exception)
+    }
+
+    // @@protoc_insertion_point(class_scope:Exception)
+    private static final ch.epfl.dedis.proto.SkipBlockProto.Exception DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.SkipBlockProto.Exception();
+    }
+
+    public static ch.epfl.dedis.proto.SkipBlockProto.Exception getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Exception>
+        PARSER = new com.google.protobuf.AbstractParser<Exception>() {
+      public Exception parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Exception(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Exception> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Exception> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.SkipBlockProto.Exception getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3621,6 +4592,11 @@ public final class SkipBlockProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_SchnorrSig_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Exception_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Exception_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -3638,10 +4614,12 @@ public final class SkipBlockProto {
       "nesis\030\010 \002(\014\022\014\n\004data\030\t \002(\014\022\027\n\006roster\030\n \002(" +
       "\0132\007.Roster\022\014\n\004hash\030\013 \002(\014\022\033\n\007forward\030\014 \003(" +
       "\0132\n.BlockLink\022\034\n\010children\030\r \003(\0132\n.BlockL" +
-      "ink\",\n\tBlockLink\022\014\n\004Hash\030\001 \002(\014\022\021\n\tSignat" +
-      "ure\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002",
-      "(\014\022\020\n\010response\030\002 \002(\014B%\n\023ch.epfl.dedis.pr" +
-      "otoB\016SkipBlockProto"
+      "ink\"E\n\tBlockLink\022\013\n\003sig\030\001 \002(\014\022\013\n\003msg\030\002 \002" +
+      "(\014\022\036\n\nexceptions\030\003 \003(\0132\n.Exception\"1\n\nSc" +
+      "hnorrSig\022\021\n\tchallenge\030\001 \002(\014\022\020\n\010response\030" +
+      "\002 \002(\014\".\n\tException\022\r\n\005index\030\001 \002(\005\022\022\n\ncom" +
+      "mitment\030\002 \002(\014B%\n\023ch.epfl.dedis.protoB\016Sk" +
+      "ipBlockProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3668,13 +4646,19 @@ public final class SkipBlockProto {
     internal_static_BlockLink_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_BlockLink_descriptor,
-        new java.lang.String[] { "Hash", "Signature", });
+        new java.lang.String[] { "Sig", "Msg", "Exceptions", });
     internal_static_SchnorrSig_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_SchnorrSig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SchnorrSig_descriptor,
         new java.lang.String[] { "Challenge", "Response", });
+    internal_static_Exception_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_Exception_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Exception_descriptor,
+        new java.lang.String[] { "Index", "Commitment", });
     ch.epfl.dedis.proto.ServerIdentityProto.getDescriptor();
     ch.epfl.dedis.proto.RosterProto.getDescriptor();
   }

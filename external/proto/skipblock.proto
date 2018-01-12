@@ -23,11 +23,18 @@ message SkipBlock {
 }
 
 message BlockLink {
-    required bytes Hash = 1;
-    required bytes Signature = 2;
+    required bytes sig = 1;
+    required bytes msg = 2;
+    repeated Exception exceptions = 3;
 }
 
 message SchnorrSig {
     required bytes challenge = 1;
     required bytes response = 2;
 }
+
+message Exception {
+    required int32 index = 1;
+    required bytes commitment = 2;
+}
+

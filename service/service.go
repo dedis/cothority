@@ -836,7 +836,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 			Admins: make(map[string]*darc.Darc),
 		},
 	}
-	s.Storage.OCSs = ocs.NewSBBStorage(s.Suite())
+	s.Storage.OCSs = ocs.NewSBBStorage()
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
