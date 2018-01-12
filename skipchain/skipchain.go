@@ -287,7 +287,7 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 		return cerr
 	}
 	for _, sb := range reply.Update {
-		for h, bid := range sb.BackLinkIDs {
+		for _, bid := range sb.BackLinkIDs {
 			// for every back link of block sb, do the following
 			// 1, find the block identified by the back link, call it back-block
 			// 2, ask for the same back-block from other nodes
@@ -296,17 +296,16 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 			// 4, check the forward links are at the right height
 			back := s.db.GetByID(bid)
 			if back == nil {
-				return errors.New("back link does not exist")
+				continue
 			}
 			newBack, cerr := NewClient().GetSingleBlock(roster, back.Hash)
 			if cerr != nil {
 				return cerr
 			}
-			if !newBack.ForwardLink[h].Hash().Equal(sb.Hash) {
-				return errors.New("block does not have correct forward link")
-			}
-			if err := newBack.ForwardLink[0].Verify(Suite, roster.Publics()); err != nil {
-				return err
+			for _, fl := range newBack.ForwardLink {
+				if err := fl.Verify(Suite, roster.Publics()); err != nil {
+					return err
+				}
 			}
 			s.db.Store(newBack)
 		}

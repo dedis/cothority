@@ -91,24 +91,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	// We've added 2 blocks, + root block = 3
 	assert.Equal(t, 3, service.db.Length())
-
-	//// bring the node back up and it should find the block which it missed
-	//if fail {
-	//go servers[len(servers)-1].Start() // TODO doesn't seem to start correctly
-	//time.Sleep(100 * time.Millisecond) // wait for server to start
-	//log.Print(servers[len(servers)-1].Closed())
-	//third := NewSkipBlock()
-	//third.Data = []byte("It is not in the stars to hold our destiny but in ourselves.")
-	//third.MaximumHeight = 2
-	//third.ParentBlockID = next.Hash
-	//third.Roster = next.Roster
-	//id = psbr2.Latest.Hash
-	//psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: third})
-	//assert.Nil(t, err)
-	//log.Lvl2(psbr3)
-	//assert.NotNil(t, psbr3)
-	//assert.NotNil(t, psbr3.Latest)
-	//}
 }
 
 func TestService_GetUpdateChain(t *testing.T) {

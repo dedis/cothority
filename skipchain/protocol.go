@@ -46,9 +46,11 @@ type ExtendRoster struct {
 	SaveCallback      func()
 	tempSigs          []ProtoExtendSignature
 	tempSigsMutex     sync.Mutex
-	allowedFailures   int
-	nbrFailures       int
-	doneChan          chan int
+	// TODO make sure all new nodes are OK
+	// new roster in ExtendRoster
+	// previous roster in one block back
+	allowedFailures int
+	doneChan        chan int
 }
 
 // GetUpdate needs to be configured by the service to hold the database

@@ -785,6 +785,7 @@ func (bft *ProtocolBFTCoSi) setClosing() {
 }
 
 func (bft *ProtocolBFTCoSi) sendToChildren(msg interface{}) error {
+	// TODO send to only nodes that did reply
 	errs := bft.SendToChildrenInParallel(msg)
 	if len(errs) > bft.allowedExceptions {
 		return fmt.Errorf("sendToChildren failed with errors: %v", errs)
