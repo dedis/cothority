@@ -240,4 +240,22 @@ class OnchainSecretsRPCTest {
         ocs2.updateDarc(userDarc2);
         logger.info("new user darc created and stored");
     }
+
+    @Test
+    void failover() throws Exception {
+        WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
+        wr.extraData = "created on Monday".getBytes();
+        assertNull(wr.id);
+
+        DarcSignature sig = wr.getSignature(ocs, publisher);
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
+
+        Runtime.getRuntime().exec(String.format("pkill -n conode"));
+        Thread.sleep(100);
+        wr.id = null;
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
+    }
+
 }

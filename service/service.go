@@ -832,11 +832,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
-			OCSs:   nil,
+			OCSs:   ocs.NewSBBStorage(),
 			Admins: make(map[string]*darc.Darc),
 		},
 	}
-	s.Storage.OCSs = ocs.NewSBBStorage()
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
 		s.DecryptKeyRequest, s.SharedPublic,
