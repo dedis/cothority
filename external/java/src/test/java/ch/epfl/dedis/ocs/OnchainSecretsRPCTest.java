@@ -241,6 +241,7 @@ class OnchainSecretsRPCTest {
         logger.info("new user darc created and stored");
     }
 
+    /*
     @Test
     void failover() throws Exception {
         WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
@@ -257,5 +258,6 @@ class OnchainSecretsRPCTest {
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
     }
+    */
 
 }
