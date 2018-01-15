@@ -33,7 +33,7 @@ import (
 // Used for tests
 var templateID onet.ServiceID
 
-const propagationTimeout = 10000
+const propagationTimeout = 5000
 
 const timestampRange = 60
 
@@ -846,7 +846,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)
 	var err error
-	s.propagateOCS, err = messaging.NewPropagationFunc(c, "PropagateOCS", s.propagateOCSFunc, 0)
+	s.propagateOCS, err = messaging.NewPropagationFunc(c, "PropagateOCS", s.propagateOCSFunc, -1)
 	log.ErrFatal(err)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

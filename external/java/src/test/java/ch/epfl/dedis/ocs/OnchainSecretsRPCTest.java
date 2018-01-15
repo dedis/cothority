@@ -13,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -66,7 +63,7 @@ class OnchainSecretsRPCTest {
             logger.info("Error is: " + e.toString());
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
-            logger.error("./run_conode.sh local 3 2");
+            logger.error("./run_conode.sh local 4 2");
             fail("Couldn't start ocs!");
         }
     }
@@ -245,7 +242,7 @@ class OnchainSecretsRPCTest {
     }
 
     @Test
-    void failover() throws Exception {
+    void failoverWrite() throws Exception {
         WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
         wr.extraData = "created on Monday".getBytes();
         assertNull(wr.id);
@@ -257,7 +254,6 @@ class OnchainSecretsRPCTest {
         // kill the last conode and try to make a request
         int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
         assertEquals(0, exitValue);
-        Thread.sleep(100);
         wr.id = null;
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
@@ -266,16 +262,12 @@ class OnchainSecretsRPCTest {
         Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
         Process p = Runtime.getRuntime().exec("pgrep conode");
         assertEquals(0, p.waitFor());
-        String result = new BufferedReader(new InputStreamReader(p.getInputStream()))
-                .lines().collect(Collectors.joining("\n"));
-        assertEquals(4, countLines(result));
+        assertEquals(4, OnchainSecretsTest.countLines(OnchainSecretsTest.inputStreamToString(p.getInputStream())));
+
+        // try to write again
+        wr.id = null;
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
     }
-
-    private static int countLines(String str){
-        String[] lines = str.split("\r\n|\r|\n");
-        return  lines.length;
-    }
-
-
 
 }

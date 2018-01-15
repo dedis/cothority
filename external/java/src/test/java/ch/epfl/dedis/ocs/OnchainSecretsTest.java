@@ -14,9 +14,14 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,7 +57,7 @@ class OnchainSecretsTest {
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
-            logger.error("./run_conode.sh local 3 2");
+            logger.error("./run_conode.sh local 4 2");
         }
     }
 
@@ -82,6 +87,30 @@ class OnchainSecretsTest {
         assertTrue(doc.equals(doc2));
         // Inverse is not true, as doc2 now contains a writeId
         assertFalse(doc2.equals(doc));
+
+        // kill a node and try the same
+        try {
+            int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
+            assertEquals(0, exitValue);
+        } catch (IOException | InterruptedException e) {
+            fail("failed to kill");
+        }
+        Document doc3 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc3));
+        assertFalse(doc3.equals(doc));
+
+        // restart the conode and try the same
+        try {
+            Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
+            Process p = Runtime.getRuntime().exec("pgrep conode");
+            assertEquals(0, p.waitFor());
+            assertEquals(4, countLines(inputStreamToString(p.getInputStream())));
+        } catch (IOException | InterruptedException e) {
+            fail("failed to restart");
+        }
+        Document doc4 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc4));
+        assertFalse(doc4.equals(doc));
     }
 
     @Test
@@ -120,5 +149,16 @@ class OnchainSecretsTest {
             }
         }
         assertEquals(2, darcs.size());
+    }
+
+
+    public static int countLines(String str){
+        String[] lines = str.split("\r\n|\r|\n");
+        return  lines.length;
+    }
+
+    public static String inputStreamToString(InputStream in) {
+        return new BufferedReader(new InputStreamReader(in))
+                    .lines().collect(Collectors.joining("\n"));
     }
 }

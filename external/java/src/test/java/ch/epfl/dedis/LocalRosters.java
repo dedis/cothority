@@ -41,7 +41,11 @@ public class LocalRosters {
             "[[servers]]\n" +
             "  Address = \"tcp://127.0.0.1:7006\"\n" +
             "  Public = \"7f47f33084c3ecc233f8b05b8f408bbd1c2e4a129aae126f92becacc73576bc7\"\n" +
-            "  Description = \"Conode_3\"\n";
+            "  Description = \"Conode_3\"\n" +
+            "[[servers]]\n"+
+            "  Address = \"tcp://127.0.0.1:7008\"\n"+
+            "  Public = \"8b25f8ac70b85b2e9aa7faf65507d4f7555af1c872240305117b7659b1e58a1e\"\n"+
+            "  Description = \"Conode_4\"\n";
 
     public static String firstToml = "[[servers]]\n" +
             "  Address = \"tcp://127.0.0.1:7002\"\n" +
