@@ -89,26 +89,26 @@ class OnchainSecretsTest {
         assertFalse(doc2.equals(doc));
 
         // kill a node and try the same
-        try {
-            int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
-            assertEquals(0, exitValue);
-        } catch (IOException | InterruptedException e) {
-            fail("failed to kill");
-        }
-        Document doc3 = ocs.getDocument(wr.id, reader2);
+//        try {
+//            int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
+//            assertEquals(0, exitValue);
+//        } catch (IOException | InterruptedException e) {
+//            fail("failed to kill");
+//        }
+        Document doc3 = ocs.getDocument(wr.id, reader2); // Break and stop conode
         assertTrue(doc.equals(doc3));
         assertFalse(doc3.equals(doc));
 
         // restart the conode and try the same
-        try {
-            Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
-            Process p = Runtime.getRuntime().exec("pgrep conode");
-            assertEquals(0, p.waitFor());
-            assertEquals(4, countLines(inputStreamToString(p.getInputStream())));
-        } catch (IOException | InterruptedException e) {
-            fail("failed to restart");
-        }
-        Document doc4 = ocs.getDocument(wr.id, reader2);
+//        try {
+//            Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
+//            Process p = Runtime.getRuntime().exec("pgrep conode");
+//            assertEquals(0, p.waitFor());
+//            assertEquals(4, countLines(inputStreamToString(p.getInputStream())));
+//        } catch (IOException | InterruptedException e) {
+//            fail("failed to restart");
+//        }
+        Document doc4 = ocs.getDocument(wr.id, reader2); // Break and start conode
         assertTrue(doc.equals(doc4));
         assertFalse(doc4.equals(doc));
     }
