@@ -13,7 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -241,7 +244,6 @@ class OnchainSecretsRPCTest {
         logger.info("new user darc created and stored");
     }
 
-    /*
     @Test
     void failover() throws Exception {
         WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
@@ -252,12 +254,28 @@ class OnchainSecretsRPCTest {
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
 
-        Runtime.getRuntime().exec(String.format("pkill -n conode"));
+        // kill the last conode and try to make a request
+        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
+        assertEquals(0, exitValue);
         Thread.sleep(100);
         wr.id = null;
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
+
+        // bring the conode backup for future tests and make sure we have 4 conodes running
+        Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
+        Process p = Runtime.getRuntime().exec("pgrep conode");
+        assertEquals(0, p.waitFor());
+        String result = new BufferedReader(new InputStreamReader(p.getInputStream()))
+                .lines().collect(Collectors.joining("\n"));
+        assertEquals(4, countLines(result));
     }
-    */
+
+    private static int countLines(String str){
+        String[] lines = str.split("\r\n|\r|\n");
+        return  lines.length;
+    }
+
+
 
 }
