@@ -61,7 +61,7 @@ func (o *OCS) Start() error {
 	if o.U == nil {
 		return errors.New("please initialize U first")
 	}
-	errs := o.TryBroadcast(&Reencrypt{U: o.U, Xc: o.Xc})
+	errs := o.Broadcast(&Reencrypt{U: o.U, Xc: o.Xc})
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
 		return errors.New("too many nodes failed in broadcast")

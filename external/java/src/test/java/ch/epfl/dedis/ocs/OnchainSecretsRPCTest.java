@@ -270,5 +270,4 @@ class OnchainSecretsRPCTest {
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
     }
-
 }

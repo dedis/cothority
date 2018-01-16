@@ -7,6 +7,7 @@ paper-draft about onchain-secrets (called BlockMage).
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -69,7 +70,11 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (o *SetupDKG) Start() error {
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
-	return o.Broadcast(&Init{Wait: o.Wait})
+	errs := o.Broadcast(&Init{Wait: o.Wait})
+	if len(errs) != 0 {
+		return fmt.Errorf("boradcast failed with error(s): %v", errs)
+	}
+	return nil
 }
 
 // Dispatch takes care for channel-messages that need to be treated in the correct order.
@@ -216,5 +221,9 @@ func (o *SetupDKG) allSecretCommit(comm structSecretCommit) error {
 
 // Convenience functions
 func (o *SetupDKG) fullBroadcast(msg interface{}) error {
-	return o.Multicast(msg, o.nodes...)
+	errs := o.Multicast(msg, o.nodes...)
+	if len(errs) != 0 {
+		return fmt.Errorf("multicast failed with error(s): %v", errs)
+	}
+	return nil
 }
