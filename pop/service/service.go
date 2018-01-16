@@ -742,7 +742,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 			"Signing failed")
 	}
 
-	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000)
+	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000*time.Millisecond)
 	if err != nil {
 		return onet.NewClientError(err)
 	}

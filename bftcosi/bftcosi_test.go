@@ -168,7 +168,6 @@ func TestCheckRefuseParallel(t *testing.T) {
 			log.Lvl3("Done with", n, fc)
 			wg.Done()
 		}(fc)
-		//wg.Wait()
 	}
 	wg.Wait()
 }

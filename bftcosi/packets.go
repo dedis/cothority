@@ -3,6 +3,7 @@ package bftcosi
 import (
 	"crypto/sha512"
 	"errors"
+	"time"
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -107,7 +108,7 @@ func (bs *BFTSignature) Verify(s network.Suite, publics []kyber.Point) error {
 // rounds)
 type Announce struct {
 	TYPE    RoundType
-	Timeout uint64
+	Timeout time.Duration
 }
 
 // announceChan is the type of the channel that will be used to catch

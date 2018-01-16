@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/pop/service"
@@ -16,7 +17,7 @@ import (
 )
 
 // How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
+const propagateTimeout = 10000 * time.Millisecond
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
