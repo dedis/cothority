@@ -18,8 +18,8 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
-// How many msec to wait before a timeout is generated in the propagation.
-const propagateTimeout = 5000
+// How long to wait before a timeout is generated in the propagation.
+const defaultPropagateTimeout = 5 * time.Second
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
