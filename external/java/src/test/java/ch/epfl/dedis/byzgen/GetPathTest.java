@@ -48,7 +48,7 @@ public class GetPathTest {
     @Test
     void checkAccessUsingKeyWithProperAccess() throws Exception {
         // given
-        WriteRequestId documentId = publishDocuentAndGrantAccessToGroup();
+        WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
         Ed25519Signer consumer = new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR));
 
@@ -66,7 +66,7 @@ public class GetPathTest {
     @Test
     void checkAccessUsingKeyWithoutAccess() throws Exception {
         // given
-        WriteRequestId documentId = publishDocuentAndGrantAccessToGroup();
+        WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
         Ed25519Signer userWithoutAccess = new Ed25519Signer(); // random key
 
@@ -84,7 +84,7 @@ public class GetPathTest {
     @Test
     void checkAccessUsingUserId() throws Exception {
         // given
-        WriteRequestId documentId = publishDocuentAndGrantAccessToGroup();
+        WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
         DarcIdentity consumerIdentity = new DarcIdentity(consumerId);
 
@@ -98,109 +98,10 @@ public class GetPathTest {
         assertNotNull(path);
     }
 
-    /*
-During execution of this test there is java.lang.NullPointerException.
-There is also 'nil pointer dereference' at server side.
-
-  NPE:
-
-java.lang.NullPointerException
-at ch.epfl.dedis.lib.ServerIdentity.SendMessage(ServerIdentity.java:71)
-at ch.epfl.dedis.lib.Roster.sendMessage(Roster.java:53)
-at ch.epfl.dedis.ocs.OnchainSecretsRPC.getDarcPath(OnchainSecretsRPC.java:240)
-at ch.epfl.dedis.byzgen.GetPathTest.checkAccessUsingGroupId(GetPathTest.java:112)
-at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-at java.lang.reflect.Method.invoke(Method.java:498)
-at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:389)
-at org.junit.jupiter.engine.execution.ExecutableInvoker.invoke(ExecutableInvoker.java:115)
-at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$6(TestMethodTestDescriptor.java:167)
-at org.junit.jupiter.engine.execution.ThrowableCollector.execute(ThrowableCollector.java:40)
-at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:163)
-at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:110)
-at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:57)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.lambda$execute$3(HierarchicalTestExecutor.java:83)
-at org.junit.platform.engine.support.hierarchical.SingleTestExecutor.executeSafely(SingleTestExecutor.java:66)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:77)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.lambda$null$2(HierarchicalTestExecutor.java:92)
-at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-at java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:175)
-at java.util.Iterator.forEachRemaining(Iterator.java:116)
-at java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1801)
-at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:481)
-at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:471)
-at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:418)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.lambda$execute$3(HierarchicalTestExecutor.java:92)
-at org.junit.platform.engine.support.hierarchical.SingleTestExecutor.executeSafely(SingleTestExecutor.java:66)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:77)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.lambda$null$2(HierarchicalTestExecutor.java:92)
-at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
-at java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:175)
-at java.util.Iterator.forEachRemaining(Iterator.java:116)
-at java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1801)
-at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:481)
-at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:471)
-at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
-at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
-at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:418)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.lambda$execute$3(HierarchicalTestExecutor.java:92)
-at org.junit.platform.engine.support.hierarchical.SingleTestExecutor.executeSafely(SingleTestExecutor.java:66)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:77)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:51)
-at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:43)
-at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:170)
-at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:154)
-at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:90)
-at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:65)
-at com.intellij.rt.execution.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:47)
-at com.intellij.rt.execution.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:242)
-at com.intellij.rt.execution.junit.JUnitStarter.main(JUnitStarter.java:70)
-
-
-And server side logs are:
-
-2018/01/09 11:02:28 http: panic serving 172.17.0.1:38704: runtime error: invalid memory address or nil pointer dereference
-goroutine 4400 [running]:
-net/http.(*conn).serve.func1(0xc420b534a0)
-/usr/local/go/src/net/http/server.go:1721 +0xd0
-panic(0x8b9580, 0xbc1990)
-/usr/local/go/src/runtime/panic.go:489 +0x2cf
-github.com/dedis/onchain-secrets/service.(*Service).GetDarcPath(0xc420101520, 0xc420f1bdb0, 0x410d28, 0x20, 0xc4202d56b0)
-/go/src/github.com/dedis/onchain-secrets/service/service.go:199 +0x89
-github.com/dedis/onchain-secrets/service.(*Service).GetDarcPath-fm(0xc420f1bdb0, 0x0, 0x0, 0x0)
-/go/src/github.com/dedis/onchain-secrets/service/service.go:842 +0x34
-reflect.Value.call(0x8a6a20, 0xc4200fb9d0, 0x13, 0x9485a6, 0x4, 0xc4215d19c0, 0x1, 0x1, 0x8f9660, 0xc420f1bd60, ...)
-/usr/local/go/src/reflect/value.go:434 +0x91f
-reflect.Value.Call(0x8a6a20, 0xc4200fb9d0, 0x13, 0xc4215d19c0, 0x1, 0x1, 0x0, 0x0, 0xc420dc29f8)
-/usr/local/go/src/reflect/value.go:302 +0xa4
-github.com/dedis/onet.(*ServiceProcessor).ProcessClientRequest.func1(0x8b6301, 0x8a6a20, 0xc4200fb9d0, 0xb9ae40, 0x8f9660, 0xc420dc2a80, 0xc4200fb930, 0x3, 0xc420dc2a58, 0x56e2c8, ...)
-/go/src/github.com/dedis/onet/processor.go:133 +0x34d
-github.com/dedis/onet.(*ServiceProcessor).ProcessClientRequest(0xc4200fb930, 0xc4214d3d24, 0xb, 0xc420d40000, 0x6c, 0x600, 0x0, 0x0, 0x0, 0x0, ...)
-/go/src/github.com/dedis/onet/processor.go:141 +0xaa
-github.com/dedis/onet.wsHandler.ServeHTTP(0x94c2af, 0xe, 0xb94680, 0xc420101520, 0xb94a80, 0xc420400fc0, 0xc420ce9300)
-/go/src/github.com/dedis/onet/websocket.go:144 +0x454
-github.com/dedis/onet.(*wsHandler).ServeHTTP(0xc4202226e0, 0xb94a80, 0xc420400fc0, 0xc420ce9300)
-<autogenerated>:146 +0x86
-net/http.(*ServeMux).ServeHTTP(0xc420102690, 0xb94a80, 0xc420400fc0, 0xc420ce9300)
-/usr/local/go/src/net/http/server.go:2238 +0x130
-net/http.serverHandler.ServeHTTP(0xc420076580, 0xb94a80, 0xc420400fc0, 0xc420ce9300)
-/usr/local/go/src/net/http/server.go:2568 +0x92
-net/http.(*conn).serve(0xc420b534a0, 0xb954c0, 0xc420f4dd40)
-/usr/local/go/src/net/http/server.go:1825 +0x612
-created by net/http.(*Server).Serve
-/usr/local/go/src/net/http/server.go:2668 +0x2ce
-Tue Jan  9 11:02:43 UTC 2018
-
- */
     @Test
     void checkAccessUsingGroupId() throws Exception {
         // given
-        WriteRequestId documentId = publishDocuentAndGrantAccessToGroup();
+        WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
         DarcIdentity groupIdentity = new DarcIdentity(readersGroupId);
 
@@ -214,8 +115,9 @@ Tue Jan  9 11:02:43 UTC 2018
         assertNotNull(path);
     }
 
-    private WriteRequestId publishDocuentAndGrantAccessToGroup() throws Exception {
-        WriteRequestId documentId;Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+    private WriteRequestId publishDocumentAndGrantAccessToGroup() throws Exception {
+        WriteRequestId documentId;
+        Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
         documentId = publishTestDocument(publisherSigner, publisherId, readersGroupId);
         return documentId;
     }
