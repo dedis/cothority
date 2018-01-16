@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -61,7 +62,7 @@ func propagate(t *testing.T, nbrNodes []int, nbrFailures []int) {
 
 		// start the propagation
 		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-		children, err := propFuncs[0](el, msg, 1000)
+		children, err := propFuncs[0](el, msg, 1*time.Second)
 		log.ErrFatal(err)
 		if recvCount+nbrFailures[i] != n {
 			t.Fatal("Didn't get data-request")

@@ -21,7 +21,7 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-const timeout = 1
+const defaultTimeout = 1 * time.Second
 
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
@@ -42,6 +42,8 @@ type ProtocolBFTCoSi struct {
 	Msg []byte
 	// Data going along the msg to the verification
 	Data []byte
+	// Timeout is how long to wait while gathering commits.
+	Timeout time.Duration
 	// last block computed
 	lastBlock string
 	// refusal to sign for the commit phase or not. This flag is set during the
@@ -134,6 +136,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 		allowedExceptions:    nodes - (nodes+1)*2/3,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
+		Timeout:              defaultTimeout,
 	}
 
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
@@ -160,7 +163,6 @@ func (bft *ProtocolBFTCoSi) Start() error {
 		return err
 	}
 	go func() {
-		//time.Sleep(time.Second)
 		bft.startAnnouncement(RoundCommit)
 	}()
 	return nil
@@ -294,6 +296,7 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 // handleAnnouncement passes the announcement to the right CoSi struct.
 func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	ann := msg.Announce
+	bft.Timeout = ann.Timeout
 	if bft.isClosing() {
 		log.Lvl3("Closing")
 		return nil
@@ -582,7 +585,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 					return nil
 				}
 			}
-		case <-time.After(time.Second * timeout):
+		case <-time.After(bft.Timeout):
 			// in some cases this might be ok because we accept a certain number of faults
 			// the caller is responsible for checking if enough messages are received
 			log.Error("timeout while trying to read commit messages")
@@ -621,7 +624,7 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 					return nil
 				}
 			}
-		case <-time.After(time.Second * timeout):
+		case <-time.After(bft.Timeout):
 			log.Error("timeout while trying to read response messages")
 			return nil
 		}
@@ -631,7 +634,7 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 // startAnnouncementPrepare create its announcement for the prepare round and
 // sends it down the tree.
 func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
-	bft.announceChan <- announceChan{Announce: Announce{TYPE: t}}
+	bft.announceChan <- announceChan{Announce: Announce{TYPE: t, Timeout: bft.Timeout}}
 	return nil
 }
 

@@ -34,12 +34,9 @@ const bftFollowBlock = "SkipchainBFTFollow"
 const storageKey = "skipchainconfig"
 
 func init() {
-	skipchainSID, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
+	onet.RegisterNewService(ServiceName, newSkipchainService)
 	network.RegisterMessages(&Storage{})
 }
-
-// Only used in tests
-var skipchainSID onet.ServiceID
 
 // Service handles adding new SkipBlocks
 type Service struct {
@@ -54,6 +51,8 @@ type Service struct {
 	newBlocks          map[string]bool
 	storageMutex       sync.Mutex
 	Storage            *Storage
+	bftTimeout         time.Duration
+	propTimeout        time.Duration
 }
 
 // Storage is saved to disk.
@@ -282,6 +281,11 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 }
 
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
+	// TODO: what if GetUpdateChain happened to choose US? Why doesn't it so far?
+	// TODO: maybe it is missing us because Go stdlib math/rand is never seeded? (in tests maybe
+	// that's correct, but in prod not so much)
+	// TODO: if GetUpdateChain happens to choose a server that's down,
+	// we need to retry (up to a limit)
 	reply, cerr := NewClient().GetUpdateChain(roster, latest)
 	if cerr != nil {
 		return cerr
@@ -635,11 +639,17 @@ func (s *Service) callGetBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBloc
 		&GetBlock{unknown}); err != nil {
 		return nil, errors.New("Couldn't get updated block: " + known.Short())
 	}
+
+	to := s.propTimeout
+	if to == 0 {
+		to = defaultPropagateTimeout
+	}
+
 	var block *SkipBlock
 	select {
 	case block = <-request:
 		log.Lvl3("Got block", block)
-	case <-time.After(time.Millisecond * time.Duration(propagateTimeout)):
+	case <-time.After(to):
 		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
 	}
 	return block, nil
@@ -766,6 +776,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 // verifyNewBlock makes sure that a signature-request for a forward-link
 // is valid.
 func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
+	// TODO: check length of data before slicing it
+
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	_, newSBi, err := network.Unmarshal(data[32:], Suite)
 	if err != nil {
@@ -965,7 +977,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			return nil, errors.New("failed in cosi")
 		}
 		return sig, nil
-		//return nil, errors.New("need more than 1 entry for Roster")
 	}
 
 	// Start the protocol
@@ -973,6 +984,10 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
+
+	if s.bftTimeout != 0 {
+		root.Timeout = s.bftTimeout
+	}
 
 	// function that will be called when protocol is finished by the root
 	done := make(chan bool)
@@ -1009,12 +1024,16 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
-	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, propagateTimeout)
+	to := s.propTimeout
+	if to == 0 {
+		to = defaultPropagateTimeout
+	}
+	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, to)
 	if err != nil {
 		return err
 	}
 	if replies != len(roster.List) {
-		log.Warn("Did only get", replies, "out of", len(roster.List))
+		log.Warn("Only got", replies, "out of", len(roster.List))
 	}
 	return nil
 }
