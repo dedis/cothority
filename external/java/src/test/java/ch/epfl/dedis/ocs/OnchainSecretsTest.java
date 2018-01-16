@@ -73,7 +73,7 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void giveReadAccessToDocument() throws CothorityException, IOException, InterruptedException {
+    void giveReadAccessToDocument() throws CothorityException {
         Signer reader2 = new Ed25519Signer();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
         try{
@@ -87,20 +87,33 @@ class OnchainSecretsTest {
         assertTrue(doc.equals(doc2));
         // Inverse is not true, as doc2 now contains a writeId
         assertFalse(doc2.equals(doc));
+    }
+
+    @Test
+    void getDocumentWithFailedNode() throws CothorityException, IOException, InterruptedException {
+        Signer reader2 = new Ed25519Signer();
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
+
+        ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
+        Document doc2 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc2));
+        // Inverse is not true, as doc2 now contains a writeId
+        assertFalse(doc2.equals(doc));
 
         // kill a node and try the same
         int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
         assertEquals(0, exitValue);
-        Document doc3 = ocs.getDocument(wr.id, reader2); // Break and stop conode
+        Document doc3 = ocs.getDocument(wr.id, reader2);
         assertTrue(doc.equals(doc3));
         assertFalse(doc3.equals(doc));
 
         // restart the conode and try the same
-        Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
+        Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
+        Thread.sleep(1000);
         Process p = Runtime.getRuntime().exec("pgrep conode");
         assertEquals(0, p.waitFor());
         assertEquals(4, countLines(inputStreamToString(p.getInputStream())));
-        Document doc4 = ocs.getDocument(wr.id, reader2); // Break and start conode
+        Document doc4 = ocs.getDocument(wr.id, reader2);
         assertTrue(doc.equals(doc4));
         assertFalse(doc4.equals(doc));
     }

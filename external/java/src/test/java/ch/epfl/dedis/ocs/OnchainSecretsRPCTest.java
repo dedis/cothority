@@ -242,7 +242,7 @@ class OnchainSecretsRPCTest {
     }
 
     @Test
-    void failoverWrite() throws Exception {
+    void writeRequestWithFailedNode() throws Exception {
         WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
         wr.extraData = "created on Monday".getBytes();
         assertNull(wr.id);
@@ -252,20 +252,21 @@ class OnchainSecretsRPCTest {
         assertNotNull(wr.id);
 
         // kill the last conode and try to make a request
-//        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
-//        assertEquals(0, exitValue);
-        wr.id = null; // Break and stop conode
+        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
+        assertEquals(0, exitValue);
+        wr.id = null;
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
 
         // bring the conode backup for future tests and make sure we have 4 conodes running
-//        Runtime.getRuntime().exec("conode -d 2 -c ../../conode/co4/private.toml server");
-//        Process p = Runtime.getRuntime().exec("pgrep conode");
-//        assertEquals(0, p.waitFor());
-//        assertEquals(4, OnchainSecretsTest.countLines(OnchainSecretsTest.inputStreamToString(p.getInputStream())));
+        Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
+        Thread.sleep(1000);
+        Process p = Runtime.getRuntime().exec("pgrep conode");
+        assertEquals(0, p.waitFor());
+        assertEquals(4, OnchainSecretsTest.countLines(OnchainSecretsTest.inputStreamToString(p.getInputStream())));
 
         // try to write again
-        wr.id = null; // Break and start conode
+        wr.id = null;
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
     }
