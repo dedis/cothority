@@ -12,7 +12,6 @@ RUN git --git-dir=/go/src/github.com/dedis/kyber/.git log -1 --format=oneline
 
 # TODO remove when bftcosi_failure is in master
 RUN git --git-dir=/go/src/github.com/dedis/cothority/.git --work-tree=/go/src/github.com/dedis/cothority checkout bftcosi_failure
-RUN git --git-dir=/go/src/github.com/dedis/onet/.git --work-tree=/go/src/github.com/dedis/onet checkout bcast_err_slice
 
 RUN go install -v ./conode
 RUN echo $PATH
