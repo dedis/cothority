@@ -24,13 +24,15 @@ func init() {
 // DKG and U must be initialized by the caller.
 type OCS struct {
 	*onet.TreeNodeInstance
-	Shared *SharedSecret  // Shared represents the private key
-	Poly   *share.PubPoly // Represents all public keys
-	U      kyber.Point    // U is the encrypted secret
-	Xc     kyber.Point    // The client's public key
+	Shared    *SharedSecret  // Shared represents the private key
+	Poly      *share.PubPoly // Represents all public keys
+	U         kyber.Point    // U is the encrypted secret
+	Xc        kyber.Point    // The client's public key
+	Threshold uint32
 	// Done receives a 'true'-value when the protocol finished successfully.
-	Done    chan bool
-	Uis     []*share.PubShare // re-encrypted shares
+	Done chan bool
+	Uis  []*share.PubShare // re-encrypted shares
+	// private fields
 	replies []ReencryptReply
 	replied bool
 }
@@ -40,6 +42,7 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &OCS{
 		TreeNodeInstance: n,
 		Done:             make(chan bool, 1),
+		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 	}
 
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
@@ -100,11 +103,9 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 		return nil
 	}
 	o.replies = append(o.replies, rr.ReencryptReply)
-	log.Print("GOT REPLY", len(o.replies))
 
-	// minus one because it does not include the root
-	t := len(o.Roster().List) - (len(o.Roster().List)-1)/3 - 1
-	if len(o.replies) >= t {
+	// minus one to exclude the root
+	if len(o.replies) >= int(o.Threshold-1) {
 		o.Uis = make([]*share.PubShare, len(o.List()))
 		var err error
 		o.Uis[0], err = o.getUI(o.U, o.Xc)

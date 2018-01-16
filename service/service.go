@@ -6,27 +6,23 @@ runs on the node.
 */
 
 import (
-	"errors"
-
 	"bytes"
-
-	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-
+	"errors"
+	"math/rand"
 	"sync"
 	"time"
 
-	"math/rand"
-
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onchain-secrets/protocol"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -34,7 +30,6 @@ import (
 var templateID onet.ServiceID
 
 const propagationTimeout = 5000
-
 const timestampRange = 60
 
 func init() {

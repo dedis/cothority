@@ -46,9 +46,9 @@ type SetupDKG struct {
 func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &SetupDKG{
 		TreeNodeInstance: n,
-		Threshold:        2,
 		keypair:          key.NewKeyPair(cothority.Suite),
 		Done:             make(chan bool, 1),
+		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
 	}
 
@@ -126,7 +126,6 @@ func (o *SetupDKG) SharedSecret() (*SharedSecret, error) {
 }
 
 // Children reactions
-
 func (o *SetupDKG) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
@@ -134,7 +133,6 @@ func (o *SetupDKG) childInit(i structInit) error {
 }
 
 // Root-node messages
-
 func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 	log.Lvl3(o.Name(), replies)
 	o.publics[0] = o.keypair.Public
@@ -152,7 +150,6 @@ func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 }
 
 // Messages for both
-
 func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
