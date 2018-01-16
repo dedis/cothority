@@ -135,6 +135,7 @@ public class GrantAccessTest {
                 .addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1)
                 .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
+                .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
                 .initialiseNewSkipchain(new Ed25519Signer(
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }

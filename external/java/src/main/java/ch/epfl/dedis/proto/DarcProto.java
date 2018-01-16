@@ -222,6 +222,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2038,7 +2041,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Darc(input, extensionRegistry);
+        return new Darc(input, extensionRegistry);
       }
     };
 
@@ -2140,6 +2143,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2976,7 +2982,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Identity(input, extensionRegistry);
+        return new Identity(input, extensionRegistry);
       }
     };
 
@@ -3038,6 +3044,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3471,7 +3480,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new IdentityEd25519(input, extensionRegistry);
+        return new IdentityEd25519(input, extensionRegistry);
       }
     };
 
@@ -3533,6 +3542,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3966,7 +3978,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new IdentityDarc(input, extensionRegistry);
+        return new IdentityDarc(input, extensionRegistry);
       }
     };
 
@@ -4062,6 +4074,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4768,7 +4783,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Signature(input, extensionRegistry);
+        return new Signature(input, extensionRegistry);
       }
     };
 
@@ -4908,6 +4923,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6055,7 +6073,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SignaturePath(input, extensionRegistry);
+        return new SignaturePath(input, extensionRegistry);
       }
     };
 
@@ -6121,6 +6139,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6665,7 +6686,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Signer(input, extensionRegistry);
+        return new Signer(input, extensionRegistry);
       }
     };
 
@@ -6737,6 +6758,9 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7257,7 +7281,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Ed25519Signer(input, extensionRegistry);
+        return new Ed25519Signer(input, extensionRegistry);
       }
     };
 
@@ -7334,7 +7358,7 @@ public final class DarcProto {
       "dentityEd25519\022\r\n\005point\030\001 \002(\014\"\032\n\014Identit" +
       "yDarc\022\n\n\002id\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignat" +
       "ure\030\001 \002(\014\022%\n\rsignaturepath\030\002 \002(\0132\016.Signa" +
-      "turePath\"N\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\013",
+      "turePath\"N\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\013" +
       "2\005.Darc\022\031\n\006signer\030\002 \002(\0132\t.Identity\022\014\n\004ro" +
       "le\030\003 \002(\021\")\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed" +
       "25519Signer\".\n\rEd25519Signer\022\r\n\005point\030\001 " +

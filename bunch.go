@@ -3,11 +3,10 @@ package ocs
 import (
 	"encoding/hex"
 	"errors"
-	"strings"
-	"sync"
-
 	"fmt"
 	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/log"
@@ -64,7 +63,7 @@ func (sbb *SkipBlockBunch) Store(sb *skipchain.SkipBlock) skipchain.SkipBlockID 
 		// new children.
 		if sb.GetForwardLen() > sbOld.GetForwardLen() {
 			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-				if err := fl.VerifySignature(sbOld.Roster.Publics()); err != nil {
+				if err := fl.Verify(skipchain.Suite, sbOld.Roster.Publics()); err != nil {
 					log.Error("Got a known block with wrong signature in forward-link")
 					return nil
 				}
@@ -169,7 +168,7 @@ func (sbb *SkipBlockBunch) VerifyLinks(sb *skipchain.SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.GetForward(0).Hash.Equal(sb.Hash) {
+	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil

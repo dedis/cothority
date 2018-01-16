@@ -7,6 +7,7 @@ paper-draft about onchain-secrets (called BlockMage).
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -46,9 +47,9 @@ type SetupDKG struct {
 func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &SetupDKG{
 		TreeNodeInstance: n,
-		Threshold:        2,
 		keypair:          key.NewKeyPair(cothority.Suite),
 		Done:             make(chan bool, 1),
+		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
 	}
 
@@ -69,7 +70,11 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (o *SetupDKG) Start() error {
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
-	return o.Broadcast(&Init{Wait: o.Wait})
+	errs := o.Broadcast(&Init{Wait: o.Wait})
+	if len(errs) != 0 {
+		return fmt.Errorf("boradcast failed with error(s): %v", errs)
+	}
+	return nil
 }
 
 // Dispatch takes care for channel-messages that need to be treated in the correct order.
@@ -126,7 +131,6 @@ func (o *SetupDKG) SharedSecret() (*SharedSecret, error) {
 }
 
 // Children reactions
-
 func (o *SetupDKG) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
@@ -134,7 +138,6 @@ func (o *SetupDKG) childInit(i structInit) error {
 }
 
 // Root-node messages
-
 func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 	log.Lvl3(o.Name(), replies)
 	o.publics[0] = o.keypair.Public
@@ -152,7 +155,6 @@ func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 }
 
 // Messages for both
-
 func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
@@ -219,5 +221,9 @@ func (o *SetupDKG) allSecretCommit(comm structSecretCommit) error {
 
 // Convenience functions
 func (o *SetupDKG) fullBroadcast(msg interface{}) error {
-	return o.Multicast(msg, o.nodes...)
+	errs := o.Multicast(msg, o.nodes...)
+	if len(errs) != 0 {
+		return fmt.Errorf("multicast failed with error(s): %v", errs)
+	}
+	return nil
 }

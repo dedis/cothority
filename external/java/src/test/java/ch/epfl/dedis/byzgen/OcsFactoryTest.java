@@ -67,6 +67,7 @@ class OcsFactoryTest {
         ocsFactory.addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1);
         ocsFactory.addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2);
         ocsFactory.addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3);
+        ocsFactory.addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4);
 
         // when
         SkipblockId genesis = ocsFactory.initialiseNewSkipchain(
@@ -97,6 +98,7 @@ class OcsFactoryTest {
                 .addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1)
                 .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
+                .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
                 .initialiseNewSkipchain(new Ed25519Signer(
                         DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
     }

@@ -24,13 +24,17 @@ func init() {
 // DKG and U must be initialized by the caller.
 type OCS struct {
 	*onet.TreeNodeInstance
-	Shared *SharedSecret  // Shared represents the private key
-	Poly   *share.PubPoly // Represents all public keys
-	U      kyber.Point    // U is the encrypted secret
-	Xc     kyber.Point    // The client's public key
+	Shared    *SharedSecret  // Shared represents the private key
+	Poly      *share.PubPoly // Represents all public keys
+	U         kyber.Point    // U is the encrypted secret
+	Xc        kyber.Point    // The client's public key
+	Threshold uint32
 	// Done receives a 'true'-value when the protocol finished successfully.
 	Done chan bool
 	Uis  []*share.PubShare // re-encrypted shares
+	// private fields
+	replies []ReencryptReply
+	replied bool
 }
 
 // NewOCS initialises the structure for use in one round
@@ -38,6 +42,7 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &OCS{
 		TreeNodeInstance: n,
 		Done:             make(chan bool, 1),
+		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 	}
 
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
@@ -56,13 +61,18 @@ func (o *OCS) Start() error {
 	if o.U == nil {
 		return errors.New("please initialize U first")
 	}
-	return o.Broadcast(&Reencrypt{U: o.U, Xc: o.Xc})
+	errs := o.Broadcast(&Reencrypt{U: o.U, Xc: o.Xc})
+	if len(errs) > (len(o.Roster().List)-1)/3 {
+		log.Errorf("Some nodes failed with error(s) %v", errs)
+		return errors.New("too many nodes failed in broadcast")
+	}
+	return nil
 }
 
 // Reencrypt is received by every node to give his part of
 // the share
 func (o *OCS) reencrypt(r structReencrypt) error {
-	log.Lvl3(o.Name())
+	log.Lvl3(o.Name() + ": starting reencrypt")
 	ui, err := o.getUI(r.U, r.Xc)
 	if err != nil {
 		return nil
@@ -87,35 +97,46 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 
 // ReencryptReply is the root-node waiting for all replies and generating
 // the reencryption key.
-func (o *OCS) reencryptReply(rr []structReencryptReply) error {
-	o.Uis = make([]*share.PubShare, len(o.List()))
-	var err error
-	o.Uis[0], err = o.getUI(o.U, o.Xc)
-	if err != nil {
-		return err
+func (o *OCS) reencryptReply(rr structReencryptReply) error {
+	if o.replied {
+		log.Lvl3("not making reencryption reply, already did")
+		return nil
 	}
-	for _, r := range rr {
-		// Verify proofs
-		ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, o.Xc))
-		uiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), r.Ui.V)
-		uiHat := cothority.Suite.Point().Add(ufi, uiei)
+	o.replies = append(o.replies, rr.ReencryptReply)
 
-		gfi := cothority.Suite.Point().Mul(r.Fi, nil)
-		gxi := o.Poly.Eval(r.Ui.I).V
-		hiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), gxi)
-		hiHat := cothority.Suite.Point().Add(gfi, hiei)
-		hash := sha256.New()
-		r.Ui.V.MarshalTo(hash)
-		uiHat.MarshalTo(hash)
-		hiHat.MarshalTo(hash)
-		e := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
-		if e.Equal(r.Ei) {
-			o.Uis[r.Ui.I] = r.Ui
-		} else {
-			log.Lvl1("Received invalid share from node", r.Ui.I)
+	// minus one to exclude the root
+	if len(o.replies) >= int(o.Threshold-1) {
+		o.Uis = make([]*share.PubShare, len(o.List()))
+		var err error
+		o.Uis[0], err = o.getUI(o.U, o.Xc)
+		if err != nil {
+			return err
 		}
+
+		for _, r := range o.replies {
+			// Verify proofs
+			ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, o.Xc))
+			uiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), r.Ui.V)
+			uiHat := cothority.Suite.Point().Add(ufi, uiei)
+
+			gfi := cothority.Suite.Point().Mul(r.Fi, nil)
+			gxi := o.Poly.Eval(r.Ui.I).V
+			hiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), gxi)
+			hiHat := cothority.Suite.Point().Add(gfi, hiei)
+			hash := sha256.New()
+			r.Ui.V.MarshalTo(hash)
+			uiHat.MarshalTo(hash)
+			hiHat.MarshalTo(hash)
+			e := cothority.Suite.Scalar().SetBytes(hash.Sum(nil))
+			if e.Equal(r.Ei) {
+				o.Uis[r.Ui.I] = r.Ui
+			} else {
+				log.Lvl1("Received invalid share from node", r.Ui.I)
+			}
+		}
+		o.Done <- true
+		o.replied = true
 	}
-	o.Done <- true
 	return nil
 }
 

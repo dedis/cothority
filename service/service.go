@@ -6,35 +6,30 @@ runs on the node.
 */
 
 import (
-	"errors"
-
 	"bytes"
-
-	"github.com/dedis/cothority"
-	"github.com/dedis/kyber"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
-
+	"errors"
+	"math/rand"
 	"sync"
 	"time"
 
-	"math/rand"
-
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onchain-secrets/protocol"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
 // Used for tests
 var templateID onet.ServiceID
 
-const propagationTimeout = 10000
-
+const propagationTimeout = 5000
 const timestampRange = 60
 
 func init() {
@@ -398,7 +393,7 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 		if len(current.ForwardLink) > 0 {
 			s.saveMutex.Lock()
 			current = s.Storage.OCSs.GetFromGenesisByID(current.SkipChainID(),
-				current.ForwardLink[0].Hash)
+				current.ForwardLink[0].Hash())
 			s.saveMutex.Unlock()
 		} else {
 			log.Lvl3("No forward-links, stopping")
@@ -846,7 +841,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	skipchain.RegisterVerification(c, ocs.VerifyOCS, s.verifyOCS)
 	var err error
-	s.propagateOCS, err = messaging.NewPropagationFunc(c, "PropagateOCS", s.propagateOCSFunc, 0)
+	s.propagateOCS, err = messaging.NewPropagationFunc(c, "PropagateOCS", s.propagateOCSFunc, -1)
 	log.ErrFatal(err)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)

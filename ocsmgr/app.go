@@ -292,7 +292,7 @@ func scread(c *cli.Context) error {
 		log.Printf("Readers: %#v", ocs.Darc)
 	}
 	if len(sb.ForwardLink) > 0 {
-		log.Printf("Next block: %x", sb.ForwardLink[0].Hash)
+		log.Printf("Next block: %x", sb.ForwardLink[0].Hash())
 	} else {
 		log.Print("This is the last block")
 	}

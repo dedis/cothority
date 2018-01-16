@@ -21,13 +21,12 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/onet/log"
-	"gopkg.in/urfave/cli.v1"
-
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/status/service"
 	_ "github.com/dedis/onchain-secrets/service"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"gopkg.in/urfave/cli.v1"
 )
 
 const (

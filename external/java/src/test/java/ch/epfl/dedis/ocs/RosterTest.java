@@ -15,7 +15,8 @@ class RosterTest {
     private static Roster r = new Roster(Arrays.asList(
             new ServerIdentity(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1),
             new ServerIdentity(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2),
-            new ServerIdentity(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)));
+            new ServerIdentity(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3),
+            new ServerIdentity(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)));
 
     //private static Roster r = ConnectingWithTomlConfig.constructRosterWithTomlConfig(LocalRosters.firstToml);
 
@@ -23,21 +24,22 @@ class RosterTest {
 
     @Test
     void testRoster() {
-        assertEquals(3, r.getNodes().size());
+        assertEquals(4, r.getNodes().size());
     }
 
     @Test
     void testAggregate() {
         Point pub = r.getNodes().get(0).Public.add(r.getNodes().get(1).Public);
-        pub = pub.add(r.getNodes().get(2).Public);
+        pub = pub.add(r.getNodes().get(2).Public).add(r.getNodes().get(3).Public);
         assertTrue(pub.equals(agg));
     }
 
     @Test
     void testProto() throws Exception {
         RosterProto.Roster r_proto = r.getProto();
-        assertEquals(3, r_proto.getListList().size());
+        assertEquals(4, r_proto.getListList().size());
         assertArrayEquals(r_proto.getAggregate().toByteArray(), agg.toBytes());
         assertEquals(16, r_proto.getId().toByteArray().length);
     }
 }
+

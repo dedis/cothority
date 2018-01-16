@@ -63,13 +63,13 @@ class OnchainSecretsRPCTest {
             logger.info("Error is: " + e.toString());
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
-            logger.error("./run_conode.sh local 3 2");
+            logger.error("./run_conode.sh local 4 2");
             fail("Couldn't start ocs!");
         }
     }
 
     @Test
-    void verify() throws Exception {
+    void verify() {
         assertTrue(ocs.verify());
         assertNotNull(ocs.getID());
     }
@@ -239,5 +239,35 @@ class OnchainSecretsRPCTest {
         Darc userDarc2 = new Darc(new Ed25519Signer(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
         ocs2.updateDarc(userDarc2);
         logger.info("new user darc created and stored");
+    }
+
+    @Test
+    void writeRequestWithFailedNode() throws Exception {
+        WriteRequest wr = new WriteRequest("data data", 16, readerDarc);
+        wr.extraData = "created on Monday".getBytes();
+        assertNull(wr.id);
+
+        DarcSignature sig = wr.getSignature(ocs, publisher);
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
+
+        // kill the last conode and try to make a request
+        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
+        assertEquals(0, exitValue);
+        wr.id = null;
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
+
+        // bring the conode backup for future tests and make sure we have 4 conodes running
+        Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
+        Thread.sleep(1000);
+        Process p = Runtime.getRuntime().exec("pgrep conode");
+        assertEquals(0, p.waitFor());
+        assertEquals(4, OnchainSecretsTest.countLines(OnchainSecretsTest.inputStreamToString(p.getInputStream())));
+
+        // try to write again
+        wr.id = null;
+        wr = ocs.createWriteRequest(wr, sig);
+        assertNotNull(wr.id);
     }
 }
