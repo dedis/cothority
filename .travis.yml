@@ -1,0 +1,23 @@
+language: java
+
+cache:
+  directories:
+  - $HOME/.m2
+
+install:
+  - go get -t github.com/dedis/cothority/...
+  - go get github.com/dedis/Coding || true
+  # Because we are using "language: java" the "git clone" is not in the
+  # GOPATH. So make a copy of it over where it is supposed to be.
+  - git clone . `go env GOPATH`/src/github.com/dedis/onchain-secrets
+  # remove when bftcosi_failure is in master
+  - (cd `go env GOPATH`/src/github.com/dedis/cothority; git checkout bftcosi_failure)
+
+script:
+  - make test_fmt test_lint
+  - go test -p=1 -v ./...
+  - (cd conode; ./run_conode.sh local 4 )&
+  - (cd external/java; mvn test)
+
+notifications:
+  email: false
