@@ -296,12 +296,12 @@ func (bft *ProtocolBFTCoSi) Shutdown() error {
 // handleAnnouncement passes the announcement to the right CoSi struct.
 func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 	ann := msg.Announce
-	bft.Timeout = ann.Timeout
 	if bft.isClosing() {
 		log.Lvl3("Closing")
 		return nil
 	}
 	if bft.IsLeaf() {
+		bft.Timeout = ann.Timeout
 		return bft.startCommitment(ann.TYPE)
 	}
 	return bft.sendToChildren(&ann)

@@ -51,7 +51,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	if fail {
 		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 5 * time.Millisecond
+		service.bftTimeout = 50 * time.Millisecond
 		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
 		// service.bftTimeout = 500 * time.Millisecond
 
