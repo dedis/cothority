@@ -43,16 +43,16 @@ func NewClient() *Client {
 //
 // Input:
 //  - r [*onet.Roster] - the roster of the nodes holding the new skipchain
-//  - admin [*darc.Darc] - the administrator of the ocs-skipchain
+//  - writers [*darc.Darc] - who is allowed to write to the skipchain
 //
 // Returns:
 //  - ocs [*SkipChainURL] - the identity of that new skipchain
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) CreateSkipchain(r *onet.Roster, admin *darc.Darc) (ocs *SkipChainURL,
+func (c *Client) CreateSkipchain(r *onet.Roster, writers *darc.Darc) (ocs *SkipChainURL,
 	cerr onet.ClientError) {
 	req := &CreateSkipchainsRequest{
 		Roster:  *r,
-		Writers: *admin,
+		Writers: *writers,
 	}
 	reply := &CreateSkipchainsReply{}
 	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
