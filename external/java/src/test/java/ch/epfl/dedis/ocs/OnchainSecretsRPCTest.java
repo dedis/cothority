@@ -1,5 +1,7 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.Point;
@@ -33,6 +35,7 @@ class OnchainSecretsRPCTest {
     static ReadRequestId readID;
 
     private final static Logger logger = LoggerFactory.getLogger(OnchainSecretsTest.class);
+    private TestServerController testInstanceController;
 
     @BeforeEach
     void initAll() throws Exception {
@@ -56,7 +59,10 @@ class OnchainSecretsRPCTest {
         extraData = "created on Monday";
         writeRequest.extraData = extraData.getBytes();
 
+        testInstanceController = TestServerInit.getInstance();
+
         try {
+            TestServerInit.getInstance();
             logger.info("Admin darc: " + adminDarc.getId().toString());
             ocs = new OnchainSecretsRPC(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
         } catch (CothorityCommunicationException e) {
@@ -251,19 +257,17 @@ class OnchainSecretsRPCTest {
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
 
-        // kill the last conode and try to make a request
-        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
-        assertEquals(0, exitValue);
+        // kill the conode co4 and try to make a request
+        testInstanceController.killConode(4);
+        assertEquals(3, testInstanceController.countRunningConodes());
+
         wr.id = null;
         wr = ocs.createWriteRequest(wr, sig);
         assertNotNull(wr.id);
 
         // bring the conode backup for future tests and make sure we have 4 conodes running
-        Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
-        Thread.sleep(1000);
-        Process p = Runtime.getRuntime().exec("pgrep conode");
-        assertEquals(0, p.waitFor());
-        assertEquals(4, OnchainSecretsTest.countLines(OnchainSecretsTest.inputStreamToString(p.getInputStream())));
+        testInstanceController.startConode(4);
+        assertEquals(4, testInstanceController.countRunningConodes());
 
         // try to write again
         wr.id = null;

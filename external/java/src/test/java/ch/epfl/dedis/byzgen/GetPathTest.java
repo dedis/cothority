@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
@@ -38,6 +39,7 @@ public class GetPathTest {
 
     @BeforeAll
     void setupBlokchainAndUsers() throws Exception {
+        TestServerInit.getInstance();
         SkipblockId genesis = createSkipChainForTest();
         ocs = connectToExistingSkipchain(genesis);
         publisherId = createPublisher(ocs);
@@ -61,7 +63,6 @@ public class GetPathTest {
         //then
         assertNotNull(path);
     }
-
 
     @Test
     void checkAccessUsingKeyWithoutAccess() throws Exception {
