@@ -784,7 +784,11 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
 	}
-	newSB := newSBi.(*SkipBlock)
+	newSB, ok := newSBi.(*SkipBlock)
+	if !ok {
+		log.Errorf("Got unexpected type %T in bftVerifyNewBlock", newSBi)
+		return false
+	}
 	if !newSB.Hash.Equal(SkipBlockID(msg)) {
 		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(newSB.Hash))
 		return false
@@ -813,7 +817,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		return false
 	}
 
-	ok := func() bool {
+	ok = func() bool {
 		for _, ver := range newSB.VerifierIDs {
 			f, ok := s.verifiers[ver]
 			if !ok {
