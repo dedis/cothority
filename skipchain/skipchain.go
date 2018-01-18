@@ -577,6 +577,11 @@ func (s *Service) IsPropagating() bool {
 	return len(s.newBlocks) > 0
 }
 
+// GetDB returns a pointer to the internal database.
+func (s *Service) GetDB() *SkipBlockDB {
+	return s.db
+}
+
 // NewProtocol intercepts the creation of the skipblock protocol and
 // initialises the necessary variables.
 func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfig) (pi onet.ProtocolInstance, err error) {
