@@ -174,6 +174,10 @@ func TestCheckRefuseParallel(t *testing.T) {
 }
 
 func TestNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis")
+	}
+
 	const TestProtocolName = "DummyBFTCoSiNodeFailure"
 
 	// Register test protocol using BFTCoSi

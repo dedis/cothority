@@ -25,6 +25,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis")
+	}
 	storeSkipBlock(t, true)
 }
 
