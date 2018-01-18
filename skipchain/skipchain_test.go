@@ -48,6 +48,9 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	defer local.CloseAll()
 	servers, el, genService := local.MakeHELS(4, skipchainSID, Suite)
 	service := genService.(*Service)
+	// This is the poor server who will play the part of the dead server
+	// for us.
+	deadServer := servers[len(servers)-1]
 
 	if fail {
 		// Set low timeout to make the test finish quickly.
@@ -55,7 +58,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
 		// service.bftTimeout = 500 * time.Millisecond
 
-		service.propTimeout = 10 * service.bftTimeout
+		service.propTimeout = 5 * service.bftTimeout
 	}
 
 	// Setting up root roster
@@ -85,8 +88,8 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	// kill one node and it should still work
 	if fail {
-		log.Lvl3("Pausing router for", servers[len(servers)-1].Address())
-		servers[len(servers)-1].Pause()
+		log.Lvl3("Pausing server", deadServer.Address())
+		deadServer.Pause()
 	}
 
 	next := NewSkipBlock()
@@ -115,9 +118,10 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	// And add it again, with all nodes running
 	if fail {
-		log.Lvl3("Unpausing router for", servers[len(servers)-1].Address())
-		servers[len(servers)-1].Unpause()
+		log.Lvl3("Unpausing server ", deadServer.Address())
+		deadServer.Unpause()
 	}
+
 	next.ParentBlockID = next.Hash
 	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: psbr2.Latest.Hash, NewBlock: next})
 	// Until the catch-up logic is implemented, sometimes this one fails, so skip the checking
