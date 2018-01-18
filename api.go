@@ -43,14 +43,16 @@ func NewClient() *Client {
 //
 // Input:
 //  - r [*onet.Roster] - the roster of the nodes holding the new skipchain
+//  - admin [*darc.Darc] - the administrator of the ocs-skipchain
 //
 // Returns:
 //  - ocs [*SkipChainURL] - the identity of that new skipchain
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) CreateSkipchain(r *onet.Roster) (ocs *SkipChainURL,
+func (c *Client) CreateSkipchain(r *onet.Roster, admin *darc.Darc) (ocs *SkipChainURL,
 	cerr onet.ClientError) {
 	req := &CreateSkipchainsRequest{
-		Roster: *r,
+		Roster:  *r,
+		Writers: *admin,
 	}
 	reply := &CreateSkipchainsReply{}
 	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
@@ -89,6 +91,7 @@ func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.Ski
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //  - encData [[]byte] - the data - already encrypted using symKey
 //  - symKey [[]byte] - the symmetric key - it will be encrypted using the shared public key
+//  - adminKey [kyber.Scalar] - the private key of an admin
 //  - acl [Darc] - the access control list of public keys that are allowed to access
 //    that resource
 //
@@ -96,7 +99,8 @@ func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.Ski
 //  - sb [*skipchain.SkipBlock] - the actual block written in the skipchain. The
 //    Data-field of the block contains the actual write request.
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, acl *darc.Darc) (sb *skipchain.SkipBlock,
+func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
+	sig *darc.Signature, acl *darc.Darc) (sb *skipchain.SkipBlock,
 	cerr onet.ClientError) {
 	if len(encData) > 1e7 {
 		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store data bigger than 10MB")
@@ -112,9 +116,10 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte, 
 	write := NewWrite(cothority.Suite, ocs.Genesis, shared.X, acl, symKey)
 	write.Data = encData
 	wr := &WriteRequest{
-		Write:   *write,
-		Readers: acl,
-		OCS:     ocs.Genesis,
+		Write:     *write,
+		Readers:   acl,
+		OCS:       ocs.Genesis,
+		Signature: *sig,
 	}
 	reply := &WriteReply{}
 	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
