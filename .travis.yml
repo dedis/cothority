@@ -7,7 +7,7 @@ install:
   - go get github.com/dedis/goveralls
 
 script:
-  - make test
+  - make test_playground
 
 notifications:
   email: false
