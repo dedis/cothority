@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onchain-secrets"
+	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -129,7 +130,7 @@ func mngCreate(c *cli.Context) error {
 	pseudo := c.Args().Get(1)
 	group := getGroup(c)
 	cl := ocs.NewClient()
-	scurl, err := cl.CreateSkipchain(group.Roster)
+	scurl, err := cl.CreateSkipchain(group.Roster, &darc.Darc{})
 	log.ErrFatal(err)
 	cfg := &ocsConfig{
 		SkipChainURL: scurl,

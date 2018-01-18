@@ -42,7 +42,8 @@ func TestUpdateDarc(t *testing.T) {
 	_, roster, _ := local.GenTree(3, true)
 	defer local.CloseAll()
 	cl := ocs.NewClient()
-	ocs, cerr := cl.CreateSkipchain(roster)
+	writers := &darc.Darc{}
+	ocs, cerr := cl.CreateSkipchain(roster, writers)
 	require.Nil(t, cerr)
 	log.Printf("%#v", *ocs)
 	_, cerr = cl.EditAccount(ocs, darc0)

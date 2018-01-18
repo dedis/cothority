@@ -15,7 +15,7 @@ install:
 
 script:
   - make test_fmt test_lint
-  - go test -p=1 -v ./...
+  - go test -v -short ./...
   - (cd conode; ./run_conode.sh local 4 )&
   - (cd external/java; mvn test)
 

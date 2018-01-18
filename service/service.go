@@ -592,10 +592,6 @@ func (s *Service) printPath(path []darc.Darc) {
 // then searching all sub-darcs.
 // If it doesn't find a matching path, it returns nil.
 func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc.Role) []darc.Darc {
-	if identity.Darc != nil {
-		log.Lvl2("Cannot search path to DarcIdentity")
-		return nil
-	}
 	newpath := make([]darc.Darc, len(path))
 	copy(newpath, path)
 
@@ -627,9 +623,17 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	if ids != nil {
 		// First search the identity
 		for _, id := range *ids {
-			if id.Ed25519 != nil {
-				if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
-					return newpath
+			if identity.Ed25519 != nil {
+				if id.Ed25519 != nil {
+					if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
+						return newpath
+					}
+				}
+			} else if identity.Darc != nil {
+				if id.Darc != nil {
+					if id.Darc.ID.Equal(identity.Darc.ID) {
+						return newpath
+					}
 				}
 			}
 		}
