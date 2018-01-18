@@ -191,8 +191,13 @@ func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply
 	if !exists {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
 	}
-	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
-		req.BaseDarcID)
+	if req.Identity.Ed25519 != nil {
+		log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
+			req.BaseDarcID)
+	} else {
+		log.Lvlf2("Searching %d/%x, starting from %x", req.Role, req.Identity.Darc.ID,
+			req.BaseDarcID)
+	}
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
 	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
@@ -599,16 +604,16 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	// First get latest version
 	for _, di := range s.Storage.Accounts[string(d.GetBaseID())].Darcs {
 		if di.Version > d.Version {
-			log.LLvl3("Adding new version", di.Version)
+			log.Lvl3("Adding new version", di.Version)
 			newpath = append(newpath, *di)
 			d = di
 		}
 	}
-	log.LLvl3("role is:", role)
+	log.Lvl3("role is:", role)
 	for i, p := range newpath {
-		log.LLvlf3("newpath[%d] = %x", i, p.GetID())
+		log.Lvlf3("newpath[%d] = %x", i, p.GetID())
 	}
-	log.LLvl3("This darc is:", newpath[len(newpath)-1].String())
+	log.Lvl3("This darc is:", newpath[len(newpath)-1].String())
 
 	// Then search for identity
 	ids := d.Users
@@ -637,7 +642,7 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 			if id.Darc != nil {
 				d, found := s.getDarc(id.Darc.ID)
 				if !found {
-					log.LLvlf1("Got unknown darc-id in path - ignoring: %x", id.Darc.ID)
+					log.Lvlf1("Got unknown darc-id in path - ignoring: %x", id.Darc.ID)
 					continue
 				}
 				if np := s.searchPath(append(newpath, *d), identity, role); np != nil {
