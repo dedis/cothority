@@ -191,8 +191,13 @@ func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply
 	if !exists {
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
 	}
-	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
-		req.BaseDarcID)
+	if req.Identity.Ed25519 != nil {
+		log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
+			req.BaseDarcID)
+	} else {
+		log.Lvlf2("Searching %d/%x, starting from %x", req.Role, req.Identity.Darc.ID,
+			req.BaseDarcID)
+	}
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
 	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
