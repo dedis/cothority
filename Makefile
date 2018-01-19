@@ -19,13 +19,17 @@ test_playground:
 # make create_stable
 
 IMAGE_NAME = dedis/onchain-secrets
+TEST_IMAGE_NAME = dedis/onchain-secrets-test
 
 docker:
 	docker build -t $(IMAGE_NAME) .
 
+docker_test:
+	docker build -t $(TEST_IMAGE_NAME) testImage
+
 docker_run:
-	docker run -it --rm -p 7003:7003 -p 7005:7005 -p 7007:7007 --name ocs \
-	 -v $(pwd)/data:/root/.local/share/conode $(IMAGE_NAME)
+	docker run -it --rm -p 7003:7003 -p 7005:7005 -p 7007:7007 -p 7009:7009 --name ocs \
+	 -v $(shell pwd)/data:/root/.local/share/conode $(TEST_IMAGE_NAME)
 
 proto:
 	awk -f proto.awk struct.go > external/proto/ocs.proto

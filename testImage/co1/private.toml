@@ -1,0 +1,6 @@
+# This file contains your private key.
+# Do not give it away lightly!
+Public = "d829a0790ffa8799e4bbd1bee8da0507c9166b665660baba72dd8610fca27cc1"
+Private = "841277c8049d1fbe3874844925e4ebef1df5310ca1055924877e22fa8beb1502"
+Address = "tcp://127.0.0.1:7002"
+Description = "Conode_1"
