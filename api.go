@@ -43,19 +43,19 @@ func NewClient() *Client {
 //
 // Input:
 //  - r [*onet.Roster] - the roster of the nodes holding the new skipchain
-//  - writers [*darc.Darc] - who is allowed to write to the skipchain
+//  - admin [*darc.Darc] - the administrator of the ocs-skipchain
 //
 // Returns:
 //  - ocs [*SkipChainURL] - the identity of that new skipchain
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) CreateSkipchain(r *onet.Roster, writers *darc.Darc) (ocs *SkipChainURL,
+func (c *Client) CreateSkipchain(r *onet.Roster, admin *darc.Darc) (ocs *SkipChainURL,
 	cerr onet.ClientError) {
 	req := &CreateSkipchainsRequest{
 		Roster:  *r,
-		Writers: *writers,
+		Writers: *admin,
 	}
 	reply := &CreateSkipchainsReply{}
-	cerr = c.SendProtobuf(r.RandomServerIdentity(), req, reply)
+	cerr = c.SendProtobuf(r.List[0], req, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -108,7 +108,7 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
 
 	requestShared := &SharedPublicRequest{Genesis: ocs.Genesis}
 	shared := &SharedPublicReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), requestShared, shared)
+	cerr = c.SendProtobuf(ocs.Roster.List[0], requestShared, shared)
 	if cerr != nil {
 		return
 	}
@@ -122,7 +122,7 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
 		Signature: *sig,
 	}
 	reply := &WriteReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), wr, reply)
+	cerr = c.SendProtobuf(ocs.Roster.List[0], wr, reply)
 	sb = reply.SB
 	return
 }
@@ -158,7 +158,7 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 		OCS: ocs.Genesis,
 	}
 	reply := &ReadReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -185,7 +185,7 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 		Read: readID,
 	}
 	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
 	if cerr != nil {
 		return
 	}
@@ -241,7 +241,7 @@ func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encDa
 func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
 	request := &GetReadRequests{start, count}
 	reply := &GetReadRequestsReply{}
-	cerr := c.SendProtobuf(ocs.Roster.RandomServerIdentity(), request, reply)
+	cerr := c.SendProtobuf(ocs.Roster.List[0], request, reply)
 	if cerr != nil {
 		return nil, cerr
 	}
