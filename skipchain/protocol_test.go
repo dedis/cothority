@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,11 +22,11 @@ func init() {
 	log.ErrFatal(err)
 }
 
-// TestGU tests the GetUpdate message
-func TestGU(t *testing.T) {
+// TestGB tests the GetBlocks protocol
+func TestGB(t *testing.T) {
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
-	servers, ro, _ := local.GenTree(2, true)
+	servers, ro, _ := local.GenTree(3, true)
 	tss := local.GetServices(servers, tsID)
 
 	ts0 := tss[0].(*testService)
@@ -48,9 +47,33 @@ func TestGU(t *testing.T) {
 	ts1.Db = skipchain.NewSkipBlockDB(db, bucket)
 	ts1.Db.Store(sb0)
 	ts1.Db.Store(sb1)
-	sb := ts1.CallGU(sb0)
+
+	// ask for only one
+	sb := ts1.CallGB(sb0, 1)
 	require.NotNil(t, sb)
-	require.Equal(t, sb1.Hash, sb.Hash)
+	require.Equal(t, 1, len(sb))
+	require.Equal(t, sb0.Hash, sb[0].Hash)
+
+	// In order to test GetUpdate in the face of failures, pause one
+	servers[2].Pause()
+
+	// ask for 10, expect to get the 2 be put in above.
+	sb = ts1.CallGB(sb0, 10)
+	require.NotNil(t, sb)
+	require.Equal(t, 2, len(sb))
+	require.Equal(t, sb0.Hash, sb[0].Hash)
+	require.Equal(t, sb1.Hash, sb[1].Hash)
+
+	// And what about getupdate with all servers replying?
+	// server[2] does not have the correct block in it, so we expect it
+	// to get the request, but send no reply back. One of the others
+	// will find the blocks.
+	servers[2].Unpause()
+	sb = ts1.CallGB(sb0, 10)
+	require.NotNil(t, sb)
+	require.Equal(t, 2, len(sb))
+	require.Equal(t, sb0.Hash, sb[0].Hash)
+	require.Equal(t, sb1.Hash, sb[1].Hash)
 }
 
 // TestER tests the ProtoExtendRoster message
@@ -136,19 +159,25 @@ func (ts *testService) CallER(t *onet.Tree, b *skipchain.SkipBlock) []skipchain.
 	return <-pisc.ExtendRosterReply
 }
 
-func (ts *testService) CallGU(sb *skipchain.SkipBlock) *skipchain.SkipBlock {
-	t := onet.NewRoster([]*network.ServerIdentity{ts.ServerIdentity(), sb.Roster.List[0]}).GenerateBinaryTree()
-	pi, err := ts.CreateProtocol(skipchain.ProtocolGetUpdate, t)
+func (ts *testService) CallGB(sb *skipchain.SkipBlock, n int) []*skipchain.SkipBlock {
+	t := sb.Roster.RandomSubset(ts.ServerIdentity(), 3).GenerateStar()
+	log.Lvl3("running on this tree", t.Dump())
+
+	pi, err := ts.CreateProtocol(skipchain.ProtocolGetBlocks, t)
 	if err != nil {
 		log.Error(err)
-		return &skipchain.SkipBlock{}
+		return nil
 	}
-	pisc := pi.(*skipchain.GetUpdate)
-	pisc.GetUpdate = &skipchain.ProtoGetUpdate{SBID: sb.Hash}
+	pisc := pi.(*skipchain.GetBlocks)
+	pisc.GetBlocks = &skipchain.ProtoGetBlocks{
+		Count: n,
+		SBID:  sb.Hash,
+	}
 	if err := pi.Start(); err != nil {
 		log.ErrFatal(err)
 	}
-	return <-pisc.GetUpdateReply
+	result := <-pisc.GetBlocksReply
+	return result
 }
 
 func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfig) (pi onet.ProtocolInstance, err error) {
@@ -162,10 +191,10 @@ func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.Generic
 			pier.DB = ts.Db
 		}
 	}
-	if ti.ProtocolName() == skipchain.ProtocolGetUpdate {
-		pi, err = skipchain.NewProtocolGetUpdate(ti)
+	if ti.ProtocolName() == skipchain.ProtocolGetBlocks {
+		pi, err = skipchain.NewProtocolGetBlocks(ti)
 		if err == nil {
-			pigu := pi.(*skipchain.GetUpdate)
+			pigu := pi.(*skipchain.GetBlocks)
 			pigu.DB = ts.Db
 		}
 	}
