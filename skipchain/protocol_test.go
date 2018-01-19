@@ -24,8 +24,6 @@ func init() {
 
 // TestGB tests the GetBlocks protocol
 func TestGB(t *testing.T) {
-	log.SetDebugVisible(3)
-
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	servers, ro, _ := local.GenTree(3, true)
