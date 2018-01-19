@@ -78,6 +78,8 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 		return nil
 	}
 
+	// TODO: verify if the request is valid
+
 	// Calculating proofs
 	si := cothority.Suite.Scalar().Pick(o.Suite().RandomStream())
 	uiHat := cothority.Suite.Point().Mul(si, cothority.Suite.Point().Add(r.U, r.Xc))
