@@ -444,11 +444,12 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.U = file.Write.U
 	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
-	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
+	ocsProto.VerificationData = readSB.Hash
 
 	// Make sure everything used from the s.Storage structure is copied, so
 	// there will be no races.
 	s.saveMutex.Lock()
+	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
 	pp := s.Storage.Polys[string(fileSB.GenesisID)]
 	reply.X = s.Storage.Shared[string(fileSB.GenesisID)].X.Clone()
 	var commits []kyber.Point
@@ -464,7 +465,9 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
 	log.Lvl3("Waiting for end of ocs-protocol")
-	<-ocsProto.Done
+	if !<-ocsProto.Reencrypted {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "reencryption got refused")
+	}
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		nodes-1, nodes)
 	if err != nil {
@@ -525,9 +528,35 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 		ocs := pi.(*protocol.OCS)
 		ocs.Shared = shared
+		ocs.Verify = s.verifyReencryption
 		return ocs, nil
 	}
 	return nil, nil
+}
+
+func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
+	err := func() error {
+		sb := s.db().GetByID(*rc.VerificationData)
+		if sb == nil {
+			return errors.New("received reencryption request with empty block")
+		}
+		o := ocs.NewOCS(sb.Data)
+		if o == nil {
+			return errors.New("not an OCS-data block")
+		}
+		if o.Read == nil {
+			return errors.New("not an OCS-read block")
+		}
+		if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
+			return errors.New("wrong reader")
+		}
+		return nil
+	}()
+	if err != nil {
+		log.Lvl3(s.ServerIdentity(), "wrong reencryption:", err)
+		return false
+	}
+	return true
 }
 
 func (s *Service) addDarc(d *darc.Darc) {

@@ -34,8 +34,19 @@ func TestOCS(t *testing.T) {
 	// nodes := []int{3, 5, 10}
 	for _, nbrNodes := range nodes {
 		log.Lvlf1("Starting setupDKG with %d nodes", nbrNodes)
-		ocs(t, nbrNodes, nbrNodes-1, 32)
+		ocs(t, nbrNodes, nbrNodes-1, 32, 0, false)
 	}
+}
+
+// Tests a system with failing nodes
+func TestFail(t *testing.T) {
+	ocs(t, 4, 2, 32, 2, false)
+}
+
+// Tests what happens if the nodes refuse to send their share
+func TestRefuse(t *testing.T) {
+	log.Lvl1("Starting setupDKG with 3 nodes and refusing to sign")
+	ocs(t, 3, 2, 32, 0, true)
 }
 
 func TestOCSKeyLengths(t *testing.T) {
@@ -44,13 +55,11 @@ func TestOCSKeyLengths(t *testing.T) {
 	}
 	for keylen := 1; keylen < 64; keylen++ {
 		log.Lvl1("Testing keylen of", keylen)
-		ocs(t, 3, 2, keylen)
+		ocs(t, 3, 2, keylen, 0, false)
 	}
 }
 
-func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
-	log.Lvl1("Running", nbrNodes, "nodes")
-	start := time.Now()
+func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
 	servers, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
@@ -59,19 +68,16 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	// 1 - setting up - in real life uses SetupDKG-protocol
 	// Store the dkgs in the services
 	dkgs, err := CreateDKGs(tSuite.(dkg.Suite), nbrNodes, threshold)
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	services := local.GetServices(servers, testServiceID)
 	for i := range services {
 		services[i].(*testService).Shared, err = NewSharedSecret(dkgs[i])
-		log.ErrFatal(err)
+		require.Nil(t, err)
 	}
-
-	log.Lvl1("Setting up DKG without network:", time.Now().Sub(start))
-	start = time.Now()
 
 	// Get the collective public key
 	dks, err := dkgs[0].DistKeyShare()
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	X := dks.Public()
 
 	// 2 - writer - Encrypt a symmetric key and publish U, Cs
@@ -83,42 +89,49 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen int) {
 	// xc is the client's private/publick key pair
 	xc := key.NewKeyPair(cothority.Suite)
 
-	log.Lvl1("Encrypting key (no interaction):", time.Now().Sub(start))
-	start = time.Now()
-
 	// 4 - service - starts the protocol -
 	// as every node needs to have its own DKG, we
 	// use a service to give the corresponding DKGs to the nodes.
-	pi, err := services[0].(*testService).startOCS(tree)
-	log.ErrFatal(err)
+
+	// First stop the nodes that should fail
+	for _, s := range servers[1 : 1+fail] {
+		log.Lvl1("Pausing", s.ServerIdentity)
+		s.Pause()
+	}
+	pi, err := services[0].(*testService).createOCS(tree, threshold)
+	require.Nil(t, err)
 	protocol := pi.(*OCS)
 	protocol.U = U
 	protocol.Xc = xc.Public
 	protocol.Poly = share.NewPubPoly(suite, suite.Point().Base(), dks.Commits)
+	if !refuse {
+		protocol.VerificationData = []byte("correct block")
+	}
 	// timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
-	log.ErrFatal(protocol.Start())
+	require.Nil(t, protocol.Start())
 	select {
-	case <-protocol.Done:
+	case <-protocol.Reencrypted:
 		log.Lvl2("root-node is done")
-		require.NotNil(t, protocol.Uis)
 		// Wait for other nodes
-	case <-time.After(time.Hour):
+	case <-time.After(time.Second):
 		t.Fatal("Didn't finish in time")
 	}
 
-	log.Lvl1("Running re-encryption:", time.Now().Sub(start))
-	start = time.Now()
-
 	// 5 - service - Lagrange interpolate the Uis - the reader will only
 	// get XhatEnc
-	XhatEnc, err := share.RecoverCommit(suite, protocol.Uis, threshold, nbrNodes)
-	log.ErrFatal(err)
+	var XhatEnc kyber.Point
+	if refuse {
+		require.Nil(t, protocol.Uis, "Reencrypted request that should've been refused")
+		return
+	}
+
+	require.NotNil(t, protocol.Uis)
+	XhatEnc, err = share.RecoverCommit(suite, protocol.Uis, threshold, nbrNodes)
+	require.Nil(t, err, "Reencryption failed")
 
 	// 6 - reader - gets the resulting symmetric key, encrypted under Xc
 	keyHat, err := DecodeKey(suite, X, Cs, XhatEnc, xc.Private)
-	log.ErrFatal(err)
-
-	log.Lvl1("Decrypting the key:", time.Now().Sub(start))
+	require.Nil(t, err)
 
 	require.Equal(t, k, keyHat)
 }
@@ -135,10 +148,11 @@ type testService struct {
 }
 
 // Creates a service-protocol and returns the ProtocolInstance.
-func (s *testService) startOCS(t *onet.Tree) (onet.ProtocolInstance, error) {
+func (s *testService) createOCS(t *onet.Tree, threshold int) (onet.ProtocolInstance, error) {
 	pi, err := s.CreateProtocol(NameOCS, t)
 	pi.(*OCS).Shared = s.Shared
 	pi.(*OCS).Poly = s.Poly
+	pi.(*OCS).Threshold = threshold
 	return pi, err
 }
 
@@ -152,6 +166,9 @@ func (s *testService) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericC
 		}
 		ocs := pi.(*OCS)
 		ocs.Shared = s.Shared
+		ocs.Verify = func(rc *Reencrypt) bool {
+			return rc.VerificationData != nil
+		}
 		return ocs, nil
 	default:
 		return nil, errors.New("unknown protocol for this service")
