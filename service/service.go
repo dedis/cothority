@@ -47,10 +47,10 @@ type Service struct {
 
 	propagateOCS messaging.PropagationFunc
 
-	Storage   *Storage
-	sdbCache  *skipchain.SkipBlockDB
 	skipchain *skipchain.Service
+	// saveMutex protects access to the storage field.
 	saveMutex sync.Mutex
+	Storage   *Storage
 }
 
 // pubPoly is a serializaable version of share.PubPoly
@@ -94,6 +94,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	block.MaximumHeight = 1
 	block.VerifierIDs = ocs.VerificationOCS
 	block.Data = genesisBuf
+	// This is for creating the skipchain, so we cannot use s.storeSkipBlock.
 	replySSB, cerr := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
 		NewBlock: block,
 	})
@@ -433,8 +434,6 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 
 	// Start OCS-protocol to re-encrypt the file's symmetric key under the
 	// reader's public key.
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
 	nodes := len(fileSB.Roster.List)
 	tree := fileSB.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
@@ -446,8 +445,19 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
+
+	// Make sure everything used from the s.Storage structure is copied, so
+	// there will be no races.
+	s.saveMutex.Lock()
 	pp := s.Storage.Polys[string(fileSB.GenesisID)]
-	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B, pp.Commits)
+	reply.X = s.Storage.Shared[string(fileSB.GenesisID)].X.Clone()
+	var commits []kyber.Point
+	for _, c := range pp.Commits {
+		commits = append(commits, c.Clone())
+	}
+	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
+	s.saveMutex.Unlock()
+
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
 	if err != nil {
@@ -461,7 +471,6 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
 	reply.Cs = file.Write.Cs
-	reply.X = s.Storage.Shared[string(fileSB.GenesisID)].X
 	return
 }
 
@@ -743,12 +752,7 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 }
 
 func (s *Service) db() *skipchain.SkipBlockDB {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	if s.sdbCache == nil {
-		s.sdbCache = s.Service(skipchain.ServiceName).(*skipchain.Service).GetDB()
-	}
-	return s.sdbCache
+	return s.skipchain.GetDB()
 }
 
 // saves the actual identity
