@@ -302,10 +302,17 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 			if back == nil {
 				continue
 			}
-			newBack, cerr := NewClient().GetSingleBlock(roster, back.Hash)
+
+			// get the one block with hash == back.Hash
+			result, cerr := s.getBlocks(roster, back.Hash, 1)
 			if cerr != nil {
 				return cerr
 			}
+			if len(result) != 1 {
+				return fmt.Errorf("expected to find 1 block, got %v", len(result))
+			}
+			newBack := result[0]
+
 			for _, fl := range newBack.ForwardLink {
 				if err := fl.Verify(Suite, roster.Publics()); err != nil {
 					return err
@@ -322,6 +329,33 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 		s.db.Store(sb)
 	}
 	return nil
+}
+
+// getBlocks uses ProtocolGetUpdate to return up to n blocks, traversing the
+// skiplist forward from id. It contacts a random subgroup of 3 of the nodes
+// in the roster, in order to find an answer, even in the case that a few
+// nodes in the network are down.
+func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
+	t := roster.RandomSubset(s.ServerIdentity(), 3).GenerateStar()
+	pi, err := s.CreateProtocol(ProtocolGetBlocks, t)
+	if err != nil {
+		return nil, err
+	}
+
+	pisc := pi.(*GetBlocks)
+	pisc.GetBlocks = &ProtoGetBlocks{
+		SBID:  id,
+		Count: n,
+	}
+	if err := pi.Start(); err != nil {
+		log.ErrFatal(err)
+	}
+	select {
+	case result := <-pisc.GetBlocksReply:
+		return result, nil
+	case <-time.After(s.propTimeout):
+		return nil, errors.New("timeout waiting for GetUpdate reply")
+	}
 }
 
 // GetSingleBlock searches for the given block and returns it. If no such block is
@@ -600,10 +634,10 @@ func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfi
 			pier.SaveCallback = s.save
 		}
 	}
-	if ti.ProtocolName() == ProtocolGetUpdate {
-		pi, err = NewProtocolGetUpdate(ti)
+	if ti.ProtocolName() == ProtocolGetBlocks {
+		pi, err = NewProtocolGetBlocks(ti)
 		if err == nil {
-			pigu := pi.(*GetUpdate)
+			pigu := pi.(*GetBlocks)
 			pigu.DB = s.db
 		}
 	}
@@ -640,16 +674,11 @@ func (s *Service) callGetBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBloc
 		return nil, errors.New("Couldn't get updated block: " + known.Short())
 	}
 
-	to := s.propTimeout
-	if to == 0 {
-		to = defaultPropagateTimeout
-	}
-
 	var block *SkipBlock
 	select {
 	case block = <-request:
 		log.Lvl3("Got block", block)
-	case <-time.After(to):
+	case <-time.After(s.propTimeout):
 		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
 	}
 	return block, nil
@@ -686,7 +715,8 @@ func (s *Service) forwardSignature(fs *ForwardSignature) error {
 	return nil
 }
 
-func (s *Service) getBlock(env *network.Envelope) {
+// deprecated: use CreateProtocol(ProtocolGetBlocks) instead.
+func (s *Service) deprecatedProcessorGetBlock(env *network.Envelope) {
 	gb, ok := env.Msg.(*GetBlock)
 	if !ok {
 		log.Error("Didn't receive GetBlock")
@@ -711,7 +741,7 @@ func (s *Service) getBlock(env *network.Envelope) {
 	}
 }
 
-func (s *Service) getBlockReply(env *network.Envelope) {
+func (s *Service) deprecatedProcessorGetBlockReply(env *network.Envelope) {
 	gbr, ok := env.Msg.(*GetBlockReply)
 	if !ok {
 		log.Error("Didn't receive GetBlock")
@@ -776,8 +806,10 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 // verifyNewBlock makes sure that a signature-request for a forward-link
 // is valid.
 func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
-	// TODO: check length of data before slicing it
-
+	if len(data) < 32 {
+		log.Error("not enough data")
+		return false
+	}
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
 	_, newSBi, err := network.Unmarshal(data[32:], Suite)
 	if err != nil {
@@ -786,7 +818,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 	}
 	newSB, ok := newSBi.(*SkipBlock)
 	if !ok {
-		log.Errorf("Got unexpected type %T in bftVerifyNewBlock", newSBi)
+		log.Errorf("got unexpected type %T", newSBi)
 		return false
 	}
 	if !newSB.Hash.Equal(SkipBlockID(msg)) {
@@ -1007,7 +1039,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		return sig, nil
-	case <-time.After(time.Second * 60):
+	case <-time.After(s.propTimeout):
 		return nil, errors.New("timed out while waiting for signature")
 	}
 }
@@ -1028,11 +1060,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
-	to := s.propTimeout
-	if to == 0 {
-		to = defaultPropagateTimeout
-	}
-	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, to)
+	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, s.propTimeout)
 	if err != nil {
 		return err
 	}
@@ -1179,7 +1207,9 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		blockRequests:    make(map[string]chan *SkipBlock),
 		newBlocks:        make(map[string]bool),
+		propTimeout:      defaultPropagateTimeout,
 	}
+
 	if err := s.tryLoad(); err != nil {
 		return nil, err
 	}
@@ -1189,9 +1219,9 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow))
 	s.ServiceProcessor.RegisterProcessorFunc(network.MessageType(GetBlock{}),
-		s.getBlock)
+		s.deprecatedProcessorGetBlock)
 	s.ServiceProcessor.RegisterProcessorFunc(network.MessageType(GetBlockReply{}),
-		s.getBlockReply)
+		s.deprecatedProcessorGetBlockReply)
 
 	if err := s.registerVerification(VerifyBase, s.verifyFuncBase); err != nil {
 		return nil, err

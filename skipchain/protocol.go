@@ -11,6 +11,7 @@ node will only use the `Handle`-methods, and not call `Start` again.
 */
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -25,13 +26,12 @@ import (
 // in a skipchain with a given id.
 const ProtocolExtendRoster = "scExtendRoster"
 
-// ProtocolGetUpdate asks a remote node to return the latest block of a
-// skipchain.
-const ProtocolGetUpdate = "scGetUpdate"
+// ProtocolGetBlocks asks a remote node for some blocks.
+const ProtocolGetBlocks = "scGetBlocks"
 
 func init() {
 	onet.GlobalProtocolRegister(ProtocolExtendRoster, NewProtocolExtendRoster)
-	onet.GlobalProtocolRegister(ProtocolGetUpdate, NewProtocolGetUpdate)
+	onet.GlobalProtocolRegister(ProtocolGetBlocks, NewProtocolGetBlocks)
 }
 
 // ExtendRoster is used for different communications in the skipchain-service.
@@ -53,13 +53,12 @@ type ExtendRoster struct {
 	doneChan        chan int
 }
 
-// GetUpdate needs to be configured by the service to hold the database
-// of all skipblocks.
-type GetUpdate struct {
+// GetBlocks is used for conodes to get blocks from each other.
+type GetBlocks struct {
 	*onet.TreeNodeInstance
 
-	GetUpdate      *ProtoGetUpdate
-	GetUpdateReply chan *SkipBlock
+	GetBlocks      *ProtoGetBlocks
+	GetBlocksReply chan []*SkipBlock
 	DB             *SkipBlockDB
 }
 
@@ -76,16 +75,16 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
 }
 
-// NewProtocolGetUpdate prepares for a protocol that fetches an update
-func NewProtocolGetUpdate(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	t := &GetUpdate{
+// NewProtocolGetBlocks prepares for a protocol that fetches blocks.
+func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	t := &GetBlocks{
 		TreeNodeInstance: n,
-		GetUpdateReply:   make(chan *SkipBlock),
+		GetBlocksReply:   make(chan []*SkipBlock),
 	}
-	return t, t.RegisterHandlers(t.HandleGetUpdate, t.HandleBlockReply)
+	return t, t.RegisterHandlers(t.HandleGetBlocks, t.HandleGetBlocksReply)
 }
 
-// Start sends the Announce-message to all children
+// Start sends the extend roster request to all of the children.
 func (p *ExtendRoster) Start() error {
 	log.Lvl3("Starting Protocol ExtendRoster")
 	errs := p.SendToChildrenInParallel(p.ExtendRoster)
@@ -95,10 +94,10 @@ func (p *ExtendRoster) Start() error {
 	return nil
 }
 
-// Start sends the Announce-message to all children
-func (p *GetUpdate) Start() error {
-	log.Lvl3("Starting Protocol GetUpdate")
-	return p.SendToChildren(p.GetUpdate)
+// Start sends the block request to all of the children.
+func (p *GetBlocks) Start() error {
+	log.Lvl3("Starting Protocol GetBlocks")
+	return p.SendToChildren(p.GetBlocks)
 }
 
 // HandleExtendRoster uses the stored followers to decide if we want to accept
@@ -218,26 +217,49 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 	return nil
 }
 
-// HandleGetUpdate searches for a skipblock and returns it if it is found.
-func (p *GetUpdate) HandleGetUpdate(msg ProtoStructGetUpdate) error {
+// HandleGetBlocks searches for a skipblock and returns it if it is found.
+func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 	defer p.Done()
 
 	if p.DB == nil {
-		log.Lvl3(p.ServerIdentity(), "no block stored in Db")
-		return p.SendToParent(&ProtoBlockReply{})
+		return errors.New("no DB available")
 	}
 
-	sb, err := p.DB.GetLatest(p.DB.GetByID(msg.SBID))
-	if err != nil {
-		log.Error("couldn't get latest: " + err.Error())
-		return err
+	n := msg.Count
+	result := make([]*SkipBlock, 0, n)
+	next := msg.SBID
+	for n > 0 {
+		// TODO: see if this could be optimised by using multiple bucket.Get in a
+		// single transaction.
+		s := p.DB.GetByID(next)
+		if s == nil {
+			break
+		}
+		result = append(result, s)
+		n--
+
+		// Find the next one (or exit if we are at the latest)
+		if len(s.ForwardLink) == 0 {
+			break
+		}
+		next = s.ForwardLink[0].Hash()
 	}
-	return p.SendToParent(&ProtoBlockReply{SkipBlock: sb})
+	if len(result) == 0 {
+		// Not found, so send no reply. Another conode will
+		// hopefully find it and send it.
+		return nil
+	}
+
+	return p.SendToParent(&ProtoGetBlocksReply{SkipBlocks: result})
 }
 
-// HandleBlockReply contacts the service that a new block has arrived
-func (p *GetUpdate) HandleBlockReply(msg ProtoStructBlockReply) error {
-	defer p.Done()
-	p.GetUpdateReply <- msg.SkipBlock
+// HandleGetBlocksReply contacts the service that a new block has arrived
+func (p *GetBlocks) HandleGetBlocksReply(msg ProtoStructGetBlocksReply) error {
+
+	// Take the first answer we get and then terminate the protocol,
+	// other answers will be discarded by onet.
+	p.GetBlocksReply <- msg.SkipBlocks
+	p.Done()
+
 	return nil
 }

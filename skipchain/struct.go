@@ -114,20 +114,20 @@ type cp interface {
 func (fct *FollowChainType) GetLatest(us *network.ServerIdentity, p cp) error {
 	log.Lvlf3("%s: fetching latest block of index %d: %x", us, fct.Block.Index, fct.Block.SkipChainID())
 	t := onet.NewRoster([]*network.ServerIdentity{us, fct.Block.Roster.List[0]}).GenerateBinaryTree()
-	pi, err := p.CreateProtocol(ProtocolGetUpdate, t)
+	pi, err := p.CreateProtocol(ProtocolGetBlocks, t)
 	if err != nil {
 		return err
 	}
-	pisc := pi.(*GetUpdate)
-	pisc.GetUpdate = &ProtoGetUpdate{SBID: fct.Block.Hash}
+	pisc := pi.(*GetBlocks)
+	pisc.GetBlocks = &ProtoGetBlocks{Count: 1, SBID: fct.Block.Hash}
 	if err := pi.Start(); err != nil {
 		return err
 	}
 	select {
-	case sbNew := <-pisc.GetUpdateReply:
-		if sbNew != nil {
-			log.Lvlf3("%s: found new block with index %d", us, sbNew.Index)
-			fct.Block = sbNew
+	case sbNew := <-pisc.GetBlocksReply:
+		if len(sbNew) >= 1 {
+			log.Lvlf3("%s: found new block with index %d", us, sbNew[0].Index)
+			fct.Block = sbNew[0]
 		}
 	case <-time.After(time.Second):
 		return errors.New("timeout while fetching latest block")
@@ -678,19 +678,6 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
-}
-
-// GetLatest searches for the latest available block for that skipblock.
-func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
-	latest := sb
-	// TODO this can be optimised by using multiple bucket.Get in a single transaction
-	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
-		if latest == nil {
-			return nil, errors.New("missing block")
-		}
-	}
-	return latest, nil
 }
 
 // GetFuzzy searches for a block that resembles the given ID.
