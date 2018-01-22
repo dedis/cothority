@@ -210,7 +210,7 @@ type ProtoStructGetBlocks struct {
 	ProtoGetBlocks
 }
 
-// ProtoGetiBlocksReply returns a slice of blocks - either from update or from getblock
+// ProtoGetBlocksReply returns a slice of blocks - either from update or from getblock
 type ProtoGetBlocksReply struct {
 	SkipBlocks []*SkipBlock
 }

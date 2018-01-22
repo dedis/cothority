@@ -305,7 +305,6 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 			latest = sb.Hash
 		}
 	}
-	return nil
 }
 
 // getBlocks uses ProtocolGetBlocks to return up to n blocks, traversing the
