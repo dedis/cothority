@@ -2,8 +2,8 @@ package randhound
 
 import (
 	"github.com/dedis/cothority/randhound/protocol"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
 // Register messages to the network.

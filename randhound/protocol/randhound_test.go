@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 func TestRandHound(test *testing.T) {
@@ -15,7 +16,7 @@ func TestRandHound(test *testing.T) {
 	groups := 2
 	purpose := "RandHound test run"
 
-	local := onet.NewLocalTest()
+	local := onet.NewLocalTest(cothority.Suite)
 	_, _, tree := local.GenTree(int(nodes), true)
 	defer local.CloseAll()
 

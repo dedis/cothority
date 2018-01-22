@@ -1,6 +1,6 @@
 package randhound
 
-import "gopkg.in/dedis/onet.v1"
+import "github.com/dedis/onet"
 
 // Client is a Pulsar[RandHound] client that can communicate with the corresponding service.
 type Client struct {

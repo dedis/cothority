@@ -8,9 +8,9 @@ import (
 
 	"github.com/dedis/cothority/randhound"
 	"github.com/dedis/cothority/randhound/protocol"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 )
 
 // ServiceName denotes the name of the service.

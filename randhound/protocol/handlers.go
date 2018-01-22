@@ -5,12 +5,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share"
-	"gopkg.in/dedis/crypto.v0/share/pvss"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/share/pvss"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/util/random"
 )
 
 // Some error definitions.
@@ -27,7 +28,7 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	clientKey := keys[src]
 
 	// Verify I1 message signature
-	if err := verifySchnorr(rh.Suite(), clientKey, msg); err != nil {
+	if err = verifySchnorr(rh.Suite(), clientKey, msg); err != nil {
 		return err
 	}
 
@@ -41,9 +42,6 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 		return errorWrongSession
 	}
 
-	// Setup CoSi instance
-	rh.cosi = cosi.NewCosi(rh.Suite(), rh.Private(), rh.Roster().Publics())
-
 	// Compute hash of the client's message
 	hi1, err := hashMessage(rh.Suite(), msg)
 	if err != nil {
@@ -54,8 +52,8 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	grp := rh.groupNum[idx]
 	groupKeys := rh.serverKeys[grp]
 	t := int(rh.thresholds[grp])
-	secret := rh.Suite().Scalar().Pick(random.Stream)
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
+	secret := rh.Suite().Scalar().Pick(random.New())
+	H := rh.Suite().Point().Pick(rh.Suite().XOF(msg.SID))
 	encShares, pubPoly, err := pvss.EncShares(rh.Suite(), H, groupKeys, secret, t)
 	if err != nil {
 		return err
@@ -72,13 +70,14 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	}
 
 	// Setup R1 message
+	rh.cosi.v, rh.cosi.V = cosi.Commit(rh.Suite())
 	_, coeffs := pubPoly.Info()
 	r1 := &R1{
 		SID:       rh.sid,
 		HI1:       hi1,
 		EncShares: shares,
 		Coeffs:    coeffs,
-		V:         rh.cosi.CreateCommitment(random.Stream),
+		V:         rh.cosi.V,
 	}
 
 	// Sign R1 message
@@ -127,7 +126,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	rh.commits[src] = msg.V
 
 	// Verify encrypted shares and record valid ones
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
+	H := rh.Suite().Point().Pick(rh.Suite().XOF(rh.sid))
 	pubPoly := share.NewPubPoly(rh.Suite(), H, msg.Coeffs)
 	for _, encShare := range msg.EncShares {
 		pos := encShare.PubVerShare.S.I
@@ -172,13 +171,11 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 
 		for i := range rh.servers {
 			// Randomly remove some secrets so that a threshold of secrets remain
-			rand := random.Bytes(rh.Suite().Hash().Size(), random.Stream)
-			prng := rh.Suite().Cipher(rand)
 			secrets := goodSecrets[i]
 			l := len(secrets) - int(rh.thresholds[i])
-			for j := 0; j < l; j++ {
-				k := int(random.Uint32(prng) % uint32(len(secrets)))
-				delete(rh.records, secrets[k]) // delete not required records
+			toDelete := rand.Perm(len(secrets))[0:l]
+			for _, j := range toDelete {
+				delete(rh.records, secrets[j]) // delete not required records
 			}
 		}
 
@@ -186,22 +183,25 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.chosenSecrets = chosenSecrets(rh.records)
 
 		// Clear CoSi mask
-		for i := 0; i < rh.nodes; i++ {
-			rh.cosi.SetMaskBit(i, false)
+		rh.cosi.mask, err = cosi.NewMask(rh.Suite(), rh.Roster().Publics(), rh.Public())
+		if err != nil {
+			return err
 		}
 
 		// Set our own masking bit
-		rh.cosi.SetMaskBit(rh.TreeNode().RosterIndex, true)
+		rh.cosi.mask.SetBit(rh.TreeNode().RosterIndex, true)
 
 		// Collect commits and mark participating nodes
-		var subComms []abstract.Point
+		var subComms []kyber.Point
+		var masks [][]byte
 		for i, V := range rh.commits {
 			subComms = append(subComms, V)
-			rh.cosi.SetMaskBit(i, true)
+			rh.cosi.mask.SetBit(i, true)
+			masks = append(masks, rh.cosi.mask.Mask())
 		}
 
 		// Compute aggregate commit
-		rh.cosi.Commit(random.Stream, subComms)
+		cosi.AggregateCommitments(rh.Suite(), subComms, masks)
 
 		// Compute message: statement = SID || chosen secrets
 		buf := new(bytes.Buffer)
@@ -214,7 +214,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 		rh.statement = buf.Bytes()
 
 		// Compute CoSi challenge
-		if _, err := rh.cosi.CreateChallenge(rh.statement); err != nil {
+		if rh.cosi.c, err = cosi.Challenge(rh.Suite(), rh.cosi.V, rh.Public(), rh.statement); err != nil {
 			return err
 		}
 
@@ -225,7 +225,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				// shares, proofs, and polynomial commits intended for the
 				// target server
 				var encShares []*Share
-				var evals []abstract.Point
+				var evals []kyber.Point
 				tgt := server.RosterIndex
 				for _, src := range rh.indices[i] {
 					if record, ok := rh.records[src][tgt]; ok {
@@ -244,7 +244,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 					ChosenSecrets: rh.chosenSecrets,
 					EncShares:     encShares,
 					Evals:         evals,
-					C:             rh.cosi.GetChallenge(),
+					C:             rh.cosi.c,
 				}
 				if err := signSchnorr(rh.Suite(), rh.Private(), i2); err != nil {
 					return err
@@ -274,7 +274,7 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	}
 
 	// Verify encrypted shares and record valid ones
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(rh.sid))
+	H := rh.Suite().Point().Pick(rh.Suite().XOF(rh.sid))
 	rh.records = make(map[int]map[int]*Record)
 	for i, encShare := range msg.EncShares {
 		pos := encShare.PubVerShare.S.I
@@ -315,8 +315,9 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 		}
 	}
 
-	rh.cosi.Challenge(msg.C)
-	r, err := rh.cosi.CreateResponse()
+	rh.cosi.c = msg.C
+	// BUG: this is not correct
+	r, err := cosi.Response(rh.Suite(), rh.Private(), rh.cosi.v, msg.C)
 	if err != nil {
 		return err
 	}
@@ -373,16 +374,19 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	// Proceed once we have all responses from servers that committed earlier
 	if len(rh.commits) <= len(rh.r2s) {
 
-		var responses []abstract.Scalar
+		var responses []kyber.Scalar
 		for src := range rh.commits {
 			responses = append(responses, rh.r2s[src].R)
 		}
 
-		if _, err := rh.cosi.Response(responses); err != nil {
+		if rh.cosi.r, err = cosi.AggregateResponses(rh.Suite(), responses); err != nil {
 			return err
 		}
-		rh.cosig = rh.cosi.Signature()
-		if err := cosi.VerifySignature(rh.Suite(), rh.Roster().Publics(), rh.statement, rh.cosig); err != nil {
+		rh.cosig, err = cosi.Sign(rh.Suite(), rh.cosi.V, rh.cosi.r, rh.cosi.mask)
+		if err != nil {
+			return err
+		}
+		if err := cosi.Verify(rh.Suite(), rh.Roster().Publics(), rh.statement, rh.cosig, cosi.CompletePolicy{}); err != nil {
 			return err
 		}
 		rh.i3 = &I3{
@@ -393,7 +397,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 			return err
 		}
 		if err := rh.Broadcast(rh.i3); err != nil {
-			return err
+			return err[0]
 		}
 	}
 	return nil
@@ -424,7 +428,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 	rh.statement = buf.Bytes()
 
 	// Verify collective signature (TODO: check that more than 2/3 of participants have signed)
-	if err := cosi.VerifySignature(rh.Suite(), rh.Roster().Publics(), rh.statement, msg.CoSig); err != nil {
+	if err := cosi.Verify(rh.Suite(), rh.Roster().Publics(), rh.statement, msg.CoSig, cosi.CompletePolicy{}); err != nil {
 		return err
 	}
 
@@ -434,7 +438,7 @@ func (rh *RandHound) handleI3(i3 WI3) error {
 		return err
 	}
 
-	H, _ := rh.Suite().Point().Pick(nil, rh.Suite().Cipher(msg.SID))
+	H := rh.Suite().Point().Pick(rh.Suite().XOF(msg.SID))
 	var decShares []*Share
 
 	for src, records := range rh.records {

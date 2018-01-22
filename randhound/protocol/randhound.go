@@ -5,18 +5,28 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share/pvss"
-	"gopkg.in/dedis/onet.v1"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share/pvss"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/onet"
 )
 
 // Name can be used to refer to the protool name
 var Name = "RandHound"
+
+// Suite in randhound needs the group and a XOF.
+type Suite interface {
+	kyber.Group
+	kyber.XOFFactory
+	kyber.Encoding
+	kyber.Random
+	kyber.HashFactory
+}
 
 // RandHound is the main protocol struct and implements the
 // onet.ProtocolInstance interface.
@@ -27,12 +37,20 @@ type RandHound struct {
 	mutex                  sync.Mutex              // An awesome mutex!
 	Done                   chan bool               // Channel to signal the end of a protocol run
 	SecretReady            bool                    // Boolean to indicate whether the collect randomness is ready or not
-	cosi                   *cosi.CoSi              // Collective signing instance
-	commits                map[int]abstract.Point  // Commits for collective signing (index: source)
+	commits                map[int]kyber.Point     // Commits for collective signing (index: source)
 	chosenSecrets          []uint32                // Chosen secrets contributing to collective randomness
 	records                map[int]map[int]*Record // Records with shares of chosen PVSS secrets; format: [source][target]*Record
 	statement              []byte                  // Statement to be collectively signed
 	cosig                  []byte                  // Collective signature on statement
+	cosi                   cosiVars                // all cosi-variables needed during the operation
+}
+
+type cosiVars struct {
+	v    kyber.Scalar // Commitment - private part
+	V    kyber.Point  // Commitment - public part
+	c    kyber.Scalar // Challenge
+	r    kyber.Scalar // Response
+	mask *cosi.Mask   // Mask of who signed
 }
 
 // Session contains all the information necessary for a RandHound run.
@@ -42,9 +60,9 @@ type Session struct {
 	purpose    string             // Purpose of protocol run
 	time       int64              // Timestamp of protocol initiation, as seconds from January 1, 1970 UTC
 	seed       []byte             // Client-chosen seed for sharding
-	clientKey  abstract.Point     // Client public key
+	clientKey  kyber.Point        // Client public key
 	servers    [][]*onet.TreeNode // Grouped servers
-	serverKeys [][]abstract.Point // Grouped server keys
+	serverKeys [][]kyber.Point    // Grouped server keys
 	indices    [][]int            // Grouped server indices
 	thresholds []uint32           // Grouped thresholds
 	groupNum   map[int]int        // Mapping of roster server index to group number
@@ -65,7 +83,7 @@ type Messages struct {
 // Record stores related encrypted and decrypted PVSS shares together with the
 // commitment.
 type Record struct {
-	Eval     abstract.Point    // Commitment of polynomial evaluation
+	Eval     kyber.Point       // Commitment of polynomial evaluation
 	EncShare *pvss.PubVerShare // Encrypted verifiable share
 	DecShare *pvss.PubVerShare // Decrypted verifiable share
 }
@@ -88,7 +106,7 @@ type Transcript struct {
 	Purpose    string                  // Purpose of protocol run
 	Time       int64                   // Timestamp of protocol initiation, as seconds since January 1, 1970 UTC
 	Seed       []byte                  // Client-chosen seed for sharding
-	Keys       []abstract.Point        // Public keys (client + server)
+	Keys       []kyber.Point           // Public keys (client + server)
 	Thresholds []uint32                // Grouped secret sharing thresholds
 	SID        []byte                  // Session identifier
 	CoSig      []byte                  // Collective signature on chosen secrets
@@ -126,11 +144,11 @@ func (rh *RandHound) Setup(nodes int, groups int, purpose string) error {
 	rh.Messages = rh.newMessages()
 
 	// Setup CoSi instance
-	rh.cosi = cosi.NewCosi(rh.Suite(), rh.Private(), rh.Roster().Publics())
+	// rh.cosi = cosi.NewCosi(rh.Suite(), rh.Private(), rh.Roster().Publics())
 
 	// Setup other stuff
 	rh.records = make(map[int]map[int]*Record)
-	rh.commits = make(map[int]abstract.Point)
+	rh.commits = make(map[int]kyber.Point)
 	rh.Done = make(chan bool, 1)
 	rh.SecretReady = false
 
@@ -159,23 +177,23 @@ func (rh *RandHound) Start() error {
 	}
 
 	// Broadcast message to servers which process it as shown in handleI1(...).
-	return rh.Broadcast(rh.i1)
+	if errs := rh.Broadcast(rh.i1); errs != nil {
+		return errs[0]
+	}
+	return nil
 }
 
 // Shard uses the seed to produce a pseudorandom permutation of the numbers of
 // 1,...,n-1 and splits the result into s shards.
-func Shard(suite abstract.Suite, seed []byte, n, s int) ([][]int, error) {
+func Shard(suite kyber.XOFFactory, seed []byte, n, s int) ([][]int, error) {
 	if n == 0 || s == 0 || n < s {
 		return nil, fmt.Errorf("number of requested shards not supported")
 	}
 
 	// Compute a random permutation of [1,...,n-1]
-	prng := suite.Cipher(seed)
-	m := make([]int, n-1)
+	m := rand.Perm(n - 1)
 	for i := range m {
-		j := int(random.Uint64(prng) % uint64(i+1))
-		m[i] = m[j]
-		m[j] = i + 1
+		m[i]++
 	}
 
 	// Create sharding of the current roster according to the above permutation
@@ -221,7 +239,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 }
 
 // Verify checks a given collective random string against its protocol transcript.
-func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
+func Verify(suite Suite, random []byte, t *Transcript) error {
 	//rh.mutex.Lock()
 	//defer rh.mutex.Unlock()
 
@@ -232,9 +250,9 @@ func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 	}
 
 	clientKey := t.Keys[0] // NOTE: we assume for now that the client key is always at index 0
-	serverKeys := make([][]abstract.Point, t.Groups)
+	serverKeys := make([][]kyber.Point, t.Groups)
 	for i, group := range indices {
-		k := make([]abstract.Point, len(group))
+		k := make([]kyber.Point, len(group))
 		for j, g := range group {
 			k[j] = t.Keys[g]
 		}
@@ -264,7 +282,7 @@ func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 	}
 
 	// Verify collective signature on statement
-	if err := cosi.VerifySignature(suite, t.Keys, statement.Bytes(), t.CoSig); err != nil {
+	if err := cosi.Verify(suite, t.Keys, statement.Bytes(), t.CoSig, cosi.CompletePolicy{}); err != nil {
 		return err
 	}
 
@@ -279,4 +297,9 @@ func Verify(suite abstract.Suite, random []byte, t *Transcript) error {
 	}
 
 	return nil
+}
+
+// Suite returns our randhound suite from the cothority-suite
+func (rh *RandHound) Suite() Suite {
+	return cothority.Suite.(Suite)
 }

@@ -2,21 +2,21 @@ package protocol
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"reflect"
 	"sort"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/hash"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/crypto.v0/share/pvss"
-	"gopkg.in/dedis/crypto.v0/sign"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share/pvss"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
-func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp int64, seed []byte, clientKey abstract.Point) (*Session, error) {
+func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp int64, seed []byte, clientKey kyber.Point) (*Session, error) {
 
 	var err error
 
@@ -25,7 +25,9 @@ func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp
 	}
 
 	if seed == nil {
-		seed = random.Bytes(rh.Suite().Hash().Size(), random.Stream)
+		seed = make([]byte, rh.Suite().Hash().Size())
+		random.Bytes(seed, random.New())
+		// seed = random.Bytes(, random.Stream)
 	}
 
 	// Shard servers
@@ -37,13 +39,13 @@ func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp
 	// Setup group information
 	treeNodes := rh.List()
 	servers := make([][]*onet.TreeNode, groups)
-	serverKeys := make([][]abstract.Point, groups)
+	serverKeys := make([][]kyber.Point, groups)
 	thresholds := make([]uint32, groups)
 	groupNum := make(map[int]int)
 	groupPos := make(map[int]int)
 	for i, group := range indices {
 		s := make([]*onet.TreeNode, len(group))
-		k := make([]abstract.Point, len(group))
+		k := make([]kyber.Point, len(group))
 		for j, g := range group {
 			s[j] = treeNodes[g]
 			k[j] = treeNodes[g].ServerIdentity.Public
@@ -81,7 +83,7 @@ func (rh *RandHound) newSession(nodes int, groups int, purpose string, timestamp
 	return session, nil
 }
 
-func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]abstract.Point, indices [][]int, purpose string, timestamp int64) ([]byte, error) {
+func sessionID(suite Suite, clientKey kyber.Point, serverKeys [][]kyber.Point, indices [][]int, purpose string, timestamp int64) ([]byte, error) {
 	// Setup some buffers
 	keyBuf := new(bytes.Buffer)
 	idxBuf := new(bytes.Buffer)
@@ -122,7 +124,13 @@ func sessionID(suite abstract.Suite, clientKey abstract.Point, serverKeys [][]ab
 		return nil, err
 	}
 
-	return hash.Bytes(suite.Hash(), keyBuf.Bytes(), idxBuf.Bytes(), miscBuf.Bytes())
+	hash := sha256.New()
+	hash.Write([]byte(suite.String()))
+	hash.Write(keyBuf.Bytes())
+	hash.Write(idxBuf.Bytes())
+	hash.Write(miscBuf.Bytes())
+	return hash.Sum(nil), nil
+	// return hash.Bytes(suite.Hash(), keyBuf.Bytes(), idxBuf.Bytes(), miscBuf.Bytes())
 }
 
 func (rh *RandHound) newMessages() *Messages {
@@ -136,12 +144,12 @@ func (rh *RandHound) newMessages() *Messages {
 	}
 }
 
-func recoverRandomness(suite abstract.Suite, sid []byte, keys []abstract.Point, thresholds []uint32, indices [][]int, records map[int]map[int]*Record) ([]byte, error) {
+func recoverRandomness(suite Suite, sid []byte, keys []kyber.Point, thresholds []uint32, indices [][]int, records map[int]map[int]*Record) ([]byte, error) {
 	rnd := suite.Point().Null()
 	G := suite.Point().Base()
-	H, _ := suite.Point().Pick(nil, suite.Cipher(sid))
+	H := suite.Point().Pick(suite.XOF(sid))
 	for src := range records {
-		var groupKeys []abstract.Point
+		var groupKeys []kyber.Point
 		var encShares []*pvss.PubVerShare
 		var decShares []*pvss.PubVerShare
 		for tgt, record := range records[src] {
@@ -186,7 +194,7 @@ func chosenSecrets(records map[int]map[int]*Record) []uint32 {
 	return chosenSecrets
 }
 
-func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error {
+func signSchnorr(suite schnorr.Suite, key kyber.Scalar, m interface{}) error {
 	// Reset signature field
 	reflect.ValueOf(m).Elem().FieldByName("Sig").SetBytes([]byte{0}) // XXX: hack
 
@@ -197,7 +205,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	}
 
 	// Sign message
-	sig, err := sign.Schnorr(suite, key, mb)
+	sig, err := schnorr.Sign(suite, key, mb)
 	if err != nil {
 		return err
 	}
@@ -208,7 +216,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	return nil
 }
 
-func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) error {
+func verifySchnorr(suite schnorr.Suite, key kyber.Point, m interface{}) error {
 	// Make a copy of the signature
 	sig := reflect.ValueOf(m).Elem().FieldByName("Sig").Bytes()
 
@@ -224,10 +232,10 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	// Copy back original signature
 	reflect.ValueOf(m).Elem().FieldByName("Sig").SetBytes(sig) // XXX: hack
 
-	return sign.VerifySchnorr(suite, key, mb, sig)
+	return schnorr.Verify(suite, key, mb, sig)
 }
 
-func hashMessage(suite abstract.Suite, m interface{}) ([]byte, error) {
+func hashMessage(suite Suite, m interface{}) ([]byte, error) {
 
 	// Reset signature field
 	reflect.ValueOf(m).Elem().FieldByName("Sig").SetBytes([]byte{0}) // XXX: hack
@@ -239,10 +247,8 @@ func hashMessage(suite abstract.Suite, m interface{}) ([]byte, error) {
 	}
 
 	// ... and hash message
-	hash, err := hash.Bytes(suite.Hash(), mb)
-	if err != nil {
-		return nil, err
-	}
-
-	return hash, nil
+	hash := sha256.New()
+	hash.Write([]byte(suite.String()))
+	hash.Write(mb)
+	return hash.Sum(nil), nil
 }

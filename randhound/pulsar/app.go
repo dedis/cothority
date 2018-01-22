@@ -5,9 +5,9 @@ import (
 
 	"github.com/dedis/cothority/randhound"
 	"github.com/dedis/cothority/randhound/protocol"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
