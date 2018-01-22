@@ -199,6 +199,9 @@ type ProtoStructExtendRosterReply struct {
 type ProtoGetBlocks struct {
 	SBID  SkipBlockID
 	Count int
+	// Do the returned blocks skip forward in the chain, or
+	// are direct neighbors (not Skipping).
+	Skipping bool
 }
 
 // ProtoStructGetBlocks embeds the treenode

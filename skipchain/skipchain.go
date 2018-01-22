@@ -238,9 +238,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 }
 
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
-// skipchain from the latest block the caller knows of to the actual latest
-// SkipBlock.
-// Somehow comparable to search in SkipLists.
+// skipchain from the latest block the caller knows to the latest
+// SkipBlock we know.
 func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
 	block := s.db.GetByID(latestKnown.LatestID)
 	if block == nil {
@@ -280,58 +279,36 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	return reply, nil
 }
 
+// syncChain communicates with conodes in the Roster via getBlocks
+// in order to find the latest block.
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
-	// TODO: what if GetUpdateChain happened to choose US? Why doesn't it so far?
-	// TODO: maybe it is missing us because Go stdlib math/rand is never seeded? (in tests maybe
-	// that's correct, but in prod not so much)
-	// TODO: if GetUpdateChain happens to choose a server that's down,
-	// we need to retry (up to a limit)
-	reply, cerr := NewClient().GetUpdateChain(roster, latest)
-	if cerr != nil {
-		return cerr
-	}
-	for _, sb := range reply.Update {
-		for _, bid := range sb.BackLinkIDs {
-			// for every back link of block sb, do the following
-			// 1, find the block identified by the back link, call it back-block
-			// 2, ask for the same back-block from other nodes
-			//    the new new-block should have forward links
-			// 3, check the forward links are signed correctly
-			// 4, check the forward links are at the right height
-			back := s.db.GetByID(bid)
-			if back == nil {
-				continue
-			}
-
-			// get the one block with hash == back.Hash
-			result, cerr := s.getBlocks(roster, back.Hash, 1)
-			if cerr != nil {
-				return cerr
-			}
-			if len(result) != 1 {
-				return fmt.Errorf("expected to find 1 block, got %v", len(result))
-			}
-			newBack := result[0]
-
-			for _, fl := range newBack.ForwardLink {
-				if err := fl.Verify(Suite, roster.Publics()); err != nil {
-					return err
-				}
-			}
-			s.db.Store(newBack)
-		}
-		if err := sb.VerifyForwardSignatures(); err != nil {
+	// loop on getBlocks, fetching 10 at a time
+	for {
+		blocks, err := s.getBlocks(roster, latest, 10)
+		if err != nil {
 			return err
 		}
-		if !s.blockIsFriendly(sb) {
-			return fmt.Errorf("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
+
+		for _, sb := range blocks {
+			log.Lvl3("syncChain block", string(sb.Data))
+
+			if err := sb.VerifyForwardSignatures(); err != nil {
+				return err
+			}
+			if !s.blockIsFriendly(sb) {
+				return fmt.Errorf("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
+			}
+			s.db.Store(sb)
+			if len(sb.ForwardLink) == 0 {
+				return nil
+			}
+			latest = sb.Hash
 		}
-		s.db.Store(sb)
 	}
 	return nil
 }
 
-// getBlocks uses ProtocolGetUpdate to return up to n blocks, traversing the
+// getBlocks uses ProtocolGetBlocks to return up to n blocks, traversing the
 // skiplist forward from id. It contacts a random subgroup of 3 of the nodes
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
@@ -344,17 +321,41 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 
 	pisc := pi.(*GetBlocks)
 	pisc.GetBlocks = &ProtoGetBlocks{
-		SBID:  id,
-		Count: n,
+		SBID:     id,
+		Count:    n,
+		Skipping: true,
 	}
 	if err := pi.Start(); err != nil {
 		log.ErrFatal(err)
 	}
 	select {
 	case result := <-pisc.GetBlocksReply:
+		log.Lvl3("getBlocks result count: ", len(result))
 		return result, nil
 	case <-time.After(s.propTimeout):
-		return nil, errors.New("timeout waiting for GetUpdate reply")
+		return nil, errors.New("timeout waiting for GetBlocks reply")
+	}
+}
+
+// getLastBlock talks one of the servers in roster in order to find the latest
+// block that it knows about.
+func (s *Service) getLastBlock(roster *onet.Roster, latest SkipBlockID) (*SkipBlock, error) {
+	// loop on getBlocks, fetching 10 at a time
+	for {
+		blocks, err := s.getBlocks(roster, latest, 10)
+		if err != nil {
+			return nil, err
+		}
+		if len(blocks) == 0 {
+			return nil, errors.New("getLastBlock got unexpected empty list")
+		}
+		// last block of this batch
+		lb := blocks[len(blocks)-1]
+
+		if len(lb.ForwardLink) == 0 {
+			return lb, nil
+		}
+		latest = lb.Hash
 	}
 }
 
@@ -509,14 +510,14 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 				sis[si.ID.String()] = si
 			}
 		}
+
 		found := false
 		for _, si := range sis {
 			roster := onet.NewRoster([]*network.ServerIdentity{si})
-			s.storageMutex.Unlock()
-			reply, cerr := NewClient().GetUpdateChain(roster, add.SkipchainID)
-			s.storageMutex.Lock()
-			if cerr == nil {
-				last := reply.Update[len(reply.Update)-1]
+			last, err := s.getLastBlock(roster, add.SkipchainID)
+			if err != nil {
+				log.Error("could not get last block: ", err)
+			} else {
 				if last.SkipChainID().Equal(add.SkipchainID) {
 					s.Storage.Follow = append(s.Storage.Follow,
 						FollowChainType{
@@ -535,13 +536,10 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 	case FollowLookup:
 		si := network.NewServerIdentity(Suite.Point(), network.NewTCPAddress(add.Conode))
 		roster := onet.NewRoster([]*network.ServerIdentity{si})
-		s.storageMutex.Unlock()
-		reply, cerr := NewClient().GetUpdateChain(roster, add.SkipchainID)
-		s.storageMutex.Lock()
-		if cerr != nil {
+		last, err := s.getLastBlock(roster, add.SkipchainID)
+		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "didn't find skipchain at given address")
 		}
-		last := reply.Update[len(reply.Update)-1]
 		if !last.SkipChainID().Equal(add.SkipchainID) {
 			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "returned block is not correct")
 		}

@@ -217,7 +217,9 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 	return nil
 }
 
-// HandleGetBlocks searches for a skipblock and returns it if it is found.
+// HandleGetBlocks returns a given number of blocks from the skipchain,
+// starting from a given block. If requested, it will return neighbor blocks,
+// otherwise it will skip forward as far as possible.
 func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 	defer p.Done()
 
@@ -242,7 +244,12 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		if len(s.ForwardLink) == 0 {
 			break
 		}
-		next = s.ForwardLink[0].Hash()
+
+		linkNum := 0
+		if msg.Skipping {
+			linkNum = len(s.ForwardLink) - 1
+		}
+		next = s.ForwardLink[linkNum].Hash()
 	}
 	if len(result) == 0 {
 		// Not found, so send no reply. Another conode will
