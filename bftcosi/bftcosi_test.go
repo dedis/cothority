@@ -175,7 +175,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 
 func TestNodeFailure(t *testing.T) {
 	if testing.Short() {
-		t.Skip("node failure tests do not run on travis")
+		t.Skip("node failure tests do not run on travis, see #1000")
 	}
 
 	const TestProtocolName = "DummyBFTCoSiNodeFailure"

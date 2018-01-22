@@ -176,6 +176,8 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 			case <-p.doneChan:
 				return
 			case <-time.After(time.Second):
+				p.Done()
+
 				p.tempSigsMutex.Lock()
 				defer p.tempSigsMutex.Unlock()
 
@@ -184,7 +186,6 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 				} else {
 					p.ExtendRosterReply <- []ProtoExtendSignature{}
 				}
-				p.Done()
 			}
 		}()
 	}
@@ -204,15 +205,15 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 	}()
 	// if a single node disagrees, we fail
 	if !ok {
+		p.Done()
 		p.ExtendRosterReply <- []ProtoExtendSignature{}
 		p.doneChan <- 1
-		p.Done()
 	} else {
 		// ideally we collect all the signatures
 		if len(p.tempSigs) == len(p.Children()) {
+			p.Done()
 			p.ExtendRosterReply <- p.tempSigs
 			p.doneChan <- 1
-			p.Done()
 		}
 	}
 	return nil
