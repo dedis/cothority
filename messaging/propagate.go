@@ -17,7 +17,7 @@ func init() {
 }
 
 // How long to wait before timing out on waiting for the time-out.
-const initialWait = 100000
+const initialWait = 100000 * time.Millisecond
 
 // Propagate is a protocol that sends some data to all attached nodes
 // and waits for confirmation before returning.
@@ -46,8 +46,8 @@ type PropagateSendData struct {
 	// Data is the data to transmit
 	Data []byte
 	// How long the root will wait for the children before
-	// timing out
-	Msec int
+	// timing out.
+	Timeout time.Duration
 }
 
 // PropagateReply is sent from the children back to the root
@@ -59,7 +59,7 @@ type PropagateReply struct {
 // minus the exception stored the new value or the timeout has been reached.
 // The return value is the number of nodes that acknowledged having
 // stored the new value or an error if the protocol couldn't start.
-type PropagationFunc func(el *onet.Roster, msg network.Message, msec int) (int, error)
+type PropagationFunc func(el *onet.Roster, msg network.Message, timeout time.Duration) (int, error)
 
 // PropagationStore is the function that will store the new data.
 type PropagationStore func(network.Message)
@@ -96,7 +96,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 	})
 	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
 		name, pid)
-	return func(el *onet.Roster, msg network.Message, msec int) (int, error) {
+	return func(el *onet.Roster, msg network.Message, to time.Duration) (int, error) {
 		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
@@ -106,12 +106,12 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		if err != nil {
 			return -1, err
 		}
-		return propagateStartAndWait(pi, msg, msec, f)
+		return propagateStartAndWait(pi, msg, to, f)
 	}, err
 }
 
 // Separate function for testing
-func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, msec int, f PropagationStore) (int, error) {
+func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, to time.Duration, f PropagationStore) (int, error) {
 	d, err := network.Marshal(msg)
 	if err != nil {
 		return -1, err
@@ -119,7 +119,7 @@ func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, msec i
 	protocol := pi.(*Propagate)
 	protocol.Lock()
 	protocol.sd.Data = d
-	protocol.sd.Msec = msec
+	protocol.sd.Timeout = to
 	protocol.onData = f
 
 	done := make(chan int)
@@ -146,12 +146,13 @@ func (p *Propagate) Dispatch() error {
 	log.Lvl4(p.ServerIdentity(), "Start dispatch")
 	for process {
 		p.Lock()
-		timeout := time.Millisecond * time.Duration(p.sd.Msec)
+		timeout := p.sd.Timeout
+		log.Lvl4("Got timeout", timeout, "from SendData")
 		p.Unlock()
 		select {
 		case msg := <-p.ChannelSD:
-			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Msec)
-			p.sd.Msec = msg.Msec
+			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Timeout)
+			p.sd.Timeout = msg.Timeout
 			if p.onData != nil {
 				_, netMsg, err := network.Unmarshal(msg.Data, p.Suite())
 				if err == nil {
@@ -181,7 +182,7 @@ func (p *Propagate) Dispatch() error {
 		case <-time.After(timeout):
 			if p.received < p.subtreeCount-p.allowedFailures {
 				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
-				log.Fatalf("Timeout of %s reached, got %v but need %v, err: %s",
+				log.Fatalf("Timeout of %s reached, got %v but need %v, err: %v",
 					timeout, p.received, p.subtreeCount-p.allowedFailures, err)
 			}
 			process = false
@@ -211,7 +212,7 @@ func (p *Propagate) RegisterOnData(fn PropagationStore) {
 }
 
 // Config stores the basic configuration for that protocol.
-func (p *Propagate) Config(d []byte, msec int) {
+func (p *Propagate) Config(d []byte, timeout time.Duration) {
 	p.sd.Data = d
-	p.sd.Msec = msec
+	p.sd.Timeout = timeout
 }
