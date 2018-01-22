@@ -54,7 +54,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	if fail {
 		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 50 * time.Millisecond
+		service.bftTimeout = 100 * time.Millisecond
 		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
 		// service.bftTimeout = 500 * time.Millisecond
 
@@ -94,8 +94,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	next := NewSkipBlock()
 	next.Data = []byte("And the earth was without form, and void; " +
-		"and darkness was upon the face of the deep. " +
-		"And the Spirit of God moved upon the face of the waters.")
+		"and darkness was upon the face of the deep. ")
 	next.MaximumHeight = 2
 	next.ParentBlockID = sbRoot.Hash
 	next.Roster = sbRoot.Roster
@@ -110,7 +109,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	assert.NotNil(t, psbr2)
 	assert.NotNil(t, psbr2.Latest)
 	latest2 := psbr2.Latest
-	// verify creation of GenesisBlock:
+
 	blockCount++
 	assert.Equal(t, blockCount-1, latest2.Index)
 	assert.Equal(t, 1, len(latest2.BackLinkIDs))
@@ -123,22 +122,17 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	}
 
 	next.ParentBlockID = next.Hash
+	next.Data = []byte("And the Spirit of God moved upon the face of the waters.")
 	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: psbr2.Latest.Hash, NewBlock: next})
-	// Until the catch-up logic is implemented, sometimes this one fails, so skip the checking
-	// in that case.
-	if err == nil {
-		assert.NotNil(t, psbr3)
-		assert.NotNil(t, psbr3.Latest)
-		latest3 := psbr3.Latest
+	assert.NotNil(t, psbr3)
+	assert.NotNil(t, psbr3.Latest)
+	latest3 := psbr3.Latest
 
-		// verify creation of GenesisBlock:
-		blockCount++
-		assert.Equal(t, blockCount-1, latest3.Index)
-		assert.Equal(t, 2, len(latest3.BackLinkIDs))
-		assert.NotEqual(t, 0, latest3.BackLinkIDs)
-	} else {
-		t.Log("3rd block write err", err)
-	}
+	// verify creation of GenesisBlock:
+	blockCount++
+	assert.Equal(t, blockCount-1, latest3.Index)
+	assert.Equal(t, 2, len(latest3.BackLinkIDs))
+	assert.NotEqual(t, 0, latest3.BackLinkIDs)
 
 	// +1 for the root block
 	assert.Equal(t, blockCount+1, service.db.Length())
