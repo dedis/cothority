@@ -11,6 +11,10 @@ node will only use the `Handle`-methods, and not call `Start` again.
 */
 
 import (
+	"fmt"
+	"sync"
+	"time"
+
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -40,6 +44,13 @@ type ExtendRoster struct {
 	FollowerIDs       []SkipBlockID
 	DB                *SkipBlockDB
 	SaveCallback      func()
+	tempSigs          []ProtoExtendSignature
+	tempSigsMutex     sync.Mutex
+	// TODO make sure all new nodes are OK
+	// new roster in ExtendRoster
+	// previous roster in one block back
+	allowedFailures int
+	doneChan        chan int
 }
 
 // GetUpdate needs to be configured by the service to hold the database
@@ -58,6 +69,9 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 	t := &ExtendRoster{
 		TreeNodeInstance:  n,
 		ExtendRosterReply: make(chan []ProtoExtendSignature),
+		// it's hardcoded at the moment, maybe the caller can specify
+		allowedFailures: (len(n.Roster().List) - 1) / 3,
+		doneChan:        make(chan int, 0),
 	}
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
 }
@@ -74,7 +88,11 @@ func NewProtocolGetUpdate(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 // Start sends the Announce-message to all children
 func (p *ExtendRoster) Start() error {
 	log.Lvl3("Starting Protocol ExtendRoster")
-	return p.SendToChildren(p.ExtendRoster)
+	errs := p.SendToChildrenInParallel(p.ExtendRoster)
+	if len(errs) > p.allowedFailures {
+		return fmt.Errorf("Send to children failed: %v", errs)
+	}
+	return nil
 }
 
 // Start sends the Announce-message to all children
@@ -148,23 +166,56 @@ func (p *ExtendRoster) isBlockAccepted(sender *network.ServerIdentity, block *Sk
 	return len(p.FollowerIDs) == 0
 }
 
-// HandleExtendRosterReply checks if all nodes are OK to hold this new block.
-func (p *ExtendRoster) HandleExtendRosterReply(reply []ProtoStructExtendRosterReply) error {
-	defer p.Done()
+// HandleExtendRosterReply checks if enough nodes are OK to hold the new block.
+func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) error {
+	// HORRIBLE HACK to give handler a timeout behaviour
+	// only the first call to HandleExtendRosterReply will have empty tempSigs
+	if len(p.tempSigs) == 0 {
+		go func() {
+			select {
+			case <-p.doneChan:
+				return
+			case <-time.After(time.Second):
+				p.Done()
 
-	var sigs []ProtoExtendSignature
-	for _, r := range reply {
+				p.tempSigsMutex.Lock()
+				defer p.tempSigsMutex.Unlock()
+
+				if len(p.tempSigs) >= len(p.Children())-p.allowedFailures {
+					p.ExtendRosterReply <- p.tempSigs
+				} else {
+					p.ExtendRosterReply <- []ProtoExtendSignature{}
+				}
+			}
+		}()
+	}
+
+	p.tempSigsMutex.Lock()
+	defer p.tempSigsMutex.Unlock()
+	ok := func() bool {
 		if r.Signature == nil {
-			sigs = []ProtoExtendSignature{}
-			break
+			return false
 		}
 		if schnorr.Verify(Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {
-			sigs = []ProtoExtendSignature{}
-			break
+			log.Lvl3("Signature verification failed")
+			return false
 		}
-		sigs = append(sigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
+		p.tempSigs = append(p.tempSigs, ProtoExtendSignature{SI: r.ServerIdentity.ID, Signature: *r.Signature})
+		return true
+	}()
+	// if a single node disagrees, we fail
+	if !ok {
+		p.Done()
+		p.ExtendRosterReply <- []ProtoExtendSignature{}
+		p.doneChan <- 1
+	} else {
+		// ideally we collect all the signatures
+		if len(p.tempSigs) == len(p.Children()) {
+			p.Done()
+			p.ExtendRosterReply <- p.tempSigs
+			p.doneChan <- 1
+		}
 	}
-	p.ExtendRosterReply <- sigs
 	return nil
 }
 

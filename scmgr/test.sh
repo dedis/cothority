@@ -22,12 +22,13 @@ main(){
 	test Unlink
 	test Follow
 	test NewChain
+	test Failure
 	stopTest
 }
 
 testNewChain(){
 	for t in none strict any; do
-	  setupThree
+		setupThree
 		testOut "Starting testNewChain_$t"
 		testNewChain_$t
 		cleanup
@@ -39,10 +40,10 @@ testNewChain_none(){
 
 	setupGenesis group1.toml
 	if [ -z "$ID" ]; then
-	    echo "id is empty"
-	    exit 1
+		echo "id is empty"
+		exit 1
 	fi
-	     
+
 	testFail runSc skipchain block add -roster group12.toml $ID
 }
 
@@ -167,6 +168,37 @@ testAdd(){
 	testFail runSc skipchain block add --roster public.toml 1234
 	testOK runSc skipchain block add --roster public.toml $ID
 	runCoBG 3
+	testOK runSc skipchain block add --roster public.toml $ID
+}
+
+setupFour(){
+	rm -f public.toml
+	for n in $( seq 4 ); do
+		co=co$n
+		rm -f $co/*
+		mkdir -p $co
+		echo -e "127.0.0.1:200$(( 2 * $n ))\nCot-$n\n$co\n" | dbgRun runCo $n setup
+		if [ ! -f $co/public.toml ]; then
+			echo "Setup failed: file $co/public.toml is missing."
+			exit
+		fi
+		cat $co/public.toml >> public.toml
+	done
+}
+
+testFailure() {
+	rm -f "$CFG"
+	setupFour
+	runCoBG 1 2 3 4
+	setupGenesis
+	testOK runSc skipchain block add --roster public.toml $ID
+
+	pkill -n conode
+	sleep .1
+	testOK runSc skipchain block add --roster public.toml $ID
+
+	runCoBG 4
+	sleep .1
 	testOK runSc skipchain block add --roster public.toml $ID
 }
 

@@ -1,15 +1,12 @@
 package bftcosi
 
 import (
+	"errors"
+	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
-
-	"strconv"
-
-	"errors"
-
-	"fmt"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
@@ -88,7 +85,7 @@ func TestThreshold(t *testing.T) {
 	for _, s := range tests {
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
-		_, _, tree := local.GenBigTree(hosts, hosts, 2, true)
+		_, _, tree := local.GenBigTree(hosts, hosts, min(2, hosts-1), true)
 		log.Lvl3("Tree is:", tree.Dump())
 
 		// Start the protocol
@@ -125,8 +122,7 @@ func TestCheckRefuseMore(t *testing.T) {
 	for _, n := range []int{3, 4, 13} {
 		for refuseCount := 1; refuseCount <= 3; refuseCount++ {
 			log.Lvl2("RefuseMore at", refuseCount)
-			runProtocolOnce(t, n, TestProtocolName,
-				refuseCount, refuseCount <= n-(n+1)*2/3)
+			runProtocolOnce(t, n, TestProtocolName, refuseCount, refuseCount <= n-(n+1)*2/3)
 		}
 	}
 }
@@ -145,8 +141,7 @@ func TestCheckRefuseBit(t *testing.T) {
 			wg.Add(1)
 			go func(n, fc int) {
 				log.Lvl1("RefuseBit at", n, fc)
-				log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
-					fc, bitCount(fc) < (n+1)*2/3))
+				runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
 				log.Lvl3("Done with", n, fc)
 				wg.Done()
 			}(n, refuseCount)
@@ -169,8 +164,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 	for fc := 0; fc < 8; fc++ {
 		wg.Add(1)
 		go func(fc int) {
-			log.ErrFatal(runProtocolOnceGo(n, TestProtocolName,
-				fc, bitCount(fc) < (n+1)*2/3))
+			runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
 			log.Lvl3("Done with", n, fc)
 			wg.Done()
 		}(fc)
@@ -179,23 +173,45 @@ func TestCheckRefuseParallel(t *testing.T) {
 	wg.Wait()
 }
 
+func TestNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis, see #1000")
+	}
+
+	const TestProtocolName = "DummyBFTCoSiNodeFailure"
+
+	// Register test protocol using BFTCoSi
+	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return NewBFTCoSiProtocol(n, verify)
+	})
+
+	nbrHostsArr := []int{5, 7, 10}
+	for _, nbrHosts := range nbrHostsArr {
+		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
+			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
+		}
+	}
+}
+
 func runProtocol(t *testing.T, name string, refuseCount int) {
 	for _, nbrHosts := range []int{3, 4, 13} {
 		runProtocolOnce(t, nbrHosts, name, refuseCount, true)
 	}
 }
-func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int,
-	succeed bool) {
-	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed); err != nil {
+
+func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, succeed bool) {
+	if err := runProtocolOnceGo(nbrHosts, name, refuseCount, succeed, 0, nbrHosts-1); err != nil {
 		t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, name, refuseCount, succeed, err)
 	}
 }
-func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
-	succeed bool) error {
+
+func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool, killCount int, bf int) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := onet.NewLocalTest(tSuite)
 	defer local.CloseAll()
-	_, _, tree := local.GenBigTree(nbrHosts, nbrHosts, 2, true)
+
+	// we set the branching factor to nbrHosts - 1 to have the root broadcast messages
+	servers, _, tree := local.GenBigTree(nbrHosts, nbrHosts, bf, true)
 	log.Lvl3("Tree is:", tree.Dump())
 
 	done := make(chan bool)
@@ -223,14 +239,24 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int,
 	root.RegisterOnDone(func() {
 		done <- true
 	})
-	go node.Start()
+
+	// kill the leafs first
+	killCount = min(killCount, len(servers))
+	for i := len(servers) - 1; i > len(servers)-killCount-1; i-- {
+		log.Lvl3("Closing server:", servers[i].ServerIdentity.Public, servers[i].Address())
+		if e := servers[i].Close(); e != nil {
+			return e
+		}
+	}
+
+	go root.Start()
 	log.Lvl1("Launched protocol")
 	// are we done yet?
 	wait := time.Second * 60
 	select {
 	case <-done:
 		counter.Lock()
-		if counter.veriCount != nbrHosts {
+		if counter.veriCount != nbrHosts-killCount {
 			return errors.New("each host should have called verification")
 		}
 		// if assert refuses we don't care for unlocking (t.Refuse)
@@ -335,4 +361,11 @@ func verifyRefuseBit(m []byte, d []byte) bool {
 	}
 	log.Lvl3("Verification called", counter.veriCount, "times")
 	return true
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

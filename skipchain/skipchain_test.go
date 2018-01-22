@@ -21,7 +21,14 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 2)
+}
+
+func TestService_StoreSkipBlock_Failure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis, see #1000")
+	}
+	storeSkipBlock(t, true)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
@@ -33,20 +40,12 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(5, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(4, skipchainSID, Suite)
 	service := genService.(*Service)
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
-
-	// kill one node and it should still work
-	go func() {
-		if fail {
-			err = servers[len(servers)-1].Close()
-			log.ErrFatal(err)
-		}
-	}()
 
 	// send a ProposeBlock
 	genesis := NewSkipBlock()
@@ -66,6 +65,13 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	assert.Equal(t, 1, len(latest.BackLinkIDs))
 	assert.NotEqual(t, 0, latest.BackLinkIDs)
 
+	// kill one node and it should still work
+	if fail {
+		log.Lvl3("Closing server", servers[len(servers)-1].Address())
+		err = servers[len(servers)-1].Close()
+		log.ErrFatal(err)
+	}
+
 	next := NewSkipBlock()
 	next.Data = []byte("And the earth was without form, and void; " +
 		"and darkness was upon the face of the deep. " +
@@ -77,9 +83,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: next})
 	assert.Nil(t, err)
 	log.Lvl2(psbr2)
-	if psbr2 == nil {
-		t.Fatal("Didn't get anything in return")
-	}
 	assert.NotNil(t, psbr2)
 	assert.NotNil(t, psbr2.Latest)
 	latest2 := psbr2.Latest
@@ -147,7 +150,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sb1.ForwardLink[height-1].Hash,
+				if !bytes.Equal(sb1.ForwardLink[height-1].Hash(),
 					sb2.Hash) {
 					t.Fatal("Forward-pointer of", up,
 						"is different of hash in", up+1)
@@ -253,7 +256,7 @@ func TestService_MultiLevel(t *testing.T) {
 							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
 							log.ErrFatal(err)
 							if len(bl.ForwardLink) == n+1 &&
-								bl.ForwardLink[n].Hash.Equal(sb.Hash) {
+								bl.ForwardLink[n].Hash().Equal(sb.Hash) {
 								break
 							}
 							time.Sleep(200 * time.Millisecond)
@@ -512,7 +515,7 @@ func TestService_ParallelStore(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
-	nbrNodes := 100
+	nbrNodes := 10
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -543,7 +546,7 @@ func TestService_AddFollow(t *testing.T) {
 	}
 	service := services[0]
 	sb := NewSkipBlock()
-	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0]})
+	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0]}) // only one in roster
 	sb.MaximumHeight = 2
 	sb.BaseHeight = 2
 	sb.Data = []byte{}
@@ -576,7 +579,7 @@ func TestService_AddFollow(t *testing.T) {
 	ssb.LatestID = master0.Latest.Hash
 	sb = sb.Copy()
 	ssb.NewBlock = sb
-	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]})
+	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
 	sig, err = schnorr.Sign(Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
@@ -618,7 +621,7 @@ func TestService_AddFollow(t *testing.T) {
 	}
 	master2, cerr := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(cerr)
-	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash.Equal(master2.Latest.Hash))
+	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {

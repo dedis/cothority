@@ -125,7 +125,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	log.ErrFatal(cerr)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
-	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].Hash, sb2.Latest.Hash),
+	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].Hash(), sb2.Latest.Hash),
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")

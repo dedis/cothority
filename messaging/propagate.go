@@ -73,9 +73,12 @@ type propagationContext interface {
 
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-// The protocol will fail if larger over t nodes per subtree fail to respond.
+// The protocol will fail if more than t nodes per subtree fail to respond.
 func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		if t == -1 {
+			t = (len(n.Roster().List) - 1) / 3
+		}
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
 			TreeNodeInstance: n,
@@ -140,7 +143,7 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
-	log.Lvl4(p.ServerIdentity())
+	log.Lvl4(p.ServerIdentity(), "Start dispatch")
 	for process {
 		p.Lock()
 		timeout := time.Millisecond * time.Duration(p.sd.Msec)
@@ -163,7 +166,7 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			} else {
 				log.Lvl3(p.ServerIdentity(), "Sending to children")
-				p.SendToChildren(&msg.PropagateSendData)
+				p.SendToChildrenInParallel(&msg.PropagateSendData)
 			}
 		case <-p.ChannelReply:
 			p.received++
@@ -171,12 +174,16 @@ func (p *Propagate) Dispatch() error {
 			if !p.IsRoot() {
 				p.SendToParent(&PropagateReply{})
 			}
-			if p.received == p.subtreeCount-p.allowedFailures {
+			// propagate to as many as we can
+			if p.received == p.subtreeCount {
 				process = false
 			}
 		case <-time.After(timeout):
-			_, a, err := network.Unmarshal(p.sd.Data, p.Suite())
-			log.Fatalf("Timeout of %s reached. %v %s", timeout, a, err)
+			if p.received < p.subtreeCount-p.allowedFailures {
+				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
+				log.Fatalf("Timeout of %s reached, got %v but need %v, err: %s",
+					timeout, p.received, p.subtreeCount-p.allowedFailures, err)
+			}
 			process = false
 		}
 	}
