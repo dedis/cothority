@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
@@ -14,6 +15,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.ocs.Document;
 import ch.epfl.dedis.ocs.WriteRequest;
 import ch.epfl.dedis.ocs.WriteRequestId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
@@ -26,6 +28,11 @@ public class GrantAccessTest {
     static final String SUPERADMIN_SCALAR = "AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D";
     static final String PUBLISHER_SCALAR ="69DBF32C1F19445487D3B0FF92919BD9F01D5B2314492D82FE74DE37EA0CF635";
     static final String CONSUMER_SCALAR = "3DA69196EBDCF765FF9DA6E65AB811EB19EA56D246AD4022A423AC84D1B36A02";
+
+    @BeforeEach
+    void initConodes() {
+         TestServerInit.getInstance();
+    }
 
     @Test
     void attemptToGrantAccessBeforeCreationDirectlyToKey() throws Exception {

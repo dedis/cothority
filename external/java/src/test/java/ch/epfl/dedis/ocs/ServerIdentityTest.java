@@ -1,10 +1,15 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.proto.ServerIdentityProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -14,6 +19,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
     static ServerIdentity si = new ServerIdentity(CONODE_1, CONODE_PUB_1);
+    private final static Logger logger = LoggerFactory.getLogger(ServerIdentityTest.class);
+
+    @BeforeEach
+    void initConodes() {
+        TestServerInit.getInstance();
+    }
 
     @Test
     void testGetStatus() {
@@ -21,8 +32,8 @@ class ServerIdentityTest {
             StatusProto.Response resp = si.GetStatus();
             assertNotNull(resp);
         } catch (Exception e) {
-            System.out.println(e.toString());
-            assertFalse(true);
+            logger.error(e.getLocalizedMessage(), e);
+            Assertions.fail("exception was not expected");
         }
     }
 

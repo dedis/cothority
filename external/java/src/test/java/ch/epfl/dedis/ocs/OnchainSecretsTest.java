@@ -2,6 +2,8 @@
 
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.*;
@@ -14,14 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,6 +35,7 @@ class OnchainSecretsTest {
     static String extraData;
 
     private final static Logger logger = LoggerFactory.getLogger(OnchainSecretsRPCTest.class);
+    private TestServerController testInstanceController;
 
     @BeforeEach
     void initAll() throws CothorityException {
@@ -50,6 +49,8 @@ class OnchainSecretsTest {
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), 16, readerDarc, extraData.getBytes());
+
+        testInstanceController = TestServerInit.getInstance();
 
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
@@ -100,19 +101,18 @@ class OnchainSecretsTest {
         // Inverse is not true, as doc2 now contains a writeId
         assertFalse(doc2.equals(doc));
 
-        // kill a node and try the same
-        int exitValue = Runtime.getRuntime().exec("pkill -n conode").waitFor();
-        assertEquals(0, exitValue);
+        // kill the conode co3 and try to make a request
+        testInstanceController.killConode(4);
+        assertEquals(3, testInstanceController.countRunningConodes());
+
         Document doc3 = ocs.getDocument(wr.id, reader2);
         assertTrue(doc.equals(doc3));
         assertFalse(doc3.equals(doc));
 
         // restart the conode and try the same
-        Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
-        Thread.sleep(1000);
-        Process p = Runtime.getRuntime().exec("pgrep conode");
-        assertEquals(0, p.waitFor());
-        assertEquals(4, countLines(inputStreamToString(p.getInputStream())));
+        testInstanceController.startConode(4);
+        assertEquals(4, testInstanceController.countRunningConodes());
+
         Document doc4 = ocs.getDocument(wr.id, reader2);
         assertTrue(doc.equals(doc4));
         assertFalse(doc4.equals(doc));
@@ -154,16 +154,5 @@ class OnchainSecretsTest {
             }
         }
         assertEquals(2, darcs.size());
-    }
-
-
-    public static int countLines(String str){
-        String[] lines = str.split("\r\n|\r|\n");
-        return  lines.length;
-    }
-
-    public static String inputStreamToString(InputStream in) {
-        return new BufferedReader(new InputStreamReader(in))
-                    .lines().collect(Collectors.joining("\n"));
     }
 }
