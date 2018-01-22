@@ -58,8 +58,8 @@ func init() {
 		&ProtoExtendSignature{},
 		&ProtoExtendRoster{},
 		&ProtoExtendRosterReply{},
-		&ProtoGetUpdate{},
-		&ProtoBlockReply{},
+		&ProtoGetBlocks{},
+		&ProtoGetBlocksReply{},
 	)
 }
 
@@ -194,26 +194,31 @@ type ProtoStructExtendRosterReply struct {
 	ProtoExtendRosterReply
 }
 
-// ProtoGetUpdate requests the latest block
-type ProtoGetUpdate struct {
-	SBID SkipBlockID
+// ProtoGetBlocks requests from another conode up to Count blocks,
+// traversing the skiplist forward from SBID.
+type ProtoGetBlocks struct {
+	SBID  SkipBlockID
+	Count int
+	// Do the returned blocks skip forward in the chain, or
+	// are direct neighbors (not Skipping).
+	Skipping bool
 }
 
-// ProtoStructGetUpdate embeds the treenode
-type ProtoStructGetUpdate struct {
+// ProtoStructGetBlocks embeds the treenode
+type ProtoStructGetBlocks struct {
 	*onet.TreeNode
-	ProtoGetUpdate
+	ProtoGetBlocks
 }
 
-// ProtoBlockReply returns a block - either from update or from getblock
-type ProtoBlockReply struct {
-	SkipBlock *SkipBlock
+// ProtoGetBlocksReply returns a slice of blocks - either from update or from getblock
+type ProtoGetBlocksReply struct {
+	SkipBlocks []*SkipBlock
 }
 
-// ProtoStructBlockReply embeds the treenode
-type ProtoStructBlockReply struct {
+// ProtoStructGetBlocksReply embeds the treenode
+type ProtoStructGetBlocksReply struct {
 	*onet.TreeNode
-	ProtoBlockReply
+	ProtoGetBlocksReply
 }
 
 // CreateLinkPrivate asks to store the given public key in the list of administrative
