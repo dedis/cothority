@@ -147,10 +147,8 @@ func TestER(t *testing.T) {
 func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	log.Lvl1("Testing", nbrNodes, "nodes")
 	local := onet.NewLocalTest(tSuite)
-	defer local.CloseAll()
 	servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss := local.GetServices(servers, tsid)
-	log.Lvl3(tree.Dump())
 
 	sb := &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Roster: roster,
 		Data: []byte{}}}
@@ -159,18 +157,21 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	for _, t := range tss {
 		t.(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
 	}
-	ts := tss[0].(*testService)
-	sigs := ts.CallER(tree, sb)
+	sigs := tss[0].(*testService).CallER(tree, sb)
 	require.Equal(t, 0, len(sigs))
+	local.CloseAll()
 
 	// Check inclusion of new chains
+	local = onet.NewLocalTest(tSuite)
+	servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
+	tss = local.GetServices(servers, tsid)
 	for _, t := range tss {
 		t.(*testService).Followers = []skipchain.FollowChainType{{
 			Block:    sb,
 			NewChain: skipchain.NewChainAnyNode,
 		}}
 	}
-	sigs = ts.CallER(tree, sb)
+	sigs = tss[0].(*testService).CallER(tree, sb)
 	require.True(t, len(sigs)+(nbrNodes-1)/3 >= nbrNodes-1)
 
 	for _, s := range sigs {
@@ -178,21 +179,26 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 		require.NotNil(t, si)
 		require.Nil(t, schnorr.Verify(tSuite, si.Public, sb.SkipChainID(), s.Signature))
 	}
+	local.CloseAll()
 
 	// When only one node refuse,
 	// we should be able to proceed because skipchain is fault tolerant
 	if nbrNodes > 4 {
+		local = onet.NewLocalTest(tSuite)
+		servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
+		tss = local.GetServices(servers, tsid)
 		for i := 3; i < nbrNodes; i++ {
 			log.Lvl2("Checking failing signature at", i)
 			tss[i].(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
 			tss[i].(*testService).Followers = []skipchain.FollowChainType{}
-			sigs = ts.CallER(tree, sb)
+			sigs = tss[0].(*testService).CallER(tree, sb)
 			require.Equal(t, 0, len(sigs))
 			tss[i].(*testService).Followers = []skipchain.FollowChainType{{
 				Block:    sb,
 				NewChain: skipchain.NewChainAnyNode,
 			}}
 		}
+		local.CloseAll()
 	}
 }
 
