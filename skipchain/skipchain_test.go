@@ -557,7 +557,7 @@ func TestService_ParallelStore(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
-	nbrNodes := 100
+	nbrNodes := 60
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
