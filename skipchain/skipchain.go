@@ -290,8 +290,6 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 		}
 
 		for _, sb := range blocks {
-			log.Lvl3("syncChain block", string(sb.Data))
-
 			if err := sb.VerifyForwardSignatures(); err != nil {
 				return err
 			}
@@ -329,7 +327,6 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 	}
 	select {
 	case result := <-pisc.GetBlocksReply:
-		log.Lvl3("getBlocks result count: ", len(result))
 		return result, nil
 	case <-time.After(s.propTimeout):
 		return nil, errors.New("timeout waiting for GetBlocks reply")
