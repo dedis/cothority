@@ -3,12 +3,16 @@ package service
 import (
 	"testing"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,18 +32,18 @@ func TestService_proof(t *testing.T) {
 	write.Data = []byte{}
 	sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
 	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writerS)
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	wr, err := o.service.WriteRequest(&ocs.WriteRequest{
 		OCS:       o.sc.OCS.Hash,
 		Write:     *write,
 		Signature: *sig,
 		Readers:   o.readers,
 	})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 
 	// Making a read request
 	sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writerS)
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	read := ocs.Read{
 		DataID:    wr.SB.Hash,
 		Signature: *sigRead,
@@ -48,23 +52,43 @@ func TestService_proof(t *testing.T) {
 		OCS:  o.sc.OCS.Hash,
 		Read: read,
 	})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 
 	// Decoding the file
 	symEnc, err := o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
 		Read: rr.SB.Hash,
 	})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, o.writer.Secret)
-	log.ErrFatal(err2)
+	require.Nil(t, err2)
 	require.Equal(t, encKey, sym)
+
+	// Create a wrong Decryption request by abusing skipchain's database and
+	// writing a wrong reader public key to the OCS-data.
+	ocsd := ocs.NewOCS(rr.SB.Data)
+	ocsd.Read.Signature.SignaturePath.Signer.Ed25519.Point = cothority.Suite.Point()
+	rr.SB.Data, err = protobuf.Encode(ocsd)
+	require.Nil(t, err)
+	val, err := network.Marshal(rr.SB)
+	require.Nil(t, err)
+	bucket := skipchain.ServiceName + "_skipblocks"
+	for _, s := range o.services {
+		db := s.(*Service).db()
+		require.Nil(t, db.Update(func(tx *bolt.Tx) error {
+			return tx.Bucket([]byte(bucket)).Put(rr.SB.Hash, val)
+		}))
+	}
+	symEnc, err = o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
+		Read: rr.SB.Hash,
+	})
+	require.NotNil(t, err)
 
 	// GetReadRequests
 	requests, err := o.service.GetReadRequests(&ocs.GetReadRequests{
 		Start: wr.SB.Hash,
 		Count: 0,
 	})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	require.Equal(t, 1, len(requests.Documents))
 }
 

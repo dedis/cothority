@@ -45,7 +45,6 @@ func TestUpdateDarc(t *testing.T) {
 	writers := &darc.Darc{}
 	ocs, cerr := cl.CreateSkipchain(roster, writers)
 	require.Nil(t, cerr)
-	log.Printf("%#v", *ocs)
 	_, cerr = cl.EditAccount(ocs, darc0)
 	require.Nil(t, cerr)
 	_, cerr = cl.EditAccount(ocs, darc1)

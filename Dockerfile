@@ -10,9 +10,6 @@ RUN git --git-dir=/go/src/github.com/dedis/cothority/.git log -1 --format=onelin
 RUN git --git-dir=/go/src/github.com/dedis/onchain-secrets/.git log -1 --format=oneline
 RUN git --git-dir=/go/src/github.com/dedis/kyber/.git log -1 --format=oneline
 
-# TODO remove when bftcosi_failure is in master
-RUN git --git-dir=/go/src/github.com/dedis/cothority/.git --work-tree=/go/src/github.com/dedis/cothority checkout bftcosi_failure
-
 RUN go install -v ./conode
 RUN echo $PATH
 RUN which conode

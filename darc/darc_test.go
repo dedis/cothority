@@ -94,10 +94,8 @@ func TestDarc_SetEvolution(t *testing.T) {
 	}
 
 	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, ownerI2, User), signer2))
-	log.Print(dNew.Verify())
 	assert.NotNil(t, dNew.Verify())
 	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, ownerI, User), signer2))
-	log.Print(dNew.Verify())
 	assert.NotNil(t, dNew.Verify())
 	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, ownerI, User), signer))
 	require.Nil(t, dNew.Verify())

@@ -28,21 +28,28 @@ type OCS struct {
 	Poly      *share.PubPoly // Represents all public keys
 	U         kyber.Point    // U is the encrypted secret
 	Xc        kyber.Point    // The client's public key
-	Threshold uint32
-	// Done receives a 'true'-value when the protocol finished successfully.
-	Done chan bool
-	Uis  []*share.PubShare // re-encrypted shares
+	Threshold int            // How many replies are needed to re-create the secret
+	// VerificationData is given to the VerifyRequest and has to hold everything
+	// needed to verify the request is valid.
+	VerificationData []byte
+	Failures         int // How many failures occured so far
+	// Can be set by the service to decide whether or not to
+	// do the reencryption
+	Verify VerifyRequest
+	// Reencrypted receives a 'true'-value when the protocol finished successfully,
+	// or 'false' if not enough shares have been collected.
+	Reencrypted chan bool
+	Uis         []*share.PubShare // re-encrypted shares
 	// private fields
 	replies []ReencryptReply
-	replied bool
 }
 
 // NewOCS initialises the structure for use in one round
 func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &OCS{
 		TreeNodeInstance: n,
-		Done:             make(chan bool, 1),
-		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
+		Reencrypted:      make(chan bool, 1),
+		Threshold:        len(n.Roster().List) - (len(n.Roster().List)-1)/3,
 	}
 
 	err := o.RegisterHandlers(o.reencrypt, o.reencryptReply)
@@ -61,7 +68,21 @@ func (o *OCS) Start() error {
 	if o.U == nil {
 		return errors.New("please initialize U first")
 	}
-	errs := o.Broadcast(&Reencrypt{U: o.U, Xc: o.Xc})
+	rc := &Reencrypt{
+		U:  o.U,
+		Xc: o.Xc,
+	}
+	if len(o.VerificationData) > 0 {
+		rc.VerificationData = &o.VerificationData
+	}
+	if o.Verify != nil {
+		if !o.Verify(rc) {
+			o.Reencrypted <- false
+			o.Done()
+			return errors.New("refused to reencrypt")
+		}
+	}
+	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
 		return errors.New("too many nodes failed in broadcast")
@@ -76,6 +97,13 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	ui, err := o.getUI(r.U, r.Xc)
 	if err != nil {
 		return nil
+	}
+
+	if o.Verify != nil {
+		if !o.Verify(&r.Reencrypt) {
+			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
+			return o.SendToParent(&ReencryptReply{})
+		}
 	}
 
 	// Calculating proofs
@@ -98,8 +126,14 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 // ReencryptReply is the root-node waiting for all replies and generating
 // the reencryption key.
 func (o *OCS) reencryptReply(rr structReencryptReply) error {
-	if o.replied {
-		log.Lvl3("not making reencryption reply, already did")
+	if rr.ReencryptReply.Ui == nil {
+		log.Lvl2("Node", rr.ServerIdentity, "refused to reply")
+		o.Failures++
+		if o.Failures >= len(o.Children())-o.Threshold {
+			log.Lvl2(rr.ServerIdentity, "couldn't get enough shares")
+			o.Reencrypted <- false
+			o.Done()
+		}
 		return nil
 	}
 	o.replies = append(o.replies, rr.ReencryptReply)
@@ -134,8 +168,8 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 				log.Lvl1("Received invalid share from node", r.Ui.I)
 			}
 		}
-		o.Done <- true
-		o.replied = true
+		o.Reencrypted <- true
+		o.Done()
 	}
 	return nil
 }
