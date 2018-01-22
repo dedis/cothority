@@ -218,8 +218,8 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 }
 
 // HandleGetBlocks returns a given number of blocks from the skipchain,
-// starting from a given block. If requested, it will return neighbor blocks,
-// otherwise it will skip forward as far as possible.
+// starting from a given block. If skipping is true, it will skip forward
+// as far as possible, otherwise it will advance one block at a time.
 func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 	defer p.Done()
 
