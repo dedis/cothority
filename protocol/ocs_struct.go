@@ -18,10 +18,17 @@ func init() {
 	network.RegisterMessages(&Reencrypt{}, &ReencryptReply{})
 }
 
+// VerifyRequest is a callback-function that can be set by a service.
+// Whenever a reencryption request is received, this function will be
+// called and its return-value used to determine whether or not to
+// allow reencryption.
+type VerifyRequest func(rc *Reencrypt) bool
+
 // Reencrypt asks for a re-encryption share from a node
 type Reencrypt struct {
-	U  kyber.Point
-	Xc kyber.Point
+	U                kyber.Point
+	Xc               kyber.Point
+	VerificationData *[]byte
 }
 
 type structReencrypt struct {
