@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
 	if testing.Short() {
-		t.Skip("node failure tests do not run on travis")
+		t.Skip("node failure tests do not run on travis, see #1000")
 	}
 	storeSkipBlock(t, true)
 }
@@ -106,6 +106,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	if err != nil {
 		t.Fatal("StoreSkipBlock:", err)
 	}
+
 	assert.NotNil(t, psbr2)
 	assert.NotNil(t, psbr2.Latest)
 	latest2 := psbr2.Latest

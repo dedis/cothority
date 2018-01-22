@@ -13,6 +13,7 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
+	raiseLimit()
 	log.MainTest(m)
 }
 
