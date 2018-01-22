@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class OcsFactoryTest {
     public static final String SAMPLE_GENESIS_ID = "8dd9d04e027040e6815d58b5ccccb1fa13df771198d52f3e035cabdffc34551a";
     public static final String PUBLIC_KEY_WITH_SPACE = "hex with spaces TvMRQrO1PAw2pVjA1hDMQQi7Tss=";
-    public static final String CONODE_ADDRESS_INCORRECT = "http://127.0.0.1:7002";
+    public static final String CONODE_ADDRESS_INCORRECT = "http://localhost:7002";
 
     @Test
     public void shouldFailWhenServersAddressIsNotCorrect() {
