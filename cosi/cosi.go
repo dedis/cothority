@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
@@ -124,7 +125,7 @@ func main() {
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						app.InteractiveConfig(BinaryName)
+						app.InteractiveConfig(BinaryName, cothority.Suite)
 						return nil
 					},
 				},

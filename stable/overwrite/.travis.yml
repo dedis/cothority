@@ -1,13 +1,13 @@
 language: go
 
 install:
-  - go get github.com/dedis/onet
-  - ( cd $GOPATH/src/github.com/dedis/onet ; git checkout p256 )
   - go get -t ./...
   - go get github.com/dedis/Coding || true
 
+go_import_path: gopkg.in/dedis/cothority.v1
+
 script:
-  - make test
+  - make test_stable
 
 notifications:
   email: false

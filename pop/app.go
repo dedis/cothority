@@ -567,13 +567,12 @@ func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
 func readGroup(name string) *onet.Roster {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	roster, err := app.ReadGroupToml(f, cothority.Suite)
+	g, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
-	if len(roster.List) == 0 {
-		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
-			name)
+	if len(g.Roster.List) == 0 {
+		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s", name)
 	}
-	return roster
+	return g.Roster
 }
 
 // PopDescGroupToml represents serializable party description

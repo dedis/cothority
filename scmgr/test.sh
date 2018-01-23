@@ -3,7 +3,7 @@
 DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
-DBG_SRV=2
+# DBG_SRV=2
 
 . $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 

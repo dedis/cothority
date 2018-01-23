@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
@@ -32,7 +31,7 @@ var RequestTimeOut = time.Second * 10
 func Config(tomlFileName string, detail bool) error {
 	f, err := os.Open(tomlFileName)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := app.ReadGroupDescToml(f, cothority.Suite)
+	group, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
