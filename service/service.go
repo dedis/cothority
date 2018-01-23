@@ -28,7 +28,7 @@ import (
 // Used for tests
 var templateID onet.ServiceID
 
-const propagationTimeout = 5000
+const propagationTimeout = 5 * time.Second
 const timestampRange = 60
 
 func init() {
