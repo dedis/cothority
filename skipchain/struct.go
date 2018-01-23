@@ -680,6 +680,19 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 	return nil
 }
 
+// GetLatest searches for the latest available block for that skipblock.
+func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	latest := sb
+	// TODO this can be optimised by using multiple bucket.Get in a single transaction
+	for latest.GetForwardLen() > 0 {
+		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
+		if latest == nil {
+			return nil, errors.New("missing block")
+		}
+	}
+	return latest, nil
+}
+
 // GetFuzzy searches for a block that resembles the given ID.
 // If there are multiple matching skipblocks, the first one is chosen. If none
 // match, nil will be returned.
