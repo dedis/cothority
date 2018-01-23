@@ -718,7 +718,7 @@ func (s *Service) deprecatedProcessorGetBlock(env *network.Envelope) {
 	}
 	sb := s.db.GetByID(gb.ID)
 	if sb == nil {
-		log.Error("Did not find block")
+		log.Errorf("Did not find block %v", gb.ID)
 		return
 	}
 	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i < 0 {

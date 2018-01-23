@@ -510,6 +510,9 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 }
 
 func TestService_ParallelStore(t *testing.T) {
+	if testing.Short() {
+		t.Skip("parallel store does not run on travis, see #1000")
+	}
 	nbrRoutines := 10
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
@@ -557,6 +560,9 @@ func TestService_ParallelStore(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("propagation does not run on travis, see #1000")
+	}
 	nbrNodes := 60
 	local := onet.NewLocalTest(Suite)
 	defer waitPropagationFinished(t, local)
