@@ -47,7 +47,7 @@ main(){
 testMerge(){
 	MERGE_FILE="pop_merge.toml"
 	mkConfig 3 3 2 4
-
+	
 	# att1 - p1, p2; att2 - p2; att3 - p3;
 	runCl 1 org public ${pub[1]} ${pop_hash[1]}
 	runCl 2 org public ${pub[1]} ${pop_hash[1]}
@@ -398,13 +398,13 @@ EOF
 	done
 	for (( n=1; n<=$2; n++ ))
 	do
-		sed -n "$((4*$n-3)),$((4*$n))p" public.toml >> pop_desc$n.toml
+	        sed -n "$((5*$n-4)),$((5*$n))p" public.toml >> pop_desc$n.toml
 		if [[ $2 -gt 1 ]]
 		then
 			local m=$(($n%$2 + 1))
-			sed -n "$((4*$m-3)),$((4*$m))p" public.toml >> pop_desc$n.toml
+			sed -n "$((5*$m-4)),$((5*$m))p" public.toml >> pop_desc$n.toml
 		fi
-	done
+	done	
 	rm -f pop_merge.toml
 	for (( n=1; n<=$2; n++ ))
 	do
@@ -413,10 +413,10 @@ EOF
 Location = "Earth, City$n"
 EOF
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((4*$n-2)),$((4*$n))p" public.toml >> pop_merge.toml
+		sed -n "$((5*$n-4)),$((5*$n))p" public.toml >> pop_merge.toml
 		local m=$(($n%$2 + 1))
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((4*$m-2)),$((4*$m))p" public.toml >> pop_merge.toml
+		sed -n "$((5*$m-4)),$((5*$m))p" public.toml >> pop_merge.toml
 	done
 }
 
@@ -425,9 +425,11 @@ testSave(){
 	mkPopConfig 1 2
 
 	testFail runCl 1 org config pop_desc1.toml
-	pkill -9 -f conode
+	pkill conode
+	sleep .1
 	mkLink 2
-	pkill -9 -f conode
+	pkill conode
+	sleep .1
 	runCoBG 1 2
 	testOK runCl 1 org config pop_desc1.toml
 }

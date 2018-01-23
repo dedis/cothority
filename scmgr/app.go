@@ -93,16 +93,16 @@ func linkAdd(c *cli.Context) error {
 	if err != nil {
 		return errors.New("error while reading private.toml: " + err.Error())
 	}
-	conodePriv, err := encoding.StringHexToScalar(skipchain.Suite, remote.Private)
+	conodePriv, err := encoding.StringHexToScalar(cothority.Suite, remote.Private)
 	if err != nil {
 		return errors.New("couldn't decode private key: " + err.Error())
 	}
-	conodePub, err := encoding.StringHexToPoint(skipchain.Suite, remote.Public)
+	conodePub, err := encoding.StringHexToPoint(cothority.Suite, remote.Public)
 	if err != nil {
 		return errors.New("couldn't decode public key: " + err.Error())
 	}
 	cfg := getConfigOrFail(c)
-	kp := key.NewKeyPair(skipchain.Suite)
+	kp := key.NewKeyPair(cothority.Suite)
 	si := network.NewServerIdentity(conodePub, remote.Address)
 	cfg.Values.Link[si.Public.String()] = &link{
 		Private: kp.Private,
@@ -139,7 +139,7 @@ func linkList(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
 	for _, link := range cfg.Values.Link {
 		log.Infof("Linked public key for conode %s: %s", link.Address,
-			skipchain.Suite.Point().Mul(link.Private, nil))
+			cothority.Suite.Point().Mul(link.Private, nil))
 	}
 	return nil
 }
@@ -625,7 +625,7 @@ func readGroupArgs(c *cli.Context, pos int) *app.Group {
 func readGroup(name string) *app.Group {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := app.ReadGroupDescToml(f, cothority.Suite)
+	group, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",

@@ -34,10 +34,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -45,12 +47,16 @@ import (
 )
 
 func init() {
-	onet.RegisterNewService(Name, newService)
-	network.RegisterMessage(&saveData{})
-	checkConfigID = network.RegisterMessage(checkConfig{})
-	checkConfigReplyID = network.RegisterMessage(checkConfigReply{})
-	mergeConfigID = network.RegisterMessage(mergeConfig{})
-	mergeConfigReplyID = network.RegisterMessage(mergeConfigReply{})
+	// This service depends on EDDSA signatures, so it must not
+	// be instantiated with other suites.
+	if cothority.Suite == suites.MustFind("Ed25519") {
+		onet.RegisterNewService(Name, newService)
+		network.RegisterMessage(&saveData{})
+		checkConfigID = network.RegisterMessage(checkConfig{})
+		checkConfigReplyID = network.RegisterMessage(checkConfigReply{})
+		mergeConfigID = network.RegisterMessage(mergeConfig{})
+		mergeConfigReplyID = network.RegisterMessage(mergeConfigReply{})
+	}
 }
 
 // Name is the name to refer to the Template service from another

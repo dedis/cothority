@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/cosi/crypto"
 	"github.com/dedis/cothority/messaging"
@@ -411,7 +412,7 @@ func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, onet.
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorOnet, "couldn't marshal public key: "+err.Error())
 	}
-	if err = schnorr.Verify(Suite, s.ServerIdentity().Public, msg, link.Signature); err != nil {
+	if err = schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, link.Signature); err != nil {
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "wrong signature on public key: "+err.Error())
 	}
 	s.storageMutex.Lock()
@@ -530,7 +531,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 		}
 		log.Lvlf2("%s FollowSearch %s %x", s.ServerIdentity(), add.Conode, add.SkipchainID)
 	case FollowLookup:
-		si := network.NewServerIdentity(Suite.Point(), network.NewTCPAddress(add.Conode))
+		si := network.NewServerIdentity(cothority.Suite.Point().Null(), network.NewTCPAddress(add.Conode))
 		roster := onet.NewRoster([]*network.ServerIdentity{si})
 		last, err := s.getLastBlock(roster, add.SkipchainID)
 		if err != nil {
@@ -645,7 +646,7 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 	}
 
 	for _, cl := range s.Storage.Clients {
-		if schnorr.Verify(Suite, cl, msg, sig) == nil {
+		if schnorr.Verify(cothority.Suite, cl, msg, sig) == nil {
 			return true
 		}
 	}
@@ -755,7 +756,7 @@ func (s *Service) deprecatedProcessorGetBlockReply(env *network.Envelope) {
 // is valid.
 func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 	err := func() error {
-		_, fsInt, err := network.Unmarshal(data, Suite)
+		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
 		if err != nil {
 			return err
 		}
@@ -771,7 +772,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if len(newest.BackLinkIDs) <= fs.TargetHeight {
 			return errors.New("Asked for signing too high a backlink")
 		}
-		if err := fs.ForwardLink.Verify(Suite, previous.Roster.Publics()); err != nil {
+		if err := fs.ForwardLink.Verify(cothority.Suite, previous.Roster.Publics()); err != nil {
 			return errors.New("Wrong forward-link signature: " + err.Error())
 		}
 		if !fs.ForwardLink.Hash().Equal(newest.Hash) {
@@ -805,7 +806,7 @@ func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
 		return false
 	}
 	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	_, newSBi, err := network.Unmarshal(data[32:], Suite)
+	_, newSBi, err := network.Unmarshal(data[32:], cothority.Suite)
 	if err != nil {
 		log.Error("Couldn't unmarshal SkipBlock", data)
 		return false
@@ -980,8 +981,8 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		return nil, errors.New("found empty Roster")
 	case 1:
 		pubs := []kyber.Point{s.ServerIdentity().Public}
-		co := crypto.NewCosi(Suite, root.Private(), pubs)
-		co.CreateCommitment(Suite.RandomStream())
+		co := crypto.NewCosi(cothority.Suite, root.Private(), pubs)
+		co.CreateCommitment(cothority.Suite.RandomStream())
 		co.CreateChallenge(msg)
 		co.CreateResponse()
 		// This is when using kyber-cosi
@@ -1003,7 +1004,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			Sig:        co.Signature(),
 			Exceptions: []bftcosi.Exception{},
 		}
-		if crypto.VerifySignature(Suite, pubs, msg, sig.Sig) != nil {
+		if crypto.VerifySignature(cothority.Suite, pubs, msg, sig.Sig) != nil {
 			return nil, errors.New("failed in cosi")
 		}
 		return sig, nil
@@ -1090,20 +1091,20 @@ func (s *Service) newBlockEnd(sb *SkipBlock) bool {
 // authenticate searches if this node or any follower-node can verify the
 // schnorr-signature.
 func (s *Service) authenticate(msg []byte, sig []byte) bool {
-	if err := schnorr.Verify(Suite, s.ServerIdentity().Public, msg, sig); err == nil {
+	if err := schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, sig); err == nil {
 		return true
 	}
 	s.storageMutex.Lock()
 	defer s.storageMutex.Unlock()
 	for _, fct := range s.Storage.Follow {
 		for _, si := range fct.Block.Roster.List {
-			if err := schnorr.Verify(Suite, si.Public, msg, sig); err == nil {
+			if err := schnorr.Verify(cothority.Suite, si.Public, msg, sig); err == nil {
 				return true
 			}
 		}
 	}
 	for _, cl := range s.Storage.Clients {
-		if err := schnorr.Verify(Suite, cl, msg, sig); err == nil {
+		if err := schnorr.Verify(cothority.Suite, cl, msg, sig); err == nil {
 			return true
 		}
 	}

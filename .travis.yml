@@ -3,6 +3,7 @@ language: go
 install:
   - go get -t ./...
   - go get github.com/dedis/Coding || true
+  - ( cd $GOPATH/src/github.com/dedis/onet ; git checkout p256 )
 
 script:
   - make test

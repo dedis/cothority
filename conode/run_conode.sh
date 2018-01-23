@@ -7,23 +7,25 @@ set -e
 
 MAILADDR=linus.gasser@epfl.ch
 MAILCMD=/usr/bin/mail
-CONODE_BIN=conode
-DEDIS_PATH="$(go env GOPATH)/src/github.com/dedis"
-COTHORITY_PATH=$DEDIS_PATH/cothority
-ONET_PATH="$(go env GOPATH)/src/github.com/dedis/onet"
-CONODE_PATH=$COTHORITY_PATH/conode
-CONODE_GO=github.com/dedis/cothority/conode
+
+# Find out which package this copy of run_conode.sh is checked into.
+dir=$(dirname $(realpath $0))
+pkg=`cd $dir && go list ..`
+all_args="$*"
+
 # increment version sub if there's something about cothority that changes
 # and requires a migration, but onet does not change.
 VERSION_SUB="1"
 # increment version in onet if there's something that changes that needs
 # migration.
+ONET_PATH="$(go env GOPATH)/src/github.com/dedis/onet"
 VERSION_ONET=$( grep "const Version" $ONET_PATH/onet.go | sed -e "s/.* \"\(.*\)\"/\1/g" )
 VERSION="$VERSION_ONET-$VERSION_SUB"
-RUN_CONODE=$0
-ALL_ARGS="$*"
-LOG=/tmp/conode-$$.log
-MEMLIMIT=""
+
+# TAGS should be passed in from the environment if you want to add extra
+# build tags to all calls to go. For example to turn on vartime algorithms:
+#   TAGS="-tags vartime" ./run_conode.sh
+# Note: TAGS is also used by the integration tests.
 
 main(){
 	if [ ! "$1" ]; then
@@ -114,8 +116,8 @@ runLocal(){
 		shift
 	done
 
-	killall -9 $CONODE_BIN || true
-	go install $CONODE_GO
+	killall -9 conode || true
+	go install $TAGS $pkg/conode
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do
@@ -128,14 +130,14 @@ runLocal(){
 			if grep 'Public =' $co/public.toml|grep -q =\"; then
 				echo "Detected base64 public key for $co: converting"
 				mv $co/public.toml $co/public.toml.bak
-				$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
+				conode convert64 < $co/public.toml.bak > $co/public.toml
 			fi
 		fi
 
 		if [ ! -d $co ]; then
-			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | $CONODE_BIN setup
+			echo -e "127.0.0.1:$((7000 + 2 * $n))\nConode_$n\n$co" | conode setup
 		fi
-		$CONODE_BIN -d $DEBUG -c $co/private.toml server &
+		conode -d $DEBUG -c $co/private.toml server &
 		cat $co/public.toml >> public.toml
 	done
 	sleep 1
@@ -184,9 +186,9 @@ runPublic(){
 			fi
 			;;
 		-memory)
-			MEMORY=$2
+			MEMLIMIT=$2
 			shift
-			if [ "$MEMORY" -lt 500 ]; then
+			if [ "$MEMLIMIT" -lt 500 ]; then
 				echo "It will not run with less than 500 MBytes of RAM."
 				exit 1
 			fi
@@ -200,12 +202,12 @@ runPublic(){
 	if [ "$UPDATE" ]; then
 		update
 	else
-		go install $CONODE_GO
+		go install $TAGS $pkg/conode
 	fi
 	migrate
 	if [ ! -f $PATH_CONODE/private.toml ]; then
 		echo "Didn't find private.toml in $PATH_CONODE - setting up conode"
-		if $CONODE_BIN setup; then
+		if conode setup; then
 			echo "Successfully setup conode."
 			exit 0
 		else
@@ -216,18 +218,21 @@ runPublic(){
 
 	echo "Running conode with args: $ARGS and debug: $DEBUG"
 	# Thanks to Pavel Shved from http://unix.stackexchange.com/questions/44985/limit-memory-usage-for-a-single-linux-process
-	if [ "$MEMLIMIT" ]; then
+	if [ -n "$MEMLIMIT" ]; then
 		ulimit -Sv $(( MEMLIMIT * 1024 ))
 	fi
-	$CONODE_BIN -d $DEBUG $ARGS server | tee $LOG
+
+	log=/tmp/conode-$$.log
+	conode -d $DEBUG $ARGS server 2>&1 | tee $log
 	if [ "$MAIL" ]; then
-		tail -n 200 $LOG | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
+		tail -n 200 $log | $MAILCMD -s "conode-log from $(hostname):$(date)" $MAILADDR
 		echo "Waiting one minute before launching conode again"
 		sleep 60
 	fi
-	rm $LOG
+	rm $log
 	echo "Conode exited at $(date) - restarting"
-	exec $RUN_CONODE "$ALL_ARGS"
+	sleep 5
+	exec $0 $all_args
 }
 
 migrate(){
@@ -269,7 +274,7 @@ migrate(){
 				co="$PATH_CONODE"
 			echo "Converting base64 public key in $co"
 				mv $co/public.toml $co/public.toml.bak
-			$CONODE_BIN convert64 < $co/public.toml.bak > $co/public.toml
+			conode convert64 < $co/public.toml.bak > $co/public.toml
 			echo $VERSION > $PATH_VERSION
 			echo "Migration to $VERSION complete"
 			;;
@@ -295,9 +300,9 @@ update(){
 	TEST=$1
 	cat - > $TMP << EOF
 if [ ! "$TEST" ]; then
-  go get -u $COTHORITY_PATH/...
+  go get -u $pkg/...
 fi
-exec $RUN_CONODE $ACTION -update_rec $TMP
+exec $0 $ACTION -update_rec $TMP
 EOF
 	chmod a+x $TMP
 	exec $TMP
@@ -317,7 +322,7 @@ test(){
 testPublic(){
 	runPublic &
 	sleep 5
-	testGrep $CONODE_BIN pgrep -lf $CONODE_BIN
+	testGrep conode pgrep -lf conode
 }
 
 testLocal(){
@@ -326,11 +331,11 @@ testLocal(){
 		sleep 1
 	done
 	sleep 2
-	local found=$( pgrep $CONODE_BIN | wc -l | sed -e "s/ *//g" )
+	local found=$( pgrep conode | wc -l | sed -e "s/ *//g" )
 	if [ "$found" != 3 ]; then
 		fail "Didn't find 3 servers, but $found"
 	fi
-	pkill -9 $CONODE_BIN
+	pkill -9 conode
 }
 
 testMigrate(){

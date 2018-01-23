@@ -535,7 +535,7 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	})
 
 	if err != nil {
-		log.Error(err.Error())
+		log.Error(err)
 	}
 	return result
 }
@@ -744,7 +744,6 @@ func (db *SkipBlockDB) storeToTx(tx *bolt.Tx, sb *SkipBlock) error {
 	if err != nil {
 		return err
 	}
-
 	return tx.Bucket([]byte(db.bucketName)).Put(key, val)
 }
 
