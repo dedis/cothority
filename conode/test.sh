@@ -15,9 +15,9 @@ main(){
 testConode(){
     runCoBG 1 2
     cp co1/public.toml .
-    tail -n 4 co2/public.toml >> public.toml
+    cat co2/public.toml >> public.toml
     testOK runCo 1 check -g public.toml
-    tail -n 4 co3/public.toml >> public.toml
+    cat co3/public.toml >> public.toml
     testFail runCo 1 check -g public.toml
 }
 

@@ -24,22 +24,38 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
+func svc(t *testing.T, local *onet.LocalTest, n int) *Service {
+	servers := local.GenServers(n)
+	services := local.GetServices(servers, serviceID)
+	if services[0] == nil {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return nil
+	}
+	return services[0].(*Service)
+}
+
 func TestServiceSave(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceID)[0].(*Service)
+	service := svc(t, local, 1)
+	if service == nil {
+		return
+	}
+
 	service.data.Pin = "1234"
 	service.save()
 	service.data.Pin = ""
 	log.ErrFatal(service.tryLoad())
 	require.Equal(t, "1234", service.data.Pin)
 }
+
 func TestService_PinRequest(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceID)[0].(*Service)
+	service := svc(t, local, 1)
+	if service == nil {
+		return
+	}
 	require.Equal(t, "", service.data.Pin)
 	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
 	_, cerr := service.PinRequest(&PinRequest{"", pub})
@@ -53,8 +69,15 @@ func TestService_PinRequest(t *testing.T) {
 func TestService_StoreConfig(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
+
 	nodes, r, _ := local.GenTree(2, true)
-	service := local.GetServices(nodes, serviceID)[0].(*Service)
+	services := local.GetServices(nodes, serviceID)
+	if services[0] == nil {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
+	service := services[0].(*Service)
+
 	desc := &PopDesc{
 		Name:     "test",
 		DateTime: "tomorrow",
@@ -78,7 +101,12 @@ func TestService_CheckConfigMessage(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
-	descs, atts, srvcs, _ := storeDesc(local.GetServices(nodes, serviceID), r, 2, 2)
+	svcs := local.GetServices(nodes, serviceID)
+	descs, atts, srvcs, _ := storeDesc(svcs, r, 2, 2)
+	if len(srvcs) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
 	for _, s := range srvcs {
 		for _, desc := range descs {
 			hash := string(desc.Hash())
@@ -113,6 +141,10 @@ func TestService_CheckConfigReply(t *testing.T) {
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
 	descs, atts, srvcs, _ := storeDesc(local.GetServices(nodes, serviceID), r, 2, 2)
+	if len(srvcs) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
 	for _, desc := range descs {
 		hash := string(desc.Hash())
 		s0 := srvcs[0]
@@ -153,6 +185,10 @@ func TestService_FinalizeRequest(t *testing.T) {
 
 	// Get all service-instances
 	descs, atts, services, privs := storeDesc(local.GetServices(nodes, serviceID), r, nbrAtt, ndescs)
+	if len(services) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
 	for _, desc := range descs {
 		// Clear config of first one
 		descHash := desc.Hash()
@@ -213,6 +249,11 @@ func TestService_FetchFinal(t *testing.T) {
 
 	// Get all service-instances
 	descs, atts, services, priv := storeDesc(local.GetServices(nodes, serviceID), r, nbrAtt, ndescs)
+	if len(services) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
+
 	for _, desc := range descs {
 		descHash := desc.Hash()
 		fr := &finalizeRequest{}
@@ -261,6 +302,10 @@ func TestService_MergeConfig(t *testing.T) {
 	nodes, r, _ := local.GenTree(nbrNodes, true)
 
 	descs, atts, srvcs, priv := storeDescMerge(local.GetServices(nodes, serviceID), r, nbrAtt)
+	if len(srvcs) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
 	hash := make([]string, nbrNodes/2)
 	hash[0] = string(descs[0].Hash())
 	hash[1] = string(descs[1].Hash())
@@ -323,6 +368,10 @@ func TestService_MergeRequest(t *testing.T) {
 	nbrAtt := 4
 	nodes, r, _ := local.GenTree(nbrNodes, true)
 	descs, atts, srvcs, priv := storeDescMerge(local.GetServices(nodes, serviceID), r, nbrAtt)
+	if len(srvcs) == 0 {
+		t.Log("The service is not available to test due to incompatible suite.")
+		return
+	}
 	hash := make([]string, nbrNodes/2)
 	hash[0] = string(descs[0].Hash())
 	hash[1] = string(descs[1].Hash())
@@ -430,6 +479,9 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 
 	sret := []*Service{}
 	for i, s := range srvcs {
+		if s == nil {
+			continue
+		}
 		sret = append(sret, s.(*Service))
 		s.(*Service).data.Public = pubs[i]
 		for _, desc := range descs {
@@ -482,6 +534,9 @@ func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
 	}
 	sret := []*Service{}
 	for i, s := range srvcs {
+		if s == nil {
+			continue
+		}
 		sret = append(sret, s.(*Service))
 		s.(*Service).data.Public = pubs[i]
 		desc := descs[i/2]

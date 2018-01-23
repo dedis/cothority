@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/crypto"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
 
-var tSuite = suites.MustFind("Ed25519")
+var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	raiseLimit()

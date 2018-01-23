@@ -96,16 +96,16 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f, cothority.Suite)
+	g, err := app.ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	if len(el.List) <= 0 {
+	if len(g.Roster.List) <= 0 {
 		return nil, errors.New("Empty or invalid cosi group file:" +
 			tomlFileName)
 	}
-	log.Lvl2("Sending signature to", el)
-	res, err := signStatement(r, el)
+	log.Lvl2("Sending signature to", g.Roster)
+	res, err := signStatement(r, g.Roster)
 	if err != nil {
 		return nil, err
 	}
@@ -185,12 +185,12 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 	log.Lvl4("Reading group definition")
-	el, err := app.ReadGroupToml(fGroup, cothority.Suite)
+	g, err := app.ReadGroupDescToml(fGroup)
 	if err != nil {
 		return err
 	}
 	log.Lvl4("Verfifying signature")
-	err = verifySignatureHash(b, sig, el)
+	err = verifySignatureHash(b, sig, g.Roster)
 	return err
 }
 

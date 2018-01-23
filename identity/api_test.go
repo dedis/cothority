@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -46,6 +47,13 @@ func TestIdentity_PinRequest(t *testing.T) {
 }
 
 func TestIdentity_StoreKeys(t *testing.T) {
+	if tSuite != suites.MustFind("Ed25519") {
+		// StoreKeys eventually calls eddsa.Verify, which will not work
+		// with non?Ed25519 suites.
+		t.Log("Wrong suite, this service will not run.")
+		return
+	}
+
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
@@ -75,7 +83,8 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	signature := make(chan []byte)
 	c := node.(*cosi.CoSi)
 	c.RegisterSignatureHook(func(sig []byte) {
-		signature <- sig[:64]
+		log.LLvl3("sig", len(sig))
+		signature <- sig[0 : len(sig)-1]
 	})
 	c.Message = hash
 	go node.Start()

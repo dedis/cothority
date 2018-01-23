@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -107,7 +108,7 @@ func (p *ExtendRoster) HandleExtendRoster(msg ProtoStructExtendRoster) error {
 
 	log.Lvlf3("%s: Check block with roster %s", p.ServerIdentity(), msg.Block.Roster.List)
 	if p.isBlockAccepted(msg.ServerIdentity, &msg.Block) {
-		sig, err := schnorr.Sign(Suite, p.Private(), msg.Block.SkipChainID())
+		sig, err := schnorr.Sign(cothority.Suite, p.Private(), msg.Block.SkipChainID())
 		if err != nil {
 			log.Error("couldn't sign genesis-block")
 			return p.SendToParent(&ProtoExtendRosterReply{})
@@ -195,7 +196,7 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 		if r.Signature == nil {
 			return false
 		}
-		if schnorr.Verify(Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {
+		if schnorr.Verify(cothority.Suite, r.ServerIdentity.Public, p.ExtendRoster.Block.SkipChainID(), *r.Signature) != nil {
 			log.Lvl3("Signature verification failed")
 			return false
 		}

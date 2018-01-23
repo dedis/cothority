@@ -59,7 +59,7 @@ func (bs *BFTSignature) Verify(s network.Suite, publics []kyber.Point) error {
 		aggPublic.Add(aggPublic, publics[i])
 	}
 	// compute the reduced public aggregate key (all - exception)
-	aggReducedPublic := s.Point().Null().Add(s.Point().Null(), aggPublic)
+	aggReducedPublic := aggPublic.Clone()
 
 	// compute the aggregate commit of exception
 	aggExCommit := s.Point().Null()
@@ -71,6 +71,10 @@ func (bs *BFTSignature) Verify(s network.Suite, publics []kyber.Point) error {
 	origCommit := s.Point()
 	pointLen := s.PointLen()
 	sigLen := pointLen + s.ScalarLen()
+
+	if len(bs.Sig) < sigLen {
+		return errors.New("signature too short")
+	}
 	if err := origCommit.UnmarshalBinary(bs.Sig[0:pointLen]); err != nil {
 		return err
 	}
