@@ -435,6 +435,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	// Start OCS-protocol to re-encrypt the file's symmetric key under the
 	// reader's public key.
 	nodes := len(fileSB.Roster.List)
+	threshold := nodes - (nodes-1)/3
 	tree := fileSB.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
 	if err != nil {
@@ -469,7 +470,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "reencryption got refused")
 	}
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
-		nodes-1, nodes)
+		threshold, nodes)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 	}
