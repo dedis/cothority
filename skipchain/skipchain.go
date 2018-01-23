@@ -306,11 +306,12 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 }
 
 // getBlocks uses ProtocolGetBlocks to return up to n blocks, traversing the
-// skiplist forward from id. It contacts a random subgroup of 3 of the nodes
+// skiplist forward from id. It contacts a random subgroup of some of the nodes
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	t := roster.RandomSubset(s.ServerIdentity(), 3).GenerateStar()
+	subCount := (len(roster.List)-1)/3 + 1
+	t := roster.RandomSubset(s.ServerIdentity(), subCount).GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, t)
 	if err != nil {
 		return nil, err
