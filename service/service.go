@@ -28,7 +28,7 @@ import (
 // Used for tests
 var templateID onet.ServiceID
 
-const propagationTimeout = 5000
+const propagationTimeout = 5 * time.Second
 const timestampRange = 60
 
 func init() {
@@ -137,7 +137,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 		s.Storage.Polys[string(reply.OCS.Hash)] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.saveMutex.Unlock()
 		reply.X = shared.X
-	case <-time.After(propagationTimeout * time.Millisecond):
+	case <-time.After(propagationTimeout):
 		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
 			"dkg didn't finish in time")
 	}
