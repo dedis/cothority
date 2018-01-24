@@ -154,7 +154,7 @@ func createOCS(t *testing.T) *ocsStruct {
 	}
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	hosts, roster, _ := o.local.GenTree(5, true)
+	hosts, roster, _ := o.local.GenTree(10, true)
 
 	o.services = o.local.GetServices(hosts, templateID)
 	o.service = o.services[0].(*Service)
