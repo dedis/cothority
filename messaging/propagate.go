@@ -176,7 +176,10 @@ func (p *Propagate) Dispatch() error {
 					for _, e := range err {
 						errs = append(errs, e.Error())
 					}
-					return errors.New(strings.Join(errs, "\n"))
+					if len(err) > p.allowedFailures {
+						return errors.New(strings.Join(errs, "\n"))
+					}
+					log.Lvl2("Error while sending to children:", errs)
 				}
 			}
 		case <-p.ChannelReply:
