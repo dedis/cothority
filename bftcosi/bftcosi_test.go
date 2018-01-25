@@ -72,8 +72,6 @@ func TestThreshold(t *testing.T) {
 		return NewBFTCoSiProtocol(n, verify)
 	})
 
-	local := onet.NewLocalTest(tSuite)
-	defer local.CloseAll()
 	tests := []struct{ h, t int }{
 		{1, 0},
 		{2, 0},
@@ -83,6 +81,7 @@ func TestThreshold(t *testing.T) {
 		{6, 2},
 	}
 	for _, s := range tests {
+		local := onet.NewLocalTest(tSuite)
 		hosts, thr := s.h, s.t
 		log.Lvl3("Hosts is", hosts)
 		_, _, tree := local.GenBigTree(hosts, hosts, min(2, hosts-1), true)
