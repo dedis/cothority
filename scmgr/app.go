@@ -625,7 +625,7 @@ func readGroupArgs(c *cli.Context, pos int) *app.Group {
 func readGroup(name string) *app.Group {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	group, err := app.ReadGroupDescToml(f, cothority.Suite)
+	group, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
 	if len(group.Roster.List) == 0 {
 		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",

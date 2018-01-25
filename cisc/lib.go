@@ -208,7 +208,7 @@ func getGroup(c *cli.Context) *app.Group {
 	gr, err := os.Open(gfile)
 	log.ErrFatal(err)
 	defer gr.Close()
-	groups, err := app.ReadGroupDescToml(gr, cothority.Suite)
+	groups, err := app.ReadGroupDescToml(gr)
 	log.ErrFatal(err)
 	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
 		log.Fatal("No servers found in roster from", gfile)
