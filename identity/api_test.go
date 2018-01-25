@@ -83,7 +83,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	signature := make(chan []byte)
 	c := node.(*cosi.CoSi)
 	c.RegisterSignatureHook(func(sig []byte) {
-		log.LLvl3("sig", len(sig))
+		log.Lvl3("sig", len(sig))
 		signature <- sig[0 : len(sig)-1]
 	})
 	c.Message = hash
