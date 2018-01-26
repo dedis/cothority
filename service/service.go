@@ -436,6 +436,16 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
+	if req.Ephemeral != nil {
+		var pub []byte
+		pub, err = req.Ephemeral.MarshalBinary()
+		if err != nil {
+			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal ephemeral key")
+		}
+		if err = req.Signature.Verify(pub, read.Darc); err != nil {
+			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature")
+		}
+	}
 	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.VerificationData = readSB.Hash

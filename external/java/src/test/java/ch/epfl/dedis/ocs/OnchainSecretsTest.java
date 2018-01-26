@@ -6,6 +6,7 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.OCSProto;
@@ -50,7 +51,7 @@ class OnchainSecretsTest {
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), 16, readerDarc, extraData.getBytes());
 
-        testInstanceController = TestServerInit.getInstance();
+        testInstanceController = TestServerInit.getInstanceManual();
 
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
@@ -88,6 +89,13 @@ class OnchainSecretsTest {
         assertTrue(doc.equals(doc2));
         // Inverse is not true, as doc2 now contains a writeId
         assertFalse(doc2.equals(doc));
+    }
+
+    @Test
+    void ephemeralReadDocument() throws Exception{
+        WriteRequest write = ocs.publishDocument(doc, publisher);
+        Document doc2 = ocs.getDocumentEphemeral(write.id, reader);
+        assertTrue(doc.equals(doc2));
     }
 
     @Test

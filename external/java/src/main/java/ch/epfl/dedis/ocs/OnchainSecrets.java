@@ -2,6 +2,7 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -134,9 +135,9 @@ public class OnchainSecrets extends OnchainSecretsRPC {
      * @throws CothorityCryptoException        if the writer could not sign the request
      * @throws CothorityCommunicationException if the request could not be stored on the skipchain
      */
-    public WriteRequest publishDocument(Document doc, Signer writer) throws CothorityCryptoException, CothorityCommunicationException{
+    public WriteRequest publishDocument(Document doc, Signer writer) throws CothorityCryptoException, CothorityCommunicationException {
         WriteRequest wr = doc.getWriteRequest();
-        DarcSignature sig = wr.getSignature(this,  writer);
+        DarcSignature sig = wr.getSignature(this, writer);
         return createWriteRequest(wr, sig);
     }
 
@@ -163,7 +164,28 @@ public class OnchainSecrets extends OnchainSecretsRPC {
         ReadRequestId rrid = createReadRequest(new ReadRequest(this, wrId, reader));
         DecryptKey dk = getDecryptionKey(rrid);
         OCSProto.Write write = getWrite(wrId);
-        byte[] keyMaterial = dk.getKeyMaterial(write, reader);
+        byte[] keyMaterial = dk.getKeyMaterial(write, reader.getPrivate());
+        return new Document(write.getData().toByteArray(), keyMaterial, write.getExtradata().toByteArray(),
+                readerDarc, wrId);
+    }
+
+    /**
+     * Requests the re-encryption symmetricKey from the skipchain, but uses an ephemeral key
+     * for it.
+     *
+     * @param wrId the id of the write request
+     * @return an array of bytes with the decrypted keymaterial
+     * @throws CothorityCommunicationException in case of communication difficulties
+     */
+    public Document getDocumentEphemeral(WriteRequestId wrId, Signer reader) throws CothorityCommunicationException, CothorityCryptoException {
+        OCSProto.Write write = getWrite(wrId);
+        Darc readerDarc = new Darc(write.getReader());
+        ReadRequestId rrId = createReadRequest(new ReadRequest(this, wrId, reader));
+
+        KeyPair kp = new KeyPair();
+        DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader, SignaturePath.USER);
+        DecryptKey dk = getDecryptionKeyEphemeral(rrId, sig, kp.Point);
+        byte[] keyMaterial = dk.getKeyMaterial(write, kp.Scalar);
         return new Document(write.getData().toByteArray(), keyMaterial, write.getExtradata().toByteArray(),
                 readerDarc, wrId);
     }

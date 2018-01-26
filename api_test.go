@@ -60,3 +60,7 @@ func TestUpdateDarc(t *testing.T) {
 	require.NotNil(t, path)
 	require.Equal(t, 3, len(*path))
 }
+
+func TestDecryptEphemeral(t *testing.T) {
+	t.Fatal(t, "need to write go-tests...")
+}

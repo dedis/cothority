@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -196,6 +197,55 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 		reply.Cs, reply.XhatEnc, reader)
 	if err != nil {
 		return nil, errors.New("could not decode sym: " + err.Error())
+	}
+	return
+}
+
+// DecryptKeyRequestEphemeral works similar to DecryptKeyRequest but generates
+// an ephemeral keypair that is used in the decryption. It still needs the
+// reader to be able to sign the ephemeral keypair, to make sure that the read-
+// request is valid.
+//
+// Input:
+//  - ocs [*SkipChainURL] - the url of the skipchain to use
+//  - readID [skipchain.SkipBlockID] - the ID of the successful read-request
+//  - reader [*darc.Signer] - the reader that has requested the read
+//
+// Output:
+//  - sym [[]byte] - the decrypted symmetric key
+//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+func (c *Client) DecryptKeyRequestEphemeral(ocs *SkipChainURL, readID skipchain.SkipBlockID, readerDarc *darc.Darc, reader *darc.Signer) (sym []byte,
+	cerr onet.ClientError) {
+	kp := key.NewKeyPair(cothority.Suite)
+	id, err := darc.NewIdentity(nil, &darc.IdentityEd25519{Point: reader.Ed25519.Point})
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+	}
+	path := darc.NewSignaturePath([]*darc.Darc{readerDarc}, *id, darc.User)
+	msg, err := kp.Public.MarshalBinary()
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+	}
+	sig, err := darc.NewDarcSignature(msg, path, reader)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+	}
+	request := &DecryptKeyRequest{
+		Read:      readID,
+		Ephemeral: kp.Public,
+		Signature: sig,
+	}
+	reply := &DecryptKeyReply{}
+	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if cerr != nil {
+		return
+	}
+
+	log.LLvl2("Got decryption key")
+	sym, err = DecodeKey(cothority.Suite, reply.X,
+		reply.Cs, reply.XhatEnc, kp.Private)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
 	}
 	return
 }

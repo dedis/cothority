@@ -348,6 +348,24 @@ public class OnchainSecretsRPC {
     }
 
     /**
+     * Requests the skipblock representing the read-request 'id' and returns
+     * the corresponding OCSRead-structure.
+     *
+     * @param id the id of the read-request
+     * @return [OCSProto.Read] the read-request
+     * @throws CothorityCommunicationException in case of communication difficulties
+     */
+
+    public OCSProto.Read getRead(ReadRequestId id) throws CothorityCommunicationException {
+        OCSProto.Transaction transaction = getTransaction(id);
+        logger.debug("Getting read-request from skipblock {}", id);
+        if (!transaction.hasRead()) {
+            throw new CothorityCommunicationException("This is not an getId from a read-request");
+        }
+        return transaction.getRead();
+    }
+
+    /**
      * Requests the re-encryption symmetricKey from the skipchain.
      * <p>
      * TODO: depending on how we decide to implement the access-rights, this
@@ -361,6 +379,35 @@ public class OnchainSecretsRPC {
         OCSProto.DecryptKeyRequest.Builder request =
                 OCSProto.DecryptKeyRequest.newBuilder();
         request.setRead(ByteString.copyFrom(id.getId()));
+        ByteString msg = roster.sendMessage("OnChainSecrets/DecryptKeyRequest",
+                request.build());
+
+        try {
+            OCSProto.DecryptKeyReply reply = OCSProto.DecryptKeyReply.parseFrom(msg);
+
+            logger.info("got decryption symmetricKey");
+            return new DecryptKey(reply, X);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Requests the re-encryption symmetricKey from the skipchain, but uses an ephemeral key
+     * for it.
+     *
+     * @param id        the read-id
+     * @param signature on the read-darc from the write-request
+     * @param ephemeral the ephemeral public key to use
+     * @return an array of bytes with the decrypted keymaterial
+     * @throws CothorityCommunicationException in case of communication difficulties
+     */
+    public DecryptKey getDecryptionKeyEphemeral(ReadRequestId id, DarcSignature signature, Point ephemeral) throws CothorityCommunicationException, CothorityCryptoException {
+        OCSProto.DecryptKeyRequest.Builder request =
+                OCSProto.DecryptKeyRequest.newBuilder();
+        request.setRead(ByteString.copyFrom(id.getId()));
+        request.setEphemeral(ephemeral.toProto());
+        request.setSignature(signature.toProto());
         ByteString msg = roster.sendMessage("OnChainSecrets/DecryptKeyRequest",
                 request.build());
 

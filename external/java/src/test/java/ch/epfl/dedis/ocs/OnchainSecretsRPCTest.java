@@ -195,7 +195,7 @@ class OnchainSecretsRPCTest {
         DecryptKey dk = ocs.getDecryptionKey(readID);
         assertNotNull(dk);
         OCSProto.Write write = ocs.getWrite(writeRequest2.id);
-        byte[] keyMaterial = dk.getKeyMaterial(write, reader);
+        byte[] keyMaterial = dk.getKeyMaterial(write, reader.getPrivate());
         byte[] data = Encryption.decryptData(write.getData(), keyMaterial);
         assertArrayEquals(docData.getBytes(), data);
     }
