@@ -9,6 +9,7 @@ import (
 
 	"sync"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
@@ -21,7 +22,7 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
@@ -39,7 +40,7 @@ func TestClient_CreateGenesis(t *testing.T) {
 }
 
 func TestClient_CreateRootControl(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	c := newTestClient(l)
@@ -51,7 +52,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Long run not good for Travis")
 	}
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -75,7 +76,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 }
 
 func TestClient_CreateRootInter(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(5, true)
 	defer l.CloseAll()
 
@@ -100,7 +101,7 @@ func TestClient_CreateRootInter(t *testing.T) {
 
 func TestClient_StoreSkipBlock(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -146,7 +147,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 
 func TestClient_GetAllSkipchains(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -173,7 +174,7 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	nbrHosts := 3
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(nbrHosts, true)
 	defer l.CloseAll()
 
@@ -328,9 +329,9 @@ type linkStruct struct {
 }
 
 func linked(nbr int) *linkStruct {
-	kp := key.NewKeyPair(Suite)
+	kp := key.NewKeyPair(cothority.Suite)
 	ls := &linkStruct{
-		local: onet.NewTCPTest(Suite),
+		local: onet.NewTCPTest(cothority.Suite),
 		priv:  kp.Private,
 		pub:   kp.Public,
 	}

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 
@@ -59,7 +60,7 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 }
 
 func TestSkipBlock_VerifySignatures(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	roster2 := onet.NewRoster(roster3.List[0:2])
@@ -99,7 +100,7 @@ func TestSkipBlock_Hash1(t *testing.T) {
 }
 
 func TestSkipBlock_Hash2(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
 	sbd1 := NewSkipBlock()
@@ -141,26 +142,35 @@ func TestBlockLink_Copy(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	l := onet.NewTCPTest(Suite)
+	l := onet.NewTCPTest(cothority.Suite)
+	defer l.CloseAll()
+
 	servers, roster, _ := l.GenTree(10, true)
 	msg := sha512.New().Sum(nil)
+
 	sig, err := sign(msg, servers, l)
-	log.ErrFatal(err)
-	log.ErrFatal(sig.Verify(Suite, roster.Publics()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = sig.Verify(cothority.Suite, roster.Publics())
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	sig.Msg = sha512.New().Sum([]byte{1})
-	require.NotNil(t, sig.Verify(Suite, roster.Publics()))
-	defer l.CloseAll()
+	require.NotNil(t, sig.Verify(cothority.Suite, roster.Publics()))
 }
 
 func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {
-	aggScalar := Suite.Scalar().Zero()
-	aggPoint := Suite.Point().Null()
+	aggScalar := l.Suite.Scalar().Zero()
+	aggPoint := l.Suite.Point().Null()
 	for _, s := range servers {
 		aggScalar.Add(aggScalar, l.GetPrivate(s))
 		aggPoint.Add(aggPoint, s.ServerIdentity.Public)
 	}
-	rand := Suite.Scalar().Pick(Suite.RandomStream())
-	comm := Suite.Point().Mul(rand, nil)
+	rand := l.Suite.Scalar().Pick(cothority.Suite.RandomStream())
+	comm := l.Suite.Point().Mul(rand, nil)
 	sigC, err := comm.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -170,17 +180,20 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	aggPoint.MarshalTo(hash)
 	hash.Write(msg)
 	challBuff := hash.Sum(nil)
-	chall := Suite.Scalar().SetBytes(challBuff)
-	resp := Suite.Scalar().Mul(aggScalar, chall)
+	chall := l.Suite.Scalar().SetBytes(challBuff)
+	resp := l.Suite.Scalar().Mul(aggScalar, chall)
 	resp = resp.Add(rand, resp)
 	sigR, err := resp.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
-	sig := make([]byte, 64+len(servers)/8)
-	copy(sig[:], sigC)
-	copy(sig[32:64], sigR)
-	return &bftcosi.BFTSignature{Sig: sig, Msg: msg, Exceptions: nil}, nil
+	sig := &bytes.Buffer{}
+	sig.Write(sigC)
+	sig.Write(sigR)
+	// a bitmask full of zeros saying no servers are excepted
+	noExceptions := make([]byte, len(servers)/8)
+	sig.Write(noExceptions)
+	return &bftcosi.BFTSignature{Sig: sig.Bytes(), Msg: msg, Exceptions: nil}, nil
 }
 
 func TestSkipBlock_GetFuzzy(t *testing.T) {

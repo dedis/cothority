@@ -7,7 +7,6 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/status/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
@@ -68,16 +67,16 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f, cothority.Suite)
+	g, err := app.ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	if len(el.List) <= 0 {
+	if len(g.Roster.List) <= 0 {
 		return nil, errors.New("Empty or invalid group file:" +
 			tomlFileName)
 	}
-	log.Lvl3(el)
-	return el, err
+	log.Lvl3(g.Roster)
+	return g.Roster, err
 }
 
 // printConn prints the status response that is returned from the server

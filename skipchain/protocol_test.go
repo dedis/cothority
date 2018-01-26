@@ -3,6 +3,7 @@ package skipchain_test
 import (
 	"testing"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -14,7 +15,6 @@ import (
 const tsName = "tsName"
 
 var tsID onet.ServiceID
-var tSuite = skipchain.Suite
 
 func init() {
 	var err error
@@ -24,7 +24,7 @@ func init() {
 
 // TestGB tests the GetBlocks protocol
 func TestGB(t *testing.T) {
-	local := onet.NewLocalTest(tSuite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	servers, ro, _ := local.GenTree(3, true)
 	tss := local.GetServices(servers, tsID)
@@ -143,7 +143,7 @@ func TestER(t *testing.T) {
 
 func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	log.Lvl1("Testing", nbrNodes, "nodes")
-	local := onet.NewLocalTest(tSuite)
+	local := onet.NewLocalTest(cothority.Suite)
 	servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss := local.GetServices(servers, tsid)
 
@@ -159,7 +159,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	local.CloseAll()
 
 	// Check inclusion of new chains
-	local = onet.NewLocalTest(tSuite)
+	local = onet.NewLocalTest(cothority.Suite)
 	servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss = local.GetServices(servers, tsid)
 	for _, t := range tss {
@@ -174,14 +174,14 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	for _, s := range sigs {
 		_, si := roster.Search(s.SI)
 		require.NotNil(t, si)
-		require.Nil(t, schnorr.Verify(tSuite, si.Public, sb.SkipChainID(), s.Signature))
+		require.Nil(t, schnorr.Verify(cothority.Suite, si.Public, sb.SkipChainID(), s.Signature))
 	}
 	local.CloseAll()
 
 	// When only one node refuse,
 	// we should be able to proceed because skipchain is fault tolerant
 	if nbrNodes > 4 {
-		local = onet.NewLocalTest(tSuite)
+		local = onet.NewLocalTest(cothority.Suite)
 		servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 		tss = local.GetServices(servers, tsid)
 		for i := 3; i < nbrNodes; i++ {

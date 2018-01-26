@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
@@ -43,10 +44,10 @@ func TestService_StoreSkipBlock(t *testing.T) {
 
 func storeSkipBlock(t *testing.T, fail bool) {
 	// First create a roster to attach the data to it
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(4, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(4, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
@@ -141,12 +142,12 @@ func storeSkipBlock(t *testing.T, fail bool) {
 func TestService_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	conodes := 10
 	sbCount := conodes - 1
-	servers, el, gs := local.MakeHELS(conodes, skipchainSID, Suite)
+	servers, el, gs := local.MakeHELS(conodes, skipchainSID, cothority.Suite)
 	s := gs.(*Service)
 
 	sbs := make([]*SkipBlock, sbCount)
@@ -206,10 +207,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	// How many nodes in Root
 	nodesRoot := 3
 
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID, Suite)
+	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
 
 	// Setting up two chains and linking one to the other
@@ -263,10 +264,10 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(3, skipchainSID, Suite)
+	servers, el, genService := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -314,11 +315,11 @@ func TestService_MultiLevel(t *testing.T) {
 }
 
 func TestService_Verification(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	sbLength := 4
-	_, el, genService := local.MakeHELS(sbLength, skipchainSID, Suite)
+	_, el, genService := local.MakeHELS(sbLength, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
 
 	elRoot := onet.NewRoster(el.List[0:3])
@@ -347,10 +348,10 @@ func TestService_Verification(t *testing.T) {
 
 func TestService_SignBlock(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, genService := local.MakeHELS(3, skipchainSID, Suite)
+	_, el, genService := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
 
 	sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerificationNone, 1, 1)
@@ -369,10 +370,10 @@ func TestService_SignBlock(t *testing.T) {
 
 func TestService_ProtocolVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, s := local.MakeHELS(3, skipchainSID, Suite)
+	_, el, s := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	s1 := s.(*Service)
 	count := make(chan bool, 3)
 	verifyFunc := func(newID []byte, newSB *SkipBlock) bool {
@@ -402,7 +403,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 func TestService_RegisterVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, el, s1 := makeHELS(local, 3)
@@ -429,7 +430,7 @@ func TestService_RegisterVerification(t *testing.T) {
 
 func TestService_StoreSkipBlock2(t *testing.T) {
 	nbrHosts := 3
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	hosts, roster, s1 := makeHELS(local, nbrHosts)
@@ -481,7 +482,7 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, nbrHosts)
@@ -514,7 +515,7 @@ func TestService_ParallelStore(t *testing.T) {
 		t.Skip("parallel store does not run on travis, see #1000")
 	}
 	nbrRoutines := 10
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, 3)
@@ -564,10 +565,11 @@ func TestService_Propagation(t *testing.T) {
 		t.Skip("propagation does not run on travis, see #1000")
 	}
 	nbrNodes := 60
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
+
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeHELS(nbrNodes, skipchainSID, Suite)
+	servers, ro, genService := local.MakeHELS(nbrNodes, skipchainSID, cothority.Suite)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -583,10 +585,10 @@ func TestService_Propagation(t *testing.T) {
 }
 
 func TestService_AddFollow(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, _ := local.MakeHELS(3, skipchainSID, Suite)
+	servers, ro, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -607,7 +609,7 @@ func TestService_AddFollow(t *testing.T) {
 	// Wrong server signature
 	priv0 := local.GetPrivate(servers[0])
 	priv1 := local.GetPrivate(servers[1])
-	sig, err := schnorr.Sign(Suite, priv1, ssb.NewBlock.CalculateHash())
+	sig, err := schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
 	_, cerr = service.StoreSkipBlock(ssb)
@@ -615,7 +617,7 @@ func TestService_AddFollow(t *testing.T) {
 
 	// Correct server signature
 	log.Lvl2("correct server signature")
-	sig, err = schnorr.Sign(Suite, priv0, ssb.NewBlock.CalculateHash())
+	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
 	master0, cerr := service.StoreSkipBlock(ssb)
@@ -628,7 +630,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb = sb.Copy()
 	ssb.NewBlock = sb
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
-	sig, err = schnorr.Sign(Suite, priv0, ssb.NewBlock.CalculateHash())
+	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
 	require.Equal(t, 0, services[1].db.Length())
@@ -642,7 +644,7 @@ func TestService_AddFollow(t *testing.T) {
 		Block:    master0.Latest,
 		NewChain: NewChainAnyNode,
 	}}
-	sig, err = schnorr.Sign(Suite, priv0, ssb.NewBlock.CalculateHash())
+	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
 	master1, cerr := service.StoreSkipBlock(ssb)
@@ -659,7 +661,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb.Hash = sb.CalculateHash()
 	ssb.NewBlock = sb
 	ssb.LatestID = master1.Latest.Hash
-	sig, err = schnorr.Sign(Suite, priv1, ssb.NewBlock.CalculateHash())
+	sig, err = schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
 	sbs, err := service.db.getAll()
@@ -673,10 +675,10 @@ func TestService_AddFollow(t *testing.T) {
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, Suite)
+	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	server := servers[0]
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 	require.Equal(t, 0, len(service.Storage.Clients))
@@ -687,7 +689,7 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 	require.NotNil(t, cerr)
 	msg, err := server.ServerIdentity.Public.MarshalBinary()
 	require.Nil(t, err)
-	sig, err := schnorr.Sign(Suite, local.GetPrivate(servers[0]), msg)
+	sig, err := schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
 	log.ErrFatal(err)
 	_, cerr = service.CreateLinkPrivate(&CreateLinkPrivate{Public: servers[0].ServerIdentity.Public, Signature: sig})
 	log.ErrFatal(cerr)
@@ -698,16 +700,16 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 }
 
 func TestService_Unlink(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, Suite)
+	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	server := servers[0]
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
-	kp := key.NewKeyPair(Suite)
+	kp := key.NewKeyPair(cothority.Suite)
 	msg, _ := kp.Public.MarshalBinary()
-	sig, err := schnorr.Sign(Suite, local.GetPrivate(servers[0]), msg)
+	sig, err := schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
 	log.ErrFatal(err)
 	_, cerr := service.CreateLinkPrivate(&CreateLinkPrivate{Public: kp.Public, Signature: sig})
 	log.ErrFatal(cerr)
@@ -724,7 +726,7 @@ func TestService_Unlink(t *testing.T) {
 	// Inexistant public key
 	msg, _ = server.ServerIdentity.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
-	sig, err = schnorr.Sign(Suite, local.GetPrivate(servers[0]), msg)
+	sig, err = schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
 	_, cerr = service.Unlink(&Unlink{
 		Public:    servers[0].ServerIdentity.Public,
 		Signature: sig,
@@ -735,7 +737,7 @@ func TestService_Unlink(t *testing.T) {
 	// Wrong signature
 	msg, _ = kp.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
-	sig, err = schnorr.Sign(Suite, local.GetPrivate(servers[0]), msg)
+	sig, err = schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
 	_, cerr = service.Unlink(&Unlink{
 		Public:    kp.Public,
 		Signature: sig,
@@ -746,7 +748,7 @@ func TestService_Unlink(t *testing.T) {
 	// Correct signautre and existing public key
 	msg, _ = kp.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
-	sig, err = schnorr.Sign(Suite, kp.Private, msg)
+	sig, err = schnorr.Sign(cothority.Suite, kp.Private, msg)
 	_, cerr = service.Unlink(&Unlink{
 		Public:    kp.Public,
 		Signature: sig,
@@ -756,25 +758,25 @@ func TestService_Unlink(t *testing.T) {
 }
 
 func TestService_DelFollow(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, Suite)
+	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
-	privWrong := key.NewKeyPair(Suite).Private
+	privWrong := key.NewKeyPair(cothority.Suite).Private
 	priv := setupFollow(service)
 	iddel := []byte{0}
 	msg := append([]byte("delfollow:"), iddel...)
 
 	// Test wrong signature
-	sig, err := schnorr.Sign(Suite, privWrong, msg)
+	sig, err := schnorr.Sign(cothority.Suite, privWrong, msg)
 	log.ErrFatal(err)
 	_, cerr := service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.NotNil(t, cerr)
 	require.Equal(t, 2, len(service.Storage.FollowIDs))
 
-	sig, err = schnorr.Sign(Suite, priv, msg)
+	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
 	log.ErrFatal(err)
 	_, cerr = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.Nil(t, cerr)
@@ -783,7 +785,7 @@ func TestService_DelFollow(t *testing.T) {
 	// Test removal of Follow
 	iddel = []byte{2}
 	msg = append([]byte("delfollow:"), iddel...)
-	sig, err = schnorr.Sign(Suite, priv, msg)
+	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
 	log.ErrFatal(err)
 	_, cerr = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.Nil(t, cerr)
@@ -791,10 +793,10 @@ func TestService_DelFollow(t *testing.T) {
 }
 
 func TestService_ListFollow(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, Suite)
+	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
 	priv := setupFollow(service)
@@ -803,7 +805,7 @@ func TestService_ListFollow(t *testing.T) {
 	msg, err := servers[1].ServerIdentity.Public.MarshalBinary()
 	log.ErrFatal(err)
 	msg = append([]byte("listfollow:"), msg...)
-	sig, err := schnorr.Sign(Suite, priv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, priv, msg)
 	log.ErrFatal(err)
 	lf, cerr := service.ListFollow(&ListFollow{Signature: sig})
 	require.NotNil(t, cerr)
@@ -811,7 +813,7 @@ func TestService_ListFollow(t *testing.T) {
 	msg, err = servers[0].ServerIdentity.Public.MarshalBinary()
 	log.ErrFatal(err)
 	msg = append([]byte("listfollow:"), msg...)
-	sig, err = schnorr.Sign(Suite, priv, msg)
+	sig, err = schnorr.Sign(cothority.Suite, priv, msg)
 	log.ErrFatal(err)
 	lf, cerr = service.ListFollow(&ListFollow{Signature: sig})
 	require.Nil(t, cerr)
@@ -820,7 +822,7 @@ func TestService_ListFollow(t *testing.T) {
 }
 
 func setupFollow(s *Service) kyber.Scalar {
-	kp := key.NewKeyPair(Suite)
+	kp := key.NewKeyPair(cothority.Suite)
 	s.Storage.Clients = []kyber.Point{kp.Public}
 	s.Storage.FollowIDs = []SkipBlockID{{0}, {1}}
 	s.Storage.Follow = []FollowChainType{

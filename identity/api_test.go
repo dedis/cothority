@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -45,7 +46,17 @@ func TestIdentity_PinRequest(t *testing.T) {
 	require.Equal(t, pub, srvc.auth.adminKeys[0])
 }
 
+func suiteSkip(t *testing.T) {
+	// Some of these tests require Ed25519, so skip if we are currently
+	// running with another suite.
+	if tSuite != suites.MustFind("Ed25519") {
+		t.Skip("current suite is not compatible with this test, skipping it")
+		return
+	}
+}
+
 func TestIdentity_StoreKeys(t *testing.T) {
+	suiteSkip(t)
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
@@ -75,7 +86,8 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	signature := make(chan []byte)
 	c := node.(*cosi.CoSi)
 	c.RegisterSignatureHook(func(sig []byte) {
-		signature <- sig[:64]
+		log.Lvl3("sig", len(sig))
+		signature <- sig[0 : len(sig)-1]
 	})
 	c.Message = hash
 	go node.Start()

@@ -1,16 +1,13 @@
 package skipchain
 
 import (
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/group/edwards25519"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
-
-// Suite is defined locally until we have a better way to give it per-service.
-var Suite = edwards25519.NewBlakeSHA256Ed25519()
 
 const (
 	// ErrorBlockNotFound indicates that for any number of operations the
@@ -41,7 +38,7 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Skipchain", Suite)}
+	return &Client{Client: onet.NewClient("Skipchain", cothority.Suite)}
 }
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and eventually
@@ -83,7 +80,7 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 	reply = &StoreSkipBlockReply{}
 	var sig *[]byte
 	if priv != nil {
-		signature, err := schnorr.Sign(Suite, priv, newBlock.CalculateHash())
+		signature, err := schnorr.Sign(cothority.Suite, priv, newBlock.CalculateHash())
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ErrorParameterWrong, "couldn't sign block: "+err.Error())
 		}
@@ -241,7 +238,7 @@ func (c *Client) CreateLinkPrivate(si *network.ServerIdentity, conodePriv kyber.
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, "couldn't marshal point: "+err.Error())
 	}
-	sig, err := schnorr.Sign(Suite, conodePriv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, conodePriv, msg)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, "couldn't sign public key: "+err.Error())
 	}
@@ -253,13 +250,13 @@ func (c *Client) CreateLinkPrivate(si *network.ServerIdentity, conodePriv kyber.
 // only if you have the private key can you request to remove the public
 // counterpart on the server.
 func (c *Client) Unlink(si *network.ServerIdentity, priv kyber.Scalar) onet.ClientError {
-	public := Suite.Point().Mul(priv, nil)
+	public := cothority.Suite.Point().Mul(priv, nil)
 	msg, err := public.MarshalBinary()
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
 	msg = append([]byte("unlink:"), msg...)
-	sig, err := schnorr.Sign(Suite, priv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, priv, msg)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorOnet, err.Error())
 	}
@@ -298,7 +295,7 @@ func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv kyber.Scalar,
 	msg := []byte{byte(Follow)}
 	msg = append(scid, msg...)
 	msg = append(msg, []byte(conode)...)
-	sig, err := schnorr.Sign(Suite, clientPriv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorParameterWrong, "couldn't sign message:"+err.Error())
 	}
@@ -311,7 +308,7 @@ func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv kyber.Scalar,
 // been called is this active.
 func (c *Client) DelFollow(si *network.ServerIdentity, clientPriv kyber.Scalar, scid SkipBlockID) onet.ClientError {
 	msg := append([]byte("delfollow:"), scid...)
-	sig, err := schnorr.Sign(Suite, clientPriv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
 	if err != nil {
 		return onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 	}
@@ -326,7 +323,7 @@ func (c *Client) ListFollow(si *network.ServerIdentity, clientPriv kyber.Scalar)
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 	}
 	msg = append([]byte("listfollow:"), msg...)
-	sig, err := schnorr.Sign(Suite, clientPriv, msg)
+	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(ErrorParameterWrong, err.Error())
 	}
