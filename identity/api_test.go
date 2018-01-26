@@ -46,14 +46,17 @@ func TestIdentity_PinRequest(t *testing.T) {
 	require.Equal(t, pub, srvc.auth.adminKeys[0])
 }
 
-func TestIdentity_StoreKeys(t *testing.T) {
+func suiteSkip(t *testing.T) {
+	// Some of these tests require Ed25519, so skip if we are currently
+	// running with another suite.
 	if tSuite != suites.MustFind("Ed25519") {
-		// StoreKeys eventually calls eddsa.Verify, which will not work
-		// with non?Ed25519 suites.
-		t.Log("Wrong suite, this service will not run.")
+		t.Skip("current suite is not compatible with this test, skipping it")
 		return
 	}
+}
 
+func TestIdentity_StoreKeys(t *testing.T) {
+	suiteSkip(t)
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
