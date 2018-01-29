@@ -5,6 +5,8 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OCSProto;
 import com.google.protobuf.ByteString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This represents a read-request as it has to be sent to the skipchain. It can communicate with the
@@ -14,6 +16,7 @@ import com.google.protobuf.ByteString;
 public class ReadRequest {
     private WriteRequestId wrId;
     private DarcSignature signature;
+    private final Logger logger = LoggerFactory.getLogger(ReadRequest.class);
 
     /**
      * This fetches the write-request and the path for the reader to sign. If the reader is
@@ -33,6 +36,9 @@ public class ReadRequest {
         Darc readDarc = new Darc(wr.getReader());
         Identity readerId = IdentityFactory.New(reader);
         SignaturePath path = ocs.getDarcPath(readDarc.getId(), readerId, SignaturePath.USER);
+        for (Darc d : path.getDarcs()) {
+            logger.debug("Path: " + d.toString());
+        }
         this.signature = new DarcSignature(wrId.getId(), path, reader);
     }
 

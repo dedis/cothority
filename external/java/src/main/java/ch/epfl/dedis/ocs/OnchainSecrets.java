@@ -155,11 +155,6 @@ public class OnchainSecrets extends OnchainSecretsRPC {
     public Document getDocument(WriteRequestId wrId, Signer reader) throws CothorityCryptoException, CothorityCommunicationException {
         OCSProto.Write document = getWrite(wrId);
         Darc readerDarc = new Darc(document.getReader());
-        SignaturePath path = getDarcPath(readerDarc.getId(), IdentityFactory.New(reader), SignaturePath.USER);
-
-        for (Darc d : path.getDarcs()) {
-            logger.debug("Path: " + d.toString());
-        }
 
         ReadRequestId rrid = createReadRequest(new ReadRequest(this, wrId, reader));
         DecryptKey dk = getDecryptionKey(rrid);

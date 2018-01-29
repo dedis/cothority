@@ -13409,11 +13409,11 @@ public final class OCSProto {
     com.google.protobuf.ByteString getRead();
 
     /**
-     * <code>required bytes ephemeral = 2;</code>
+     * <code>optional bytes ephemeral = 2;</code>
      */
     boolean hasEphemeral();
     /**
-     * <code>required bytes ephemeral = 2;</code>
+     * <code>optional bytes ephemeral = 2;</code>
      */
     com.google.protobuf.ByteString getEphemeral();
 
@@ -13547,13 +13547,13 @@ public final class OCSProto {
     public static final int EPHEMERAL_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString ephemeral_;
     /**
-     * <code>required bytes ephemeral = 2;</code>
+     * <code>optional bytes ephemeral = 2;</code>
      */
     public boolean hasEphemeral() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes ephemeral = 2;</code>
+     * <code>optional bytes ephemeral = 2;</code>
      */
     public com.google.protobuf.ByteString getEphemeral() {
       return ephemeral_;
@@ -13587,10 +13587,6 @@ public final class OCSProto {
       if (isInitialized == 0) return false;
 
       if (!hasRead()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasEphemeral()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -13935,9 +13931,6 @@ public final class OCSProto {
         if (!hasRead()) {
           return false;
         }
-        if (!hasEphemeral()) {
-          return false;
-        }
         if (hasSignature()) {
           if (!getSignature().isInitialized()) {
             return false;
@@ -14002,19 +13995,19 @@ public final class OCSProto {
 
       private com.google.protobuf.ByteString ephemeral_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes ephemeral = 2;</code>
+       * <code>optional bytes ephemeral = 2;</code>
        */
       public boolean hasEphemeral() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required bytes ephemeral = 2;</code>
+       * <code>optional bytes ephemeral = 2;</code>
        */
       public com.google.protobuf.ByteString getEphemeral() {
         return ephemeral_;
       }
       /**
-       * <code>required bytes ephemeral = 2;</code>
+       * <code>optional bytes ephemeral = 2;</code>
        */
       public Builder setEphemeral(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -14026,7 +14019,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required bytes ephemeral = 2;</code>
+       * <code>optional bytes ephemeral = 2;</code>
        */
       public Builder clearEphemeral() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -19004,7 +18997,7 @@ public final class OCSProto {
       "ipBlock\"&\n\023SharedPublicRequest\022\017\n\007genesi" +
       "s\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"" +
       "S\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002(\014\022\021\n\tep" +
-      "hemeral\030\002 \002(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signa" +
+      "hemeral\030\002 \001(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signa" +
       "ture\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007x",
       "hatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadReques" +
       "ts\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetR" +

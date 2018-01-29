@@ -164,7 +164,7 @@ message SharedPublicReply {
 // encrypted, but then a Signature on the key from the reader is needed.
 message DecryptKeyRequest {
   required bytes read = 1;
-  required bytes ephemeral = 2;
+  optional bytes ephemeral = 2;
   optional Signature signature = 3;
 }
 

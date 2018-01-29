@@ -92,6 +92,22 @@ class OnchainSecretsTest {
     }
 
     @Test
+    void getDocument() throws CothorityException, IOException, InterruptedException {
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
+        Document doc2 = ocs.getDocument(wr.id, reader);
+        assertTrue(doc.equals(doc2));
+        // Inverse is not true, as doc2 now contains a writeId
+        assertFalse(doc2.equals(doc));
+
+        // Add another reader
+        Signer reader2 = new Ed25519Signer();
+        ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
+        Document doc3 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc3));
+        assertFalse(doc3.equals(doc));
+    }
+
+    @Test
     void ephemeralReadDocument() throws Exception{
         WriteRequest write = ocs.publishDocument(doc, publisher);
         Document doc2 = ocs.getDocumentEphemeral(write.id, reader);

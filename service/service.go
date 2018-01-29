@@ -443,6 +443,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal ephemeral key")
 		}
 		if err = req.Signature.Verify(pub, read.Darc); err != nil {
+			log.Print(err)
 			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature")
 		}
 	}

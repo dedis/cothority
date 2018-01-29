@@ -388,7 +388,8 @@ type SharedPublicReply struct {
 // it can be given an Ephemeral public key under which the reply should be
 // encrypted, but then a Signature on the key from the reader is needed.
 type DecryptKeyRequest struct {
-	Read      skipchain.SkipBlockID
+	Read skipchain.SkipBlockID
+	// optional
 	Ephemeral kyber.Point
 	Signature *darc.Signature
 }
