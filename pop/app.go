@@ -127,7 +127,6 @@ func orgLink(c *cli.Context) error {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
-		log.Print()
 		return err
 	}
 	cfg.Address = addr

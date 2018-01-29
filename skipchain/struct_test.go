@@ -218,30 +218,39 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 		return nil
 	})
 
-	require.Nil(t, db.GetFuzzy(""))
+	sb, err := db.GetFuzzy("")
+	require.Nil(t, sb)
+	require.NotNil(t, err)
 
-	sb := db.GetFuzzy("01")
+	sb, err = db.GetFuzzy("01")
+	require.Nil(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 
-	sb = db.GetFuzzy("02")
+	sb, err = db.GetFuzzy("02")
+	require.Nil(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb1.Data[0])
 
-	sb = db.GetFuzzy("03")
+	sb, err = db.GetFuzzy("03")
+	require.Nil(t, err)
 	require.Nil(t, sb)
 
-	sb = db.GetFuzzy("04")
+	sb, err = db.GetFuzzy("04")
+	require.Nil(t, err)
 	require.Nil(t, sb)
 
-	sb = db.GetFuzzy("05")
+	sb, err = db.GetFuzzy("05")
+	require.Nil(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 
-	sb = db.GetFuzzy("06")
+	sb, err = db.GetFuzzy("06")
+	require.Nil(t, err)
 	require.Nil(t, sb)
 
-	sb = db.GetFuzzy("0102030605")
+	sb, err = db.GetFuzzy("0102030605")
+	require.Nil(t, err)
 	require.NotNil(t, sb)
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 }

@@ -1,6 +1,7 @@
 package skipchain_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/dedis/cothority"
@@ -141,6 +142,30 @@ func TestER(t *testing.T) {
 	}
 }
 
+func TestFail(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Stress-test of localtest with premature close")
+	}
+	for i := 0; i < 50; i++ {
+		log.Lvl1("Starting test", i)
+		nbrNodes := 10
+		local := onet.NewLocalTest(cothority.Suite)
+		servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
+		tss := local.GetServices(servers, tsID)
+
+		sb := &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Roster: roster,
+			Data: []byte{}}}
+
+		// Check refusing of new chains
+		for _, t := range tss {
+			t.(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
+		}
+		sigs := tss[0].(*testService).CallER(tree, sb)
+		require.Equal(t, 0, len(sigs))
+		local.CloseAll()
+	}
+}
+
 func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	log.Lvl1("Testing", nbrNodes, "nodes")
 	local := onet.NewLocalTest(cothority.Suite)
@@ -178,7 +203,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	}
 	local.CloseAll()
 
-	// When only one node refuse,
+	// When only one node refuses,
 	// we should be able to proceed because skipchain is fault tolerant
 	if nbrNodes > 4 {
 		local = onet.NewLocalTest(cothority.Suite)
@@ -186,14 +211,18 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 		tss = local.GetServices(servers, tsid)
 		for i := 3; i < nbrNodes; i++ {
 			log.Lvl2("Checking failing signature at", i)
+			tss[i].(*testService).Lock()
 			tss[i].(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
 			tss[i].(*testService).Followers = []skipchain.FollowChainType{}
+			tss[i].(*testService).Unlock()
 			sigs = tss[0].(*testService).CallER(tree, sb)
 			require.Equal(t, 0, len(sigs))
+			tss[i].(*testService).Lock()
 			tss[i].(*testService).Followers = []skipchain.FollowChainType{{
 				Block:    sb,
 				NewChain: skipchain.NewChainAnyNode,
 			}}
+			tss[i].(*testService).Unlock()
 		}
 		local.CloseAll()
 	}
@@ -201,6 +230,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 
 type testService struct {
 	*onet.ServiceProcessor
+	sync.Mutex
 	Followers   []skipchain.FollowChainType
 	FollowerIDs []skipchain.SkipBlockID
 	Db          *skipchain.SkipBlockDB
@@ -247,9 +277,11 @@ func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.Generic
 		pi, err = skipchain.NewProtocolExtendRoster(ti)
 		if err == nil {
 			pier := pi.(*skipchain.ExtendRoster)
+			ts.Lock()
 			pier.Followers = &ts.Followers
 			pier.FollowerIDs = ts.FollowerIDs
 			pier.DB = ts.Db
+			ts.Unlock()
 		}
 	}
 	if ti.ProtocolName() == skipchain.ProtocolGetBlocks {
