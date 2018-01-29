@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -945,4 +946,94 @@ func waitPropagationFinished(t *testing.T, local *onet.LocalTest) {
 		}
 	}
 	log.AfterTest(t)
+}
+
+func TestService_LeaderCatchup(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+
+	hosts := local.GenServers(2)
+	roster := local.GenRosterFromHost(hosts...)
+	leader := local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
+	follower := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
+
+	log.Lvl1("Creating root and control chain")
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 2,
+			BaseHeight:    3,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	ssbrep, cerr := leader.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	log.ErrFatal(cerr)
+
+	var third SkipBlockID
+	for i := 0; i < 10; i++ {
+		ssbrep, cerr = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+			NewBlock: sbRoot})
+		if cerr != nil {
+			t.Fatal(cerr)
+		}
+		if i == 3 {
+			third = ssbrep.Latest.Hash
+		}
+	}
+
+	// At this point, both servers have all blocks. Now remove blocks from
+	// the leader's DB starting at the third one to simulate the situation where the leader
+	// boots with an old backup.
+	nukeBlocksFrom(t, leader.db, third)
+
+	// Write one more onto the leader: it will need to sync it's chain in order
+	// to handle this write.
+	ssbrep, cerr = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+		NewBlock: sbRoot})
+	if cerr != nil {
+		t.Fatal(cerr)
+	}
+
+	sb11 := leader.db.GetByID(ssbrep.Latest.Hash)
+	require.Equal(t, sb11.Index, 11)
+
+	// Simulate follower old backup.
+	nukeBlocksFrom(t, follower.db, third)
+
+	// Write onto leader; the follower will need to sync to be able to sign this.
+	ssbrep, cerr = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+		NewBlock: sbRoot})
+	if cerr != nil {
+		t.Fatal(cerr)
+	}
+}
+
+func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
+	for {
+		// Get to find forward links.
+		sb := db.GetByID(where)
+		if sb == nil {
+			return
+		}
+
+		// nuke it
+		t.Log("nuking block", sb.Index)
+		err := db.Update(func(tx *bolt.Tx) error {
+			err := tx.Bucket([]byte(db.bucketName)).Delete(where)
+			if err != nil {
+				log.Fatal("delete error", err)
+			}
+			return err
+		})
+		if err != nil {
+			log.Fatal("update error", err)
+		}
+
+		// Go to next one
+		if len(sb.ForwardLink) == 0 {
+			return
+		}
+		where = sb.ForwardLink[0].Hash()
+	}
 }

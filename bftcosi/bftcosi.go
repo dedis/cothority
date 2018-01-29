@@ -486,9 +486,10 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	if err := sig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
 		log.Error(bft.Name(), "Verification of the signature failed:", err)
 		bft.signRefusal = true
-	} else {
-		log.Lvl3(bft.Name(), "Verification of signature successful")
+		return err
 	}
+	log.Lvl3(bft.Name(), "Verification of signature successful")
+
 	// Start the challenge of the 'commit'-round
 	if err := bft.startChallenge(RoundCommit); err != nil {
 		log.Error(bft.Name(), err)

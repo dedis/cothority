@@ -47,7 +47,6 @@ type Service struct {
 	verifiers          map[VerifierID]SkipBlockVerifier
 	blockRequestsMutex sync.Mutex
 	blockRequests      map[string]chan *SkipBlock
-	lastSave           time.Time
 	newBlocksMutex     sync.Mutex
 	newBlocks          map[string]bool
 	storageMutex       sync.Mutex
@@ -145,8 +144,29 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		// We're appending a block to an existing chain
 		prev = s.db.GetByID(psbd.LatestID)
 		if prev == nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
-				"Didn't find latest block")
+			// Did not find the block they claim is the latest.
+
+			// If we don't know this chain, we give up (so that
+			// they cannot make us run useless chainSyncs and attack
+			// other conodes).
+			var gen *SkipBlock
+			if gen = s.db.GetByID(psbd.NewBlock.SkipChainID()); gen == nil {
+				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					"Unknown latest block, unknown chain-id")
+			}
+			// If we know of this chain, try to sync it.
+			latest := s.findLatest(gen)
+			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
+			err := s.syncChain(latest.Roster, latest.Hash)
+			if err != nil {
+				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					"failed to catch up")
+			}
+			prev = s.db.GetByID(psbd.LatestID)
+			if prev == nil {
+				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+					"Didn't find latest block, even after catchup")
+			}
 		}
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
 			return nil, onet.NewClientErrorCode(ErrorBlockContent,
@@ -234,7 +254,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		Previous: prev,
 		Latest:   prop,
 	}
-	log.Lvl2("Block added, replying")
+	log.Lvlf2("Block added, replying. New latest is: %x", prop.Hash)
 	return reply, nil
 }
 
@@ -280,6 +300,21 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	return reply, nil
 }
 
+// Search the local DB starting at bl and finding the latest block we know.
+func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
+	for {
+		if len(bl.ForwardLink) == 0 {
+			return bl
+		}
+		next := bl.ForwardLink[len(bl.ForwardLink)-1].Hash()
+		nextBl := s.db.GetByID(next)
+		if nextBl == nil {
+			return bl
+		}
+		bl = nextBl
+	}
+}
+
 // syncChain communicates with conodes in the Roster via getBlocks
 // in order to find the latest block.
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
@@ -312,8 +347,9 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
 	subCount := (len(roster.List)-1)/3 + 1
-	t := roster.RandomSubset(s.ServerIdentity(), subCount).GenerateStar()
-	pi, err := s.CreateProtocol(ProtocolGetBlocks, t)
+	r := roster.RandomSubset(s.ServerIdentity(), subCount)
+	tr := r.GenerateStar()
+	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
 	if err != nil {
 		return nil, err
 	}
@@ -801,7 +837,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 
 // verifyNewBlock makes sure that a signature-request for a forward-link
 // is valid.
-func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) bool {
+func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) (out bool) {
 	if len(data) < 32 {
 		log.Error("not enough data")
 		return false
@@ -938,6 +974,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 	msg := []byte(dst.Hash)
 	sig, err := s.startBFT(bftNewBlock, roster, msg, append(src.Hash, data...))
 	if err != nil {
+		log.Lvl3("startBFT failed with", err)
 		return err
 	}
 
@@ -1165,7 +1202,8 @@ func (s *Service) willNodesAcceptBlock(block *SkipBlock) bool {
 	return len(sigs) >= len(block.Roster.List)-(len(block.Roster.List)-1)/3-1
 }
 
-// saves all skipblocks.
+// Saves s.Storage into the DB. The blocks themselves are stored as they
+// are added.
 func (s *Service) save() {
 	s.storageMutex.Lock()
 	defer s.storageMutex.Unlock()
@@ -1209,7 +1247,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err := s.tryLoad(); err != nil {
 		return nil, err
 	}
-	s.lastSave = time.Now()
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
