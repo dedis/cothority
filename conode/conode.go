@@ -53,23 +53,12 @@ func main() {
 			Name:    "setup",
 			Aliases: []string{"s"},
 			Usage:   "Setup server configuration (interactive)",
-			Action: func(c *cli.Context) error {
-				if c.String("config") != "" {
-					log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
-				}
-				if c.String("debug") != "" {
-					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
-				}
-				app.InteractiveConfig("conode", cothority.Suite)
-				return nil
-			},
+			Action:  setup,
 		},
 		{
-			Name:  "server",
-			Usage: "Start cothority server",
-			Action: func(c *cli.Context) {
-				runServer(c)
-			},
+			Name:   "server",
+			Usage:  "Start cothority server",
+			Action: runServer,
 		},
 		{
 			Name:      "check",
@@ -115,10 +104,11 @@ func main() {
 	log.ErrFatal(err)
 }
 
-func runServer(ctx *cli.Context) {
+func runServer(ctx *cli.Context) error {
 	// first check the options
 	config := ctx.GlobalString("config")
 	app.RunServer(config)
+	return nil
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid
@@ -129,6 +119,17 @@ func checkConfig(c *cli.Context) error {
 		tomlFileName = c.Args().First()
 	}
 	return check.Config(tomlFileName, c.Bool("detail"))
+}
+
+func setup(c *cli.Context) error {
+	if c.String("config") != "" {
+		log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
+	}
+	if c.String("debug") != "" {
+		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
+	}
+	app.InteractiveConfig("conode", cothority.Suite)
+	return nil
 }
 
 // Convert toml files from base64-encoded kyes to hex-encoded keys

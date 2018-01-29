@@ -1,39 +1,40 @@
 [[servers]]
   Address = "tcp://78.46.227.60:7770"
-  Public = "5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY="
+  Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
   Description = "Ineiti's Cothority-server"
 
 [[servers]]
   Address = "tcp://192.33.210.8:7770"
-  Public = "A2vzFuHqbn6Z4LtxNBnRbAtnlL+dxELMTPNsP5Nek88="
+  Public = "036bf316e1ea6e7e99e0bb713419d16c0b6794bf9dc442cc4cf36c3f935e93cf"
   Description = "EPFL Cothority-server"
 
 [[servers]]
   Address = "tcp://5.135.161.91:2000"
-  Public = "UsanfHVs5fO+80FABsRVVq63CEwPPkRn3ScQeSeRLFE="
+  Public = "52c6a77c756ce5f3bef3414006c45556aeb7084c0f3e4467dd27107927912c51"
   Description = "Nikkolasg's server serving the cothority"
 
 [[servers]]
   Address = "tcp://159.100.249.178:6879"
-  Public = "9nzWwjezfPVlu5U9q07h2HWTsBJmXXsRBJO+6AHonkw="
+  Public = "f67cd6c237b37cf565bb953dab4ee1d87593b012665d7b110493bee801e89e4c"
   Description = "Daeinar's Conode"
 
 [[servers]]
   Address = "tcp://46.101.254.191:6879"
-  Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
+  Public = "619d198a0611b40d57c5bc220a2b3655cbfef092f06ed68a7808c053e1cf98db"
   Description = "Kirill's server"
 
 [[servers]]
   Address = "tcp://139.59.10.242:3000"
-  Public = "4OwnNWMX6+XIenC/8orGHYzwhuxSwSLGhUCyAsDTvt8="
+  Public = "e0ec27356317ebe5c87a70bff28ac61d8cf086ec52c122c68540b202c0d3bedf"
   Description = "Brahma-BL1"
 
 [[servers]]
   Address = "tcp://167.160.36.37:3000"
-  Public = "Nw0ZhZgLzZ3Vjkgx/lWkCd2LIN+E+IM3AI2jBv4j9dk="
+  Public = "370d1985980bcd9dd58e4831fe55a409dd8b20df84f88337008da306fe23f5d9"
   Description = "sina's conode"
 
 [[servers]]
   Address = "tcp://46.101.101.102:9100"
-  Public = "TX6jUNkOPB7daK7Paq87x5eCBIcMcc9ELrxZkcwtpJs="
+  Public = "4d7ea350d90e3c1edd68aecf6aaf3bc7978204870c71cf442ebc5991cc2da49b"
   Description = "jwhite's server"
+
