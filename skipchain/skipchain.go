@@ -572,7 +572,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 			roster := onet.NewRoster([]*network.ServerIdentity{si})
 			last, err := s.getLastBlock(roster, add.SkipchainID)
 			if err != nil {
-				log.Error("could not get last block: ", err)
+				log.Lvl1(s.ServerIdentity(), "could not get last block: ", err)
 			} else {
 				if last.SkipChainID().Equal(add.SkipchainID) {
 					s.Storage.Follow = append(s.Storage.Follow,
@@ -696,6 +696,18 @@ func (s *Service) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 	}
 	return
+}
+
+// AddClientKey can be used by other services to add a key so
+// they can store new Blocks
+func (s *Service) AddClientKey(pub kyber.Point) {
+	for _, p := range s.Storage.Clients {
+		if p.Equal(pub) {
+			return
+		}
+	}
+	s.Storage.Clients = append(s.Storage.Clients, pub)
+	s.save()
 }
 
 func (s *Service) verifySigs(msg, sig []byte) bool {

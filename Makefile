@@ -10,7 +10,7 @@ include $(shell go env GOPATH)/src/github.com/dedis/Coding/bin/Makefile.base
 test_playground:
 	cd skipchain; \
 	for a in $$( seq 100 ); do \
-	  go test -v -race -short || exit 1 ; \
+	  go test -race -short || exit 1 ; \
 	done;
 
 # Other targets are:

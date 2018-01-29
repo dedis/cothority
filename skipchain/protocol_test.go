@@ -188,7 +188,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss = local.GetServices(servers, tsid)
 	for _, t := range tss {
-		t.(*testService).Followers = []skipchain.FollowChainType{{
+		t.(*testService).Followers = &[]skipchain.FollowChainType{{
 			Block:    sb,
 			NewChain: skipchain.NewChainAnyNode,
 		}}
@@ -213,12 +213,12 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 			log.Lvl2("Checking failing signature at", i)
 			tss[i].(*testService).Lock()
 			tss[i].(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
-			tss[i].(*testService).Followers = []skipchain.FollowChainType{}
+			tss[i].(*testService).Followers = &[]skipchain.FollowChainType{}
 			tss[i].(*testService).Unlock()
 			sigs = tss[0].(*testService).CallER(tree, sb)
 			require.Equal(t, 0, len(sigs))
 			tss[i].(*testService).Lock()
-			tss[i].(*testService).Followers = []skipchain.FollowChainType{{
+			tss[i].(*testService).Followers = &[]skipchain.FollowChainType{{
 				Block:    sb,
 				NewChain: skipchain.NewChainAnyNode,
 			}}
@@ -231,7 +231,7 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 type testService struct {
 	*onet.ServiceProcessor
 	sync.Mutex
-	Followers   []skipchain.FollowChainType
+	Followers   *[]skipchain.FollowChainType
 	FollowerIDs []skipchain.SkipBlockID
 	Db          *skipchain.SkipBlockDB
 }
@@ -278,7 +278,7 @@ func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.Generic
 		if err == nil {
 			pier := pi.(*skipchain.ExtendRoster)
 			ts.Lock()
-			pier.Followers = &ts.Followers
+			pier.Followers = ts.Followers
 			pier.FollowerIDs = ts.FollowerIDs
 			pier.DB = ts.Db
 			ts.Unlock()
