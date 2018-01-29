@@ -50,15 +50,6 @@ var VerifyOCS = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OCS"))
 var VerificationOCS = []skipchain.VerifierID{skipchain.VerifyBase,
 	VerifyOCS}
 
-const (
-	// ErrorParameter is used when one of the parameters is faulty or leads
-	// to a fault.
-	ErrorParameter = iota + 4000
-	// ErrorProtocol is used when one of the protocols (propagation) returns
-	// an error.
-	ErrorProtocol
-)
-
 // SkipChainURL represents a skipchain. It needs to know the roster of the
 // responsible nodes, and the hash of the genesis-block, which is the ID
 // of the Skipchain.

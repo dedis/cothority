@@ -237,16 +237,16 @@ func read(c *cli.Context) error {
 	// pub := cothority.Suite.Point().Mul(priv, nil)
 	// log.Printf("Private: %s\nPublic: %s", priv, pub)
 	// cl := ocs.NewClient()
-	// sb, cerr := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
+	// sb, err := cl.ReadRequest(cfg.SkipChainURL, fileID, priv)
 	// log.ErrFatal(cerr)
 	// if sb == nil {
 	// 	log.Fatal("Got empty skipblock - read refused")
 	// }
 
 	// log.Info("Asking to re-encrypt the symmetric key")
-	// key, cerr := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
+	// key, err := cl.DecryptKeyRequest(cfg.SkipChainURL, sb.Hash, priv)
 	// log.ErrFatal(cerr)
-	// fileEnc, cerr := cl.GetData(cfg.SkipChainURL, fileID)
+	// fileEnc, err := cl.GetData(cfg.SkipChainURL, fileID)
 	// log.ErrFatal(cerr)
 
 	// file, err := aeadOpen(key, fileEnc)
@@ -273,9 +273,9 @@ func scread(c *cli.Context) error {
 		sc = cfg.SkipChainURL.Genesis
 	}
 	cl := skipchain.NewClient()
-	sb, cerr := cl.GetSingleBlock(cfg.SkipChainURL.Roster, sc)
-	if cerr != nil {
-		return cerr
+	sb, err := cl.GetSingleBlock(cfg.SkipChainURL.Roster, sc)
+	if err != nil {
+		return err
 	}
 	log.Printf("SkipblockID (Hash): %x", sb.Hash)
 	log.Printf("Index: %d", sb.Index)
