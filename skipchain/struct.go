@@ -701,15 +701,13 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 //  1. as prefix - if none is found
 //  2. as suffix - if none is found
 //  3. anywhere
-func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
+func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 	match, err := hex.DecodeString(id)
 	if err != nil {
-		log.Error("Failed to decode " + id)
-		return nil
+		return nil, errors.New("Failed to decode " + id)
 	}
 	if len(match) == 0 {
-		log.Error("id is empty")
-		return nil
+		return nil, errors.New("id is empty")
 	}
 
 	var sb *SkipBlock
@@ -719,8 +717,7 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 			if bytes.HasPrefix(k, match) {
 				_, msg, err := network.Unmarshal(v, cothority.Suite)
 				if err != nil {
-					log.Error("Unmarshal failed with error: " + err.Error())
-					return err
+					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
 				sb = msg.(*SkipBlock).Copy()
 				return nil
@@ -730,17 +727,15 @@ func (db *SkipBlockDB) GetFuzzy(id string) *SkipBlock {
 			if bytes.HasSuffix(k, match) {
 				_, msg, err := network.Unmarshal(v, cothority.Suite)
 				if err != nil {
-					log.Error("Unmarshal failed with error: " + err.Error())
-					return err
+					return errors.New("Unmarshal failed with error: " + err.Error())
 				}
 				sb = msg.(*SkipBlock).Copy()
 				return nil
 			}
 		}
-		log.Info("Cannot find key that matches " + id)
 		return nil
 	})
-	return sb
+	return sb, nil
 }
 
 // GetSkipchains returns all latest skipblocks from all skipchains.

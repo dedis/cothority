@@ -316,7 +316,10 @@ func scAdd(c *cli.Context) error {
 		roster = group.Roster
 	}
 	cfg := getConfigOrFail(c)
-	sb := cfg.Db.GetFuzzy(c.Args().First())
+	sb, err := cfg.Db.GetFuzzy(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if sb == nil {
 		return errors.New("didn't find this skipchain")
 	}
@@ -349,7 +352,10 @@ func scPrint(c *cli.Context) error {
 		return errors.New("Please give a skipchain-id")
 	}
 	cfg := getConfigOrFail(c)
-	sb := cfg.Db.GetFuzzy(c.Args().First())
+	sb, err := cfg.Db.GetFuzzy(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if sb == nil {
 		return errors.New("didn't find this skipblock")
 	}

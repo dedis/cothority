@@ -219,7 +219,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 					prev.GetForward(0)}); err != nil {
 				// This is not a critical failure - we have at least
 				// one forward-link
-				log.Error("Couldn't get old block to sign: " + err.Error())
+				log.Lvl1("Couldn't get old block to sign: " + err.Error())
 			} else {
 				changed = append(changed, back)
 			}
@@ -715,12 +715,12 @@ func (s *Service) forwardSignature(fs *ForwardSignature) error {
 func (s *Service) deprecatedProcessorGetBlock(env *network.Envelope) {
 	gb, ok := env.Msg.(*GetBlock)
 	if !ok {
-		log.Error("Didn't receive GetBlock")
+		log.Lvl1("Didn't receive GetBlock")
 		return
 	}
 	sb := s.db.GetByID(gb.ID)
 	if sb == nil {
-		log.Errorf("Did not find block %v", gb.ID)
+		log.Lvl1("Did not find block %v", gb.ID)
 		return
 	}
 	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i < 0 {
@@ -733,7 +733,7 @@ func (s *Service) deprecatedProcessorGetBlock(env *network.Envelope) {
 		}
 	}
 	if err := s.SendRaw(env.ServerIdentity, &GetBlockReply{sb}); err != nil {
-		log.Error(err)
+		log.Lvl1(err)
 	}
 }
 
@@ -1061,7 +1061,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 		return err
 	}
 	if replies != len(roster.List) {
-		log.Warn("Only got", replies, "out of", len(roster.List))
+		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(roster.List))
 	}
 	return nil
 }
