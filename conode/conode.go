@@ -57,7 +57,7 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 				}
-				app.InteractiveConfig("conode")
+				app.InteractiveConfig("conode", cothority.Suite)
 				return nil
 			},
 		},
@@ -116,7 +116,7 @@ func runServer(ctx *cli.Context) {
 	// first check the options
 	config := ctx.GlobalString("config")
 
-	app.RunServer(config, cothority.Suite)
+	app.RunServer(config)
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid
