@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -63,7 +64,7 @@ func (sbb *SkipBlockBunch) Store(sb *skipchain.SkipBlock) skipchain.SkipBlockID 
 		// new children.
 		if sb.GetForwardLen() > sbOld.GetForwardLen() {
 			for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
-				if err := fl.Verify(skipchain.Suite, sbOld.Roster.Publics()); err != nil {
+				if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
 					log.Error("Got a known block with wrong signature in forward-link")
 					return nil
 				}
