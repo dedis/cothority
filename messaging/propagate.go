@@ -2,7 +2,9 @@ package messaging
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -161,19 +163,32 @@ func (p *Propagate) Dispatch() error {
 			}
 			if !p.IsRoot() {
 				log.Lvl3(p.ServerIdentity(), "Sending to parent")
-				p.SendToParent(&PropagateReply{})
+				if err := p.SendToParent(&PropagateReply{}); err != nil {
+					return err
+				}
 			}
 			if p.IsLeaf() {
 				process = false
 			} else {
 				log.Lvl3(p.ServerIdentity(), "Sending to children")
-				p.SendToChildrenInParallel(&msg.PropagateSendData)
+				if err := p.SendToChildrenInParallel(&msg.PropagateSendData); err != nil {
+					var errs []string
+					for _, e := range err {
+						errs = append(errs, e.Error())
+					}
+					if len(err) > p.allowedFailures {
+						return errors.New(strings.Join(errs, "\n"))
+					}
+					log.Lvl2("Error while sending to children:", errs)
+				}
 			}
 		case <-p.ChannelReply:
 			p.received++
 			log.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtreeCount)
 			if !p.IsRoot() {
-				p.SendToParent(&PropagateReply{})
+				if err := p.SendToParent(&PropagateReply{}); err != nil {
+					return err
+				}
 			}
 			// propagate to as many as we can
 			if p.received == p.subtreeCount {
@@ -182,7 +197,7 @@ func (p *Propagate) Dispatch() error {
 		case <-time.After(timeout):
 			if p.received < p.subtreeCount-p.allowedFailures {
 				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
-				log.Fatalf("Timeout of %s reached, got %v but need %v, err: %v",
+				return fmt.Errorf("Timeout of %s reached, got %v but need %v, err: %v",
 					timeout, p.received, p.subtreeCount-p.allowedFailures, err)
 			}
 			process = false
