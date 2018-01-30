@@ -149,8 +149,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			// If we don't know this chain, we give up (so that
 			// they cannot make us run useless chainSyncs and attack
 			// other conodes).
-			var gen *SkipBlock
-			if gen = s.db.GetByID(psbd.NewBlock.SkipChainID()); gen == nil {
+			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
+			if gen == nil {
 				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
 					"Unknown latest block, unknown chain-id")
 			}
