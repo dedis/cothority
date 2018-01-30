@@ -7,7 +7,9 @@ import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Encryption;
+import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.SkipBlockProto;
@@ -51,7 +53,8 @@ class OnchainSecretsTest {
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), 16, readerDarc, extraData.getBytes());
 
-        testInstanceController = TestServerInit.getInstanceManual();
+//        testInstanceController = TestServerInit.getInstanceManual();
+        testInstanceController = TestServerInit.getInstance();
 
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
@@ -112,6 +115,19 @@ class OnchainSecretsTest {
         WriteRequest write = ocs.publishDocument(doc, publisher);
         Document doc2 = ocs.getDocumentEphemeral(write.id, reader);
         assertTrue(doc.equals(doc2));
+    }
+
+    @Test
+    void ephemeralReadDocumentWrongSignature() throws Exception{
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
+        OCSProto.Write write = ocs.getWrite(wr.id);
+        Darc readerDarc = new Darc(write.getReader());
+        ReadRequestId rrId = ocs.createReadRequest(new ReadRequest(ocs, wr.id, reader));
+
+        KeyPair kp = new KeyPair();
+        Signer reader2 = new Ed25519Signer();
+        DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
+        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);});
     }
 
     @Test

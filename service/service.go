@@ -32,8 +32,7 @@ const propagationTimeout = 5 * time.Second
 const timestampRange = 60
 
 func init() {
-	network.RegisterMessage(Storage{})
-	network.RegisterMessage(Darcs{})
+	network.RegisterMessages(Storage{}, Darcs{}, vData{})
 	var err error
 	templateID, err = onet.RegisterNewService(ocs.ServiceName, newService)
 	log.ErrFatal(err)
@@ -70,6 +69,15 @@ type Storage struct {
 // Darcs holds a series of darcs in increasing, succeeding version numbers.
 type Darcs struct {
 	Darcs []*darc.Darc
+}
+
+// vData is sent to all nodes when re-encryption takes place. If Ephemeral
+// is non-nil, Signature needs to hold a valid signature from the reader
+// in the SB-block.
+type vData struct {
+	SB        skipchain.SkipBlockID
+	Ephemeral kyber.Point
+	Signature *darc.Signature
 }
 
 // CreateSkipchains sets up a new OCS-skipchain.
@@ -436,20 +444,29 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
+	verificationData := &vData{
+		SB: readSB.Hash,
+	}
 	if req.Ephemeral != nil {
 		var pub []byte
 		pub, err = req.Ephemeral.MarshalBinary()
 		if err != nil {
 			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal ephemeral key")
 		}
-		if err = req.Signature.Verify(pub, read.Darc); err != nil {
-			log.Print(err)
+		if err = req.Signature.Verify(pub, &file.Write.Reader); err != nil {
 			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature")
 		}
+		ocsProto.Xc = req.Ephemeral
+		verificationData.Ephemeral = req.Ephemeral
+		verificationData.Signature = req.Signature
+	} else {
+		ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	}
-	ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
-	ocsProto.VerificationData = readSB.Hash
+	ocsProto.VerificationData, err = network.Marshal(verificationData)
+	if err != nil {
+		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal verificationdata: "+err.Error())
+	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
 	// there will be no races.
@@ -541,7 +558,15 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 
 func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 	err := func() error {
-		sb := s.db().GetByID(*rc.VerificationData)
+		_, vdInt, err := network.Unmarshal(*rc.VerificationData, cothority.Suite)
+		if err != nil {
+			return err
+		}
+		verificationData, ok := vdInt.(*vData)
+		if !ok {
+			return errors.New("verificationData was not of type vData")
+		}
+		sb := s.db().GetByID(verificationData.SB)
 		if sb == nil {
 			return errors.New("received reencryption request with empty block")
 		}
@@ -552,13 +577,29 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		if o.Read == nil {
 			return errors.New("not an OCS-read block")
 		}
-		if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
-			return errors.New("wrong reader")
+		if verificationData.Ephemeral != nil {
+			buf, err := verificationData.Ephemeral.MarshalBinary()
+			if err != nil {
+				return errors.New("couldn't marshal ephemeral key: " + err.Error())
+			}
+			darcs := *verificationData.Signature.SignaturePath.Darcs
+			darc := darcs[len(darcs)-1]
+			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(
+				verificationData.Signature.SignaturePath.Signer.Ed25519.Point) {
+				return errors.New("ephemeral key signed by wrong reader")
+			}
+			if err := verificationData.Signature.Verify(buf, darc); err != nil {
+				return errors.New("wrong signature on ephemeral key: " + err.Error())
+			}
+		} else {
+			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
+				return errors.New("wrong reader")
+			}
 		}
 		return nil
 	}()
 	if err != nil {
-		log.Lvl3(s.ServerIdentity(), "wrong reencryption:", err)
+		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
 		return false
 	}
 	return true
