@@ -297,6 +297,7 @@ public class OnchainSecretsRPC {
 
         try {
             SkipBlockProto.SkipBlock sb = SkipBlockProto.SkipBlock.parseFrom(msg);
+            //TODO: add verification that the skipblock is valid by hashing and comparing to the id
 
             logger.debug("Got the following skipblock: {}", sb);
             logger.info("Successfully read skipblock");
