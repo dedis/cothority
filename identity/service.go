@@ -217,9 +217,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, error) {
 	ctx := []byte(ServiceName + s.ServerIdentity().String())
 	if _, ok := s.auth.nonces[string(ai.Nonce)]; !ok {
 		log.Error("Given nonce is not stored on ", s.ServerIdentity())
-		return nil, errors.New(
-			fmt.Sprintf("Given nonce is not stored on %s", s.ServerIdentity()))
-
+		return nil, fmt.Errorf("Given nonce is not stored on %s", s.ServerIdentity())
 	}
 	valid := false
 	var tag string
@@ -298,7 +296,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, error) {
 		Latest: ai.Data,
 	}
 	log.Lvl3("Creating Root-skipchain")
-	var cerr onet.ClientError
+	var err error
 	ids.SCRoot, err = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
 		[]skipchain.VerifierID{}, nil, nil)
 	if err != nil {
@@ -405,9 +403,9 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, error) {
 		return nil, errors.New("Didn't find identity")
 	}
 
-	// Putting this in a function because of the lock which needs to be held
-	// over all calls that might return an error.
-	cerr := func() error {
+	// Putting this in a function so that we can use defer Unlock
+	// to be sure to release the lock no matter which error happens.
+	err := func() error {
 		sid.Lock()
 		defer sid.Unlock()
 		owner, ok := sid.Latest.Device[v.Signer]
@@ -443,9 +441,9 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, error) {
 	}
 
 	// Propagate the vote
-	_, err := s.propagateData(sid.SCRoot.Roster, v, propagateTimeout)
+	_, err = s.propagateData(sid.SCRoot.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, errors.New(cerr.Error())
+		return nil, err
 	}
 	votesCnt := len(sid.Proposed.Votes)
 	if votesCnt >= sid.Latest.Threshold ||
@@ -468,7 +466,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, error) {
 		}
 		_, err = s.propagateSkipBlock(sid.SCRoot.Roster, usb, propagateTimeout)
 		if err != nil {
-			return nil, errors.New(cerr.Error())
+			return nil, err
 		}
 		return &ProposeVoteReply{sid.SCData}, nil
 	}

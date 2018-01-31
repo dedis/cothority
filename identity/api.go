@@ -48,22 +48,6 @@ func init() {
 	}
 }
 
-// The errors are above the skipchain-errors so that they don't mix and the
-// skipchain-errors can be passed through unchanged.
-const (
-	ErrorDataMissing = 4200 + iota
-	ErrorBlockMissing
-	ErrorAccountDouble
-	ErrorAccountMissing
-	ErrorVoteDouble
-	ErrorVoteSignature
-	ErrorListMissing
-	ErrorOnet
-	ErrorWrongPIN
-	ErrorAuthentication
-	ErrorInvalidSignature
-)
-
 // AuthType is type of authentication to create skipchains
 type AuthType int
 
@@ -173,7 +157,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	i.ID = ID
 	err := i.DataUpdate()
 	if err != nil {
-		return cerr
+		return err
 	}
 	if _, exists := i.Data.Device[i.DeviceName]; exists {
 		return errors.New("Adding with an existing account-name")
@@ -182,7 +166,7 @@ func (i *Identity) AttachToIdentity(ID ID) error {
 	confPropose.Device[i.DeviceName] = &Device{i.Public}
 	err = i.ProposeSend(confPropose)
 	if err != nil {
-		return cerr
+		return err
 	}
 	return nil
 }
@@ -234,13 +218,14 @@ func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) error {
 	// request for authentication
 	si := i.Cothority.RandomServerIdentity()
 	au := &Authenticate{[]byte{}, []byte{}}
-	err := i.Client.SendProtobuf(si, au, au)
-	if err != nil {
+	cerr := i.Client.SendProtobuf(si, au, au)
+	if cerr != nil {
 		return cerr
 	}
 
 	var cr *CreateIdentity
 	var err error
+
 	switch t {
 	case PoPAuth:
 		cr, err = i.popAuth(au, atts)
@@ -250,13 +235,13 @@ func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) error {
 		return errors.New("wrong type of authentication")
 	}
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 	cr.Type = t
 	air := &CreateIdentityReply{}
 	err = i.Client.SendProtobuf(si, cr, air)
 	if err != nil {
-		return cerr
+		return err
 	}
 	i.ID = ID(air.Data.Hash)
 	return nil
@@ -309,13 +294,13 @@ func (i *Identity) ProposeVote(accept bool) error {
 		return err
 	}
 	pvr := &ProposeVoteReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
+	err = i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: sig,
 	}, pvr)
 	if err != nil {
-		return cerr
+		return err
 	}
 	if pvr.Data != nil {
 		log.Lvl2("Threshold reached and signed")

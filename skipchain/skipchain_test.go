@@ -239,7 +239,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err := sbRoot.VerifyForwardSignatures(); cerr != nil {
+		if err := sbRoot.VerifyForwardSignatures(); err != nil {
 			t.Fatal("Signature on child-link is not valid")
 		}
 	}
@@ -390,7 +390,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 	log.ErrFatal(err)
 	sbNext := sbRoot.Copy()
 	sbNext.BackLinkIDs = []SkipBlockID{sbRoot.Hash}
-	_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sbNext})
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sbNext})
 	log.ErrFatal(err)
 	for i := 0; i < 3; i++ {
 		select {
@@ -543,9 +543,6 @@ func TestService_ParallelStore(t *testing.T) {
 					log.Lvl1("Done with", i)
 					wg.Done()
 					break
-				} else if cerr.ErrorCode() != ErrorBlockInProgress &&
-					cerr.ErrorCode() != ErrorBlockContent {
-					log.Fatal(cerr)
 				}
 				for {
 					time.Sleep(10 * time.Millisecond)
@@ -670,7 +667,7 @@ func TestService_AddFollow(t *testing.T) {
 	for _, sb := range sbs {
 		services[1].db.Store(sb)
 	}
-	master2, cerr := services[1].StoreSkipBlock(ssb)
+	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
 	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
 }
@@ -712,7 +709,7 @@ func TestService_Unlink(t *testing.T) {
 	msg, _ := kp.Public.MarshalBinary()
 	sig, err := schnorr.Sign(cothority.Suite, local.GetPrivate(servers[0]), msg)
 	log.ErrFatal(err)
-	_, err := service.CreateLinkPrivate(&CreateLinkPrivate{Public: kp.Public, Signature: sig})
+	_, err = service.CreateLinkPrivate(&CreateLinkPrivate{Public: kp.Public, Signature: sig})
 	log.ErrFatal(err)
 	require.Equal(t, 1, len(service.Storage.Clients))
 
@@ -773,7 +770,7 @@ func TestService_DelFollow(t *testing.T) {
 	// Test wrong signature
 	sig, err := schnorr.Sign(cothority.Suite, privWrong, msg)
 	log.ErrFatal(err)
-	_, err := service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
+	_, err = service.DelFollow(&DelFollow{SkipchainID: iddel, Signature: sig})
 	require.NotNil(t, err)
 	require.Equal(t, 2, len(service.Storage.FollowIDs))
 
@@ -975,7 +972,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 		ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
 		if err != nil {
-			t.Fatal(cerr)
+			t.Fatal(err)
 		}
 		if i == 3 {
 			third = ssbrep.Latest.Hash
@@ -992,7 +989,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
-		t.Fatal(cerr)
+		t.Fatal(err)
 	}
 
 	sb11 := leader.db.GetByID(ssbrep.Latest.Hash)
@@ -1005,7 +1002,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
-		t.Fatal(cerr)
+		t.Fatal(err)
 	}
 }
 

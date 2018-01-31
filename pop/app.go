@@ -123,7 +123,7 @@ func orgLink(c *cli.Context) error {
 	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
-		if err.ErrorCode() == service.ErrorWrongPIN && pin == "" {
+		if err == service.ErrorWrongPIN && pin == "" {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}

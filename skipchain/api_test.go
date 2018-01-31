@@ -60,14 +60,14 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	for i := range [8]byte{} {
 		clients[i] = newTestClient(l)
 	}
-	_, inter, cerr := clients[0].CreateRootControl(ro, ro, nil, 1, 1, 1)
+	_, inter, err := clients[0].CreateRootControl(ro, ro, nil, 1, 1, 1)
 	log.ErrFatal(err)
 
 	wg := sync.WaitGroup{}
 	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, cerr := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
+			_, err := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
 			log.ErrFatal(err)
 			wg.Done()
 		}(i)

@@ -69,6 +69,10 @@ type Storage struct {
 	Clients []kyber.Point
 }
 
+// ErrorProcessing happens when two clients are trying to add to the
+// same skipchain at the same time.
+var ErrorProcessing = errors.New("this skipchain-id is currently processing a block")
+
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
 // genesis-skipblock, that will create a new skipchain, or a new skipblock,
 // that will be added to an existing chain.
@@ -126,8 +130,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 		}
 		if !s.newBlockStart(prop) {
-			return nil, errors.New(
-				"this skipchain-id is currently processing a block")
+			return nil, ErrorProcessing
 
 		}
 		defer s.newBlockEnd(prop)
@@ -603,7 +606,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 			})
 		log.Lvlf2("%s FollowLookup %x", s.ServerIdentity(), add.SkipchainID)
 	default:
-		return nil, errors.New("that Follow is not known.")
+		return nil, errors.New("unknown follow type")
 	}
 	return &EmptyReply{}, nil
 }

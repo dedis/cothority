@@ -60,7 +60,7 @@ func TestService_PinRequest(t *testing.T) {
 	require.NotNil(t, err)
 	require.NotEqual(t, "", service.data.Pin)
 	_, err = service.PinRequest(&PinRequest{service.data.Pin, pub})
-	log.Error(cerr)
+	log.Error(err)
 	require.Equal(t, service.data.Public, pub)
 }
 

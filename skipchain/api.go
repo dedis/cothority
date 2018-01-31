@@ -11,27 +11,6 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-const (
-	// ErrorBlockNotFound indicates that for any number of operations the
-	// corresponding block has not been found.
-	ErrorBlockNotFound = 4100 + iota
-	// ErrorBlockNoParent indicates that a parent should be there but hasn't
-	// been found.
-	ErrorBlockNoParent
-	// ErrorBlockContent indicates that part of a block is in an invalid state.
-	ErrorBlockContent
-	// ErrorParameterWrong indicates that a given parameter is out of bounds.
-	ErrorParameterWrong
-	// ErrorVerification indicates that a given block could not be verified
-	// and a signature is invalid.
-	ErrorVerification
-	// ErrorOnet indicates an error from the onet framework
-	ErrorOnet
-	// ErrorBlockInProgress indicates that currently a block is being formed
-	// and propagated
-	ErrorBlockInProgress
-)
-
 // Client is a structure to communicate with the Skipchain
 // service from the outside
 type Client struct {
@@ -190,7 +169,7 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 	if err != nil {
 		return
 	}
-	return root, control, cerr
+	return root, control, err
 }
 
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
@@ -332,7 +311,7 @@ func (c *Client) ListFollow(si *network.ServerIdentity, clientPriv kyber.Scalar)
 		return nil, err
 	}
 	reply := &ListFollowReply{}
-	err := c.SendProtobuf(si, &ListFollow{Signature: sig}, reply)
+	err = c.SendProtobuf(si, &ListFollow{Signature: sig}, reply)
 	if err != nil {
 		return nil, err
 	}

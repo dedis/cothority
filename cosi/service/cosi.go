@@ -48,7 +48,7 @@ type SignatureResponse struct {
 func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, error) {
 	suite, ok := cs.Suite().(kyber.HashFactory)
 	if !ok {
-		return nil, onet.NewClientError(errors.New("suite is unusable"))
+		return nil, errors.New("suite is unusable")
 	}
 
 	if req.Roster.ID.IsNil() {

@@ -17,26 +17,6 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
-const (
-	// ErrorWrongPIN indicates a wrong PIN
-	ErrorWrongPIN = iota + 4100
-	// ErrorInternal indicates something internally went wrong - see the
-	// error message
-	ErrorInternal
-	// ErrorOtherFinals indicates that one or more of the other conodes
-	// are still missing the finalization-step
-	ErrorOtherFinals
-	// ErrorMerge indicates that other parties have not recieved
-	// the merge request yet
-	ErrorMerge
-	// ErrorTimeout indicates that waiting on network was too long
-	// Either node is down or network is partitioned
-	ErrorTimeout
-	// ErrorMergeInProgress indicates that there was an attempt
-	// to launch proccess twice on the same node
-	ErrorMergeInProgress
-)
-
 func init() {
 	network.RegisterMessage(&FinalStatement{})
 	network.RegisterMessage(&PopDesc{})
@@ -67,7 +47,7 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 	si := &network.ServerIdentity{Address: dst}
 	sg, e := schnorr.Sign(cothority.Suite, priv, p.Hash())
 	if e != nil {
-		return onet.NewClientError(e)
+		return e
 	}
 	err := c.SendProtobuf(si, &storeConfig{p, sg}, nil)
 	if err != nil {

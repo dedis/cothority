@@ -109,7 +109,9 @@ func adminLink(c *cli.Context) error {
 	}
 	client := onet.NewClient(identity.ServiceName, cothority.Suite)
 	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
-		if err.ErrorCode() == identity.ErrorWrongPIN && pin == "" {
+		// Compare by string because we are on the client, and we will be
+		// be receiving a new error made locally by onet, not the original error.
+		if err.Error() == service.ErrorWrongPIN.Error() && pin == "" {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
@@ -165,10 +167,10 @@ func adminStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err := client.SendProtobuf(si,
+	cerr := client.SendProtobuf(si,
 		&identity.StoreKeys{Type: identity.PoPAuth, Final: final,
 			Publics: nil, Sig: sig}, nil)
-	if err != nil {
+	if cerr != nil {
 		return cerr
 	}
 	return nil
@@ -235,10 +237,10 @@ func adminAdd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err := client.SendProtobuf(si,
+	cerr := client.SendProtobuf(si,
 		&identity.StoreKeys{Type: identity.PublicAuth, Final: nil,
 			Publics: pubs, Sig: sig}, nil)
-	if err != nil {
+	if cerr != nil {
 		return cerr
 	}
 	return nil

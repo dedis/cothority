@@ -128,6 +128,9 @@ type sync struct {
 	mcChannel chan *mergeConfigReply
 }
 
+// ErrorWrongPIN means that they provided the wrong PIN.
+var ErrorWrongPIN = errors.New("Wrong PIN")
+
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
@@ -137,7 +140,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 		return nil, errors.New("Read PIN in server-log")
 	}
 	if req.Pin != s.data.Pin {
-		return nil, errors.New("Wrong PIN")
+		return nil, ErrorWrongPIN
 	}
 	s.data.Public = req.Public
 	s.save()
@@ -225,7 +228,7 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error)
 		return nil, err
 	}
 	// Create signature and propagate it
-	err := s.signAndPropagate(final, bftSignFinal, data)
+	err = s.signAndPropagate(final, bftSignFinal, data)
 	if err != nil {
 		return nil, err
 	}
@@ -313,9 +316,6 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 	}
 	newFinal, err := s.merge(final, m)
 	if err != nil {
-		if cerr.ErrorCode() == ErrorMergeInProgress {
-			return final, nil
-		}
 		return nil, err
 	}
 
@@ -716,7 +716,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 	node, err := s.CreateProtocol(protoName, tree)
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 
 	// Register the function generating the protocol instance
@@ -729,7 +729,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	root.Msg, err = final.Hash()
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 
 	root.Data = data
@@ -763,7 +763,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000*time.Millisecond)
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 	if replies != len(final.Desc.Roster.List) {
 		log.Warn("Did only get", replies)

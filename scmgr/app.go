@@ -110,10 +110,10 @@ func linkAdd(c *cli.Context) error {
 		Conode:  si,
 	}
 	log.Infof("Connecting to %s and creating link", remote.Address)
-	err := skipchain.NewClient().CreateLinkPrivate(si, conodePriv, kp.Public)
+	err = skipchain.NewClient().CreateLinkPrivate(si, conodePriv, kp.Public)
 	if err != nil {
-		log.Error(cerr)
-		return cerr
+		log.Error(err)
+		return err
 	}
 	log.Info("Correctly linked with", remote.Address)
 	return cfg.save(c)
@@ -128,11 +128,11 @@ func linkDel(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	err := skipchain.NewClient().Unlink(link.Conode, link.Private)
+	err = skipchain.NewClient().Unlink(link.Conode, link.Private)
 	if err != nil {
-		return errors.New("couldn't unlink:" + cerr.Error())
+		return errors.New("couldn't unlink:" + err.Error())
 	}
-	log.Info("Successfull unlinked with", link.Conode)
+	log.Info("Successfully unlinked with", link.Conode)
 	return nil
 }
 func linkList(c *cli.Context) error {
@@ -152,7 +152,7 @@ func linkQuery(c *cli.Context) error {
 		si.Address)
 	keys, err := skipchain.NewClient().Listlink(si)
 	if err != nil {
-		return cerr
+		return err
 	}
 	if len(keys) == 0 {
 		log.Infof("Node %s does not have any public keys stored", si.Address)
@@ -179,10 +179,10 @@ func followAddID(c *cli.Context) error {
 		return errors.New("couldn't parse node-address or not linked yet: " + err.Error())
 	}
 	log.Infof("Adding skipchain %x to conode %s", scid, link.Address)
-	err := skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, skipchain.FollowID,
+	err = skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, skipchain.FollowID,
 		skipchain.NewChainNone, "")
 	if err != nil {
-		return errors.New("couldn't add this block as chain-follower: " + cerr.Error())
+		return errors.New("couldn't add this block as chain-follower: " + err.Error())
 	}
 	return nil
 }
@@ -213,10 +213,10 @@ func followAddRoster(c *cli.Context) error {
 		log.Infof("Will try to lookup the skipchain on conode %s", scURL)
 		ft = skipchain.FollowLookup
 	}
-	err := skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, ft,
+	err = skipchain.NewClient().AddFollow(link.Conode, link.Private, scid, ft,
 		nc, scURL)
 	if err != nil {
-		return errors.New("couldn't find this block in search: " + cerr.Error())
+		return errors.New("couldn't find this block in search: " + err.Error())
 	}
 	return nil
 }
@@ -234,9 +234,9 @@ func followDel(c *cli.Context) error {
 		return err
 	}
 	log.Infof("Deleting following of skipchain %x in conode %s", scid, link.Conode.Address)
-	err := skipchain.NewClient().DelFollow(link.Conode, link.Private, scid)
+	err = skipchain.NewClient().DelFollow(link.Conode, link.Private, scid)
 	if err != nil {
-		return cerr
+		return err
 	}
 	log.Infof("Successfully deleted following of skipchain", scid, link.Conode)
 	return nil
@@ -252,7 +252,7 @@ func followList(c *cli.Context) error {
 	}
 	list, err := skipchain.NewClient().ListFollow(link.Conode, link.Private)
 	if err != nil {
-		return cerr
+		return err
 	}
 	if list.FollowIDs != nil {
 		log.Info("Followed skipchains:")
@@ -290,7 +290,7 @@ func scCreate(c *cli.Context) error {
 	sb, err := skipchain.NewClient().CreateGenesisSignature(group.Roster, c.Int("base"), c.Int("height"),
 		skipchain.VerificationStandard, nil, nil, priv)
 	if err != nil {
-		return errors.New("while creating the genesis-roster: " + cerr.Error())
+		return errors.New("while creating the genesis-roster: " + err.Error())
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
 	cfg.Db.Store(sb)
@@ -326,7 +326,7 @@ func scAdd(c *cli.Context) error {
 	log.Info("Updating the skipchain to know where to add a new block.")
 	guc, err := skipchain.NewClient().GetUpdateChain(sb.Roster, sb.Hash)
 	if err != nil {
-		return cerr
+		return err
 	}
 	latest := guc.Update[len(guc.Update)-1]
 	var priv kyber.Scalar
@@ -338,7 +338,7 @@ func scAdd(c *cli.Context) error {
 	log.Info("Adding new block to skipchain.")
 	ssbr, err := skipchain.NewClient().StoreSkipBlockSignature(latest, roster, nil, priv)
 	if err != nil {
-		return errors.New("while storing block: " + cerr.Error())
+		return errors.New("while storing block: " + err.Error())
 	}
 	cfg.Db.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
@@ -402,8 +402,8 @@ func dnsFetch(c *cli.Context) error {
 	log.Infof("Requesting latest block attached to %x", sbid)
 	gcr, err := skipchain.NewClient().GetUpdateChain(group.Roster, sbid)
 	if err != nil {
-		log.Error(cerr)
-		return cerr
+		log.Error(err)
+		return err
 	}
 	latest := gcr.Update[len(gcr.Update)-1]
 	genesis := latest.GenesisID
@@ -548,7 +548,7 @@ func dnsUpdate(c *cli.Context) error {
 		if err != nil {
 			// Error is not fatal here - perhaps the node is down,
 			// but we can continue anyway.
-			log.Error(cerr)
+			log.Error(err)
 			continue
 		}
 		for _, sb := range gasr.SkipChains {
