@@ -45,7 +45,7 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, error) {
 	suite, ok := cs.Suite().(kyber.HashFactory)
 	if !ok {
 		return nil, onet.NewClientError(errors.New("suite is unusable"))
@@ -57,13 +57,13 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 
 	_, root := req.Roster.Search(cs.ServerIdentity().ID)
 	if root == nil {
-		return nil, onet.NewClientErrorCode(4102, "Couldn't find a serverIdetity in Roster")
+		return nil, errors.New("Couldn't find a serverIdetity in Roster")
 	}
 	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(4100, "Couldn't make new protocol: "+err.Error())
+		return nil, errors.New("Couldn't make new protocol: " + err.Error())
 	}
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.CoSi)

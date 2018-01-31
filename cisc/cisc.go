@@ -165,10 +165,10 @@ func adminStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cerr := client.SendProtobuf(si,
+	err := client.SendProtobuf(si,
 		&identity.StoreKeys{Type: identity.PoPAuth, Final: final,
 			Publics: nil, Sig: sig}, nil)
-	if cerr != nil {
+	if err != nil {
 		return cerr
 	}
 	return nil
@@ -235,10 +235,10 @@ func adminAdd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cerr := client.SendProtobuf(si,
+	err := client.SendProtobuf(si,
 		&identity.StoreKeys{Type: identity.PublicAuth, Final: nil,
 			Publics: pubs, Sig: sig}, nil)
-	if cerr != nil {
+	if err != nil {
 		return cerr
 	}
 	return nil

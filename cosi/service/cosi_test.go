@@ -34,8 +34,8 @@ func TestServiceCosi(t *testing.T) {
 	for _, dst := range el.List {
 		reply := &SignatureResponse{}
 		log.Lvl1("Sending request to service...")
-		cerr := client.SendProtobuf(dst, serviceReq, reply)
-		require.Nil(t, cerr, "Couldn't send")
+		err := client.SendProtobuf(dst, serviceReq, reply)
+		require.Nil(t, err, "Couldn't send")
 
 		// verify the response still
 		require.Nil(t, crypto.VerifySignature(hosts[0].Suite(), el.Publics(),

@@ -57,13 +57,13 @@ func NewClient() *Client {
 // If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
 // If the PIN is given and is correct, the public key will be stored in the
 // service.
-func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) onet.ClientError {
+func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) error {
 	si := &network.ServerIdentity{Address: dst}
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
 // StoreConfig sends the configuration to the conode for later usage.
-func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) onet.ClientError {
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) error {
 	si := &network.ServerIdentity{Address: dst}
 	sg, e := schnorr.Sign(cothority.Suite, priv, p.Hash())
 	if e != nil {
@@ -78,7 +78,7 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 
 // FetchFinal sends Request to update local final statement
 func (c *Client) FetchFinal(dst network.Address, hash []byte) (
-	*FinalStatement, onet.ClientError) {
+	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	err := c.SendProtobuf(si, &fetchRequest{hash}, res)
@@ -95,19 +95,19 @@ func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 // collectively signed. The new pop-description and the final statement
 // will be returned.
 func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Point,
-	priv kyber.Scalar) (*FinalStatement, onet.ClientError) {
+	priv kyber.Scalar) (*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	req := &finalizeRequest{}
 	req.DescID = p.Hash()
 	req.Attendees = attendees
 	hash, err := req.hash()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	res := &finalizeResponse{}
 	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	req.Signature = sg
 	e := c.SendProtobuf(si, req, res)
@@ -121,13 +121,13 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Poi
 // private key of organizer. It triggers merge process on nodes mentioned in
 // config
 func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
-	*FinalStatement, onet.ClientError) {
+	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	hash := p.Hash()
 	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 
 	e := c.SendProtobuf(si, &mergeRequest{hash, sg}, res)

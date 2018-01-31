@@ -130,14 +130,14 @@ type sync struct {
 
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
-func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
+func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	if req.Pin == "" {
 		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		log.Info("PIN:", s.data.Pin)
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+		return nil, errors.New("Read PIN in server-log")
 	}
 	if req.Pin != s.data.Pin {
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+		return nil, errors.New("Wrong PIN")
 	}
 	s.data.Public = req.Public
 	s.save()
@@ -146,17 +146,17 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError
 }
 
 // StoreConfig saves the pop-config locally
-func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientError) {
+func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 	log.Lvlf2("StoreConfig: %s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
 	if req.Desc.Roster == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
+		return nil, errors.New("no roster set")
 	}
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 	hash := req.Desc.Hash()
 	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature"+err.Error())
+		return nil, errors.New("Invalid signature" + err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
 	s.syncs[string(hash)] = &sync{
@@ -176,23 +176,23 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientErr
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.ClientError) {
+func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error) {
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 	hash, err := req.hash()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature:"+err.Error())
+		return nil, errors.New("Invalid signature:" + err.Error())
 	}
 
 	var final *FinalStatement
 	var ok bool
 	if final, ok = s.data.Finals[string(req.DescID)]; !ok || final == nil || final.Desc == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "No config found")
+		return nil, errors.New("No config found")
 	}
 	if final.Verify() == nil {
 		log.Lvl2("Sending known final statement")
@@ -208,25 +208,26 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 			log.Lvl2("Contacting", c, cc.Attendees)
 			err := s.SendRaw(c, cc)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+				return nil, err
 			}
 			if syncData, ok := s.syncs[string(req.DescID)]; ok {
 				rep := <-syncData.ccChannel
 				if rep == nil {
-					return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+					return nil, errors.New(
 						"Not all other conodes finalized yet")
+
 				}
 			}
 		}
 	}
 	data, err := final.ToToml()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	// Create signature and propagate it
-	cerr := s.signAndPropagate(final, bftSignFinal, data)
-	if cerr != nil {
-		return nil, cerr
+	err := s.signAndPropagate(final, bftSignFinal, data)
+	if err != nil {
+		return nil, err
 	}
 	return &finalizeResponse{final}, nil
 }
@@ -234,17 +235,19 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 // FetchFinal returns FinalStatement by hash
 // used after Finalization
 func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
-	onet.ClientError) {
+	error) {
 	log.Lvlf2("FetchFinal: %s %v", s.Context.ServerIdentity(), req.ID)
 	var fs *FinalStatement
 	var ok bool
 	if fs, ok = s.data.Finals[string(req.ID)]; !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No config found")
+
 	}
 	if len(fs.Signature) <= 0 {
-		return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+		return nil, errors.New(
 			"Not all other conodes finalized yet")
+
 	}
 	return &finalizeResponse{fs}, nil
 }
@@ -252,42 +255,47 @@ func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
 // MergeRequest starts Merge process and returns FinalStatement after
 // used after finalization
 func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
-	onet.ClientError) {
+	error) {
 	log.Lvlf2("MergeRequest: %s %v", s.Context.ServerIdentity(), req.ID)
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 
 	if err := schnorr.Verify(s.Suite(), s.data.Public, req.ID, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature: err")
+		return nil, errors.New("Invalid signature: err")
 	}
 
 	final, ok := s.data.Finals[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No config found")
+
 	}
 	if final.Merged {
 		return &finalizeResponse{final}, nil
 	}
 	m, ok := s.data.merges[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No meta found")
+
 	}
 	syncData, ok := s.syncs[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No meta found")
+
 	}
 
 	if len(final.Signature) <= 0 || final.Verify() != nil {
-		return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+		return nil, errors.New(
 			"Not all other conodes finalized yet")
+
 	}
 	if len(final.Desc.Parties) <= 1 {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"Party is unmergeable")
+
 	}
 
 	// Check if the party is the merge list
@@ -299,27 +307,28 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 		}
 	}
 	if !found {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"Party is not included in merge list")
+
 	}
-	newFinal, cerr := s.merge(final, m)
-	if cerr != nil {
+	newFinal, err := s.merge(final, m)
+	if err != nil {
 		if cerr.ErrorCode() == ErrorMergeInProgress {
 			return final, nil
 		}
-		return nil, cerr
+		return nil, err
 	}
 
 	// Decode mapStatements to send it on signing
 	data, err := encodeMapFinal(m.statementsMap)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 
-	cerr = s.signAndPropagate(newFinal, bftSignMerge, data)
-	if cerr != nil {
+	err = s.signAndPropagate(newFinal, bftSignMerge, data)
+	if err != nil {
 		m.distrib = false
-		return nil, cerr
+		return nil, err
 	}
 	// refresh data
 	hash := string(newFinal.Desc.Hash())
@@ -698,11 +707,12 @@ func (s *Service) PropagateFinal(msg network.Message) {
 
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
-	data []byte) onet.ClientError {
+	data []byte) error {
 	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
 	if tree == nil {
-		return onet.NewClientErrorCode(ErrorInternal,
+		return errors.New(
 			"Root does not exist")
+
 	}
 	node, err := s.CreateProtocol(protoName, tree)
 	if err != nil {
@@ -712,8 +722,9 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	// Register the function generating the protocol instance
 	root, ok := node.(*bftcosi.ProtocolBFTCoSi)
 	if !ok {
-		return onet.NewClientErrorCode(ErrorInternal,
+		return errors.New(
 			"protocol instance is invalid")
+
 	}
 
 	root.Msg, err = final.Hash()
@@ -739,13 +750,15 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 		}
 	case <-time.After(timeout):
 		log.Error("signing failed on timeout")
-		return onet.NewClientErrorCode(ErrorTimeout,
+		return errors.New(
 			"signing timeout")
+
 	}
 	if len(final.Signature) <= 0 {
 		log.Error("Signing failed")
-		return onet.NewClientErrorCode(ErrorTimeout,
+		return errors.New(
 			"Signing failed")
+
 	}
 
 	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000*time.Millisecond)
@@ -764,18 +777,18 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 // When all merge party's info is saved, merge it and starts global sighning process
 // After all, sends StoreConfig request to other conodes of own party
 func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
-	onet.ClientError) {
+	error) {
 	if m.distrib {
 		// Used not to start merge process 2 times, when one is on run.
 		log.Lvl2(s.ServerIdentity(), "Not enter merge")
-		return nil, onet.NewClientErrorCode(ErrorMergeInProgress, "Merge Process in in progress")
+		return nil, errors.New("Merge Process in in progress")
 	}
 	log.Lvl2("Merge ", s.ServerIdentity())
 	m.distrib = true
 	// Flag indicating that there were connection with other nodes
 	syncData, ok := s.syncs[string(final.Desc.Hash())]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorMerge, "Wrong Hash")
+		return nil, errors.New("Wrong Hash")
 	}
 	for _, party := range final.Desc.Parties {
 		popDesc := PopDesc{
@@ -795,19 +808,21 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 			log.Lvlf2("Sending from %s to %s", s.ServerIdentity(), si)
 			err := s.SendRaw(si, mc)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+				return nil, err
 			}
 			var mcr *mergeConfigReply
 			select {
 			case mcr = <-syncData.mcChannel:
 				break
 			case <-time.After(timeout):
-				return nil, onet.NewClientErrorCode(ErrorTimeout,
+				return nil, errors.New(
 					"timeout on waiting response MergeConfig")
+
 			}
 			if mcr == nil {
-				return nil, onet.NewClientErrorCode(ErrorMerge,
+				return nil, errors.New(
 					"Error during merging")
+
 			}
 			if mcr.PopStatus == PopStatusOK {
 				m.statementsMap[string(hash)] = mcr.Final
@@ -815,8 +830,9 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 			}
 		}
 		if _, ok = m.statementsMap[string(hash)]; !ok {
-			return nil, onet.NewClientErrorCode(ErrorMerge,
+			return nil, errors.New(
 				"merge with party failed")
+
 		}
 	}
 

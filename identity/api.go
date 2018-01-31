@@ -169,19 +169,19 @@ func (i *Identity) GetProposed() *Data {
 }
 
 // AttachToIdentity proposes to attach it to an existing Identity
-func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
+func (i *Identity) AttachToIdentity(ID ID) error {
 	i.ID = ID
-	cerr := i.DataUpdate()
-	if cerr != nil {
+	err := i.DataUpdate()
+	if err != nil {
 		return cerr
 	}
 	if _, exists := i.Data.Device[i.DeviceName]; exists {
-		return onet.NewClientErrorCode(ErrorAccountDouble, "Adding with an existing account-name")
+		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Data.Copy()
 	confPropose.Device[i.DeviceName] = &Device{i.Public}
-	cerr = i.ProposeSend(confPropose)
-	if cerr != nil {
+	err = i.ProposeSend(confPropose)
+	if err != nil {
 		return cerr
 	}
 	return nil
@@ -228,14 +228,14 @@ func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
 }
 
 // CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) onet.ClientError {
+func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) error {
 	log.Lvl3("Creating identity", i)
 
 	// request for authentication
 	si := i.Cothority.RandomServerIdentity()
 	au := &Authenticate{[]byte{}, []byte{}}
-	cerr := i.Client.SendProtobuf(si, au, au)
-	if cerr != nil {
+	err := i.Client.SendProtobuf(si, au, au)
+	if err != nil {
 		return cerr
 	}
 
@@ -247,15 +247,15 @@ func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) onet.ClientErr
 	case PublicAuth:
 		cr, err = i.publicAuth(au.Nonce)
 	default:
-		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
+		return errors.New("wrong type of authentication")
 	}
 	if err != nil {
 		return onet.NewClientError(err)
 	}
 	cr.Type = t
 	air := &CreateIdentityReply{}
-	cerr = i.Client.SendProtobuf(si, cr, air)
-	if cerr != nil {
+	err = i.Client.SendProtobuf(si, cr, air)
+	if err != nil {
 		return cerr
 	}
 	i.ID = ID(air.Data.Hash)
@@ -264,7 +264,7 @@ func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point) onet.ClientErr
 
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
-func (i *Identity) ProposeSend(d *Data) onet.ClientError {
+func (i *Identity) ProposeSend(d *Data) error {
 	log.Lvl3("Sending proposal", d)
 	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
 		&ProposeSend{i.ID, d}, nil)
@@ -274,7 +274,7 @@ func (i *Identity) ProposeSend(d *Data) onet.ClientError {
 
 // ProposeUpdate verifies if there is a new data waiting that
 // needs approval from clients
-func (i *Identity) ProposeUpdate() onet.ClientError {
+func (i *Identity) ProposeUpdate() error {
 	log.Lvl3("Updating proposal")
 	cnc := &ProposeUpdateReply{}
 	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
@@ -288,10 +288,10 @@ func (i *Identity) ProposeUpdate() onet.ClientError {
 }
 
 // ProposeVote calls the 'accept'-vote on the current propose-data
-func (i *Identity) ProposeVote(accept bool) onet.ClientError {
+func (i *Identity) ProposeVote(accept bool) error {
 	log.Lvl3("Voting proposal")
 	if i.Proposed == nil {
-		return onet.NewClientErrorCode(ErrorDataMissing, "No proposed data")
+		return errors.New("No proposed data")
 	}
 	log.Lvlf3("Voting %t on %s", accept, i.Proposed.Device)
 	if !accept {
@@ -299,22 +299,22 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 	}
 	hash, err := i.Proposed.Hash(i.Client.Suite().(kyber.HashFactory))
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return err
 	}
 	if i.Private == nil {
-		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
+		return errors.New("no private key is provided")
 	}
 	sig, err := schnorr.Sign(i.Client.Suite(), i.Private, hash)
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return err
 	}
 	pvr := &ProposeVoteReply{}
-	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
+	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
 		Signature: sig,
 	}, pvr)
-	if cerr != nil {
+	if err != nil {
 		return cerr
 	}
 	if pvr.Data != nil {
@@ -329,10 +329,10 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 
 // DataUpdate asks if there is any new data available that has already
 // been approved by others and updates the local data
-func (i *Identity) DataUpdate() onet.ClientError {
+func (i *Identity) DataUpdate() error {
 	log.Lvl3(i)
 	if i.Cothority == nil || len(i.Cothority.List) == 0 {
-		return onet.NewClientErrorCode(ErrorListMissing, "Didn't find any list in the cothority")
+		return errors.New("Didn't find any list in the cothority")
 	}
 	cur := &DataUpdateReply{}
 	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),

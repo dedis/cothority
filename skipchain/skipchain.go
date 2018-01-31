@@ -86,20 +86,23 @@ type Storage struct {
 // If the latest block is non-nil and exists, the skipblock will be added to the
 // skipchain after verification that it fits and no other block already has been
 // added.
-func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, onet.ClientError) {
+func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
 	prop := psbd.NewBlock
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
-		return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+		return nil, errors.New(
 			"only leader is allowed to add blocks")
+
 	}
 	if len(s.Storage.Clients) > 0 {
 		if psbd.Signature == nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+			return nil, errors.New(
 				"cannot create new skipblock without authentication")
+
 		}
 		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+			return nil, errors.New(
 				"wrong signature for this skipchain")
+
 		}
 	}
 	var prev *SkipBlock
@@ -119,20 +122,22 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		prop.updateHash()
 		err := s.verifyBlock(prop)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong,
-				err.Error())
+			return nil, err
+
 		}
 		if !s.newBlockStart(prop) {
-			return nil, onet.NewClientErrorCode(ErrorBlockInProgress,
+			return nil, errors.New(
 				"this skipchain-id is currently processing a block")
+
 		}
 		defer s.newBlockEnd(prop)
 
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.db.GetByID(prop.ParentBlockID)
 			if parent == nil {
-				return nil, onet.NewClientErrorCode(ErrorParameterWrong,
+				return nil, errors.New(
 					"Didn't find parent")
+
 			}
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
@@ -151,34 +156,40 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			// other conodes).
 			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
 			if gen == nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				return nil, errors.New(
 					"Unknown latest block, unknown chain-id")
+
 			}
 			// If we know of this chain, try to sync it.
 			latest := s.findLatest(gen)
 			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
 			err := s.syncChain(latest.Roster, latest.Hash)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				return nil, errors.New(
 					"failed to catch up")
+
 			}
 			prev = s.db.GetByID(psbd.LatestID)
 			if prev == nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+				return nil, errors.New(
 					"Didn't find latest block, even after catchup")
+
 			}
 		}
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, errors.New(
 				"We're not responsible for latest block")
+
 		}
 		if len(prev.ForwardLink) > 0 {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
+			return nil, errors.New(
 				"the latest block already has a follower")
+
 		}
 		if !s.newBlockStart(prev) {
-			return nil, onet.NewClientErrorCode(ErrorBlockInProgress,
+			return nil, errors.New(
 				"this skipchain-id is currently processing a block")
+
 		}
 		defer s.newBlockEnd(prev)
 
@@ -203,9 +214,10 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 			for pointer.Height < h+1 {
 				pointer = s.db.GetByID(pointer.BackLinkIDs[0])
 				if pointer == nil {
-					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
-						"Didn't find convenient SkipBlock for height "+
+					return nil, errors.New(
+						"Didn't find convenient SkipBlock for height " +
 							strconv.Itoa(h))
+
 				}
 			}
 			prop.BackLinkIDs[h] = pointer.Hash
@@ -217,22 +229,25 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 		log.Lvl3("Checking if all nodes from roster accept block")
 		if !prev.Roster.ID.Equal(prop.Roster.ID) || prop.Index == 1 {
 			if !s.willNodesAcceptBlock(prop) {
-				return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				return nil, errors.New(
 					"node refused to accept new roster")
+
 			}
 		}
 
 		if err := s.addForwardLink(prev, prop); err != nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockContent,
-				"Couldn't get forward signature on block: "+err.Error())
+			return nil, errors.New(
+				"Couldn't get forward signature on block: " + err.Error())
+
 		}
 		changed = append(changed, prev, prop)
 		log.Lvl3("Asking forward-links from all linked blocks")
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := s.db.GetByID(bl)
 			if back == nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockContent,
+				return nil, errors.New(
 					"Didn't get skipblock in back-link")
+
 			}
 			if err := s.forwardSignature(
 				&ForwardSignature{i + 1, prev.Hash, prop,
@@ -247,8 +262,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 	}
 	log.Lvlf3("Propagate %d blocks", len(changed))
 	if err := s.startPropagation(changed); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorVerification,
-			"Couldn't propagate new blocks: "+err.Error())
+		return nil, errors.New(
+			"Couldn't propagate new blocks: " + err.Error())
+
 	}
 	reply := &StoreSkipBlockReply{
 		Previous: prev,
@@ -261,10 +277,10 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, on
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
 // skipchain from the latest block the caller knows to the latest
 // SkipBlock we know.
-func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, onet.ClientError) {
+func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, error) {
 	block := s.db.GetByID(latestKnown.LatestID)
 	if block == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "Couldn't find latest skipblock")
+		return nil, errors.New("Couldn't find latest skipblock")
 	}
 	// at least the latest know and the next block:
 	blocks := []*SkipBlock{block.Copy()}
@@ -277,8 +293,8 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 			var err error
 			next, err = s.callGetBlock(block, link.Hash())
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
-					err.Error())
+				return nil, err
+
 			}
 		} else {
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
@@ -286,8 +302,8 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 				var err error
 				next, err = s.callGetBlock(next, link.Hash())
 				if err != nil {
-					return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
-						err.Error())
+					return nil, err
+
 				}
 			}
 		}
@@ -395,22 +411,24 @@ func (s *Service) getLastBlock(roster *onet.Roster, latest SkipBlockID) (*SkipBl
 
 // GetSingleBlock searches for the given block and returns it. If no such block is
 // found, a nil is returned.
-func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, onet.ClientError) {
+func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.ID)
 	if sb == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+		return nil, errors.New(
 			"No such block")
+
 	}
 	return sb, nil
 }
 
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
-func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, onet.ClientError) {
+func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+		return nil, errors.New(
 			"No such genesis-block")
+
 	}
 	if sb.Index == id.Index {
 		return sb, nil
@@ -421,16 +439,17 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 			return sb, nil
 		}
 	}
-	return nil, onet.NewClientErrorCode(ErrorBlockNotFound,
+	return nil, errors.New(
 		"No block with this index found")
+
 }
 
 // GetAllSkipchains returns a list of all known skipchains
-func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, onet.ClientError) {
+func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
 	// Write all known skipblocks to a map, thus removing double blocks.
 	chains, err := s.db.getAll()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 
 	reply := &GetAllSkipchainsReply{
@@ -444,13 +463,13 @@ func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply
 
 // CreateLinkPrivate checks if the given public key is signed with our private
 // key and stores it in the list of allowed clients if it is true.
-func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, onet.ClientError) {
+func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, error) {
 	msg, err := link.Public.MarshalBinary()
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, "couldn't marshal public key: "+err.Error())
+		return nil, errors.New("couldn't marshal public key: " + err.Error())
 	}
 	if err = schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, msg, link.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "wrong signature on public key: "+err.Error())
+		return nil, errors.New("wrong signature on public key: " + err.Error())
 	}
 	s.storageMutex.Lock()
 	s.Storage.Clients = append(s.Storage.Clients, link.Public)
@@ -464,10 +483,10 @@ func (s *Service) CreateLinkPrivate(link *CreateLinkPrivate) (*EmptyReply, onet.
 // following message:
 // "unlink:" + byte representation of the public key to be
 // removed
-func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
+func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, error) {
 	msg, err := unlink.Public.MarshalBinary()
 	if err != nil {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return &EmptyReply{}, err
 	}
 	msg = append([]byte("unlink:"), msg...)
 	found := false
@@ -478,11 +497,11 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
 		}
 	}
 	if !found {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "didn't find public key in clients")
+		return &EmptyReply{}, errors.New("didn't find public key in clients")
 	}
 	err = schnorr.Verify(s.Suite(), unlink.Public, msg, unlink.Signature)
 	if err != nil {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return &EmptyReply{}, err
 	}
 	client := -1
 	for i, pub := range s.Storage.Clients {
@@ -492,7 +511,7 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
 		}
 	}
 	if client == -1 {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "didn't find this clients public key")
+		return &EmptyReply{}, errors.New("didn't find this clients public key")
 	}
 	s.Storage.Clients = append(s.Storage.Clients[:client], s.Storage.Clients[client+1:]...)
 	s.save()
@@ -502,7 +521,7 @@ func (s *Service) Unlink(unlink *Unlink) (*EmptyReply, onet.ClientError) {
 // Listlink returns a list of all public keys that are linked
 // with this conode and are allowed to do administrative
 // tasks.
-func (s *Service) Listlink(list *Listlink) (*ListlinkReply, onet.ClientError) {
+func (s *Service) Listlink(list *Listlink) (*ListlinkReply, error) {
 	reply := &ListlinkReply{}
 	for _, pub := range s.Storage.Clients {
 		reply.Publics = append(reply.Publics, pub)
@@ -511,12 +530,12 @@ func (s *Service) Listlink(list *Listlink) (*ListlinkReply, onet.ClientError) {
 }
 
 // AddFollow adds a new skipchain to be followed
-func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
+func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 	msg := []byte{byte(add.Follow)}
 	msg = append(add.SkipchainID, msg...)
 	msg = append(msg, []byte(add.Conode)...)
 	if !s.verifySigs(msg, add.Signature) {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "wrong signature of unknown signer")
+		return &EmptyReply{}, errors.New("wrong signature of unknown signer")
 	}
 
 	s.storageMutex.Lock()
@@ -537,7 +556,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 		// TODO: this is really not good and will fail if we have too many blocks.
 		sbs, err := s.db.getAll()
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong, "couldn't load db of all blocks")
+			return nil, errors.New("couldn't load db of all blocks")
 		}
 		for sc := range sbs {
 			for _, si := range s.db.GetByID(SkipBlockID(sc)).Roster.List {
@@ -564,7 +583,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 			}
 		}
 		if !found {
-			return nil, onet.NewClientErrorCode(ErrorParameterWrong, "didn't find that skipchain-id")
+			return nil, errors.New("didn't find that skipchain-id")
 		}
 		log.Lvlf2("%s FollowSearch %s %x", s.ServerIdentity(), add.Conode, add.SkipchainID)
 	case FollowLookup:
@@ -572,10 +591,10 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 		roster := onet.NewRoster([]*network.ServerIdentity{si})
 		last, err := s.getLastBlock(roster, add.SkipchainID)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "didn't find skipchain at given address")
+			return nil, errors.New("didn't find skipchain at given address")
 		}
 		if !last.SkipChainID().Equal(add.SkipchainID) {
-			return nil, onet.NewClientErrorCode(ErrorBlockNotFound, "returned block is not correct")
+			return nil, errors.New("returned block is not correct")
 		}
 		s.Storage.Follow = append(s.Storage.Follow,
 			FollowChainType{
@@ -584,17 +603,17 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, onet.ClientError) {
 			})
 		log.Lvlf2("%s FollowLookup %x", s.ServerIdentity(), add.SkipchainID)
 	default:
-		return nil, onet.NewClientErrorCode(ErrorParameterWrong, "that Follow is not known.")
+		return nil, errors.New("that Follow is not known.")
 	}
 	return &EmptyReply{}, nil
 }
 
 // DelFollow searches for that skipchain in the follower
 // list and deletes it if it is there.
-func (s *Service) DelFollow(del *DelFollow) (*EmptyReply, onet.ClientError) {
+func (s *Service) DelFollow(del *DelFollow) (*EmptyReply, error) {
 	msg := append([]byte("delfollow:"), del.SkipchainID...)
 	if !s.verifySigs(msg, del.Signature) {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "wrong signature of unknown signer")
+		return &EmptyReply{}, errors.New("wrong signature of unknown signer")
 	}
 	deleted := false
 	for i, scid := range s.Storage.FollowIDs {
@@ -614,22 +633,22 @@ func (s *Service) DelFollow(del *DelFollow) (*EmptyReply, onet.ClientError) {
 		}
 	}
 	if !deleted {
-		return &EmptyReply{}, onet.NewClientErrorCode(ErrorParameterWrong, "didn't find any block of that id")
+		return &EmptyReply{}, errors.New("didn't find any block of that id")
 	}
 	s.save()
 	return &EmptyReply{}, nil
 }
 
 // ListFollow returns the skipchain-ids that are followed
-func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, onet.ClientError) {
+func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, error) {
 	reply := &ListFollowReply{}
 	msg, err := s.ServerIdentity().Public.MarshalBinary()
 	if err != nil {
-		return reply, onet.NewClientErrorCode(ErrorOnet, "couldn't marshal public key")
+		return reply, errors.New("couldn't marshal public key")
 	}
 	msg = append([]byte("listfollow:"), msg...)
 	if !s.verifySigs(msg, list.Signature) {
-		return reply, onet.NewClientErrorCode(ErrorParameterWrong, "wrong signature of unknown signer")
+		return reply, errors.New("wrong signature of unknown signer")
 	}
 	if len(s.Storage.Follow) > 0 {
 		reply.Follow = &s.Storage.Follow

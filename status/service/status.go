@@ -35,7 +35,7 @@ type Response struct {
 }
 
 // Request treats external request to this service.
-func (st *Stat) Request(req *Request) (network.Message, onet.ClientError) {
+func (st *Stat) Request(req *Request) (network.Message, error) {
 	log.Lvl3("Returning", st.Context.ReportStatus())
 	return &Response{
 		Msg:            st.Context.ReportStatus(),

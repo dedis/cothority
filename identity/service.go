@@ -105,16 +105,16 @@ type authData struct {
 
 // PinRequest will check PIN of admin or print it in case PIN is not provided
 // then save the admin's public key
-func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
+func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	log.Lvl3("PinRequest", s.ServerIdentity())
 	if req.PIN == "" {
 		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		s.auth.pins[pin] = struct{}{}
 		log.Info("PIN:", pin)
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+		return nil, errors.New("Read PIN in server-log")
 	}
 	if _, ok := s.auth.pins[req.PIN]; !ok {
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+		return nil, errors.New("Wrong PIN")
 	}
 	s.auth.adminKeys = append(s.auth.adminKeys, req.Public)
 	s.save()
@@ -123,7 +123,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError
 }
 
 // StoreKeys accepts finalStatement, verifies it and saves public credentials from it
-func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) {
+func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 	log.Lvl3("Store key", s.ServerIdentity())
 	var msg []byte
 	var err error
@@ -132,23 +132,26 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 	case PoPAuth:
 		if req.Final == nil {
 			log.Error("No final statement in request")
-			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			return nil, errors.New(
 				"Invalid request")
+
 		}
 		if req.Final.Verify() != nil {
 			log.Error(s.ServerIdentity(), "Invalid FinalStatement")
-			return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
+			return nil, errors.New(
 				"Signature of final statement is invalid")
+
 		}
 		msg, err = req.Final.Hash()
 		if err != nil {
-			return nil, onet.NewClientError(err)
+			return nil, err
 		}
 	case PublicAuth:
 		if req.Publics == nil || len(req.Publics) == 0 {
 			log.Error("No public keys in request")
-			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			return nil, errors.New(
 				"Invalid request")
+
 		}
 
 		h := s.Suite().(kyber.HashFactory).Hash()
@@ -157,19 +160,20 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 			b, err := k.MarshalBinary()
 			if err != nil {
 				log.Error("failed to marshal public key")
-				return nil, onet.NewClientError(err)
+				return nil, err
 			}
 			_, err = h.Write(b)
 			if err != nil {
 				log.Error("failed to hash public key")
-				return nil, onet.NewClientError(err)
+				return nil, err
 			}
 
 		}
 		msg = h.Sum(nil)
 	default:
-		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+		return nil, errors.New(
 			"No such type of authentication")
+
 	}
 
 	// check Signature
@@ -182,8 +186,9 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 	}
 	if !valid {
 		log.Error(s.ServerIdentity(), "No keys for sent signature are stored")
-		return nil, onet.NewClientErrorCode(ErrorInvalidSignature,
+		return nil, errors.New(
 			"Invalid signature on StoreKeys")
+
 	}
 	switch req.Type {
 	case PoPAuth:
@@ -198,7 +203,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, onet.ClientError) 
 // It saves nonces in set
 // Replay attack is impossible, because after successful authentification nonce will
 // be deleted.
-func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientError) {
+func (s *Service) Authenticate(ap *Authenticate) (network.Message, error) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
 	ap.Nonce = make([]byte, nonceSize)
 	random.Bytes(ap.Nonce, s.Suite().RandomStream())
@@ -208,12 +213,13 @@ func (s *Service) Authenticate(ap *Authenticate) (network.Message, onet.ClientEr
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.ClientError) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, error) {
 	ctx := []byte(ServiceName + s.ServerIdentity().String())
 	if _, ok := s.auth.nonces[string(ai.Nonce)]; !ok {
 		log.Error("Given nonce is not stored on ", s.ServerIdentity())
-		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+		return nil, errors.New(
 			fmt.Sprintf("Given nonce is not stored on %s", s.ServerIdentity()))
+
 	}
 	valid := false
 	var tag string
@@ -233,8 +239,9 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 					s.tagsLimits[tag] = defaultNumberSkipchains
 				} else {
 					if n <= 0 {
-						return nil, onet.NewClientErrorCode(ErrorAuthentication,
+						return nil, errors.New(
 							"No more skipchains is allowed to create")
+
 					}
 				}
 				// authentication succeeded. we need to delete the nonce
@@ -245,8 +252,9 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	case PublicAuth:
 		if ai.Public == nil {
 			log.Error("nil public key or signature")
-			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			return nil, errors.New(
 				"wrong public key authentication data")
+
 		}
 		found := false
 		for _, k := range s.auth.keys {
@@ -256,8 +264,9 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			}
 		}
 		if !found {
-			return nil, onet.NewClientErrorCode(ErrorAuthentication,
+			return nil, errors.New(
 				"No such key is stored")
+
 		}
 		if schnorr.Verify(s.Suite(), ai.Public, ai.Nonce, *ai.SchnSig) != nil {
 			valid = false
@@ -269,17 +278,19 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 			s.pointsLimits[str] = defaultNumberSkipchains
 		} else {
 			if n <= 0 {
-				return nil, onet.NewClientErrorCode(ErrorAuthentication,
+				return nil, errors.New(
 					"No more skipchains is allowed to create")
+
 			}
 		}
 	default:
-		return nil, onet.NewClientErrorCode(ErrorAuthentication, "Wrong authentication type")
+		return nil, errors.New("Wrong authentication type")
 	}
 	if !valid {
 		log.Error(s.ServerIdentity(), "Authentication is failed")
-		return nil, onet.NewClientErrorCode(ErrorAuthentication,
+		return nil, errors.New(
 			"Invalid Signature on CreateIdentity")
+
 	}
 
 	log.Lvlf3("%s Creating new identity with data %+v", s.ServerIdentity(), ai.Data)
@@ -288,22 +299,22 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 	}
 	log.Lvl3("Creating Root-skipchain")
 	var cerr onet.ClientError
-	ids.SCRoot, cerr = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
+	ids.SCRoot, err = s.skipchain.CreateGenesis(ai.Roster, 10, 10,
 		[]skipchain.VerifierID{}, nil, nil)
-	if cerr != nil {
-		return nil, cerr
+	if err != nil {
+		return nil, err
 	}
 	log.Lvl3("Creating Data-skipchain", ai.Data)
-	ids.SCData, cerr = s.skipchain.CreateGenesis(ids.SCRoot.Roster, 10, 10,
+	ids.SCData, err = s.skipchain.CreateGenesis(ids.SCRoot.Roster, 10, 10,
 		VerificationIdentity, ai.Data, ids.SCRoot.Hash)
-	if cerr != nil {
-		return nil, cerr
+	if err != nil {
+		return nil, err
 	}
 
 	roster := ids.SCRoot.Roster
 	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids, tag, ai.Public}, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return nil, err
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -317,18 +328,18 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, onet.Clie
 }
 
 // DataUpdate returns a new data-update
-func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError) {
+func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, error) {
 	// Check if there is something new on the skipchain - in case we've been
 	// offline
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	reply, cerr := s.skipchain.GetUpdateChain(sid.SCRoot.Roster, sid.SCData.Hash)
-	if cerr != nil {
-		return nil, cerr
+	reply, err := s.skipchain.GetUpdateChain(sid.SCRoot.Roster, sid.SCData.Hash)
+	if err != nil {
+		return nil, err
 	}
 	if len(reply.Update) > 1 {
 		log.Lvl3("Got new data")
@@ -336,12 +347,12 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 		sid.SCData = reply.Update[len(reply.Update)-1]
 		_, dataInt, err := network.Unmarshal(sid.SCData.Data, s.Suite())
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorDataMissing, err.Error())
+			return nil, err
 		}
 		var ok bool
 		sid.Latest, ok = dataInt.(*Data)
 		if !ok {
-			return nil, onet.NewClientErrorCode(ErrorDataMissing, "did get invalid block from skipchain")
+			return nil, errors.New("did get invalid block from skipchain")
 		}
 	}
 	log.Lvl3(s, "Sending data-update")
@@ -352,16 +363,16 @@ func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, onet.ClientError)
 
 // ProposeSend only stores the proposed data internally. Signatures
 // come later.
-func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError) {
+func (s *Service) ProposeSend(p *ProposeSend) (network.Message, error) {
 	log.Lvl2(s, "Storing new proposal")
 	sid := s.getIdentityStorage(p.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+		return nil, errors.New("Didn't find Identity")
 	}
 	roster := sid.SCRoot.Roster
 	replies, err := s.propagateData(roster, p, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return nil, err
 	}
 	if replies != len(roster.List) {
 		log.Warn("Did only get", replies, "out of", len(roster.List))
@@ -370,11 +381,11 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, onet.ClientError
 }
 
 // ProposeUpdate returns an eventual data-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.ClientError) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, error) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find Identity")
+		return nil, errors.New("Didn't find Identity")
 	}
 	sid.Lock()
 	defer sid.Unlock()
@@ -386,55 +397,55 @@ func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, onet.Clien
 // ProposeVote takes int account a vote for the proposed data. It also verifies
 // that the voter is in the latest data.
 // An empty signature signifies that the vote has been rejected.
-func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError) {
+func (s *Service) ProposeVote(v *ProposeVote) (network.Message, error) {
 	log.Lvl2(s, "Voting on proposal")
 	// First verify if the signature is legitimate
 	sid := s.getIdentityStorage(v.ID)
 	if sid == nil {
-		return nil, onet.NewClientErrorCode(ErrorBlockMissing, "Didn't find identity")
+		return nil, errors.New("Didn't find identity")
 	}
 
 	// Putting this in a function because of the lock which needs to be held
 	// over all calls that might return an error.
-	cerr := func() onet.ClientError {
+	cerr := func() error {
 		sid.Lock()
 		defer sid.Unlock()
 		owner, ok := sid.Latest.Device[v.Signer]
 		if !ok {
-			return onet.NewClientErrorCode(ErrorAccountMissing, "Didn't find signer")
+			return errors.New("Didn't find signer")
 		}
 		if sid.Proposed == nil {
-			return onet.NewClientErrorCode(ErrorDataMissing, "No proposed block")
+			return errors.New("No proposed block")
 		}
 		log.Lvl3("Voting on", sid.Proposed.Device)
 		hash, err := sid.Proposed.Hash(s.Suite().(kyber.HashFactory))
 		if err != nil {
-			return onet.NewClientErrorCode(ErrorOnet, "Couldn't get hash")
+			return errors.New("Couldn't get hash")
 		}
 		if oldvote := sid.Proposed.Votes[v.Signer]; oldvote != nil {
 			// It can either be an update-vote (accepted), or a second
 			// vote (refused).
 			if schnorr.Verify(s.Suite(), owner.Point, hash, oldvote) == nil {
-				return onet.NewClientErrorCode(ErrorVoteDouble, "Already voted for that block")
+				return errors.New("Already voted for that block")
 			}
 		}
 		log.Lvl3(v.Signer, "voted", v.Signature)
 		if v.Signature != nil {
 			err = schnorr.Verify(s.Suite(), owner.Point, hash, v.Signature)
 			if err != nil {
-				return onet.NewClientErrorCode(ErrorVoteSignature, "Wrong signature: "+err.Error())
+				return errors.New("Wrong signature: " + err.Error())
 			}
 		}
 		return nil
 	}()
-	if cerr != nil {
-		return nil, cerr
+	if err != nil {
+		return nil, err
 	}
 
 	// Propagate the vote
 	_, err := s.propagateData(sid.SCRoot.Roster, v, propagateTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
+		return nil, errors.New(cerr.Error())
 	}
 	votesCnt := len(sid.Proposed.Votes)
 	if votesCnt >= sid.Latest.Threshold ||
@@ -445,9 +456,9 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		reply, cerr := s.skipchain.StoreSkipBlock(sid.SCData, nil, sid.Proposed)
-		if cerr != nil {
-			return nil, cerr
+		reply, err := s.skipchain.StoreSkipBlock(sid.SCData, nil, sid.Proposed)
+		if err != nil {
+			return nil, err
 		}
 		_, msg, _ := network.Unmarshal(reply.Latest.Data, s.Suite())
 		log.Lvl3("SB signed is", msg.(*Data).Device)
@@ -457,7 +468,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (network.Message, onet.ClientError
 		}
 		_, err = s.propagateSkipBlock(sid.SCRoot.Roster, usb, propagateTimeout)
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ErrorOnet, cerr.Error())
+			return nil, errors.New(cerr.Error())
 		}
 		return &ProposeVoteReply{sid.SCData}, nil
 	}

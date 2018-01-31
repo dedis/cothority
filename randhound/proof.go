@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/kyber/poly"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/crypto"
+	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // Package proof provides functionality to create and verify non-interactive
