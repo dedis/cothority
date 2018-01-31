@@ -3,6 +3,9 @@ KyberJS
 
 Javascript implementation of [Kyber interfaces](https://github.com/dedis/kyber/blob/master/group.go)
 
+1. **This is developmental, and not ready for protecting production data.**
+2. **This is not a constant time implementation, and likely has timing side channels that can be attacked.**
+
 Usage
 -----
 
