@@ -59,5 +59,11 @@ public class SignerTest {
         sig = signer2.sign(buf);
         assertTrue(signer.getIdentity().verify(buf, sig));
         assertTrue(signer2.getIdentity().verify(buf, sig));
+
+        Identity sig1 = signer.getIdentity();
+        Identity sig2 = IdentityFactory.New(sig1.toProto());
+        assertTrue(sig1.equals(sig2));
+        assertTrue(sig1.verify(buf, sig));
+        assertTrue(sig2.verify(buf, sig));
     }
 }
