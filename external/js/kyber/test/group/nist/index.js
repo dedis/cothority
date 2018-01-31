@@ -2,7 +2,7 @@ const kyber = require("../../../index.js");
 const nist = kyber.group.nist;
 const BN = require("bn.js");
 const assert = require("chai").assert;
-const PRNG = kyber.util.PRNG;
+const PRNG = require("../../util").PRNG;
 
 describe("p256", () => {
   const curve = new nist.Curve(nist.Params.p256);
