@@ -74,7 +74,7 @@ type Darcs struct {
 
 // CreateSkipchains sets up a new OCS-skipchain.
 func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs.CreateSkipchainsReply,
-	cerr onet.ClientError) {
+	err error) {
 
 	// Create OCS-skipchian
 	reply = &ocs.CreateSkipchainsReply{}
@@ -86,7 +86,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	}
 	genesisBuf, err := protobuf.Encode(genesis)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
+		return nil, err
 	}
 	block := skipchain.NewSkipBlock()
 	block.Roster = &req.Roster
@@ -95,16 +95,16 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	block.VerifierIDs = ocs.VerificationOCS
 	block.Data = genesisBuf
 	// This is for creating the skipchain, so we cannot use s.storeSkipBlock.
-	replySSB, cerr := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
+	replySSB, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
 		NewBlock: block,
 	})
-	if cerr != nil {
-		return nil, cerr
+	if err != nil {
+		return nil, err
 	}
 	reply.OCS = replySSB.Latest
 	replies, err := s.propagateOCS(&req.Roster, reply.OCS, propagationTimeout)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	if replies != len(req.Roster.List) {
 		log.Warn("Got only", replies, "replies for ocs-propagation")
@@ -118,28 +118,27 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
 	//log.Lvl2(s.ServerIdentity(), reply.OCS.Hash)
 	if err := pi.Start(); err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	log.Lvl3("Started DKG-protocol - waiting for done")
 	select {
 	case <-setupDKG.Done:
 		shared, err := setupDKG.SharedSecret()
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+			return nil, err
 		}
 		s.saveMutex.Lock()
 		s.Storage.Shared[string(reply.OCS.Hash)] = shared
 		dks, err := setupDKG.DKG.DistKeyShare()
 		if err != nil {
 			s.saveMutex.Unlock()
-			return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+			return nil, err
 		}
 		s.Storage.Polys[string(reply.OCS.Hash)] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.saveMutex.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout):
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol,
-			"dkg didn't finish in time")
+		return nil, errors.New("dkg didn't finish in time")
 	}
 
 	s.Storage.Admins[string(reply.OCS.Hash)] = &req.Writers
@@ -149,17 +148,17 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 
 // UpdateDarc adds a new account or modifies an existing one.
 func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
-	cerr onet.ClientError) {
+	err error) {
 	if _, exists := s.getDarc(req.Darc.GetID()); exists {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "cannot store darc again")
+		return nil, errors.New("cannot store darc again")
 	}
 	latest := s.getLatestDarc(req.Darc.GetBaseID())
 	if latest != nil && latest.Version >= req.Darc.Version {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "cannot store darc with lower or equal version")
+		return nil, errors.New("cannot store darc with lower or equal version")
 	}
 	if err := req.Darc.Verify(); err != nil {
 		log.Lvl2("Error when checking signature:", err)
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	dataOCS := &ocs.Transaction{
 		Darc:      &req.Darc,
@@ -167,15 +166,15 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't find latest block: "+err.Error())
+		return nil, errors.New("couldn't find latest block: " + err.Error())
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
+		return nil, err
 	}
-	latestSB, cerr = s.storeSkipBlock(latestSB, data)
-	if cerr != nil {
-		return nil, cerr
+	latestSB, err = s.storeSkipBlock(latestSB, data)
+	if err != nil {
+		return nil, err
 	}
 	log.Lvl3("New darc is:", req.Darc.String())
 	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
@@ -183,7 +182,6 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 
 	replies, err := s.propagateOCS(latestSB.Roster, latestSB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		return
 	}
 	if replies != len(latestSB.Roster.List) {
@@ -195,10 +193,10 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 
 // GetDarcPath returns the latest valid Darc given its identity.
 func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
-	cerr onet.ClientError) {
+	err error) {
 	d, exists := s.getDarc(req.BaseDarcID)
 	if !exists {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
+		return nil, errors.New("this Darc doesn't exist")
 	}
 	if req.Identity.Ed25519 != nil {
 		log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
@@ -210,17 +208,17 @@ func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
 	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find a path to the given identity")
+		return nil, errors.New("didn't find a path to the given identity")
 	}
 	return &ocs.GetDarcPathReply{Path: &path}, nil
 }
 
 // GetLatestDarc searches for new darcs and returns the
 // whole path for the requester to verify.
-func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDarcReply, cerr onet.ClientError) {
+func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDarcReply, err error) {
 	start, exists := s.getDarc(req.DarcID)
 	if !exists {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "this Darc doesn't exist")
+		return nil, errors.New("this Darc doesn't exist")
 	}
 	path := []*darc.Darc{start}
 	darcs := s.Storage.Accounts[string(start.GetBaseID())]
@@ -236,12 +234,12 @@ func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDar
 
 // WriteRequest adds a block the OCS-skipchain with a new file.
 func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
-	cerr onet.ClientError) {
+	err error) {
 	log.Lvl2("Write request")
 	reply = &ocs.WriteReply{}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find latest block: "+err.Error())
+		return nil, errors.New("didn't find latest block: " + err.Error())
 	}
 	dataOCS := &ocs.Transaction{
 		Write:     &req.Write,
@@ -250,42 +248,41 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
+		return nil, err
 	}
 	admin := s.Storage.Admins[string(req.OCS)]
 	if admin == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't find admin for this chain")
+		return nil, errors.New("couldn't find admin for this chain")
 	}
 	if s.searchPath([]darc.Darc{*admin}, req.Signature.SignaturePath.Signer, darc.User) == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "writer is not in admin-darc")
+		return nil, errors.New("writer is not in admin-darc")
 	}
 	if err = req.Signature.Verify(req.Write.Reader.GetID(), admin); err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "invalid signature: "+err.Error())
+		return nil, errors.New("invalid signature: " + err.Error())
 	}
 	i := 1
 	for {
-		reply.SB, cerr = s.storeSkipBlock(latestSB, data)
-		if cerr == nil {
+		reply.SB, err = s.storeSkipBlock(latestSB, data)
+		if err == nil {
 			break
 		}
-		if cerr.ErrorCode() == skipchain.ErrorBlockInProgress {
+		if err == skipchain.ErrorProcessing {
 			log.Lvl2("Waiting for block to be propagated...")
 			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
 			i++
 		} else {
-			return nil, cerr
+			return nil, err
 		}
 	}
 
 	log.Lvl2("Writing a key to the skipchain")
-	if cerr != nil {
-		log.Error(cerr)
+	if err != nil {
+		log.Error(err)
 		return
 	}
 
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
@@ -296,20 +293,20 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
 func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
-	cerr onet.ClientError) {
+	err error) {
 	log.Lvl2("Requesting a file. Reader:", req.Read.Signature.SignaturePath.Signer)
 	reply = &ocs.ReadReply{}
 	writeSB := s.db().GetByID(req.Read.DataID)
 	blockData := ocs.NewOCS(writeSB.Data)
 	if blockData == nil || blockData.Write == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Not an ocs-write block")
+		return nil, errors.New("Not an ocs-write block")
 	}
 	log.Lvlf2("Document reader is %x", blockData.Write.Reader.GetID())
 	if err := req.Read.Signature.SignaturePath.Verify(darc.User); err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "signature by wrong identity: "+err.Error())
+		return nil, errors.New("signature by wrong identity: " + err.Error())
 	}
 	if err := req.Read.Signature.Verify(req.Read.DataID, &blockData.Write.Reader); err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature: "+err.Error())
+		return nil, errors.New("wrong signature: " + err.Error())
 	}
 	dataOCS := &ocs.Transaction{
 		Read:      &req.Read,
@@ -317,31 +314,30 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, err.Error())
+		return nil, err
 	}
 
 	latestSB, err := s.db().GetLatest(writeSB)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find latest block: "+err.Error())
+		return nil, errors.New("didn't find latest block: " + err.Error())
 	}
 	i := 1
 	for {
-		reply.SB, cerr = s.storeSkipBlock(latestSB, data)
-		if cerr == nil {
+		reply.SB, err = s.storeSkipBlock(latestSB, data)
+		if err == nil {
 			break
 		}
-		if cerr.ErrorCode() == skipchain.ErrorBlockInProgress {
+		if err == skipchain.ErrorProcessing {
 			log.Lvl2("Waiting for block to be propagated...")
 			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
 			i++
 		} else {
-			return nil, cerr
+			return nil, err
 		}
 	}
 
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		cerr = onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
@@ -351,21 +347,22 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 }
 
 // GetReadRequests returns up to a maximum number of read-requests.
-func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadRequestsReply, cerr onet.ClientError) {
+func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadRequestsReply, err error) {
 	reply = &ocs.GetReadRequestsReply{}
 	current := s.db().GetByID(req.Start)
 	log.Lvlf2("Asking read-requests on writeID: %x", req.Start)
 
 	if current == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find starting skipblock")
+		return nil, errors.New("didn't find starting skipblock")
 	}
 	var doc skipchain.SkipBlockID
 	if req.Count == 0 {
 		dataOCS := ocs.NewOCS(current.Data)
 		if dataOCS == nil || dataOCS.Write == nil {
 			log.Error("Didn't find this writeID")
-			return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
+			return nil, errors.New(
 				"id is not a writer-block")
+
 		}
 		log.Lvl2("Got first block")
 		doc = current.Hash
@@ -375,8 +372,9 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 			// Search next read-request
 			dataOCS := ocs.NewOCS(current.Data)
 			if dataOCS == nil {
-				return nil, onet.NewClientErrorCode(ocs.ErrorParameter,
+				return nil, errors.New(
 					"unknown block in ocs-skipchain")
+
 			}
 			if dataOCS.Read != nil {
 				if req.Count > 0 || dataOCS.Read.DataID.Equal(doc) {
@@ -402,13 +400,13 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 }
 
 // SharedPublic returns the shared public key of a skipchain.
-func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedPublicReply, error onet.ClientError) {
+func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedPublicReply, err error) {
 	log.Lvl2("Getting shared public key")
 	s.saveMutex.Lock()
 	shared, ok := s.Storage.Shared[string(req.Genesis)]
 	s.saveMutex.Unlock()
 	if !ok {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "didn't find this skipchain")
+		return nil, errors.New("didn't find this skipchain")
 	}
 	return &ocs.SharedPublicReply{X: shared.X}, nil
 }
@@ -417,19 +415,19 @@ func (s *Service) SharedPublic(req *ocs.SharedPublicRequest) (reply *ocs.SharedP
 // key of the read-request. Once the read-request is on the skipchain, it is
 // not necessary to check its validity again.
 func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.DecryptKeyReply,
-	cerr onet.ClientError) {
+	err error) {
 	reply = &ocs.DecryptKeyReply{}
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
 	readSB := s.db().GetByID(req.Read)
 	read := ocs.NewOCS(readSB.Data)
 	if read == nil || read.Read == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "This is not a read-block")
+		return nil, errors.New("This is not a read-block")
 	}
 	fileSB := s.db().GetByID(read.Read.DataID)
 	file := ocs.NewOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "Data-block is broken")
+		return nil, errors.New("Data-block is broken")
 	}
 
 	// Start OCS-protocol to re-encrypt the file's symmetric key under the
@@ -439,7 +437,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	tree := fileSB.Roster.GenerateNaryTreeWithRoot(nodes, s.ServerIdentity())
 	pi, err := s.CreateProtocol(protocol.NameOCS, tree)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	ocsProto := pi.(*protocol.OCS)
 	ocsProto.U = file.Write.U
@@ -463,31 +461,31 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
 	err = ocsProto.Start()
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	log.Lvl3("Waiting for end of ocs-protocol")
 	if !<-ocsProto.Reencrypted {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "reencryption got refused")
+		return nil, errors.New("reencryption got refused")
 	}
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorProtocol, err.Error())
+		return nil, err
 	}
 	reply.Cs = file.Write.Cs
 	return
 }
 
 // storeSkipBlock calls directly the method of the service.
-func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, cerr onet.ClientError) {
+func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, err error) {
 	block := latest.Copy()
 	block.Data = d
-	reply, cerr := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
+	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
 		LatestID: latest.Hash,
 		NewBlock: block,
 	})
-	if cerr != nil {
-		return nil, cerr
+	if err != nil {
+		return nil, err
 	}
 	return reply.Latest, nil
 }
@@ -772,9 +770,9 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	}
 	c := skipchain.NewClient()
 	for _, sbID := range sb.BackLinkIDs {
-		sbNew, cerr := c.GetSingleBlock(sb.Roster, sbID)
-		if cerr != nil {
-			log.Error(cerr)
+		sbNew, err := c.GetSingleBlock(sb.Roster, sbID)
+		if err != nil {
+			log.Error(err)
 		} else {
 			s.db().Store(sbNew)
 		}

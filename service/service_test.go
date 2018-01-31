@@ -107,16 +107,16 @@ func TestService_GetDarcPath(t *testing.T) {
 	err = newReader.SetEvolution(o.readers, path, &darc.Signer{Ed25519: o.writer})
 	require.Nil(t, err)
 
-	_, cerr := o.service.UpdateDarc(&ocs.UpdateDarc{
+	_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
 		OCS:  o.sc.OCS.SkipChainID(),
 		Darc: *w,
 	})
-	require.Nil(t, cerr)
-	_, cerr = o.service.UpdateDarc(&ocs.UpdateDarc{
+	require.Nil(t, err)
+	_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
 		OCS:  o.sc.OCS.SkipChainID(),
 		Darc: *newReader,
 	})
-	require.Nil(t, cerr)
+	require.Nil(t, err)
 
 	request := &ocs.GetDarcPath{
 		OCS:        o.sc.OCS.SkipChainID(),
@@ -126,13 +126,13 @@ func TestService_GetDarcPath(t *testing.T) {
 	}
 
 	log.Lvl1("Searching for wrong role")
-	reply, cerr := o.service.GetDarcPath(request)
-	require.NotNil(t, cerr)
+	reply, err := o.service.GetDarcPath(request)
+	require.NotNil(t, err)
 
 	log.Lvl1("Searching for correct role")
 	request.Role = int(darc.User)
-	reply, cerr = o.service.GetDarcPath(request)
-	require.Nil(t, cerr)
+	reply, err = o.service.GetDarcPath(request)
+	require.Nil(t, err)
 	require.NotNil(t, reply.Path)
 	require.NotEqual(t, 0, len(*reply.Path))
 }

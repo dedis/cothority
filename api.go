@@ -47,17 +47,17 @@ func NewClient() *Client {
 //
 // Returns:
 //  - ocs [*SkipChainURL] - the identity of that new skipchain
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+//  - err - an error if something went wrong, or nil
 func (c *Client) CreateSkipchain(r *onet.Roster, admin *darc.Darc) (ocs *SkipChainURL,
-	cerr onet.ClientError) {
+	err error) {
 	req := &CreateSkipchainsRequest{
 		Roster:  *r,
 		Writers: *admin,
 	}
 	reply := &CreateSkipchainsReply{}
-	cerr = c.SendProtobuf(r.List[0], req, reply)
-	if cerr != nil {
-		return nil, cerr
+	err = c.SendProtobuf(r.List[0], req, reply)
+	if err != nil {
+		return nil, err
 	}
 	ocs = NewSkipChainURL(reply.OCS)
 	return
@@ -68,14 +68,14 @@ func (c *Client) CreateSkipchain(r *onet.Roster, admin *darc.Darc) (ocs *SkipCha
 // must be valid: Version_new = Version_old + 1, Threshold_new = Threshold_old and the
 // different Darc-changes must follow the rules.
 func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.SkipBlock,
-	cerr onet.ClientError) {
+	err error) {
 	req := &UpdateDarc{
 		Darc: *d,
 		OCS:  ocs.Genesis,
 	}
 	reply := &UpdateDarcReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], req, reply)
-	if cerr != nil {
+	err = c.SendProtobuf(ocs.Roster.List[0], req, reply)
+	if err != nil {
 		return
 	}
 	return reply.SB, nil
@@ -98,18 +98,18 @@ func (c *Client) EditAccount(ocs *SkipChainURL, d *darc.Darc) (sb *skipchain.Ski
 // Output:
 //  - sb [*skipchain.SkipBlock] - the actual block written in the skipchain. The
 //    Data-field of the block contains the actual write request.
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+//  - err - an error if something went wrong, or nil
 func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
 	sig *darc.Signature, acl *darc.Darc) (sb *skipchain.SkipBlock,
-	cerr onet.ClientError) {
+	err error) {
 	if len(encData) > 1e7 {
-		return nil, onet.NewClientErrorCode(ErrorParameter, "Cannot store data bigger than 10MB")
+		return nil, errors.New("Cannot store data bigger than 10MB")
 	}
 
 	requestShared := &SharedPublicRequest{Genesis: ocs.Genesis}
 	shared := &SharedPublicReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], requestShared, shared)
-	if cerr != nil {
+	err = c.SendProtobuf(ocs.Roster.List[0], requestShared, shared)
+	if err != nil {
 		return
 	}
 
@@ -122,7 +122,7 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
 		Signature: *sig,
 	}
 	reply := &WriteReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], wr, reply)
+	err = c.SendProtobuf(ocs.Roster.List[0], wr, reply)
 	sb = reply.SB
 	return
 }
@@ -142,12 +142,12 @@ func (c *Client) WriteRequest(ocs *SkipChainURL, encData []byte, symKey []byte,
 // Output:
 //  - sb [*skipchain.SkipBlock] - the read-request that has been added to the
 //    skipchain if it accepted the signature.
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+//  - err - an error if something went wrong, or nil
 func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
-	reader kyber.Scalar) (sb *skipchain.SkipBlock, cerr onet.ClientError) {
+	reader kyber.Scalar) (sb *skipchain.SkipBlock, err error) {
 	sig, err := schnorr.Sign(cothority.Suite, reader, dataID)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+		return nil, err
 	}
 
 	request := &ReadRequest{
@@ -158,9 +158,9 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 		OCS: ocs.Genesis,
 	}
 	reply := &ReadReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
-	if cerr != nil {
-		return nil, cerr
+	err = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if err != nil {
+		return nil, err
 	}
 	return reply.SB, nil
 }
@@ -178,24 +178,24 @@ func (c *Client) ReadRequest(ocs *SkipChainURL, dataID skipchain.SkipBlockID,
 //
 // Output:
 //  - sym [[]byte] - the decrypted symmetric key
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+//  - err - an error if something went wrong, or nil
 func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlockID, reader kyber.Scalar) (sym []byte,
-	cerr onet.ClientError) {
+	err error) {
 	request := &DecryptKeyRequest{
 		Read: readID,
 	}
 	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
-	if cerr != nil {
+	err = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if err != nil {
 		return
 	}
 
 	log.LLvl2("Got decryption key")
-	var err error
+
 	sym, err = DecodeKey(cothority.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, reader)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
+		return nil, errors.New("could not decode sym: " + err.Error())
 	}
 	return
 }
@@ -213,17 +213,17 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 //    is stored
 //
 // Output:
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
+//  - err - an error if something went wrong, or nil
 func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encData []byte,
-	cerr onet.ClientError) {
+	err error) {
 	cl := skipchain.NewClient()
-	sb, cerr := cl.GetSingleBlock(ocs.Roster, dataID)
-	if cerr != nil {
-		return nil, cerr
+	sb, err := cl.GetSingleBlock(ocs.Roster, dataID)
+	if err != nil {
+		return nil, err
 	}
 	ocsData := NewOCS(sb.Data)
 	if ocsData == nil || ocsData.Write == nil {
-		return nil, onet.NewClientError(errors.New("not correct type of data"))
+		return nil, errors.New("not correct type of data")
 	}
 	return ocsData.Write.Data, nil
 }
@@ -237,13 +237,13 @@ func (c *Client) GetData(ocs *SkipChainURL, dataID skipchain.SkipBlockID) (encDa
 //  - ocs [*SkipChainURL] - the url of the skipchain to use
 //
 // Output:
-//  - cerr [ClientError] - an eventual error if something went wrong, or nil
-func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID, count int) ([]*ReadDoc, onet.ClientError) {
+//  - err - an error if something went wrong, or nil
+func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID, count int) ([]*ReadDoc, error) {
 	request := &GetReadRequests{start, count}
 	reply := &GetReadRequestsReply{}
-	cerr := c.SendProtobuf(ocs.Roster.List[0], request, reply)
-	if cerr != nil {
-		return nil, cerr
+	err := c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if err != nil {
+		return nil, err
 	}
 	return reply.Documents, nil
 }
@@ -251,14 +251,14 @@ func (c *Client) GetReadRequests(ocs *SkipChainURL, start skipchain.SkipBlockID,
 // GetLatestDarc looks for an update path to the latest valid
 // darc given either a genesis-darc and nil, or a later darc
 // and its base-darc.
-func (c *Client) GetLatestDarc(ocs *SkipChainURL, darcID darc.ID) (path *[]*darc.Darc, cerr onet.ClientError) {
+func (c *Client) GetLatestDarc(ocs *SkipChainURL, darcID darc.ID) (path *[]*darc.Darc, err error) {
 	request := &GetLatestDarc{
 		OCS:    ocs.Genesis,
 		DarcID: darcID,
 	}
 	reply := &GetLatestDarcReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
-	if cerr != nil {
+	err = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if err != nil {
 		return
 	}
 	return reply.Darcs, nil
