@@ -151,13 +151,13 @@ Point.prototype.embedLen = function() {
  */
 Point.prototype.embed = function(data, callback) {
   if (data.constructor !== Uint8Array) {
-    throw new TypeError();
+    throw new TypeError("data should be Uint8Array");
   }
 
   let l = this.ref.curve._coordLen();
   let dl = this.embedLen();
   if (data.length > dl) {
-    throw new Error();
+    throw new Error("data.length > dl");
   }
 
   if (dl > data.length) {
@@ -283,7 +283,7 @@ Point.prototype.neg = function(p) {
  */
 Point.prototype.mul = function(s, p) {
   if (s.constructor !== Scalar) {
-    throw new TypeError();
+    throw new TypeError("s should be a Scalar");
   }
   p = p || null;
   const arr = s.ref.arr.fromRed();
@@ -326,7 +326,8 @@ Point.prototype.marshalBinary = function() {
 };
 
 /**
- * Convert a Uint8Array back to a curve point
+ * Convert a Uint8Array back to a curve point.
+ * Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
  * @param {Uint8Array} bytes
  *
  * @throws {TypeError} when bytes is not Uint8Array
@@ -334,14 +335,15 @@ Point.prototype.marshalBinary = function() {
  */
 Point.prototype.unmarshalBinary = function(bytes) {
   if (bytes.constructor !== Uint8Array) {
-    throw new TypeError();
+    throw new TypeError("bytes should be a Uint8Array");
   }
   const byteLen = this.ref.curve._coordLen();
   if (bytes.length != 1 + 2 * byteLen) {
     throw new Error();
   }
+  // not an uncompressed point
   if (bytes[0] != 4) {
-    throw new Error();
+    throw new Error("unmarshalBinary only accepts uncompressed point");
   }
   let x = new BN(bytes.slice(1, 1 + byteLen), 16);
   let y = new BN(bytes.slice(1 + byteLen), 16);
@@ -352,6 +354,6 @@ Point.prototype.unmarshalBinary = function(bytes) {
   }
   this.ref.point = this.ref.curve.curve.point(x, y);
   if (!this.ref.curve.curve.validate(this.ref.point)) {
-    throw new Error();
+    throw new Error("point is not on curve");
   }
 };

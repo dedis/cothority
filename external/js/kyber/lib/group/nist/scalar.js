@@ -155,7 +155,7 @@ Scalar.prototype.inv = function(a) {
  */
 Scalar.prototype.setBytes = function(b) {
   if (b.constructor !== Uint8Array) {
-    throw new TypeError();
+    throw new TypeError("b should be a Uint8Array");
   }
   this.ref.arr = new BN(b, 16, "be").toRed(this.ref.red);
   return this;
@@ -217,11 +217,11 @@ Scalar.prototype.marshalBinary = function() {
  */
 Scalar.prototype.unmarshalBinary = function(bytes) {
   if (bytes.constructor !== Uint8Array) {
-    throw new TypeError();
+    throw new TypeError("bytes should be a Uint8Array");
   }
 
   if (bytes.length !== this.marshalSize()) {
-    throw new Error();
+    throw new Error("bytes.length != marshalSize");
   }
   this.setBytes(bytes);
 };
