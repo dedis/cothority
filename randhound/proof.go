@@ -9,7 +9,6 @@ import (
 	"github.com/dedis/kyber/poly"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/crypto"
-	"gopkg.in/dedis/crypto.v0/abstract"
 )
 
 // Package proof provides functionality to create and verify non-interactive
@@ -17,7 +16,7 @@ import (
 
 // Proof resembles a NIZK dlog-equality proof. Allows to handle multiple proofs.
 type Proof struct {
-	suite abstract.Suite
+	suite kyber.Suite
 	Base  []ProofBase
 	Core  []ProofCore
 }
@@ -37,7 +36,7 @@ type ProofCore struct {
 }
 
 // NewProof creates a new NIZK dlog-equality proof.
-func NewProof(suite abstract.Suite, g []kyber.Point, h []kyber.Point, core []ProofCore) (*Proof, error) {
+func NewProof(suite kyber.Suite, g []kyber.Point, h []kyber.Point, core []ProofCore) (*Proof, error) {
 
 	if len(g) != len(h) {
 		return nil, errors.New("Received non-matching number of points")
@@ -168,14 +167,14 @@ func (p *Proof) Verify(xG []kyber.Point, xH []kyber.Point) ([]int, []int, error)
 
 // PVSS implements public verifiable secret sharing.
 type PVSS struct {
-	suite abstract.Suite // Suite
-	h     kyber.Point    // Base point for polynomial commits
-	t     int            // Secret sharing threshold
+	suite kyber.Suite // Suite
+	h     kyber.Point // Base point for polynomial commits
+	t     int         // Secret sharing threshold
 }
 
 // NewPVSS creates a new PVSS struct using the given suite, base point, and
 // secret sharing threshold.
-func NewPVSS(s abstract.Suite, h kyber.Point, t int) *PVSS {
+func NewPVSS(s kyber.Suite, h kyber.Point, t int) *PVSS {
 	return &PVSS{suite: s, h: h, t: t}
 }
 
@@ -225,7 +224,7 @@ func (pv *PVSS) Split(X []kyber.Point, secret kyber.Scalar) ([]int, []kyber.Poin
 // Verify checks that log_H(sH) == log_X(sX) using the given proof(s) and
 // returns the indices of those proofs that are valid (good) and non-valid
 // (bad), respectively.
-func (pv *PVSS) Verify(H kyber.Point, X []kyber.Point, sH []abstract.Point, sX []abstract.Point, core []ProofCore) (good, bad []int, err error) {
+func (pv *PVSS) Verify(H kyber.Point, X []kyber.Point, sH []kyber.Point, sX []kyber.Point, core []ProofCore) (good, bad []int, err error) {
 
 	n := len(X)
 	Y := make([]kyber.Point, n)
