@@ -139,7 +139,7 @@ func orgLink(c *cli.Context) error {
 func orgConfig(c *cli.Context) error {
 	log.Lvl3("Org: Config")
 	if c.NArg() < 1 {
-		log.Fatal(`Please give pop_desc.toml and (optionaly) merge_party.toml`)
+		log.Fatal(`Please give pop_desc.toml and (optionally) merge_party.toml`)
 	}
 	cfg, client := getConfigClient(c)
 	if cfg.Address.String() == "" {
@@ -471,7 +471,7 @@ func attSign(c *cli.Context) error {
 	}
 
 	if len(party.Final.Signature) < 0 || party.Final.Verify() != nil {
-		log.Fatal("Party is not finilized or signature is not valid")
+		log.Fatal("Party is not finalized or signature is not valid")
 	}
 
 	msg := []byte(c.Args().First())
@@ -498,7 +498,7 @@ func attVerify(c *cli.Context) error {
 	}
 
 	if len(party.Final.Signature) < 0 || party.Final.Verify() != nil {
-		return errors.New("Party is not finilized or signature is not valid")
+		return errors.New("Party is not finalized or signature is not valid")
 	}
 
 	msg := []byte(c.Args().First())
