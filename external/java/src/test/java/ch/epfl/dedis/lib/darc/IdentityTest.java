@@ -28,4 +28,9 @@ public class IdentityTest {
 
         assertTrue(ownerI.equals(ownerI2));
     }
+
+    @Test
+    void testKeycard() throws Exception{
+
+    }
 }

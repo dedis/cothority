@@ -222,9 +222,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2041,7 +2038,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Darc(input, extensionRegistry);
+          return new Darc(input, extensionRegistry);
       }
     };
 
@@ -2113,6 +2110,31 @@ public final class DarcProto {
      * <code>optional .IdentityEd25519 ed25519 = 2;</code>
      */
     ch.epfl.dedis.proto.DarcProto.IdentityEd25519OrBuilder getEd25519OrBuilder();
+
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    boolean hasKeycard();
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.IdentityKeycard getKeycard();
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder getKeycardOrBuilder();
   }
   /**
    * <pre>
@@ -2143,9 +2165,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2188,6 +2207,19 @@ public final class DarcProto {
                 ed25519_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = keycard_.toBuilder();
+              }
+              keycard_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.IdentityKeycard.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(keycard_);
+                keycard_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
           }
@@ -2281,6 +2313,39 @@ public final class DarcProto {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityEd25519.getDefaultInstance() : ed25519_;
     }
 
+    public static final int KEYCARD_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.proto.DarcProto.IdentityKeycard keycard_;
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    public boolean hasKeycard() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.IdentityKeycard getKeycard() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance() : keycard_;
+    }
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityKeycard keycard = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder getKeycardOrBuilder() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance() : keycard_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2299,6 +2364,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasKeycard()) {
+        if (!getKeycard().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -2310,6 +2381,9 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, getEd25519());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getKeycard());
       }
       unknownFields.writeTo(output);
     }
@@ -2326,6 +2400,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getEd25519());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getKeycard());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2353,6 +2431,11 @@ public final class DarcProto {
         result = result && getEd25519()
             .equals(other.getEd25519());
       }
+      result = result && (hasKeycard() == other.hasKeycard());
+      if (hasKeycard()) {
+        result = result && getKeycard()
+            .equals(other.getKeycard());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2371,6 +2454,10 @@ public final class DarcProto {
       if (hasEd25519()) {
         hash = (37 * hash) + ED25519_FIELD_NUMBER;
         hash = (53 * hash) + getEd25519().hashCode();
+      }
+      if (hasKeycard()) {
+        hash = (37 * hash) + KEYCARD_FIELD_NUMBER;
+        hash = (53 * hash) + getKeycard().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2503,6 +2590,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
           getDarcFieldBuilder();
           getEd25519FieldBuilder();
+          getKeycardFieldBuilder();
         }
       }
       public Builder clear() {
@@ -2519,6 +2607,12 @@ public final class DarcProto {
           ed25519Builder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (keycardBuilder_ == null) {
+          keycard_ = null;
+        } else {
+          keycardBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -2558,6 +2652,14 @@ public final class DarcProto {
           result.ed25519_ = ed25519_;
         } else {
           result.ed25519_ = ed25519Builder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (keycardBuilder_ == null) {
+          result.keycard_ = keycard_;
+        } else {
+          result.keycard_ = keycardBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -2607,6 +2709,9 @@ public final class DarcProto {
         if (other.hasEd25519()) {
           mergeEd25519(other.getEd25519());
         }
+        if (other.hasKeycard()) {
+          mergeKeycard(other.getKeycard());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2620,6 +2725,11 @@ public final class DarcProto {
         }
         if (hasEd25519()) {
           if (!getEd25519().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasKeycard()) {
+          if (!getKeycard().isInitialized()) {
             return false;
           }
         }
@@ -2952,6 +3062,160 @@ public final class DarcProto {
         }
         return ed25519Builder_;
       }
+
+      private ch.epfl.dedis.proto.DarcProto.IdentityKeycard keycard_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.IdentityKeycard, ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder, ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder> keycardBuilder_;
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public boolean hasKeycard() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycard getKeycard() {
+        if (keycardBuilder_ == null) {
+          return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance() : keycard_;
+        } else {
+          return keycardBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public Builder setKeycard(ch.epfl.dedis.proto.DarcProto.IdentityKeycard value) {
+        if (keycardBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          keycard_ = value;
+          onChanged();
+        } else {
+          keycardBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public Builder setKeycard(
+          ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder builderForValue) {
+        if (keycardBuilder_ == null) {
+          keycard_ = builderForValue.build();
+          onChanged();
+        } else {
+          keycardBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public Builder mergeKeycard(ch.epfl.dedis.proto.DarcProto.IdentityKeycard value) {
+        if (keycardBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              keycard_ != null &&
+              keycard_ != ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance()) {
+            keycard_ =
+              ch.epfl.dedis.proto.DarcProto.IdentityKeycard.newBuilder(keycard_).mergeFrom(value).buildPartial();
+          } else {
+            keycard_ = value;
+          }
+          onChanged();
+        } else {
+          keycardBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public Builder clearKeycard() {
+        if (keycardBuilder_ == null) {
+          keycard_ = null;
+          onChanged();
+        } else {
+          keycardBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder getKeycardBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getKeycardFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder getKeycardOrBuilder() {
+        if (keycardBuilder_ != null) {
+          return keycardBuilder_.getMessageOrBuilder();
+        } else {
+          return keycard_ == null ?
+              ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance() : keycard_;
+        }
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityKeycard keycard = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.IdentityKeycard, ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder, ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder> 
+          getKeycardFieldBuilder() {
+        if (keycardBuilder_ == null) {
+          keycardBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.IdentityKeycard, ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder, ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder>(
+                  getKeycard(),
+                  getParentForChildren(),
+                  isClean());
+          keycard_ = null;
+        }
+        return keycardBuilder_;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -2982,7 +3246,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Identity(input, extensionRegistry);
+          return new Identity(input, extensionRegistry);
       }
     };
 
@@ -3044,9 +3308,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3480,7 +3741,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityEd25519(input, extensionRegistry);
+          return new IdentityEd25519(input, extensionRegistry);
       }
     };
 
@@ -3494,6 +3755,501 @@ public final class DarcProto {
     }
 
     public ch.epfl.dedis.proto.DarcProto.IdentityEd25519 getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface IdentityKeycardOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:IdentityKeycard)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    com.google.protobuf.ByteString getPublic();
+  }
+  /**
+   * <pre>
+   * IdentityKeycard holds a public key from a keycard
+   * </pre>
+   *
+   * Protobuf type {@code IdentityKeycard}
+   */
+  public  static final class IdentityKeycard extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:IdentityKeycard)
+      IdentityKeycardOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use IdentityKeycard.newBuilder() to construct.
+    private IdentityKeycard(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private IdentityKeycard() {
+      public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private IdentityKeycard(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityKeycard_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityKeycard_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.DarcProto.IdentityKeycard.class, ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, public_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, public_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.IdentityKeycard)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.DarcProto.IdentityKeycard other = (ch.epfl.dedis.proto.DarcProto.IdentityKeycard) obj;
+
+      boolean result = true;
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.IdentityKeycard prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * IdentityKeycard holds a public key from a keycard
+     * </pre>
+     *
+     * Protobuf type {@code IdentityKeycard}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:IdentityKeycard)
+        ch.epfl.dedis.proto.DarcProto.IdentityKeycardOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityKeycard_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityKeycard_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.DarcProto.IdentityKeycard.class, ch.epfl.dedis.proto.DarcProto.IdentityKeycard.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.DarcProto.IdentityKeycard.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityKeycard_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycard getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycard build() {
+        ch.epfl.dedis.proto.DarcProto.IdentityKeycard result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityKeycard buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.IdentityKeycard result = new ch.epfl.dedis.proto.DarcProto.IdentityKeycard(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.public_ = public_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.IdentityKeycard) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.IdentityKeycard)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.IdentityKeycard other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.IdentityKeycard.getDefaultInstance()) return this;
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPublic()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.DarcProto.IdentityKeycard parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.IdentityKeycard) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:IdentityKeycard)
+    }
+
+    // @@protoc_insertion_point(class_scope:IdentityKeycard)
+    private static final ch.epfl.dedis.proto.DarcProto.IdentityKeycard DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.IdentityKeycard();
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.IdentityKeycard getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityKeycard>
+        PARSER = new com.google.protobuf.AbstractParser<IdentityKeycard>() {
+      public IdentityKeycard parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IdentityKeycard(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<IdentityKeycard> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IdentityKeycard> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.DarcProto.IdentityKeycard getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3542,9 +4298,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3978,7 +4731,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityDarc(input, extensionRegistry);
+          return new IdentityDarc(input, extensionRegistry);
       }
     };
 
@@ -4074,9 +4827,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4783,7 +5533,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signature(input, extensionRegistry);
+          return new Signature(input, extensionRegistry);
       }
     };
 
@@ -4923,9 +5673,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6073,7 +6820,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SignaturePath(input, extensionRegistry);
+          return new SignaturePath(input, extensionRegistry);
       }
     };
 
@@ -6108,6 +6855,19 @@ public final class DarcProto {
      * <code>optional .Ed25519Signer ed25519 = 1;</code>
      */
     ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder();
+
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    boolean hasKeycard();
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard();
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder();
   }
   /**
    * <pre>
@@ -6139,9 +6899,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6171,6 +6928,19 @@ public final class DarcProto {
                 ed25519_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = keycard_.toBuilder();
+              }
+              keycard_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.KeycardSigner.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(keycard_);
+                keycard_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
               break;
             }
           }
@@ -6219,6 +6989,27 @@ public final class DarcProto {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
     }
 
+    public static final int KEYCARD_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.DarcProto.KeycardSigner keycard_;
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    public boolean hasKeycard() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+    }
+    /**
+     * <code>optional .KeycardSigner keycard = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -6227,6 +7018,12 @@ public final class DarcProto {
 
       if (hasEd25519()) {
         if (!getEd25519().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasKeycard()) {
+        if (!getKeycard().isInitialized()) {
           memoizedIsInitialized = 0;
           return false;
         }
@@ -6240,6 +7037,9 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeMessage(1, getEd25519());
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getKeycard());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -6251,6 +7051,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getEd25519());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getKeycard());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6273,6 +7077,11 @@ public final class DarcProto {
         result = result && getEd25519()
             .equals(other.getEd25519());
       }
+      result = result && (hasKeycard() == other.hasKeycard());
+      if (hasKeycard()) {
+        result = result && getKeycard()
+            .equals(other.getKeycard());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -6287,6 +7096,10 @@ public final class DarcProto {
       if (hasEd25519()) {
         hash = (37 * hash) + ED25519_FIELD_NUMBER;
         hash = (53 * hash) + getEd25519().hashCode();
+      }
+      if (hasKeycard()) {
+        hash = (37 * hash) + KEYCARD_FIELD_NUMBER;
+        hash = (53 * hash) + getKeycard().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6419,6 +7232,7 @@ public final class DarcProto {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getEd25519FieldBuilder();
+          getKeycardFieldBuilder();
         }
       }
       public Builder clear() {
@@ -6429,6 +7243,12 @@ public final class DarcProto {
           ed25519Builder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
+        if (keycardBuilder_ == null) {
+          keycard_ = null;
+        } else {
+          keycardBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -6460,6 +7280,14 @@ public final class DarcProto {
           result.ed25519_ = ed25519_;
         } else {
           result.ed25519_ = ed25519Builder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (keycardBuilder_ == null) {
+          result.keycard_ = keycard_;
+        } else {
+          result.keycard_ = keycardBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -6506,6 +7334,9 @@ public final class DarcProto {
         if (other.hasEd25519()) {
           mergeEd25519(other.getEd25519());
         }
+        if (other.hasKeycard()) {
+          mergeKeycard(other.getKeycard());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -6514,6 +7345,11 @@ public final class DarcProto {
       public final boolean isInitialized() {
         if (hasEd25519()) {
           if (!getEd25519().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasKeycard()) {
+          if (!getKeycard().isInitialized()) {
             return false;
           }
         }
@@ -6656,6 +7492,124 @@ public final class DarcProto {
         }
         return ed25519Builder_;
       }
+
+      private ch.epfl.dedis.proto.DarcProto.KeycardSigner keycard_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder> keycardBuilder_;
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public boolean hasKeycard() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard() {
+        if (keycardBuilder_ == null) {
+          return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+        } else {
+          return keycardBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public Builder setKeycard(ch.epfl.dedis.proto.DarcProto.KeycardSigner value) {
+        if (keycardBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          keycard_ = value;
+          onChanged();
+        } else {
+          keycardBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public Builder setKeycard(
+          ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder builderForValue) {
+        if (keycardBuilder_ == null) {
+          keycard_ = builderForValue.build();
+          onChanged();
+        } else {
+          keycardBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public Builder mergeKeycard(ch.epfl.dedis.proto.DarcProto.KeycardSigner value) {
+        if (keycardBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              keycard_ != null &&
+              keycard_ != ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance()) {
+            keycard_ =
+              ch.epfl.dedis.proto.DarcProto.KeycardSigner.newBuilder(keycard_).mergeFrom(value).buildPartial();
+          } else {
+            keycard_ = value;
+          }
+          onChanged();
+        } else {
+          keycardBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public Builder clearKeycard() {
+        if (keycardBuilder_ == null) {
+          keycard_ = null;
+          onChanged();
+        } else {
+          keycardBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder getKeycardBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getKeycardFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder() {
+        if (keycardBuilder_ != null) {
+          return keycardBuilder_.getMessageOrBuilder();
+        } else {
+          return keycard_ == null ?
+              ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+        }
+      }
+      /**
+       * <code>optional .KeycardSigner keycard = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder> 
+          getKeycardFieldBuilder() {
+        if (keycardBuilder_ == null) {
+          keycardBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder>(
+                  getKeycard(),
+                  getParentForChildren(),
+                  isClean());
+          keycard_ = null;
+        }
+        return keycardBuilder_;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -6686,7 +7640,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signer(input, extensionRegistry);
+          return new Signer(input, extensionRegistry);
       }
     };
 
@@ -6758,9 +7712,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7281,7 +8232,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Ed25519Signer(input, extensionRegistry);
+          return new Ed25519Signer(input, extensionRegistry);
       }
     };
 
@@ -7295,6 +8246,600 @@ public final class DarcProto {
     }
 
     public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface KeycardSignerOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:KeycardSigner)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    boolean hasPoint();
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    com.google.protobuf.ByteString getPoint();
+
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    boolean hasSecret();
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    com.google.protobuf.ByteString getSecret();
+  }
+  /**
+   * <pre>
+   * KeycardSigner holds a public and private keys necessary to sign Darcs,
+   * but the private key will not be given out.
+   * </pre>
+   *
+   * Protobuf type {@code KeycardSigner}
+   */
+  public  static final class KeycardSigner extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:KeycardSigner)
+      KeycardSignerOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use KeycardSigner.newBuilder() to construct.
+    private KeycardSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private KeycardSigner() {
+      point_ = com.google.protobuf.ByteString.EMPTY;
+      secret_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private KeycardSigner(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              point_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              secret_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.DarcProto.KeycardSigner.class, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int POINT_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString point_;
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    public boolean hasPoint() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPoint() {
+      return point_;
+    }
+
+    public static final int SECRET_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString secret_;
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    public boolean hasSecret() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    public com.google.protobuf.ByteString getSecret() {
+      return secret_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPoint()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSecret()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, point_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, secret_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, point_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, secret_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.KeycardSigner)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.DarcProto.KeycardSigner other = (ch.epfl.dedis.proto.DarcProto.KeycardSigner) obj;
+
+      boolean result = true;
+      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint()) {
+        result = result && getPoint()
+            .equals(other.getPoint());
+      }
+      result = result && (hasSecret() == other.hasSecret());
+      if (hasSecret()) {
+        result = result && getSecret()
+            .equals(other.getSecret());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPoint()) {
+        hash = (37 * hash) + POINT_FIELD_NUMBER;
+        hash = (53 * hash) + getPoint().hashCode();
+      }
+      if (hasSecret()) {
+        hash = (37 * hash) + SECRET_FIELD_NUMBER;
+        hash = (53 * hash) + getSecret().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.KeycardSigner prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * KeycardSigner holds a public and private keys necessary to sign Darcs,
+     * but the private key will not be given out.
+     * </pre>
+     *
+     * Protobuf type {@code KeycardSigner}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:KeycardSigner)
+        ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.DarcProto.KeycardSigner.class, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.DarcProto.KeycardSigner.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        point_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        secret_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.KeycardSigner build() {
+        ch.epfl.dedis.proto.DarcProto.KeycardSigner result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.KeycardSigner buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.KeycardSigner result = new ch.epfl.dedis.proto.DarcProto.KeycardSigner(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.point_ = point_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.secret_ = secret_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.KeycardSigner) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.KeycardSigner)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.KeycardSigner other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance()) return this;
+        if (other.hasPoint()) {
+          setPoint(other.getPoint());
+        }
+        if (other.hasSecret()) {
+          setSecret(other.getSecret());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPoint()) {
+          return false;
+        }
+        if (!hasSecret()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.DarcProto.KeycardSigner parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.KeycardSigner) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public boolean hasPoint() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPoint() {
+        return point_;
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public Builder setPoint(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        point_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public Builder clearPoint() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        point_ = getDefaultInstance().getPoint();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public boolean hasSecret() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public com.google.protobuf.ByteString getSecret() {
+        return secret_;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public Builder setSecret(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        secret_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public Builder clearSecret() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        secret_ = getDefaultInstance().getSecret();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:KeycardSigner)
+    }
+
+    // @@protoc_insertion_point(class_scope:KeycardSigner)
+    private static final ch.epfl.dedis.proto.DarcProto.KeycardSigner DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.KeycardSigner();
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<KeycardSigner>
+        PARSER = new com.google.protobuf.AbstractParser<KeycardSigner>() {
+      public KeycardSigner parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new KeycardSigner(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<KeycardSigner> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<KeycardSigner> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -7315,6 +8860,11 @@ public final class DarcProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_IdentityEd25519_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_IdentityKeycard_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_IdentityKeycard_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_IdentityDarc_descriptor;
   private static final 
@@ -7340,6 +8890,11 @@ public final class DarcProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Ed25519Signer_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_KeycardSigner_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_KeycardSigner_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -7353,17 +8908,21 @@ public final class DarcProto {
       "Identity\022\030\n\005users\030\002 \003(\0132\t.Identity\022\017\n\007ve" +
       "rsion\030\003 \002(\021\022\023\n\013description\030\004 \001(\014\022\016\n\006base" +
       "id\030\005 \001(\014\022\035\n\tsignature\030\006 \001(\0132\n.Signature\"" +
-      "J\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityDarc" +
-      "\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\" \n\017I" +
-      "dentityEd25519\022\r\n\005point\030\001 \002(\014\"\032\n\014Identit" +
-      "yDarc\022\n\n\002id\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignat" +
-      "ure\030\001 \002(\014\022%\n\rsignaturepath\030\002 \002(\0132\016.Signa" +
-      "turePath\"N\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\013" +
-      "2\005.Darc\022\031\n\006signer\030\002 \002(\0132\t.Identity\022\014\n\004ro" +
-      "le\030\003 \002(\021\")\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed" +
-      "25519Signer\".\n\rEd25519Signer\022\r\n\005point\030\001 " +
-      "\002(\014\022\016\n\006secret\030\002 \002(\014B \n\023ch.epfl.dedis.pro" +
-      "toB\tDarcProto"
+      "m\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityDarc" +
+      "\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\022!\n\007k" +
+      "eycard\030\003 \001(\0132\020.IdentityKeycard\" \n\017Identi" +
+      "tyEd25519\022\r\n\005point\030\001 \002(\014\"!\n\017IdentityKeyc" +
+      "ard\022\016\n\006public\030\001 \002(\014\"\032\n\014IdentityDarc\022\n\n\002i" +
+      "d\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022",
+      "%\n\rsignaturepath\030\002 \002(\0132\016.SignaturePath\"N" +
+      "\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n" +
+      "\006signer\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"J" +
+      "\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed25519Signe" +
+      "r\022\037\n\007keycard\030\002 \001(\0132\016.KeycardSigner\".\n\rEd" +
+      "25519Signer\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002" +
+      "(\014\".\n\rKeycardSigner\022\r\n\005point\030\001 \002(\014\022\016\n\006se" +
+      "cret\030\002 \002(\014B \n\023ch.epfl.dedis.protoB\tDarcP" +
+      "roto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7388,42 +8947,54 @@ public final class DarcProto {
     internal_static_Identity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Identity_descriptor,
-        new java.lang.String[] { "Darc", "Ed25519", });
+        new java.lang.String[] { "Darc", "Ed25519", "Keycard", });
     internal_static_IdentityEd25519_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_IdentityEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityEd25519_descriptor,
         new java.lang.String[] { "Point", });
-    internal_static_IdentityDarc_descriptor =
+    internal_static_IdentityKeycard_descriptor =
       getDescriptor().getMessageTypes().get(3);
+    internal_static_IdentityKeycard_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_IdentityKeycard_descriptor,
+        new java.lang.String[] { "Public", });
+    internal_static_IdentityDarc_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_IdentityDarc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityDarc_descriptor,
         new java.lang.String[] { "Id", });
     internal_static_Signature_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_Signature_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Signature_descriptor,
         new java.lang.String[] { "Signature", "Signaturepath", });
     internal_static_SignaturePath_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_SignaturePath_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignaturePath_descriptor,
         new java.lang.String[] { "Darcs", "Signer", "Role", });
     internal_static_Signer_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Signer_descriptor,
-        new java.lang.String[] { "Ed25519", });
+        new java.lang.String[] { "Ed25519", "Keycard", });
     internal_static_Ed25519Signer_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_Ed25519Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Ed25519Signer_descriptor,
+        new java.lang.String[] { "Point", "Secret", });
+    internal_static_KeycardSigner_descriptor =
+      getDescriptor().getMessageTypes().get(9);
+    internal_static_KeycardSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_KeycardSigner_descriptor,
         new java.lang.String[] { "Point", "Secret", });
   }
 

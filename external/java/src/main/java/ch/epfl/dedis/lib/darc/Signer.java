@@ -22,14 +22,14 @@ public interface Signer {
      *
      * @return
      */
-    Scalar getPrivate();
+    Scalar getPrivate() throws CothorityCryptoException;
 
     /**
      * Returns the public key of the signer or throws a NoPublicKey exception.
      *
      * @return
      */
-    Point getPublic();
+    Point getPublic() throws CothorityCryptoException;
 
     /**
      * Returns an identity of the signer.

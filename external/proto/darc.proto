@@ -32,11 +32,18 @@ message Identity {
   optional IdentityDarc darc = 1;
   // 	 Public-key identity
   optional IdentityEd25519 ed25519 = 2;
+  // 	 Public-key identity
+  optional IdentityKeycard keycard = 3;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
 message IdentityEd25519 {
   required bytes point = 1;
+}
+
+// IdentityKeycard holds a public key from a keycard
+message IdentityKeycard {
+  required bytes public = 1;
 }
 
 // IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
@@ -67,10 +74,18 @@ message SignaturePath {
 // TODO Make it an interface
 message Signer {
   optional Ed25519Signer ed25519 = 1;
+  optional KeycardSigner keycard = 2;
 }
 
 // Ed25519Signer holds a public and private keys necessary to sign Darcs
 message Ed25519Signer {
+  required bytes point = 1;
+  required bytes secret = 2;
+}
+
+// KeycardSigner holds a public and private keys necessary to sign Darcs,
+// but the private key will not be given out.
+message KeycardSigner {
   required bytes point = 1;
   required bytes secret = 2;
 }

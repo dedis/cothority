@@ -61,11 +61,18 @@ type Identity struct {
 	Darc *IdentityDarc
 	// Public-key identity
 	Ed25519 *IdentityEd25519
+	// Public-key identity
+	Keycard *IdentityKeycard
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
 type IdentityEd25519 struct {
 	Point kyber.Point
+}
+
+// IdentityKeycard holds a public key from a keycard
+type IdentityKeycard struct {
+	Public []byte
 }
 
 // IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
@@ -96,10 +103,18 @@ type SignaturePath struct {
 // TODO Make it an interface
 type Signer struct {
 	Ed25519 *Ed25519Signer
+	Keycard *KeycardSigner
 }
 
 // Ed25519Signer holds a public and private keys necessary to sign Darcs
 type Ed25519Signer struct {
 	Point  kyber.Point
 	Secret kyber.Scalar
+}
+
+// KeycardSigner holds a public and private keys necessary to sign Darcs,
+// but the private key will not be given out.
+type KeycardSigner struct {
+	Point  []byte
+	secret []byte
 }
