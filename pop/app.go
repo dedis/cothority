@@ -123,7 +123,8 @@ func orgLink(c *cli.Context) error {
 	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
-		if err.ErrorCode() == service.ErrorWrongPIN && pin == "" {
+		// Compare by string because this comes over the network.
+		if err.Error() == service.ErrorWrongPIN.Error() && pin == "" {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
@@ -269,10 +270,10 @@ func orgFinal(c *cli.Context) error {
 		log.Lvl2("Final statement already here:\n", "\n"+string(finst))
 		return nil
 	}
-	fs, cerr := client.Finalize(cfg.Address, party.Final.Desc,
+	fs, err := client.Finalize(cfg.Address, party.Final.Desc,
 		party.Final.Attendees, cfg.OrgPrivate)
-	if cerr != nil {
-		return cerr
+	if err != nil {
+		return err
 	}
 	party.Final = fs
 	cfg.write()
@@ -609,7 +610,7 @@ func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
 	if val, ok := cfg.Parties[hash]; ok {
 		return val, nil
 	}
-	return nil, onet.NewClientErrorCode(service.ErrorInternal, "No such party")
+	return nil, errors.New("No such party")
 }
 
 // readGroup fetches group definition file.

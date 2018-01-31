@@ -250,7 +250,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 }
 
 // Verify checks a given collective random string against a protocol transcript.
-func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) error {
+func (rh *RandHound) Verify(suite kyber.Suite, random []byte, t *Transcript) error {
 
 	rh.mutex.Lock()
 	defer rh.mutex.Unlock()
@@ -917,7 +917,7 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 	return hash.Bytes(rh.Suite().Hash(), buf.Bytes())
 }
 
-func signSchnorr(suite abstract.Suite, key kyber.Scalar, m interface{}) error {
+func signSchnorr(suite kyber.Suite, key kyber.Scalar, m interface{}) error {
 
 	// Reset signature field
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
@@ -940,7 +940,7 @@ func signSchnorr(suite abstract.Suite, key kyber.Scalar, m interface{}) error {
 	return nil
 }
 
-func verifySchnorr(suite abstract.Suite, key kyber.Point, m interface{}) error {
+func verifySchnorr(suite kyber.Suite, key kyber.Point, m interface{}) error {
 
 	// Make a copy of the signature
 	x := reflect.ValueOf(m).Elem().FieldByName("Sig")
@@ -962,7 +962,7 @@ func verifySchnorr(suite abstract.Suite, key kyber.Point, m interface{}) error {
 	return schnorr.Verify(suite, key, mb, sig.Interface().([]byte))
 }
 
-func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
+func verifyMessage(suite kyber.Suite, m interface{}, hash1 []byte) error {
 
 	// Make a copy of the signature
 	x := reflect.ValueOf(m).Elem().FieldByName("Sig")

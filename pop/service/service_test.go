@@ -56,11 +56,11 @@ func TestService_PinRequest(t *testing.T) {
 	}
 	require.Equal(t, "", service.data.Pin)
 	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
-	_, cerr := service.PinRequest(&PinRequest{"", pub})
-	require.NotNil(t, cerr)
+	_, err := service.PinRequest(&PinRequest{"", pub})
+	require.NotNil(t, err)
 	require.NotEqual(t, "", service.data.Pin)
-	_, cerr = service.PinRequest(&PinRequest{service.data.Pin, pub})
-	log.Error(cerr)
+	_, err = service.PinRequest(&PinRequest{service.data.Pin, pub})
+	log.Error(err)
 	require.Equal(t, service.data.Public, pub)
 }
 
@@ -84,8 +84,8 @@ func TestService_StoreConfig(t *testing.T) {
 	hash := desc.Hash()
 	sg, err := schnorr.Sign(tSuite, kp.Private, hash)
 	log.ErrFatal(err)
-	msg, cerr := service.StoreConfig(&storeConfig{desc, sg})
-	log.ErrFatal(cerr)
+	msg, err := service.StoreConfig(&storeConfig{desc, sg})
+	log.ErrFatal(err)
 	_, ok := msg.(*storeConfigReply)
 	require.True(t, ok)
 	_, ok = service.data.Finals[string(desc.Hash())]

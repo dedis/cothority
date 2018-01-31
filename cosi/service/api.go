@@ -32,9 +32,9 @@ func (c *Client) SignatureRequest(r *onet.Roster, msg []byte) (*SignatureRespons
 	dst := r.List[0]
 	log.Lvl4("Sending message to", dst)
 	reply := &SignatureResponse{}
-	cerr := c.SendProtobuf(dst, serviceReq, reply)
-	if cerr != nil {
-		return nil, cerr
+	err := c.SendProtobuf(dst, serviceReq, reply)
+	if err != nil {
+		return nil, err
 	}
 	return reply, nil
 }

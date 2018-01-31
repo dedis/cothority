@@ -34,15 +34,15 @@ func TestIdentity_PinRequest(t *testing.T) {
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
 	require.Equal(t, 0, len(srvc.auth.pins))
 	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
-	_, cerr := srvc.PinRequest(&PinRequest{"", pub})
-	require.NotNil(t, cerr)
+	_, err := srvc.PinRequest(&PinRequest{"", pub})
+	require.NotNil(t, err)
 	require.NotEqual(t, 0, len(srvc.auth.pins))
 	pin := ""
 	for t := range srvc.auth.pins {
 		pin = t
 	}
-	_, cerr = srvc.PinRequest(&PinRequest{pin, pub})
-	log.Error(cerr)
+	_, err = srvc.PinRequest(&PinRequest{pin, pub})
+	log.Error(err)
 	require.Equal(t, pub, srvc.auth.adminKeys[0])
 }
 
@@ -98,8 +98,8 @@ func TestIdentity_StoreKeys(t *testing.T) {
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	log.ErrFatal(err)
-	_, cerr := srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
-	require.Nil(t, cerr)
+	_, err = srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
+	require.Nil(t, err)
 	require.Equal(t, 1, len(srvc.auth.sets))
 }
 
@@ -126,8 +126,8 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 	srvc.auth.adminKeys = append(srvc.auth.adminKeys, keypairAdmin.Public)
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	log.ErrFatal(err)
-	_, cerr := srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
-	require.Nil(t, cerr)
+	_, err = srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
+	require.Nil(t, err)
 	require.Equal(t, N, len(srvc.auth.keys))
 }
 
@@ -374,8 +374,8 @@ func TestVerificationFunction(t *testing.T) {
 	data2.Votes["two2"] = sig
 	id := s0.getIdentityStorage(c1.ID)
 	require.NotNil(t, id, "Didn't find identity")
-	_, cerr := s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
-	require.NotNil(t, cerr, "Skipchain accepted our fake block!")
+	_, err = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	require.NotNil(t, err, "Skipchain accepted our fake block!")
 
 	// Gibberish signature
 	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
@@ -383,15 +383,15 @@ func TestVerificationFunction(t *testing.T) {
 	// Change one bit in the signature
 	sig[len(sig)-1] ^= 1
 	data2.Votes["one1"] = sig
-	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
-	require.NotNil(t, cerr, "Skipchain accepted our fake signature!")
+	_, err = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	require.NotNil(t, err, "Skipchain accepted our fake signature!")
 
 	// Unhack: verify that the correct way of doing it works, even if
 	// we bypass the identity.
 	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
 	log.ErrFatal(err)
 	data2.Votes["one1"] = sig
-	_, cerr = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
+	_, err = s0.skipchain.StoreSkipBlock(id.SCData, nil, data2)
 	log.ErrFatal(err)
 	log.ErrFatal(c1.DataUpdate())
 

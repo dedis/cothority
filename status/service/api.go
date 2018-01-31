@@ -17,11 +17,11 @@ func NewClient() *Client {
 }
 
 // Request sends requests to all other members of network and creates client.
-func (c *Client) Request(dst *network.ServerIdentity) (*Response, onet.ClientError) {
+func (c *Client) Request(dst *network.ServerIdentity) (*Response, error) {
 	resp := &Response{}
-	cerr := c.SendProtobuf(dst, &Request{}, resp)
-	if cerr != nil {
-		return nil, cerr
+	err := c.SendProtobuf(dst, &Request{}, resp)
+	if err != nil {
+		return nil, err
 	}
 	return resp, nil
 }
