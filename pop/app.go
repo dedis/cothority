@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -172,7 +172,7 @@ func orgConfig(c *cli.Context) error {
 			log.Fatal("party is not included in merge config")
 		}
 	}
-	hash := base64.StdEncoding.EncodeToString(desc.Hash())
+	hash := hex.EncodeToString(desc.Hash())
 	log.Lvlf2("Hash of config: %s", hash)
 	log.ErrFatal(client.StoreConfig(cfg.Address, desc, cfg.OrgPrivate))
 	if val, ok := cfg.Parties[hash]; !ok {
@@ -190,6 +190,7 @@ func orgConfig(c *cli.Context) error {
 	} else {
 		val.Final.Desc = desc
 	}
+	log.Infof("Stored new config with hash %x", desc.Hash())
 	cfg.write()
 	return nil
 }
@@ -329,11 +330,10 @@ func attJoin(c *cli.Context) error {
 	if c.NArg() < 2 {
 		log.Fatal("Please give private key and final.toml")
 	}
-	privStr := c.Args().First()
-	privBuf, err := base64.StdEncoding.DecodeString(privStr)
-	log.ErrFatal(err)
-	priv := cothority.Suite.Scalar()
-	log.ErrFatal(priv.UnmarshalBinary(privBuf))
+	priv, err := encoding.StringHexToScalar(cothority.Suite, c.Args().First())
+	if err != nil {
+		return err
+	}
 	cfg, client := getConfigClient(c)
 
 	finalName := c.Args().Get(1)
@@ -392,7 +392,7 @@ func attJoin(c *cli.Context) error {
 		log.Fatal("Didn't find our public key in the final statement!")
 	}
 	party.Index = index
-	hash := base64.StdEncoding.EncodeToString(final.Desc.Hash())
+	hash := hex.EncodeToString(final.Desc.Hash())
 	log.Lvlf2("Final statement hash: %s", hash)
 	if !c.Bool("yes") {
 		fmt.Printf("Is it correct hash(y/n)")
@@ -442,8 +442,7 @@ func attSign(c *cli.Context) error {
 		Set, ctx, party.Index, party.Private)
 	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
 	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]
-	log.Lvlf2("\nSignature: %s\nTag: %s", base64.StdEncoding.EncodeToString(sig),
-		base64.StdEncoding.EncodeToString(tag))
+	log.Lvlf2("\nSignature: %x\nTag: %x", sig, tag)
 	return nil
 }
 
@@ -463,9 +462,9 @@ func attVerify(c *cli.Context) error {
 
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
-	sig, err := base64.StdEncoding.DecodeString(c.Args().Get(2))
+	sig, err := hex.DecodeString(c.Args().Get(2))
 	log.ErrFatal(err)
-	tag, err := base64.StdEncoding.DecodeString(c.Args().Get(3))
+	tag, err := hex.DecodeString(c.Args().Get(3))
 	log.ErrFatal(err)
 	sigtag := append(sig, tag...)
 	ctag, err := anon.Verify(cothority.Suite.(anon.Suite), msg,
@@ -500,7 +499,7 @@ func authStore(c *cli.Context) error {
 	}
 	party := &PartyConfig{}
 	party.Final = final
-	hash := base64.StdEncoding.EncodeToString(final.Desc.Hash())
+	hash := hex.EncodeToString(final.Desc.Hash())
 	cfg.Parties[hash] = party
 	cfg.write()
 	log.Lvlf1("Stored final statement, hash: %s", hash)

@@ -2,7 +2,7 @@ package service
 
 import (
 	"bytes"
-	"encoding/base64"
+	"encoding/hex"
 	"errors"
 
 	"github.com/BurntSushi/toml"
@@ -171,7 +171,7 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 		}
 		atts = append(atts, pub)
 	}
-	sig, err := base64.StdEncoding.DecodeString(fsToml.Signature)
+	sig, err := hex.DecodeString(fsToml.Signature)
 	// TODO: sign and verify signature
 	if err != nil {
 		return nil, err
@@ -220,7 +220,7 @@ func encodeMapFinal(stmts map[string]*FinalStatement) ([]byte, error) {
 	mapToml := make(map[string]*finalStatementToml)
 	var err error
 	for key, fs := range stmts {
-		mapToml[string(base64.StdEncoding.EncodeToString([]byte(key)))], err = fs.toTomlStruct()
+		mapToml[hex.EncodeToString([]byte(key))], err = fs.toTomlStruct()
 		if err != nil {
 			return nil, err
 		}
@@ -260,7 +260,7 @@ func (desc *PopDesc) toTomlStruct() (*popDescToml, error) {
 func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 	sis := []*network.ServerIdentity{}
 	if descToml == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "failed toml struct")
+		return nil, errors.New("no toml struct given")
 	}
 	for _, s := range descToml.Roster {
 		uid, err := uuid.FromString(s[2])
@@ -343,7 +343,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	fsToml := &finalStatementToml{
 		Desc:      descToml,
 		Attendees: atts,
-		Signature: base64.StdEncoding.EncodeToString(fs.Signature),
+		Signature: hex.EncodeToString(fs.Signature),
 		Merged:    fs.Merged,
 	}
 	return fsToml, nil

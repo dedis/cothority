@@ -22,8 +22,8 @@ for i in $( seq -f "%02g" ${1:-10} ); do
 	ATTS="$ATTS $PUB"
 	TMP=$( mktemp -d )
 	unzip -q paperkey.odg -d $TMP
-	perl -pi -e "s-Public_base64-$PUB-" $TMP/content.xml
-	perl -pi -e "s-Private_base64-$PRIV-" $TMP/content.xml
+	perl -pi -e "s-Public_hex-$PUB-" $TMP/content.xml
+	perl -pi -e "s-Private_hex-$PRIV-" $TMP/content.xml
 	qrencode -o $TMP/Pictures/$IMG_PUB ed25519pub:$PUB
 	qrencode -o $TMP/Pictures/$IMG_PRIV ed25519priv:$PRIV
 	( cd $TMP; zip -qr $OFILE . )
