@@ -4,10 +4,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -15,12 +12,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.ECGenParameterSpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Random;
 
+import static ch.epfl.dedis.lib.darc.TestKeycardSigner.readPrivateKey;
+import static ch.epfl.dedis.lib.darc.TestKeycardSigner.readPublicKey;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -98,30 +93,5 @@ public class KeyAndSignOperationsTest {
 
         //
         assertTrue(verificationResults);
-    }
-
-    public static PrivateKey readPrivateKey(InputStream privKeyStream) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte buffer[] = new byte[2048]; // size sufficient for keys
-
-        int size = privKeyStream.read(buffer);
-        byte privKeyBytes[] = Arrays.copyOf(buffer, size);
-
-        KeyFactory keyFactory = KeyFactory.getInstance("EC");
-
-        PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(privKeyBytes);
-        return keyFactory.generatePrivate(privSpec);
-    }
-
-    public static PublicKey readPublicKey(InputStream pubKeyStream) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte buffer[] = new byte[2048]; // size sufficient for keys
-
-        int size = pubKeyStream.read(buffer);
-        byte pubKeyBytes[] = Arrays.copyOf(buffer, size);
-
-        KeyFactory keyFactory = KeyFactory.getInstance("EC");
-
-        X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(pubKeyBytes);
-        PublicKey pubKey = keyFactory.generatePublic(pubSpec);
-        return pubKey;
     }
 }

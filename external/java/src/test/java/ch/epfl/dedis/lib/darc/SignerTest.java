@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,28 +43,21 @@ public class SignerTest {
 
     @Test
     void keycard() throws Exception {
-        KeycardSigner signer = new KeycardSigner();
-        assertThrows(CothorityCryptoException.class, () -> {
-            signer.getPrivate();
-        });
+        KeycardSigner signer = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        KeycardSigner signer2 = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
 
-        byte[] buf = signer.serialize();
-        Signer signer2 = SignerFactory.New(buf);
+        assertThrows(CothorityCryptoException.class, () -> signer.getPrivate());
+        assertThrows(IllegalStateException.class, () -> signer.serialize());
 
-        assertTrue(signer.getPublic().equals(signer2.getPublic()));
-
-        byte[] sig = signer.sign(buf);
-        assertTrue(signer.getIdentity().verify(buf, sig));
-        assertTrue(signer2.getIdentity().verify(buf, sig));
-
-        sig = signer2.sign(buf);
-        assertTrue(signer.getIdentity().verify(buf, sig));
-        assertTrue(signer2.getIdentity().verify(buf, sig));
+        byte[] msg = "test data to sign".getBytes();
+        byte[] sig = signer.sign(msg);
+        assertTrue(signer.getIdentity().verify(msg, sig));
+        assertTrue(signer2.getIdentity().verify(msg, sig));
 
         Identity sig1 = signer.getIdentity();
         Identity sig2 = IdentityFactory.New(sig1.toProto());
         assertTrue(sig1.equals(sig2));
-        assertTrue(sig1.verify(buf, sig));
-        assertTrue(sig2.verify(buf, sig));
+        assertTrue(sig1.verify(msg, sig));
+        assertTrue(sig2.verify(msg, sig));
     }
 }

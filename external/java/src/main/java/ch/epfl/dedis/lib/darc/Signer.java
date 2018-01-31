@@ -15,7 +15,7 @@ public interface Signer {
      * @param msg
      * @return
      */
-    byte[] sign(byte[] msg);
+    byte[] sign(byte[] msg) throws SignRequestRejectedException;
 
     /**
      * Returns the private key of the signer, or throws a NoPrivateKey exception.
@@ -45,5 +45,10 @@ public interface Signer {
      */
     byte[] serialize() throws IOException;
 
-    boolean equals(Object o);
+    class SignRequestRejectedException extends Exception {
+        public SignRequestRejectedException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        // TODO: this exception should be moved to a proper place
+    }
 }

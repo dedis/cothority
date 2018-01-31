@@ -17,7 +17,7 @@ public class SignerFactory {
             case IDEd25519:
                 return new Ed25519Signer(Arrays.copyOfRange(data, 1, data.length));
             case Keycard:
-                return new KeycardSigner(Arrays.copyOfRange(data, 1, data.length));
+                throw new IllegalStateException("Sorry but keycard signer can not be serialised/deserialised");
             default:
                 throw new Exception("invalid data");
         }
