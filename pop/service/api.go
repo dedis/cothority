@@ -45,11 +45,11 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) er
 // StoreConfig sends the configuration to the conode for later usage.
 func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) error {
 	si := &network.ServerIdentity{Address: dst}
-	sg, e := schnorr.Sign(cothority.Suite, priv, p.Hash())
-	if e != nil {
-		return e
+	sg, err := schnorr.Sign(cothority.Suite, priv, p.Hash())
+	if err != nil {
+		return err
 	}
-	err := c.SendProtobuf(si, &storeConfig{p, sg}, nil)
+	err = c.SendProtobuf(si, &storeConfig{p, sg}, nil)
 	if err != nil {
 		return err
 	}
