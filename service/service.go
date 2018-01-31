@@ -283,7 +283,6 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		err = err
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
@@ -339,7 +338,6 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
-		err = err
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
