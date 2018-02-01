@@ -128,6 +128,7 @@ type sync struct {
 	mcChannel chan *mergeConfigReply
 }
 
+// ErrorReadPIN means that there is a PIN to read in the server-logs
 var ErrorReadPIN = errors.New("Read PIN in server-log")
 
 // PinRequest prints out a pin if none is given, else it verifies it has the

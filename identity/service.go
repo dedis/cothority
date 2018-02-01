@@ -103,6 +103,7 @@ type authData struct {
  * API messages
  */
 
+// ErrorReadPIN means that there is a PIN to read in the server-logs
 var ErrorReadPIN = errors.New("Read PIN in server-log")
 
 // PinRequest will check PIN of admin or print it in case PIN is not provided
