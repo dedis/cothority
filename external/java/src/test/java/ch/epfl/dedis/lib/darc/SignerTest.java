@@ -10,7 +10,6 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class SignerTest {
     @Test
@@ -46,7 +45,6 @@ public class SignerTest {
     void keycard() throws Exception {
         KeycardSigner signer = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
         KeycardSigner signer2 = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
-        KeycardSigner signer3 = new TestKeycardSigner("secp256k1-pkcs8-2.der", "secp256k1-pub-2.der");
 
         assertThrows(CothorityCryptoException.class, () -> signer.getPrivate());
         assertThrows(IllegalStateException.class, () -> signer.serialize());
@@ -55,14 +53,11 @@ public class SignerTest {
         byte[] sig = signer.sign(msg);
         assertTrue(signer.getIdentity().verify(msg, sig));
         assertTrue(signer2.getIdentity().verify(msg, sig));
-        assertFalse(signer3.getIdentity().verify(msg, sig));
 
-        Identity id1 = signer.getIdentity();
-        Identity id2 = IdentityFactory.New(id1.toProto());
-        Identity id3 = signer3.getIdentity();
-        assertTrue(id1.equals(id2));
-        assertTrue(id1.verify(msg, sig));
-        assertTrue(id2.verify(msg, sig));
-        assertFalse(id3.verify(msg, sig));
+        Identity sig1 = signer.getIdentity();
+        Identity sig2 = IdentityFactory.New(sig1.toProto());
+        assertTrue(sig1.equals(sig2));
+        assertTrue(sig1.verify(msg, sig));
+        assertTrue(sig2.verify(msg, sig));
     }
 }
