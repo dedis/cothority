@@ -64,6 +64,11 @@ func (d *Darc) Copy() *Darc {
 	return dCopy
 }
 
+// Equal returns true if both darcs point to the same data.
+func (d *Darc) Equal(d2 *Darc) bool {
+	return d.GetID().Equal(d2.GetID())
+}
+
 // ToProto returns a protobuf representation of the Darc-structure.
 // We copy a darc first to keep only invariant fields which exclude
 // the delegation signature.
@@ -288,9 +293,7 @@ func (ds *Signature) Verify(msg []byte, base *Darc) error {
 	if err != nil {
 		return err
 	}
-	// TODO: use correct signer interface
-	pub := ds.SignaturePath.Signer.Ed25519.Point
-	return schnorr.Verify(cothority.Suite, pub, hash, ds.Signature)
+	return ds.SignaturePath.Signer.Verify(hash, ds.Signature)
 }
 
 // sigHash returns the hash needed to create or verify a DarcSignature.
@@ -389,20 +392,44 @@ func (sigpath *SignaturePath) Verify(role Role) error {
 	}
 	if role == User {
 		for _, id := range *previous.Users {
-			if id.Ed25519 != nil &&
-				id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
+			if sigpath.Signer.Equal(id) {
 				return nil
 			}
 		}
 	} else {
 		for _, id := range *previous.Owners {
-			if id.Ed25519 != nil &&
-				id.Ed25519.Point.Equal(sigpath.Signer.Ed25519.Point) {
+			if sigpath.Signer.Equal(id) {
 				return nil
 			}
 		}
 	}
 	return errors.New("didn't find signer in last darc of path")
+}
+
+// Type returns an integer representing the type of key held in the signer.
+// It is compatible with Identity.Type. For an empty signer, -1 is returned.
+func (s *Signer) Type() int {
+	switch {
+	case s.Ed25519 != nil:
+		return 1
+	case s.Keycard != nil:
+		return 2
+	default:
+		return -1
+	}
+}
+
+// Identity returns an identity struct with the pre initialised fields
+// for the appropriate signer.
+func (s *Signer) Identity() *Identity {
+	switch s.Type() {
+	case 1:
+		return &Identity{Ed25519: &IdentityEd25519{Point: s.Ed25519.Point}}
+	case 2:
+		return &Identity{Keycard: &IdentityKeycard{Public: s.Keycard.Point}}
+	default:
+		return nil
+	}
 }
 
 // Sign returns a signature in bytes for a given messages by the signer
@@ -447,18 +474,106 @@ func NewIdentity(darc *IdentityDarc, ed *IdentityEd25519) (*Identity, error) {
 	}, nil
 }
 
-// NewDarcIdentity creates a new darc identity struct given a darcid
-func NewDarcIdentity(id ID) *IdentityDarc {
-	return &IdentityDarc{
-		ID: id,
+// Equal first checks the type of the two identities, and if they match,
+// it returns if their data is the same.
+func (id *Identity) Equal(id2 *Identity) bool {
+	if id.Type() != id2.Type() {
+		return false
+	}
+	switch id.Type() {
+	case 0:
+		return id.Darc.Equal(id2.Darc)
+	case 1:
+		return id.Ed25519.Equal(id2.Ed25519)
+	case 2:
+		return id.Keycard.Equal(id2.Keycard)
+	}
+	return false
+}
+
+// Type returns an int indicating what type of identity this is. If all
+// identities are nil, it returns -1.
+func (id *Identity) Type() int {
+	switch {
+	case id.Darc != nil:
+		return 0
+	case id.Ed25519 != nil:
+		return 1
+	case id.Keycard != nil:
+		return 2
+	}
+	return -1
+}
+
+// String returns the string representation of the identity
+func (id *Identity) String() string {
+	switch id.Type() {
+	case 0:
+		return fmt.Sprintf("Darc: %x", id.Darc.ID)
+	case 1:
+		return fmt.Sprintf("Ed25519: %s", id.Ed25519.Point.String())
+	case 2:
+		return fmt.Sprintf("Keycard: %x", id.Keycard.Public)
+	default:
+		return fmt.Sprintf("No identity")
 	}
 }
 
-// NewEd25519Identity creates a new ed25519 identity given a public-key point
-func NewEd25519Identity(point kyber.Point) *IdentityEd25519 {
-	return &IdentityEd25519{
-		Point: point,
+// Verify returns nil if the signature is correct, or an error if something
+// went wrong.
+func (id *Identity) Verify(msg, sig []byte) error {
+	switch id.Type() {
+	case 0:
+		return errors.New("cannot verify a darc-signature")
+	case 1:
+		return schnorr.Verify(cothority.Suite, id.Ed25519.Point, msg, sig)
+	case 2:
+		return errors.New("cannot verify a keycard")
+	default:
+		return errors.New("unknown identity")
 	}
+}
+
+// NewIdentityDarc creates a new darc identity struct given a darcid
+func NewIdentityDarc(id ID) *Identity {
+	return &Identity{
+		Darc: &IdentityDarc{
+			ID: id,
+		},
+	}
+}
+
+// Equal returns true if both IdentityDarcs point to the same data.
+func (idd *IdentityDarc) Equal(idd2 *IdentityDarc) bool {
+	return bytes.Compare(idd.ID, idd2.ID) == 0
+}
+
+// NewIdentityEd25519 creates a new Ed25519 identity struct given a point
+func NewIdentityEd25519(point kyber.Point) *Identity {
+	return &Identity{
+		Ed25519: &IdentityEd25519{
+			Point: point,
+		},
+	}
+}
+
+// Equal returns true if both IdentityEd25519 point to the same data.
+func (ide *IdentityEd25519) Equal(ide2 *IdentityEd25519) bool {
+	return ide.Point.Equal(ide2.Point)
+}
+
+// NewIdentityKeycard creates a new Keycard identity struct given a point
+func NewIdentityKeycard(public []byte) *Identity {
+	return &Identity{
+		Keycard: &IdentityKeycard{
+			Public: public,
+		},
+	}
+}
+
+// Equal returns true if both IdentityKeycard point to the same data.
+func (idkc *IdentityKeycard) Equal(idkc2 *IdentityKeycard) bool {
+	return bytes.Compare(idkc.Public, idkc2.Public) == 0
 }
 
 // NewEd25519Signer initializes a new Ed25519Signer given a public and private keys.

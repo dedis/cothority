@@ -198,13 +198,8 @@ func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply
 	if !exists {
 		return nil, errors.New("this Darc doesn't exist")
 	}
-	if req.Identity.Ed25519 != nil {
-		log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.Ed25519.Point,
-			req.BaseDarcID)
-	} else {
-		log.Lvlf2("Searching %d/%x, starting from %x", req.Role, req.Identity.Darc.ID,
-			req.BaseDarcID)
-	}
+	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.String(),
+		req.BaseDarcID)
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
 	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
@@ -631,18 +626,8 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	if ids != nil {
 		// First search the identity
 		for _, id := range *ids {
-			if identity.Ed25519 != nil {
-				if id.Ed25519 != nil {
-					if id.Ed25519.Point.Equal(identity.Ed25519.Point) {
-						return newpath
-					}
-				}
-			} else if identity.Darc != nil {
-				if id.Darc != nil {
-					if id.Darc.ID.Equal(identity.Darc.ID) {
-						return newpath
-					}
-				}
+			if identity.Equal(id) {
+				return newpath
 			}
 		}
 		// Then search sub-darcs

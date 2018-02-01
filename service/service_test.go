@@ -97,7 +97,7 @@ func TestService_GetDarcPath(t *testing.T) {
 	defer o.local.CloseAll()
 
 	w := &darc.Darc{}
-	wDarcID := darc.NewDarcIdentity(w.GetID())
+	wDarcID := darc.NewIdentityDarc(w.GetID())
 	wID, err := darc.NewIdentity(wDarcID, nil)
 
 	newReader := o.readers.Copy()
