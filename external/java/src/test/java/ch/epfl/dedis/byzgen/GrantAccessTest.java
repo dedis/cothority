@@ -5,8 +5,8 @@ import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcId;
-import ch.epfl.dedis.lib.darc.DarcIdentity;
-import ch.epfl.dedis.lib.darc.Ed25519Identity;
+import ch.epfl.dedis.lib.darc.IdentityDarc;
+import ch.epfl.dedis.lib.darc.IdentityEd25519;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.darc.IdentityFactory;
 import ch.epfl.dedis.lib.darc.SignaturePath;
@@ -45,11 +45,11 @@ public class GrantAccessTest {
         SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
         //when
-        DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
+        IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "document darc".getBytes());
         ocs.updateDarc(documentDarc);
         ocs.addIdentityToDarc(documentDarc,
-                new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
+                new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
                 publisherSigner, SignaturePath.USER);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, documentDarc, "extra data".getBytes());
@@ -72,7 +72,7 @@ public class GrantAccessTest {
 
         SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
-        DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
+        IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "docuemnt darc".getBytes());
 
 
@@ -83,7 +83,7 @@ public class GrantAccessTest {
 
         //when
         ocs.addIdentityToDarc(documentDarc,
-                new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
+                new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
                 publisherSigner, SignaturePath.USER);
 
         //then
@@ -102,7 +102,7 @@ public class GrantAccessTest {
 
         SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
-        DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
+        IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "docuemnt darc".getBytes());
 
 
@@ -112,7 +112,7 @@ public class GrantAccessTest {
         WriteRequestId documentId = new WriteRequestId(writeId.id.getId()); // recreate object to ensure separation
 
         //when
-        ocs.addIdentityToDarc(documentDarc, new DarcIdentity(consumerId), publisherSigner, SignaturePath.USER);
+        ocs.addIdentityToDarc(documentDarc, new IdentityDarc(consumerId), publisherSigner, SignaturePath.USER);
 
         //then
         Document document = ocs.getDocument(documentId, new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
@@ -120,7 +120,7 @@ public class GrantAccessTest {
     }
 
     private DarcId createConsumer(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
         return new DarcId(user.getId().getId());
     }
 
@@ -132,7 +132,7 @@ public class GrantAccessTest {
     }
 
     private DarcId createPublisher(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
         grantSystemWriteAccess(ocs, user);
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
@@ -147,7 +147,7 @@ public class GrantAccessTest {
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
-    private static Darc createUser(OnchainSecrets ocs, Ed25519Identity user) throws Exception {
+    private static Darc createUser(OnchainSecrets ocs, IdentityEd25519 user) throws Exception {
         Darc userDarc = new Darc(user, Arrays.asList(user), "user".getBytes());
         ocs.updateDarc(userDarc);
         return userDarc;
