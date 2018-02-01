@@ -437,14 +437,16 @@ func (s *Signer) Sign(msg []byte) ([]byte, error) {
 	if msg == nil {
 		return nil, errors.New("nothing to sign, message is empty")
 	}
-	if s.Ed25519 != nil {
-		key, err := s.GetPrivate()
-		if err != nil {
-			return nil, errors.New("could not retrieve a private key")
-		}
-		return schnorr.Sign(cothority.Suite, key, msg)
+	switch s.Type() {
+	case 0:
+		return nil, errors.New("cannot sign with a darc")
+	case 1:
+		return s.Ed25519.Sign(msg)
+	case 2:
+		return s.Keycard.Sign(msg)
+	default:
+		return nil, errors.New("unknown signer type")
 	}
-	return nil, errors.New("signer is of unknown type")
 }
 
 // GetPrivate returns the private key, if one exists.
@@ -576,15 +578,25 @@ func (idkc *IdentityKeycard) Equal(idkc2 *IdentityKeycard) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
 }
 
-// NewEd25519Signer initializes a new Ed25519Signer given a public and private keys.
+// NewSignerEd15529 initializes a new Ed25519Signer given a public and private keys.
 // If any of the given values is nil or both are nil, then a new key pair is generated.
-func NewEd25519Signer(point kyber.Point, secret kyber.Scalar) *Ed25519Signer {
+func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
 	if point == nil || secret == nil {
 		kp := key.NewKeyPair(cothority.Suite)
 		point, secret = kp.Public, kp.Private
 	}
-	return &Ed25519Signer{
+	return &Signer{Ed25519: &Ed25519Signer{
 		Point:  point,
 		Secret: secret,
-	}
+	}}
+}
+
+// Sign creates a schnorr signautre on the message
+func (eds *Ed25519Signer) Sign(msg []byte) ([]byte, error) {
+	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
+}
+
+// Sign creates a RSA signature on the message
+func (kcs *KeycardSigner) Sign(msg []byte) ([]byte, error) {
+	return nil, errors.New("not yet implemented")
 }

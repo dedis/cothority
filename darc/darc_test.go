@@ -72,28 +72,22 @@ func TestDarc_IncrementVersion(t *testing.T) {
 func TestDarc_SetEvolution(t *testing.T) {
 	d := createDarc("testdarc").darc
 	log.ErrFatal(d.Verify())
-	owner := NewEd25519Signer(nil, nil)
-	owner2 := NewEd25519Signer(nil, nil)
-	ownerI := NewIdentityEd25519(owner.Point)
-	ownerI2 := NewIdentityEd25519(owner2.Point)
+	owner := NewSignerEd25519(nil, nil)
+	owner2 := NewSignerEd25519(nil, nil)
+	ownerI := owner.Identity()
+	ownerI2 := owner2.Identity()
 	d.AddOwner(ownerI)
 	dNew := d.Copy()
 	dNew.IncrementVersion()
 	assert.NotNil(t, dNew.Verify())
 
 	darcs := []*Darc{d}
-	signer := &Signer{
-		Ed25519: owner,
-	}
-	signer2 := &Signer{
-		Ed25519: owner2,
-	}
 
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI2, User), signer2))
+	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI2, User), owner2))
 	assert.NotNil(t, dNew.Verify())
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), signer2))
+	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner2))
 	assert.NotNil(t, dNew.Verify())
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), signer))
+	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner))
 	require.Nil(t, dNew.Verify())
 }
 
@@ -134,9 +128,7 @@ func TestSignaturePath(t *testing.T) {
 func TestDarcSignature_Verify(t *testing.T) {
 	msg := []byte("document")
 	d := createDarc("testdarc").darc
-	owner := &Signer{
-		Ed25519: NewEd25519Signer(nil, nil),
-	}
+	owner := NewSignerEd25519(nil, nil)
 	ownerI := owner.Identity()
 	path := NewSignaturePath([]*Darc{d}, *ownerI, User)
 	ds, err := NewDarcSignature(msg, path, owner)
@@ -149,7 +141,7 @@ func TestDarcSignature_Verify(t *testing.T) {
 
 func TestSignature(t *testing.T) {
 	// msg := []byte("darc-policy")
-	// sigEd := NewEd25519Signer(nil, nil)
+	// sigEd := NewSignerEd25519(nil, nil)
 	// sig := sigEd.Sign
 }
 
@@ -186,7 +178,6 @@ func createIdentity() *Identity {
 }
 
 func createSignerIdentity() (*Signer, *Identity) {
-	edSigner := NewEd25519Signer(nil, nil)
-	signer := &Signer{Ed25519: edSigner}
+	signer := NewSignerEd25519(nil, nil)
 	return signer, signer.Identity()
 }
