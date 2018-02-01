@@ -1,5 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
@@ -16,7 +18,6 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 public class TestKeycardSigner extends KeycardSigner {
     private final PublicKey publicKey;
@@ -105,10 +106,7 @@ public class TestKeycardSigner extends KeycardSigner {
     }
 
     public static PrivateKey readPrivateKey(InputStream privKeyStream) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte buffer[] = new byte[2048]; // size sufficient for keys
-
-        int size = privKeyStream.read(buffer);
-        byte privKeyBytes[] = Arrays.copyOf(buffer, size);
+        byte privKeyBytes[] = IOUtils.toByteArray(privKeyStream);
 
         KeyFactory keyFactory = KeyFactory.getInstance("EC");
 
@@ -117,11 +115,7 @@ public class TestKeycardSigner extends KeycardSigner {
     }
 
     public static PublicKey readPublicKey(InputStream pubKeyStream) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte buffer[] = new byte[2048]; // size sufficient for keys
-
-        int size = pubKeyStream.read(buffer);
-        byte pubKeyBytes[] = Arrays.copyOf(buffer, size);
-
+        byte pubKeyBytes[] = IOUtils.toByteArray(pubKeyStream);
         KeyFactory keyFactory = KeyFactory.getInstance("EC");
 
         X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(pubKeyBytes);
