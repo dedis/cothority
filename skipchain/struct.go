@@ -682,6 +682,9 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 
 // GetLatest searches for the latest available block for that skipblock.
 func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	if sb == nil {
+		return nil, errors.New("got nil skipblock")
+	}
 	latest := sb
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
