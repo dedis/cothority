@@ -478,7 +478,7 @@ func dnsIndex(c *cli.Context) error {
 		block.Data = g.Data
 
 		for j, server := range g.Roster.List {
-			block.Servers[j] = server.Address.Host() + ":" + server.Address.Port()
+			block.Servers[j] = net.JoinHostPort(server.Address.Host(), server.Address.Port())
 		}
 
 		// Write the genesis block file
