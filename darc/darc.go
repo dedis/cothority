@@ -10,9 +10,14 @@ package darc
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/sha256"
+	"crypto/sha512"
+	"crypto/x509"
+	"encoding/asn1"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -584,14 +589,33 @@ func (idkc *IdentityKeycard) Equal(idkc2 *IdentityKeycard) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
 }
 
-// Verify returns nil if the signature is correct, or an error if something
-// fails.
-func (idkc *IdentityKeycard) Verify(msg, sig []byte) error {
-	return errors.New("not yet implemented")
+type sigRS struct {
+	R *big.Int
+	S *big.Int
 }
 
-// NewSignerEd15529 initializes a new Ed25519Signer given a public and private keys.
+// Verify returns nil if the signature is correct, or an error if something
+// fails.
+func (idkc *IdentityKeycard) Verify(msg, s []byte) error {
+	public, err := x509.ParsePKIXPublicKey(idkc.Public)
+	if err != nil {
+		return err
+	}
+	hash := sha512.Sum384(msg)
+	sig := &sigRS{}
+	_, err = asn1.Unmarshal(s, sig)
+	if err != nil {
+		return err
+	}
+	if ecdsa.Verify(public.(*ecdsa.PublicKey), hash[:], sig.R, sig.S) {
+		return nil
+	}
+	return errors.New("Wrong signature")
+}
+
+// NewSignerEd25519 initializes a new Ed25519Signer given a public and private keys.
 // If any of the given values is nil or both are nil, then a new key pair is generated.
+// It returns a signer.
 func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
 	if point == nil || secret == nil {
 		kp := key.NewKeyPair(cothority.Suite)

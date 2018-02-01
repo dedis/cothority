@@ -66,7 +66,8 @@ public class KeyAndSignOperationsTest {
      * </pre>
      */
     @ParameterizedTest
-    @CsvSource({ "secp256k1-pkcs8.der, secp256k1-pub.der",
+    @CsvSource({
+            "secp256k1-pkcs8.der, secp256k1-pub.der",
             "secp384r1-pkcs8.der, secp384r1-pub.der",
             "secp521r1-pkcs8.der, secp521r1-pub.der" })
     public void exampleReadOpenSSLKeyAndSginAndVerify(String priv, String pub) throws Exception {
