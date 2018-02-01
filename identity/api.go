@@ -84,7 +84,7 @@ type Identity struct {
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
 func NewIdentity(r *onet.Roster, threshold int, owner string, kp *key.Pair) *Identity {
-	client := onet.NewClient(ServiceName, cothority.Suite)
+	client := onet.NewClient(cothority.Suite, ServiceName)
 	if kp == nil {
 		kp = key.NewKeyPair(cothority.Suite)
 	}
@@ -101,7 +101,7 @@ func NewIdentity(r *onet.Roster, threshold int, owner string, kp *key.Pair) *Ide
 // NewIdentityFromCothority searches for a given cothority
 func NewIdentityFromCothority(el *onet.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
-		Client:    onet.NewClient(ServiceName, cothority.Suite),
+		Client:    onet.NewClient(cothority.Suite, ServiceName),
 		Cothority: el,
 		ID:        id,
 	}
@@ -124,7 +124,7 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 		return nil, err
 	}
 	id := idInt.(*Identity)
-	id.Client = onet.NewClient(ServiceName, cothority.Suite)
+	id.Client = onet.NewClient(cothority.Suite, ServiceName)
 	return id, nil
 }
 

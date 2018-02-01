@@ -66,9 +66,9 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
-	cfg.Identity.Client = onet.NewClient(identity.ServiceName, cothority.Suite)
+	cfg.Identity.Client = onet.NewClient(cothority.Suite, identity.ServiceName)
 	for _, f := range cfg.Follow {
-		f.Client = onet.NewClient(identity.ServiceName, cothority.Suite)
+		f.Client = onet.NewClient(cothority.Suite, identity.ServiceName)
 	}
 	if !loaded {
 		log.Fatal("Wrong message-type in config-file")
