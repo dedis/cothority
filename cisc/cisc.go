@@ -111,7 +111,7 @@ func adminLink(c *cli.Context) error {
 	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
 		// Compare by string because we are on the client, and we will be
 		// be receiving a new error made locally by onet, not the original error.
-		if err.Error() == service.ErrorWrongPIN.Error() && pin == "" {
+		if err.Error() == identity.ErrorReadPIN.Error() {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}

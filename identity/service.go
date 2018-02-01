@@ -103,6 +103,9 @@ type authData struct {
  * API messages
  */
 
+// ErrorReadPIN means that there is a PIN to read in the server-logs
+var ErrorReadPIN = errors.New("Read PIN in server-log")
+
 // PinRequest will check PIN of admin or print it in case PIN is not provided
 // then save the admin's public key
 func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
@@ -111,7 +114,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		s.auth.pins[pin] = struct{}{}
 		log.Info("PIN:", pin)
-		return nil, errors.New("Read PIN in server-log")
+		return nil, ErrorReadPIN
 	}
 	if _, ok := s.auth.pins[req.PIN]; !ok {
 		return nil, errors.New("Wrong PIN")

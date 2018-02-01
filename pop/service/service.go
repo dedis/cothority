@@ -128,8 +128,8 @@ type sync struct {
 	mcChannel chan *mergeConfigReply
 }
 
-// ErrorWrongPIN means that they provided the wrong PIN.
-var ErrorWrongPIN = errors.New("Wrong PIN")
+// ErrorReadPIN means that there is a PIN to read in the server-logs
+var ErrorReadPIN = errors.New("Read PIN in server-log")
 
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
@@ -137,10 +137,10 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	if req.Pin == "" {
 		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		log.Info("PIN:", s.data.Pin)
-		return nil, errors.New("Read PIN in server-log")
+		return nil, ErrorReadPIN
 	}
 	if req.Pin != s.data.Pin {
-		return nil, ErrorWrongPIN
+		return nil, errors.New("Wrong PIN")
 	}
 	s.data.Public = req.Public
 	s.save()
