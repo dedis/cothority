@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SignerTest {
     @Test
     void instantiateSigner() throws IOException, Exception {
-        Ed25519Signer signer = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
         Point pub = signer.getPublic();
         Scalar priv = signer.getPrivate();
 
@@ -24,7 +24,7 @@ public class SignerTest {
 
     @Test
     void signAndVerify() throws Exception {
-        Ed25519Signer signer = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
         byte[] msg = "document".getBytes();
 
         byte[] sig = signer.sign(msg);
@@ -33,7 +33,7 @@ public class SignerTest {
 
     @Test
     void serialize() throws Exception {
-        Ed25519Signer signer = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
         byte[] buf = signer.serialize();
         Signer signer2 = SignerFactory.New(buf);
 
@@ -43,8 +43,8 @@ public class SignerTest {
 
     @Test
     void keycard() throws Exception {
-        KeycardSigner signer = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
-        KeycardSigner signer2 = new TestKeycardSigner("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerKeycard signer = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerKeycard signer2 = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
 
         assertThrows(CothorityCryptoException.class, () -> signer.getPrivate());
         assertThrows(IllegalStateException.class, () -> signer.serialize());

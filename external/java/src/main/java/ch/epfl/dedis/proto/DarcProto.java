@@ -6844,30 +6844,30 @@ public final class DarcProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
     boolean hasEd25519();
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519();
+    ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519();
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder();
+    ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder();
 
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
     boolean hasKeycard();
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard();
+    ch.epfl.dedis.proto.DarcProto.SignerKeycard getKeycard();
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder();
+    ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder getKeycardOrBuilder();
   }
   /**
    * <pre>
@@ -6918,11 +6918,11 @@ public final class DarcProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder subBuilder = null;
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = ed25519_.toBuilder();
               }
-              ed25519_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Ed25519Signer.PARSER, extensionRegistry);
+              ed25519_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.SignerEd25519.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(ed25519_);
                 ed25519_ = subBuilder.buildPartial();
@@ -6931,11 +6931,11 @@ public final class DarcProto {
               break;
             }
             case 18: {
-              ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder subBuilder = null;
+              ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = keycard_.toBuilder();
               }
-              keycard_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.KeycardSigner.PARSER, extensionRegistry);
+              keycard_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.SignerKeycard.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(keycard_);
                 keycard_ = subBuilder.buildPartial();
@@ -6969,45 +6969,45 @@ public final class DarcProto {
 
     private int bitField0_;
     public static final int ED25519_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.DarcProto.Ed25519Signer ed25519_;
+    private ch.epfl.dedis.proto.DarcProto.SignerEd25519 ed25519_;
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
     public boolean hasEd25519() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519() {
-      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519() {
+      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder() {
-      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
+      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
 
     public static final int KEYCARD_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.proto.DarcProto.KeycardSigner keycard_;
+    private ch.epfl.dedis.proto.DarcProto.SignerKeycard keycard_;
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
     public boolean hasKeycard() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard() {
-      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+    public ch.epfl.dedis.proto.DarcProto.SignerKeycard getKeycard() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance() : keycard_;
     }
     /**
-     * <code>optional .KeycardSigner keycard = 2;</code>
+     * <code>optional .SignerKeycard keycard = 2;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder() {
-      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+    public ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder getKeycardOrBuilder() {
+      return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance() : keycard_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -7375,29 +7375,29 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.DarcProto.Ed25519Signer ed25519_ = null;
+      private ch.epfl.dedis.proto.DarcProto.SignerEd25519 ed25519_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder> ed25519Builder_;
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder> ed25519Builder_;
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public boolean hasEd25519() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
-          return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+          return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
         } else {
           return ed25519Builder_.getMessage();
         }
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public Builder setEd25519(ch.epfl.dedis.proto.DarcProto.Ed25519Signer value) {
+      public Builder setEd25519(ch.epfl.dedis.proto.DarcProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7411,10 +7411,10 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public Builder setEd25519(
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder builderForValue) {
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder builderForValue) {
         if (ed25519Builder_ == null) {
           ed25519_ = builderForValue.build();
           onChanged();
@@ -7425,15 +7425,15 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public Builder mergeEd25519(ch.epfl.dedis.proto.DarcProto.Ed25519Signer value) {
+      public Builder mergeEd25519(ch.epfl.dedis.proto.DarcProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               ed25519_ != null &&
-              ed25519_ != ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance()) {
+              ed25519_ != ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance()) {
             ed25519_ =
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.newBuilder(ed25519_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.newBuilder(ed25519_).mergeFrom(value).buildPartial();
           } else {
             ed25519_ = value;
           }
@@ -7445,7 +7445,7 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public Builder clearEd25519() {
         if (ed25519Builder_ == null) {
@@ -7458,33 +7458,33 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder getEd25519Builder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder getEd25519Builder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getEd25519FieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
         if (ed25519Builder_ != null) {
           return ed25519Builder_.getMessageOrBuilder();
         } else {
           return ed25519_ == null ?
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
         }
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder> 
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder> 
           getEd25519FieldBuilder() {
         if (ed25519Builder_ == null) {
           ed25519Builder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder>(
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder>(
                   getEd25519(),
                   getParentForChildren(),
                   isClean());
@@ -7493,29 +7493,29 @@ public final class DarcProto {
         return ed25519Builder_;
       }
 
-      private ch.epfl.dedis.proto.DarcProto.KeycardSigner keycard_ = null;
+      private ch.epfl.dedis.proto.DarcProto.SignerKeycard keycard_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder> keycardBuilder_;
+          ch.epfl.dedis.proto.DarcProto.SignerKeycard, ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder, ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder> keycardBuilder_;
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
       public boolean hasKeycard() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.KeycardSigner getKeycard() {
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycard getKeycard() {
         if (keycardBuilder_ == null) {
-          return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+          return keycard_ == null ? ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance() : keycard_;
         } else {
           return keycardBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
-      public Builder setKeycard(ch.epfl.dedis.proto.DarcProto.KeycardSigner value) {
+      public Builder setKeycard(ch.epfl.dedis.proto.DarcProto.SignerKeycard value) {
         if (keycardBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -7529,10 +7529,10 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
       public Builder setKeycard(
-          ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder builderForValue) {
+          ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder builderForValue) {
         if (keycardBuilder_ == null) {
           keycard_ = builderForValue.build();
           onChanged();
@@ -7543,15 +7543,15 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
-      public Builder mergeKeycard(ch.epfl.dedis.proto.DarcProto.KeycardSigner value) {
+      public Builder mergeKeycard(ch.epfl.dedis.proto.DarcProto.SignerKeycard value) {
         if (keycardBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
               keycard_ != null &&
-              keycard_ != ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance()) {
+              keycard_ != ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance()) {
             keycard_ =
-              ch.epfl.dedis.proto.DarcProto.KeycardSigner.newBuilder(keycard_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.DarcProto.SignerKeycard.newBuilder(keycard_).mergeFrom(value).buildPartial();
           } else {
             keycard_ = value;
           }
@@ -7563,7 +7563,7 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
       public Builder clearKeycard() {
         if (keycardBuilder_ == null) {
@@ -7576,33 +7576,33 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder getKeycardBuilder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder getKeycardBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
         return getKeycardFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder getKeycardOrBuilder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder getKeycardOrBuilder() {
         if (keycardBuilder_ != null) {
           return keycardBuilder_.getMessageOrBuilder();
         } else {
           return keycard_ == null ?
-              ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance() : keycard_;
+              ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance() : keycard_;
         }
       }
       /**
-       * <code>optional .KeycardSigner keycard = 2;</code>
+       * <code>optional .SignerKeycard keycard = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder> 
+          ch.epfl.dedis.proto.DarcProto.SignerKeycard, ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder, ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder> 
           getKeycardFieldBuilder() {
         if (keycardBuilder_ == null) {
           keycardBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.DarcProto.KeycardSigner, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder, ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder>(
+              ch.epfl.dedis.proto.DarcProto.SignerKeycard, ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder, ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder>(
                   getKeycard(),
                   getParentForChildren(),
                   isClean());
@@ -7659,8 +7659,8 @@ public final class DarcProto {
 
   }
 
-  public interface Ed25519SignerOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Ed25519Signer)
+  public interface SignerEd25519OrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SignerEd25519)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -7683,21 +7683,21 @@ public final class DarcProto {
   }
   /**
    * <pre>
-   * Ed25519Signer holds a public and private keys necessary to sign Darcs
+   * SignerEd25519 holds a public and private keys necessary to sign Darcs
    * </pre>
    *
-   * Protobuf type {@code Ed25519Signer}
+   * Protobuf type {@code SignerEd25519}
    */
-  public  static final class Ed25519Signer extends
+  public  static final class SignerEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Ed25519Signer)
-      Ed25519SignerOrBuilder {
+      // @@protoc_insertion_point(message_implements:SignerEd25519)
+      SignerEd25519OrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use Ed25519Signer.newBuilder() to construct.
-    private Ed25519Signer(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use SignerEd25519.newBuilder() to construct.
+    private SignerEd25519(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private Ed25519Signer() {
+    private SignerEd25519() {
       point_ = com.google.protobuf.ByteString.EMPTY;
       secret_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -7707,7 +7707,7 @@ public final class DarcProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Ed25519Signer(
+    private SignerEd25519(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -7754,14 +7754,14 @@ public final class DarcProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.class, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder.class);
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder.class);
     }
 
     private int bitField0_;
@@ -7847,10 +7847,10 @@ public final class DarcProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.Ed25519Signer)) {
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.SignerEd25519)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.proto.DarcProto.Ed25519Signer other = (ch.epfl.dedis.proto.DarcProto.Ed25519Signer) obj;
+      ch.epfl.dedis.proto.DarcProto.SignerEd25519 other = (ch.epfl.dedis.proto.DarcProto.SignerEd25519) obj;
 
       boolean result = true;
       result = result && (hasPoint() == other.hasPoint());
@@ -7887,69 +7887,69 @@ public final class DarcProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(byte[] data)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseDelimitedFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -7961,7 +7961,7 @@ public final class DarcProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.Ed25519Signer prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.SignerEd25519 prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -7977,28 +7977,28 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * Ed25519Signer holds a public and private keys necessary to sign Darcs
+     * SignerEd25519 holds a public and private keys necessary to sign Darcs
      * </pre>
      *
-     * Protobuf type {@code Ed25519Signer}
+     * Protobuf type {@code SignerEd25519}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Ed25519Signer)
-        ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder {
+        // @@protoc_insertion_point(builder_implements:SignerEd25519)
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.DarcProto.Ed25519Signer.class, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder.class);
+                ch.epfl.dedis.proto.DarcProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.proto.DarcProto.Ed25519Signer.newBuilder()
+      // Construct using ch.epfl.dedis.proto.DarcProto.SignerEd25519.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -8024,23 +8024,23 @@ public final class DarcProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance();
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance();
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer build() {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer result = buildPartial();
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 build() {
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer buildPartial() {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer result = new ch.epfl.dedis.proto.DarcProto.Ed25519Signer(this);
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 result = new ch.epfl.dedis.proto.DarcProto.SignerEd25519(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8083,16 +8083,16 @@ public final class DarcProto {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.DarcProto.Ed25519Signer) {
-          return mergeFrom((ch.epfl.dedis.proto.DarcProto.Ed25519Signer)other);
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.SignerEd25519) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.SignerEd25519)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.Ed25519Signer other) {
-        if (other == ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.SignerEd25519 other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance()) return this;
         if (other.hasPoint()) {
           setPoint(other.getPoint());
         }
@@ -8118,11 +8118,11 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer parsedMessage = null;
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.DarcProto.Ed25519Signer) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.SignerEd25519) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -8213,46 +8213,46 @@ public final class DarcProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Ed25519Signer)
+      // @@protoc_insertion_point(builder_scope:SignerEd25519)
     }
 
-    // @@protoc_insertion_point(class_scope:Ed25519Signer)
-    private static final ch.epfl.dedis.proto.DarcProto.Ed25519Signer DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:SignerEd25519)
+    private static final ch.epfl.dedis.proto.DarcProto.SignerEd25519 DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.Ed25519Signer();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.SignerEd25519();
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstance() {
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<Ed25519Signer>
-        PARSER = new com.google.protobuf.AbstractParser<Ed25519Signer>() {
-      public Ed25519Signer parsePartialFrom(
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerEd25519>
+        PARSER = new com.google.protobuf.AbstractParser<SignerEd25519>() {
+      public SignerEd25519 parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Ed25519Signer(input, extensionRegistry);
+          return new SignerEd25519(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Ed25519Signer> parser() {
+    public static com.google.protobuf.Parser<SignerEd25519> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Ed25519Signer> getParserForType() {
+    public com.google.protobuf.Parser<SignerEd25519> getParserForType() {
       return PARSER;
     }
 
-    public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstanceForType() {
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface KeycardSignerOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:KeycardSigner)
+  public interface SignerKeycardOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SignerKeycard)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -8275,22 +8275,22 @@ public final class DarcProto {
   }
   /**
    * <pre>
-   * KeycardSigner holds a public and private keys necessary to sign Darcs,
+   * SignerKeycard holds a public and private keys necessary to sign Darcs,
    * but the private key will not be given out.
    * </pre>
    *
-   * Protobuf type {@code KeycardSigner}
+   * Protobuf type {@code SignerKeycard}
    */
-  public  static final class KeycardSigner extends
+  public  static final class SignerKeycard extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:KeycardSigner)
-      KeycardSignerOrBuilder {
+      // @@protoc_insertion_point(message_implements:SignerKeycard)
+      SignerKeycardOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use KeycardSigner.newBuilder() to construct.
-    private KeycardSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use SignerKeycard.newBuilder() to construct.
+    private SignerKeycard(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private KeycardSigner() {
+    private SignerKeycard() {
       point_ = com.google.protobuf.ByteString.EMPTY;
       secret_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -8300,7 +8300,7 @@ public final class DarcProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private KeycardSigner(
+    private SignerKeycard(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -8347,14 +8347,14 @@ public final class DarcProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerKeycard_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerKeycard_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.DarcProto.KeycardSigner.class, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder.class);
+              ch.epfl.dedis.proto.DarcProto.SignerKeycard.class, ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder.class);
     }
 
     private int bitField0_;
@@ -8440,10 +8440,10 @@ public final class DarcProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.KeycardSigner)) {
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.SignerKeycard)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.proto.DarcProto.KeycardSigner other = (ch.epfl.dedis.proto.DarcProto.KeycardSigner) obj;
+      ch.epfl.dedis.proto.DarcProto.SignerKeycard other = (ch.epfl.dedis.proto.DarcProto.SignerKeycard) obj;
 
       boolean result = true;
       result = result && (hasPoint() == other.hasPoint());
@@ -8480,69 +8480,69 @@ public final class DarcProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(byte[] data)
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseDelimitedFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -8554,7 +8554,7 @@ public final class DarcProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.KeycardSigner prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.SignerKeycard prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -8570,29 +8570,29 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * KeycardSigner holds a public and private keys necessary to sign Darcs,
+     * SignerKeycard holds a public and private keys necessary to sign Darcs,
      * but the private key will not be given out.
      * </pre>
      *
-     * Protobuf type {@code KeycardSigner}
+     * Protobuf type {@code SignerKeycard}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:KeycardSigner)
-        ch.epfl.dedis.proto.DarcProto.KeycardSignerOrBuilder {
+        // @@protoc_insertion_point(builder_implements:SignerKeycard)
+        ch.epfl.dedis.proto.DarcProto.SignerKeycardOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerKeycard_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerKeycard_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.DarcProto.KeycardSigner.class, ch.epfl.dedis.proto.DarcProto.KeycardSigner.Builder.class);
+                ch.epfl.dedis.proto.DarcProto.SignerKeycard.class, ch.epfl.dedis.proto.DarcProto.SignerKeycard.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.proto.DarcProto.KeycardSigner.newBuilder()
+      // Construct using ch.epfl.dedis.proto.DarcProto.SignerKeycard.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -8618,23 +8618,23 @@ public final class DarcProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_KeycardSigner_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerKeycard_descriptor;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance();
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycard getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance();
       }
 
-      public ch.epfl.dedis.proto.DarcProto.KeycardSigner build() {
-        ch.epfl.dedis.proto.DarcProto.KeycardSigner result = buildPartial();
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycard build() {
+        ch.epfl.dedis.proto.DarcProto.SignerKeycard result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.KeycardSigner buildPartial() {
-        ch.epfl.dedis.proto.DarcProto.KeycardSigner result = new ch.epfl.dedis.proto.DarcProto.KeycardSigner(this);
+      public ch.epfl.dedis.proto.DarcProto.SignerKeycard buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.SignerKeycard result = new ch.epfl.dedis.proto.DarcProto.SignerKeycard(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8677,16 +8677,16 @@ public final class DarcProto {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.DarcProto.KeycardSigner) {
-          return mergeFrom((ch.epfl.dedis.proto.DarcProto.KeycardSigner)other);
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.SignerKeycard) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.SignerKeycard)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.KeycardSigner other) {
-        if (other == ch.epfl.dedis.proto.DarcProto.KeycardSigner.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.SignerKeycard other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.SignerKeycard.getDefaultInstance()) return this;
         if (other.hasPoint()) {
           setPoint(other.getPoint());
         }
@@ -8712,11 +8712,11 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.proto.DarcProto.KeycardSigner parsedMessage = null;
+        ch.epfl.dedis.proto.DarcProto.SignerKeycard parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.DarcProto.KeycardSigner) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.SignerKeycard) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -8807,39 +8807,39 @@ public final class DarcProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:KeycardSigner)
+      // @@protoc_insertion_point(builder_scope:SignerKeycard)
     }
 
-    // @@protoc_insertion_point(class_scope:KeycardSigner)
-    private static final ch.epfl.dedis.proto.DarcProto.KeycardSigner DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:SignerKeycard)
+    private static final ch.epfl.dedis.proto.DarcProto.SignerKeycard DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.KeycardSigner();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.SignerKeycard();
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstance() {
+    public static ch.epfl.dedis.proto.DarcProto.SignerKeycard getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<KeycardSigner>
-        PARSER = new com.google.protobuf.AbstractParser<KeycardSigner>() {
-      public KeycardSigner parsePartialFrom(
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerKeycard>
+        PARSER = new com.google.protobuf.AbstractParser<SignerKeycard>() {
+      public SignerKeycard parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new KeycardSigner(input, extensionRegistry);
+          return new SignerKeycard(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<KeycardSigner> parser() {
+    public static com.google.protobuf.Parser<SignerKeycard> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<KeycardSigner> getParserForType() {
+    public com.google.protobuf.Parser<SignerKeycard> getParserForType() {
       return PARSER;
     }
 
-    public ch.epfl.dedis.proto.DarcProto.KeycardSigner getDefaultInstanceForType() {
+    public ch.epfl.dedis.proto.DarcProto.SignerKeycard getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -8886,15 +8886,15 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Signer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Ed25519Signer_descriptor;
+    internal_static_SignerEd25519_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Ed25519Signer_fieldAccessorTable;
+      internal_static_SignerEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_KeycardSigner_descriptor;
+    internal_static_SignerKeycard_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_KeycardSigner_fieldAccessorTable;
+      internal_static_SignerKeycard_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8918,9 +8918,9 @@ public final class DarcProto {
       "\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n" +
       "\006signer\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"J" +
       "\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed25519Signe" +
-      "r\022\037\n\007keycard\030\002 \001(\0132\016.KeycardSigner\".\n\rEd" +
+      "r\022\037\n\007keycard\030\002 \001(\0132\016.SignerKeycard\".\n\rEd" +
       "25519Signer\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002" +
-      "(\014\".\n\rKeycardSigner\022\r\n\005point\030\001 \002(\014\022\016\n\006se" +
+      "(\014\".\n\rSignerKeycard\022\r\n\005point\030\001 \002(\014\022\016\n\006se" +
       "cret\030\002 \002(\014B \n\023ch.epfl.dedis.protoB\tDarcP" +
       "roto"
     };
@@ -8984,17 +8984,17 @@ public final class DarcProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Signer_descriptor,
         new java.lang.String[] { "Ed25519", "Keycard", });
-    internal_static_Ed25519Signer_descriptor =
+    internal_static_SignerEd25519_descriptor =
       getDescriptor().getMessageTypes().get(8);
-    internal_static_Ed25519Signer_fieldAccessorTable = new
+    internal_static_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Ed25519Signer_descriptor,
+        internal_static_SignerEd25519_descriptor,
         new java.lang.String[] { "Point", "Secret", });
-    internal_static_KeycardSigner_descriptor =
+    internal_static_SignerKeycard_descriptor =
       getDescriptor().getMessageTypes().get(9);
-    internal_static_KeycardSigner_fieldAccessorTable = new
+    internal_static_SignerKeycard_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_KeycardSigner_descriptor,
+        internal_static_SignerKeycard_descriptor,
         new java.lang.String[] { "Point", "Secret", });
   }
 

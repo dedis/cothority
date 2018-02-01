@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SignaturePathTest {
     @Test
     void serialize() throws Exception{
-        Ed25519Signer signer = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
         Darc darc = new Darc(signer, null, null);
         SignaturePath path = new SignaturePath(darc, signer, SignaturePath.OWNER);
 

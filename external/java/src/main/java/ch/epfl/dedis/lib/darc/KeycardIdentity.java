@@ -36,12 +36,12 @@ public class KeycardIdentity implements Identity {
     }
 
     /**
-     * Creates an Ed25519Identity from a Ed25519Signer.
+     * Creates an Ed25519Identity from a SignerEd25519.
      * @param signer
      */
     public KeycardIdentity(Signer signer) throws CothorityCryptoException{
-        if (KeycardSigner.class.isInstance(signer)) {
-            pubKey = ((KeycardSigner) signer).getPublicKey();
+        if (SignerKeycard.class.isInstance(signer)) {
+            pubKey = ((SignerKeycard) signer).getPublicKey();
         } else {
             throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
         }

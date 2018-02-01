@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DarcSignatureTest {
     @Test
     void testSigning() throws Exception{
-        Ed25519Signer signer = new Ed25519Signer();
-        Ed25519Signer signer2 = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
+        SignerEd25519 signer2 = new SignerEd25519();
         byte[] msg = "document".getBytes();
         Darc darc = new Darc(signer, Arrays.asList(signer), null);
         Darc darc2 = new Darc(signer2, null, null);
@@ -29,7 +29,7 @@ public class DarcSignatureTest {
 
     @Test
     void serialization() throws Exception{
-        Ed25519Signer signer = new Ed25519Signer();
+        SignerEd25519 signer = new SignerEd25519();
         byte[] msg = "document".getBytes();
         Darc darc = new Darc(signer, null, null);
         SignaturePath path = new SignaturePath(darc, signer, SignaturePath.OWNER);

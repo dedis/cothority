@@ -19,14 +19,14 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class TestKeycardSigner extends KeycardSigner {
+public class TestSignerKeycard extends SignerKeycard {
     private final PublicKey publicKey;
     private final PrivateKey privateKey;
 
     /**
      * this constructor create internally random key
      */
-    public TestKeycardSigner() {
+    public TestSignerKeycard() {
         this("secp256r1");
     }
 
@@ -35,11 +35,11 @@ public class TestKeycardSigner extends KeycardSigner {
      *
      * @param keyType type of curve can be one of "secp256r1", "secp384r1", "secp521r1"
      */
-    public TestKeycardSigner(String keyType) {
+    public TestSignerKeycard(String keyType) {
         this(createKeyPair(keyType));
     }
 
-    public TestKeycardSigner(KeyPair keyPair) {
+    public TestSignerKeycard(KeyPair keyPair) {
         this.publicKey = keyPair.getPublic();
         this.privateKey = keyPair.getPrivate();
     }
@@ -72,7 +72,7 @@ public class TestKeycardSigner extends KeycardSigner {
      * @param publicKeyResourceName resource name of a public key x509 der format
      * @throws IOException when key pair can not be read
      */
-    public TestKeycardSigner(String privateKeyResourceName, String publicKeyResourceName) throws IOException {
+    public TestSignerKeycard(String privateKeyResourceName, String publicKeyResourceName) throws IOException {
         try {
             publicKey = readPublicKey(getClass().getClassLoader().getResourceAsStream(publicKeyResourceName));
             privateKey = readPrivateKey(getClass().getClassLoader().getResourceAsStream(privateKeyResourceName));

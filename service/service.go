@@ -451,10 +451,10 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		var pub []byte
 		pub, err = req.Ephemeral.MarshalBinary()
 		if err != nil {
-			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal ephemeral key")
+			return nil, errors.New("couldn't marshal ephemeral key")
 		}
 		if err = req.Signature.Verify(pub, &file.Write.Reader); err != nil {
-			return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "wrong signature")
+			return nil, errors.New("wrong signature")
 		}
 		ocsProto.Xc = req.Ephemeral
 		verificationData.Ephemeral = req.Ephemeral
@@ -465,7 +465,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.VerificationData, err = network.Marshal(verificationData)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ocs.ErrorParameter, "couldn't marshal verificationdata: "+err.Error())
+		return nil, errors.New("couldn't marshal verificationdata: " + err.Error())
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so

@@ -18,11 +18,11 @@ public class Ed25519Identity implements Identity {
     }
 
     /**
-     * Creates an Ed25519Identity from a Ed25519Signer.
+     * Creates an Ed25519Identity from a SignerEd25519.
      * @param signer
      */
     public Ed25519Identity(Signer signer) throws CothorityCryptoException{
-        if (Ed25519Signer.class.isInstance(signer)) {
+        if (SignerEd25519.class.isInstance(signer)) {
             pub = new Point(signer.getPublic());
         } else {
             throw new CothorityCryptoException("Wrong signer type: " + signer.toString());

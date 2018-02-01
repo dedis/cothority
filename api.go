@@ -215,20 +215,17 @@ func (c *Client) DecryptKeyRequest(ocs *SkipChainURL, readID skipchain.SkipBlock
 //  - sym [[]byte] - the decrypted symmetric key
 //  - cerr [ClientError] - an eventual error if something went wrong, or nil
 func (c *Client) DecryptKeyRequestEphemeral(ocs *SkipChainURL, readID skipchain.SkipBlockID, readerDarc *darc.Darc, reader *darc.Signer) (sym []byte,
-	cerr onet.ClientError) {
+	err error) {
 	kp := key.NewKeyPair(cothority.Suite)
-	id, err := darc.NewIdentity(nil, &darc.IdentityEd25519{Point: reader.Ed25519.Point})
-	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
-	}
+	id := darc.NewIdentityEd25519(reader.Ed25519.Point)
 	path := darc.NewSignaturePath([]*darc.Darc{readerDarc}, *id, darc.User)
 	msg, err := kp.Public.MarshalBinary()
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+		return
 	}
 	sig, err := darc.NewDarcSignature(msg, path, reader)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorParameter, err.Error())
+		return
 	}
 	request := &DecryptKeyRequest{
 		Read:      readID,
@@ -236,8 +233,8 @@ func (c *Client) DecryptKeyRequestEphemeral(ocs *SkipChainURL, readID skipchain.
 		Signature: sig,
 	}
 	reply := &DecryptKeyReply{}
-	cerr = c.SendProtobuf(ocs.Roster.List[0], request, reply)
-	if cerr != nil {
+	err = c.SendProtobuf(ocs.Roster.List[0], request, reply)
+	if err != nil {
 		return
 	}
 
@@ -245,7 +242,7 @@ func (c *Client) DecryptKeyRequestEphemeral(ocs *SkipChainURL, readID skipchain.
 	sym, err = DecodeKey(cothority.Suite, reply.X,
 		reply.Cs, reply.XhatEnc, kp.Private)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(ErrorProtocol, "couldn't decode sym: "+err.Error())
+		return
 	}
 	return
 }

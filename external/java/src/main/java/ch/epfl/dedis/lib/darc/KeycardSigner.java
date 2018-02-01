@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.security.PublicKey;
 
 /**
- * KeycardSigner represents a keycard that holds its private key and can only be used to sign
+ * SignerKeycard represents a keycard that holds its private key and can only be used to sign
  * but which will not reveal its private key.
  * For the moment it _does_ hold its own private key, but in a later version this can be
  * removed and then any call to `sign` needs to go to the card.
  */
-public abstract class KeycardSigner implements Signer {
-    private final Logger logger = LoggerFactory.getLogger(KeycardSigner.class);
+public abstract class SignerKeycard implements Signer {
+    private final Logger logger = LoggerFactory.getLogger(SignerKeycard.class);
     /**
      * Signs the sha256 hash of the message. It must return
      * an array of bytes that can be verified by the
@@ -75,7 +75,7 @@ public abstract class KeycardSigner implements Signer {
      * bytes returned by this method are internal, binary representation of X509 key.
      * It should be possible to
      * <ol>
-     *     <li>create a (@Link X509EncodedKeySpec key in following way: <pre>new X509EncodedKeySpec(KeycardSigner.publicBytes)</pre></li>
+     *     <li>create a (@Link X509EncodedKeySpec key in following way: <pre>new X509EncodedKeySpec(SignerKeycard.publicBytes)</pre></li>
      *     <li>analyse returned value by openssl command</li>
      *     <li>use openssl to verify signature</li>
      * </ol>

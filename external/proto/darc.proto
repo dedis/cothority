@@ -73,19 +73,19 @@ message SignaturePath {
 // Signer is a generic structure that can hold different types of signers
 // TODO Make it an interface
 message Signer {
-  optional Ed25519Signer ed25519 = 1;
-  optional KeycardSigner keycard = 2;
+  optional SignerEd25519 ed25519 = 1;
+  optional SignerKeycard keycard = 2;
 }
 
-// Ed25519Signer holds a public and private keys necessary to sign Darcs
-message Ed25519Signer {
+// SignerEd25519 holds a public and private keys necessary to sign Darcs
+message SignerEd25519 {
   required bytes point = 1;
   required bytes secret = 2;
 }
 
-// KeycardSigner holds a public and private keys necessary to sign Darcs,
+// SignerKeycard holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
-message KeycardSigner {
+message SignerKeycard {
   required bytes point = 1;
   required bytes secret = 2;
 }

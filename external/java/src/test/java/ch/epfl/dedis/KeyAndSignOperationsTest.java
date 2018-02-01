@@ -14,8 +14,8 @@ import java.security.Signature;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
-import static ch.epfl.dedis.lib.darc.TestKeycardSigner.readPrivateKey;
-import static ch.epfl.dedis.lib.darc.TestKeycardSigner.readPublicKey;
+import static ch.epfl.dedis.lib.darc.TestSignerKeycard.readPrivateKey;
+import static ch.epfl.dedis.lib.darc.TestSignerKeycard.readPublicKey;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

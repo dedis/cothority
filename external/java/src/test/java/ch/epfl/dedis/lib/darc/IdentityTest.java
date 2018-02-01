@@ -9,8 +9,8 @@ public class IdentityTest {
 
     @Test
     void instantiateIdentity() throws Exception{
-        Ed25519Signer owner = new Ed25519Signer();
-        Ed25519Signer user = new Ed25519Signer();
+        SignerEd25519 owner = new SignerEd25519();
+        SignerEd25519 user = new SignerEd25519();
 
         Identity ownerI = IdentityFactory.New(owner);
         Identity userI = IdentityFactory.New(user);
@@ -21,7 +21,7 @@ public class IdentityTest {
 
     @Test
     void serialization() throws Exception{
-        Ed25519Signer owner = new Ed25519Signer();
+        SignerEd25519 owner = new SignerEd25519();
         Identity ownerI = IdentityFactory.New(owner);
         DarcProto.Identity proto = ownerI.toProto();
         Identity ownerI2 = IdentityFactory.New(proto);

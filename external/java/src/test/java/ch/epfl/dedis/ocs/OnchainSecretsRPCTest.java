@@ -39,10 +39,10 @@ class OnchainSecretsRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        admin = new Ed25519Signer();
-        publisher = new Ed25519Signer();
-        reader = new Ed25519Signer();
-        reader2 = new Ed25519Signer();
+        admin = new SignerEd25519();
+        publisher = new SignerEd25519();
+        reader = new SignerEd25519();
+        reader2 = new SignerEd25519();
 
         adminDarc = new Darc(admin, null, null);
         adminDarc.addUser(publisher);
@@ -109,7 +109,7 @@ class OnchainSecretsRPCTest {
 
     @Test
     void addAccountToSkipchain() throws Exception {
-        Signer admin2 = new Ed25519Signer();
+        Signer admin2 = new SignerEd25519();
         Darc adminDarc2 = adminDarc.copy();
         adminDarc2.addOwner(admin2);
         adminDarc2.incVersion();
@@ -202,7 +202,7 @@ class OnchainSecretsRPCTest {
 
     @Test
     void getLatestDarc() throws CothorityException {
-        Signer publisher2 = new Ed25519Signer();
+        Signer publisher2 = new SignerEd25519();
         Darc admin2Darc = adminDarc.copy();
         admin2Darc.addUser(publisher2);
         admin2Darc.setEvolution(adminDarc, null, admin);
@@ -218,7 +218,7 @@ class OnchainSecretsRPCTest {
 
     @Test
     void checkWriteAuthorization() throws CothorityException {
-        Signer publisher2 = new Ed25519Signer();
+        Signer publisher2 = new SignerEd25519();
         DarcSignature sig = new DarcSignature(writeRequest.owner.getId().getId(),
                 writeRequest.owner, publisher2, SignaturePath.USER);
         try {
@@ -231,7 +231,7 @@ class OnchainSecretsRPCTest {
 
     @Test
     void createDarcForTheSameUserInDifferentSkipchain() throws Exception {
-        Darc userDarc = new Darc(new Ed25519Signer(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
+        Darc userDarc = new Darc(new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
         ocs.updateDarc(userDarc);
 
         OnchainSecretsRPC ocs2 = new OnchainSecretsRPC(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
@@ -242,7 +242,7 @@ class OnchainSecretsRPCTest {
             logger.info("correctly refusing to save again");
         }
 
-        Darc userDarc2 = new Darc(new Ed25519Signer(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
+        Darc userDarc2 = new Darc(new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
         ocs2.updateDarc(userDarc2);
         logger.info("new user darc created and stored");
     }

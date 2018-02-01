@@ -100,21 +100,20 @@ type SignaturePath struct {
 }
 
 // Signer is a generic structure that can hold different types of signers
-// TODO Make it an interface
 type Signer struct {
-	Ed25519 *Ed25519Signer
-	Keycard *KeycardSigner
+	Ed25519 *SignerEd25519
+	Keycard *SignerKeycard
 }
 
-// Ed25519Signer holds a public and private keys necessary to sign Darcs
-type Ed25519Signer struct {
+// SignerEd25519 holds a public and private keys necessary to sign Darcs
+type SignerEd25519 struct {
 	Point  kyber.Point
 	Secret kyber.Scalar
 }
 
-// KeycardSigner holds a public and private keys necessary to sign Darcs,
+// SignerKeycard holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
-type KeycardSigner struct {
+type SignerKeycard struct {
 	Point  []byte
 	secret []byte
 }

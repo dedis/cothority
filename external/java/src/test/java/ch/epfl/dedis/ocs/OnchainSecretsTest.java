@@ -42,9 +42,9 @@ class OnchainSecretsTest {
 
     @BeforeEach
     void initAll() throws CothorityException {
-        admin = new Ed25519Signer();
-        publisher = new Ed25519Signer();
-        reader = new Ed25519Signer();
+        admin = new SignerEd25519();
+        publisher = new SignerEd25519();
+        reader = new SignerEd25519();
 
         adminDarc = new Darc(admin, Arrays.asList(publisher), null);
         readerDarc = new Darc(publisher, Arrays.asList(reader), null);
@@ -79,7 +79,7 @@ class OnchainSecretsTest {
 
     @Test
     void giveReadAccessToDocument() throws CothorityException {
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
         try{
             ocs.getDocument(wr.id, reader2);
@@ -103,7 +103,7 @@ class OnchainSecretsTest {
         assertFalse(doc2.equals(doc));
 
         // Add another reader
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
         Document doc3 = ocs.getDocument(wr.id, reader2);
         assertTrue(doc.equals(doc3));
@@ -125,14 +125,14 @@ class OnchainSecretsTest {
         ReadRequestId rrId = ocs.createReadRequest(new ReadRequest(ocs, wr.id, reader));
 
         KeyPair kp = new KeyPair();
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
         assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);});
     }
 
     @Test
     void getDocumentWithFailedNode() throws CothorityException, IOException, InterruptedException {
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
 
         ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
@@ -169,7 +169,7 @@ class OnchainSecretsTest {
         // - reader-signer
         // - publisher-signer
         OnchainSecrets ocs2 = new OnchainSecrets(ocs.getRoster(), ocs.getID());
-        Signer reader = new Ed25519Signer();
+        Signer reader = new SignerEd25519();
         OCSProto.Write wr2 = ocs.getWrite(wr.id);
         ocs2.addIdentityToDarc(new Darc(wr2.getReader()), reader, publisher, SignaturePath.USER);
         Document doc2 = ocs2.getDocument(wr.id, reader);

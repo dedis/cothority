@@ -7,7 +7,7 @@ import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.DarcIdentity;
 import ch.epfl.dedis.lib.darc.Ed25519Identity;
-import ch.epfl.dedis.lib.darc.Ed25519Signer;
+import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.darc.IdentityFactory;
 import ch.epfl.dedis.lib.darc.SignaturePath;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -42,14 +42,14 @@ public class GrantAccessTest {
         OnchainSecrets ocs = connectToExistingSkipchain(genesis);
         DarcId publisherId = createPublisher(ocs);
 
-        Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+        SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
         //when
         DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "document darc".getBytes());
         ocs.updateDarc(documentDarc);
         ocs.addIdentityToDarc(documentDarc,
-                new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
+                new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
                 publisherSigner, SignaturePath.USER);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, documentDarc, "extra data".getBytes());
@@ -58,7 +58,7 @@ public class GrantAccessTest {
         WriteRequestId documentId = new WriteRequestId(writeId.id.getId()); // recreate object to ensure separation
 
         //then
-        Document document = ocs.getDocument(documentId, new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
+        Document document = ocs.getDocument(documentId, new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
         assertNotNull(document.getDataEncrypted());
     }
 
@@ -70,7 +70,7 @@ public class GrantAccessTest {
         OnchainSecrets ocs = connectToExistingSkipchain(genesis);
         DarcId publisherId = createPublisher(ocs);
 
-        Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+        SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
         DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "docuemnt darc".getBytes());
@@ -83,11 +83,11 @@ public class GrantAccessTest {
 
         //when
         ocs.addIdentityToDarc(documentDarc,
-                new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
+                new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))),
                 publisherSigner, SignaturePath.USER);
 
         //then
-        Document document = ocs.getDocument(documentId, new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
+        Document document = ocs.getDocument(documentId, new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
         assertNotNull(document.getDataEncrypted());
     }
 
@@ -100,7 +100,7 @@ public class GrantAccessTest {
         DarcId publisherId = createPublisher(ocs);
         DarcId consumerId = createConsumer(ocs);
 
-        Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+        SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
 
         DarcIdentity publisherIdentity = new DarcIdentity(publisherId);
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "docuemnt darc".getBytes());
@@ -115,12 +115,12 @@ public class GrantAccessTest {
         ocs.addIdentityToDarc(documentDarc, new DarcIdentity(consumerId), publisherSigner, SignaturePath.USER);
 
         //then
-        Document document = ocs.getDocument(documentId, new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
+        Document document = ocs.getDocument(documentId, new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR)));
         assertNotNull(document.getDataEncrypted());
     }
 
     private DarcId createConsumer(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
+        Darc user = createUser(ocs, new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
         return new DarcId(user.getId().getId());
     }
 
@@ -132,7 +132,7 @@ public class GrantAccessTest {
     }
 
     private DarcId createPublisher(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
+        Darc user = createUser(ocs, new Ed25519Identity(new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
         grantSystemWriteAccess(ocs, user);
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
@@ -143,7 +143,7 @@ public class GrantAccessTest {
                 .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
                 .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
-                .initialiseNewSkipchain(new Ed25519Signer(
+                .initialiseNewSkipchain(new SignerEd25519(
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
@@ -154,7 +154,7 @@ public class GrantAccessTest {
     }
 
     private static void grantSystemWriteAccess(OnchainSecrets ocs, Darc userDarc) throws Exception {
-        Ed25519Signer admin = new Ed25519Signer(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.USER);
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
     }

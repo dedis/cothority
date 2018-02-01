@@ -171,14 +171,13 @@ func (d *Darc) RemoveUser(user *Identity) ([]*Identity, error) {
 // SetEvolution evolves a darc, the latest valid darc needs to sign the new darc.
 // Only if one of the previous owners signs off on the new darc will it be
 // valid and accepted to sign on behalf of the old darc. The path can be nil
-// unless if the previousOwner is an Ed25519Signer and found directly in the
+// unless if the previousOwner is an SignerEd25519 and found directly in the
 // previous darc.
 func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) error {
 	d.Signature = nil
 	d.Version = prevd.Version + 1
 	if pth == nil {
-		prevOwnerID := Identity{Ed25519: &IdentityEd25519{Point: prevOwner.Ed25519.Point}}
-		pth = NewSignaturePath([]*Darc{prevd}, prevOwnerID, Owner)
+		pth = NewSignaturePath([]*Darc{prevd}, *prevOwner.Identity(), Owner)
 	}
 	if prevd.BaseID == nil {
 		id := prevd.GetID()
@@ -240,13 +239,8 @@ func (d Darc) String() string {
 	ret := fmt.Sprintf("this[base]: %x[%x]\nVersion: %d", d.GetID(), d.GetBaseID(), d.Version)
 	for idStr, list := range map[string]*[]*Identity{"owner": d.Owners, "user": d.Users} {
 		if list != nil {
-			for ui, u := range *list {
-				if u.Ed25519 != nil {
-					ret += fmt.Sprintf("\n%sEd25519[%d] = %s", idStr, ui, u.Ed25519.Point)
-				}
-				if u.Darc != nil {
-					ret += fmt.Sprintf("\n%sDarc[%d] = %x", idStr, ui, u.Darc.ID)
-				}
+			for _, u := range *list {
+				ret += fmt.Sprintf("\n%s: %s", idStr, u.String())
 			}
 		}
 	}
@@ -456,29 +450,14 @@ func (s *Signer) Sign(msg []byte) ([]byte, error) {
 
 // GetPrivate returns the private key, if one exists.
 func (s *Signer) GetPrivate() (kyber.Scalar, error) {
-	if s.Ed25519 != nil {
-		if s.Ed25519.Secret != nil {
-			return s.Ed25519.Secret, nil
-		}
+	switch s.Type() {
+	case 1:
+		return s.Ed25519.Secret, nil
+	case 0, 2:
 		return nil, errors.New("signer lacks a private key")
+	default:
+		return nil, errors.New("signer is of unknown type")
 	}
-	return nil, errors.New("signer is of unknown type")
-}
-
-// NewIdentity creates an identity with either a link to another darc
-// or an Ed25519 identity (containing a point). You're only allowed
-// to give either a darc or a point, but not both.
-func NewIdentity(darc *IdentityDarc, ed *IdentityEd25519) (*Identity, error) {
-	if darc != nil && ed != nil {
-		return nil, errors.New("cannot have both darc and ed25519 point in one identity")
-	}
-	if darc == nil && ed == nil {
-		return nil, errors.New("give one of darc or point")
-	}
-	return &Identity{
-		Darc:    darc,
-		Ed25519: ed,
-	}, nil
 }
 
 // Equal first checks the type of the two identities, and if they match,
@@ -613,7 +592,7 @@ func (idkc *IdentityKeycard) Verify(msg, s []byte) error {
 	return errors.New("Wrong signature")
 }
 
-// NewSignerEd25519 initializes a new Ed25519Signer given a public and private keys.
+// NewSignerEd25519 initializes a new SignerEd25519 given a public and private keys.
 // If any of the given values is nil or both are nil, then a new key pair is generated.
 // It returns a signer.
 func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
@@ -621,14 +600,14 @@ func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
 		kp := key.NewKeyPair(cothority.Suite)
 		point, secret = kp.Public, kp.Private
 	}
-	return &Signer{Ed25519: &Ed25519Signer{
+	return &Signer{Ed25519: &SignerEd25519{
 		Point:  point,
 		Secret: secret,
 	}}
 }
 
 // Sign creates a schnorr signautre on the message
-func (eds *Ed25519Signer) Sign(msg []byte) ([]byte, error) {
+func (eds *SignerEd25519) Sign(msg []byte) ([]byte, error) {
 	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
 }
 
@@ -638,6 +617,6 @@ func NewSignerKeycard() *Signer {
 }
 
 // Sign creates a RSA signature on the message
-func (kcs *KeycardSigner) Sign(msg []byte) ([]byte, error) {
+func (kcs *SignerKeycard) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }

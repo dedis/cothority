@@ -25,9 +25,9 @@ public class IdentityFactory {
      * @param signer
      */
     public static Identity New(Signer signer) throws CothorityCryptoException {
-        if (Ed25519Signer.class.isInstance(signer)) {
+        if (SignerEd25519.class.isInstance(signer)) {
             return new Ed25519Identity(signer);
-        } else if (KeycardSigner.class.isInstance(signer)) {
+        } else if (SignerKeycard.class.isInstance(signer)) {
             return new KeycardIdentity(signer);
         } else {
             throw new CothorityCryptoException("Cannot make Identity out of " + signer.toString());
