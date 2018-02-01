@@ -3,6 +3,7 @@ const nist = kyber.group.nist;
 const BN = require("bn.js");
 const assert = require("chai").assert;
 const PRNG = require("../../util").PRNG;
+const nistVectors = require("./ecdh_test.json");
 
 describe("p256", () => {
   const curve = new nist.Curve(nist.Params.p256);
@@ -286,7 +287,7 @@ describe("p256", () => {
         let x = new BN(
           "55302791189059782649052548129238946009757254481983766602279814276765761229598",
           10
-        )
+        );
         let y = new BN(
           "61392340999017759760595650359991412638601309952067335192619881551703613872215",
           10
@@ -295,7 +296,6 @@ describe("p256", () => {
         let target = new nist.Point(curve, x, y);
         assert.isTrue(point.equal(target), "point != target");
       });
-
     });
 
     describe("data", () => {
@@ -751,5 +751,35 @@ describe("p256", () => {
         assert.strictEqual(s1.string(), target);
       });
     });
+  });
+
+  it("should work with NIST CAVP SP 800-56A ECCCDH Primitive Test Vectors", () => {
+    // For each test vector calculate Z = privKey * peerPubKey and assert
+    // X Coordinate of calcZ == Z
+    for (let i = 0; i < nistVectors.length; i++) {
+      let testVector = nistVectors[i];
+      let X = new BN(testVector.X, 16);
+      let Y = new BN(testVector.Y, 16);
+      let privKey = new BN(testVector.Private, 16);
+      let peerX = new BN(testVector.PeerX, 16);
+      let peerY = new BN(testVector.PeerY, 16);
+      let Z = Uint8Array.from(new BN(testVector.Z, 16).toArray());
+
+      let key = curve.scalar().setBytes(Uint8Array.from(privKey.toArray()));
+      let pubKey = new nist.Point(curve, X, Y);
+      let peerPubKey = new nist.Point(curve, peerX, peerY);
+
+      let calcZ = curve.point().mul(key, peerPubKey);
+
+      assert.isTrue(
+        curve.curve.validate(pubKey.ref.point),
+        "peerPubKey not on curve"
+      );
+      assert.isTrue(
+        curve.curve.validate(peerPubKey.ref.point),
+        "peerPubKey not on curve"
+      );
+      assert.deepEqual(Z, Uint8Array.from(calcZ.ref.point.getX().toArray()));
+    }
   });
 });
