@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"os"
 	"path"
 	"strings"
@@ -112,15 +111,7 @@ func orgLink(c *cli.Context) error {
 	}
 	cfg, client := getConfigClient(c)
 
-	host, port, err := net.SplitHostPort(c.Args().First())
-	if err != nil {
-		return err
-	}
-	addrs, err := net.LookupHost(host)
-	if err != nil {
-		return err
-	}
-	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	addr := network.NewTCPAddress(c.Args().First())
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
 		// Compare by string because this comes over the network.
@@ -140,7 +131,7 @@ func orgLink(c *cli.Context) error {
 func orgConfig(c *cli.Context) error {
 	log.Lvl3("Org: Config")
 	if c.NArg() < 1 {
-		log.Fatal(`Please give pop_desc.toml and (optionally) merge_party.toml`)
+		log.Fatal("Please give pop_desc.toml and (optionally) merge_party.toml")
 	}
 	cfg, client := getConfigClient(c)
 	if cfg.Address.String() == "" {
