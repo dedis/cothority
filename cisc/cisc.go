@@ -107,7 +107,7 @@ func adminLink(c *cli.Context) error {
 		}
 		public = kp.Public
 	}
-	client := onet.NewClient(identity.ServiceName, cothority.Suite)
+	client := onet.NewClient(cothority.Suite, identity.ServiceName)
 	if err := client.SendProtobuf(si, &identity.PinRequest{PIN: pin, Public: public}, nil); err != nil {
 		// Compare by string because we are on the client, and we will be
 		// be receiving a new error made locally by onet, not the original error.
@@ -147,7 +147,7 @@ func adminStore(c *cli.Context) error {
 		log.Fatal("not linked")
 	}
 
-	client := onet.NewClient(identity.ServiceName, cothority.Suite)
+	client := onet.NewClient(cothority.Suite, identity.ServiceName)
 
 	finalName := c.Args().First()
 	buf, err := ioutil.ReadFile(finalName)
@@ -197,7 +197,7 @@ func adminAdd(c *cli.Context) error {
 		log.Fatal("not linked")
 	}
 
-	client := onet.NewClient(identity.ServiceName, cothority.Suite)
+	client := onet.NewClient(cothority.Suite, identity.ServiceName)
 
 	// keys processing
 	str := c.Args().First()

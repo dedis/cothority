@@ -30,7 +30,7 @@ type Client struct {
 
 // NewClient instantiates a new Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(Name, cothority.Suite)}
+	return &Client{Client: onet.NewClient(cothority.Suite, Name)}
 }
 
 // PinRequest takes a destination-address, a PIN and a public key as an argument.

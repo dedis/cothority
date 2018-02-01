@@ -125,7 +125,7 @@ func main() {
 						if c.GlobalIsSet("debug") {
 							log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 						}
-						app.InteractiveConfig(BinaryName, cothority.Suite)
+						app.InteractiveConfig(cothority.Suite, BinaryName)
 						return nil
 					},
 				},

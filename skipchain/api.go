@@ -19,7 +19,7 @@ type Client struct {
 
 // NewClient instantiates a new client with name 'n'
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient("Skipchain", cothority.Suite)}
+	return &Client{Client: onet.NewClient(cothority.Suite, "Skipchain")}
 }
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and eventually

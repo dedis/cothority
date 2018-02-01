@@ -13,7 +13,7 @@ type Client struct {
 
 // NewClient makes a new Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(ServiceName, cothority.Suite)}
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
 // Request sends requests to all other members of network and creates client.
