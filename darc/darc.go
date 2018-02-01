@@ -528,9 +528,9 @@ func (id *Identity) Verify(msg, sig []byte) error {
 	case 0:
 		return errors.New("cannot verify a darc-signature")
 	case 1:
-		return schnorr.Verify(cothority.Suite, id.Ed25519.Point, msg, sig)
+		return id.Ed25519.Verify(msg, sig)
 	case 2:
-		return errors.New("cannot verify a keycard")
+		return id.Keycard.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -564,6 +564,12 @@ func (ide *IdentityEd25519) Equal(ide2 *IdentityEd25519) bool {
 	return ide.Point.Equal(ide2.Point)
 }
 
+// Verify returns nil if the signature is correct, or an error if something
+// fails.
+func (ide *IdentityEd25519) Verify(msg, sig []byte) error {
+	return schnorr.Verify(cothority.Suite, ide.Point, msg, sig)
+}
+
 // NewIdentityKeycard creates a new Keycard identity struct given a point
 func NewIdentityKeycard(public []byte) *Identity {
 	return &Identity{
@@ -576,6 +582,12 @@ func NewIdentityKeycard(public []byte) *Identity {
 // Equal returns true if both IdentityKeycard point to the same data.
 func (idkc *IdentityKeycard) Equal(idkc2 *IdentityKeycard) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
+}
+
+// Verify returns nil if the signature is correct, or an error if something
+// fails.
+func (idkc *IdentityKeycard) Verify(msg, sig []byte) error {
+	return errors.New("not yet implemented")
 }
 
 // NewSignerEd15529 initializes a new Ed25519Signer given a public and private keys.
@@ -594,6 +606,11 @@ func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
 // Sign creates a schnorr signautre on the message
 func (eds *Ed25519Signer) Sign(msg []byte) ([]byte, error) {
 	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
+}
+
+// NewSignerKeycard creates a new SignerKeycard - mostly for tests
+func NewSignerKeycard() *Signer {
+	return nil
 }
 
 // Sign creates a RSA signature on the message
