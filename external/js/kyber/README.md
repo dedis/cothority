@@ -12,16 +12,21 @@ Usage
 ```html
 <html>
   <head>
+    <meta charset="UTF-8">
     <script src="dist/bundle.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-	  var nist = kyber.group.nist;
+      var nist = kyber.group.nist;
       var p256 = new nist.Curve(nist.Params.p256);
-      console.log(p256.string()); // P256
+      var randomPoint = p256.point().pick();
+      var randomScalar = p256.scalar().pick();
+	  var product = p256.point().mul(randomScalar, randomPoint);
+      console.log(product.string(), randomPoint.string(), randomScalar.string());
     </script>
   </head>
   <body>
   </body>
 </html>
+
 ``` 
 
 Dev Setup
@@ -36,8 +41,7 @@ npm install
 Browser Build
 -------------
 
-`npm run-script build` will output a browserified `bundle.min.js` in the project
-root
+`npm run build` will output `dist/bundle.min.js` and `dist/bundle.node.min.js`
 
 Running Tests
 -------------
@@ -47,5 +51,5 @@ Execute `npm test` to run the unit tests.
 Generate Documentation
 ----------------------
 
-Execute `npm run-script doc` to generate JSDoc output in markdown format in
+Execute `npm run doc` to generate JSDoc output in markdown format in
 `doc/doc.md`
