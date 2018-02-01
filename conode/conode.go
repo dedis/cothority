@@ -57,7 +57,7 @@ func main() {
 				if c.String("debug") != "" {
 					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 				}
-				app.InteractiveConfig("conode", cothority.Suite)
+				app.InteractiveConfig(cothority.Suite, "conode")
 				return nil
 			},
 		},
