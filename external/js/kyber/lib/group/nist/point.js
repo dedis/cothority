@@ -3,11 +3,12 @@
 const BN = require("bn.js");
 const crypto = require("crypto");
 const Scalar = require("./scalar");
+const constants = require("../../constants");
 
 module.exports = Point;
 
 /**
- * @module group/nist
+ * @module group/nist/point
  */
 
 /**
@@ -347,8 +348,7 @@ Point.prototype.unmarshalBinary = function(bytes) {
   }
   let x = new BN(bytes.slice(1, 1 + byteLen), 16);
   let y = new BN(bytes.slice(1 + byteLen), 16);
-  let zero = new BN(0);
-  if (x.cmp(zero) === 0 && y.cmp(zero) === 0) {
+  if (x.cmp(constants.zeroBN) === 0 && y.cmp(constants.zeroBN) === 0) {
     this.ref.point = this.ref.curve.curve.point(null, null);
     return this;
   }

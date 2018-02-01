@@ -6,7 +6,7 @@ const crypto = require("crypto");
 module.exports = Scalar;
 
 /**
- * @module group/nist
+ * @module group/nist/scalar
  */
 
 /**

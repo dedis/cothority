@@ -6,11 +6,13 @@ const crypto = require("crypto");
 const elliptic = require("elliptic");
 const BN = require("bn.js");
 
+/*
+ * @module group/nist/curve
+ */
+
 /**
  * Class Weierstrass defines the weierstrass form of
  * elliptic curves
- *
- * @class
  */
 class Weierstrass {
   /**
@@ -25,7 +27,6 @@ class Weierstrass {
    * @param {(String|Uint8Array|BN.jsObject)} config.gx - x coordinate of the base point. Little Endian if string or Uint8Array
    * @param {(String|Uint8Array|BN.jsObject)} config.gy - y coordinate of the base point. Little Endian if string or Uint8Array
    * @param {number} config.bitSize - the size of the underlying field.
-   * @constructor
    */
   constructor(config) {
     let { name, bitSize, gx, gy, ...options } = config;
@@ -42,6 +43,11 @@ class Weierstrass {
     this.redN = BN.red(options.n);
   }
 
+  /**
+   * Returns the name of the curve
+   *
+   * @returns {string}
+   */
   string() {
     return this.name;
   }
@@ -50,19 +56,39 @@ class Weierstrass {
     return (this.bitSize + 7) >> 3;
   }
 
+  /**
+   * Returns the size in bytes of a scalar
+   *
+   * @returns {number}
+   */
   scalarLen() {
     return (this.curve.n.bitLength() + 7) >> 3;
   }
 
+  /**
+   * Returns the size in bytes of a point
+   *
+   * @returns {module:group/nist/scalar~Scalar}
+   */
   scalar() {
     return new Scalar(this, this.redN);
   }
 
+  /**
+   * Returns the size in bytes of a point
+   *
+   * @returns {number}
+   */
   pointLen() {
     // ANSI X9.62: 1 header byte plus 2 coords
     return this._coordLen() * 2 + 1;
   }
 
+  /**
+   * Returns a new Point
+   *
+   * @returns {module:group/nist/point~Point}
+   */
   point() {
     return new Point(this);
   }
