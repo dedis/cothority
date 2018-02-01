@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 public class TestServerInit {
     private static final Logger logger = LoggerFactory.getLogger(TestServerInit.class);
     private TestServerController controllerImplementation;
+    private static String testWithoutDocker = System.getenv("TEST_WITHOUT_DOCKER");
 
     private static class Holder {
         private static final TestServerController INSTANCE = new TestServerInit().getControllerImplementation();
@@ -14,9 +15,12 @@ public class TestServerInit {
     public static TestServerController getInstance() {
         return Holder.INSTANCE;
     }
+    public static TestServerController getInstanceManual() {
+        testWithoutDocker = "yes";
+        return Holder.INSTANCE;
+    }
     private TestServerInit() {
         try {
-            String testWithoutDocker = System.getenv("TEST_WITHOUT_DOCKER");
 
             if (testWithoutDocker != null) {
                 logger.info("tests will not start docker with conodes for you. Remember to do it by your self");
