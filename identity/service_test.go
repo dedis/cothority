@@ -40,9 +40,8 @@ func TestService_CreateIdentity2(t *testing.T) {
 
 	ci.Sig = anon.Sign(tSuite, ci.Nonce,
 		set, ctx, 0, kp.Private)
-	msg, err := service.CreateIdentity(ci)
+	air, err := service.CreateIdentity(ci)
 	log.ErrFatal(err)
-	air := msg.(*CreateIdentityReply)
 
 	data := air.Data
 	id, ok := service.Identities[string(data.Hash)]
@@ -72,9 +71,8 @@ func TestService_CreateIdentity3(t *testing.T) {
 	ssig, err := schnorr.Sign(tSuite, kp.Private, ci.Nonce)
 	ci.SchnSig = &ssig
 	log.ErrFatal(err)
-	msg, err := service.CreateIdentity(ci)
+	air, err := service.CreateIdentity(ci)
 	log.ErrFatal(err)
-	air := msg.(*CreateIdentityReply)
 
 	data := air.Data
 	id, ok := service.Identities[string(data.Hash)]
