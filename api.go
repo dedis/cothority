@@ -32,7 +32,7 @@ type Client struct {
 // NewClient instantiates a new ocs.Client
 func NewClient() *Client {
 	return &Client{
-		Client: onet.NewClient(ServiceName, cothority.Suite),
+		Client: onet.NewClient(cothority.Suite, ServiceName),
 		sbc:    skipchain.NewClient(),
 	}
 }
