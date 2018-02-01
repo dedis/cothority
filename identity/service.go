@@ -206,7 +206,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 // It saves nonces in set
 // Replay attack is impossible, because after successful authentification nonce will
 // be deleted.
-func (s *Service) Authenticate(ap *Authenticate) (network.Message, error) {
+func (s *Service) Authenticate(ap *Authenticate) (*Authenticate, error) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
 	ap.Nonce = make([]byte, nonceSize)
 	random.Bytes(ap.Nonce, s.Suite().RandomStream())
@@ -216,7 +216,7 @@ func (s *Service) Authenticate(ap *Authenticate) (network.Message, error) {
 
 // CreateIdentity will register a new SkipChain and add it to our list of
 // managed identities.
-func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, error) {
+func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, error) {
 	ctx := []byte(ServiceName + s.ServerIdentity().String())
 	if _, ok := s.auth.nonces[string(ai.Nonce)]; !ok {
 		log.Error("Given nonce is not stored on ", s.ServerIdentity())
@@ -329,7 +329,7 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (network.Message, error) {
 }
 
 // DataUpdate returns a new data-update
-func (s *Service) DataUpdate(cu *DataUpdate) (network.Message, error) {
+func (s *Service) DataUpdate(cu *DataUpdate) (*DataUpdateReply, error) {
 	// Check if there is something new on the skipchain - in case we've been
 	// offline
 	sid := s.getIdentityStorage(cu.ID)
@@ -382,7 +382,7 @@ func (s *Service) ProposeSend(p *ProposeSend) (network.Message, error) {
 }
 
 // ProposeUpdate returns an eventual data-proposition
-func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (network.Message, error) {
+func (s *Service) ProposeUpdate(cnc *ProposeUpdate) (*ProposeUpdateReply, error) {
 	log.Lvl3(s, "Sending proposal-update to client")
 	sid := s.getIdentityStorage(cnc.ID)
 	if sid == nil {
