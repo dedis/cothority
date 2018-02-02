@@ -20,9 +20,9 @@ main(){
 		mkdir -p $cl
 	done
 	addr=()
-	addr[1]=127.0.0.1:2002
-	addr[2]=127.0.0.1:2004
-	addr[3]=127.0.0.1:2006
+	addr[1]=localhost:2002
+	addr[2]=localhost:2004
+	addr[3]=localhost:2006
 
 	test Build
 	test Check
@@ -47,7 +47,7 @@ main(){
 testMerge(){
 	MERGE_FILE="pop_merge.toml"
 	mkConfig 3 3 2 4
-	
+
 	# att1 - p1, p2; att2 - p2; att3 - p3;
 	runCl 1 org public ${pub[1]} ${pop_hash[1]}
 	runCl 2 org public ${pub[1]} ${pop_hash[1]}
@@ -99,9 +99,7 @@ testMerge(){
 			testOK runCl $i attendee verify msg1 ctx1 ${sig[$j]} ${tag[$j]} $merged_hash
 		done
 	done
-
 }
-
 
 testAtMultipleKey(){
 	mkConfig 2 2 2 3
@@ -404,7 +402,7 @@ EOF
 			local m=$(($n%$2 + 1))
 			sed -n "$((5*$m-4)),$((5*$m))p" public.toml >> pop_desc$n.toml
 		fi
-	done	
+	done
 	rm -f pop_merge.toml
 	for (( n=1; n<=$2; n++ ))
 	do

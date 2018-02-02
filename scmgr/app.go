@@ -763,18 +763,8 @@ func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
 
 func findLinkFromAddress(cfg *config, address string) (*link, error) {
 	var l *link
-	// Else search for the ip:port
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return nil, errors.New("invalid host:port option: " + err.Error())
-	}
-	resolved, err := net.ResolveIPAddr("ip", host)
-	if err != nil {
-		return nil, errors.New("invalid host: " + err.Error())
-	}
-	ipPort := net.JoinHostPort(resolved.String(), port)
 	for _, o := range cfg.Values.Link {
-		if o.Address == network.NewTCPAddress(ipPort) {
+		if o.Address == network.NewTCPAddress(address) {
 			l = o
 			break
 		}

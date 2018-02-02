@@ -129,8 +129,8 @@ testLink(){
 	ID=""
 	testFail [ -n "$ID" ]
 	testOK runSc link add co1/private.toml
-	testOK runSc follow add single 00 127.0.0.1:2002
-	testFail runSc follow add single 00 127.0.0.1:2004
+	testOK runSc follow add single 00 localhost:2002
+	testFail runSc follow add single 00 localhost:2004
 	setupGenesis
 	testOK [ -n "$ID" ]
 }
@@ -177,7 +177,7 @@ setupFour(){
 		co=co$n
 		rm -f $co/*
 		mkdir -p $co
-		echo -e "127.0.0.1:200$(( 2 * $n ))\nCot-$n\n$co\n" | dbgRun runCo $n setup
+		echo -e "localhost:200$(( 2 * $n ))\nCot-$n\n$co\n" | dbgRun runCo $n setup
 		if [ ! -f $co/public.toml ]; then
 			echo "Setup failed: file $co/public.toml is missing."
 			exit
@@ -236,9 +236,9 @@ testIndex(){
 	testFail runSc scdns index
 	testOK runSc scdns index $PWD
 	testGrep "$ID" cat index.js
-	testGrep "127.0.0.1" cat index.js
+	testGrep "localhost" cat index.js
 	testGrep "$ID" cat "$ID.js"
-	testGrep "127.0.0.1" cat "$ID.js"
+	testGrep "localhost" cat "$ID.js"
 	testNFile random.js
 	dbgOut ""
 }

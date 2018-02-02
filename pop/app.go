@@ -115,7 +115,7 @@ func orgLink(c *cli.Context) error {
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
 		// Compare by string because this comes over the network.
-		if err.Error() == service.ErrorReadPIN.Error() {
+		if strings.Contains(err.Error(), service.ErrorReadPIN.Error()) {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
