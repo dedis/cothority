@@ -411,10 +411,10 @@ EOF
 Location = "Earth, City$n"
 EOF
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((5*$n-4)),$((5*$n))p" public.toml >> pop_merge.toml
+		sed -n "$((5*$n-3)),$((5*$n))p" public.toml >> pop_merge.toml
 		local m=$(($n%$2 + 1))
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((5*$m-4)),$((5*$m))p" public.toml >> pop_merge.toml
+		sed -n "$((5*$m-3)),$((5*$m))p" public.toml >> pop_merge.toml
 	done
 }
 

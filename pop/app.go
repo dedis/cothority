@@ -141,21 +141,21 @@ func orgConfig(c *cli.Context) error {
 	pdFile := c.Args().First()
 	buf, err := ioutil.ReadFile(pdFile)
 	if err != nil {
-		return fmt.Errorf("error: %s - while reading: %s", err, pdFile)
+		return fmt.Errorf("error: %s - while reading pop-description: %s", err, pdFile)
 	}
 	err = decodePopDesc(string(buf), desc)
 	if err != nil {
-		return fmt.Errorf("error: %s - while decoding: %s", err, pdFile)
+		return fmt.Errorf("error: %s - while decoding pop-description: %s", err, pdFile)
 	}
 	if c.NArg() == 2 {
 		mergeFile := c.Args().Get(1)
 		buf, err = ioutil.ReadFile(mergeFile)
 		if err != nil {
-			return fmt.Errorf("error: %s - while reading: %s", err, mergeFile)
+			return fmt.Errorf("error: %s - while reading merge_party: %s", err, mergeFile)
 		}
 		desc.Parties, err = decodeGroups(string(buf))
 		if err != nil {
-			return fmt.Errorf("error: %s - while decoding: %s", err, mergeFile)
+			return fmt.Errorf("error: %s - while decoding merge_party: %s", err, mergeFile)
 		}
 
 		// Check that current party is included in merge config
@@ -653,6 +653,7 @@ type shortDescGroupToml struct {
 // decode config of several groups into array of rosters
 func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 	decodedGroups := make(map[string][]shortDescGroupToml)
+	log.Print(buf)
 	_, err := toml.Decode(buf, &decodedGroups)
 	if err != nil {
 		return []*service.ShortDesc{}, err
