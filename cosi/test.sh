@@ -80,9 +80,9 @@ setupServers(){
     SERVERS=cl$CLIENT/servers.toml
     rm -f srv1/*
     rm -f srv2/*
-    runSrvCfg 1 
+    runSrvCfg 1
     cp srv1/public.toml $SERVERS
-    runSrvCfg 2 
+    runSrvCfg 2
     echo >> $SERVERS
     cat srv2/public.toml >> $SERVERS
     runSrv 1
@@ -98,7 +98,7 @@ runCl(){
 }
 
 runSrvCfg(){
-    echo -e "127.0.0.1:200$(( 2 * $1 ))\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
+    echo -e "localhost:200$(( 2 * $1 ))\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
 }
 
 runSrv(){

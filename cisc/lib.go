@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"errors"
 	"io/ioutil"
@@ -17,7 +18,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
-	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -27,31 +28,29 @@ import (
 
 func init() {
 	network.RegisterMessage(ciscConfig{})
-	network.RegisterMessage(keyPair{})
-}
-
-type keyPair struct {
-	Public  kyber.Point
-	Private kyber.Scalar
 }
 
 type ciscConfig struct {
-	*identity.Identity
+	// Identities is a slice of all identities we have the
+	// private key for.
+	Identities []*identity.Identity
+	// Follow is the identities we're following and where we search for new
+	// ssh public keys to include in our authorized_keys.
 	Follow []*identity.Identity
 	// admin key pairs. Key of map is address of conode
-	KeyPairs map[string]*keyPair
+	KeyPairs map[string]*key.Pair
 }
 
 func newCiscConfig(i *identity.Identity) *ciscConfig {
-	return &ciscConfig{Identity: i,
-		KeyPairs: make(map[string]*keyPair)}
+	return &ciscConfig{Identities: []*identity.Identity{i},
+		KeyPairs: make(map[string]*key.Pair)}
 }
 
 // loadConfig will try to load the configuration and `fatal` if it is there but
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
 func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
-	cfg = newCiscConfig(&identity.Identity{})
+	cfg = &ciscConfig{KeyPairs: make(map[string]*key.Pair)}
 	loaded = true
 
 	configFile := getConfig(c)
@@ -66,7 +65,9 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	log.ErrFatal(err)
 	cfg, loaded = msg.(*ciscConfig)
-	cfg.Identity.Client = onet.NewClient(cothority.Suite, identity.ServiceName)
+	for _, i := range cfg.Identities {
+		i.Client = onet.NewClient(cothority.Suite, identity.ServiceName)
+	}
 	for _, f := range cfg.Follow {
 		f.Client = onet.NewClient(cothority.Suite, identity.ServiceName)
 	}
@@ -84,8 +85,10 @@ func loadConfigOrFail(c *cli.Context) *ciscConfig {
 	if !loaded {
 		log.Fatal("Couldn't load configuration-file")
 	}
-	log.ErrFatal(cfg.DataUpdate())
-	log.ErrFatal(cfg.ProposeUpdate())
+	for _, id := range cfg.Identities {
+		log.ErrFatal(id.DataUpdate())
+		log.ErrFatal(id.ProposeUpdate())
+	}
 	return cfg
 }
 
@@ -115,10 +118,10 @@ func (cfg *ciscConfig) saveConfig(c *cli.Context) error {
 }
 
 // convenience function to send and vote a proposition and update.
-func (cfg *ciscConfig) proposeSendVoteUpdate(p *identity.Data) {
-	log.ErrFatal(cfg.ProposeSend(p))
-	log.ErrFatal(cfg.ProposeVote(true))
-	log.ErrFatal(cfg.DataUpdate())
+func (cfg *ciscConfig) proposeSendVoteUpdate(id *identity.Identity, p *identity.Data) {
+	log.ErrFatal(id.ProposeSend(p))
+	log.ErrFatal(id.ProposeVote(true))
+	log.ErrFatal(id.DataUpdate())
 }
 
 // writes the ssh-keys to an 'authorized_keys.cisc'-file. If
@@ -148,44 +151,62 @@ func (cfg *ciscConfig) writeAuthorizedKeys(c *cli.Context) {
 }
 
 // showDifference compares the propose and the config-part
-func (cfg *ciscConfig) showDifference() {
-	if cfg.Proposed == nil {
+func (cfg *ciscConfig) showDifference(id *identity.Identity) {
+	if id.Proposed == nil {
 		log.Info("No proposed config found")
 		return
 	}
-	for k, v := range cfg.Proposed.Storage {
-		orig, ok := cfg.Data.Storage[k]
+	for k, v := range id.Proposed.Storage {
+		orig, ok := id.Data.Storage[k]
 		if !ok || v != orig {
 			log.Infof("New or changed key: %s/%s", k, v)
 		}
 	}
-	for k := range cfg.Data.Storage {
-		_, ok := cfg.Proposed.Storage[k]
+	for k := range id.Data.Storage {
+		_, ok := id.Proposed.Storage[k]
 		if !ok {
 			log.Info("Deleted key:", k)
 		}
 	}
-	for dev, pub := range cfg.Proposed.Device {
-		if _, exists := cfg.Data.Device[dev]; !exists {
+	for dev, pub := range id.Proposed.Device {
+		if _, exists := id.Data.Device[dev]; !exists {
 			log.Infof("New device: %s / %s", dev,
 				pub.Point.String())
 		}
 	}
-	for dev := range cfg.Data.Device {
-		if _, exists := cfg.Proposed.Device[dev]; !exists {
+	for dev := range id.Data.Device {
+		if _, exists := id.Proposed.Device[dev]; !exists {
 			log.Info("Deleted device:", dev)
 		}
+	}
+	if id.Proposed.Roster != nil {
+		log.Info("Changing roster:")
+		log.Info("Old:", id.Data.Roster.List)
+		log.Info("New:", id.Proposed.Roster.List)
 	}
 }
 
 // shows only the keys, but not the data
-func (cfg *ciscConfig) showKeys() {
-	for d := range cfg.Data.Device {
+func (cfg *ciscConfig) showKeys(id *identity.Identity) {
+	for d := range id.Data.Device {
 		log.Info("Connected device", d)
 	}
-	for k := range cfg.Data.Storage {
+	for k := range id.Data.Storage {
 		log.Info("Key set", k)
 	}
+}
+
+func (cfg *ciscConfig) findSC(idHex string) *identity.Identity {
+	id, err := hex.DecodeString(idHex)
+	if err != nil {
+		return nil
+	}
+	for _, i := range cfg.Identities {
+		if i.ID.FuzzyEqual(id) {
+			return i
+		}
+	}
+	return nil
 }
 
 // Returns the config-file from the configuration
