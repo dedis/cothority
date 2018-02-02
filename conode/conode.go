@@ -18,18 +18,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
-	"gopkg.in/urfave/cli.v1"
-
 	"github.com/dedis/cothority/cosi/check"
 	_ "github.com/dedis/cothority/cosi/service"
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
+	"github.com/dedis/onet/log"
+	"gopkg.in/urfave/cli.v1"
 )
 
 const (
@@ -91,7 +92,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: app.GetDefaultConfigFile("conode"),
+			Value: path.Join(cfgpath.GetConfigPath("conode"), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}
