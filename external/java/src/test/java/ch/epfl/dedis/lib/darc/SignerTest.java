@@ -43,8 +43,8 @@ public class SignerTest {
 
     @Test
     void keycard() throws Exception {
-        SignerKeycard signer = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
-        SignerKeycard signer2 = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerX509EC signer = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
+        SignerX509EC signer2 = new TestSignerKeycard("secp256k1-pkcs8.der", "secp256k1-pub.der");
 
         assertThrows(CothorityCryptoException.class, () -> signer.getPrivate());
         assertThrows(IllegalStateException.class, () -> signer.serialize());

@@ -33,7 +33,7 @@ message Identity {
   // 	 Public-key identity
   optional IdentityEd25519 ed25519 = 2;
   // 	 Public-key identity
-  optional IdentityKeycard keycard = 3;
+  optional IdentityX509EC x509ec = 3;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -41,8 +41,8 @@ message IdentityEd25519 {
   required bytes point = 1;
 }
 
-// IdentityKeycard holds a public key from a keycard
-message IdentityKeycard {
+// IdentityX509EC holds a public key from a X509EC
+message IdentityX509EC {
   required bytes public = 1;
 }
 
@@ -71,10 +71,9 @@ message SignaturePath {
 }
 
 // Signer is a generic structure that can hold different types of signers
-// TODO Make it an interface
 message Signer {
   optional SignerEd25519 ed25519 = 1;
-  optional SignerKeycard keycard = 2;
+  optional SignerX509EC x509ec = 2;
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -83,9 +82,9 @@ message SignerEd25519 {
   required bytes secret = 2;
 }
 
-// SignerKeycard holds a public and private keys necessary to sign Darcs,
+// SignerX509EC holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
-message SignerKeycard {
+message SignerX509EC {
   required bytes point = 1;
   required bytes secret = 2;
 }

@@ -62,7 +62,7 @@ type Identity struct {
 	// Public-key identity
 	Ed25519 *IdentityEd25519
 	// Public-key identity
-	Keycard *IdentityKeycard
+	X509EC *IdentityX509EC
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -70,8 +70,8 @@ type IdentityEd25519 struct {
 	Point kyber.Point
 }
 
-// IdentityKeycard holds a public key from a keycard
-type IdentityKeycard struct {
+// IdentityX509EC holds a public key from a X509EC
+type IdentityX509EC struct {
 	Public []byte
 }
 
@@ -102,7 +102,7 @@ type SignaturePath struct {
 // Signer is a generic structure that can hold different types of signers
 type Signer struct {
 	Ed25519 *SignerEd25519
-	Keycard *SignerKeycard
+	X509EC  *SignerX509EC
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -111,9 +111,9 @@ type SignerEd25519 struct {
 	Secret kyber.Scalar
 }
 
-// SignerKeycard holds a public and private keys necessary to sign Darcs,
+// SignerX509EC holds a public and private keys necessary to sign Darcs,
 // but the private key will not be given out.
-type SignerKeycard struct {
+type SignerX509EC struct {
 	Point  []byte
 	secret []byte
 }

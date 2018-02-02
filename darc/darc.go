@@ -411,7 +411,7 @@ func (s *Signer) Type() int {
 	switch {
 	case s.Ed25519 != nil:
 		return 1
-	case s.Keycard != nil:
+	case s.X509EC != nil:
 		return 2
 	default:
 		return -1
@@ -425,7 +425,7 @@ func (s *Signer) Identity() *Identity {
 	case 1:
 		return &Identity{Ed25519: &IdentityEd25519{Point: s.Ed25519.Point}}
 	case 2:
-		return &Identity{Keycard: &IdentityKeycard{Public: s.Keycard.Point}}
+		return &Identity{X509EC: &IdentityX509EC{Public: s.X509EC.Point}}
 	default:
 		return nil
 	}
@@ -442,7 +442,7 @@ func (s *Signer) Sign(msg []byte) ([]byte, error) {
 	case 1:
 		return s.Ed25519.Sign(msg)
 	case 2:
-		return s.Keycard.Sign(msg)
+		return s.X509EC.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -472,7 +472,7 @@ func (id *Identity) Equal(id2 *Identity) bool {
 	case 1:
 		return id.Ed25519.Equal(id2.Ed25519)
 	case 2:
-		return id.Keycard.Equal(id2.Keycard)
+		return id.X509EC.Equal(id2.X509EC)
 	}
 	return false
 }
@@ -485,7 +485,7 @@ func (id *Identity) Type() int {
 		return 0
 	case id.Ed25519 != nil:
 		return 1
-	case id.Keycard != nil:
+	case id.X509EC != nil:
 		return 2
 	}
 	return -1
@@ -499,7 +499,7 @@ func (id *Identity) String() string {
 	case 1:
 		return fmt.Sprintf("Ed25519: %s", id.Ed25519.Point.String())
 	case 2:
-		return fmt.Sprintf("Keycard: %x", id.Keycard.Public)
+		return fmt.Sprintf("X509EC: %x", id.X509EC.Public)
 	default:
 		return fmt.Sprintf("No identity")
 	}
@@ -514,7 +514,7 @@ func (id *Identity) Verify(msg, sig []byte) error {
 	case 1:
 		return id.Ed25519.Verify(msg, sig)
 	case 2:
-		return id.Keycard.Verify(msg, sig)
+		return id.X509EC.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -554,17 +554,17 @@ func (ide *IdentityEd25519) Verify(msg, sig []byte) error {
 	return schnorr.Verify(cothority.Suite, ide.Point, msg, sig)
 }
 
-// NewIdentityKeycard creates a new Keycard identity struct given a point
-func NewIdentityKeycard(public []byte) *Identity {
+// NewIdentityX509EC creates a new X509EC identity struct given a point
+func NewIdentityX509EC(public []byte) *Identity {
 	return &Identity{
-		Keycard: &IdentityKeycard{
+		X509EC: &IdentityX509EC{
 			Public: public,
 		},
 	}
 }
 
-// Equal returns true if both IdentityKeycard point to the same data.
-func (idkc *IdentityKeycard) Equal(idkc2 *IdentityKeycard) bool {
+// Equal returns true if both IdentityX509EC point to the same data.
+func (idkc *IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
 }
 
@@ -575,7 +575,7 @@ type sigRS struct {
 
 // Verify returns nil if the signature is correct, or an error if something
 // fails.
-func (idkc *IdentityKeycard) Verify(msg, s []byte) error {
+func (idkc *IdentityX509EC) Verify(msg, s []byte) error {
 	public, err := x509.ParsePKIXPublicKey(idkc.Public)
 	if err != nil {
 		return err
@@ -611,12 +611,12 @@ func (eds *SignerEd25519) Sign(msg []byte) ([]byte, error) {
 	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
 }
 
-// NewSignerKeycard creates a new SignerKeycard - mostly for tests
-func NewSignerKeycard() *Signer {
+// NewSignerX509EC creates a new SignerX509EC - mostly for tests
+func NewSignerX509EC() *Signer {
 	return nil
 }
 
 // Sign creates a RSA signature on the message
-func (kcs *SignerKeycard) Sign(msg []byte) ([]byte, error) {
+func (kcs *SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }

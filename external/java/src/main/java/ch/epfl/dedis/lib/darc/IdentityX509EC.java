@@ -15,23 +15,23 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 /**
- * IdentityKeycard represents a keycard that holds its private key and can only be used to sign
+ * IdentityX509EC represents a keycard that holds its private key and can only be used to sign
  * but which will not reveal its private key.
  */
-public class IdentityKeycard implements Identity {
+public class IdentityX509EC implements Identity {
     private final PublicKey pubKey;
 
     /**
-     * Creates an IdentityKeycard from a protobuf representation.
+     * Creates an IdentityX509EC from a protobuf representation.
      * @param proto
      */
-    public IdentityKeycard(DarcProto.IdentityKeycard proto) throws CothorityCryptoException {
+    public IdentityX509EC(DarcProto.IdentityKeycard proto) throws CothorityCryptoException {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(proto.getPublic().toByteArray());
             pubKey = keyFactory.generatePublic(pubSpec);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            throw new CothorityCryptoException("Unable to deserialise IdentityKeycard identity", e);
+            throw new CothorityCryptoException("Unable to deserialise IdentityX509EC identity", e);
         }
     }
 
@@ -39,9 +39,9 @@ public class IdentityKeycard implements Identity {
      * Creates an IdentityEd25519 from a SignerEd25519.
      * @param signer
      */
-    public IdentityKeycard(Signer signer) throws CothorityCryptoException{
-        if (SignerKeycard.class.isInstance(signer)) {
-            pubKey = ((SignerKeycard) signer).getPublicKey();
+    public IdentityX509EC(Signer signer) throws CothorityCryptoException{
+        if (SignerX509EC.class.isInstance(signer)) {
+            pubKey = ((SignerX509EC) signer).getPublicKey();
         } else {
             throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
         }
@@ -91,8 +91,8 @@ public class IdentityKeycard implements Identity {
     public boolean equals(Object other) {
         if (other == null) return false;
         if (other == this) return true;
-        if (!(other instanceof IdentityKeycard))return false;
-        IdentityKeycard otherEd = (IdentityKeycard) other;
+        if (!(other instanceof IdentityX509EC))return false;
+        IdentityX509EC otherEd = (IdentityX509EC) other;
         return Arrays.equals(pubKey.getEncoded(), otherEd.pubKey.getEncoded());
     }
 }

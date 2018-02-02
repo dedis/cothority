@@ -13,7 +13,7 @@ public class IdentityFactory {
         } else if (proto.hasDarc()) {
             return new IdentityDarc(proto.getDarc());
         } else if (proto.hasKeycard()) {
-            return new IdentityKeycard(proto.getKeycard());
+            return new IdentityX509EC(proto.getKeycard());
         } else {
             throw new CothorityCryptoException("No identity present");
         }
@@ -27,8 +27,8 @@ public class IdentityFactory {
     public static Identity New(Signer signer) throws CothorityCryptoException {
         if (SignerEd25519.class.isInstance(signer)) {
             return new IdentityEd25519(signer);
-        } else if (SignerKeycard.class.isInstance(signer)) {
-            return new IdentityKeycard(signer);
+        } else if (SignerX509EC.class.isInstance(signer)) {
+            return new IdentityX509EC(signer);
         } else {
             throw new CothorityCryptoException("Cannot make Identity out of " + signer.toString());
         }

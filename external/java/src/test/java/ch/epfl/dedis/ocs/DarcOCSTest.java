@@ -42,8 +42,8 @@ public class DarcOCSTest {
 
     @Test
     void keycardSignature() throws Exception{
-        SignerKeycard kcsigner = new TestSignerKeycard();
-        SignerKeycard kcsigner2 = new TestSignerKeycard();
+        SignerX509EC kcsigner = new TestSignerKeycard();
+        SignerX509EC kcsigner2 = new TestSignerKeycard();
         Darc adminDarc2;
         adminDarc2 = ocs.addIdentityToDarc(adminDarc, kcsigner.getIdentity(), admin, SignaturePath.OWNER);
 
