@@ -4,7 +4,9 @@ const topl = require('topl');
 const UUID = require('pure-uuid');
 const protobuf = require('protobufjs')
 
+
 const misc = require('../misc/misc.js');
+const root = require('../protobuf/index.js').root;
 
 const BASE64 = require("base-64");
 const UTF8 = require("utf8");
@@ -19,12 +21,12 @@ const UTF8 = require("utf8");
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */
-function Socket(path, messages) {
+function Socket(path) {
     if (typeof protobuf !== 'object')
 	    throw new TypeError;
 
     this.url = path;
-    this.protobuf = messages;
+    this.protobuf = root;
 
    /**
     * Send transmits data to a given url and parses the response.

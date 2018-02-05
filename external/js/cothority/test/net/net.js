@@ -29,7 +29,7 @@ describe("sockets", () =>  {
             mockServer.send(marshalled);
         });
 
-        const socket = new network.Socket(serverAddr,root);
+        const socket = new network.Socket(serverAddr);
         socket.send(deviceProtoName,idProtoName,deviceMessage).then((data) => {
             expect(data.id).to.deep.equal(deviceMessage.point);
             mockServer.stop(done);
