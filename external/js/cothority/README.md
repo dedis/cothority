@@ -57,3 +57,14 @@ You should be able to run the tests with
 ```
 npm run test
 ```
+
+## Protobuf generation
+
+To add a new protobuf file to the library, simply place your `*.proto` file
+somewhere in `lib/protobuf/build/models` and then run 
+```
+npm run protobuf
+```
+
+That would compile all protobuf definitions into a single JSON file
+(`models.json`). This json file is then embedded in the library automatically.
