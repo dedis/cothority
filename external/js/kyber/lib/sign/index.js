@@ -3,5 +3,5 @@
 const schnorr = require("./schnorr/schnorr.js");
 
 module.exports = {
-    schnorr
+  schnorr
 };
