@@ -341,7 +341,7 @@ func attCreate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Private: %s\nPublic: %s", secStr, pubStr)
+	log.Infof("Private: %s\nPublic: %s", secStr, pubStr)
 	return nil
 }
 
@@ -653,7 +653,6 @@ type shortDescGroupToml struct {
 // decode config of several groups into array of rosters
 func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 	decodedGroups := make(map[string][]shortDescGroupToml)
-	log.Print(buf)
 	_, err := toml.Decode(buf, &decodedGroups)
 	if err != nil {
 		return []*service.ShortDesc{}, err
