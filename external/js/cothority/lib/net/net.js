@@ -12,18 +12,18 @@ const UTF8 = require("utf8");
 /**
  * Socket is a WebSocket object instance through which protobuf messages are
  * sent to conodes.
- * @param {url} string conode identity
- * @param {path} string websocket path 
+ * @param {path} string websocket path. Composed from a node's address with the
+ *              websocket's service name
  * @param {object} protobufjs root messages. Usually just 
  *              use `require("cothority.protobuf").root`
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */
-function Socket(node, path, messages) {
+function Socket(path, messages) {
     if (typeof protobuf !== 'object')
-	throw new TypeError;
+	    throw new TypeError;
 
-    this.url = convertServerIdentityToWebSocket(node, path);
+    this.url = path;
     this.protobuf = messages;
 
    /**
@@ -146,3 +146,7 @@ function convertServerIdentityToWebSocket(serverIdentity, path){
 
     return "ws://" + parts.join(":") + path;
 }
+
+module.exports.Socket = Socket;
+module.exports.parseCothorityRoster = parseCothorityRoster;
+module.exports.getConodeFromRoster = getConodeFromRoster;
