@@ -40,5 +40,20 @@ messages.
 
 ``` 
 
+# Documentation
 
+You can find the markdown generated documentation in `doc/doc.md`.
 
+# Development
+
+You need to have `npm` installed. Then
+```go
+git clone https://github.com/dedis/cothority"
+cd cothority/external/js/cothority
+npm install
+```
+
+You should be able to run the tests with 
+```
+npm run test
+```
