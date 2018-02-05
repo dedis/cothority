@@ -2,6 +2,7 @@
 
 const BN = require("bn.js");
 const crypto = require("crypto");
+const random = require("../../random");
 
 module.exports = Scalar;
 
@@ -185,8 +186,7 @@ Scalar.prototype.toString = function() {
  */
 Scalar.prototype.pick = function(callback) {
   callback = callback || crypto.randomBytes;
-  let buff = callback(this.ref.curve.scalarLen());
-  let bytes = Uint8Array.from(buff);
+  let bytes = random.int(this.ref.curve.curve.n, callback);
   this.setBytes(bytes);
   return this;
 };
@@ -222,6 +222,10 @@ Scalar.prototype.unmarshalBinary = function(bytes) {
 
   if (bytes.length !== this.marshalSize()) {
     throw new Error("bytes.length != marshalSize");
+  }
+  let bnObj = new BN(bytes, 16);
+  if (bnObj.cmp(this.ref.curve.curve.n) > 0) {
+    throw new Error("bytes > q");
   }
   this.setBytes(bytes);
 };
