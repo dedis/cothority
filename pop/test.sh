@@ -358,8 +358,7 @@ testAtCreate(){
 	testOK runCl 1 attendee create
 	runDbgCl 2 1 attendee create > keypair.1
 	runDbgCl 2 1 attendee create > keypair.2
-	cmp keypair.1 keypair.2
-	testOK [ $? -eq 1 ]
+	testFail cmp keypair.1 keypair.2
 }
 
 priv=()
@@ -396,11 +395,11 @@ EOF
 	done
 	for (( n=1; n<=$2; n++ ))
 	do
-	        sed -n "$((5*$n-4)),$((5*$n))p" public.toml >> pop_desc$n.toml
+			cat co$n/public.toml >> pop_desc$n.toml
 		if [[ $2 -gt 1 ]]
 		then
 			local m=$(($n%$2 + 1))
-			sed -n "$((5*$m-4)),$((5*$m))p" public.toml >> pop_desc$n.toml
+			cat co$m/public.toml >> pop_desc$n.toml
 		fi
 	done
 	rm -f pop_merge.toml
@@ -411,10 +410,10 @@ EOF
 Location = "Earth, City$n"
 EOF
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((5*$n-3)),$((5*$n))p" public.toml >> pop_merge.toml
+		tail -n +2 co$n/public.toml >> pop_merge.toml
 		local m=$(($n%$2 + 1))
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((5*$m-3)),$((5*$m))p" public.toml >> pop_merge.toml
+		tail -n +2 co$m/public.toml >> pop_merge.toml
 	done
 }
 
