@@ -5,7 +5,7 @@ const protobuf = require("./protobuf");
 const misc = require("./misc/misc.js");
 
 module.exports =  {
-    net
-    protobuf
+    net,
+    protobuf,
     misc
 };
