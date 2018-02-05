@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "RandomProto";
+
+message RandomRequest {
+}
+
+message RandomResponse {
+    required bytes r = 1;
+    required Transcript t = 2;
+
+    message Transcript {
+        required sint32 nodes = 1;
+        required sint32 groups = 2;
+        required string purpose = 3;
+        required fixed64 time = 4;
+    }
+}

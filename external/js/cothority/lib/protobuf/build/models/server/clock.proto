@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+import "roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "ClockProto";
+
+message ClockRequest {
+    required Roster roster = 1;
+}
+
+message ClockResponse {
+    required double time = 1;
+    required sint32 children = 2;
+}

@@ -1,0 +1,9 @@
+syntax = "proto2";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "PinProto";
+
+message PinRequest {
+    required string pin = 1;
+    required bytes public = 2;
+}
