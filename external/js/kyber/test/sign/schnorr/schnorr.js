@@ -5,16 +5,16 @@ const assert = chai.assert;
 const kyber = require("../../../index.js");
 const schnorr = kyber.sign.schnorr;
 // XXX to be changed to an interface style
-const nist = kyber.group.nist;      
+const nist = kyber.group.nist;
 var group = new nist.Curve(nist.Params.p256);
 const secretKey = group.scalar().pick();
 const publicKey = group.point().mul(secretKey,null);
 const scalarLen = group.scalarLen()
 const pointLen = group.pointLen();
 const message = new Uint8Array([1,2,3,4]);
-    
+
 describe("schnorr signature", () => {
-   
+
     it("fails with wrong suite input", () => {
         chai.expect(schnorr.sign.bind(null,new Number(2),null,null)).to.throw("first argument must be a suite");
     });
@@ -32,7 +32,7 @@ describe("schnorr signature", () => {
         var sigSize = scalarLen + pointLen;
         chai.expect(sig).to.be.an.instanceof(Uint8Array); 
         assert.lengthOf(sig,sigSize);
-        
+
     });
 });
 

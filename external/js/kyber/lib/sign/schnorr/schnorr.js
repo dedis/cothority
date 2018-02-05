@@ -1,6 +1,6 @@
 const group = require("./../../group");
 // XXX to be changed to an interface style
-const nist = group.nist;      
+const nist = group.nist;
 const curve = nist.Curve;
 const scalarCons = nist.Scalar;
 const pointCons = nist.Point;
@@ -32,10 +32,10 @@ function Sign(suite, privateKey, message) {
 
     // generate public key
     const pub = suite.point().mul(privateKey,null);
-    
+
     // generate challenge
-    const challenge = hashSchnorr(suite,buffR, pub.marshalBinary(), 
-                         message) 
+    const challenge = hashSchnorr(suite,buffR, pub.marshalBinary(),
+                         message)
 
     // generate signature
     const s = suite.scalar().mul(privateKey,challenge)
@@ -50,7 +50,7 @@ function Sign(suite, privateKey, message) {
 }
 
 /**
- * 
+ *
  * Verify verify if the signature of the message is valid under the given public
  * key.
  *
@@ -81,7 +81,7 @@ function Verify(suite, publicKey, message, signature) {
     if (signature.length != totalSize) {
         return false;
     }
-   
+
     // unmarshal R || s
     const buffR = signature.slice(0,plen);
     const R = suite.point();
