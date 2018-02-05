@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/dedis/cothority"
@@ -25,6 +26,7 @@ import (
 	_ "github.com/dedis/cothority/status/service"
 	_ "github.com/dedis/onchain-secrets/service"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -99,7 +101,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: app.GetDefaultConfigFile("cothority"),
+			Value: path.Join(cfgpath.GetConfigPath("cothority"), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}

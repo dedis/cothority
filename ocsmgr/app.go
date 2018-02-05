@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onchain-secrets"
 	"github.com/dedis/onchain-secrets/darc"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -110,7 +111,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "~/.config/ocs",
+			Value: cfgpath.GetConfigPath("ocs"),
 			Usage: "The configuration-directory for ocs",
 		},
 	}
