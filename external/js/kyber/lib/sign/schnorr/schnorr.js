@@ -50,7 +50,7 @@ function Sign(suite, privateKey, message) {
 
 /**
  *
- * Verify verify if the signature of the message is valid under the given public
+ * Verify verifies if the signature of the message is valid under the given public
  * key.
  *
  * @params suite suite to use
