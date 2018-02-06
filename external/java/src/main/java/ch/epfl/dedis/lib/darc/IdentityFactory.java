@@ -12,8 +12,8 @@ public class IdentityFactory {
             return new IdentityEd25519(proto.getEd25519());
         } else if (proto.hasDarc()) {
             return new IdentityDarc(proto.getDarc());
-        } else if (proto.hasKeycard()) {
-            return new IdentityX509EC(proto.getKeycard());
+        } else if (proto.hasX509Ec()) {
+            return new IdentityX509EC(proto.getX509Ec());
         } else {
             throw new CothorityCryptoException("No identity present");
         }

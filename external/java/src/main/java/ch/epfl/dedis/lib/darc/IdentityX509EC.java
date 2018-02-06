@@ -25,7 +25,7 @@ public class IdentityX509EC implements Identity {
      * Creates an IdentityX509EC from a protobuf representation.
      * @param proto
      */
-    public IdentityX509EC(DarcProto.IdentityKeycard proto) throws CothorityCryptoException {
+    public IdentityX509EC(DarcProto.IdentityX509EC proto) throws CothorityCryptoException {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(proto.getPublic().toByteArray());
@@ -77,9 +77,9 @@ public class IdentityX509EC implements Identity {
      */
     public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
-        DarcProto.IdentityKeycard.Builder bed = DarcProto.IdentityKeycard.newBuilder();
+        DarcProto.IdentityX509EC.Builder bed = DarcProto.IdentityX509EC.newBuilder();
         bed.setPublic(ByteString.copyFrom(pubKey.getEncoded()));
-        bid.setKeycard(bed);
+        bid.setX509Ec(bed);
         return bid.build();
     }
 
