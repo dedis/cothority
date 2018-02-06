@@ -3,6 +3,8 @@
 const topl = require('topl');
 const UUID = require('pure-uuid');
 const protobuf = require('protobufjs')
+const co = require('co');
+const shuffle = require("crypto-shuffle");
 
 
 const misc = require('../misc/misc.js');
@@ -14,18 +16,18 @@ const UTF8 = require("utf8");
 /**
  * Socket is a WebSocket object instance through which protobuf messages are
  * sent to conodes.
- * @param {path} string websocket path. Composed from a node's address with the
- *              websocket's service name
+ * @param {string} addr websocket address of the conode to contact.
+ * @param {string} service name. A socket is tied to a service name.
  * @param {object} protobufjs root messages. Usually just 
  *              use `require("cothority.protobuf").root`
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */
-function Socket(path) {
+function Socket(addr,service) {
     if (typeof protobuf !== 'object')
 	    throw new TypeError;
 
-    this.url = path;
+    this.url = addr + "/" + service;
     this.protobuf = root;
 
    /**
@@ -74,4 +76,37 @@ function Socket(path) {
    };
 }
 
+/*
+ * RosterSocket offers similar functionality from the Socket class but chooses
+ * a random conode when trying to connect. If a connection fails, it
+ * automatically retries to connect to another random server.
+ * */
+class RosterSocket {
+
+    constructor(addresses,service) {
+        this.addresses = addresses;
+        this.service = service;
+    }
+
+    send(request,response,data)  {
+        const fn = co.wrap(function *(addresses,service) {
+            shuffle(addresses)
+            for(var i=0; i < addresses.length; i++) {
+                var addr = addresses[i];
+                try {
+                    var socket = new Socket(addr,service);
+                    var data = yield socket.send(request,response,data);
+                    return Promise.resolve(data);
+                } catch (err) {
+                    console.log("could not reach out to " + addr);
+                    continue;
+                }
+            }
+            return Promise.reject("no conodes are available");
+        });
+        return fn(this.addresses,this.service);
+    }
+}
+
 module.exports.Socket = Socket;
+module.exports.RosterSocket = RosterSocket;

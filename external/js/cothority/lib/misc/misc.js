@@ -1,10 +1,8 @@
 'use strict';
 
-/** @module misc */
+const BASE64 = require("base-64");
+const UTF8 = require("utf8");
 
-exports.uint8ArrayToHex = uint8ArrayToHex;
-exports.hexToUint8Array = hexToUint8Array;
-exports.reverseHex = reverseHex;
 
 /**
  * Convert a byte buffer to a hexadecimal string.
@@ -15,7 +13,7 @@ exports.reverseHex = reverseHex;
  */
 function uint8ArrayToHex(buffer) {
     if (buffer.constructor !== Uint8Array)
-	throw new TypeError;
+	    throw new TypeError;
 
     return Array.from(buffer).map((element, index) => {
 	return ('00' + element.toString(16)).slice(-2);
@@ -38,23 +36,6 @@ function hexToUint8Array(hex) {
     });
 }
 
-/**
- * Reverse a hexadecimal string.
- * @param {string} hex
- *
- * @throws {TypeError} when hex is not a string
- * @return {string} reversed hex string
- */
-function reverseHex(hex) {
-    if (typeof hex !== 'string')
-	throw new TypeError;
-
-    let reversed = '';
-    for (let i = 0; i < hex.length-1; i += 2)
-	reversed = hex.substring(i, i+2) + reversed;
-
-    if (hex.length % 2 === 1)
-	reversed = hex[hex.length-1] + reversed;
-
-    return reversed;
-}
+/** @module misc */
+exports.uint8ArrayToHex = uint8ArrayToHex;
+exports.hexToUint8Array = hexToUint8Array;

@@ -17,6 +17,8 @@
   "license": "ISC",
   "dependencies": {
     "base-64": "^0.1.0",
+    "co": "^4.6.0",
+    "crypto-shuffle": "^1.0.1",
     "protobufjs": "^6.8.4",
     "pure-uuid": "^1.4.11",
     "topl": "^0.3.1",
