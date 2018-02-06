@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/dedis/fixbuf"
   packages = ["."]
-  revision = "9774cf687c0f09b0e619c17b033ff76a887be2eb"
-  version = "1.0.0"
+  revision = "ab1b75f8e6ddce7d35f726cde9fefffb74b97105"
+  version = "1.0.1"
 
 [[projects]]
   branch = "byzgen_poc"
@@ -58,8 +58,8 @@
 [[projects]]
   name = "github.com/dedis/protobuf"
   packages = ["."]
-  revision = "dadbfacaa0e2b61cf59ca31336e3c8bbdf064d6e"
-  version = "1.0.0"
+  revision = "9f837400795940f3980e1710416cda1263e5a648"
+  version = "1.0.1"
 
 [[projects]]
   name = "github.com/go-ole/go-ole"
