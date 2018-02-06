@@ -5,7 +5,7 @@ import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
-import ch.epfl.dedis.lib.darc.Ed25519Signer;
+import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.SkipBlockProto;
@@ -29,7 +29,7 @@ public class RestartError {
 
     @Test
     void Step1() throws CothorityException {
-        Signer admin = new Ed25519Signer();
+        Signer admin = new SignerEd25519();
         Darc adminDarc = new Darc(admin, null, null);
         OnchainSecretsRPC ocs = new OnchainSecretsRPC(roster, adminDarc);
         ocs.verify();

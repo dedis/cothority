@@ -32,13 +32,13 @@ public class DecryptKey {
         this.X = X;
     }
 
-    public byte[] getKeyMaterial(OCSProto.Write write, Signer reader) throws CothorityCryptoException {
+    public byte[] getKeyMaterial(OCSProto.Write write, Scalar reader) throws CothorityCryptoException {
         List<Point> Cs = new ArrayList<>();
         write.getCsList().forEach(cs -> Cs.add(new Point(cs)));
 
         // Use our private key to decrypt the re-encryption key and use it
         // to recover the symmetric key.
-        Scalar xc = reader.getPrivate().reduce();
+        Scalar xc = reader.reduce();
         Scalar xcInv = xc.negate();
         Point XhatDec = xcInv.scalarMult(X);
         Point Xhat = XhatEnc.add(XhatDec);

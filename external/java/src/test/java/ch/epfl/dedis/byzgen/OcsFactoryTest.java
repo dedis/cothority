@@ -2,7 +2,7 @@ package ch.epfl.dedis.byzgen;
 
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.darc.Ed25519Signer;
+import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -78,7 +78,7 @@ class OcsFactoryTest {
 
         // when
         SkipblockId genesis = ocsFactory.initialiseNewSkipchain(
-                new Ed25519Signer(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
+                new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
 
         // then
         assertNotNull(genesis);
@@ -106,7 +106,7 @@ class OcsFactoryTest {
                 .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
                 .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
-                .initialiseNewSkipchain(new Ed25519Signer(
+                .initialiseNewSkipchain(new SignerEd25519(
                         DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
     }
 }

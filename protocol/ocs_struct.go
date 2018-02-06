@@ -26,8 +26,12 @@ type VerifyRequest func(rc *Reencrypt) bool
 
 // Reencrypt asks for a re-encryption share from a node
 type Reencrypt struct {
-	U                kyber.Point
-	Xc               kyber.Point
+	// U is the point from the write-request
+	U kyber.Point
+	// Xc is the public key of the reader
+	Xc kyber.Point
+	// VerificationData is optional and can be any slice of bytes, so that each
+	// node can verify if the reencryption request is valid or not.
 	VerificationData *[]byte
 }
 

@@ -384,9 +384,14 @@ type SharedPublicReply struct {
 	X kyber.Point
 }
 
-// DecryptKeyRequest is sent to the service with the read-request
+// DecryptKeyRequest is sent to the service with the read-request. Optionally
+// it can be given an Ephemeral public key under which the reply should be
+// encrypted, but then a Signature on the key from the reader is needed.
 type DecryptKeyRequest struct {
 	Read skipchain.SkipBlockID
+	// optional
+	Ephemeral kyber.Point
+	Signature *darc.Signature
 }
 
 // DecryptKeyReply is sent back to the api with the key encrypted under the

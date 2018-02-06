@@ -166,7 +166,7 @@ public class Darc {
      * To evolve a darc, the latest valid darc needs to sign the new darc.
      * Only if one of the previous owners signs off on the new darc will it be
      * valid and accepted to sign on behalf of the old darc. The path can be nil
-     * unless if the previousOwner is an Ed25519Signer and found directly in the
+     * unless if the previousOwner is an SignerEd25519 and found directly in the
      * previous darc.
      *
      * @param previous

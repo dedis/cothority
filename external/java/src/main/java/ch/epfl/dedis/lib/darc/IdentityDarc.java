@@ -4,32 +4,32 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
-public class DarcIdentity implements Identity {
+public class IdentityDarc implements Identity {
     private DarcId darcID;
 
     /**
-     * Instantiates a DarcIdentity given its protobuf representation.
+     * Instantiates a IdentityDarc given its protobuf representation.
      *
      * @param proto
      */
-    public DarcIdentity(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
+    public IdentityDarc(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
         darcID = new DarcId(proto.getId().toByteArray());
     }
 
     /**
-     * Instantiates a DarcIdentity given a darc-id.
+     * Instantiates a IdentityDarc given a darc-id.
      *
      * @param darcID
      */
-    public DarcIdentity(DarcId darcID) {
+    public IdentityDarc(DarcId darcID) {
         this.darcID = darcID;
     }
 
     /**
-     * Instantiates a DarcIdentity given a darc.
+     * Instantiates a IdentityDarc given a darc.
      * @param darc
      */
-    public DarcIdentity(Darc darc)throws CothorityCryptoException{
+    public IdentityDarc(Darc darc)throws CothorityCryptoException{
         this(darc.getId());
     }
 

@@ -9,14 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DarcTest {
-    static Ed25519Signer owner;
-    static Ed25519Signer user;
+    static SignerEd25519 owner;
+    static SignerEd25519 user;
     static Darc darc;
 
     @BeforeAll
     static void initAll() throws CothorityCryptoException {
-        owner = new Ed25519Signer();
-        user = new Ed25519Signer();
+        owner = new SignerEd25519();
+        user = new SignerEd25519();
         darc = new Darc(owner, null, null);
     }
 

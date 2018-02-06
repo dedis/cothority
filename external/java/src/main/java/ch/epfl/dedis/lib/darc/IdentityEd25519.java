@@ -6,23 +6,23 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
-public class Ed25519Identity implements Identity {
+public class IdentityEd25519 implements Identity {
     private Point pub;
 
     /**
-     * Creates an Ed25519Identity from a protobuf representation.
+     * Creates an IdentityEd25519 from a protobuf representation.
      * @param proto
      */
-    public Ed25519Identity(DarcProto.IdentityEd25519 proto){
+    public IdentityEd25519(DarcProto.IdentityEd25519 proto){
         pub = new Point(proto.getPoint());
     }
 
     /**
-     * Creates an Ed25519Identity from a Ed25519Signer.
+     * Creates an IdentityEd25519 from a SignerEd25519.
      * @param signer
      */
-    public Ed25519Identity(Signer signer) throws CothorityCryptoException{
-        if (Ed25519Signer.class.isInstance(signer)) {
+    public IdentityEd25519(Signer signer) throws CothorityCryptoException{
+        if (SignerEd25519.class.isInstance(signer)) {
             pub = new Point(signer.getPublic());
         } else {
             throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
@@ -62,8 +62,8 @@ public class Ed25519Identity implements Identity {
     public boolean equals(Object other) {
         if (other == null) return false;
         if (other == this) return true;
-        if (!(other instanceof Ed25519Identity))return false;
-        Ed25519Identity otherEd = (Ed25519Identity) other;
+        if (!(other instanceof IdentityEd25519))return false;
+        IdentityEd25519 otherEd = (IdentityEd25519) other;
         return pub.equals(otherEd.pub);
     }
 }

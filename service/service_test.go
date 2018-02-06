@@ -31,7 +31,7 @@ func TestService_proof(t *testing.T) {
 	write := ocs.NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
 	write.Data = []byte{}
 	sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
-	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writerS)
+	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writer)
 	require.Nil(t, err)
 	wr, err := o.service.WriteRequest(&ocs.WriteRequest{
 		OCS:       o.sc.OCS.Hash,
@@ -42,7 +42,7 @@ func TestService_proof(t *testing.T) {
 	require.Nil(t, err)
 
 	// Making a read request
-	sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writerS)
+	sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writer)
 	require.Nil(t, err)
 	read := ocs.Read{
 		DataID:    wr.SB.Hash,
@@ -59,7 +59,9 @@ func TestService_proof(t *testing.T) {
 		Read: rr.SB.Hash,
 	})
 	require.Nil(t, err)
-	sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, o.writer.Secret)
+	priv, err := o.writer.GetPrivate()
+	require.Nil(t, err)
+	sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
 	require.Nil(t, err2)
 	require.Equal(t, encKey, sym)
 
@@ -97,14 +99,12 @@ func TestService_GetDarcPath(t *testing.T) {
 	defer o.local.CloseAll()
 
 	w := &darc.Darc{}
-	wDarcID := darc.NewDarcIdentity(w.GetID())
-	wID, err := darc.NewIdentity(wDarcID, nil)
+	wDarcID := darc.NewIdentityDarc(w.GetID())
 
 	newReader := o.readers.Copy()
-	require.Nil(t, err)
-	newReader.AddUser(wID)
+	newReader.AddUser(wDarcID)
 	path := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.Owner)
-	err = newReader.SetEvolution(o.readers, path, &darc.Signer{Ed25519: o.writer})
+	err := newReader.SetEvolution(o.readers, path, o.writer)
 	require.Nil(t, err)
 
 	_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
@@ -121,7 +121,7 @@ func TestService_GetDarcPath(t *testing.T) {
 	request := &ocs.GetDarcPath{
 		OCS:        o.sc.OCS.SkipChainID(),
 		BaseDarcID: o.readers.GetID(),
-		Identity:   *wID,
+		Identity:   *wDarcID,
 		Role:       int(darc.Owner),
 	}
 
@@ -141,8 +141,7 @@ type ocsStruct struct {
 	local    *onet.LocalTest
 	services []onet.Service
 	service  *Service
-	writer   *darc.Ed25519Signer
-	writerS  *darc.Signer
+	writer   *darc.Signer
 	writerI  *darc.Identity
 	readers  *darc.Darc
 	sc       *ocs.CreateSkipchainsReply
@@ -160,14 +159,12 @@ func createOCS(t *testing.T) *ocsStruct {
 	o.service = o.services[0].(*Service)
 
 	// Initializing onchain-secrets skipchain
-	o.writer = darc.NewEd25519Signer(nil, nil)
-	o.writerS = &darc.Signer{Ed25519: o.writer}
-	var err error
-	o.writerI, err = darc.NewIdentity(nil, darc.NewEd25519Identity(o.writer.Point))
-	require.Nil(t, err)
+	o.writer = darc.NewSignerEd25519(nil, nil)
+	o.writerI = o.writer.Identity()
 	o.readers = darc.NewDarc(nil, nil, nil)
 	o.readers.AddOwner(o.writerI)
 	o.readers.AddUser(o.writerI)
+	var err error
 	o.sc, err = o.service.CreateSkipchains(&ocs.CreateSkipchainsRequest{
 		Roster:  *roster,
 		Writers: *o.readers,

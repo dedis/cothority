@@ -19,13 +19,12 @@ func TestMain(m *testing.M) {
 }
 
 func TestUpdateDarc(t *testing.T) {
-	owner := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
-	ownerID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(owner.Ed25519.Point))
-	require.Nil(t, err)
-	user1 := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
-	user1ID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(user1.Ed25519.Point))
-	user2 := &darc.Signer{Ed25519: darc.NewEd25519Signer(nil, nil)}
-	user2ID, err := darc.NewIdentity(nil, darc.NewEd25519Identity(user2.Ed25519.Point))
+	owner := darc.NewSignerEd25519(nil, nil)
+	ownerID := owner.Identity()
+	user1 := darc.NewSignerEd25519(nil, nil)
+	user1ID := user1.Identity()
+	user2 := darc.NewSignerEd25519(nil, nil)
+	user2ID := user2.Identity()
 	owners := []*darc.Identity{ownerID}
 
 	darc0 := darc.NewDarc(&owners, nil, []byte("desc"))
