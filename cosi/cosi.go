@@ -5,10 +5,12 @@ package main
 
 import (
 	"os"
+	"path"
 	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -19,10 +21,6 @@ const (
 
 	// Version of the binary
 	Version = "1.00"
-
-	// DefaultGroupFile is the name of the default file to lookup for group
-	// definition
-	DefaultGroupFile = "public.toml"
 
 	optionGroup      = "group"
 	optionGroupShort = "g"
@@ -51,7 +49,7 @@ func main() {
 	clientFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  optionGroup + ", " + optionGroupShort,
-			Value: DefaultGroupFile,
+			Value: app.DefaultGroupFile,
 			Usage: "Cosi group definition file",
 		},
 	}
@@ -59,7 +57,7 @@ func main() {
 	serverFlags := []cli.Flag{
 		cli.StringFlag{
 			Name:  optionConfig + ", " + optionConfigShort,
-			Value: app.GetDefaultConfigFile(BinaryName),
+			Value: path.Join(cfgpath.GetConfigPath(BinaryName), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}
