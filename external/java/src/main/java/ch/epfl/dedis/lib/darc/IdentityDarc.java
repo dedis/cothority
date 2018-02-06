@@ -62,9 +62,25 @@ public class IdentityDarc implements Identity {
 
     /**
      * Return ID of DARC
+     *
      * @return ID of DARC
      */
     public DarcId getDarcId() {
         return darcID;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IdentityDarc that = (IdentityDarc) o;
+
+        return darcID != null ? darcID.equals(that.darcID) : that.darcID == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return darcID != null ? darcID.hashCode() : 0;
     }
 }

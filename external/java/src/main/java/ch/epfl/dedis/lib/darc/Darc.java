@@ -180,13 +180,13 @@ public class Darc {
         }
         boolean found = false;
         Identity signerId = IdentityFactory.New(previousOwner);
-        for (Identity id: path.getDarcs().get(path.getDarcs().size()-1).owners){
-            if (id.equals(signerId)){
+        for (Identity id : path.getDarcs().get(path.getDarcs().size() - 1).owners) {
+            if (id.equals(signerId)) {
                 found = true;
                 break;
             }
         }
-        if (!found){
+        if (!found) {
             throw new CothorityCryptoException("Wrong path: signer is not in last darc.");
         }
         baseid = previous.getBaseId();
@@ -273,6 +273,60 @@ public class Darc {
         addUser(IdentityFactory.New(signer));
     }
 
+    /*
+     * Remove a owner from the list of allowed signers.
+     *
+     * @param identity
+     */
+    public void removeOwner(Identity identity) {
+        owners.remove(identity);
+    }
+
+    /*
+     * Remove a owner from the list of allowed signers.
+     *
+     * @param darc
+     */
+    public void removeOwner(Darc darc) throws CothorityCryptoException {
+        owners.remove(IdentityFactory.New(darc));
+    }
+
+    /*
+     * Remove a owner from the list of allowed signers.
+     *
+     * @param signer
+     */
+    public void removeOwner(Signer signer) throws CothorityCryptoException{
+        owners.remove(IdentityFactory.New(signer));
+    }
+
+    /*
+     * Remove a user from the list of allowed signers.
+     *
+     * @param identity
+     */
+    public void removeUser(Identity identity) {
+        users.remove(identity);
+    }
+
+    /*
+     * Remove a user from the list of allowed signers.
+     *
+     * @param darc
+     */
+    public void removeUser(Darc darc) throws CothorityCryptoException {
+        users.remove(IdentityFactory.New(darc));
+    }
+
+    /*
+     * Remove a user from the list of allowed signers.
+     *
+     * @param signer
+     */
+    public void removeUser(Signer signer) throws CothorityCryptoException{
+        users.remove(IdentityFactory.New(signer));
+    }
+
     /**
      * Adds a owner to the list of allowed signers.
      *
@@ -318,6 +372,7 @@ public class Darc {
 
     /**
      * Retrun copy of current owners of DARC
+     *
      * @return list of owners
      */
     public List<Identity> getOwners() {
@@ -326,6 +381,7 @@ public class Darc {
 
     /**
      * Return copy of current users of DARC (users/dacs who can execute this DARC)
+     *
      * @return list of users
      */
     public List<Identity> getUsers() {
@@ -333,7 +389,7 @@ public class Darc {
     }
 
     public byte[] getData() {
-        if (data==null) {
+        if (data == null) {
             return null;
         }
         return Arrays.copyOf(data, data.length);

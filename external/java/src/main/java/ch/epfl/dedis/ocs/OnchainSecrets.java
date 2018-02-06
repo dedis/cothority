@@ -184,4 +184,36 @@ public class OnchainSecrets extends OnchainSecretsRPC {
         return new Document(write.getData().toByteArray(), keyMaterial, write.getExtradata().toByteArray(),
                 readerDarc, wrId);
     }
+
+
+    /**
+     * Remove identity from an existing darc under the given role. The darc must already be in its
+     * latest version, else it will be refused server-side by `updateDarc`. After the new darc is created,
+     * the darc is stored on the skipchain and returned as a value.
+     *
+     * @param darc     the latest version of the darc where an identity should be added to.
+     * @param identity the identity to be removed from the darc.
+     * @param signer   must be an owner of the darc.
+     * @param role     the role the new identity should have in the darc.
+     * @return the new darc
+     * @throws CothorityCommunicationException if the new darc could not be stored on the skipchain
+     * @throws CothorityCryptoException        if the signer could not sign the darc.
+     */
+    public Darc removeIdentityFromDarc(Darc darc, Identity identity, Signer signer, int role) throws CothorityCommunicationException, CothorityCryptoException {
+        Darc newDarc = darc.copy();
+        switch (role) {
+            case SignaturePath.USER:
+                newDarc.removeUser(identity);
+                break;
+            case SignaturePath.OWNER:
+                newDarc.removeOwner(identity);
+                break;
+            default:
+
+        }
+        SignaturePath path = getDarcPath(darc.getId(), signer, SignaturePath.OWNER);
+        newDarc.setEvolution(darc, path, signer);
+        updateDarc(newDarc);
+        return newDarc;
+    }
 }
