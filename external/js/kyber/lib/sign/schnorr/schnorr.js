@@ -1,9 +1,4 @@
-const group = require("./../../group");
-// XXX to be changed to an interface style
-const nist = group.nist;
-const curve = nist.Curve;
-const scalarCons = nist.Scalar;
-const pointCons = nist.Point;
+const group = require("../../group/group.js");
 
 const hash = require("hash.js");
 /**
@@ -15,10 +10,10 @@ const hash = require("hash.js");
  * @return signature as a Uint8Array
  * */
 function Sign(suite, privateKey, message) {
-  if (suite.constructor !== curve) {
+  if (!(suite instanceof group.Group)) {
     throw "first argument must be a suite";
   }
-  if (privateKey.constructor !== scalarCons) {
+  if (!(privateKey instanceof group.Scalar)) {
     throw "second argument must be a scalar";
   }
   if (message.constructor !== Uint8Array) {
@@ -60,10 +55,10 @@ function Sign(suite, privateKey, message) {
  * @return boolean true if signature is valid or false otherwise.
  * */
 function Verify(suite, publicKey, message, signature) {
-  if (suite.constructor !== curve) {
+  if (!(suite instanceof group.Group)) {
     throw "first argument must be a suite";
   }
-  if (publicKey.constructor !== pointCons) {
+  if (!(publicKey instanceof group.Point)) {
     throw "second argument must be a point";
   }
   if (message.constructor !== Uint8Array) {

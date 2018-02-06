@@ -5,6 +5,7 @@ const Point = require("./point");
 const crypto = require("crypto");
 const elliptic = require("elliptic");
 const BN = require("bn.js");
+const group = require("../group.js");
 
 /*
  * @module group/nist/curve
@@ -14,7 +15,7 @@ const BN = require("bn.js");
  * Class Weierstrass defines the weierstrass form of
  * elliptic curves
  */
-class Weierstrass {
+class Weierstrass extends group.Group {
   /**
    * Create a new Weierstrass Curve
    *
@@ -29,6 +30,7 @@ class Weierstrass {
    * @param {number} config.bitSize - the size of the underlying field.
    */
   constructor(config) {
+    super();
     let { name, bitSize, gx, gy, ...options } = config;
     this.name = name;
     options["g"] = [new BN(gx, 16, "le"), new BN(gy, 16, "le")];
