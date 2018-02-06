@@ -10,16 +10,17 @@ cache:
   - $HOME/.m2
 
 install:
-  - go get -t github.com/dedis/cothority/...
   - go get github.com/dedis/Coding || true
   # Because we are using "language: java" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
-  - git clone . `go env GOPATH`/src/github.com/dedis/onchain-secrets
-
+  - git clone . `go env GOPATH`/src/github.com/dedis/onchain-secrets  
+  - curl -fsSL -o /tmp/dep https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 && echo "31144e465e52ffbc0035248a10ddea61a09bf28b00784fd3fdd9882c8cbb2315  /tmp/dep" | sha256sum -c && chmod +x /tmp/dep
+  - ( cd `go env GOPATH`/src/github.com/dedis/onchain-secrets && /tmp/dep ensure -vendor-only -v )
+  
 script:
   - make test_fmt test_lint
   - make docker docker_test
-  - go test -v -short ./...
+  - (cd `go env GOPATH`/src/github.com/dedis/onchain-secrets && go test -v -short $(go list ./... | grep -v /vendor/) )
   - (cd external/java; mvn test)
 
 notifications:
