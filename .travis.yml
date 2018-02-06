@@ -21,6 +21,8 @@ matrix:
 
       before_install:
         - "cd external/js/kyber"
+      after_success:
+        - npm run coveralls
 
       notifications:
         email: false
