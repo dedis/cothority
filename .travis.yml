@@ -1,3 +1,25 @@
+language: node_js
+
+      node_js:
+        - "lts/*"
+        - "8"
+        - "7"
+
+      env:
+        - TEST_DIR=cothority
+        - TEST_DIR=kyber
+
+      before_install:
+        - "cd external/js/kyber"
+
+      script: cd $TEST_DIR && npm run test && npm run build
+
+      after_success:
+        - npm run coveralls
+
+      notifications:
+        email: false
+
 matrix:
   include:
     - language: go
@@ -6,27 +28,11 @@ matrix:
         - go get -t ./...
         - go get github.com/dedis/Coding || true
 
+      before_install:
+        - "cd $GOPATH/github.com/dedis/cothority"
+
       script:
         - make test
-
-      notifications:
-        email: false
-
-    - language: node_js
-
-      node_js:
-        - "lts/*"
-        - "8"
-        - "7"
-
-      env:
-        - TEST_DIR=external/js/cothority
-        - TEST_DIR=external/js/kyber
-
-      script: cd $TEST_DIR && npm install && npm run test && npm run build
-
-      after_success:
-        - npm run coveralls
 
       notifications:
         email: false
