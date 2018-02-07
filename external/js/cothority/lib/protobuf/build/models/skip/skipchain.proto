@@ -1,0 +1,21 @@
+syntax = "proto2";
+
+import "skipblock.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "SkipchainProto";
+
+message GetUpdateChain {
+    required bytes latestId = 1;
+}
+
+message GetUpdateChainReply {
+    repeated SkipBlock update = 1;
+}
+
+message GetAllSkipchains {
+}
+
+message GetAllSkipchainsReply {
+    repeated SkipBlock skipchains = 1;
+}

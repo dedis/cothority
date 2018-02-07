@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+import "desc.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "FinalStatementProto";
+
+message FinalStatement {
+    required PopDesc desc = 1;
+    repeated bytes attendees = 2;
+    required bytes signature = 3;
+    required bool merged = 4;
+}
+
+message FinalStatementToml {
+    required PopDescToml desc = 1;
+    repeated string attendees = 2;
+    required string signature = 3;
+    required bool merged = 4;
+}

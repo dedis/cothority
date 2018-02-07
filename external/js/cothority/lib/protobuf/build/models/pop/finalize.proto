@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+import "final.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "FinalizeProto";
+
+message FinalizeRequest {
+    required bytes descId = 1;
+    repeated bytes attendees = 2;
+    required bytes signature = 3;
+}
+
+message FinalizeResponse {
+    optional FinalStatement final = 1;
+}
+
+message FetchRequest {
+    required bytes id = 1;
+}
+
+message MergeRequest {
+    required bytes id = 1;
+    required bytes signature = 2;
+}

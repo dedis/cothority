@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+import "roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "SignatureProto";
+
+message SignatureRequest {
+    required bytes message = 1;
+    required Roster roster = 2;
+}
+
+message SignatureResponse {
+    required bytes hash = 1;
+    required bytes signature = 2;
+}

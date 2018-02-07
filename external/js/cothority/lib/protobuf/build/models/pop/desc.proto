@@ -1,0 +1,32 @@
+syntax = "proto2";
+
+import "../server/roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "PopDescProto";
+
+message PopDesc {
+    required string name = 1;
+    required string dateTime = 2;
+    required string location = 3;
+    required Roster roster = 4;
+    optional ShortDesc parties = 5;
+}
+
+message PopDescToml {
+    required string name = 1;
+    required string dateTime = 2;
+    required string location = 3;
+    repeated string roster = 4;
+    repeated bytes parties = 5;
+}
+
+message ShortDesc {
+    required string location = 1;
+    required Roster roster = 2;
+}
+
+message ShortDescToml {
+    required string location = 1;
+    repeated string roster = 2;
+}
