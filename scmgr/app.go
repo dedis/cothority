@@ -27,6 +27,7 @@ import (
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -63,8 +64,10 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
-			Name:  "config, c",
-			Value: "~/.config/scmgr/config.bin",
+			Name: "config, c",
+			// we use GetDataPath because only non-human-readable
+			// data files are stored here
+			Value: cfgpath.GetDataPath("scmgr"),
 			Usage: "path to config-file",
 		},
 	}
@@ -649,7 +652,7 @@ func getConfigOrFail(c *cli.Context) *config {
 }
 
 func loadConfig(c *cli.Context) (*config, error) {
-	cfgPath := app.TildeToHome(c.GlobalString("config"))
+	cfgPath := path.Join(c.GlobalString("config"), "config.bin")
 	dir := path.Dir(cfgPath)
 	_, err := os.Stat(dir)
 	if err != nil {

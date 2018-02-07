@@ -6,7 +6,9 @@
   "scripts": {
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec"
+    "test": "node node_modules/.bin/mocha --recursive --reporter spec",
+    "cover": "nyc --reporter=html --reporter=text mocha --recursive",
+    "coveralls": "nyc --reporter=lcov mocha --recursive && cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -22,18 +24,22 @@
   "homepage": "https://github.com/dedis/cothority",
   "dependencies": {
     "bn.js": "^4.11.8",
-    "elliptic": "^6.4.0"
+    "elliptic": "^6.4.0",
+    "hash.js": "^1.1.3"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.2",
+    "coveralls": "^3.0.0",
     "eslint": "^4.16.0",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.5.0",
     "jsdoc-to-markdown": "^4.0.1",
     "mocha": "^5.0.0",
+    "mocha-lcov-reporter": "^1.3.0",
+    "nyc": "^11.4.1",
     "prettier": "^1.10.2",
     "uglify-es": "^3.3.9",
     "uglifyjs-webpack-plugin": "^1.1.8",

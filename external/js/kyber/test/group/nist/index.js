@@ -315,10 +315,13 @@ describe("p256", () => {
 
       it("should throw an Error on embeded length > embedLen", () => {
         setSeed(42);
-        let bytes = randomBytes(65);
-        bytes[64] = curve._coordLen() + 1;
+        randomBytes(65);
+        // prettier-ignore
+        let bytes = new Uint8Array([4, 201, 209, 147, 190, 134, 219, 80, 165, 6, 231, 153, 126, 240, 204, 175, 212, 170, 3, 0, 156, 228, 220, 14, 189, 212, 105, 250, 84, 26, 5, 195, 137, 6, 162, 237, 154, 18, 5, 159, 120, 82, 140, 135, 94, 18, 162, 95, 112, 39, 108, 199, 167, 17, 65, 78, 9, 156, 173, 246, 10, 104, 224, 192, 157]);
+        let point = curve.point();
+        point.unmarshalBinary(bytes);
         assert.throws(() => {
-          curve.point().data(bytes);
+          point.data();
         }, Error);
       });
     });
@@ -714,11 +717,13 @@ describe("p256", () => {
         }, TypeError);
       });
 
-      it("should throw an error if input is not Uint8Array", () => {
+      it("should throw an error if input > q", () => {
         let s1 = curve.scalar();
+        // prettier-ignore
+        let bytes = new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]);
         assert.throws(() => {
-          s1.unmarshalBinary(123);
-        }, TypeError);
+          s1.unmarshalBinary(bytes);
+        }, Error);
       });
 
       it("should throw an error if input size > marshalSize", () => {
