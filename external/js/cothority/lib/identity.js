@@ -148,6 +148,10 @@ class Roster {
         const identities = roster.servers.map((server) => ServerIdentity.fromHexPublic(server.Public,server.Address));
         return new Roster(identities);
     }
+
+    static fromProtobuf(roster) {
+
+    }
 }
 
 module.exports = {
