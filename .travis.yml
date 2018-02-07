@@ -19,8 +19,12 @@ matrix:
         - "8"
         - "7"
 
-      before_install:
-        - "cd external/js/kyber"
+      env:
+        - TEST_DIR=external/js/cothority
+        - TEST_DIR=external/js/kyber
+
+      script: cd $TEST_DIR && npm install && npm run test && npm run build
+
       after_success:
         - npm run coveralls
 
