@@ -14,13 +14,17 @@ const misc = require('./misc');
 class ServerIdentity {
     /*
      * Returns a new ServerIdentity from the public key and address.
-     * @param publicKey public key in bytes format
-     * @param address tcp address of the cothority node
+     * @param {Uint8Array} public key in bytes format
+     * @param {string} address tcp address of the cothority node
+     * @param {string} description of the conode. Can be null.
      * @return a ServerIdentity
      * */
-    constructor(publicKey, address) {
+    constructor(publicKey, address,description) {
+        if (publicKey.constructor !== Uint8Array)
+            throw TypeError;
         this.pub = publicKey
         this.addr = address;
+        this._description = description;
         // id of the identity
         const url = 'https://dedis.epfl.ch/id/' + misc.uint8ArrayToHex(this.pub);
         this._id = new UUID(5, 'ns:URL', url).export();
@@ -37,9 +41,9 @@ class ServerIdentity {
      * @param {string} address
      * @return a ServerIdentity
      * */
-    static fromHexPublic(hexPublic,address) {
+    static fromHexPublic(hexPublic,address,description) {
         const pub = misc.hexToUint8Array(hexPublic);
-        return new ServerIdentity(pub,address);
+        return new ServerIdentity(pub,address,description);
     }
     /*
      * @return the public key as a Uint8Array buffer
@@ -70,6 +74,15 @@ class ServerIdentity {
         return this._id;
     }
 
+    /**
+     * returns the description associated with this identity
+     *
+     * @returns {string} the string description
+     */
+    get description() {
+        return this._description;
+    }
+
     toString() {
         return this.tcpAddr;
     }
@@ -86,8 +99,9 @@ class Roster {
      * @param a list of ServerIdentity
      * @return a Roster from the given list of identites
      * */
-    constructor(identities) {
-        this._identities = identities
+    constructor(identities,id) {
+        this._identities = identities;
+        this._id = id;
     }
 
     /*
@@ -117,6 +131,17 @@ class Roster {
      * @return the id of the roster
      * */
     get id() {
+        return this._id;
+    }
+
+    /**
+     * aggregateKey returns the aggregate public key for this server.
+     * It is the sum of all public keys of the identities of this Roster.
+     *
+     * @param {kyber.Group} group The group to use to compute the aggregate key.
+     * @returns {kyber.Point} The aggregate key
+     */
+    aggregateKey(group) {
         throw new Error("not implemented yet");
     }
 
@@ -145,12 +170,22 @@ class Roster {
             throw new TypeError;
 
         const roster = topl.parse(toml);
-        const identities = roster.servers.map((server) => ServerIdentity.fromHexPublic(server.Public,server.Address));
+        const identities = roster.servers.map((server) =>
+            ServerIdentity.fromHexPublic(server.Public,server.Address,server.description));
         return new Roster(identities);
     }
 
-    static fromProtobuf(roster) {
-
+    /**
+     * Parses the protobuf-decoded object into a Roster object
+     *
+     * @static
+     * @param {Object} protoRoster the litteral JS object returned by protobuf
+     * @returns {Roster} the Roster object
+     */
+    static fromProtobuf(protoRoster) {
+        const identities = protoRoster.list.map((id) =>
+            new ServerIdentity(new Uint8Array(id.public),id.address,id.description));
+        return new Roster(identities);
     }
 }
 

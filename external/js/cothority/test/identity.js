@@ -4,6 +4,7 @@ const chai = require("chai");
 const expect = chai.expect;
 
 const cothority = require("../lib");
+const proto = require("../lib/protobuf").root;
 
 const serversTOML = `
 [[servers]]
@@ -17,7 +18,7 @@ const serversTOML = `
   Description = "conode2"
 `
 describe("roster", () => {
-    
+
     it("can be created", () => {
         const roster = new cothority.Roster([1,2,3]);
         expect(roster).to.not.be.null;
@@ -29,7 +30,7 @@ describe("roster", () => {
         const roster = cothority.Roster.fromTOML(serversTOML);
         expect(roster.length).to.be.equals(2);
         expect(roster.identities[0].tcpAddr).to.be.equal("tcp://127.0.0.1:7001");
-    }); 
+    });
 
     it("gives correct websocket address", () => {
         const roster = cothority.Roster.fromTOML(serversTOML);
@@ -37,4 +38,31 @@ describe("roster", () => {
         expect(wsAddr).to.be.equal("ws://127.0.0.1:7002");
     });
 
+    it("correctly parses protobuf-decoded object", () => {
+        const addr1 = "tcp://127.0.0.1:7000";
+        const addr2 = "tcp://127.0.0.1:7000";
+        const objectId1 = fakeIdentity(addr1);
+        const objectId2 = fakeIdentity(addr2);
+        const objectRoster = {
+            list: [objectId1,objectId2],
+            aggregate: new Uint8Array([7,8]),
+        };
+        const rosterProto = proto.lookup("Roster");
+        const message = rosterProto.create(objectRoster);
+        const marshalled = rosterProto.encode(message).finish();
+        const rosterProto2 = proto.lookup("Roster");
+        const unmarshalled = rosterProto2.decode(marshalled);
+        const roster = cothority.Roster.fromProtobuf(unmarshalled);
+        expect(roster.length).to.be.equal(2);
+        expect(roster.identities[0].tcpAddr).to.be.equal(addr1);
+    });
 });
+
+function fakeIdentity(addr) {
+    return {
+        id: new Uint8Array([1]),
+        public: new Uint8Array([1,2,3,4]),
+        address: addr,
+        description: "fake",
+    };
+}

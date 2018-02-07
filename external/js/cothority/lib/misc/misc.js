@@ -36,6 +36,45 @@ function hexToUint8Array(hex) {
     });
 }
 
+/**
+ * Compares two Uint8Array buffers. If constant is true, it does the comparison in constant time.
+ *
+ * @param {Uint8Array} arr1 first buffer
+ * @param {Uint8Array} arr2 second buffer
+ * @param {Boolean} constant if true, constant time comparison is done.
+ * @returns {Boolean} True if both buffers are equals, false otherwise.
+ */
+function uint8ArrayCompare(arr1, arr2,constant) {
+
+    if (arr1.constructor !== Uint8Array)
+        throw TypeError;
+    if (arr2.constructor !== Uint8Array)
+        throw TypeError;
+
+    if (arr1.length != arr2.length) {
+        return false;
+    }
+    if (constant) {
+        return constantCompare(arr1,arr2);
+    } else {
+        return normalCompare(arr1,arr2);
+    }
+}
+
+function normalCompare(arr1, arr2) {
+    for(var i = 0; i < arr1.length; i++) {
+        if (arr1[i] != arr2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function constantCompare(arr1,arr2) {
+    throw new Error("not implemented yet");
+}
+
 /** @module misc */
 exports.uint8ArrayToHex = uint8ArrayToHex;
 exports.hexToUint8Array = hexToUint8Array;
+exports.uint8ArrayCompare = uint8ArrayCompare;

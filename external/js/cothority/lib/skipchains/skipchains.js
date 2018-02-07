@@ -70,5 +70,7 @@ class SkipchainClient {
 function verifyUpdateChainReply(lastID, updateChainReply) {
     const blocks = updateChainReply.update;
     // first verify the first block is the one we know
-    blocks[0]
+
 }
+
+
