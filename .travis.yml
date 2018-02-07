@@ -9,6 +9,9 @@ env:
   - TEST_DIR=cothority
   - TEST_DIR=kyber
 
+before_install:
+  - "cd external/js/"
+
 script: cd $TEST_DIR && npm run test && npm run build
 
 after_success:
