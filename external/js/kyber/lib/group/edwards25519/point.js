@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const Scalar = require("./scalar");
 const group = require("../group.js");
 
-/*
+/**
  * @module group/edwards25519/point
  */
 

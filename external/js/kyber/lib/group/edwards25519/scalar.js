@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const random = require("../../random");
 const group = require("../group.js");
 
-/*
+/**
  * @module group/edwards25519/scalar
  */
 

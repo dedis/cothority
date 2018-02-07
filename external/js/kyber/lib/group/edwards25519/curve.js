@@ -10,7 +10,7 @@ const BN = require("bn.js");
 const orderRed = BN.red(ec.curve.n);
 const group = require("../group.js");
 
-/*
+/**
  * @module group/edwards25519/curve
  */
 

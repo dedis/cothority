@@ -3,31 +3,22 @@
 <dl>
 <dt><a href="#module_constants">constants</a></dt>
 <dd></dd>
+<dt><a href="#module_group/edwards25519/curve">group/edwards25519/curve</a></dt>
+<dd></dd>
+<dt><a href="#module_group/edwards25519/point">group/edwards25519/point</a></dt>
+<dd></dd>
+<dt><a href="#module_group/edwards25519/scalar">group/edwards25519/scalar</a></dt>
+<dd></dd>
+<dt><a href="#module_group">group</a></dt>
+<dd></dd>
+<dt><a href="#module_group/nist/curve">group/nist/curve</a></dt>
+<dd></dd>
 <dt><a href="#module_group/nist/point">group/nist/point</a></dt>
 <dd></dd>
 <dt><a href="#module_group/nist/scalar">group/nist/scalar</a></dt>
 <dd></dd>
-</dl>
-
-## Classes
-
-<dl>
-<dt><a href="#Edwards25519">Edwards25519</a></dt>
-<dd><p>Represents an Ed25519 curve</p>
-</dd>
-<dt><a href="#Point">Point</a></dt>
-<dd><p>Represents a Point on the twisted edwards curve
-(X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT</p>
-<p>The value of the parameters is expcurveted in little endian form if being
-passed as a Uint8Array</p>
-</dd>
-<dt><a href="#Scalar">Scalar</a></dt>
-<dd><p>Scalar represents a value in GF(2^252 + 27742317777372353535851937790883648493)</p>
-</dd>
-<dt><a href="#Weierstrass">Weierstrass</a></dt>
-<dd><p>Class Weierstrass defines the weierstrass form of
-elliptic curves</p>
-</dd>
+<dt><a href="#module_sign/schnorr">sign/schnorr</a></dt>
+<dd></dd>
 </dl>
 
 ## Functions
@@ -39,16 +30,6 @@ If exact is <code>true</code>, chose Uint8Array with <em>exactly</em> that bitle
 </dd>
 <dt><a href="#int">int(mod, callback)</a> ⇒ <code>Uint8Array</code></dt>
 <dd><p>int choses a random uniform Uint8Array less than given modulus</p>
-</dd>
-<dt><a href="#Sign">Sign(privateKey, message)</a> ⇒</dt>
-<dd><p>Sign computes a Schnorr signature over the given message.</p>
-</dd>
-<dt><a href="#Verify">Verify()</a> ⇒</dt>
-<dd><p>Verify verifies if the signature of the message is valid under the given public
-key.</p>
-</dd>
-<dt><a href="#hashSchnorr">hashSchnorr()</a> ⇒</dt>
-<dd><p>hashSchnorr returns a scalar out of hashing the given inputs.</p>
 </dd>
 </dl>
 
@@ -67,6 +48,621 @@ Constants
 | --- | --- | --- |
 | zeroBN | <code>BN.jsObject</code> | BN.js object representing 0 |
 
+<a name="module_group/edwards25519/curve"></a>
+
+## group/edwards25519/curve
+
+* [group/edwards25519/curve](#module_group/edwards25519/curve)
+    * [~Edwards25519](#module_group/edwards25519/curve..Edwards25519)
+        * [.string()](#module_group/edwards25519/curve..Edwards25519+string) ⇒ <code>string</code>
+        * [.scalarLen()](#module_group/edwards25519/curve..Edwards25519+scalarLen) ⇒ <code>number</code>
+        * [.scalar()](#module_group/edwards25519/curve..Edwards25519+scalar) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.pointLen()](#module_group/edwards25519/curve..Edwards25519+pointLen) ⇒ <code>number</code>
+        * [.point()](#module_group/edwards25519/curve..Edwards25519+point) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.newKey()](#module_group/edwards25519/curve..Edwards25519+newKey) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+
+<a name="module_group/edwards25519/curve..Edwards25519"></a>
+
+### group/edwards25519/curve~Edwards25519
+Represents an Ed25519 curve
+
+**Kind**: inner class of [<code>group/edwards25519/curve</code>](#module_group/edwards25519/curve)  
+
+* [~Edwards25519](#module_group/edwards25519/curve..Edwards25519)
+    * [.string()](#module_group/edwards25519/curve..Edwards25519+string) ⇒ <code>string</code>
+    * [.scalarLen()](#module_group/edwards25519/curve..Edwards25519+scalarLen) ⇒ <code>number</code>
+    * [.scalar()](#module_group/edwards25519/curve..Edwards25519+scalar) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.pointLen()](#module_group/edwards25519/curve..Edwards25519+pointLen) ⇒ <code>number</code>
+    * [.point()](#module_group/edwards25519/curve..Edwards25519+point) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.newKey()](#module_group/edwards25519/curve..Edwards25519+newKey) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+
+<a name="module_group/edwards25519/curve..Edwards25519+string"></a>
+
+#### edwards25519.string() ⇒ <code>string</code>
+Return the name of the curve
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/curve..Edwards25519+scalarLen"></a>
+
+#### edwards25519.scalarLen() ⇒ <code>number</code>
+Returns 32, the size in bytes of a Scalar on Ed25519 curve
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/curve..Edwards25519+scalar"></a>
+
+#### edwards25519.scalar() ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Returns a new Scalar for the prime-order subgroup of Ed25519 curve
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/curve..Edwards25519+pointLen"></a>
+
+#### edwards25519.pointLen() ⇒ <code>number</code>
+Returns 32, the size of a Point on Ed25519 curve
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/curve..Edwards25519+point"></a>
+
+#### edwards25519.point() ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Creates a new point on the Ed25519 curve
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/curve..Edwards25519+newKey"></a>
+
+#### edwards25519.newKey() ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring
+it to be a multiple of 8).
+
+**Kind**: instance method of [<code>Edwards25519</code>](#module_group/edwards25519/curve..Edwards25519)  
+<a name="module_group/edwards25519/point"></a>
+
+## group/edwards25519/point
+
+* [group/edwards25519/point](#module_group/edwards25519/point)
+    * [~Point](#module_group/edwards25519/point..Point)
+        * [new Point(curve, X, Y, Z, T)](#new_module_group/edwards25519/point..Point_new)
+        * [.toString()](#module_group/edwards25519/point..Point+toString) ⇒ <code>string</code>
+        * [.equal(p2)](#module_group/edwards25519/point..Point+equal) ⇒ <code>boolean</code>
+        * [.set(p2)](#module_group/edwards25519/point..Point+set) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.clone()](#module_group/edwards25519/point..Point+clone) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.null()](#module_group/edwards25519/point..Point+null) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.base()](#module_group/edwards25519/point..Point+base) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.embedLen()](#module_group/edwards25519/point..Point+embedLen) ⇒ <code>number</code>
+        * [.embed(data, callback)](#module_group/edwards25519/point..Point+embed) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.data()](#module_group/edwards25519/point..Point+data) ⇒ <code>Uint8Array</code>
+        * [.add(p1, p2)](#module_group/edwards25519/point..Point+add) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.sub(p1, p2)](#module_group/edwards25519/point..Point+sub) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.neg(p)](#module_group/edwards25519/point..Point+neg) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.mul(s, [p])](#module_group/edwards25519/point..Point+mul) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.pick(callback)](#module_group/edwards25519/point..Point+pick) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+        * [.marshalBinary()](#module_group/edwards25519/point..Point+marshalBinary) ⇒ <code>Uint8Array</code>
+        * [.unmarshalBinary(bytes)](#module_group/edwards25519/point..Point+unmarshalBinary) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+
+<a name="module_group/edwards25519/point..Point"></a>
+
+### group/edwards25519/point~Point
+Represents a Point on the twisted edwards curve
+(X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
+
+The value of the parameters is expcurveted in little endian form if being
+passed as a Uint8Array
+
+**Kind**: inner class of [<code>group/edwards25519/point</code>](#module_group/edwards25519/point)  
+
+* [~Point](#module_group/edwards25519/point..Point)
+    * [new Point(curve, X, Y, Z, T)](#new_module_group/edwards25519/point..Point_new)
+    * [.toString()](#module_group/edwards25519/point..Point+toString) ⇒ <code>string</code>
+    * [.equal(p2)](#module_group/edwards25519/point..Point+equal) ⇒ <code>boolean</code>
+    * [.set(p2)](#module_group/edwards25519/point..Point+set) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.clone()](#module_group/edwards25519/point..Point+clone) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.null()](#module_group/edwards25519/point..Point+null) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.base()](#module_group/edwards25519/point..Point+base) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.embedLen()](#module_group/edwards25519/point..Point+embedLen) ⇒ <code>number</code>
+    * [.embed(data, callback)](#module_group/edwards25519/point..Point+embed) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.data()](#module_group/edwards25519/point..Point+data) ⇒ <code>Uint8Array</code>
+    * [.add(p1, p2)](#module_group/edwards25519/point..Point+add) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.sub(p1, p2)](#module_group/edwards25519/point..Point+sub) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.neg(p)](#module_group/edwards25519/point..Point+neg) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.mul(s, [p])](#module_group/edwards25519/point..Point+mul) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.pick(callback)](#module_group/edwards25519/point..Point+pick) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+    * [.marshalBinary()](#module_group/edwards25519/point..Point+marshalBinary) ⇒ <code>Uint8Array</code>
+    * [.unmarshalBinary(bytes)](#module_group/edwards25519/point..Point+unmarshalBinary) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+
+<a name="new_module_group/edwards25519/point..Point_new"></a>
+
+#### new Point(curve, X, Y, Z, T)
+
+| Param | Type |
+| --- | --- |
+| curve | <code>module:group/edwards25519~Edwards25519</code> | 
+| X | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
+| Y | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
+| Z | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
+| T | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
+
+<a name="module_group/edwards25519/point..Point+toString"></a>
+
+#### point.toString() ⇒ <code>string</code>
+Returns the little endian representation of the y coordinate of
+the Point
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+<a name="module_group/edwards25519/point..Point+equal"></a>
+
+#### point.equal(p2) ⇒ <code>boolean</code>
+Tests for equality between two Points derived from the same group
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p2 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point to compare |
+
+<a name="module_group/edwards25519/point..Point+set"></a>
+
+#### point.set(p2) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+set Set the current point to be equal to p2
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p2 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point |
+
+<a name="module_group/edwards25519/point..Point+clone"></a>
+
+#### point.clone() ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Creates a copy of the current point
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Returns**: [<code>Point</code>](#module_group/edwards25519/point..Point) - new Point module:group/edwards25519/point~Point  
+<a name="module_group/edwards25519/point..Point+null"></a>
+
+#### point.null() ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Set to the neutral element, which is (0, 1) for twisted Edwards
+Curve
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+<a name="module_group/edwards25519/point..Point+base"></a>
+
+#### point.base() ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Set to the standard base point for this curve
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+<a name="module_group/edwards25519/point..Point+embedLen"></a>
+
+#### point.embedLen() ⇒ <code>number</code>
+Returns the length (in bytes) of the embedded data
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+<a name="module_group/edwards25519/point..Point+embed"></a>
+
+#### point.embed(data, callback) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Returns a Point with data embedded in the y coordinate
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Throws**:
+
+- <code>TypeError</code> if data is not Uint8Array
+- <code>Error</code> if data.length > embedLen
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| data | <code>Uint8Array</code> | to embed with length <= embedLen |
+| callback | <code>function</code> | to generate a random byte array of given length |
+
+<a name="module_group/edwards25519/point..Point+data"></a>
+
+#### point.data() ⇒ <code>Uint8Array</code>
+Extract embedded data from a point
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Throws**:
+
+- <code>Error</code> when length of embedded data > embedLen
+
+<a name="module_group/edwards25519/point..Point+add"></a>
+
+#### point.add(p1, p2) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Returns the sum of two points on the curve
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Returns**: [<code>Point</code>](#module_group/edwards25519/point..Point) - p1 + p2  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p1 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point, addend |
+| p2 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point, addend |
+
+<a name="module_group/edwards25519/point..Point+sub"></a>
+
+#### point.sub(p1, p2) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Subtract two points
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Returns**: [<code>Point</code>](#module_group/edwards25519/point..Point) - p1 - p2  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p1 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point |
+| p2 | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point module:group/edwards25519/point~Point |
+
+<a name="module_group/edwards25519/point..Point+neg"></a>
+
+#### point.neg(p) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Finds the negative of a point p
+For Edwards Curves, the negative of (x, y) is (-x, y)
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Returns**: [<code>Point</code>](#module_group/edwards25519/point..Point) - -p  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| p | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point to negate |
+
+<a name="module_group/edwards25519/point..Point+mul"></a>
+
+#### point.mul(s, [p]) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Multiply point p by scalar s
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| s | [<code>Point</code>](#module_group/edwards25519/point..Point) | Scalar |
+| [p] | [<code>Point</code>](#module_group/edwards25519/point..Point) | Point |
+
+<a name="module_group/edwards25519/point..Point+pick"></a>
+
+#### point.pick(callback) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Selects a random point
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| callback | <code>function</code> | to generate a random byte array of given length |
+
+<a name="module_group/edwards25519/point..Point+marshalBinary"></a>
+
+#### point.marshalBinary() ⇒ <code>Uint8Array</code>
+Convert a ed25519 curve point into a byte representation
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Returns**: <code>Uint8Array</code> - byte representation  
+<a name="module_group/edwards25519/point..Point+unmarshalBinary"></a>
+
+#### point.unmarshalBinary(bytes) ⇒ [<code>Point</code>](#module_group/edwards25519/point..Point)
+Convert a Uint8Array back to a ed25519 curve point
+[tools.ietf.org/html/rfc8032#scurvetion-5.1.3](tools.ietf.org/html/rfc8032#scurvetion-5.1.3)
+
+**Kind**: instance method of [<code>Point</code>](#module_group/edwards25519/point..Point)  
+**Throws**:
+
+- <code>TypeError</code> when bytes is not Uint8Array
+- <code>Error</code> when bytes does not correspond to a valid point
+
+
+| Param | Type |
+| --- | --- |
+| bytes | <code>Uint8Array</code> | 
+
+<a name="module_group/edwards25519/scalar"></a>
+
+## group/edwards25519/scalar
+
+* [group/edwards25519/scalar](#module_group/edwards25519/scalar)
+    * [~Scalar](#module_group/edwards25519/scalar..Scalar)
+        * [.equal(s2)](#module_group/edwards25519/scalar..Scalar+equal) ⇒ <code>boolean</code>
+        * [.set(a)](#module_group/edwards25519/scalar..Scalar+set) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.clone()](#module_group/edwards25519/scalar..Scalar+clone) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.zero()](#module_group/edwards25519/scalar..Scalar+zero) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.add(s1, s2)](#module_group/edwards25519/scalar..Scalar+add) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.sub(s1, s2)](#module_group/edwards25519/scalar..Scalar+sub) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.neg(a)](#module_group/edwards25519/scalar..Scalar+neg) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.one()](#module_group/edwards25519/scalar..Scalar+one) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.mul(s1, s2)](#module_group/edwards25519/scalar..Scalar+mul) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.div(s1, s2)](#module_group/edwards25519/scalar..Scalar+div) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.inv(a)](#module_group/edwards25519/scalar..Scalar+inv) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.setBytes(b)](#module_group/edwards25519/scalar..Scalar+setBytes) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.bytes()](#module_group/edwards25519/scalar..Scalar+bytes) ⇒ <code>Uint8Array</code>
+        * [.pick(callback)](#module_group/edwards25519/scalar..Scalar+pick) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+        * [.marshalBinary()](#module_group/edwards25519/scalar..Scalar+marshalBinary) ⇒ <code>Uint8Array</code>
+        * [.unmarshalBinary(bytes)](#module_group/edwards25519/scalar..Scalar+unmarshalBinary)
+
+<a name="module_group/edwards25519/scalar..Scalar"></a>
+
+### group/edwards25519/scalar~Scalar
+Scalar represents a value in GF(2^252 + 27742317777372353535851937790883648493)
+
+**Kind**: inner class of [<code>group/edwards25519/scalar</code>](#module_group/edwards25519/scalar)  
+
+* [~Scalar](#module_group/edwards25519/scalar..Scalar)
+    * [.equal(s2)](#module_group/edwards25519/scalar..Scalar+equal) ⇒ <code>boolean</code>
+    * [.set(a)](#module_group/edwards25519/scalar..Scalar+set) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.clone()](#module_group/edwards25519/scalar..Scalar+clone) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.zero()](#module_group/edwards25519/scalar..Scalar+zero) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.add(s1, s2)](#module_group/edwards25519/scalar..Scalar+add) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.sub(s1, s2)](#module_group/edwards25519/scalar..Scalar+sub) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.neg(a)](#module_group/edwards25519/scalar..Scalar+neg) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.one()](#module_group/edwards25519/scalar..Scalar+one) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.mul(s1, s2)](#module_group/edwards25519/scalar..Scalar+mul) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.div(s1, s2)](#module_group/edwards25519/scalar..Scalar+div) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.inv(a)](#module_group/edwards25519/scalar..Scalar+inv) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.setBytes(b)](#module_group/edwards25519/scalar..Scalar+setBytes) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.bytes()](#module_group/edwards25519/scalar..Scalar+bytes) ⇒ <code>Uint8Array</code>
+    * [.pick(callback)](#module_group/edwards25519/scalar..Scalar+pick) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+    * [.marshalBinary()](#module_group/edwards25519/scalar..Scalar+marshalBinary) ⇒ <code>Uint8Array</code>
+    * [.unmarshalBinary(bytes)](#module_group/edwards25519/scalar..Scalar+unmarshalBinary)
+
+<a name="module_group/edwards25519/scalar..Scalar+equal"></a>
+
+#### scalar.equal(s2) ⇒ <code>boolean</code>
+Equality test for two Scalars derived from the same Group
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| s2 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+
+<a name="module_group/edwards25519/scalar..Scalar+set"></a>
+
+#### scalar.set(a) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Sets the receiver equal to another Scalar a
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| a | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+
+<a name="module_group/edwards25519/scalar..Scalar+clone"></a>
+
+#### scalar.clone() ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Returns a copy of the scalar
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+<a name="module_group/edwards25519/scalar..Scalar+zero"></a>
+
+#### scalar.zero() ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the additive identity (0)
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+<a name="module_group/edwards25519/scalar..Scalar+add"></a>
+
+#### scalar.add(s1, s2) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular sums of scalars s1 and s2
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+**Returns**: [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) - s1 + s2  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| s1 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+| s2 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+
+<a name="module_group/edwards25519/scalar..Scalar+sub"></a>
+
+#### scalar.sub(s1, s2) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular difference
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+**Returns**: [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) - s1 - s2  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| s1 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+| s2 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+
+<a name="module_group/edwards25519/scalar..Scalar+neg"></a>
+
+#### scalar.neg(a) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular negation of scalar a
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| a | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | Scalar |
+
+<a name="module_group/edwards25519/scalar..Scalar+one"></a>
+
+#### scalar.one() ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the multiplicative identity (1)
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+<a name="module_group/edwards25519/scalar..Scalar+mul"></a>
+
+#### scalar.mul(s1, s2) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular products of scalars s1 and s2
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param | Type |
+| --- | --- |
+| s1 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | 
+| s2 | [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar) | 
+
+<a name="module_group/edwards25519/scalar..Scalar+div"></a>
+
+#### scalar.div(s1, s2) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular division of scalar s1 by scalar s2
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param |
+| --- |
+| s1 | 
+| s2 | 
+
+<a name="module_group/edwards25519/scalar..Scalar+inv"></a>
+
+#### scalar.inv(a) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to the modular inverse of scalar a
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param |
+| --- |
+| a | 
+
+<a name="module_group/edwards25519/scalar..Scalar+setBytes"></a>
+
+#### scalar.setBytes(b) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Sets the scalar from little-endian Uint8Array
+and reduces to the appropriate modulus
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+**Throws**:
+
+- <code>TypeError</code> when b is not Uint8Array
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| b | <code>Uint8Array</code> | bytes |
+
+<a name="module_group/edwards25519/scalar..Scalar+bytes"></a>
+
+#### scalar.bytes() ⇒ <code>Uint8Array</code>
+Returns a big-endian representation of the scalar
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+<a name="module_group/edwards25519/scalar..Scalar+pick"></a>
+
+#### scalar.pick(callback) ⇒ [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)
+Set to a random scalar
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| callback | <code>function</code> | to generate random byte array of given length |
+
+<a name="module_group/edwards25519/scalar..Scalar+marshalBinary"></a>
+
+#### scalar.marshalBinary() ⇒ <code>Uint8Array</code>
+Returns the binary representation (little endian) of the scalar
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+<a name="module_group/edwards25519/scalar..Scalar+unmarshalBinary"></a>
+
+#### scalar.unmarshalBinary(bytes)
+Reads the binary representation (little endian) of scalar
+
+**Kind**: instance method of [<code>Scalar</code>](#module_group/edwards25519/scalar..Scalar)  
+
+| Param |
+| --- |
+| bytes | 
+
+<a name="module_group"></a>
+
+## group
+
+* [group](#module_group)
+    * [~Group](#module_group..Group)
+    * [~Point](#module_group..Point)
+    * [~Scalar](#module_group..Scalar)
+
+<a name="module_group..Group"></a>
+
+### group~Group
+Group is an abstract class for curves
+
+**Kind**: inner class of [<code>group</code>](#module_group)  
+<a name="module_group..Point"></a>
+
+### group~Point
+Point is an abstract class for representing
+a point on an elliptic curve
+
+**Kind**: inner class of [<code>group</code>](#module_group)  
+<a name="module_group..Scalar"></a>
+
+### group~Scalar
+Scalar is an abstract class for representing a scalar
+to be used in elliptic curve operations
+
+**Kind**: inner class of [<code>group</code>](#module_group)  
+<a name="module_group/nist/curve"></a>
+
+## group/nist/curve
+
+* [group/nist/curve](#module_group/nist/curve)
+    * [~Weierstrass](#module_group/nist/curve..Weierstrass)
+        * [new Weierstrass(config)](#new_module_group/nist/curve..Weierstrass_new)
+        * [.string()](#module_group/nist/curve..Weierstrass+string) ⇒ <code>string</code>
+        * [.scalarLen()](#module_group/nist/curve..Weierstrass+scalarLen) ⇒ <code>number</code>
+        * [.scalar()](#module_group/nist/curve..Weierstrass+scalar) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.pointLen()](#module_group/nist/curve..Weierstrass+pointLen) ⇒ <code>number</code>
+        * [.point()](#module_group/nist/curve..Weierstrass+point) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+
+<a name="module_group/nist/curve..Weierstrass"></a>
+
+### group/nist/curve~Weierstrass
+Class Weierstrass defines the weierstrass form of
+elliptic curves
+
+**Kind**: inner class of [<code>group/nist/curve</code>](#module_group/nist/curve)  
+
+* [~Weierstrass](#module_group/nist/curve..Weierstrass)
+    * [new Weierstrass(config)](#new_module_group/nist/curve..Weierstrass_new)
+    * [.string()](#module_group/nist/curve..Weierstrass+string) ⇒ <code>string</code>
+    * [.scalarLen()](#module_group/nist/curve..Weierstrass+scalarLen) ⇒ <code>number</code>
+    * [.scalar()](#module_group/nist/curve..Weierstrass+scalar) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.pointLen()](#module_group/nist/curve..Weierstrass+pointLen) ⇒ <code>number</code>
+    * [.point()](#module_group/nist/curve..Weierstrass+point) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+
+<a name="new_module_group/nist/curve..Weierstrass_new"></a>
+
+#### new Weierstrass(config)
+Create a new Weierstrass Curve
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| config | <code>object</code> | Curve configuration |
+| config.name | <code>String</code> | Curve name |
+| config.p | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Order of the underlying field. Little Endian if string or Uint8Array. |
+| config.a | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Curve Parameter a. Little Endian if string or Uint8Array. |
+| config.b | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Curve Parameter b. Little Endian if string or Uint8Array. |
+| config.n | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Order of the base point. Little Endian if string or Uint8Array |
+| config.gx | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | x coordinate of the base point. Little Endian if string or Uint8Array |
+| config.gy | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | y coordinate of the base point. Little Endian if string or Uint8Array |
+| config.bitSize | <code>number</code> | the size of the underlying field. |
+
+<a name="module_group/nist/curve..Weierstrass+string"></a>
+
+#### weierstrass.string() ⇒ <code>string</code>
+Returns the name of the curve
+
+**Kind**: instance method of [<code>Weierstrass</code>](#module_group/nist/curve..Weierstrass)  
+<a name="module_group/nist/curve..Weierstrass+scalarLen"></a>
+
+#### weierstrass.scalarLen() ⇒ <code>number</code>
+Returns the size in bytes of a scalar
+
+**Kind**: instance method of [<code>Weierstrass</code>](#module_group/nist/curve..Weierstrass)  
+<a name="module_group/nist/curve..Weierstrass+scalar"></a>
+
+#### weierstrass.scalar() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+Returns the size in bytes of a point
+
+**Kind**: instance method of [<code>Weierstrass</code>](#module_group/nist/curve..Weierstrass)  
+<a name="module_group/nist/curve..Weierstrass+pointLen"></a>
+
+#### weierstrass.pointLen() ⇒ <code>number</code>
+Returns the size in bytes of a point
+
+**Kind**: instance method of [<code>Weierstrass</code>](#module_group/nist/curve..Weierstrass)  
+<a name="module_group/nist/curve..Weierstrass+point"></a>
+
+#### weierstrass.point() ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+Returns a new Point
+
+**Kind**: instance method of [<code>Weierstrass</code>](#module_group/nist/curve..Weierstrass)  
 <a name="module_group/nist/point"></a>
 
 ## group/nist/point
@@ -76,18 +672,18 @@ Constants
         * [new Point(curve, x, y)](#new_module_group/nist/point..Point_new)
         * [.toString()](#module_group/nist/point..Point+toString) ⇒ <code>string</code>
         * [.equal(p2)](#module_group/nist/point..Point+equal) ⇒ <code>boolean</code>
-        * [.set(p2)](#module_group/nist/point..Point+set) ⇒ <code>module:group/nist~Point</code>
-        * [.clone()](#module_group/nist/point..Point+clone) ⇒ <code>module:group/nist~Point</code>
-        * [.null()](#module_group/nist/point..Point+null) ⇒ <code>module:group/nist~Point</code>
-        * [.base()](#module_group/nist/point..Point+base) ⇒ <code>module:group/nist~Point</code>
+        * [.set(p2)](#module_group/nist/point..Point+set) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.clone()](#module_group/nist/point..Point+clone) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.null()](#module_group/nist/point..Point+null) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.base()](#module_group/nist/point..Point+base) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
         * [.embedLen()](#module_group/nist/point..Point+embedLen) ⇒ <code>number</code>
-        * [.embed(data, [callback])](#module_group/nist/point..Point+embed) ⇒ <code>module:group/nist~Point</code>
+        * [.embed(data, [callback])](#module_group/nist/point..Point+embed) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
         * [.data()](#module_group/nist/point..Point+data) ⇒ <code>Uint8Array</code>
-        * [.add(p1, p2)](#module_group/nist/point..Point+add) ⇒ <code>module:group/nist~Point</code>
-        * [.sub(p1, p2)](#module_group/nist/point..Point+sub) ⇒ <code>module:group/nist~Point</code>
-        * [.neg(p)](#module_group/nist/point..Point+neg) ⇒ <code>module:group/nist~Point</code>
-        * [.mul(s, [p])](#module_group/nist/point..Point+mul) ⇒ <code>module:group/nist~Point</code>
-        * [.pick([callback])](#module_group/nist/point..Point+pick) ⇒ <code>module:group/nist~Point</code>
+        * [.add(p1, p2)](#module_group/nist/point..Point+add) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.sub(p1, p2)](#module_group/nist/point..Point+sub) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.neg(p)](#module_group/nist/point..Point+neg) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.mul(s, [p])](#module_group/nist/point..Point+mul) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+        * [.pick([callback])](#module_group/nist/point..Point+pick) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
         * [.marshalBinary()](#module_group/nist/point..Point+marshalBinary) ⇒ <code>Uint8Array</code>
         * [.unmarshalBinary(bytes)](#module_group/nist/point..Point+unmarshalBinary)
 
@@ -105,18 +701,18 @@ passed as a Uint8Array
     * [new Point(curve, x, y)](#new_module_group/nist/point..Point_new)
     * [.toString()](#module_group/nist/point..Point+toString) ⇒ <code>string</code>
     * [.equal(p2)](#module_group/nist/point..Point+equal) ⇒ <code>boolean</code>
-    * [.set(p2)](#module_group/nist/point..Point+set) ⇒ <code>module:group/nist~Point</code>
-    * [.clone()](#module_group/nist/point..Point+clone) ⇒ <code>module:group/nist~Point</code>
-    * [.null()](#module_group/nist/point..Point+null) ⇒ <code>module:group/nist~Point</code>
-    * [.base()](#module_group/nist/point..Point+base) ⇒ <code>module:group/nist~Point</code>
+    * [.set(p2)](#module_group/nist/point..Point+set) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.clone()](#module_group/nist/point..Point+clone) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.null()](#module_group/nist/point..Point+null) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.base()](#module_group/nist/point..Point+base) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
     * [.embedLen()](#module_group/nist/point..Point+embedLen) ⇒ <code>number</code>
-    * [.embed(data, [callback])](#module_group/nist/point..Point+embed) ⇒ <code>module:group/nist~Point</code>
+    * [.embed(data, [callback])](#module_group/nist/point..Point+embed) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
     * [.data()](#module_group/nist/point..Point+data) ⇒ <code>Uint8Array</code>
-    * [.add(p1, p2)](#module_group/nist/point..Point+add) ⇒ <code>module:group/nist~Point</code>
-    * [.sub(p1, p2)](#module_group/nist/point..Point+sub) ⇒ <code>module:group/nist~Point</code>
-    * [.neg(p)](#module_group/nist/point..Point+neg) ⇒ <code>module:group/nist~Point</code>
-    * [.mul(s, [p])](#module_group/nist/point..Point+mul) ⇒ <code>module:group/nist~Point</code>
-    * [.pick([callback])](#module_group/nist/point..Point+pick) ⇒ <code>module:group/nist~Point</code>
+    * [.add(p1, p2)](#module_group/nist/point..Point+add) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.sub(p1, p2)](#module_group/nist/point..Point+sub) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.neg(p)](#module_group/nist/point..Point+neg) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.mul(s, [p])](#module_group/nist/point..Point+mul) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
+    * [.pick([callback])](#module_group/nist/point..Point+pick) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
     * [.marshalBinary()](#module_group/nist/point..Point+marshalBinary) ⇒ <code>Uint8Array</code>
     * [.unmarshalBinary(bytes)](#module_group/nist/point..Point+unmarshalBinary)
 
@@ -126,7 +722,7 @@ passed as a Uint8Array
 
 | Param | Type | Description |
 | --- | --- | --- |
-| curve | <code>module:group/nist~Weierstrass</code> | Weierstrass curve |
+| curve | <code>module:group/nist/curve~Weirstrass</code> | Weierstrass curve |
 | x | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> |  |
 | y | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> |  |
 
@@ -146,36 +742,36 @@ Tests for equality between two Points derived from the same group
 
 | Param | Type | Description |
 | --- | --- | --- |
-| p2 | <code>module:group/nist~Point</code> | Point object to compare |
+| p2 | [<code>Point</code>](#module_group/nist/point..Point) | Point object to compare |
 
 <a name="module_group/nist/point..Point+set"></a>
 
-#### point.set(p2) ⇒ <code>module:group/nist~Point</code>
+#### point.set(p2) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 set Set the current point to be equal to p2
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| p2 | <code>module:group/nist~Point</code> | Point object |
+| p2 | [<code>Point</code>](#module_group/nist/point..Point) | Point object |
 
 <a name="module_group/nist/point..Point+clone"></a>
 
-#### point.clone() ⇒ <code>module:group/nist~Point</code>
+#### point.clone() ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Creates a copy of the current point
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
-**Returns**: <code>module:group/nist~Point</code> - new Point object  
+**Returns**: [<code>Point</code>](#module_group/nist/point..Point) - new Point object  
 <a name="module_group/nist/point..Point+null"></a>
 
-#### point.null() ⇒ <code>module:group/nist~Point</code>
+#### point.null() ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Set to the neutral element for the curve
 Modifies the receiver
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
 <a name="module_group/nist/point..Point+base"></a>
 
-#### point.base() ⇒ <code>module:group/nist~Point</code>
+#### point.base() ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Set to the standard base point for this curve
 Modifies the receiver
 
@@ -188,7 +784,7 @@ Returns the length (in bytes) of the embedded data
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
 <a name="module_group/nist/point..Point+embed"></a>
 
-#### point.embed(data, [callback]) ⇒ <code>module:group/nist~Point</code>
+#### point.embed(data, [callback]) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Returns a Point with data embedded in the y coordinate
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
@@ -215,48 +811,48 @@ Extract embedded data from a point
 
 <a name="module_group/nist/point..Point+add"></a>
 
-#### point.add(p1, p2) ⇒ <code>module:group/nist~Point</code>
+#### point.add(p1, p2) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Returns the sum of two points on the curve
 Modifies the receiver
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
-**Returns**: <code>module:group/nist~Point</code> - p1 + p2  
+**Returns**: [<code>Point</code>](#module_group/nist/point..Point) - p1 + p2  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| p1 | <code>module:group/nist~Point</code> | Point object, addend |
-| p2 | <code>module:group/nist~Point</code> | Point object, addend |
+| p1 | [<code>Point</code>](#module_group/nist/point..Point) | Point object, addend |
+| p2 | [<code>Point</code>](#module_group/nist/point..Point) | Point object, addend |
 
 <a name="module_group/nist/point..Point+sub"></a>
 
-#### point.sub(p1, p2) ⇒ <code>module:group/nist~Point</code>
+#### point.sub(p1, p2) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Subtract two points
 Modifies the receiver
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
-**Returns**: <code>module:group/nist~Point</code> - p1 - p2  
+**Returns**: [<code>Point</code>](#module_group/nist/point..Point) - p1 - p2  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| p1 | <code>module:group/nist~Point</code> | Point object |
-| p2 | <code>module:group/nist~Point</code> | Point object |
+| p1 | [<code>Point</code>](#module_group/nist/point..Point) | Point object |
+| p2 | [<code>Point</code>](#module_group/nist/point..Point) | Point object |
 
 <a name="module_group/nist/point..Point+neg"></a>
 
-#### point.neg(p) ⇒ <code>module:group/nist~Point</code>
+#### point.neg(p) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Finds the negative of a point p
 Modifies the receiver
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
-**Returns**: <code>module:group/nist~Point</code> - -p  
+**Returns**: [<code>Point</code>](#module_group/nist/point..Point) - -p  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| p | <code>module:group/nist~Point</code> | Point to negate |
+| p | [<code>Point</code>](#module_group/nist/point..Point) | Point to negate |
 
 <a name="module_group/nist/point..Point+mul"></a>
 
-#### point.mul(s, [p]) ⇒ <code>module:group/nist~Point</code>
+#### point.mul(s, [p]) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Multiply point p by scalar s.
 If p is not passed then multiplies the base point of the curve with
 scalar s
@@ -266,12 +862,12 @@ Modifies the receiver
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| s | <code>module:group/nist~Scalar</code> |  | Scalar |
-| [p] | <code>module:group/nist~Point</code> | <code></code> | Point |
+| s | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) |  | Scalar |
+| [p] | [<code>Point</code>](#module_group/nist/point..Point) | <code></code> | Point |
 
 <a name="module_group/nist/point..Point+pick"></a>
 
-#### point.pick([callback]) ⇒ <code>module:group/nist~Point</code>
+#### point.pick([callback]) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
 Selects a random point
 
 **Kind**: instance method of [<code>Point</code>](#module_group/nist/point..Point)  
@@ -312,19 +908,19 @@ Accepts only uncompressed point as specified in section 4.3.6 of ANSI X9.62
     * [~Scalar](#module_group/nist/scalar..Scalar)
         * [new Scalar(curve, red)](#new_module_group/nist/scalar..Scalar_new)
         * [.equal(s2)](#module_group/nist/scalar..Scalar+equal) ⇒ <code>boolean</code>
-        * [.set(a)](#module_group/nist/scalar..Scalar+set) ⇒ <code>module:group/nist~Scalar</code>
-        * [.clone()](#module_group/nist/scalar..Scalar+clone) ⇒ <code>module:group/nist~Scalar</code>
-        * [.zero()](#module_group/nist/scalar..Scalar+zero) ⇒ <code>module:group/nist~Scalar</code>
-        * [.add(s1, s2)](#module_group/nist/scalar..Scalar+add) ⇒ <code>module:group/nist~Scalar</code>
-        * [.sub(s1, s2)](#module_group/nist/scalar..Scalar+sub) ⇒ <code>module:group/nist~Scalar</code>
-        * [.neg(a)](#module_group/nist/scalar..Scalar+neg) ⇒ <code>module:group/nist~Scalar</code>
-        * [.one()](#module_group/nist/scalar..Scalar+one) ⇒ <code>module:group/nist~Scalar</code>
-        * [.mul(s1, s2)](#module_group/nist/scalar..Scalar+mul) ⇒ <code>module:group/nist~Scalar</code>
-        * [.div(s1, s2)](#module_group/nist/scalar..Scalar+div) ⇒ <code>module:group/nist~Scalar</code>
-        * [.inv(a)](#module_group/nist/scalar..Scalar+inv) ⇒ <code>module:group/nist~Scalar</code>
-        * [.setBytes(b)](#module_group/nist/scalar..Scalar+setBytes) ⇒ <code>module:group/nist~Scalar</code>
+        * [.set(a)](#module_group/nist/scalar..Scalar+set) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.clone()](#module_group/nist/scalar..Scalar+clone) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.zero()](#module_group/nist/scalar..Scalar+zero) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.add(s1, s2)](#module_group/nist/scalar..Scalar+add) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.sub(s1, s2)](#module_group/nist/scalar..Scalar+sub) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.neg(a)](#module_group/nist/scalar..Scalar+neg) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.one()](#module_group/nist/scalar..Scalar+one) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.mul(s1, s2)](#module_group/nist/scalar..Scalar+mul) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.div(s1, s2)](#module_group/nist/scalar..Scalar+div) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.inv(a)](#module_group/nist/scalar..Scalar+inv) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+        * [.setBytes(b)](#module_group/nist/scalar..Scalar+setBytes) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
         * [.bytes()](#module_group/nist/scalar..Scalar+bytes) ⇒ <code>Uint8Array</code>
-        * [.pick()](#module_group/nist/scalar..Scalar+pick) ⇒ <code>module:group/nist~Scalar</code>
+        * [.pick()](#module_group/nist/scalar..Scalar+pick) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
         * [.marshalBinary()](#module_group/nist/scalar..Scalar+marshalBinary) ⇒ <code>Uint8Array</code>
         * [.unmarshalBinary(bytes)](#module_group/nist/scalar..Scalar+unmarshalBinary) ⇒ <code>undefined</code>
 
@@ -338,19 +934,19 @@ Scalar
 * [~Scalar](#module_group/nist/scalar..Scalar)
     * [new Scalar(curve, red)](#new_module_group/nist/scalar..Scalar_new)
     * [.equal(s2)](#module_group/nist/scalar..Scalar+equal) ⇒ <code>boolean</code>
-    * [.set(a)](#module_group/nist/scalar..Scalar+set) ⇒ <code>module:group/nist~Scalar</code>
-    * [.clone()](#module_group/nist/scalar..Scalar+clone) ⇒ <code>module:group/nist~Scalar</code>
-    * [.zero()](#module_group/nist/scalar..Scalar+zero) ⇒ <code>module:group/nist~Scalar</code>
-    * [.add(s1, s2)](#module_group/nist/scalar..Scalar+add) ⇒ <code>module:group/nist~Scalar</code>
-    * [.sub(s1, s2)](#module_group/nist/scalar..Scalar+sub) ⇒ <code>module:group/nist~Scalar</code>
-    * [.neg(a)](#module_group/nist/scalar..Scalar+neg) ⇒ <code>module:group/nist~Scalar</code>
-    * [.one()](#module_group/nist/scalar..Scalar+one) ⇒ <code>module:group/nist~Scalar</code>
-    * [.mul(s1, s2)](#module_group/nist/scalar..Scalar+mul) ⇒ <code>module:group/nist~Scalar</code>
-    * [.div(s1, s2)](#module_group/nist/scalar..Scalar+div) ⇒ <code>module:group/nist~Scalar</code>
-    * [.inv(a)](#module_group/nist/scalar..Scalar+inv) ⇒ <code>module:group/nist~Scalar</code>
-    * [.setBytes(b)](#module_group/nist/scalar..Scalar+setBytes) ⇒ <code>module:group/nist~Scalar</code>
+    * [.set(a)](#module_group/nist/scalar..Scalar+set) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.clone()](#module_group/nist/scalar..Scalar+clone) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.zero()](#module_group/nist/scalar..Scalar+zero) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.add(s1, s2)](#module_group/nist/scalar..Scalar+add) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.sub(s1, s2)](#module_group/nist/scalar..Scalar+sub) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.neg(a)](#module_group/nist/scalar..Scalar+neg) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.one()](#module_group/nist/scalar..Scalar+one) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.mul(s1, s2)](#module_group/nist/scalar..Scalar+mul) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.div(s1, s2)](#module_group/nist/scalar..Scalar+div) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.inv(a)](#module_group/nist/scalar..Scalar+inv) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
+    * [.setBytes(b)](#module_group/nist/scalar..Scalar+setBytes) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
     * [.bytes()](#module_group/nist/scalar..Scalar+bytes) ⇒ <code>Uint8Array</code>
-    * [.pick()](#module_group/nist/scalar..Scalar+pick) ⇒ <code>module:group/nist~Scalar</code>
+    * [.pick()](#module_group/nist/scalar..Scalar+pick) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
     * [.marshalBinary()](#module_group/nist/scalar..Scalar+marshalBinary) ⇒ <code>Uint8Array</code>
     * [.unmarshalBinary(bytes)](#module_group/nist/scalar..Scalar+unmarshalBinary) ⇒ <code>undefined</code>
 
@@ -360,7 +956,7 @@ Scalar
 
 | Param | Type | Description |
 | --- | --- | --- |
-| curve | <code>module:group/nist~Weierstrass</code> |  |
+| curve | <code>module:group/nist/curve~Weirstrass</code> |  |
 | red | <code>BN.Red</code> | BN.js Reduction context |
 
 <a name="module_group/nist/scalar..Scalar+equal"></a>
@@ -372,112 +968,112 @@ Equality test for two Scalars derived from the same Group
 
 | Param | Type | Description |
 | --- | --- | --- |
-| s2 | <code>module:group/nist~Scalar</code> | Scalar |
+| s2 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
 
 <a name="module_group/nist/scalar..Scalar+set"></a>
 
-#### scalar.set(a) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.set(a) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Sets the receiver equal to another Scalar a
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| a | <code>module:group/nist~Scalar</code> | Scalar |
+| a | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
 
 <a name="module_group/nist/scalar..Scalar+clone"></a>
 
-#### scalar.clone() ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.clone() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Returns a copy of the scalar
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 <a name="module_group/nist/scalar..Scalar+zero"></a>
 
-#### scalar.zero() ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.zero() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the additive identity (0)
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 <a name="module_group/nist/scalar..Scalar+add"></a>
 
-#### scalar.add(s1, s2) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.add(s1, s2) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular sums of scalars s1 and s2
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
-**Returns**: <code>module:group/nist~Scalar</code> - s1 + s2  
+**Returns**: [<code>Scalar</code>](#module_group/nist/scalar..Scalar) - s1 + s2  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| s1 | <code>module:group/nist~Scalar</code> | Scalar |
-| s2 | <code>module:group/nist~Scalar</code> | Scalar |
+| s1 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
+| s2 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
 
 <a name="module_group/nist/scalar..Scalar+sub"></a>
 
-#### scalar.sub(s1, s2) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.sub(s1, s2) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular difference
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
-**Returns**: <code>module:group/nist~Scalar</code> - s1 - s2  
+**Returns**: [<code>Scalar</code>](#module_group/nist/scalar..Scalar) - s1 - s2  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| s1 | <code>module:group/nist~Scalar</code> | Scalar |
-| s2 | <code>module:group/nist~Scalar</code> | Scalar |
+| s1 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
+| s2 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
 
 <a name="module_group/nist/scalar..Scalar+neg"></a>
 
-#### scalar.neg(a) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.neg(a) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular negation of scalar a
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| a | <code>module:group/nist~Scalar</code> | Scalar |
+| a | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | Scalar |
 
 <a name="module_group/nist/scalar..Scalar+one"></a>
 
-#### scalar.one() ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.one() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the multiplicative identity (1)
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 <a name="module_group/nist/scalar..Scalar+mul"></a>
 
-#### scalar.mul(s1, s2) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.mul(s1, s2) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular products of scalars s1 and s2
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 
 | Param | Type |
 | --- | --- |
-| s1 | <code>module:group/nist~Scalar</code> | 
-| s2 | <code>module:group/nist~Scalar</code> | 
+| s1 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | 
+| s2 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | 
 
 <a name="module_group/nist/scalar..Scalar+div"></a>
 
-#### scalar.div(s1, s2) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.div(s1, s2) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular division of scalar s1 by scalar s2
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 
 | Param | Type |
 | --- | --- |
-| s1 | <code>module:group/nist~Scalar</code> | 
-| s2 | <code>module:group/nist~Scalar</code> | 
+| s1 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | 
+| s2 | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | 
 
 <a name="module_group/nist/scalar..Scalar+inv"></a>
 
-#### scalar.inv(a) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.inv(a) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to the modular inverse of scalar a
 
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 
 | Param | Type |
 | --- | --- |
-| a | <code>module:group/nist~Scalar</code> | 
+| a | [<code>Scalar</code>](#module_group/nist/scalar..Scalar) | 
 
 <a name="module_group/nist/scalar..Scalar+setBytes"></a>
 
-#### scalar.setBytes(b) ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.setBytes(b) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Sets the scalar from big-endian Uint8Array
 and reduces to the appropriate modulus
 
@@ -499,7 +1095,7 @@ Returns a big-endian representation of the scalar
 **Kind**: instance method of [<code>Scalar</code>](#module_group/nist/scalar..Scalar)  
 <a name="module_group/nist/scalar..Scalar+pick"></a>
 
-#### scalar.pick() ⇒ <code>module:group/nist~Scalar</code>
+#### scalar.pick() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
 Set to a random scalar
 
 param {function} [callback] - to generate randomBytes of given length
@@ -522,519 +1118,41 @@ Reads the binary representation (big endian) of scalar
 | --- | --- |
 | bytes | <code>Uint8Array</code> | 
 
-<a name="Edwards25519"></a>
+<a name="module_sign/schnorr"></a>
 
-## Edwards25519
-Represents an Ed25519 curve
+## sign/schnorr
 
-**Kind**: global class  
+* [sign/schnorr](#module_sign/schnorr)
+    * [~Verify(suite, publicKey, message, signature)](#module_sign/schnorr..Verify) ⇒ <code>boolean</code>
+    * [~hashSchnorr(...inputs)](#module_sign/schnorr..hashSchnorr) ⇒ [<code>Scalar</code>](#module_group..Scalar)
 
-* [Edwards25519](#Edwards25519)
-    * [.string()](#Edwards25519+string) ⇒ <code>string</code>
-    * [.scalarLen()](#Edwards25519+scalarLen) ⇒ <code>number</code>
-    * [.scalar()](#Edwards25519+scalar) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.pointLen()](#Edwards25519+pointLen) ⇒ <code>number</code>
-    * [.point()](#Edwards25519+point) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.newKey()](#Edwards25519+newKey) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
+<a name="module_sign/schnorr..Verify"></a>
 
-<a name="Edwards25519+string"></a>
+### sign/schnorr~Verify(suite, publicKey, message, signature) ⇒ <code>boolean</code>
+Verify verifies if the signature of the message is valid under the given public
+key.
 
-### edwards25519.string() ⇒ <code>string</code>
-Return the name of the curve
+**Kind**: inner method of [<code>sign/schnorr</code>](#module_sign/schnorr)  
+**Returns**: <code>boolean</code> - true if signature is valid or false otherwise.  
 
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Edwards25519+scalarLen"></a>
+| Param | Type | Description |
+| --- | --- | --- |
+| suite | [<code>Group</code>](#module_group..Group) | suite to use |
+| publicKey | [<code>Point</code>](#module_group..Point) | public key under which to verify the signature |
+| message | <code>Uint8Array</code> | message that is signed |
+| signature | <code>Uint8Array</code> | signature made over the given message |
 
-### edwards25519.scalarLen() ⇒ <code>number</code>
-Returns 32, the size in bytes of a Scalar on Ed25519 curve
+<a name="module_sign/schnorr..hashSchnorr"></a>
 
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Edwards25519+scalar"></a>
+### sign/schnorr~hashSchnorr(...inputs) ⇒ [<code>Scalar</code>](#module_group..Scalar)
+hashSchnorr returns a scalar out of hashing the given inputs.
 
-### edwards25519.scalar() ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Returns a new Scalar for the prime-order subgroup of Ed25519 curve
-
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Edwards25519+pointLen"></a>
-
-### edwards25519.pointLen() ⇒ <code>number</code>
-Returns 32, the size of a Point on Ed25519 curve
-
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Edwards25519+point"></a>
-
-### edwards25519.point() ⇒ <code>module:group/edwards25519/point~Point</code>
-Creates a new point on the Ed25519 curve
-
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Edwards25519+newKey"></a>
-
-### edwards25519.newKey() ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring
-it to be a multiple of 8).
-
-**Kind**: instance method of [<code>Edwards25519</code>](#Edwards25519)  
-<a name="Point"></a>
-
-## Point
-Represents a Point on the twisted edwards curve
-(X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
-
-The value of the parameters is expcurveted in little endian form if being
-passed as a Uint8Array
-
-**Kind**: global class  
-
-* [Point](#Point)
-    * [new Point(curve, X, Y, Z, T)](#new_Point_new)
-    * [.toString()](#Point+toString) ⇒ <code>string</code>
-    * [.equal(p2)](#Point+equal) ⇒ <code>boolean</code>
-    * [.set(p2)](#Point+set) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.clone()](#Point+clone) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.null()](#Point+null) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.base()](#Point+base) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.embedLen()](#Point+embedLen) ⇒ <code>number</code>
-    * [.embed(data, callback)](#Point+embed) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.data()](#Point+data) ⇒ <code>Uint8Array</code>
-    * [.add(p1, p2)](#Point+add) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.sub(p1, p2)](#Point+sub) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.neg(p)](#Point+neg) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.mul(s, p)](#Point+mul) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.pick(callback)](#Point+pick) ⇒ <code>module:group/edwards25519/point~Point</code>
-    * [.marshalBinary()](#Point+marshalBinary) ⇒ <code>Uint8Array</code>
-    * [.unmarshalBinary(bytes)](#Point+unmarshalBinary) ⇒ <code>module:group/edwards25519/point~Point</code>
-
-<a name="new_Point_new"></a>
-
-### new Point(curve, X, Y, Z, T)
+**Kind**: inner method of [<code>sign/schnorr</code>](#module_sign/schnorr)  
 
 | Param | Type |
 | --- | --- |
-| curve | <code>module:group/edwards25519~Edwards25519</code> | 
-| X | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
-| Y | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
-| Z | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
-| T | <code>number</code> \| <code>Uint8Array</code> \| <code>BN.jsObjcurvet</code> | 
+| ...inputs | <code>Uint8Array</code> | 
 
-<a name="Point+toString"></a>
-
-### point.toString() ⇒ <code>string</code>
-Returns the little endian representation of the y coordinate of
-the Point
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-<a name="Point+equal"></a>
-
-### point.equal(p2) ⇒ <code>boolean</code>
-Tests for equality between two Points derived from the same group
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| p2 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point to compare |
-
-<a name="Point+set"></a>
-
-### point.set(p2) ⇒ <code>module:group/edwards25519/point~Point</code>
-set Set the current point to be equal to p2
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| p2 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point |
-
-<a name="Point+clone"></a>
-
-### point.clone() ⇒ <code>module:group/edwards25519/point~Point</code>
-Creates a copy of the current point
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Returns**: <code>module:group/edwards25519/point~Point</code> - new Point module:group/edwards25519/point~Point  
-<a name="Point+null"></a>
-
-### point.null() ⇒ <code>module:group/edwards25519/point~Point</code>
-Set to the neutral element, which is (0, 1) for twisted Edwards
-Curve
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-<a name="Point+base"></a>
-
-### point.base() ⇒ <code>module:group/edwards25519/point~Point</code>
-Set to the standard base point for this curve
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-<a name="Point+embedLen"></a>
-
-### point.embedLen() ⇒ <code>number</code>
-Returns the length (in bytes) of the embedded data
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-<a name="Point+embed"></a>
-
-### point.embed(data, callback) ⇒ <code>module:group/edwards25519/point~Point</code>
-Returns a Point with data embedded in the y coordinate
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Throws**:
-
-- <code>TypeError</code> if data is not Uint8Array
-- <code>Error</code> if data.length > embedLen
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| data | <code>Uint8Array</code> | to embed with length <= embedLen |
-| callback | <code>function</code> | to generate a random byte array of given length |
-
-<a name="Point+data"></a>
-
-### point.data() ⇒ <code>Uint8Array</code>
-Extract embedded data from a point
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Throws**:
-
-- <code>Error</code> when length of embedded data > embedLen
-
-<a name="Point+add"></a>
-
-### point.add(p1, p2) ⇒ <code>module:group/edwards25519/point~Point</code>
-Returns the sum of two points on the curve
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Returns**: <code>module:group/edwards25519/point~Point</code> - p1 + p2  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| p1 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point, addend |
-| p2 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point, addend |
-
-<a name="Point+sub"></a>
-
-### point.sub(p1, p2) ⇒ <code>module:group/edwards25519/point~Point</code>
-Subtract two points
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Returns**: <code>module:group/edwards25519/point~Point</code> - p1 - p2  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| p1 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point |
-| p2 | <code>module:group/edwards25519/point~Point</code> | Point module:group/edwards25519/point~Point |
-
-<a name="Point+neg"></a>
-
-### point.neg(p) ⇒ <code>module:group/edwards25519/point~Point</code>
-Finds the negative of a point p
-For Edwards Curves, the negative of (x, y) is (-x, y)
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Returns**: <code>module:group/edwards25519/point~Point</code> - -p  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| p | <code>module:group/edwards25519/point~Point</code> | Point to negate |
-
-<a name="Point+mul"></a>
-
-### point.mul(s, p) ⇒ <code>module:group/edwards25519/point~Point</code>
-Multiply point p by scalar s
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| s | <code>module:group/edwards25519/point~Point</code> | Scalar |
-| p | <code>module:group/edwards25519/point~Point</code> | Point |
-
-<a name="Point+pick"></a>
-
-### point.pick(callback) ⇒ <code>module:group/edwards25519/point~Point</code>
-Selects a random point
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| callback | <code>function</code> | to generate a random byte array of given length |
-
-<a name="Point+marshalBinary"></a>
-
-### point.marshalBinary() ⇒ <code>Uint8Array</code>
-Convert a ed25519 curve point into a byte representation
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Returns**: <code>Uint8Array</code> - byte representation  
-<a name="Point+unmarshalBinary"></a>
-
-### point.unmarshalBinary(bytes) ⇒ <code>module:group/edwards25519/point~Point</code>
-Convert a Uint8Array back to a ed25519 curve point
-[tools.ietf.org/html/rfc8032#scurvetion-5.1.3](tools.ietf.org/html/rfc8032#scurvetion-5.1.3)
-
-**Kind**: instance method of [<code>Point</code>](#Point)  
-**Throws**:
-
-- <code>TypeError</code> when bytes is not Uint8Array
-- <code>Error</code> when bytes does not correspond to a valid point
-
-
-| Param | Type |
-| --- | --- |
-| bytes | <code>Uint8Array</code> | 
-
-<a name="Scalar"></a>
-
-## Scalar
-Scalar represents a value in GF(2^252 + 27742317777372353535851937790883648493)
-
-**Kind**: global class  
-
-* [Scalar](#Scalar)
-    * [.equal(s2)](#Scalar+equal) ⇒ <code>boolean</code>
-    * [.set(a)](#Scalar+set) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.clone()](#Scalar+clone) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.zero()](#Scalar+zero) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.add(s1, s2)](#Scalar+add) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.sub(s1, s2)](#Scalar+sub) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.neg(a)](#Scalar+neg) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.one()](#Scalar+one) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.mul(s1, s2)](#Scalar+mul) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.div(s1, s2)](#Scalar+div) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.inv(a)](#Scalar+inv) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.setBytes(b)](#Scalar+setBytes) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.bytes()](#Scalar+bytes) ⇒ <code>Uint8Array</code>
-    * [.pick(callback)](#Scalar+pick) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-    * [.marshalBinary()](#Scalar+marshalBinary) ⇒ <code>Uint8Array</code>
-    * [.unmarshalBinary(bytes)](#Scalar+unmarshalBinary)
-
-<a name="Scalar+equal"></a>
-
-### scalar.equal(s2) ⇒ <code>boolean</code>
-Equality test for two Scalars derived from the same Group
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| s2 | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-
-<a name="Scalar+set"></a>
-
-### scalar.set(a) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Sets the receiver equal to another Scalar a
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| a | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-
-<a name="Scalar+clone"></a>
-
-### scalar.clone() ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Returns a copy of the scalar
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-<a name="Scalar+zero"></a>
-
-### scalar.zero() ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the additive identity (0)
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-<a name="Scalar+add"></a>
-
-### scalar.add(s1, s2) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular sums of scalars s1 and s2
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-**Returns**: <code>module:group/edwards25519/scalar~Scalar</code> - s1 + s2  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| s1 | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-| s2 | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-
-<a name="Scalar+sub"></a>
-
-### scalar.sub(s1, s2) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular difference
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-**Returns**: <code>module:group/edwards25519/scalar~Scalar</code> - s1 - s2  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| s1 | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-| s2 | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-
-<a name="Scalar+neg"></a>
-
-### scalar.neg(a) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular negation of scalar a
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| a | <code>module:group/edwards25519/scalar~Scalar</code> | Scalar |
-
-<a name="Scalar+one"></a>
-
-### scalar.one() ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the multiplicative identity (1)
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-<a name="Scalar+mul"></a>
-
-### scalar.mul(s1, s2) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular products of scalars s1 and s2
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param | Type |
-| --- | --- |
-| s1 | <code>module:group/edwards25519/scalar~Scalar</code> | 
-| s2 | <code>module:group/edwards25519/scalar~Scalar</code> | 
-
-<a name="Scalar+div"></a>
-
-### scalar.div(s1, s2) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular division of scalar s1 by scalar s2
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param |
-| --- |
-| s1 | 
-| s2 | 
-
-<a name="Scalar+inv"></a>
-
-### scalar.inv(a) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to the modular inverse of scalar a
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param |
-| --- |
-| a | 
-
-<a name="Scalar+setBytes"></a>
-
-### scalar.setBytes(b) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Sets the scalar from little-endian Uint8Array
-and reduces to the appropriate modulus
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-**Throws**:
-
-- <code>TypeError</code> when b is not Uint8Array
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| b | <code>Uint8Array</code> | bytes |
-
-<a name="Scalar+bytes"></a>
-
-### scalar.bytes() ⇒ <code>Uint8Array</code>
-Returns a big-endian representation of the scalar
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-<a name="Scalar+pick"></a>
-
-### scalar.pick(callback) ⇒ <code>module:group/edwards25519/scalar~Scalar</code>
-Set to a random scalar
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| callback | <code>function</code> | to generate random byte array of given length |
-
-<a name="Scalar+marshalBinary"></a>
-
-### scalar.marshalBinary() ⇒ <code>Uint8Array</code>
-Returns the binary representation (little endian) of the scalar
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-<a name="Scalar+unmarshalBinary"></a>
-
-### scalar.unmarshalBinary(bytes)
-Reads the binary representation (little endian) of scalar
-
-**Kind**: instance method of [<code>Scalar</code>](#Scalar)  
-
-| Param |
-| --- |
-| bytes | 
-
-<a name="Weierstrass"></a>
-
-## Weierstrass
-Class Weierstrass defines the weierstrass form of
-elliptic curves
-
-**Kind**: global class  
-
-* [Weierstrass](#Weierstrass)
-    * [new Weierstrass(config)](#new_Weierstrass_new)
-    * [.string()](#Weierstrass+string) ⇒ <code>string</code>
-    * [.scalarLen()](#Weierstrass+scalarLen) ⇒ <code>number</code>
-    * [.scalar()](#Weierstrass+scalar) ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
-    * [.pointLen()](#Weierstrass+pointLen) ⇒ <code>number</code>
-    * [.point()](#Weierstrass+point) ⇒ [<code>Point</code>](#module_group/nist/point..Point)
-
-<a name="new_Weierstrass_new"></a>
-
-### new Weierstrass(config)
-Create a new Weierstrass Curve
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| config | <code>object</code> | Curve configuration |
-| config.name | <code>String</code> | Curve name |
-| config.p | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Order of the underlying field. Little Endian if string or Uint8Array. |
-| config.a | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Curve Parameter a. Little Endian if string or Uint8Array. |
-| config.b | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Curve Parameter b. Little Endian if string or Uint8Array. |
-| config.n | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | Order of the base point. Little Endian if string or Uint8Array |
-| config.gx | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | x coordinate of the base point. Little Endian if string or Uint8Array |
-| config.gy | <code>String</code> \| <code>Uint8Array</code> \| <code>BN.jsObject</code> | y coordinate of the base point. Little Endian if string or Uint8Array |
-| config.bitSize | <code>number</code> | the size of the underlying field. |
-
-<a name="Weierstrass+string"></a>
-
-### weierstrass.string() ⇒ <code>string</code>
-Returns the name of the curve
-
-**Kind**: instance method of [<code>Weierstrass</code>](#Weierstrass)  
-<a name="Weierstrass+scalarLen"></a>
-
-### weierstrass.scalarLen() ⇒ <code>number</code>
-Returns the size in bytes of a scalar
-
-**Kind**: instance method of [<code>Weierstrass</code>](#Weierstrass)  
-<a name="Weierstrass+scalar"></a>
-
-### weierstrass.scalar() ⇒ [<code>Scalar</code>](#module_group/nist/scalar..Scalar)
-Returns the size in bytes of a point
-
-**Kind**: instance method of [<code>Weierstrass</code>](#Weierstrass)  
-<a name="Weierstrass+pointLen"></a>
-
-### weierstrass.pointLen() ⇒ <code>number</code>
-Returns the size in bytes of a point
-
-**Kind**: instance method of [<code>Weierstrass</code>](#Weierstrass)  
-<a name="Weierstrass+point"></a>
-
-### weierstrass.point() ⇒ [<code>Point</code>](#module_group/nist/point..Point)
-Returns a new Point
-
-**Kind**: instance method of [<code>Weierstrass</code>](#Weierstrass)  
 <a name="bits"></a>
 
 ## bits(bitlen, exact, callback) ⇒ <code>Uint8Array</code>
@@ -1061,36 +1179,3 @@ int choses a random uniform Uint8Array less than given modulus
 | mod | <code>BN.jsObject</code> | modulus |
 | callback | <code>function</code> | to generate a random byte array |
 
-<a name="Sign"></a>
-
-## Sign(privateKey, message) ⇒
-Sign computes a Schnorr signature over the given message.
-
-**Kind**: global function  
-**Returns**: signature as a Uint8Array  
-
-| Param | Description |
-| --- | --- |
-| privateKey | private key scalar to sign with |
-| message | message over which the signature is computed |
-
-<a name="Verify"></a>
-
-## Verify() ⇒
-Verify verifies if the signature of the message is valid under the given public
-key.
-
-**Kind**: global function  
-**Returns**: boolean true if signature is valid or false otherwise.  
-**Params**: suite suite to use  
-**Params**: publicKey public key under which to verify the signature  
-**Params**: message message that is signed  
-**Params**: signature signature made over the given message  
-<a name="hashSchnorr"></a>
-
-## hashSchnorr() ⇒
-hashSchnorr returns a scalar out of hashing the given inputs.
-
-**Kind**: global function  
-**Returns**: a scalar  
-**Params**: inputs a list of Uint8Array  
