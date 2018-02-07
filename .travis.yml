@@ -3,7 +3,6 @@ language: node_js
 node_js:
   - "lts/*"
   - "8"
-  - "7"
 
 env:
   - TEST_DIR=cothority
@@ -27,9 +26,6 @@ matrix:
       install:
         - go get -t ./...
         - go get github.com/dedis/Coding || true
-
-      before_install:
-        - "cd $GOPATH/github.com/dedis/cothority"
 
       script:
         - make test
