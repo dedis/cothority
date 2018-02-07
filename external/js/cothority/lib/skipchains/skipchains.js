@@ -15,10 +15,11 @@ class SkipchainClient {
      * @param {string} last know skipblock ID in hexadecimal format
      * @returns {SkipchainClient} A client that can talks to the skipchain services
      */
-    constructor(roster,lastID) {
+    constructor(group, roster,lastID) {
         this.lastRoster = roster;
         this.lastID = misc.hexToUint8Array(lastID);
         this.socket = new net.RosterSocket(this.lastRoster);
+        this.group = group;
     }
 
     /**
@@ -69,8 +70,25 @@ class SkipchainClient {
  */
 function verifyUpdateChainReply(lastID, updateChainReply) {
     const blocks = updateChainReply.update;
+    if (blocks.length == 0) {
+        return [null,new Error("no block returned in the chain")];
+    }
     // first verify the first block is the one we know
+    const first = blocks[0];
+    const id = new Uint8Array(first.hash);
+    if (!misc.uint8ArrayCompare(id,lastID)) {
+        return [null,new Error("the first ID is not the one we have")];
+    }
 
+    if (blocks.length == 1) {
+        return [first,null];
+    }
+    // then check the block links consecutively
+    var currBlock = first;
+    for (var i = 1; i < blocks.length; i++) {
+        var nextBlock = blocks[i];
+
+    }
 }
 
 
