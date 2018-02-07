@@ -24,6 +24,7 @@ import (
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
@@ -91,8 +92,10 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
-			Name:  "config,c",
-			Value: "~/.config/cothority/pop",
+			Name: "config,c",
+			// we use GetDataPath because only non-human-readable
+			// data files are stored here
+			Value: cfgpath.GetDataPath("pop"),
 			Usage: "The configuration-directory of pop",
 		},
 	}
@@ -141,21 +144,21 @@ func orgConfig(c *cli.Context) error {
 	pdFile := c.Args().First()
 	buf, err := ioutil.ReadFile(pdFile)
 	if err != nil {
-		return fmt.Errorf("error: %s - while reading: %s", err, pdFile)
+		return fmt.Errorf("error: %s - while reading pop-description: %s", err, pdFile)
 	}
 	err = decodePopDesc(string(buf), desc)
 	if err != nil {
-		return fmt.Errorf("error: %s - while decoding: %s", err, pdFile)
+		return fmt.Errorf("error: %s - while decoding pop-description: %s", err, pdFile)
 	}
 	if c.NArg() == 2 {
 		mergeFile := c.Args().Get(1)
 		buf, err = ioutil.ReadFile(mergeFile)
 		if err != nil {
-			return fmt.Errorf("error: %s - while reading: %s", err, mergeFile)
+			return fmt.Errorf("error: %s - while reading merge_party: %s", err, mergeFile)
 		}
 		desc.Parties, err = decodeGroups(string(buf))
 		if err != nil {
-			return fmt.Errorf("error: %s - while decoding: %s", err, mergeFile)
+			return fmt.Errorf("error: %s - while decoding merge_party: %s", err, mergeFile)
 		}
 
 		// Check that current party is included in merge config
@@ -341,7 +344,7 @@ func attCreate(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Private: %s\nPublic: %s", secStr, pubStr)
+	log.Infof("Private: %s\nPublic: %s", secStr, pubStr)
 	return nil
 }
 

@@ -21,7 +21,7 @@ describe("sockets", () =>  {
         mockServer.on('message', event => {
             const idProto = root.lookup(idProtoName);
             const id = {
-                id: message, 
+                id: message,
             };
             const idMessage = idProto.create(id);
             const marshalled = idProto.encode(idMessage).finish();

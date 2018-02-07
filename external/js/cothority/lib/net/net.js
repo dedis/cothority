@@ -6,8 +6,6 @@ const protobuf = require('protobufjs')
 const co = require('co');
 const shuffle = require("crypto-shuffle");
 
-
-const misc = require('../misc/misc.js');
 const root = require('../protobuf/index.js').root;
 
 const BASE64 = require("base-64");
@@ -18,8 +16,6 @@ const UTF8 = require("utf8");
  * sent to conodes.
  * @param {string} addr websocket address of the conode to contact.
  * @param {string} service name. A socket is tied to a service name.
- * @param {object} protobufjs root messages. Usually just 
- *              use `require("cothority.protobuf").root`
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */

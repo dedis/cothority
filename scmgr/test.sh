@@ -10,7 +10,7 @@ DBG_APP=2
 main(){
 	startTest
 	buildConode github.com/dedis/cothority/skipchain
-	CFG=$BUILDDIR/config.bin
+	CFG=$BUILDDIR/scmgr_config
 	test Restart
 	test Config
 	test Create
@@ -146,7 +146,7 @@ testUnlink(){
 testFetch(){
 	startCl
 	setupGenesis
-	rm -f $CFG
+	rm -rf "$CFG"
 	testFail runSc scdns fetch
 	testOK runSc scdns fetch public.toml $ID
 	testGrep 2002 runSc scdns list
@@ -187,7 +187,7 @@ setupFour(){
 }
 
 testFailure() {
-	rm -f "$CFG"
+	rm -rf "$CFG"
 	setupFour
 	runCoBG 1 2 3 4
 	setupGenesis
@@ -212,7 +212,7 @@ testJoin(){
 	startCl
 	runGrepSed "Created new" "s/.* //" runSc skipchain create public.toml
 	ID=$SED
-	rm -f $CFG
+	rm -rf "$CFG"
 	testGrep "Didn't find any" runSc scdns list
 	testFail runSc scdns fetch public.toml 1234
 	testGrep "Didn't find any" runSc scdns list
@@ -247,13 +247,16 @@ testConfig(){
 	startCl
 	OLDCFG=$CFG
 	CFGDIR=$( mktemp -d )
-	CFG=$CFGDIR/config.bin
+	CFG=$CFGDIR/scmgr_config
 	rmdir $CFGDIR
 	head -n 4 public.toml > one.toml
 	testOK runSc skipchain create one.toml
 	testOK runSc skipchain create public.toml
 	rm -rf $CFGDIR
 	CFG=$OLDCFG
+
+	# $CFG/data cannot be empty
+	testFail find "$CFG/data" -maxdepth 0 -type d -empty
 }
 
 runSc(){
@@ -261,7 +264,7 @@ runSc(){
 }
 
 startCl(){
-	rm -f $CFG
+	rm -rf "$CFG"
 	runCoBG 1 2
 }
 
