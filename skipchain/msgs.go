@@ -45,10 +45,6 @@ func init() {
 		&PropagateSkipBlocks{},
 		// Request forward-signature
 		&ForwardSignature{},
-		// Request updated block
-		&GetBlock{},
-		// Updated block reply
-		&GetBlockReply{},
 		// - Data structures
 		&SkipBlockFix{},
 		&SkipBlock{},

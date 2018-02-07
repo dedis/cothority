@@ -177,10 +177,33 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
 	reply = &GetUpdateChainReply{}
-	r := roster.RandomServerIdentity()
-	err = c.SendProtobuf(r,
-		&GetUpdateChain{latest}, reply)
-	return
+	for {
+		r2 := &GetUpdateChainReply{}
+		r := roster.RandomServerIdentity()
+		err = c.SendProtobuf(r, &GetUpdateChain{LatestID: latest}, r2)
+		if err != nil {
+			return
+		}
+		// Why would this happen?
+		if len(r2.Update) == 0 {
+			return
+		}
+		// The reply always has the original block they
+		// searched for. The first time through, keep it.
+		if reply.Update == nil {
+			reply.Update = append(reply.Update, r2.Update...)
+		} else {
+			// On subsequent searches, drop it because it is
+			// already the last item in reply.Update.
+			reply.Update = append(reply.Update, r2.Update[1:]...)
+		}
+		last := reply.Update[len(reply.Update)-1]
+		if last.GetForwardLen() == 0 {
+			return
+		}
+		latest = last.Hash
+		roster = last.Roster
+	}
 }
 
 // GetAllSkipchains returns all skipchains known to that conode. If none are

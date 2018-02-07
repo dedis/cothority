@@ -140,70 +140,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	assert.Equal(t, blockCount+1, service.db.Length())
 }
 
-func TestService_GetUpdateChain(t *testing.T) {
-	// Create a small chain and test whether we can get from one element
-	// of the chain to the last element with a valid slice of SkipBlocks
-	local := onet.NewLocalTest(cothority.Suite)
-	defer waitPropagationFinished(t, local)
-	defer local.CloseAll()
-	conodes := 10
-	sbCount := conodes - 1
-	servers, el, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
-	s := gs.(*Service)
-
-	sbs := make([]*SkipBlock, sbCount)
-	var err error
-	sbs[0], err = makeGenesisRoster(s, onet.NewRoster(el.List[0:2]))
-	log.ErrFatal(err)
-	log.Lvl1("Initialize skipchain.")
-	// init skipchain
-	for i := 1; i < sbCount; i++ {
-		newSB := NewSkipBlock()
-		newSB.Roster = onet.NewRoster(el.List[i : i+2])
-		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
-		log.Lvl2("Doing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
-		reply, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbs[i-1].Hash, NewBlock: newSB})
-		require.Nil(t, err)
-		require.NotNil(t, reply.Latest)
-		sbs[i] = reply.Latest
-	}
-
-	for i := 0; i < sbCount; i++ {
-		m, err := s.GetUpdateChain(&GetUpdateChain{sbs[i].Hash})
-		log.ErrFatal(err)
-		sbc := m.(*GetUpdateChainReply)
-		if !sbc.Update[0].Equal(sbs[i]) {
-			t.Fatal("First hash is not from our SkipBlock")
-		}
-		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
-		if !sbc.Update[len(sbc.Update)-1].Equal(sbs[sbCount-1]) {
-			log.Lvl2(sbc.Update[len(sbc.Update)-1].Hash)
-			log.Lvl2(sbs[sbCount-1].Hash)
-			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
-		}
-		for up, sb1 := range sbc.Update {
-			log.ErrFatal(sb1.VerifyForwardSignatures())
-			if up < len(sbc.Update)-1 {
-				sb2 := sbc.Update[up+1]
-				h1 := sb1.Height
-				h2 := sb2.Height
-				log.Lvl3("sbc1.Height=", sb1.Height)
-				log.Lvl3("sbc2.Height=", sb2.Height)
-				// height := min(len(sb1.ForwardLink), h2)
-				height := h1
-				if h2 < height {
-					height = h2
-				}
-				if !bytes.Equal(sb1.ForwardLink[height-1].Hash(),
-					sb2.Hash) {
-					t.Fatal("Forward-pointer of", up,
-						"is different of hash in", up+1)
-				}
-			}
-		}
-	}
-}
-
 func TestService_SetChildrenSkipBlock(t *testing.T) {
 	// How many nodes in Root
 	nodesRoot := 3
@@ -224,7 +160,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for i, h := range hosts {
 		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		m, err := s.GetUpdateChain(&GetUpdateChain{sbRoot.Hash})
+		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
 		sb := m.(*GetUpdateChainReply)
 		log.Lvl2(s.Context)
@@ -248,7 +184,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 
-		m, err := s.GetUpdateChain(&GetUpdateChain{sbInter.Hash})
+		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
 		sb := m.(*GetUpdateChainReply)
 
 		log.ErrFatal(err)
@@ -844,7 +780,7 @@ func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int)
 
 func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) error {
 	log.Lvl3(service, root, latest, base, height)
-	chain, err := service.GetUpdateChain(&GetUpdateChain{root.Hash})
+	chain, err := service.GetUpdateChain(&GetUpdateChain{LatestID: root.Hash})
 	if err != nil {
 		return err
 	}
@@ -1032,5 +968,65 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 			return
 		}
 		where = sb.ForwardLink[0].Hash()
+	}
+}
+
+func TestRosterAddCausesSync(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis, see #1000")
+	}
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	servers, _, genService := local.MakeHELS(5, skipchainSID, cothority.Suite)
+	leader := genService.(*Service)
+
+	// put last one to sleep, wake it up after the others have added it into the roster
+	servers[4].Pause()
+	leader.bftTimeout = 100 * time.Millisecond
+	leader.propTimeout = 5 * leader.bftTimeout
+
+	log.Lvl1("Creating chain with 4 servers")
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 2,
+			BaseHeight:    3,
+			Roster:        local.GenRosterFromHost(servers[0:4]...),
+			Data:          []byte{},
+		},
+	}
+	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	if err != nil {
+		t.Error(err)
+	}
+
+	log.Lvl1("Add last server into roster")
+	newBlock := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 2,
+			BaseHeight:    3,
+			Roster:        local.GenRosterFromHost(servers...),
+			Data:          []byte{},
+		},
+	}
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
+		LatestID: ssbrep.Latest.Hash,
+		NewBlock: newBlock})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Wake #4. It does not know any blocks yet.
+	log.Lvl1("Wake up last server")
+	servers[4].Unpause()
+
+	// Add a block on. #4 will be asked to sign a forward link on a block
+	// it has never heard of, so it will sync.
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
+		LatestID: ssbrep.Latest.Hash,
+		NewBlock: newBlock})
+	if err != nil {
+		t.Error(err)
 	}
 }
