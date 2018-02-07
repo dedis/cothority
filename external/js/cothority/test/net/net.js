@@ -5,6 +5,7 @@ const mock = require('mock-socket');
 const root = require("../../lib/protobuf").root;
 const network = require("../../lib/net");
 const cothority = require("../../lib");
+const identity = require("../../lib/identity.js");
 
 const serverAddr = "ws://127.0.0.1:9000";
 const deviceProtoName = "Device";
@@ -46,7 +47,7 @@ describe("roster socket", () => {
         mockServer.on('message', event => {
             const idProto = root.lookup(idProtoName);
             const id = {
-                id: message, 
+                id: message,
             };
             const idMessage = idProto.create(id);
             const marshalled = idProto.encode(idMessage).finish();
@@ -54,21 +55,22 @@ describe("roster socket", () => {
         });
         return mockServer;
     }
-    
+
     it("tries all servers", (done) => {
         const n = 5;
         // create the addresses
-        const addresses = [];
+        const identities = [];
         var server = "";
         for (var i = 0; i < n; i++) {
-            addresses[i] = "ws://127.0.0.1:700" + i;
+            identities[i] = new identity.ServerIdentity(new Uint8Array(),"tcp://127.0.0.1:700" + i);
             if (i == n-1) {
-                wsAddr = addresses[i] + "/cisc/Device";
+                wsAddr = identities[i].websocketAddr + "/cisc/Device";
                 server = createServer(wsAddr);
             }
         }
-        // create the socket and see if we have any messages back 
-        const socket = new network.RosterSocket(addresses,"cisc");
+        const roster = new identity.Roster(identities);
+        // create the socket and see if we have any messages back
+        const socket = new network.RosterSocket(roster,"cisc");
         socket.send(deviceProtoName,idProtoName,deviceMessage).then((data) => {
             expect(data.id).to.deep.equal(deviceMessage.point);
             server.stop(done);
@@ -76,7 +78,7 @@ describe("roster socket", () => {
             expect(true,"socket send: " + err).to.be.false;
             server.stop(done);
         });
-       
+
     });
 
 });

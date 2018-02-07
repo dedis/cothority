@@ -7,6 +7,7 @@ const co = require('co');
 const shuffle = require("crypto-shuffle");
 
 const root = require('../protobuf/index.js').root;
+const identity = require("../identity.js");
 
 const BASE64 = require("base-64");
 const UTF8 = require("utf8");
@@ -79,8 +80,8 @@ function Socket(addr,service) {
  * */
 class RosterSocket {
 
-    constructor(addresses,service) {
-        this.addresses = addresses;
+    constructor(roster,service) {
+        this.addresses = roster.identities.map((id) => id.websocketAddr);
         this.service = service;
     }
 

@@ -14,12 +14,12 @@ const misc = require('./misc');
 class ServerIdentity {
     /*
      * Returns a new ServerIdentity from the public key and address.
-     * @param hexPublic public key in hexadecimal format
+     * @param publicKey public key in bytes format
      * @param address tcp address of the cothority node
-     * @return a ServerIdentity 
+     * @return a ServerIdentity
      * */
-    constructor(hexPublic, address) {
-        this.pub = misc.hexToUint8Array(hexPublic);
+    constructor(publicKey, address) {
+        this.pub = publicKey
         this.addr = address;
         // id of the identity
         const url = 'https://dedis.epfl.ch/id/' + misc.uint8ArrayToHex(this.pub);
@@ -30,6 +30,17 @@ class ServerIdentity {
         this.wsAddr = "ws://" + parts.join(":");
     }
 
+    /*
+     * Returns a new ServerIdentity from the public key in hexadecimal format
+     * and address
+     * @param {string} hex-encoded public key
+     * @param {string} address
+     * @return a ServerIdentity
+     * */
+    static fromHexPublic(hexPublic,address) {
+        const pub = misc.hexToUint8Array(hexPublic);
+        return new ServerIdentity(pub,address);
+    }
     /*
      * @return the public key as a Uint8Array buffer
      * */
@@ -42,7 +53,7 @@ class ServerIdentity {
      * address constructor argument.
      * */
     get websocketAddr() {
-        return this.wsAddr; 
+        return this.wsAddr;
     }
 
     /*
@@ -87,7 +98,7 @@ class Roster {
         const idx = Math.floor(Math.random() * (this.length()-1));
         return this._identities[idx];
     }
-   
+
     /*
      * @return the list of identities composing this Roster
      * */
@@ -113,18 +124,17 @@ class Roster {
     * Parse cothority roster toml string into a Roster object.
     * @example
     * // Toml needs to adhere to the following format
-    * // where public has to be a base64 encodable string.
+    * // where public has to be a hex-encoded string.
     *
-    *     [[servers]]
-    *         Address = "tcp://127.0.0.1:7002"
-    *         Public = "GhxOf6H+23gK2NP4qu+FrRT5/Ca08+tCRcAaoZu26BY="
-    *         Description = "Conode_1"
-    *     [[servers]]
-    *         Address = "tcp://127.0.0.1:7004"
-    *         Public = "HSSppBPaE4QFpPQ2yvDN9Fss/RIe/jmtEvNvMm3y49M="
-    *         Description = "Conode_2"
+    *    [[servers]]
+    *        Address = "tcp://127.0.0.1:7001"
+    *        Public = "4e3008c1a2b6e022fb60b76b834f174911653e9c9b4156cc8845bfb334075655"
+    *        Description = "conode1"
+    *    [[servers]]
+    *        Address = "tcp://127.0.0.1:7003"
+    *        Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
+    *        Description = "conode2"
     *
-    * Where public has to be a base64 encodable string.
     * @param {string} toml of the above format.
     *
     * @throws {TypeError} when toml is not a string
@@ -135,7 +145,7 @@ class Roster {
             throw new TypeError;
 
         const roster = topl.parse(toml);
-        const identities = roster.servers.map((server) => new ServerIdentity(server.Public,server.Address));
+        const identities = roster.servers.map((server) => ServerIdentity.fromHexPublic(server.Public,server.Address));
         return new Roster(identities);
     }
 }
