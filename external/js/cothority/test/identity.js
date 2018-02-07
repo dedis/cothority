@@ -5,6 +5,10 @@ const expect = chai.expect;
 
 const cothority = require("../lib");
 const proto = require("../lib/protobuf").root;
+const kyber = require("@dedis/kyber-js");
+
+const nist = kyber.group.nist;
+const p256 = new nist.Curve(nist.Params.p256);
 
 const serversTOML = `
 [[servers]]
@@ -56,12 +60,35 @@ describe("roster", () => {
         expect(roster.length).to.be.equal(2);
         expect(roster.identities[0].tcpAddr).to.be.equal(addr1);
     });
+
+    it("correctly computes the aggregate key", () => {
+        const pub1 = p256.point().pick();
+        const pub2 = p256.point().pick();
+        const id1 = new cothority.ServerIdentity(pub1.marshalBinary(),"tcp://127.0.0.1:7000");
+        const id2 = new cothority.ServerIdentity(pub2.marshalBinary(),"tcp://127.0.0.1:7001");
+        const aggregate = p256.point().add(pub1,pub2);
+        const roster = new cothority.Roster([id1,id2],new Uint8Array([1,2,3]));
+        expect(roster.aggregateKey(p256).equal(aggregate)).to.be.true;
+    });
+
+});
+
+describe("server identity", () =>  {
+    it("correctly creates its point representation", () => {
+        const randomPoint = p256.point().pick();
+        const randomBuff = randomPoint.marshalBinary();
+        const si = new cothority.ServerIdentity(randomBuff,"127.0.0.1");
+        const siPoint = si.point(p256);
+        expect(siPoint).to.not.be.null;
+        expect(siPoint.equal(randomPoint)).to.be.true;
+    });
 });
 
 function fakeIdentity(addr) {
     return {
         id: new Uint8Array([1]),
-        public: new Uint8Array([1,2,3,4]),
+        //public: p256.point().pick(),
+        public: new Uint8Array([1,2,3]),
         address: addr,
         description: "fake",
     };

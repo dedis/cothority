@@ -86,6 +86,24 @@ class ServerIdentity {
     toString() {
         return this.tcpAddr;
     }
+
+    /**
+     * point returns the point representation of the public key
+     *
+     * @param {kyber.Group} group the expected group from which the public key belongs
+     * @returns {kyber.Point} the kyber.Point representing the public key
+     */
+    point(group) {
+    /*    if (this.point)*/
+            //return this.point;
+
+        //this.point = group.point();
+        //this.point.unmarshalBinary(this.pub);
+        /*return this.point.clone();*/
+        const point = group.point();
+        point.unmarshalBinary(this.pub);
+        return point;
+    }
 }
 
 
@@ -142,7 +160,21 @@ class Roster {
      * @returns {kyber.Point} The aggregate key
      */
     aggregateKey(group) {
-        throw new Error("not implemented yet");
+        /*if (this.aggr)*/
+            //return this.aggr;
+
+        /*this.aggr = group.point().null();*/
+        //for(var i = 0; i < this.length; i++) {
+            //this.aggr.add(aggr,this.identities[i].point(group));
+        //}
+        /*return this.aggr;*/
+
+        const aggr = group.point().null();
+        for(var i = 0; i < this.length; i++) {
+            aggr.add(aggr,this.identities[i].point(group));
+        }
+        return aggr;
+
     }
 
     /**

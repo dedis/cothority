@@ -1,5 +1,5 @@
 {
-  "name": "kyber-js",
+  "name": "@dedis/kyber-js",
   "version": "0.0.1",
   "description": "A javascript implementation of Kyber interfaces",
   "main": "index.js",

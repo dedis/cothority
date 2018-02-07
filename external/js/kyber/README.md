@@ -9,6 +9,8 @@ Javascript implementation of [Kyber interfaces](https://github.com/dedis/kyber/b
 Usage
 -----
 
+In the browser:
+
 ```html
 <html>
   <head>
@@ -26,8 +28,12 @@ Usage
   <body>
   </body>
 </html>
-
 ``` 
+
+In node_js:
+```js
+const kyber = require("@dedis/kyber-js");
+```
 
 Dev Setup
 ---------
