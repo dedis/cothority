@@ -4,8 +4,6 @@ const topl = require('topl');
 const UUID = require('pure-uuid');
 const protobuf = require('protobufjs')
 
-
-const misc = require('../misc/misc.js');
 const root = require('../protobuf/index.js').root;
 
 const BASE64 = require("base-64");
@@ -16,7 +14,7 @@ const UTF8 = require("utf8");
  * sent to conodes.
  * @param {path} string websocket path. Composed from a node's address with the
  *              websocket's service name
- * @param {object} protobufjs root messages. Usually just 
+ * @param {object} protobufjs root messages. Usually just
  *              use `require("cothority.protobuf").root`
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
