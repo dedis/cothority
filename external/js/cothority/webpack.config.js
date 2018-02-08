@@ -33,7 +33,7 @@ const browserConfig = {
   output: {
     filename: "bundle.min.js",
     path: path.resolve(__dirname, "dist"),
-    library: "kyber"
+    library: "cothority"
   },
   module: {
     rules: [
