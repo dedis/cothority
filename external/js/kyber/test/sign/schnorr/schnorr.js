@@ -5,7 +5,7 @@ const assert = chai.assert;
 const kyber = require("../../../index.js");
 const schnorr = kyber.sign.schnorr;
 // XXX to be changed to an interface style
-const nist = kyber.group.nist;
+const nist = kyber.curves.nist;
 var group = new nist.Curve(nist.Params.p256);
 const secretKey = group.scalar().pick();
 const publicKey = group.point().mul(secretKey, null);

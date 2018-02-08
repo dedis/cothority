@@ -1,4 +1,4 @@
-const group = require("../../group/group.js");
+const group = require("../../index.js");
 
 const hash = require("hash.js");
 
@@ -10,7 +10,7 @@ const hash = require("hash.js");
  *
  * Sign computes a Schnorr signature over the given message.
  *
- * @param {module:group~Scalar} privateKey - private key scalar to sign with
+ * @param {Scalar} privateKey - private key scalar to sign with
  * @param {Uint8Array} message - message over which the signature is computed
  * @return {Uint8Array} signature as a Uint8Array
  * */
@@ -53,8 +53,8 @@ function Sign(suite, privateKey, message) {
  * Verify verifies if the signature of the message is valid under the given public
  * key.
  *
- * @param {module:group~Group} suite - suite to use
- * @param {module:group~Point} publicKey public key under which to verify the signature
+ * @param {Group} suite - suite to use
+ * @param {Point} publicKey public key under which to verify the signature
  * @param {Uint8Array} message - message that is signed
  * @param {Uint8Array} signature - signature made over the given message
  * @return {boolean}  true if signature is valid or false otherwise.
@@ -110,7 +110,7 @@ function Verify(suite, publicKey, message, signature) {
  *
  * hashSchnorr returns a scalar out of hashing the given inputs.
  * @param {...Uint8Array} inputs
- * @return {module:group~Scalar}
+ * @return {Scalar}
  *
  **/
 function hashSchnorr(suite, ...inputs) {

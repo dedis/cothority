@@ -8,10 +8,10 @@ const EdDSA = elliptic.eddsa;
 const ec = new EdDSA("ed25519");
 const BN = require("bn.js");
 const orderRed = BN.red(ec.curve.n);
-const group = require("../group.js");
+const group = require("../../index.js");
 
 /**
- * @module group/edwards25519/curve
+ * @module curves/edwards25519/curve
  */
 
 /**
@@ -45,7 +45,7 @@ class Edwards25519 extends group.Group {
   /**
    * Returns a new Scalar for the prime-order subgroup of Ed25519 curve
    *
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   scalar() {
     return new Scalar(this, this.orderRed);
@@ -63,7 +63,7 @@ class Edwards25519 extends group.Group {
   /**
    * Creates a new point on the Ed25519 curve
    *
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   point() {
     return new Point(this);
@@ -72,7 +72,7 @@ class Edwards25519 extends group.Group {
   /**
    * NewKey returns a formatted Ed25519 key (avoiding subgroup attack by requiring
    * it to be a multiple of 8).
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   newKey() {
     let bytes = crypto.randomBytes(32);

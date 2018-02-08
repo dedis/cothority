@@ -5,10 +5,10 @@ const Point = require("./point");
 const crypto = require("crypto");
 const elliptic = require("elliptic");
 const BN = require("bn.js");
-const group = require("../group.js");
+const group = require("../../index.js");
 
 /**
- * @module group/nist/curve
+ * @module curves/nist/curve
  */
 
 /**
@@ -70,7 +70,7 @@ class Weierstrass extends group.Group {
   /**
    * Returns the size in bytes of a point
    *
-   * @returns {module:group/nist/scalar~Scalar}
+   * @returns {module:curves/nist/scalar~Scalar}
    */
   scalar() {
     return new Scalar(this, this.redN);
@@ -89,7 +89,7 @@ class Weierstrass extends group.Group {
   /**
    * Returns a new Point
    *
-   * @returns {module:group/nist/point~Point}
+   * @returns {module:curves/nist/point~Point}
    */
   point() {
     return new Point(this);

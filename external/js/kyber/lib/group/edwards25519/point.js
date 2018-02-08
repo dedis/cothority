@@ -3,10 +3,10 @@
 const BN = require("bn.js");
 const crypto = require("crypto");
 const Scalar = require("./scalar");
-const group = require("../group.js");
+const group = require("../../index.js");
 
 /**
- * @module group/edwards25519/point
+ * @module curves/edwards25519/point
  */
 
 /**
@@ -17,7 +17,7 @@ const group = require("../group.js");
  * passed as a Uint8Array
  * @constructor
  *
- * @param {module:group/edwards25519~Edwards25519} curve
+ * @param {module:curves/edwards25519~Edwards25519} curve
  * @param {(number|Uint8Array|BN.jsObjcurvet)} X
  * @param {(number|Uint8Array|BN.jsObjcurvet)} Y
  * @param {(number|Uint8Array|BN.jsObjcurvet)} Z
@@ -43,7 +43,7 @@ class Point extends group.Point {
     if (T !== undefined && T.constructor === Uint8Array) {
       _T = new BN(T, 16, "le");
     }
-    // the point reference is stored in an module:group/edwards25519/point~Point to make set()
+    // the point reference is stored in an module:curves/edwards25519/point~Point to make set()
     // consistent.
     this.ref = {
       point: curve.curve.point(_X, _Y, _Z, _T),
@@ -70,7 +70,7 @@ class Point extends group.Point {
   /**
    * Tests for equality between two Points derived from the same group
    *
-   * @param {module:group/edwards25519/point~Point} p2 Point module:group/edwards25519/point~Point to compare
+   * @param {module:curves/edwards25519/point~Point} p2 Point module:curves/edwards25519/point~Point to compare
    * @returns {boolean}
    */
   equal(p2) {
@@ -89,8 +89,8 @@ class Point extends group.Point {
   /**
    * set Set the current point to be equal to p2
    *
-   * @param {module:group/edwards25519/point~Point} p2 Point module:group/edwards25519/point~Point
-   * @returns {module:group/edwards25519/point~Point}
+   * @param {module:curves/edwards25519/point~Point} p2 Point module:curves/edwards25519/point~Point
+   * @returns {module:curves/edwards25519/point~Point}
    */
   set(p2) {
     this.ref = p2.ref;
@@ -100,7 +100,7 @@ class Point extends group.Point {
   /**
    * Creates a copy of the current point
    *
-   * @returns {module:group/edwards25519/point~Point} new Point module:group/edwards25519/point~Point
+   * @returns {module:curves/edwards25519/point~Point} new Point module:curves/edwards25519/point~Point
    */
   clone() {
     const point = this.ref.point;
@@ -111,7 +111,7 @@ class Point extends group.Point {
    * Set to the neutral element, which is (0, 1) for twisted Edwards
    * Curve
    *
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   null() {
     this.ref.point = this.ref.curve.curve.point(0, 1, 1, 0);
@@ -121,7 +121,7 @@ class Point extends group.Point {
   /**
    * Set to the standard base point for this curve
    *
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   base() {
     this.ref.point = this.ref.curve.curve.point(
@@ -151,7 +151,7 @@ class Point extends group.Point {
    *
    * @throws {TypeError} if data is not Uint8Array
    * @throws {Error} if data.length > embedLen
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   embed(data, callback) {
     if (data.constructor !== Uint8Array) {
@@ -224,9 +224,9 @@ class Point extends group.Point {
   /**
    * Returns the sum of two points on the curve
    *
-   * @param {module:group/edwards25519/point~Point} p1 Point module:group/edwards25519/point~Point, addend
-   * @param {module:group/edwards25519/point~Point} p2 Point module:group/edwards25519/point~Point, addend
-   * @returns {module:group/edwards25519/point~Point} p1 + p2
+   * @param {module:curves/edwards25519/point~Point} p1 Point module:curves/edwards25519/point~Point, addend
+   * @param {module:curves/edwards25519/point~Point} p2 Point module:curves/edwards25519/point~Point, addend
+   * @returns {module:curves/edwards25519/point~Point} p1 + p2
    */
   add(p1, p2) {
     const point = p1.ref.point;
@@ -239,9 +239,9 @@ class Point extends group.Point {
   /**
    * Subtract two points
    *
-   * @param {module:group/edwards25519/point~Point} p1 Point module:group/edwards25519/point~Point
-   * @param {module:group/edwards25519/point~Point} p2 Point module:group/edwards25519/point~Point
-   * @returns {module:group/edwards25519/point~Point} p1 - p2
+   * @param {module:curves/edwards25519/point~Point} p1 Point module:curves/edwards25519/point~Point
+   * @param {module:curves/edwards25519/point~Point} p2 Point module:curves/edwards25519/point~Point
+   * @returns {module:curves/edwards25519/point~Point} p1 - p2
    */
   sub(p1, p2) {
     const point = p1.ref.point;
@@ -255,8 +255,8 @@ class Point extends group.Point {
    * Finds the negative of a point p
    * For Edwards Curves, the negative of (x, y) is (-x, y)
    *
-   * @param {module:group/edwards25519/point~Point} p Point to negate
-   * @returns {module:group/edwards25519/point~Point} -p
+   * @param {module:curves/edwards25519/point~Point} p Point to negate
+   * @returns {module:curves/edwards25519/point~Point} -p
    */
   neg(p) {
     this.ref.point = p.ref.point.neg();
@@ -266,9 +266,9 @@ class Point extends group.Point {
   /**
    * Multiply point p by scalar s
    *
-   * @param {module:group/edwards25519/point~Point} s Scalar
-   * @param {module:group/edwards25519/point~Point} [p] Point
-   * @returns {module:group/edwards25519/point~Point}
+   * @param {module:curves/edwards25519/point~Point} s Scalar
+   * @param {module:curves/edwards25519/point~Point} [p] Point
+   * @returns {module:curves/edwards25519/point~Point}
    */
   mul(s, p) {
     if (s.constructor !== Scalar) {
@@ -285,7 +285,7 @@ class Point extends group.Point {
    * Selects a random point
    *
    * @param {function} callback - to generate a random byte array of given length
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   pick(callback) {
     return this.embed(new Uint8Array(), callback);
@@ -316,7 +316,7 @@ class Point extends group.Point {
    *
    * @throws {TypeError} when bytes is not Uint8Array
    * @throws {Error} when bytes does not correspond to a valid point
-   * @returns {module:group/edwards25519/point~Point}
+   * @returns {module:curves/edwards25519/point~Point}
    */
   unmarshalBinary(bytes) {
     if (bytes.constructor !== Uint8Array) {
