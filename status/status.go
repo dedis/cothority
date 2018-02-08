@@ -7,7 +7,7 @@ import (
 
 	"errors"
 
-	"github.com/dedis/cothority/status/service"
+	status "github.com/dedis/cothority/status/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -62,7 +62,6 @@ func network(c *cli.Context) error {
 
 // readGroup takes a toml file name and reads the file, returning the entities within
 func readGroup(tomlFileName string) (*onet.Roster, error) {
-	log.Print("Reading From File")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
@@ -82,10 +81,11 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 // printConn prints the status response that is returned from the server
 func printConn(e *status.Response) {
 	var a []string
-	for key, value := range e.Msg["Status"].Field {
-		a = append(a, (key + ": " + value + "\n"))
+	for sec := range e.Status {
+		for key, value := range e.Status[sec] {
+			a = append(a, (sec + "." + key + ": " + value))
+		}
 	}
 	sort.Strings(a)
-	strings.Join(a, "\n")
-	log.Print(a)
+	log.Print(strings.Join(a, "\n"))
 }
