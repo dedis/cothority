@@ -20,7 +20,6 @@ class SkipchainClient {
     constructor(group, roster,lastID) {
         this.lastRoster = roster;
         this.lastID = misc.hexToUint8Array(lastID);
-        this.socket = new net.RosterSocket(this.lastRoster);
         this.group = group;
     }
 
@@ -42,20 +41,32 @@ class SkipchainClient {
      * all checks pass.
      */
     latestBlock() {
-        const requestName = "GetUpdateChain";
-        const responseName = "GetUpdateChainReply";
+        const requestStr = "GetUpdateChain";
+        const responseStr = "GetUpdateChainReply";
         const request = { latestId: this.lastID };
         const client = this;
-        const promise = new Promise(function(resolve,reject) {
-            socket.send(requestName,responseName,request).then( (data) => {
+        const fn =  co(function *() {
+            // XXX  somewhat hackyish but sets a realistic upper bound
+            const initLength = client.roster.length;
+            var nbErr = 0;
+            while (nbErr < initLength) {
+                client.socket = new net.RosterSocket(client.lastRoster,skipchainID);
+                const data = yield client.socket.send(requestStr,responseStr,request);
                 [lastBlock,err] = client.verifyUpdateChainReply(data);
                 if (!err) {
-                    reject(err);
+                    // tries again with random conodes
+                    nbErr++;
                 }
-                resolve(lastBlock);
-            }).catch((err) => { reject(err); });
+                client.lastRoster = identity.Roster.fromProtobuf(lastBlock.roster);
+                client.lastID = lastBlock.hash;
+                if (!(lastBlock.forward) || (lastBlock.forward.length == 0)) {
+                    // no forward block means it's the latest block
+                    return Promise.resolve(lastBlock);
+                }
+            }
+            return Promise.reject(nbErr + " occured retrieving the latest block...");
         });
-        return promise;
+        return fn();
     }
 
     update(lastBlock) {
