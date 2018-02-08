@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 func TestService_CreateIdentity2(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	_, ro, s := local.MakeHELS(tSuite, 5, identityService)
+	_, ro, s := local.MakeSRS(tSuite, 5, identityService)
 	service := s.(*Service)
 
 	kp := key.NewKeyPair(tSuite)
@@ -51,7 +51,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 func TestService_CreateIdentity3(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	_, ro, s := local.MakeHELS(tSuite, 5, identityService)
+	_, ro, s := local.MakeSRS(tSuite, 5, identityService)
 	service := s.(*Service)
 
 	kp := key.NewKeyPair(tSuite)
