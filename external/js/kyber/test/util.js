@@ -30,6 +30,24 @@ class PRNG {
   }
 }
 
+const unhexlify = function(str) {
+  let result = new Uint8Array(str.length >> 1);
+  for (let c = 0, i = 0, l = str.length; i < l; i += 2, c++) {
+    result[c] = parseInt(str.substr(i, 2), 16);
+  }
+  return result;
+};
+
+const hexToUint8Array = hex => {
+  let bytes = new Uint8Array(hex.length >> 1);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i << 1, 2), 16);
+  }
+  return bytes;
+};
+
 module.exports = {
-  PRNG
+  PRNG,
+  unhexlify,
+  hexToUint8Array
 };

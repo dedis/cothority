@@ -1,3 +1,10 @@
+/**
+ * @module group
+ */
+
+/**
+ * Group is an abstract class for curves
+ */
 class Group {
   constructor() {}
 
@@ -18,6 +25,10 @@ class Group {
   }
 }
 
+/**
+ * Point is an abstract class for representing
+ * a point on an elliptic curve
+ */
 class Point {
   constructor() {}
 
@@ -82,6 +93,10 @@ class Point {
   }
 }
 
+/**
+ * Scalar is an abstract class for representing a scalar
+ * to be used in elliptic curve operations
+ */
 class Scalar {
   marshalBinary() {
     throw new Error("Not implemented");
@@ -143,5 +158,5 @@ class Scalar {
 module.exports = {
   Point,
   Scalar,
-  Group,
+  Group
 };
