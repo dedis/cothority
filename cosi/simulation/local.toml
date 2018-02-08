@@ -1,0 +1,25 @@
+Simulation = "CosiProtocol"
+Servers = 8
+Bf = 4
+Rounds = 1
+CloseWait = 6000
+Suite = "Ed25519"
+
+Hosts, NSubtrees, FailingSubleaders,FailingLeafs
+  4,  1, 0,  0
+  4,  1, 0,  1
+  4,  3, 0,  0
+ 10,  3, 0,  0
+ 10,  3, 2,  0
+ 10,  3, 0,  3
+ 50,  7, 0,  0
+ 50,  7, 5, 10
+ 60,  8, 0,  0
+ 70,  8, 0,  0
+ 75,  9, 0,  0
+ 80,  9, 0,  0
+ 90,  9, 0,  0
+100, 10, 0,  0
+100, 10, 9,  0
+100, 10, 0, 50
+100, 10, 9, 50

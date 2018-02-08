@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/crypto"
-	cosi "github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
@@ -38,8 +38,8 @@ func TestServiceCosi(t *testing.T) {
 		require.Nil(t, err, "Couldn't send")
 
 		// verify the response still
-		require.Nil(t, crypto.VerifySignature(hosts[0].Suite(), el.Publics(),
-			msg, reply.Signature))
+		suite := suites.MustFind(hosts[0].Suite().String())
+		require.Nil(t, cosi.Verify(suite, el.Publics(), msg, reply.Signature, cosi.CompletePolicy{}))
 	}
 }
 
@@ -64,6 +64,6 @@ func TestCreateAggregate(t *testing.T) {
 	require.Nil(t, err, "Couldn't send")
 
 	// verify the response still
-	require.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
-		msg, res.Signature))
+	suite := suites.MustFind(hosts[0].Suite().String())
+	require.Nil(t, cosi.Verify(suite, el.Publics(), msg, res.Signature, cosi.CompletePolicy{}))
 }

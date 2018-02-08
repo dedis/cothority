@@ -3,11 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
-
-	"errors"
 	"time"
 
 	"github.com/dedis/cothority"
