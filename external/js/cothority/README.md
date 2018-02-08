@@ -14,7 +14,7 @@ messages.
     <script type="text/javascript">
         const net = cothority.net; // the network module 
         const serverAddress = "ws://127.0.0.1:8000"; 
-        const socket = net.Socket(serverAddress); // socket to talk to a conode
+        const socket = new net.Socket(serverAddress); // socket to talk to a conode
         
         // the data that we want to send, as a JS object
         const deviceMessage = { 
