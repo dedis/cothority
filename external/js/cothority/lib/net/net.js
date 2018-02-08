@@ -83,16 +83,24 @@ class RosterSocket {
     constructor(roster,service) {
         this.addresses = roster.identities.map((id) => id.websocketAddr);
         this.service = service;
+        this.lastGoodServer = null;
     }
 
     send(request,response,data)  {
+        const socket = this;
         const fn = co.wrap(function *(addresses,service) {
             shuffle(addresses)
+            // try first the last good server we know
+            if (socket.lastGoodServer) {
+                addresses.unshift(socket.lastGoodServer);
+            }
+            addresses.unshift(
             for(var i=0; i < addresses.length; i++) {
                 var addr = addresses[i];
                 try {
                     var socket = new Socket(addr,service);
                     var data = yield socket.send(request,response,data);
+                    socket.lastGoodServer = addr;
                     return Promise.resolve(data);
                 } catch (err) {
                     console.log("could not reach out to " + addr);
