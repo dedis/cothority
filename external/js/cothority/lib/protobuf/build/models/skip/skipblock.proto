@@ -37,7 +37,7 @@ message SkipBlockData {
 message BlockLink {
     required bytes hash = 1;
     required bytes signature = 2;
-    optional Exception exceptions = 3;
+    repeated Exception exceptions = 3;
 }
 
 message Exception {

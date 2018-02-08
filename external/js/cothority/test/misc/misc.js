@@ -37,3 +37,34 @@ describe("misc buffer equality", () => {
 
 });
 
+describe("misc bitmask", () => {
+
+    it("returns the right bit set", () => {
+
+        // try with 6 bit set amongst 16 bits
+        // "0110 1101 0000 0010";
+        const buffer = new Buffer(2);
+        buffer.writeUInt8(0x6d,0);
+        buffer.writeUInt8(0x02,1);
+        const bitmask = Uint8Array.from(buffer);
+        const nb = misc.getBitmaskLength(bitmask)
+        expect(nb).to.be.equal(16);
+        console.log(convert(bitmask).toString(2));
+        const indices = misc.getSetBits(bitmask);
+        const expected = [1,2,4,5,7,14];
+        console.log(indices);
+        console.log(expected);
+        expect(indices).to.be.deep.equal(expected);
+
+    });
+
+});
+
+function convert(Uint8Arr) {
+    var length = Uint8Arr.length;
+
+    let buffer = Buffer.from(Uint8Arr);
+    var result = buffer.readUIntBE(0, length);
+
+    return result;
+}

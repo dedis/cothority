@@ -1,6 +1,6 @@
 const group = require("../../group/group.js");
 
-const hash = require("hash.js");
+const crypto = require("crypto");
 /**
  *
  * Sign computes a Schnorr signature over the given message.
@@ -109,7 +109,7 @@ function Verify(suite, publicKey, message, signature) {
  *
  **/
 function hashSchnorr(suite, ...inputs) {
-  const h = hash.sha512();
+  const h = crypto.createHash("sha512");
   for (let i of inputs) {
     h.update(i);
   }
@@ -120,3 +120,4 @@ function hashSchnorr(suite, ...inputs) {
 
 module.exports.sign = Sign;
 module.exports.verify = Verify;
+module.exports.hashSchnorr = hashSchnorr;

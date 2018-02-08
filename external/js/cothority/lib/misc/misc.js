@@ -74,7 +74,46 @@ function constantCompare(arr1,arr2) {
     throw new Error("not implemented yet");
 }
 
+function getBitmaskLength(bitmask) {
+    if (bitmask.constructor !== Uint8Array)
+        throw TypeError;
+
+    const masklen = bitmask.length;
+    return masklen << 3;
+}
+
+/**
+ * getSetBits returns an array of indices for each bit set in the given bitmask. See cosi bitmask for more information.
+ *
+ * @param {Uint8Array} mask the bit mask
+ * @returns {Array} array of indices of bits sets
+ */
+const BN = require("bn.js");
+function getSetBits(mask) {
+    if (mask.constructor !== Uint8Array)
+        throw TypeError
+
+    const masklen = mask.length;
+    const n = masklen << 3;
+    const indices = [];
+     for (var i = 0; i < n; i++) {
+        var byt = i >> 3;
+        var bit = 1 << (i&7);
+        if ((byt < masklen) && ((mask[byt]&bit) != 0)) {
+            // Participant i disabled
+            // take the idx relative to the current byte
+            var idx = i % 8;
+            // since we're reading bits in a byte from the lowest bit first,
+            // need to reverse
+            idx = (byt << 3) + (7-idx);
+            indices.push(idx);
+        }
+    }
+    return indices.sort((a,b) => a-b);
+}
 /** @module misc */
 exports.uint8ArrayToHex = uint8ArrayToHex;
 exports.hexToUint8Array = hexToUint8Array;
 exports.uint8ArrayCompare = uint8ArrayCompare;
+exports.getSetBits = getSetBits;
+exports.getBitmaskLength = getBitmaskLength;
