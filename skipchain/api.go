@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"errors"
+	"math/rand"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -176,22 +177,34 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
+	const retries = 3
+
 	reply = &GetUpdateChainReply{}
 	for {
 		r2 := &GetUpdateChainReply{}
-		r := roster.RandomServerIdentity()
-		err = c.SendProtobuf(r, &GetUpdateChain{LatestID: latest}, r2)
-		if err != nil {
-			return
+
+		// Try up to retries random servers from the given roster.
+		i := 0
+		perm := rand.Perm(len(roster.List))
+		for ; i < retries; i++ {
+			// To handle the case where len(perm) < retries.
+			which := i % len(perm)
+			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{LatestID: latest}, r2)
+			if err == nil && len(r2.Update) != 0 {
+				break
+			}
 		}
-		// Why would this happen?
-		if len(r2.Update) == 0 {
-			return
+		if i == retries {
+			return nil, err
 		}
+
+		// TODO: Verify that these blocks are a valid
+		// chain from where we knew.
+
 		// The reply always has the original block they
 		// searched for. The first time through, keep it.
 		if reply.Update == nil {
-			reply.Update = append(reply.Update, r2.Update...)
+			reply.Update = r2.Update
 		} else {
 			// On subsequent searches, drop it because it is
 			// already the last item in reply.Update.
@@ -199,7 +212,7 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 		}
 		last := reply.Update[len(reply.Update)-1]
 		if last.GetForwardLen() == 0 {
-			return
+			return reply, nil
 		}
 		latest = last.Hash
 		roster = last.Roster

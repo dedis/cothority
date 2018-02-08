@@ -156,11 +156,8 @@ func TestClient_GetUpdateChain(t *testing.T) {
 				if h2 < height {
 					height = h2
 				}
-				if !bytes.Equal(sb1.ForwardLink[height-1].Hash(),
-					sb2.Hash) {
-					t.Fatal("Forward-pointer of update", up,
-						"is different from hash in", up+1)
-				}
+				require.True(t, sb1.ForwardLink[height-1].Hash().Equal(sb2.Hash),
+					"Forward-pointer of update", up, "is different from hash in", up+1)
 			}
 		}
 	}
