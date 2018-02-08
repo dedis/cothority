@@ -47,15 +47,20 @@ describe("misc bitmask", () => {
         buffer.writeUInt8(0x6d,0);
         buffer.writeUInt8(0x02,1);
         const bitmask = Uint8Array.from(buffer);
-        const nb = misc.getBitmaskLength(bitmask)
+        var nb = misc.getBitmaskLength(bitmask)
         expect(nb).to.be.equal(16);
         console.log(convert(bitmask).toString(2));
-        const indices = misc.getSetBits(bitmask);
+        var indices = misc.getSetBits(bitmask);
         const expected = [1,2,4,5,7,14];
         console.log(indices);
         console.log(expected);
         expect(indices).to.be.deep.equal(expected);
 
+        const empty = new Uint8Array();
+        nb = misc.getBitmaskLength(empty);
+        expect(nb).to.be.equal(0);
+        indices = misc.getSetBits(empty);
+        expect(indices).to.be.deep.equal([]);
     });
 
 });

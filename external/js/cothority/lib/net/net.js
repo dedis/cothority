@@ -85,15 +85,24 @@ class RosterSocket {
         this.lastGoodServer = null;
     }
 
+    /**
+     * send tries to send the request to a random server in the list as long as there is no successful response. It tries a permutation of all server's addresses.
+     *
+     * @param {string} request name of the protobuf packet
+     * @param {string} response name of the protobuf packet response
+     * @param {Object} data javascript object representing the request
+     * @returns {Promise} holds the returned data in case of success.
+     */
     send(request,response,data)  {
         const socket = this;
-        const fn = co.wrap(function *(addresses,service) {
+        const fn = co.wrap(function *(socket) {
+            var addresses = socket.addresses;
+            var service = socket.service;
             shuffle(addresses)
             // try first the last good server we know
-            if (socket.lastGoodServer) {
+            if (socket.lastGoodServer)
                 addresses.unshift(socket.lastGoodServer);
-            }
-            addresses.unshift(
+
             for(var i=0; i < addresses.length; i++) {
                 var addr = addresses[i];
                 try {
@@ -108,7 +117,7 @@ class RosterSocket {
             }
             return Promise.reject("no conodes are available");
         });
-        return fn(this.addresses,this.service);
+        return fn(this);
     }
 }
 

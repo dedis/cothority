@@ -50,15 +50,19 @@ class SkipchainClient {
             const initLength = client.roster.length;
             var nbErr = 0;
             while (nbErr < initLength) {
+                // fetches the data with the current roster
                 client.socket = new net.RosterSocket(client.lastRoster,skipchainID);
                 const data = yield client.socket.send(requestStr,responseStr,request);
+                // verifies it's all correct
                 [lastBlock,err] = client.verifyUpdateChainReply(data);
                 if (!err) {
                     // tries again with random conodes
                     nbErr++;
                 }
+                // update the roster
                 client.lastRoster = identity.Roster.fromProtobuf(lastBlock.roster);
                 client.lastID = lastBlock.hash;
+                // if there is nothing new stop !
                 if (!(lastBlock.forward) || (lastBlock.forward.length == 0)) {
                     // no forward block means it's the latest block
                     return Promise.resolve(lastBlock);
@@ -69,15 +73,12 @@ class SkipchainClient {
         return fn();
     }
 
-    update(lastBlock) {
-        this.lastRoster = identity.Roster.fromProtobuf(lastBlock.Roster);
-    }
    /**
     * verifies if the list of skipblock given is correct and if it links with the last know given skipblockID.
     *
     * @param {Uint8Array} lastID last know skipblock ID
     * @param {GetUpdateChainReply} updateChainReply the response from a conode containing the blocks
-    * @returns {(SkipBlock,err)} the last skipblock and an error if any
+    * @returns {(SkipBlock,err)} the most recent valid block in the chain, or an error
     */
     verifyUpdateChainReply(updateChainReply) {
         const blocks = updateChainReply.update;
@@ -109,8 +110,9 @@ class SkipchainClient {
             // XXX to change later to source_hash, dest_hash, dst_roster_id
             const message = nextBlock.hash;
             const roster = identity.Roster.fromProtobuf(currBlock.roster);
-            if (!this.verifyForwardLink(roster,message,lastLink))
-                return [null,new Error("Forward link incorrect!")];
+            var err = this.verifyForwardLink(roster,message,lastLink)
+            if (err)
+                return [null,err];
 
             // move to the next block
             currBlock = nextBlock;
@@ -132,13 +134,18 @@ class SkipchainClient {
         const pointLen = group.pointLen();
         const scalarlLen = group.scalarLen();
         if ((link) && (link.signature.length < pointLen+scalarLen))
-            return false;
+            return new Error("signature length invalid");
 
         // compute the bitmask and the reduced public key
         const bitmask = link.signature.slice(pointLen+scalarLen,link.signature.length);
-        if (getBitmaskLength(bitmask) > roster.length) {
-            return false;
-        }
+        const bitmaskLenth = getBitmaskLength(bitmask)
+        if (bitmaskLength > roster.length)
+            return new Error("bitmask length invalid");
+
+        const threshold = (roster.length - 1) / 3;
+        if (bitmaskLength > threshold)
+            return new Error("nb of signers absent above threshold");
+
         // get the roster aggregate key and subtract any exception listed.
         const aggregate = roster.aggregateKey();
 
@@ -174,6 +181,8 @@ class SkipchainClient {
         s.unmarshalBinary(link.signature.slice(pointLen,pointLen+scalarLen));
 
         // recompute challenge = H(R || P || M)
+        // with P being the roster aggregate public key minus the public keys
+        // indicated by the bitmask
         const buffPub = publicKey.marshalBinary();
         const challenge = schnorr.hashSchnorr(suite, R.marshalBinary(), aggregate.marshalBinary(), message);
         // compute sG
@@ -182,9 +191,9 @@ class SkipchainClient {
         const right = suite.point().mul(challenge, publicKey);
         right.add(right, reducedR);
         if (!right.equal(left)) {
-            return false;
+            return new Error("invalid signature");
         }
-        return true;
+        return null;
     }
 }
 
