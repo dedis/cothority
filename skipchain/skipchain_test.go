@@ -48,7 +48,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(4, skipchainSID, cothority.Suite)
+	servers, el, genService := local.MakeHELS(cothority.Suite, 4, skipchainSID)
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
@@ -148,7 +148,7 @@ func TestService_GetUpdateChain(t *testing.T) {
 	defer local.CloseAll()
 	conodes := 10
 	sbCount := conodes - 1
-	servers, el, gs := local.MakeHELS(conodes, skipchainSID, cothority.Suite)
+	servers, el, gs := local.MakeHELS(cothority.Suite, conodes, skipchainSID)
 	s := gs.(*Service)
 
 	sbs := make([]*SkipBlock, sbCount)
@@ -211,7 +211,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	hosts, el, genService := local.MakeHELS(nodesRoot, skipchainSID, cothority.Suite)
+	hosts, el, genService := local.MakeHELS(cothority.Suite, nodesRoot, skipchainSID)
 	service := genService.(*Service)
 
 	// Setting up two chains and linking one to the other
@@ -268,7 +268,7 @@ func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, el, genService := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -320,7 +320,7 @@ func TestService_Verification(t *testing.T) {
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	sbLength := 4
-	_, el, genService := local.MakeHELS(sbLength, skipchainSID, cothority.Suite)
+	_, el, genService := local.MakeHELS(cothority.Suite, sbLength, skipchainSID)
 	service := genService.(*Service)
 
 	elRoot := onet.NewRoster(el.List[0:3])
@@ -352,7 +352,7 @@ func TestService_SignBlock(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, genService := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	_, el, genService := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	service := genService.(*Service)
 
 	sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerificationNone, 1, 1)
@@ -374,7 +374,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	_, el, s := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	_, el, s := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	s1 := s.(*Service)
 	count := make(chan bool, 3)
 	verifyFunc := func(newID []byte, newSB *SkipBlock) bool {
@@ -567,7 +567,7 @@ func TestService_Propagation(t *testing.T) {
 
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, genService := local.MakeHELS(nbrNodes, skipchainSID, cothority.Suite)
+	servers, ro, genService := local.MakeHELS(cothority.Suite, nbrNodes, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -586,7 +586,7 @@ func TestService_AddFollow(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, ro, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, ro, _ := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
@@ -676,7 +676,7 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, _, _ := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	server := servers[0]
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 	require.Equal(t, 0, len(service.Storage.Clients))
@@ -701,7 +701,7 @@ func TestService_Unlink(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, _, _ := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	server := servers[0]
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
@@ -759,7 +759,7 @@ func TestService_DelFollow(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, _, _ := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
 	privWrong := key.NewKeyPair(cothority.Suite).Private
@@ -794,7 +794,7 @@ func TestService_ListFollow(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, _ := local.MakeHELS(3, skipchainSID, cothority.Suite)
+	servers, _, _ := local.MakeHELS(cothority.Suite, 3, skipchainSID)
 	service := local.GetServices(servers, skipchainSID)[0].(*Service)
 
 	priv := setupFollow(service)
