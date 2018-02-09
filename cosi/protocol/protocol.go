@@ -18,7 +18,7 @@ func init() {
 	network.RegisterMessages(Announcement{}, Commitment{}, Challenge{}, Response{}, Stop{})
 
 	onet.GlobalProtocolRegister(ProtocolName, NewProtocol)
-	onet.GlobalProtocolRegister(subProtocolName, NewSubProtocol)
+	onet.GlobalProtocolRegister(SubProtocolName, NewSubProtocol)
 }
 
 // CoSiRootNode holds the parameters of the protocol.
@@ -241,7 +241,7 @@ func (p *CoSiRootNode) Start() error {
 // and returns the started protocol.
 func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, error) {
 
-	pi, err := p.CreateProtocol(subProtocolName, tree)
+	pi, err := p.CreateProtocol(SubProtocolName, tree)
 	if err != nil {
 		return nil, err
 	}

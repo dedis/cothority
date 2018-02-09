@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -85,7 +85,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 
 	// the hash is the message cosi actually signs, ideally cosi protocol
 	// should tell us what it is, here we recompute it and then return
-	suite, ok := s.Suite().(kyber.HashFactory)
+	suite, ok := s.Suite().(cosi.Suite)
 	if !ok {
 		return nil, errors.New("suite is unusable")
 	}
@@ -99,8 +99,13 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
-	pi, err := protocol.NewProtocol(tn)
-	return pi, err
+	if tn.ProtocolName() == protocol.ProtocolName {
+		return protocol.NewProtocol(tn)
+	}
+	if tn.ProtocolName() == protocol.SubProtocolName {
+		return protocol.NewSubProtocol(tn)
+	}
+	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }
 
 func newCoSiService(c *onet.Context) (onet.Service, error) {
@@ -112,7 +117,11 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	if _, err := c.ProtocolRegister(protocol.ProtocolName, protocol.NewProtocol); err != nil {
-		log.Error("couldn't register protocol:", err)
+		log.Error("couldn't register main protocol:", err)
+		return nil, err
+	}
+	if _, err := c.ProtocolRegister(protocol.SubProtocolName, protocol.NewSubProtocol); err != nil {
+		log.Error("couldn't register sub protocol:", err)
 		return nil, err
 	}
 	return s, nil

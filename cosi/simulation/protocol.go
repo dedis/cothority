@@ -1,89 +1,174 @@
 package main
 
-import (
-	p "github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/kyber"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
-)
-
 /*
-This is the CoSi-protocol for simulation which supports
- verification at different level.
+The simulation-file can be used with the `cothority/simul` and be run either
+locally or on deterlab. Contrary to the `test` of the protocol, the simulation
+is much more realistic, as it tests the protocol on different nodes, and not
+only in a test-environment.
+
+The Setup-method is run once on the client and will create all structures
+and slices necessary to the simulation. It also receives a 'dir' argument
+of a directory where it can write files. These files will be copied over to
+the simulation so that they are available.
+
+The Run-method is called only once by the root-node of the tree defined in
+Setup. It should run the simulation in different rounds. It can also
+measure the time each run takes.
+
+In the Node-method you can read the files that have been created by the
+'Setup'-method.
 */
 
-// Name can be used to reference the registered protocol.
-var Name = "CoSimul"
+import (
+	"fmt"
+	"time"
 
-func init() {
-	onet.GlobalProtocolRegister(Name, NewCoSimul)
-}
-
-// VRType defines what verifications are done
-// see https://github.com/dedis/cothority/issues/260
-type VRType int
-
-const (
-	// NoCheck will do no check at all
-	NoCheck = VRType(0)
-	// RootCheck will check only at root
-	RootCheck = VRType(1)
-	// AllCheck check at each level of the tree, except the leafs
-	AllCheck = VRType(2)
+	"github.com/BurntSushi/toml"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/suites"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
+	"github.com/dedis/onet/simul/monitor"
+	"github.com/dedis/student_17_bftcosi/protocol"
 )
 
-// CoSimul is a protocol suited for simulation
-type CoSimul struct {
-	*p.CoSi
-	// VerifyResponse sets how the checks are done,
-	VerifyResponse VRType
+func init() {
+	onet.SimulationRegister("CosiProtocol", NewSimulationProtocol)
 }
 
-// NewCoSimul returns a new CoSi-protocol suited for simulation
-func NewCoSimul(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	c, err := p.NewProtocol(node)
+// SimulationProtocol implements onet.Simulation.
+type SimulationProtocol struct {
+	onet.SimulationBFTree
+	NSubtrees         int
+	FailingSubleaders int
+	FailingLeafs      int
+}
+
+// NewSimulationProtocol is used internally to register the simulation (see the init()
+// function above).
+func NewSimulationProtocol(config string) (onet.Simulation, error) {
+	es := &SimulationProtocol{}
+	_, err := toml.Decode(config, es)
 	if err != nil {
 		return nil, err
 	}
-
-	cosimul := &CoSimul{c.(*p.CoSi), RootCheck}
-	cosimul.RegisterResponseHook(cosimul.getResponse)
-
-	return cosimul, nil
+	return es, nil
 }
 
-// Publics returns an array of public points for the signature- and
-// verification method
-func (c *CoSimul) Publics() []kyber.Point {
-	var publics []kyber.Point
-	for _, e := range c.Tree().Roster.List {
-		publics = append(publics, e.Public)
+// Setup implements onet.Simulation.
+func (s *SimulationProtocol) Setup(dir string, hosts []string) (*onet.SimulationConfig, error) {
+	sc := &onet.SimulationConfig{}
+	s.CreateRoster(sc, hosts, 2000)
+	err := s.CreateTree(sc)
+	if err != nil {
+		return nil, err
 	}
-	return publics
+	return sc, nil
 }
 
-func (c *CoSimul) getResponse(in []kyber.Scalar) {
-	if c.IsLeaf() {
-		// This is the leaf-node and we can't verify it
-		return
+// Node can be used to initialize each node before it will be run
+// by the server. Here we call the 'Node'-method of the
+// SimulationBFTree structure which will load the roster- and the
+// tree-structure to speed up the first round.
+func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
+	index, _ := config.Roster.Search(config.Server.ServerIdentity.ID)
+	if index < 0 {
+		log.Fatal("Didn't find this node in roster")
 	}
 
-	verify := false
-	switch c.VerifyResponse {
-	case NoCheck:
-		log.Lvl3("Not checking at all")
-	case RootCheck:
-		verify = c.IsRoot()
-	case AllCheck:
-		verify = !c.IsLeaf()
+	// get subleader ids
+	subleadersIds, err := protocol.GetSubleaderIDs(config.Tree, s.Hosts, s.NSubtrees)
+	if err != nil {
+		return err
+	}
+	if len(subleadersIds) > s.FailingSubleaders {
+		subleadersIds = subleadersIds[:s.FailingSubleaders]
 	}
 
-	if verify {
-		err := c.VerifyResponses(c.TreeNode().AggregatePublic(c.Suite()))
-		if err != nil {
-			log.Error("Couldn't verify responses at our level", c.Name(), err.Error())
-		} else {
-			log.Lvl2("Successfully verified responses at", c.Name())
+	// get leafs ids
+	leafsIds, err := protocol.GetLeafsIDs(config.Tree, s.Hosts, s.NSubtrees)
+	if err != nil {
+		return err
+	}
+	if len(leafsIds) > s.FailingLeafs {
+		leafsIds = leafsIds[:s.FailingLeafs]
+	}
+
+	toIntercept := append(leafsIds, subleadersIds...)
+
+	// intercept announcements on some nodes
+	for _, id := range toIntercept {
+		if id == config.Server.ServerIdentity.ID {
+			config.Server.RegisterProcessorFunc(onet.ProtocolMsgID, func(e *network.Envelope) {
+				//get message
+				_, msg, err := network.Unmarshal(e.Msg.(*onet.ProtocolMsg).MsgSlice, config.Server.Suite())
+				if err != nil {
+					log.Fatal("error while unmarshaling a message:", err)
+					return
+				}
+
+				switch msg.(type) {
+				case *protocol.Announcement, *protocol.Commitment, *protocol.Challenge, *protocol.Response:
+					log.Lvl3("ignoring cosi message")
+				default:
+					config.Overlay.Process(e)
+				}
+			})
+			break // this node has been found
 		}
 	}
+	log.Lvl3("Initializing node-index", index)
+	return s.SimulationBFTree.Node(config)
+}
+
+// Run implements onet.Simulation.
+func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
+	log.SetDebugVisible(2)
+	size := config.Tree.Size()
+	log.Lvl2("Size is:", size, "rounds:", s.Rounds)
+	for round := 0; round < s.Rounds; round++ {
+		log.Lvl1("Starting round", round)
+		round := monitor.NewTimeMeasure("round")
+
+		proposal := []byte{0xFF}
+		p, err := config.Overlay.CreateProtocol(protocol.ProtocolName, config.Tree,
+			onet.NilServiceID)
+		if err != nil {
+			return err
+		}
+		proto := p.(*protocol.CoSiRootNode)
+		proto.NSubtrees = s.NSubtrees
+		proto.Proposal = proposal
+		// timeouts may need to be modified depending on platform
+		proto.SubleaderTimeout = protocol.DefaultSubleaderTimeout
+		proto.LeavesTimeout = protocol.DefaultLeavesTimeout
+		proto.CreateProtocol = func(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
+			return config.Overlay.CreateProtocol(name, t, onet.NilServiceID)
+		}
+		proto.ProtocolTimeout = 10 * time.Second
+		go func() {
+			log.ErrFatal(p.Start())
+		}()
+		Signature := <-proto.FinalSignature
+		round.Record()
+
+		// get public keys
+		publics := make([]kyber.Point, config.Tree.Size())
+		for i, node := range config.Tree.List() {
+			publics[i] = node.ServerIdentity.Public
+		}
+
+		// verify signature
+		threshold := s.Hosts - s.FailingLeafs - s.FailingSubleaders
+		suite := suites.MustFind(proto.Suite().String())
+		err = cosi.Verify(suite, publics, proposal, Signature, cosi.NewThresholdPolicy(threshold))
+		if err != nil {
+			return fmt.Errorf("error while verifying signature:%s", err)
+		}
+		log.Lvl2("Signature correctly verified!")
+
+	}
+	return nil
 }

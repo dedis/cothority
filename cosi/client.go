@@ -219,6 +219,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 	}
 	return nil
 }
+
 func entityListToPublics(r *onet.Roster) []kyber.Point {
 	publics := make([]kyber.Point, len(r.List))
 	for i, e := range r.List {

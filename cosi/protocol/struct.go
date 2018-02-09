@@ -16,7 +16,7 @@ import (
 
 // ProtocolName can be used from other packages to refer to this protocol.
 const ProtocolName = "CoSiProto"
-const subProtocolName = "SubCoSiProto"
+const SubProtocolName = "SubCoSiProto"
 
 // DefaultProtocolTimeout is the primary timeout for the CoSi protocol
 const DefaultProtocolTimeout = time.Second * 5
