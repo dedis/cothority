@@ -4,10 +4,10 @@ const BN = require("bn.js");
 const crypto = require("crypto");
 const Scalar = require("./scalar");
 const constants = require("../../constants");
-const group = require("../group.js");
+const group = require("../../index.js");
 
 /**
- * @module group/nist/point
+ * @module curves/nist/point
  */
 
 /**
@@ -16,7 +16,7 @@ const group = require("../group.js");
  * The value of the parameters is expected in little endian form if being
  * passed as a Uint8Array
  *
- * @param {module:group/nist/curve~Weirstrass} curve - Weierstrass curve
+ * @param {module:curves/nist/curve~Weirstrass} curve - Weierstrass curve
  * @param {(number|Uint8Array|BN.jsObject)} x
  * @param {(number|Uint8Array|BN.jsObject)} y
  */
@@ -63,11 +63,10 @@ class Point extends group.Point {
     );
   }
 
-
   /**
    * Tests for equality between two Points derived from the same group
    *
-   * @param {module:group/nist/point~Point} p2 Point object to compare
+   * @param {module:curves/nist/point~Point} p2 Point object to compare
    * @return {boolean}
    */
   equal(p2) {
@@ -88,8 +87,8 @@ class Point extends group.Point {
   /**
    * set Set the current point to be equal to p2
    *
-   * @param {module:group/nist/point~Point} p2 Point object
-   * @return {module:group/nist/point~Point}
+   * @param {module:curves/nist/point~Point} p2 Point object
+   * @return {module:curves/nist/point~Point}
    */
   set(p2) {
     this.ref = p2.ref;
@@ -99,7 +98,7 @@ class Point extends group.Point {
   /**
    * Creates a copy of the current point
    *
-   * @return {module:group/nist/point~Point} new Point object
+   * @return {module:curves/nist/point~Point} new Point object
    */
   clone() {
     const point = this.ref.point;
@@ -110,7 +109,7 @@ class Point extends group.Point {
    * Set to the neutral element for the curve
    * Modifies the receiver
    *
-   * @return {module:group/nist/point~Point}
+   * @return {module:curves/nist/point~Point}
    */
   null() {
     this.ref.point = this.ref.curve.curve.point(null, null);
@@ -121,7 +120,7 @@ class Point extends group.Point {
    * Set to the standard base point for this curve
    * Modifies the receiver
    *
-   * @return {module:group/nist/point~Point}
+   * @return {module:curves/nist/point~Point}
    */
   base() {
     const g = this.ref.curve.curve.g;
@@ -149,7 +148,7 @@ class Point extends group.Point {
    *
    * @throws {TypeError} if data is not Uint8Array
    * @throws {Error} if data.length > embedLen
-   * @return {module:group/nist/point~Point}
+   * @return {module:curves/nist/point~Point}
    */
   embed(data, callback) {
     if (data.constructor !== Uint8Array) {
@@ -233,9 +232,9 @@ class Point extends group.Point {
    * Returns the sum of two points on the curve
    * Modifies the receiver
    *
-   * @param {module:group/nist/point~Point} p1 Point object, addend
-   * @param {module:group/nist/point~Point} p2 Point object, addend
-   * @return {module:group/nist/point~Point} p1 + p2
+   * @param {module:curves/nist/point~Point} p1 Point object, addend
+   * @param {module:curves/nist/point~Point} p2 Point object, addend
+   * @return {module:curves/nist/point~Point} p1 + p2
    */
   add(p1, p2) {
     const point = p1.ref.point;
@@ -249,9 +248,9 @@ class Point extends group.Point {
    * Subtract two points
    * Modifies the receiver
    *
-   * @param {module:group/nist/point~Point} p1 Point object
-   * @param {module:group/nist/point~Point} p2 Point object
-   * @return {module:group/nist/point~Point} p1 - p2
+   * @param {module:curves/nist/point~Point} p1 Point object
+   * @param {module:curves/nist/point~Point} p2 Point object
+   * @return {module:curves/nist/point~Point} p1 - p2
    */
   sub(p1, p2) {
     const point = p1.ref.point;
@@ -265,8 +264,8 @@ class Point extends group.Point {
    * Finds the negative of a point p
    * Modifies the receiver
    *
-   * @param {module:group/nist/point~Point} p Point to negate
-   * @return {module:group/nist/point~Point} -p
+   * @param {module:curves/nist/point~Point} p Point to negate
+   * @return {module:curves/nist/point~Point} -p
    */
   neg(p) {
     this.ref.point = p.ref.point.neg();
@@ -279,9 +278,9 @@ class Point extends group.Point {
    * scalar s
    * Modifies the receiver
    *
-   * @param {module:group/nist/scalar~Scalar} s Scalar
-   * @param {module:group/nist/point~Point} [p=null] Point
-   * @return {module:group/nist/point~Point}
+   * @param {module:curves/nist/scalar~Scalar} s Scalar
+   * @param {module:curves/nist/point~Point} [p=null] Point
+   * @return {module:curves/nist/point~Point}
    */
   mul(s, p) {
     if (s.constructor !== Scalar) {
@@ -298,7 +297,7 @@ class Point extends group.Point {
    * Selects a random point
    *
    * @param {function} [callback] - to generate a random byte array of given length
-   * @return {module:group/nist/point~Point}
+   * @return {module:curves/nist/point~Point}
    */
   pick(callback) {
     return this.embed(new Uint8Array(), callback);

@@ -3,10 +3,10 @@
 const BN = require("bn.js");
 const crypto = require("crypto");
 const random = require("../../random");
-const group = require("../group.js");
+const group = require("../../index.js");
 
 /**
- * @module group/edwards25519/scalar
+ * @module curves/edwards25519/scalar
  */
 
 /**
@@ -28,7 +28,7 @@ class Scalar extends group.Scalar {
   /**
    * Equality test for two Scalars derived from the same Group
    *
-   * @param {module:group/edwards25519/scalar~Scalar} s2 Scalar
+   * @param {module:curves/edwards25519/scalar~Scalar} s2 Scalar
    * @returns {boolean}
    */
   equal(s2) {
@@ -38,8 +38,8 @@ class Scalar extends group.Scalar {
   /**
    * Sets the receiver equal to another Scalar a
    *
-   * @param {module:group/edwards25519/scalar~Scalar} a Scalar
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @param {module:curves/edwards25519/scalar~Scalar} a Scalar
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   set(a) {
     this.ref = a.ref;
@@ -49,7 +49,7 @@ class Scalar extends group.Scalar {
   /**
    * Returns a copy of the scalar
    *
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   clone() {
     return new Scalar(this.ref.curve, this.ref.red).setBytes(
@@ -60,7 +60,7 @@ class Scalar extends group.Scalar {
   /**
    * Set to the additive identity (0)
    *
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   zero() {
     this.ref.arr = new BN(0, 16).toRed(this.ref.red);
@@ -70,9 +70,9 @@ class Scalar extends group.Scalar {
   /**
    * Set to the modular sums of scalars s1 and s2
    *
-   * @param {module:group/edwards25519/scalar~Scalar} s1 Scalar
-   * @param {module:group/edwards25519/scalar~Scalar} s2 Scalar
-   * @returns {module:group/edwards25519/scalar~Scalar} s1 + s2
+   * @param {module:curves/edwards25519/scalar~Scalar} s1 Scalar
+   * @param {module:curves/edwards25519/scalar~Scalar} s2 Scalar
+   * @returns {module:curves/edwards25519/scalar~Scalar} s1 + s2
    */
   add(s1, s2) {
     this.ref.arr = s1.ref.arr.redAdd(s2.ref.arr);
@@ -82,9 +82,9 @@ class Scalar extends group.Scalar {
   /**
    * Set to the modular difference
    *
-   * @param {module:group/edwards25519/scalar~Scalar} s1 Scalar
-   * @param {module:group/edwards25519/scalar~Scalar} s2 Scalar
-   * @returns {module:group/edwards25519/scalar~Scalar} s1 - s2
+   * @param {module:curves/edwards25519/scalar~Scalar} s1 Scalar
+   * @param {module:curves/edwards25519/scalar~Scalar} s2 Scalar
+   * @returns {module:curves/edwards25519/scalar~Scalar} s1 - s2
    */
   sub(s1, s2) {
     this.ref.arr = s1.ref.arr.redSub(s2.ref.arr);
@@ -94,8 +94,8 @@ class Scalar extends group.Scalar {
   /**
    * Set to the modular negation of scalar a
    *
-   * @param {module:group/edwards25519/scalar~Scalar} a Scalar
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @param {module:curves/edwards25519/scalar~Scalar} a Scalar
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   neg(a) {
     this.ref.arr = a.ref.arr.redNeg();
@@ -105,7 +105,7 @@ class Scalar extends group.Scalar {
   /**
    * Set to the multiplicative identity (1)
    *
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   one() {
     this.ref.arr = new BN(1, 16).toRed(this.ref.red);
@@ -115,9 +115,9 @@ class Scalar extends group.Scalar {
   /**
    * Set to the modular products of scalars s1 and s2
    *
-   * @param {module:group/edwards25519/scalar~Scalar} s1
-   * @param {module:group/edwards25519/scalar~Scalar} s2
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @param {module:curves/edwards25519/scalar~Scalar} s1
+   * @param {module:curves/edwards25519/scalar~Scalar} s2
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   mul(s1, s2) {
     this.ref.arr = s1.ref.arr.redMul(s2.ref.arr);
@@ -129,7 +129,7 @@ class Scalar extends group.Scalar {
    *
    * @param s1
    * @param s2
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   div(s1, s2) {
     this.ref.arr = s1.ref.arr.redMul(s2.ref.arr.redInvm());
@@ -140,7 +140,7 @@ class Scalar extends group.Scalar {
    * Set to the modular inverse of scalar a
    *
    * @param a
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   inv(a) {
     this.ref.arr = a.ref.arr.redInvm();
@@ -153,7 +153,7 @@ class Scalar extends group.Scalar {
    * @param {Uint8Array} b - bytes
    *
    * @throws {TypeError} when b is not Uint8Array
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   setBytes(b) {
     if (b.constructor !== Uint8Array) {
@@ -183,7 +183,7 @@ class Scalar extends group.Scalar {
    * Set to a random scalar
    *
    * @param {function} callback - to generate random byte array of given length
-   * @returns {module:group/edwards25519/scalar~Scalar}
+   * @returns {module:curves/edwards25519/scalar~Scalar}
    */
   pick(callback) {
     callback = callback || crypto.randomBytes;
@@ -222,4 +222,3 @@ class Scalar extends group.Scalar {
   }
 }
 module.exports = Scalar;
-
