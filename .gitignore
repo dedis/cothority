@@ -13,6 +13,5 @@ sda/testdata
 *.iml
 config/
 build/
-cothority
 *.cov
 *~
