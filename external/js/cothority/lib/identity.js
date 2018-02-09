@@ -3,6 +3,7 @@
 const topl = require("topl");
 const UUID = require("pure-uuid");
 const protobuf = require("protobufjs");
+const kyber = require("@dedis/kyber-js");
 
 const misc = require("./misc");
 
@@ -18,15 +19,16 @@ class ServerIdentity {
      * @param {string} description of the conode. Can be null.
      * @return a ServerIdentity
      * */
-  //constructor(group, publicKey, address, description) {
-  //if (!(publicKey instanceof kyber.group.Point)) throw new TypeError();
-  constructor(publicKey, address, description) {
-    if (publicKey.constructor !== Uint8Array) throw TypeError;
+  constructor(group, publicKey, address, description) {
+    if (!(publicKey instanceof kyber.Point)) throw new TypeError();
+    if (!(group instanceof kyber.Group)) throw new TypeError();
+    this.group = group;
     this.pub = publicKey;
     this.addr = address;
     this._description = description;
     // id of the identity
-    const url = "https://dedis.epfl.ch/id/" + misc.uint8ArrayToHex(this.pub);
+    const hex = misc.uint8ArrayToHex(this.pub.marshalBinary());
+    const url = "https://dedis.epfl.ch/id/" + hex;
     this._id = new UUID(5, "ns:URL", url).export();
     // tcp + websocket address
     let parts = address.replace("tcp://", "").split(":");
@@ -41,9 +43,11 @@ class ServerIdentity {
      * @param {string} address
      * @return a ServerIdentity
      * */
-  static fromHexPublic(hexPublic, address, description) {
-    const pub = misc.hexToUint8Array(hexPublic);
-    return new ServerIdentity(pub, address, description);
+  static fromHexPublic(group, hexPublic, address, description) {
+    var pubBuff = misc.hexToUint8Array(hexPublic);
+    var pub = group.point();
+    pub.unmarshalBinary(pubBuff);
+    return new ServerIdentity(group, pub, address, description);
   }
   /*
      * @return the public key as a Uint8Array buffer
@@ -85,24 +89,6 @@ class ServerIdentity {
 
   toString() {
     return this.tcpAddr;
-  }
-
-  /**
-   * point returns the point representation of the public key
-   *
-   * @param {kyber.Group} group the expected group from which the public key belongs
-   * @returns {kyber.Point} the kyber.Point representing the public key
-   */
-  point(group) {
-    /*    if (this.point)*/
-    //return this.point;
-
-    //this.point = group.point();
-    //this.point.unmarshalBinary(this.pub);
-    /*return this.point.clone();*/
-    const point = group.point();
-    point.unmarshalBinary(this.pub);
-    return point;
   }
 }
 
@@ -175,7 +161,7 @@ class Roster {
 
     const aggr = group.point().null();
     for (var i = 0; i < this.length; i++) {
-      aggr.add(aggr, this.identities[i].point(group));
+      aggr.add(aggr, this.identities[i].public);
     }
     return aggr;
   }
@@ -204,8 +190,11 @@ class Roster {
     if (typeof toml !== "string") throw new TypeError();
 
     const roster = topl.parse(toml);
+    var group = roster.Suite === undefined ? "edwards25519" : roster.Suite;
+    group = kyber.curve.newCurve(group);
     const identities = roster.servers.map(server =>
       ServerIdentity.fromHexPublic(
+        group,
         server.Public,
         server.Address,
         server.description
@@ -222,14 +211,14 @@ class Roster {
    * @returns {Roster} the Roster object
    */
   static fromProtobuf(protoRoster) {
-    const identities = protoRoster.list.map(
-      id =>
-        new ServerIdentity(
-          new Uint8Array(id.public),
-          id.address,
-          id.description
-        )
-    );
+    var group =
+      protoRoster.Suite === undefined ? "edwards25519" : protoRoster.Suite;
+    group = kyber.curve.newCurve(group);
+    const identities = protoRoster.list.map(id => {
+      var pub = group.point();
+      pub.unmarshalBinary(new Uint8Array(id.public));
+      return new ServerIdentity(group, pub, id.address, id.description);
+    });
     return new Roster(identities);
   }
 }
