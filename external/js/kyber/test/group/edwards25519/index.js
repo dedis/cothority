@@ -1,7 +1,7 @@
 const EdDSA = require("elliptic").eddsa;
 const ec = new EdDSA("ed25519");
 const kyber = require("../../../index.js");
-const edwards25519 = kyber.curves.edwards25519;
+const edwards25519 = kyber.curve.edwards25519;
 const BN = require("bn.js");
 const util = require("../../util");
 const unhexlify = util.unhexlify;

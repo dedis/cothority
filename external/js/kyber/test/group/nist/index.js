@@ -1,5 +1,5 @@
 const kyber = require("../../../index.js");
-const nist = kyber.curves.nist;
+const nist = kyber.curve.nist;
 const BN = require("bn.js");
 const assert = require("chai").assert;
 const PRNG = require("../../util").PRNG;
