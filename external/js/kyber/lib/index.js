@@ -1,8 +1,4 @@
 /**
- * @module group
- */
-
-/**
  * Group is an abstract class for curves
  */
 class Group {
