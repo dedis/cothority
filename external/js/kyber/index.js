@@ -2,7 +2,7 @@
 
 const kyber = exports;
 
-kyber.curves = require("./lib/group");
+kyber.curve = require("./lib/curve");
 kyber.sign = require("./lib/sign");
 const abstractCls = require("./lib/index.js");
 
