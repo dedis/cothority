@@ -295,11 +295,11 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
 		link := block.ForwardLink[block.GetForwardLen()-1]
 		next := s.db.GetByID(link.Hash())
 		if next == nil {
-			// Next not found means that maybe the roster has evolved
-			// and we are no longer aware of this chain. The caller
-			// (in this case, api.go) will be responsible to issue
-			// a new GetUpdateChain with the latest Roster to keep
-			// traversing.
+			// Next not found means that maybe the roster
+			// has evolved and we are no longer aware of
+			// this chain. The caller will be responsible
+			// to issue a new GetUpdateChain with the
+			// latest Roster to keep traversing.
 			break
 		} else {
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
@@ -312,7 +312,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
 		blocks = append(blocks, next.Copy())
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
-	reply := &GetUpdateChainReply{blocks}
+	reply := &GetUpdateChainReply{Update: blocks}
 
 	return reply, nil
 }

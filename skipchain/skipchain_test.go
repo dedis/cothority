@@ -979,7 +979,7 @@ func TestRosterAddCausesSync(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, _, genService := local.MakeHELS(5, skipchainSID, cothority.Suite)
+	servers, _, genService := local.MakeSRS(cothority.Suite, 5, skipchainSID)
 	leader := genService.(*Service)
 
 	// put last one to sleep, wake it up after the others have added it into the roster

@@ -2,6 +2,7 @@ package skipchain
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 
 	"github.com/dedis/cothority"
@@ -195,25 +196,47 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 			}
 		}
 		if i == retries {
-			return nil, err
+			return nil, fmt.Errorf("too many retries; last error: %v", err)
 		}
 
-		// TODO: Verify that these blocks are a valid
-		// chain from where we knew.
-
-		// The reply always has the original block they
-		// searched for. The first time through, keep it.
-		if reply.Update == nil {
-			reply.Update = r2.Update
-		} else {
-			// On subsequent searches, drop it because it is
-			// already the last item in reply.Update.
-			reply.Update = append(reply.Update, r2.Update[1:]...)
+		// Does this chain start where we expect it to?
+		if !r2.Update[0].Hash.Equal(latest) {
+			return nil, errors.New("first returned block does not match requested hash")
 		}
+
+		// Step through the returned blocks one at a time, verifying
+		// the forward links, and that they link correctly backwards.
+		for j, b := range r2.Update {
+			if j == 0 && len(reply.Update) > 0 {
+				continue
+			}
+
+			if err := b.VerifyForwardSignatures(); err != nil {
+				return nil, err
+			}
+			// Cannot check back links until we've confirmed the first one
+			if len(reply.Update) > 0 {
+				if len(b.BackLinkIDs) == 0 {
+					return nil, errors.New("no backlinks?")
+				}
+				lastHash := reply.Update[len(reply.Update)-1].Hash
+				if !b.BackLinkIDs[len(b.BackLinkIDs)-1].Equal(lastHash) {
+					return nil, errors.New("highest backlink does not lead to previous received update")
+				}
+			}
+
+			reply.Update = append(reply.Update, b)
+		}
+
 		last := reply.Update[len(reply.Update)-1]
+
+		// If they updated us to the end of the chain, return.
 		if last.GetForwardLen() == 0 {
 			return reply, nil
 		}
+
+		// Otherwise update the roster and contact the new servers
+		// to continue following the chain.
 		latest = last.Hash
 		roster = last.Roster
 	}
