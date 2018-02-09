@@ -53,7 +53,11 @@ func network(c *cli.Context) error {
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
 		log.Lvl3(el.List[i])
-		sr, _ := cl.Request(el.List[i])
+		sr, err := cl.Request(el.List[i])
+		if err != nil {
+			log.Print("error on server", el.List[i], err)
+			continue
+		}
 		printConn(sr)
 		log.Lvl3(cl)
 	}
@@ -81,6 +85,10 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 // printConn prints the status response that is returned from the server
 func printConn(e *status.Response) {
 	var a []string
+	if e.Status == nil {
+		log.Print("no status from ", e.ServerIdentity)
+		return
+	}
 	for sec := range e.Status {
 		for key, value := range e.Status[sec] {
 			a = append(a, (sec + "." + key + ": " + value))
