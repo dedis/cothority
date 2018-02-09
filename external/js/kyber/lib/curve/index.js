@@ -7,6 +7,11 @@ const mappings = {};
 mappings["edwards25519"] = edwards25519.Curve;
 mappings["p256"] = nist.Curve.bind(nist.Params.p256);
 
+/**
+ * availableCurves returns all the curves currently implemented as an array of string
+ *
+ * @returns {Array} array of names of the curves
+ */
 function availableCurves() {
   return Object.keys(mappings);
 }
