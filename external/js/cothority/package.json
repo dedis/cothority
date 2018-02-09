@@ -17,7 +17,9 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "base-64": "^0.1.0",
+    "@dedis/kyber-js": "0.0.2",
+    "co": "^4.6.0",
+    "crypto-shuffle": "^1.0.1",
     "protobufjs": "^6.8.4",
     "pure-uuid": "^1.4.11",
     "topl": "^0.3.1",
@@ -38,7 +40,7 @@
     "mocha": "^5.0.0",
     "mock-socket": "^7.1.0",
     "prettier": "1.10.2",
-    "uglify-es": "^3.3.9",
+    "uglify-es": "^3.3.10",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "^3.10.0"
   }
