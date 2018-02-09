@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec",
+    "test": "node node_modules/.bin/mocha --compilers js:babel-register --recursive --reporter spec",
     "cover": "nyc --reporter=html --reporter=text mocha --recursive",
     "coveralls": "nyc --reporter=lcov mocha --recursive && cat ./coverage/lcov.info | coveralls"
   },
@@ -30,6 +30,7 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.2",
     "coveralls": "^3.0.0",
