@@ -70,8 +70,6 @@ incentives in Byzcoin and Bitcoin
 - [PoP](https://bford.github.io/2015/10/07/names.html) - Let's verify real people,
 not real names
 
-## Presentations
-
 ## Papers
 
 A number of papers have been written that are implemented partially or fully
