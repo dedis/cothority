@@ -123,7 +123,7 @@ func getCommands() cli.Commands {
 					Subcommands: cli.Commands{
 						{
 							Name:      "add",
-							Usage:     "create a new block",
+							Usage:     "create a new block on the server and save it in local cache",
 							Aliases:   []string{"a"},
 							ArgsUsage: "skipchain-id",
 							Action:    scAdd,
@@ -133,11 +133,16 @@ func getCommands() cli.Commands {
 									Value: "",
 									Usage: "file containing new roster",
 								},
+								cli.StringFlag{
+									Name:  "data",
+									Value: "",
+									Usage: "data to put into the block",
+								},
 							},
 						},
 						{
 							Name:      "print",
-							Usage:     "show the content of a block",
+							Usage:     "show the content of a block from the local cache",
 							Aliases:   []string{"p"},
 							ArgsUsage: "skipblock-id",
 							Action:    scPrint,
@@ -179,8 +184,9 @@ func getCommands() cli.Commands {
 					Action:    dnsIndex,
 				},
 				{
-					Name:  "update",
-					Usage: "update all locally stored skipchains",
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "update all locally stored skipchains",
 					Flags: []cli.Flag{
 						cli.BoolFlag{
 							Name:  "new, n",

@@ -30,7 +30,7 @@ type Request struct{}
 
 // Response is what the Status service will reply to clients.
 type Response struct {
-	Msg            map[string]*onet.Status
+	Status         map[string]onet.Status
 	ServerIdentity *network.ServerIdentity
 }
 
@@ -38,7 +38,7 @@ type Response struct {
 func (st *Stat) Request(req *Request) (network.Message, error) {
 	log.Lvl3("Returning", st.Context.ReportStatus())
 	return &Response{
-		Msg:            st.Context.ReportStatus(),
+		Status:         st.Context.ReportStatus(),
 		ServerIdentity: st.ServerIdentity(),
 	}, nil
 }

@@ -19,6 +19,7 @@ main(){
 	test Index
 	test Fetch
 	test Link
+	test Linklist
 	test Unlink
 	test Follow
 	test NewChain
@@ -133,6 +134,11 @@ testLink(){
 	testFail runSc follow add single 00 localhost:2004
 	setupGenesis
 	testOK [ -n "$ID" ]
+}
+
+testLinklist(){
+	startCl
+	testOK runSc link list localhost:2002
 }
 
 testUnlink(){

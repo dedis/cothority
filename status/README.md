@@ -8,7 +8,7 @@ A status is a list of connections and packets sent and received for each server 
 To install the status-binary, enter
 
 ```
-go get github.com/dedis/cothority/app/status
+go get github.com/dedis/cothority/status
 ```
 
 And then you can run

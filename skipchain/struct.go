@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	bolt "github.com/coreos/bbolt"
@@ -522,6 +523,21 @@ func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
 	}
 }
 
+// GetStatus is a function that returns the status report of the db.
+func (db *SkipBlockDB) GetStatus() onet.Status {
+	out := make(map[string]string)
+	db.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		s := b.Stats()
+		out["Blocks"] = strconv.Itoa(s.KeyN)
+
+		total := s.BranchInuse + s.LeafInuse
+		out["Bytes"] = strconv.Itoa(total)
+		return nil
+	})
+	return onet.Status(out)
+}
+
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	var result *SkipBlock
@@ -584,7 +600,7 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	return result
 }
 
-// Length returns the actual length using mutexes
+// Length returns how many skip blocks there are in this SkipBlockDB.
 func (db *SkipBlockDB) Length() int {
 	var i int
 	db.View(func(tx *bolt.Tx) error {
