@@ -165,7 +165,7 @@ func linkQuery(c *cli.Context) error {
 			log.Infof("Public-key: %s", pub)
 		}
 	}
-	return errors.New("not yet implemented")
+	return nil
 }
 
 func followAddID(c *cli.Context) error {
@@ -306,18 +306,7 @@ func scAdd(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return errors.New("Please give a skipchain-id")
 	}
-	var roster *onet.Roster
-	if rosterFile := c.String("roster"); rosterFile != "" {
-		group := readGroup(rosterFile)
-		if group == nil {
-			return errors.New("Error while reading group definition file: " + rosterFile)
-		}
-		if len(group.Roster.List) == 0 {
-			return errors.New("Empty entity or invalid group defintion in: " +
-				rosterFile)
-		}
-		roster = group.Roster
-	}
+
 	cfg := getConfigOrFail(c)
 	sb, err := cfg.Db.GetFuzzy(c.Args().First())
 	if err != nil {
@@ -331,15 +320,38 @@ func scAdd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(guc.Update) == 0 {
+		return errors.New("no latest block")
+	}
 	latest := guc.Update[len(guc.Update)-1]
+
+	var roster *onet.Roster
+	if rosterFile := c.String("roster"); rosterFile != "" {
+		group := readGroup(rosterFile)
+		if group == nil {
+			return errors.New("Error while reading group definition file: " + rosterFile)
+		}
+		if len(group.Roster.List) == 0 {
+			return errors.New("Empty entity or invalid group defintion in: " +
+				rosterFile)
+		}
+		roster = group.Roster
+	} else {
+		roster = sb.Roster
+	}
+
+	data := c.String("data")
+	dataMsg := []byte(data)
+
 	var priv kyber.Scalar
 	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
 		log.Lvl1("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
+
 	log.Info("Adding new block to skipchain.")
-	ssbr, err := skipchain.NewClient().StoreSkipBlockSignature(latest, roster, nil, priv)
+	ssbr, err := skipchain.NewClient().StoreSkipBlockSignature(latest, roster, dataMsg, priv)
 	if err != nil {
 		return errors.New("while storing block: " + err.Error())
 	}
@@ -368,9 +380,9 @@ func scPrint(c *cli.Context) error {
 		log.Infof("BackwardLink[%d] = %x", i, bl)
 	}
 	for i, fl := range sb.ForwardLink {
-		log.Infof("ForwardLink[%d] = %x", i, fl)
+		log.Infof("ForwardLink[%d] = %x", i, fl.Msg)
 	}
-	log.Infof("Data: %x", sb.Data)
+	log.Infof("Data: %#v", string(sb.Data))
 	for i, vf := range sb.VerifierIDs {
 		vfStr := vf.String()
 		switch vf {
@@ -508,6 +520,7 @@ func dnsIndex(c *cli.Context) error {
 
 	return nil
 }
+
 func dnsUpdate(c *cli.Context) error {
 	cfg := getConfigOrFail(c)
 	fetchNew := c.Bool("new")
@@ -546,7 +559,6 @@ func dnsUpdate(c *cli.Context) error {
 		} else {
 			sisNew = []*network.ServerIdentity{}
 		}
-		log.Info("si, sisNew:", si, sisNew)
 		gasr, err := client.GetAllSkipchains(si)
 		if err != nil {
 			// Error is not fatal here - perhaps the node is down,
