@@ -1,12 +1,12 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -153,7 +153,10 @@ subtrees:
 		}
 	}
 
-	suite := suites.MustFind(p.Suite().String()) // convert network.Suite to full suite
+	suite, ok := p.Suite().(cosi.Suite)
+	if !ok {
+		return errors.New("not a cosi suite")
+	}
 
 	// generate challenge
 	log.Lvl3("root-node generating global challenge")

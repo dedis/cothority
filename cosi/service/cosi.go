@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -37,6 +38,7 @@ type SignatureRequest struct {
 
 // SignatureResponse is what the Cosi service will reply to clients.
 type SignatureResponse struct {
+	Hash      []byte
 	Signature []byte
 }
 
@@ -80,7 +82,16 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	case <-time.After(protocol.DefaultProtocolTimeout + time.Second):
 		return nil, errors.New("protocol timed out")
 	}
-	return &SignatureResponse{sig}, nil
+
+	// the hash is the message cosi actually signs, ideally cosi protocol
+	// should tell us what it is, here we recompute it and then return
+	suite, ok := s.Suite().(kyber.HashFactory)
+	if !ok {
+		return nil, errors.New("suite is unusable")
+	}
+	h := suite.Hash()
+	h.Write(req.Message)
+	return &SignatureResponse{h.Sum(nil), sig}, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is

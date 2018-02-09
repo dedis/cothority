@@ -7,7 +7,6 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -86,7 +85,10 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	p.Publics = announcement.Publics
 	p.SubleaderTimeout = announcement.SubleaderTimeout
 	p.LeavesTimeout = announcement.LeafTimeout
-	suite := suites.MustFind(p.Suite().String()) // convert network.Suite to full suite
+	suite, ok := p.Suite().(cosi.Suite)
+	if !ok {
+		return errors.New("not a cosi suite")
+	}
 
 	err := p.SendToChildren(&announcement.Announcement)
 	if err != nil {

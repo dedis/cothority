@@ -11,9 +11,9 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/check"
-	"github.com/dedis/cothority/cosi/crypto"
 	s "github.com/dedis/cothority/cosi/service"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -118,7 +118,11 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	publics := entityListToPublics(el)
 	client := s.NewClient()
 
-	h := client.Suite().(kyber.HashFactory).Hash()
+	suite, ok := client.Suite().(cosi.Suite)
+	if !ok {
+		return nil, errors.New("not a cosi suite")
+	}
+	h := suite.Hash()
 	io.Copy(h, read)
 	msg := h.Sum(nil)
 
@@ -142,7 +146,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 			return nil, errors.New("received an invalid repsonse")
 		}
 
-		err = crypto.VerifySignature(client.Suite(), publics, msg, response.Signature)
+		err = cosi.Verify(suite, publics, msg, response.Signature, cosi.CompletePolicy{})
 		if err != nil {
 			return nil, err
 		}
@@ -210,7 +214,7 @@ func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) er
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	if err := crypto.VerifySignature(cothority.Suite, publics, fHash, sig.Signature); err != nil {
+	if err := cosi.Verify(cothority.Suite, publics, fHash, sig.Signature, cosi.CompletePolicy{}); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
