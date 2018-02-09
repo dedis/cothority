@@ -7,7 +7,7 @@ const elliptic = require("elliptic");
 const BN = require("bn.js");
 const group = require("../group.js");
 
-/*
+/**
  * @module group/nist/curve
  */
 

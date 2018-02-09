@@ -1,16 +1,13 @@
 "use strict";
 
-const topl = require('topl');
-const UUID = require('pure-uuid');
-const protobuf = require('protobufjs')
-const co = require('co');
+const topl = require("topl");
+const UUID = require("pure-uuid");
+const protobuf = require("protobufjs");
+const co = require("co");
 const shuffle = require("crypto-shuffle");
 
-const root = require('../protobuf/index.js').root;
+const root = require("../protobuf/index.js").root;
 const identity = require("../identity.js");
-
-const BASE64 = require("base-64");
-const UTF8 = require("utf8");
 
 /**
  * Socket is a WebSocket object instance through which protobuf messages are
@@ -20,12 +17,11 @@ const UTF8 = require("utf8");
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */
-function Socket(addr,service) {
-    if (typeof protobuf !== 'object')
-	    throw new TypeError();
+function Socket(addr, service) {
+  if (typeof protobuf !== "object") throw new TypeError();
 
-    this.url = addr + "/" + service;
-    this.protobuf = root;
+  this.url = addr + "/" + service;
+  this.protobuf = root;
 
   /**
    * Send transmits data to a given url and parses the response.
@@ -78,47 +74,45 @@ function Socket(addr,service) {
  * automatically retries to connect to another random server.
  * */
 class RosterSocket {
+  constructor(roster, service) {
+    this.addresses = roster.identities.map(id => id.websocketAddr);
+    this.service = service;
+    this.lastGoodServer = null;
+  }
 
-    constructor(roster,service) {
-        this.addresses = roster.identities.map((id) => id.websocketAddr);
-        this.service = service;
-        this.lastGoodServer = null;
-    }
+  /**
+   * send tries to send the request to a random server in the list as long as there is no successful response. It tries a permutation of all server's addresses.
+   *
+   * @param {string} request name of the protobuf packet
+   * @param {string} response name of the protobuf packet response
+   * @param {Object} data javascript object representing the request
+   * @returns {Promise} holds the returned data in case of success.
+   */
+  send(request, response, data) {
+    const socket = this;
+    const fn = co.wrap(function*(socket) {
+      var addresses = socket.addresses;
+      var service = socket.service;
+      shuffle(addresses);
+      // try first the last good server we know
+      if (socket.lastGoodServer) addresses.unshift(socket.lastGoodServer);
 
-    /**
-     * send tries to send the request to a random server in the list as long as there is no successful response. It tries a permutation of all server's addresses.
-     *
-     * @param {string} request name of the protobuf packet
-     * @param {string} response name of the protobuf packet response
-     * @param {Object} data javascript object representing the request
-     * @returns {Promise} holds the returned data in case of success.
-     */
-    send(request,response,data)  {
-        const socket = this;
-        const fn = co.wrap(function *(socket) {
-            var addresses = socket.addresses;
-            var service = socket.service;
-            shuffle(addresses)
-            // try first the last good server we know
-            if (socket.lastGoodServer)
-                addresses.unshift(socket.lastGoodServer);
-
-            for(var i=0; i < addresses.length; i++) {
-                var addr = addresses[i];
-                try {
-                    var socket = new Socket(addr,service);
-                    var data = yield socket.send(request,response,data);
-                    socket.lastGoodServer = addr;
-                    return Promise.resolve(data);
-                } catch (err) {
-                    console.log("could not reach out to " + addr);
-                    continue;
-                }
-            }
-            return Promise.reject("no conodes are available");
-        });
-        return fn(this);
-    }
+      for (var i = 0; i < addresses.length; i++) {
+        var addr = addresses[i];
+        try {
+          var socket = new Socket(addr, service);
+          var data = yield socket.send(request, response, data);
+          socket.lastGoodServer = addr;
+          return Promise.resolve(data);
+        } catch (err) {
+          console.log("could not reach out to " + addr);
+          continue;
+        }
+      }
+      return Promise.reject("no conodes are available");
+    });
+    return fn(this);
+  }
 }
 
 module.exports.Socket = Socket;

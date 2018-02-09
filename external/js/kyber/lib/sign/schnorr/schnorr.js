@@ -2,12 +2,16 @@ const group = require("../../group/group.js");
 
 const crypto = require("crypto");
 /**
+ * @module sign/schnorr
+ */
+
+/*
  *
  * Sign computes a Schnorr signature over the given message.
  *
- * @param privateKey private key scalar to sign with
- * @param message message over which the signature is computed
- * @return signature as a Uint8Array
+ * @param {module:group~Scalar} privateKey - private key scalar to sign with
+ * @param {Uint8Array} message - message over which the signature is computed
+ * @return {Uint8Array} signature as a Uint8Array
  * */
 function Sign(suite, privateKey, message) {
   if (!(suite instanceof group.Group)) {
@@ -48,11 +52,11 @@ function Sign(suite, privateKey, message) {
  * Verify verifies if the signature of the message is valid under the given public
  * key.
  *
- * @params suite suite to use
- * @params publicKey public key under which to verify the signature
- * @params message message that is signed
- * @params signature signature made over the given message
- * @return boolean true if signature is valid or false otherwise.
+ * @param {module:group~Group} suite - suite to use
+ * @param {module:group~Point} publicKey public key under which to verify the signature
+ * @param {Uint8Array} message - message that is signed
+ * @param {Uint8Array} signature - signature made over the given message
+ * @return {boolean}  true if signature is valid or false otherwise.
  * */
 function Verify(suite, publicKey, message, signature) {
   if (!(suite instanceof group.Group)) {
@@ -104,8 +108,8 @@ function Verify(suite, publicKey, message, signature) {
 /**
  *
  * hashSchnorr returns a scalar out of hashing the given inputs.
- * @params inputs a list of Uint8Array
- * @return a scalar
+ * @param {...Uint8Array} inputs
+ * @return {module:group~Scalar}
  *
  **/
 function hashSchnorr(suite, ...inputs) {
