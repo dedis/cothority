@@ -18,6 +18,7 @@ type CoSiSubProtocolNode struct {
 	Proposal         []byte
 	SubleaderTimeout time.Duration
 	LeavesTimeout    time.Duration
+	VerificationFn   VerificationFn
 	hasStopped       bool //used since Shutdown can be called multiple time
 
 	// protocol/subprotocol channels
@@ -40,6 +41,7 @@ func NewSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	c := &CoSiSubProtocolNode{
 		TreeNodeInstance: n,
 		hasStopped:       false,
+		VerificationFn:   nil, // TODO need a way to initialise this
 	}
 
 	if n.IsRoot() {
@@ -48,7 +50,12 @@ func NewSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		c.subResponse = make(chan StructResponse)
 	}
 
-	for _, channel := range []interface{}{&c.ChannelAnnouncement, &c.ChannelCommitment, &c.ChannelChallenge, &c.ChannelResponse} {
+	for _, channel := range []interface{}{
+		&c.ChannelAnnouncement,
+		&c.ChannelCommitment,
+		&c.ChannelChallenge,
+		&c.ChannelResponse,
+	} {
 		err := c.RegisterChannel(channel)
 		if err != nil {
 			return nil, errors.New("couldn't register channel: " + err.Error())
@@ -98,7 +105,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	// ----- Commitment -----
 	commitments := make([]StructCommitment, 0)
 	if p.IsRoot() {
-		select { //one commitment expected
+		select { // one commitment expected from super-protocol
 		case commitment, channelOpen := <-p.ChannelCommitment:
 			if !channelOpen {
 				return nil
@@ -111,7 +118,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	} else {
 		t := time.After(p.LeavesTimeout)
 	loop:
-		for i := 0; i < len(p.Children()); i++ {
+		for _ = range p.Children() {
 			select {
 			case commitment, channelOpen := <-p.ChannelCommitment:
 				if !channelOpen {
@@ -135,16 +142,15 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 
 	var secret kyber.Scalar
 
-	// if root, send commitment to super-protocol
 	if p.IsRoot() {
+		// send commitment to super-protocol
 		if len(commitments) != 1 {
 			return fmt.Errorf("root node in subprotocol should have received 1 commitment,"+
 				"but received %d", len(commitments))
 		}
 		p.subCommitment <- commitments[0]
-
-		// if not root, compute personal commitment and send to parent
 	} else {
+		// otherwise, compute personal commitment and send to parent
 		var commitment kyber.Point
 		var mask *cosi.Mask
 		secret, commitment, mask, err = generateCommitmentAndAggregate(suite, p.TreeNodeInstance, p.Publics, commitments)
@@ -158,15 +164,32 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	}
 
 	// ----- Challenge -----
-	challenge, channelOpen := <-p.ChannelChallenge
+	challenge, channelOpen := <-p.ChannelChallenge // from the leader
 	if !channelOpen {
 		return nil
 	}
+
+	// start the verification if I'm not the root
+	verifyChan := make(chan bool, 1)
+	if !p.IsRoot() {
+		go func() {
+			verifyChan <- p.VerificationFn(p.Proposal)
+		}()
+	}
+
 	log.Lvl3(p.ServerIdentity().Address, "received challenge")
 	for _, TreeNode := range committedChildren {
 		err = p.SendTo(TreeNode, &challenge.Challenge)
 		if err != nil {
 			return err
+		}
+	}
+
+	// if the verification is not ok, we stop the protocol
+	if !p.IsRoot() {
+		if ok := <-verifyChan; !ok {
+			log.Lvl1("verification failed, will not send response")
+			return nil
 		}
 	}
 
@@ -176,7 +199,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	}
 	responses := make([]StructResponse, 0)
 
-	for i := 0; i < len(committedChildren); i++ {
+	for _ = range committedChildren {
 		response, channelOpen := <-p.ChannelResponse
 		if !channelOpen {
 			return nil
@@ -185,17 +208,18 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	}
 	log.Lvl3(p.ServerIdentity().Address, "received all", len(responses), "response(s)")
 
-	//if root, send response to super-protocol
 	if p.IsRoot() {
+		// send response to super-protocol
 		if len(responses) != 1 {
-			return fmt.Errorf("root node in subprotocol should have received 1 response,"+
-				"but received %d", len(commitments))
+			return fmt.Errorf(
+				"root node in subprotocol should have received 1 response, but received %v",
+				len(commitments))
 		}
 		p.subResponse <- responses[0]
-
-		// if not root, generate own response and send to parent
 	} else {
-		response, err := generateResponse(suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
+		// otherwise, generate own response and send to parent
+		response, err := generateResponse(
+			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
 		if err != nil {
 			return err
 		}
@@ -205,7 +229,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}
 	}
 
-	//TODO: see if should stop node or be ready for another proposal
+	// TODO: see if should stop node or be ready for another proposal
 	return nil
 }
 
@@ -223,9 +247,13 @@ func (p *CoSiSubProtocolNode) HandleStop(stop StructStop) error {
 func (p *CoSiSubProtocolNode) Start() error {
 	log.Lvl3("Starting subCoSi")
 	if p.Proposal == nil {
-		return fmt.Errorf("subprotocol started without any proposal set")
-	} else if p.Publics == nil || len(p.Publics) < 1 {
-		return fmt.Errorf("subprotocol started with an invlid public key list")
+		return errors.New("subprotocol does not have a proposal")
+	}
+	if p.Publics == nil || len(p.Publics) < 1 {
+		return errors.New("subprotocol has invalid public keys")
+	}
+	if p.VerificationFn == nil {
+		return errors.New("subprotocol has an empty verification fn")
 	}
 	if p.SubleaderTimeout < 1 {
 		p.SubleaderTimeout = DefaultSubleaderTimeout

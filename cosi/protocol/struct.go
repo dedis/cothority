@@ -16,16 +16,18 @@ import (
 
 // ProtocolName can be used from other packages to refer to this protocol.
 const ProtocolName = "CoSiProto"
+
+// SubProtocolName is started by the main protocol.
 const SubProtocolName = "SubCoSiProto"
 
 // DefaultProtocolTimeout is the primary timeout for the CoSi protocol
-const DefaultProtocolTimeout = time.Second * 5
+const DefaultProtocolTimeout = time.Second * 10
 
 // DefaultSubleaderTimeout is the timeout for subleader's responses
-const DefaultSubleaderTimeout = DefaultProtocolTimeout / 2
+const DefaultSubleaderTimeout = DefaultProtocolTimeout / 10
 
 // DefaultLeavesTimeout is the timeout for responses from the leaves
-const DefaultLeavesTimeout = DefaultProtocolTimeout / 4
+const DefaultLeavesTimeout = DefaultProtocolTimeout / 20
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {

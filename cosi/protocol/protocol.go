@@ -12,6 +12,11 @@ import (
 	"github.com/dedis/onet/network"
 )
 
+// VerificationFn can be passes to each protocol node. It will be called
+// in a go-routine during the (start/handle) challenge phase of the protocol.
+// The input msg is the same as sent in the challenge phase.
+type VerificationFn func(msg []byte) bool
+
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
 func init() {
@@ -33,6 +38,7 @@ type CoSiRootNode struct {
 	SubleaderTimeout time.Duration
 	LeavesTimeout    time.Duration
 	FinalSignature   chan []byte
+	VerificationFn   VerificationFn
 
 	publics    []kyber.Point
 	hasStopped bool //used since Shutdown can be called multiple time
@@ -231,6 +237,9 @@ func (p *CoSiRootNode) Start() error {
 	if p.LeavesTimeout < 10 {
 		p.LeavesTimeout = DefaultLeavesTimeout
 	}
+	if p.VerificationFn == nil {
+		p.VerificationFn = func(a []byte) bool { return true }
+	}
 
 	log.Lvl3("Starting CoSi")
 	p.startChan <- true
@@ -251,6 +260,7 @@ func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, 
 	cosiSubProtocol.Proposal = p.Proposal
 	cosiSubProtocol.SubleaderTimeout = p.SubleaderTimeout
 	cosiSubProtocol.LeavesTimeout = p.LeavesTimeout
+	cosiSubProtocol.VerificationFn = p.VerificationFn
 
 	err = cosiSubProtocol.Start()
 	if err != nil {
