@@ -36,7 +36,7 @@ export DEDIS_GROUP=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothori
 Now you can run it by giving the definition of the dedis-cothority on the command line:
 
 ```go
-status $DEDIS_GROUP
+status --group $DEDIS_GROUP
 ```
 
 ### Collective Signing
@@ -58,7 +58,7 @@ cosi sign --group $DEDIS_GROUP /tmp/my_file | tee sig.json
 And later somebody can verify the signature is correct by running the following command:
 
 ```go
-cosi verify --group dedis-cothority.toml --signature sig.json dedis-cothority.toml
+cosi verify --group $DEDIS_GROUP --signature sig.json /tmp/my_file
 ```
 
 If everything is correct, it should print
