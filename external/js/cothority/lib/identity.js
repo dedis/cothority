@@ -2,6 +2,7 @@
 
 const topl = require("topl");
 const UUID = require("pure-uuid");
+const co = require("co");
 const protobuf = require("protobufjs");
 const kyber = require("@dedis/kyber-js");
 

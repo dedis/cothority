@@ -5,6 +5,7 @@ const UUID = require("pure-uuid");
 const protobuf = require("protobufjs");
 const co = require("co");
 const shuffle = require("crypto-shuffle");
+const WebSocket = require("isomorphic-ws");
 
 const root = require("../protobuf/index.js").root;
 const identity = require("../identity.js");
@@ -33,6 +34,8 @@ function Socket(addr, service) {
    */
   this.send = (request, response, data) => {
     return new Promise((resolve, reject) => {
+      const path = this.url + "/" + request;
+      console.log("net.Socket: new WebSocket(" + path + ")");
       const ws = new WebSocket(this.url + "/" + request);
       ws.binaryType = "arraybuffer";
 
@@ -62,7 +65,8 @@ function Socket(addr, service) {
       };
 
       ws.onerror = error => {
-        reject(new Error("Could not connect to " + this.url));
+        console.log(error);
+        reject(new Error("could not connect to " + this.url));
       };
     });
   };
@@ -90,7 +94,7 @@ class RosterSocket {
    */
   send(request, response, data) {
     const socket = this;
-    const fn = co.wrap(function*(socket) {
+    const fn = function*(socket) {
       var addresses = socket.addresses;
       var service = socket.service;
       shuffle(addresses);
@@ -100,18 +104,21 @@ class RosterSocket {
       for (var i = 0; i < addresses.length; i++) {
         var addr = addresses[i];
         try {
+          console.log("RosterSocket: trying out " + addr + "/" + service);
           var socket = new Socket(addr, service);
           var data = yield socket.send(request, response, data);
+          console.log("DATA RECEIVED: " + data);
           socket.lastGoodServer = addr;
           return Promise.resolve(data);
         } catch (err) {
-          console.log("could not reach out to " + addr);
+          console.log(err);
           continue;
         }
       }
       return Promise.reject("no conodes are available");
-    });
-    return fn(this);
+    };
+    var binded = fn.bind(null, this);
+    return co(binded);
   }
 }
 

@@ -8,7 +8,7 @@
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
     "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "mocha --recursive --reporter spec"
+    "test": "mocha --recursive --reporter spec --exit"
   },
   "keywords": [
     "cothority",
@@ -20,10 +20,13 @@
     "@dedis/kyber-js": "0.0.5",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
+    "isomorphic-ws": "^4.0.0",
     "protobufjs": "^6.8.4",
     "pure-uuid": "^1.4.11",
     "topl": "^0.3.1",
     "utf8": "^3.0.0",
+    "ws": "^4.0.0",
+    "wtfnode": "^0.5.7",
     "xo": "^0.18.2"
   },
   "devDependencies": {

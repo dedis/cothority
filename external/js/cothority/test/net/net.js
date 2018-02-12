@@ -1,8 +1,6 @@
 const chai = require("chai");
 const expect = chai.expect;
 
-const mock = require("mock-socket");
-
 const root = require("../../lib/protobuf").root;
 const network = require("../../lib/net");
 const cothority = require("../../lib");
@@ -18,48 +16,59 @@ const deviceMessage = {
   point: message
 };
 
+//const mock = require("mock-socket");
+const WebSocket = require("ws");
 describe("sockets", () => {
   it("sends and receives correct protobuf messages", done => {
-    const mockServer = new mock.Server(serverAddr + "/cisc/Device");
-    mockServer.on("message", event => {
-      const idProto = root.lookup(idProtoName);
-      const id = {
-        id: message
-      };
-      const idMessage = idProto.create(id);
-      const marshalled = idProto.encode(idMessage).finish();
-      mockServer.send(marshalled);
-    });
+    const mockServer = createServer("9000");
+    /*const mockServer = new mock.Server(serverAddr + "/cisc/Device");*/
+    //mockServer.on("message", event => {
+    //const idProto = root.lookup(idProtoName);
+    //const id = {
+    //id: message
+    //};
+    //const idMessage = idProto.create(id);
+    //const marshalled = idProto.encode(idMessage).finish();
+    //mockServer.send(marshalled);
+    //});
 
     const socket = new network.Socket(serverAddr, "cisc");
     socket
       .send(deviceProtoName, idProtoName, deviceMessage)
       .then(data => {
         expect(data.id).to.deep.equal(deviceMessage.point);
-        mockServer.stop(done);
+        mockServer.close(done);
       })
       .catch(err => {
-        expect(true, "socket send: " + err).to.be.false;
-        mockServer.stop(done);
+        //expect(true, "socket send: " + err).to.be.false;
+        mockServer.close(done);
+        throw err;
       });
   });
 });
 
-describe("roster socket", () => {
-  const createServer = function(addr) {
-    const mockServer = new mock.Server(addr);
-    mockServer.on("message", event => {
+function createServer(port) {
+  const mockServer = new WebSocket.Server({
+    host: "127.0.0.1",
+    port: port
+  });
+
+  mockServer.on("connection", function connection(ws) {
+    ws.on("message", function incoming(msg) {
+      console.log("received: ", msg.toString());
       const idProto = root.lookup(idProtoName);
       const id = {
         id: message
       };
       const idMessage = idProto.create(id);
       const marshalled = idProto.encode(idMessage).finish();
-      mockServer.send(marshalled);
+      ws.send(marshalled);
     });
-    return mockServer;
-  };
+  });
+  return mockServer;
+}
 
+describe.only("roster socket", () => {
   it("tries all servers", done => {
     const n = 5;
     // create the addresses
@@ -73,7 +82,7 @@ describe("roster socket", () => {
       );
       if (i == n - 1) {
         wsAddr = identities[i].websocketAddr + "/cisc/Device";
-        server = createServer(wsAddr);
+        server = createServer("700" + i);
       }
     }
     const roster = new identity.Roster(identities);
@@ -83,11 +92,12 @@ describe("roster socket", () => {
       .send(deviceProtoName, idProtoName, deviceMessage)
       .then(data => {
         expect(data.id).to.deep.equal(deviceMessage.point);
-        server.stop(done);
+        server.close(done);
       })
       .catch(err => {
-        expect(true, "socket send: " + err).to.be.false;
-        server.stop(done);
+        //expect(true, "socket send: " + err).to.be.false;
+        server.close(done);
+        throw err;
       });
   });
 });
