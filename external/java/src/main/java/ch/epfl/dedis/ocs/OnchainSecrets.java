@@ -86,8 +86,7 @@ public class OnchainSecrets extends OnchainSecretsRPC {
             default:
 
         }
-        SignaturePath path = getDarcPath(darc.getId(), signer, SignaturePath.OWNER);
-        newDarc.setEvolution(darc, path, signer);
+        newDarc.setEvolution(darc, signer);
         updateDarc(newDarc);
         return newDarc;
     }
@@ -211,8 +210,7 @@ public class OnchainSecrets extends OnchainSecretsRPC {
             default:
 
         }
-        SignaturePath path = getDarcPath(darc.getId(), signer, SignaturePath.OWNER);
-        newDarc.setEvolution(darc, path, signer);
+        newDarc.setEvolution(darc, signer);
         updateDarc(newDarc);
         return newDarc;
     }

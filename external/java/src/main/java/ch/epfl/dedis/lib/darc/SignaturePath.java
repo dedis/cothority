@@ -55,7 +55,20 @@ public class SignaturePath {
      */
     public SignaturePath(Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new ArrayList<>();
-        path.add(darc);
+            path.add(darc);
+        this.signer = IdentityFactory.New(signer);
+        this.role = role;
+    }
+
+    /**
+     * For creating online paths that don't inlcude the previous darcs
+     * but that need the path to be verified by the verifier itself.
+     * @param signer
+     * @param role
+     * @throws Exception
+     */
+    public SignaturePath(Signer signer, int role) throws CothorityCryptoException {
+        path = new ArrayList<>();
         this.signer = IdentityFactory.New(signer);
         this.role = role;
     }
@@ -80,7 +93,7 @@ public class SignaturePath {
      */
     public byte[] getPathMsg() throws CothorityCryptoException {
         if (path.size() == 0){
-            return new byte[0];
+            return "online".getBytes();
         }
         byte[] pathMsg = new byte[path.size() * path.get(0).getId().getId().length];
         int pos = 0;
