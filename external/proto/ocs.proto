@@ -55,10 +55,6 @@ message Write {
   optional bytes extradata = 7;
   // 	 Reader points to a darc where the reading-rights are stored
   required Darc reader = 8;
-  // 	 Signature must come from a valid writer stored in the admin darc of the OCS
-  // 	 skipchain. For backwards-compatibility, this is an optional field.
-  // 	 But for every new write-request, it must be set.
-  optional Signature signature = 9;
 }
 
 // Read stores a read-request which is the secret encrypted under the

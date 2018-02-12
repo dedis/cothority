@@ -155,7 +155,7 @@ func (d *Darc) RemoveUser(user *Identity) ([]*Identity, error) {
 	}
 	users = *d.Users
 	for i, u := range *d.Users {
-		if u.Equal(user) {
+		if u == user {
 			userIndex = i
 		}
 	}
@@ -171,13 +171,13 @@ func (d *Darc) RemoveUser(user *Identity) ([]*Identity, error) {
 // SetEvolution evolves a darc, the latest valid darc needs to sign the new darc.
 // Only if one of the previous owners signs off on the new darc will it be
 // valid and accepted to sign on behalf of the old darc. The path can be nil
-// if the previousOwner is a SignerEd25519 and found directly in the
+// unless if the previousOwner is an SignerEd25519 and found directly in the
 // previous darc.
 func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) error {
 	d.Signature = nil
 	d.Version = prevd.Version + 1
 	if pth == nil {
-		pth = NewSignaturePath([]ID{prevd.GetID()}, *prevOwner.Identity(), Owner)
+		pth = NewSignaturePath([]*Darc{prevd}, *prevOwner.Identity(), Owner)
 	}
 	if prevd.BaseID == nil {
 		id := prevd.GetID()
@@ -200,34 +200,43 @@ func (d *Darc) IncrementVersion() {
 	d.Version++
 }
 
-// VerifyEvolutionFrom makes sure this darc is valid by checking that it is
-// either a new darc or that it has a correct signature from
-// the previous darc.
-// If the verification succeeds, nil is returned, or an error
-// otherwise.
-// The caller has to make sure that the signature comes from an
-// appropriate signer.
-func (d Darc) VerifyEvolutionFrom(previous *Darc) error {
+// Verify returns nil if the verification is OK, or an error
+// if something is wrong.
+func (d Darc) Verify() error {
 	if d.Version == 0 {
 		return nil
-	}
-	if previous == nil {
-		return errors.New("no previous darc given")
-	}
-	if previous.Version >= d.Version {
-		return errors.New("incorrect evolution of version numbers")
-	}
-	if !previous.GetBaseID().Equal(d.GetBaseID()) {
-		return errors.New("incorrect evolution - not the same darc.BaseID")
 	}
 	if d.Signature == nil || len(d.Signature.Signature) == 0 {
 		return errors.New("No signature available")
 	}
-	return d.Signature.Verify(d.GetID(), previous)
+	latest, err := d.GetLatest()
+	if err != nil {
+		return err
+	}
+	if err := d.Signature.SignaturePath.Verify(Owner); err != nil {
+		return err
+	}
+	return d.Signature.Verify(d.GetID(), latest)
+}
+
+// GetLatest searches for the previous darc in the signature and returns an
+// error if it's not an evolving darc.
+func (d Darc) GetLatest() (*Darc, error) {
+	if d.Signature == nil {
+		return nil, nil
+	}
+	if d.Signature.SignaturePath.Darcs == nil {
+		return nil, errors.New("signature but no darcs")
+	}
+	prev := (*d.Signature.SignaturePath.Darcs)[0]
+	if prev.Version+1 != d.Version {
+		return nil, errors.New("not clean evolution - version mismatch")
+	}
+	return prev, nil
 }
 
 func (d Darc) String() string {
-	ret := fmt.Sprintf("this[base]: %x [ %x ]\nVersion: %d", d.GetID(), d.GetBaseID(), d.Version)
+	ret := fmt.Sprintf("this[base]: %x[%x]\nVersion: %d", d.GetID(), d.GetBaseID(), d.Version)
 	for idStr, list := range map[string]*[]*Identity{"owner": d.Owners, "user": d.Users} {
 		if list != nil {
 			for _, u := range *list {
@@ -268,16 +277,14 @@ func NewDarcSignature(msg []byte, sigpath *SignaturePath, signer *Signer) (*Sign
 
 // Verify returns nil if the signature is correct, or an error
 // if something is wrong.
-// It does not verify the path itself, but only whether the
-// signer did actually sign the message.
 func (ds *Signature) Verify(msg []byte, base *Darc) error {
 	if base == nil {
 		return errors.New("Base-darc is missing")
 	}
-	if ds.SignaturePath.DarcIDs == nil || len(*ds.SignaturePath.DarcIDs) == 0 {
+	if ds.SignaturePath.Darcs == nil || len(*ds.SignaturePath.Darcs) == 0 {
 		return errors.New("No path stored in signaturepath")
 	}
-	sigBase := (*ds.SignaturePath.DarcIDs)[0]
+	sigBase := (*ds.SignaturePath.Darcs)[0].GetID()
 	if !sigBase.Equal(base.GetID()) {
 		return errors.New("Base-darc is not at root of path")
 	}
@@ -304,11 +311,11 @@ func sigHash(sigpath *SignaturePath, msg []byte) ([]byte, error) {
 }
 
 // NewSignaturePath returns an initialized SignaturePath structure.
-func NewSignaturePath(darcIDs []ID, signer Identity, role Role) *SignaturePath {
+func NewSignaturePath(darcs []*Darc, signer Identity, role Role) *SignaturePath {
 	return &SignaturePath{
-		DarcIDs: &darcIDs,
-		Signer:  signer,
-		Role:    role,
+		Darcs:  &darcs,
+		Signer: signer,
+		Role:   role,
 	}
 }
 
@@ -318,10 +325,84 @@ func (sigpath *SignaturePath) GetPathMsg() []byte {
 		return []byte{}
 	}
 	var path []byte
-	for _, darc := range *sigpath.DarcIDs {
-		path = append(path, darc...)
+	for _, darc := range *sigpath.Darcs {
+		path = append(path, darc.GetID()...)
 	}
 	return path
+}
+
+// Verify makes sure that the path is a correctly evolving one (each next
+// darc should be referenced by the previous one) and that the signer
+// is present in the last darc.
+func (sigpath *SignaturePath) Verify(role Role) error {
+	if len(*sigpath.Darcs) == 0 {
+		return errors.New("no path stored")
+	}
+	var previous *Darc
+	for n, d := range *sigpath.Darcs {
+		if d == nil {
+			return errors.New("null pointer in path list")
+		}
+		if previous != nil {
+			// Check if its an evolving darc
+			latest, err := d.GetLatest()
+			if err != nil {
+				return errors.New("found incorrect darc in chain")
+			}
+			if latest != nil {
+				log.Lvlf2("Verifying evolution from %x", d.GetID())
+				if err := d.Verify(); err != nil {
+					return errors.New("not correct evolution of darcs in path: " + err.Error())
+				}
+			}
+			if latest == nil || bytes.Compare(latest.GetID(), previous.GetID()) != 0 {
+				// The darc link can only come from an owner of the first darc. Afterwards
+				// darc links have to be user-links.
+				found := false
+				if role == Owner && n == 1 {
+					if previous.Owners != nil {
+						for _, id := range *previous.Owners {
+							if id.Darc != nil && id.Darc.ID.Equal(d.GetID()) {
+								found = true
+								break
+							}
+						}
+					} else {
+						return errors.New("no owners defined in base darc")
+					}
+				} else {
+					if previous.Users != nil {
+						for _, id := range *previous.Users {
+							if id.Darc != nil && id.Darc.ID.Equal(d.GetID()) {
+								found = true
+								break
+							}
+						}
+					} else {
+						return errors.New("no users defined for user signature")
+					}
+				}
+				if !found {
+					return fmt.Errorf("didn't find valid darc-link in chain at position %d", n)
+				}
+			}
+		}
+		previous = d
+	}
+	if role == User {
+		for _, id := range *previous.Users {
+			if sigpath.Signer.Equal(id) {
+				return nil
+			}
+		}
+	} else {
+		for _, id := range *previous.Owners {
+			if sigpath.Signer.Equal(id) {
+				return nil
+			}
+		}
+	}
+	return errors.New("didn't find signer in last darc of path")
 }
 
 // Type returns an integer representing the type of key held in the signer.

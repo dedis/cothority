@@ -18,8 +18,8 @@ public class DarcSignatureTest {
         byte[] msg = "document".getBytes();
         Darc darc = new Darc(signer, Arrays.asList(signer), null);
         Darc darc2 = new Darc(signer2, null, null);
-        List<DarcId> dpath = new ArrayList<>();
-        dpath.add(darc.getId());
+        List<Darc> dpath = new ArrayList<>();
+        dpath.add(darc);
         SignaturePath path = new SignaturePath(dpath, signer, SignaturePath.OWNER);
 
         DarcSignature sig = new DarcSignature(msg, path, signer);

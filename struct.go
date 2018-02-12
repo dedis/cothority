@@ -280,10 +280,6 @@ type Write struct {
 	ExtraData *[]byte
 	// Reader points to a darc where the reading-rights are stored
 	Reader darc.Darc
-	// Signature must come from a valid writer stored in the admin darc of the OCS
-	// skipchain. For backwards-compatibility, this is an optional field.
-	// But for every new write-request, it must be set.
-	Signature *darc.Signature
 }
 
 // Read stores a read-request which is the secret encrypted under the

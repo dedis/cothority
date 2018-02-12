@@ -35,7 +35,6 @@ public class GetPathTest {
     @BeforeAll
     void setupBlokchainAndUsers() throws Exception {
         TestServerInit.getInstance();
-//        TestServerInit.getInstanceManual();
         SkipblockId genesis = createSkipChainForTest();
         ocs = connectToExistingSkipchain(genesis);
         publisherId = createPublisher(ocs);

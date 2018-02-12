@@ -2,7 +2,6 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
-import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,7 @@ public class SignaturePath {
     public static final int OWNER = 0;
     public static final int USER = 1;
 
-    private List<DarcId> path;
+    private List<Darc> path;
     private Identity signer;
     private int role;
 
@@ -30,7 +29,7 @@ public class SignaturePath {
      * @param signer
      * @param role
      */
-    public SignaturePath(List<DarcId> darcPath, Identity signer, int role) {
+    public SignaturePath(List<Darc> darcPath, Identity signer, int role) {
         path = darcPath;
         this.signer = signer;
         this.role = role;
@@ -43,7 +42,7 @@ public class SignaturePath {
      * @param signer
      * @param role
      */
-    public SignaturePath(List<DarcId> darcPath, Signer signer, int role) throws CothorityCryptoException {
+    public SignaturePath(List<Darc> darcPath, Signer signer, int role) throws CothorityCryptoException {
         this(darcPath, IdentityFactory.New(signer), role);
     }
 
@@ -56,7 +55,7 @@ public class SignaturePath {
      */
     public SignaturePath(Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new ArrayList<>();
-        path.add(darc.getId());
+        path.add(darc);
         this.signer = IdentityFactory.New(signer);
         this.role = role;
     }
@@ -65,9 +64,9 @@ public class SignaturePath {
         role = proto.getRole();
         signer = IdentityFactory.New(proto.getSigner());
         path = new ArrayList<>();
-        for (ByteString id :
-                proto.getDarcidsList()) {
-            path.add(new DarcId(id.toByteArray()));
+        for (DarcProto.Darc d :
+                proto.getDarcsList()) {
+            path.add(new Darc(d));
         }
     }
 
@@ -83,10 +82,10 @@ public class SignaturePath {
         if (path.size() == 0){
             return new byte[0];
         }
-        byte[] pathMsg = new byte[path.size() * path.get(0).getId().length];
+        byte[] pathMsg = new byte[path.size() * path.get(0).getId().getId().length];
         int pos = 0;
-        for (DarcId id : path) {
-            System.arraycopy(id.getId(), 0, pathMsg, pos * 32, 32);
+        for (Darc d : path) {
+            System.arraycopy(d.getId().getId(), 0, pathMsg, pos * 32, 32);
             pos++;
         }
         return pathMsg;
@@ -94,11 +93,28 @@ public class SignaturePath {
 
     public List<DarcId> getPathIDs() {
         List<DarcId> ids = new ArrayList<>();
-        for (DarcId id :
+        for (Darc d :
                 path) {
-                ids.add(id);
+            try {
+                ids.add(d.getId());
+            } catch (CothorityCryptoException e){
+            }
         }
         return ids;
+    }
+
+    /**
+     * Returns a copy of the darc-list
+     * @return
+     */
+    public List<Darc> getDarcs(){
+        List<Darc> darcs = new ArrayList<>();
+        for (Darc d :
+                path) {
+            darcs.add(d);
+        }
+        return darcs;
+
     }
 
     /**
@@ -117,9 +133,9 @@ public class SignaturePath {
         DarcProto.SignaturePath.Builder b = DarcProto.SignaturePath.newBuilder();
         b.setRole(role);
         b.setSigner(signer.toProto());
-        for (DarcId id :
+        for (Darc d :
                 path) {
-            b.addDarcids(ByteString.copyFrom(id.getId()));
+            b.addDarcs(d.toProto());
         }
         return b.build();
     }

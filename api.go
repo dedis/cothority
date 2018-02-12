@@ -218,7 +218,7 @@ func (c *Client) DecryptKeyRequestEphemeral(ocs *SkipChainURL, readID skipchain.
 	err error) {
 	kp := key.NewKeyPair(cothority.Suite)
 	id := darc.NewIdentityEd25519(reader.Ed25519.Point)
-	path := darc.NewSignaturePath([]darc.ID{readerDarc.GetID()}, *id, darc.User)
+	path := darc.NewSignaturePath([]*darc.Darc{readerDarc}, *id, darc.User)
 	msg, err := kp.Public.MarshalBinary()
 	if err != nil {
 		return
