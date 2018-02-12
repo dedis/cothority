@@ -155,7 +155,7 @@ func (d *Darc) RemoveUser(user *Identity) ([]*Identity, error) {
 	}
 	users = *d.Users
 	for i, u := range *d.Users {
-		if u == user {
+		if u.Equal(user) {
 			userIndex = i
 		}
 	}
@@ -184,6 +184,31 @@ func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) 
 		d.BaseID = &id
 	}
 	sig, err := NewDarcSignature(d.GetID(), pth, prevOwner)
+	if err != nil {
+		return errors.New("error creating a darc signature for evolution: " + err.Error())
+	}
+	if sig != nil {
+		d.Signature = sig
+	} else {
+		return errors.New("the resulting signature is nil")
+	}
+	return nil
+}
+
+// SetEvolutionOnline works like SetEvolution, but doesn't inlcude all the
+// necessary data to verify the update in an offline setting. This is enough
+// for the use case where the ocs stores all darcs in its internal database.
+// The service verifying the signature will have to verify if there is a valid
+// path from the previous darc to the signer.
+func (d *Darc) SetEvolutionOnline(prevd *Darc, prevOwner *Signer) error {
+	d.Signature = nil
+	d.Version = prevd.Version + 1
+	if prevd.BaseID == nil {
+		id := prevd.GetID()
+		d.BaseID = &id
+	}
+	path := &SignaturePath{Signer: *prevOwner.Identity(), Role: Owner}
+	sig, err := NewDarcSignature(d.GetID(), path, prevOwner)
 	if err != nil {
 		return errors.New("error creating a darc signature for evolution: " + err.Error())
 	}
@@ -264,7 +289,7 @@ func NewDarcSignature(msg []byte, sigpath *SignaturePath, signer *Signer) (*Sign
 	if sigpath == nil || signer == nil {
 		return nil, errors.New("signature path or signer are missing")
 	}
-	hash, err := sigHash(sigpath, msg)
+	hash, err := sigpath.SigHash(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -288,15 +313,24 @@ func (ds *Signature) Verify(msg []byte, base *Darc) error {
 	if !sigBase.Equal(base.GetID()) {
 		return errors.New("Base-darc is not at root of path")
 	}
-	hash, err := sigHash(&ds.SignaturePath, msg)
+	hash, err := ds.SignaturePath.SigHash(msg)
 	if err != nil {
 		return err
 	}
 	return ds.SignaturePath.Signer.Verify(hash, ds.Signature)
 }
 
-// sigHash returns the hash needed to create or verify a DarcSignature.
-func sigHash(sigpath *SignaturePath, msg []byte) ([]byte, error) {
+// NewSignaturePath returns an initialized SignaturePath structure.
+func NewSignaturePath(darcs []*Darc, signer Identity, role Role) *SignaturePath {
+	return &SignaturePath{
+		Darcs:  &darcs,
+		Signer: signer,
+		Role:   role,
+	}
+}
+
+// SigHash returns the hash needed to create or verify a DarcSignature.
+func (sigpath *SignaturePath) SigHash(msg []byte) ([]byte, error) {
 	h := sha256.New()
 	msgpath := sigpath.GetPathMsg()
 	_, err := h.Write(msgpath)
@@ -310,23 +344,18 @@ func sigHash(sigpath *SignaturePath, msg []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-// NewSignaturePath returns an initialized SignaturePath structure.
-func NewSignaturePath(darcs []*Darc, signer Identity, role Role) *SignaturePath {
-	return &SignaturePath{
-		Darcs:  &darcs,
-		Signer: signer,
-		Role:   role,
-	}
-}
-
 // GetPathMsg returns the concatenated Darc-IDs of the path.
 func (sigpath *SignaturePath) GetPathMsg() []byte {
 	if sigpath == nil {
 		return []byte{}
 	}
 	var path []byte
-	for _, darc := range *sigpath.Darcs {
-		path = append(path, darc.GetID()...)
+	if sigpath.Darcs == nil {
+		path = []byte("online")
+	} else {
+		for _, darc := range *sigpath.Darcs {
+			path = append(path, darc.GetID()...)
+		}
 	}
 	return path
 }

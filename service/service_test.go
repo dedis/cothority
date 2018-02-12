@@ -137,6 +137,77 @@ func TestService_GetDarcPath(t *testing.T) {
 	require.NotEqual(t, 0, len(*reply.Path))
 }
 
+func TestService_UpdateDarcOffline(t *testing.T) {
+	o := createOCS(t)
+	defer o.local.CloseAll()
+
+	latestReader := o.readers.Copy()
+	var newSigner *darc.Signer
+	for i := 0; i < 10; i++ {
+		log.Lvl1("Adding darc", i)
+		w := darc.NewSignerEd25519(nil, nil)
+		newReader := latestReader.Copy()
+		newReader.AddUser(w.Identity())
+		if newSigner != nil {
+			newReader.RemoveUser(newSigner.Identity())
+		}
+		err := newReader.SetEvolution(latestReader, nil, o.writer)
+		require.Nil(t, err)
+
+		_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+			OCS:  o.sc.OCS.SkipChainID(),
+			Darc: *newReader,
+		})
+		require.Nil(t, err)
+
+		_, err = o.service.GetDarcPath(&ocs.GetDarcPath{
+			OCS:        o.sc.OCS.SkipChainID(),
+			BaseDarcID: o.readers.GetID(),
+			Identity:   *w.Identity(),
+			Role:       int(darc.User),
+		})
+		require.Nil(t, err)
+
+		latestReader = newReader
+		newSigner = w
+	}
+}
+
+func TestService_UpdateDarcOnline(t *testing.T) {
+	if testing.Short() {
+		t.Skip("adding 100 darcs takes a lot of time")
+	}
+	o := createOCS(t)
+	defer o.local.CloseAll()
+
+	latestReader := o.readers.Copy()
+	var newSigner *darc.Signer
+	for i := 0; i < 100; i++ {
+		log.Lvl1("Adding darc", i)
+		w := darc.NewSignerEd25519(nil, nil)
+		newReader := latestReader.Copy()
+		newReader.AddUser(w.Identity())
+		if newSigner != nil {
+			newReader.RemoveUser(newSigner.Identity())
+		}
+		err := newReader.SetEvolutionOnline(latestReader, o.writer)
+		require.Nil(t, err)
+
+		_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+			OCS:  o.sc.OCS.SkipChainID(),
+			Darc: *newReader,
+		})
+		require.Nil(t, err)
+
+		buf, err := network.Marshal(newReader)
+		require.Nil(t, err)
+		log.Lvl2("Size of darc:", len(buf))
+
+		latestReader = newReader
+		newSigner = w
+	}
+}
+
 type ocsStruct struct {
 	local    *onet.LocalTest
 	services []onet.Service
@@ -153,7 +224,7 @@ func createOCS(t *testing.T) *ocsStruct {
 	}
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	hosts, roster, _ := o.local.GenTree(10, true)
+	hosts, roster, _ := o.local.GenTree(5, true)
 
 	o.services = o.local.GetServices(hosts, templateID)
 	o.service = o.services[0].(*Service)

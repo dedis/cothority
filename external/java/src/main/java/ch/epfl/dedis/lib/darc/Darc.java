@@ -168,12 +168,37 @@ public class Darc {
      * valid and accepted to sign on behalf of the old darc. The path can be nil
      * unless if the previousOwner is an SignerEd25519 and found directly in the
      * previous darc.
+     * <p>
+     * If a new darc is signed with this method, it will only be verifiable in a
+     * setting where the verifier has access to the previous darc. This is OK
+     * in the case of OCS, but might not be OK if you would want to verify it
+     * without having access to the previous darc.
+     * <p>
+     * The verification will have to be done on the OCS skipchain.
+     *
+     * @param previous
+     * @param previousOwner
+     */
+    public void setEvolution(Darc previous, Signer previousOwner) throws CothorityCryptoException {
+        version = previous.version + 1;
+        SignaturePath path = new SignaturePath(previousOwner, SignaturePath.OWNER);
+        baseid = previous.getBaseId();
+        signature = new DarcSignature(getId().getId(), path, previousOwner);
+        logger.debug("Signature is: " + signature.toProto().toString());
+    }
+
+    /**
+     * To evolve a darc, the latest valid darc needs to sign the new darc.
+     * Only if one of the previous owners signs off on the new darc will it be
+     * valid and accepted to sign on behalf of the old darc. The path can be nil
+     * unless if the previousOwner is an SignerEd25519 and found directly in the
+     * previous darc.
      *
      * @param previous
      * @param path
      * @param previousOwner
      */
-    public void setEvolution(Darc previous, SignaturePath path, Signer previousOwner) throws CothorityCryptoException {
+    public void setEvolutionOffline(Darc previous, SignaturePath path, Signer previousOwner) throws CothorityCryptoException {
         version = previous.version + 1;
         if (path == null) {
             path = new SignaturePath(previous, previousOwner, SignaturePath.OWNER);
@@ -296,7 +321,7 @@ public class Darc {
      *
      * @param signer
      */
-    public void removeOwner(Signer signer) throws CothorityCryptoException{
+    public void removeOwner(Signer signer) throws CothorityCryptoException {
         owners.remove(IdentityFactory.New(signer));
     }
 
@@ -323,7 +348,7 @@ public class Darc {
      *
      * @param signer
      */
-    public void removeUser(Signer signer) throws CothorityCryptoException{
+    public void removeUser(Signer signer) throws CothorityCryptoException {
         users.remove(IdentityFactory.New(signer));
     }
 

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import org.junit.jupiter.api.BeforeAll;
@@ -7,9 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DarcTest {
     static SignerEd25519 owner;
@@ -44,11 +43,27 @@ public class DarcTest {
     void evolveDarc() throws Exception {
         Darc darc2 = darc.copy();
         darc2.addUser(user);
-        darc2.setEvolution(darc, null, owner);
+        darc2.setEvolution(darc, owner);
 
         Darc darc3 = darc.copy();
         darc3.addUser(user);
-        darc3.setEvolution(darc2, null, owner);
+        darc3.setEvolution(darc2, owner);
+
+        assertThrows(CothorityCryptoException.class, ()->darc2.verifyEvolution(darc));
+        assertThrows(CothorityCryptoException.class, ()->darc3.verifyEvolution(darc));
+        assertTrue(darc.getBaseId().equals(darc2.getBaseId()));
+        assertTrue(darc2.getBaseId().equals(darc3.getBaseId()));
+    }
+
+    @Test
+    void evolveDarcOffline() throws Exception {
+        Darc darc2 = darc.copy();
+        darc2.addUser(user);
+        darc2.setEvolutionOffline(darc, null, owner);
+
+        Darc darc3 = darc.copy();
+        darc3.addUser(user);
+        darc3.setEvolutionOffline(darc2, null, owner);
 
         assertTrue(darc2.verifyEvolution(darc));
         assertFalse(darc3.verifyEvolution(darc));

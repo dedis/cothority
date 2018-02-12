@@ -28,7 +28,7 @@ import (
 // Used for tests
 var templateID onet.ServiceID
 
-const propagationTimeout = 5 * time.Second
+const propagationTimeout = 10 * time.Second
 const timestampRange = 60
 
 func init() {
@@ -128,7 +128,7 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 	if err := pi.Start(); err != nil {
 		return nil, err
 	}
-	log.Lvl3("Started DKG-protocol - waiting for done")
+	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
 	select {
 	case <-setupDKG.Done:
 		shared, err := setupDKG.SharedSecret()
@@ -149,7 +149,6 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 		return nil, errors.New("dkg didn't finish in time")
 	}
 
-	s.Storage.Admins[string(reply.OCS.Hash)] = &req.Writers
 	s.save()
 	return
 }
@@ -157,20 +156,12 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 // UpdateDarc adds a new account or modifies an existing one.
 func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	err error) {
-	if _, exists := s.getDarc(req.Darc.GetID()); exists {
-		return nil, errors.New("cannot store darc again")
-	}
-	latest := s.getLatestDarc(req.Darc.GetBaseID())
-	if latest != nil && latest.Version >= req.Darc.Version {
-		return nil, errors.New("cannot store darc with lower or equal version")
-	}
-	if err := req.Darc.Verify(); err != nil {
-		log.Lvl2("Error when checking signature:", err)
-		return nil, err
-	}
 	dataOCS := &ocs.Transaction{
 		Darc:      &req.Darc,
 		Timestamp: time.Now().Unix(),
+	}
+	if err := s.verifyDarc(dataOCS.Darc); err != nil {
+		return nil, errors.New("verification of new darc failed: " + err.Error())
 	}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
 	if err != nil {
@@ -186,7 +177,7 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	}
 	log.Lvl3("New darc is:", req.Darc.String())
 	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
-	log.Lvlf2("New darc is %d", req.Darc.Version)
+	log.Lvlf2("New darc version is %d", req.Darc.Version)
 
 	replies, err := s.propagateOCS(latestSB.Roster, latestSB, propagationTimeout)
 	if err != nil {
@@ -195,32 +186,36 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	if replies != len(latestSB.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
-
 	return &ocs.UpdateDarcReply{SB: latestSB}, nil
 }
 
-// GetDarcPath returns the latest valid Darc given its identity.
+// GetDarcPath searches a path from the given darc to the identity. If it
+// finds a valid path, it only returns the last part of the darc chain, as
+// this is sufficient in an online setting where all darcs are available when
+// the signature has to be verified.
 func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
 	err error) {
-	d, exists := s.getDarc(req.BaseDarcID)
-	if !exists {
+	d := s.getDarc(req.BaseDarcID)
+	if d == nil {
 		return nil, errors.New("this Darc doesn't exist")
 	}
 	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.String(),
 		req.BaseDarcID)
 	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
-	log.Lvlf3("%#v", path)
 	if len(path) == 0 {
 		return nil, errors.New("didn't find a path to the given identity")
 	}
+	// We only send the last darc in the path to save space. Once we receive
+	// a signature we'll re-create the path and make sure it's a valid path.
+	// path = path[len(path)-1:]
 	return &ocs.GetDarcPathReply{Path: &path}, nil
 }
 
 // GetLatestDarc searches for new darcs and returns the
 // whole path for the requester to verify.
 func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDarcReply, err error) {
-	start, exists := s.getDarc(req.DarcID)
-	if !exists {
+	start := s.getDarc(req.DarcID)
+	if start == nil {
 		return nil, errors.New("this Darc doesn't exist")
 	}
 	path := []*darc.Darc{start}
@@ -244,24 +239,24 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	if err != nil {
 		return nil, errors.New("didn't find latest block: " + err.Error())
 	}
+	if req.Readers != nil {
+		req.Write.Reader = *req.Readers
+	}
+	req.Write.Signature = &req.Signature
 	dataOCS := &ocs.Transaction{
 		Write:     &req.Write,
-		Darc:      req.Readers,
 		Timestamp: time.Now().Unix(),
+	}
+	if s.getDarc(req.Write.Reader.GetID()) == nil {
+		// Only set up the reader darc for storage if it is not already known.
+		dataOCS.Darc = &req.Write.Reader
+	}
+	if err := s.verifyWrite(req.OCS, &req.Write); err != nil {
+		return nil, errors.New("write-verification failed: " + err.Error())
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
 		return nil, err
-	}
-	admin := s.Storage.Admins[string(req.OCS)]
-	if admin == nil {
-		return nil, errors.New("couldn't find admin for this chain")
-	}
-	if s.searchPath([]darc.Darc{*admin}, req.Signature.SignaturePath.Signer, darc.User) == nil {
-		return nil, errors.New("writer is not in admin-darc")
-	}
-	if err = req.Signature.Verify(req.Write.Reader.GetID(), admin); err != nil {
-		return nil, errors.New("invalid signature: " + err.Error())
 	}
 	i := 1
 	for {
@@ -300,20 +295,12 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	log.Lvl2("Requesting a file. Reader:", req.Read.Signature.SignaturePath.Signer)
 	reply = &ocs.ReadReply{}
 	writeSB := s.db().GetByID(req.Read.DataID)
-	blockData := ocs.NewOCS(writeSB.Data)
-	if blockData == nil || blockData.Write == nil {
-		return nil, errors.New("Not an ocs-write block")
-	}
-	log.Lvlf2("Document reader is %x", blockData.Write.Reader.GetID())
-	if err := req.Read.Signature.SignaturePath.Verify(darc.User); err != nil {
-		return nil, errors.New("signature by wrong identity: " + err.Error())
-	}
-	if err := req.Read.Signature.Verify(req.Read.DataID, &blockData.Write.Reader); err != nil {
-		return nil, errors.New("wrong signature: " + err.Error())
-	}
 	dataOCS := &ocs.Transaction{
 		Read:      &req.Read,
 		Timestamp: time.Now().Unix(),
+	}
+	if err := s.verifyRead(&req.Read); err != nil {
+		return nil, errors.New("verification of read-request failed: " + err.Error())
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
@@ -615,15 +602,15 @@ func (s *Service) addDarc(d *darc.Darc) {
 	s.Storage.Accounts[key] = darcs
 }
 
-func (s *Service) getDarc(id darc.ID) (*darc.Darc, bool) {
+func (s *Service) getDarc(id darc.ID) *darc.Darc {
 	for _, darcs := range s.Storage.Accounts {
 		for _, d := range darcs.Darcs {
 			if d.GetID().Equal(id) {
-				return d, true
+				return d
 			}
 		}
 	}
-	return nil, false
+	return nil
 }
 
 func (s *Service) getLatestDarc(genesisID darc.ID) *darc.Darc {
@@ -685,8 +672,8 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 		// Then search sub-darcs
 		for _, id := range *ids {
 			if id.Darc != nil {
-				d, found := s.getDarc(id.Darc.ID)
-				if !found {
+				d := s.getDarc(id.Darc.ID)
+				if d == nil {
 					log.Lvlf1("Got unknown darc-id in path - ignoring: %x", id.Darc.ID)
 					continue
 				}
@@ -699,35 +686,11 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	return nil
 }
 
-// darcRecursive searches for all darcs given an id. It makes sure to avoid
-// recursive endless loops by verifying that all new calls are done with
-// not-yet-existing IDs.
-func (s *Service) darcRecursive(storage map[string]*darc.Darc, search darc.ID) {
-	// darc := s.Storage.Accounts[string(search)]
-	// storage[string(search)] = darc
-	// log.Lvlf2("%+v", darc)
-	// for _, d := range darc.Accounts {
-	// 	if _, exists := storage[string(d.ID)]; !exists {
-	// 		s.darcRecursive(storage, d.ID)
-	// 	}
-	// }
-}
-
 func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 	log.Lvl3(s.ServerIdentity(), "Verifying ocs")
 	dataOCS := ocs.NewOCS(sb.Data)
 	if dataOCS == nil {
 		log.Lvl3("Didn't find ocs")
-		return false
-	}
-	genesis := s.db().GetByID(sb.SkipChainID())
-	if genesis == nil {
-		log.Lvl3("No genesis-block")
-		return false
-	}
-	ocsData := ocs.NewOCS(genesis.Data)
-	if ocsData == nil {
-		log.Lvl3("No ocs-data in genesis-block")
 		return false
 	}
 
@@ -742,47 +705,107 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 		return false
 	}
 
-	if write := dataOCS.Write; write != nil {
-		// Write has to check if the signature comes from a valid writer.
-		log.Lvl2("Checking the proof of the writer knowing r.")
-		return true
-	} else if read := dataOCS.Read; read != nil {
-		// Read has to check that it's a valid reader
-		log.Lvl2("It's a read")
-		// Search file
-		var writeBlock *ocs.Write
-		var readersBlock *darc.Darc
-		sb := s.db().GetByID(read.DataID)
-		if sb == nil {
-			log.Lvl2("Didn't find write-block")
+	if dataOCS.Darc != nil {
+		if err := s.verifyDarc(dataOCS.Darc); err != nil {
+			log.Error("verification of new darc failed: " + err.Error())
 			return false
 		}
-		wd := ocs.NewOCS(sb.Data)
-		if wd == nil || wd.Write == nil {
-			log.Lvl2("block was not a write-block")
-			return false
-		}
-		writeBlock = wd.Write
-		readersBlock = wd.Darc
-		if writeBlock == nil {
-			log.Lvl2("Didn't find file")
-			return false
-		}
-		if readersBlock == nil {
-			log.Error("Found empty readers-block")
-			return false
-		}
-		if err := readersBlock.Verify(); err != nil {
-			log.Error("wrong reader verification:" + err.Error())
-			return false
-		}
-		return true
-		//return false
-	} else if darc := dataOCS.Darc; darc != nil {
-		log.Lvl2("Accepting all darc side")
-		return true
 	}
-	return false
+	if dataOCS.Write != nil {
+		if err := s.verifyWrite(sb.SkipChainID(), dataOCS.Write); err != nil {
+			log.Error("verification of write request failed: " + err.Error())
+			return false
+		}
+	}
+	if dataOCS.Read != nil {
+		if err := s.verifyRead(dataOCS.Read); err != nil {
+			log.Error("verification of read request failed: " + err.Error())
+			return false
+		}
+	}
+	return true
+}
+
+// verifyRead makes sure that the read request is correctly signed from
+// a valid reader that has a path to the Readers-entry in the corresponding write
+// request.
+func (s *Service) verifyRead(read *ocs.Read) error {
+	// Read has to check that it's a valid reader
+	log.Lvl2("It's a read")
+
+	// Search write request
+	sbWrite := s.db().GetByID(read.DataID)
+	if sbWrite == nil {
+		return errors.New("Didn't find write-block")
+	}
+	wd := ocs.NewOCS(sbWrite.Data)
+	if wd == nil || wd.Write == nil {
+		return errors.New("block was not a write-block")
+	}
+	readers := wd.Write.Reader
+	if s.getDarc(readers.GetID()) == nil {
+		return errors.New("couldn't find reader-darc in database")
+	}
+	return s.verifySignature(read.DataID, read.Signature, readers, darc.User)
+}
+
+// verifySignature handles both offline and online signatures. For offline
+// signatures, all darcs in the path must be stored in the SignaturePath.
+// For online signatures, the system will check itself if it finds a valid
+// path from the base darc to the signer.
+// If the signature is valid, nil is returned. Else an error is returned,
+// indicating what went wrong.
+func (s *Service) verifySignature(msg []byte, sig darc.Signature, base darc.Darc, role darc.Role) error {
+	if sig.SignaturePath.Darcs == nil {
+		log.Lvl2("Searching for online verification")
+		signer := sig.SignaturePath.Signer
+		path := s.searchPath([]darc.Darc{base}, signer, role)
+		if path == nil {
+			return errors.New("didn't find a valid path from the write.Readers to the signer")
+		}
+		hash, err := sig.SignaturePath.SigHash(msg)
+		if err != nil {
+			return err
+		}
+		if err := signer.Verify(hash, sig.Signature); err != nil {
+			return errors.New("wrong online signature: " + err.Error())
+		}
+	} else {
+		log.Lvl2("Searching for offline verification")
+		if err := sig.Verify(msg, &base); err != nil {
+			return errors.New("wrong offline signature: " + err.Error())
+		}
+	}
+	return nil
+}
+
+// verifyWrite makes sure that the write request is correctly signed from
+// a writer that has a valid path from the admin darc in the ocs skipchain.
+func (s *Service) verifyWrite(ocs skipchain.SkipBlockID, write *ocs.Write) error {
+	admin := s.Storage.Admins[string(ocs)]
+	if admin == nil {
+		return errors.New("couldn't find admin for this chain")
+	}
+	return s.verifySignature(write.Reader.GetID(), *write.Signature, *admin, darc.User)
+}
+
+// verifyDarc makes sure that the new darc is correctly signed from a previous
+// darc if it has a Version > 0.
+func (s *Service) verifyDarc(newDarc *darc.Darc) error {
+	if s.getDarc(newDarc.GetID()) != nil {
+		return errors.New("cannot store darc again")
+	}
+	latest := s.getLatestDarc(newDarc.GetBaseID())
+	if latest != nil && latest.Version >= newDarc.Version {
+		return errors.New("cannot store darc with lower or equal version")
+	}
+	if latest == nil {
+		if newDarc.Version > 0 {
+			return errors.New("not storing new darc with version > 0")
+		}
+		return nil
+	}
+	return s.verifySignature(newDarc.GetID(), *newDarc.Signature, *latest, darc.Owner)
 }
 
 func (s *Service) propagateOCSFunc(sbI network.Message) {
@@ -796,23 +819,14 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 		log.Error("Got a skipblock without dataOCS - not storing")
 		return
 	}
-	s.db().Store(sb)
 	if r := dataOCS.Darc; r != nil {
-		log.Lvlf2("Storing new darc %x - %x", r.GetID(), r.GetBaseID())
+		log.Lvlf3("Storing new darc %x - %x", r.GetID(), r.GetBaseID())
 		s.addDarc(r)
 	}
-	s.save()
+	defer s.save()
 	if sb.Index == 0 {
+		s.Storage.Admins[string(sb.Hash)] = dataOCS.Darc
 		return
-	}
-	c := skipchain.NewClient()
-	for _, sbID := range sb.BackLinkIDs {
-		sbNew, err := c.GetSingleBlock(sb.Roster, sbID)
-		if err != nil {
-			log.Error(err)
-		} else {
-			s.db().Store(sbNew)
-		}
 	}
 }
 

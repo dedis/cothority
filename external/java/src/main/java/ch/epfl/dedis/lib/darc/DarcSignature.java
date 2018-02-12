@@ -72,6 +72,9 @@ public class DarcSignature {
      * @return
      */
     public boolean verify(byte[] msg, Darc base) throws CothorityCryptoException {
+        if (path.getPathIDs().size() == 0){
+            throw new CothorityCryptoException("cannot verify if path is not set - is this an online signature?");
+        }
         if (!path.getPathIDs().get(0).equals(base.getId())) {
             return false;
         }

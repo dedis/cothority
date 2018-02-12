@@ -52,7 +52,7 @@ class OnchainSecretsRPCTest {
         logger.info("readerDarc: " + readerDarc.getId().toString());
         reader2Darc = readerDarc.copy();
         reader2Darc.addUser(reader2);
-        reader2Darc.setEvolution(readerDarc, null, publisher);
+        reader2Darc.setEvolution(readerDarc, publisher);
 
         docData = "https://dedis.ch/secret_document.osd";
         writeRequest = new WriteRequest(docData, 16, readerDarc);
@@ -99,7 +99,7 @@ class OnchainSecretsRPCTest {
         ocs.updateDarc(readerDarc);
         ocs.updateDarc(reader2Darc);
         reader2Darc.addUser(admin);
-        reader2Darc.setEvolution(readerDarc, null, publisher);
+        reader2Darc.setEvolution(readerDarc, publisher);
         try {
             ocs.updateDarc(reader2Darc);
         } catch (Exception e) {
@@ -119,7 +119,7 @@ class OnchainSecretsRPCTest {
         } catch (CothorityCommunicationException e) {
             logger.info("Correctly refused unsigned darc");
         }
-        adminDarc2.setEvolution(adminDarc, null, admin);
+        adminDarc2.setEvolution(adminDarc, admin);
         try {
             ocs.updateDarc(adminDarc2);
             logger.info("Accepted correct signature");
@@ -180,7 +180,7 @@ class OnchainSecretsRPCTest {
         ocs.updateDarc(reader2Darc);
         Darc admin2Darc = adminDarc.copy();
         admin2Darc.addUser(readerDarc);
-        admin2Darc.setEvolution(adminDarc, null, admin);
+        admin2Darc.setEvolution(adminDarc, admin);
         ocs.updateDarc(admin2Darc);
         SignaturePath path = ocs.getDarcPath(adminDarc.getId(), reader2.getIdentity(), SignaturePath.USER);
         assertNotNull(path);
@@ -205,7 +205,7 @@ class OnchainSecretsRPCTest {
         Signer publisher2 = new SignerEd25519();
         Darc admin2Darc = adminDarc.copy();
         admin2Darc.addUser(publisher2);
-        admin2Darc.setEvolution(adminDarc, null, admin);
+        admin2Darc.setEvolution(adminDarc, admin);
         assertTrue(adminDarc.getBaseId().equals(admin2Darc.getBaseId()));
         logger.info(adminDarc.getBaseId().toString());
         logger.info(admin2Darc.getBaseId().toString());
