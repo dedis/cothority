@@ -177,7 +177,7 @@ type ProtoExtendRoster struct {
 	Block SkipBlock
 }
 
-// ProtoStructExtendRoster embeds the treenode
+// ProtoStructExtendRoster embeds the treenode.
 type ProtoStructExtendRoster struct {
 	*onet.TreeNode
 	ProtoExtendRoster
