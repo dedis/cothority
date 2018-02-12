@@ -145,7 +145,7 @@ describe("edwards25519", () => {
         let b = new edwards25519.Point(curve,x, y);
         assert.isTrue(a.equal(b), "equals returns false for two equal points");
         assert.isFalse(
-          a.equal(new edwards25519.Point(curve,)),
+          a.equal(new edwards25519.Point(curve,y,x)),
           "equal returns true for two unequal points"
         );
       });

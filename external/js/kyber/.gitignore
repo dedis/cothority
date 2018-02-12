@@ -1,3 +1,4 @@
 .DS_Store
 node_modules/
 dist/bundle.min.js
+dist/bundle.node.min.js
