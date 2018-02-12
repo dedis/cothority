@@ -92,7 +92,7 @@ type Signature struct {
 // SignaturePath is a struct that holds information necessary for signature verification
 type SignaturePath struct {
 	// Darc(s) that justify the right of the signer to push a new Darc
-	DarcIDs *[]ID
+	Darcs *[]*Darc
 	// the Idenity (public key or another Darc) of the signer
 	Signer Identity
 	// Is the signer Owner of a Darc or an user

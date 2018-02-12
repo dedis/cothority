@@ -19,7 +19,6 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
-	log.SetShowTime(true)
 	log.MainTest(m, 2)
 }
 
@@ -31,7 +30,7 @@ func TestService_proof(t *testing.T) {
 	encKey := []byte{1, 2, 3}
 	write := ocs.NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
 	write.Data = []byte{}
-	sigPath := darc.NewSignaturePath([]darc.ID{o.readers.GetID()}, *o.writerI, darc.User)
+	sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
 	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writer)
 	require.Nil(t, err)
 	wr, err := o.service.WriteRequest(&ocs.WriteRequest{
@@ -104,7 +103,7 @@ func TestService_GetDarcPath(t *testing.T) {
 
 	newReader := o.readers.Copy()
 	newReader.AddUser(wDarcID)
-	path := darc.NewSignaturePath([]darc.ID{o.readers.GetID()}, *o.writerI, darc.Owner)
+	path := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.Owner)
 	err := newReader.SetEvolution(o.readers, path, o.writer)
 	require.Nil(t, err)
 
@@ -138,41 +137,6 @@ func TestService_GetDarcPath(t *testing.T) {
 	require.NotEqual(t, 0, len(*reply.Path))
 }
 
-func TestService_UpdateDarc(t *testing.T) {
-	o := createOCS(t)
-	defer o.local.CloseAll()
-
-	latestReader := o.readers.Copy()
-	var newSigner *darc.Signer
-	for i := 0; i < 100; i++ {
-		w := darc.NewSignerEd25519(nil, nil)
-		newReader := latestReader.Copy()
-		newReader.AddUser(w.Identity())
-		if newSigner != nil {
-			newReader.RemoveUser(newSigner.Identity())
-		}
-		err := newReader.SetEvolution(latestReader, nil, o.writer)
-		require.Nil(t, err)
-
-		_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
-			OCS:  o.sc.OCS.SkipChainID(),
-			Darc: *newReader,
-		})
-		require.Nil(t, err)
-
-		_, err = o.service.GetDarcPath(&ocs.GetDarcPath{
-			OCS:        o.sc.OCS.SkipChainID(),
-			BaseDarcID: o.readers.GetID(),
-			Identity:   *w.Identity(),
-			Role:       int(darc.User),
-		})
-		require.Nil(t, err)
-
-		latestReader = newReader
-		newSigner = w
-	}
-}
-
 type ocsStruct struct {
 	local    *onet.LocalTest
 	services []onet.Service
@@ -189,7 +153,7 @@ func createOCS(t *testing.T) *ocsStruct {
 	}
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
-	hosts, roster, _ := o.local.GenTree(5, true)
+	hosts, roster, _ := o.local.GenTree(10, true)
 
 	o.services = o.local.GetServices(hosts, templateID)
 	o.service = o.services[0].(*Service)

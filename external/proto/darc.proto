@@ -63,7 +63,7 @@ message Signature {
 // SignaturePath is a struct that holds information necessary for signature verification
 message SignaturePath {
   // 	 Darc(s) that justify the right of the signer to push a new Darc
-  repeated bytes darcids = 1;
+  repeated Darc darcs = 1;
   // 	 the Idenity (public key or another Darc) of the signer
   required Identity signer = 2;
   // 	 Is the signer Owner of a Darc or an user

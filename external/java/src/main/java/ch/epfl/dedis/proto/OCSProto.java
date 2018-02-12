@@ -1666,37 +1666,6 @@ public final class OCSProto {
      * <code>required .Darc reader = 8;</code>
      */
     ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getReaderOrBuilder();
-
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    boolean hasSignature();
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    ch.epfl.dedis.proto.DarcProto.Signature getSignature();
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder();
   }
   /**
    * <pre>
@@ -1801,19 +1770,6 @@ public final class OCSProto {
                 reader_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000040;
-              break;
-            }
-            case 74: {
-              ch.epfl.dedis.proto.DarcProto.Signature.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000080) == 0x00000080)) {
-                subBuilder = signature_.toBuilder();
-              }
-              signature_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signature.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(signature_);
-                signature_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000080;
               break;
             }
           }
@@ -2060,45 +2016,6 @@ public final class OCSProto {
       return reader_ == null ? ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance() : reader_;
     }
 
-    public static final int SIGNATURE_FIELD_NUMBER = 9;
-    private ch.epfl.dedis.proto.DarcProto.Signature signature_;
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    public boolean hasSignature() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
-    }
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
-      return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
-    }
-    /**
-     * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
-     * </pre>
-     *
-     * <code>optional .Signature signature = 9;</code>
-     */
-    public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
-      return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
-    }
-
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2133,12 +2050,6 @@ public final class OCSProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (hasSignature()) {
-        if (!getSignature().isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -2168,9 +2079,6 @@ public final class OCSProto {
       }
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeMessage(8, getReader());
-      }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
-        output.writeMessage(9, getSignature());
       }
       unknownFields.writeTo(output);
     }
@@ -2216,10 +2124,6 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(8, getReader());
-      }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(9, getSignature());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2274,11 +2178,6 @@ public final class OCSProto {
         result = result && getReader()
             .equals(other.getReader());
       }
-      result = result && (hasSignature() == other.hasSignature());
-      if (hasSignature()) {
-        result = result && getSignature()
-            .equals(other.getSignature());
-      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2321,10 +2220,6 @@ public final class OCSProto {
       if (hasReader()) {
         hash = (37 * hash) + READER_FIELD_NUMBER;
         hash = (53 * hash) + getReader().hashCode();
-      }
-      if (hasSignature()) {
-        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
-        hash = (53 * hash) + getSignature().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2456,7 +2351,6 @@ public final class OCSProto {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getReaderFieldBuilder();
-          getSignatureFieldBuilder();
         }
       }
       public Builder clear() {
@@ -2481,12 +2375,6 @@ public final class OCSProto {
           readerBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000080);
-        if (signatureBuilder_ == null) {
-          signature_ = null;
-        } else {
-          signatureBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000100);
         return this;
       }
 
@@ -2547,14 +2435,6 @@ public final class OCSProto {
           result.reader_ = reader_;
         } else {
           result.reader_ = readerBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000080;
-        }
-        if (signatureBuilder_ == null) {
-          result.signature_ = signature_;
-        } else {
-          result.signature_ = signatureBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -2629,9 +2509,6 @@ public final class OCSProto {
         if (other.hasReader()) {
           mergeReader(other.getReader());
         }
-        if (other.hasSignature()) {
-          mergeSignature(other.getSignature());
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2658,11 +2535,6 @@ public final class OCSProto {
         }
         if (!getReader().isInitialized()) {
           return false;
-        }
-        if (hasSignature()) {
-          if (!getSignature().isInitialized()) {
-            return false;
-          }
         }
         return true;
       }
@@ -3267,178 +3139,6 @@ public final class OCSProto {
           reader_ = null;
         }
         return readerBuilder_;
-      }
-
-      private ch.epfl.dedis.proto.DarcProto.Signature signature_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> signatureBuilder_;
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public boolean hasSignature() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
-        if (signatureBuilder_ == null) {
-          return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
-        } else {
-          return signatureBuilder_.getMessage();
-        }
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public Builder setSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
-        if (signatureBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          signature_ = value;
-          onChanged();
-        } else {
-          signatureBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000100;
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public Builder setSignature(
-          ch.epfl.dedis.proto.DarcProto.Signature.Builder builderForValue) {
-        if (signatureBuilder_ == null) {
-          signature_ = builderForValue.build();
-          onChanged();
-        } else {
-          signatureBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000100;
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public Builder mergeSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
-        if (signatureBuilder_ == null) {
-          if (((bitField0_ & 0x00000100) == 0x00000100) &&
-              signature_ != null &&
-              signature_ != ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance()) {
-            signature_ =
-              ch.epfl.dedis.proto.DarcProto.Signature.newBuilder(signature_).mergeFrom(value).buildPartial();
-          } else {
-            signature_ = value;
-          }
-          onChanged();
-        } else {
-          signatureBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000100;
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public Builder clearSignature() {
-        if (signatureBuilder_ == null) {
-          signature_ = null;
-          onChanged();
-        } else {
-          signatureBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000100);
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.Signature.Builder getSignatureBuilder() {
-        bitField0_ |= 0x00000100;
-        onChanged();
-        return getSignatureFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
-        if (signatureBuilder_ != null) {
-          return signatureBuilder_.getMessageOrBuilder();
-        } else {
-          return signature_ == null ?
-              ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
-        }
-      }
-      /**
-       * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
-       * </pre>
-       *
-       * <code>optional .Signature signature = 9;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> 
-          getSignatureFieldBuilder() {
-        if (signatureBuilder_ == null) {
-          signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder>(
-                  getSignature(),
-                  getParentForChildren(),
-                  isClean());
-          signature_ = null;
-        }
-        return signatureBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -19273,41 +18973,40 @@ public final class OCSProto {
       "\032\014roster.proto\"o\n\013Transaction\022\025\n\005write\030\001" +
       " \001(\0132\006.Write\022\023\n\004read\030\002 \001(\0132\005.Read\022\023\n\004dar" +
       "c\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\022\021\n\ttimestam" +
-      "p\030\005 \002(\022\"\231\001\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002" +
-      "(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n" +
-      "\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\025\n\006reader\030" +
-      "\010 \002(\0132\005.Darc\022\035\n\tsignature\030\t \001(\0132\n.Signat" +
-      "ure\"5\n\004Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\tsignature" +
-      "\030\002 \002(\0132\n.Signature\"D\n\007ReadDoc\022\031\n\006reader\030",
-      "\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014\022\016\n\006data" +
-      "id\030\003 \002(\014\"J\n\027CreateSkipchainsRequest\022\027\n\006r" +
-      "oster\030\001 \002(\0132\007.Roster\022\026\n\007writers\030\002 \002(\0132\005." +
-      "Darc\";\n\025CreateSkipchainsReply\022\027\n\003ocs\030\001 \001" +
-      "(\0132\n.SkipBlock\022\t\n\001x\030\002 \002(\014\"Y\n\013GetDarcPath" +
-      "\022\013\n\003ocs\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(\014\022\033\n\010ide" +
-      "ntity\030\003 \002(\0132\t.Identity\022\014\n\004role\030\004 \002(\021\"\'\n\020" +
-      "GetDarcPathReply\022\023\n\004path\030\001 \003(\0132\005.Darc\".\n" +
-      "\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(\0132\005" +
-      ".Darc\")\n\017UpdateDarcReply\022\026\n\002sb\030\001 \001(\0132\n.S",
-      "kipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\025\n" +
-      "\005write\030\002 \002(\0132\006.Write\022\035\n\tsignature\030\003 \002(\0132" +
-      "\n.Signature\022\026\n\007readers\030\004 \001(\0132\005.Darc\"$\n\nW" +
-      "riteReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"/\n\013Rea" +
-      "dRequest\022\013\n\003ocs\030\001 \002(\014\022\023\n\004read\030\002 \002(\0132\005.Re" +
-      "ad\"#\n\tReadReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"" +
-      "&\n\023SharedPublicRequest\022\017\n\007genesis\030\001 \002(\014\"" +
-      "\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"S\n\021Decry" +
-      "ptKeyRequest\022\014\n\004read\030\001 \002(\014\022\021\n\tephemeral\030" +
-      "\002 \001(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signature\"9\n\017",
-      "DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002" +
-      " \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadRequests\022\r\n\005st" +
-      "art\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetReadReque" +
-      "stsReply\022\033\n\tdocuments\030\001 \003(\0132\010.ReadDoc\"\021\n" +
-      "\017GetBunchRequest\",\n\rGetBunchReply\022\033\n\007bun" +
-      "ches\030\001 \003(\0132\n.SkipBlock\",\n\rGetLatestDarc\022" +
-      "\013\n\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022GetLates" +
-      "tDarcReply\022\024\n\005darcs\030\001 \003(\0132\005.DarcB\037\n\023ch.e" +
-      "pfl.dedis.protoB\010OCSProto"
+      "p\030\005 \002(\022\"z\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(" +
+      "\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n" +
+      "\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\025\n\006reader\030\010" +
+      " \002(\0132\005.Darc\"5\n\004Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\ts" +
+      "ignature\030\002 \002(\0132\n.Signature\"D\n\007ReadDoc\022\031\n" +
+      "\006reader\030\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014",
+      "\022\016\n\006dataid\030\003 \002(\014\"J\n\027CreateSkipchainsRequ" +
+      "est\022\027\n\006roster\030\001 \002(\0132\007.Roster\022\026\n\007writers\030" +
+      "\002 \002(\0132\005.Darc\";\n\025CreateSkipchainsReply\022\027\n" +
+      "\003ocs\030\001 \001(\0132\n.SkipBlock\022\t\n\001x\030\002 \002(\014\"Y\n\013Get" +
+      "DarcPath\022\013\n\003ocs\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(" +
+      "\014\022\033\n\010identity\030\003 \002(\0132\t.Identity\022\014\n\004role\030\004" +
+      " \002(\021\"\'\n\020GetDarcPathReply\022\023\n\004path\030\001 \003(\0132\005" +
+      ".Darc\".\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc" +
+      "\030\002 \002(\0132\005.Darc\")\n\017UpdateDarcReply\022\026\n\002sb\030\001" +
+      " \001(\0132\n.SkipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030",
+      "\001 \002(\014\022\025\n\005write\030\002 \002(\0132\006.Write\022\035\n\tsignatur" +
+      "e\030\003 \002(\0132\n.Signature\022\026\n\007readers\030\004 \001(\0132\005.D" +
+      "arc\"$\n\nWriteReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBloc" +
+      "k\"/\n\013ReadRequest\022\013\n\003ocs\030\001 \002(\014\022\023\n\004read\030\002 " +
+      "\002(\0132\005.Read\"#\n\tReadReply\022\026\n\002sb\030\001 \001(\0132\n.Sk" +
+      "ipBlock\"&\n\023SharedPublicRequest\022\017\n\007genesi" +
+      "s\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"" +
+      "S\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002(\014\022\021\n\tep" +
+      "hemeral\030\002 \001(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signa" +
+      "ture\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007x",
+      "hatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadReques" +
+      "ts\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetR" +
+      "eadRequestsReply\022\033\n\tdocuments\030\001 \003(\0132\010.Re" +
+      "adDoc\"\021\n\017GetBunchRequest\",\n\rGetBunchRepl" +
+      "y\022\033\n\007bunches\030\001 \003(\0132\n.SkipBlock\",\n\rGetLat" +
+      "estDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022" +
+      "GetLatestDarcReply\022\024\n\005darcs\030\001 \003(\0132\005.Darc" +
+      "B\037\n\023ch.epfl.dedis.protoB\010OCSProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -19335,7 +19034,7 @@ public final class OCSProto {
     internal_static_Write_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Write_descriptor,
-        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "Cs", "Extradata", "Reader", "Signature", });
+        new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "Cs", "Extradata", "Reader", });
     internal_static_Read_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_Read_fieldAccessorTable = new

@@ -2,15 +2,15 @@
 
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.proto.DarcProto;
 import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.SkipBlockProto;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -59,7 +59,7 @@ class OnchainSecretsTest {
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
             ocs = new OnchainSecrets(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
-        } catch (Exception e) {
+        } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
             logger.error("./run_conode.sh local 4 2");
@@ -73,7 +73,7 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void publishDocument() throws CothorityException {
+    void publishDocument() throws CothorityException{
         ocs.publishDocument(doc, publisher);
     }
 
@@ -81,10 +81,10 @@ class OnchainSecretsTest {
     void giveReadAccessToDocument() throws CothorityException {
         Signer reader2 = new SignerEd25519();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
-        try {
+        try{
             ocs.getDocument(wr.id, reader2);
             fail("read-request of unauthorized reader should fail");
-        } catch (CothorityException e) {
+        } catch (CothorityException e){
             logger.info("correct refusal of invalid read-request");
         }
         ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
@@ -92,19 +92,6 @@ class OnchainSecretsTest {
         assertTrue(doc.equals(doc2));
         // Inverse is not true, as doc2 now contains a writeId
         assertFalse(doc2.equals(doc));
-    }
-
-    @Test
-    void giveWriteAccessToDocument() throws CothorityException {
-        Signer publisher2 = new SignerEd25519();
-        try {
-            ocs.publishDocument(doc, publisher2);
-            fail("write-request of unauthorized publisher should fail");
-        } catch (CothorityException e) {
-            logger.info("correct refusal of invalid write-request");
-        }
-        ocs.addIdentityToDarc(adminDarc, publisher2, admin, SignaturePath.USER);
-        ocs.publishDocument(doc, publisher2);
     }
 
     @Test
@@ -124,14 +111,14 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void ephemeralReadDocument() throws Exception {
+    void ephemeralReadDocument() throws Exception{
         WriteRequest write = ocs.publishDocument(doc, publisher);
         Document doc2 = ocs.getDocumentEphemeral(write.id, reader);
         assertTrue(doc.equals(doc2));
     }
 
     @Test
-    void ephemeralReadDocumentWrongSignature() throws Exception {
+    void ephemeralReadDocumentWrongSignature() throws Exception{
         WriteRequest wr = ocs.publishDocument(doc, publisher);
         OCSProto.Write write = ocs.getWrite(wr.id);
         Darc readerDarc = new Darc(write.getReader());
@@ -140,9 +127,7 @@ class OnchainSecretsTest {
         KeyPair kp = new KeyPair();
         Signer reader2 = new SignerEd25519();
         DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
-        assertThrows(CothorityCommunicationException.class, () -> {
-            ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);
-        });
+        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);});
     }
 
     @Test
@@ -193,13 +178,13 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void readDarcs() throws CothorityException, InvalidProtocolBufferException {
+    void readDarcs() throws CothorityException, InvalidProtocolBufferException{
         ocs.addIdentityToDarc(adminDarc, publisher, admin, SignaturePath.USER);
         List<Darc> darcs = new ArrayList<>();
-        for (SkipblockId latest = ocs.getID(); latest != null; ) {
+        for (SkipblockId latest = ocs.getID();latest != null;){
             SkipBlockProto.SkipBlock sb = ocs.getSkipblock(latest);
             OCSProto.Transaction transaction = OCSProto.Transaction.parseFrom(sb.getData());
-            if (transaction.hasDarc()) {
+            if (transaction.hasDarc()){
                 darcs.add(new Darc(transaction.getDarc()));
             }
             if (sb.getForwardCount() > 0) {
@@ -209,26 +194,5 @@ class OnchainSecretsTest {
             }
         }
         assertEquals(2, darcs.size());
-    }
-
-    @Test
-    void createLotsOfUsers() throws Exception{
-        Darc latestAdmin = adminDarc;
-        // Put to 10 for testing - but can be put to 100. It still slows
-        // down, mostly because it has to transfer all users back and forth
-        // between the conode and the java-library.
-        for (int i = 0; i < 10; i++){
-            Signer newUser = new SignerEd25519();
-            latestAdmin = ocs.addIdentityToDarc(latestAdmin, newUser, admin, SignaturePath.USER);
-        }
-    }
-
-    @Test
-    void updateDarcId() throws Exception{
-        Signer publisher = new SignerEd25519();
-        Signer consumer = new SignerEd25519();
-        Darc documentDarc = new Darc(publisher, Arrays.asList(publisher), "document darc".getBytes());
-        ocs.updateDarc(documentDarc);
-        ocs.addIdentityToDarc(documentDarc, consumer, publisher, SignaturePath.USER);
     }
 }

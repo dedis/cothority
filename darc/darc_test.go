@@ -71,38 +71,58 @@ func TestDarc_IncrementVersion(t *testing.T) {
 
 func TestDarc_SetEvolution(t *testing.T) {
 	d := createDarc("testdarc").darc
-	log.ErrFatal(d.VerifyEvolutionFrom(nil))
+	log.ErrFatal(d.Verify())
 	owner := NewSignerEd25519(nil, nil)
 	owner2 := NewSignerEd25519(nil, nil)
 	ownerI := owner.Identity()
+	ownerI2 := owner2.Identity()
 	d.AddOwner(ownerI)
 	dNew := d.Copy()
 	dNew.IncrementVersion()
-	bid := d.GetID()
-	dNew.BaseID = &bid
-	assert.NotNil(t, dNew.VerifyEvolutionFrom(d))
+	assert.NotNil(t, dNew.Verify())
 
-	darcs := []ID{d.GetID()}
+	darcs := []*Darc{d}
 
+	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI2, User), owner2))
+	assert.NotNil(t, dNew.Verify())
 	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner2))
-	assert.NotNil(t, dNew.VerifyEvolutionFrom(d))
+	assert.NotNil(t, dNew.Verify())
 	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner))
-	require.Nil(t, dNew.VerifyEvolutionFrom(d))
+	require.Nil(t, dNew.Verify())
 }
 
 func TestSignatureChange(t *testing.T) {
 	td1 := createDarc("testdarc")
 	td2 := createDarc("testdarc")
 	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	require.Nil(t, td2.darc.VerifyEvolutionFrom(td1.darc))
+	require.Nil(t, td2.darc.Verify())
 	td2.darc.AddUser(td2.usersI[1])
-	require.NotNil(t, td2.darc.VerifyEvolutionFrom(td1.darc))
+	require.NotNil(t, td2.darc.Verify())
 
 	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	require.Nil(t, td2.darc.VerifyEvolutionFrom(td1.darc))
+	require.Nil(t, td2.darc.Verify())
 
 	td2.darc.AddOwner(td2.ownersI[1])
-	require.NotNil(t, td2.darc.VerifyEvolutionFrom(td1.darc))
+	require.NotNil(t, td2.darc.Verify())
+}
+
+func TestSignaturePath(t *testing.T) {
+	td1 := createDarc("testdarc")
+	td2 := createDarc("testdarc2")
+	td3 := createDarc("testdarc3")
+	td4 := createDarc("testdarc4")
+	path := NewSignaturePath([]*Darc{td1.darc, td2.darc, td3.darc, td4.darc}, *td4.usersI[0], User)
+	require.NotNil(t, path.Verify(User))
+	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
+	td4.darc.SetEvolution(td3.darc, nil, td3.owners[0])
+	require.NotNil(t, path.Verify(User))
+
+	td2.darc.AddUser(&Identity{Darc: &IdentityDarc{td3.darc.GetID()}})
+	require.NotNil(t, path.Verify(User))
+	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
+	require.Nil(t, path.Verify(User))
+	td4.darc.SetEvolution(td3.darc, nil, td3.owners[0])
+	require.Nil(t, path.Verify(User))
 }
 
 func TestDarcSignature_Verify(t *testing.T) {
@@ -110,7 +130,7 @@ func TestDarcSignature_Verify(t *testing.T) {
 	d := createDarc("testdarc").darc
 	owner := NewSignerEd25519(nil, nil)
 	ownerI := owner.Identity()
-	path := NewSignaturePath([]ID{d.GetID()}, *ownerI, User)
+	path := NewSignaturePath([]*Darc{d}, *ownerI, User)
 	ds, err := NewDarcSignature(msg, path, owner)
 	log.ErrFatal(err)
 	d2 := d.Copy()
@@ -119,16 +139,10 @@ func TestDarcSignature_Verify(t *testing.T) {
 	require.Nil(t, ds.Verify(msg, d))
 }
 
-func TestSignatureDarc(t *testing.T) {
-	msg := []byte("document")
-	d1 := createDarc("darc1")
-	d2 := createDarc("darc2")
-	d2darcid := NewIdentityDarc(d2.darc.GetID())
-	d1.darc.AddUser(d2darcid)
-	path := NewSignaturePath([]ID{d1.darc.GetID(), d2.darc.GetID()}, *d2.users[0].Identity(), User)
-	ds, err := NewDarcSignature(msg, path, d2.users[0])
-	require.Nil(t, err)
-	require.Nil(t, ds.Verify(msg, d1.darc))
+func TestSignature(t *testing.T) {
+	// msg := []byte("darc-policy")
+	// sigEd := NewSignerEd25519(nil, nil)
+	// sig := sigEd.Sign
 }
 
 type testDarc struct {

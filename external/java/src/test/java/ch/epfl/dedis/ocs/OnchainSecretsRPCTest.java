@@ -184,8 +184,8 @@ class OnchainSecretsRPCTest {
         ocs.updateDarc(admin2Darc);
         SignaturePath path = ocs.getDarcPath(adminDarc.getId(), reader2.getIdentity(), SignaturePath.USER);
         assertNotNull(path);
-        for (DarcId id : path.getPathIDs()) {
-            logger.debug("Darc-list is: " + id.toString());
+        for (Darc d : path.getDarcs()) {
+            logger.debug("Darc-list is: " + d.toString());
         }
     }
 

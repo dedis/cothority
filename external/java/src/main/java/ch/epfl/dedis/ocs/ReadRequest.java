@@ -36,8 +36,8 @@ public class ReadRequest {
         Darc readDarc = new Darc(wr.getReader());
         Identity readerId = IdentityFactory.New(reader);
         SignaturePath path = ocs.getDarcPath(readDarc.getId(), readerId, SignaturePath.USER);
-        for (DarcId id : path.getPathIDs()) {
-            logger.debug("Path: " + id.toString());
+        for (Darc d : path.getDarcs()) {
+            logger.debug("Path: " + d.toString());
         }
         this.signature = new DarcSignature(wrId.getId(), path, reader);
     }
