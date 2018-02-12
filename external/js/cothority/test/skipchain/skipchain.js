@@ -1,5 +1,5 @@
 //"use strict";
-var wtf = require("wtfnode");
+//var wtf = require("wtfnode");
 const chai = require("chai");
 const expect = chai.expect;
 
@@ -17,7 +17,8 @@ const child_process = require("child_process");
 
 describe.only("skipchain client", () => {
   after(function() {
-    wtf.dump();
+    //wtf.dump();
+    //global.asyncDump();
   });
   it("can retrieve updates from conodes", done => {
     runGolang()
@@ -25,9 +26,9 @@ describe.only("skipchain client", () => {
         [roster, id] = data;
         //console.log("TEST ROSTER =>");
         //onsole.log(roster);
-        const socket = new net.RosterSocket(roster, "Skipchain");
-        //const addr1 = roster.identities[0].websocketAddr;
-        //const socket = new net.Socket(addr1, "Skipchain");
+        //const socket = new net.RosterSocket(roster, "Skipchain");
+        const addr1 = roster.identities[0].websocketAddr;
+        const socket = new net.Socket(addr1, "Skipchain");
         const requestStr = "GetUpdateChain";
         const responseStr = "GetUpdateChainReply";
         const request = { latestId: misc.hexToUint8Array(id) };
@@ -60,6 +61,8 @@ var spawned_conodes;
 function killGolang() {
   console.log("KILL");
   spawned_conodes.kill();
+  spawned_conodes.stdout.destroy();
+  spawned_conodes.stderr.destroy();
   child_process.execSync("pkill go");
 }
 
