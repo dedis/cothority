@@ -6,12 +6,11 @@ handle aspects of collective authorities to support scalable, self-organizing
 communities. This document collects web-pages, blog-posts, wikis,
 godocs, papers and more in a central place as a reference.
 
-## Program Code
+## Key Repositories
 
-At DEDIS we like to take code from research projects and turn it into usable
-code for other projects, too. We program most of the time using
-[golang][https://golang.org] because it is a system language that is easy to
-learn but fast. Our main efforts are on the kyber library and the cothority.
+Software quality is often emphasised in our research. Therefore, the key
+repositories are often useful for the industry, the general public and future
+research projects. We organise it into three key repositories below.
 
 ### Cothority
 
