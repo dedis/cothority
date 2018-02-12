@@ -8,7 +8,7 @@
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
     "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "mocha --recursive --reporter spec --exit"
+    "test": "node node_modules/.bin/mocha --recursive --reporter spec --exit"
   },
   "keywords": [
     "cothority",
