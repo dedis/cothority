@@ -3,5 +3,5 @@ build/
 .idea
 .DS_Store
 profile.cov
-.tags
+.tags*
 vendor/

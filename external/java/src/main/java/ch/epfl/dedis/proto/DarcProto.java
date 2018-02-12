@@ -5561,44 +5561,25 @@ public final class DarcProto {
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.proto.DarcProto.Darc> 
-        getDarcsList();
+    java.util.List<com.google.protobuf.ByteString> getDarcidsList();
     /**
      * <pre>
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.Darc getDarcs(int index);
+    int getDarcidsCount();
     /**
      * <pre>
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    int getDarcsCount();
-    /**
-     * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
-     * </pre>
-     *
-     * <code>repeated .Darc darcs = 1;</code>
-     */
-    java.util.List<? extends ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
-        getDarcsOrBuilderList();
-    /**
-     * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
-     * </pre>
-     *
-     * <code>repeated .Darc darcs = 1;</code>
-     */
-    ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getDarcsOrBuilder(
-        int index);
+    com.google.protobuf.ByteString getDarcids(int index);
 
     /**
      * <pre>
@@ -5659,7 +5640,7 @@ public final class DarcProto {
       super(builder);
     }
     private SignaturePath() {
-      darcs_ = java.util.Collections.emptyList();
+      darcids_ = java.util.Collections.emptyList();
       role_ = 0;
     }
 
@@ -5693,11 +5674,10 @@ public final class DarcProto {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                darcs_ = new java.util.ArrayList<ch.epfl.dedis.proto.DarcProto.Darc>();
+                darcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              darcs_.add(
-                  input.readMessage(ch.epfl.dedis.proto.DarcProto.Darc.PARSER, extensionRegistry));
+              darcids_.add(input.readBytes());
               break;
             }
             case 18: {
@@ -5727,7 +5707,7 @@ public final class DarcProto {
             e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          darcs_ = java.util.Collections.unmodifiableList(darcs_);
+          darcids_ = java.util.Collections.unmodifiableList(darcids_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -5746,59 +5726,38 @@ public final class DarcProto {
     }
 
     private int bitField0_;
-    public static final int DARCS_FIELD_NUMBER = 1;
-    private java.util.List<ch.epfl.dedis.proto.DarcProto.Darc> darcs_;
+    public static final int DARCIDS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> darcids_;
     /**
      * <pre>
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    public java.util.List<ch.epfl.dedis.proto.DarcProto.Darc> getDarcsList() {
-      return darcs_;
+    public java.util.List<com.google.protobuf.ByteString>
+        getDarcidsList() {
+      return darcids_;
     }
     /**
      * <pre>
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
-        getDarcsOrBuilderList() {
-      return darcs_;
+    public int getDarcidsCount() {
+      return darcids_.size();
     }
     /**
      * <pre>
      * 	 Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated bytes darcids = 1;</code>
      */
-    public int getDarcsCount() {
-      return darcs_.size();
-    }
-    /**
-     * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
-     * </pre>
-     *
-     * <code>repeated .Darc darcs = 1;</code>
-     */
-    public ch.epfl.dedis.proto.DarcProto.Darc getDarcs(int index) {
-      return darcs_.get(index);
-    }
-    /**
-     * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
-     * </pre>
-     *
-     * <code>repeated .Darc darcs = 1;</code>
-     */
-    public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getDarcsOrBuilder(
-        int index) {
-      return darcs_.get(index);
+    public com.google.protobuf.ByteString getDarcids(int index) {
+      return darcids_.get(index);
     }
 
     public static final int SIGNER_FIELD_NUMBER = 2;
@@ -5871,12 +5830,6 @@ public final class DarcProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      for (int i = 0; i < getDarcsCount(); i++) {
-        if (!getDarcs(i).isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
-      }
       if (!getSigner().isInitialized()) {
         memoizedIsInitialized = 0;
         return false;
@@ -5887,8 +5840,8 @@ public final class DarcProto {
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      for (int i = 0; i < darcs_.size(); i++) {
-        output.writeMessage(1, darcs_.get(i));
+      for (int i = 0; i < darcids_.size(); i++) {
+        output.writeBytes(1, darcids_.get(i));
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeMessage(2, getSigner());
@@ -5904,9 +5857,14 @@ public final class DarcProto {
       if (size != -1) return size;
 
       size = 0;
-      for (int i = 0; i < darcs_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, darcs_.get(i));
+      {
+        int dataSize = 0;
+        for (int i = 0; i < darcids_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(darcids_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getDarcidsList().size();
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
@@ -5932,8 +5890,8 @@ public final class DarcProto {
       ch.epfl.dedis.proto.DarcProto.SignaturePath other = (ch.epfl.dedis.proto.DarcProto.SignaturePath) obj;
 
       boolean result = true;
-      result = result && getDarcsList()
-          .equals(other.getDarcsList());
+      result = result && getDarcidsList()
+          .equals(other.getDarcidsList());
       result = result && (hasSigner() == other.hasSigner());
       if (hasSigner()) {
         result = result && getSigner()
@@ -5955,9 +5913,9 @@ public final class DarcProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (getDarcsCount() > 0) {
-        hash = (37 * hash) + DARCS_FIELD_NUMBER;
-        hash = (53 * hash) + getDarcsList().hashCode();
+      if (getDarcidsCount() > 0) {
+        hash = (37 * hash) + DARCIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getDarcidsList().hashCode();
       }
       if (hasSigner()) {
         hash = (37 * hash) + SIGNER_FIELD_NUMBER;
@@ -6096,18 +6054,13 @@ public final class DarcProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getDarcsFieldBuilder();
           getSignerFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        if (darcsBuilder_ == null) {
-          darcs_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-        } else {
-          darcsBuilder_.clear();
-        }
+        darcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
         if (signerBuilder_ == null) {
           signer_ = null;
         } else {
@@ -6140,15 +6093,11 @@ public final class DarcProto {
         ch.epfl.dedis.proto.DarcProto.SignaturePath result = new ch.epfl.dedis.proto.DarcProto.SignaturePath(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        if (darcsBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            darcs_ = java.util.Collections.unmodifiableList(darcs_);
-            bitField0_ = (bitField0_ & ~0x00000001);
-          }
-          result.darcs_ = darcs_;
-        } else {
-          result.darcs_ = darcsBuilder_.build();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          darcids_ = java.util.Collections.unmodifiableList(darcids_);
+          bitField0_ = (bitField0_ & ~0x00000001);
         }
+        result.darcids_ = darcids_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000001;
         }
@@ -6203,31 +6152,15 @@ public final class DarcProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.SignaturePath other) {
         if (other == ch.epfl.dedis.proto.DarcProto.SignaturePath.getDefaultInstance()) return this;
-        if (darcsBuilder_ == null) {
-          if (!other.darcs_.isEmpty()) {
-            if (darcs_.isEmpty()) {
-              darcs_ = other.darcs_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-            } else {
-              ensureDarcsIsMutable();
-              darcs_.addAll(other.darcs_);
-            }
-            onChanged();
+        if (!other.darcids_.isEmpty()) {
+          if (darcids_.isEmpty()) {
+            darcids_ = other.darcids_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureDarcidsIsMutable();
+            darcids_.addAll(other.darcids_);
           }
-        } else {
-          if (!other.darcs_.isEmpty()) {
-            if (darcsBuilder_.isEmpty()) {
-              darcsBuilder_.dispose();
-              darcsBuilder_ = null;
-              darcs_ = other.darcs_;
-              bitField0_ = (bitField0_ & ~0x00000001);
-              darcsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getDarcsFieldBuilder() : null;
-            } else {
-              darcsBuilder_.addAllMessages(other.darcs_);
-            }
-          }
+          onChanged();
         }
         if (other.hasSigner()) {
           mergeSigner(other.getSigner());
@@ -6246,11 +6179,6 @@ public final class DarcProto {
         }
         if (!hasRole()) {
           return false;
-        }
-        for (int i = 0; i < getDarcsCount(); i++) {
-          if (!getDarcs(i).isInitialized()) {
-            return false;
-          }
         }
         if (!getSigner().isInitialized()) {
           return false;
@@ -6277,79 +6205,59 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private java.util.List<ch.epfl.dedis.proto.DarcProto.Darc> darcs_ =
-        java.util.Collections.emptyList();
-      private void ensureDarcsIsMutable() {
+      private java.util.List<com.google.protobuf.ByteString> darcids_ = java.util.Collections.emptyList();
+      private void ensureDarcidsIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          darcs_ = new java.util.ArrayList<ch.epfl.dedis.proto.DarcProto.Darc>(darcs_);
+          darcids_ = new java.util.ArrayList<com.google.protobuf.ByteString>(darcids_);
           bitField0_ |= 0x00000001;
          }
       }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> darcsBuilder_;
-
       /**
        * <pre>
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.proto.DarcProto.Darc> getDarcsList() {
-        if (darcsBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(darcs_);
-        } else {
-          return darcsBuilder_.getMessageList();
-        }
+      public java.util.List<com.google.protobuf.ByteString>
+          getDarcidsList() {
+        return java.util.Collections.unmodifiableList(darcids_);
       }
       /**
        * <pre>
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public int getDarcsCount() {
-        if (darcsBuilder_ == null) {
-          return darcs_.size();
-        } else {
-          return darcsBuilder_.getCount();
-        }
+      public int getDarcidsCount() {
+        return darcids_.size();
       }
       /**
        * <pre>
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Darc getDarcs(int index) {
-        if (darcsBuilder_ == null) {
-          return darcs_.get(index);
-        } else {
-          return darcsBuilder_.getMessage(index);
-        }
+      public com.google.protobuf.ByteString getDarcids(int index) {
+        return darcids_.get(index);
       }
       /**
        * <pre>
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public Builder setDarcs(
-          int index, ch.epfl.dedis.proto.DarcProto.Darc value) {
-        if (darcsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureDarcsIsMutable();
-          darcs_.set(index, value);
-          onChanged();
-        } else {
-          darcsBuilder_.setMessage(index, value);
-        }
+      public Builder setDarcids(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarcidsIsMutable();
+        darcids_.set(index, value);
+        onChanged();
         return this;
       }
       /**
@@ -6357,17 +6265,15 @@ public final class DarcProto {
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public Builder setDarcs(
-          int index, ch.epfl.dedis.proto.DarcProto.Darc.Builder builderForValue) {
-        if (darcsBuilder_ == null) {
-          ensureDarcsIsMutable();
-          darcs_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          darcsBuilder_.setMessage(index, builderForValue.build());
-        }
+      public Builder addDarcids(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureDarcidsIsMutable();
+        darcids_.add(value);
+        onChanged();
         return this;
       }
       /**
@@ -6375,19 +6281,14 @@ public final class DarcProto {
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public Builder addDarcs(ch.epfl.dedis.proto.DarcProto.Darc value) {
-        if (darcsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureDarcsIsMutable();
-          darcs_.add(value);
-          onChanged();
-        } else {
-          darcsBuilder_.addMessage(value);
-        }
+      public Builder addAllDarcids(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureDarcidsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, darcids_);
+        onChanged();
         return this;
       }
       /**
@@ -6395,198 +6296,13 @@ public final class DarcProto {
        * 	 Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated bytes darcids = 1;</code>
        */
-      public Builder addDarcs(
-          int index, ch.epfl.dedis.proto.DarcProto.Darc value) {
-        if (darcsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureDarcsIsMutable();
-          darcs_.add(index, value);
-          onChanged();
-        } else {
-          darcsBuilder_.addMessage(index, value);
-        }
+      public Builder clearDarcids() {
+        darcids_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
         return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public Builder addDarcs(
-          ch.epfl.dedis.proto.DarcProto.Darc.Builder builderForValue) {
-        if (darcsBuilder_ == null) {
-          ensureDarcsIsMutable();
-          darcs_.add(builderForValue.build());
-          onChanged();
-        } else {
-          darcsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public Builder addDarcs(
-          int index, ch.epfl.dedis.proto.DarcProto.Darc.Builder builderForValue) {
-        if (darcsBuilder_ == null) {
-          ensureDarcsIsMutable();
-          darcs_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          darcsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public Builder addAllDarcs(
-          java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcProto.Darc> values) {
-        if (darcsBuilder_ == null) {
-          ensureDarcsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, darcs_);
-          onChanged();
-        } else {
-          darcsBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public Builder clearDarcs() {
-        if (darcsBuilder_ == null) {
-          darcs_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
-          onChanged();
-        } else {
-          darcsBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public Builder removeDarcs(int index) {
-        if (darcsBuilder_ == null) {
-          ensureDarcsIsMutable();
-          darcs_.remove(index);
-          onChanged();
-        } else {
-          darcsBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.Darc.Builder getDarcsBuilder(
-          int index) {
-        return getDarcsFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.DarcOrBuilder getDarcsOrBuilder(
-          int index) {
-        if (darcsBuilder_ == null) {
-          return darcs_.get(index);  } else {
-          return darcsBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public java.util.List<? extends ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
-           getDarcsOrBuilderList() {
-        if (darcsBuilder_ != null) {
-          return darcsBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(darcs_);
-        }
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.Darc.Builder addDarcsBuilder() {
-        return getDarcsFieldBuilder().addBuilder(
-            ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance());
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public ch.epfl.dedis.proto.DarcProto.Darc.Builder addDarcsBuilder(
-          int index) {
-        return getDarcsFieldBuilder().addBuilder(
-            index, ch.epfl.dedis.proto.DarcProto.Darc.getDefaultInstance());
-      }
-      /**
-       * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
-       * </pre>
-       *
-       * <code>repeated .Darc darcs = 1;</code>
-       */
-      public java.util.List<ch.epfl.dedis.proto.DarcProto.Darc.Builder> 
-           getDarcsBuilderList() {
-        return getDarcsFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder> 
-          getDarcsFieldBuilder() {
-        if (darcsBuilder_ == null) {
-          darcsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              ch.epfl.dedis.proto.DarcProto.Darc, ch.epfl.dedis.proto.DarcProto.Darc.Builder, ch.epfl.dedis.proto.DarcProto.DarcOrBuilder>(
-                  darcs_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
-                  getParentForChildren(),
-                  isClean());
-          darcs_ = null;
-        }
-        return darcsBuilder_;
       }
 
       private ch.epfl.dedis.proto.DarcProto.Identity signer_ = null;
@@ -8912,14 +8628,14 @@ public final class DarcProto {
       "Ed25519\022\r\n\005point\030\001 \002(\014\" \n\016IdentityX509EC" +
       "\022\016\n\006public\030\001 \002(\014\"\032\n\014IdentityDarc\022\n\n\002id\030\001" +
       " \002(\014\"E\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022%\n\r",
-      "signaturepath\030\002 \002(\0132\016.SignaturePath\"N\n\rS" +
-      "ignaturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n\006si" +
-      "gner\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"H\n\006S" +
-      "igner\022\037\n\007ed25519\030\001 \001(\0132\016.SignerEd25519\022\035" +
-      "\n\006x509ec\030\002 \001(\0132\r.SignerX509EC\".\n\rSignerE" +
-      "d25519\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"-\n" +
-      "\014SignerX509EC\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002" +
-      " \002(\014B \n\023ch.epfl.dedis.protoB\tDarcProto"
+      "signaturepath\030\002 \002(\0132\016.SignaturePath\"I\n\rS" +
+      "ignaturePath\022\017\n\007darcids\030\001 \003(\014\022\031\n\006signer\030" +
+      "\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"H\n\006Signer" +
+      "\022\037\n\007ed25519\030\001 \001(\0132\016.SignerEd25519\022\035\n\006x50" +
+      "9ec\030\002 \001(\0132\r.SignerX509EC\".\n\rSignerEd2551" +
+      "9\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"-\n\014Sign" +
+      "erX509EC\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014B" +
+      " \n\023ch.epfl.dedis.protoB\tDarcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8974,7 +8690,7 @@ public final class DarcProto {
     internal_static_SignaturePath_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignaturePath_descriptor,
-        new java.lang.String[] { "Darcs", "Signer", "Role", });
+        new java.lang.String[] { "Darcids", "Signer", "Role", });
     internal_static_Signer_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_Signer_fieldAccessorTable = new

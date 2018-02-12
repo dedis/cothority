@@ -178,17 +178,6 @@ public class Darc {
         if (path == null) {
             path = new SignaturePath(previous, previousOwner, SignaturePath.OWNER);
         }
-        boolean found = false;
-        Identity signerId = IdentityFactory.New(previousOwner);
-        for (Identity id : path.getDarcs().get(path.getDarcs().size() - 1).owners) {
-            if (id.equals(signerId)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            throw new CothorityCryptoException("Wrong path: signer is not in last darc.");
-        }
         baseid = previous.getBaseId();
         signature = new DarcSignature(getId().getId(), path, previousOwner);
         logger.debug("Signature is: " + signature.toProto().toString());

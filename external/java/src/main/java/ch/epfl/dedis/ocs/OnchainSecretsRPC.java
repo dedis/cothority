@@ -220,8 +220,8 @@ public class OnchainSecretsRPC {
     }
 
     /**
-     * Gets a darc-path starting from the base to the identity given. This darc-path
-     * is the shortest, most up-to-date path at the moment of reply. Of course an
+     * Searches a path starting from the base to the identity given and returns the latest
+     * element of that path. This element is the most up-to-date at the moment of reply. Of course an
      * update might happen just before you actually use it, and your signature might
      * be rejected then.
      *
@@ -241,12 +241,12 @@ public class OnchainSecretsRPC {
 
         try {
             OCSProto.GetDarcPathReply reply = OCSProto.GetDarcPathReply.parseFrom(msg);
-            List<Darc> darcs = new ArrayList<>();
+            List<DarcId> darcIds = new ArrayList<>();
             for (DarcProto.Darc d :
                     reply.getPathList()) {
-                darcs.add(new Darc(d));
+                darcIds.add(new Darc(d).getId());
             }
-            return new SignaturePath(darcs, identity, role);
+            return new SignaturePath(darcIds, identity, role);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         } catch (Exception e) {

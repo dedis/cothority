@@ -31,7 +31,9 @@ public class GrantAccessTest {
 
     @BeforeEach
     void initConodes() {
-         TestServerInit.getInstance();
+
+//        TestServerInit.getInstanceManual();
+        TestServerInit.getInstance();
     }
 
     @Test
