@@ -15,6 +15,7 @@ install:
   # Because we are using "language: java" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/onchain-secrets
+  - (cd `go env GOPATH`/src/github.com/dedis/onchain-secrets && go get -t ./... )
 
 script:
   - make test_fmt test_lint
