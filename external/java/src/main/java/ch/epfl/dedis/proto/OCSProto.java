@@ -168,9 +168,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1484,7 +1481,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Transaction(input, extensionRegistry);
+          return new Transaction(input, extensionRegistry);
       }
     };
 
@@ -1706,9 +1703,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3176,7 +3170,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Write(input, extensionRegistry);
+          return new Write(input, extensionRegistry);
       }
     };
 
@@ -3276,9 +3270,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3998,7 +3989,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Read(input, extensionRegistry);
+          return new Read(input, extensionRegistry);
       }
     };
 
@@ -4083,9 +4074,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4806,7 +4794,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadDoc(input, extensionRegistry);
+          return new ReadDoc(input, extensionRegistry);
       }
     };
 
@@ -4884,9 +4872,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5633,7 +5618,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateSkipchainsRequest(input, extensionRegistry);
+          return new CreateSkipchainsRequest(input, extensionRegistry);
       }
     };
 
@@ -5708,9 +5693,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6341,7 +6323,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateSkipchainsReply(input, extensionRegistry);
+          return new CreateSkipchainsReply(input, extensionRegistry);
       }
     };
 
@@ -6437,9 +6419,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7245,7 +7224,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetDarcPath(input, extensionRegistry);
+          return new GetDarcPath(input, extensionRegistry);
       }
     };
 
@@ -7323,9 +7302,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8023,7 +7999,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetDarcPathReply(input, extensionRegistry);
+          return new GetDarcPathReply(input, extensionRegistry);
       }
     };
 
@@ -8099,9 +8075,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8736,7 +8709,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new UpdateDarc(input, extensionRegistry);
+          return new UpdateDarc(input, extensionRegistry);
       }
     };
 
@@ -8803,9 +8776,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9351,7 +9321,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new UpdateDarcReply(input, extensionRegistry);
+          return new UpdateDarcReply(input, extensionRegistry);
       }
     };
 
@@ -9456,9 +9426,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10493,7 +10460,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new WriteRequest(input, extensionRegistry);
+          return new WriteRequest(input, extensionRegistry);
       }
     };
 
@@ -10558,9 +10525,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11104,7 +11068,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new WriteReply(input, extensionRegistry);
+          return new WriteReply(input, extensionRegistry);
       }
     };
 
@@ -11179,9 +11143,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11815,7 +11776,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadRequest(input, extensionRegistry);
+          return new ReadRequest(input, extensionRegistry);
       }
     };
 
@@ -11880,9 +11841,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12426,7 +12384,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadReply(input, extensionRegistry);
+          return new ReadReply(input, extensionRegistry);
       }
     };
 
@@ -12489,9 +12447,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12926,7 +12881,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicRequest(input, extensionRegistry);
+          return new SharedPublicRequest(input, extensionRegistry);
       }
     };
 
@@ -12988,9 +12943,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13424,7 +13376,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicReply(input, extensionRegistry);
+          return new SharedPublicReply(input, extensionRegistry);
       }
     };
 
@@ -13455,10 +13407,34 @@ public final class OCSProto {
      * <code>required bytes read = 1;</code>
      */
     com.google.protobuf.ByteString getRead();
+
+    /**
+     * <code>optional bytes ephemeral = 2;</code>
+     */
+    boolean hasEphemeral();
+    /**
+     * <code>optional bytes ephemeral = 2;</code>
+     */
+    com.google.protobuf.ByteString getEphemeral();
+
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Signature getSignature();
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder();
   }
   /**
    * <pre>
-   * DecryptKeyRequest is sent to the service with the read-request
+   * DecryptKeyRequest is sent to the service with the read-request. Optionally
+   * it can be given an Ephemeral public key under which the reply should be
+   * encrypted, but then a Signature on the key from the reader is needed.
    * </pre>
    *
    * Protobuf type {@code DecryptKeyRequest}
@@ -13474,6 +13450,7 @@ public final class OCSProto {
     }
     private DecryptKeyRequest() {
       read_ = com.google.protobuf.ByteString.EMPTY;
+      ephemeral_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -13486,9 +13463,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13510,6 +13484,24 @@ public final class OCSProto {
             case 10: {
               bitField0_ |= 0x00000001;
               read_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              ephemeral_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.proto.DarcProto.Signature.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = signature_.toBuilder();
+              }
+              signature_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signature.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signature_);
+                signature_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
           }
@@ -13552,6 +13544,42 @@ public final class OCSProto {
       return read_;
     }
 
+    public static final int EPHEMERAL_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString ephemeral_;
+    /**
+     * <code>optional bytes ephemeral = 2;</code>
+     */
+    public boolean hasEphemeral() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes ephemeral = 2;</code>
+     */
+    public com.google.protobuf.ByteString getEphemeral() {
+      return ephemeral_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.proto.DarcProto.Signature signature_;
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
+      return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+    }
+    /**
+     * <code>optional .Signature signature = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
+      return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -13562,6 +13590,12 @@ public final class OCSProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (hasSignature()) {
+        if (!getSignature().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -13570,6 +13604,12 @@ public final class OCSProto {
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(1, read_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getSignature());
       }
       unknownFields.writeTo(output);
     }
@@ -13582,6 +13622,14 @@ public final class OCSProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, read_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, ephemeral_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getSignature());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -13604,6 +13652,16 @@ public final class OCSProto {
         result = result && getRead()
             .equals(other.getRead());
       }
+      result = result && (hasEphemeral() == other.hasEphemeral());
+      if (hasEphemeral()) {
+        result = result && getEphemeral()
+            .equals(other.getEphemeral());
+      }
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -13618,6 +13676,14 @@ public final class OCSProto {
       if (hasRead()) {
         hash = (37 * hash) + READ_FIELD_NUMBER;
         hash = (53 * hash) + getRead().hashCode();
+      }
+      if (hasEphemeral()) {
+        hash = (37 * hash) + EPHEMERAL_FIELD_NUMBER;
+        hash = (53 * hash) + getEphemeral().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -13714,7 +13780,9 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * DecryptKeyRequest is sent to the service with the read-request
+     * DecryptKeyRequest is sent to the service with the read-request. Optionally
+     * it can be given an Ephemeral public key under which the reply should be
+     * encrypted, but then a Signature on the key from the reader is needed.
      * </pre>
      *
      * Protobuf type {@code DecryptKeyRequest}
@@ -13748,12 +13816,21 @@ public final class OCSProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getSignatureFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
         read_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+        } else {
+          signatureBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -13782,6 +13859,18 @@ public final class OCSProto {
           to_bitField0_ |= 0x00000001;
         }
         result.read_ = read_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.ephemeral_ = ephemeral_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (signatureBuilder_ == null) {
+          result.signature_ = signature_;
+        } else {
+          result.signature_ = signatureBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -13827,6 +13916,12 @@ public final class OCSProto {
         if (other.hasRead()) {
           setRead(other.getRead());
         }
+        if (other.hasEphemeral()) {
+          setEphemeral(other.getEphemeral());
+        }
+        if (other.hasSignature()) {
+          mergeSignature(other.getSignature());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -13835,6 +13930,11 @@ public final class OCSProto {
       public final boolean isInitialized() {
         if (!hasRead()) {
           return false;
+        }
+        if (hasSignature()) {
+          if (!getSignature().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -13892,6 +13992,159 @@ public final class OCSProto {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.ByteString ephemeral_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes ephemeral = 2;</code>
+       */
+      public boolean hasEphemeral() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes ephemeral = 2;</code>
+       */
+      public com.google.protobuf.ByteString getEphemeral() {
+        return ephemeral_;
+      }
+      /**
+       * <code>optional bytes ephemeral = 2;</code>
+       */
+      public Builder setEphemeral(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        ephemeral_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes ephemeral = 2;</code>
+       */
+      public Builder clearEphemeral() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        ephemeral_ = getDefaultInstance().getEphemeral();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.DarcProto.Signature signature_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> signatureBuilder_;
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signature getSignature() {
+        if (signatureBuilder_ == null) {
+          return signature_ == null ? ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+        } else {
+          return signatureBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public Builder setSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
+        if (signatureBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signature_ = value;
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public Builder setSignature(
+          ch.epfl.dedis.proto.DarcProto.Signature.Builder builderForValue) {
+        if (signatureBuilder_ == null) {
+          signature_ = builderForValue.build();
+          onChanged();
+        } else {
+          signatureBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public Builder mergeSignature(ch.epfl.dedis.proto.DarcProto.Signature value) {
+        if (signatureBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              signature_ != null &&
+              signature_ != ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance()) {
+            signature_ =
+              ch.epfl.dedis.proto.DarcProto.Signature.newBuilder(signature_).mergeFrom(value).buildPartial();
+          } else {
+            signature_ = value;
+          }
+          onChanged();
+        } else {
+          signatureBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public Builder clearSignature() {
+        if (signatureBuilder_ == null) {
+          signature_ = null;
+          onChanged();
+        } else {
+          signatureBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signature.Builder getSignatureBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getSignatureFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder getSignatureOrBuilder() {
+        if (signatureBuilder_ != null) {
+          return signatureBuilder_.getMessageOrBuilder();
+        } else {
+          return signature_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Signature.getDefaultInstance() : signature_;
+        }
+      }
+      /**
+       * <code>optional .Signature signature = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder> 
+          getSignatureFieldBuilder() {
+        if (signatureBuilder_ == null) {
+          signatureBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Signature, ch.epfl.dedis.proto.DarcProto.Signature.Builder, ch.epfl.dedis.proto.DarcProto.SignatureOrBuilder>(
+                  getSignature(),
+                  getParentForChildren(),
+                  isClean());
+          signature_ = null;
+        }
+        return signatureBuilder_;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -13922,7 +14175,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKeyRequest(input, extensionRegistry);
+          return new DecryptKeyRequest(input, extensionRegistry);
       }
     };
 
@@ -14009,9 +14262,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14673,7 +14923,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKeyReply(input, extensionRegistry);
+          return new DecryptKeyReply(input, extensionRegistry);
       }
     };
 
@@ -14745,9 +14995,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15265,7 +15512,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetReadRequests(input, extensionRegistry);
+          return new GetReadRequests(input, extensionRegistry);
       }
     };
 
@@ -15342,9 +15589,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16041,7 +16285,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetReadRequestsReply(input, extensionRegistry);
+          return new GetReadRequestsReply(input, extensionRegistry);
       }
     };
 
@@ -16093,9 +16337,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -16436,7 +16677,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetBunchRequest(input, extensionRegistry);
+          return new GetBunchRequest(input, extensionRegistry);
       }
     };
 
@@ -16513,9 +16754,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17212,7 +17450,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetBunchReply(input, extensionRegistry);
+          return new GetBunchReply(input, extensionRegistry);
       }
     };
 
@@ -17285,9 +17523,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17809,7 +18044,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLatestDarc(input, extensionRegistry);
+          return new GetLatestDarc(input, extensionRegistry);
       }
     };
 
@@ -17888,9 +18123,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -18589,7 +18821,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLatestDarcReply(input, extensionRegistry);
+          return new GetLatestDarcReply(input, extensionRegistry);
       }
     };
 
@@ -18746,7 +18978,7 @@ public final class OCSProto {
       "\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\025\n\006reader\030\010" +
       " \002(\0132\005.Darc\"5\n\004Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\ts" +
       "ignature\030\002 \002(\0132\n.Signature\"D\n\007ReadDoc\022\031\n" +
-      "\006reader\030\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014" +
+      "\006reader\030\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014",
       "\022\016\n\006dataid\030\003 \002(\014\"J\n\027CreateSkipchainsRequ" +
       "est\022\027\n\006roster\030\001 \002(\0132\007.Roster\022\026\n\007writers\030" +
       "\002 \002(\0132\005.Darc\";\n\025CreateSkipchainsReply\022\027\n" +
@@ -18756,7 +18988,7 @@ public final class OCSProto {
       " \002(\021\"\'\n\020GetDarcPathReply\022\023\n\004path\030\001 \003(\0132\005" +
       ".Darc\".\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc" +
       "\030\002 \002(\0132\005.Darc\")\n\017UpdateDarcReply\022\026\n\002sb\030\001" +
-      " \001(\0132\n.SkipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030" +
+      " \001(\0132\n.SkipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030",
       "\001 \002(\014\022\025\n\005write\030\002 \002(\0132\006.Write\022\035\n\tsignatur" +
       "e\030\003 \002(\0132\n.Signature\022\026\n\007readers\030\004 \001(\0132\005.D" +
       "arc\"$\n\nWriteReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBloc" +
@@ -18764,16 +18996,17 @@ public final class OCSProto {
       "\002(\0132\005.Read\"#\n\tReadReply\022\026\n\002sb\030\001 \001(\0132\n.Sk" +
       "ipBlock\"&\n\023SharedPublicRequest\022\017\n\007genesi" +
       "s\030\001 \002(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"" +
-      "!\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002(\014\"9\n\017De" +
-      "cryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002" +
-      "(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadRequests\022\r\n\005star" +
-      "t\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetReadRequest" +
-      "sReply\022\033\n\tdocuments\030\001 \003(\0132\010.ReadDoc\"\021\n\017G" +
-      "etBunchRequest\",\n\rGetBunchReply\022\033\n\007bunch" +
-      "es\030\001 \003(\0132\n.SkipBlock\",\n\rGetLatestDarc\022\013\n" +
-      "\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022GetLatestD" +
-      "arcReply\022\024\n\005darcs\030\001 \003(\0132\005.DarcB\037\n\023ch.epf" +
-      "l.dedis.protoB\010OCSProto"
+      "S\n\021DecryptKeyRequest\022\014\n\004read\030\001 \002(\014\022\021\n\tep" +
+      "hemeral\030\002 \001(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signa" +
+      "ture\"9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007x",
+      "hatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadReques" +
+      "ts\022\r\n\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetR" +
+      "eadRequestsReply\022\033\n\tdocuments\030\001 \003(\0132\010.Re" +
+      "adDoc\"\021\n\017GetBunchRequest\",\n\rGetBunchRepl" +
+      "y\022\033\n\007bunches\030\001 \003(\0132\n.SkipBlock\",\n\rGetLat" +
+      "estDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022" +
+      "GetLatestDarcReply\022\024\n\005darcs\030\001 \003(\0132\005.Darc" +
+      "B\037\n\023ch.epfl.dedis.protoB\010OCSProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18891,7 +19124,7 @@ public final class OCSProto {
     internal_static_DecryptKeyRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_DecryptKeyRequest_descriptor,
-        new java.lang.String[] { "Read", });
+        new java.lang.String[] { "Read", "Ephemeral", "Signature", });
     internal_static_DecryptKeyReply_descriptor =
       getDescriptor().getMessageTypes().get(17);
     internal_static_DecryptKeyReply_fieldAccessorTable = new

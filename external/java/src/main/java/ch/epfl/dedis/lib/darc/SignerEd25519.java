@@ -10,16 +10,16 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class Ed25519Signer implements Signer {
+public class SignerEd25519 implements Signer {
     private Point pub;
     private Scalar priv;
 
-    private final Logger logger = LoggerFactory.getLogger(Ed25519Signer.class);
+    private final Logger logger = LoggerFactory.getLogger(SignerEd25519.class);
 
     /**
      * Constructor for signer.
      */
-    public Ed25519Signer() {
+    public SignerEd25519() {
         KeyPair kp = new KeyPair();
         pub = kp.Point;
         priv = kp.Scalar;
@@ -30,7 +30,7 @@ public class Ed25519Signer implements Signer {
      * what Ed25519.Scalar.toBytes() returns.
      * @param data
      */
-    public Ed25519Signer(byte[] data){
+    public SignerEd25519(byte[] data){
         priv = new Scalar(data);
         pub = priv.scalarMult(null);
     }

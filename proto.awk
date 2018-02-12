@@ -15,6 +15,7 @@ a == 2 && /^type.*struct/ { print "message", $2, "{"; a = 3; i = 1; next }
 a == 2 { print; next }
 
 a == 3 && /^\}/ { print; a = 2; next }
+a == 3 && / *\/\/ optional/ { a = 4; next }
 a == 3 && / *\/\// { sub( " *\/\/\s*", "" ); print "  //", $0; next }
 a == 3 && /\*/ {    sub( "\\*", "", $2 )
 					print_field("optional", $2, $1, i)
@@ -23,6 +24,12 @@ a == 3 && /\*/ {    sub( "\\*", "", $2 )
 				}
 a == 3 { 	print_field("required", $2, $1, i)
 			i = i + 1
+			next
+		}
+
+a == 4 { print_field("optional", $2, $1, i)
+			i = i + 1
+			a = 3
 			next
 		}
 

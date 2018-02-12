@@ -6,7 +6,10 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Encryption;
+import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.SkipBlockProto;
@@ -39,9 +42,9 @@ class OnchainSecretsTest {
 
     @BeforeEach
     void initAll() throws CothorityException {
-        admin = new Ed25519Signer();
-        publisher = new Ed25519Signer();
-        reader = new Ed25519Signer();
+        admin = new SignerEd25519();
+        publisher = new SignerEd25519();
+        reader = new SignerEd25519();
 
         adminDarc = new Darc(admin, Arrays.asList(publisher), null);
         readerDarc = new Darc(publisher, Arrays.asList(reader), null);
@@ -50,6 +53,7 @@ class OnchainSecretsTest {
         extraData = "created on Monday";
         doc = new Document(docData.getBytes(), 16, readerDarc, extraData.getBytes());
 
+//        testInstanceController = TestServerInit.getInstanceManual();
         testInstanceController = TestServerInit.getInstance();
 
         try {
@@ -75,7 +79,7 @@ class OnchainSecretsTest {
 
     @Test
     void giveReadAccessToDocument() throws CothorityException {
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
         try{
             ocs.getDocument(wr.id, reader2);
@@ -91,8 +95,44 @@ class OnchainSecretsTest {
     }
 
     @Test
+    void getDocument() throws CothorityException, IOException, InterruptedException {
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
+        Document doc2 = ocs.getDocument(wr.id, reader);
+        assertTrue(doc.equals(doc2));
+        // Inverse is not true, as doc2 now contains a writeId
+        assertFalse(doc2.equals(doc));
+
+        // Add another reader
+        Signer reader2 = new SignerEd25519();
+        ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
+        Document doc3 = ocs.getDocument(wr.id, reader2);
+        assertTrue(doc.equals(doc3));
+        assertFalse(doc3.equals(doc));
+    }
+
+    @Test
+    void ephemeralReadDocument() throws Exception{
+        WriteRequest write = ocs.publishDocument(doc, publisher);
+        Document doc2 = ocs.getDocumentEphemeral(write.id, reader);
+        assertTrue(doc.equals(doc2));
+    }
+
+    @Test
+    void ephemeralReadDocumentWrongSignature() throws Exception{
+        WriteRequest wr = ocs.publishDocument(doc, publisher);
+        OCSProto.Write write = ocs.getWrite(wr.id);
+        Darc readerDarc = new Darc(write.getReader());
+        ReadRequestId rrId = ocs.createReadRequest(new ReadRequest(ocs, wr.id, reader));
+
+        KeyPair kp = new KeyPair();
+        Signer reader2 = new SignerEd25519();
+        DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
+        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);});
+    }
+
+    @Test
     void getDocumentWithFailedNode() throws CothorityException, IOException, InterruptedException {
-        Signer reader2 = new Ed25519Signer();
+        Signer reader2 = new SignerEd25519();
         WriteRequest wr = ocs.publishDocument(doc, publisher);
 
         ocs.addIdentityToDarc(readerDarc, reader2, publisher, SignaturePath.USER);
@@ -129,7 +169,7 @@ class OnchainSecretsTest {
         // - reader-signer
         // - publisher-signer
         OnchainSecrets ocs2 = new OnchainSecrets(ocs.getRoster(), ocs.getID());
-        Signer reader = new Ed25519Signer();
+        Signer reader = new SignerEd25519();
         OCSProto.Write wr2 = ocs.getWrite(wr.id);
         ocs2.addIdentityToDarc(new Darc(wr2.getReader()), reader, publisher, SignaturePath.USER);
         Document doc2 = ocs2.getDocument(wr.id, reader);

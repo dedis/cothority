@@ -29,12 +29,20 @@ public class DarcSignature {
      */
     public DarcSignature(byte[] msg, SignaturePath path, Signer signer) throws CothorityCryptoException {
         this.path = path;
-        signature = signer.sign(getHash(msg));
+        try {
+            signature = signer.sign(getHash(msg));
+        } catch (Signer.SignRequestRejectedException e) {
+            throw new CothorityCryptoException("Ugly user does not sign a request ", e);
+        }
     }
 
     public DarcSignature(byte[] msg, Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new SignaturePath(darc, signer, role);
-        signature = signer.sign(getHash(msg));
+        try {
+            signature = signer.sign(getHash(msg));
+        } catch (Signer.SignRequestRejectedException e) {
+            throw new CothorityCryptoException("Ugly user does not sign a request ", e);
+        }
     }
 
     /**

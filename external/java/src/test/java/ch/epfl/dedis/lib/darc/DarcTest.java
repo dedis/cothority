@@ -5,18 +5,21 @@ import ch.epfl.dedis.proto.DarcProto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DarcTest {
-    static Ed25519Signer owner;
-    static Ed25519Signer user;
+    static SignerEd25519 owner;
+    static SignerEd25519 user;
     static Darc darc;
 
     @BeforeAll
     static void initAll() throws CothorityCryptoException {
-        owner = new Ed25519Signer();
-        user = new Ed25519Signer();
+        owner = new SignerEd25519();
+        user = new SignerEd25519();
         darc = new Darc(owner, null, null);
     }
 
@@ -62,6 +65,35 @@ public class DarcTest {
         assertTrue(darc.equals(darc2));
         assertTrue(darc.getVersion() == 1);
         assertTrue(darc2.getVersion() == 1);
+    }
+
+    @Test
+    void removeFromDarc() throws CothorityCryptoException{
+        SignerEd25519 owner2 = new SignerEd25519();
+        SignerEd25519 owner3 = new SignerEd25519();
+        SignerEd25519 user2 = new SignerEd25519();
+        SignerEd25519 user3 = new SignerEd25519();
+
+        Darc darc = new Darc(owner, Arrays.asList(user, user2), null);
+        darc.addOwner(owner2);
+        assertEquals(2, darc.getOwners().size());
+        assertEquals(2, darc.getUsers().size());
+
+        darc.removeOwner(owner3.getIdentity());
+        assertEquals(2, darc.getOwners().size());
+        assertEquals(2, darc.getUsers().size());
+
+        darc.removeOwner(owner2.getIdentity());
+        assertEquals(1, darc.getOwners().size());
+        assertEquals(2, darc.getUsers().size());
+
+        darc.removeUser(user3.getIdentity());
+        assertEquals(1, darc.getOwners().size());
+        assertEquals(2, darc.getUsers().size());
+
+        darc.removeUser(user2.getIdentity());
+        assertEquals(1, darc.getOwners().size());
+        assertEquals(1, darc.getUsers().size());
     }
 
 }

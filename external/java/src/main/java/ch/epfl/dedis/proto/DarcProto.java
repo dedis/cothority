@@ -222,9 +222,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2041,7 +2038,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Darc(input, extensionRegistry);
+          return new Darc(input, extensionRegistry);
       }
     };
 
@@ -2113,6 +2110,31 @@ public final class DarcProto {
      * <code>optional .IdentityEd25519 ed25519 = 2;</code>
      */
     ch.epfl.dedis.proto.DarcProto.IdentityEd25519OrBuilder getEd25519OrBuilder();
+
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    boolean hasX509Ec();
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.IdentityX509EC getX509Ec();
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder getX509EcOrBuilder();
   }
   /**
    * <pre>
@@ -2143,9 +2165,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2188,6 +2207,19 @@ public final class DarcProto {
                 ed25519_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = x509Ec_.toBuilder();
+              }
+              x509Ec_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.IdentityX509EC.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(x509Ec_);
+                x509Ec_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
               break;
             }
           }
@@ -2281,6 +2313,39 @@ public final class DarcProto {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityEd25519.getDefaultInstance() : ed25519_;
     }
 
+    public static final int X509EC_FIELD_NUMBER = 3;
+    private ch.epfl.dedis.proto.DarcProto.IdentityX509EC x509Ec_;
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    public boolean hasX509Ec() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.IdentityX509EC getX509Ec() {
+      return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
+    }
+    /**
+     * <pre>
+     * 	 Public-key identity
+     * </pre>
+     *
+     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder getX509EcOrBuilder() {
+      return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2299,6 +2364,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasX509Ec()) {
+        if (!getX509Ec().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -2310,6 +2381,9 @@ public final class DarcProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, getEd25519());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, getX509Ec());
       }
       unknownFields.writeTo(output);
     }
@@ -2326,6 +2400,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getEd25519());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, getX509Ec());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2353,6 +2431,11 @@ public final class DarcProto {
         result = result && getEd25519()
             .equals(other.getEd25519());
       }
+      result = result && (hasX509Ec() == other.hasX509Ec());
+      if (hasX509Ec()) {
+        result = result && getX509Ec()
+            .equals(other.getX509Ec());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2371,6 +2454,10 @@ public final class DarcProto {
       if (hasEd25519()) {
         hash = (37 * hash) + ED25519_FIELD_NUMBER;
         hash = (53 * hash) + getEd25519().hashCode();
+      }
+      if (hasX509Ec()) {
+        hash = (37 * hash) + X509EC_FIELD_NUMBER;
+        hash = (53 * hash) + getX509Ec().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2503,6 +2590,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
           getDarcFieldBuilder();
           getEd25519FieldBuilder();
+          getX509EcFieldBuilder();
         }
       }
       public Builder clear() {
@@ -2519,6 +2607,12 @@ public final class DarcProto {
           ed25519Builder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = null;
+        } else {
+          x509EcBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -2558,6 +2652,14 @@ public final class DarcProto {
           result.ed25519_ = ed25519_;
         } else {
           result.ed25519_ = ed25519Builder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (x509EcBuilder_ == null) {
+          result.x509Ec_ = x509Ec_;
+        } else {
+          result.x509Ec_ = x509EcBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -2607,6 +2709,9 @@ public final class DarcProto {
         if (other.hasEd25519()) {
           mergeEd25519(other.getEd25519());
         }
+        if (other.hasX509Ec()) {
+          mergeX509Ec(other.getX509Ec());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -2620,6 +2725,11 @@ public final class DarcProto {
         }
         if (hasEd25519()) {
           if (!getEd25519().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasX509Ec()) {
+          if (!getX509Ec().isInitialized()) {
             return false;
           }
         }
@@ -2952,6 +3062,160 @@ public final class DarcProto {
         }
         return ed25519Builder_;
       }
+
+      private ch.epfl.dedis.proto.DarcProto.IdentityX509EC x509Ec_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder> x509EcBuilder_;
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public boolean hasX509Ec() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509EC getX509Ec() {
+        if (x509EcBuilder_ == null) {
+          return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
+        } else {
+          return x509EcBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public Builder setX509Ec(ch.epfl.dedis.proto.DarcProto.IdentityX509EC value) {
+        if (x509EcBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          x509Ec_ = value;
+          onChanged();
+        } else {
+          x509EcBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public Builder setX509Ec(
+          ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder builderForValue) {
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = builderForValue.build();
+          onChanged();
+        } else {
+          x509EcBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public Builder mergeX509Ec(ch.epfl.dedis.proto.DarcProto.IdentityX509EC value) {
+        if (x509EcBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              x509Ec_ != null &&
+              x509Ec_ != ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance()) {
+            x509Ec_ =
+              ch.epfl.dedis.proto.DarcProto.IdentityX509EC.newBuilder(x509Ec_).mergeFrom(value).buildPartial();
+          } else {
+            x509Ec_ = value;
+          }
+          onChanged();
+        } else {
+          x509EcBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public Builder clearX509Ec() {
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = null;
+          onChanged();
+        } else {
+          x509EcBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder getX509EcBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getX509EcFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder getX509EcOrBuilder() {
+        if (x509EcBuilder_ != null) {
+          return x509EcBuilder_.getMessageOrBuilder();
+        } else {
+          return x509Ec_ == null ?
+              ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
+        }
+      }
+      /**
+       * <pre>
+       * 	 Public-key identity
+       * </pre>
+       *
+       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder> 
+          getX509EcFieldBuilder() {
+        if (x509EcBuilder_ == null) {
+          x509EcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.IdentityX509EC, ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder, ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder>(
+                  getX509Ec(),
+                  getParentForChildren(),
+                  isClean());
+          x509Ec_ = null;
+        }
+        return x509EcBuilder_;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -2982,7 +3246,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Identity(input, extensionRegistry);
+          return new Identity(input, extensionRegistry);
       }
     };
 
@@ -3044,9 +3308,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3480,7 +3741,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityEd25519(input, extensionRegistry);
+          return new IdentityEd25519(input, extensionRegistry);
       }
     };
 
@@ -3494,6 +3755,501 @@ public final class DarcProto {
     }
 
     public ch.epfl.dedis.proto.DarcProto.IdentityEd25519 getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface IdentityX509ECOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:IdentityX509EC)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    com.google.protobuf.ByteString getPublic();
+  }
+  /**
+   * <pre>
+   * IdentityX509EC holds a public key from a X509EC
+   * </pre>
+   *
+   * Protobuf type {@code IdentityX509EC}
+   */
+  public  static final class IdentityX509EC extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:IdentityX509EC)
+      IdentityX509ECOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use IdentityX509EC.newBuilder() to construct.
+    private IdentityX509EC(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private IdentityX509EC() {
+      public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private IdentityX509EC(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityX509EC_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityX509EC_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.DarcProto.IdentityX509EC.class, ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, public_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, public_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.IdentityX509EC)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.DarcProto.IdentityX509EC other = (ch.epfl.dedis.proto.DarcProto.IdentityX509EC) obj;
+
+      boolean result = true;
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.IdentityX509EC prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * IdentityX509EC holds a public key from a X509EC
+     * </pre>
+     *
+     * Protobuf type {@code IdentityX509EC}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:IdentityX509EC)
+        ch.epfl.dedis.proto.DarcProto.IdentityX509ECOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityX509EC_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityX509EC_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.DarcProto.IdentityX509EC.class, ch.epfl.dedis.proto.DarcProto.IdentityX509EC.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.DarcProto.IdentityX509EC.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_IdentityX509EC_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509EC getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509EC build() {
+        ch.epfl.dedis.proto.DarcProto.IdentityX509EC result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.IdentityX509EC buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.IdentityX509EC result = new ch.epfl.dedis.proto.DarcProto.IdentityX509EC(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.public_ = public_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.IdentityX509EC) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.IdentityX509EC)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.IdentityX509EC other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.IdentityX509EC.getDefaultInstance()) return this;
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPublic()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.DarcProto.IdentityX509EC parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.IdentityX509EC) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:IdentityX509EC)
+    }
+
+    // @@protoc_insertion_point(class_scope:IdentityX509EC)
+    private static final ch.epfl.dedis.proto.DarcProto.IdentityX509EC DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.IdentityX509EC();
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.IdentityX509EC getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityX509EC>
+        PARSER = new com.google.protobuf.AbstractParser<IdentityX509EC>() {
+      public IdentityX509EC parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new IdentityX509EC(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<IdentityX509EC> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<IdentityX509EC> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.DarcProto.IdentityX509EC getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3542,9 +4298,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3978,7 +4731,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityDarc(input, extensionRegistry);
+          return new IdentityDarc(input, extensionRegistry);
       }
     };
 
@@ -4074,9 +4827,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4783,7 +5533,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signature(input, extensionRegistry);
+          return new Signature(input, extensionRegistry);
       }
     };
 
@@ -4923,9 +5673,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6073,7 +6820,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SignaturePath(input, extensionRegistry);
+          return new SignaturePath(input, extensionRegistry);
       }
     };
 
@@ -6097,22 +6844,34 @@ public final class DarcProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
     boolean hasEd25519();
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519();
+    ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519();
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder();
+    ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder();
+
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    boolean hasX509Ec();
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerX509EC getX509Ec();
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder getX509EcOrBuilder();
   }
   /**
    * <pre>
    * Signer is a generic structure that can hold different types of signers
-   * TODO Make it an interface
    * </pre>
    *
    * Protobuf type {@code Signer}
@@ -6139,9 +6898,6 @@ public final class DarcProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6161,16 +6917,29 @@ public final class DarcProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder subBuilder = null;
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = ed25519_.toBuilder();
               }
-              ed25519_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Ed25519Signer.PARSER, extensionRegistry);
+              ed25519_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.SignerEd25519.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(ed25519_);
                 ed25519_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = x509Ec_.toBuilder();
+              }
+              x509Ec_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.SignerX509EC.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(x509Ec_);
+                x509Ec_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
               break;
             }
           }
@@ -6199,24 +6968,45 @@ public final class DarcProto {
 
     private int bitField0_;
     public static final int ED25519_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.DarcProto.Ed25519Signer ed25519_;
+    private ch.epfl.dedis.proto.DarcProto.SignerEd25519 ed25519_;
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
     public boolean hasEd25519() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519() {
-      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519() {
+      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
     /**
-     * <code>optional .Ed25519Signer ed25519 = 1;</code>
+     * <code>optional .SignerEd25519 ed25519 = 1;</code>
      */
-    public ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder() {
-      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
+      return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
+    }
+
+    public static final int X509EC_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.DarcProto.SignerX509EC x509Ec_;
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    public boolean hasX509Ec() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerX509EC getX509Ec() {
+      return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
+    }
+    /**
+     * <code>optional .SignerX509EC x509ec = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder getX509EcOrBuilder() {
+      return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -6231,6 +7021,12 @@ public final class DarcProto {
           return false;
         }
       }
+      if (hasX509Ec()) {
+        if (!getX509Ec().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -6239,6 +7035,9 @@ public final class DarcProto {
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeMessage(1, getEd25519());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getX509Ec());
       }
       unknownFields.writeTo(output);
     }
@@ -6251,6 +7050,10 @@ public final class DarcProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getEd25519());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getX509Ec());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -6273,6 +7076,11 @@ public final class DarcProto {
         result = result && getEd25519()
             .equals(other.getEd25519());
       }
+      result = result && (hasX509Ec() == other.hasX509Ec());
+      if (hasX509Ec()) {
+        result = result && getX509Ec()
+            .equals(other.getX509Ec());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -6287,6 +7095,10 @@ public final class DarcProto {
       if (hasEd25519()) {
         hash = (37 * hash) + ED25519_FIELD_NUMBER;
         hash = (53 * hash) + getEd25519().hashCode();
+      }
+      if (hasX509Ec()) {
+        hash = (37 * hash) + X509EC_FIELD_NUMBER;
+        hash = (53 * hash) + getX509Ec().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -6384,7 +7196,6 @@ public final class DarcProto {
     /**
      * <pre>
      * Signer is a generic structure that can hold different types of signers
-     * TODO Make it an interface
      * </pre>
      *
      * Protobuf type {@code Signer}
@@ -6419,6 +7230,7 @@ public final class DarcProto {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
           getEd25519FieldBuilder();
+          getX509EcFieldBuilder();
         }
       }
       public Builder clear() {
@@ -6429,6 +7241,12 @@ public final class DarcProto {
           ed25519Builder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = null;
+        } else {
+          x509EcBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -6460,6 +7278,14 @@ public final class DarcProto {
           result.ed25519_ = ed25519_;
         } else {
           result.ed25519_ = ed25519Builder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (x509EcBuilder_ == null) {
+          result.x509Ec_ = x509Ec_;
+        } else {
+          result.x509Ec_ = x509EcBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -6506,6 +7332,9 @@ public final class DarcProto {
         if (other.hasEd25519()) {
           mergeEd25519(other.getEd25519());
         }
+        if (other.hasX509Ec()) {
+          mergeX509Ec(other.getX509Ec());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -6514,6 +7343,11 @@ public final class DarcProto {
       public final boolean isInitialized() {
         if (hasEd25519()) {
           if (!getEd25519().isInitialized()) {
+            return false;
+          }
+        }
+        if (hasX509Ec()) {
+          if (!getX509Ec().isInitialized()) {
             return false;
           }
         }
@@ -6539,29 +7373,29 @@ public final class DarcProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.DarcProto.Ed25519Signer ed25519_ = null;
+      private ch.epfl.dedis.proto.DarcProto.SignerEd25519 ed25519_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder> ed25519Builder_;
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder> ed25519Builder_;
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public boolean hasEd25519() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getEd25519() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
-          return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+          return ed25519_ == null ? ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
         } else {
           return ed25519Builder_.getMessage();
         }
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public Builder setEd25519(ch.epfl.dedis.proto.DarcProto.Ed25519Signer value) {
+      public Builder setEd25519(ch.epfl.dedis.proto.DarcProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6575,10 +7409,10 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public Builder setEd25519(
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder builderForValue) {
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder builderForValue) {
         if (ed25519Builder_ == null) {
           ed25519_ = builderForValue.build();
           onChanged();
@@ -6589,15 +7423,15 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public Builder mergeEd25519(ch.epfl.dedis.proto.DarcProto.Ed25519Signer value) {
+      public Builder mergeEd25519(ch.epfl.dedis.proto.DarcProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               ed25519_ != null &&
-              ed25519_ != ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance()) {
+              ed25519_ != ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance()) {
             ed25519_ =
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.newBuilder(ed25519_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.newBuilder(ed25519_).mergeFrom(value).buildPartial();
           } else {
             ed25519_ = value;
           }
@@ -6609,7 +7443,7 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       public Builder clearEd25519() {
         if (ed25519Builder_ == null) {
@@ -6622,39 +7456,157 @@ public final class DarcProto {
         return this;
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder getEd25519Builder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder getEd25519Builder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getEd25519FieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
-      public ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder getEd25519OrBuilder() {
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
         if (ed25519Builder_ != null) {
           return ed25519Builder_.getMessageOrBuilder();
         } else {
           return ed25519_ == null ?
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance() : ed25519_;
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance() : ed25519_;
         }
       }
       /**
-       * <code>optional .Ed25519Signer ed25519 = 1;</code>
+       * <code>optional .SignerEd25519 ed25519 = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder> 
+          ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder> 
           getEd25519FieldBuilder() {
         if (ed25519Builder_ == null) {
           ed25519Builder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder, ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder>(
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder>(
                   getEd25519(),
                   getParentForChildren(),
                   isClean());
           ed25519_ = null;
         }
         return ed25519Builder_;
+      }
+
+      private ch.epfl.dedis.proto.DarcProto.SignerX509EC x509Ec_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.SignerX509EC, ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder> x509EcBuilder_;
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public boolean hasX509Ec() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerX509EC getX509Ec() {
+        if (x509EcBuilder_ == null) {
+          return x509Ec_ == null ? ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
+        } else {
+          return x509EcBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public Builder setX509Ec(ch.epfl.dedis.proto.DarcProto.SignerX509EC value) {
+        if (x509EcBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          x509Ec_ = value;
+          onChanged();
+        } else {
+          x509EcBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public Builder setX509Ec(
+          ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder builderForValue) {
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = builderForValue.build();
+          onChanged();
+        } else {
+          x509EcBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public Builder mergeX509Ec(ch.epfl.dedis.proto.DarcProto.SignerX509EC value) {
+        if (x509EcBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              x509Ec_ != null &&
+              x509Ec_ != ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance()) {
+            x509Ec_ =
+              ch.epfl.dedis.proto.DarcProto.SignerX509EC.newBuilder(x509Ec_).mergeFrom(value).buildPartial();
+          } else {
+            x509Ec_ = value;
+          }
+          onChanged();
+        } else {
+          x509EcBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public Builder clearX509Ec() {
+        if (x509EcBuilder_ == null) {
+          x509Ec_ = null;
+          onChanged();
+        } else {
+          x509EcBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder getX509EcBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getX509EcFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder getX509EcOrBuilder() {
+        if (x509EcBuilder_ != null) {
+          return x509EcBuilder_.getMessageOrBuilder();
+        } else {
+          return x509Ec_ == null ?
+              ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance() : x509Ec_;
+        }
+      }
+      /**
+       * <code>optional .SignerX509EC x509ec = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.SignerX509EC, ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder> 
+          getX509EcFieldBuilder() {
+        if (x509EcBuilder_ == null) {
+          x509EcBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.SignerX509EC, ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder, ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder>(
+                  getX509Ec(),
+                  getParentForChildren(),
+                  isClean());
+          x509Ec_ = null;
+        }
+        return x509EcBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -6686,7 +7638,7 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signer(input, extensionRegistry);
+          return new Signer(input, extensionRegistry);
       }
     };
 
@@ -6705,8 +7657,8 @@ public final class DarcProto {
 
   }
 
-  public interface Ed25519SignerOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Ed25519Signer)
+  public interface SignerEd25519OrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SignerEd25519)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -6729,21 +7681,21 @@ public final class DarcProto {
   }
   /**
    * <pre>
-   * Ed25519Signer holds a public and private keys necessary to sign Darcs
+   * SignerEd25519 holds a public and private keys necessary to sign Darcs
    * </pre>
    *
-   * Protobuf type {@code Ed25519Signer}
+   * Protobuf type {@code SignerEd25519}
    */
-  public  static final class Ed25519Signer extends
+  public  static final class SignerEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Ed25519Signer)
-      Ed25519SignerOrBuilder {
+      // @@protoc_insertion_point(message_implements:SignerEd25519)
+      SignerEd25519OrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use Ed25519Signer.newBuilder() to construct.
-    private Ed25519Signer(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use SignerEd25519.newBuilder() to construct.
+    private SignerEd25519(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private Ed25519Signer() {
+    private SignerEd25519() {
       point_ = com.google.protobuf.ByteString.EMPTY;
       secret_ = com.google.protobuf.ByteString.EMPTY;
     }
@@ -6753,14 +7705,11 @@ public final class DarcProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Ed25519Signer(
+    private SignerEd25519(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6803,14 +7752,14 @@ public final class DarcProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.DarcProto.Ed25519Signer.class, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder.class);
+              ch.epfl.dedis.proto.DarcProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder.class);
     }
 
     private int bitField0_;
@@ -6896,10 +7845,10 @@ public final class DarcProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.Ed25519Signer)) {
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.SignerEd25519)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.proto.DarcProto.Ed25519Signer other = (ch.epfl.dedis.proto.DarcProto.Ed25519Signer) obj;
+      ch.epfl.dedis.proto.DarcProto.SignerEd25519 other = (ch.epfl.dedis.proto.DarcProto.SignerEd25519) obj;
 
       boolean result = true;
       result = result && (hasPoint() == other.hasPoint());
@@ -6936,69 +7885,69 @@ public final class DarcProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(byte[] data)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseDelimitedFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer parseFrom(
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -7010,7 +7959,7 @@ public final class DarcProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.Ed25519Signer prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.SignerEd25519 prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -7026,28 +7975,28 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * Ed25519Signer holds a public and private keys necessary to sign Darcs
+     * SignerEd25519 holds a public and private keys necessary to sign Darcs
      * </pre>
      *
-     * Protobuf type {@code Ed25519Signer}
+     * Protobuf type {@code SignerEd25519}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Ed25519Signer)
-        ch.epfl.dedis.proto.DarcProto.Ed25519SignerOrBuilder {
+        // @@protoc_insertion_point(builder_implements:SignerEd25519)
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519OrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.DarcProto.Ed25519Signer.class, ch.epfl.dedis.proto.DarcProto.Ed25519Signer.Builder.class);
+                ch.epfl.dedis.proto.DarcProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcProto.SignerEd25519.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.proto.DarcProto.Ed25519Signer.newBuilder()
+      // Construct using ch.epfl.dedis.proto.DarcProto.SignerEd25519.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -7073,23 +8022,23 @@ public final class DarcProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcProto.internal_static_Ed25519Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerEd25519_descriptor;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance();
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance();
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer build() {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer result = buildPartial();
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 build() {
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public ch.epfl.dedis.proto.DarcProto.Ed25519Signer buildPartial() {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer result = new ch.epfl.dedis.proto.DarcProto.Ed25519Signer(this);
+      public ch.epfl.dedis.proto.DarcProto.SignerEd25519 buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 result = new ch.epfl.dedis.proto.DarcProto.SignerEd25519(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7132,16 +8081,16 @@ public final class DarcProto {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.DarcProto.Ed25519Signer) {
-          return mergeFrom((ch.epfl.dedis.proto.DarcProto.Ed25519Signer)other);
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.SignerEd25519) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.SignerEd25519)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.Ed25519Signer other) {
-        if (other == ch.epfl.dedis.proto.DarcProto.Ed25519Signer.getDefaultInstance()) return this;
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.SignerEd25519 other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.SignerEd25519.getDefaultInstance()) return this;
         if (other.hasPoint()) {
           setPoint(other.getPoint());
         }
@@ -7167,11 +8116,11 @@ public final class DarcProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.proto.DarcProto.Ed25519Signer parsedMessage = null;
+        ch.epfl.dedis.proto.DarcProto.SignerEd25519 parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.DarcProto.Ed25519Signer) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.SignerEd25519) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -7262,39 +8211,633 @@ public final class DarcProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Ed25519Signer)
+      // @@protoc_insertion_point(builder_scope:SignerEd25519)
     }
 
-    // @@protoc_insertion_point(class_scope:Ed25519Signer)
-    private static final ch.epfl.dedis.proto.DarcProto.Ed25519Signer DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:SignerEd25519)
+    private static final ch.epfl.dedis.proto.DarcProto.SignerEd25519 DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.Ed25519Signer();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.SignerEd25519();
     }
 
-    public static ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstance() {
+    public static ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<Ed25519Signer>
-        PARSER = new com.google.protobuf.AbstractParser<Ed25519Signer>() {
-      public Ed25519Signer parsePartialFrom(
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerEd25519>
+        PARSER = new com.google.protobuf.AbstractParser<SignerEd25519>() {
+      public SignerEd25519 parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Ed25519Signer(input, extensionRegistry);
+          return new SignerEd25519(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Ed25519Signer> parser() {
+    public static com.google.protobuf.Parser<SignerEd25519> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Ed25519Signer> getParserForType() {
+    public com.google.protobuf.Parser<SignerEd25519> getParserForType() {
       return PARSER;
     }
 
-    public ch.epfl.dedis.proto.DarcProto.Ed25519Signer getDefaultInstanceForType() {
+    public ch.epfl.dedis.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SignerX509ECOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SignerX509EC)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    boolean hasPoint();
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    com.google.protobuf.ByteString getPoint();
+
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    boolean hasSecret();
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    com.google.protobuf.ByteString getSecret();
+  }
+  /**
+   * <pre>
+   * SignerX509EC holds a public and private keys necessary to sign Darcs,
+   * but the private key will not be given out.
+   * </pre>
+   *
+   * Protobuf type {@code SignerX509EC}
+   */
+  public  static final class SignerX509EC extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:SignerX509EC)
+      SignerX509ECOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SignerX509EC.newBuilder() to construct.
+    private SignerX509EC(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SignerX509EC() {
+      point_ = com.google.protobuf.ByteString.EMPTY;
+      secret_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SignerX509EC(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              point_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              secret_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerX509EC_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.DarcProto.internal_static_SignerX509EC_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.DarcProto.SignerX509EC.class, ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int POINT_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString point_;
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    public boolean hasPoint() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes point = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPoint() {
+      return point_;
+    }
+
+    public static final int SECRET_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString secret_;
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    public boolean hasSecret() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes secret = 2;</code>
+     */
+    public com.google.protobuf.ByteString getSecret() {
+      return secret_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPoint()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSecret()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, point_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, secret_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, point_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, secret_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.DarcProto.SignerX509EC)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.DarcProto.SignerX509EC other = (ch.epfl.dedis.proto.DarcProto.SignerX509EC) obj;
+
+      boolean result = true;
+      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint()) {
+        result = result && getPoint()
+            .equals(other.getPoint());
+      }
+      result = result && (hasSecret() == other.hasSecret());
+      if (hasSecret()) {
+        result = result && getSecret()
+            .equals(other.getSecret());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPoint()) {
+        hash = (37 * hash) + POINT_FIELD_NUMBER;
+        hash = (53 * hash) + getPoint().hashCode();
+      }
+      if (hasSecret()) {
+        hash = (37 * hash) + SECRET_FIELD_NUMBER;
+        hash = (53 * hash) + getSecret().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.DarcProto.SignerX509EC prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SignerX509EC holds a public and private keys necessary to sign Darcs,
+     * but the private key will not be given out.
+     * </pre>
+     *
+     * Protobuf type {@code SignerX509EC}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SignerX509EC)
+        ch.epfl.dedis.proto.DarcProto.SignerX509ECOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerX509EC_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerX509EC_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.DarcProto.SignerX509EC.class, ch.epfl.dedis.proto.DarcProto.SignerX509EC.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.DarcProto.SignerX509EC.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        point_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        secret_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.DarcProto.internal_static_SignerX509EC_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.SignerX509EC getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.SignerX509EC build() {
+        ch.epfl.dedis.proto.DarcProto.SignerX509EC result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.DarcProto.SignerX509EC buildPartial() {
+        ch.epfl.dedis.proto.DarcProto.SignerX509EC result = new ch.epfl.dedis.proto.DarcProto.SignerX509EC(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.point_ = point_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.secret_ = secret_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.DarcProto.SignerX509EC) {
+          return mergeFrom((ch.epfl.dedis.proto.DarcProto.SignerX509EC)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.SignerX509EC other) {
+        if (other == ch.epfl.dedis.proto.DarcProto.SignerX509EC.getDefaultInstance()) return this;
+        if (other.hasPoint()) {
+          setPoint(other.getPoint());
+        }
+        if (other.hasSecret()) {
+          setSecret(other.getSecret());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPoint()) {
+          return false;
+        }
+        if (!hasSecret()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.DarcProto.SignerX509EC parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.DarcProto.SignerX509EC) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString point_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public boolean hasPoint() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPoint() {
+        return point_;
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public Builder setPoint(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        point_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes point = 1;</code>
+       */
+      public Builder clearPoint() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        point_ = getDefaultInstance().getPoint();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public boolean hasSecret() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public com.google.protobuf.ByteString getSecret() {
+        return secret_;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public Builder setSecret(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        secret_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes secret = 2;</code>
+       */
+      public Builder clearSecret() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        secret_ = getDefaultInstance().getSecret();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:SignerX509EC)
+    }
+
+    // @@protoc_insertion_point(class_scope:SignerX509EC)
+    private static final ch.epfl.dedis.proto.DarcProto.SignerX509EC DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcProto.SignerX509EC();
+    }
+
+    public static ch.epfl.dedis.proto.DarcProto.SignerX509EC getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerX509EC>
+        PARSER = new com.google.protobuf.AbstractParser<SignerX509EC>() {
+      public SignerX509EC parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new SignerX509EC(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SignerX509EC> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SignerX509EC> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.DarcProto.SignerX509EC getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -7316,6 +8859,11 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_IdentityEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_IdentityX509EC_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_IdentityX509EC_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_IdentityDarc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -7336,10 +8884,15 @@ public final class DarcProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Signer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Ed25519Signer_descriptor;
+    internal_static_SignerEd25519_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Ed25519Signer_fieldAccessorTable;
+      internal_static_SignerEd25519_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_SignerX509EC_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_SignerX509EC_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -7353,17 +8906,20 @@ public final class DarcProto {
       "Identity\022\030\n\005users\030\002 \003(\0132\t.Identity\022\017\n\007ve" +
       "rsion\030\003 \002(\021\022\023\n\013description\030\004 \001(\014\022\016\n\006base" +
       "id\030\005 \001(\014\022\035\n\tsignature\030\006 \001(\0132\n.Signature\"" +
-      "J\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityDarc" +
-      "\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\" \n\017I" +
-      "dentityEd25519\022\r\n\005point\030\001 \002(\014\"\032\n\014Identit" +
-      "yDarc\022\n\n\002id\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignat" +
-      "ure\030\001 \002(\014\022%\n\rsignaturepath\030\002 \002(\0132\016.Signa" +
-      "turePath\"N\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\013" +
-      "2\005.Darc\022\031\n\006signer\030\002 \002(\0132\t.Identity\022\014\n\004ro" +
-      "le\030\003 \002(\021\")\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.Ed" +
-      "25519Signer\".\n\rEd25519Signer\022\r\n\005point\030\001 " +
-      "\002(\014\022\016\n\006secret\030\002 \002(\014B \n\023ch.epfl.dedis.pro" +
-      "toB\tDarcProto"
+      "k\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityDarc" +
+      "\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\022\037\n\006x" +
+      "509ec\030\003 \001(\0132\017.IdentityX509EC\" \n\017Identity" +
+      "Ed25519\022\r\n\005point\030\001 \002(\014\" \n\016IdentityX509EC" +
+      "\022\016\n\006public\030\001 \002(\014\"\032\n\014IdentityDarc\022\n\n\002id\030\001" +
+      " \002(\014\"E\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022%\n\r",
+      "signaturepath\030\002 \002(\0132\016.SignaturePath\"N\n\rS" +
+      "ignaturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n\006si" +
+      "gner\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"H\n\006S" +
+      "igner\022\037\n\007ed25519\030\001 \001(\0132\016.SignerEd25519\022\035" +
+      "\n\006x509ec\030\002 \001(\0132\r.SignerX509EC\".\n\rSignerE" +
+      "d25519\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014\"-\n" +
+      "\014SignerX509EC\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002" +
+      " \002(\014B \n\023ch.epfl.dedis.protoB\tDarcProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7388,42 +8944,54 @@ public final class DarcProto {
     internal_static_Identity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Identity_descriptor,
-        new java.lang.String[] { "Darc", "Ed25519", });
+        new java.lang.String[] { "Darc", "Ed25519", "X509Ec", });
     internal_static_IdentityEd25519_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_IdentityEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityEd25519_descriptor,
         new java.lang.String[] { "Point", });
-    internal_static_IdentityDarc_descriptor =
+    internal_static_IdentityX509EC_descriptor =
       getDescriptor().getMessageTypes().get(3);
+    internal_static_IdentityX509EC_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_IdentityX509EC_descriptor,
+        new java.lang.String[] { "Public", });
+    internal_static_IdentityDarc_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_IdentityDarc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityDarc_descriptor,
         new java.lang.String[] { "Id", });
     internal_static_Signature_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_Signature_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Signature_descriptor,
         new java.lang.String[] { "Signature", "Signaturepath", });
     internal_static_SignaturePath_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_SignaturePath_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignaturePath_descriptor,
         new java.lang.String[] { "Darcs", "Signer", "Role", });
     internal_static_Signer_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Signer_descriptor,
-        new java.lang.String[] { "Ed25519", });
-    internal_static_Ed25519Signer_descriptor =
-      getDescriptor().getMessageTypes().get(7);
-    internal_static_Ed25519Signer_fieldAccessorTable = new
+        new java.lang.String[] { "Ed25519", "X509Ec", });
+    internal_static_SignerEd25519_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Ed25519Signer_descriptor,
+        internal_static_SignerEd25519_descriptor,
+        new java.lang.String[] { "Point", "Secret", });
+    internal_static_SignerX509EC_descriptor =
+      getDescriptor().getMessageTypes().get(9);
+    internal_static_SignerX509EC_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_SignerX509EC_descriptor,
         new java.lang.String[] { "Point", "Secret", });
   }
 

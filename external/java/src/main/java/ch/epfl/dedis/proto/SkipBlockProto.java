@@ -214,9 +214,6 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2422,7 +2419,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SkipBlock(input, extensionRegistry);
+          return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -2515,9 +2512,6 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3387,7 +3381,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new BlockLink(input, extensionRegistry);
+          return new BlockLink(input, extensionRegistry);
       }
     };
 
@@ -3455,9 +3449,6 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3974,7 +3965,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SchnorrSig(input, extensionRegistry);
+          return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -4042,9 +4033,6 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4558,7 +4546,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Exception(input, extensionRegistry);
+          return new Exception(input, extensionRegistry);
       }
     };
 
@@ -4615,7 +4603,7 @@ public final class SkipBlockProto {
       "\0132\007.Roster\022\014\n\004hash\030\013 \002(\014\022\033\n\007forward\030\014 \003(" +
       "\0132\n.BlockLink\022\034\n\010children\030\r \003(\0132\n.BlockL" +
       "ink\"E\n\tBlockLink\022\013\n\003sig\030\001 \002(\014\022\013\n\003msg\030\002 \002" +
-      "(\014\022\036\n\nexceptions\030\003 \003(\0132\n.Exception\"1\n\nSc" +
+      "(\014\022\036\n\nexceptions\030\003 \003(\0132\n.Exception\"1\n\nSc",
       "hnorrSig\022\021\n\tchallenge\030\001 \002(\014\022\020\n\010response\030" +
       "\002 \002(\014\".\n\tException\022\r\n\005index\030\001 \002(\005\022\022\n\ncom" +
       "mitment\030\002 \002(\014B%\n\023ch.epfl.dedis.protoB\016Sk" +

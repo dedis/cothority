@@ -3,13 +3,8 @@ package ch.epfl.dedis.byzgen;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.darc.Darc;
-import ch.epfl.dedis.lib.darc.DarcId;
-import ch.epfl.dedis.lib.darc.DarcIdentity;
-import ch.epfl.dedis.lib.darc.Ed25519Identity;
-import ch.epfl.dedis.lib.darc.Ed25519Signer;
-import ch.epfl.dedis.lib.darc.IdentityFactory;
-import ch.epfl.dedis.lib.darc.SignaturePath;
+import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.darc.IdentityDarc;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.ocs.Document;
 import ch.epfl.dedis.ocs.WriteRequest;
@@ -52,7 +47,7 @@ public class GetPathTest {
         // given
         WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
-        Ed25519Signer consumer = new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR));
+        SignerEd25519 consumer = new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR));
 
         OCSProto.Write document = ocs.getWrite(documentId);
         Darc documentDarc = new Darc(document.getReader());
@@ -69,7 +64,7 @@ public class GetPathTest {
         // given
         WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
-        Ed25519Signer userWithoutAccess = new Ed25519Signer(); // random key
+        SignerEd25519 userWithoutAccess = new SignerEd25519(); // random key
 
         OCSProto.Write document = ocs.getWrite(documentId);
         Darc documentDarc = new Darc(document.getReader());
@@ -87,7 +82,7 @@ public class GetPathTest {
         // given
         WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
-        DarcIdentity consumerIdentity = new DarcIdentity(consumerId);
+        IdentityDarc consumerIdentity = new IdentityDarc(consumerId);
 
         OCSProto.Write document = ocs.getWrite(documentId);
         Darc documentDarc = new Darc(document.getReader());
@@ -104,7 +99,7 @@ public class GetPathTest {
         // given
         WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
-        DarcIdentity groupIdentity = new DarcIdentity(readersGroupId);
+        IdentityDarc groupIdentity = new IdentityDarc(readersGroupId);
 
         OCSProto.Write document = ocs.getWrite(documentId);
         Darc documentDarc = new Darc(document.getReader());
@@ -118,14 +113,14 @@ public class GetPathTest {
 
     private WriteRequestId publishDocumentAndGrantAccessToGroup() throws Exception {
         WriteRequestId documentId;
-        Ed25519Signer publisherSigner = new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+        SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
         documentId = publishTestDocument(publisherSigner, publisherId, readersGroupId);
         return documentId;
     }
 
-    private WriteRequestId publishTestDocument(Ed25519Signer publisherSigner, DarcId publisherDarcId, DarcId consumerId) throws Exception {
-        DarcIdentity publisherIdentity = new DarcIdentity(publisherDarcId);
-        DarcIdentity consumerIdentity = new DarcIdentity(consumerId);
+    private WriteRequestId publishTestDocument(SignerEd25519 publisherSigner, DarcId publisherDarcId, DarcId consumerId) throws Exception {
+        IdentityDarc publisherIdentity = new IdentityDarc(publisherDarcId);
+        IdentityDarc consumerIdentity = new IdentityDarc(consumerId);
 
         Darc documentDarc = new Darc(publisherIdentity, Arrays.asList(publisherIdentity), "document darc".getBytes());
         ocs.updateDarc(documentDarc);
@@ -138,18 +133,18 @@ public class GetPathTest {
     }
 
     private DarcId createUserGroup(OnchainSecrets ocs, DarcId... members) throws Exception {
-        Ed25519Signer admin = new Ed25519Signer(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
 
         Darc groupDarc = new Darc(admin, Collections.emptyList(), "group".getBytes());
         for (DarcId id : members) {
-            groupDarc.addUser(new DarcIdentity(id));
+            groupDarc.addUser(new IdentityDarc(id));
         }
         ocs.updateDarc(groupDarc);
         return groupDarc.getId();
     }
 
     private DarcId createConsumer(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
         return new DarcId(user.getId().getId());
     }
 
@@ -161,7 +156,7 @@ public class GetPathTest {
     }
 
     private DarcId createPublisher(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new Ed25519Identity(new Ed25519Signer(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
         grantSystemWriteAccess(ocs, user);
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
@@ -172,18 +167,18 @@ public class GetPathTest {
                 .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
                 .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
                 .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
-                .initialiseNewSkipchain(new Ed25519Signer(
+                .initialiseNewSkipchain(new SignerEd25519(
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
-    private static Darc createUser(OnchainSecrets ocs, Ed25519Identity user) throws Exception {
+    private static Darc createUser(OnchainSecrets ocs, IdentityEd25519 user) throws Exception {
         Darc userDarc = new Darc(user, Arrays.asList(user), "user".getBytes());
         ocs.updateDarc(userDarc);
         return userDarc;
     }
 
     private static void grantSystemWriteAccess(OnchainSecrets ocs, Darc userDarc) throws Exception {
-        Ed25519Signer admin = new Ed25519Signer(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.USER);
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
     }
