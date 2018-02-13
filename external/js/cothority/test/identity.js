@@ -7,8 +7,7 @@ const cothority = require("../lib");
 const proto = require("../lib/protobuf").root;
 const kyber = require("@dedis/kyber-js");
 
-const nist = kyber.curve.nist;
-const p256 = new nist.Curve(nist.Params.p256);
+const curve = new kyber.curve.edwards25519.Curve();
 
 const serversTOML = `
 [[servers]]
@@ -62,36 +61,41 @@ describe("roster", () => {
   });
 
   it("correctly computes the aggregate key", () => {
-    const pub1 = p256.point().pick();
-    const pub2 = p256.point().pick();
+    const pub1 = curve.point().pick();
+    const pub2 = curve.point().pick();
     const id1 = new cothority.ServerIdentity(
-      p256,
+      curve,
       pub1,
       "tcp://127.0.0.1:7000"
     );
     const id2 = new cothority.ServerIdentity(
-      p256,
+      curve,
       pub2,
       "tcp://127.0.0.1:7001"
     );
-    const aggregate = p256.point().add(pub1, pub2);
-    const roster = new cothority.Roster([id1, id2], new Uint8Array([1, 2, 3]));
-    expect(roster.aggregateKey(p256).equal(aggregate)).to.be.true;
+    const aggregate = curve.point().add(pub1, pub2);
+    const roster = new cothority.Roster(
+      curve,
+      [id1, id2],
+      new Uint8Array([1, 2, 3])
+    );
+    expect(roster.aggregateKey().equal(aggregate)).to.be.true;
   });
 });
 
 describe("server identity", () => {
   it("correctly creates its point representation", () => {
-    const randomPoint = p256.point().pick();
+    const randomPoint = curve.point().pick();
     const randomBuff = randomPoint.marshalBinary();
-    const si = new cothority.ServerIdentity(p256, randomPoint, "127.0.0.1");
+    const addr = "tls://127.0.0.1:8000";
+    const si = new cothority.ServerIdentity(curve, randomPoint, addr);
   });
 });
 
 function fakeIdentity(addr) {
   return {
     id: new Uint8Array([1]),
-    //public: p256.point().pick(),
+    //public: curve.point().pick(),
     public: new Uint8Array([1, 2, 3]),
     address: addr,
     description: "fake"

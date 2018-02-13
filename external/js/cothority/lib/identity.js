@@ -32,9 +32,14 @@ class ServerIdentity {
     const url = "https://dedis.epfl.ch/id/" + hex;
     this._id = new UUID(5, "ns:URL", url).export();
     // tcp + websocket address
-    let parts = address.replace("tcp://", "").split(":");
-    parts[1] = parseInt(parts[1]) + 1;
-    this.wsAddr = "ws://" + parts.join(":");
+    let parts = address.split("://");
+    if (parts.length != 2) {
+      throw new Error("invalid address: " + address);
+    }
+    // XXX Does not support IPv6 yet
+    let fullAddress = parts[1].split(":");
+    fullAddress[1] = parseInt(fullAddress[1]) + 1;
+    this.wsAddr = "ws://" + fullAddress.join(":");
   }
 
   /*
@@ -102,7 +107,8 @@ class Roster {
      * @param a list of ServerIdentity
      * @return a Roster from the given list of identites
      * */
-  constructor(identities, id) {
+  constructor(group, identities, id) {
+    this.group = group;
     this._identities = identities;
     this._id = id;
   }
@@ -150,17 +156,8 @@ class Roster {
    * @param {kyber.Group} group The group to use to compute the aggregate key.
    * @returns {kyber.Point} The aggregate key
    */
-  aggregateKey(group) {
-    /*if (this.aggr)*/
-    //return this.aggr;
-
-    /*this.aggr = group.point().null();*/
-    //for(var i = 0; i < this.length; i++) {
-    //this.aggr.add(aggr,this.identities[i].point(group));
-    //}
-    /*return this.aggr;*/
-
-    const aggr = group.point().null();
+  aggregateKey() {
+    const aggr = this.group.point().null();
     for (var i = 0; i < this.length; i++) {
       aggr.add(aggr, this.identities[i].public);
     }
@@ -182,6 +179,7 @@ class Roster {
    *        Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
    *        Description = "conode2"
    *
+   * @param {kyber.Group} group to construct the identities
    * @param {string} toml of the above format.
    *
    * @throws {TypeError} when toml is not a string
@@ -201,7 +199,7 @@ class Roster {
         server.description
       )
     );
-    return new Roster(identities);
+    return new Roster(group, identities);
   }
 
   /**
@@ -220,7 +218,7 @@ class Roster {
       pub.unmarshalBinary(new Uint8Array(id.public));
       return new ServerIdentity(group, pub, id.address, id.description);
     });
-    return new Roster(identities);
+    return new Roster(group, identities);
   }
 }
 
