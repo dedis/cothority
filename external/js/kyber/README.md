@@ -15,11 +15,11 @@ Usage
     <meta charset="UTF-8">
     <script src="dist/bundle.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-      var nist = kyber.group.nist;
+      var nist = kyber.curve.nist;
       var p256 = new nist.Curve(nist.Params.p256);
       var randomPoint = p256.point().pick();
       var randomScalar = p256.scalar().pick();
-	  var product = p256.point().mul(randomScalar, randomPoint);
+      var product = p256.point().mul(randomScalar, randomPoint);
       console.log(product.string(), randomPoint.string(), randomScalar.string());
     </script>
   </head>

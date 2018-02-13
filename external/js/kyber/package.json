@@ -1,8 +1,9 @@
 {
-  "name": "kyber-js",
-  "version": "0.0.1",
+  "name": "@dedis/kyber-js",
+  "version": "0.0.6",
   "description": "A javascript implementation of Kyber interfaces",
-  "main": "index.js",
+  "main": "dist/bundle.node.min.js",
+  "browser": "dist/bundle.min.js",
   "scripts": {
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
@@ -20,7 +21,8 @@
     "curve25519",
     "nist"
   ],
-  "author": "Gaurav Narula <gnarula94@gmail.com>",
+  "author": "DEDIS",
+  "license": "AGPL-3.0",
   "homepage": "https://github.com/dedis/cothority",
   "dependencies": {
     "bn.js": "^4.11.8",
@@ -44,5 +46,10 @@
     "uglify-es": "^3.3.9",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "^3.10.0"
-  }
+  },
+  "files": [
+    "dist/",
+    "doc/",
+    "index.html"
+  ]
 }
