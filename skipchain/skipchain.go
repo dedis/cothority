@@ -1218,6 +1218,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow, s.Listlink))
+	s.ServiceProcessor.RegisterStatusReporter("Skipblock", s.db)
 
 	if err := s.registerVerification(VerifyBase, s.verifyFuncBase); err != nil {
 		return nil, err
