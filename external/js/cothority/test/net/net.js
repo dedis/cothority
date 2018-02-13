@@ -68,7 +68,7 @@ function createServer(port) {
   return mockServer;
 }
 
-describe.only("roster socket", () => {
+describe("roster socket", () => {
   it("tries all servers", done => {
     const n = 5;
     // create the addresses
