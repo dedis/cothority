@@ -45,6 +45,10 @@ const defaultNumberSkipchains = 5
 
 var identityService onet.ServiceID
 
+func IdentityService() onet.ServiceID {
+	return identityService
+}
+
 // VerificationIdentity gives a combined VerifyBase + verifyIdentity.
 var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, VerifyIdentity}
 
