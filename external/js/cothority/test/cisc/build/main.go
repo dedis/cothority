@@ -1,6 +1,11 @@
 package main
 
 import (
+	"encoding/hex"
+	"fmt"
+	"os"
+	"time"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/onet"
@@ -8,29 +13,48 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber"
+	"github.com/dedis/onet/app"
 )
 
 func main() {
+	n := 5
 	l := onet.NewTCPTest(cothority.Suite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, el, _ := l.GenTree(n, true)
 	services := l.GetServices(hosts, identity.IdentityService())
 	defer l.CloseAll()
 	for _, s := range services {
 		log.Lvl3(s.(*identity.Service).Storage.Identities)
 	}
-
 	c1 := createIdentity(l, services, el, "one1")
+
+	serversToml := make([]*app.ServerToml, n)
+	for i, si := range el.List {
+		serversToml[i] = app.NewServerToml(
+			cothority.Suite,
+			si.Public,
+			si.Address,
+			si.Description,
+		)
+	}
+	group := app.NewGroupToml(serversToml...)
+	log.ErrFatal(group.Save("public.toml"))
+
+	log.Lvl3("Before data add", c1.Data.Storage)
 	data2 := c1.Data.Copy()
-	kp2 := key.NewKeyPair(cothority.Suite)
-	data2.Device["two2"] = &identity.Device{kp2.Public}
 	data2.Storage["two2"] = "public2"
 	log.ErrFatal(c1.ProposeSend(data2))
 	log.ErrFatal(c1.ProposeUpdate())
 	log.ErrFatal(c1.ProposeVote(true))
 
-	if len(c1.Data.Device) != 2 {
-		log.Fatal("Should have two owners now")
-	}
+	log.Lvl3("After data add", c1.Data.Storage)
+
+	id := hex.EncodeToString([]byte("dunno-what-you-want-here"))
+	fd, err := os.Create("genesis.txt")
+	log.ErrFatal(err)
+	fd.WriteString(id)
+	fd.Close()
+	fmt.Println("OK")
+	time.Sleep(3600 * time.Second)
 }
 
 func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster, name string) *identity.Identity {
