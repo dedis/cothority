@@ -110,6 +110,11 @@ type authData struct {
 	nonces map[string]struct{}
 }
 
+func (a authData) AddToSet(set anon.Set) {
+	a.sets = append(a.sets, set)
+	log.Lvl1("Added to set", a.sets)
+}
+
 /*
  * API messages
  */
