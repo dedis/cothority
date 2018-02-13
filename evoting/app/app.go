@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"os"
@@ -17,12 +18,17 @@ import (
 
 func main() {
 	argRoster := flag.String("roster", "", "path to group toml file")
-	_ = flag.String("key", "", "client-side public key")
+	argKey := flag.String("key", "", "client-side public key")
 	argAdmins := flag.String("admins", "", "list of admin scipers")
 	argPin := flag.String("pin", "", "service pin")
 	flag.Parse()
 
 	roster, err := parseRoster(*argRoster)
+	if err != nil {
+		panic(err)
+	}
+
+	key, err := parseKey(*argKey)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +42,7 @@ func main() {
 		*onet.Client
 	}
 
-	request := &evoting.Link{Pin: *argPin, Roster: roster, Admins: admins}
+	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: key, Admins: admins}
 	reply := &evoting.LinkReply{}
 	client.Client = onet.NewClient(lib.Suite, evoting.ServiceName)
 	if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
@@ -61,7 +67,16 @@ func parseRoster(path string) (*onet.Roster, error) {
 }
 
 func parseKey(key string) (kyber.Point, error) {
-	return nil, nil
+	b, err := hex.DecodeString(key)
+	if err != nil {
+		return nil, err
+	}
+
+	point := lib.Suite.Point()
+	if err = point.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+	return point, nil
 }
 
 // parseAdmins converts a string of comma-separated sciper numbers in
