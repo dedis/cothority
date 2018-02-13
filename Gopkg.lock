@@ -58,8 +58,8 @@
 [[projects]]
   name = "github.com/dedis/protobuf"
   packages = ["."]
-  revision = "dadbfacaa0e2b61cf59ca31336e3c8bbdf064d6e"
-  version = "1.0.0"
+  revision = "8960325c46c893b7d94b587784f2c1f8b95d2ebc"
+  version = "1.0.2"
 
 [[projects]]
   name = "github.com/go-ole/go-ole"
