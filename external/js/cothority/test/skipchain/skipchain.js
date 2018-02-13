@@ -26,12 +26,8 @@ describe.only("skipchain client", () => {
       .runGolang(build_dir)
       .then(data => {
         [roster, id] = helpers.readSkipchainInfo(build_dir);
-        const socket = new net.RosterSocket(roster, "Skipchain");
-        const addr1 = roster.identities[0].websocketAddr;
-        const requestStr = "GetUpdateChain";
-        const responseStr = "GetUpdateChainReply";
-        const request = { latestId: misc.hexToUint8Array(id) };
-        return socket.send(requestStr, responseStr, request);
+        const client = new skipchain.Client(curve, roster, id);
+        return client.getLatestBlock();
       })
       .then(data => {
         console.log(data);

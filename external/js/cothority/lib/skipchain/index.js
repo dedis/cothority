@@ -2,4 +2,4 @@
 
 const skip = require("./skipchain.js");
 
-module.exports.SkipchainClient = skip.SkipchainClient
+module.exports.Client = skip.Client;

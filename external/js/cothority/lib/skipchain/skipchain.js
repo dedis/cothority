@@ -3,6 +3,7 @@
 const net = require("../net");
 const protobuf = require("../protobuf");
 const misc = require("../misc");
+const identity = require("../identity.js");
 
 const kyber = require("@dedis/kyber-js");
 
@@ -10,7 +11,7 @@ const co = require("co");
 
 const skipchainID = "Skipchain";
 
-class SkipchainClient {
+class Client {
   /**
    * Returns a new skipchain client from a roster
    *
@@ -42,28 +43,24 @@ class SkipchainClient {
    * all checks pass.
    */
   getLatestBlock() {
-    const requestStr = "GetUpdateChain";
-    const responseStr = "GetUpdateChainReply";
-    const request = { latestId: this.lastID };
-    const client = this;
-    return co(function*() {
+    var fn = co.wrap(function*(client) {
+      const requestStr = "GetUpdateChain";
+      const responseStr = "GetUpdateChainReply";
+      const request = { latestId: client.lastID };
       // XXX  somewhat hackyish but sets a realistic upper bound
       const initLength = client.lastRoster.length;
       var nbErr = 0;
       while (nbErr < initLength) {
         // fetches the data with the current roster
         client.socket = new net.RosterSocket(client.lastRoster, skipchainID);
+        var data = null;
         try {
-          const data = yield client.socket.send(
-            requestStr,
-            responseStr,
-            request
-          );
+          data = yield client.socket.send(requestStr, responseStr, request);
         } catch (err) {
           return Promise.reject(err);
         }
-        return Promise.resolve(data);
         // verifies it's all correct
+        var lastBlock, err;
         [lastBlock, err] = client.verifyUpdateChainReply(data);
         if (!err) {
           // tries again with random conodes
@@ -80,6 +77,7 @@ class SkipchainClient {
       }
       return Promise.reject(nbErr + " occured retrieving the latest block...");
     });
+    return fn(this);
   }
 
   /**
@@ -90,6 +88,7 @@ class SkipchainClient {
    * @returns {(SkipBlock,err)} the most recent valid block in the chain, or an error
    */
   verifyUpdateChainReply(updateChainReply) {
+    console.log("Verifying update...");
     const blocks = updateChainReply.update;
     if (blocks.length == 0) {
       return [null, new Error("no block returned in the chain")];
@@ -119,13 +118,13 @@ class SkipchainClient {
       // XXX to change later to source_hash, dest_hash, dst_roster_id
       const message = nextBlock.hash;
       const roster = identity.Roster.fromProtobuf(currBlock.roster);
-      var err = this.verifyForwardLink(roster, message, lastLink);
-      if (err) return [null, err];
+      //var err = this.verifyForwardLink(roster, message, lastLink);
+      //if (err) return [null, err];
 
       // move to the next block
       currBlock = nextBlock;
     }
-    return currBlock;
+    return [currBlock, null];
   }
 
   /**
@@ -215,4 +214,4 @@ class SkipchainClient {
   }
 }
 
-module.exports.SkipchainClient = SkipchainClient;
+module.exports.Client = Client;
