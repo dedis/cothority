@@ -18,33 +18,33 @@ func TestFetchElection(t *testing.T) {
 	_, err := FetchElection(roster, []byte{})
 	assert.NotNil(t, err)
 
-	election := &Election{Roster: roster, Stage: RUNNING}
+	election := &Election{Roster: roster, Stage: Running}
 	_ = election.GenChain(10)
 
 	e, _ := FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
-	assert.Equal(t, RUNNING, int(e.Stage))
+	assert.Equal(t, Running, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: SHUFFLED}
+	election = &Election{Roster: roster, Stage: Shuffled}
 	_ = election.GenChain(10)
 
 	e, _ = FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
-	assert.Equal(t, SHUFFLED, int(e.Stage))
+	assert.Equal(t, Shuffled, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: DECRYPTED}
+	election = &Election{Roster: roster, Stage: Decrypted}
 	_ = election.GenChain(10)
 
 	e, _ = FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
-	assert.Equal(t, DECRYPTED, int(e.Stage))
+	assert.Equal(t, Decrypted, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: SHUFFLED}
+	election = &Election{Roster: roster, Stage: Shuffled}
 	_ = election.GenChain(10)
 	_ = election.Store(&Mix{Proof: []byte{}})
 
 	e, _ = FetchElection(roster, election.ID)
-	assert.Equal(t, CORRUPT, int(e.Stage))
+	assert.Equal(t, Corrupt, int(e.Stage))
 }
 
 func TestStore(t *testing.T) {
@@ -53,7 +53,7 @@ func TestStore(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: RUNNING}
+	election := &Election{Roster: roster, Stage: Running}
 	_ = election.GenChain(10)
 
 	election.Store(&Ballot{User: 1000})
@@ -69,7 +69,7 @@ func TestBox(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: RUNNING}
+	election := &Election{Roster: roster, Stage: Running}
 	_ = election.GenChain(10)
 
 	box, _ := election.Box()
@@ -82,7 +82,7 @@ func TestMixes(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: SHUFFLED}
+	election := &Election{Roster: roster, Stage: Shuffled}
 	_ = election.GenChain(10)
 
 	mixes, _ := election.Mixes()
@@ -95,7 +95,7 @@ func TestPartials(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: DECRYPTED}
+	election := &Election{Roster: roster, Stage: Decrypted}
 	_ = election.GenChain(10)
 
 	partials, _ := election.Partials()

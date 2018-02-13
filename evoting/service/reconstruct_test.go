@@ -21,7 +21,7 @@ func TestReconstruct_UserNotLoggedIn(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.Reconstruct(&evoting.Reconstruct{Token: ""})
-	assert.Equal(t, ERR_NOT_LOGGED_IN, err)
+	assert.Equal(t, errNotLoggedIn, err)
 }
 
 func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
@@ -36,12 +36,12 @@ func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Reconstruct(&evoting.Reconstruct{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_NOT_DECRYPTED, err)
+	assert.Equal(t, errNotDecrypted, err)
 }
 
 func TestReconstruct_Full(t *testing.T) {
@@ -56,7 +56,7 @@ func TestReconstruct_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.DECRYPTED,
+		Stage:   lib.Decrypted,
 	}
 	_ = election.GenChain(7)
 

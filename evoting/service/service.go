@@ -17,22 +17,22 @@ import (
 )
 
 var (
-	ERR_INVALID_PIN       = errors.New("Invalid pin")
-	ERR_INVALID_SIGNATURE = errors.New("Invalid signature")
-	ERR_NOT_LOGGED_IN     = errors.New("User is not logged in")
-	ERR_NOT_ADMIN         = errors.New("Admin privileges required")
-	ERR_NOT_CREATOR       = errors.New("User is not election creator")
-	ERR_NOT_PART          = errors.New("User is not part of election")
+	errInvalidPin       = errors.New("Invalid pin")
+	errInvalidSignature = errors.New("Invalid signature")
+	errNotLoggedIn      = errors.New("User is not logged in")
+	errNotAdmin         = errors.New("Admin privileges required")
+	errNotCreator       = errors.New("User is not election creator")
+	errNotPart          = errors.New("User is not part of election")
 
-	ERR_NOT_SHUFFLED      = errors.New("Election has not been shuffled yet")
-	ERR_NOT_DECRYPTED     = errors.New("Election has not been decrypted yet")
-	ERR_ALREADY_SHUFFLED  = errors.New("Election has already been shuffled")
-	ERR_ALREADY_DECRYPTED = errors.New("Election has already been decrypted")
-	ERR_ALREADY_CLOSED    = errors.New("Election has already been closed")
-	ERR_CORRUPT           = errors.New("Election skipchain is corrupt")
+	errNotShuffled      = errors.New("Election has not been shuffled yet")
+	errNotDecrypted     = errors.New("Election has not been decrypted yet")
+	errAlreadyShuffled  = errors.New("Election has already been shuffled")
+	errAlreadyDecrypted = errors.New("Election has already been decrypted")
+	errAlreadyClosed    = errors.New("Election has already been closed")
+	errCorrupt          = errors.New("Election skipchain is corrupt")
 
-	ERR_PROTOCOL_UNKNOWN = errors.New("Protocol unknown")
-	ERR_PROTOCOL_TIMEOUT = errors.New("Protocol timeout")
+	errProtocolUnknown = errors.New("Protocol unknown")
+	errProtocolTimeout = errors.New("Protocol timeout")
 )
 
 // serviceID is the onet identifier.
@@ -67,7 +67,7 @@ func (s *Service) Ping(req *evoting.Ping) (*evoting.Ping, error) {
 // Link message handler. Generates a new master skipchain.
 func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	if req.Pin != s.pin {
-		return nil, ERR_INVALID_PIN
+		return nil, errInvalidPin
 	}
 
 	genesis, err := lib.New(req.Roster, nil)
@@ -131,7 +131,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
 	case <-time.After(2 * time.Second):
-		return nil, ERR_PROTOCOL_TIMEOUT
+		return nil, errProtocolTimeout
 	}
 }
 
@@ -143,7 +143,7 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 	}
 
 	if req.Verify(master.Key) != nil {
-		return nil, ERR_INVALID_SIGNATURE
+		return nil, errInvalidSignature
 	}
 
 	links, err := master.Links()
@@ -175,8 +175,8 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 		return nil, err
 	}
 
-	if election.Stage >= lib.SHUFFLED {
-		return nil, ERR_ALREADY_CLOSED
+	if election.Stage >= lib.Shuffled {
+		return nil, errAlreadyClosed
 	}
 
 	if err = election.Store(req.Ballot); err != nil {
@@ -208,8 +208,8 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 		return nil, err
 	}
 
-	if election.Stage < lib.SHUFFLED {
-		return nil, ERR_NOT_SHUFFLED
+	if election.Stage < lib.Shuffled {
+		return nil, errNotShuffled
 	}
 
 	mixes, err := election.Mixes()
@@ -227,8 +227,8 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 		return nil, err
 	}
 
-	if election.Stage < lib.DECRYPTED {
-		return nil, ERR_NOT_DECRYPTED
+	if election.Stage < lib.Decrypted {
+		return nil, errNotDecrypted
 	}
 
 	partials, err := election.Partials()
@@ -246,8 +246,8 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 		return nil, err
 	}
 
-	if election.Stage >= lib.SHUFFLED {
-		return nil, ERR_ALREADY_SHUFFLED
+	if election.Stage >= lib.Shuffled {
+		return nil, errAlreadyShuffled
 	}
 
 	tree := election.Roster.GenerateNaryTreeWithRoot(1, s.ServerIdentity())
@@ -266,7 +266,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	case <-protocol.Finished:
 		return &evoting.ShuffleReply{}, nil
 	case <-time.After(5 * time.Second):
-		return nil, ERR_PROTOCOL_TIMEOUT
+		return nil, errProtocolTimeout
 	}
 }
 
@@ -277,10 +277,10 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		return nil, err
 	}
 
-	if election.Stage >= lib.DECRYPTED {
-		return nil, ERR_ALREADY_DECRYPTED
-	} else if election.Stage < lib.SHUFFLED {
-		return nil, ERR_NOT_SHUFFLED
+	if election.Stage >= lib.Decrypted {
+		return nil, errAlreadyDecrypted
+	} else if election.Stage < lib.Shuffled {
+		return nil, errNotShuffled
 	}
 
 	tree := election.Roster.GenerateNaryTreeWithRoot(1, s.ServerIdentity())
@@ -300,7 +300,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	case <-protocol.Finished:
 		return &evoting.DecryptReply{}, nil
 	case <-time.After(5 * time.Second):
-		return nil, ERR_PROTOCOL_TIMEOUT
+		return nil, errProtocolTimeout
 	}
 }
 
@@ -311,8 +311,8 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 		return nil, err
 	}
 
-	if election.Stage < lib.DECRYPTED {
-		return nil, ERR_NOT_DECRYPTED
+	if election.Stage < lib.Decrypted {
+		return nil, errNotDecrypted
 	}
 
 	partials, err := election.Partials()
@@ -383,7 +383,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 
 		return protocol, nil
 	default:
-		return nil, ERR_PROTOCOL_UNKNOWN
+		return nil, errProtocolUnknown
 	}
 }
 
@@ -394,23 +394,23 @@ func (s *Service) vet(token string, id skipchain.SkipBlockID, admin bool) (
 
 	stamp, found := s.state.log[token]
 	if !found {
-		return nil, ERR_NOT_LOGGED_IN
+		return nil, errNotLoggedIn
 	} else if admin && !stamp.admin {
-		return nil, ERR_NOT_ADMIN
+		return nil, errNotAdmin
 	}
 
 	if id != nil {
 		election, err := lib.FetchElection(s.node, id)
 		if err != nil {
 			return nil, err
-		} else if election.Stage == lib.CORRUPT {
-			return nil, ERR_CORRUPT
+		} else if election.Stage == lib.Corrupt {
+			return nil, errCorrupt
 		}
 
 		if admin && !election.IsCreator(stamp.user) {
-			return nil, ERR_NOT_CREATOR
+			return nil, errNotCreator
 		} else if !admin && !election.IsUser(stamp.user) {
-			return nil, ERR_NOT_PART
+			return nil, errNotPart
 		}
 		return election, nil
 	}

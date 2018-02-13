@@ -20,7 +20,7 @@ func TestShuffle_UserNotLoggedIn(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: ""})
-	assert.Equal(t, ERR_NOT_LOGGED_IN, err)
+	assert.Equal(t, errNotLoggedIn, err)
 }
 
 func TestShuffle_UserNotAdmin(t *testing.T) {
@@ -35,12 +35,12 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: "1", ID: election.ID})
-	assert.Equal(t, ERR_NOT_ADMIN, err)
+	assert.Equal(t, errNotAdmin, err)
 }
 
 func TestShuffle_UserNotCreator(t *testing.T) {
@@ -55,12 +55,12 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0, 1},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: "1", ID: election.ID})
-	assert.Equal(t, ERR_NOT_CREATOR, err)
+	assert.Equal(t, errNotCreator, err)
 }
 
 func TestShuffle_ElectionClosed(t *testing.T) {
@@ -75,23 +75,23 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_ALREADY_SHUFFLED, err)
+	assert.Equal(t, errAlreadyShuffled, err)
 
 	election = &lib.Election{
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.DECRYPTED,
+		Stage:   lib.Decrypted,
 	}
 	_ = election.GenChain(3)
 
 	_, err = s.Shuffle(&evoting.Shuffle{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_ALREADY_SHUFFLED, err)
+	assert.Equal(t, errAlreadyShuffled, err)
 }
 
 func TestShuffle_Full(t *testing.T) {
@@ -106,7 +106,7 @@ func TestShuffle_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 

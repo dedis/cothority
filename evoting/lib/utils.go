@@ -36,20 +36,7 @@ func NewSharedSecret(dkg *dkg.DistKeyGenerator) (*SharedSecret, error) {
 	}, nil
 }
 
-func ExtractSharedSecret(dkg *dkg.DistKeyGenerator) (kyber.Scalar, kyber.Point, error) {
-	if dkg == nil {
-		return nil, nil, errors.New("no valid dkg given")
-	}
-	if !dkg.Finished() {
-		return nil, nil, errors.New("dkg is not finished yet")
-	}
-	dks, err := dkg.DistKeyShare()
-	if err != nil {
-		return nil, nil, err
-	}
-	return dks.Share.V, dks.Public(), nil
-}
-
+// DKGSimulate runs an offline version of the DKG protocol.
 func DKGSimulate(nbrNodes, threshold int) (dkgs []*dkg.DistKeyGenerator, err error) {
 	dkgs = make([]*dkg.DistKeyGenerator, nbrNodes)
 	scalars := make([]kyber.Scalar, nbrNodes)

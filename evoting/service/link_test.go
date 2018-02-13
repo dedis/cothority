@@ -21,7 +21,7 @@ func TestLink_WrongPin(t *testing.T) {
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
 
 	_, err := s.Link(&evoting.Link{Pin: "0"})
-	assert.NotNil(t, ERR_INVALID_PIN, err)
+	assert.NotNil(t, errInvalidPin, err)
 }
 
 func TestLink_InvalidRoster(t *testing.T) {

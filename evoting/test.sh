@@ -8,7 +8,7 @@ passed=true
 echo "mode: atomic" > profile.cov
 for dir in $DIRS; do
 	if ! echo $EXCLUDE | grep -q $dir; then
-	    go test -short -covermode=atomic -coverprofile=$dir/profile.tmp $dir
+	    go test -covermode=atomic -coverprofile=$dir/profile.tmp $dir
 
     	if [ $? -ne 0 ]; then
         	passed=false

@@ -20,7 +20,7 @@ func TestDecrypt_UserNotLoggedIn(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: ""})
-	assert.Equal(t, ERR_NOT_LOGGED_IN, err)
+	assert.Equal(t, errNotLoggedIn, err)
 }
 
 func TestDecrypt_UserNotAdmin(t *testing.T) {
@@ -35,12 +35,12 @@ func TestDecrypt_UserNotAdmin(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: "1", ID: election.ID})
-	assert.Equal(t, ERR_NOT_ADMIN, err)
+	assert.Equal(t, errNotAdmin, err)
 }
 
 func TestDecrypt_UserNotCreator(t *testing.T) {
@@ -55,12 +55,12 @@ func TestDecrypt_UserNotCreator(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0, 1},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: "1", ID: election.ID})
-	assert.Equal(t, ERR_NOT_CREATOR, err)
+	assert.Equal(t, errNotCreator, err)
 }
 
 func TestDecrypt_ElectionNotShuffled(t *testing.T) {
@@ -75,12 +75,12 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_NOT_SHUFFLED, err)
+	assert.Equal(t, errNotShuffled, err)
 }
 
 func TestDecrypt_ElectionClosed(t *testing.T) {
@@ -95,12 +95,12 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.DECRYPTED,
+		Stage:   lib.Decrypted,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_ALREADY_DECRYPTED, err)
+	assert.Equal(t, errAlreadyDecrypted, err)
 }
 
 func TestDecrypt_Full(t *testing.T) {
@@ -117,7 +117,7 @@ func TestDecrypt_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	dkgs := election.GenChain(3)
 	s0.secrets[election.ID.Short()], _ = lib.NewSharedSecret(dkgs[0])

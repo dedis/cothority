@@ -20,7 +20,7 @@ func TestGetMixes_UserNotLoggedIn(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.GetMixes(&evoting.GetMixes{Token: ""})
-	assert.NotNil(t, ERR_NOT_LOGGED_IN, err)
+	assert.NotNil(t, errNotLoggedIn, err)
 }
 
 func TestGetMixes_UserNotPart(t *testing.T) {
@@ -35,12 +35,12 @@ func TestGetMixes_UserNotPart(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.GetMixes(&evoting.GetMixes{Token: "1", ID: election.ID})
-	assert.NotNil(t, ERR_NOT_PART, err)
+	assert.NotNil(t, errNotPart, err)
 }
 
 func TestGetMixes_ElectionNotShuffled(t *testing.T) {
@@ -55,12 +55,12 @@ func TestGetMixes_ElectionNotShuffled(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.GetMixes(&evoting.GetMixes{Token: "0", ID: election.ID})
-	assert.NotNil(t, ERR_NOT_SHUFFLED, err)
+	assert.NotNil(t, errNotShuffled, err)
 }
 
 func TestGetMixes_Full(t *testing.T) {
@@ -75,7 +75,7 @@ func TestGetMixes_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	_ = election.GenChain(10)
 

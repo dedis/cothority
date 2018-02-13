@@ -56,10 +56,10 @@ func (m *Mix) genPartials(dkgs []*dkg.DistKeyGenerator) []*Partial {
 	partials := make([]*Partial, len(dkgs))
 
 	for i, gen := range dkgs {
-		secret, _, _ := ExtractSharedSecret(gen)
+		secret, _ := NewSharedSecret(gen)
 		points := make([]kyber.Point, len(m.Ballots))
 		for j, ballot := range m.Ballots {
-			points[j] = Decrypt(secret, ballot.Alpha, ballot.Beta)
+			points[j] = Decrypt(secret.V, ballot.Alpha, ballot.Beta)
 		}
 		partials[i] = &Partial{Points: points, Node: string(i)}
 	}

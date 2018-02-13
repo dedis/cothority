@@ -66,7 +66,7 @@ func TestLogin_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 

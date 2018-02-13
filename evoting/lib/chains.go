@@ -20,15 +20,3 @@ func chain(roster *onet.Roster, id skipchain.SkipBlockID) ([]*skipchain.SkipBloc
 	}
 	return chain.Update, nil
 }
-
-func reconstruct() {
-	// for i := 0; i < 3; i++ {
-	// 	shares := make([]*share.PubShare, 3)
-	// 	for j, partial := range partials {
-	// 		shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
-	// 	}
-
-	// 	message, _ := share.RecoverCommit(crypto.Suite, shares, 3, 3)
-	// 	fmt.Println(message.Data())
-	// }
-}

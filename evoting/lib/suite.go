@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	Suite  = edwards25519.NewBlakeSHA256Ed25519WithRand(blake.New(nil))
+	// Suite is the Ed25519 curve.
+	Suite = edwards25519.NewBlakeSHA256Ed25519WithRand(blake.New(nil))
+	// Stream is used to generate random Ed25519 curve points.
 	Stream = Suite.RandomStream()
-	Base   = Suite.Point().Base()
 )
 
 // RandomKeyPair creates a random public/private Diffie-Hellman key pair.

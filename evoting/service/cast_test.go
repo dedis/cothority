@@ -37,12 +37,12 @@ func TestCast_UserNotPart(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Cast(&evoting.Cast{Token: "1", ID: election.ID})
-	assert.Equal(t, ERR_NOT_PART, err)
+	assert.Equal(t, errNotPart, err)
 }
 
 func TestCast_ElectionAlreadyClosed(t *testing.T) {
@@ -57,23 +57,23 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.SHUFFLED,
+		Stage:   lib.Shuffled,
 	}
 	_ = election.GenChain(3)
 
 	_, err := s.Cast(&evoting.Cast{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_ALREADY_CLOSED, err)
+	assert.Equal(t, errAlreadyClosed, err)
 
 	election = &lib.Election{
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{0},
-		Stage:   lib.DECRYPTED,
+		Stage:   lib.Decrypted,
 	}
 	_ = election.GenChain(3)
 
 	_, err = s.Cast(&evoting.Cast{Token: "0", ID: election.ID})
-	assert.Equal(t, ERR_ALREADY_CLOSED, err)
+	assert.Equal(t, errAlreadyClosed, err)
 }
 
 func TestCast_Full(t *testing.T) {
@@ -88,7 +88,7 @@ func TestCast_Full(t *testing.T) {
 		Roster:  roster,
 		Creator: 0,
 		Users:   []uint32{1000},
-		Stage:   lib.RUNNING,
+		Stage:   lib.Running,
 	}
 	_ = election.GenChain(3)
 

@@ -22,7 +22,7 @@ func TestOpen_NotLoggedIn(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.Open(&evoting.Open{Token: ""})
-	assert.NotNil(t, ERR_NOT_LOGGED_IN, err)
+	assert.NotNil(t, errNotLoggedIn, err)
 }
 
 func TestOpen_NotAdmin(t *testing.T) {
@@ -34,7 +34,7 @@ func TestOpen_NotAdmin(t *testing.T) {
 	s.state.log["0"] = &stamp{user: 0, admin: false}
 
 	_, err := s.Open(&evoting.Open{Token: "0"})
-	assert.NotNil(t, ERR_NOT_ADMIN, err)
+	assert.NotNil(t, errNotAdmin, err)
 }
 
 func TestOpen_InvalidMasterID(t *testing.T) {

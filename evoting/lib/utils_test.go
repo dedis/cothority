@@ -12,16 +12,16 @@ func TestDKGSimulate(t *testing.T) {
 	dkgs, _ := DKGSimulate(5, 4)
 	assert.Equal(t, 5, len(dkgs))
 
-	secrets := make([]kyber.Scalar, 5)
+	secrets := make([]*SharedSecret, 5)
 	for i, dkg := range dkgs {
-		secrets[i], _, _ = ExtractSharedSecret(dkg) //NewSharedSecret(dkg)
+		secrets[i], _ = NewSharedSecret(dkg)
 	}
 
 	var private kyber.Scalar
 	for _, secret := range secrets {
 		if private != nil {
-			assert.NotEqual(t, private.String(), secret.String())
+			assert.NotEqual(t, private.String(), secret.V.String())
 		}
-		private = secret
+		private = secret.V
 	}
 }

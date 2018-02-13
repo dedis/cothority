@@ -10,17 +10,19 @@ import (
 )
 
 const (
-	// Election stages.
-	RUNNING = iota
-	SHUFFLED
-	DECRYPTED
-	FINISHED
-	CORRUPT
+	// Running depicts that an election is open for ballot casting.
+	Running = iota
+	// Shuffled depicts that the mixes have been created.
+	Shuffled
+	// Decrypted depicts that the partials have been created.
+	Decrypted
+	// Corrupt depicts that the election skipchain has been corrupted.
+	Corrupt
 )
 
 // Election is the base object for a voting procedure. It is stored
-// in the second Skipblock right after the (empty) genesis block. A reference
-// to the election Skipchain is appended to the master Skipchain upon opening.
+// in the second skipblock right after the (empty) genesis block. A reference
+// to the election skipchain is appended to the master skipchain upon opening.
 type Election struct {
 	Name    string   // Name of the election.
 	Creator uint32   // Creator is the election responsible.
@@ -60,13 +62,13 @@ func FetchElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, er
 	}
 
 	if numMixes == 0 && numPartials == 0 {
-		election.Stage = RUNNING
+		election.Stage = Running
 	} else if numMixes == n && numPartials == 0 {
-		election.Stage = SHUFFLED
+		election.Stage = Shuffled
 	} else if numMixes == n && numPartials == n {
-		election.Stage = DECRYPTED
+		election.Stage = Decrypted
 	} else {
-		election.Stage = CORRUPT
+		election.Stage = Corrupt
 	}
 	return election, nil
 }
@@ -77,21 +79,21 @@ func (e *Election) GenChain(numBallots int) []*dkg.DistKeyGenerator {
 
 	n := len(e.Roster.List)
 	dkgs, _ := DKGSimulate(n, n-1)
-	_, X, _ := ExtractSharedSecret(dkgs[0])
+	secret, _ := NewSharedSecret(dkgs[0])
 
 	e.ID = chain.Hash
-	e.Key = X
+	e.Key = secret.X
 
-	box := genBox(X, numBallots)
-	mixes := box.genMix(X, n)
+	box := genBox(secret.X, numBallots)
+	mixes := box.genMix(secret.X, n)
 	partials := mixes[n-1].genPartials(dkgs)
 
 	e.Store(e)
 	e.storeBallots(box.Ballots)
 
-	if e.Stage == SHUFFLED {
+	if e.Stage == Shuffled {
 		e.storeMixes(mixes)
-	} else if e.Stage == DECRYPTED {
+	} else if e.Stage == Decrypted {
 		e.storeMixes(mixes)
 		e.storePartials(partials)
 	}
