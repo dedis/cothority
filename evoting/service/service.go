@@ -423,7 +423,7 @@ func new(context *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		secrets:          make(map[string]*lib.SharedSecret),
 		state:            &state{make(map[string]*stamp)},
-		pin:              nonce(6),
+		pin:              "0", //nonce(6),
 	}
 
 	service.RegisterHandlers(service.Ping, service.Link, service.Open, service.Login,
