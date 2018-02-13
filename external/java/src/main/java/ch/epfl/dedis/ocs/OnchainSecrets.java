@@ -152,6 +152,9 @@ public class OnchainSecrets extends OnchainSecretsRPC {
      * @throws CothorityCommunicationException if the request could not be stored on the skipchain
      */
     public Document getDocument(WriteRequestId wrId, Signer reader) throws CothorityCryptoException, CothorityCommunicationException {
+        if (!(reader instanceof SignerEd25519)) {
+            throw new IllegalStateException("getDocument can only be used with SignerEd25519");
+        }
         OCSProto.Write document = getWrite(wrId);
         Darc readerDarc = new Darc(document.getReader());
 
@@ -171,6 +174,7 @@ public class OnchainSecrets extends OnchainSecretsRPC {
      * @return an array of bytes with the decrypted keymaterial
      * @throws CothorityCommunicationException in case of communication difficulties
      */
+
     public Document getDocumentEphemeral(WriteRequestId wrId, Signer reader) throws CothorityCommunicationException, CothorityCryptoException {
         OCSProto.Write write = getWrite(wrId);
         Darc readerDarc = new Darc(write.getReader());
