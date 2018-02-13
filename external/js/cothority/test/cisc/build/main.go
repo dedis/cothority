@@ -6,18 +6,22 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/kyber/util/key"
+	"strconv"
 )
 
 func main() {
+
 	n := 5
 	l := onet.NewTCPTest(cothority.Suite)
-	_, ro, _ := l.GenTree(n, true)
+	hosts, ro, _ := l.GenTree(n, true)
+	services := l.GetServices(hosts, identity.IdentityService())
 	defer l.CloseAll()
 
 	// creates the clients
 	clients := make(map[int]*identity.Identity)
 	for i := range [8]byte{} {
-		clients[i] = newTestIdentity(l, ro)
+		clients[i] = createIdentity(l, services, ro, "client-"+strconv.Itoa(i))
 	}
 
 	// saves the roster (of clients) into public.toml
@@ -61,8 +65,22 @@ func main() {
 
 }
 
-func newTestIdentity(l *onet.LocalTest, ro *onet.Roster) *identity.Identity {
-	id := identity.NewIdentity(ro, 1, "owner", nil)
-	id.Client = l.NewClient("Cisc")
+
+func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster, name string) *identity.Identity {
+	kp1 := key.NewKeyPair(cothority.Suite)
+	//kp2 := key.NewKeyPair(cothority.Suite)
+	//set := anon.Set([]kyber.Point{kp1.Public, kp2.Public})
+	//for _, srvc := range services {
+	//	s := srvc.(*identity.Service)
+	//	s.Storage.Auth.sets = append(s.Storage.Auth.sets, set)
+	//}
+
+	c := NewTestIdentity(el, 1, name, l, kp1)
+	log.ErrFatal(c.CreateIdentity(identity.PublicAuth, nil, kp1.Private))
+	return c
+}
+func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest, kp *key.Pair) *identity.Identity {
+	id := identity.NewIdentity(cothority, majority, owner, kp)
+	id.Client = local.NewClient("Identity")
 	return id
 }
