@@ -299,41 +299,6 @@ func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
 	}
 }
 
-// SkipBlockData represents all entries - as maps are not ordered and thus
-// difficult to hash, this is as a slice to {key,data}-pairs.
-type SkipBlockData struct {
-	Entries []SkipBlockDataEntry
-}
-
-// Get returns the data-portion of the key. If key does not exist, it returns
-// nil.
-func (sbd *SkipBlockData) Get(key string) []byte {
-	for _, d := range sbd.Entries {
-		if d.Key == key {
-			return d.Data
-		}
-	}
-	return nil
-}
-
-// Set replaces an existing entry or adds a new entry if the key is not
-// existant.
-func (sbd *SkipBlockData) Set(key string, data []byte) {
-	for i := range sbd.Entries {
-		if sbd.Entries[i].Key == key {
-			sbd.Entries[i].Data = data
-			return
-		}
-	}
-	sbd.Entries = append(sbd.Entries, SkipBlockDataEntry{key, data})
-}
-
-// SkipBlockDataEntry is one entry for the SkipBlockData.
-type SkipBlockDataEntry struct {
-	Key  string
-	Data []byte
-}
-
 // CalculateHash hashes all fixed fields of the skipblock.
 func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	hash := sha256.New()
