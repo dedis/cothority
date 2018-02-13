@@ -1,16 +1,4 @@
-# nevv
-
-[![Build Status](https://travis-ci.org/dedis/student_17_evoting.svg?branch=master)](https://travis-ci.org/dedis/student_17_evoting)
-[![Coverage Status](https://coveralls.io/repos/github/dedis/student_17_evoting/badge.svg?branch=master)](https://coveralls.io/github/dedis/student_17_evoting?branch=master&service=github)
-
-nevv is a decentralized and distributed e-voting architecture based on verifiable Neff
-shuffles.\
-It is based on the ideas laid out in the Helios project [1, 2].
-
-## Architecture
-nevv is built on top of the cothority architecture developped by DEDIS at EFPL. It provides
-a framework to deploy distributed and decentralized systems and protocols. The cothority
-uses an alternative blockchain implementation called skipchain to store data [3].
+# evoting
 
 The backbone of the system is a master skipchain storing general configurations.
 Each election is stored in a separate chain with the same sequence of blocks.
@@ -26,7 +14,7 @@ The life cycle of an election is driven by three underlying protocols.
 
 ## API
 The system is accessible through protocol buffer message over websockets.
-See ```api.proto``` for a complete overview.
+See ```struct.go``` for a complete overview.
 
 ```protobuf
 message Login{} // Register in the system
@@ -38,11 +26,6 @@ message GetBox{} // Get encrypted ballots of an election
 message GetMixes{} // Get all the created mixes
 message GetPartials{} // Get all the partially decrypted ballots
 message Reconstruct{} // Reconstruct plaintext from partials
-```
-
-## Installation
-```shell
-git clone https://github.com/dedis/student_17_evoting
 ```
 
 ## Setup
