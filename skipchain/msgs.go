@@ -45,10 +45,6 @@ func init() {
 		&PropagateSkipBlocks{},
 		// Request forward-signature
 		&ForwardSignature{},
-		// Request updated block
-		&GetBlock{},
-		// Updated block reply
-		&GetBlockReply{},
 		// - Data structures
 		&SkipBlockFix{},
 		&SkipBlock{},
@@ -177,7 +173,7 @@ type ProtoExtendRoster struct {
 	Block SkipBlock
 }
 
-// ProtoStructExtendRoster embeds the treenode
+// ProtoStructExtendRoster embeds the treenode.
 type ProtoStructExtendRoster struct {
 	*onet.TreeNode
 	ProtoExtendRoster

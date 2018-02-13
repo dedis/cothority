@@ -114,7 +114,7 @@ func orgLink(c *cli.Context) error {
 	}
 	cfg, client := getConfigClient(c)
 
-	addr := network.NewTCPAddress(c.Args().First())
+	addr := network.NewAddress(network.PlainTCP, c.Args().First())
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
 		// Compare by string because this comes over the network.

@@ -80,7 +80,7 @@ public				# runs a public conode - supposes it's already configured
 	-update			# will automatically update the repositories
 	-mail			# every time the cothority restarts, the last 200 lines get sent
 					# to $MAILADDR
-	-debug 3		# Set the debug-level for the conode-run
+	-debug 2		# Set the debug-level for the conode-run (default: 2)
 	-memory 500		# Restarts the process if it exceeds 500MBytes
 
 local nbr [dbg_lvl]	# runs nbr local conodes - you can give a debug-level as second
@@ -96,7 +96,7 @@ runLocal(){
 	NBR=$1
 	shift
 	WAIT=""
-	DEBUG=1
+	DEBUG=2
 	while [ "$1" ]; do
 		case $1 in
 		-update)
@@ -161,7 +161,7 @@ EOF
 runPublic(){
 	# Get all arguments
 	ARGS=""
-	DEBUG=0
+	DEBUG=2
 	while [ "$1" ]; do
 		case $1 in
 		-update)
@@ -179,7 +179,6 @@ runPublic(){
 		-mail)
 			if [ -x $MAILCMD ]; then
 				MAIL=yes
-				DEBUG=3
 			else
 				echo "$MAILCMD not found - install using"
 				echo "sudo apt-get install bsd-mailx"
