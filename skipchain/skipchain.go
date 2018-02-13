@@ -146,7 +146,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		changed = append(changed, prop)
 
 	} else {
-		log.Lvlf2("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
+		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
 		// We're appending a block to an existing chain
 		prev = s.db.GetByID(psbd.LatestID)
 		if prev == nil {
@@ -274,7 +274,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		Previous: prev,
 		Latest:   prop,
 	}
-	log.Lvlf2("Block added, replying. New latest is: %x", prop.Hash)
+	log.Lvlf3("Block added, replying. New latest is: %x", prop.Hash)
 	return reply, nil
 }
 
@@ -1045,7 +1045,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	log.Lvl2("Starting to propagate for service", s.ServerIdentity())
+	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
 	siMap := map[string]*network.ServerIdentity{}
 	// Add all rosters of all blocks - everybody needs to be contacted
 	for _, block := range blocks {
