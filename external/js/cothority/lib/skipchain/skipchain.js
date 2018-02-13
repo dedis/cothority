@@ -37,7 +37,7 @@ class Client {
   /**
    * updateChain asks for the latest block of the skipchain with all intermediate blocks.
    * It automatically verifies the transition from the last known skipblock ID to the
-   * latest one returned. It also automatically save the latest good known
+   * latest one returned. It also automatically remembers the latest good known
    * roster from the latest block.
    * @return {Promise} A promise which resolves with the latest skipblock if
    * all checks pass.
@@ -130,9 +130,9 @@ class Client {
   /**
    * verify if the link is a valid signature over the given message for the given roster
    *
-   * @param {Roster} roster THe roster who created the signature
-   * @param {Uint8Array} message the message
-   * @param {Object} link BlockLink object (protobuf)
+   * @param {Roster} the roster who created the signature
+   * @param {Uint8Array} the message
+   * @param {Object} BlockLink object (protobuf)
    * @returns {Boolean} true if signature is valid, false otherwise
    */
   verifyForwardLink(roster, message, link) {
