@@ -207,7 +207,7 @@ var (
 	// that every new block is signed by the keys present in the previous block.
 	VerifyRoot = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Root"))
 	// VerifyControl makes sure this chain is a child of a Root-chain and
-	// that there is now new block if a newer parent is present.
+	// that there is no new block if a newer parent is present.
 	// It also makes sure that no more than 1/3 of the members of the roster
 	// change between two blocks.
 	VerifyControl = VerifierID(uuid.NewV5(uuid.NamespaceURL, "Control"))

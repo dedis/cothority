@@ -2,6 +2,8 @@ package skipchain
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -176,11 +178,68 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
+	const retries = 3
+
 	reply = &GetUpdateChainReply{}
-	r := roster.RandomServerIdentity()
-	err = c.SendProtobuf(r,
-		&GetUpdateChain{latest}, reply)
-	return
+	for {
+		r2 := &GetUpdateChainReply{}
+
+		// Try up to retries random servers from the given roster.
+		i := 0
+		perm := rand.Perm(len(roster.List))
+		for ; i < retries; i++ {
+			// To handle the case where len(perm) < retries.
+			which := i % len(perm)
+			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{LatestID: latest}, r2)
+			if err == nil && len(r2.Update) != 0 {
+				break
+			}
+		}
+		if i == retries {
+			return nil, fmt.Errorf("too many retries; last error: %v", err)
+		}
+
+		// Does this chain start where we expect it to?
+		if !r2.Update[0].Hash.Equal(latest) {
+			return nil, errors.New("first returned block does not match requested hash")
+		}
+
+		// Step through the returned blocks one at a time, verifying
+		// the forward links, and that they link correctly backwards.
+		for j, b := range r2.Update {
+			if j == 0 && len(reply.Update) > 0 {
+				continue
+			}
+
+			if err := b.VerifyForwardSignatures(); err != nil {
+				return nil, err
+			}
+			// Cannot check back links until we've confirmed the first one
+			if len(reply.Update) > 0 {
+				if len(b.BackLinkIDs) == 0 {
+					return nil, errors.New("no backlinks?")
+				}
+				lastHash := reply.Update[len(reply.Update)-1].Hash
+				if !b.BackLinkIDs[len(b.BackLinkIDs)-1].Equal(lastHash) {
+					return nil, errors.New("highest backlink does not lead to previous received update")
+				}
+			}
+
+			reply.Update = append(reply.Update, b)
+		}
+
+		last := reply.Update[len(reply.Update)-1]
+
+		// If they updated us to the end of the chain, return.
+		if last.GetForwardLen() == 0 {
+			return reply, nil
+		}
+
+		// Otherwise update the roster and contact the new servers
+		// to continue following the chain.
+		latest = last.Hash
+		roster = last.Roster
+	}
 }
 
 // GetAllSkipchains returns all skipchains known to that conode. If none are
