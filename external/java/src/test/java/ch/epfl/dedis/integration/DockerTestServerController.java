@@ -44,6 +44,7 @@ public class DockerTestServerController implements TestServerController {
 
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
             blockchainContainer.withLogConsumer(logConsumer);
+            blockchainContainer.followOutput(logConsumer);
         } catch (Exception e) {
             throw new IllegalStateException("Cannot start docker image with test server. Please ensure that local conodes are not running.", e);
         }

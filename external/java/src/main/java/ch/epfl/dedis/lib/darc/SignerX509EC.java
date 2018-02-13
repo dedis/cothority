@@ -81,7 +81,9 @@ public abstract class SignerX509EC implements Signer {
      * </ol>
      * EncodedKeySpec
      */
-    public abstract byte[] publicBytes();
+    public byte[] publicBytes() {
+        return getPublicKey().getEncoded();
+    }
 
     /**
      * Return public key as a class
