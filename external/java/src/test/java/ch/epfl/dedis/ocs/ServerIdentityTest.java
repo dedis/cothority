@@ -1,5 +1,6 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.proto.ServerIdentityProto;
@@ -13,17 +14,18 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 
-import static ch.epfl.dedis.LocalRosters.CONODE_PUB_1;
-import static ch.epfl.dedis.LocalRosters.CONODE_1;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerIdentityTest {
-    static ServerIdentity si = new ServerIdentity(CONODE_1, CONODE_PUB_1);
     private final static Logger logger = LoggerFactory.getLogger(ServerIdentityTest.class);
+    private TestServerController testServerController;
+    private ServerIdentity si;
 
     @BeforeEach
     void initConodes() {
-        TestServerInit.getInstance();
+        testServerController = TestServerInit.getInstance();
+        si = new ServerIdentity(testServerController.getMasterConode().getAddress(),
+                testServerController.getMasterConode().getPublicKey());
     }
 
     @Test
@@ -40,7 +42,7 @@ class ServerIdentityTest {
     @Test
     void testCreate() {
         // TODO: there is not much value in this test
-        assertEquals(CONODE_1.toString(), si.getAddress().toString());
+        assertEquals(testServerController.getMasterConode().getAddress().toString(), si.getAddress().toString());
         assertNotEquals(null, si.Public);
     }
 
