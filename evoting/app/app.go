@@ -16,11 +16,14 @@ import (
 	"github.com/dedis/cothority/evoting/lib"
 )
 
+var (
+	argRoster = flag.String("roster", "", "path to roster toml file")
+	argKey    = flag.String("key", "", "client-side public key")
+	argAdmins = flag.String("admins", "", "list of admin users")
+	argPin    = flag.String("pin", "", "service pin")
+)
+
 func main() {
-	argRoster := flag.String("roster", "", "path to group toml file")
-	argKey := flag.String("key", "", "client-side public key")
-	argAdmins := flag.String("admins", "", "list of admin scipers")
-	argPin := flag.String("pin", "", "service pin")
 	flag.Parse()
 
 	roster, err := parseRoster(*argRoster)
@@ -44,6 +47,7 @@ func main() {
 
 	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: key, Admins: admins}
 	reply := &evoting.LinkReply{}
+
 	client.Client = onet.NewClient(lib.Suite, evoting.ServiceName)
 	if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
 		panic(err)
@@ -66,6 +70,7 @@ func parseRoster(path string) (*onet.Roster, error) {
 	return group.Roster, nil
 }
 
+// parseKey unmarshals a Ed25519 point given in hexadecimal form.
 func parseKey(key string) (kyber.Point, error) {
 	b, err := hex.DecodeString(key)
 	if err != nil {
