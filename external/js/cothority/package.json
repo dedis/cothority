@@ -1,5 +1,5 @@
 {
-  "name": "cothority",
+  "name": "@dedis/cothority",
   "version": "1.0.0",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
@@ -41,5 +41,10 @@
     "uglify-es": "^3.3.9",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "^3.10.0"
-  }
+  },
+  "files": [
+	"dist",
+	"doc",
+	"index.html"
+  ]
 }
