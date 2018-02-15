@@ -25,15 +25,6 @@ type Stat struct {
 	*onet.ServiceProcessor
 }
 
-// Request is what the Status service is expected to receive from clients.
-type Request struct{}
-
-// Response is what the Status service will reply to clients.
-type Response struct {
-	Status         map[string]onet.Status
-	ServerIdentity *network.ServerIdentity
-}
-
 // Request treats external request to this service.
 func (st *Stat) Request(req *Request) (network.Message, error) {
 	log.Lvl3("Returning", st.Context.ReportStatus())
