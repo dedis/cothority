@@ -7,10 +7,12 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/dedis/cothority"
 )
 
 func TestFetchElection(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -48,7 +50,7 @@ func TestFetchElection(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -59,12 +61,12 @@ func TestStore(t *testing.T) {
 	election.Store(&Ballot{User: 1000})
 
 	chain, _ := client.GetUpdateChain(roster, election.ID)
-	_, blob, _ := network.Unmarshal(chain.Update[len(chain.Update)-1].Data, Suite)
+	_, blob, _ := network.Unmarshal(chain.Update[len(chain.Update)-1].Data, cothority.Suite)
 	assert.Equal(t, uint32(1000), blob.(*Ballot).User)
 }
 
 func TestBox(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -77,7 +79,7 @@ func TestBox(t *testing.T) {
 }
 
 func TestMixes(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -90,7 +92,7 @@ func TestMixes(t *testing.T) {
 }
 
 func TestPartials(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)

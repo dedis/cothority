@@ -7,12 +7,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 )
 
 func TestLogin_InvalidMasterID(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
@@ -23,7 +24,7 @@ func TestLogin_InvalidMasterID(t *testing.T) {
 }
 
 func TestLogin_InvalidLink(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -37,7 +38,7 @@ func TestLogin_InvalidLink(t *testing.T) {
 }
 
 func TestLogin_InvalidSignature(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -56,7 +57,7 @@ func TestLogin_InvalidSignature(t *testing.T) {
 }
 
 func TestLogin_Full(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)

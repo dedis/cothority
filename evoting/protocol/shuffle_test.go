@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/onet"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
 )
 
@@ -45,7 +46,7 @@ func TestShuffleProtocol(t *testing.T) {
 }
 
 func runShuffle(t *testing.T, n int) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, tree := local.GenBigTree(n, n, 1, true)

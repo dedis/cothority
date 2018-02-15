@@ -5,6 +5,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -37,7 +38,7 @@ func FetchMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error)
 		return nil, err
 	}
 
-	_, blob, _ := network.Unmarshal(chain[1].Data, Suite)
+	_, blob, _ := network.Unmarshal(chain[1].Data, cothority.Suite)
 	return blob.(*Master), nil
 }
 
@@ -76,7 +77,7 @@ func (m *Master) Links() ([]*Link, error) {
 
 	links := make([]*Link, 0)
 	for i := 2; i < len(chain); i++ {
-		_, blob, _ := network.Unmarshal(chain[i].Data, Suite)
+		_, blob, _ := network.Unmarshal(chain[i].Data, cothority.Suite)
 		links = append(links, blob.(*Link))
 	}
 	return links, nil

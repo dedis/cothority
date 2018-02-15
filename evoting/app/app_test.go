@@ -3,9 +3,11 @@ package main
 import (
 	"testing"
 
+	"github.com/dedis/kyber/util/random"
+
 	"github.com/stretchr/testify/assert"
 
-	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority"
 )
 
 func TestParseKey(t *testing.T) {
@@ -15,7 +17,7 @@ func TestParseKey(t *testing.T) {
 	_, err = parseKey("")
 	assert.NotNil(t, err)
 
-	p1 := lib.Suite.Point().Pick(lib.Stream)
+	p1 := cothority.Suite.Point().Pick(random.New())
 	p2, _ := parseKey(p1.String())
 	assert.True(t, p1.Equal(p2))
 }

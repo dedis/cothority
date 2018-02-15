@@ -4,15 +4,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-)
 
-var tSuite = suites.MustFind("Ed25519")
+	"github.com/stretchr/testify/require"
+
+	"github.com/dedis/cothority"
+)
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -28,7 +27,7 @@ func TestSetupDKG(t *testing.T) {
 
 func setupDKG(t *testing.T, nbrNodes int) {
 	log.Lvl1("Running", nbrNodes, "nodes")
-	local := onet.NewLocalTest(tSuite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	log.Lvl3(tree.Dump())

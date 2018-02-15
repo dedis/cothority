@@ -5,7 +5,17 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/kyber/util/random"
+
+	"github.com/dedis/cothority"
 )
+
+// RandomKeyPair creates a random public/private Diffie-Hellman key pair.
+func RandomKeyPair() (x kyber.Scalar, X kyber.Point) {
+	x = cothority.Suite.Scalar().Pick(random.New())
+	X = cothority.Suite.Point().Mul(x, nil)
+	return
+}
 
 // SharedSecret represents the needed information to do shared encryption and decryption.
 type SharedSecret struct {
@@ -44,13 +54,13 @@ func DKGSimulate(nbrNodes, threshold int) (dkgs []*dkg.DistKeyGenerator, err err
 
 	// 1a - initialisation
 	for i := range scalars {
-		scalars[i] = Suite.Scalar().Pick(Suite.RandomStream())
-		points[i] = Suite.Point().Mul(scalars[i], nil)
+		scalars[i] = cothority.Suite.Scalar().Pick(cothority.Suite.RandomStream())
+		points[i] = cothority.Suite.Point().Mul(scalars[i], nil)
 	}
 
 	// 1b - key-sharing
 	for i := range dkgs {
-		dkgs[i], err = dkg.NewDistKeyGenerator(Suite, scalars[i], points, threshold)
+		dkgs[i], err = dkg.NewDistKeyGenerator(cothority.Suite, scalars[i], points, threshold)
 		if err != nil {
 			return
 		}

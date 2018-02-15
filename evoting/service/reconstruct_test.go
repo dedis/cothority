@@ -8,12 +8,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 )
 
 func TestReconstruct_UserNotLoggedIn(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
@@ -25,7 +26,7 @@ func TestReconstruct_UserNotLoggedIn(t *testing.T) {
 }
 
 func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -45,7 +46,7 @@ func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
 }
 
 func TestReconstruct_Full(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)

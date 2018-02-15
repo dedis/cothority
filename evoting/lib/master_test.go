@@ -5,13 +5,14 @@ import (
 
 	"github.com/dedis/onet"
 
-	"github.com/dedis/cothority/skipchain"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
 )
 
 func TestFetchMaster(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -27,7 +28,7 @@ func TestFetchMaster(t *testing.T) {
 }
 
 func TestLinks(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)

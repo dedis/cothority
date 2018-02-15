@@ -8,13 +8,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
 )
 
 func TestCast_InvalidElectionID(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
@@ -26,7 +27,7 @@ func TestCast_InvalidElectionID(t *testing.T) {
 }
 
 func TestCast_UserNotPart(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -46,7 +47,7 @@ func TestCast_UserNotPart(t *testing.T) {
 }
 
 func TestCast_ElectionAlreadyClosed(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -77,7 +78,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 }
 
 func TestCast_Full(t *testing.T) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -98,6 +99,6 @@ func TestCast_Full(t *testing.T) {
 
 	client := skipchain.NewClient()
 	chain, _ := client.GetUpdateChain(roster, election.ID)
-	_, blob, _ := network.Unmarshal(chain.Update[len(chain.Update)-1].Data, lib.Suite)
+	_, blob, _ := network.Unmarshal(chain.Update[len(chain.Update)-1].Data, cothority.Suite)
 	assert.Equal(t, ballot.User, blob.(*lib.Ballot).User)
 }

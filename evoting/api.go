@@ -3,7 +3,7 @@ package evoting
 import (
 	"github.com/dedis/onet"
 
-	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority"
 )
 
 // ServiceName is the identifier of the service (application name).
@@ -16,7 +16,7 @@ type Client struct {
 
 // NewClient instantiates a new evoting.Client.
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(lib.Suite, ServiceName)}
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
 // Ping a random server which increments the nonce.

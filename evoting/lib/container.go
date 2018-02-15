@@ -5,6 +5,9 @@ import (
 	"github.com/dedis/kyber/proof"
 	"github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/kyber/shuffle"
+	"github.com/dedis/kyber/util/random"
+
+	"github.com/dedis/cothority"
 )
 
 // Ballot represents an encrypted vote.
@@ -27,8 +30,8 @@ func (b *Box) genMix(key kyber.Point, n int) []*Mix {
 
 	x, y := Split(b.Ballots)
 	for i := range mixes {
-		v, w, prover := shuffle.Shuffle(Suite, nil, key, x, y, Stream)
-		proof, _ := proof.HashProve(Suite, "", prover)
+		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
+		proof, _ := proof.HashProve(cothority.Suite, "", prover)
 		mixes[i] = &Mix{Ballots: Combine(v, w), Proof: proof, Node: string(i)}
 		x, y = v, w
 	}

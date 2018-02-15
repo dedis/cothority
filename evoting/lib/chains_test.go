@@ -6,10 +6,12 @@ import (
 	"github.com/dedis/onet"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/dedis/cothority"
 )
 
 func TestChain(t *testing.T) {
-	local := onet.NewLocalTest(Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)

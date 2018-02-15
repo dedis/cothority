@@ -3,13 +3,12 @@ package evoting
 import (
 	"testing"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
-
-	"github.com/dedis/cothority/evoting/lib"
 )
 
 func TestPing(t *testing.T) {
-	local := onet.NewTCPTest(lib.Suite)
+	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
 	// 	_, roster, _ := local.GenTree(3, true)

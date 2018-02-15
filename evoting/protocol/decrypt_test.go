@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
 )
 
@@ -49,7 +50,7 @@ func TestDecryptProtocol(t *testing.T) {
 }
 
 func runDecrypt(t *testing.T, n int) {
-	local := onet.NewLocalTest(lib.Suite)
+	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodes, roster, tree := local.GenBigTree(n, n, 1, true)

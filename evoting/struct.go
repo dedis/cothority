@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
 )
@@ -46,14 +47,14 @@ func (l *Login) Digest() []byte {
 
 // Sign creates a Schnorr signature of the login digest.
 func (l *Login) Sign(secret kyber.Scalar) error {
-	sig, err := schnorr.Sign(lib.Suite, secret, l.Digest())
+	sig, err := schnorr.Sign(cothority.Suite, secret, l.Digest())
 	l.Signature = sig
 	return err
 }
 
 // Verify checks the Schnorr signature.
 func (l *Login) Verify(public kyber.Point) error {
-	return schnorr.Verify(lib.Suite, public, l.Digest(), l.Signature)
+	return schnorr.Verify(cothority.Suite, public, l.Digest(), l.Signature)
 }
 
 // LoginReply message.

@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 
 	"github.com/dedis/cothority/evoting"
-	"github.com/dedis/cothority/evoting/lib"
 )
 
 var (
@@ -48,7 +48,7 @@ func main() {
 	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: key, Admins: admins}
 	reply := &evoting.LinkReply{}
 
-	client.Client = onet.NewClient(lib.Suite, evoting.ServiceName)
+	client.Client = onet.NewClient(cothority.Suite, evoting.ServiceName)
 	if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
 		panic(err)
 	}
@@ -77,7 +77,7 @@ func parseKey(key string) (kyber.Point, error) {
 		return nil, err
 	}
 
-	point := lib.Suite.Point()
+	point := cothority.Suite.Point()
 	if err = point.UnmarshalBinary(b); err != nil {
 		return nil, err
 	}

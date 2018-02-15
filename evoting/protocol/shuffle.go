@@ -3,8 +3,10 @@ package protocol
 import (
 	"errors"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/proof"
 	"github.com/dedis/kyber/shuffle"
+	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
@@ -79,9 +81,9 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	}
 
 	a, b := lib.Split(ballots)
-	g, d, prover := shuffle.Shuffle(lib.Suite, nil, s.Election.Key, a, b, lib.Stream)
+	g, d, prover := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
 
-	proof, err := proof.HashProve(lib.Suite, "", prover)
+	proof, err := proof.HashProve(cothority.Suite, "", prover)
 	if err != nil {
 		return err
 	}

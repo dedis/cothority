@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/evoting/protocol"
@@ -329,7 +330,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 			shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
 		}
 
-		message, _ := share.RecoverCommit(lib.Suite, shares, n, n)
+		message, _ := share.RecoverCommit(cothority.Suite, shares, n, n)
 		points = append(points, message)
 	}
 
@@ -340,7 +341,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericConfig) (
 	onet.ProtocolInstance, error) {
 
-	_, blob, _ := network.Unmarshal(conf.Data, lib.Suite)
+	_, blob, _ := network.Unmarshal(conf.Data, cothority.Suite)
 	id := blob.(*synchronizer).ID
 
 	switch node.ProtocolName() {

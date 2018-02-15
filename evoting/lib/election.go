@@ -1,12 +1,13 @@
 package lib
 
 import (
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/kyber/share/dkg/rabin"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
 )
 
 const (
@@ -48,12 +49,12 @@ func FetchElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, er
 		return nil, err
 	}
 
-	_, blob, _ := network.Unmarshal(chain[1].Data, Suite)
+	_, blob, _ := network.Unmarshal(chain[1].Data, cothority.Suite)
 	election := blob.(*Election)
 
 	n, numMixes, numPartials := len(election.Roster.List), 0, 0
 	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, Suite)
+		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
 		if _, ok := blob.(*Mix); ok {
 			numMixes++
 		} else if _, ok := blob.(*Partial); ok {
@@ -123,7 +124,7 @@ func (e *Election) Box() (*Box, error) {
 	// Use map to only included a user's last ballot.
 	mapping := make(map[uint32]*Ballot)
 	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, Suite)
+		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
 		if ballot, ok := blob.(*Ballot); ok {
 			mapping[ballot.User] = ballot
 		}
@@ -145,7 +146,7 @@ func (e *Election) Mixes() ([]*Mix, error) {
 
 	mixes := make([]*Mix, 0)
 	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, Suite)
+		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
 		if mix, ok := blob.(*Mix); ok {
 			mixes = append(mixes, mix)
 		}
@@ -163,7 +164,7 @@ func (e *Election) Partials() ([]*Partial, error) {
 
 	partials := make([]*Partial, 0)
 	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, Suite)
+		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
 		if partial, ok := blob.(*Partial); ok {
 			partials = append(partials, partial)
 		}
