@@ -118,11 +118,11 @@ func TestSkipBlock_Hash2(t *testing.T) {
 
 func TestBlockLink_Copy(t *testing.T) {
 	// Test if copy is deep or only shallow
-	b1 := &BlockLink{}
-	b1.Sig = []byte{1}
+	b1 := &ForwardLink{}
+	b1.Signature.Sig = []byte{1}
 	b2 := b1.Copy()
-	b2.Sig = []byte{2}
-	if bytes.Equal(b1.Sig, b2.Sig) {
+	b2.Signature.Sig[0] = byte(2)
+	if bytes.Equal(b1.Signature.Sig, b2.Signature.Sig) {
 		t.Fatal("They should not be equal")
 	}
 

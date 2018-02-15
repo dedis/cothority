@@ -251,7 +251,7 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		if msg.Skipping {
 			linkNum = len(s.ForwardLink) - 1
 		}
-		next = s.ForwardLink[linkNum].Hash()
+		next = s.ForwardLink[linkNum].To
 	}
 	if len(result) == 0 {
 		// Not found, so send no reply. Another conode will

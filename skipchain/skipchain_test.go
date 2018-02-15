@@ -236,7 +236,7 @@ func TestService_MultiLevel(t *testing.T) {
 							bl, err := s.GetSingleBlock(&GetSingleBlock{i})
 							log.ErrFatal(err)
 							if len(bl.ForwardLink) == n+1 &&
-								bl.ForwardLink[n].Hash().Equal(sb.Hash) {
+								bl.ForwardLink[n].To.Equal(sb.Hash) {
 								break
 							}
 							time.Sleep(200 * time.Millisecond)
@@ -605,7 +605,7 @@ func TestService_AddFollow(t *testing.T) {
 	}
 	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
-	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
+	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].To.Equal(master2.Latest.Hash))
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {
@@ -951,7 +951,7 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 		}
 
 		// nuke it
-		t.Log("nuking block", sb.Index)
+		log.Lvl2("nuking block", sb.Index)
 		err := db.Update(func(tx *bolt.Tx) error {
 			err := tx.Bucket([]byte(db.bucketName)).Delete(where)
 			if err != nil {
@@ -967,7 +967,7 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 		if len(sb.ForwardLink) == 0 {
 			return
 		}
-		where = sb.ForwardLink[0].Hash()
+		where = sb.ForwardLink[0].To
 	}
 }
 
