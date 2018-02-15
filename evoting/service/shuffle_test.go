@@ -17,7 +17,7 @@ func TestShuffle_UserNotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: ""})
 	assert.Equal(t, errNotLoggedIn, err)
@@ -29,7 +29,7 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["1"] = &stamp{user: 1, admin: false}
+	s.state.log.Store("1", &stamp{user: 1, admin: false})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -49,7 +49,7 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["1"] = &stamp{user: 1, admin: true}
+	s.state.log.Store("1", &stamp{user: 1, admin: true})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -69,7 +69,7 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -100,7 +100,7 @@ func TestShuffle_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	election := &lib.Election{
 		Roster:  roster,

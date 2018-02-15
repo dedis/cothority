@@ -17,7 +17,7 @@ func TestGetBox_NotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	_, err := s.GetBox(&evoting.GetBox{Token: ""})
 	assert.NotNil(t, errNotLoggedIn, err)
@@ -29,7 +29,7 @@ func TestGetBox_NotPart(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["1"] = &stamp{user: 1, admin: false}
+	s.state.log.Store("1", &stamp{user: 1, admin: false})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -49,7 +49,7 @@ func TestGetBox_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	election := &lib.Election{
 		Roster:  roster,

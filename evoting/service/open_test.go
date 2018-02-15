@@ -19,7 +19,7 @@ func TestOpen_NotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	_, err := s.Open(&evoting.Open{Token: ""})
 	assert.NotNil(t, errNotLoggedIn, err)
@@ -31,7 +31,7 @@ func TestOpen_NotAdmin(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	_, err := s.Open(&evoting.Open{Token: "0"})
 	assert.NotNil(t, errNotAdmin, err)
@@ -43,7 +43,7 @@ func TestOpen_InvalidMasterID(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	_, err := s.Open(&evoting.Open{Token: "0"})
 	assert.NotNil(t, err)
@@ -54,7 +54,7 @@ func TestOpen_CloseConnection(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	master := &lib.Master{Roster: roster}
 	master.GenChain(nil)
@@ -70,7 +70,7 @@ func TestOpen_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	master := &lib.Master{Roster: roster}
 	master.GenChain(nil)

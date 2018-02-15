@@ -20,7 +20,7 @@ func TestLink_WrongPin(t *testing.T) {
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
 
-	_, err := s.Link(&evoting.Link{Pin: "0"})
+	_, err := s.Link(&evoting.Link{Pin: ""})
 	assert.NotNil(t, errInvalidPin, err)
 }
 

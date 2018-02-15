@@ -19,7 +19,7 @@ func TestCast_InvalidElectionID(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0}
+	s.state.log.Store("0", &stamp{user: 0})
 
 	_, err := s.Cast(&evoting.Cast{Token: "0", ID: []byte{}})
 	assert.NotNil(t, err)
@@ -31,7 +31,7 @@ func TestCast_UserNotPart(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["1"] = &stamp{user: 1}
+	s.state.log.Store("1", &stamp{user: 1})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -51,7 +51,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0}
+	s.state.log.Store("0", &stamp{user: 0})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -82,7 +82,7 @@ func TestCast_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["1000"] = &stamp{user: 1000}
+	s.state.log.Store("1000", &stamp{user: 1000})
 
 	election := &lib.Election{
 		Roster:  roster,

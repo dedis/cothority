@@ -79,5 +79,4 @@ func TestLogin_Full(t *testing.T) {
 
 	r, _ := s.Login(l)
 	assert.Equal(t, election.ID, r.Elections[0].ID)
-	assert.Equal(t, uint32(0), s.state.log[r.Token].user)
 }

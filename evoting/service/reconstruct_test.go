@@ -18,7 +18,7 @@ func TestReconstruct_UserNotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: false}
+	s.state.log.Store("0", &stamp{user: 0, admin: false})
 
 	_, err := s.Reconstruct(&evoting.Reconstruct{Token: ""})
 	assert.Equal(t, errNotLoggedIn, err)
@@ -30,7 +30,7 @@ func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -50,7 +50,7 @@ func TestReconstruct_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log["0"] = &stamp{user: 0, admin: true}
+	s.state.log.Store("0", &stamp{user: 0, admin: true})
 
 	election := &lib.Election{
 		Roster:  roster,

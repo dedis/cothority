@@ -2,6 +2,7 @@ package service
 
 import (
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type stamp struct {
 // state is a wrapper around the log map.
 type state struct {
 	// log is map from nonce to user stamp.
-	log map[string]*stamp
+	log sync.Map
 }
 
 // schedule periodically increments the time counter for each user in the
@@ -34,13 +35,16 @@ func (s *state) schedule(interval time.Duration) chan bool {
 		for {
 			select {
 			case <-ticker.C:
-				for nonce, stamp := range s.log {
+				incr := func(key, value interface{}) bool {
+					stamp := value.(*stamp)
 					if stamp.time == 5 {
-						delete(s.log, nonce)
+						s.log.Delete(key)
 					} else {
 						stamp.time++
 					}
+					return true
 				}
+				s.log.Range(incr)
 			case <-stop:
 				ticker.Stop()
 				return
@@ -54,7 +58,7 @@ func (s *state) schedule(interval time.Duration) chan bool {
 // register a new user in the log and return 32 character nonce as a token.
 func (s *state) register(user uint32, admin bool) string {
 	token := nonce(32)
-	s.log[token] = &stamp{user, admin, 0}
+	s.log.Store(token, &stamp{user, admin, 0})
 	return token
 }
 

@@ -14,22 +14,31 @@ func TestNonce(t *testing.T) {
 }
 
 func TestSchedule(t *testing.T) {
-	s := state{make(map[string]*stamp)}
-	s.log["u"] = &stamp{0, false, 4}
+	s := state{}
+	s.log.Store("u", &stamp{0, false, 4})
 
 	stop := s.schedule(time.Second)
-	assert.Equal(t, 1, len(s.log))
-	<-time.After(2500 * time.Millisecond)
-	assert.Equal(t, 0, len(s.log))
+
+	_, found := s.log.Load("u")
+	assert.True(t, found)
+
+	<-time.After(3 * time.Second)
+
+	_, found = s.log.Load("u")
+	assert.False(t, found)
+
 	stop <- true
-	<-time.After(500 * time.Millisecond)
 }
 
 func TestRegister(t *testing.T) {
-	s := state{make(map[string]*stamp)}
+	s := state{}
 	t1 := s.register(123, true)
 	t2 := s.register(456, false)
 
 	assert.NotEqual(t, t1, t2)
-	assert.Equal(t, 2, len(s.log))
+
+	_, found := s.log.Load(t1)
+	assert.True(t, found)
+	_, found = s.log.Load(t2)
+	assert.True(t, found)
 }
