@@ -124,8 +124,6 @@ type ForwardSignature struct {
 	Previous SkipBlockID
 	// Newest is the newest skipblock, signed by previous
 	Newest *SkipBlock
-	// ForwardLink is the signature from Previous to Newest
-	ForwardLink *BlockLink
 }
 
 // GetSingleBlock asks for a single block.

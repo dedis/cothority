@@ -13,6 +13,7 @@ import (
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -333,7 +334,7 @@ type SkipBlock struct {
 
 	// ForwardLink will be calculated once future SkipBlocks are
 	// available
-	ForwardLink []*BlockLink
+	ForwardLink []*ForwardLink
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
@@ -373,7 +374,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := &SkipBlock{
 		SkipBlockFix: sb.SkipBlockFix.Copy(),
 		Hash:         make([]byte, len(sb.Hash)),
-		ForwardLink:  make([]*BlockLink, len(sb.ForwardLink)),
+		ForwardLink:  make([]*ForwardLink, len(sb.ForwardLink)),
 		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
 	}
 	for i, fl := range sb.ForwardLink {
@@ -419,13 +420,13 @@ func (sb *SkipBlock) SkipChainID() SkipBlockID {
 }
 
 // AddForward stores the forward-link with mutex protection.
-func (sb *SkipBlock) AddForward(fw *BlockLink) {
+func (sb *SkipBlock) AddForward(fw *ForwardLink) {
 	sb.ForwardLink = append(sb.ForwardLink, fw)
 }
 
 // GetForward returns copy of the forward-link at position i. It returns nil if no link
 // at that level exists.
-func (sb *SkipBlock) GetForward(i int) *BlockLink {
+func (sb *SkipBlock) GetForward(i int) *ForwardLink {
 	if len(sb.ForwardLink) <= i {
 		return nil
 	}
@@ -442,34 +443,83 @@ func (sb *SkipBlock) updateHash() SkipBlockID {
 	return sb.Hash
 }
 
-// BlockLink has the hash and a signature of a block
-type BlockLink struct {
-	bftcosi.BFTSignature
+// ForwardLink can be used to jump from old blocks to newer
+// blocks. Depending on the BaseHeight and MaximumHeight, older
+// rosters are asked to sign direct links to new blocks.
+type ForwardLink struct {
+	// From - where this forward link comes from
+	From SkipBlockID
+	// To - where this forward link points to
+	To SkipBlockID
+	// NewRoster is only set to non-nil if the From block has a
+	// different roster from the To-block.
+	NewRoster *onet.Roster
+	// Signature is calculated on the
+	// sha256(From.Hash()|To.Hash()|NewRoster)
+	// In the case that NewRoster is nil, the signature is
+	// calculated on the sha256(From.Hash()|To.Hash())
+	Signature bftcosi.BFTSignature
 }
 
-// Hash is equivalent to the Msg field
-func (bl *BlockLink) Hash() SkipBlockID {
-	return bl.Msg
+// NewForwardLink creates a new forwardlink structure with
+// the From, To, and NewRoster initialized. If the roster in
+// From and To is identitcal, NewRoster will be nil.
+func NewForwardLink(from, to *SkipBlock) *ForwardLink {
+	fl := &ForwardLink{
+		From: from.Hash,
+		To:   to.Hash,
+	}
+	if !from.Roster.ID.Equal(to.Roster.ID) {
+		fl.NewRoster = to.Roster
+	}
+	return fl
 }
 
-// Copy makes a deep copy of a blocklink
-func (bl *BlockLink) Copy() *BlockLink {
-	sigCopy := make([]byte, len(bl.Sig))
-	copy(sigCopy, bl.Sig)
+// Hash is calculated as
+// sha256(From.Hash()|To.Hash()|NewRoster.ID), except
+// if NewRoster is nil, then it is calculated as
+// sha256(From.Hash()|To.Hash())
+func (fl *ForwardLink) Hash() SkipBlockID {
+	hash := sha256.New()
+	hash.Write(fl.From)
+	hash.Write(fl.To)
+	if fl.NewRoster != nil {
+		hash.Write(fl.NewRoster.ID[:])
+	}
+	return hash.Sum(nil)
+}
 
-	msgCopy := make([]byte, len(bl.Msg))
-	copy(msgCopy, bl.Msg)
+// Copy makes a deep copy of a ForwardLink
+func (fl *ForwardLink) Copy() *ForwardLink {
+	sigCopy := make([]byte, len(fl.Signature.Sig))
+	copy(sigCopy, fl.Signature.Sig)
 
-	exsCopy := make([]bftcosi.Exception, len(bl.Exceptions))
-	copy(exsCopy, bl.Exceptions)
+	msgCopy := make([]byte, len(fl.Signature.Msg))
+	copy(msgCopy, fl.Signature.Msg)
 
-	return &BlockLink{
-		bftcosi.BFTSignature{
+	exsCopy := make([]bftcosi.Exception, len(fl.Signature.Exceptions))
+	copy(exsCopy, fl.Signature.Exceptions)
+
+	return &ForwardLink{
+		Signature: bftcosi.BFTSignature{
 			Sig:        sigCopy,
 			Msg:        msgCopy,
 			Exceptions: exsCopy,
 		},
+		From:      fl.From,
+		To:        fl.To,
+		NewRoster: fl.NewRoster,
 	}
+}
+
+// Verify checks the signature against a list of public keys. This list must
+// be in the same order as the Roster that signed the message.
+// It returns nil if the signature is correct, or an error if not.
+func (fl *ForwardLink) Verify(suite network.Suite, pubs []kyber.Point) error {
+	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
+		return errors.New("wrong hash of forward link")
+	}
+	return fl.Signature.Verify(suite, pubs)
 }
 
 // SkipBlockDB holds the database to the skipblocks.
@@ -655,7 +705,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
+	if !sbBack.GetForward(0).To.Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
@@ -669,7 +719,7 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
+		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
 		if latest == nil {
 			return nil, errors.New("missing block")
 		}
