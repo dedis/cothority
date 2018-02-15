@@ -18,7 +18,7 @@ const txt2dict = (txt, opt_operator) => {
 }
 
 const dict2txt = (data) => {
-  return Object.keys(data).map(k => k + '=' + data[k] + '\r\n').join('').slice(0, -2)
+  return Object.keys(data).map(k => k + '=' + data[k] + '\n').join('').slice(0, -1)
 }
 
 module.exports = {
