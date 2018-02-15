@@ -42,11 +42,9 @@ func TestGB(t *testing.T) {
 	sb1.Roster = ro
 	sb1.BackLinkIDs = []skipchain.SkipBlockID{sb0.Hash}
 	sb1.Hash = sb1.CalculateHash()
-	sb0.ForwardLink = []*skipchain.BlockLink{
-		&skipchain.BlockLink{
-			BFTSignature: bftcosi.BFTSignature{Msg: sb1.Hash, Sig: []byte{}},
-		},
-	}
+	sig0 := skipchain.NewForwardLink(sb0, sb1)
+	sig0.Signature = bftcosi.BFTSignature{Msg: sig0.Hash(), Sig: []byte{}}
+	sb0.ForwardLink = []*skipchain.ForwardLink{sig0}
 
 	sb2 := skipchain.NewSkipBlock()
 	sb2.BackLinkIDs = []skipchain.SkipBlockID{sb1.Hash}
@@ -55,20 +53,17 @@ func TestGB(t *testing.T) {
 	sb3 := skipchain.NewSkipBlock()
 	sb3.BackLinkIDs = []skipchain.SkipBlockID{sb2.Hash}
 	sb3.Hash = sb3.CalculateHash()
-	sb2.ForwardLink = []*skipchain.BlockLink{
-		&skipchain.BlockLink{
-			BFTSignature: bftcosi.BFTSignature{Msg: sb3.Hash, Sig: []byte{}},
-		},
-	}
+	sig2 := skipchain.NewForwardLink(sb2, sb3)
+	sig2.Signature = bftcosi.BFTSignature{Msg: sig2.Hash(), Sig: []byte{}}
+	sb2.ForwardLink = []*skipchain.ForwardLink{sig2}
+
 	// and make sb1 forward[1] point to sb3 as well.
-	sb1.ForwardLink = []*skipchain.BlockLink{
-		&skipchain.BlockLink{
-			BFTSignature: bftcosi.BFTSignature{Msg: sb2.Hash, Sig: []byte{}},
-		},
-		&skipchain.BlockLink{
-			BFTSignature: bftcosi.BFTSignature{Msg: sb3.Hash, Sig: []byte{}},
-		},
-	}
+	sig12 := skipchain.NewForwardLink(sb1, sb2)
+	sig12.Signature = bftcosi.BFTSignature{Msg: sig12.Hash(), Sig: []byte{}}
+
+	sig13 := skipchain.NewForwardLink(sb1, sb3)
+	sig13.Signature = bftcosi.BFTSignature{Msg: sig13.Hash(), Sig: []byte{}}
+	sb1.ForwardLink = []*skipchain.ForwardLink{sig12, sig13}
 
 	db, bucket := ts0.GetAdditionalBucket("skipblocks")
 	ts0.Db = skipchain.NewSkipBlockDB(db, bucket)

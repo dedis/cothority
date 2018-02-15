@@ -134,7 +134,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 	for i := 0; i < sbCount; i++ {
 		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash)
-		log.ErrFatal(err)
+		require.Nil(t, err)
 
 		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
 		if !sbc.Update[0].Equal(sbs[i]) {
@@ -156,9 +156,9 @@ func TestClient_GetUpdateChain(t *testing.T) {
 				if h2 < height {
 					height = h2
 				}
-				require.True(t, sb1.ForwardLink[height-1].Hash().Equal(sb2.Hash),
+				require.True(t, sb1.ForwardLink[height-1].To.Equal(sb2.Hash),
 					"Forward-pointer[%v/%v] of update %v %x is different from hash in %v %x",
-					height-1, len(sb1.ForwardLink), up, sb1.ForwardLink[height-1].Hash(), up+1, sb2.Hash)
+					height-1, len(sb1.ForwardLink), up, sb1.ForwardLink[height-1].To, up+1, sb2.Hash)
 			}
 		}
 	}
@@ -191,7 +191,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	log.ErrFatal(err)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
-	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].Hash(), sb2.Latest.Hash),
+	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].To, sb2.Latest.Hash),
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")
