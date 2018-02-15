@@ -1,0 +1,9 @@
+html
+  head
+    script.
+      localStorage.setItem('evoting', '!{state}');
+      var redirectUrl = window.location.protocol + '//' + window.location.hostname
+      if (window.location.port) {
+        redirectUrl += ':' + window.location.port
+      }
+      window.location.replace(redirectUrl);

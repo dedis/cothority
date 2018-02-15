@@ -1,0 +1,20 @@
+{
+  "name": "evoting-auth-server",
+  "version": "1.0.0",
+  "description": "Node server for serving authorization files and built Vue files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "DEDIS",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@dedis/kyber-js": "file:../../cothority/external/js/kyber/dedis-kyber-js-0.0.6.tgz",
+    "axios": "^0.17.1",
+    "express": "^4.16.2",
+    "express-promise-router": "^3.0.1",
+    "hex-to-array-buffer": "^1.1.0",
+    "promised-ldap": "^0.3.0",
+    "pug": "^2.0.0-rc.4"
+  }
+}
