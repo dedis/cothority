@@ -10,6 +10,7 @@ env:
 
 before_install:
   - export GOPATH="$(pwd)/../../../../"
+  - echo $GOPATH
   - cd external/js/
 
 script: cd $TEST_DIR && npm install && npm run test && npm run build
