@@ -121,7 +121,7 @@ func TestBlockLink_Copy(t *testing.T) {
 	b1 := &ForwardLink{}
 	b1.Signature.Sig = []byte{1}
 	b2 := b1.Copy()
-	b2.Signature.Sig = []byte{2}
+	b2.Signature.Sig[0] = byte(2)
 	if bytes.Equal(b1.Signature.Sig, b2.Signature.Sig) {
 		t.Fatal("They should not be equal")
 	}
