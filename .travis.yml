@@ -9,7 +9,8 @@ env:
   - TEST_DIR=kyber
 
 before_install:
-  - "cd external/js/"
+  - export GOPATH="$(pwd)/../../../../"
+  - cd external/js/
 
 script: cd $TEST_DIR && npm install && npm run test && npm run build
 
