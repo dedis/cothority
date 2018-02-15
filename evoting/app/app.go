@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
 )
 
