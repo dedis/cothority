@@ -115,7 +115,7 @@ public class GrantAccessTest {
     }
 
     private DarcId createConsumer(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new IdentityEd25519(consumerSigner));
+        Darc user = createUser(ocs, consumerSigner.getIdentity());
         return new DarcId(user.getId().getId());
     }
 
