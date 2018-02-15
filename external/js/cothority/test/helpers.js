@@ -66,7 +66,7 @@ function killGolang() {
   spawned_conodes.kill();
   spawned_conodes.stdout.destroy();
   spawned_conodes.stderr.destroy();
-  child_process.execSync("pkill go");
+  //child_process.execSync("pkill go");
 }
 
 /**
