@@ -11,7 +11,7 @@ const hexToArrayBuffer = require('hex-to-array-buffer')
 const LdapClient = require('promised-ldap')
 
 const PORT = process.env.PORT || 3000
-const isProd = proces.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV === 'production'
 
 const tequilaRequest = (path, data) => {
   dataStr = util.dict2txt(data)
