@@ -40,7 +40,7 @@ if (!isProd) {
 router.get('/auth/login', (req, res) => {
   let data = {
     client: 'evoting-auth',
-    urlaccess: 'http://localhost:3000/auth/verify',
+    urlaccess: `${req.protocol}://${req.hostname}/auth/verify`,
     service: 'Evoting App',
     request: 'uniqueid,displayname'
   }
@@ -100,4 +100,7 @@ router.get('/auth/verify', (req, res) => {
 
 app.use(router)
 app.set('view engine', 'pug')
+if (isProd) {
+  app.enable('trust proxy')
+}
 app.listen(PORT, () => console.log('Running the server on port ' + PORT))
