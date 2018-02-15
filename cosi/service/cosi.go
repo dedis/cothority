@@ -100,10 +100,10 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
 	if tn.ProtocolName() == protocol.ProtocolName {
-		return protocol.NewProtocol(tn)
+		return protocol.NewDefaultProtocol(tn)
 	}
 	if tn.ProtocolName() == protocol.SubProtocolName {
-		return protocol.NewSubProtocol(tn)
+		return protocol.NewDefaultSubProtocol(tn)
 	}
 	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }
@@ -116,11 +116,11 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 		log.Error("couldn't register message:", err)
 		return nil, err
 	}
-	if _, err := c.ProtocolRegister(protocol.ProtocolName, protocol.NewProtocol); err != nil {
+	if _, err := c.ProtocolRegister(protocol.ProtocolName, protocol.NewDefaultProtocol); err != nil {
 		log.Error("couldn't register main protocol:", err)
 		return nil, err
 	}
-	if _, err := c.ProtocolRegister(protocol.SubProtocolName, protocol.NewSubProtocol); err != nil {
+	if _, err := c.ProtocolRegister(protocol.SubProtocolName, protocol.NewDefaultSubProtocol); err != nil {
 		log.Error("couldn't register sub protocol:", err)
 		return nil, err
 	}

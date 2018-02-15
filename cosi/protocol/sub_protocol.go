@@ -18,8 +18,8 @@ type CoSiSubProtocolNode struct {
 	Proposal         []byte
 	SubleaderTimeout time.Duration
 	LeavesTimeout    time.Duration
-	VerificationFn   VerificationFn
 	hasStopped       bool //used since Shutdown can be called multiple time
+	verificationFn   VerificationFn
 
 	// protocol/subprotocol channels
 	// these are used to communicate between the subprotocol and the main protocol
@@ -34,14 +34,21 @@ type CoSiSubProtocolNode struct {
 	ChannelResponse     chan StructResponse
 }
 
-// NewSubProtocol is used to define the subprotocol and to register
+// NewDefaultSubProtocol is the default sub-protocol function used for registration
+// with an always-true verification.
+func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	vf := func(a []byte) bool { return true }
+	return newSubProtocol(n, vf)
+}
+
+// newSubProtocol is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+func newSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
 
 	c := &CoSiSubProtocolNode{
 		TreeNodeInstance: n,
 		hasStopped:       false,
-		VerificationFn:   nil, // TODO need a way to initialise this
+		verificationFn:   vf,
 	}
 
 	if n.IsRoot() {
@@ -169,11 +176,11 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		return nil
 	}
 
-	// start the verification if I'm not the root
+	// start the verification if I'm not the root because root should not fail
 	verifyChan := make(chan bool, 1)
 	if !p.IsRoot() {
 		go func() {
-			verifyChan <- p.VerificationFn(p.Proposal)
+			verifyChan <- p.verificationFn(p.Proposal)
 		}()
 	}
 
@@ -182,14 +189,6 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		err = p.SendTo(TreeNode, &challenge.Challenge)
 		if err != nil {
 			return err
-		}
-	}
-
-	// if the verification is not ok, we stop the protocol
-	if !p.IsRoot() {
-		if ok := <-verifyChan; !ok {
-			log.Lvl1("verification failed, will not send response")
-			return nil
 		}
 	}
 
@@ -217,7 +216,12 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}
 		p.subResponse <- responses[0]
 	} else {
-		// otherwise, generate own response and send to parent
+		// if verification fails, we stop and treat it as any other failure
+		if ok := <-verifyChan; !ok {
+			log.Lvl1("verification failed, will not send response")
+			return nil
+		}
+		// generate own response and send to parent
 		response, err := generateResponse(
 			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
 		if err != nil {
@@ -229,7 +233,6 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}
 	}
 
-	// TODO: see if should stop node or be ready for another proposal
 	return nil
 }
 
@@ -252,7 +255,7 @@ func (p *CoSiSubProtocolNode) Start() error {
 	if p.Publics == nil || len(p.Publics) < 1 {
 		return errors.New("subprotocol has invalid public keys")
 	}
-	if p.VerificationFn == nil {
+	if p.verificationFn == nil {
 		return errors.New("subprotocol has an empty verification fn")
 	}
 	if p.SubleaderTimeout < 1 {

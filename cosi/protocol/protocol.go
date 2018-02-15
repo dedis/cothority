@@ -22,8 +22,8 @@ type VerificationFn func(msg []byte) bool
 func init() {
 	network.RegisterMessages(Announcement{}, Commitment{}, Challenge{}, Response{}, Stop{})
 
-	onet.GlobalProtocolRegister(ProtocolName, NewProtocol)
-	onet.GlobalProtocolRegister(SubProtocolName, NewSubProtocol)
+	onet.GlobalProtocolRegister(ProtocolName, NewDefaultProtocol)
+	onet.GlobalProtocolRegister(SubProtocolName, NewDefaultSubProtocol)
 }
 
 // CoSiRootNode holds the parameters of the protocol.
@@ -38,19 +38,26 @@ type CoSiRootNode struct {
 	SubleaderTimeout time.Duration
 	LeavesTimeout    time.Duration
 	FinalSignature   chan []byte
-	VerificationFn   VerificationFn
 
-	publics    []kyber.Point
-	hasStopped bool //used since Shutdown can be called multiple time
-	startChan  chan bool
+	publics        []kyber.Point
+	hasStopped     bool //used since Shutdown can be called multiple time
+	startChan      chan bool
+	verificationFn VerificationFn
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
 // used in CoSiRootNode protocol for creating sub leader protocols.
 type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstance, error)
 
-// NewProtocol method is used to define the protocol.
-func NewProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+// NewDefaultProtocol is the default protocol function used for registration
+// with an always-true verification.
+func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	vf := func(a []byte) bool { return true }
+	return newProtocol(n, vf)
+}
+
+// newProtocol method is used to define the protocol.
+func newProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
 
 	var list []kyber.Point
 	for _, t := range n.Tree().List() {
@@ -63,6 +70,7 @@ func NewProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		publics:          list,
 		hasStopped:       false,
 		startChan:        make(chan bool),
+		verificationFn:   vf,
 	}
 
 	return c, nil
@@ -224,6 +232,10 @@ func (p *CoSiRootNode) Start() error {
 		close(p.startChan)
 		return fmt.Errorf("no create protocol function specified")
 	}
+	if p.verificationFn == nil {
+		close(p.startChan)
+		return fmt.Errorf("verification function cannot be nil")
+	}
 
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
@@ -236,9 +248,6 @@ func (p *CoSiRootNode) Start() error {
 	}
 	if p.LeavesTimeout < 10 {
 		p.LeavesTimeout = DefaultLeavesTimeout
-	}
-	if p.VerificationFn == nil {
-		p.VerificationFn = func(a []byte) bool { return true }
 	}
 
 	log.Lvl3("Starting CoSi")
@@ -260,7 +269,6 @@ func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, 
 	cosiSubProtocol.Proposal = p.Proposal
 	cosiSubProtocol.SubleaderTimeout = p.SubleaderTimeout
 	cosiSubProtocol.LeavesTimeout = p.LeavesTimeout
-	cosiSubProtocol.VerificationFn = p.VerificationFn
 
 	err = cosiSubProtocol.Start()
 	if err != nil {

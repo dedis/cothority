@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/suites"
@@ -31,7 +32,6 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/onet/simul/monitor"
-	"github.com/dedis/student_17_bftcosi/protocol"
 )
 
 func init() {
