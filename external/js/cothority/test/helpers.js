@@ -100,6 +100,9 @@ function runGolang(buildPath, scriptArgs) {
     spawned_conodes.stdout.on("data", data => {
       resolve(data);
     });
+    spawned_conodes.stderr.on("data", data => {
+      console.log("error launching golang: " + data);
+    });
     spawned_conodes.on("exit", (code, signal) => {
       console.log("exiting program: code" + code + " / signal " + signal);
     });
