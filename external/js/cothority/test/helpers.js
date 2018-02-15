@@ -101,7 +101,7 @@ function runGolang(buildPath, scriptArgs) {
       resolve(data);
     });
     spawned_conodes.on("exit", (code, signal) => {
-      console.log("exiting program...");
+      console.log("exiting program: code" + code + " / signal " + signal);
     });
   });
 }
