@@ -5,7 +5,6 @@ import (
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/dedis/cothority/evoting"
@@ -19,7 +18,7 @@ func TestOpen_NotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: false})
+	s.state.register(0, false)
 
 	_, err := s.Open(&evoting.Open{Token: ""})
 	assert.NotNil(t, errNotLoggedIn, err)
@@ -31,9 +30,9 @@ func TestOpen_NotAdmin(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: false})
+	token := s.state.register(0, false)
 
-	_, err := s.Open(&evoting.Open{Token: "0"})
+	_, err := s.Open(&evoting.Open{Token: token})
 	assert.NotNil(t, errNotAdmin, err)
 }
 
@@ -43,9 +42,9 @@ func TestOpen_InvalidMasterID(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
-	_, err := s.Open(&evoting.Open{Token: "0"})
+	_, err := s.Open(&evoting.Open{Token: token})
 	assert.NotNil(t, err)
 }
 
@@ -54,13 +53,13 @@ func TestOpen_CloseConnection(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	master := &lib.Master{Roster: roster}
 	master.GenChain(nil)
 
 	local.CloseAll()
-	_, err := s.Open(&evoting.Open{Token: "0", ID: master.ID})
+	_, err := s.Open(&evoting.Open{Token: token, ID: master.ID})
 	assert.NotNil(t, err)
 }
 
@@ -70,13 +69,13 @@ func TestOpen_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	master := &lib.Master{Roster: roster}
 	master.GenChain(nil)
 
 	election := &lib.Election{}
-	r, _ := s.Open(&evoting.Open{Token: "0", ID: master.ID, Election: election})
+	r, _ := s.Open(&evoting.Open{Token: token, ID: master.ID, Election: election})
 	assert.NotNil(t, r)
 
 	client := skipchain.NewClient()

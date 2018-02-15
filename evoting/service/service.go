@@ -392,13 +392,10 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 func (s *Service) vet(token string, id skipchain.SkipBlockID, admin bool) (
 	*lib.Election, error) {
 
-	result, found := s.state.log.Load(token)
-	if !found {
+	stamp := s.state.get(token)
+	if stamp == nil {
 		return nil, errNotLoggedIn
-	}
-
-	stamp := result.(*stamp)
-	if admin && !stamp.admin {
+	} else if admin && !stamp.admin {
 		return nil, errNotAdmin
 	}
 
@@ -425,7 +422,7 @@ func new(context *onet.Context) (onet.Service, error) {
 	service := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		secrets:          make(map[string]*lib.SharedSecret),
-		state:            &state{},
+		state:            &state{log: make(map[string]*stamp)},
 		pin:              "0", //nonce(6),
 	}
 

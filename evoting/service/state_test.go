@@ -14,31 +14,39 @@ func TestNonce(t *testing.T) {
 }
 
 func TestSchedule(t *testing.T) {
-	s := state{}
-	s.log.Store("u", &stamp{0, false, 4})
+	s := state{log: make(map[string]*stamp)}
+	s.log["0"] = &stamp{0, false, 4}
 
-	stop := s.schedule(time.Second)
+	s.schedule(time.Second)
 
-	_, found := s.log.Load("u")
-	assert.True(t, found)
+	stamp := s.get("0")
+	assert.NotNil(t, stamp)
 
 	<-time.After(3 * time.Second)
 
-	_, found = s.log.Load("u")
-	assert.False(t, found)
+	stamp = s.get("0")
+	assert.Nil(t, stamp)
+}
 
-	stop <- true
+func TestHandle(t *testing.T) {
+	s := state{log: make(map[string]*stamp)}
+	s.log["0"] = &stamp{0, false, 4}
+	s.log["1"] = &stamp{0, false, 5}
+
+	s.handle()
+
+	_, found := s.log["1"]
+	assert.False(t, found)
+	stamp, _ := s.log["0"]
+	assert.Equal(t, 5, stamp.time)
 }
 
 func TestRegister(t *testing.T) {
-	s := state{}
-	t1 := s.register(123, true)
-	t2 := s.register(456, false)
+	s := state{log: make(map[string]*stamp)}
+	token := s.register(0, false)
 
-	assert.NotEqual(t, t1, t2)
-
-	_, found := s.log.Load(t1)
-	assert.True(t, found)
-	_, found = s.log.Load(t2)
-	assert.True(t, found)
+	stamp := s.get("")
+	assert.Nil(t, stamp)
+	stamp = s.get(token)
+	assert.NotNil(t, stamp)
 }

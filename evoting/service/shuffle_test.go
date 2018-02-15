@@ -17,7 +17,7 @@ func TestShuffle_UserNotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: false})
+	s.state.register(0, false)
 
 	_, err := s.Shuffle(&evoting.Shuffle{Token: ""})
 	assert.Equal(t, errNotLoggedIn, err)
@@ -29,7 +29,7 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1", &stamp{user: 1, admin: false})
+	token := s.state.register(0, false)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -39,7 +39,7 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Shuffle(&evoting.Shuffle{Token: "1", ID: election.ID})
+	_, err := s.Shuffle(&evoting.Shuffle{Token: token, ID: election.ID})
 	assert.Equal(t, errNotAdmin, err)
 }
 
@@ -49,7 +49,7 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1", &stamp{user: 1, admin: true})
+	token := s.state.register(1, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -59,7 +59,7 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Shuffle(&evoting.Shuffle{Token: "1", ID: election.ID})
+	_, err := s.Shuffle(&evoting.Shuffle{Token: token, ID: election.ID})
 	assert.Equal(t, errNotCreator, err)
 }
 
@@ -69,7 +69,7 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -79,7 +79,7 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Shuffle(&evoting.Shuffle{Token: "0", ID: election.ID})
+	_, err := s.Shuffle(&evoting.Shuffle{Token: token, ID: election.ID})
 	assert.Equal(t, errAlreadyShuffled, err)
 
 	election = &lib.Election{
@@ -90,7 +90,7 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err = s.Shuffle(&evoting.Shuffle{Token: "0", ID: election.ID})
+	_, err = s.Shuffle(&evoting.Shuffle{Token: token, ID: election.ID})
 	assert.Equal(t, errAlreadyShuffled, err)
 }
 
@@ -100,7 +100,7 @@ func TestShuffle_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -110,6 +110,6 @@ func TestShuffle_Full(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	r, _ := s.Shuffle(&evoting.Shuffle{Token: "0", ID: election.ID})
+	r, _ := s.Shuffle(&evoting.Shuffle{Token: token, ID: election.ID})
 	assert.NotNil(t, r)
 }

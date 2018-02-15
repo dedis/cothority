@@ -17,7 +17,7 @@ func TestDecrypt_UserNotLoggedIn(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: false})
+	s.state.register(0, false)
 
 	_, err := s.Decrypt(&evoting.Decrypt{Token: ""})
 	assert.Equal(t, errNotLoggedIn, err)
@@ -29,7 +29,7 @@ func TestDecrypt_UserNotAdmin(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1", &stamp{user: 1, admin: false})
+	token := s.state.register(0, false)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -39,7 +39,7 @@ func TestDecrypt_UserNotAdmin(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Decrypt(&evoting.Decrypt{Token: "1", ID: election.ID})
+	_, err := s.Decrypt(&evoting.Decrypt{Token: token, ID: election.ID})
 	assert.Equal(t, errNotAdmin, err)
 }
 
@@ -49,7 +49,7 @@ func TestDecrypt_UserNotCreator(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1", &stamp{user: 1, admin: true})
+	token := s.state.register(1, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -59,7 +59,7 @@ func TestDecrypt_UserNotCreator(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Decrypt(&evoting.Decrypt{Token: "1", ID: election.ID})
+	_, err := s.Decrypt(&evoting.Decrypt{Token: token, ID: election.ID})
 	assert.Equal(t, errNotCreator, err)
 }
 
@@ -69,7 +69,7 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -79,7 +79,7 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Decrypt(&evoting.Decrypt{Token: "0", ID: election.ID})
+	_, err := s.Decrypt(&evoting.Decrypt{Token: token, ID: election.ID})
 	assert.Equal(t, errNotShuffled, err)
 }
 
@@ -89,7 +89,7 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s.state.register(0, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -99,7 +99,7 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Decrypt(&evoting.Decrypt{Token: "0", ID: election.ID})
+	_, err := s.Decrypt(&evoting.Decrypt{Token: token, ID: election.ID})
 	assert.Equal(t, errAlreadyDecrypted, err)
 }
 
@@ -111,7 +111,7 @@ func TestDecrypt_Full(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	s1 := local.GetServices(nodes, serviceID)[1].(*Service)
 	s2 := local.GetServices(nodes, serviceID)[2].(*Service)
-	s0.state.log.Store("0", &stamp{user: 0, admin: true})
+	token := s0.state.register(0, true)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -124,6 +124,6 @@ func TestDecrypt_Full(t *testing.T) {
 	s1.secrets[election.ID.Short()], _ = lib.NewSharedSecret(dkgs[1])
 	s2.secrets[election.ID.Short()], _ = lib.NewSharedSecret(dkgs[2])
 
-	r, _ := s0.Decrypt(&evoting.Decrypt{Token: "0", ID: election.ID})
+	r, _ := s0.Decrypt(&evoting.Decrypt{Token: token, ID: election.ID})
 	assert.NotNil(t, r)
 }

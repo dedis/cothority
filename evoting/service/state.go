@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const limit = 5
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
@@ -22,43 +24,52 @@ type stamp struct {
 
 // state is a wrapper around the log map.
 type state struct {
+	mux sync.Mutex
 	// log is map from nonce to user stamp.
-	log sync.Map
+	log map[string]*stamp
+}
+
+// handle increments all user timestamps and removes the users whose timestamps equal the limit.
+func (s *state) handle() {
+	s.mux.Lock()
+	for key, value := range s.log {
+		if value.time == limit {
+			delete(s.log, key)
+		} else {
+			value.time++
+		}
+	}
+	s.mux.Unlock()
+}
+
+// get retrieves a user stamp from the log.
+func (s *state) get(key string) *stamp {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	return s.log[key]
 }
 
 // schedule periodically increments the time counter for each user in the
 // state log and removes him if the time limit has been reached.
-func (s *state) schedule(interval time.Duration) chan bool {
+func (s *state) schedule(interval time.Duration) {
 	ticker := time.NewTicker(interval)
-	stop := make(chan bool)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				incr := func(key, value interface{}) bool {
-					stamp := value.(*stamp)
-					if stamp.time == 5 {
-						s.log.Delete(key)
-					} else {
-						stamp.time++
-					}
-					return true
-				}
-				s.log.Range(incr)
-			case <-stop:
-				ticker.Stop()
-				return
+				s.handle()
 			}
 		}
 	}()
-
-	return stop
 }
 
 // register a new user in the log and return 32 character nonce as a token.
 func (s *state) register(user uint32, admin bool) string {
+	s.mux.Lock()
 	token := nonce(32)
-	s.log.Store(token, &stamp{user, admin, 0})
+	s.log[token] = &stamp{user, admin, 0}
+	s.mux.Unlock()
 	return token
 }
 

@@ -19,9 +19,9 @@ func TestCast_InvalidElectionID(t *testing.T) {
 
 	nodes, _, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0})
+	token := s.state.register(0, false)
 
-	_, err := s.Cast(&evoting.Cast{Token: "0", ID: []byte{}})
+	_, err := s.Cast(&evoting.Cast{Token: token, ID: []byte{}})
 	assert.NotNil(t, err)
 }
 
@@ -31,7 +31,7 @@ func TestCast_UserNotPart(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1", &stamp{user: 1})
+	token := s.state.register(1, false)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -41,7 +41,7 @@ func TestCast_UserNotPart(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Cast(&evoting.Cast{Token: "1", ID: election.ID})
+	_, err := s.Cast(&evoting.Cast{Token: token, ID: election.ID})
 	assert.Equal(t, errNotPart, err)
 }
 
@@ -51,7 +51,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("0", &stamp{user: 0})
+	token := s.state.register(0, false)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -61,7 +61,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err := s.Cast(&evoting.Cast{Token: "0", ID: election.ID})
+	_, err := s.Cast(&evoting.Cast{Token: token, ID: election.ID})
 	assert.Equal(t, errAlreadyClosed, err)
 
 	election = &lib.Election{
@@ -72,7 +72,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 	}
 	_ = election.GenChain(3)
 
-	_, err = s.Cast(&evoting.Cast{Token: "0", ID: election.ID})
+	_, err = s.Cast(&evoting.Cast{Token: token, ID: election.ID})
 	assert.Equal(t, errAlreadyClosed, err)
 }
 
@@ -82,7 +82,7 @@ func TestCast_Full(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	s.state.log.Store("1000", &stamp{user: 1000})
+	token := s.state.register(1000, false)
 
 	election := &lib.Election{
 		Roster:  roster,
@@ -93,7 +93,7 @@ func TestCast_Full(t *testing.T) {
 	_ = election.GenChain(3)
 
 	ballot := &lib.Ballot{User: 1000}
-	r, _ := s.Cast(&evoting.Cast{Token: "1000", ID: election.ID, Ballot: ballot})
+	r, _ := s.Cast(&evoting.Cast{Token: token, ID: election.ID, Ballot: ballot})
 	assert.NotNil(t, r)
 
 	client := skipchain.NewClient()

@@ -3,9 +3,9 @@ package service
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/dedis/onet"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
