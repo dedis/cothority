@@ -82,17 +82,17 @@ function killGolang() {
 function runGolang(buildPath, scriptArgs) {
   const spawn = child_process.spawn;
   return new Promise(function(resolve, reject) {
-    // first get get
-    try {
-      child_process.execSync("go get ./...", {
-        cwd: buildPath
-      });
-        console.log("Golang dependencies fetched");
-    } catch (err) {
-      console.log("error updating Go packages: " + err);
-      reject(err);
-      return;
-    }
+    /*// first get get*/
+    //try {
+    //child_process.execSync("go get ./...", {
+    //cwd: buildPath
+    //});
+    //console.log("Golang dependencies fetched");
+    //} catch (err) {
+    //console.log("error updating Go packages: " + err);
+    //reject(err);
+    //return;
+    /*}*/
     // then run the golang script
     console.log("build path = " + buildPath);
     const args = ["run", "main.go"];
