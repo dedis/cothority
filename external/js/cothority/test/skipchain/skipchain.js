@@ -49,5 +49,5 @@ describe("skipchain client", () => {
         done();
         throw err;
       });
-  });
+  }).timeout(5000);
 });
