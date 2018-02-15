@@ -380,7 +380,7 @@ func scPrint(c *cli.Context) error {
 		log.Infof("BackwardLink[%d] = %x", i, bl)
 	}
 	for i, fl := range sb.ForwardLink {
-		log.Infof("ForwardLink[%d] = %x", i, fl.Msg)
+		log.Infof("ForwardLink[%d] = %x", i, fl.To)
 	}
 	log.Infof("Data: %#v", string(sb.Data))
 	for i, vf := range sb.VerifierIDs {
