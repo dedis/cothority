@@ -134,7 +134,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 
 	for i := 0; i < sbCount; i++ {
 		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash)
-		log.ErrFatal(err)
+		require.Nil(t, err)
 
 		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
 		if !sbc.Update[0].Equal(sbs[i]) {

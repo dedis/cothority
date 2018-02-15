@@ -491,24 +491,20 @@ func (fl *ForwardLink) Hash() SkipBlockID {
 
 // Copy makes a deep copy of a ForwardLink
 func (fl *ForwardLink) Copy() *ForwardLink {
-	sigCopy := make([]byte, len(fl.Signature.Sig))
-	copy(sigCopy, fl.Signature.Sig)
-
-	msgCopy := make([]byte, len(fl.Signature.Msg))
-	copy(msgCopy, fl.Signature.Msg)
-
-	exsCopy := make([]bftcosi.Exception, len(fl.Signature.Exceptions))
-	copy(exsCopy, fl.Signature.Exceptions)
-
+	var newRoster *onet.Roster
+	if fl.NewRoster != nil {
+		newRoster = onet.NewRoster(fl.NewRoster.List)
+		newRoster.ID = onet.RosterID([uuid.Size]byte(fl.NewRoster.ID))
+	}
 	return &ForwardLink{
 		Signature: bftcosi.BFTSignature{
-			Sig:        sigCopy,
-			Msg:        msgCopy,
-			Exceptions: exsCopy,
+			Sig:        append([]byte{}, fl.Signature.Sig...),
+			Msg:        append([]byte{}, fl.Signature.Msg...),
+			Exceptions: append([]bftcosi.Exception{}, fl.Signature.Exceptions...),
 		},
-		From:      fl.From,
-		To:        fl.To,
-		NewRoster: fl.NewRoster,
+		From:      append([]byte{}, fl.From...),
+		To:        append([]byte{}, fl.To...),
+		NewRoster: newRoster,
 	}
 }
 
