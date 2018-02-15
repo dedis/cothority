@@ -446,6 +446,8 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		ocsProto.Xc = req.Ephemeral
 		verificationData.Ephemeral = req.Ephemeral
 		verificationData.Signature = req.Signature
+	} else if read.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
+		return nil, errors.New("please use ephemeral keys for non-ed25519 private keys")
 	} else {
 		ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	}
@@ -571,14 +573,17 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 			}
 			darcs := *verificationData.Signature.SignaturePath.Darcs
 			darc := darcs[len(darcs)-1]
-			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(
-				verificationData.Signature.SignaturePath.Signer.Ed25519.Point) {
+			if !o.Read.Signature.SignaturePath.Signer.Equal(
+				&verificationData.Signature.SignaturePath.Signer) {
 				return errors.New("ephemeral key signed by wrong reader")
 			}
 			if err := verificationData.Signature.Verify(buf, darc); err != nil {
 				return errors.New("wrong signature on ephemeral key: " + err.Error())
 			}
 		} else {
+			if o.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
+				return errors.New("use ephemeral keys for non-ed25519 keys")
+			}
 			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
 				return errors.New("wrong reader")
 			}
