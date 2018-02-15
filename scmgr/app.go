@@ -779,7 +779,7 @@ func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
 func findLinkFromAddress(cfg *config, address string) (*link, error) {
 	var l *link
 	for _, o := range cfg.Values.Link {
-		if o.Address == network.NewAddress(network.PlainTCP, address) {
+		if o.Address.NetworkAddress() == address {
 			l = o
 			break
 		}

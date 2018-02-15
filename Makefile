@@ -15,3 +15,6 @@ test_playground:
 
 # Other targets are:
 # make create_stable
+
+proto:
+	awk -f proto.awk status/service/struct.go > external/proto/status.proto
