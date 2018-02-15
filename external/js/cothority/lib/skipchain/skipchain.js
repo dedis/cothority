@@ -1,4 +1,4 @@
-//"use strict";
+"use strict";
 
 const net = require("../net");
 const protobuf = require("../protobuf");
@@ -65,6 +65,7 @@ class Client {
         if (!err) {
           // tries again with random conodes
           nbErr++;
+          continue;
         }
         // update the roster
         client.lastRoster = identity.Roster.fromProtobuf(lastBlock.roster);
