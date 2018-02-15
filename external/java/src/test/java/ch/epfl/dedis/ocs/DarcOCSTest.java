@@ -1,6 +1,5 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.darc.*;
@@ -32,7 +31,7 @@ public class DarcOCSTest {
 
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
-            ocs = new OnchainSecrets(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
+            ocs = new OnchainSecrets(testInstanceController.getRoster(), adminDarc);
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");

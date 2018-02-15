@@ -11,6 +11,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class OcsFactory {
     private ArrayList<ServerIdentity> servers = new ArrayList<>();
@@ -38,6 +39,25 @@ public class OcsFactory {
         }
 
         servers.add(new ServerIdentity(conode, publicKey));
+        return this;
+    }
+
+    /**
+     * @param conode    conode address with public key
+     * @throws IllegalArgumentException when conode address is incorrect
+     */
+    public OcsFactory addConode(final ConodeAddress conode) {
+        return this.addConode(conode.getAddress(), conode.getPublicKey());
+    }
+
+    /**
+     * @param conodes   cothority server address with public key
+     * @throws IllegalArgumentException when conode address is incorrect
+     */
+    public OcsFactory addConodes(final Collection<ConodeAddress> conodes) {
+        for (ConodeAddress conodeAddress : conodes) {
+            this.addConode(conodeAddress);
+        }
         return this;
     }
 
@@ -83,6 +103,24 @@ public class OcsFactory {
             return new Darc(admin, null, null);
         } catch (CothorityCryptoException e) {
             throw new CothorityCommunicationException("Unable to create admin DARC for a new skipchain", e);
+        }
+    }
+
+    public static class ConodeAddress {
+        private final URI address;
+        private final String publicKey;
+
+        public URI getAddress() {
+            return address;
+        }
+
+        public String getPublicKey() {
+            return publicKey;
+        }
+
+        public ConodeAddress(URI address, String publicKey) {
+            this.address = address;
+            this.publicKey = publicKey;
         }
     }
 }

@@ -1,7 +1,7 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.darc.IdentityDarc;
@@ -31,10 +31,11 @@ public class GetPathTest {
     private DarcId publisherId;
     private DarcId consumerId;
     private DarcId readersGroupId;
+    private TestServerController testServerController;
 
     @BeforeAll
     void setupBlokchainAndUsers() throws Exception {
-        TestServerInit.getInstance();
+        testServerController = TestServerInit.getInstance();
         SkipblockId genesis = createSkipChainForTest();
         ocs = connectToExistingSkipchain(genesis);
         publisherId = createPublisher(ocs);
@@ -150,7 +151,7 @@ public class GetPathTest {
 
     private OnchainSecrets connectToExistingSkipchain(SkipblockId genesis) throws Exception {
         OcsFactory ocsFactory = new OcsFactory();
-        ocsFactory.addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1);
+        ocsFactory.addConode(testServerController.getMasterConode());
         ocsFactory.setGenesis(genesis);
         return ocsFactory.createConnection();
     }
@@ -163,10 +164,7 @@ public class GetPathTest {
 
     private SkipblockId createSkipChainForTest() throws Exception {
         return new OcsFactory()
-                .addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1)
-                .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
-                .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
-                .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
+                .addConodes(testServerController.getConodes())
                 .initialiseNewSkipchain(new SignerEd25519(
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }

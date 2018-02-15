@@ -4,9 +4,7 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -58,7 +56,7 @@ class OnchainSecretsTest {
 
         try {
             logger.info("Admin darc: " + adminDarc.getId().toString());
-            ocs = new OnchainSecrets(LocalRosters.FromToml(LocalRosters.groupToml), adminDarc);
+            ocs = new OnchainSecrets(testInstanceController.getRoster(), adminDarc);
         } catch (Exception e){
             logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
             logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
