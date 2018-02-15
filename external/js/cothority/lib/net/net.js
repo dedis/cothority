@@ -65,8 +65,7 @@ function Socket(addr, service) {
       };
 
       ws.onerror = error => {
-        console.log(error);
-        reject(new Error("could not connect to " + this.url));
+        reject(new Error("could not connect to " + this.url + ":" + error));
       };
     });
   };
@@ -110,7 +109,6 @@ class RosterSocket {
           var socket = new Socket(addr, service);
           console.log("RosterSocket: trying out " + addr + "/" + service);
           var data = yield socket.send(request, response, data);
-          console.log("RosterSocket: received data back");
           socket.lastGoodServer = addr;
           return Promise.resolve(data);
         } catch (err) {
