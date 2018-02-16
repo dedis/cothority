@@ -1,0 +1,151 @@
+message Election {
+    required string name = 1;
+    required uint32 creator = 2;
+    repeated uint32 users = 3;
+    optional bytes id = 4;
+    optional Roster roster = 5;
+    optional bytes key = 6;
+    optional uint32 stage = 8;
+    optional string description = 9;
+    optional string end = 10;
+}
+
+message Ballot {
+    required uint32 user = 1;
+    required bytes alpha = 2;
+    required bytes beta = 3;
+    // optional bytes text = 4;
+}
+
+message Box {
+    repeated Ballot ballots = 1;
+}
+
+message Ping {
+    required uint32 nonce = 1;
+}
+
+message Link {
+    required string pin = 1;
+    required Roster roster = 2;
+    required bytes key = 3;
+    repeated uint32 admins = 4;
+}
+
+message LinkReply {
+    optional bytes master = 1;
+}
+
+message Login {
+    required bytes id = 1;
+    required uint32 user = 2;
+    required bytes signature = 3;
+}
+
+message LoginReply {
+    required string token = 1;
+    required bool admin = 2;
+    repeated Election elections = 3;
+}
+
+message Open{
+    required string token = 1;
+    required Election election = 2;
+    required bytes id = 3;
+}
+
+message OpenReply {
+    required bytes id = 1;
+    required bytes key = 2;
+}
+
+message Cast {
+    required string token = 1;
+    required bytes id = 2;
+    required Ballot ballot = 3;
+}
+
+message CastReply {
+    // required bytes block = 1;
+}
+
+message Shuffle {
+    required string token = 1;
+    required bytes id = 2;
+}
+
+message ShuffleReply {
+    // required Box shuffled = 1;
+}
+
+message Decrypt {
+    required string token = 1;
+    required bytes id = 2;
+}
+
+message DecryptReply {
+    //required Box decrypted = 1;
+}
+
+message GetBox {
+	required string token = 1;
+	required bytes id = 2;
+}
+
+message GetBoxReply {
+	repeated Box box = 1;
+}
+
+message GetMixes {
+	required string token = 1;
+	required bytes id = 2;
+}
+
+message Mix {
+	repeated Ballot ballots = 1;
+	required bytes proof = 2;
+
+	required string node = 3;
+}
+
+message GetMixesReply {
+	repeated Mix mixes = 1;
+}
+
+message Partial {
+    repeated bytes points = 1;
+
+	required bool flag = 2;
+	required string node = 3;
+}
+
+message GetPartials {
+	required string token = 1;
+	required bytes id = 2;
+}
+
+message GetPartialsReply {
+    repeated Partial partials = 1;
+}
+
+message Reconstruct {
+	required string token = 1;
+	required bytes id = 2;
+}
+
+// ReconstructReply message.
+message ReconstructReply {
+	repeated bytes points = 1;
+}
+
+/*
+message Aggregate {
+    required string token = 1;
+    required string genesis = 2;
+    required int32 type = 3;
+}
+
+message AggregateReply {
+    required Box box = 1;
+}
+*/
