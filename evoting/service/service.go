@@ -79,6 +79,8 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	master := &lib.Master{
 		ID:     genesis.Hash,
 		Roster: req.Roster,
+		Admins: req.Admins,
+		Key:    req.Key,
 	}
 	if err := master.Store(master); err != nil {
 		return nil, err
