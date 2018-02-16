@@ -37,6 +37,22 @@ if (!isProd) {
   router.use('/static', express.static(path.join(__dirname, '/dist/static')))
 }
 
+const generateSignature = sciper => {
+  sciper = typeof sciper === 'string' ? sciper : sciper.toString()
+  const message = new Uint8Array(config.masterKey.length + sciper.length)
+  message.set(config.masterKey)
+  for (let i = 0; i < sciper.length; i++) {
+    message[i + config.masterKey.length] = sciper[i] - '0'
+  }
+  const suite = new kyber.curve.edwards25519.Curve()
+  const key = suite.scalar()
+  key.unmarshalBinary(new Uint8Array(hexToArrayBuffer(process.env.PRIVATE_KEY)))
+  return kyber.sign.schnorr.sign(suite,
+    key,
+    message
+  )
+}
+
 router.get('/auth/login', (req, res) => {
   let data = {
     client: 'evoting-auth',
@@ -75,22 +91,13 @@ router.get('/auth/verify', (req, res) => {
       }
 
       // Sign the data
-      const message = process.env.MASTER_PIN + sciper
-      const suite = new kyber.curve.edwards25519.Curve()
-      const key = suite.scalar()
-      key.unmarshalBinary(
-        Uint8Array.from(hexToArrayBuffer(process.env.PRIVATE_KEY))
-      )
-      const signature = kyber.sign.schnorr.sign(suite,
-        key,
-        Uint8Array.from(Buffer.from(message))
-      )
+      signature = generateSignature(sciper)
       user = {
         name,
         sciper,
         groups,
         sections,
-        signature
+        signature: Array.from(signature) // JSON stringification is messed up with TypedArray
       }
       res.render('template', { state: JSON.stringify({ user }) })
     })

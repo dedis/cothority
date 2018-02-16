@@ -9,9 +9,8 @@ This package is split into two parts
 
 ## Environmental Variables
 
-The authentication server requires two environment variables
+The authentication server requires an environment variable
 
-* `MASTER_PIN` - from evoting service
 * `PRIVATE_KEY` - ed25519 private key to generate schnorr signature
 
 ## Common steps
@@ -23,6 +22,8 @@ cd ../server
 npm install
 ```
 
+Edit `frontend/src/config.js` and `server/config.js` and update `masterKey` to the
+one logged by cothority
 
 ## Dev
 
@@ -42,7 +43,7 @@ The production setup is to use nginx as a reverse proxy that would redirect all
 requests to `/auth/(login|verify)` to the node process while all other requests
 will be served by the Vue frontend.
 
-You'd want to change `frontned/config/index.js`. Search for the `build` key and
+You'd want to change `frontend/config/index.js`. Search for the `build` key and
 change the `index` and `assetsRoot` keys
 
 ```
