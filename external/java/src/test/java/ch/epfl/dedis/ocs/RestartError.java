@@ -1,7 +1,7 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
@@ -23,8 +23,8 @@ public class RestartError {
 
     @BeforeEach
     void init() {
-        TestServerInit.getInstance();
-        roster = LocalRosters.FromToml(LocalRosters.groupToml);
+        TestServerController testServerController = TestServerInit.getInstance();
+        roster = testServerController.getRoster();
     }
 
     @Test

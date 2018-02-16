@@ -15,10 +15,12 @@ public class TestServerInit {
     public static TestServerController getInstance() {
         return Holder.INSTANCE;
     }
+
     public static TestServerController getInstanceManual() {
         testWithoutDocker = "yes";
         return Holder.INSTANCE;
     }
+
     private TestServerInit() {
         try {
 

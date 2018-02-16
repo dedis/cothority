@@ -1,7 +1,8 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.LocalRosters;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcId;
@@ -15,6 +16,7 @@ import ch.epfl.dedis.lib.darc.SignaturePath;
 import ch.epfl.dedis.lib.darc.SignerX509EC;
 import ch.epfl.dedis.lib.darc.TestSignerX509EC;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.ocs.Document;
 import ch.epfl.dedis.ocs.WriteRequest;
 import ch.epfl.dedis.ocs.WriteRequestId;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.DatatypeConverter;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,10 +34,11 @@ public class GrantAccessTest {
     private final SignerX509EC consumerSigner = new TestSignerX509EC();
     private final SignerX509EC publisherSigner = new TestSignerX509EC();
     private final SignerX509EC consumerPublicPart = new TestLimitedSignerX509EC(consumerSigner);
+    private TestServerController testServerController;
 
     @BeforeEach
     void initConodes() {
-         TestServerInit.getInstance();
+        testServerController = TestServerInit.getInstance();
     }
 
     @Test
@@ -121,7 +125,7 @@ public class GrantAccessTest {
 
     private OnchainSecrets connectToExistingSkipchain(SkipblockId genesis) throws Exception {
         OcsFactory ocsFactory = new OcsFactory();
-        ocsFactory.addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1);
+        ocsFactory.addConode(testServerController.getMasterConode());
         ocsFactory.setGenesis(genesis);
         return ocsFactory.createConnection();
     }
@@ -134,10 +138,7 @@ public class GrantAccessTest {
 
     private SkipblockId createSkipChainForTest() throws CothorityCommunicationException {
         return new OcsFactory()
-                .addConode(LocalRosters.CONODE_1, LocalRosters.CONODE_PUB_1)
-                .addConode(LocalRosters.CONODE_2, LocalRosters.CONODE_PUB_2)
-                .addConode(LocalRosters.CONODE_3, LocalRosters.CONODE_PUB_3)
-                .addConode(LocalRosters.CONODE_4, LocalRosters.CONODE_PUB_4)
+                .addConodes(testServerController.getConodes())
                 .initialiseNewSkipchain(new SignerEd25519(
                         DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
     }
