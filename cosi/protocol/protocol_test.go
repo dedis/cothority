@@ -12,6 +12,10 @@ import (
 	"github.com/dedis/onet/log"
 )
 
+func init() {
+	GlobalRegisterDefaultProtocols()
+}
+
 var testSuite = suites.MustFind("Ed25519")
 
 // Tests various trees configurations
@@ -35,7 +39,7 @@ func TestProtocol(t *testing.T) {
 				publics[i] = node.ServerIdentity.Public
 			}
 
-			pi, err := local.CreateProtocol(ProtocolName, tree)
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
@@ -85,7 +89,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			}
 
 			// create protocol
-			pi, err := local.CreateProtocol(ProtocolName, tree)
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
@@ -160,7 +164,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 			}
 
 			// create protocol
-			pi, err := local.CreateProtocol(ProtocolName, tree)
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
@@ -226,7 +230,7 @@ func TestProtocolErrors(t *testing.T) {
 			_, _, tree := local.GenTree(nNodes, false)
 
 			// missing create protocol function
-			pi, err := local.CreateProtocol(ProtocolName, tree)
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
@@ -243,7 +247,7 @@ func TestProtocolErrors(t *testing.T) {
 			}
 
 			// missing proposal
-			pi, err = local.CreateProtocol(ProtocolName, tree)
+			pi, err = local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)

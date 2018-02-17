@@ -14,11 +14,11 @@ import (
 	"github.com/dedis/onet"
 )
 
-// ProtocolName can be used from other packages to refer to this protocol.
-const ProtocolName = "CoSiProto"
+// DefaultProtocolName can be used from other packages to refer to this protocol.
+const DefaultProtocolName = "CoSiProtoDefault"
 
-// SubProtocolName is started by the main protocol.
-const SubProtocolName = "SubCoSiProto"
+// DefaultSubProtocolName is started by the main protocol.
+const DefaultSubProtocolName = "SubCoSiProtoDefault"
 
 // DefaultProtocolTimeout is the primary timeout for the CoSi protocol
 const DefaultProtocolTimeout = time.Second * 10

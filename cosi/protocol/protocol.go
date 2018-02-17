@@ -21,13 +21,11 @@ type VerificationFn func(msg []byte) bool
 // and registers the protocols.
 func init() {
 	network.RegisterMessages(Announcement{}, Commitment{}, Challenge{}, Response{}, Stop{})
-
-	onet.GlobalProtocolRegister(ProtocolName, NewDefaultProtocol)
-	onet.GlobalProtocolRegister(SubProtocolName, NewDefaultSubProtocol)
 }
 
 // CoSiRootNode holds the parameters of the protocol.
 // It also defines a channel that will receive the final signature.
+// This protocol should only exist on the root node.
 type CoSiRootNode struct {
 	*onet.TreeNodeInstance
 
@@ -39,10 +37,11 @@ type CoSiRootNode struct {
 	LeavesTimeout    time.Duration
 	FinalSignature   chan []byte
 
-	publics        []kyber.Point
-	hasStopped     bool //used since Shutdown can be called multiple time
-	startChan      chan bool
-	verificationFn VerificationFn
+	publics         []kyber.Point
+	hasStopped      bool //used since Shutdown can be called multiple time
+	startChan       chan bool
+	subProtocolName string
+	verificationFn  VerificationFn
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
@@ -53,11 +52,18 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // with an always-true verification.
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a []byte) bool { return true }
-	return newProtocol(n, vf)
+	return NewProtocol(n, vf, DefaultSubProtocolName)
 }
 
-// newProtocol method is used to define the protocol.
-func newProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
+// GlobalRegisterDefaultProtocols is used to register the protocols before use,
+// most likely in an init function.
+func GlobalRegisterDefaultProtocols() {
+	onet.GlobalProtocolRegister(DefaultProtocolName, NewDefaultProtocol)
+	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
+}
+
+// NewProtocol method is used to define the protocol.
+func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string) (onet.ProtocolInstance, error) {
 
 	var list []kyber.Point
 	for _, t := range n.Tree().List() {
@@ -71,6 +77,7 @@ func newProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInst
 		hasStopped:       false,
 		startChan:        make(chan bool),
 		verificationFn:   vf,
+		subProtocolName:  subProtocolName,
 	}
 
 	return c, nil
@@ -236,6 +243,10 @@ func (p *CoSiRootNode) Start() error {
 		close(p.startChan)
 		return fmt.Errorf("verification function cannot be nil")
 	}
+	if p.subProtocolName == "" {
+		close(p.startChan)
+		return fmt.Errorf("sub-protocol name cannot be empty")
+	}
 
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
@@ -259,7 +270,7 @@ func (p *CoSiRootNode) Start() error {
 // and returns the started protocol.
 func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, error) {
 
-	pi, err := p.CreateProtocol(SubProtocolName, tree)
+	pi, err := p.CreateProtocol(p.subProtocolName, tree)
 	if err != nil {
 		return nil, err
 	}

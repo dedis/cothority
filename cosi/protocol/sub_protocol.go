@@ -11,6 +11,10 @@ import (
 	"github.com/dedis/onet/log"
 )
 
+func init() {
+	GlobalRegisterDefaultProtocols()
+}
+
 // CoSiSubProtocolNode holds the different channels used to receive the different protocol messages.
 type CoSiSubProtocolNode struct {
 	*onet.TreeNodeInstance
@@ -38,12 +42,12 @@ type CoSiSubProtocolNode struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a []byte) bool { return true }
-	return newSubProtocol(n, vf)
+	return NewSubProtocol(n, vf)
 }
 
-// newSubProtocol is used to define the subprotocol and to register
+// NewSubProtocol is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func newSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
+func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
 
 	c := &CoSiSubProtocolNode{
 		TreeNodeInstance: n,

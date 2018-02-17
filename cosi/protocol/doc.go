@@ -16,5 +16,19 @@ The protocol uses five files:
 - helper_functions.go defines some functions that are used by both the root and the other nodes
 
 The package protocol_tests contains unit tests testing the package's code.
+
+Under-the-hood, there are two protocols. A main protocol which only runs on the
+root node and a sub-protocol that runs on all nodes (including the root). The
+tree structure of the sub-protocol is illustrated below.
+     root
+       |
+       |
+   sub-leader
+    /       \
+   /         \
+leaf_1 ... leaf_n
+Namely, if there are m sub-leaders, the root will run m sub-protocols. The sub-
+protocols do bulk of the work (collective signatures) and communicates the
+result to the main protocol via channels.
 */
 package protocol
