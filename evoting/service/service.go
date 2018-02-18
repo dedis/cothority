@@ -17,6 +17,7 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+// timeout for protocol termination.
 const timeout = 60 * time.Second
 
 var (
