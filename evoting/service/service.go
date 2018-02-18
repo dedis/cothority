@@ -17,6 +17,8 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+const timeout = 60 * time.Second
+
 var (
 	errInvalidPin       = errors.New("Invalid pin")
 	errInvalidSignature = errors.New("Invalid signature")
@@ -133,7 +135,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		}
 
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
-	case <-time.After(2 * time.Second):
+	case <-time.After(timeout):
 		return nil, errProtocolTimeout
 	}
 }
@@ -268,7 +270,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	select {
 	case <-protocol.Finished:
 		return &evoting.ShuffleReply{}, nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(timeout):
 		return nil, errProtocolTimeout
 	}
 }
@@ -302,7 +304,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	select {
 	case <-protocol.Finished:
 		return &evoting.DecryptReply{}, nil
-	case <-time.After(5 * time.Second):
+	case <-time.After(timeout):
 		return nil, errProtocolTimeout
 	}
 }
@@ -436,7 +438,7 @@ func new(context *onet.Context) (onet.Service, error) {
 
 	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
 
-	log.Lvl3("Pin:", service.pin)
+	log.Info("Pin:", service.pin)
 
 	return service, nil
 }
