@@ -426,7 +426,7 @@ func new(context *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		secrets:          make(map[string]*lib.SharedSecret),
 		state:            &state{log: make(map[string]*stamp)},
-		pin:              "0", //nonce(6),
+		pin:              nonce(48),
 	}
 
 	service.RegisterHandlers(service.Ping, service.Link, service.Open, service.Login,
@@ -434,7 +434,6 @@ func new(context *onet.Context) (onet.Service, error) {
 		service.GetPartials, service.Decrypt, service.Reconstruct,
 	)
 
-	service.state.schedule(3 * time.Minute)
 	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
 
 	log.Lvl3("Pin:", service.pin)
