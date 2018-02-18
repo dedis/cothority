@@ -179,6 +179,12 @@ subtrees:
 		return errors.New("not a cosi suite")
 	}
 
+	verifyChan := make(chan bool, 1)
+	go func() {
+		log.Lvl3(p.ServerIdentity().Address, "starting verification")
+		verifyChan <- p.verificationFn(p.Proposal)
+	}()
+
 	// generate challenge
 	log.Lvl3("root-node generating global challenge")
 	secret, commitment, finalMask, err := generateCommitmentAndAggregate(suite, p.TreeNodeInstance, p.publics, commitments)
@@ -212,7 +218,7 @@ subtrees:
 	}
 
 	// signs the proposal
-	response, err := generateResponse(suite, p.TreeNodeInstance, responses, secret, cosiChallenge)
+	response, err := generateResponse(suite, p.TreeNodeInstance, responses, secret, cosiChallenge, verifyChan)
 	if err != nil {
 		return err
 	}

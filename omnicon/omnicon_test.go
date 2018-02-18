@@ -18,23 +18,23 @@ import (
 var testSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 type testState struct {
-	// xs is a binary array, 0 represents fail and 1 represents pass
-	// this is the only field that should be initialised
-	xs          []bool
+	sync.Mutex
 	refuseCount int
 	acceptCount int
-	stateMut    sync.Mutex
+	ackCount    int
 }
 
-func genVerificationFn(i int, s *testState) protocol.VerificationFn {
+func genVerificationFn(n, t int, s *testState) protocol.VerificationFn {
 	return func(a []byte) bool {
-		s.stateMut.Lock()
-		defer s.stateMut.Unlock()
-		if s.xs[i] {
+		s.Lock()
+		defer s.Unlock()
+		// total number of calls = s.acceptCount+s.refuseCount
+		log.Print(s.acceptCount+s.refuseCount, n, t)
+		if s.acceptCount+s.refuseCount < n-t {
 			s.acceptCount++
 			return true
 		}
@@ -43,17 +43,33 @@ func genVerificationFn(i int, s *testState) protocol.VerificationFn {
 	}
 }
 
+func genAckFn(s *testState) protocol.VerificationFn {
+	return func(a []byte) bool {
+		s.Lock()
+		s.ackCount++
+		s.Unlock()
+		return true
+	}
+}
+
 func TestBftCoSi(t *testing.T) {
 	const protoName = "TestBftCoSi"
 
-	vf := func(a []byte) bool { return true }
-	err := GlobalInitBFTCoSiProtocol(vf, protoName)
+	s := testState{}
+	vf := genVerificationFn(5, 0, &s)
+	ack := genAckFn(&s)
+	err := GlobalInitBFTCoSiProtocol(vf, ack, protoName)
+
 	require.Nil(t, err)
-	err = runProtocol(t, 5, 0, protoName, []byte("hello world"))
+	err = runProtocol(t, 5, 0, 0, protoName, []byte("hello world"))
 	require.Nil(t, err)
+
+	require.Equal(t, s.acceptCount, 5)
+	require.Equal(t, s.ackCount, 5)
+	require.Equal(t, s.refuseCount, 0)
 }
 
-func runProtocol(t *testing.T, nbrHosts int, nbrFault int, protoName string, proposal []byte) error {
+func runProtocol(t *testing.T, nbrHosts int, nbrFault int, nbrRefuse int, protoName string, proposal []byte) error {
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 
@@ -98,7 +114,9 @@ func getAndVerifySignature(sigChan chan []byte, publics []kyber.Point, proposal 
 	if sig == nil {
 		return fmt.Errorf("signature is nil")
 	}
-	err := cosi.Verify(testSuite, publics, proposal, sig, policy)
+	h := testSuite.Hash()
+	h.Write(proposal)
+	err := cosi.Verify(testSuite, publics, h.Sum(nil), sig, policy)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

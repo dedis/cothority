@@ -180,10 +180,12 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		return nil
 	}
 
-	// start the verification if I'm not the root because root should not fail
+	// start the verification if I'm not the root because root does the
+	// verification in the main protocol
 	verifyChan := make(chan bool, 1)
 	if !p.IsRoot() {
 		go func() {
+			log.Lvl3(p.ServerIdentity().Address, "starting verification")
 			verifyChan <- p.verificationFn(p.Proposal)
 		}()
 	}
@@ -220,14 +222,9 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}
 		p.subResponse <- responses[0]
 	} else {
-		// if verification fails, we stop and treat it as any other failure
-		if ok := <-verifyChan; !ok {
-			log.Lvl1("verification failed, will not send response")
-			return nil
-		}
 		// generate own response and send to parent
 		response, err := generateResponse(
-			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
+			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, verifyChan)
 		if err != nil {
 			return err
 		}

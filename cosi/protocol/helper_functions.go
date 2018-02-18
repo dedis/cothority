@@ -65,7 +65,7 @@ func generateCommitmentAndAggregate(s cosi.Suite, t *onet.TreeNodeInstance, publ
 // generateResponse generates a personal response based on the secret
 // and returns the aggregated response of all children and the node
 func generateResponse(s cosi.Suite, t *onet.TreeNodeInstance, structResponses []StructResponse,
-	secret kyber.Scalar, challenge kyber.Scalar) (kyber.Scalar, error) {
+	secret kyber.Scalar, challenge kyber.Scalar, verifyChan chan bool) (kyber.Scalar, error) {
 
 	if t == nil {
 		return nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
@@ -77,20 +77,25 @@ func generateResponse(s cosi.Suite, t *onet.TreeNodeInstance, structResponses []
 		return nil, fmt.Errorf("challenge should not be nil, but is")
 	}
 
-	//extract lists of responses
+	// extract lists of responses
 	var responses []kyber.Scalar
 	for _, c := range structResponses {
 		responses = append(responses, c.CoSiReponse)
 	}
 
-	//generate personal response
-	personalResponse, err := cosi.Response(s, t.Private(), secret, challenge)
-	if err != nil {
-		return nil, err
+	// generate personal response
+	if <-verifyChan {
+		personalResponse, err := cosi.Response(s, t.Private(), secret, challenge)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, personalResponse)
+	} else {
+		log.Lvl2(t.ServerIdentity().Address,
+			"Verification failed, not including personal response.")
 	}
-	responses = append(responses, personalResponse)
 
-	//aggregate responses
+	// aggregate responses
 	aggResponse, err := cosi.AggregateResponses(s, responses)
 	if err != nil {
 		return nil, err
