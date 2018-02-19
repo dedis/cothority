@@ -412,7 +412,9 @@ func dataList(c *cli.Context) error {
 	log.Info("Account name:", id.DeviceName)
 	log.Infof("Identity-ID: %x", id.ID)
 	if c.Bool("d") {
-		log.Info(id.Data.Storage)
+		for k, v := range id.Data.Storage {
+			log.Infof("%s : %s", k, v)
+		}
 	} else {
 		cfg.showKeys(id)
 	}
@@ -514,7 +516,9 @@ func kvAdd(c *cli.Context) error {
 	}
 	key := c.Args().Get(0)
 	value := c.Args().Get(1)
-	return addKv(c, cfg, id, key, value)
+	prop := id.GetProposed()
+	prop.Storage[key] = value
+	return addKv(c, cfg, id, prop)
 }
 
 func kvAddCsv(c *cli.Context) error {
@@ -538,19 +542,20 @@ func kvAddCsv(c *cli.Context) error {
 	}
 	column := c.Int("column")
 	log.Info("Column names to insert in cisc: " + strings.Join(records[0], ":"))
-	for i, row := range records {
+	log.Info("Column name to use as a key: " + records[0][column])
+	prop := id.GetProposed()
+	for _, row := range records[1:] {
 		key := row[column]
 		value := strings.Join(row, ",")
-		if err := addKv(c, cfg, id, key, value); err != nil {
-			return fmt.Errorf("adding row %d: %s", i, err)
-		}
+		prop.Storage[key] = value
+	}
+	if err := addKv(c, cfg, id, prop); err != nil {
+		return err
 	}
 	return nil
 }
 
-func addKv(c *cli.Context, cfg *ciscConfig, id *identity.Identity, key, value string) error {
-	prop := id.GetProposed()
-	prop.Storage[key] = value
+func addKv(c *cli.Context, cfg *ciscConfig, id *identity.Identity, prop *identity.Data) error {
 	cfg.proposeSendVoteUpdate(id, prop)
 	if id.Proposed == nil {
 		log.Info("Stored key-value pair")

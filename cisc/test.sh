@@ -207,17 +207,21 @@ testKeyAdd(){
 }
 
 testKeyCsv() {
-clientSetup 2
+  clientSetup 2
   csvFile=$(mktemp)
   cat > $csvFile  <<EOL
 key,val1,val2
-1,"ranger","barbare"
-2,"elf","nain"
+"jobs","ranger","warrior"
+"types","elf","dwarf"
 EOL
 
   testOK runCl 1 kv csv $csvFile
-  runCl 1 kv ls
   rm $csvFile
+  testOK runCl 2 data update
+  testOK runCl 2 data vote -yes
+  testOK runCl 1 data update
+  testGrep "jobs: jobs,ranger,warrior" runCl 1 kv ls
+  testGrep "types: types,elf,dwarf" runCl 1 kv ls
 }
 
 testIdDel(){
