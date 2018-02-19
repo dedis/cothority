@@ -546,6 +546,41 @@ func kvAdd(c *cli.Context) error {
 	}
 	key := c.Args().Get(0)
 	value := c.Args().Get(1)
+	return addKv(c, cfg, id, key, value)
+}
+
+func kvAddCsv(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	if c.NArg() != 1 {
+		return errors.New("Missing argument: csv file")
+	}
+	id := cfg.findSC(c.Args().Get(1))
+	if id == nil {
+		scList(c)
+		return errors.New("Please give skipchain-id")
+	}
+	file := c.Args().First()
+	fd, err := os.Open(file)
+	log.ErrFatal(err)
+	reader := csv.NewReader(fd)
+	records, err := reader.ReadAll()
+	log.ErrFatal(err)
+	if len(records) < 2 {
+		return errors.New("csv file given only contains column name")
+	}
+	column := c.Int("column")
+	log.Info("Column names to insert in cisc: " + strings.Join(records[0], ":"))
+	for i, row := range records {
+		key := row[column]
+		value := strings.Join(row, ",")
+		if err := addKv(c, cfg, id, key, value); err != nil {
+			return fmt.Errorf("adding row %d: %s", i, err)
+		}
+	}
+	return nil
+}
+
+func addKv(c *cli.Context, cfg *ciscConfig, id *identity.Identity, key, value string) error {
 	prop := id.GetProposed()
 	prop.Storage[key] = value
 	return addKv(c, cfg, id, prop)
