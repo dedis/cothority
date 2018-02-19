@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
@@ -33,6 +34,8 @@ type ProtocolBFTCoSi struct {
 	nbrFault int
 	// prepSigChan TODO
 	prepSigChan chan []byte
+	// publics
+	publics []kyber.Point
 }
 
 type phase int
@@ -111,8 +114,9 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
 	suite := bft.Suite().(suites.Suite)
-	err := cosi.Verify(suite, bft.Roster().Publics(), bft.Proposal, prepSig, cosi.NewThresholdPolicy(bft.nbrFault))
+	err := cosi.Verify(suite, bft.publics, bft.Proposal, prepSig, cosi.NewThresholdPolicy(bft.nbrFault))
 	if err != nil {
+		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignature <- nil
 		return nil
 	}
@@ -139,15 +143,20 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 // NewBFTCoSiProtocol TODO
 func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string) (*ProtocolBFTCoSi, error) {
+	publics := make([]kyber.Point, n.Tree().Size())
+	for i, node := range n.Tree().List() {
+		publics[i] = node.ServerIdentity.Public
+	}
 	return &ProtocolBFTCoSi{
 		TreeNodeInstance:    n,
 		Proposal:            make([]byte, 0),
 		FinalSignature:      make(chan []byte, 0),
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
-		protocolTimeout:     time.Second * 10, // TODO make it configurable
+		protocolTimeout:     time.Second * 10, // TODO make it configurable, not used
 		nbrFault:            1,                // TODO compute this
 		prepSigChan:         make(chan []byte, 0),
+		publics:             publics,
 	}, nil
 }
 

@@ -80,7 +80,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
 
 			local := onet.NewLocalTest(testSuite)
-			servers, _, tree := local.GenTree(nNodes, false)
+			servers, roster, tree := local.GenTree(nNodes, false)
 
 			// get public keys
 			publics := make([]kyber.Point, tree.Size())

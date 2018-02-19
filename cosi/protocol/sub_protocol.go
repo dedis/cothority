@@ -109,6 +109,16 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		return errors.New("not a cosi suite")
 	}
 
+	// start the verification in background if I'm not the root because
+	// root does the verification in the main protocol
+	verifyChan := make(chan bool, 1)
+	if !p.IsRoot() {
+		go func() {
+			log.Lvl3(p.ServerIdentity().Address, "starting verification")
+			verifyChan <- p.verificationFn(p.Proposal)
+		}()
+	}
+
 	err := p.SendToChildren(&announcement.Announcement)
 	if err != nil {
 		return err
@@ -162,6 +172,12 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}
 		p.subCommitment <- commitments[0]
 	} else {
+		// do not commit if the verification does not succeed
+		if !<-verifyChan {
+			log.Lvl2(p.ServerIdentity().Address, "verification failed, terminating")
+			return nil
+		}
+
 		// otherwise, compute personal commitment and send to parent
 		var commitment kyber.Point
 		var mask *cosi.Mask
@@ -179,16 +195,6 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	challenge, channelOpen := <-p.ChannelChallenge // from the leader
 	if !channelOpen {
 		return nil
-	}
-
-	// start the verification if I'm not the root because root does the
-	// verification in the main protocol
-	verifyChan := make(chan bool, 1)
-	if !p.IsRoot() {
-		go func() {
-			log.Lvl3(p.ServerIdentity().Address, "starting verification")
-			verifyChan <- p.verificationFn(p.Proposal)
-		}()
 	}
 
 	log.Lvl3(p.ServerIdentity().Address, "received challenge")
@@ -225,7 +231,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	} else {
 		// generate own response and send to parent
 		response, err := generateResponse(
-			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, verifyChan)
+			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
 		if err != nil {
 			return err
 		}
