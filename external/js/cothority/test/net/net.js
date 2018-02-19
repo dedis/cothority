@@ -109,25 +109,25 @@ describe("real server status", () => {
   after(function() {
     helpers.killGolang();
   });
-  
-  it("talk to :7003", done => {
+
+  it("can talk to status", done => {
     const build_dir = process.cwd() + "/test/skipchain/build";
 
     var fn = co.wrap(function*() {
       [roster, id] = helpers.readSkipchainInfo(build_dir);
       const socket = new network.RosterSocket(roster, "Status");
       socket
-	.send("Request", "Response", {})
-	.then(data => {
-	  expect(data.system.Db.field.Open).to.equal('true');
-	  done();
-	})
-	.catch(err => {
-	  throw err;
-	  done();
-	});
+        .send("Request", "Response", {})
+        .then(data => {
+          expect(data.system.Db.field.Open).to.equal("true");
+          done();
+        })
+        .catch(err => {
+          throw err;
+          done();
+        });
     });
-    
+
     helpers
       .runGolang(build_dir)
       .then(fn)
@@ -135,5 +135,5 @@ describe("real server status", () => {
         done();
         throw err;
       });
-  });
+  }).timeout(5000);
 });
