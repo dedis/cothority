@@ -42,14 +42,15 @@ main(){
   test IdConnect
   test IdDel
   test KeyAdd
-  test KeyAdd2
-  test KeyAddWeb
-  test KeyDel
-  test SSHAdd
-  test SSHDel
-  test Follow
-  test SymLink
-  test Revoke
+  test KeyCsv
+  #test KeyAdd2
+  #test KeyAddWeb
+  #test KeyDel
+  #test SSHAdd
+  #test SSHDel
+  #test Follow
+  #test SymLink
+  #test Revoke
   stopTest
 }
 
@@ -203,6 +204,20 @@ testKeyAdd(){
   testGrep key1 runCl 2 kv ls
   testOK runCl 1 data update
   testGrep key1 runCl 1 kv ls
+}
+
+testKeyCsv() {
+clientSetup 2
+  csvFile=$(mktemp)
+  cat > $csvFile  <<EOL
+key,val1,val2
+1,"ranger","barbare"
+2,"elf","nain"
+EOL
+
+  testOK runCl 1 kv csv $csvFile
+  runCl 1 kv ls
+  rm $csvFile
 }
 
 testIdDel(){
