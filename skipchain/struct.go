@@ -535,7 +535,7 @@ func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
 }
 
 // GetStatus is a function that returns the status report of the db.
-func (db *SkipBlockDB) GetStatus() onet.Status {
+func (db *SkipBlockDB) GetStatus() *onet.Status {
 	out := make(map[string]string)
 	db.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
@@ -546,7 +546,7 @@ func (db *SkipBlockDB) GetStatus() onet.Status {
 		out["Bytes"] = strconv.Itoa(total)
 		return nil
 	})
-	return onet.Status(out)
+	return &onet.Status{Field: out}
 }
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
