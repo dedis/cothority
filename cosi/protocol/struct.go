@@ -31,7 +31,8 @@ const DefaultLeavesTimeout = DefaultProtocolTimeout / 20
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {
-	Proposal         []byte
+	Msg              []byte
+	Data             []byte
 	Publics          []kyber.Point
 	SubleaderTimeout time.Duration
 	LeafTimeout      time.Duration

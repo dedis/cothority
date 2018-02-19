@@ -19,7 +19,8 @@ func init() {
 type CoSiSubProtocolNode struct {
 	*onet.TreeNodeInstance
 	Publics          []kyber.Point
-	Proposal         []byte
+	Msg              []byte
+	Data             []byte
 	SubleaderTimeout time.Duration
 	LeavesTimeout    time.Duration
 	hasStopped       bool //used since Shutdown can be called multiple time
@@ -41,7 +42,7 @@ type CoSiSubProtocolNode struct {
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return true }
+	vf := func(a, b []byte) bool { return true }
 	return NewSubProtocol(n, vf)
 }
 
@@ -103,7 +104,8 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	p.Publics = announcement.Publics
 	p.SubleaderTimeout = announcement.SubleaderTimeout
 	p.LeavesTimeout = announcement.LeafTimeout
-	p.Proposal = announcement.Proposal
+	p.Msg = announcement.Msg
+	p.Data = announcement.Data
 	suite, ok := p.Suite().(cosi.Suite)
 	if !ok {
 		return errors.New("not a cosi suite")
@@ -115,7 +117,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	if !p.IsRoot() {
 		go func() {
 			log.Lvl3(p.ServerIdentity().Address, "starting verification")
-			verifyChan <- p.verificationFn(p.Proposal)
+			verifyChan <- p.verificationFn(p.Msg, p.Data)
 		}()
 	}
 
@@ -257,9 +259,10 @@ func (p *CoSiSubProtocolNode) HandleStop(stop StructStop) error {
 // Start is done only by root and starts the subprotocol
 func (p *CoSiSubProtocolNode) Start() error {
 	log.Lvl3("Starting subCoSi")
-	if p.Proposal == nil {
-		return errors.New("subprotocol does not have a proposal")
+	if p.Msg == nil {
+		return errors.New("subprotocol does not have a proposal msg")
 	}
+	// p.Data can be nil
 	if p.Publics == nil || len(p.Publics) < 1 {
 		return errors.New("subprotocol has invalid public keys")
 	}
@@ -274,7 +277,7 @@ func (p *CoSiSubProtocolNode) Start() error {
 	}
 
 	announcement := StructAnnouncement{p.TreeNode(),
-		Announcement{p.Proposal, p.Publics,
+		Announcement{p.Msg, p.Data, p.Publics,
 			p.SubleaderTimeout, p.LeavesTimeout}}
 	p.ChannelAnnouncement <- announcement
 	return nil

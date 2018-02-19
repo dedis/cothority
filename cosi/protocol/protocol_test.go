@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -46,7 +47,7 @@ func TestProtocol(t *testing.T) {
 			}
 			cosiProtocol := pi.(*CoSiRootNode)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Proposal = proposal
+			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 
 			err = cosiProtocol.Start()
@@ -81,6 +82,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 
 			local := onet.NewLocalTest(testSuite)
 			servers, roster, tree := local.GenTree(nNodes, false)
+			require.NotNil(t, roster)
 
 			// get public keys
 			publics := make([]kyber.Point, tree.Size())
@@ -96,7 +98,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			}
 			cosiProtocol := pi.(*CoSiRootNode)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Proposal = proposal
+			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 			cosiProtocol.LeavesTimeout = DefaultLeavesTimeout
 
@@ -171,7 +173,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 			}
 			cosiProtocol := pi.(*CoSiRootNode)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Proposal = proposal
+			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 			cosiProtocol.SubleaderTimeout = DefaultSubleaderTimeout
 
@@ -237,7 +239,7 @@ func TestProtocolErrors(t *testing.T) {
 			}
 			cosiProtocol := pi.(*CoSiRootNode)
 			//cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Proposal = proposal
+			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 
 			err = cosiProtocol.Start()
@@ -254,7 +256,7 @@ func TestProtocolErrors(t *testing.T) {
 			}
 			cosiProtocol = pi.(*CoSiRootNode)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
-			//cosiProtocol.Proposal = proposal
+			//cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 
 			err = cosiProtocol.Start()

@@ -12,10 +12,9 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-// VerificationFn can be passes to each protocol node. It will be called
-// in a go-routine during the (start/handle) challenge phase of the protocol.
-// The input msg is the same as sent in the challenge phase.
-type VerificationFn func(msg []byte) bool
+// VerificationFn is called on every node. Where msg is the message that is
+// co-signed and the data is additional data for verification.
+type VerificationFn func(msg []byte, data []byte) bool
 
 // init is done at startup. It defines every messages that is handled by the network
 // and registers the protocols.
@@ -30,7 +29,8 @@ type CoSiRootNode struct {
 	*onet.TreeNodeInstance
 
 	NSubtrees        int
-	Proposal         []byte
+	Msg              []byte
+	Data             []byte
 	CreateProtocol   CreateProtocolFunction
 	ProtocolTimeout  time.Duration
 	SubleaderTimeout time.Duration
@@ -51,7 +51,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // NewDefaultProtocol is the default protocol function used for registration
 // with an always-true verification.
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	vf := func(a []byte) bool { return true }
+	vf := func(a, b []byte) bool { return true }
 	return NewProtocol(n, vf, DefaultSubProtocolName)
 }
 
@@ -73,6 +73,7 @@ func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName st
 	c := &CoSiRootNode{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan []byte),
+		Data:             make([]byte, 0),
 		publics:          list,
 		hasStopped:       false,
 		startChan:        make(chan bool),
@@ -101,7 +102,7 @@ func (p *CoSiRootNode) Dispatch() error {
 	verifyChan := make(chan bool, 1)
 	go func() {
 		log.Lvl3(p.ServerIdentity().Address, "starting verification")
-		verifyChan <- p.verificationFn(p.Proposal)
+		verifyChan <- p.verificationFn(p.Msg, p.Data)
 	}()
 
 	select {
@@ -192,7 +193,7 @@ subtrees:
 		return err
 	}
 
-	cosiChallenge, err := cosi.Challenge(suite, commitment, finalMask.AggregatePublic, p.Proposal)
+	cosiChallenge, err := cosi.Challenge(suite, commitment, finalMask.AggregatePublic, p.Msg)
 	if err != nil {
 		return err
 	}
@@ -243,9 +244,9 @@ subtrees:
 // Start is done only by root and starts the protocol.
 // It also verifies that the protocol has been correctly parameterized.
 func (p *CoSiRootNode) Start() error {
-	if p.Proposal == nil {
+	if p.Msg == nil {
 		close(p.startChan)
-		return fmt.Errorf("no proposal specified")
+		return fmt.Errorf("no proposal msg specified")
 	}
 	if p.CreateProtocol == nil {
 		close(p.startChan)
@@ -289,7 +290,8 @@ func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, 
 
 	cosiSubProtocol := pi.(*CoSiSubProtocolNode)
 	cosiSubProtocol.Publics = p.publics
-	cosiSubProtocol.Proposal = p.Proposal
+	cosiSubProtocol.Msg = p.Msg
+	cosiSubProtocol.Data = p.Data
 	cosiSubProtocol.SubleaderTimeout = p.SubleaderTimeout
 	cosiSubProtocol.LeavesTimeout = p.LeavesTimeout
 

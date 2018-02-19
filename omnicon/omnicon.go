@@ -18,8 +18,10 @@ import (
 type ProtocolBFTCoSi struct {
 	// the node we are represented-in
 	*onet.TreeNodeInstance
-	// Proposal is the message that will be signed by cosigners
-	Proposal []byte
+	// Msg is the message that will be signed by cosigners
+	Msg []byte
+	// Data is used for verification only, not signed
+	Data []byte
 	// FinalSignature is output of the protocol, for the caller to read
 	FinalSignature chan []byte
 	// CreateProtocol TODO
@@ -88,10 +90,10 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	// once more. Instead, send the digest of it.
 	if phase == phaseCommit {
 		h := bft.Suite().(suites.Suite).Hash()
-		h.Write(bft.Proposal)
-		cosiProto.Proposal = h.Sum(nil)
+		h.Write(bft.Msg)
+		cosiProto.Msg = h.Sum(nil)
 	} else {
-		cosiProto.Proposal = bft.Proposal
+		cosiProto.Msg = bft.Msg
 	}
 
 	return cosiProto, nil
@@ -114,7 +116,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
 	suite := bft.Suite().(suites.Suite)
-	err := cosi.Verify(suite, bft.publics, bft.Proposal, prepSig, cosi.NewThresholdPolicy(bft.nbrFault))
+	err := cosi.Verify(suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(bft.nbrFault))
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignature <- nil
@@ -148,8 +150,9 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 		publics[i] = node.ServerIdentity.Public
 	}
 	return &ProtocolBFTCoSi{
-		TreeNodeInstance:    n,
-		Proposal:            make([]byte, 0),
+		TreeNodeInstance: n,
+		// we do not have Msg to make the protocol fail if it's not set
+		Data:                make([]byte, 0),
 		FinalSignature:      make(chan []byte, 0),
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,

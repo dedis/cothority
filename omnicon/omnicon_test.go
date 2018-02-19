@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -49,10 +50,10 @@ func (co *Counters) get(i int) *Counter {
 var counters = &Counters{}
 
 // verify function that returns true if the length of the data is 1.
-func verify(a []byte) bool {
-	c, err := strconv.Atoi(string(a))
+func verify(msg, data []byte) bool {
+	c, err := strconv.Atoi(string(msg))
 	if err != nil {
-		log.Error("Failed to cast", a)
+		log.Error("Failed to cast", msg)
 		return false
 	}
 
@@ -61,7 +62,7 @@ func verify(a []byte) bool {
 	counter.veriCount++
 	log.Lvl4("Verification called", counter.veriCount, "times")
 	counter.Unlock()
-	if len(a) == 0 {
+	if len(msg) == 0 {
 		log.Error("Didn't receive correct data")
 		return false
 	}
@@ -69,10 +70,10 @@ func verify(a []byte) bool {
 }
 
 // verifyRefuse will refuse the refuseIndex'th calls
-func verifyRefuse(a []byte) bool {
-	c, err := strconv.Atoi(string(a))
+func verifyRefuse(msg, data []byte) bool {
+	c, err := strconv.Atoi(string(msg))
 	if err != nil {
-		log.Error("Failed to cast", a)
+		log.Error("Failed to cast", msg)
 		return false
 	}
 
@@ -85,7 +86,7 @@ func verifyRefuse(a []byte) bool {
 		return false
 	}
 	log.Lvl3("Verification called", counter.veriCount, "times")
-	if len(a) == 0 {
+	if len(msg) == 0 {
 		log.Error("Didn't receive correct data")
 		return false
 	}
@@ -93,7 +94,7 @@ func verifyRefuse(a []byte) bool {
 }
 
 // ack is a dummy
-func ack(a []byte) bool {
+func ack(a, b []byte) bool {
 	return true
 }
 
@@ -169,7 +170,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	counter := &Counter{refuseIndex: refuseIndex}
 	counters.add(counter)
 	proposal := []byte(strconv.Itoa(counters.size() - 1))
-	bftCosiProto.Proposal = proposal
+	bftCosiProto.Msg = proposal
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
 	// kill the leafs first
@@ -203,8 +204,8 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 }
 
 func getAndVerifySignature(sigChan chan []byte, publics []kyber.Point, proposal []byte, policy cosi.Policy) error {
-	timeout := time.Second * 20
 	var sig []byte
+	timeout := protocol.DefaultProtocolTimeout * 2
 	select {
 	case sig = <-sigChan:
 	case <-time.After(timeout):

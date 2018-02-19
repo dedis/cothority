@@ -50,7 +50,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	if tree == nil {
 		return nil, errors.New("failed to generate tree")
 	}
-	pi, err := s.CreateProtocol(protocol.ProtocolName, tree)
+	pi, err := s.CreateProtocol(protocol.DefaultProtocolName, tree)
 	if err != nil {
 		return nil, errors.New("Couldn't make new protocol: " + err.Error())
 	}
@@ -58,7 +58,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	// configure the protocol
 	p := pi.(*protocol.CoSiRootNode)
 	p.CreateProtocol = s.CreateProtocol
-	p.Proposal = req.Message
+	p.Msg = req.Message
 	// TODO is there an optimal way to find out the number of subtrees?
 	p.NSubtrees = nNodes / 10
 	if p.NSubtrees < 1 {
@@ -99,10 +99,10 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 // generate the PI on all others node.
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
-	if tn.ProtocolName() == protocol.ProtocolName {
+	if tn.ProtocolName() == protocol.DefaultProtocolName {
 		return protocol.NewDefaultProtocol(tn)
 	}
-	if tn.ProtocolName() == protocol.SubProtocolName {
+	if tn.ProtocolName() == protocol.DefaultSubProtocolName {
 		return protocol.NewDefaultSubProtocol(tn)
 	}
 	return nil, errors.New("no such protocol " + tn.ProtocolName())
@@ -116,11 +116,11 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 		log.Error("couldn't register message:", err)
 		return nil, err
 	}
-	if _, err := c.ProtocolRegister(protocol.ProtocolName, protocol.NewDefaultProtocol); err != nil {
+	if _, err := c.ProtocolRegister(protocol.DefaultProtocolName, protocol.NewDefaultProtocol); err != nil {
 		log.Error("couldn't register main protocol:", err)
 		return nil, err
 	}
-	if _, err := c.ProtocolRegister(protocol.SubProtocolName, protocol.NewDefaultSubProtocol); err != nil {
+	if _, err := c.ProtocolRegister(protocol.DefaultSubProtocolName, protocol.NewDefaultSubProtocol); err != nil {
 		log.Error("couldn't register sub protocol:", err)
 		return nil, err
 	}

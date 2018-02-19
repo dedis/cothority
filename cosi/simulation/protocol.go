@@ -133,14 +133,14 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		round := monitor.NewTimeMeasure("round")
 
 		proposal := []byte{0xFF}
-		p, err := config.Overlay.CreateProtocol(protocol.ProtocolName, config.Tree,
+		p, err := config.Overlay.CreateProtocol(protocol.DefaultProtocolName, config.Tree,
 			onet.NilServiceID)
 		if err != nil {
 			return err
 		}
 		proto := p.(*protocol.CoSiRootNode)
 		proto.NSubtrees = s.NSubtrees
-		proto.Proposal = proposal
+		proto.Msg = proposal
 		// timeouts may need to be modified depending on platform
 		proto.SubleaderTimeout = protocol.DefaultSubleaderTimeout
 		proto.LeavesTimeout = protocol.DefaultLeavesTimeout
