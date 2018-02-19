@@ -262,7 +262,7 @@ testConfig(){
 	CFG=$OLDCFG
 
 	# $CFG/data cannot be empty
-	testFail find "$CFG/data" -maxdepth 0 -type d -empty
+	testFail [ -d "$CFG/data" ]
 }
 
 runSc(){

@@ -275,7 +275,7 @@ type AddFollow struct {
 	SkipchainID SkipBlockID
 	Follow      FollowType
 	NewChain    PolicyNewChain
-	Conode      string
+	Conode      *network.ServerIdentity
 	Signature   []byte
 }
 

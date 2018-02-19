@@ -166,11 +166,11 @@ func getCommands() cli.Commands {
 					Action:    dataVote,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "no",
+							Name:  "no, n",
 							Usage: "refuse vote",
 						},
 						cli.BoolFlag{
-							Name:  "yes",
+							Name:  "yes, y",
 							Usage: "accept vote",
 						},
 					},

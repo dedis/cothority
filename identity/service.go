@@ -738,12 +738,19 @@ func (s *Service) tryLoad() error {
 		s.Storage.Identities = make(map[string]*IDBlock)
 	}
 	if s.Storage.Auth == nil {
-		s.Storage.Auth = &authData{
-			pins:      make(map[string]struct{}),
-			nonces:    make(map[string]struct{}),
-			sets:      make([]anon.Set, 0),
-			adminKeys: make([]kyber.Point, 0),
-		}
+		s.Storage.Auth = &authData{}
+	}
+	if len(s.Storage.Auth.pins) == 0 {
+		s.Storage.Auth.pins = map[string]struct{}{}
+	}
+	if len(s.Storage.Auth.nonces) == 0 {
+		s.Storage.Auth.nonces = map[string]struct{}{}
+	}
+	if s.Storage.Auth.sets == nil {
+		s.Storage.Auth.sets = []anon.Set{}
+	}
+	if s.Storage.Auth.adminKeys == nil {
+		s.Storage.Auth.adminKeys = []kyber.Point{}
 	}
 	log.Lvl3("Successfully loaded")
 	return nil
