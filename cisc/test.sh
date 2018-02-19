@@ -43,14 +43,14 @@ main(){
   test IdDel
   test KeyAdd
   test KeyCsv
-  #test KeyAdd2
-  #test KeyAddWeb
-  #test KeyDel
-  #test SSHAdd
-  #test SSHDel
-  #test Follow
-  #test SymLink
-  #test Revoke
+  test KeyAdd2
+  test KeyAddWeb
+  test KeyDel
+  test SSHAdd
+  test SSHDel
+  test Follow
+  test SymLink
+  test Revoke
   stopTest
 }
 
