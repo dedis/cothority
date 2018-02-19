@@ -23,6 +23,8 @@ const DefaultSubProtocolName = "SubCoSiProtoDefault"
 // DefaultProtocolTimeout is the primary timeout for the CoSi protocol
 const DefaultProtocolTimeout = time.Second * 10
 
+// TODO make the ones below private, or compute dynamically
+
 // DefaultSubleaderTimeout is the timeout for subleader's responses
 const DefaultSubleaderTimeout = DefaultProtocolTimeout / 10
 

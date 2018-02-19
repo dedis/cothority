@@ -12,8 +12,9 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	bftcosi "github.com/dedis/cothority/omnicon"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -458,7 +459,7 @@ type ForwardLink struct {
 	// sha256(From.Hash()|To.Hash()|NewRoster)
 	// In the case that NewRoster is nil, the signature is
 	// calculated on the sha256(From.Hash()|To.Hash())
-	Signature bftcosi.BFTSignature
+	Signature bftcosi.FinalSignature
 }
 
 // NewForwardLink creates a new forwardlink structure with
@@ -497,10 +498,9 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 		newRoster.ID = onet.RosterID([uuid.Size]byte(fl.NewRoster.ID))
 	}
 	return &ForwardLink{
-		Signature: bftcosi.BFTSignature{
-			Sig:        append([]byte{}, fl.Signature.Sig...),
-			Msg:        append([]byte{}, fl.Signature.Msg...),
-			Exceptions: append([]bftcosi.Exception{}, fl.Signature.Exceptions...),
+		Signature: bftcosi.FinalSignature{
+			Sig: append([]byte{}, fl.Signature.Sig...),
+			Msg: append([]byte{}, fl.Signature.Msg...),
 		},
 		From:      append([]byte{}, fl.From...),
 		To:        append([]byte{}, fl.To...),
@@ -511,11 +511,16 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // Verify checks the signature against a list of public keys. This list must
 // be in the same order as the Roster that signed the message.
 // It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) Verify(suite network.Suite, pubs []kyber.Point) error {
+func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	return fl.Signature.Verify(suite, pubs)
+	// this calculation must match the one in omnicon/bftcosi
+	t := (len(pubs)-1)/3 - 1
+	if t < 0 {
+		t = 0
+	}
+	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig, cosi.NewThresholdPolicy(t))
 }
 
 // SkipBlockDB holds the database to the skipblocks.

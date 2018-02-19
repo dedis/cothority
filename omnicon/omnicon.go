@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -23,21 +22,25 @@ type ProtocolBFTCoSi struct {
 	// Data is used for verification only, not signed
 	Data []byte
 	// FinalSignature is output of the protocol, for the caller to read
-	FinalSignature chan []byte
+	FinalSignatureChan chan FinalSignature
 	// CreateProtocol TODO
 	CreateProtocol protocol.CreateProtocolFunction
+	// Timeout define the timeout duration
+	Timeout time.Duration
 	// prepCosiProtoName is the cosi protocol name for the prepare phase
 	prepCosiProtoName string
 	// commitCosiProtoName is the cosi protocol name for the commit phase
 	commitCosiProtoName string
-	// protocolTimeout define the timeout duration
-	protocolTimeout time.Duration
-	// nbrFault TODO
-	nbrFault int
-	// prepSigChan TODO
+	// prepSigChan is the channel for reading the prepare phase signature
 	prepSigChan chan []byte
 	// publics
 	publics []kyber.Point
+}
+
+// FinalSignature holds the message Msg and its signature
+type FinalSignature struct {
+	Msg []byte
+	Sig []byte
 }
 
 type phase int
@@ -78,23 +81,18 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 		return nil, fmt.Errorf("invalid phase %v", phase)
 	}
 
-	pi, err := bft.CreateProtocol(name, bft.Tree()) // TODO bft.Tree() is ok?
+	pi, err := bft.CreateProtocol(name, bft.Tree())
 	if err != nil {
 		return nil, err
 	}
 	cosiProto := pi.(*protocol.CoSiRootNode)
 	cosiProto.CreateProtocol = bft.CreateProtocol
-	cosiProto.NSubtrees = 3 // TODO how to compute this?
-
-	// If our phase is commit, we do not need to send the whole proposal
-	// once more. Instead, send the digest of it.
-	if phase == phaseCommit {
-		h := bft.Suite().(suites.Suite).Hash()
-		h.Write(bft.Msg)
-		cosiProto.Msg = h.Sum(nil)
-	} else {
-		cosiProto.Msg = bft.Msg
-	}
+	// We set it to n / 10 to have every sub-leader manage 10 nodes.
+	// This setting is bad if there are thousands of nodes as the root
+	// would need to manage hundres of sub-leaders.
+	cosiProto.NSubtrees = len(bft.List()) / 10
+	cosiProto.Msg = bft.Msg
+	cosiProto.Data = bft.Data
 
 	return cosiProto, nil
 }
@@ -115,11 +113,15 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	suite := bft.Suite().(suites.Suite)
-	err := cosi.Verify(suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(bft.nbrFault))
+	suite := bft.Suite().(cosi.Suite)
+	nbrFault := (len(bft.List())-1)/3 - 1
+	if nbrFault < 0 {
+		nbrFault = 0
+	}
+	err := cosi.Verify(suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(nbrFault))
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
-		bft.FinalSignature <- nil
+		bft.FinalSignatureChan <- FinalSignature{nil, nil}
 		return nil
 	}
 	log.Lvl3("Finished prepare phase")
@@ -139,7 +141,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	commitSig := <-commitProto.FinalSignature
 	log.Lvl3("Finished commit phase")
 
-	bft.FinalSignature <- commitSig
+	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
 	return nil
 }
 
@@ -152,12 +154,11 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 	return &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
-		Data:                make([]byte, 0),
-		FinalSignature:      make(chan []byte, 0),
+		Data: make([]byte, 0),
+		// the caller also needs to make FinalSignatureChan
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
-		protocolTimeout:     time.Second * 10, // TODO make it configurable, not used
-		nbrFault:            1,                // TODO compute this
+		Timeout:             protocol.DefaultProtocolTimeout * 2, // TODO not used
 		prepSigChan:         make(chan []byte, 0),
 		publics:             publics,
 	}, nil
@@ -214,7 +215,7 @@ func GlobalInitBFTCoSiProtocol(vf, ack protocol.VerificationFn, protoName string
 
 // InitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi to the context c.
-func InitBFTCoSiProtocol(c onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
+func InitBFTCoSiProtocol(c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
 	protocolMap := makeProtocols(vf, ack, protoName)
 	for protoName, proto := range protocolMap {
 		if _, err := c.ProtocolRegister(protoName, proto); err != nil {

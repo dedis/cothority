@@ -1,6 +1,7 @@
 package omnicon
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 	"sync"
@@ -53,7 +54,12 @@ var counters = &Counters{}
 func verify(msg, data []byte) bool {
 	c, err := strconv.Atoi(string(msg))
 	if err != nil {
-		log.Error("Failed to cast", msg)
+		log.Error("Failed to cast msg", msg)
+		return false
+	}
+
+	if len(data) == 0 {
+		log.Error("Data is empty.")
 		return false
 	}
 
@@ -165,12 +171,13 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 
 	bftCosiProto := pi.(*ProtocolBFTCoSi)
 	bftCosiProto.CreateProtocol = local.CreateProtocol
-	bftCosiProto.FinalSignature = make(chan []byte, 0)
+	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 0)
 
 	counter := &Counter{refuseIndex: refuseIndex}
 	counters.add(counter)
 	proposal := []byte(strconv.Itoa(counters.size() - 1))
 	bftCosiProto.Msg = proposal
+	bftCosiProto.Data = []byte("hello world")
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
 	// kill the leafs first
@@ -190,7 +197,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	} else {
 		policy = cosi.NewThresholdPolicy(nbrFault)
 	}
-	err = getAndVerifySignature(bftCosiProto.FinalSignature, publics, proposal, policy)
+	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
 	require.Nil(t, err)
 
 	// check the counters
@@ -203,8 +210,8 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	require.True(t, nbrHosts-nbrFault <= counter.veriCount)
 }
 
-func getAndVerifySignature(sigChan chan []byte, publics []kyber.Point, proposal []byte, policy cosi.Policy) error {
-	var sig []byte
+func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte, policy cosi.Policy) error {
+	var sig FinalSignature
 	timeout := protocol.DefaultProtocolTimeout * 2
 	select {
 	case sig = <-sigChan:
@@ -213,12 +220,13 @@ func getAndVerifySignature(sigChan chan []byte, publics []kyber.Point, proposal 
 	}
 
 	// verify signature
-	if sig == nil {
+	if sig.Sig == nil {
 		return fmt.Errorf("signature is nil")
 	}
-	h := testSuite.Hash()
-	h.Write(proposal)
-	err := cosi.Verify(testSuite, publics, h.Sum(nil), sig, policy)
+	if bytes.Compare(sig.Msg, proposal) != 0 {
+		return fmt.Errorf("message in the signature is different from proposal")
+	}
+	err := cosi.Verify(testSuite, publics, proposal, sig.Sig, policy)
 	if err != nil {
 		return fmt.Errorf("didn't get a valid signature: %s", err)
 	}

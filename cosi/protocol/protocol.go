@@ -233,6 +233,7 @@ subtrees:
 	var signature []byte
 	signature, err = cosi.Sign(suite, commitment, response, finalMask)
 	if err != nil {
+		log.Print(err)
 		return err
 	}
 	p.FinalSignature <- signature

@@ -9,7 +9,8 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	bftcosi "github.com/dedis/cothority/omnicon"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
@@ -153,16 +154,16 @@ func TestSign(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = sig.Verify(cothority.Suite, roster.Publics())
+	err = cosi.Verify(cothority.Suite, roster.Publics(), msg, sig.Sig, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	sig.Msg = sha512.New().Sum([]byte{1})
-	require.NotNil(t, sig.Verify(cothority.Suite, roster.Publics()))
+	require.NotNil(t, cosi.Verify(cothority.Suite, roster.Publics(), msg, sig.Sig, nil))
 }
 
-func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.BFTSignature, error) {
+func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.FinalSignature, error) {
 	aggScalar := l.Suite.Scalar().Zero()
 	aggPoint := l.Suite.Point().Null()
 	for _, s := range servers {
@@ -193,7 +194,7 @@ func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.
 	// a bitmask full of zeros saying no servers are excepted
 	noExceptions := make([]byte, len(servers)/8)
 	sig.Write(noExceptions)
-	return &bftcosi.BFTSignature{Sig: sig.Bytes(), Msg: msg, Exceptions: nil}, nil
+	return &bftcosi.FinalSignature{Sig: sig.Bytes(), Msg: msg}, nil
 }
 
 func TestSkipBlock_GetFuzzy(t *testing.T) {

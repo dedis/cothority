@@ -29,7 +29,7 @@ func init() {
 var skipchainSID onet.ServiceID
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
@@ -53,15 +53,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	// This is the poor server who will play the part of the dead server
 	// for us.
 	deadServer := servers[len(servers)-1]
-
-	if fail {
-		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 100 * time.Millisecond
-		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
-		// service.bftTimeout = 500 * time.Millisecond
-
-		service.propTimeout = 5 * service.bftTimeout
-	}
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
