@@ -103,6 +103,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	p.Publics = announcement.Publics
 	p.SubleaderTimeout = announcement.SubleaderTimeout
 	p.LeavesTimeout = announcement.LeafTimeout
+	p.Proposal = announcement.Proposal
 	suite, ok := p.Suite().(cosi.Suite)
 	if !ok {
 		return errors.New("not a cosi suite")
