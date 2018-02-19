@@ -48,8 +48,8 @@
     "webpack": "^3.11.0"
   },
   "files": [
-	"dist",
-	"doc",
-	"index.html"
+    "dist",
+    "doc",
+    "index.html"
   ]
 }

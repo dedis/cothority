@@ -74,7 +74,8 @@ func linkPin(c *cli.Context) error {
 	if c.NArg() == 2 {
 		pin = c.Args().Get(1)
 	}
-	addr := network.NewAddress(network.PlainTCP, c.Args().First())
+	addrStr := c.Args().First()
+	addr := network.NewAddress(network.PlainTCP, addrStr)
 	si := &network.ServerIdentity{Address: addr}
 
 	cfg := loadConfigAdminOrFail(c)
@@ -91,7 +92,7 @@ func linkPin(c *cli.Context) error {
 		return err
 	}
 	log.Info("Successfully linked with", addr)
-	cfg.KeyPairs[string(addr)] = kp
+	cfg.KeyPairs[addrStr] = kp
 	cfg.saveConfig(c)
 	return nil
 }
@@ -100,11 +101,12 @@ func getClient(c *cli.Context, arg string) (*ciscConfig, *network.ServerIdentity
 	if c.NArg() != 2 {
 		return nil, nil, nil, errors.New("please give the following arguments: " + arg + " ip:port")
 	}
-	addr := network.NewAddress(network.PlainTCP, c.Args().Get(1))
+	addrStr := c.Args().Get(1)
+	addr := network.NewAddress(network.PlainTCP, addrStr)
 	si := &network.ServerIdentity{Address: addr}
 
 	cfg := loadConfigAdminOrFail(c)
-	kp, ok := cfg.KeyPairs[string(addr)]
+	kp, ok := cfg.KeyPairs[addrStr]
 	if !ok {
 		return cfg, si, nil, errors.New("not linked")
 	}
@@ -209,11 +211,11 @@ func scCreate(c *cli.Context) error {
 	group := getGroup(c)
 	var atts []kyber.Point
 
-	address := group.Roster.List[0].Address.String()
+	addrStr := group.Roster.List[0].Address.NetworkAddress()
 	var typ identity.AuthType
-	kp := cfg.KeyPairs[address]
+	kp := cfg.KeyPairs[addrStr]
 	if kp != nil {
-		log.Info("Found full link to conode:", address, kp.Public)
+		log.Info("Found full link to conode:", addrStr, kp.Public)
 		typ = identity.PublicAuth
 	} else if c.String("private") != "" {
 		log.Info("Signing with given private key")
@@ -243,7 +245,7 @@ func scCreate(c *cli.Context) error {
 			Private: popToken.Private,
 		}
 		atts = popToken.Final.Attendees
-		log.Info("Found PoP-link to conode:", address)
+		log.Info("Found PoP-link to conode:", addrStr)
 	} else {
 		return errors.New("didn't find any authentication method")
 	}
@@ -302,7 +304,11 @@ func scDel(c *cli.Context) error {
 		scList(c)
 		return errors.New("Have more than one identity, please chose")
 	} else {
-		id = cfg.findSC(c.Args().Get(1))
+		var err error
+		id, err = cfg.findSC(c.Args().Get(1))
+		if err != nil {
+			return err
+		}
 		if id == nil {
 			scList(c)
 			return errors.New("Didn't find skipchain with id " + c.Args().Get(1))
@@ -342,7 +348,10 @@ func scList(c *cli.Context) error {
 
 func scQrcode(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please chose one of the existing skipchain-ids")
@@ -359,7 +368,10 @@ func scQrcode(c *cli.Context) error {
 
 func scRoster(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please chose one of the existing skipchain-ids")
@@ -380,19 +392,18 @@ func scRoster(c *cli.Context) error {
  */
 func dataUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please indicate skipchain-id")
 	}
-	if err := id.DataUpdate(); err != nil {
-		return err
-	}
-	if err := id.ProposeUpdate(); err != nil {
-		return err
-	}
 	log.Info("Successfully updated")
-	log.ErrFatal(cfg.saveConfig(c))
+	if err := cfg.saveConfig(c); err != nil {
+		return err
+	}
 	if id.Proposed != nil {
 		cfg.showDifference(id)
 	} else {
@@ -403,7 +414,10 @@ func dataUpdate(c *cli.Context) error {
 func dataList(c *cli.Context) error {
 	log.Info("Listing data on the identity-skipchain")
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please indicate skipchain-id")
@@ -427,10 +441,16 @@ func dataList(c *cli.Context) error {
 }
 func dataClear(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please indicate skipchain-id")
+	}
+	if err := id.DataUpdate(); err != nil {
+		return err
 	}
 	id.Proposed = nil
 	if err := id.ProposeSend(id.Proposed); err != nil {
@@ -441,13 +461,14 @@ func dataClear(c *cli.Context) error {
 }
 func dataVote(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please indicate skipchain-id")
 	}
-	log.ErrFatal(id.DataUpdate())
-	log.ErrFatal(id.ProposeUpdate())
 	if id.Proposed == nil {
 		log.Info("No proposed data")
 		return nil
@@ -461,7 +482,9 @@ func dataVote(c *cli.Context) error {
 			return nil
 		}
 	}
-	log.ErrFatal(id.ProposeVote(true))
+	if err := id.ProposeVote(true); err != nil {
+		return err
+	}
 	dataList(c)
 	return cfg.saveConfig(c)
 }
@@ -471,10 +494,13 @@ func dataVote(c *cli.Context) error {
  */
 func kvList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
+	}
+	if err != nil {
+		return err
 	}
 	log.Infof("config for id %x", id.ID)
 	for k, v := range id.Data.Storage {
@@ -487,7 +513,10 @@ func kvValue(c *cli.Context) error {
 		return errors.New("please give key to search")
 	}
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -506,7 +535,10 @@ func kvAdd(c *cli.Context) error {
 	if c.NArg() < 2 {
 		return errors.New("Please give a key value pair")
 	}
-	id := cfg.findSC(c.Args().Get(2))
+	id, err := cfg.findSC(c.Args().Get(2))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -528,7 +560,10 @@ func kvDel(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return errors.New("Please give a key to delete")
 	}
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -551,7 +586,10 @@ func kvAddWeb(c *cli.Context) error {
 		// https://github.com/remy/inliner
 	}
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -590,7 +628,10 @@ func kvAddWeb(c *cli.Context) error {
  */
 func sshAdd(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -602,7 +643,9 @@ func sshAdd(c *cli.Context) error {
 
 	// Get the current configuration
 	sc, err := NewSSHConfigFromFile(sshConfig)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 
 	// Add a new host-entry
 	hostname := c.Args().First()
@@ -613,7 +656,9 @@ func sshAdd(c *cli.Context) error {
 	filePub := path.Join(sshDir, "key_"+alias+".pub")
 	idPriv := "key_" + alias
 	filePriv := path.Join(sshDir, idPriv)
-	log.ErrFatal(makeSSHKeyPair(c.Int("sec"), filePub, filePriv))
+	if err := makeSSHKeyPair(c.Int("sec"), filePub, filePriv); err != nil {
+		return err
+	}
 	host := NewSSHHost(alias, "HostName "+hostname,
 		"IdentityFile "+filePriv)
 	if port := c.String("p"); port != "" {
@@ -623,21 +668,27 @@ func sshAdd(c *cli.Context) error {
 		host.AddConfig("User " + user)
 	}
 	sc.AddHost(host)
-	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
-	log.ErrFatal(err)
+	if err := ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600); err != nil {
+		return err
+	}
 
 	// Propose the new configuration
 	prop := id.GetProposed()
 	key := strings.Join([]string{"ssh", id.DeviceName, hostname}, ":")
 	pub, err := ioutil.ReadFile(filePub)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	prop.Storage[key] = strings.TrimSpace(string(pub))
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
 }
 func sshLs(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().First())
+	id, err := cfg.findSC(c.Args().First())
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -657,7 +708,10 @@ func sshLs(c *cli.Context) error {
 }
 func sshDel(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	id := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
 	if id == nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
@@ -667,7 +721,9 @@ func sshDel(c *cli.Context) error {
 		return errors.New("Please give alias or host to delete from ssh")
 	}
 	sc, err := NewSSHConfigFromFile(sshConfig)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	// Converting ah to a hostname if found in ssh-config
 	host := sc.ConvertAliasToHostname(c.Args().First())
 	if len(id.Data.GetValue("ssh", id.DeviceName, host)) == 0 {
@@ -677,8 +733,9 @@ func sshDel(c *cli.Context) error {
 	}
 
 	sc.DelHost(host)
-	err = ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600)
-	log.ErrFatal(err)
+	if err := ioutil.WriteFile(sshConfig, []byte(sc.String()), 0600); err != nil {
+		return err
+	}
 	prop := id.GetProposed()
 	delete(prop.Storage, "ssh:"+id.DeviceName+":"+host)
 	cfg.proposeSendVoteUpdate(id, prop)
@@ -698,16 +755,22 @@ func followAdd(c *cli.Context) error {
 	cfg, _ := loadConfig(c)
 	group := getGroup(c)
 	idBytes, err := hex.DecodeString(c.Args().Get(1))
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	id := identity.ID(idBytes)
 	newID, err := identity.NewIdentityFromRoster(group.Roster, id)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if c.NArg() == 3 {
 		newID.DeviceName = c.Args().Get(2)
 	} else {
 		var err error
 		newID.DeviceName, err = os.Hostname()
-		log.ErrFatal(err)
+		if err != nil {
+			return err
+		}
 		log.Info("Using", newID.DeviceName, "as the device-name.")
 	}
 	cfg.Follow = append(cfg.Follow, newID)
@@ -724,7 +787,9 @@ func followDel(c *cli.Context) error {
 	}
 	cfg := loadConfigOrFail(c)
 	idBytes, err := hex.DecodeString(c.Args().First())
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	idDel := identity.ID(idBytes)
 	newSlice := cfg.Follow[:0]
 	for _, id := range cfg.Follow {
@@ -750,7 +815,9 @@ func followList(c *cli.Context) error {
 func followUpdate(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, f := range cfg.Follow {
-		log.ErrFatal(f.DataUpdate())
+		if err := f.DataUpdate(); err != nil {
+			return err
+		}
 	}
 	cfg.writeAuthorizedKeys(c)
 	return cfg.saveConfig(c)

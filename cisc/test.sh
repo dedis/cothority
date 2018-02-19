@@ -253,24 +253,24 @@ testIdConnect(){
 }
 
 testDataVote(){
-  clientSetup 2
+  clientSetup 3
   testOK runCl 1 kv add one two
   testNGrep one runCl 1 kv ls
 
   testOK runCl 2 data vote -no
   testNGrep one runCl 2 kv ls
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -y
 
   testOK runCl 1 kv add three four
   testNGrep three runCl 1 kv ls
-  echo "n" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -n
   testNGrep three runCl 1 kv ls
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 3 data vote -y
   testGrep three runCl 1 kv ls
   testGrep three runCl 2 kv ls
 
   testOK runCl 1 kv add five six
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -y
   testGrep five runCl 1 kv ls
   testGrep five runCl 2 kv ls
 }
