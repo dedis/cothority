@@ -205,7 +205,7 @@ func getCommands() cli.Commands {
 				},
 				{
 					Name:      "csv",
-					Usage:     "add key/value pairs from a CSV file",
+					Usage:     "add key/value pairs from a CSV file. Key is the value at a custom defined column. Value is a full row of the csv file.",
 					ArgsUsage: "csvFile [skipchain-id]",
 					Action:    kvAddCsv,
 					Flags: []cli.Flag{
