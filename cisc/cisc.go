@@ -553,6 +553,9 @@ func kvAdd(c *cli.Context) error {
 	return addKv(c, cfg, id, prop)
 }
 
+// kvAddCsv reads the input CSV file, lookup its key column and inputs all the
+// // csv file at once to the skipchain. The key is given from the "column" args
+// and the value is the whole full row, unmodified.
 func kvAddCsv(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() != 1 {
