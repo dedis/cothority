@@ -3,26 +3,25 @@
 const topl = require("topl");
 const UUID = require("pure-uuid");
 const protobuf = require("protobufjs");
+const co = require("co");
+const shuffle = require("crypto-shuffle");
+const WebSocket = require("isomorphic-ws");
 
 const root = require("../protobuf/index.js").root;
-
-const BASE64 = require("base-64");
-const UTF8 = require("utf8");
+const identity = require("../identity.js");
 
 /**
  * Socket is a WebSocket object instance through which protobuf messages are
  * sent to conodes.
- * @param {path} string websocket path. Composed from a node's address with the
- *              websocket's service name
- * @param {object} protobufjs root messages. Usually just
- *              use `require("cothority.protobuf").root`
+ * @param {string} addr websocket address of the conode to contact.
+ * @param {string} service name. A socket is tied to a service name.
  *
  * @throws {TypeError} when url is not a string or protobuf is not an object
  */
-function Socket(path) {
+function Socket(addr, service) {
   if (typeof protobuf !== "object") throw new TypeError();
 
-  this.url = path;
+  this.url = addr + "/" + service;
   this.protobuf = root;
 
   /**
@@ -35,6 +34,8 @@ function Socket(path) {
    */
   this.send = (request, response, data) => {
     return new Promise((resolve, reject) => {
+      const path = this.url + "/" + request;
+      console.log("net.Socket: new WebSocket(" + path + ")");
       const ws = new WebSocket(this.url + "/" + request);
       ws.binaryType = "arraybuffer";
 
@@ -64,10 +65,62 @@ function Socket(path) {
       };
 
       ws.onerror = error => {
-        reject(new Error("Could not connect to " + this.url));
+        reject(new Error("could not connect to " + this.url + ":" + error));
       };
     });
   };
 }
 
+/*
+ * RosterSocket offers similar functionality from the Socket class but chooses
+ * a random conode when trying to connect. If a connection fails, it
+ * automatically retries to connect to another random server.
+ * */
+class RosterSocket {
+  constructor(roster, service) {
+    this.addresses = roster.identities.map(id => id.websocketAddr);
+    this.service = service;
+    this.lastGoodServer = null;
+  }
+
+  /**
+   * send tries to send the request to a random server in the list as long as there is no successful response. It tries a permutation of all server's addresses.
+   *
+   * @param {string} request name of the protobuf packet
+   * @param {string} response name of the protobuf packet response
+   * @param {Object} data javascript object representing the request
+   * @returns {Promise} holds the returned data in case of success.
+   */
+  send(request, response, data) {
+    const socket = this;
+    const fn = co.wrap(function*(req, resp, data, socket) {
+      request = req;
+      response = resp;
+      data = data;
+      var addresses = socket.addresses;
+      var service = socket.service;
+      shuffle(addresses);
+      // try first the last good server we know
+      if (socket.lastGoodServer) addresses.unshift(socket.lastGoodServer);
+
+      for (var i = 0; i < addresses.length; i++) {
+        var addr = addresses[i];
+        try {
+          var socket = new Socket(addr, service);
+          console.log("RosterSocket: trying out " + addr + "/" + service);
+          var data = yield socket.send(request, response, data);
+          socket.lastGoodServer = addr;
+          return Promise.resolve(data);
+        } catch (err) {
+          console.log("rostersocket: " + err);
+          continue;
+        }
+      }
+      return Promise.reject("no conodes are available");
+    });
+    return fn(request, response, data, socket);
+  }
+}
+
 module.exports.Socket = Socket;
+module.exports.RosterSocket = RosterSocket;

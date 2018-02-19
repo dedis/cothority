@@ -17,8 +17,8 @@ message SkipBlock {
     required bytes data = 9;
     required Roster roster = 10;
     optional bytes hash = 11;
-    optional BlockLink forward = 12;
-    optional BlockLink children = 13;
+    repeated BlockLink forward = 12;
+    repeated BlockLink children = 13;
 }
 
 message SkipBlockMap {
@@ -37,6 +37,12 @@ message SkipBlockData {
 message BlockLink {
     required bytes hash = 1;
     required bytes signature = 2;
+    repeated Exception exceptions = 3;
+}
+
+message Exception {
+    required uint32 index = 1;
+    required bytes commitment = 2;
 }
 
 message GetBlock {
