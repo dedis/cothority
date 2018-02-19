@@ -582,10 +582,7 @@ func kvAddCsv(c *cli.Context) error {
 		value := strings.Join(row, ",")
 		prop.Storage[key] = value
 	}
-	if err := addKv(c, cfg, id, prop); err != nil {
-		return err
-	}
-	return nil
+	return addKv(c, cfg, id, prop)
 }
 
 func addKv(c *cli.Context, cfg *ciscConfig, id *identity.Identity, key, value string) error {
