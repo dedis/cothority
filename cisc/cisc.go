@@ -426,9 +426,7 @@ func dataList(c *cli.Context) error {
 	log.Info("Account name:", id.DeviceName)
 	log.Infof("Identity-ID: %x", id.ID)
 	if c.Bool("d") {
-		for k, v := range id.Data.Storage {
-			log.Infof("%s : %s", k, v)
-		}
+		log.Info(id.Data.Storage)
 	} else {
 		cfg.showKeys(id)
 	}
@@ -561,8 +559,8 @@ func kvAddCsv(c *cli.Context) error {
 	if c.NArg() != 1 {
 		return errors.New("Missing argument: csv file")
 	}
-	id := cfg.findSC(c.Args().Get(1))
-	if id == nil {
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
 	}
