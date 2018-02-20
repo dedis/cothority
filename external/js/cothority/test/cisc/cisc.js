@@ -13,7 +13,7 @@ const misc = cothority.misc;
 const net = cothority.net;
 const expect = chai.expect;
 
-describe.only("skipchain client", () => {
+describe.only("cisc client", () => {
 
   it("can retrieve updates from conodes", done => {
 
@@ -27,9 +27,12 @@ describe.only("skipchain client", () => {
 
         const addr1 = roster.identities[0].websocketAddr;
         const socket = new net.Socket(addr1, "Skipchain");
-        const requestStr = "GetUpdateChain";
-        const responseStr = "GetUpdateChainReply";
-        const request = { latestId: misc.hexToUint8Array(id) };
+        const requestStr = "DataUpdate";
+        const responseStr = "DataUpdateReply";
+
+        const request = { id: misc.hexToUint8Array(id) };
+
+        console.log("Sending data", request)
         return socket.send(requestStr, responseStr, request);
       })
       .then(skipblocks => {
@@ -62,6 +65,9 @@ function runGolang() {
   return new Promise(function(resolve, reject) {
 
     console.log("build_dir = " + build_dir);
+    env = process.env;
+    env['DEBUG_LVL'] = '2'
+    env['DEBUG_COLOR'] = 'true'
     spawned_conodes = spawn("go", ["run", "main.go"], {
       cwd: build_dir,
       env: process.env,
