@@ -8,6 +8,7 @@
           fab
           bottom
           right
+          to="/election/new"
           color="primary"
         >
           <v-icon>add</v-icon>
@@ -17,7 +18,8 @@
         <h3>Active Elections</h3>
         <v-layout v-for="layout in active(elections)" class="election-cards" row wrap>
           <election-card
-            v-for="election in layout" :key="election.title"
+            v-for="election in layout" :key="election.id"
+            :id="election.id"
             :title="election.title"
             :endDate="election.endDate"
             :creator="election.creator"
@@ -30,6 +32,7 @@
         <v-layout v-for="layout in shuffled(elections)" class="election-cards" row wrap>
           <election-card
             v-for="election in layout" :key="election.title"
+            :id="election.id"
             :title="election.title"
             :endDate="election.endDate"
             :creator="election.creator"
@@ -38,10 +41,11 @@
         </v-layout>
       </div>
       <div class="election-group">
-        <h3>Aggregated Elections</h3>
-        <v-layout v-for="layout in aggregated(elections)" class="election-cards" row wrap>
+        <h3>Decrypted Elections</h3>
+        <v-layout v-for="layout in decrypted(elections)" class="election-cards" row wrap>
           <election-card
             v-for="election in layout" :key="election.title"
+            :id="election.id"
             :title="election.title"
             :endDate="election.endDate"
             :creator="election.creator"
@@ -111,7 +115,7 @@ export default {
         return e.stage === 1
       }))
     },
-    aggregated: (elections) => {
+    decrypted: (elections) => {
       return createArray(elections.filter(e => {
         return e.stage === 2
       }))
@@ -121,6 +125,7 @@ export default {
     return {
       elections: [
         {
+          id: 'asdad1',
           title: 'Election 1',
           creator: 'John Doe',
           endDate: '1st May, 2018',
@@ -128,6 +133,7 @@ export default {
           stage: 0
         },
         {
+          id: 'asdad2',
           title: 'Election 2',
           creator: 'Jane Doe',
           endDate: '1st May, 2018',
@@ -135,6 +141,7 @@ export default {
           stage: 0
         },
         {
+          id: 'asdad3',
           title: 'Election 3',
           creator: 'John Doe',
           endDate: '1st May, 2018',
@@ -142,6 +149,7 @@ export default {
           stage: 2
         },
         {
+          id: 'asdad4',
           title: 'Election 4',
           creator: 'John Doe',
           endDate: '1st May, 2018',
@@ -153,14 +161,16 @@ export default {
           creator: 'Jenna Doe',
           endDate: '1st May, 2018',
           content: 'Foo bar baz',
-          stage: 0
+          stage: 0,
+          id: 'asdad5'
         },
         {
           title: 'Election 6',
           creator: 'Jenna Doe',
           endDate: '1st May, 2018',
           content: 'Foo bar baz',
-          stage: 0
+          stage: 1,
+          id: 'asdad6'
         }
       ]
     }

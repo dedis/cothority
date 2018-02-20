@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import store from '../store'
 import Index from '@/components/Index'
 import Logout from '@/components/Logout'
+import NewElection from '@/components/NewElection'
 import * as cothority from '@dedis/cothority'
 import config from '../config'
 
@@ -19,6 +20,11 @@ const router = new Router({
       path: '/logout',
       name: 'Logout',
       component: Logout
+    },
+    {
+      path: '/election/new',
+      name: 'NewElection',
+      component: NewElection
     }
   ]
 })
