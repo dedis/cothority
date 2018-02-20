@@ -3,6 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/dedis/kyber"
@@ -140,45 +141,9 @@ func (p *CoSiRootNode) Dispatch() error {
 	}
 	log.Lvl3("all protocols started")
 
-	// get all commitments, restart subprotocols where subleaders do not respond
-	commitments := make([]StructCommitment, 0)
-	runningSubProtocols := make([]*CoSiSubProtocolNode, 0)
-subtrees:
-	for i, subProtocol := range cosiSubProtocols {
-		for {
-			select {
-			case _ = <-subProtocol.subleaderNotResponding:
-				subleaderID := trees[i].Root.Children[0].RosterIndex
-				log.Lvlf2("subleader from tree %d (id %d) failed, restarting it", i, subleaderID)
-
-				// send stop signal
-				subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
-
-				// generate new tree
-				newSubleaderID := subleaderID + 1
-				if newSubleaderID >= len(trees[i].Roster.List) {
-					log.Lvl2("subprotocol", i, "failed with every subleader, ignoring this subtree")
-					continue subtrees
-				}
-				trees[i], err = GenSubtree(trees[i].Roster, newSubleaderID)
-				if err != nil {
-					return err
-				}
-
-				// restart subprotocol
-				subProtocol, err = p.startSubProtocol(trees[i])
-				if err != nil {
-					return fmt.Errorf("error in restarting of subprotocol: %s", err)
-				}
-				cosiSubProtocols[i] = subProtocol
-			case commitment := <-subProtocol.subCommitment:
-				runningSubProtocols = append(runningSubProtocols, subProtocol)
-				commitments = append(commitments, commitment)
-				continue subtrees
-			case <-time.After(p.ProtocolTimeout):
-				return fmt.Errorf("didn't get commitment in time")
-			}
-		}
+	commitments, runningSubProtocols, err := p.collectCommitments(trees, cosiSubProtocols)
+	if err != nil {
+		return err
 	}
 
 	suite, ok := p.Suite().(cosi.Suite)
@@ -207,15 +172,25 @@ subtrees:
 
 	// get response from all subprotocols
 	responses := make([]StructResponse, 0)
+	var responsesMut sync.Mutex
+	var responsesWg sync.WaitGroup
 	for _, cosiSubProtocol := range runningSubProtocols {
-		subProtocol := cosiSubProtocol
-		select {
-		case response := <-subProtocol.subResponse:
-			responses = append(responses, response)
-			continue
-		case <-time.After(p.ProtocolTimeout):
-			return fmt.Errorf("didn't finish in time")
-		}
+		responsesWg.Add(1)
+		go func(subProto *CoSiSubProtocolNode) {
+			defer responsesWg.Done()
+			select {
+			case response := <-subProto.subResponse:
+				responsesMut.Lock()
+				responses = append(responses, response)
+				responsesMut.Unlock()
+			case <-time.After(p.ProtocolTimeout):
+				log.Error("didn't finish in time")
+			}
+		}(cosiSubProtocol)
+	}
+	responsesWg.Wait()
+	if len(responses) != len(runningSubProtocols) {
+		return fmt.Errorf("did not get all the responses")
 	}
 
 	// signs the proposal
@@ -240,6 +215,83 @@ subtrees:
 
 	log.Lvl3("Root-node is done without errors")
 	return nil
+}
+
+func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree, cosiSubProtocols []*CoSiSubProtocolNode) ([]StructCommitment, []*CoSiSubProtocolNode, error) {
+	// get all commitments, restart subprotocols where subleaders do not respond
+	var mut sync.Mutex
+	var wg sync.WaitGroup
+	errChan := make(chan error, 1) // only keep one error
+	commitments := make([]StructCommitment, 0)
+	runningSubProtocols := make([]*CoSiSubProtocolNode, 0)
+
+	for i, subProtocol := range cosiSubProtocols {
+		wg.Add(1)
+		go func(i int, subProtocol *CoSiSubProtocolNode) {
+			defer wg.Done()
+			for {
+				select {
+				case <-subProtocol.subleaderNotResponding:
+					subleaderID := trees[i].Root.Children[0].RosterIndex
+					log.Lvlf2("subleader from tree %d (id %d) failed, restarting it", i, subleaderID)
+
+					// send stop signal
+					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
+
+					// generate new tree
+					newSubleaderID := subleaderID + 1
+					if newSubleaderID >= len(trees[i].Roster.List) {
+						log.Lvl2("subprotocol", i, "failed with every subleader, ignoring this subtree")
+						return
+					}
+					var err error
+					trees[i], err = GenSubtree(trees[i].Roster, newSubleaderID)
+					if err != nil {
+						select {
+						case errChan <- err:
+						default:
+						}
+						return
+					}
+
+					// restart subprotocol
+					subProtocol, err = p.startSubProtocol(trees[i])
+					if err != nil {
+						err = fmt.Errorf("error in restarting of subprotocol: %s", err)
+						select {
+						case errChan <- err:
+						default:
+						}
+						return
+					}
+					mut.Lock()
+					cosiSubProtocols[i] = subProtocol
+					mut.Unlock()
+				case commitment := <-subProtocol.subCommitment:
+					mut.Lock()
+					runningSubProtocols = append(runningSubProtocols, subProtocol)
+					commitments = append(commitments, commitment)
+					mut.Unlock()
+					return
+				case <-time.After(p.ProtocolTimeout):
+					err := fmt.Errorf("didn't get commitment after timeout %v", p.ProtocolTimeout)
+					select {
+					case errChan <- err:
+					default:
+					}
+					return
+				}
+			}
+		}(i, subProtocol)
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errChan:
+		return nil, nil, err
+	default:
+		return commitments, runningSubProtocols, nil
+	}
 }
 
 // Start is done only by root and starts the protocol.
