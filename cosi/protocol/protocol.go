@@ -29,14 +29,12 @@ func init() {
 type CoSiRootNode struct {
 	*onet.TreeNodeInstance
 
-	NSubtrees        int
-	Msg              []byte
-	Data             []byte
-	CreateProtocol   CreateProtocolFunction
-	ProtocolTimeout  time.Duration
-	SubleaderTimeout time.Duration
-	LeavesTimeout    time.Duration
-	FinalSignature   chan []byte
+	NSubtrees      int
+	Msg            []byte
+	Data           []byte
+	CreateProtocol CreateProtocolFunction
+	Timeout        time.Duration
+	FinalSignature chan []byte
 
 	publics         []kyber.Point
 	hasStopped      bool //used since Shutdown can be called multiple time
@@ -113,7 +111,7 @@ func (p *CoSiRootNode) Dispatch() error {
 			return nil
 		}
 		close(p.startChan)
-	case <-time.After(DefaultProtocolTimeout):
+	case <-time.After(time.Second):
 		return fmt.Errorf("timeout, did you forget to call Start?")
 	}
 
@@ -183,7 +181,7 @@ func (p *CoSiRootNode) Dispatch() error {
 				responsesMut.Lock()
 				responses = append(responses, response)
 				responsesMut.Unlock()
-			case <-time.After(p.ProtocolTimeout):
+			case <-time.After(p.Timeout):
 				log.Error("didn't finish in time")
 			}
 		}(cosiSubProtocol)
@@ -273,8 +271,8 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree, cosiSubProtocols [
 					commitments = append(commitments, commitment)
 					mut.Unlock()
 					return
-				case <-time.After(p.ProtocolTimeout):
-					err := fmt.Errorf("didn't get commitment after timeout %v", p.ProtocolTimeout)
+				case <-time.After(p.Timeout):
+					err := fmt.Errorf("didn't get commitment after timeout %v", p.Timeout)
 					select {
 					case errChan <- err:
 					default:
@@ -313,18 +311,13 @@ func (p *CoSiRootNode) Start() error {
 		close(p.startChan)
 		return fmt.Errorf("sub-protocol name cannot be empty")
 	}
+	if p.Timeout < 10 {
+		close(p.startChan)
+		return fmt.Errorf("unrealistic timeout")
+	}
 
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
-	}
-	if p.ProtocolTimeout < 10 {
-		p.ProtocolTimeout = DefaultProtocolTimeout
-	}
-	if p.SubleaderTimeout < 10 {
-		p.SubleaderTimeout = DefaultSubleaderTimeout
-	}
-	if p.LeavesTimeout < 10 {
-		p.LeavesTimeout = DefaultLeavesTimeout
 	}
 
 	log.Lvl3("Starting CoSi")
@@ -345,8 +338,7 @@ func (p *CoSiRootNode) startSubProtocol(tree *onet.Tree) (*CoSiSubProtocolNode, 
 	cosiSubProtocol.Publics = p.publics
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
-	cosiSubProtocol.SubleaderTimeout = p.SubleaderTimeout
-	cosiSubProtocol.LeavesTimeout = p.LeavesTimeout
+	cosiSubProtocol.Timeout = p.Timeout / 2
 
 	err = cosiSubProtocol.Start()
 	if err != nil {

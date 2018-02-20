@@ -18,6 +18,7 @@ func init() {
 }
 
 var testSuite = suites.MustFind("Ed25519")
+var defaultTimeout = time.Second * 2
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {
@@ -49,6 +50,7 @@ func TestProtocol(t *testing.T) {
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
 
 			err = cosiProtocol.Start()
 			if err != nil {
@@ -100,7 +102,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
-			cosiProtocol.LeavesTimeout = DefaultLeavesTimeout
+			cosiProtocol.Timeout = defaultTimeout
 
 			// find first subtree leaves servers based on GenTree function
 			leafsServerIdentities, err := GetLeafsIDs(tree, nNodes, nSubtrees)
@@ -175,7 +177,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
-			cosiProtocol.SubleaderTimeout = DefaultSubleaderTimeout
+			cosiProtocol.Timeout = defaultTimeout
 
 			// find first subleader server based on genTree function
 			subleaderIds, err := GetSubleaderIDs(tree, nNodes, nSubtrees)
@@ -241,6 +243,7 @@ func TestProtocolErrors(t *testing.T) {
 			//cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
 
 			err = cosiProtocol.Start()
 			if err == nil {
@@ -258,6 +261,7 @@ func TestProtocolErrors(t *testing.T) {
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			//cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
 
 			err = cosiProtocol.Start()
 			if err == nil {
@@ -278,7 +282,7 @@ func getAndVerifySignature(cosiProtocol *CoSiRootNode, publics []kyber.Point,
 	select {
 	case signature = <-cosiProtocol.FinalSignature:
 		log.Lvl3("Instance is done")
-	case <-time.After(DefaultProtocolTimeout + time.Second):
+	case <-time.After(defaultTimeout * 2):
 		// wait a bit longer than the protocol timeout
 		return fmt.Errorf("didn't get commitment in time")
 	}

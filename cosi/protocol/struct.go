@@ -20,24 +20,12 @@ const DefaultProtocolName = "CoSiProtoDefault"
 // DefaultSubProtocolName is started by the main protocol.
 const DefaultSubProtocolName = "SubCoSiProtoDefault"
 
-// DefaultProtocolTimeout is the primary timeout for the CoSi protocol
-const DefaultProtocolTimeout = time.Second * 10
-
-// TODO make the ones below private, or compute dynamically
-
-// DefaultSubleaderTimeout is the timeout for subleader's responses
-const DefaultSubleaderTimeout = DefaultProtocolTimeout / 10
-
-// DefaultLeavesTimeout is the timeout for responses from the leaves
-const DefaultLeavesTimeout = DefaultProtocolTimeout / 20
-
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {
-	Msg              []byte
-	Data             []byte
-	Publics          []kyber.Point
-	SubleaderTimeout time.Duration
-	LeafTimeout      time.Duration
+	Msg     []byte
+	Data    []byte
+	Publics []kyber.Point
+	Timeout time.Duration
 }
 
 // StructAnnouncement just contains Announcement and the data necessary to identify and

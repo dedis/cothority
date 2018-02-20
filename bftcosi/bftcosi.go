@@ -93,6 +93,7 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	cosiProto.NSubtrees = len(bft.List()) / 10
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
+	cosiProto.Timeout = bft.Timeout
 
 	return cosiProto, nil
 }
@@ -158,7 +159,6 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 		// the caller also needs to make FinalSignatureChan
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
-		Timeout:             protocol.DefaultProtocolTimeout * 2, // TODO not used
 		prepSigChan:         make(chan []byte, 0),
 		publics:             publics,
 	}, nil

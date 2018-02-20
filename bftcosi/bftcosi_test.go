@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -17,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var defaultTimeout = time.Second * 2
 var testSuite = cothority.Suite
 
 type Counter struct {
@@ -178,6 +178,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	proposal := []byte(strconv.Itoa(counters.size() - 1))
 	bftCosiProto.Msg = proposal
 	bftCosiProto.Data = []byte("hello world")
+	bftCosiProto.Timeout = defaultTimeout
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
 	// kill the leafs first
@@ -212,7 +213,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 
 func getAndVerifySignature(sigChan chan FinalSignature, publics []kyber.Point, proposal []byte, policy cosi.Policy) error {
 	var sig FinalSignature
-	timeout := protocol.DefaultProtocolTimeout * 2
+	timeout := defaultTimeout + time.Second
 	select {
 	case sig = <-sigChan:
 	case <-time.After(timeout):

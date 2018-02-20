@@ -142,12 +142,10 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		proto.NSubtrees = s.NSubtrees
 		proto.Msg = proposal
 		// timeouts may need to be modified depending on platform
-		proto.SubleaderTimeout = protocol.DefaultSubleaderTimeout
-		proto.LeavesTimeout = protocol.DefaultLeavesTimeout
 		proto.CreateProtocol = func(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
 			return config.Overlay.CreateProtocol(name, t, onet.NilServiceID)
 		}
-		proto.ProtocolTimeout = 10 * time.Second
+		proto.Timeout = 10 * time.Second
 		go func() {
 			log.ErrFatal(p.Start())
 		}()

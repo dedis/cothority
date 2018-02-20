@@ -18,13 +18,12 @@ func init() {
 // CoSiSubProtocolNode holds the different channels used to receive the different protocol messages.
 type CoSiSubProtocolNode struct {
 	*onet.TreeNodeInstance
-	Publics          []kyber.Point
-	Msg              []byte
-	Data             []byte
-	SubleaderTimeout time.Duration
-	LeavesTimeout    time.Duration
-	hasStopped       bool //used since Shutdown can be called multiple time
-	verificationFn   VerificationFn
+	Publics        []kyber.Point
+	Msg            []byte
+	Data           []byte
+	Timeout        time.Duration
+	hasStopped     bool //used since Shutdown can be called multiple time
+	verificationFn VerificationFn
 
 	// protocol/subprotocol channels
 	// these are used to communicate between the subprotocol and the main protocol
@@ -102,8 +101,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	}
 	log.Lvl3(p.ServerIdentity().Address, "received announcement")
 	p.Publics = announcement.Publics
-	p.SubleaderTimeout = announcement.SubleaderTimeout
-	p.LeavesTimeout = announcement.LeafTimeout
+	p.Timeout = announcement.Timeout
 	p.Msg = announcement.Msg
 	p.Data = announcement.Data
 	suite, ok := p.Suite().(cosi.Suite)
@@ -135,12 +133,14 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 				return nil
 			}
 			commitments = append(commitments, commitment)
-		case <-time.After(p.SubleaderTimeout):
+		case <-time.After(p.Timeout):
+			// the timeout here should be shorter than the main protocol timeout
+			// because main protocol waits on the channel below
 			p.subleaderNotResponding <- true
 			return nil
 		}
 	} else {
-		t := time.After(p.LeavesTimeout)
+		t := time.After(p.Timeout / 2)
 	loop:
 		for _ = range p.Children() {
 			select {
@@ -269,16 +269,14 @@ func (p *CoSiSubProtocolNode) Start() error {
 	if p.verificationFn == nil {
 		return errors.New("subprotocol has an empty verification fn")
 	}
-	if p.SubleaderTimeout < 1 {
-		p.SubleaderTimeout = DefaultSubleaderTimeout
-	}
-	if p.LeavesTimeout < 1 {
-		p.LeavesTimeout = DefaultLeavesTimeout
+	if p.Timeout < 10 {
+		return errors.New("unrealistic timeout")
 	}
 
-	announcement := StructAnnouncement{p.TreeNode(),
-		Announcement{p.Msg, p.Data, p.Publics,
-			p.SubleaderTimeout, p.LeavesTimeout}}
+	announcement := StructAnnouncement{
+		p.TreeNode(),
+		Announcement{p.Msg, p.Data, p.Publics, p.Timeout},
+	}
 	p.ChannelAnnouncement <- announcement
 	return nil
 }
