@@ -325,6 +325,7 @@ func (s *Service) CreateIdentityInternal(ai *CreateIdentity, tag, pubStr string)
 func (s *Service) DataUpdate(cu *DataUpdate) (*DataUpdateReply, error) {
 	// Check if there is something new on the skipchain - in case we've been
 	// offline
+	log.Lvl1("Got a DataUpdate message")
 	sid := s.getIdentityStorage(cu.ID)
 	if sid == nil {
 		return nil, errors.New("Didn't find Identity")
