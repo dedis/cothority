@@ -2,15 +2,12 @@ package skipchain
 
 import (
 	"bytes"
-	"crypto/sha512"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	bftcosi "github.com/dedis/cothority/omnicon"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
@@ -140,61 +137,6 @@ func TestBlockLink_Copy(t *testing.T) {
 	if sb1.Height == sb2.Height {
 		t.Fatal("Should not be equal")
 	}
-}
-
-func TestSign(t *testing.T) {
-	l := onet.NewTCPTest(cothority.Suite)
-	defer l.CloseAll()
-
-	servers, roster, _ := l.GenTree(10, true)
-	msg := sha512.New().Sum(nil)
-
-	sig, err := sign(msg, servers, l)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = cosi.Verify(cothority.Suite, roster.Publics(), msg, sig.Sig, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sig.Msg = sha512.New().Sum([]byte{1})
-	require.NotNil(t, cosi.Verify(cothority.Suite, roster.Publics(), msg, sig.Sig, nil))
-}
-
-func sign(msg SkipBlockID, servers []*onet.Server, l *onet.LocalTest) (*bftcosi.FinalSignature, error) {
-	aggScalar := l.Suite.Scalar().Zero()
-	aggPoint := l.Suite.Point().Null()
-	for _, s := range servers {
-		aggScalar.Add(aggScalar, l.GetPrivate(s))
-		aggPoint.Add(aggPoint, s.ServerIdentity.Public)
-	}
-	rand := l.Suite.Scalar().Pick(cothority.Suite.RandomStream())
-	comm := l.Suite.Point().Mul(rand, nil)
-	sigC, err := comm.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	hash := sha512.New()
-	hash.Write(sigC)
-	aggPoint.MarshalTo(hash)
-	hash.Write(msg)
-	challBuff := hash.Sum(nil)
-	chall := l.Suite.Scalar().SetBytes(challBuff)
-	resp := l.Suite.Scalar().Mul(aggScalar, chall)
-	resp = resp.Add(rand, resp)
-	sigR, err := resp.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	sig := &bytes.Buffer{}
-	sig.Write(sigC)
-	sig.Write(sigR)
-	// a bitmask full of zeros saying no servers are excepted
-	noExceptions := make([]byte, len(servers)/8)
-	sig.Write(noExceptions)
-	return &bftcosi.FinalSignature{Sig: sig.Bytes(), Msg: msg}, nil
 }
 
 func TestSkipBlock_GetFuzzy(t *testing.T) {

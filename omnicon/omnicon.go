@@ -87,7 +87,7 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	}
 	cosiProto := pi.(*protocol.CoSiRootNode)
 	cosiProto.CreateProtocol = bft.CreateProtocol
-	// We set it to n / 10 to have every sub-leader manage 10 nodes.
+	// NOTE We set it to n / 10 to have every sub-leader manage 10 nodes.
 	// This setting is bad if there are thousands of nodes as the root
 	// would need to manage hundres of sub-leaders.
 	cosiProto.NSubtrees = len(bft.List()) / 10
