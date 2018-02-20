@@ -65,8 +65,7 @@ function Socket(addr, service) {
       };
 
       ws.onerror = error => {
-        console.log(error);
-        reject(new Error("could not connect to " + this.url));
+        reject(new Error("could not connect to " + this.url + ":" + error));
       };
     });
   };
@@ -94,7 +93,10 @@ class RosterSocket {
    */
   send(request, response, data) {
     const socket = this;
-    const fn = function*(socket) {
+    const fn = co.wrap(function*(req, resp, data, socket) {
+      request = req;
+      response = resp;
+      data = data;
       var addresses = socket.addresses;
       var service = socket.service;
       shuffle(addresses);
@@ -104,21 +106,19 @@ class RosterSocket {
       for (var i = 0; i < addresses.length; i++) {
         var addr = addresses[i];
         try {
-          console.log("RosterSocket: trying out " + addr + "/" + service);
           var socket = new Socket(addr, service);
+          console.log("RosterSocket: trying out " + addr + "/" + service);
           var data = yield socket.send(request, response, data);
-          console.log("DATA RECEIVED: " + data);
           socket.lastGoodServer = addr;
           return Promise.resolve(data);
         } catch (err) {
-          console.log(err);
+          console.log("rostersocket: " + err);
           continue;
         }
       }
       return Promise.reject("no conodes are available");
-    };
-    var binded = fn.bind(null, this);
-    return co(binded);
+    });
+    return fn(request, response, data, socket);
   }
 }
 

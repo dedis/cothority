@@ -45,10 +45,6 @@ func init() {
 		&PropagateSkipBlocks{},
 		// Request forward-signature
 		&ForwardSignature{},
-		// Request updated block
-		&GetBlock{},
-		// Updated block reply
-		&GetBlockReply{},
 		// - Data structures
 		&SkipBlockFix{},
 		&SkipBlock{},
@@ -128,8 +124,6 @@ type ForwardSignature struct {
 	Previous SkipBlockID
 	// Newest is the newest skipblock, signed by previous
 	Newest *SkipBlock
-	// ForwardLink is the signature from Previous to Newest
-	ForwardLink *BlockLink
 }
 
 // GetSingleBlock asks for a single block.
@@ -177,7 +171,7 @@ type ProtoExtendRoster struct {
 	Block SkipBlock
 }
 
-// ProtoStructExtendRoster embeds the treenode
+// ProtoStructExtendRoster embeds the treenode.
 type ProtoStructExtendRoster struct {
 	*onet.TreeNode
 	ProtoExtendRoster

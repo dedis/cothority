@@ -68,7 +68,7 @@ function createServer(port) {
   return mockServer;
 }
 
-describe.only("roster socket", () => {
+describe("roster socket", () => {
   it("tries all servers", done => {
     const n = 5;
     // create the addresses
@@ -85,7 +85,7 @@ describe.only("roster socket", () => {
         server = createServer("700" + i);
       }
     }
-    const roster = new identity.Roster(identities);
+    const roster = new identity.Roster(ed25519, identities);
     // create the socket and see if we have any messages back
     const socket = new network.RosterSocket(roster, "cisc");
     socket

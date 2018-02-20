@@ -74,7 +74,7 @@ func linkPin(c *cli.Context) error {
 	if c.NArg() == 2 {
 		pin = c.Args().Get(1)
 	}
-	addr := network.NewTCPAddress(c.Args().First())
+	addr := network.NewAddress(network.PlainTCP, c.Args().First())
 	si := &network.ServerIdentity{Address: addr}
 
 	cfg := loadConfigAdminOrFail(c)
@@ -100,7 +100,7 @@ func getClient(c *cli.Context, arg string) (*ciscConfig, *network.ServerIdentity
 	if c.NArg() != 2 {
 		return nil, nil, nil, errors.New("please give the following arguments: " + arg + " ip:port")
 	}
-	addr := network.NewTCPAddress(c.Args().Get(1))
+	addr := network.NewAddress(network.PlainTCP, c.Args().Get(1))
 	si := &network.ServerIdentity{Address: addr}
 
 	cfg := loadConfigAdminOrFail(c)

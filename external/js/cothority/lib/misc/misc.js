@@ -67,6 +67,12 @@ function constantCompare(arr1, arr2) {
   throw new Error("not implemented yet");
 }
 
+/**
+ * returns the length in bits of a given bitmask
+ *
+ * @param {Uint8Array} bitmask the bitmask
+ * @returns {number} the number of bits in the bitmask
+ */
 function getBitmaskLength(bitmask) {
   if (bitmask.constructor !== Uint8Array) throw TypeError;
 
@@ -80,7 +86,6 @@ function getBitmaskLength(bitmask) {
  * @param {Uint8Array} mask the bit mask
  * @returns {Array} array of indices of bits sets
  */
-const BN = require("bn.js");
 function getSetBits(mask) {
   if (mask.constructor !== Uint8Array) throw TypeError;
 

@@ -48,7 +48,7 @@ func TestClient_CreateRootControl(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestClient_GetUpdateChain(t *testing.T) {
+func TestClient_ParallelGetUpdateChain(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Long run not good for Travis")
 	}
@@ -99,6 +99,71 @@ func TestClient_CreateRootInter(t *testing.T) {
 	}
 }
 
+func TestClient_GetUpdateChain(t *testing.T) {
+	// Create a small chain and test whether we can get from one element
+	// of the chain to the last element with a valid slice of SkipBlocks
+	local := onet.NewTCPTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+
+	conodes := 10
+	sbCount := conodes - 1
+	servers, roster, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
+	s := gs.(*Service)
+
+	c := newTestClient(local)
+
+	sbs := make([]*SkipBlock, sbCount)
+	var err error
+	sbs[0], err = makeGenesisRosterArgs(s, onet.NewRoster(roster.List[0:2]),
+		nil, VerificationNone, 1, 1)
+	log.ErrFatal(err)
+
+	log.Lvl1("Initialize skipchain.")
+
+	for i := 1; i < sbCount; i++ {
+		newSB := NewSkipBlock()
+		newSB.Roster = onet.NewRoster(roster.List[i : i+2])
+		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
+		log.Lvl2("Doing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
+		reply, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbs[i-1].Hash, NewBlock: newSB})
+		require.Nil(t, err)
+		require.NotNil(t, reply.Latest)
+		sbs[i] = reply.Latest
+	}
+
+	for i := 0; i < sbCount; i++ {
+		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash)
+		require.Nil(t, err)
+
+		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
+		if !sbc.Update[0].Equal(sbs[i]) {
+			t.Fatal("First hash is not from our SkipBlock")
+		}
+
+		if !sbc.Update[len(sbc.Update)-1].Equal(sbs[sbCount-1]) {
+			log.Lvl2(sbc.Update[len(sbc.Update)-1].Hash)
+			log.Lvl2(sbs[sbCount-1].Hash)
+			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
+		}
+		for up, sb1 := range sbc.Update {
+			log.ErrFatal(sb1.VerifyForwardSignatures())
+			if up < len(sbc.Update)-1 {
+				sb2 := sbc.Update[up+1]
+				h1 := sb1.Height
+				h2 := sb2.Height
+				height := h1
+				if h2 < height {
+					height = h2
+				}
+				require.True(t, sb1.ForwardLink[height-1].To.Equal(sb2.Hash),
+					"Forward-pointer[%v/%v] of update %v %x is different from hash in %v %x",
+					height-1, len(sb1.ForwardLink), up, sb1.ForwardLink[height-1].To, up+1, sb2.Hash)
+			}
+		}
+	}
+}
+
 func TestClient_StoreSkipBlock(t *testing.T) {
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
@@ -126,7 +191,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	log.ErrFatal(err)
 	require.True(t, sb2.Previous.Equal(sb1.Latest),
 		"New previous should be previous latest")
-	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].Hash(), sb2.Latest.Hash),
+	require.True(t, bytes.Equal(sb2.Previous.ForwardLink[0].To, sb2.Latest.Hash),
 		"second should point to third SkipBlock")
 
 	log.Lvl1("Checking update-chain")

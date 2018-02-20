@@ -380,7 +380,7 @@ func scPrint(c *cli.Context) error {
 		log.Infof("BackwardLink[%d] = %x", i, bl)
 	}
 	for i, fl := range sb.ForwardLink {
-		log.Infof("ForwardLink[%d] = %x", i, fl.Msg)
+		log.Infof("ForwardLink[%d] = %x", i, fl.To)
 	}
 	log.Infof("Data: %#v", string(sb.Data))
 	for i, vf := range sb.VerifierIDs {
@@ -779,7 +779,7 @@ func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
 func findLinkFromAddress(cfg *config, address string) (*link, error) {
 	var l *link
 	for _, o := range cfg.Values.Link {
-		if o.Address == network.NewTCPAddress(address) {
+		if o.Address == network.NewAddress(network.PlainTCP, address) {
 			l = o
 			break
 		}

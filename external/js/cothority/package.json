@@ -1,5 +1,5 @@
 {
-  "name": "cothority",
+  "name": "@dedis/cothority",
   "version": "1.0.0",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
@@ -8,7 +8,7 @@
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
     "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec --exit"
+    "test": "node node_modules/.bin/mocha --recursive --reporter spec"
   },
   "keywords": [
     "cothority",
@@ -17,12 +17,12 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "0.0.5",
+    "@dedis/kyber-js": "0.0.6",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
     "isomorphic-ws": "^4.0.0",
     "protobufjs": "^6.8.4",
-    "pure-uuid": "^1.4.11",
+    "pure-uuid": "^1.5.0",
     "topl": "^0.3.1",
     "utf8": "^3.0.0",
     "ws": "^4.0.0",
@@ -40,11 +40,16 @@
     "file": "^0.2.2",
     "istanbul": "^0.4.5",
     "jsdoc-to-markdown": "^4.0.1",
-    "mocha": "^5.0.0",
+    "mocha": "^5.0.1",
     "mock-socket": "^7.1.0",
     "prettier": "1.10.2",
     "uglify-es": "^3.3.10",
     "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.10.0"
-  }
+    "webpack": "^3.11.0"
+  },
+  "files": [
+	"dist",
+	"doc",
+	"index.html"
+  ]
 }

@@ -9,6 +9,7 @@
 package skipchain
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -42,17 +43,15 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	db                 *SkipBlockDB
-	propagate          messaging.PropagationFunc
-	verifiers          map[VerifierID]SkipBlockVerifier
-	blockRequestsMutex sync.Mutex
-	blockRequests      map[string]chan *SkipBlock
-	newBlocksMutex     sync.Mutex
-	newBlocks          map[string]bool
-	storageMutex       sync.Mutex
-	Storage            *Storage
-	bftTimeout         time.Duration
-	propTimeout        time.Duration
+	db             *SkipBlockDB
+	propagate      messaging.PropagationFunc
+	verifiers      map[VerifierID]SkipBlockVerifier
+	newBlocksMutex sync.Mutex
+	newBlocks      map[string]bool
+	storageMutex   sync.Mutex
+	Storage        *Storage
+	bftTimeout     time.Duration
+	propTimeout    time.Duration
 }
 
 // Storage is saved to disk.
@@ -91,34 +90,33 @@ var ErrorProcessing = errors.New("this skipchain-id is currently processing a bl
 // skipchain after verification that it fits and no other block already has been
 // added.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
+	// Initial checks on the proposed block.
 	prop := psbd.NewBlock
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
 		return nil, errors.New(
 			"only leader is allowed to add blocks")
-
 	}
 	if len(s.Storage.Clients) > 0 {
 		if psbd.Signature == nil {
 			return nil, errors.New(
 				"cannot create new skipblock without authentication")
-
 		}
 		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
 			return nil, errors.New(
 				"wrong signature for this skipchain")
-
 		}
 	}
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
 	if psbd.LatestID.IsNull() {
-		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		// A new chain is created
+		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Index = 0
 		prop.Height = prop.MaximumHeight
-		prop.ForwardLink = make([]*BlockLink, 0)
-		// genesis block has a random back-link:
+		prop.ForwardLink = make([]*ForwardLink, 0)
+		// genesis block has a random back-link, so that two
+		// identical genesis blocks have a different ID.
 		var bl [32]byte
 		random.Bytes(bl[:], random.New())
 		prop.BackLinkIDs = []SkipBlockID{SkipBlockID(bl[:])}
@@ -127,11 +125,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		err := s.verifyBlock(prop)
 		if err != nil {
 			return nil, err
-
 		}
 		if !s.newBlockStart(prop) {
 			return nil, ErrorProcessing
-
 		}
 		defer s.newBlockEnd(prop)
 
@@ -140,7 +136,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			if parent == nil {
 				return nil, errors.New(
 					"Didn't find parent")
-
 			}
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
@@ -148,28 +143,31 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		changed = append(changed, prop)
 
 	} else {
-		log.Lvlf2("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
+
 		// We're appending a block to an existing chain
+		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
 		prev = s.db.GetByID(psbd.LatestID)
 		if prev == nil {
-			// Did not find the block they claim is the latest.
+			// Did not find the block they claim is the latest. So
+			// if this is a chain we are supposed to be following
+			// (is friendly), then talk to peers to catch up.
 
-			// If we don't know this chain, we give up (so that
-			// they cannot make us run useless chainSyncs and attack
-			// other conodes).
+			if !s.blockIsFriendly(psbd.NewBlock) {
+				log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), psbd.NewBlock.Hash)
+				return nil, errors.New("chain not followed")
+			}
+
 			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
 			if gen == nil {
-				return nil, errors.New(
-					"Unknown latest block, unknown chain-id")
-
+				return nil, errors.New("unknown latest block, unknown chain-id")
 			}
+
 			// If we know of this chain, try to sync it.
 			latest := s.findLatest(gen)
 			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
 			err := s.syncChain(latest.Roster, latest.Hash)
 			if err != nil {
-				return nil, errors.New(
-					"failed to catch up")
+				return nil, errors.New("failed to catch up")
 
 			}
 			prev = s.db.GetByID(psbd.LatestID)
@@ -241,7 +239,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		if err := s.addForwardLink(prev, prop); err != nil {
 			return nil, errors.New(
 				"Couldn't get forward signature on block: " + err.Error())
-
 		}
 		changed = append(changed, prev, prop)
 		log.Lvl3("Asking forward-links from all linked blocks")
@@ -253,13 +250,14 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 			}
 			if err := s.forwardSignature(
-				&ForwardSignature{i + 1, prev.Hash, prop,
-					prev.GetForward(0)}); err != nil {
+				&ForwardSignature{
+					TargetHeight: i + 1,
+					Previous:     back.Hash,
+					Newest:       prop,
+				}); err != nil {
 				// This is not a critical failure - we have at least
 				// one forward-link
 				log.Lvl1("Couldn't get old block to sign: " + err.Error())
-			} else {
-				changed = append(changed, back)
 			}
 		}
 	}
@@ -273,48 +271,45 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		Previous: prev,
 		Latest:   prop,
 	}
-	log.Lvlf2("Block added, replying. New latest is: %x", prop.Hash)
+	log.Lvlf3("Block added, replying. New latest is: %x", prop.Hash)
 	return reply, nil
 }
 
 // GetUpdateChain returns a slice of SkipBlocks which describe the part of the
 // skipchain from the latest block the caller knows to the latest
-// SkipBlock we know.
-func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, error) {
-	block := s.db.GetByID(latestKnown.LatestID)
+// SkipBlock we know. The last block in the returned slice of blocks is
+// not guaranteed to have no forward links. It is up to the caller
+// to continue following forward links with the new roster if necessary.
+func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
+	block := s.db.GetByID(guc.LatestID)
 	if block == nil {
 		return nil, errors.New("Couldn't find latest skipblock")
 	}
-	// at least the latest know and the next block:
+
 	blocks := []*SkipBlock{block.Copy()}
-	log.Lvlf3("Starting to search chain at %x", s.Context.ServerIdentity().ID[0:8])
+	log.Lvlf3("Starting to search chain at %s", s.Context.ServerIdentity())
 	for block.GetForwardLen() > 0 {
 		link := block.ForwardLink[block.GetForwardLen()-1]
-		next := s.db.GetByID(link.Hash())
+		next := s.db.GetByID(link.To)
 		if next == nil {
-			log.Lvl3("Didn't find next block, updating block")
-			var err error
-			next, err = s.callGetBlock(block, link.Hash())
-			if err != nil {
-				return nil, err
-
-			}
+			// Next not found means that maybe the roster
+			// has evolved and we are no longer aware of
+			// this chain. The caller will be responsible
+			// to issue a new GetUpdateChain with the
+			// latest Roster to keep traversing.
+			break
 		} else {
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
-				log.Lvl3("We're not responsible for", next, "- asking for update")
-				var err error
-				next, err = s.callGetBlock(next, link.Hash())
-				if err != nil {
-					return nil, err
-
-				}
+				// Likewise for the case where we know the block,
+				// but we are no longer in the Roster, stop searching.
+				break
 			}
 		}
 		block = next
 		blocks = append(blocks, next.Copy())
 	}
 	log.Lvl3("Found", len(blocks), "blocks")
-	reply := &GetUpdateChainReply{blocks}
+	reply := &GetUpdateChainReply{Update: blocks}
 
 	return reply, nil
 }
@@ -325,7 +320,7 @@ func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
 		if len(bl.ForwardLink) == 0 {
 			return bl
 		}
-		next := bl.ForwardLink[len(bl.ForwardLink)-1].Hash()
+		next := bl.ForwardLink[len(bl.ForwardLink)-1].To
 		nextBl := s.db.GetByID(next)
 		if nextBl == nil {
 			return bl
@@ -335,7 +330,7 @@ func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
 }
 
 // syncChain communicates with conodes in the Roster via getBlocks
-// in order to find the latest block.
+// in order traverse the chain and save the blocks locally.
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 	// loop on getBlocks, fetching 10 at a time
 	for {
@@ -347,9 +342,6 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 		for _, sb := range blocks {
 			if err := sb.VerifyForwardSignatures(); err != nil {
 				return err
-			}
-			if !s.blockIsFriendly(sb) {
-				return fmt.Errorf("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
 			}
 			s.db.Store(sb)
 			if len(sb.ForwardLink) == 0 {
@@ -437,7 +429,10 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 		return sb, nil
 	}
 	for len(sb.ForwardLink) > 0 {
-		sb = s.db.GetByID(sb.ForwardLink[0].Hash())
+		sb = s.db.GetByID(sb.ForwardLink[0].To)
+		if sb == nil {
+			return nil, errors.New("didn't find block in forward link")
+		}
 		if sb.Index == id.Index {
 			return sb, nil
 		}
@@ -590,7 +585,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 		}
 		log.Lvlf2("%s FollowSearch %s %x", s.ServerIdentity(), add.Conode, add.SkipchainID)
 	case FollowLookup:
-		si := network.NewServerIdentity(cothority.Suite.Point().Null(), network.NewTCPAddress(add.Conode))
+		si := network.NewServerIdentity(cothority.Suite.Point().Null(), network.NewAddress(network.PlainTCP, add.Conode))
 		roster := onet.NewRoster([]*network.ServerIdentity{si})
 		last, err := s.getLastBlock(roster, add.SkipchainID)
 		if err != nil {
@@ -724,30 +719,112 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 	return false
 }
 
-func (s *Service) callGetBlock(known *SkipBlock, unknown SkipBlockID) (*SkipBlock, error) {
-	s.blockRequestsMutex.Lock()
-	request := make(chan *SkipBlock)
-	s.blockRequests[string(unknown)] = request
-	s.blockRequestsMutex.Unlock()
-	defer func() {
-		s.blockRequestsMutex.Lock()
-		delete(s.blockRequests, string(unknown))
-		s.blockRequestsMutex.Unlock()
-	}()
-	node := known.Roster.RandomServerIdentity()
-	if err := s.SendRaw(node,
-		&GetBlock{unknown}); err != nil {
-		return nil, errors.New("Couldn't get updated block: " + known.Short())
+// addForwardLink verifies if the new block is valid. If it is not valid, it
+// returns with an error.
+// If it finds a valid block, a forward-link will be added and a BFT-signature
+// requested.
+func (s *Service) addForwardLink(src, dst *SkipBlock) error {
+	if src.GetForwardLen() > 0 {
+		return errors.New("already have forward-link at this height")
 	}
 
-	var block *SkipBlock
-	select {
-	case block = <-request:
-		log.Lvl3("Got block", block)
-	case <-time.After(s.propTimeout):
-		return nil, errors.New("Couldn't get updated block in time: " + unknown.Short())
+	// create the message we want to sign for this round
+	roster := src.Roster
+	log.Lvlf3("%s is adding forward-link to %s: %d->%d", s.ServerIdentity(),
+		roster.List, src.Index, dst.Index)
+	fs := &ForwardSignature{
+		TargetHeight: len(src.ForwardLink),
+		Previous:     src.Hash,
+		Newest:       dst,
 	}
-	return block, nil
+	data, err := network.Marshal(fs)
+	if err != nil {
+		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
+	}
+	fwd := NewForwardLink(src, dst)
+	sig, err := s.startBFT(bftNewBlock, roster, fwd.Hash(), data)
+	if err != nil {
+		log.Warn("startBFT failed with", err)
+		return err
+	}
+	fwd.Signature = *sig
+
+	fwl := s.db.GetByID(src.Hash).ForwardLink
+	log.Lvlf3("%s adds forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
+		roster.List, src.Index, dst.Index, fwl)
+	if len(fwl) > 0 {
+		return errors.New("forward-link got signed during our signing")
+	}
+	src.ForwardLink = []*ForwardLink{fwd}
+	if err = src.VerifyForwardSignatures(); err != nil {
+		return errors.New("Wrong BFT-signature: " + err.Error())
+	}
+	s.startPropagation([]*SkipBlock{src})
+	return nil
+}
+
+// verifyNewBlock makes sure that a signature-request for a forward-link
+// is valid.
+func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) (out bool) {
+	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
+	_, fsInt, err := network.Unmarshal(data, cothority.Suite)
+	if err != nil {
+		log.Error("Couldn't unmarshal ForwardSignature", data)
+		return false
+	}
+	fs, ok := fsInt.(*ForwardSignature)
+	if !ok {
+		log.Errorf("got unexpected type %T", fsInt)
+		return false
+	}
+	prevSB := s.db.GetByID(fs.Previous)
+	if prevSB == nil {
+		if !s.blockIsFriendly(fs.Newest) {
+			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), fs.Newest.Hash)
+			return
+		}
+		log.Lvl3(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
+		if err := s.syncChain(fs.Newest.Roster, fs.Previous); err != nil {
+			log.Error("failed to sync skipchain", err)
+			return false
+		}
+		prevSB = s.db.GetByID(fs.Previous)
+		if prevSB == nil {
+			log.Error(s.ServerIdentity(), "Didn't find src-skipblock")
+			return false
+		}
+	}
+
+	fl := NewForwardLink(prevSB, fs.Newest)
+	if bytes.Compare(fl.Hash(), msg) != 0 {
+		log.Lvlf2("Hash of ForwardLink is different from msg %x %x", msg, fl.Hash())
+		return false
+	}
+
+	if !fs.Newest.BackLinkIDs[0].Equal(fs.Previous) {
+		log.Lvl2("Backlink does not point to previous block:", prevSB.Index, fs.Newest.Index)
+		return false
+	}
+	if len(prevSB.ForwardLink) > 0 {
+		log.Lvl2("previous block already has forward-link")
+		return false
+	}
+
+	ok = func() bool {
+		for _, ver := range fs.Newest.VerifierIDs {
+			f, ok := s.verifiers[ver]
+			if !ok {
+				log.Lvlf2("Found no user verification for %x", ver)
+				return false
+			}
+			if !f(fl.To, fs.Newest) {
+				log.Lvlf2("verification function failed: %v %s", f, ver)
+				return false
+			}
+		}
+		return true
+	}()
+	return ok
 }
 
 // forwardSignature receives a signature request of a newly accepted block.
@@ -760,67 +837,27 @@ func (s *Service) forwardSignature(fs *ForwardSignature) error {
 	if target == nil {
 		return errors.New("Didn't find target-block")
 	}
+	if !fs.Previous.Equal(target.Hash) {
+		return errors.New("TargetHeight backlink doesn't correspond to previous")
+	}
 	data, err := network.Marshal(fs)
 	if err != nil {
 		return err
 	}
-	// TODO: is this really signed by target.roster?
-	sig, err := s.startBFT(bftFollowBlock, target.Roster, fs.ForwardLink.Hash(), data)
+	fl := NewForwardLink(target, fs.Newest)
+	sig, err := s.startBFT(bftFollowBlock, target.Roster, fl.Hash(), data)
 	if err != nil {
 		return errors.New("Couldn't get signature: " + err.Error())
 	}
 	log.Lvl1("Adding forward-link to", target.Index)
 
-	// sanity check
-	if !fs.ForwardLink.Hash().Equal(sig.Msg) {
-		panic("invalid message in signature")
+	fl.Signature = *sig
+	if !target.Roster.ID.Equal(fs.Newest.Roster.ID) {
+		fl.NewRoster = fs.Newest.Roster
 	}
-
-	target.AddForward(&BlockLink{BFTSignature: *sig})
+	target.AddForward(fl)
 	s.startPropagation([]*SkipBlock{target})
 	return nil
-}
-
-// deprecated: use CreateProtocol(ProtocolGetBlocks) instead.
-func (s *Service) deprecatedProcessorGetBlock(env *network.Envelope) {
-	gb, ok := env.Msg.(*GetBlock)
-	if !ok {
-		log.Lvl1("Didn't receive GetBlock")
-		return
-	}
-	sb := s.db.GetByID(gb.ID)
-	if sb == nil {
-		log.Lvl1("Did not find block %v", gb.ID)
-		return
-	}
-	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i < 0 {
-		log.Lvl3("Not responsible for that block, recursing")
-		var err error
-		sb, err = s.callGetBlock(sb, sb.Hash)
-		if err != nil {
-			log.Error(err)
-			sb = nil
-		}
-	}
-	if err := s.SendRaw(env.ServerIdentity, &GetBlockReply{sb}); err != nil {
-		log.Lvl1(err)
-	}
-}
-
-func (s *Service) deprecatedProcessorGetBlockReply(env *network.Envelope) {
-	gbr, ok := env.Msg.(*GetBlockReply)
-	if !ok {
-		log.Error("Didn't receive GetBlock")
-		return
-	}
-	if err := s.db.VerifyLinks(gbr.SkipBlock); err != nil {
-		log.Error("Received invalid skipblock: " + err.Error())
-	}
-	id := s.db.Store(gbr.SkipBlock)
-	log.Lvl3("Sending block to channel")
-	s.blockRequestsMutex.Lock()
-	s.blockRequests[string(id)] <- gbr.SkipBlock
-	s.blockRequestsMutex.Unlock()
 }
 
 // verifyFollowBlock makes sure that a signature-request for a forward-link
@@ -835,19 +872,23 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !ok {
 			return errors.New("Didn't receive a ForwardSignature")
 		}
-		previous := s.db.GetByID(fs.Previous)
-		if previous == nil {
-			return errors.New("Didn't find newest block")
-		}
 		newest := fs.Newest
 		if len(newest.BackLinkIDs) <= fs.TargetHeight {
 			return errors.New("Asked for signing too high a backlink")
 		}
-		if err := fs.ForwardLink.Verify(cothority.Suite, previous.Roster.Publics()); err != nil {
+		previous := s.db.GetByID(newest.BackLinkIDs[0])
+		if previous == nil {
+			return errors.New("Didn't find newest block")
+		}
+		if len(previous.ForwardLink) == 0 {
+			return errors.New("Previous doesn't have forward link - cannot verify it's valid")
+		}
+		highest := previous.ForwardLink[len(previous.ForwardLink)-1]
+		if err := highest.Verify(cothority.Suite, previous.Roster.Publics()); err != nil {
 			return errors.New("Wrong forward-link signature: " + err.Error())
 		}
-		if !fs.ForwardLink.Hash().Equal(newest.Hash) {
-			return errors.New("No forward-link from previous to newest")
+		if !highest.To.Equal(newest.Hash) {
+			return errors.New("Previous doesn't point to newest")
 		}
 		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
@@ -860,6 +901,10 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		if !target.SkipChainID().Equal(newest.SkipChainID()) {
 			return errors.New("Target and newest not from same skipchain")
 		}
+		fl := NewForwardLink(target, fs.Newest)
+		if bytes.Compare(fl.Hash(), msg) != 0 {
+			return errors.New("Hash to sign doesn't correspond to ForwardSignature")
+		}
 		return nil
 	}()
 	if err != nil {
@@ -867,169 +912,6 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		return false
 	}
 	return true
-}
-
-// verifyNewBlock makes sure that a signature-request for a forward-link
-// is valid.
-func (s *Service) bftVerifyNewBlock(msg []byte, data []byte) (out bool) {
-	if len(data) < 32 {
-		log.Error("not enough data")
-		return false
-	}
-	log.Lvlf4("%s verifying block %x", s.ServerIdentity(), msg)
-	_, newSBi, err := network.Unmarshal(data[32:], cothority.Suite)
-	if err != nil {
-		log.Error("Couldn't unmarshal SkipBlock", data)
-		return false
-	}
-	newSB, ok := newSBi.(*SkipBlock)
-	if !ok {
-		log.Errorf("got unexpected type %T", newSBi)
-		return false
-	}
-	if !newSB.Hash.Equal(SkipBlockID(msg)) {
-		log.Lvlf2("Dest skipBlock different from msg %x %x", msg, []byte(newSB.Hash))
-		return false
-	}
-	srcHash := data[0:32]
-	prevSB := s.db.GetByID(srcHash)
-	if prevSB == nil {
-		log.Lvl3(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
-		if err := s.syncChain(newSB.Roster, srcHash); err != nil {
-			log.Error("failed to sync skipchain", err)
-			return false
-		}
-		prevSB = s.db.GetByID(srcHash)
-		if prevSB == nil {
-			log.Error(s.ServerIdentity(), "Didn't find src-skipblock")
-			return false
-		}
-	}
-
-	if !newSB.BackLinkIDs[0].Equal(srcHash) {
-		log.Lvl2("Backlink does not point to previous block:", prevSB.Index, newSB.Index)
-		return false
-	}
-	if len(prevSB.ForwardLink) > 0 {
-		log.Lvl2("previous block already has forward-link")
-		return false
-	}
-
-	ok = func() bool {
-		for _, ver := range newSB.VerifierIDs {
-			f, ok := s.verifiers[ver]
-			if !ok {
-				log.Lvlf2("Found no user verification for %x", ver)
-				return false
-			}
-			if !f(msg, newSB) {
-				return false
-			}
-		}
-		return true
-	}()
-	return ok
-}
-
-// PropagateSkipBlock will save a new SkipBlock
-func (s *Service) propagateSkipBlock(msg network.Message) {
-	sbs, ok := msg.(*PropagateSkipBlocks)
-	if !ok {
-		log.Error("Couldn't convert to slice of SkipBlocks")
-		return
-	}
-	for _, sb := range sbs.SkipBlocks {
-		if err := sb.VerifyForwardSignatures(); err != nil {
-			log.Error(err)
-			return
-		}
-		if !s.blockIsFriendly(sb) {
-			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
-			return
-		}
-		s.db.Store(sb)
-	}
-}
-
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
-func (s *Service) registerVerification(v VerifierID, f SkipBlockVerifier) error {
-	s.verifiers[v] = f
-	return nil
-}
-
-// checkBlock makes sure the basic parameters of a block are correct and returns
-// an error if something fails.
-func (s *Service) verifyBlock(sb *SkipBlock) error {
-	if sb.MaximumHeight <= 0 {
-		return errors.New("Set a maximumHeight > 0")
-	}
-	if sb.BaseHeight <= 0 {
-		return errors.New("Set a baseHeight > 0")
-	}
-	if sb.MaximumHeight > sb.BaseHeight {
-		return errors.New("maximumHeight must be smaller or equal baseHeight")
-	}
-	if sb.Index < 0 {
-		return errors.New("Can't have an index < 0")
-	}
-	if len(sb.BackLinkIDs) <= 0 {
-		return errors.New("Need at least one backlinkID")
-	}
-	if sb.Height < 1 {
-		return errors.New("Minimum height is 1")
-	}
-	if sb.Height > sb.MaximumHeight {
-		return errors.New("Height must be <= maximumHeight")
-	}
-	if sb.Roster == nil {
-		return errors.New("Need a roster")
-	}
-	return nil
-}
-
-// addForwardLink verifies if the new block is valid. If it is not valid, it
-// returns with an error.
-// If it finds a valid block, a forward-link will be added and a BFT-signature
-// requested.
-func (s *Service) addForwardLink(src, dst *SkipBlock) error {
-	if src.GetForwardLen() > 0 {
-		return errors.New("already have forward-link at this height")
-	}
-
-	// create the message we want to sign for this round
-	roster := src.Roster
-	log.Lvlf3("%s is adding forward-link to %s: %d->%d", s.ServerIdentity(),
-		roster.List, src.Index, dst.Index)
-	data, err := network.Marshal(dst)
-	if err != nil {
-		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
-	}
-	msg := []byte(dst.Hash)
-	sig, err := s.startBFT(bftNewBlock, roster, msg, append(src.Hash, data...))
-	if err != nil {
-		log.Lvl3("startBFT failed with", err)
-		return err
-	}
-
-	fwd := &BlockLink{*sig}
-
-	// sanity check
-	if !dst.Hash.Equal(fwd.Hash()) {
-		panic("invalid message in signature")
-	}
-
-	fwl := s.db.GetByID(src.Hash).ForwardLink
-	log.Lvlf3("%s adds forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
-		roster.List, src.Index, dst.Index, fwl)
-	if len(fwl) > 0 {
-		return errors.New("forward-link got signed during our signing")
-	}
-	src.ForwardLink = []*BlockLink{fwd}
-	if err = src.VerifyForwardSignatures(); err != nil {
-		return errors.New("Wrong BFT-signature: " + err.Error())
-	}
-	return nil
 }
 
 // startBFT starts a BFT-protocol with the given parameters.
@@ -1111,9 +993,66 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	}
 }
 
+// PropagateSkipBlock will save a new SkipBlock
+func (s *Service) propagateSkipBlock(msg network.Message) {
+	sbs, ok := msg.(*PropagateSkipBlocks)
+	if !ok {
+		log.Error("Couldn't convert to slice of SkipBlocks")
+		return
+	}
+	for _, sb := range sbs.SkipBlocks {
+		if err := sb.VerifyForwardSignatures(); err != nil {
+			log.Error(err)
+			return
+		}
+		if !s.blockIsFriendly(sb) {
+			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
+			return
+		}
+		s.db.Store(sb)
+	}
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) registerVerification(v VerifierID, f SkipBlockVerifier) error {
+	s.verifiers[v] = f
+	return nil
+}
+
+// checkBlock makes sure the basic parameters of a block are correct and returns
+// an error if something fails.
+func (s *Service) verifyBlock(sb *SkipBlock) error {
+	if sb.MaximumHeight <= 0 {
+		return errors.New("Set a maximumHeight > 0")
+	}
+	if sb.BaseHeight <= 0 {
+		return errors.New("Set a baseHeight > 0")
+	}
+	if sb.MaximumHeight > sb.BaseHeight {
+		return errors.New("maximumHeight must be smaller or equal baseHeight")
+	}
+	if sb.Index < 0 {
+		return errors.New("Can't have an index < 0")
+	}
+	if len(sb.BackLinkIDs) <= 0 {
+		return errors.New("Need at least one backlinkID")
+	}
+	if sb.Height < 1 {
+		return errors.New("Minimum height is 1")
+	}
+	if sb.Height > sb.MaximumHeight {
+		return errors.New("Height must be <= maximumHeight")
+	}
+	if sb.Roster == nil {
+		return errors.New("Need a roster")
+	}
+	return nil
+}
+
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	log.Lvl2("Starting to propagate for service", s.ServerIdentity())
+	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
 	siMap := map[string]*network.ServerIdentity{}
 	// Add all rosters of all blocks - everybody needs to be contacted
 	for _, block := range blocks {
@@ -1203,12 +1142,14 @@ func (s *Service) blockIsFriendly(sb *SkipBlock) bool {
 			return true
 		}
 	}
-	// Accept if there is only one node in the roster or if we're the
-	// root.
+
+	// Accept if we're the root.
 	index, _ := sb.Roster.Search(s.ServerIdentity().ID)
-	if len(sb.Roster.List) == 1 || index == 0 {
+	if index == 0 {
 		return true
 	}
+
+	// For each Follow, find out if it permits this chain.
 	for _, fct := range s.Storage.Follow {
 		err := fct.GetLatest(s.ServerIdentity(), s)
 		if err != nil {
@@ -1273,7 +1214,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		db:               NewSkipBlockDB(db, bucket),
 		Storage:          &Storage{},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
-		blockRequests:    make(map[string]chan *SkipBlock),
 		newBlocks:        make(map[string]bool),
 		propTimeout:      defaultPropagateTimeout,
 	}
@@ -1286,10 +1226,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow, s.Listlink))
 	s.ServiceProcessor.RegisterStatusReporter("Skipblock", s.db)
-	s.ServiceProcessor.RegisterProcessorFunc(network.MessageType(GetBlock{}),
-		s.deprecatedProcessorGetBlock)
-	s.ServiceProcessor.RegisterProcessorFunc(network.MessageType(GetBlockReply{}),
-		s.deprecatedProcessorGetBlockReply)
 
 	if err := s.registerVerification(VerifyBase, s.verifyFuncBase); err != nil {
 		return nil, err

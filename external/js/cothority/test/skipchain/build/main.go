@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -14,21 +15,40 @@ import (
 	"github.com/dedis/onet/log"
 )
 
+const defaultN = 5
+const defaultBlocks = 5
+
 func main() {
-	n := 5
+	n := defaultN
+	var err error
+	if len(os.Args) > 1 {
+		n, err = strconv.Atoi(os.Args[1])
+		log.ErrFatal(err)
+	}
+	blocks := defaultBlocks
+	if len(os.Args) > 2 {
+		blocks, err = strconv.Atoi(os.Args[2])
+		log.ErrFatal(err)
+	}
+	var message = []byte("Hello World")
+	if len(os.Args) > 3 {
+		message = []byte(os.Args[3])
+	}
+
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(n, true)
 	defer l.CloseAll()
 
-	clients := make(map[int]*skipchain.Client)
-	for i := range [8]byte{} {
-		clients[i] = newTestClient(l)
-	}
-	_, inter, err := clients[0].CreateRootControl(ro, ro, nil, 1, 1, 1)
+	client := newTestClient(l)
+	_, inter, err := client.CreateRootControl(ro, ro, nil, 1, 1, 1)
 	log.ErrFatal(err)
 
-	_, err = clients[2%8].GetUpdateChain(inter.Roster, inter.Hash)
-	log.ErrFatal(err)
+	var latest = inter
+	for i := 0; i < blocks; i++ {
+		sb, err := client.StoreSkipBlock(latest, ro, message)
+		log.ErrFatal(err)
+		latest = sb.Latest
+	}
 
 	serversToml := make([]*app.ServerToml, n)
 	for i, si := range ro.List {

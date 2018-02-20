@@ -1,5 +1,5 @@
 const path = require("path");
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 const nodeConfig = {
   target: "node",
@@ -23,9 +23,7 @@ const nodeConfig = {
       }
     ]
   },
-  plugins: [
-    new UglifyJsPlugin()
-  ]
+  plugins: [new UglifyJsPlugin()]
 };
 
 const browserConfig = {
@@ -33,7 +31,8 @@ const browserConfig = {
   output: {
     filename: "bundle.min.js",
     path: path.resolve(__dirname, "dist"),
-    library: "cothority"
+    library: "cothority",
+    libraryTarget: "umd"
   },
   module: {
     rules: [
@@ -49,9 +48,7 @@ const browserConfig = {
       }
     ]
   },
-  plugins: [
-    new UglifyJsPlugin()
-  ]
+  plugins: [new UglifyJsPlugin()]
 };
 
 module.exports = [nodeConfig, browserConfig];
