@@ -14,7 +14,7 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "@dedis/cothority": "file:../../cothority/dedis-cothority-1.0.0.tgz",
+    "@dedis/cothority": "^1.0.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
     "vuetify": "^1.0.1",
