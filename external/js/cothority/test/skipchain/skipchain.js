@@ -16,9 +16,10 @@ const curve = new kyber.curve.edwards25519.Curve();
 const child_process = require("child_process");
 const co = require("co");
 
-describe("skipchain client", () => {
+describe.only("skipchain client", () => {
+  var proc;
   after(function() {
-    helpers.killGolang();
+    helpers.killGolang(proc);
   });
 
   it("can retrieve updates from conodes", done => {
@@ -43,7 +44,11 @@ describe("skipchain client", () => {
       done();
     });
     helpers
-      .runGolang(build_dir)
+      .runGolang(build_dir, data => data.match(/OK/))
+      .then(proces => {
+        proc = proces;
+        return Promise.resolve(true);
+      })
       .then(fn)
       .catch(err => {
         done();
