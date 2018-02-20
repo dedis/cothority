@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/messaging"
-	bftcosi "github.com/dedis/cothority/omnicon"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
@@ -42,17 +42,17 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	db                   *SkipBlockDB
-	propagate            messaging.PropagationFunc
-	verifiers            map[VerifierID]SkipBlockVerifier
-	newBlocksMutex       sync.Mutex
-	newBlocks            map[string]bool
-	storageMutex         sync.Mutex
-	Storage              *Storage
-	bftTimeout           time.Duration
-	propTimeout          time.Duration
-	bftNewBlockBuffer    sync.Map
-	bftFollowBlockBuffer sync.Map
+	db                      *SkipBlockDB
+	propagate               messaging.PropagationFunc
+	verifiers               map[VerifierID]SkipBlockVerifier
+	newBlocksMutex          sync.Mutex
+	newBlocks               map[string]bool
+	storageMutex            sync.Mutex
+	Storage                 *Storage
+	bftTimeout              time.Duration
+	propTimeout             time.Duration
+	verifyNewBlockBuffer    sync.Map
+	verifyFollowBlockBuffer sync.Map
 }
 
 // Storage is saved to disk.
@@ -831,24 +831,16 @@ func (s *Service) bftVerifyNewBlock(msg, data []byte) bool {
 		return true
 	}()
 	if ok {
-		s.bftNewBlockBuffer.Store(sliceToArr(msg), true)
+		s.verifyNewBlockBuffer.Store(sliceToArr(msg), true)
 	}
 	return ok
 }
 
-// sliceToArr does what the name suggests, we need it to turn a slice into
-// something hashable.
-func sliceToArr(msg []byte) [32]byte {
-	var arr [32]byte
-	copy(arr[:], msg)
-	return arr
-}
-
 func (s *Service) bftVerifyNewBlockAck(msg []byte, data []byte) bool {
 	arr := sliceToArr(msg)
-	_, ok := s.bftNewBlockBuffer.Load(arr)
+	_, ok := s.verifyNewBlockBuffer.Load(arr)
 	if ok {
-		s.bftNewBlockBuffer.Delete(arr)
+		s.verifyNewBlockBuffer.Delete(arr)
 	} else {
 		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
 	}
@@ -940,15 +932,15 @@ func (s *Service) bftVerifyFollowBlock(msg, data []byte) bool {
 		return false
 	}
 
-	s.bftFollowBlockBuffer.Store(sliceToArr(msg), true)
+	s.verifyFollowBlockBuffer.Store(sliceToArr(msg), true)
 	return true
 }
 
 func (s *Service) bftVerifyFollowBlockAck(msg, data []byte) bool {
 	arr := sliceToArr(msg)
-	_, ok := s.bftFollowBlockBuffer.Load(arr)
+	_, ok := s.verifyFollowBlockBuffer.Load(arr)
 	if ok {
-		s.bftFollowBlockBuffer.Delete(arr)
+		s.verifyFollowBlockBuffer.Delete(arr)
 	} else {
 		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
 	}
@@ -1210,6 +1202,14 @@ func (s *Service) tryLoad() error {
 		return errors.New("data of wrong type")
 	}
 	return nil
+}
+
+// sliceToArr does what the name suggests, we need it to turn a slice into
+// something hashable.
+func sliceToArr(msg []byte) [32]byte {
+	var arr [32]byte
+	copy(arr[:], msg)
+	return arr
 }
 
 func newSkipchainService(c *onet.Context) (onet.Service, error) {

@@ -32,6 +32,7 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -98,7 +99,11 @@ type Service struct {
 	// Sync tools
 	// key of map is ID of party
 	// synchronizing inside one party
-	syncs map[string]*sync
+	syncs map[string]*syncChans
+	// verifyFinalBuffer is a temporary buffer for bftVerifyFinal results
+	verifyFinalBuffer sync.Map
+	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results
+	verifyMergeBuffer sync.Map
 }
 
 type saveData struct {
@@ -121,7 +126,7 @@ type merge struct {
 	distrib bool
 }
 
-type sync struct {
+type syncChans struct {
 	// channel to return the configreply
 	ccChannel chan *checkConfigReply
 	// channel to return the mergereply
@@ -162,7 +167,7 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 		return nil, errors.New("Invalid signature" + err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
-	s.syncs[string(hash)] = &sync{
+	s.syncs[string(hash)] = &syncChans{
 		ccChannel: make(chan *checkConfigReply, 1),
 		mcChannel: make(chan *mergeConfigReply, 1),
 	}
@@ -400,7 +405,7 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 }
 
 // MergeConfigReply processes the response after MergeConfig message
-func (s Service) MergeConfigReply(req *network.Envelope) {
+func (s *Service) MergeConfigReply(req *network.Envelope) {
 	log.Lvlf2("MergeConfigReply: %s from %s got %v",
 		s.ServerIdentity(), req.ServerIdentity.String(), req.Msg)
 	mcrVal, ok := req.Msg.(*mergeConfigReply)
@@ -541,7 +546,7 @@ func (final *FinalStatement) VerifyMergeStatement(mergeFinal *FinalStatement) in
 }
 
 // Verification function for signing during Finalization
-func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
+func (s *Service) bftVerifyFinal(Msg, Data []byte) bool {
 	final, err := NewFinalStatementFromToml(Data)
 	if err != nil {
 		log.Error(err.Error())
@@ -570,7 +575,19 @@ func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
 		log.Error("hash of lccocal Final stmt and msg are not equal")
 		return false
 	}
+	s.verifyFinalBuffer.Store(sliceToArr(Msg), true)
 	return true
+}
+
+func (s *Service) bftVerifyFinalAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyFinalBuffer.Load(arr)
+	if ok {
+		s.verifyFinalBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
 }
 
 // Verification function for sighning during Merging
@@ -631,7 +648,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	m := &merge{stmtsMap, true}
-	var syncData *sync
+	var syncData *syncChans
 	if syncData, ok = s.syncs[string(final.Desc.Hash())]; !ok {
 		log.Lvl2("VerifyMerge: No sync data with given hash")
 		return false
@@ -689,6 +706,17 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	return true
 }
 
+func (s *Service) bftVerifyMergeAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyMergeBuffer.Load(arr)
+	if ok {
+		s.verifyMergeBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
+}
+
 // PropagateFinal saves the new final statement
 func (s *Service) PropagateFinal(msg network.Message) {
 	fs, ok := msg.(*FinalStatement)
@@ -733,16 +761,11 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 
 	root.Data = data
-	done := make(chan bool)
-	root.RegisterOnDone(func() {
-		done <- true
-	})
 	final.Signature = []byte{}
 	go node.Start()
 
 	select {
-	case <-done:
-		sig := root.Signature()
+	case sig := <-root.FinalSignatureChan:
 		if len(sig.Sig) >= SIGSIZE {
 			final.Signature = sig.Sig[:SIGSIZE]
 		} else {
@@ -958,7 +981,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if s.data.merges == nil {
 		s.data.merges = make(map[string]*merge)
 	}
-	s.syncs = make(map[string]*sync)
+	s.syncs = make(map[string]*syncChans)
 	var err error
 	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
 	if err != nil {
@@ -969,12 +992,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	s.ProtocolRegister(bftSignFinal, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal)
-	})
-	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
-	})
+	if err := bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
+		return nil, err
+	}
+	if err := bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
+		return nil, err
+	}
 	return s, nil
 }
 
@@ -1005,4 +1028,12 @@ func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point
 	sort.Strings(locs)
 	sort.Sort(byIdentity(roster))
 	sort.Sort(byPoint(atts))
+}
+
+// sliceToArr does what the name suggests, we need it to turn a slice into
+// something hashable.
+func sliceToArr(msg []byte) [32]byte {
+	var arr [32]byte
+	copy(arr[:], msg)
+	return arr
 }

@@ -3,7 +3,6 @@ package identity
 import (
 	"errors"
 	"io"
-
 	"io/ioutil"
 
 	"github.com/dedis/cothority"

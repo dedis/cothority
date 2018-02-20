@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	bftcosi "github.com/dedis/cothority/omnicon"
+	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"

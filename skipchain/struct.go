@@ -12,7 +12,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	bftcosi "github.com/dedis/cothority/omnicon"
+	"github.com/dedis/cothority/bftcosi"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
