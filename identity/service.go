@@ -12,13 +12,11 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"reflect"
-	"sync"
-
 	"errors"
-
 	"fmt"
 	"math/big"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"

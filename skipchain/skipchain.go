@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/cothority/messaging"
 	bftcosi "github.com/dedis/cothority/omnicon"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -849,6 +850,8 @@ func (s *Service) bftVerifyNewBlockAck(msg []byte, data []byte) bool {
 	_, ok := s.bftNewBlockBuffer.Load(arr)
 	if ok {
 		s.bftNewBlockBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
 	}
 	return ok
 }
@@ -937,6 +940,7 @@ func (s *Service) bftVerifyFollowBlock(msg, data []byte) bool {
 		log.Error(err)
 		return false
 	}
+
 	s.bftFollowBlockBuffer.Store(sliceToArr(msg), true)
 	return true
 }
@@ -946,6 +950,8 @@ func (s *Service) bftVerifyFollowBlockAck(msg, data []byte) bool {
 	_, ok := s.bftFollowBlockBuffer.Load(arr)
 	if ok {
 		s.bftFollowBlockBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
 	}
 	return ok
 }
@@ -970,37 +976,39 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	case 0:
 		return nil, errors.New("found empty Roster")
 	case 1:
-		/*
-			TODO
-			pubs := []kyber.Point{s.ServerIdentity().Public}
-			co := crypto.NewCosi(cothority.Suite, root.Private(), pubs)
-			co.CreateCommitment(cothority.Suite.RandomStream())
-			co.CreateChallenge(msg)
-			co.CreateResponse()
-			// This is when using kyber-cosi
-			// r, c := cosi.Commit(Suite, random.Stream)
-			// ch, err := cosi.Challenge(Suite, c, s.ServerIdentity().Public, msg)
-			// if err != nil {
-			// 	return nil, errors.New("couldn't create cosi-signature: " + err.Error())
-			// }
-			// resp, err := cosi.Response(Suite, root.Private(), r, ch)
-			// if err != nil {
-			// 	return nil, errors.New("couldn't create cosi-signature: " + err.Error())
-			// }
-			// coSig, err := cosi.Sign(Suite, c, resp, nil)
-			// if err != nil {
-			// 	return nil, errors.New("couldn't create cosi-signature: " + err.Error())
-			// }
-			sig := &bftcosi.FinalSignature{
-				Msg: msg,
-				Sig: co.Signature(),
-			}
-			if crypto.VerifySignature(cothority.Suite, pubs, msg, sig.Sig) != nil {
-				return nil, errors.New("failed in cosi")
-			}
-			return sig, nil
-		*/
-		return nil, errors.New("Roster has only 1 node")
+		pubs := []kyber.Point{s.ServerIdentity().Public}
+		mask, err := cosi.NewMask(cothority.Suite, pubs, s.ServerIdentity().Public)
+		if err != nil {
+			return nil, err
+		}
+		x, X := cosi.Commit(cothority.Suite)
+		if err != nil {
+			return nil, err
+		}
+
+		ci, err := cosi.Challenge(cothority.Suite, X, mask.AggregatePublic, msg)
+		if err != nil {
+			return nil, err
+		}
+
+		r, err := cosi.Response(cothority.Suite, root.Private(), x, ci)
+		if err != nil {
+			return nil, err
+		}
+
+		sig, err := cosi.Sign(cothority.Suite, X, r, mask)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := cosi.Verify(cothority.Suite, pubs, msg, sig, nil); err != nil {
+			return nil, err
+		}
+
+		return &bftcosi.FinalSignature{
+			Sig: sig,
+			Msg: msg,
+		}, nil
 	}
 
 	// Start the protocol
@@ -1009,7 +1017,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	root.Msg = msg
 	root.Data = data
 	root.CreateProtocol = s.CreateProtocol
-	root.FinalSignatureChan = make(chan bftcosi.FinalSignature, 0)
+	root.FinalSignatureChan = make(chan bftcosi.FinalSignature, 1)
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}
@@ -1282,7 +1290,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyFollowBlock, s.bftVerifyNewBlockAck, bftFollowBlock)
+	err = bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyFollowBlock, s.bftVerifyFollowBlockAck, bftFollowBlock)
 	if err != nil {
 		return nil, err
 	}
