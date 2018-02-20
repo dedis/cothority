@@ -14,10 +14,10 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "@dedis/cothority": "^1.0.0",
+    "@dedis/cothority": "^1.0.2",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
-    "vuetify": "^1.0.1",
+    "vuetify": "^1.0.2",
     "vuex": "^3.0.1",
     "vuex-persistedstate": "^2.4.2"
   },
@@ -51,7 +51,7 @@
     "eslint-plugin-promise": "^3.4.0",
     "eslint-plugin-standard": "^3.0.1",
     "extract-text-webpack-plugin": "^3.0.0",
-    "file-loader": "^1.1.4",
+    "file-loader": "^1.1.8",
     "friendly-errors-webpack-plugin": "^1.6.1",
     "html-webpack-plugin": "^2.30.1",
     "inject-loader": "^3.0.0",
@@ -80,7 +80,7 @@
     "shelljs": "^0.7.6",
     "sinon": "^4.0.0",
     "sinon-chai": "^2.8.0",
-    "uglifyjs-webpack-plugin": "^1.1.1",
+    "uglifyjs-webpack-plugin": "^1.2.0",
     "url-loader": "^0.5.8",
     "vue-loader": "^13.3.0",
     "vue-style-loader": "^3.0.1",
