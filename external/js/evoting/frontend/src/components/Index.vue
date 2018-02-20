@@ -1,16 +1,18 @@
 <template>
   <div v-if='$store.getters.hasLoginReply'>
     <div>
-      <v-btn
-        fixed
-        dark
-        fab
-        bottom
-        right
-        color="primary"
-      >
-        <v-icon>add</v-icon>
-      </v-btn>
+      <div v-if="$store.state.loginReply.admin">
+        <v-btn
+          fixed
+          dark
+          fab
+          bottom
+          right
+          color="primary"
+        >
+          <v-icon>add</v-icon>
+        </v-btn>
+      </div>
       <div class="election-group">
         <h3>Active Elections</h3>
         <v-layout v-for="layout in active(elections)" class="election-cards" row wrap>
