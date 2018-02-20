@@ -20,6 +20,9 @@ const store = new Vuex.Store({
   mutations: {
     SET_LOGIN_REPLY (state, data) {
       state.loginReply = data
+    },
+    SET_USER (state, data) {
+      state.user = data
     }
   },
   plugins: [createPersistedState({ key: 'evoting' })]

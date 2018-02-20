@@ -17,7 +17,7 @@
     "@dedis/cothority": "file:../../cothority/dedis-cothority-1.0.0.tgz",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
-    "vuetify": "^0.17.6",
+    "vuetify": "^1.0.1",
     "vuex": "^3.0.1",
     "vuex-persistedstate": "^2.4.2"
   },

@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import store from '../store'
 import Index from '@/components/Index'
+import Logout from '@/components/Logout'
 import * as cothority from '@dedis/cothority'
 import config from '../config'
 
@@ -13,6 +14,11 @@ const router = new Router({
       path: '/',
       name: 'Index',
       component: Index
+    },
+    {
+      path: '/logout',
+      name: 'Logout',
+      component: Logout
     }
   ]
 })
