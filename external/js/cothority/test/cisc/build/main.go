@@ -8,12 +8,12 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
-	"github.com/dedis/onet"
-	"github.com/dedis/kyber/sign/anon"
-	"github.com/dedis/onet/log"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/anon"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 )
 
 func main() {
@@ -45,10 +45,11 @@ func main() {
 	log.ErrFatal(c1.ProposeSend(data2))
 	log.ErrFatal(c1.ProposeUpdate())
 	log.ErrFatal(c1.ProposeVote(true))
+	log.ErrFatal(c1.DataUpdate())
 
 	log.Lvl3("After data add", c1.Data.Storage)
 
-	id := hex.EncodeToString([]byte("dunno-what-you-want-here"))
+	id := hex.EncodeToString(c1.ID)
 	fd, err := os.Create("genesis.txt")
 	log.ErrFatal(err)
 	fd.WriteString(id)
@@ -71,6 +72,7 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster,
 	return c
 }
 
+// NewTestIdentity returns a identity.Identity client
 func NewTestIdentity(cothority *onet.Roster, majority int, owner string, local *onet.LocalTest, kp *key.Pair) *identity.Identity {
 	id := identity.NewIdentity(cothority, majority, owner, kp)
 	id.Client = local.NewClient(identity.ServiceName)

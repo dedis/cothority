@@ -2,6 +2,7 @@ syntax = "proto2";
 
 //imports
 import "../pop/final.proto";
+import "../server/roster.proto";
 import "../skip/skipblock.proto";
 
 option java_package = "ch.epfl.dedis.proto";
@@ -24,7 +25,8 @@ message Data {
     required sint32 threshold = 1;
     map<string, Device> device = 2;
     map<string, string> storage = 3;
-    map<string, bytes> votes = 4;
+    optional Roster roster = 4;
+    map<string, bytes> votes = 5;
 }
 
 message StoreKeys {
