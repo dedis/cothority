@@ -16,7 +16,7 @@ const curve = new kyber.curve.edwards25519.Curve();
 const child_process = require("child_process");
 const co = require("co");
 
-describe("skipchain client", () => {
+describe.only("skipchain client", () => {
   after(function() {
     helpers.killGolang();
   });
