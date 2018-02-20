@@ -20,7 +20,6 @@ import (
 	"github.com/dedis/cothority/messaging"
 	bftcosi "github.com/dedis/cothority/omnicon"
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -958,6 +957,12 @@ func (s *Service) bftVerifyFollowBlockAck(msg, data []byte) bool {
 
 // startBFT starts a BFT-protocol with the given parameters.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.FinalSignature, error) {
+
+	if len(roster.List) == 0 {
+		return nil, errors.New("found empty Roster")
+	}
+
+	// Start the protocol
 	bf := 2
 	if len(roster.List)-1 > 2 {
 		bf = len(roster.List) - 1
@@ -971,47 +976,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		return nil, fmt.Errorf("couldn't create new node: %s", err.Error())
 	}
 	root := node.(*bftcosi.ProtocolBFTCoSi)
-
-	switch len(roster.List) {
-	case 0:
-		return nil, errors.New("found empty Roster")
-	case 1:
-		pubs := []kyber.Point{s.ServerIdentity().Public}
-		mask, err := cosi.NewMask(cothority.Suite, pubs, s.ServerIdentity().Public)
-		if err != nil {
-			return nil, err
-		}
-		x, X := cosi.Commit(cothority.Suite)
-		if err != nil {
-			return nil, err
-		}
-
-		ci, err := cosi.Challenge(cothority.Suite, X, mask.AggregatePublic, msg)
-		if err != nil {
-			return nil, err
-		}
-
-		r, err := cosi.Response(cothority.Suite, root.Private(), x, ci)
-		if err != nil {
-			return nil, err
-		}
-
-		sig, err := cosi.Sign(cothority.Suite, X, r, mask)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := cosi.Verify(cothority.Suite, pubs, msg, sig, nil); err != nil {
-			return nil, err
-		}
-
-		return &bftcosi.FinalSignature{
-			Sig: sig,
-			Msg: msg,
-		}, nil
-	}
-
-	// Start the protocol
 
 	// Register the function generating the protocol instance
 	root.Msg = msg

@@ -114,7 +114,7 @@ func TestBftCoSi(t *testing.T) {
 	err := GlobalInitBFTCoSiProtocol(verify, ack, protoName)
 	require.Nil(t, err)
 
-	for _, n := range []int{4, 9, 20} {
+	for _, n := range []int{1, 2, 4, 9, 20} {
 		runProtocol(t, n, 0, 0, protoName)
 	}
 }
