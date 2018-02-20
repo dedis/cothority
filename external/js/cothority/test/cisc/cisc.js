@@ -14,37 +14,31 @@ const net = cothority.net;
 const expect = chai.expect;
 
 describe.only("cisc client", () => {
-
   it("can retrieve updates from conodes", done => {
-
-    after(function(){
-      console.log("Cleanup...")
+    after(function() {
       killGolang();
-    })
+    });
     runGolang()
       .then(data => {
         [roster, id] = data;
 
         const addr1 = roster.identities[0].websocketAddr;
-        const socket = new net.Socket(addr1, "Skipchain");
+        const socket = new net.Socket(addr1, "Identity");
         const requestStr = "DataUpdate";
         const responseStr = "DataUpdateReply";
 
         const request = { id: misc.hexToUint8Array(id) };
 
-        console.log("Sending data", request)
+        //console.log("Sending data", request);
         return socket.send(requestStr, responseStr, request);
       })
-      .then(skipblocks => {
-        console.log("Received data from the skipchain:", skipblocks);
-
-        for(var i=0; i<skipblocks.update.length; i++){
-          var skipblock = skipblocks.update[i];
-          console.log(skipblock.data);
-        }
+      .then(data => {
+        console.log("Received data from the identity skipchain:", data);
+        console.log("Storage: ", data.data.storage);
+        console.log("Keys: ", Object.keys(data.data.storage));
         done();
-      })
-  });
+      });
+  }).timeout(5000);
 });
 
 var spawned_conodes;
@@ -60,17 +54,16 @@ function killGolang() {
 }
 
 function runGolang() {
-  const build_dir = process.cwd() + "/test/skipchain/build";
+  const build_dir = process.cwd() + "/test/cisc/build";
   const spawn = child_process.spawn;
   return new Promise(function(resolve, reject) {
-
     console.log("build_dir = " + build_dir);
     env = process.env;
-    env['DEBUG_LVL'] = '2'
-    env['DEBUG_COLOR'] = 'true'
+    //env["DEBUG_LVL"] = "1";
+    //env["DEBUG_COLOR"] = "true";
     spawned_conodes = spawn("go", ["run", "main.go"], {
       cwd: build_dir,
-      env: process.env,
+      env: env,
       detached: true
     });
     spawned_conodes.unref();
@@ -82,15 +75,15 @@ function runGolang() {
 
     spawned_conodes.stdout.setEncoding("utf8");
     spawned_conodes.stdout.on("data", data => {
+      console.log(data);
       if (!data.match(/OK/)) {
-        reject("RECEIVED DATA (NOT OK) => " + data);
+        //reject("RECEIVED DATA (NOT OK) => " + data);
+        return;
       }
-      console.log("RECEIVED DATA (OK) => " + data);
-      resolve(data);
+      console.log("RECEIVED OK");
+      resolve();
     });
-    
-  }).then(data => {
-
+  }).then(() => {
     // read roster and genesis
     const group_file = build_dir + "/public.toml";
     const genesis_file = build_dir + "/genesis.txt";
@@ -98,6 +91,7 @@ function runGolang() {
     const groupToml = fs.readFileSync(group_file, "utf8");
     const genesisID = fs.readFileSync(genesis_file, "utf8");
     console.log("groupToml:  " + groupToml);
+    console.log("genesisID: " + genesisID);
     const roster = cothority.Roster.fromTOML(groupToml);
 
     return Promise.resolve([roster, genesisID]);
