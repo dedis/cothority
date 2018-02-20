@@ -62,10 +62,10 @@ var spawned_conodes;
  * ```
  *
  */
-function killGolang() {
-  spawned_conodes.kill();
-  spawned_conodes.stdout.destroy();
-  spawned_conodes.stderr.destroy();
+function killGolang(conode) {
+  conode.kill();
+  conode.stdout.destroy();
+  conode.stderr.destroy();
   //child_process.execSync("pkill go");
 }
 
@@ -76,24 +76,14 @@ function killGolang() {
  * The process MUST be kill at the end of the test using `killGolang`.
  *
  * @param {string} buildPath build directory
+ * @param {Function} function that must return true on the stdout for resolving the promise. can be nil.
  * @param {Array} args to give to the script, as an array
- * @return {Promise} Promise that returns the data output by the golang script.
+ * @return {Promise} Promise that returns the process executed to be killed via
+ * killGolang afterwards..
  */
-function runGolang(buildPath, scriptArgs) {
+function runGolang(buildPath, condition, scriptArgs) {
   const spawn = child_process.spawn;
   return new Promise(function(resolve, reject) {
-    /*// first get get*/
-    //try {
-    //child_process.execSync("go get ./...", {
-    //cwd: buildPath
-    //});
-    //console.log("Golang dependencies fetched");
-    //} catch (err) {
-    //console.log("error updating Go packages: " + err);
-    //reject(err);
-    //return;
-    /*}*/
-    // then run the golang script
     console.log("build path = " + buildPath);
     const args = ["run", "main.go"];
     if (scriptArgs) args.concat(args);
@@ -110,7 +100,10 @@ function runGolang(buildPath, scriptArgs) {
     });
     spawned_conodes.stdout.setEncoding("utf8");
     spawned_conodes.stdout.on("data", data => {
-      resolve(data);
+      if (condition) {
+        if (condition(data)) resolve(spawned_conodes);
+      }
+      resolve(spawned_conodes);
     });
     spawned_conodes.stderr.on("data", data => {
       console.log("error launching golang: " + data);
