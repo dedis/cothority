@@ -29,7 +29,7 @@ func init() {
 var skipchainSID onet.ServiceID
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 2)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {

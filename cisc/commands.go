@@ -166,11 +166,11 @@ func getCommands() cli.Commands {
 					Action:    dataVote,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "no",
+							Name:  "no, n",
 							Usage: "refuse vote",
 						},
 						cli.BoolFlag{
-							Name:  "yes",
+							Name:  "yes, y",
 							Usage: "accept vote",
 						},
 					},
@@ -202,6 +202,19 @@ func getCommands() cli.Commands {
 					Usage:     "add a new key/value pair",
 					ArgsUsage: "key value [skipchain-id]",
 					Action:    kvAdd,
+				},
+				{
+					Name:      "csv",
+					Usage:     "add key/value pairs from a CSV file. Key is the value at a custom defined column. Value is a full row of the csv file.",
+					ArgsUsage: "csvFile [skipchain-id]",
+					Action:    kvAddCsv,
+					Flags: []cli.Flag{
+						cli.IntFlag{
+							Name:  "column",
+							Usage: "column to choose as the key. default 0.",
+							Value: 0,
+						},
+					},
 				},
 				{
 					Name:      "del",

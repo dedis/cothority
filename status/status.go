@@ -89,8 +89,9 @@ func printConn(e *status.Response) {
 		log.Print("no status from ", e.ServerIdentity)
 		return
 	}
-	for sec := range e.Status {
-		for key, value := range e.Status[sec] {
+
+	for sec, st := range e.Status {
+		for key, value := range st.Field {
 			a = append(a, (sec + "." + key + ": " + value))
 		}
 	}

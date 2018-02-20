@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/dedis/cothority"
+	status "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
@@ -332,11 +333,20 @@ func (c *Client) AddFollow(si *network.ServerIdentity, clientPriv kyber.Scalar,
 		SkipchainID: scid,
 		Follow:      Follow,
 		NewChain:    NewChain,
-		Conode:      conode,
 	}
 	msg := []byte{byte(Follow)}
 	msg = append(scid, msg...)
-	msg = append(msg, []byte(conode)...)
+
+	if conode != "" {
+		log.Lvl2("Getting public key of conode:", conode, si)
+		lookup := network.NewServerIdentity(cothority.Suite.Point().Null(), network.NewAddress(network.PlainTCP, conode))
+		resp, err := status.NewClient().Request(lookup)
+		if err != nil {
+			return err
+		}
+		req.Conode = resp.ServerIdentity
+		msg = append(msg, req.Conode.ID[:]...)
+	}
 	sig, err := schnorr.Sign(cothority.Suite, clientPriv, msg)
 	if err != nil {
 		return errors.New("couldn't sign message:" + err.Error())
