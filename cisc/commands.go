@@ -204,6 +204,19 @@ func getCommands() cli.Commands {
 					Action:    kvAdd,
 				},
 				{
+					Name:      "csv",
+					Usage:     "add key/value pairs from a CSV file. Key is the value at a custom defined column. Value is a full row of the csv file.",
+					ArgsUsage: "csvFile [skipchain-id]",
+					Action:    kvAddCsv,
+					Flags: []cli.Flag{
+						cli.IntFlag{
+							Name:  "column",
+							Usage: "column to choose as the key. default 0.",
+							Value: 0,
+						},
+					},
+				},
+				{
 					Name:      "del",
 					Aliases:   []string{"d", "rm"},
 					Usage:     "delete a value",
