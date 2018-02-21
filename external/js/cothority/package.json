@@ -1,6 +1,6 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
@@ -8,7 +8,8 @@
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
     "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec"
+    "test": "node node_modules/.bin/mocha --recursive --reporter spec",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "cothority",
@@ -17,7 +18,7 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "0.0.6",
+    "@dedis/kyber-js": "^0.0.7",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
     "isomorphic-ws": "^4.0.0",
