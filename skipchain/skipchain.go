@@ -87,12 +87,24 @@ func (cl *chainLocker) lock(chain SkipBlockID) {
 }
 
 func (cl *chainLocker) unlock(chain SkipBlockID) {
+	key := string(chain)
 	cl.Lock()
-	l := cl.chains[string(chain)]
+	l := cl.chains[key]
 	if l != nil {
 		l.Unlock()
 		cl.locks--
 	}
+	// It is not possible to delete the entry from the map in a non-racy way.
+	// Consider 3 goroutines. #1 has the lock and is here unlocking. #2 is
+	// sleeping on the lock. #3 has just received a block for this chain, but has
+	// not tried to lock it. When #1 unlocks, #2 wakes up and runs, locking the
+	// same mutex that #1 just unlocked. If #1 deletes the mutex from the map,
+	// later #2 will unlock it and could just ignore the fact that it is no longer
+	// in the map. But if #3 tries to lock while #2 has it locked, but after #1 has
+	// removed it from the map, #3 makes a new mutex, and gets the lock. Now #2 and #3
+	// are both holding different locks that they each think is the lock for chainId.
+	// Not ok.
+
 	cl.Unlock()
 }
 
