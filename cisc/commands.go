@@ -325,6 +325,12 @@ func getCommands() cli.Commands {
 					Aliases: []string{"ls", "l"},
 					Usage:   "list all skipchains and keys",
 					Action:  followList,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "id-only",
+							Usage: "only list the skipchain ID",
+						},
+					},
 				},
 				{
 					Name:    "update",

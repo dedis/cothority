@@ -2,10 +2,10 @@ message Election {
     required string name = 1;
     required uint32 creator = 2;
     repeated uint32 users = 3;
-    optional bytes id = 4;
-    optional Roster roster = 5;
-    optional bytes key = 6;
-    optional uint32 stage = 8;
+    required bytes id = 4;
+    required Roster roster = 5;
+    required bytes key = 6;
+    required uint32 stage = 8;
     optional string description = 9;
     optional string end = 10;
 }

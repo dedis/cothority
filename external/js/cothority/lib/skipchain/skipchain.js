@@ -60,9 +60,10 @@ class Client {
           return Promise.reject(err);
         }
         // verifies it's all correct
-        var lastBlock, err;
-        [lastBlock, err] = client.verifyUpdateChainReply(data);
-        if (!err) {
+        var lastBlock;
+        try {
+          lastBlock = client.verifyUpdateChainReply(data);
+        } catch (err) {
           // tries again with random conodes
           nbErr++;
           continue;
@@ -86,24 +87,21 @@ class Client {
    *
    * @param {Uint8Array} lastID last know skipblock ID
    * @param {GetUpdateChainReply} updateChainReply the response from a conode containing the blocks
-   * @returns {(SkipBlock,err)} the most recent valid block in the chain, or an error
+   * @returns {SkipBlock} the most recent valid block in the chain
+   * @throws {Error} throw an error if the chain is invalid
    */
   verifyUpdateChainReply(updateChainReply) {
     console.log("Verifying update...");
     const blocks = updateChainReply.update;
-    if (blocks.length == 0) {
-      return [null, new Error("no block returned in the chain")];
-    }
+    if (blocks.length == 0) throw new Error("no block returned in the chain");
+
     // first verify the first block is the one we know
     const first = blocks[0];
     const id = new Uint8Array(first.hash);
-    if (!misc.uint8ArrayCompare(id, this.lastID)) {
-      return [null, new Error("the first ID is not the one we have")];
-    }
+    if (!misc.uint8ArrayCompare(id, this.lastID))
+      throw new Error("the first ID is not the one we have");
 
-    if (blocks.length == 1) {
-      return [first, null];
-    }
+    if (blocks.length == 1) return first;
     // then check the block links consecutively
     var currBlock = first;
     for (var i = 1; i < blocks.length; i++) {
@@ -111,7 +109,7 @@ class Client {
 
       const forwardLinks = currBlock.forward;
       if (forwardLinks.length == 0)
-        return [null, new Error("No forward links included in the skipblocks")];
+        throw new Error("No forward links included in the skipblocks");
 
       // only take the highest link since we move "as fast as possible" on
       // the skipchain, i.e. we skip the biggest number of blocks
@@ -125,7 +123,7 @@ class Client {
       // move to the next block
       currBlock = nextBlock;
     }
-    return [currBlock, null];
+    return currBlock;
   }
 
   /**
