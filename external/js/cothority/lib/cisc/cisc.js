@@ -42,7 +42,7 @@ class Client {
         var data = null;
         try {
           data = yield client.socket.send(requestStr, responseStr, request);
-          console.log(data);
+          return Promise.resolve(data);
         } catch (err) {
           return Promise.reject(err);
         }   
