@@ -5,6 +5,8 @@ const kyber = require("@dedis/kyber-js");
 const helpers = require("../helpers.js");
 const child_process = require("child_process");
 const fs = require("fs");
+const co = require("co");
+
 
 const curve = new kyber.curve.edwards25519.Curve();
 const proto = cothority.protobuf;
@@ -12,55 +14,44 @@ const cisc = cothority.cisc;
 const misc = cothority.misc;
 const net = cothority.net;
 const expect = chai.expect;
-
 const build_dir = process.cwd() + "/test/cisc/build";
 describe("cisc client", () => {
-  it("can retrieve updates from conodes (not using the lib)", done => {
-    var proc;
-    after(function() {
-      helpers.killGolang(proc);
+  var proc;
+  after(function() {
+    helpers.killGolang(proc);
+  });
+
+  it("can retrieve updates from conodes", done => {
+    var fn = co.wrap(function*() {
+      [roster, id] = helpers.readSkipchainInfo(build_dir);
+      const client = new cisc.Client(roster, id);
+      cisc_data = yield client.getLatestCISCData();
+
+      // try to read it from a roster socket
+      //  and compare if we have the same results
+      const socket = new net.RosterSocket(roster, "Identity");
+      const requestStr = "DataUpdate";
+      const responseStr = "DataUpdateReply";
+      const request = { id: misc.hexToUint8Array(id) };
+      cisc_data2 = yield socket.send(requestStr, responseStr, request);
+
+      console.log(cisc_data);
+      console.log("-----------------------------------------------------")
+      console.log(cisc_data2);
+
+      expect(cisc_data).to.be.deep.equal(cisc_data2);
+      done();
     });
     helpers
       .runGolang(build_dir, data => data.match(/OK/))
-      .then(proc2 => {
-        proc = proc2;
-        [roster, id] = helpers.readSkipchainInfo(build_dir);
-
-        const addr1 = roster.identities[0].websocketAddr;
-        const socket = new net.Socket(addr1, "Identity");
-        const requestStr = "DataUpdate";
-        const responseStr = "DataUpdateReply";
-
-        const request = { id: misc.hexToUint8Array(id) };
-
-        //console.log("Sending data", request);
-        return socket.send(requestStr, responseStr, request);
+      .then(proces => {
+        proc = proces;
+        return Promise.resolve(true);
       })
-      .then(data => {
-        console.log("Received data from the identity skipchain:", data);
-        console.log("Storage: ", data.data.storage);
-        console.log("Keys: ", Object.keys(data.data.storage));
+      .then(fn)
+      .catch(err => {
         done();
+        throw err;
       });
   }).timeout(5000);
-
-  it("can retrieve updates from conodes (using the lib)", done => {
-    var proc;
-    after(function() {
-      helpers.killGolang(proc);
-    });
-    helpers
-      .runGolang(build_dir, data => data.match(/OK/))
-      .then(proc2 => {
-        proc = proc2;
-        [roster, id] = helpers.readSkipchainInfo(build_dir);
-        const client = new cisc.Client(roster, id);
-
-        const promise = client.getLatestCISCData();
-        promise.then(data => {
-          console.log(data)
-          done()
-        });
-      })
-  }).timeout(15000);
 });
