@@ -29,20 +29,20 @@ class Client {
    */
   getLatestCISCData() {
     var fn = co.wrap(function*(client) {
-        const requestStr = "DataUpdate";
-        const responseStr = "DataUpdateReply";
-        const request = { id: client.lastID };
+      const requestStr = "DataUpdate";
+      const responseStr = "DataUpdateReply";
+      const request = { id: client.lastID };
 
-        // fetches the data with the current roster
-        client.socket = new net.RosterSocket(client.lastRoster, "Identity");
+      // fetches the data with the current roster
+      client.socket = new net.RosterSocket(client.lastRoster, "Identity");
 
-        var data = null;
-        try {
-          data = yield client.socket.send(requestStr, responseStr, request);
-          return Promise.resolve(data);
-        } catch (err) {
-          return Promise.reject(err);
-        }   
+      var data = null;
+      try {
+        data = yield client.socket.send(requestStr, responseStr, request);
+        return Promise.resolve(data);
+      } catch (err) {
+        return Promise.reject(err);
+      }
     });
     return fn(this);
   }
@@ -52,14 +52,13 @@ class Client {
    * @return {Promise} A promise which resolves with the latest KV storage
    */
   getStorage() {
-    var fn = co.wrap(function*(client){
+    var fn = co.wrap(function*(client) {
       const ciscBlock = yield client.getLatestCISCData();
       const kvStore = ciscBlock.data.storage;
       return Promise.resolve(kvStore);
     });
     return fn(this);
   }
-
 }
 
 module.exports.Client = Client;
