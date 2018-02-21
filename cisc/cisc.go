@@ -560,12 +560,12 @@ func kvAdd(c *cli.Context) error {
 	return addKv(c, cfg, id, prop)
 }
 
-// kvAddCsv reads the input file, and stores it in the data. The key is the
+// kvAddFile reads the input file, and stores it in the data. The key is the
 // name of the file by default or overridden by the key flag. Do not use with
 // big files as it reads all at once.
 func kvAddFile(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	if c.NArg() != 1 {
+	if c.NArg() < 1 {
 		return errors.New("Missing argument: file name")
 	}
 	id, err := cfg.findSC(c.Args().Get(1))
