@@ -188,6 +188,12 @@ func getCommands() cli.Commands {
 					Aliases: []string{"ls", "l"},
 					Usage:   "list all values",
 					Action:  kvList,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "key",
+							Usage: "only prints the value mapped to this key",
+						},
+					},
 				},
 				{
 					Name:      "value",
@@ -204,15 +210,14 @@ func getCommands() cli.Commands {
 					Action:    kvAdd,
 				},
 				{
-					Name:      "csv",
-					Usage:     "add key/value pairs from a CSV file. Key is the value at a custom defined column. Value is a full row of the csv file.",
+					Name:      "file",
+					Usage:     "add a key/value pair from a file.Key is given in flag, and value is the file in utf-8.",
 					ArgsUsage: "csvFile [skipchain-id]",
-					Action:    kvAddCsv,
+					Action:    kvAddFile,
 					Flags: []cli.Flag{
-						cli.IntFlag{
-							Name:  "column",
-							Usage: "column to choose as the key. default 0.",
-							Value: 0,
+						cli.StringFlag{
+							Name:  "key",
+							Usage: "key name where to add the file. Default is the name of the file",
 						},
 					},
 				},

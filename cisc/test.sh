@@ -33,24 +33,24 @@ main(){
   test Link
   test Final
   test ClientSetup
-  test ScCreate
-  test ScCreate2
-  test ScCreate3
-  test DataList
-  test DataVote
-  test DataRoster
-  test IdConnect
-  test IdDel
+  #test ScCreate
+  #test ScCreate2
+  #test ScCreate3
+  #test DataList
+  #test DataVote
+  #test DataRoster
+  #test IdConnect
+  #test IdDel
   test KeyAdd
-  test KeyCsv
-  test KeyAdd2
-  test KeyAddWeb
-  test KeyDel
-  test SSHAdd
-  test SSHDel
-  test Follow
-  test SymLink
-  test Revoke
+  test KeyFile
+#  test KeyAdd2
+  #test KeyAddWeb
+  #test KeyDel
+  #test SSHAdd
+  #test SSHDel
+  #test Follow
+  #test SymLink
+  #test Revoke
   stopTest
 }
 
@@ -206,22 +206,22 @@ testKeyAdd(){
   testGrep key1 runCl 1 kv ls
 }
 
-testKeyCsv() {
+testKeyFile() {
   clientSetup 2
   csvFile=$(mktemp)
   cat > $csvFile  <<EOL
 key,val1,val2
-"jobs","ranger","warrior"
-"types","elf","dwarf"
+jobs,ranger,warrior
+types,elf,dwarf
 EOL
-
-  testOK runCl 1 kv csv $csvFile
+  key="csv"
+  testOK runCl 1 kv file $csvFile --key "$key"
   rm $csvFile
   testOK runCl 2 data update
   testOK runCl 2 data vote -yes
   testOK runCl 1 data update
-  testGrep "jobs: jobs,ranger,warrior" runCl 1 kv ls
-  testGrep "types: types,elf,dwarf" runCl 1 kv ls
+  testGrep "jobs,ranger,warrior" runCl 1 kv ls --key "$key"
+  testGrep "types,elf,dwarf" runCl 1 kv ls --key "$key"
 }
 
 testIdDel(){
