@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -109,7 +110,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		suite:            protocol.DefaultCosiSuite,
+		suite:            cothority.Suite,
 	}
 	if err := s.RegisterHandler(s.SignatureRequest); err != nil {
 		log.Error("couldn't register message:", err)

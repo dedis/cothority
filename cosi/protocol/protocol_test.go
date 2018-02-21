@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -16,13 +17,11 @@ func init() {
 	GlobalRegisterDefaultProtocols()
 }
 
-var testSuite = DefaultCosiSuite
-var defaultTimeout = time.Second * 2
+var testSuite = cothority.Suite
+var defaultTimeout = time.Second * 5
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {
-	//log.SetDebugVisible(3)
-
 	nodes := []int{1, 2, 5, 13, 24, 100}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
@@ -71,8 +70,6 @@ func TestProtocol(t *testing.T) {
 
 // Tests unresponsive leaves in various tree configurations
 func TestUnresponsiveLeafs(t *testing.T) {
-	//log.SetDebugVisible(3)
-
 	nodes := []int{3, 13, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
@@ -147,8 +144,6 @@ func TestUnresponsiveLeafs(t *testing.T) {
 
 // Tests unresponsive subleaders in various tree configurations
 func TestUnresponsiveSubleader(t *testing.T) {
-	//log.SetDebugVisible(3)
-
 	nodes := []int{6, 13, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
@@ -219,8 +214,6 @@ func TestUnresponsiveSubleader(t *testing.T) {
 
 // Tests that the protocol throws errors with invalid configurations
 func TestProtocolErrors(t *testing.T) {
-	//log.SetDebugVisible(3)
-
 	nodes := []int{1, 2, 5, 13, 24}
 	subtrees := []int{1, 2, 5}
 	proposal := []byte{0xFF}

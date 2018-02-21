@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -43,7 +44,7 @@ type CoSiSubProtocolNode struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubProtocol(n, vf, DefaultCosiSuite)
+	return NewSubProtocol(n, vf, cothority.Suite)
 }
 
 // NewSubProtocol is used to define the subprotocol and to register

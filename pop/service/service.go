@@ -37,6 +37,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -1000,11 +1001,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	if err := bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+	if err := bftcosi.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
 		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
 		return nil, err
 	}
-	if err := bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+	if err := bftcosi.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
 		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}

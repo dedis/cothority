@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -51,7 +52,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // with an always-true verification.
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewProtocol(n, vf, DefaultSubProtocolName, DefaultCosiSuite)
+	return NewProtocol(n, vf, DefaultSubProtocolName, cothority.Suite)
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -99,12 +100,6 @@ func (p *CoSiRootNode) Dispatch() error {
 		return nil
 	}
 
-	verifyChan := make(chan bool, 1)
-	go func() {
-		log.Lvl3(p.ServerIdentity().Address, "starting verification")
-		verifyChan <- p.verificationFn(p.Msg, p.Data)
-	}()
-
 	select {
 	case _, ok := <-p.startChan:
 		if !ok {
@@ -117,6 +112,12 @@ func (p *CoSiRootNode) Dispatch() error {
 	}
 
 	log.Lvl1("leader protocol started")
+
+	verifyChan := make(chan bool, 1)
+	go func() {
+		log.Lvl3(p.ServerIdentity().Address, "starting verification")
+		verifyChan <- p.verificationFn(p.Msg, p.Data)
+	}()
 
 	// generate trees
 	nNodes := p.Tree().Size()

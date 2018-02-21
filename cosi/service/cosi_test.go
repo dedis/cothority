@@ -3,14 +3,14 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
-var tSuite = protocol.DefaultCosiSuite
+var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -16,7 +17,7 @@ import (
 )
 
 var defaultTimeout = time.Second * 2
-var testSuite = DefaultCosiSuite
+var testSuite = cothority.Suite
 
 type Counter struct {
 	veriCount   int

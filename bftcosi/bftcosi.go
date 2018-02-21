@@ -11,10 +11,6 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-// DefaultCosiSuite should be used to initialise ProtocolBFTCoSi if there are
-// no special requirements.
-var DefaultCosiSuite = protocol.DefaultCosiSuite
-
 // ProtocolBFTCoSi contains the state used in the execution of the BFTCoSi
 // protocol. It is also known as OmniCon, which is described in the OmniLedger
 // paper - https://eprint.iacr.org/2017/406

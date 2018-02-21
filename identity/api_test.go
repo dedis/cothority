@@ -82,14 +82,19 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	log.ErrFatal(err)
 
 	// Sign Final
-	tree := roster.GenerateNaryTreeWithRoot(2, srvc.ServerIdentity())
-	node, err := srvc.CreateProtocol(protocol.DefaultProtocolName, tree)
+	protoName := "TestIdentity_StoreKeys"
+	err = registerCosiProtocols(srvc.Context, protoName)
+	require.Nil(t, err)
+
+	tree := roster.GenerateNaryTreeWithRoot(len(roster.List), srvc.ServerIdentity())
+	node, err := srvc.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
 	c := node.(*protocol.CoSiRootNode)
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
+
 	err = node.Start()
 	require.Nil(t, err)
 
@@ -428,4 +433,25 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 	log.Error("set", set)
 	log.ErrFatal(c.CreateIdentity(PoPAuth, set, kp1.Private))
 	return c
+}
+
+func registerCosiProtocols(c *onet.Context, protoName string) error {
+	vf := func(a, b []byte) bool { return true }
+	suite := protocol.EdDSACompatibleCosiSuite
+	cosiSubProtoName := protoName + "_sub"
+
+	cosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return protocol.NewProtocol(n, vf, cosiSubProtoName, suite)
+	}
+	cosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return protocol.NewSubProtocol(n, vf, suite)
+	}
+
+	if _, err := c.ProtocolRegister(protoName, cosiProto); err != nil {
+		return err
+	}
+	if _, err := c.ProtocolRegister(cosiSubProtoName, cosiSubProto); err != nil {
+		return err
+	}
+	return nil
 }
