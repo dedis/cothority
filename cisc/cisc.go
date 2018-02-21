@@ -566,7 +566,7 @@ func kvAdd(c *cli.Context) error {
 func kvAddFile(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() != 1 {
-		return errors.New("Missing argument: csv file")
+		return errors.New("Missing argument: file name")
 	}
 	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
