@@ -6,7 +6,7 @@
     <v-spacer></v-spacer>
     <div v-if='$store.getters.hasLoginReply'>
       <v-btn flat>{{ $store.state.user.name }}</v-btn>
-      <v-btn to="logout" icon><v-icon>exit_to_app</v-icon></v-btn>
+      <v-btn to="/logout" icon><v-icon>exit_to_app</v-icon></v-btn>
     </div>
   </v-toolbar>
 </template>
