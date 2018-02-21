@@ -33,24 +33,24 @@ main(){
   test Link
   test Final
   test ClientSetup
-  #test ScCreate
-  #test ScCreate2
-  #test ScCreate3
-  #test DataList
-  #test DataVote
-  #test DataRoster
-  #test IdConnect
-  #test IdDel
+  test ScCreate
+  test ScCreate2
+  test ScCreate3
+  test DataList
+  test DataVote
+  test DataRoster
+  test IdConnect
+  test IdDel
   test KeyAdd
   test KeyFile
-#  test KeyAdd2
-  #test KeyAddWeb
-  #test KeyDel
-  #test SSHAdd
-  #test SSHDel
-  #test Follow
-  #test SymLink
-  #test Revoke
+  test KeyAdd2
+  test KeyAddWeb
+  test KeyDel
+  test SSHAdd
+  test SSHDel
+  test Follow
+  test SymLink
+  test Revoke
   stopTest
 }
 
