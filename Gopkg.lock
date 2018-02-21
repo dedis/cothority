@@ -35,7 +35,7 @@
   branch = "byzgen_poc"
   name = "github.com/dedis/cothority"
   packages = [".","bftcosi","cosi/check","cosi/crypto","cosi/protocol","cosi/service","messaging","skipchain","status/service"]
-  revision = "5a1949ac63542c2479183486885b7bc9766c3290"
+  revision = "356f5bcbe7a0a218a5b8a85a01d72f127f0e04fe"
 
 [[projects]]
   name = "github.com/dedis/fixbuf"
