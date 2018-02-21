@@ -35,9 +35,9 @@ describe("cisc client", () => {
       const request = { id: misc.hexToUint8Array(id) };
       cisc_data2 = yield socket.send(requestStr, responseStr, request);
 
-      console.log(cisc_data);
-      console.log("-----------------------------------------------------")
-      console.log(cisc_data2);
+      //console.log(cisc_data);
+      //console.log("-----------------------------------------------------")
+      //console.log(cisc_data2);
 
       expect(cisc_data).to.be.deep.equal(cisc_data2);
       done();
