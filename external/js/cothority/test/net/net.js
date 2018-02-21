@@ -21,7 +21,7 @@ const deviceMessage = {
 
 //const mock = require("mock-socket");
 const WebSocket = require("ws");
-describe("sockets", () => {
+describe.only("sockets", () => {
   it("sends and receives correct protobuf messages", done => {
     const mockServer = createServer("9000");
     /*const mockServer = new mock.Server(serverAddr + "/cisc/Device");*/
