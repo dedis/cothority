@@ -9,7 +9,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/csv"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -503,7 +502,17 @@ func kvList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("config for id %x", id.ID)
+	// only print value for the given key
+	if c.String("key") != "" {
+		val, ok := id.Data.Storage[c.String("key")]
+		if !ok {
+			return errors.New("key does not exists")
+		}
+		fmt.Println(val)
+		return nil
+	}
+
+	// print everything
 	for k, v := range id.Data.Storage {
 		log.Infof("%s: %s", k, v)
 	}
@@ -551,37 +560,36 @@ func kvAdd(c *cli.Context) error {
 	return addKv(c, cfg, id, prop)
 }
 
-// kvAddCsv reads the input CSV file, lookup its key column and inputs all the
-// csv file at once to the skipchain. The key is given from the "column" args
-// and the value is the whole full row, unmodified.
-func kvAddCsv(c *cli.Context) error {
+// kvAddFile reads the input file, and stores it in the data. The key is the
+// name of the file by default or overridden by the key flag. Do not use with
+// big files as it reads all at once.
+func kvAddFile(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	if c.NArg() != 1 {
-		return errors.New("Missing argument: csv file")
+	if c.NArg() < 1 {
+		return errors.New("Missing argument: file name")
 	}
 	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
 		scList(c)
 		return errors.New("Please give skipchain-id")
 	}
+	// read file name
 	file := c.Args().First()
+	// determine the key
+	key := path.Base(file)
+	if c.String("key") != "" {
+		key = c.String("key")
+	}
+	// read file
 	fd, err := os.Open(file)
 	log.ErrFatal(err)
-	reader := csv.NewReader(fd)
-	records, err := reader.ReadAll()
+	buff, err := ioutil.ReadAll(fd)
 	log.ErrFatal(err)
-	if len(records) < 2 {
-		return errors.New("csv file given only contains column name")
-	}
-	column := c.Int("column")
-	log.Info("Column names to insert in cisc: " + strings.Join(records[0], ":"))
-	log.Info("Column name to use as a key: " + records[0][column])
+
+	// store it
+	log.Info("File will be stored under key: " + key)
 	prop := id.GetProposed()
-	for _, row := range records[1:] {
-		key := row[column]
-		value := strings.Join(row, ",")
-		prop.Storage[key] = value
-	}
+	prop.Storage[key] = string(buff)
 	return addKv(c, cfg, id, prop)
 }
 
