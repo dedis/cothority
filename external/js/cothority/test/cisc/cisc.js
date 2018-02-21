@@ -8,22 +8,22 @@ const fs = require("fs");
 
 const curve = new kyber.curve.edwards25519.Curve();
 const proto = cothority.protobuf;
-const skipchain = cothority.skipchain;
+const cisc = cothority.cisc;
 const misc = cothority.misc;
 const net = cothority.net;
 const expect = chai.expect;
 
 const build_dir = process.cwd() + "/test/cisc/build";
-describe.only("cisc client", () => {
-  it("can retrieve updates from conodes", done => {
+describe("cisc client", () => {
+  it("can retrieve updates from conodes (not using the lib)", done => {
     var proc;
     after(function() {
       helpers.killGolang(proc);
     });
     helpers
       .runGolang(build_dir, data => data.match(/OK/))
-      .then(proces => {
-        proc = proces;
+      .then(proc2 => {
+        proc = proc2;
         [roster, id] = helpers.readSkipchainInfo(build_dir);
 
         const addr1 = roster.identities[0].websocketAddr;
@@ -43,4 +43,24 @@ describe.only("cisc client", () => {
         done();
       });
   }).timeout(5000);
+
+  it("can retrieve updates from conodes (using the lib)", done => {
+    var proc;
+    after(function() {
+      helpers.killGolang(proc);
+    });
+    helpers
+      .runGolang(build_dir, data => data.match(/OK/))
+      .then(proc2 => {
+        proc = proc2;
+        [roster, id] = helpers.readSkipchainInfo(build_dir);
+        const client = new cisc.Client(roster, id);
+
+        const promise = client.getLatestCISCData();
+        promise.then(data => {
+          console.log(data)
+          done()
+        });
+      })
+  }).timeout(15000);
 });
