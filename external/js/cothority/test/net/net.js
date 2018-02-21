@@ -21,7 +21,7 @@ const deviceMessage = {
 
 //const mock = require("mock-socket");
 const WebSocket = require("ws");
-describe.only("sockets", () => {
+describe("sockets", () => {
   it("sends and receives correct protobuf messages", done => {
     const mockServer = createServer("9000");
     /*const mockServer = new mock.Server(serverAddr + "/cisc/Device");*/
@@ -106,8 +106,9 @@ describe("roster socket", () => {
 });
 
 describe("real server status", () => {
+  var proc;
   after(function() {
-    helpers.killGolang();
+    helpers.killGolang(proc);
   });
 
   it("can talk to status", done => {
@@ -130,6 +131,10 @@ describe("real server status", () => {
 
     helpers
       .runGolang(build_dir)
+      .then(proces => {
+        proc = proces;
+        return Promise.resolve(true);
+      })
       .then(fn)
       .catch(err => {
         done();
