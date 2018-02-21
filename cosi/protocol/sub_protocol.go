@@ -24,6 +24,7 @@ type CoSiSubProtocolNode struct {
 	Timeout        time.Duration
 	hasStopped     bool //used since Shutdown can be called multiple time
 	verificationFn VerificationFn
+	suite          cosi.Suite
 
 	// protocol/subprotocol channels
 	// these are used to communicate between the subprotocol and the main protocol
@@ -42,17 +43,18 @@ type CoSiSubProtocolNode struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubProtocol(n, vf)
+	return NewSubProtocol(n, vf, DefaultCosiSuite)
 }
 
 // NewSubProtocol is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn) (onet.ProtocolInstance, error) {
+func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
 	c := &CoSiSubProtocolNode{
 		TreeNodeInstance: n,
 		hasStopped:       false,
 		verificationFn:   vf,
+		suite:            suite,
 	}
 
 	if n.IsRoot() {
@@ -104,10 +106,6 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	p.Timeout = announcement.Timeout
 	p.Msg = announcement.Msg
 	p.Data = announcement.Data
-	suite, ok := p.Suite().(cosi.Suite)
-	if !ok {
-		return errors.New("not a cosi suite")
-	}
 
 	// start the verification in background if I'm not the root because
 	// root does the verification in the main protocol
@@ -183,7 +181,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		// otherwise, compute personal commitment and send to parent
 		var commitment kyber.Point
 		var mask *cosi.Mask
-		secret, commitment, mask, err = generateCommitmentAndAggregate(suite, p.TreeNodeInstance, p.Publics, commitments)
+		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments)
 		if err != nil {
 			return err
 		}
@@ -233,7 +231,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	} else {
 		// generate own response and send to parent
 		response, err := generateResponse(
-			suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
+			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
 		if err != nil {
 			return err
 		}

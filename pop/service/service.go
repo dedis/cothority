@@ -992,10 +992,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	if err := bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
+	if err := bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
 		return nil, err
 	}
-	if err := bftcosi.InitBFTCoSiProtocol(s.Context, s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
+	if err := bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}
 	return s, nil

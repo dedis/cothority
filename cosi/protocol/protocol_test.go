@@ -7,7 +7,6 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
@@ -17,7 +16,7 @@ func init() {
 	GlobalRegisterDefaultProtocols()
 }
 
-var testSuite = suites.MustFind("Ed25519")
+var testSuite = DefaultCosiSuite
 var defaultTimeout = time.Second * 2
 
 // Tests various trees configurations

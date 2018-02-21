@@ -8,17 +8,41 @@ so that it can find out who sent the message.
 */
 
 import (
+	"crypto/cipher"
+	"crypto/sha512"
+	"hash"
 	"time"
 
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/group/edwards25519"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/xof/blake"
 	"github.com/dedis/onet"
 )
 
 // DefaultProtocolName can be used from other packages to refer to this protocol.
+// If this name is used, then the suite used to verify signatures must be
+// DefaultCosiSuite.
 const DefaultProtocolName = "CoSiProtoDefault"
 
-// DefaultSubProtocolName is started by the main protocol.
+// DefaultSubProtocolName the name of the default sub protocol, started by the
+// main protocol.
 const DefaultSubProtocolName = "SubCoSiProtoDefault"
+
+type cosiSuite struct {
+	cosi.Suite
+	r kyber.XOF
+}
+
+func (m *cosiSuite) Hash() hash.Hash {
+	return sha512.New()
+}
+
+func (m *cosiSuite) RandomStream() cipher.Stream { return m.r }
+
+// DefaultCosiSuite is a custom suite made to be compatible with eddsa because
+// cothority.Suite uses sha256 but eddsa uses sha512
+var DefaultCosiSuite = &cosiSuite{edwards25519.NewBlakeSHA256Ed25519(), blake.New(nil)}
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {

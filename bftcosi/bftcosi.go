@@ -11,6 +11,10 @@ import (
 	"github.com/dedis/onet/log"
 )
 
+// DefaultCosiSuite should be used to initialise ProtocolBFTCoSi if there are
+// no special requirements.
+var DefaultCosiSuite = protocol.DefaultCosiSuite
+
 // ProtocolBFTCoSi contains the state used in the execution of the BFTCoSi
 // protocol. It is also known as OmniCon, which is described in the OmniLedger
 // paper - https://eprint.iacr.org/2017/406
@@ -33,8 +37,10 @@ type ProtocolBFTCoSi struct {
 	commitCosiProtoName string
 	// prepSigChan is the channel for reading the prepare phase signature
 	prepSigChan chan []byte
-	// publics
+	// publics TODO
 	publics []kyber.Point
+	// suite TODO
+	suite cosi.Suite
 }
 
 // FinalSignature holds the message Msg and its signature
@@ -114,12 +120,11 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	suite := bft.Suite().(cosi.Suite)
 	nbrFault := (len(bft.List())-1)/3 - 1
 	if nbrFault < 0 {
 		nbrFault = 0
 	}
-	err := cosi.Verify(suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(nbrFault))
+	err := cosi.Verify(bft.suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(nbrFault))
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignatureChan <- FinalSignature{nil, nil}
@@ -147,7 +152,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 }
 
 // NewBFTCoSiProtocol TODO
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string) (*ProtocolBFTCoSi, error) {
+func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string, suite cosi.Suite) (*ProtocolBFTCoSi, error) {
 	publics := make([]kyber.Point, n.Tree().Size())
 	for i, node := range n.Tree().List() {
 		publics[i] = node.ServerIdentity.Public
@@ -161,10 +166,11 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 		commitCosiProtoName: commitCosiProtoName,
 		prepSigChan:         make(chan []byte, 0),
 		publics:             publics,
+		suite:               suite,
 	}, nil
 }
 
-func makeProtocols(vf, ack protocol.VerificationFn, protoName string) map[string]onet.NewProtocol {
+func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite cosi.Suite) map[string]onet.NewProtocol {
 
 	protocolMap := make(map[string]onet.NewProtocol)
 
@@ -174,27 +180,27 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string) map[string
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
 	bftProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, prepCosiProtoName, commitCosiProtoName)
+		return NewBFTCoSiProtocol(n, prepCosiProtoName, commitCosiProtoName, suite)
 	}
 	protocolMap[protoName] = bftProto
 
 	prepCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewProtocol(n, vf, prepCosiSubProtoName)
+		return protocol.NewProtocol(n, vf, prepCosiSubProtoName, suite)
 	}
 	protocolMap[prepCosiProtoName] = prepCosiProto
 
 	prepCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubProtocol(n, vf)
+		return protocol.NewSubProtocol(n, vf, suite)
 	}
 	protocolMap[prepCosiSubProtoName] = prepCosiSubProto
 
 	commitCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewProtocol(n, ack, commitCosiSubProtoName)
+		return protocol.NewProtocol(n, ack, commitCosiSubProtoName, suite)
 	}
 	protocolMap[commitCosiProtoName] = commitCosiProto
 
 	commitCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubProtocol(n, ack)
+		return protocol.NewSubProtocol(n, ack, suite)
 	}
 	protocolMap[commitCosiSubProtoName] = commitCosiSubProto
 
@@ -203,8 +209,8 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string) map[string
 
 // GlobalInitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi globally.
-func GlobalInitBFTCoSiProtocol(vf, ack protocol.VerificationFn, protoName string) error {
-	protocolMap := makeProtocols(vf, ack, protoName)
+func GlobalInitBFTCoSiProtocol(suite cosi.Suite, vf, ack protocol.VerificationFn, protoName string) error {
+	protocolMap := makeProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := onet.GlobalProtocolRegister(protoName, proto); err != nil {
 			return err
@@ -215,8 +221,8 @@ func GlobalInitBFTCoSiProtocol(vf, ack protocol.VerificationFn, protoName string
 
 // InitBFTCoSiProtocol creates and registers the protocols required to run
 // BFTCoSi to the context c.
-func InitBFTCoSiProtocol(c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
-	protocolMap := makeProtocols(vf, ack, protoName)
+func InitBFTCoSiProtocol(suite cosi.Suite, c *onet.Context, vf, ack protocol.VerificationFn, protoName string) error {
+	protocolMap := makeProtocols(vf, ack, protoName, suite)
 	for protoName, proto := range protocolMap {
 		if _, err := c.ProtocolRegister(protoName, proto); err != nil {
 			return err

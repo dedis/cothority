@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -41,6 +40,7 @@ type CoSiRootNode struct {
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
+	suite           cosi.Suite
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
@@ -51,7 +51,7 @@ type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstan
 // with an always-true verification.
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewProtocol(n, vf, DefaultSubProtocolName)
+	return NewProtocol(n, vf, DefaultSubProtocolName, DefaultCosiSuite)
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -62,7 +62,7 @@ func GlobalRegisterDefaultProtocols() {
 }
 
 // NewProtocol method is used to define the protocol.
-func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string) (onet.ProtocolInstance, error) {
+func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
 	var list []kyber.Point
 	for _, t := range n.Tree().List() {
@@ -71,13 +71,14 @@ func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName st
 
 	c := &CoSiRootNode{
 		TreeNodeInstance: n,
-		FinalSignature:   make(chan []byte),
+		FinalSignature:   make(chan []byte, 1),
 		Data:             make([]byte, 0),
 		publics:          list,
 		hasStopped:       false,
-		startChan:        make(chan bool),
+		startChan:        make(chan bool, 1),
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
+		suite:            suite,
 	}
 
 	return c, nil
@@ -144,19 +145,14 @@ func (p *CoSiRootNode) Dispatch() error {
 		return err
 	}
 
-	suite, ok := p.Suite().(cosi.Suite)
-	if !ok {
-		return errors.New("not a cosi suite")
-	}
-
 	// generate challenge
 	log.Lvl3("root-node generating global challenge")
-	secret, commitment, finalMask, err := generateCommitmentAndAggregate(suite, p.TreeNodeInstance, p.publics, commitments)
+	secret, commitment, finalMask, err := generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.publics, commitments)
 	if err != nil {
 		return err
 	}
 
-	cosiChallenge, err := cosi.Challenge(suite, commitment, finalMask.AggregatePublic, p.Msg)
+	cosiChallenge, err := cosi.Challenge(p.suite, commitment, finalMask.AggregatePublic, p.Msg)
 	if err != nil {
 		return err
 	}
@@ -198,15 +194,14 @@ func (p *CoSiRootNode) Dispatch() error {
 		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
-	response, err := generateResponse(suite, p.TreeNodeInstance, responses, secret, cosiChallenge)
+	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge)
 	if err != nil {
 		return err
 	}
 	log.Lvl3(p.ServerIdentity().Address, "starts final signature")
 	var signature []byte
-	signature, err = cosi.Sign(suite, commitment, response, finalMask)
+	signature, err = cosi.Sign(p.suite, commitment, response, finalMask)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	p.FinalSignature <- signature

@@ -118,11 +118,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	publics := entityListToPublics(el)
 	client := s.NewClient()
 
-	suite, ok := client.Suite().(cosi.Suite)
-	if !ok {
-		return nil, errors.New("not a cosi suite")
-	}
-	h := suite.Hash()
+	h := cothority.Suite.Hash()
 	io.Copy(h, read)
 	msg := h.Sum(nil)
 
@@ -146,7 +142,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 			return nil, errors.New("received an invalid repsonse")
 		}
 
-		err = cosi.Verify(suite, publics, msg, response.Signature, cosi.CompletePolicy{})
+		err = cosi.Verify(cothority.Suite, publics, msg, response.Signature, cosi.CompletePolicy{})
 		if err != nil {
 			return nil, err
 		}
@@ -198,12 +194,10 @@ func verify(fileName, sigFileName, groupToml string) error {
 }
 
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) error {
-	localSuite := cothority.Suite.(kyber.HashFactory)
-
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	publics := entityListToPublics(el)
-	h := localSuite.Hash()
+	h := cothority.Suite.Hash()
 	h.Write(b)
 	fHash := h.Sum(nil)
 	h.Reset()

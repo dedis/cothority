@@ -27,7 +27,6 @@ import (
 	"github.com/dedis/cothority/cosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
-	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -160,8 +159,8 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 
 		// verify signature
 		threshold := s.Hosts - s.FailingLeafs - s.FailingSubleaders
-		suite := suites.MustFind(proto.Suite().String())
-		err = cosi.Verify(suite, publics, proposal, Signature, cosi.NewThresholdPolicy(threshold))
+		// we have to use the DefaultCosiSuite because we are using DefaultProtocolName
+		err = cosi.Verify(protocol.DefaultCosiSuite, publics, proposal, Signature, cosi.NewThresholdPolicy(threshold))
 		if err != nil {
 			return fmt.Errorf("error while verifying signature:%s", err)
 		}

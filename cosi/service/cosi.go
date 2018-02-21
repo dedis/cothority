@@ -28,6 +28,7 @@ func init() {
 // Service is the service that handles collective signing operations
 type Service struct {
 	*onet.ServiceProcessor
+	suite cosi.Suite
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -61,6 +62,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	p.Msg = req.Message
 	// TODO is there an optimal way to find out the number of subtrees?
 	p.NSubtrees = nNodes / 10
+	p.Timeout = time.Second * 5
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
 	}
@@ -79,17 +81,13 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	var sig []byte
 	select {
 	case sig = <-p.FinalSignature:
-	case <-time.After(protocol.DefaultProtocolTimeout + time.Second):
+	case <-time.After(p.Timeout + time.Second):
 		return nil, errors.New("protocol timed out")
 	}
 
 	// the hash is the message cosi actually signs, ideally cosi protocol
 	// should tell us what it is, here we recompute it and then return
-	suite, ok := s.Suite().(cosi.Suite)
-	if !ok {
-		return nil, errors.New("suite is unusable")
-	}
-	h := suite.Hash()
+	h := s.suite.Hash()
 	h.Write(req.Message)
 	return &SignatureResponse{h.Sum(nil), sig}, nil
 }
@@ -111,6 +109,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		suite:            protocol.DefaultCosiSuite,
 	}
 	if err := s.RegisterHandler(s.SignatureRequest); err != nil {
 		log.Error("couldn't register message:", err)

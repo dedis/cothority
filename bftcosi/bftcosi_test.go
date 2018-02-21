@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -17,7 +16,7 @@ import (
 )
 
 var defaultTimeout = time.Second * 2
-var testSuite = cothority.Suite
+var testSuite = DefaultCosiSuite
 
 type Counter struct {
 	veriCount   int
@@ -111,7 +110,7 @@ func TestMain(m *testing.M) {
 func TestBftCoSi(t *testing.T) {
 	const protoName = "TestBftCoSi"
 
-	err := GlobalInitBFTCoSiProtocol(verify, ack, protoName)
+	err := GlobalInitBFTCoSiProtocol(testSuite, verify, ack, protoName)
 	require.Nil(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
@@ -122,7 +121,7 @@ func TestBftCoSi(t *testing.T) {
 func TestBftCoSiRefuse(t *testing.T) {
 	const protoName = "TestBftCoSiRefuse"
 
-	err := GlobalInitBFTCoSiProtocol(verifyRefuse, ack, protoName)
+	err := GlobalInitBFTCoSiProtocol(testSuite, verifyRefuse, ack, protoName)
 	require.Nil(t, err)
 
 	// the refuseIndex has both leaf and sub leader failure
@@ -140,7 +139,7 @@ func TestBftCoSiRefuse(t *testing.T) {
 func TestBftCoSiFault(t *testing.T) {
 	const protoName = "TestBftCoSiFault"
 
-	err := GlobalInitBFTCoSiProtocol(verify, ack, protoName)
+	err := GlobalInitBFTCoSiProtocol(testSuite, verify, ack, protoName)
 	require.Nil(t, err)
 
 	configs := []struct{ n, f, r int }{
