@@ -844,6 +844,10 @@ func followDel(c *cli.Context) error {
 func followList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, id := range cfg.Follow {
+		if c.Bool("id-only") {
+			fmt.Printf("%x\n", id.ID)
+			continue
+		}
 		log.Infof("SCID: %x", id.ID)
 		server := id.DeviceName
 		log.Infof("Server %s is asked to accept ssh-keys from %s:",
