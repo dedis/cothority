@@ -6,6 +6,7 @@ import Logout from '@/components/Logout'
 import NewElection from '@/components/NewElection'
 import * as cothority from '@dedis/cothority'
 import config from '../config'
+import rosterTOML from '../public.toml'
 
 Vue.use(Router)
 
@@ -46,8 +47,12 @@ router.beforeEach((to, from, next) => {
     signature: Uint8Array.from(user.signature)
   }
   const net = cothority.net // the network module
-  const serverAddress = 'ws://127.0.0.1:7009/evoting' // TODO: use roster
-  const socket = new net.Socket(serverAddress) // socket to talk to a conode
+  const roster = cothority.Roster.fromTOML(rosterTOML)
+  console.log(roster)
+  const socket = new net.RosterSocket(
+    roster,
+    'evoting'
+  ) // socket to talk to a conode
   const sendingMessageName = 'Login'
   const expectedMessageName = 'LoginReply'
   socket.send(sendingMessageName, expectedMessageName, deviceMessage)
