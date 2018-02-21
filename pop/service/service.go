@@ -703,6 +703,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	s.save()
+	s.verifyMergeBuffer.Store(sliceToArr(Msg), true)
 	return true
 }
 
@@ -736,12 +737,12 @@ func (s *Service) PropagateFinal(msg network.Message) {
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
-	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(len(final.Desc.Roster.List), s.ServerIdentity())
 	if tree == nil {
 		return errors.New(
 			"Root does not exist")
-
 	}
+
 	node, err := s.CreateProtocol(protoName, tree)
 	if err != nil {
 		return err
@@ -754,15 +755,22 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 			"protocol instance is invalid")
 
 	}
-
 	root.Msg, err = final.Hash()
 	if err != nil {
 		return err
 	}
 
 	root.Data = data
+	root.Timeout = time.Second * 5
+	root.FinalSignatureChan = make(chan bftcosi.FinalSignature, 1)
+	root.CreateProtocol = s.CreateProtocol
+
 	final.Signature = []byte{}
-	go node.Start()
+
+	err = node.Start()
+	if err != nil {
+		return err
+	}
 
 	select {
 	case sig := <-root.FinalSignatureChan:
@@ -784,7 +792,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	}
 
-	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000*time.Millisecond)
+	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10*time.Second)
 	if err != nil {
 		return err
 	}

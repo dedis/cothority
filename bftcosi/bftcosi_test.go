@@ -170,7 +170,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 
 	bftCosiProto := pi.(*ProtocolBFTCoSi)
 	bftCosiProto.CreateProtocol = local.CreateProtocol
-	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 0)
+	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 1)
 
 	counter := &Counter{refuseIndex: refuseIndex}
 	counters.add(counter)

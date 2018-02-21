@@ -1251,12 +1251,12 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+	err = bftcosi.InitBFTCoSiProtocol(cothority.Suite, s.Context,
 		s.bftVerifyNewBlock, s.bftVerifyNewBlockAck, bftNewBlock)
 	if err != nil {
 		return nil, err
 	}
-	err = bftcosi.InitBFTCoSiProtocol(bftcosi.DefaultCosiSuite, s.Context,
+	err = bftcosi.InitBFTCoSiProtocol(cothority.Suite, s.Context,
 		s.bftVerifyFollowBlock, s.bftVerifyFollowBlockAck, bftFollowBlock)
 	if err != nil {
 		return nil, err

@@ -58,6 +58,13 @@ const (
 
 // Start begins the BFTCoSi protocol by starting the prepare cosi.
 func (bft *ProtocolBFTCoSi) Start() error {
+	if bft.CreateProtocol == nil {
+		return fmt.Errorf("no CreateProtocol")
+	}
+	if bft.FinalSignatureChan == nil {
+		return fmt.Errorf("no FinalSignatureChan")
+	}
+
 	// prepare phase (part 1)
 	log.Lvl3("Starting prepare phase")
 	prepProto, err := bft.initCosiProtocol(phasePrep)

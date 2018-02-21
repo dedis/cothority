@@ -210,7 +210,8 @@ func (p *CoSiRootNode) Dispatch() error {
 	return nil
 }
 
-func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree, cosiSubProtocols []*CoSiSubProtocolNode) ([]StructCommitment, []*CoSiSubProtocolNode, error) {
+func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
+	cosiSubProtocols []*CoSiSubProtocolNode) ([]StructCommitment, []*CoSiSubProtocolNode, error) {
 	// get all commitments, restart subprotocols where subleaders do not respond
 	var mut sync.Mutex
 	var wg sync.WaitGroup
