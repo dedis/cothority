@@ -537,6 +537,11 @@ func TestService_ParallelGenesis(t *testing.T) {
 	default:
 		t.Log("congratulations, no errors")
 	}
+
+	n := s1.db.Length()
+	if n != numBlocks*nbrRoutines {
+		t.Error("num blocks is wrong:", n)
+	}
 }
 
 func TestService_ParallelStoreBlock(t *testing.T) {
@@ -587,6 +592,12 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 		t.Error("got an error", err)
 	default:
 		t.Log("congratulations, no errors")
+	}
+
+	n := s1.db.Length()
+	// plus 1 for the genesis block
+	if n != numBlocks*nbrRoutines+1 {
+		t.Error("num blocks is wrong:", n)
 	}
 }
 
