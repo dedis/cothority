@@ -23,10 +23,7 @@ class Client {
   }
 
   /**
-   * updateChain asks for the latest block of the skipchain with all intermediate blocks.
-   * It automatically verifies the transition from the last known skipblock ID to the
-   * latest one returned. It also automatically remembers the latest good known
-   * roster from the latest block.
+   * getLatestCISCData asks for the latest CISC block and returns the raw CISC data
    * @return {Promise} A promise which resolves with the latest cisc data if
    * all checks pass.
    */
@@ -46,6 +43,19 @@ class Client {
         } catch (err) {
           return Promise.reject(err);
         }   
+    });
+    return fn(this);
+  }
+
+  /**
+   * getLatestCISCData asks for the latest CISC block and returns the data in "storage"
+   * @return {Promise} A promise which resolves with the latest KV storage
+   */
+  getStorage() {
+    var fn = co.wrap(function*(client){
+      const ciscBlock = yield client.getLatestCISCData();
+      const kvStore = ciscBlock.data.storage;
+      return Promise.resolve(kvStore);
     });
     return fn(this);
   }

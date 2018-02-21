@@ -40,7 +40,17 @@ describe("cisc client", () => {
       //console.log(cisc_data2);
 
       expect(cisc_data).to.be.deep.equal(cisc_data2);
+
+      kvStore = cisc_data.data.storage;
+      kvStore2 = yield client.getStorage();
+
+      //console.log(kvStore)
+      //console.log(kvStore2)
+
+      expect(kvStore).to.be.deep.equal(kvStore2);
+
       done();
+
     });
     helpers
       .runGolang(build_dir, data => data.match(/OK/))
