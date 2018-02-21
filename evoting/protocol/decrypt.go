@@ -12,9 +12,8 @@ import (
 Each participating node begins with verifying the integrity of each mix. If
 If all mixes are correct a partial decryption of the last mix is performed using
 the node's shared secret from the DKG. The result is the appended to the election
-skipchain before prompting the next node. If at least one mix can no be verified
-the node won't create a decryption but appends a flag indicating the failure
-on the skipchain. The leaf node notifies the root upon completing its turn, which
+skipchain before prompting the next node. A node sets a flag in its partial if it
+cannot verify all the mixes. The leaf node notifies the root upon completing its turn, which
 terminates the protocol.
 
 Schema:
@@ -66,17 +65,25 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 		return err
 	}
 
-	var partial *lib.Partial
-	if !Verify(d.Election.Key, box, mixes) {
-		partial = &lib.Partial{Flag: true, Node: d.Name()}
-	} else {
-		last := mixes[len(mixes)-1].Ballots
-		points := make([]kyber.Point, len(box.Ballots))
-		for i := range points {
-			points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
-		}
-		partial = &lib.Partial{Points: points, Flag: false, Node: d.Name()}
+	// var partial *lib.Partial
+	// if !Verify(d.Election.Key, box, mixes) {
+	// 	partial = &lib.Partial{Flag: true, Node: d.Name()}
+	// } else {
+	// 	last := mixes[len(mixes)-1].Ballots
+	// 	points := make([]kyber.Point, len(box.Ballots))
+	// 	for i := range points {
+	// 		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
+	// 	}
+	// 	partial = &lib.Partial{Points: points, Flag: false, Node: d.Name()}
+	// }
+
+	last := mixes[len(mixes)-1].Ballots
+	points := make([]kyber.Point, len(box.Ballots))
+	for i := range points {
+		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
 	}
+	flag := Verify(d.Election.Key, box, mixes)
+	partial := &lib.Partial{Points: points, Flag: flag, Node: d.Name()}
 
 	if err = d.Election.Store(partial); err != nil {
 		return err

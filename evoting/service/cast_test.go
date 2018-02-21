@@ -39,6 +39,7 @@ func TestCast_UserNotPart(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -59,6 +60,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -70,6 +72,7 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Decrypted,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -90,6 +93,7 @@ func TestCast_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{1000},
 		Stage:   lib.Running,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 

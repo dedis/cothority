@@ -19,7 +19,7 @@ func TestChain(t *testing.T) {
 	_, err := chain(roster, []byte{})
 	assert.NotNil(t, err)
 
-	election := &Election{Roster: roster, Stage: Running}
+	election := &Election{Roster: roster, Stage: Running, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	chain, _ := chain(roster, election.ID)

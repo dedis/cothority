@@ -76,7 +76,7 @@ func TestOpen_Full(t *testing.T) {
 	master := &lib.Master{Roster: roster}
 	master.GenChain(nil)
 
-	election := &lib.Election{}
+	election := &lib.Election{Data: []byte{}}
 	r, _ := s.Open(&evoting.Open{Token: token, ID: master.ID, Election: election})
 	assert.NotNil(t, r)
 

@@ -37,6 +37,7 @@ func TestGetBox_NotPart(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -57,6 +58,7 @@ func TestGetBox_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
+		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 

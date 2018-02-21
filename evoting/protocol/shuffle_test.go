@@ -51,7 +51,7 @@ func runShuffle(t *testing.T, n int) {
 
 	nodes, roster, tree := local.GenBigTree(n, n, 1, true)
 
-	election := &lib.Election{Roster: roster, Stage: lib.Running}
+	election := &lib.Election{Roster: roster, Stage: lib.Running, Data: []byte{}}
 	_ = election.GenChain(n)
 
 	services := local.GetServices(nodes, shuffleServiceID)

@@ -20,28 +20,28 @@ func TestFetchElection(t *testing.T) {
 	_, err := FetchElection(roster, []byte{})
 	assert.NotNil(t, err)
 
-	election := &Election{Roster: roster, Stage: Running}
+	election := &Election{Roster: roster, Stage: Running, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	e, _ := FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
 	assert.Equal(t, Running, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: Shuffled}
+	election = &Election{Roster: roster, Stage: Shuffled, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	e, _ = FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
 	assert.Equal(t, Shuffled, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: Decrypted}
+	election = &Election{Roster: roster, Stage: Decrypted, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	e, _ = FetchElection(roster, election.ID)
 	assert.Equal(t, election.ID, e.ID)
 	assert.Equal(t, Decrypted, int(e.Stage))
 
-	election = &Election{Roster: roster, Stage: Shuffled}
+	election = &Election{Roster: roster, Stage: Shuffled, Data: []byte{}}
 	_ = election.GenChain(10)
 	_ = election.Store(&Mix{Proof: []byte{}})
 
@@ -55,7 +55,7 @@ func TestStore(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: Running}
+	election := &Election{Roster: roster, Stage: Running, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	election.Store(&Ballot{User: 1000})
@@ -71,7 +71,7 @@ func TestBox(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: Running}
+	election := &Election{Roster: roster, Stage: Running, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	box, _ := election.Box()
@@ -84,7 +84,7 @@ func TestMixes(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: Shuffled}
+	election := &Election{Roster: roster, Stage: Shuffled, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	mixes, _ := election.Mixes()
@@ -97,7 +97,7 @@ func TestPartials(t *testing.T) {
 
 	_, roster, _ := local.GenBigTree(3, 3, 1, true)
 
-	election := &Election{Roster: roster, Stage: Decrypted}
+	election := &Election{Roster: roster, Stage: Decrypted, Data: []byte{}}
 	_ = election.GenChain(10)
 
 	partials, _ := election.Partials()
@@ -105,13 +105,13 @@ func TestPartials(t *testing.T) {
 }
 
 func TestIsUser(t *testing.T) {
-	e := &Election{Creator: 0, Users: []uint32{0}}
+	e := &Election{Creator: 0, Users: []uint32{0}, Data: []byte{}}
 	assert.True(t, e.IsUser(0))
 	assert.False(t, e.IsUser(1))
 }
 
 func TestIsCreator(t *testing.T) {
-	e := &Election{Creator: 0, Users: []uint32{0, 1}}
+	e := &Election{Creator: 0, Users: []uint32{0, 1}, Data: []byte{}}
 	assert.True(t, e.IsCreator(0))
 	assert.False(t, e.IsCreator(1))
 }
