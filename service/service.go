@@ -7,7 +7,6 @@ runs on the node.
 
 import (
 	"errors"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -258,19 +257,9 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	if err != nil {
 		return nil, err
 	}
-	i := 1
-	for {
-		reply.SB, err = s.storeSkipBlock(latestSB, data)
-		if err == nil {
-			break
-		}
-		if err == skipchain.ErrorProcessing {
-			log.Lvl2("Waiting for block to be propagated...")
-			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
-			i++
-		} else {
-			return nil, err
-		}
+	reply.SB, err = s.storeSkipBlock(latestSB, data)
+	if err != nil {
+		return nil, err
 	}
 
 	log.Lvl2("Writing a key to the skipchain")
@@ -311,19 +300,9 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	if err != nil {
 		return nil, errors.New("didn't find latest block: " + err.Error())
 	}
-	i := 1
-	for {
-		reply.SB, err = s.storeSkipBlock(latestSB, data)
-		if err == nil {
-			break
-		}
-		if err == skipchain.ErrorProcessing {
-			log.Lvl2("Waiting for block to be propagated...")
-			time.Sleep(time.Duration(rand.Intn(20)*i) * time.Millisecond)
-			i++
-		} else {
-			return nil, err
-		}
+	reply.SB, err = s.storeSkipBlock(latestSB, data)
+	if err != nil {
+		return nil, err
 	}
 
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
