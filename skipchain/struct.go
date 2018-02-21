@@ -176,7 +176,7 @@ func (fct *FollowChainType) AcceptNew(sb *SkipBlock, us *network.ServerIdentity)
 		}
 		return true
 	default:
-		log.Error("unknown AuthSkipchain type")
+		log.Error("unknown policy")
 	}
 	return false
 }

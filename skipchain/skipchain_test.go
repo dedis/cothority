@@ -447,9 +447,9 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 	}
 }
 
-func TestService_ParallelStore(t *testing.T) {
+func TestService_ParallelGUC(t *testing.T) {
 	if testing.Short() {
-		t.Skip("parallel store does not run on travis, see #1000")
+		t.Skip("parallel GUC does not run on travis, see #1000")
 	}
 	nbrRoutines := 10
 	local := onet.NewLocalTest(cothority.Suite)
@@ -492,6 +492,102 @@ func TestService_ParallelStore(t *testing.T) {
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
+}
+
+func TestService_ParallelGenesis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("parallel tests too big for travis")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 5)
+	sb0 := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+
+	const nbrRoutines = 20
+	const numBlocks = 100
+	errs := make(chan error, nbrRoutines*numBlocks)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(sb *SkipBlock) {
+			for j := 0; j < numBlocks; j++ {
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sb})
+				if err != nil {
+					errs <- err
+					break
+				}
+			}
+			wg.Done()
+		}(sb0.Copy())
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errs:
+		t.Error("got an error", err)
+	default:
+		t.Log("congratulations, no errors")
+	}
+}
+
+func TestService_ParallelStoreBlock(t *testing.T) {
+	if testing.Short() {
+		t.Skip("parallel tests too big for travis")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 5)
+	ssb := &StoreSkipBlock{
+		NewBlock: &SkipBlock{
+			SkipBlockFix: &SkipBlockFix{
+				MaximumHeight: 1,
+				BaseHeight:    1,
+				Roster:        roster,
+				Data:          []byte{},
+			},
+		},
+	}
+	reply, err := s1.StoreSkipBlock(ssb)
+	if err != nil {
+		t.Error(err)
+	}
+
+	const nbrRoutines = 20
+	const numBlocks = 100
+	errs := make(chan error, nbrRoutines*numBlocks)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(sb *SkipBlock) {
+			for j := 0; j < numBlocks; j++ {
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sb})
+				if err != nil {
+					errs <- err
+					break
+				}
+			}
+			wg.Done()
+		}(reply.Latest.Copy())
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errs:
+		t.Error("got an error", err)
+	default:
+		t.Log("congratulations, no errors")
+	}
 }
 
 func TestService_Propagation(t *testing.T) {
@@ -869,8 +965,8 @@ func waitPropagationFinished(t *testing.T, local *onet.LocalTest) {
 	for propagating {
 		propagating = false
 		for _, s := range services {
-			if s.IsPropagating() {
-				log.Lvl1("Service", s, "is still propagating")
+			if s.chains.numLocks() != 0 {
+				log.Lvl1("Service", s, "is still locking chains")
 				propagating = true
 			}
 		}

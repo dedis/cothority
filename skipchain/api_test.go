@@ -179,10 +179,13 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	var sb1 *StoreSkipBlockReply
 	sb1, err = c.StoreSkipBlock(inter, ro2, nil)
 	log.ErrFatal(err)
-	log.Lvl1("Proposing same roster again")
-	_, err = c.StoreSkipBlock(inter, ro2, nil)
-	require.NotNil(t, err,
-		"Appending two Blocks to the same last block should fail")
+	// This now works, because in order to implement concurrent writes
+	// correctly, we need to have StoreSkipBlock advance latest to the
+	// true latest block, atomically.
+	//log.Lvl1("Proposing same roster again")
+	//_, err = c.StoreSkipBlock(inter, ro2, nil)
+	//require.NotNil(t, err,
+	//	"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
 	sb1, err = c.StoreSkipBlock(sb1.Latest, ro2, []byte{1, 2, 3})
 	log.ErrFatal(err)
