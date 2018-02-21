@@ -9,6 +9,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -547,6 +548,44 @@ func kvAdd(c *cli.Context) error {
 	value := c.Args().Get(1)
 	prop := id.GetProposed()
 	prop.Storage[key] = value
+	return addKv(c, cfg, id, prop)
+}
+
+// kvAddCsv reads the input CSV file, lookup its key column and inputs all the
+// csv file at once to the skipchain. The key is given from the "column" args
+// and the value is the whole full row, unmodified.
+func kvAddCsv(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	if c.NArg() != 1 {
+		return errors.New("Missing argument: csv file")
+	}
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		scList(c)
+		return errors.New("Please give skipchain-id")
+	}
+	file := c.Args().First()
+	fd, err := os.Open(file)
+	log.ErrFatal(err)
+	reader := csv.NewReader(fd)
+	records, err := reader.ReadAll()
+	log.ErrFatal(err)
+	if len(records) < 2 {
+		return errors.New("csv file given only contains column name")
+	}
+	column := c.Int("column")
+	log.Info("Column names to insert in cisc: " + strings.Join(records[0], ":"))
+	log.Info("Column name to use as a key: " + records[0][column])
+	prop := id.GetProposed()
+	for _, row := range records[1:] {
+		key := row[column]
+		value := strings.Join(row, ",")
+		prop.Storage[key] = value
+	}
+	return addKv(c, cfg, id, prop)
+}
+
+func addKv(c *cli.Context, cfg *ciscConfig, id *identity.Identity, prop *identity.Data) error {
 	cfg.proposeSendVoteUpdate(id, prop)
 	if id.Proposed == nil {
 		log.Info("Stored key-value pair")
@@ -554,6 +593,7 @@ func kvAdd(c *cli.Context) error {
 		log.Info("Voted for key-value pair - need confirmation")
 	}
 	return cfg.saveConfig(c)
+
 }
 func kvDel(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
@@ -804,6 +844,10 @@ func followDel(c *cli.Context) error {
 func followList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	for _, id := range cfg.Follow {
+		if c.Bool("id-only") {
+			fmt.Printf("%x\n", id.ID)
+			continue
+		}
 		log.Infof("SCID: %x", id.ID)
 		server := id.DeviceName
 		log.Infof("Server %s is asked to accept ssh-keys from %s:",
