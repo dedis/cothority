@@ -139,7 +139,7 @@ func (p *CoSiRootNode) Dispatch() error {
 			return err
 		}
 	}
-	log.Lvl3("all protocols started")
+	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	commitments, runningSubProtocols, err := p.collectCommitments(trees, cosiSubProtocols)
 	if err != nil {

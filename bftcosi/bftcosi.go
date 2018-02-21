@@ -23,7 +23,8 @@ type ProtocolBFTCoSi struct {
 	Data []byte
 	// FinalSignature is output of the protocol, for the caller to read
 	FinalSignatureChan chan FinalSignature
-	// CreateProtocol TODO
+	// CreateProtocol stores a function pointer used to create the cosi
+	// protocol
 	CreateProtocol protocol.CreateProtocolFunction
 	// Timeout define the timeout duration
 	Timeout time.Duration
@@ -33,9 +34,11 @@ type ProtocolBFTCoSi struct {
 	commitCosiProtoName string
 	// prepSigChan is the channel for reading the prepare phase signature
 	prepSigChan chan []byte
-	// publics TODO
+	// publics is the list of public keys
 	publics []kyber.Point
-	// suite TODO
+	// suite is the cosi.Suite, which may be different from the suite used
+	// in the protocol because we need sha512 for the hash function so that
+	// the signature can be verified using eddsa.Verify.
 	suite cosi.Suite
 }
 
@@ -154,8 +157,9 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	return nil
 }
 
-// NewBFTCoSiProtocol TODO
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string, suite cosi.Suite) (*ProtocolBFTCoSi, error) {
+// NewBFTCoSiProtocol creates and initialises a BFTCoSi protocol.
+func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
+	suite cosi.Suite) (*ProtocolBFTCoSi, error) {
 	publics := make([]kyber.Point, n.Tree().Size())
 	for i, node := range n.Tree().List() {
 		publics[i] = node.ServerIdentity.Public
@@ -163,8 +167,8 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 	return &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
-		Data: make([]byte, 0),
-		// the caller also needs to make FinalSignatureChan
+		FinalSignatureChan:  make(chan FinalSignature, 1),
+		Data:                make([]byte, 0),
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
 		prepSigChan:         make(chan []byte, 0),

@@ -22,7 +22,7 @@ var defaultTimeout = time.Second * 5
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {
-	nodes := []int{1, 2, 5, 13, 24, 100}
+	nodes := []int{1, 2, 5, 13, 24}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
 

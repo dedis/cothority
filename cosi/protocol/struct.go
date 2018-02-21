@@ -43,7 +43,7 @@ func (m *cosiSuite) RandomStream() cipher.Stream {
 }
 
 // EdDSACompatibleCosiSuite is a custom suite made to be compatible with eddsa because
-// cothority.Suite uses sha256 but EdDSA uses sha512
+// cothority.Suite uses sha256 but EdDSA uses sha512.
 var EdDSACompatibleCosiSuite = &cosiSuite{edwards25519.NewBlakeSHA256Ed25519(), random.New()}
 
 // Announcement is the announcement message, the first message in the CoSi protocol

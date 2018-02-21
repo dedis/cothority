@@ -107,6 +107,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	p.Timeout = announcement.Timeout
 	p.Msg = announcement.Msg
 	p.Data = announcement.Data
+	var err error
 
 	// start the verification in background if I'm not the root because
 	// root does the verification in the main protocol
@@ -118,9 +119,8 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 		}()
 	}
 
-	err := p.SendToChildren(&announcement.Announcement)
-	if err != nil {
-		return err
+	if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
+		log.Lvl3(p.ServerIdentity().Address, "failed to send announcement to all children")
 	}
 
 	// ----- Commitment -----
@@ -141,6 +141,7 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	} else {
 		t := time.After(p.Timeout / 2)
 	loop:
+		// note that this section will not execute if it's on the leaf
 		for _ = range p.Children() {
 			select {
 			case commitment, channelOpen := <-p.ChannelCommitment:
@@ -199,11 +200,8 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	}
 
 	log.Lvl3(p.ServerIdentity().Address, "received challenge")
-	for _, TreeNode := range committedChildren {
-		err = p.SendTo(TreeNode, &challenge.Challenge)
-		if err != nil {
-			return err
-		}
+	if errs := p.Multicast(&challenge.Challenge, committedChildren...); len(errs) > 0 {
+		log.Lvl3(p.ServerIdentity().Address, "")
 	}
 
 	// ----- Response -----
@@ -257,7 +255,7 @@ func (p *CoSiSubProtocolNode) HandleStop(stop StructStop) error {
 
 // Start is done only by root and starts the subprotocol
 func (p *CoSiSubProtocolNode) Start() error {
-	log.Lvl3("Starting subCoSi")
+	log.Lvl3(p.ServerIdentity().Address, "Starting subCoSi")
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
 	}
