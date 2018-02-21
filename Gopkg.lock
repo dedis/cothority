@@ -53,7 +53,7 @@
   branch = "byzgen_poc"
   name = "github.com/dedis/onet"
   packages = [".","app","log","network"]
-  revision = "61ad31b464e9a12fd6df8648c7ab3aace2fea848"
+  revision = "627f94ee245fa231b6f92a6bfb512dfb5110bc9d"
 
 [[projects]]
   name = "github.com/dedis/protobuf"
