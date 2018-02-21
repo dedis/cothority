@@ -65,11 +65,10 @@ func init() {
 // External calls
 
 // StoreSkipBlock - Requests a new skipblock to be appended to
-// the given SkipBlock. If the given SkipBlock has Index 0 (which
-// is invalid), a new SkipChain will be created.
-// if AuthSkipchain == true, then the signature has to be a valid
-// Schnorr signature on the hash of the NewBlock by either one of the
-// conodes in the roster or by one of the clients.
+// the given SkipBlock. If the given SkipBlock has Index 0
+// a new SkipChain will be created. If LatestID is the zero value,
+// the latest block from the chain with hash NewBlock.GenesisID
+// will be used.
 type StoreSkipBlock struct {
 	LatestID  SkipBlockID
 	NewBlock  *SkipBlock
