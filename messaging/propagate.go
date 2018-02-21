@@ -75,9 +75,13 @@ type propagationContext interface {
 
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-// The protocol will fail if more than t nodes per subtree fail to respond.
-func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
+// The protocol will fail if more than thresh nodes per subtree fail to respond.
+// If thresh == -1, the threshold defaults to len(n.Roster().List-1)/3. Thus, for a roster of
+// 5, t = int(4/3) = 1, e.g. 1 node out of the 5 can fail.
+func NewPropagationFunc(c propagationContext, name string, f PropagationStore, thresh int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		// Make a local copy in order to avoid a data race.
+		t := thresh
 		if t == -1 {
 			t = (len(n.Roster().List) - 1) / 3
 		}

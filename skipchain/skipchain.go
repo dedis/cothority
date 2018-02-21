@@ -47,12 +47,60 @@ type Service struct {
 	verifiers          map[VerifierID]SkipBlockVerifier
 	blockRequestsMutex sync.Mutex
 	blockRequests      map[string]chan *SkipBlock
-	newBlocksMutex     sync.Mutex
-	newBlocks          map[string]bool
 	storageMutex       sync.Mutex
 	Storage            *Storage
 	bftTimeout         time.Duration
 	propTimeout        time.Duration
+	chains             chainLocker
+}
+
+type chainLocker struct {
+	sync.Mutex
+	// the key type is string because []byte is not allowed
+	// in Go maps as keys.
+	chains map[string]*sync.Mutex
+	// a count of how many locks are currently held
+	locks int
+}
+
+var errTimeout = errors.New("timeout waiting to lock chain")
+
+func (cl *chainLocker) lock(chain SkipBlockID) {
+	cl.Lock()
+	// Lazy initializtion.
+	if cl.chains == nil {
+		cl.chains = make(map[string]*sync.Mutex)
+	}
+
+	if l, ok := cl.chains[string(chain)]; ok {
+		cl.locks++
+		cl.Unlock()
+		l.Lock()
+		return
+	}
+
+	l := new(sync.Mutex)
+	l.Lock()
+	cl.chains[string(chain)] = l
+	cl.Unlock()
+	return
+}
+
+func (cl *chainLocker) unlock(chain SkipBlockID) {
+	cl.Lock()
+	l := cl.chains[string(chain)]
+	if l != nil {
+		l.Unlock()
+		cl.locks--
+	}
+	cl.Unlock()
+}
+
+func (cl *chainLocker) numLocks() (ret int) {
+	cl.Lock()
+	ret = cl.locks
+	cl.Unlock()
+	return
 }
 
 // Storage is saved to disk.
@@ -68,10 +116,6 @@ type Storage struct {
 	// by this client will be allowed.
 	Clients []kyber.Point
 }
-
-// ErrorProcessing happens when two clients are trying to add to the
-// same skipchain at the same time.
-var ErrorProcessing = errors.New("this skipchain-id is currently processing a block")
 
 // StoreSkipBlock stores a new skipblock in the system. This can be either a
 // genesis-skipblock, that will create a new skipchain, or a new skipblock,
@@ -112,10 +156,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
-	if psbd.LatestID.IsNull() {
-		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
+	if psbd.LatestID.IsNull() && psbd.NewBlock.GenesisID.IsNull() {
 		// A new chain is created
-		prop.Index = 0
+		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*BlockLink, 0)
 		// genesis block has a random back-link:
@@ -129,11 +172,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			return nil, err
 
 		}
-		if !s.newBlockStart(prop) {
-			return nil, ErrorProcessing
-
-		}
-		defer s.newBlockEnd(prop)
 
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.db.GetByID(prop.ParentBlockID)
@@ -150,7 +188,21 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	} else {
 		log.Lvlf2("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
 		// We're appending a block to an existing chain
-		prev = s.db.GetByID(psbd.LatestID)
+		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
+
+		// If they chose to send not LatestID, it means they want us to find it
+		// for them, based on the given NewBlock.GenesisID.
+		if psbd.LatestID.IsNull() {
+			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
+			if gen != nil {
+				// Ignore error here because even if prev ends up
+				// nil, we'll handle it in the next step.
+				prev, _ = s.db.GetLatest(gen)
+			}
+		} else {
+			prev = s.db.GetByID(psbd.LatestID)
+		}
+
 		if prev == nil {
 			// Did not find the block they claim is the latest.
 
@@ -180,28 +232,34 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			}
 		}
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
-			return nil, errors.New(
-				"We're not responsible for latest block")
-
+			return nil, errors.New("this node is not in the previous roster")
 		}
+
+		// Now that we are sure we are responsible for this chain,
+		// make sure that concurrent requests to us to append to
+		// it can not happen.
+		chainID := prev.SkipChainID()
+		s.chains.lock(chainID)
+		defer s.chains.unlock(chainID)
+
+		// Once we have the lock on this skipchain, refresh
+		// prev in case someone else added a block to it while
+		// we were waiting for the lock.
+		prev = s.db.GetByID(prev.Hash)
+		prev = s.findLatest(prev)
+
 		if len(prev.ForwardLink) > 0 {
 			return nil, errors.New(
 				"the latest block already has a follower")
 
 		}
-		if !s.newBlockStart(prev) {
-			return nil, errors.New(
-				"this skipchain-id is currently processing a block")
-
-		}
-		defer s.newBlockEnd(prev)
 
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
 		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
-		prop.GenesisID = prev.SkipChainID()
+		prop.GenesisID = chainID
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
@@ -660,13 +718,6 @@ func (s *Service) ListFollow(list *ListFollow) (*ListFollowReply, error) {
 		reply.FollowIDs = &s.Storage.FollowIDs
 	}
 	return reply, nil
-}
-
-// IsPropagating returns true if there is at least one propagation running.
-func (s *Service) IsPropagating() bool {
-	s.newBlocksMutex.Lock()
-	defer s.newBlocksMutex.Unlock()
-	return len(s.newBlocks) > 0
 }
 
 // GetDB returns a pointer to the internal database.
@@ -1137,29 +1188,6 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	return nil
 }
 
-func (s *Service) newBlockStart(sb *SkipBlock) bool {
-	s.newBlocksMutex.Lock()
-	defer s.newBlocksMutex.Unlock()
-	if _, processing := s.newBlocks[string(sb.Hash)]; processing {
-		return false
-	}
-	if len(s.newBlocks) > 0 {
-		return false
-	}
-	s.newBlocks[string(sb.Hash)] = true
-	return true
-}
-
-func (s *Service) newBlockEnd(sb *SkipBlock) bool {
-	s.newBlocksMutex.Lock()
-	defer s.newBlocksMutex.Unlock()
-	if _, processing := s.newBlocks[string(sb.Hash)]; !processing {
-		return false
-	}
-	delete(s.newBlocks, string(sb.Hash))
-	return true
-}
-
 // authenticate searches if this node or any follower-node can verify the
 // schnorr-signature.
 func (s *Service) authenticate(msg []byte, sig []byte) bool {
@@ -1273,8 +1301,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		db:               NewSkipBlockDB(db, bucket),
 		Storage:          &Storage{},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
-		blockRequests:    make(map[string]chan *SkipBlock),
-		newBlocks:        make(map[string]bool),
+		blockRequests:    map[string]chan *SkipBlock{},
 		propTimeout:      defaultPropagateTimeout,
 	}
 
