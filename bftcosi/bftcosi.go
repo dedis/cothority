@@ -2,6 +2,7 @@ package bftcosi
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/dedis/cothority/cosi/protocol"
@@ -99,10 +100,11 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	}
 	cosiProto := pi.(*protocol.CoSiRootNode)
 	cosiProto.CreateProtocol = bft.CreateProtocol
-	// NOTE We set it to n / 10 to have every sub-leader manage 10 nodes.
-	// This setting is bad if there are thousands of nodes as the root
-	// would need to manage hundres of sub-leaders.
-	cosiProto.NSubtrees = len(bft.List()) / 10
+	// We set NSubtrees to the cube root of n to evenly distribute the load,
+	// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
+	// It is possible to make this configurable if needed at protocol
+	// creation time if necessary.
+	cosiProto.NSubtrees = int(math.Pow(float64(len(bft.List())), 1.0/3.0))
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
 	cosiProto.Timeout = bft.Timeout

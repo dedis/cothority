@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"math"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -61,8 +62,9 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	p := pi.(*protocol.CoSiRootNode)
 	p.CreateProtocol = s.CreateProtocol
 	p.Msg = req.Message
-	// TODO is there an optimal way to find out the number of subtrees?
-	p.NSubtrees = nNodes / 10
+	// We set NSubtrees to the cube root of n to evenly distribute the load,
+	// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
+	p.NSubtrees = int(math.Pow(float64(nNodes), 1.0/3.0))
 	p.Timeout = time.Second * 5
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
