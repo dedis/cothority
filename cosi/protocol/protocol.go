@@ -33,6 +33,8 @@ type CoSiRootNode struct {
 	Msg            []byte
 	Data           []byte
 	CreateProtocol CreateProtocolFunction
+	// Timeout is not a global timeout for the protocol, but a timeout used
+	// for waiting for responses for sub protocols.
 	Timeout        time.Duration
 	FinalSignature chan []byte
 
@@ -121,7 +123,7 @@ func (p *CoSiRootNode) Dispatch() error {
 
 	// generate trees
 	nNodes := p.Tree().Size()
-	trees, err := GenTrees(p.Tree().Roster, nNodes, p.NSubtrees)
+	trees, err := genTrees(p.Tree().Roster, nNodes, p.NSubtrees)
 	if err != nil {
 		return fmt.Errorf("error in tree generation: %s", err)
 	}
@@ -167,6 +169,7 @@ func (p *CoSiRootNode) Dispatch() error {
 
 	// get response from all subprotocols
 	responses := make([]StructResponse, 0)
+	errChan := make(chan error, 1)
 	var responsesMut sync.Mutex
 	var responsesWg sync.WaitGroup
 	for _, cosiSubProtocol := range runningSubProtocols {
@@ -179,13 +182,18 @@ func (p *CoSiRootNode) Dispatch() error {
 				responses = append(responses, response)
 				responsesMut.Unlock()
 			case <-time.After(p.Timeout):
-				log.Error("didn't finish in time")
+				select {
+				case errChan <- fmt.Errorf("didn't finish in time"):
+				default:
+				}
 			}
 		}(cosiSubProtocol)
 	}
 	responsesWg.Wait()
-	if len(responses) != len(runningSubProtocols) {
-		return fmt.Errorf("did not get all the responses")
+	select {
+	case err = <-errChan:
+		return err
+	default:
 	}
 
 	// signs the proposal
@@ -240,7 +248,7 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
 						return
 					}
 					var err error
-					trees[i], err = GenSubtree(trees[i].Roster, newSubleaderID)
+					trees[i], err = genSubtree(trees[i].Roster, newSubleaderID)
 					if err != nil {
 						select {
 						case errChan <- err:

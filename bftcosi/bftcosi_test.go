@@ -3,6 +3,7 @@ package bftcosi
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"testing"
@@ -180,6 +181,8 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	bftCosiProto.Data = []byte("hello world")
 	bftCosiProto.Timeout = defaultTimeout
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
+
+	require.Equal(t, bftCosiProto.nSubtrees, int(math.Pow(float64(nbrHosts), 1.0/3.0)))
 
 	// kill the leafs first
 	nbrFault = min(nbrFault, len(servers))

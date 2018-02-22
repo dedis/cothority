@@ -8,14 +8,16 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-// GenTrees will create a given number of subtrees of the same number of nodes.
+// genTrees will create a given number of subtrees of the same number of nodes.
 // Each generated subtree will have the same root.
 // Each generated tree have a root with one child (the subleader)
 // and all other nodes in the tree will be the subleader children.
 // NOTE: register being not implementable with the current API could hurt the scalability tests
-func GenTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) {
+// TODO: we may be able to simplify the code here to make sure the existing onet
+// tree generation functions.
+func genTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) {
 
-	//parameter verification
+	// parameter verification
 	if roster == nil {
 		return nil, errors.New("the roster is nil")
 	}
@@ -45,7 +47,7 @@ func GenTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) 
 		return trees, nil
 	}
 
-	//generate each subtree
+	// generate each subtree
 	nodesPerSubtree := (nNodes - 1) / nSubtrees
 	surplusNodes := (nNodes - 1) % nSubtrees
 
@@ -53,17 +55,17 @@ func GenTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) 
 	for i := 0; i < nSubtrees; i++ {
 
 		end := start + nodesPerSubtree
-		if i < surplusNodes { //to handle surplus nodes
+		if i < surplusNodes { // to handle surplus nodes
 			end++
 		}
 
-		//generate tree roster
+		// generate tree roster
 		servers := []*network.ServerIdentity{roster.List[0]}
 		servers = append(servers, roster.List[start:end]...)
 		treeRoster := onet.NewRoster(servers)
 
 		var err error
-		trees[i], err = GenSubtree(treeRoster, 1)
+		trees[i], err = genSubtree(treeRoster, 1)
 		if err != nil {
 			return nil, err
 		}
@@ -71,19 +73,13 @@ func GenTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) 
 		start = end
 	}
 
-	//l.Trees[tree.ID] = tree
-	//if registerOLD {
-	//	servers[0].overlay.RegisterRoster(list)
-	//	servers[0].overlay.RegisterTree(tree)
-	//}
-
 	return trees, nil
 }
 
-// GenSubtree generates a single subtree with a given subleaderID.
+// genSubtree generates a single subtree with a given subleaderID.
 // The generated tree will have a root with one child (the subleader)
 // and all other nodes in the roster will be the subleader children.
-func GenSubtree(roster *onet.Roster, subleaderID int) (*onet.Tree, error) {
+func genSubtree(roster *onet.Roster, subleaderID int) (*onet.Tree, error) {
 
 	if roster == nil {
 		return nil, fmt.Errorf("the roster should not be nil, but is")

@@ -27,7 +27,8 @@ type ProtocolBFTCoSi struct {
 	// CreateProtocol stores a function pointer used to create the cosi
 	// protocol
 	CreateProtocol protocol.CreateProtocolFunction
-	// Timeout define the timeout duration
+	// Timeout is passed down to the cosi protocol and used for waiting
+	// for some of its messages.
 	Timeout time.Duration
 	// prepCosiProtoName is the cosi protocol name for the prepare phase
 	prepCosiProtoName string
@@ -41,6 +42,8 @@ type ProtocolBFTCoSi struct {
 	// in the protocol because we need sha512 for the hash function so that
 	// the signature can be verified using eddsa.Verify.
 	suite cosi.Suite
+	// nSubtrees is the number of subtrees used for the cosi protocols.
+	nSubtrees int
 }
 
 // FinalSignature holds the message Msg and its signature
@@ -78,7 +81,13 @@ func (bft *ProtocolBFTCoSi) Start() error {
 	}
 
 	go func() {
-		bft.prepSigChan <- <-prepProto.FinalSignature
+		select {
+		case tmpSig := <-prepProto.FinalSignature:
+			bft.prepSigChan <- tmpSig
+		case <-time.After(time.Duration(bft.nSubtrees) * bft.Timeout):
+			log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+			bft.prepSigChan <- nil
+		}
 	}()
 
 	return nil
@@ -100,11 +109,7 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	}
 	cosiProto := pi.(*protocol.CoSiRootNode)
 	cosiProto.CreateProtocol = bft.CreateProtocol
-	// We set NSubtrees to the cube root of n to evenly distribute the load,
-	// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
-	// It is possible to make this configurable if needed at protocol
-	// creation time if necessary.
-	cosiProto.NSubtrees = int(math.Pow(float64(len(bft.List())), 1.0/3.0))
+	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
 	cosiProto.Timeout = bft.Timeout
@@ -152,8 +157,13 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		return err
 	}
 
-	commitSig := <-commitProto.FinalSignature
-	log.Lvl3("Finished commit phase")
+	var commitSig []byte
+	select {
+	case commitSig = <-commitProto.FinalSignature:
+		log.Lvl3("Finished commit phase")
+	case <-time.After(time.Duration(bft.nSubtrees) * bft.Timeout):
+		log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+	}
 
 	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
 	return nil
@@ -176,6 +186,9 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiP
 		prepSigChan:         make(chan []byte, 0),
 		publics:             publics,
 		suite:               suite,
+		// We set nSubtrees to the cube root of n to evenly distribute the load,
+		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
+		nSubtrees: int(math.Pow(float64(len(n.List())), 1.0/3.0)),
 	}, nil
 }
 
