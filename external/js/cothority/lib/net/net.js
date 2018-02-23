@@ -114,7 +114,7 @@ class RosterSocket {
           socket.lastGoodServer = addr;
           return Promise.resolve(data);
         } catch (err) {
-          console.log("rostersocket: " + err);
+          console.log("rostersocket: ", err);
           continue;
         }
       }

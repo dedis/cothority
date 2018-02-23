@@ -50,6 +50,12 @@ func main() {
 		latest = sb.Latest
 	}
 
+	reply, err := client.GetUpdateChain(ro, inter.Hash)
+	log.ErrFatal(err)
+	block := reply.Update[0]
+	link := block.ForwardLink[len(block.ForwardLink)-1]
+	fmt.Println("Link signature: ", len(link.Signature.Sig))
+
 	serversToml := make([]*app.ServerToml, n)
 	for i, si := range ro.List {
 		serversToml[i] = app.NewServerToml(

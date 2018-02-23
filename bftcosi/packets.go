@@ -3,6 +3,7 @@ package bftcosi
 import (
 	"crypto/sha512"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dedis/kyber"
@@ -71,7 +72,7 @@ func (bs *BFTSignature) Verify(s network.Suite, publics []kyber.Point) error {
 	origCommit := s.Point()
 	pointLen := s.PointLen()
 	sigLen := pointLen + s.ScalarLen()
-
+	fmt.Println("Signature length bft: ", len(bs.Sig))
 	if len(bs.Sig) < sigLen {
 		return errors.New("signature too short")
 	}
