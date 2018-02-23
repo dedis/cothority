@@ -7,7 +7,6 @@ const child_process = require("child_process");
 const fs = require("fs");
 const co = require("co");
 
-
 const curve = new kyber.curve.edwards25519.Curve();
 const proto = cothority.protobuf;
 const cisc = cothority.cisc;
@@ -24,7 +23,7 @@ describe("cisc client", () => {
   it("can retrieve updates from conodes", done => {
     var fn = co.wrap(function*() {
       [roster, id] = helpers.readSkipchainInfo(build_dir);
-      const client = new cisc.Client(roster, id);
+      const client = new cisc.Client(curve, roster, id);
       cisc_data = yield client.getLatestCISCData();
 
       // try to read it from a roster socket
@@ -39,9 +38,9 @@ describe("cisc client", () => {
       //console.log("-----------------------------------------------------")
       //console.log(cisc_data2);
 
-      expect(cisc_data).to.be.deep.equal(cisc_data2);
+      expect(cisc_data).to.be.deep.equal(cisc_data2.data);
 
-      kvStore = cisc_data.data.storage;
+      kvStore = cisc_data.storage;
       kvStore2 = yield client.getStorage();
 
       //console.log(kvStore)
@@ -50,7 +49,6 @@ describe("cisc client", () => {
       expect(kvStore).to.be.deep.equal(kvStore2);
 
       done();
-
     });
     helpers
       .runGolang(build_dir, data => data.match(/OK/))
@@ -60,7 +58,7 @@ describe("cisc client", () => {
       })
       .then(fn)
       .catch(err => {
-        done();
+        done(err);
         throw err;
       });
   }).timeout(5000);
