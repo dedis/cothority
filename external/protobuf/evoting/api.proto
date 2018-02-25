@@ -1,13 +1,16 @@
+syntax = "proto2";
+
 message Election {
     required string name = 1;
     required uint32 creator = 2;
-    repeated uint32 users = 3;
-    required bytes id = 4;
-    required Roster roster = 5;
-    required bytes key = 6;
-    required uint32 stage = 8;
-    optional string description = 9;
-    optional string end = 10;
+    repeated uint32 users = 3 [packed=true];
+    optional bytes id = 4;
+    optional Roster roster = 5;
+    optional bytes key = 6;
+    optional uint32 stage = 7;
+    required bytes data = 8;
+    required string description = 9;
+    required string end = 10;
 }
 
 message Ballot {
@@ -50,8 +53,8 @@ message LoginReply {
 
 message Open{
     required string token = 1;
-    required Election election = 2;
-    required bytes id = 3;
+    required bytes id = 2;
+    required Election election = 3;
 }
 
 message OpenReply {

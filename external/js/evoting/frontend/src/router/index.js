@@ -4,9 +4,8 @@ import store from '../store'
 import Index from '@/components/Index'
 import Logout from '@/components/Logout'
 import NewElection from '@/components/NewElection'
-import * as cothority from '@dedis/cothority'
+import CastVote from '@/components/CastVote'
 import config from '../config'
-import rosterTOML from '../public.toml'
 
 Vue.use(Router)
 
@@ -26,6 +25,11 @@ const router = new Router({
       path: '/election/new',
       name: 'NewElection',
       component: NewElection
+    },
+    {
+      path: '/election/:id/vote',
+      name: 'CastVote',
+      component: CastVote
     }
   ]
 })
@@ -36,27 +40,25 @@ router.beforeEach((to, from, next) => {
     // we do not use next('/auth/login') here because it redirects inside the spa
     window.location.replace(authUrl)
     next()
+    return
   }
   if (store.getters.hasLoginReply) {
+    console.log('Have login reply')
     next()
+    return
   }
   const { user } = store.state
   const deviceMessage = {
     id: config.masterKey,
-    user: user.sciper,
+    user: parseInt(user.sciper),
     signature: Uint8Array.from(user.signature)
   }
-  const net = cothority.net // the network module
-  const roster = cothority.Roster.fromTOML(rosterTOML)
-  console.log(roster)
-  const socket = new net.RosterSocket(
-    roster,
-    'evoting'
-  ) // socket to talk to a conode
   const sendingMessageName = 'Login'
   const expectedMessageName = 'LoginReply'
+  const { socket } = store.state
   socket.send(sendingMessageName, expectedMessageName, deviceMessage)
     .then((data) => {
+      console.log(data)
       store.commit('SET_LOGIN_REPLY', data)
       next()
     }).catch((err) => {

@@ -20,7 +20,7 @@
             </v-flex>
             <v-flex xs12>
               <v-text-field
-                label="Election Description"
+                label="Election Decricription"
                 v-model="description"
                 :counter=100
                 prepend-icon="mode_comment"
@@ -138,29 +138,9 @@
 </template>
 
 <script>
-/*
-const getLdapData = (groups, scipers) => {
-  const client = new LdapClient({ url: `ldap://${config.ldap.hostname}` })
+import config from '../config'
+import { scipersToUint8Array } from '../utils'
 
-  const groupFilter = groups.reduce((accumulator, group) => {
-    return accumulator + `(ou:dn:=${group})`
-  }, '')
-
-  const sciperFilter = scipers.reduce((accumulator, sciper) => {
-    return accumulator + `(uniqueIdentifier=${sciper})`
-  }, '')
-
-  const opts = {
-    filter: `(&(objectClass=person)(|${groupFilter}${sciperFilter}))`,
-    scope: 'sub',
-    attributes: ['uniqueIdentifier']
-  }
-
-  const base = 'o=epfl, c=ch'
-
-  return client.search(base, opts)
-}
-*/
 export default {
   methods: {
     removeGroup (item) {
@@ -201,6 +181,28 @@ export default {
       e.preventDefault()
       this.submitted = true
 
+      const openProto = {
+        token: this.$store.state.loginReply.token,
+        id: config.masterKey,
+        election: {
+          name: this.name,
+          creator: parseInt(this.$store.state.user.sciper),
+          users: this.voterScipers.map(e => parseInt(e)),
+          description: this.description,
+          end: this.end,
+          data: scipersToUint8Array(this.candidateScipers)
+        }
+      }
+      const { socket } = this.$store.state
+      socket.send('Open', 'OpenReply', openProto)
+        .then(data => {
+          console.log(data)
+          this.submitted = false
+        })
+        .catch(e => {
+          console.error(e)
+          this.submitted = false
+        })
       // construct the protobuf
       // send request to conode
       // PROFIT

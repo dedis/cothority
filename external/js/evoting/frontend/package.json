@@ -14,7 +14,8 @@
     "build": "node build/build.js"
   },
   "dependencies": {
-    "@dedis/cothority": "^1.0.2",
+    "@dedis/cothority": "file:../../cothority",
+    "@dedis/kyber-js": "0.0.7",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1",
     "vuetify": "^1.0.2",

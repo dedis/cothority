@@ -16,57 +16,72 @@
       </div>
       <div class="election-group">
         <h3>Active Elections</h3>
-        <v-layout v-for="layout in active(elections)" class="election-cards" row wrap>
+        <v-layout
+          v-for="(layout, idx) in active(elections)"
+          :key="idx"
+          class="election-cards"
+          row
+          wrap>
           <election-card
-            v-for="election in layout" :key="election.id"
-            :id="election.id"
-            :title="election.title"
-            :endDate="election.endDate"
+            v-for="election in layout" :key="election.id.toString()"
+            :id="getId(election.id)"
+            :name="election.name"
+            :end="election.end"
             :creator="election.creator"
-            :content="election.content"
+            :description="election.description"
             :stage="election.stage"></election-card>
         </v-layout>
       </div>
       <div class="election-group">
         <h3>Shuffled Elections</h3>
-        <v-layout v-for="layout in shuffled(elections)" class="election-cards" row wrap>
+        <v-layout
+          v-for="(layout, idx) in shuffled(elections)"
+          :key="idx"
+          class="election-cards"
+          row
+          wrap>
           <election-card
-            v-for="election in layout" :key="election.title"
-            :id="election.id"
-            :title="election.title"
-            :endDate="election.endDate"
+            v-for="election in layout" :key="election.name"
+            :id="getId(election.id)"
+            :name="election.name"
+            :end="election.end"
             :creator="election.creator"
-            :content="election.content"
+            :description="election.description"
             :stage="election.stage"></election-card>
         </v-layout>
       </div>
       <div class="election-group">
         <h3>Decrypted Elections</h3>
-        <v-layout v-for="layout in decrypted(elections)" class="election-cards" row wrap>
+        <v-layout
+          v-for="(layout, idx) in decrypted(elections)"
+          :key="idx"
+          class="election-cards"
+          row
+          wrap>
           <election-card
-            v-for="election in layout" :key="election.title"
-            :id="election.id"
-            :title="election.title"
-            :endDate="election.endDate"
+            v-for="election in layout" :key="election.name"
+            :id="getId(election.id)"
+            :name="election.name"
+            :end="election.end"
             :creator="election.creator"
-            :content="election.content"
+            :description="election.description"
             :stage="election.stage"></election-card>
         </v-layout>
       </div>
     </div>
-	</div>
-	<div v-else>
-		<v-layout row wrap align-center>
-			<v-flex xs12 class='text-xs-center'>
-				<div v-if='$store.getters.hasLoginReply'>
-					<p>Welcome, {{ $store.state.user.name }}</p>
-				</div>
-				<div v-else>
-					<v-progress-circular :indeterminate='true' :size="50" />
-				</div>
-			</v-flex>
-		</v-layout>
-	</div>
+  </div>
+  <div v-else>
+    <v-layout row wrap align-center>
+      <v-flex xs12 class='text-xs-center'>
+        <div v-if='$store.getters.hasLoginReply'>
+          <p>Welcome, {{ $store.state.user.name }}</p>
+        </div>
+        <div v-else>
+          <v-progress-circular :indeterminate='true' :size="50" />
+        </div>
+      </v-flex>
+    </v-layout>
+  </div>
 </template>
 
 <style>
@@ -119,60 +134,14 @@ export default {
       return createArray(elections.filter(e => {
         return e.stage === 2
       }))
+    },
+    getId: (id) => {
+      return btoa(id).replace(/\\/g, '-')
     }
   },
-  data () {
-    return {
-      elections: [
-        {
-          id: 'asdad1',
-          title: 'Election 1',
-          creator: 'John Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 0
-        },
-        {
-          id: 'asdad2',
-          title: 'Election 2',
-          creator: 'Jane Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 0
-        },
-        {
-          id: 'asdad3',
-          title: 'Election 3',
-          creator: 'John Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 2
-        },
-        {
-          id: 'asdad4',
-          title: 'Election 4',
-          creator: 'John Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 2
-        },
-        {
-          title: 'Election 5',
-          creator: 'Jenna Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 0,
-          id: 'asdad5'
-        },
-        {
-          title: 'Election 6',
-          creator: 'Jenna Doe',
-          endDate: '1st May, 2018',
-          content: 'Foo bar baz',
-          stage: 1,
-          id: 'asdad6'
-        }
-      ]
+  computed: {
+    elections () {
+      return this.$store.state.loginReply.elections
     }
   }
 }
