@@ -39,7 +39,7 @@ type CoSiRootNode struct {
 	FinalSignature chan []byte
 
 	publics         []kyber.Point
-	hasStopped      bool //used since Shutdown can be called multiple time
+	stoppedOnce     sync.Once
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
@@ -77,7 +77,6 @@ func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName st
 		FinalSignature:   make(chan []byte, 1),
 		Data:             make([]byte, 0),
 		publics:          list,
-		hasStopped:       false,
 		startChan:        make(chan bool, 1),
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
@@ -89,9 +88,9 @@ func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName st
 
 // Shutdown stops the protocol
 func (p *CoSiRootNode) Shutdown() error {
-	if !p.hasStopped {
-		p.hasStopped = true
-	}
+	p.stoppedOnce.Do(func() {
+		close(p.FinalSignature)
+	})
 	return nil
 }
 

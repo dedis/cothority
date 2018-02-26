@@ -3,6 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -23,7 +24,7 @@ type CoSiSubProtocolNode struct {
 	Msg            []byte
 	Data           []byte
 	Timeout        time.Duration
-	hasStopped     bool //used since Shutdown can be called multiple time
+	stoppedOnce    sync.Once
 	verificationFn VerificationFn
 	suite          cosi.Suite
 
@@ -53,7 +54,6 @@ func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suit
 
 	c := &CoSiSubProtocolNode{
 		TreeNodeInstance: n,
-		hasStopped:       false,
 		verificationFn:   vf,
 		suite:            suite,
 	}
@@ -84,13 +84,12 @@ func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suit
 
 // Shutdown stops the protocol
 func (p *CoSiSubProtocolNode) Shutdown() error {
-	if !p.hasStopped {
+	p.stoppedOnce.Do(func() {
 		close(p.ChannelAnnouncement)
 		close(p.ChannelCommitment)
 		close(p.ChannelChallenge)
 		close(p.ChannelResponse)
-		p.hasStopped = true
-	}
+	})
 	return nil
 }
 
@@ -139,6 +138,8 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 			return nil
 		}
 	} else {
+		// the timeout should be shorter than the timeout for receiving
+		// commits above (i.e. p.Timeout), hence it is reduced
 		t := time.After(p.Timeout / 2)
 	loop:
 		// note that this section will not execute if it's on the leaf
@@ -243,8 +244,9 @@ func (p *CoSiSubProtocolNode) Dispatch() error {
 	return nil
 }
 
-//HandleStop is called when a Stop message is send to this node.
-// It broadcasts the message and stops the node
+// HandleStop is called when a Stop message is send to this node.
+// It broadcasts the message to all the nodes in tree and each node will stop
+// the protocol by calling p.Done.
 func (p *CoSiSubProtocolNode) HandleStop(stop StructStop) error {
 	defer p.Done()
 	if p.IsRoot() {
@@ -259,14 +261,16 @@ func (p *CoSiSubProtocolNode) Start() error {
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
 	}
-	// p.Data can be nil
+	if p.Data == nil {
+		return errors.New("subprotocol does not have data, it can be empty but cannot be nil")
+	}
 	if p.Publics == nil || len(p.Publics) < 1 {
 		return errors.New("subprotocol has invalid public keys")
 	}
 	if p.verificationFn == nil {
 		return errors.New("subprotocol has an empty verification fn")
 	}
-	if p.Timeout < 10 {
+	if p.Timeout < 10*time.Nanosecond {
 		return errors.New("unrealistic timeout")
 	}
 

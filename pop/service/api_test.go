@@ -54,7 +54,6 @@ func TestFinalStatement_Verify(t *testing.T) {
 	require.NotNil(t, fs.Verify())
 	h, err := fs.Hash()
 	log.ErrFatal(err)
-	// TODO how to sign??
 	fs.Signature, err = eddsa.Sign(h)
 	log.ErrFatal(err)
 	require.Nil(t, fs.Verify())

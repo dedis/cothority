@@ -133,11 +133,8 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	nbrFault := (len(bft.List())-1)/3 - 1
-	if nbrFault < 0 {
-		nbrFault = 0
-	}
-	err := cosi.Verify(bft.suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(nbrFault))
+	nbrFault := FaultThreshold(len(bft.List()))
+	err := cosi.Verify(bft.suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(len(bft.List())-nbrFault))
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignatureChan <- FinalSignature{nil, nil}
@@ -251,4 +248,9 @@ func InitBFTCoSiProtocol(suite cosi.Suite, c *onet.Context, vf, ack protocol.Ver
 		}
 	}
 	return nil
+}
+
+// FaultThreshold computes the number of faults that bftcosi tolerates.
+func FaultThreshold(n int) int {
+	return (n - 1) / 3
 }

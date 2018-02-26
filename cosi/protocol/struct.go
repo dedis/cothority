@@ -55,7 +55,7 @@ type Announcement struct {
 }
 
 // StructAnnouncement just contains Announcement and the data necessary to identify and
-// process the message in the sda framework.
+// process the message in the onet framework.
 type StructAnnouncement struct {
 	*onet.TreeNode //sender
 	Announcement
@@ -68,7 +68,7 @@ type Commitment struct {
 }
 
 // StructCommitment just contains Commitment and the data necessary to identify and
-// process the message in the sda framework.
+// process the message in the onet framework.
 type StructCommitment struct {
 	*onet.TreeNode
 	Commitment
@@ -80,7 +80,7 @@ type Challenge struct {
 }
 
 // StructChallenge just contains Challenge and the data necessary to identify and
-// process the message in the sda framework.
+// process the message in the onet framework.
 type StructChallenge struct {
 	*onet.TreeNode
 	Challenge
@@ -92,7 +92,7 @@ type Response struct {
 }
 
 // StructResponse just contains Response and the data necessary to identify and
-// process the message in the sda framework.
+// process the message in the onet framework.
 type StructResponse struct {
 	*onet.TreeNode
 	Response

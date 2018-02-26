@@ -516,11 +516,9 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 		return errors.New("wrong hash of forward link")
 	}
 	// this calculation must match the one in omnicon/bftcosi
-	t := (len(pubs)-1)/3 - 1
-	if t < 0 {
-		t = 0
-	}
-	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig, cosi.NewThresholdPolicy(t))
+	t := bftcosi.FaultThreshold(len(pubs))
+	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
+		cosi.NewThresholdPolicy(len(pubs)-t))
 }
 
 // SkipBlockDB holds the database to the skipblocks.

@@ -102,8 +102,12 @@ type Service struct {
 	// synchronizing inside one party
 	syncs map[string]*syncChans
 	// verifyFinalBuffer is a temporary buffer for bftVerifyFinal results
+	// it is set by the bftVerifyFinal if the verification is successful,
+	// and unset by bftVerifyFinalAck. Every key/value pair stored in it
+	// should be cleared at the end of the bft protocol.
 	verifyFinalBuffer sync.Map
-	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results
+	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results.
+	// The logic is the same for verifyFinalBuffer above.
 	verifyMergeBuffer sync.Map
 }
 
@@ -762,8 +766,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 
 	root.Data = data
-	root.Timeout = time.Second * 5
-	root.FinalSignatureChan = make(chan bftcosi.FinalSignature, 1)
+	root.Timeout = 5 * time.Second
 	root.CreateProtocol = s.CreateProtocol
 
 	final.Signature = []byte{}

@@ -88,8 +88,8 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		return nil, errors.New("protocol timed out")
 	}
 
-	// the hash is the message cosi actually signs, ideally cosi protocol
-	// should tell us what it is, here we recompute it and then return
+	// The hash is the message cosi actually signs, we recompute it the
+	// same way as cosi and then return it.
 	h := s.suite.Hash()
 	h.Write(req.Message)
 	return &SignatureResponse{h.Sum(nil), sig}, nil
