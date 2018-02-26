@@ -168,12 +168,12 @@ func (p *CoSiRootNode) Dispatch() error {
 
 	// get response from all subprotocols
 	responses := make([]StructResponse, 0)
-	errChan := make(chan error, 1)
+	errChan := make(chan error, len(runningSubProtocols))
 	var responsesMut sync.Mutex
 	var responsesWg sync.WaitGroup
-	for _, cosiSubProtocol := range runningSubProtocols {
+	for i, cosiSubProtocol := range runningSubProtocols {
 		responsesWg.Add(1)
-		go func(subProto *CoSiSubProtocolNode) {
+		go func(i int, subProto *CoSiSubProtocolNode) {
 			defer responsesWg.Done()
 			select {
 			case response := <-subProto.subResponse:
@@ -181,18 +181,20 @@ func (p *CoSiRootNode) Dispatch() error {
 				responses = append(responses, response)
 				responsesMut.Unlock()
 			case <-time.After(p.Timeout):
-				select {
-				case errChan <- fmt.Errorf("didn't finish in time"):
-				default:
-				}
+				errChan <- fmt.Errorf("%v", i)
 			}
-		}(cosiSubProtocol)
+		}(i, cosiSubProtocol)
 	}
 	responsesWg.Wait()
-	select {
-	case err = <-errChan:
-		return err
-	default:
+
+	// check errors if any
+	close(errChan)
+	var errs []error
+	for err := range errChan {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("nodes timed out while waiting for response %v", errs)
 	}
 
 	// signs the proposal
@@ -223,7 +225,7 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
 	// get all commitments, restart subprotocols where subleaders do not respond
 	var mut sync.Mutex
 	var wg sync.WaitGroup
-	errChan := make(chan error, 1) // only keep one error
+	errChan := make(chan error, len(cosiSubProtocols))
 	commitments := make([]StructCommitment, 0)
 	runningSubProtocols := make([]*CoSiSubProtocolNode, 0)
 
@@ -249,21 +251,15 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
 					var err error
 					trees[i], err = genSubtree(trees[i].Roster, newSubleaderID)
 					if err != nil {
-						select {
-						case errChan <- err:
-						default:
-						}
+						errChan <- fmt.Errorf("(node %v) %v", i, err)
 						return
 					}
 
 					// restart subprotocol
 					subProtocol, err = p.startSubProtocol(trees[i])
 					if err != nil {
-						err = fmt.Errorf("error in restarting of subprotocol: %s", err)
-						select {
-						case errChan <- err:
-						default:
-						}
+						err = fmt.Errorf("(node %v) error in restarting of subprotocol: %s", i, err)
+						errChan <- err
 						return
 					}
 					mut.Lock()
@@ -276,11 +272,8 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
 					mut.Unlock()
 					return
 				case <-time.After(p.Timeout):
-					err := fmt.Errorf("didn't get commitment after timeout %v", p.Timeout)
-					select {
-					case errChan <- err:
-					default:
-					}
+					err := fmt.Errorf("(node %v) didn't get commitment after timeout %v", i, p.Timeout)
+					errChan <- err
 					return
 				}
 			}
@@ -288,12 +281,16 @@ func (p *CoSiRootNode) collectCommitments(trees []*onet.Tree,
 	}
 	wg.Wait()
 
-	select {
-	case err := <-errChan:
-		return nil, nil, err
-	default:
-		return commitments, runningSubProtocols, nil
+	close(errChan)
+	var errs []error
+	for err := range errChan {
+		errs = append(errs, err)
 	}
+
+	if len(errs) > 0 {
+		return nil, nil, fmt.Errorf("failed to collect commitments with errors %v", errs)
+	}
+	return commitments, runningSubProtocols, nil
 }
 
 // Start is done only by root and starts the protocol.
