@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-//tests the root of the trees
+// tests the root of the trees
 func TestGenTreesRoot(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
@@ -47,7 +47,7 @@ func TestGenTreesRoot(t *testing.T) {
 	}
 }
 
-//tests the number of nodes of the tree
+// tests the number of nodes of the tree
 func TestGenTreesCount(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
@@ -67,7 +67,7 @@ func TestGenTreesCount(t *testing.T) {
 				if tree.Size() != expectedNodesPerTree && tree.Size() != expectedNodesPerTree+1 {
 					t.Fatal("The subtree", i, "should contain", expectedNodesPerTree, "nodes, but contains", tree.Size(), "nodes")
 				}
-				totalNodes += tree.Size() - 1 //to account for shared leader
+				totalNodes += tree.Size() - 1 // to account for shared leader
 			}
 			if totalNodes != nNodes {
 				t.Fatal("Trees should in total contain", nNodes, "nodes, but they contain", totalNodes, "nodes")
@@ -77,7 +77,7 @@ func TestGenTreesCount(t *testing.T) {
 	}
 }
 
-//tests that the generated tree has the good number of subtrees
+// tests that the generated tree has the good number of subtrees
 func TestGenTreesSubtrees(t *testing.T) {
 
 	nodes := []int{1, 2, 5, 20}
@@ -150,7 +150,7 @@ func TestGenTreesComplete(t *testing.T) {
 	}
 }
 
-//global tests to be performed on every node,
+// global tests to be performed on every node,
 func testNode(t *testing.T, node, parent *onet.TreeNode, tree *onet.Tree) {
 	if node.Parent != parent {
 		t.Fatal("a node has not the right parent in the field \"parent\"")
@@ -161,7 +161,7 @@ func testNode(t *testing.T, node, parent *onet.TreeNode, tree *onet.Tree) {
 	}
 }
 
-//tests that the GenTree function returns errors correctly
+// tests that the GenTree function returns errors correctly
 func TestGenTreesErrors(t *testing.T) {
 	negativeNumbers := []int{0, -1, -2, -12, -34}
 	positiveNumber := 12
@@ -194,7 +194,7 @@ func TestGenTreesErrors(t *testing.T) {
 	}
 }
 
-//tests that the GenTree function returns roster errors correctly
+// tests that the GenTree function returns roster errors correctly
 func TestGenTreesRosterErrors(t *testing.T) {
 	local := onet.NewLocalTest(testSuite)
 
@@ -224,7 +224,7 @@ func TestGenTreesRosterErrors(t *testing.T) {
 	local.CloseAll()
 }
 
-//tests that the GenTree function uses as many different servers from the roster as possible
+// tests that the GenTree function uses as many different servers from the roster as possible
 func TestGenTreesUsesWholeRoster(t *testing.T) {
 
 	servers := []int{5, 13, 20}
@@ -246,7 +246,7 @@ func TestGenTreesUsesWholeRoster(t *testing.T) {
 			expectedUsedServers = nServers
 		}
 
-		//get all the used serverIdentities
+		// get all the used serverIdentities
 		for _, tree := range trees {
 			serverSet[tree.Root.ServerIdentity] = true
 			if tree.Size() > 1 {
@@ -267,7 +267,7 @@ func TestGenTreesUsesWholeRoster(t *testing.T) {
 	}
 }
 
-//tests that the subtree generator puts the correct subleader in place
+// tests that the subtree generator puts the correct subleader in place
 func TestGenSubtreePutsCorrectSubleader(t *testing.T) {
 
 	nodes := []int{2, 5, 20}
