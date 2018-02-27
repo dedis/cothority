@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"testing"
 
 	"github.com/dedis/cothority"
@@ -9,6 +8,7 @@ import (
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -74,7 +74,7 @@ func TestService(t *testing.T) {
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
 		loginUser := login(user)
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
-		log.Print(cothority.Suite.Point().Sub(c, replyOpen.Key))
+		log.Lvl2(cothority.Suite.Point().Sub(c, replyOpen.Key))
 		ballot := &lib.Ballot{
 			User:  user,
 			Alpha: k,
@@ -115,6 +115,6 @@ func TestService(t *testing.T) {
 	})
 	require.Nil(t, err)
 	for _, p := range reconstructReply.Points {
-		log.Print("Point is:", p.String())
+		log.Lvl2("Point is:", p.String())
 	}
 }
