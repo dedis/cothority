@@ -33,6 +33,8 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
+var bucketName = []byte("skipblocks")
+
 type config struct {
 	// The database holding all skipblocks
 	Db *skipchain.SkipBlockDB
@@ -688,7 +690,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 				return nil, err
 			}
 			db.Update(func(tx *bolt.Tx) error {
-				_, err := tx.CreateBucket([]byte("skipblocks"))
+				_, err := tx.CreateBucket(bucketName)
 				if err != nil {
 					return fmt.Errorf("create bucket: %s", err)
 				}
@@ -698,7 +700,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 				}
 				return nil
 			})
-			cfg.Db = skipchain.NewSkipBlockDB(db, "skipblocks")
+			cfg.Db = skipchain.NewSkipBlockDB(db, bucketName)
 			return cfg, nil
 		}
 		return nil, fmt.Errorf("Could not open file %s", cfgPath)
@@ -707,7 +709,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg.Db = skipchain.NewSkipBlockDB(db, "skipblocks")
+	cfg.Db = skipchain.NewSkipBlockDB(db, bucketName)
 	err = cfg.Db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("values"))

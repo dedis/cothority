@@ -215,5 +215,5 @@ func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
 	})
 	require.Nil(t, err)
 
-	return &SkipBlockDB{db, "skipblock-test"}, fname
+	return &SkipBlockDB{db, []byte("skipblock-test")}, fname
 }

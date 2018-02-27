@@ -32,7 +32,8 @@ import (
 const ServiceName = "Skipchain"
 const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
-const storageKey = "skipchainconfig"
+
+var storageKey = []byte("skipchainconfig")
 
 func init() {
 	onet.RegisterNewService(ServiceName, newSkipchainService)
@@ -1258,7 +1259,7 @@ func sliceToArr(msg []byte) [32]byte {
 }
 
 func newSkipchainService(c *onet.Context) (onet.Service, error) {
-	db, bucket := c.GetAdditionalBucket("skipblocks")
+	db, bucket := c.GetAdditionalBucket([]byte("skipblocks"))
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		db:               NewSkipBlockDB(db, bucket),
