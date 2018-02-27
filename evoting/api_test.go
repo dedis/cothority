@@ -32,6 +32,12 @@ func TestLookupSciper(t *testing.T) {
 
 	_, err := evoting.NewClient().LookupSciper(roster, "")
 	require.NotNil(t, err)
+	_, err = evoting.NewClient().LookupSciper(roster, "12345")
+	require.NotNil(t, err)
+	_, err = evoting.NewClient().LookupSciper(roster, "1234567")
+	require.NotNil(t, err)
+	_, err = evoting.NewClient().LookupSciper(roster, "000000")
+	require.NotNil(t, err)
 	vcard, err := evoting.NewClient().LookupSciper(roster, "107537")
 	require.Nil(t, err)
 	require.Equal(t, "Martin Vetterli", vcard.FullName)

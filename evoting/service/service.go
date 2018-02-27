@@ -3,9 +3,11 @@ package service
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -182,13 +184,26 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
 // to convert scipers to names
 func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
-	url := fmt.Sprintf("https://people.epfl.ch/cgi-bin/people/vCard?id=%s", req.Sciper)
+	if len(req.Sciper) != 6 {
+		return nil, errors.New("sciper should be 6 digits only")
+	}
+	sciper, err := strconv.Atoi(req.Sciper)
+	if err != nil {
+		return nil, errors.New("couldn't convert sciper to integer")
+	}
+
+	url := fmt.Sprintf("https://people.epfl.ch/cgi-bin/people/vCard?id=%06d", sciper)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
+		return nil, errors.New("invalid or unknown sciper")
+	}
+
+	bodyLimit := io.LimitReader(resp.Body, 1<<17)
+	body, err := ioutil.ReadAll(bodyLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -212,11 +227,8 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 			reply.URL = value
 		}
 	}
-	if reply.FullName == "" {
-		return nil, errors.New("didn't find sciper")
-	}
 
-	log.Lvl2("Got vcard: %v", reply)
+	log.Lvl3("Got vcard: %v", reply)
 	return reply, nil
 }
 
