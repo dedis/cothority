@@ -1,0 +1,30 @@
+package evoting
+
+import (
+	"github.com/dedis/onet"
+
+	"github.com/dedis/cothority"
+)
+
+// ServiceName is the identifier of the service (application name).
+const ServiceName = "evoting"
+
+// Client is a structure to communicate with the evoting service.
+type Client struct {
+	*onet.Client
+}
+
+// NewClient instantiates a new evoting.Client.
+func NewClient() *Client {
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+}
+
+// Ping a random server which increments the nonce.
+func (c *Client) Ping(roster *onet.Roster, nonce uint32) (*Ping, error) {
+	dest := roster.RandomServerIdentity()
+	reply := &Ping{}
+	if err := c.SendProtobuf(dest, &Ping{Nonce: nonce}, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
