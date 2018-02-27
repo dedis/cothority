@@ -2,6 +2,13 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dedis/kyber"
@@ -172,6 +179,57 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 	admin := master.IsAdmin(req.User)
 	token := s.state.register(req.User, admin)
 	return &evoting.LoginReply{Token: token, Admin: admin, Elections: elections}, nil
+}
+
+// LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+// to convert scipers to names
+func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
+	if len(req.Sciper) != 6 {
+		return nil, errors.New("sciper should be 6 digits only")
+	}
+	sciper, err := strconv.Atoi(req.Sciper)
+	if err != nil {
+		return nil, errors.New("couldn't convert sciper to integer")
+	}
+
+	url := fmt.Sprintf("https://people.epfl.ch/cgi-bin/people/vCard?id=%06d", sciper)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
+		return nil, errors.New("invalid or unknown sciper")
+	}
+
+	bodyLimit := io.LimitReader(resp.Body, 1<<17)
+	body, err := ioutil.ReadAll(bodyLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	reply := &evoting.LookupSciperReply{}
+	search := regexp.MustCompile("[:;]")
+	for _, line := range strings.Split(string(body), "\n") {
+		fr := search.Split(line, 2)
+		if len(fr) != 2 {
+			continue
+		}
+		value := strings.Replace(fr[1], "CHARSET=UTF-8:", "", 1)
+		switch fr[0] {
+		case "FN":
+			reply.FullName = value
+		case "EMAIL":
+			reply.Email = value
+		case "TITLE":
+			reply.Title = value
+		case "URL":
+			reply.URL = value
+		}
+	}
+
+	log.Lvl3("Got vcard: %v", reply)
+	return reply, nil
 }
 
 // Cast message handler. Cast a ballot in a given election.
@@ -432,10 +490,13 @@ func new(context *onet.Context) (onet.Service, error) {
 		pin:              nonce(48),
 	}
 
-	service.RegisterHandlers(service.Ping, service.Link, service.Open, service.Login,
+	err := service.RegisterHandlers(service.Ping, service.Link, service.Open, service.Login,
 		service.Cast, service.GetBox, service.GetMixes, service.Shuffle,
-		service.GetPartials, service.Decrypt, service.Reconstruct,
+		service.GetPartials, service.Decrypt, service.Reconstruct, service.LookupSciper,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
 

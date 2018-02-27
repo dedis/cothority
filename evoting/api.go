@@ -28,3 +28,10 @@ func (c *Client) Ping(roster *onet.Roster, nonce uint32) (*Ping, error) {
 	}
 	return reply, nil
 }
+
+// LookupSciper returns information about a sciper number.
+func (c *Client) LookupSciper(roster *onet.Roster, sciper string) (reply *LookupSciperReply, err error) {
+	reply = &LookupSciperReply{}
+	err = c.SendProtobuf(roster.RandomServerIdentity(), &LookupSciper{Sciper: sciper}, reply)
+	return
+}
