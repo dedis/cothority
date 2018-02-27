@@ -476,8 +476,9 @@ func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *ski
 	if block.Index == 0 {
 		block.GenesisID = block.SkipChainID()
 	}
+	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
+	// append.
 	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
-		// LatestID: latest.Hash,
 		NewBlock: block,
 	})
 	if err != nil {
