@@ -16,6 +16,7 @@ import (
 func init() {
 	network.RegisterMessages(
 		Link{}, LinkReply{},
+		LookupSciper{}, LookupSciperReply{},
 		Open{}, OpenReply{},
 		Cast{}, CastReply{},
 		Shuffle{}, ShuffleReply{},
@@ -62,6 +63,20 @@ type LoginReply struct {
 	Token     string          // Token (time-limited) for further calls.
 	Admin     bool            // Admin indicates if user has admin rights.
 	Elections []*lib.Election // Elections the user participates in.
+}
+
+// LookupSciper takes a sciper number and returns elements of the user.
+type LookupSciper struct {
+	Sciper string
+}
+
+// LookupSciperReply returns the elements of the vcard from
+// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+type LookupSciperReply struct {
+	FullName string
+	Email    string
+	URL      string
+	Title    string
 }
 
 // Link message.

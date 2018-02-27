@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/onet"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
@@ -21,4 +22,18 @@ func TestPing(t *testing.T) {
 	c := evoting.NewClient()
 	r, _ := c.Ping(roster, 0)
 	assert.Equal(t, uint32(1), r.Nonce)
+}
+
+func TestLookupSciper(t *testing.T) {
+	local := onet.NewTCPTest(cothority.Suite)
+	defer local.CloseAll()
+
+	_, roster, _ := local.GenTree(3, true)
+
+	_, err := evoting.NewClient().LookupSciper(roster, "")
+	require.NotNil(t, err)
+	vcard, err := evoting.NewClient().LookupSciper(roster, "107537")
+	require.Nil(t, err)
+	require.Equal(t, "Martin Vetterli", vcard.FullName)
+	require.Equal(t, "TYPE=INTERNET:martin.vetterli@epfl.ch", vcard.Email)
 }
