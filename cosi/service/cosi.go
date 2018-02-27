@@ -2,15 +2,15 @@ package service
 
 import (
 	"errors"
-	"fmt"
+	"math"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/cosi/protocol"
-	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"gopkg.in/satori/go.uuid.v1"
 )
 
 // This file contains all the code to run a CoSi service. It is used to reply to
@@ -19,7 +19,7 @@ import (
 // updated version that chains all signatures for example.
 
 // ServiceName is the name to refer to the CoSi service
-const ServiceName = "CoSi"
+const ServiceName = "CoSiService"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newCoSiService)
@@ -27,9 +27,10 @@ func init() {
 	network.RegisterMessage(&SignatureResponse{})
 }
 
-// CoSi is the service that handles collective signing operations
-type CoSi struct {
+// Service is the service that handles collective signing operations
+type Service struct {
 	*onet.ServiceProcessor
+	suite cosi.Suite
 }
 
 // SignatureRequest is what the Cosi service is expected to receive from clients.
@@ -45,64 +46,84 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, error) {
-	suite, ok := cs.Suite().(kyber.HashFactory)
-	if !ok {
-		return nil, errors.New("suite is unusable")
+func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, error) {
+	// generate the tree
+	nNodes := len(req.Roster.List)
+	tree := req.Roster.GenerateNaryTreeWithRoot(nNodes, s.ServerIdentity())
+	if tree == nil {
+		return nil, errors.New("failed to generate tree")
 	}
-
-	if req.Roster.ID.IsNil() {
-		req.Roster.ID = onet.RosterID(uuid.NewV4())
-	}
-
-	_, root := req.Roster.Search(cs.ServerIdentity().ID)
-	if root == nil {
-		return nil, errors.New("Couldn't find a serverIdetity in Roster")
-	}
-	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
-	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
-	pi, err := cosi.NewProtocol(tni)
+	pi, err := s.CreateProtocol(protocol.DefaultProtocolName, tree)
 	if err != nil {
 		return nil, errors.New("Couldn't make new protocol: " + err.Error())
 	}
-	cs.RegisterProtocolInstance(pi)
-	pcosi := pi.(*cosi.CoSi)
-	pcosi.SigningMessage(req.Message)
-	h := suite.Hash()
-	h.Write(req.Message)
-	response := make(chan []byte)
-	pcosi.RegisterSignatureHook(func(sig []byte) {
-		response <- sig
-	})
-	log.Lvl3("Cosi Service starting up root protocol")
-	go pi.Dispatch()
-	go pi.Start()
-	sig := <-response
-	if log.DebugVisible() > 1 {
-		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+
+	// configure the protocol
+	p := pi.(*protocol.CoSiRootNode)
+	p.CreateProtocol = s.CreateProtocol
+	p.Msg = req.Message
+	// We set NSubtrees to the cube root of n to evenly distribute the load,
+	// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
+	p.NSubtrees = int(math.Pow(float64(nNodes), 1.0/3.0))
+	p.Timeout = time.Second * 5
+	if p.NSubtrees < 1 {
+		p.NSubtrees = 1
 	}
-	return &SignatureResponse{
-		Hash:      h.Sum(nil),
-		Signature: sig,
-	}, nil
+
+	// start the protocol
+	log.Lvl3("Cosi Service starting up root protocol")
+	if err = pi.Start(); err != nil {
+		return nil, err
+	}
+
+	if log.DebugVisible() > 1 {
+		log.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
+	}
+
+	// wait for reply
+	var sig []byte
+	select {
+	case sig = <-p.FinalSignature:
+	case <-time.After(p.Timeout + time.Second):
+		return nil, errors.New("protocol timed out")
+	}
+
+	// The hash is the message cosi actually signs, we recompute it the
+	// same way as cosi and then return it.
+	h := s.suite.Hash()
+	h.Write(req.Message)
+	return &SignatureResponse{h.Sum(nil), sig}, nil
 }
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
 // generate the PI on all others node.
-func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
+func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Cosi Service received New Protocol event")
-	pi, err := cosi.NewProtocol(tn)
-	return pi, err
+	if tn.ProtocolName() == protocol.DefaultProtocolName {
+		return protocol.NewDefaultProtocol(tn)
+	}
+	if tn.ProtocolName() == protocol.DefaultSubProtocolName {
+		return protocol.NewDefaultSubProtocol(tn)
+	}
+	return nil, errors.New("no such protocol " + tn.ProtocolName())
 }
 
 func newCoSiService(c *onet.Context) (onet.Service, error) {
-	s := &CoSi{
+	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		suite:            cothority.Suite,
 	}
-	err := s.RegisterHandler(s.SignatureRequest)
-	if err != nil {
-		log.Error(err, "Couldn't register message:")
+	if err := s.RegisterHandler(s.SignatureRequest); err != nil {
+		log.Error("couldn't register message:", err)
+		return nil, err
+	}
+	if _, err := c.ProtocolRegister(protocol.DefaultProtocolName, protocol.NewDefaultProtocol); err != nil {
+		log.Error("couldn't register main protocol:", err)
+		return nil, err
+	}
+	if _, err := c.ProtocolRegister(protocol.DefaultSubProtocolName, protocol.NewDefaultSubProtocol); err != nil {
+		log.Error("couldn't register sub protocol:", err)
 		return nil, err
 	}
 	return s, nil

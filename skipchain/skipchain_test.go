@@ -36,32 +36,23 @@ func TestService_StoreSkipBlock_Failure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("node failure tests do not run on travis, see #1000")
 	}
-	storeSkipBlock(t, true)
+	storeSkipBlock(t, 4, true)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
-	storeSkipBlock(t, false)
+	storeSkipBlock(t, 4, false)
 }
 
-func storeSkipBlock(t *testing.T, fail bool) {
+func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeSRS(cothority.Suite, 4, skipchainSID)
+	servers, el, genService := local.MakeSRS(cothority.Suite, nbrServers, skipchainSID)
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
 	deadServer := servers[len(servers)-1]
-
-	if fail {
-		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 100 * time.Millisecond
-		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
-		// service.bftTimeout = 500 * time.Millisecond
-
-		service.propTimeout = 5 * service.bftTimeout
-	}
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)

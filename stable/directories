@@ -7,7 +7,6 @@ cosi/check
 cosi/protocol
 cosi/service
 cosi/simulation
-cosi/crypto
 identity
 messaging
 pop

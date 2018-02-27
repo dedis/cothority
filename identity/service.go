@@ -12,13 +12,11 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"reflect"
-	"sync"
-
 	"errors"
-
 	"fmt"
 	"math/big"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
@@ -147,10 +145,10 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 				"Invalid request")
 
 		}
-		if req.Final.Verify() != nil {
-			log.Error(s.ServerIdentity(), "Invalid FinalStatement")
+		if err := req.Final.Verify(); err != nil {
+			log.Error(s.ServerIdentity(), "Invalid FinalStatement: ", err)
 			return nil, errors.New(
-				"Signature of final statement is invalid")
+				"Signature of final statement is invalid: " + err.Error())
 
 		}
 		msg, err = req.Final.Hash()
