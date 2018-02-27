@@ -1,5 +1,19 @@
 syntax = "proto2";
 
+
+message LookupSciper {
+	required string sciper = 1;
+}
+
+// LookupSciperReply returns the elements of the vcard from
+// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+message LookupSciperReply {
+	required string fullName = 1;
+	required string email = 2;
+	required string url = 3;
+	required string title = 4;
+}
+
 message Election {
     required string name = 1;
     required uint32 creator = 2;
