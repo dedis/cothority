@@ -35,8 +35,10 @@ const bftFollowBlock = "SkipchainBFTFollow"
 
 var storageKey = []byte("skipchainconfig")
 
+var sid onet.ServiceID
+
 func init() {
-	onet.RegisterNewService(ServiceName, newSkipchainService)
+	sid, _ = onet.RegisterNewService(ServiceName, newSkipchainService)
 	network.RegisterMessages(&Storage{})
 }
 

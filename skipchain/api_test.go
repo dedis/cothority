@@ -1,6 +1,8 @@
 package skipchain
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -421,4 +423,79 @@ func newTestClient(l *onet.LocalTest) *Client {
 type testData struct {
 	A int
 	B string
+}
+
+func TestClient_ParallelWrite(t *testing.T) {
+	numClients := 20
+	numWrites := 100
+	if testing.Short() {
+		numClients = 2
+	}
+
+	l := onet.NewTCPTest(cothority.Suite)
+	svrs, ro, _ := l.GenTree(5, true)
+	defer l.CloseAll()
+
+	cl := newTestClient(l)
+	msg := []byte(fmt.Sprintf("genesis"))
+	gen, err := cl.CreateGenesis(ro, 1, 1, VerificationRoot, msg, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)
+
+	wg := sync.WaitGroup{}
+	errCh := make(chan error, numClients*numWrites)
+
+	for i := 0; i < numClients; i++ {
+		wg.Add(1)
+		go func(i int) {
+			cl := newTestClient(l)
+			msg := []byte(fmt.Sprintf("hello from client %v", i))
+
+			for j := 0; j < numWrites; j++ {
+				_, err := cl.StoreSkipBlock(gen, nil, msg)
+				if err != nil {
+					errCh <- err
+					break
+				}
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		t.Fatal(err)
+	default:
+		t.Log("congrats, no errors")
+	}
+
+	num := s.db.Length()
+	// plus 1 for the genesis block
+	expected := numClients*numWrites + 1
+	if num != expected {
+		t.Fatal("length db", num)
+	}
+
+	// Read the chain back, check it.
+	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reply.Update) != expected {
+		t.Fatal("not enough updates")
+	}
+	for i, x := range reply.Update {
+		// Genesis does not match the expected string. NBD.
+		if i == 0 {
+			continue
+		}
+		msg := string(x.Data)
+		if !strings.HasPrefix(msg, "hello from client ") {
+			t.Errorf("block %v: %v", i, string(x.Data))
+		}
+	}
 }
