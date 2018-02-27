@@ -30,6 +30,8 @@ var templateID onet.ServiceID
 const propagationTimeout = 10 * time.Second
 const timestampRange = 60
 
+var storageKey = []byte("storage")
+
 func init() {
 	network.RegisterMessages(Storage{}, Darcs{}, vData{})
 	var err error
@@ -818,7 +820,7 @@ func (s *Service) save() {
 	log.Lvl3(s.String(), "Saving service")
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
-	err := s.Save("storage", s.Storage)
+	err := s.Save(storageKey, s.Storage)
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -843,7 +845,7 @@ func (s *Service) tryLoad() error {
 	}()
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
-	msg, err := s.Load("storage")
+	msg, err := s.Load(storageKey)
 	if err != nil {
 		return err
 	}
