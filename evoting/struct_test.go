@@ -3,7 +3,8 @@ package evoting
 import (
 	"testing"
 
-	"github.com/qantik/nevv/crypto"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber/util/key"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +14,8 @@ func TestDigest(t *testing.T) {
 }
 
 func TestSchnorr(t *testing.T) {
-	x, X := crypto.RandomKeyPair()
+	kp := key.NewKeyPair(cothority.Suite)
+	x, X := kp.Private, kp.Public
 
 	login := &Login{ID: []byte{0, 1, 2}, User: 3}
 	login.Sign(x)
