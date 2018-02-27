@@ -7,7 +7,7 @@
       <v-card-title class="election-card-name">
         <v-layout class="election-info-container" row>
           <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ end }}</p></v-flex>
-          <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creator }}</p></v-flex>
+          <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ creator }})</p></v-flex>
         </v-layout>
       </v-card-title>
       <v-card-actions>
@@ -16,10 +16,10 @@
         <v-btn :disabled="disabled" :to="voteLink" color="primary">Vote</v-btn>
         </v-flex>
         <v-flex v-if="$store.state.loginReply.admin && stage === 0" class="text-xs-right" xs5>
-          <v-btn :disabled="disabled" v-on:click.native="shuffle" color="orange">Shuffle</v-btn>
+          <v-btn :disabled="disabled" v-on:click.native="finalize" color="orange">Finalize</v-btn>
         </v-flex>
-        <v-flex v-if="$store.state.loginReply.admin && stage === 1" xs5>
-          <v-btn :disabled="disabled" v-on:click.native="decrypt" color="red">Decrypt</v-btn>
+        <v-flex v-if="stage === 2" xs10>
+          <v-btn :disabled="disabled" :to="resultLink" color="success">View Results</v-btn>
         </v-flex>
         <v-spacer></v-spacer>
         <v-flex xs2 class="text-xs-right">
@@ -35,14 +35,6 @@
         </v-card-text>
       </v-slide-y-transition>
     </v-card>
-    <v-snackbar
-      :timeout="timeout"
-      :color="snackbarColor"
-      v-model="snackbar"
-    >
-      {{ snackbarText }}
-      <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
-    </v-snackbar>
   </div>
 </template>
 
@@ -54,6 +46,7 @@
 </style>
 
 <script>
+import config from '@/config'
 export default {
   props: {
     name: String,
@@ -64,46 +57,44 @@ export default {
     id: String
   },
   methods: {
-    shuffle (event) {
-      console.log('Shuffling')
+    finalize (event) {
+      const { socket } = this.$store.state
       this.disabled = true
-      const shuffleMsg = {
+      const msg = {
         token: this.$store.state.loginReply.token,
         id: Uint8Array.from(atob(this.id).split(',').map(x => parseInt(x)))
       }
-      this.$store.state.socket.send('Shuffle', 'ShuffleReply', shuffleMsg)
+      socket.send('Shuffle', 'ShuffleReply', msg)
         .then(() => {
-          this.snackbarColor = 'success'
-          this.snackbarText = 'Ballots have been shuffled'
-          this.snackbar = true
+          return socket.send('Decrypt', 'DecryptReply', msg)
+        })
+        .then(() => {
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'success',
+            text: 'Election finalized',
+            model: true,
+            timeout: 6000
+          })
           this.disabled = false
-          this.stage = 1
+          const { sciper, signature } = this.$store.state.user
+          const id = config.masterKey
+          return socket.send('Login', 'LoginReply', {
+            id,
+            user: parseInt(sciper),
+            signature: Uint8Array.from(signature)
+          })
+        })
+        .then(response => {
+          this.$store.commit('SET_LOGIN_REPLY', response)
+          this.$router.push('/')
         })
         .catch(e => {
-          this.snackbarColor = 'error'
-          this.snackbarText = e.message
-          this.snackbar = true
-          this.disabled = false
-        })
-    },
-    decrypt (event) {
-      console.log('Decrypting')
-      this.disabled = true
-      const decryptMessage = {
-        token: this.$store.state.loginReply.token,
-        id: Uint8Array.from(atob(this.id).split(',').map(x => parseInt(x)))
-      }
-      this.$store.state.socket.send('Decrypt', 'DecryptReply', decryptMessage)
-        .then(() => {
-          this.snackbarColor = 'success'
-          this.snackbarText = 'Ballots have been decrypted'
-          this.snackbar = true
-          this.disabled = false
-        })
-        .catch(e => {
-          this.snackbarColor = 'error'
-          this.snackbarText = e.message
-          this.snackbar = true
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'error',
+            text: e.message,
+            model: true,
+            timeout: 6000
+          })
           this.disabled = false
         })
     }
@@ -111,13 +102,27 @@ export default {
   data () {
     return {
       show: false,
-      voteLink: '/election/' + this.id + '/vote',
-      snackbar: false,
-      snackbarColor: '',
-      snackbarText: '',
-      timeout: 6000,
-      disabled: false
+      voteLink: `/election/${this.id}/vote`,
+      resultLink: `/election/${this.id}/results`,
+      disabled: false,
+      creatorName: '',
+      candidateNames: []
     }
+  },
+  created () {
+    // creator
+    if (this.creator in this.$store.state.names) {
+      this.creatorName = this.$store.state.names[this.creator]
+      return
+    }
+    this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
+      sciper: this.creator.toString()
+    })
+      .then(response => {
+        this.creatorName = response.fullName
+        // cache
+        this.$store.state.names[this.creator] = this.creatorName
+      })
   }
 }
 </script>

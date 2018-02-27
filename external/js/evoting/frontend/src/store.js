@@ -15,7 +15,16 @@ const store = new Vuex.Store({
   state: {
     user: null,
     loginReply: null,
-    socket: new net.RosterSocket(roster, 'evoting')
+    socket: new net.RosterSocket(roster, 'evoting'),
+    snackbar: {
+      text: '',
+      timeout: 6000,
+      model: false,
+      color: ''
+    },
+    names: {
+
+    }
   },
   getters: {
     isAuthenticated: state => {
@@ -23,6 +32,9 @@ const store = new Vuex.Store({
     },
     hasLoginReply: state => {
       return state.loginReply !== null
+    },
+    snackbar: state => {
+      return state.snackbar
     }
   },
   mutations: {
@@ -31,6 +43,9 @@ const store = new Vuex.Store({
     },
     SET_USER (state, data) {
       state.user = data
+    },
+    SET_SNACKBAR (state, snackbar) {
+      state.snackbar = snackbar
     }
   },
   plugins: [createPersistedState({ key: 'evoting', paths: ['user'] })]

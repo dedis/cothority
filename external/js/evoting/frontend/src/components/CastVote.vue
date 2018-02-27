@@ -9,7 +9,7 @@
           <v-container fluid>
             <v-layout class="election-info-container" row>
               <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ election.end }}</p></v-flex>
-              <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ election.creator }}</p></v-flex>
+          <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
             </v-layout>
             <v-layout>
               <v-flex xs12>
@@ -26,7 +26,7 @@
                     <v-radio
                       v-for="candidate in candidates(election.data)"
                       :key="candidate"
-                      :label="`${candidate}`"
+                      :label="`${candidateNames[candidate]}`"
                       :value="`${candidate}`"
                     ></v-radio>
                   </v-radio-group>
@@ -40,14 +40,6 @@
         </v-card-title>
       </v-card>
     </v-flex>
-    <v-snackbar
-      :timeout="timeout"
-      :color="snackbarColor"
-      v-model="snackbar"
-    >
-      {{ snackbarText }}
-      <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
-    </v-snackbar>
   </v-layout>
 </template>
 
@@ -84,11 +76,10 @@ export default {
       const { key } = this.election
       // encrypt the ballot
       const embedMsg = scipersToUint8Array([this.ballot])
-      console.log(embedMsg)
       const m = curve.point().embed(embedMsg)
       const r = curve.scalar().pick()
       // u = gr
-      const u = curve.point().mul(r)
+      const u = curve.point().mul(r, null)
       // v = m + yr
       const y = curve.point()
       y.unmarshalBinary(key)
@@ -110,18 +101,23 @@ export default {
         .then(() => {
           console.log('Submitted Successfully')
           this.submitted = false
-          this.snackbarColor = 'success'
-          this.snackbarText = 'Your vote has been cast successfully'
-          this.snackbar = true
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'success',
+            text: 'Your vote has been cast successfully',
+            model: true,
+            timeout: 6000
+          })
+          this.$router.push('/')
         })
         .catch(e => {
-          console.error(e)
           this.submitted = false
-          this.snackbarColor = 'error'
-          this.snackbarText = e.message
-          this.snackbar = true
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'error',
+            text: e.message,
+            model: true,
+            timeout: 6000
+          })
         })
-      // show the encrypted message on success
     }
   },
   data () {
@@ -129,10 +125,38 @@ export default {
       ballot: null,
       valid: false,
       submitted: false,
-      snackbar: false,
-      snackbarColor: '',
-      timeout: 6000,
-      snackbarText: ''
+      creatorName: '',
+      candidateNames: {}
+    }
+  },
+  created () {
+    if (this.election.creator in this.$store.state.names) {
+      this.creatorName = this.$store.state.names[this.election.creator]
+    } else {
+      this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
+        sciper: this.election.creator.toString()
+      })
+        .then(response => {
+          this.creatorName = response.fullName
+          // cache
+          this.$store.state.names[this.creator] = this.creatorName
+        })
+    }
+    const scipers = this.candidates(this.election.data)
+    for (let i = 0; i < scipers.length; i++) {
+      const sciper = scipers[i]
+      this.candidateNames[sciper] = this.$store.state.names[sciper] || ''
+      if (this.candidateNames) {
+        continue
+      }
+      this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
+        sciper: sciper.toString()
+      })
+        .then(response => {
+          this.candidateNames[sciper] = response.fullName
+          // cache
+          this.$store.state.names[sciper] = this.candidateNames[sciper]
+        })
     }
   }
 }

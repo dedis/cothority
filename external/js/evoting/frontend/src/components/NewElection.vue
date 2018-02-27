@@ -196,12 +196,35 @@ export default {
       const { socket } = this.$store.state
       socket.send('Open', 'OpenReply', openProto)
         .then(data => {
-          console.log(data)
           this.submitted = false
+          this.$router.push('/')
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'success',
+            text: 'New election created',
+            timeout: 6000,
+            model: true
+          })
+          // refresh the election list - TODO: replace with get elections message
+          const { sciper, signature } = this.$store.state.user
+          const id = config.masterKey
+          return socket.send('Login', 'LoginReply', { id,
+            user: parseInt(sciper),
+            signature: Uint8Array.from(signature)
+          })
+        })
+        .then(response => {
+          this.$store.commit('SET_LOGIN_REPLY', response)
+          this.$router.push('/')
         })
         .catch(e => {
           console.error(e)
           this.submitted = false
+          this.$store.commit('SET_SNACKBAR', {
+            color: 'error',
+            text: e.message,
+            timeout: 6000,
+            model: true
+          })
         })
       // construct the protobuf
       // send request to conode

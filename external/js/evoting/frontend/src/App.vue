@@ -4,6 +4,14 @@
     <!--<main>-->
       <v-container class="root-container" fluid full-height>
         <router-view/>
+        <v-snackbar
+          :timeout="$store.getters.snackbar.timeout"
+          :color="$store.getters.snackbar.color"
+          v-model="$store.getters.snackbar.model"
+        >
+          {{ $store.getters.snackbar.text }}
+          <v-btn dark flat @click.native="snackbar = false">Close</v-btn>
+        </v-snackbar>
       </v-container>
     <!--</main>-->
     <v-footer :fixed="fixed" app>

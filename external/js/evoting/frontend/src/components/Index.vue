@@ -33,27 +33,9 @@
         </v-layout>
       </div>
       <div class="election-group">
-        <h3>Shuffled Elections</h3>
+        <h3>Finalized Elections</h3>
         <v-layout
-          v-for="(layout, idx) in shuffled(elections)"
-          :key="idx"
-          class="election-cards"
-          row
-          wrap>
-          <election-card
-            v-for="election in layout" :key="election.name"
-            :id="getId(election.id)"
-            :name="election.name"
-            :end="election.end"
-            :creator="election.creator"
-            :description="election.description"
-            :stage="election.stage"></election-card>
-        </v-layout>
-      </div>
-      <div class="election-group">
-        <h3>Decrypted Elections</h3>
-        <v-layout
-          v-for="(layout, idx) in decrypted(elections)"
+          v-for="(layout, idx) in finalized(elections)"
           :key="idx"
           class="election-cards"
           row
@@ -103,11 +85,11 @@ const createArray = filteredArray => {
   const res = []
   let tmp = []
   filteredArray.forEach((e, i) => {
-    tmp.push(e)
     if (i > 0 && i % 3 === 0) {
       res.push(tmp)
       tmp = []
     }
+    tmp.push(e)
   })
   if (tmp.length > 0) {
     res.push(tmp)
@@ -125,12 +107,7 @@ export default {
         return e.stage === 0
       }))
     },
-    shuffled: (elections) => {
-      return createArray(elections.filter(e => {
-        return e.stage === 1
-      }))
-    },
-    decrypted: (elections) => {
+    finalized: (elections) => {
       return createArray(elections.filter(e => {
         return e.stage === 2
       }))
