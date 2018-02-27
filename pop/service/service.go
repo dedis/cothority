@@ -67,9 +67,7 @@ const Name = "PoPServer"
 const cfgName = "pop.bin"
 const bftSignFinal = "BFTFinal"
 const bftSignMerge = "PopBFTSignMerge"
-
 const propagFinal = "PoPPropagateFinal"
-
 const timeout = 60 * time.Second
 
 // SIGSIZE size of signature
@@ -85,6 +83,8 @@ var mergeConfigID network.MessageTypeID
 var mergeConfigReplyID network.MessageTypeID
 var mergeCheckID network.MessageTypeID
 var mergeCheckReplyID network.MessageTypeID
+
+var storageKey = []byte("storage")
 
 // Service represents data needed for one pop-party.
 type Service struct {
@@ -899,7 +899,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl2("Saving service", s.ServerIdentity())
-	err := s.Save("storage", s.data)
+	err := s.Save(storageKey, s.data)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
@@ -908,7 +908,7 @@ func (s *Service) save() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	msg, err := s.Load("storage")
+	msg, err := s.Load(storageKey)
 	if err != nil {
 		return err
 	}

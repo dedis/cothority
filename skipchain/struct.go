@@ -526,11 +526,11 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 // It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
 	*bolt.DB
-	bucketName string
+	bucketName []byte
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
-func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
+func NewSkipBlockDB(db *bolt.DB, bn []byte) *SkipBlockDB {
 	return &SkipBlockDB{
 		DB:         db,
 		bucketName: bn,

@@ -65,13 +65,13 @@ func TestGB(t *testing.T) {
 	sig13.Signature = bftcosi.FinalSignature{Msg: sig13.Hash(), Sig: []byte{}}
 	sb1.ForwardLink = []*skipchain.ForwardLink{sig12, sig13}
 
-	db, bucket := ts0.GetAdditionalBucket("skipblocks")
+	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))
 	ts0.Db = skipchain.NewSkipBlockDB(db, bucket)
 	ts0.Db.Store(sb0)
 	ts0.Db.Store(sb1)
 	ts0.Db.Store(sb2)
 	ts0.Db.Store(sb3)
-	db, bucket = ts1.GetAdditionalBucket("skipblocks")
+	db, bucket = ts1.GetAdditionalBucket([]byte("skipblocks"))
 	ts1.Db = skipchain.NewSkipBlockDB(db, bucket)
 	ts1.Db.Store(sb0)
 	ts1.Db.Store(sb1)
