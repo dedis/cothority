@@ -394,11 +394,11 @@ func getCommands() cli.Commands {
 					Action:    certRenew,
 				},
 				{
-					Name:      "list",
-					Aliases:   []string{"l"},
-					Usage:     "list the certificate",
-					ArgsUsage: "",
-					Action:    certList,
+					Name:      "revoke",
+					Aliases:   []string{"k"},
+					Usage:     "revoke and delete a certificate",
+					ArgsUsage: "the key",
+					Action:    certRevoke,
 				},
 				{
 					Name:      "retrieve",
