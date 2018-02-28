@@ -15,7 +15,7 @@
         <v-flex v-if="stage === 0" xs5>
         <v-btn :disabled="disabled" :to="voteLink" color="primary">Vote</v-btn>
         </v-flex>
-        <v-flex v-if="$store.state.loginReply.admin && stage === 0" class="text-xs-right" xs5>
+        <v-flex v-if="$store.state.loginReply.admin && stage === 0 && creator === parseInt($store.state.user.sciper)" class="text-xs-right" xs5>
           <v-btn :disabled="disabled" v-on:click.native="finalize" color="orange">Finalize</v-btn>
         </v-flex>
         <v-flex v-if="stage === 2" xs10>
