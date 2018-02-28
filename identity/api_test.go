@@ -86,7 +86,10 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	err = registerCosiProtocols(srvc.Context, protoName)
 	require.Nil(t, err)
 
-	tree := roster.NewRosterWithRoot(srvc.ServerIdentity()).GenerateNaryTree(len(roster.List))
+	rooted := roster.NewRosterWithRoot(srvc.ServerIdentity())
+	require.NotNil(t, rooted)
+	tree := rooted.GenerateNaryTree(len(roster.List))
+	require.NotNil(t, tree)
 	node, err := srvc.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
