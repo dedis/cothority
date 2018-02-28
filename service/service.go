@@ -51,6 +51,8 @@ type Service struct {
 	// saveMutex protects access to the storage field.
 	saveMutex sync.Mutex
 	Storage   *Storage
+	// big bad global lock
+	process sync.Mutex
 }
 
 // pubPoly is a serializaable version of share.PubPoly
@@ -157,6 +159,8 @@ func (s *Service) CreateSkipchains(req *ocs.CreateSkipchainsRequest) (reply *ocs
 // UpdateDarc adds a new account or modifies an existing one.
 func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	err error) {
+	s.process.Lock()
+	defer s.process.Unlock()
 	dataOCS := &ocs.Transaction{
 		Darc:      &req.Darc,
 		Timestamp: time.Now().Unix(),
@@ -236,6 +240,8 @@ func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDar
 // WriteRequest adds a block the OCS-skipchain with a new file.
 func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	err error) {
+	s.process.Lock()
+	defer s.process.Unlock()
 	log.Lvlf2("Write request on skipchain %x", req.OCS)
 	reply = &ocs.WriteReply{}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
@@ -285,6 +291,8 @@ func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 // ReadRequest asks for a read-offer on the skipchain for a reader on a file.
 func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	err error) {
+	s.process.Lock()
+	defer s.process.Unlock()
 	log.Lvl2("Requesting a file. Reader:", req.Read.Signature.SignaturePath.Signer)
 	reply = &ocs.ReadReply{}
 	writeSB := s.db().GetByID(req.Read.DataID)

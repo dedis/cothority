@@ -1,6 +1,7 @@
 package service
 
 import (
+	"sync"
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
@@ -206,6 +207,72 @@ func TestService_UpdateDarcOnline(t *testing.T) {
 		latestReader = newReader
 		newSigner = w
 	}
+}
+
+func TestStress(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Not stress-testing on travis")
+	}
+	log.SetDebugVisible(1)
+
+	nbrThreads := 30
+	nbrLoops := 10
+
+	o := createOCS(t)
+	defer o.local.CloseAll()
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrThreads)
+	for thread := 0; thread < nbrThreads; thread++ {
+		go func(n int) {
+			for loop := 0; loop < nbrLoops; loop++ {
+				// Creating a write request
+				log.Lvlf1("Loop %d in thread %d: Write", loop, n)
+				encKey := []byte{1, 2, 3}
+				write := ocs.NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
+				write.Data = []byte{}
+				sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
+				sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writer)
+				require.Nil(t, err)
+				wr, err := o.service.WriteRequest(&ocs.WriteRequest{
+					OCS:       o.sc.OCS.Hash,
+					Write:     *write,
+					Signature: *sig,
+					Readers:   o.readers,
+				})
+				require.Nil(t, err)
+				require.NotNil(t, wr)
+
+				// Making a read request
+				log.Lvlf1("Loop %d in thread %d: Read", loop, n)
+				sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writer)
+				require.Nil(t, err)
+				read := ocs.Read{
+					DataID:    wr.SB.Hash,
+					Signature: *sigRead,
+				}
+				rr, err := o.service.ReadRequest(&ocs.ReadRequest{
+					OCS:  o.sc.OCS.Hash,
+					Read: read,
+				})
+				require.Nil(t, err)
+
+				// Decoding the file
+				log.Lvlf1("Loop %d in thread %d: DecryptKey", loop, n)
+				symEnc, err := o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
+					Read: rr.SB.Hash,
+				})
+				require.Nil(t, err)
+				priv, err := o.writer.GetPrivate()
+				require.Nil(t, err)
+				sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
+				require.Nil(t, err2)
+				require.Equal(t, encKey, sym)
+			}
+			wg.Done()
+		}(thread)
+	}
+	wg.Wait()
 }
 
 type ocsStruct struct {
