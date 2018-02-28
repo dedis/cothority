@@ -22,6 +22,7 @@
 
 <script>
 import Navbar from './components/Navbar'
+import config from '@/config'
 export default {
   components: {
     'navbar': Navbar
@@ -32,12 +33,25 @@ export default {
       title: 'Evoting'
     }
   },
+  mounted () {
+    setInterval(() => {
+      const { socket, user } = this.$store.state
+      socket.send('Login', 'LoginReply', {
+        id: config.masterKey,
+        user: parseInt(user.sciper),
+        signature: Uint8Array.from(user.signature)
+      })
+        .then((loginReply) => {
+          this.$store.commit('SET_LOGIN_REPLY', loginReply)
+        })
+    }, 570000)
+  },
   name: 'App'
 }
 </script>
 
 <style scope>
 .root-container {
-  margin-top: 60px;
+  margin-top: 64px !important;
 }
 </style>
