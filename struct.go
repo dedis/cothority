@@ -84,13 +84,20 @@ func (dw *Transaction) String() string {
 	if dw == nil {
 		return "nil-pointer"
 	}
+	var str string
+	if dw.Darc != nil {
+		str += fmt.Sprintf("Darc: %s\n", dw.Darc)
+	}
+	if dw.Meta != nil {
+		str += fmt.Sprintf("Meta: %x\n", *dw.Meta)
+	}
 	if dw.Write != nil {
-		return fmt.Sprintf("Write: data-length of %d\n", len(dw.Write.Data))
+		str += fmt.Sprintf("Write: data-length of %d\n", len(dw.Write.Data))
 	}
 	if dw.Read != nil {
-		return fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Signature.SignaturePath.Signer, dw.Read.DataID)
+		str += fmt.Sprintf("Read: %+v read data %x\n", dw.Read.Signature.SignaturePath.Signer, dw.Read.DataID)
 	}
-	return "all nil DataOCS"
+	return str
 }
 
 // NewWrite is used by the writer to an onchain-secret skipchain

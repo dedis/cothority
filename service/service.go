@@ -30,7 +30,7 @@ var templateID onet.ServiceID
 const propagationTimeout = 10 * time.Second
 const timestampRange = 60
 
-var storageKey = []byte("storage")
+var storageKey = "storage"
 
 func init() {
 	network.RegisterMessages(Storage{}, Darcs{}, vData{})
@@ -220,6 +220,8 @@ func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDar
 		return nil, errors.New("this Darc doesn't exist")
 	}
 	path := []*darc.Darc{start}
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	darcs := s.Storage.Accounts[string(start.GetBaseID())]
 	for v, d := range darcs.Darcs {
 		if v > start.Version {
@@ -234,7 +236,7 @@ func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDar
 // WriteRequest adds a block the OCS-skipchain with a new file.
 func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	err error) {
-	log.Lvl2("Write request")
+	log.Lvlf2("Write request on skipchain %x", req.OCS)
 	reply = &ocs.WriteReply{}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
 	if err != nil {
@@ -427,6 +429,8 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 		ocsProto.Xc = req.Ephemeral
 		verificationData.Ephemeral = req.Ephemeral
 		verificationData.Signature = req.Signature
+	} else if read.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
+		return nil, errors.New("please use ephemeral keys for non-ed25519 private keys")
 	} else {
 		ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	}
@@ -439,9 +443,9 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	// Make sure everything used from the s.Storage structure is copied, so
 	// there will be no races.
 	s.saveMutex.Lock()
-	ocsProto.Shared = s.Storage.Shared[string(fileSB.GenesisID)]
-	pp := s.Storage.Polys[string(fileSB.GenesisID)]
-	reply.X = s.Storage.Shared[string(fileSB.GenesisID)].X.Clone()
+	ocsProto.Shared = s.Storage.Shared[string(fileSB.SkipChainID())]
+	pp := s.Storage.Polys[string(fileSB.SkipChainID())]
+	reply.X = s.Storage.Shared[string(fileSB.SkipChainID())].X.Clone()
 	var commits []kyber.Point
 	for _, c := range pp.Commits {
 		commits = append(commits, c.Clone())
@@ -449,7 +453,7 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
 	s.saveMutex.Unlock()
 
-	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.GenesisID})
+	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.SkipChainID()})
 	err = ocsProto.Start()
 	if err != nil {
 		return nil, err
@@ -471,8 +475,12 @@ func (s *Service) DecryptKeyRequest(req *ocs.DecryptKeyRequest) (reply *ocs.Decr
 func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, err error) {
 	block := latest.Copy()
 	block.Data = d
+	if block.Index == 0 {
+		block.GenesisID = block.SkipChainID()
+	}
+	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
+	// append.
 	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
-		LatestID: latest.Hash,
 		NewBlock: block,
 	})
 	if err != nil {
@@ -552,14 +560,17 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 			}
 			darcs := *verificationData.Signature.SignaturePath.Darcs
 			darc := darcs[len(darcs)-1]
-			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(
-				verificationData.Signature.SignaturePath.Signer.Ed25519.Point) {
+			if !o.Read.Signature.SignaturePath.Signer.Equal(
+				&verificationData.Signature.SignaturePath.Signer) {
 				return errors.New("ephemeral key signed by wrong reader")
 			}
 			if err := verificationData.Signature.Verify(buf, darc); err != nil {
 				return errors.New("wrong signature on ephemeral key: " + err.Error())
 			}
 		} else {
+			if o.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
+				return errors.New("use ephemeral keys for non-ed25519 keys")
+			}
 			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
 				return errors.New("wrong reader")
 			}
@@ -575,6 +586,8 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 
 func (s *Service) addDarc(d *darc.Darc) {
 	key := string(d.GetBaseID())
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	darcs := s.Storage.Accounts[key]
 	if darcs == nil {
 		darcs = &Darcs{}
@@ -584,6 +597,8 @@ func (s *Service) addDarc(d *darc.Darc) {
 }
 
 func (s *Service) getDarc(id darc.ID) *darc.Darc {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	for _, darcs := range s.Storage.Accounts {
 		for _, d := range darcs.Darcs {
 			if d.GetID().Equal(id) {
@@ -595,6 +610,8 @@ func (s *Service) getDarc(id darc.ID) *darc.Darc {
 }
 
 func (s *Service) getLatestDarc(genesisID darc.ID) *darc.Darc {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	darcs := s.Storage.Accounts[string(genesisID)]
 	if darcs == nil || len(darcs.Darcs) == 0 {
 		return nil
@@ -625,6 +642,7 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	d := &path[len(path)-1]
 
 	// First get latest version
+	s.saveMutex.Lock()
 	for _, di := range s.Storage.Accounts[string(d.GetBaseID())].Darcs {
 		if di.Version > d.Version {
 			log.Lvl3("Adding new version", di.Version)
@@ -632,6 +650,7 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 			d = di
 		}
 	}
+	s.saveMutex.Unlock()
 	log.Lvl3("role is:", role)
 	for i, p := range newpath {
 		log.Lvlf3("newpath[%d] = %x", i, p.GetID())
@@ -763,6 +782,8 @@ func (s *Service) verifySignature(msg []byte, sig darc.Signature, base darc.Darc
 // verifyWrite makes sure that the write request is correctly signed from
 // a writer that has a valid path from the admin darc in the ocs skipchain.
 func (s *Service) verifyWrite(ocs skipchain.SkipBlockID, write *ocs.Write) error {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	admin := s.Storage.Admins[string(ocs)]
 	if admin == nil {
 		return errors.New("couldn't find admin for this chain")
@@ -806,7 +827,12 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	}
 	defer s.save()
 	if sb.Index == 0 {
+		s.saveMutex.Lock()
+		if dataOCS.Darc == nil {
+			log.Fatal("Should not be nil!")
+		}
 		s.Storage.Admins[string(sb.Hash)] = dataOCS.Darc
+		s.saveMutex.Unlock()
 		return
 	}
 }

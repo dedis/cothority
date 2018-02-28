@@ -75,7 +75,7 @@ class OnchainSecretsRPCTest {
     }
 
     @Test
-    @Disabled("in case of nodes enclosed in docker I'm not able to connect all of them. Let's talk about" +
+    @Disabled("in case of nodes enclosed in docker I'm not able to connect all of them. Let's talk about " +
             "this test and decide what we can do with it")
     void verify() {
         assertTrue(ocs.verify());
