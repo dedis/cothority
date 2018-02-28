@@ -20,7 +20,7 @@
             </v-flex>
             <v-flex xs12>
               <v-text-field
-                label="Election Decricription"
+                label="Election Description"
                 v-model="description"
                 :counter=100
                 prepend-icon="mode_comment"
