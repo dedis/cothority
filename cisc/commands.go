@@ -359,7 +359,6 @@ func getCommands() cli.Commands {
 				},
 			},
 		},
-	
 
 		{
 			Name:    "cert",
@@ -367,72 +366,55 @@ func getCommands() cli.Commands {
 			Usage:   "create and use links with admin privileges",
 			Subcommands: cli.Commands{
 				{
-					Name:	   "request",
+					Name:      "request",
 					Aliases:   []string{"q"},
-					Usage: 	   "request a certificate to letsencrypt and store it to the skipchain",		
+					Usage:     "request a certificate to letsencrypt and store it to the skipchain",
 					ArgsUsage: "name of the directory",
-					Action:     certRequest,
+					Action:    certRequest,
 				},
-				/*{
-					Name:	   "list",
+				{
+					Name:      "list",
 					Aliases:   []string{"l"},
-					Usage:     "list the certificate", 
+					Usage:     "list the certificate",
 					ArgsUsage: "",
-					Action:	    certList,
-				}*/
-		
+					Action:    certList,
+				},
+				{
+					Name:      "verify",
+					Aliases:   []string{"v"},
+					Usage:     "verify the certificate against the root certificate",
+					ArgsUsage: "key",
+					Action:    certVerify,
+				},
+				{
+					Name:      "renew",
+					Aliases:   []string{"u"},
+					Usage:     "renew a certificate",
+					ArgsUsage: "the key",
+					Action:    certRenew,
+				},
+				{
+					Name:      "list",
+					Aliases:   []string{"l"},
+					Usage:     "list the certificate",
+					ArgsUsage: "",
+					Action:    certList,
+				},
+				{
+					Name:      "retrieve",
+					Aliases:   []string{"r"},
+					Usage:     "retrieve the certificate of a given key",
+					ArgsUsage: "key and optionnaly a file name to write the retrieved cert ",
+					Action:    certRetrieve,
+				},
+				{
+					Name:      "add",
+					Aliases:   []string{"a"},
+					Usage:     "add a key/cert pair",
+					ArgsUsage: "key/cert pair",
+					Action:    certStore,
+				},
 			},
-
 		},
 	}
 }
-	/*	Name: "cert",
-		Aliases:[]string{"c"},
-		Usage: "Manage Certificates",
-		Subcommands: []cli.Command{
-			{
-				Name:	   "add",
-				Aliases:   []string{"a"},
-				Usage:     "add a key/cert pair", 
-				ArgsUsage: "key/cert pair",
-				Action:	    certStore,
-			},
-			{
-				Name:	   "verify",
-				Aliases:    []string{"v"},
-				Usage:	   "verify the certificate against the root certificate",
-				ArgsUsage: "key",
-				Action:     certVerify,
-			},
-			{
-				Name:	   "renew",
-				Aliases:   []string{"u"},
-				Usage:     "renew a certificate", 
-				ArgsUsage: "the key",
-				Action:	    certRenew,
-			},
-			{
-				Name:	   "list",
-				Aliases:   []string{"l"},
-				Usage:     "list the certificate", 
-				ArgsUsage: "",
-				Action:	    certList,
-			},
-			{
-				Name:	   "revoke",
-				Aliases:   []string{"k"},
-				Usage:     "revoke and delete a certificate", 
-				ArgsUsage: "the key",
-				Action:	    certRevoke,
-			},
-			{
-				Name:	   "retrieve",
-				Aliases:   []string{"r"},
-				Usage:     "retrieve the certificate of a given key",
-				ArgsUsage: "key and optionnaly a file name to write the retrieved cert ",
-				Action:	   certRetrieve,				 	 	 	 	
-			},
-		
-		},	
-	},
-}*/
