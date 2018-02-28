@@ -9,7 +9,7 @@
           <v-container fluid>
             <v-layout class="election-info-container" row>
               <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ election.end }}</p></v-flex>
-          <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
+            <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
             </v-layout>
             <v-layout>
               <v-flex xs12>
@@ -146,17 +146,22 @@ export default {
     for (let i = 0; i < scipers.length; i++) {
       const sciper = scipers[i]
       this.candidateNames[sciper] = this.$store.state.names[sciper] || ''
-      if (this.candidateNames) {
+      if (this.candidateNames[sciper]) {
         continue
       }
       this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
         sciper: sciper.toString()
       })
         .then(response => {
-          this.candidateNames[sciper] = response.fullName
+          this.candidateNames = {...this.candidateNames, [sciper]: response.fullName}
           // cache
           this.$store.state.names[sciper] = this.candidateNames[sciper]
         })
+    }
+  },
+  watch: {
+    candidateNames: {
+      deep: true
     }
   }
 }

@@ -9,7 +9,7 @@
           <v-container fluid>
             <v-layout class="election-info-container" row>
               <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ election.end }}</p></v-flex>
-              <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ election.creator }}</p></v-flex>
+              <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
             </v-layout>
             <v-layout>
               <v-flex xs12>
@@ -22,13 +22,13 @@
               row
               wrap>
               <v-flex xs5 md3>
-                <p class="candidate">{{ key }}</p>
+                <p class="candidate">{{ candidateNames[key] }}</p>
               </v-flex>
               <v-flex xs5 md7>
                 <v-progress-linear color="success" :value="percentage(val, totalCount)"></v-progress-linear>
               </v-flex>
               <v-flex xs2 md2 class="text-md-center">
-                <span class="count">({{ val }}, {{ totalCount }})</span>
+                <span class="count">({{ val }}/{{ totalCount }})</span>
               </v-flex>
             </v-layout>
           </v-container>
@@ -64,19 +64,49 @@ export default {
     }
   },
   data () {
-    const counts = {}
-    const c = this.candidates(this.election.data)
-    for (let i = 0; i < c.length; i++) {
-      counts[c[i]] = 0
-    }
     return {
-      counts,
-      totalCount: 0
+      counts: {},
+      totalCount: 0,
+      creatorName: '',
+      candidateNames: {}
     }
   },
   created () {
+    if (this.election.creator in this.$store.state.names) {
+      this.creatorName = this.$store.state.names[this.election.creator]
+    } else {
+      this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
+        sciper: this.election.creator.toString()
+      })
+        .then(response => {
+          this.creatorName = response.fullName
+          // cache
+          this.$store.state.names[this.creator] = this.creatorName
+        })
+    }
+    const c = this.candidates(this.election.data)
+    for (let i = 0; i < c.length; i++) {
+      this.counts[c[i]] = 0
+    }
+    const scipers = this.candidates(this.election.data)
+    for (let i = 0; i < scipers.length; i++) {
+      const sciper = scipers[i]
+      this.candidateNames[sciper] = this.$store.state.names[sciper] || null
+      if (this.candidateNames[sciper]) {
+        continue
+      }
+      console.log(`Looking up ${sciper}`)
+      this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
+        sciper: sciper.toString()
+      })
+        .then(response => {
+          this.candidateNames = {...this.candidateNames, [sciper]: response.fullName}
+          console.log('Updated candidateNames', this.candidateNames)
+          // cache
+          this.$store.state.names[sciper] = this.candidateNames[sciper]
+        })
+    }
     const { socket } = this.$store.state
-    console.log(this.election)
     socket.send('Reconstruct', 'ReconstructReply', {
       id: this.election.id,
       token: this.$store.state.loginReply.token
@@ -96,6 +126,11 @@ export default {
       .catch(e => {
         console.error(e.message)
       })
+  },
+  watch: {
+    candidateNames: {
+      deep: true
+    }
   }
 }
 </script>
