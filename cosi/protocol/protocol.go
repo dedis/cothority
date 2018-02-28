@@ -112,7 +112,7 @@ func (p *CoSiRootNode) Dispatch() error {
 		return fmt.Errorf("timeout, did you forget to call Start?")
 	}
 
-	log.Lvl1("leader protocol started")
+	log.Lvl3("leader protocol started")
 
 	verifyChan := make(chan bool, 1)
 	go func() {
