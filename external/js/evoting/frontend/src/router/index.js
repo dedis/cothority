@@ -41,6 +41,10 @@ const router = new Router({
 })
 
 router.beforeEach((to, from, next) => {
+  if (to.path === '/logout') {
+    next()
+    return
+  }
   if (!store.getters.isAuthenticated) {
     const authUrl = '/auth/login'
     // we do not use next('/auth/login') here because it redirects inside the spa
@@ -68,9 +72,9 @@ router.beforeEach((to, from, next) => {
       store.commit('SET_LOGIN_REPLY', data)
       next()
     }).catch((err) => {
+      console.log(err.message)
       // probably a stale signature? Remove token and redirect to tequila
-      router.push('/logout')
-      next(err)
+      next('/logout')
     })
 })
 
