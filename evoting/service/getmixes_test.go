@@ -37,7 +37,6 @@ func TestGetMixes_UserNotPart(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -58,7 +57,6 @@ func TestGetMixes_ElectionNotShuffled(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -79,7 +77,6 @@ func TestGetMixes_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(10)
 

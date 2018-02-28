@@ -38,7 +38,6 @@ func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -59,7 +58,6 @@ func TestReconstruct_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Decrypted,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(7)
 
