@@ -117,11 +117,11 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	size := len(master.Roster.List)
 	rooted := master.Roster.NewRosterWithRoot(s.ServerIdentity())
 	if rooted == nil {
-		return errors.New("we're not in the roster")
+		return nil, errors.New("we're not in the roster")
 	}
 	tree := rooted.GenerateNaryTree(size)
 	if tree == nil {
-		return errors.New("error while creating the tree")
+		return nil, errors.New("error while creating the tree")
 	}
 	instance, err := s.CreateProtocol(protocol.NameDKG, tree)
 	protocol := instance.(*protocol.SetupDKG)
@@ -323,11 +323,11 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 	rooted := election.Roster.NewRosterWithRoot(s.ServerIdentity())
 	if rooted == nil {
-		return errors.New("we're not in the roster")
+		return nil, errors.New("we're not in the roster")
 	}
 	tree := rooted.GenerateNaryTree(1)
 	if tree == nil {
-		return errors.New("failed to generate tree")
+		return nil, errors.New("failed to generate tree")
 	}
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
 	protocol := instance.(*protocol.Shuffle)
@@ -363,11 +363,11 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 
 	rooted := election.Roster.NewRosterWithRoot(s.ServerIdentity())
 	if rooted == nil {
-		return errors.New("we're not in the roster")
+		return nil, errors.New("we're not in the roster")
 	}
 	tree := rooted.GenerateNaryTree(1)
 	if tree == nil {
-		return errors.New("error while generating tree")
+		return nil, errors.New("error while generating tree")
 	}
 	instance, _ := s.CreateProtocol(protocol.NameDecrypt, tree)
 	protocol := instance.(*protocol.Decrypt)
