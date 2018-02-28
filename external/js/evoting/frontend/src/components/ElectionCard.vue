@@ -62,7 +62,7 @@ export default {
       this.disabled = true
       const msg = {
         token: this.$store.state.loginReply.token,
-        id: Uint8Array.from(atob(this.id).split(',').map(x => parseInt(x)))
+        id: Uint8Array.from(atob(this.id.replace(/-/g, '/')).split(',').map(x => parseInt(x)))
       }
       socket.send('Shuffle', 'ShuffleReply', msg)
         .then(() => {
