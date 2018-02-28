@@ -6,7 +6,6 @@ import Logout from '@/components/Logout'
 import NewElection from '@/components/NewElection'
 import CastVote from '@/components/CastVote'
 import ElectionResult from '@/components/ElectionResult'
-import TestComponent from '@/components/TestComponent'
 import config from '../config'
 
 Vue.use(Router)
@@ -37,11 +36,6 @@ const router = new Router({
       path: '/election/:id/results',
       name: 'ElectionResult',
       component: ElectionResult
-    },
-    {
-      path: '/test',
-      name: 'Test',
-      component: TestComponent
     }
   ]
 })
