@@ -115,7 +115,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	}
 
 	size := len(master.Roster.List)
-	tree := master.Roster.GenerateNaryTreeWithRoot(size, s.ServerIdentity())
+	tree := master.Roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(size)
 	instance, err := s.CreateProtocol(protocol.NameDKG, tree)
 	protocol := instance.(*protocol.SetupDKG)
 
@@ -314,7 +314,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 		return nil, errAlreadyShuffled
 	}
 
-	tree := election.Roster.GenerateNaryTreeWithRoot(1, s.ServerIdentity())
+	tree := election.Roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(1)
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
 	protocol := instance.(*protocol.Shuffle)
 	protocol.Election = election
@@ -347,7 +347,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		return nil, errNotShuffled
 	}
 
-	tree := election.Roster.GenerateNaryTreeWithRoot(1, s.ServerIdentity())
+	tree := election.Roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(1)
 	instance, _ := s.CreateProtocol(protocol.NameDecrypt, tree)
 	protocol := instance.(*protocol.Decrypt)
 	protocol.Secret = s.secrets[skipchain.SkipBlockID(election.ID).Short()]

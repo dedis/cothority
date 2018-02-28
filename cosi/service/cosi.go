@@ -49,7 +49,7 @@ type SignatureResponse struct {
 func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, error) {
 	// generate the tree
 	nNodes := len(req.Roster.List)
-	tree := req.Roster.GenerateNaryTreeWithRoot(nNodes, s.ServerIdentity())
+	tree := req.Roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(nNodes)
 	if tree == nil {
 		return nil, errors.New("failed to generate tree")
 	}

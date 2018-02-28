@@ -1025,7 +1025,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	if len(roster.List)-1 > 2 {
 		bf = len(roster.List) - 1
 	}
-	tree := roster.GenerateNaryTreeWithRoot(bf, s.ServerIdentity())
+	tree := roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(bf)
 	if tree == nil {
 		return nil, errors.New("couldn't form tree")
 	}

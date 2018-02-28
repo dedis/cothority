@@ -103,7 +103,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
 		name, pid)
 	return func(el *onet.Roster, msg network.Message, to time.Duration) (int, error) {
-		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		tree := el.NewRosterWithRoot(c.ServerIdentity()).GenerateNaryTree(8)
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
 		}

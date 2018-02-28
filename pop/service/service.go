@@ -742,7 +742,7 @@ func (s *Service) PropagateFinal(msg network.Message) {
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
-	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(len(final.Desc.Roster.List), s.ServerIdentity())
+	tree := final.Desc.Roster.NewRosterWithRoot(s.ServerIdentity()).GenerateNaryTree(len(final.Desc.Roster.List))
 	if tree == nil {
 		return errors.New(
 			"Root does not exist")
