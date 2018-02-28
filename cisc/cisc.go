@@ -876,7 +876,7 @@ func followUpdate(c *cli.Context) error {
 }
 
 /*
-*(Newly added)command related to the certificate store/retrieve
+ * Commands related to the certificate store/retrieve
  */
 
 //Request a Certificate to Letsencrypt Ca and store it.
@@ -951,7 +951,7 @@ func certStore(c *cli.Context) error {
 		log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
 
-	id, err := cfg.findSC(c.Args().Get(0))
+	id, err := cfg.findSC(c.Args().Get(2))
 	if err != nil {
 		return err
 	}
@@ -973,7 +973,7 @@ func certVerify(c *cli.Context) error {
 		log.Fatal("Please give a key to verify")
 	}
 	cfg := loadConfigOrFail(c)
-	id, err := cfg.findSC(c.Args().Get(0))
+	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -999,7 +999,7 @@ func certRenew(c *cli.Context) error {
 		log.Fatal("Please give a domain name")
 	}
 	domain := c.Args().Get(0)
-	id, err := cfg.findSC(c.Args().Get(0))
+	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -1035,7 +1035,7 @@ func certRevoke(c *cli.Context) error {
 		log.Fatal("Please give a cert to delete")
 	}
 
-	id, err := cfg.findSC(c.Args().Get(0))
+	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -1051,7 +1051,7 @@ func certRevoke(c *cli.Context) error {
 	}
 	cert, _ := prop.Storage[key]
 	if !isCert(cert) {
-		log.Fatal("The values is not a certificate")
+		log.Fatal("The values are not a certificate")
 	}
 	//revoke the certificate (see certificate.go)
 	revokeCert(cert)
@@ -1066,7 +1066,7 @@ func certRetrieve(c *cli.Context) error {
 	}
 	k := c.Args().Get(0)
 	cfg := loadConfigOrFail(c)
-	id, err := cfg.findSC(c.Args().Get(0))
+	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
@@ -1086,7 +1086,7 @@ func certRetrieve(c *cli.Context) error {
 	if !check(cert) {
 		log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
-	//futur work: check the signature
+
 	log.Info("Valid certificate, Retrive it to: " + k + ".pem")
 	ioutil.WriteFile(k+".pem", []byte(cert), 0644)
 	return cfg.saveConfig(c)
