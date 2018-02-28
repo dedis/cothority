@@ -30,7 +30,7 @@ var templateID onet.ServiceID
 const propagationTimeout = 10 * time.Second
 const timestampRange = 60
 
-var storageKey = "storage"
+var storageKey = []byte("storage")
 
 func init() {
 	network.RegisterMessages(Storage{}, Darcs{}, vData{})
