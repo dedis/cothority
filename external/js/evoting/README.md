@@ -25,6 +25,10 @@ npm install
 Edit `frontend/src/config.js` and `server/config.js` and update `masterKey` to the
 one logged by cothority
 
+Copy/Symlink the conodes `public.toml` to `frontend/src`. If you'd rather use
+a single conode or connect to WS over reverse proxy, edit `frontend/src/store.js`
+and replace `RosterSocket` with `Socket('ws://<path>', 'evoting')`
+
 ## Dev
 
 By default, the destination for `npm run build` is set to `../server/dist`. The
@@ -43,7 +47,7 @@ The production setup is to use nginx as a reverse proxy that would redirect all
 requests to `/auth/(login|verify)` to the node process while all other requests
 will be served by the Vue frontend.
 
-You'd want to change `frontend/config/index.js`. Search for the `build` key and
+You might want to change `frontend/config/index.js`. Search for the `build` key and
 change the `index` and `assetsRoot` keys
 
 ```
@@ -86,10 +90,8 @@ server {
         ssl_certificate_key <path/to/key>;
 
         location ~ ^/auth/(login|verify)$ {
+				proxy_set_header Host $host;
 				proxy_pass http://localhost:3000;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection 'upgrade';
                 proxy_set_header X-Forwarded-Host $host:$server_port;
                 proxy_set_header X-Forwarded-Server $host;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
