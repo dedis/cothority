@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 
@@ -72,7 +74,7 @@ func runShuffle(t *testing.T, n int) {
 
 		x, y := lib.Split(box.Ballots)
 		v, w := lib.Split(mixes[0].Ballots)
-		log.Lvl1(lib.Verify(mixes[0].Proof, election.Key, x, y, v, w))
+		require.Nil(t, lib.Verify(mixes[0].Proof, election.Key, x, y, v, w))
 	case <-time.After(3 * time.Second):
 		t.Fatal("Protocol timeout")
 	}
