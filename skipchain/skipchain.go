@@ -1310,7 +1310,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = byzcoin.InitBFTCoSiProtocol(cothority.Suite, s.Context,
+	err = byzcoinx.InitBFTCoSiProtocol(cothority.Suite, s.Context,
 		s.bftForwardLink, s.bftForwardLinkAck, bftFollowBlock)
 	if err != nil {
 		return nil, err
