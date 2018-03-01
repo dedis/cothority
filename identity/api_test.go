@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
@@ -93,7 +93,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	node, err := srvc.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	c := node.(*protocol.CoSiRootNode)
+	c := node.(*protocol.FtCosi)
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
@@ -444,10 +444,10 @@ func registerCosiProtocols(c *onet.Context, protoName string) error {
 	cosiSubProtoName := protoName + "_sub"
 
 	cosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewProtocol(n, vf, cosiSubProtoName, suite)
+		return protocol.NewFtCosi(n, vf, cosiSubProtoName, suite)
 	}
 	cosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubProtocol(n, vf, suite)
+		return protocol.NewSubFtCosi(n, vf, suite)
 	}
 
 	if _, err := c.ProtocolRegister(protoName, cosiProto); err != nil {

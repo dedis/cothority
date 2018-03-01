@@ -1,5 +1,6 @@
 .
 bftcosi
+byzcoinx
 cisc
 conode
 cosi
@@ -7,6 +8,12 @@ cosi/check
 cosi/protocol
 cosi/service
 cosi/simulation
+cosi/crypto
+ftcosi
+ftcosi/check
+ftcosi/protocol
+ftcosi/service
+ftcosi/simulation
 identity
 messaging
 pop

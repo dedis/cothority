@@ -1,0 +1,11 @@
+Simulation = "CoSimul"
+Servers = 16
+Bf = 3
+Rounds = 10
+RunWait = "6000s"
+Suite = "Ed25519"
+
+Depth
+1
+2
+3
