@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
