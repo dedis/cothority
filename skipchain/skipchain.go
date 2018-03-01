@@ -818,7 +818,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
 	}
 	fwd := NewForwardLink(src, dst)
-	log.Print()
 	sig, err := s.startBFT(bftNewBlock, roster, fwd.Hash(), data)
 	if err != nil {
 		log.Error(s.ServerIdentity().Address, "startBFT failed with", err)
@@ -936,7 +935,6 @@ func (s *Service) forwardLink(fs *ForwardSignature) error {
 		return err
 	}
 	fl := NewForwardLink(from, fs.Newest)
-	log.Print()
 	sig, err := s.startBFT(bftFollowBlock, from.Roster, fl.Hash(), data)
 	if err != nil {
 		return errors.New("Couldn't get signature: " + err.Error())
