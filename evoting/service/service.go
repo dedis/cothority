@@ -200,10 +200,16 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	}
 
 	url := fmt.Sprintf("https://people.epfl.ch/cgi-bin/people/vCard?id=%06d", sciper)
-	resp, err := http.Get(url)
+	transport := &http.Transport{}
+	client := &http.Client{
+		Transport: transport,
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+	defer transport.CloseIdleConnections()
 
 	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
 		return nil, errors.New("invalid or unknown sciper")
@@ -521,7 +527,7 @@ func new(context *onet.Context) (onet.Service, error) {
 
 	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
 
-	log.Info("Pin:", service.pin)
+	log.Lvl1("Pin:", service.pin)
 
 	return service, nil
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
@@ -66,12 +67,12 @@ func runShuffle(t *testing.T, n int) {
 
 	select {
 	case <-shuffle.Finished:
-		// box, _ := election.Box()
-		// mixes, _ := election.Mixes()
+		box, _ := election.Box()
+		mixes, _ := election.Mixes()
 
-		// x, y := lib.Split(box.Ballots)
-		// v, w := lib.Split(mixes[0].Ballots)
-		// fmt.Println(lib.Verify(mixes[0].Proof, election.Key, x, y, v, w))
+		x, y := lib.Split(box.Ballots)
+		v, w := lib.Split(mixes[0].Ballots)
+		log.Lvl1(lib.Verify(mixes[0].Proof, election.Key, x, y, v, w))
 	case <-time.After(3 * time.Second):
 		t.Fatal("Protocol timeout")
 	}
