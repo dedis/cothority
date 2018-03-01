@@ -23,28 +23,28 @@ import (
 // DefaultProtocolName can be used from other packages to refer to this protocol.
 // If this name is used, then the suite used to verify signatures must be
 // the default cothority.Suite.
-const DefaultProtocolName = "CoSiProtoDefault"
+const DefaultProtocolName = "ftCoSiProtoDefault"
 
 // DefaultSubProtocolName the name of the default sub protocol, started by the
 // main protocol.
-const DefaultSubProtocolName = "SubCoSiProtoDefault"
+const DefaultSubProtocolName = "ftSubCoSiProtoDefault"
 
-type cosiSuite struct {
+type ftCosiSuite struct {
 	cosi.Suite
 	r cipher.Stream
 }
 
-func (m *cosiSuite) Hash() hash.Hash {
+func (m *ftCosiSuite) Hash() hash.Hash {
 	return sha512.New()
 }
 
-func (m *cosiSuite) RandomStream() cipher.Stream {
+func (m *ftCosiSuite) RandomStream() cipher.Stream {
 	return m.r
 }
 
 // EdDSACompatibleCosiSuite is a custom suite made to be compatible with eddsa because
 // cothority.Suite uses sha256 but EdDSA uses sha512.
-var EdDSACompatibleCosiSuite = &cosiSuite{edwards25519.NewBlakeSHA256Ed25519(), random.New()}
+var EdDSACompatibleCosiSuite = &ftCosiSuite{edwards25519.NewBlakeSHA256Ed25519(), random.New()}
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {

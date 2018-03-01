@@ -19,7 +19,7 @@ import (
 // updated version that chains all signatures for example.
 
 // ServiceName is the name to refer to the CoSi service
-const ServiceName = "CoSiService"
+const ServiceName = "ftCoSiService"
 
 func init() {
 	onet.RegisterNewService(ServiceName, newCoSiService)

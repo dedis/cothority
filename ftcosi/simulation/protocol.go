@@ -35,7 +35,7 @@ import (
 )
 
 func init() {
-	onet.SimulationRegister("CosiProtocol", NewSimulationProtocol)
+	onet.SimulationRegister("ftCosiProtocol", NewSimulationProtocol)
 }
 
 // SimulationProtocol implements onet.Simulation.

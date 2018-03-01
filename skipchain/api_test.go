@@ -1,6 +1,8 @@
 package skipchain
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -423,7 +425,6 @@ type testData struct {
 	B string
 }
 
-/*
 func TestClient_ParallelWrite(t *testing.T) {
 	numClients := 20
 	numWrites := 50
@@ -498,4 +499,3 @@ func TestClient_ParallelWrite(t *testing.T) {
 		}
 	}
 }
-*/
